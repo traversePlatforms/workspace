@@ -93,13 +93,31 @@ git checkout -- <file>         # undo edits to one file
 **Everything** — including the video, the photo tree and `.git` — mirrors to
 `C:\Users\Surge Inc\OneDrive\Backups\claude test 2`, which OneDrive then syncs off the machine.
 
+**This runs itself daily at 6:00 PM** — Windows scheduled task *"Backup claude test 2 to OneDrive"*.
+You don't need to do anything. Run it by hand only if you want a copy taken right now:
+
 ```
 .\shared\tools\Backup-ToOneDrive.ps1 -WhatIf    # see what would change
-.\shared\tools\Backup-ToOneDrive.ps1            # run it
+.\shared\tools\Backup-ToOneDrive.ps1            # run it now
 ```
 
+Managing the schedule (all optional):
+
+```
+Get-ScheduledTaskInfo -TaskName 'Backup claude test 2 to OneDrive'   # last run + result (0 = ok)
+Start-ScheduledTask   -TaskName 'Backup claude test 2 to OneDrive'   # run it now, in the background
+.\shared\tools\Register-BackupSchedule.ps1 -At 22:30                 # change the time
+.\shared\tools\Register-BackupSchedule.ps1 -Unregister               # turn the schedule off
+```
+
+The task runs as you, only while logged on (OneDrive only syncs logged on anyway), so it needed no
+admin rights and stores no password. It's set to still run on battery, and `StartWhenAvailable` means
+a run missed because the machine was off happens at the next opportunity rather than being skipped.
+Logs go to `%TEMP%\project-backup-logs\`.
+
 First run 2026-09-13: 3,003 files / 3.92 GB. Verified — git can read the mirrored repo with full
-history, and SHA-256 spot checks match.
+history, `fsck` clean, SHA-256 spot checks match, and the scheduled task completes with result 0.
+Incremental runs take about two seconds.
 
 It's a **mirror**, so a file deleted here is deleted there on the next run (OneDrive's recycle bin
 keeps it 30 days). A mirror is used rather than putting the project inside OneDrive because OneDrive
