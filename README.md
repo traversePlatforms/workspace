@@ -37,7 +37,20 @@ Left exactly as it was; it was already the tidiest tree here. Start at [sixfold/
 
 Your independent websites-and-marketing offering: rate card, services page, pricing, outreach emails, hosting notes, and `matthew-sharpe-rates.pdf`.
 
-**The brand name is still open.** The old `rates-onesheet` files were branded "HORIZON" — that's **Donny's company**, not yours — so they sit in `_horizon-branded-superseded/` and should be rebuilt under whatever name you pick. Rename this folder then too.
+**The name is now "Stringline"** (chosen 2026-09-13) — the taut line a crew pulls to set a dead-true
+reference, which is what the offering sells. Work in progress in [matthew/branding/](matthew/branding/):
+
+- [name-clearance-screen.md](matthew/branding/name-clearance-screen.md) — 24 candidates screened against
+  Colorado entity records, domains and open-web conflicts. **Preliminary, not legal clearance.**
+- [stringline-identity.html](matthew/branding/stringline-identity.html) — three mark directions, the
+  chalk-line palette and the type system. Also at
+  https://claude.ai/code/artifact/2f7a9fa5-7586-44ec-b457-b14e67013fb3
+
+**Folder stays `matthew/` for now,** deliberately — the USPTO class 35 search is still open, and
+renaming twice is worse than renaming once. Rename to `stringline/` when clearance closes.
+
+The old `rates-onesheet` files were branded "HORIZON" — **Donny's company**, not yours — so they sit in
+`_horizon-branded-superseded/` and get rebuilt under the new mark.
 
 ## shared/ — used by more than one entity
 

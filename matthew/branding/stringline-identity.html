@@ -1,0 +1,465 @@
+<title>Stringline Identity</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* ---- brand values (light is the default state) ---------------------- */
+  :root{
+    --paper:#EEF0F3; --paper-hi:#F8F9FB;
+    --graphite:#171B21; --slate:#5C6673;
+    --chalk:#1E5AC8; --chalk-dust:#B9CCEE;
+    --red-chalk:#B03A2A;
+
+    --bg:var(--paper); --surface:var(--paper-hi);
+    --fg:var(--graphite); --muted:var(--slate);
+    --accent:var(--chalk); --accent-soft:var(--chalk-dust);
+    --line:#D3D9E0; --line-strong:#B9C2CD; --warn:var(--red-chalk);
+
+    --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+
+    --max:1080px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#12161B; --surface:#191F26;
+      --fg:#E6EAEF; --muted:#97A3B0;
+      --accent:#5B8FF5; --accent-soft:#24385C;
+      --line:#2A323C; --line-strong:#3A4450; --warn:#E0705C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12161B; --surface:#191F26;
+    --fg:#E6EAEF; --muted:#97A3B0;
+    --accent:#5B8FF5; --accent-soft:#24385C;
+    --line:#2A323C; --line-strong:#3A4450; --warn:#E0705C;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--fg);
+    font-family:var(--f-body); font-size:16px; line-height:1.6;
+    margin:0; padding:0 24px 96px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--max); margin:0 auto}
+
+  /* ---- title block (drafting convention) ------------------------------ */
+  .titleblock{
+    border-bottom:2px solid var(--fg);
+    padding:44px 0 18px; margin-bottom:40px;
+    display:grid; grid-template-columns:1fr auto; gap:28px; align-items:end;
+  }
+  .titleblock h1{
+    font-family:var(--f-display); font-weight:900; font-size:clamp(2.4rem,6vw,4rem);
+    letter-spacing:-.035em; line-height:.95; margin:0; text-wrap:balance;
+  }
+  .titleblock h1 em{font-style:normal; color:var(--accent)}
+  .lede{color:var(--muted); margin:14px 0 0; max-width:56ch}
+  .meta{
+    font-family:var(--f-mono); font-size:.7rem; line-height:1.9;
+    color:var(--muted); text-align:right; white-space:nowrap;
+  }
+  .meta b{color:var(--fg); font-weight:500}
+
+  /* ---- section scaffolding ------------------------------------------- */
+  section{margin:0 0 56px}
+  .eyebrow{
+    font-family:var(--f-mono); font-size:.68rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted);
+    display:flex; align-items:center; gap:12px; margin:0 0 6px;
+  }
+  .eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+  h2{
+    font-family:var(--f-display); font-weight:700; font-size:1.55rem;
+    letter-spacing:-.02em; margin:0 0 6px; text-wrap:balance;
+  }
+  .note{color:var(--muted); max-width:68ch; margin:0 0 22px}
+  p{max-width:68ch}
+
+  /* ---- drawing fields ------------------------------------------------ */
+  .fields{display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .field{
+    background:var(--surface); border:1px solid var(--line);
+    display:flex; flex-direction:column;
+  }
+  .field.pick{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
+  .stage{
+    padding:34px 26px 26px; display:flex; align-items:center; justify-content:center;
+    min-height:150px;
+  }
+  .stage svg{width:100%; max-width:240px; height:auto; display:block; overflow:visible}
+  .caption{
+    border-top:1px solid var(--line); padding:14px 18px 18px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .caption .id{
+    font-family:var(--f-mono); font-size:.68rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--accent);
+    display:flex; justify-content:space-between; gap:10px;
+  }
+  .caption .id .tag{color:var(--muted)}
+  .caption h3{font-family:var(--f-display); font-weight:700; font-size:1.02rem; margin:0; letter-spacing:-.01em}
+  .caption p{font-size:.86rem; color:var(--muted); margin:0; max-width:none}
+
+  /* ---- svg mark parts ------------------------------------------------ */
+  .taut{stroke:var(--accent); stroke-width:2.6; fill:none; stroke-linecap:square}
+  .crooked{stroke:var(--line-strong); stroke-width:2.2; fill:none; stroke-linecap:round}
+  .pin{fill:var(--fg)}
+  .tick{stroke:var(--line-strong); stroke-width:1.6}
+  .tick-key{stroke:var(--accent); stroke-width:2.6}
+  .dust{fill:var(--accent-soft)}
+
+  /* animation rule: the line is PULLED taut, left pin to right pin */
+  @keyframes pull{from{stroke-dashoffset:var(--len)} to{stroke-dashoffset:0}}
+  @keyframes seat{0%{transform:scale(.2)} 70%{transform:scale(1.18)} 100%{transform:scale(1)}}
+  .anim .taut{stroke-dasharray:var(--len); animation:pull .62s cubic-bezier(.22,1.1,.36,1) .15s both}
+  .anim .pin{transform-box:fill-box; transform-origin:center; animation:seat .3s ease-out both}
+  .anim .pin.b{animation-delay:.72s}
+  @media (prefers-reduced-motion:reduce){
+    .anim .taut,.anim .pin{animation:none; stroke-dashoffset:0; transform:none}
+  }
+
+  /* ---- recommendation ------------------------------------------------ */
+  .rec{
+    border-left:3px solid var(--accent); background:var(--surface);
+    padding:20px 24px; display:grid; gap:8px;
+  }
+  .rec .k{font-family:var(--f-mono); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent)}
+  .rec p{margin:0}
+
+  /* ---- wordmark ------------------------------------------------------ */
+  .lockups{display:grid; gap:20px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .lockup{background:var(--surface); border:1px solid var(--line); padding:34px 28px; display:grid; gap:8px; place-items:center}
+  .lockup.invert{background:var(--graphite)}
+  .wm{
+    font-family:var(--f-display); font-weight:900; font-size:1.9rem;
+    letter-spacing:-.045em; line-height:1; color:var(--fg); display:flex; align-items:center; gap:11px;
+  }
+  .lockup.invert .wm{color:var(--paper)}
+  .wm svg{height:.78em; width:auto; flex:none; overflow:visible}
+  .desc{
+    font-family:var(--f-mono); font-size:.66rem; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .lockup.invert .desc{color:var(--chalk-dust)}
+
+  /* ---- size test ----------------------------------------------------- */
+  .sizes{display:flex; align-items:flex-end; gap:34px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); padding:26px 28px}
+  .size{display:grid; gap:10px; justify-items:center}
+  .size svg{display:block; overflow:visible}
+  .size .px{font-family:var(--f-mono); font-size:.64rem; color:var(--muted)}
+
+  /* ---- palette ------------------------------------------------------- */
+  .swatches{display:grid; gap:1px; background:var(--line); border:1px solid var(--line)}
+  .sw{background:var(--surface); display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:18px; padding:13px 18px}
+  .chip{width:56px; height:36px; border:1px solid var(--line-strong)}
+  .sw .nm{font-weight:600; font-size:.92rem}
+  .sw .role{color:var(--muted); font-size:.84rem; display:block; font-weight:400}
+  .sw .hex{font-family:var(--f-mono); font-size:.8rem; color:var(--muted)}
+
+  /* ---- type specimen ------------------------------------------------- */
+  .spec{display:grid; gap:1px; background:var(--line); border:1px solid var(--line)}
+  .row{background:var(--surface); padding:18px 20px; display:grid; grid-template-columns:132px 1fr; gap:20px; align-items:baseline}
+  .row .lbl{font-family:var(--f-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .s-disp{font-family:var(--f-display); font-weight:900; font-size:1.7rem; letter-spacing:-.035em; line-height:1.1}
+  .s-body{font-family:var(--f-body); font-size:1rem}
+  .s-mono{font-family:var(--f-mono); font-size:.84rem}
+
+  /* ---- open items ---------------------------------------------------- */
+  .open{display:grid; gap:1px; background:var(--line); border:1px solid var(--line)}
+  .item{background:var(--surface); padding:15px 20px; display:grid; grid-template-columns:24px 1fr; gap:14px; align-items:start}
+  .item .n{font-family:var(--f-mono); font-size:.76rem; color:var(--accent); padding-top:2px}
+  .item.stop .n{color:var(--warn)}
+  .item p{margin:0; font-size:.93rem}
+  .item b{font-weight:600}
+
+  a{color:var(--accent); text-underline-offset:3px}
+  a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  footer{border-top:1px solid var(--line); margin-top:56px; padding-top:18px; font-family:var(--f-mono); font-size:.7rem; color:var(--muted)}
+</style>
+
+<div class="wrap">
+
+  <div class="titleblock">
+    <div>
+      <h1>Stringline<em>.</em></h1>
+      <p class="lede">Three mark directions, a palette taken from chalk-line chalk, and the
+      type system — for a solo web and marketing studio that sources every claim it makes.</p>
+    </div>
+    <div class="meta">
+      DRAWING &nbsp;<b>SL-ID-01</b><br>
+      PREPARED &nbsp;<b>2026-09-13</b><br>
+      STATUS &nbsp;&nbsp;&nbsp;<b>Draft — nothing registered</b><br>
+      CLEARANCE <b>Preliminary, class 35 open</b>
+    </div>
+  </div>
+
+  <!-- ============================ MARKS ============================ -->
+  <section>
+    <p class="eyebrow">Mark directions</p>
+    <h2>The line you check everything against</h2>
+    <p class="note">A stringline is the taut string pulled between two pins to set a dead-true line —
+    every measurement on the job references it. All three directions share that horizontal run, so
+    they read as one family. The difference is what each one says about it.</p>
+
+    <div class="fields">
+
+      <!-- A -->
+      <div class="field pick">
+        <div class="stage">
+          <svg class="anim" viewBox="0 0 120 46" role="img" aria-label="Stringline mark A: a dead-straight blue line above a crooked grey line, anchored by two pins" style="--len:92">
+            <path class="crooked" d="M14 34 Q25 27.5 36 34 Q47 40.5 58 34 Q69 27.5 80 34 Q91 40.5 102 34 L106 33.4"/>
+            <line class="taut" x1="14" y1="17" x2="106" y2="17"/>
+            <rect class="pin a" x="10.4" y="13.4" width="7.2" height="7.2"/>
+            <rect class="pin b" x="102.4" y="13.4" width="7.2" height="7.2"/>
+          </svg>
+        </div>
+        <div class="caption">
+          <span class="id">A — Taut Line <span class="tag">recommended</span></span>
+          <h3>Straight over crooked</h3>
+          <p>The true line, and the wobble it corrects. Says the thing the studio actually sells —
+          a checked claim against an unchecked one — without a word of copy.</p>
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="field">
+        <div class="stage">
+          <svg viewBox="0 0 120 46" role="img" aria-label="Stringline mark B: a straight line with a burst of chalk dust at its midpoint">
+            <line class="taut" x1="14" y1="25" x2="106" y2="25"/>
+            <rect class="pin" x="10.4" y="21.4" width="7.2" height="7.2"/>
+            <rect class="pin" x="102.4" y="21.4" width="7.2" height="7.2"/>
+            <g class="dust">
+              <circle cx="60" cy="15" r="2.1"/><circle cx="52" cy="17.5" r="1.5"/>
+              <circle cx="68" cy="18" r="1.3"/><circle cx="56" cy="11" r="1.15"/>
+              <circle cx="65" cy="11.5" r="1"/><circle cx="60" cy="35" r="1.7"/>
+              <circle cx="53" cy="33" r="1.2"/><circle cx="69" cy="33.5" r="1.05"/>
+            </g>
+          </svg>
+        </div>
+        <div class="caption">
+          <span class="id">B — The Snap <span class="tag">alt</span></span>
+          <h3>The moment it marks</h3>
+          <p>The snap that leaves the line on the deck. More energetic, and the dust gives a
+          texture to reuse in print. Loses the "versus" idea that makes A argue for itself.</p>
+        </div>
+      </div>
+
+      <!-- C -->
+      <div class="field">
+        <div class="stage">
+          <svg viewBox="0 0 120 46" role="img" aria-label="Stringline mark C: a straight line with graduated measurement ticks and one emphasised tick">
+            <line class="taut" x1="14" y1="27" x2="106" y2="27"/>
+            <g class="tick">
+              <line x1="24" y1="27" x2="24" y2="20"/><line x1="36" y1="27" x2="36" y2="22.5"/>
+              <line x1="48" y1="27" x2="48" y2="22.5"/><line x1="72" y1="27" x2="72" y2="22.5"/>
+              <line x1="84" y1="27" x2="84" y2="22.5"/><line x1="96" y1="27" x2="96" y2="20"/>
+            </g>
+            <line class="tick-key" x1="60" y1="27" x2="60" y2="13"/>
+            <rect class="pin" x="10.4" y="23.4" width="7.2" height="7.2"/>
+            <rect class="pin" x="102.4" y="23.4" width="7.2" height="7.2"/>
+          </svg>
+        </div>
+        <div class="caption">
+          <span class="id">C — The Datum <span class="tag">alt</span></span>
+          <h3>The graduated reference</h3>
+          <p>Reads as measurement and precision. The most literal, and the most like an
+          engineering firm — which is a risk when the buyer is a roofer, not an engineer.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:22px">
+      <strong>Animation rule for A</strong> — not a fade. The line is <em>pulled</em>: it draws from the
+      left pin to the right over 0.62s on an overshooting curve, the far pin seats as it arrives, and it
+      fires once. That is a rule specific to this mark, which is what
+      <a href="../services-pricing.md">the rate card</a> promises and a generic fade does not deliver.
+      Reload to watch it. Disabled under <code>prefers-reduced-motion</code>.
+    </p>
+  </section>
+
+  <!-- ========================= RECOMMENDATION ====================== -->
+  <section>
+    <div class="rec">
+      <span class="k">Recommendation</span>
+      <p><strong>Take A.</strong> It is the only one of the three that makes an argument. B and C
+      illustrate a tool; A illustrates the difference between a checked claim and an unchecked one,
+      which is the whole basis of the offering and the one thing a competitor cannot copy by
+      lowering a price.</p>
+      <p>It also survives being small, because at 16px the crooked line drops out and you are left
+      with two pins and a rule — still legible, still the same idea.</p>
+    </div>
+  </section>
+
+  <!-- ============================ LOCKUP =========================== -->
+  <section>
+    <p class="eyebrow">Wordmark</p>
+    <h2>The mark sits on the line, not beside it</h2>
+    <p class="note">Archivo Black at −0.045em, with the mark carrying the line into the word. The
+    descriptor is set in mono — it reads as a specification rather than a slogan, which is the
+    right register for a studio selling verifiability. It says what is sold and claims nothing.</p>
+
+    <div class="lockups">
+      <div class="lockup">
+        <span class="wm">
+          <svg viewBox="0 0 34 24" aria-hidden="true">
+            <path class="crooked" d="M4 18 Q9.5 14.5 15 18 Q20.5 21.5 26 18 L30 17.7" stroke-width="2.4"/>
+            <line class="taut" x1="4" y1="7" x2="30" y2="7" stroke-width="3"/>
+            <rect class="pin" x="1.2" y="4.2" width="5.6" height="5.6"/>
+            <rect class="pin" x="27.2" y="4.2" width="5.6" height="5.6"/>
+          </svg>
+          Stringline
+        </span>
+        <span class="desc">Websites &amp; marketing · sourced</span>
+      </div>
+      <div class="lockup invert">
+        <span class="wm">
+          <svg viewBox="0 0 34 24" aria-hidden="true">
+            <path d="M4 18 Q9.5 14.5 15 18 Q20.5 21.5 26 18 L30 17.7" fill="none" stroke="#5C6673" stroke-width="2.4" stroke-linecap="round"/>
+            <line x1="4" y1="7" x2="30" y2="7" stroke="#5B8FF5" stroke-width="3" stroke-linecap="square"/>
+            <rect x="1.2" y="4.2" width="5.6" height="5.6" fill="#EEF0F3"/>
+            <rect x="27.2" y="4.2" width="5.6" height="5.6" fill="#EEF0F3"/>
+          </svg>
+          Stringline
+        </span>
+        <span class="desc">Reversed — for dark ground and print</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ SIZES ============================ -->
+  <section>
+    <p class="eyebrow">Small-size test</p>
+    <h2>Where a mark actually fails</h2>
+    <p class="note">Drawn at true pixel sizes, not scaled screenshots. Below roughly 20px the crooked
+    line is dropped and the pins tighten — the same decision a foundry makes for an optical size.</p>
+
+    <div class="sizes">
+      <div class="size">
+        <svg width="96" height="42" viewBox="0 0 120 46" role="img" aria-label="Mark at 96 pixels">
+          <path class="crooked" d="M14 34 Q25 27.5 36 34 Q47 40.5 58 34 Q69 27.5 80 34 Q91 40.5 102 34 L106 33.4"/>
+          <line class="taut" x1="14" y1="17" x2="106" y2="17"/>
+          <rect class="pin" x="10.4" y="13.4" width="7.2" height="7.2"/>
+          <rect class="pin" x="102.4" y="13.4" width="7.2" height="7.2"/>
+        </svg>
+        <span class="px">96px · avatar</span>
+      </div>
+      <div class="size">
+        <svg width="48" height="21" viewBox="0 0 120 46" role="img" aria-label="Mark at 48 pixels">
+          <path class="crooked" d="M14 34 Q25 27.5 36 34 Q47 40.5 58 34 Q69 27.5 80 34 Q91 40.5 102 34 L106 33.4" stroke-width="3.4"/>
+          <line class="taut" x1="14" y1="17" x2="106" y2="17" stroke-width="3.6"/>
+          <rect class="pin" x="9.4" y="12.4" width="9.2" height="9.2"/>
+          <rect class="pin" x="101.4" y="12.4" width="9.2" height="9.2"/>
+        </svg>
+        <span class="px">48px</span>
+      </div>
+      <div class="size">
+        <svg width="32" height="32" viewBox="0 0 40 40" role="img" aria-label="Mark at 32 pixels, square">
+          <line class="taut" x1="6" y1="15" x2="34" y2="15" stroke-width="3.4"/>
+          <path class="crooked" d="M6 27 Q13 23 20 27 Q27 31 34 27" stroke-width="3"/>
+          <rect class="pin" x="3.4" y="12.4" width="5.2" height="5.2"/>
+          <rect class="pin" x="31.4" y="12.4" width="5.2" height="5.2"/>
+        </svg>
+        <span class="px">32px · favicon</span>
+      </div>
+      <div class="size">
+        <svg width="16" height="16" viewBox="0 0 40 40" role="img" aria-label="Mark at 16 pixels, simplified">
+          <line class="taut" x1="4" y1="16" x2="36" y2="16" stroke-width="5"/>
+          <line class="crooked" x1="4" y1="27" x2="36" y2="27" stroke-width="4.4"/>
+        </svg>
+        <span class="px">16px · tab</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ PALETTE ========================== -->
+  <section>
+    <p class="eyebrow">Palette</p>
+    <h2>Taken from the tool, not from a trend</h2>
+    <p class="note">Chalk-line chalk is blue — the standard temporary layout colour — and red is the
+    permanent one. That gives the brand a primary and an accent with a reason behind each, and it
+    lands in a hue neither Surge (green on near-black) nor Sixfold (ember on pine) occupies, so the
+    three never get confused in a folder or on a screen.</p>
+
+    <div class="swatches">
+      <div class="sw"><span class="chip" style="background:#1E5AC8"></span>
+        <span><span class="nm">Chalk Blue</span><span class="role">Primary. The line itself. Links, the mark, one emphasis per view.</span></span>
+        <span class="hex">#1E5AC8</span></div>
+      <div class="sw"><span class="chip" style="background:#B9CCEE"></span>
+        <span><span class="nm">Chalk Dust</span><span class="role">Tints, fills, chart areas, the settled-dust texture in print.</span></span>
+        <span class="hex">#B9CCEE</span></div>
+      <div class="sw"><span class="chip" style="background:#171B21"></span>
+        <span><span class="nm">Graphite</span><span class="role">Text and the dark ground. Cool-biased, so it sits under blue without going muddy.</span></span>
+        <span class="hex">#171B21</span></div>
+      <div class="sw"><span class="chip" style="background:#5C6673"></span>
+        <span><span class="nm">Slate</span><span class="role">Secondary text and the crooked line. A grey pulled toward the blue, deliberately.</span></span>
+        <span class="hex">#5C6673</span></div>
+      <div class="sw"><span class="chip" style="background:#EEF0F3"></span>
+        <span><span class="nm">Paper</span><span class="role">Light ground. Drafting stock, not cream — cream is every other studio's default.</span></span>
+        <span class="hex">#EEF0F3</span></div>
+      <div class="sw"><span class="chip" style="background:#B03A2A"></span>
+        <span><span class="nm">Red Chalk</span><span class="role">One job only: a correction, a rejected figure, a killed claim. Never decoration.</span></span>
+        <span class="hex">#B03A2A</span></div>
+    </div>
+  </section>
+
+  <!-- ============================ TYPE ============================= -->
+  <section>
+    <p class="eyebrow">Type</p>
+    <h2>Three roles, two families</h2>
+    <p class="note">Archivo carries the voice; IBM Plex Sans reads at length; IBM Plex Mono handles
+    anything that is a figure, a source, or a specification. That third role is not decorative — a
+    studio whose deliverables all carry a fact-check log needs a face that makes a table of sources
+    look like evidence rather than body copy.</p>
+
+    <div class="spec">
+      <div class="row"><span class="lbl">Display<br>Archivo 900</span><span class="s-disp">Every claim, traced</span></div>
+      <div class="row"><span class="lbl">Body<br>Plex Sans 400</span><span class="s-body">A stringline is the taut string pulled between two pins to set a dead-true line. Every measurement on the job references it.</span></div>
+      <div class="row"><span class="lbl">Data<br>Plex Mono 400</span><span class="s-mono">BrightLocal 2024 · n=385 · verified 2026-09-13 · $1,779/mo</span></div>
+    </div>
+  </section>
+
+  <!-- ============================ OPEN ============================= -->
+  <section>
+    <p class="eyebrow">Before this goes on anything</p>
+    <h2>What is still open</h2>
+
+    <div class="open">
+      <div class="item stop">
+        <span class="n">01</span>
+        <p><b>The entity question, first.</b> This offering overlaps Surge's line of business. Whether
+        Stringline is a separate entity, a trade name, or a Surge sub-offering decides who the client
+        contracts with — and a name cannot be registered sensibly until it is settled. See
+        <a href="../services-pricing.md">services-pricing.md</a> §8.</p>
+      </div>
+      <div class="item stop">
+        <span class="n">02</span>
+        <p><b>USPTO class 35 search.</b> Could not be reached from here — the portal is a JavaScript
+        application. This is the one real gap in
+        <a href="name-clearance-screen.md">the clearance screen</a>, and it is twenty minutes of an
+        attorney's time.</p>
+      </div>
+      <div class="item">
+        <span class="n">03</span>
+        <p><b>Domain.</b> <code>stringlineco.com</code> is the recommendation. <code>stringline.com</code>
+        is a parked for-sale listing rather than a live business — worth a price check first.</p>
+      </div>
+      <div class="item">
+        <span class="n">04</span>
+        <p><b>Two out-of-state "StringLine Construction" companies exist</b> — Kansas and the Gulf
+        Coast. Different class, different state, neither in marketing. But since the buyers <em>are</em>
+        contractors, the descriptor has to do the work of saying which side of the job this is.</p>
+      </div>
+      <div class="item">
+        <span class="n">05</span>
+        <p><b>Pick the mark</b>, then the rest follows: favicon set, social profile and banner set,
+        and the rate sheet rebuilt off the Horizon-branded version it currently lives in.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    STRINGLINE IDENTITY · SL-ID-01 · DRAFT 2026-09-13 · NOTHING REGISTERED, PURCHASED OR PRINTED<br>
+    Clearance: <a href="name-clearance-screen.md">name-clearance-screen.md</a> — preliminary, not legal clearance.
+  </footer>
+</div>
