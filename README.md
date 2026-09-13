@@ -76,7 +76,7 @@ Nothing here is referenced by live work. Delete any pile you're confident about.
 
 **Not tracked** — see [.gitignore](.gitignore): raw video (3.2 GB), the `surge/brand/photos/` image tree (~500 MB), camera `.heic` originals, `node_modules/`, `**/deploy/dist/` bundles, `.zip`/`.wpress` archives, and the `_archive/` payload (its `README.md` and the move manifest *are* tracked).
 
-> **Git is not a backup for the excluded media.** Roughly 3.9 GB of video and photos sits outside version control and needs a real backup.
+> **Git is not a backup for the excluded media.** Roughly 3.9 GB of video and photos sits outside version control — that's what the OneDrive mirror below is for.
 
 Useful:
 ```
@@ -88,8 +88,33 @@ git checkout -- <file>         # undo edits to one file
 
 `core.autocrlf` is `false` repo-local, deliberately — git must not rewrite line endings on files whose encoding was just repaired.
 
-## Two other things to know
+## Backup
 
-**There is a stale duplicate of this project in OneDrive.** `C:\Users\Surge Inc\OneDrive\Desktop\claude test 2` is ~3.7 GB, frozen around 2026-09-04, still on the old folder structure. Left over from when OneDrive Desktop backup was enabled. **This folder — the live one — is not synced to OneDrive.** Don't edit the OneDrive copy; decide whether to delete it or make it the backup.
+**Everything** — including the video, the photo tree and `.git` — mirrors to
+`C:\Users\Surge Inc\OneDrive\Backups\claude test 2`, which OneDrive then syncs off the machine.
+
+```
+.\shared\tools\Backup-ToOneDrive.ps1 -WhatIf    # see what would change
+.\shared\tools\Backup-ToOneDrive.ps1            # run it
+```
+
+First run 2026-09-13: 3,003 files / 3.92 GB. Verified — git can read the mirrored repo with full
+history, and SHA-256 spot checks match.
+
+It's a **mirror**, so a file deleted here is deleted there on the next run (OneDrive's recycle bin
+keeps it 30 days). A mirror is used rather than putting the project inside OneDrive because OneDrive
+live-syncing an active `.git` directory can corrupt the repo. **Run it after any significant session.**
+
+> The live folder itself is **not** OneDrive-synced. The backup is the only off-machine copy.
+
+### The old stale duplicate — safe to delete
+
+`C:\Users\Surge Inc\OneDrive\Desktop\claude test 2` is a **superseded** ~3.7 GB copy, frozen around
+2026-09-04 on the old folder structure, left over from when OneDrive Desktop backup was enabled.
+It was compared against the live folder: only two files existed there and nowhere else
+(`brand/photos/People/John wallace.jpeg` and a 2026-09-04 screenshot), and **both have been copied
+across**. Everything else in it is older than its live counterpart.
+
+Deleting it reclaims ~3.7 GB. Don't edit it — it is not the working tree.
 
 **Don't edit markdown with PowerShell.** `Get-Content -Raw` in PowerShell 5.1 reads UTF-8 as ANSI and silently double-encodes every em-dash on write. Use the editor, or Node. See the note at the end of [CLAUDE.md](CLAUDE.md).
