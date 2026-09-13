@@ -1,0 +1,8 @@
+# Surge — STAGING POSTURE.
+# Every page also carries <meta name="robots" content="noindex">.
+# AT LAUNCH: delete the Disallow line below AND remove the noindex meta
+# from every page (see DEPLOY.md).
+User-agent: *
+Disallow: /
+
+Sitemap: https://surgeftw.com/sitemap.xml

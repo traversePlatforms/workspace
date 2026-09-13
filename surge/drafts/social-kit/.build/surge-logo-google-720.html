@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden;
+       font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"DejaVu Sans Mono",monospace}
+  .art{position:relative;overflow:hidden}
+  svg{display:block}
+
+  /* avatar */
+  .avatar{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .avatar .lift{position:absolute;inset:0;
+    background:radial-gradient(120% 120% at 30% 0%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%)}
+  .avatar .bwrap{position:relative;width:50%;display:flex;align-items:center;justify-content:center;
+    transform:translate(-1.5%,-3%)}
+  .avatar .bars{width:100%;height:auto}
+
+  /* instagram highlight */
+  .hl{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .hl .lift{position:absolute;inset:0;
+    background:radial-gradient(120% 120% at 30% 0%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%)}
+  .hl .hlicon{position:relative;width:34%;height:34%}
+
+  /* banner */
+  .banner .glow{position:absolute;inset:0;background:
+    radial-gradient(120% 150% at 50% 118%, rgba(74,190,74,.16) 0%, rgba(74,190,74,.04) 40%, rgba(74,190,74,0) 68%)}
+  .banner .bwrap .bars-svg{width:100%;height:100%}
+  .floor{position:absolute;left:0;right:0}
+  .stack{position:absolute;inset:0;display:flex;flex-direction:column;
+         align-items:center;justify-content:center;padding:0 5%}
+  .banner .lock{display:flex;align-items:center;justify-content:center}
+  .banner .lock .bwrap{display:flex;align-items:center;justify-content:center}
+  .banner .row{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .banner .row .bwrap{display:flex;align-items:center;justify-content:center}
+  .wm-wrap{position:relative}
+  .wm-wrap .wm{width:100%;height:auto;fill:currentColor}
+  .desc{text-transform:uppercase;letter-spacing:.2em;text-indent:.2em;
+        white-space:nowrap;font-weight:400}
+
+    body{width:720px;height:720px}
+    .art{width:720px;height:720px}</style>
+<div class="art avatar" style="background:#0a0a0a">
+  <div class="lift"></div>
+  <div class="bwrap"><svg class="bars" viewBox="0 0 120 90" role="img" aria-label="Surge" style="color:#4abe4a">
+     <g fill="currentColor">
+  <rect x="0"  y="72" width="80" height="18"/>
+  <rect x="20" y="42" width="80" height="18"/>
+  <rect x="40" y="12" width="80" height="18"/></g>
+   </svg></div>
+</div>

@@ -1,0 +1,643 @@
+<title>Horizon Rates</title>
+<style>
+  /* ------------------------------------------------------------------
+     HORIZON — one-page rate sheet.
+
+     Condensed from services-page.html (7 pages) and services-pricing.md
+     (the internal source of truth).
+
+     REVISED 2026-08-24, on his instruction. Monthly rates now carry a
+     commitment discount (-$100/-$200/-$400) for signing up for a month
+     rather than paying weekly; a twelve-month Engine or Pipeline term
+     includes the website build outright rather than halving it; the word
+     "retainer" is out of public copy entirely, along with the non-monthly
+     ad-management option and the -15% line. All three files were updated
+     together — this sheet, services-page.html and services-pricing.md —
+     because three files disagreeing about a price is how a wrong number
+     reaches a client. The margin implication of the new rates is written
+     up in services-pricing.md §2 and is NOT resolved.
+
+     Deliberately LEFT OUT, because this sheet goes to everyone:
+       - market comparables and effective hourly rates (internal reasoning)
+       - "the tier to sell" / margin logic (internal)
+       - the bad-fit list (that is a conversation, not a leave-behind)
+       - process narrative and the "worth knowing" essays (they live on
+         the full page, which this sheet links nobody to and replaces)
+
+     Committed single visual world: ink on paper. No dark theme by
+     design — this exists to be sent and printed, and a dark ground is
+     unprintable. Every colour is painted explicitly so the sheet holds
+     on any host background.
+
+     Palette is taken off the logo: true black, the sun's amber gradient,
+     white. Nothing else.
+
+     ONE PAGE IS THE SPEC. Verified by printing to PDF and counting the
+     pages, not by looking at the screen.
+     ------------------------------------------------------------------ */
+  :root {
+    --paper: #FFFFFF;
+    --tint: #FDF4E7;          /* warm block fill, off the sun's light end */
+    --tint-edge: #F0DCBE;
+    --ink: #000000;           /* the mark is true black; match it */
+    --ink-mid: #3F3B37;
+    --ink-soft: #6E6862;
+    --amber: #F5872B;         /* rules and display figures */
+    --amber-light: #FBBB4A;
+    --amber-text: #B85E10;    /* small text on white — holds contrast */
+
+    --f-display: "Times New Roman", "Liberation Serif", Times, Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: #241F1B; }
+
+  body {
+    margin: 0;
+    background: #241F1B;
+    color: var(--ink);
+    font-family: var(--f-body);
+    padding: 24px 12px 48px;
+  }
+
+  .sheet {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.38in 0.46in 0;
+    font-size: 8.4pt;
+    line-height: 1.36;
+    box-shadow: 0 8px 34px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Masthead ------------------------------------------------------- */
+  .top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.3in;
+    padding-bottom: 3pt;
+    border-bottom: 2.5pt solid var(--amber);
+  }
+  .mark { width: 112pt; height: auto; display: block; }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 5.8pt;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--amber-text);
+    margin: 3pt 0 0 3pt;
+  }
+  .reach { text-align: right; margin: 0; line-height: 1.5; }
+  .reach .tel {
+    font-family: var(--f-display);
+    font-size: 12pt;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    display: block;
+  }
+  .reach .placeholder {
+    border-bottom: 1.2pt dashed var(--amber);
+    color: var(--amber-text);
+  }
+  .reach .rest {
+    font-family: var(--f-data);
+    font-size: 6.6pt;
+    letter-spacing: 0.04em;
+    color: var(--ink-mid);
+    display: block;
+    margin-top: 2pt;
+  }
+  .reach .meta {
+    font-family: var(--f-data);
+    font-size: 5.9pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: block;
+    margin-top: 4pt;
+  }
+
+  /* Headline ------------------------------------------------------- */
+  .headline {
+    font-family: var(--f-display);
+    font-size: 16pt;
+    line-height: 1.06;
+    letter-spacing: -0.012em;
+    margin: 6pt 0 2.5pt;
+  }
+  .sub {
+    margin: 0 0 7pt;
+    font-size: 8pt;
+    color: var(--ink-mid);
+    max-width: 6.4in;
+  }
+  .sub b { color: var(--ink); font-weight: 600; }
+
+  /* Section headers ------------------------------------------------ */
+  .shead {
+    display: flex;
+    align-items: baseline;
+    gap: 7pt;
+    margin: 4.5pt 0 3pt;
+    border-bottom: 0.8pt solid var(--ink);
+    padding-bottom: 3pt;
+  }
+  .shead h2 {
+    font-family: var(--f-display);
+    font-size: 11.4pt;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .shead .note {
+    font-family: var(--f-data);
+    font-size: 6.1pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-left: auto;
+  }
+
+  /* Tiers ---------------------------------------------------------- */
+  .tiers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9pt; }
+  .tier {
+    border: 0.8pt solid var(--tint-edge);
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+  }
+  .tier.pick { border-color: var(--ink); }
+  .tier .cap {
+    background: var(--tint);
+    border-bottom: 0.8pt solid var(--tint-edge);
+    padding: 4pt 6pt 4.5pt;
+  }
+  .tier.pick .cap {
+    background: linear-gradient(100deg, var(--amber-light), var(--amber));
+    border-bottom-color: var(--ink);
+  }
+  .tier h3 {
+    font-family: var(--f-display);
+    font-size: 12pt;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  .tier .who {
+    margin: 1pt 0 0;
+    font-size: 7.2pt;
+    color: var(--ink-mid);
+    line-height: 1.32;
+    min-height: 16pt;
+  }
+  .tier.pick .who { color: #3A2405; }
+  .tier .money {
+    display: flex;
+    align-items: baseline;
+    gap: 5pt;
+    padding: 4.5pt 6pt 4pt;
+    border-bottom: 0.5pt solid var(--tint-edge);
+  }
+  .tier .mo {
+    font-family: var(--f-display);
+    font-size: 18.5pt;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+  .tier .per {
+    font-family: var(--f-data);
+    font-size: 6.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .tier .wk {
+    margin-left: auto;
+    text-align: right;
+    font-family: var(--f-data);
+    font-size: 6.6pt;
+    color: var(--ink-mid);
+    line-height: 1.3;
+  }
+  .tier .wk b { font-size: 9.4pt; color: var(--ink); display: block; }
+  .tier ul {
+    margin: 0;
+    padding: 5pt 6pt 5pt 16pt;
+    list-style: none;
+    flex: 1;
+  }
+  .tier li {
+    position: relative;
+    margin-bottom: 2.6pt;
+    font-size: 7.2pt;
+    line-height: 1.27;
+  }
+  .tier li::before {
+    content: "";
+    position: absolute;
+    left: -9pt;
+    top: 3pt;
+    width: 3.6pt;
+    height: 3.6pt;
+    background: var(--amber);
+  }
+  .tier li.carry { font-weight: 600; }
+  .tier li.carry::before { background: var(--ink); }
+
+  .tier .save {
+    margin: 0;
+    padding: 3pt 6pt 3.5pt;
+    border-bottom: 0.5pt solid var(--tint-edge);
+    font-family: var(--f-data);
+    font-size: 6.2pt;
+    letter-spacing: 0.02em;
+    color: var(--amber-text);
+  }
+
+  /* The weekly note ------------------------------------------------ */
+  .honest {
+    margin: 6pt 0 0;
+    padding: 4pt 8pt;
+    background: var(--tint);
+    border-left: 2.5pt solid var(--amber);
+    font-size: 7.6pt;
+    line-height: 1.4;
+    color: var(--ink-mid);
+  }
+  .honest b { color: var(--ink); }
+
+  /* Two-column band ------------------------------------------------ */
+  .band { display: grid; grid-template-columns: 1.02fr 1fr; gap: 16pt; }
+
+  /* Price rows ----------------------------------------------------- */
+  .rows { width: 100%; border-collapse: collapse; }
+  .rows td {
+    padding: 2.2pt 0;
+    border-bottom: 0.4pt dotted var(--tint-edge);
+    vertical-align: baseline;
+    font-size: 7.5pt;
+  }
+  .rows td.p {
+    text-align: right;
+    white-space: nowrap;
+    font-family: var(--f-display);
+    font-size: 9pt;
+    padding-left: 8pt;
+  }
+  .rows tr.big td { font-size: 7.9pt; }
+  .rows tr.big td.p { font-size: 10.6pt; }
+  .rows td small { display: block; color: var(--ink-soft); font-size: 6.2pt; }
+
+  .terms-line {
+    margin: 5pt 0 0;
+    font-size: 7.4pt;
+    color: var(--ink-mid);
+    line-height: 1.38;
+  }
+  .terms-line b { color: var(--ink); }
+
+  .lever {
+    margin: 6pt 0 0;
+    padding: 4pt 7pt;
+    border: 0.8pt solid var(--ink);
+    font-size: 7.5pt;
+    line-height: 1.36;
+  }
+  .lever b { font-family: var(--f-display); font-size: 9pt; }
+
+  .cols2 { columns: 2; column-gap: 14pt; }
+
+  /* Terms strip ---------------------------------------------------- */
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 8pt;
+    border-top: 0.8pt solid var(--ink);
+    border-bottom: 0.8pt solid var(--ink);
+  }
+  .strip div {
+    padding: 3.5pt 8pt 3.5pt 0;
+    border-right: 0.4pt solid var(--tint-edge);
+  }
+  .strip div:last-child { border-right: 0; }
+  .strip span {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 11pt;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .strip p {
+    margin: 3pt 0 0;
+    font-size: 6.5pt;
+    line-height: 1.28;
+    color: var(--ink-mid);
+  }
+
+  /* Footer band ---------------------------------------------------- */
+  .foot {
+    margin: 7pt -0.46in 0;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5pt 0.46in 6pt;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.3in;
+  }
+  .foot h2 {
+    font-family: var(--f-display);
+    font-size: 11.8pt;
+    margin: 0 0 3pt;
+    letter-spacing: -0.005em;
+    color: var(--paper);
+  }
+  .foot p { margin: 0; font-size: 7.1pt; color: #D8D2CB; max-width: 4.5in; line-height: 1.4; }
+  .foot .contact { text-align: right; white-space: nowrap; }
+  .foot .contact .tel {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 13pt;
+    color: var(--amber-light);
+    line-height: 1.1;
+  }
+  .foot .contact .tel.placeholder { border-bottom: 1.2pt dashed var(--amber); }
+  .foot .contact .em {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 7.2pt;
+    color: var(--paper);
+    margin-top: 3pt;
+  }
+  .foot .contact .loc {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 5.9pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9C948B;
+    margin-top: 4pt;
+  }
+
+  .proof {
+    max-width: 8.5in;
+    margin: 14px auto 0;
+    color: #8D8378;
+    font-family: var(--f-data);
+    font-size: 10px;
+    text-align: center;
+  }
+
+  /* On screen the sheet holds a full 11in page, so push the footer band
+     to the foot of it rather than leaving a white sliver underneath.
+     In print there is no min-height, so this does nothing. */
+  @media screen { .foot { margin-top: auto; } }
+
+  /* Print ---------------------------------------------------------- */
+  @page { size: letter; margin: 0.3in 0.46in; }
+  @media print {
+    html, body { background: #FFFFFF; }
+    body { padding: 0; }
+    .sheet {
+      width: auto;
+      min-height: 0;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+    }
+    .foot { margin-left: -0.46in; margin-right: -0.46in; }
+    .proof { display: none; }
+    .tier, .strip, .lever, .honest { break-inside: avoid; }
+  }
+
+  /* Small screens: the sheet is a fixed-width document, so let it
+     scroll rather than reflow into something that is not the page. */
+  @media (max-width: 8.9in) {
+    body { padding: 12px 0 24px; overflow-x: auto; }
+    .sheet { box-shadow: none; }
+  }
+</style>
+
+
+<div class="sheet">
+
+  <!-- Masthead ---------------------------------------------------- -->
+  <header class="top">
+    <div>
+      <svg class="mark" viewBox="60 300 1480 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Horizon">
+        <defs>
+          <linearGradient id="sun" x1="0" y1="0" x2="1" y2="0.35">
+            <stop offset="0" stop-color="#FBBB4A"/>
+            <stop offset="0.55" stop-color="#F9A83C"/>
+            <stop offset="1" stop-color="#F5872B"/>
+          </linearGradient>
+        </defs>
+        <path d="M205,760 A595,595 0 0 1 1395,760 Z" fill="url(#sun)"/>
+        <g fill="#000000" stroke="#ffffff" stroke-width="11" stroke-linejoin="miter">
+          <polygon points="106,532 120,408 134,532"/>
+          <polygon points="157,532 173,398 189,532"/>
+          <rect x="95" y="525" width="105" height="270"/>
+          <rect x="209" y="470" width="16" height="325"/>
+          <rect x="222" y="455" width="80" height="340"/>
+          <rect x="298" y="545" width="30" height="250"/>
+          <rect x="308" y="575" width="60" height="220"/>
+          <rect x="370" y="365" width="112" height="430"/>
+          <rect x="482" y="452" width="92" height="343"/>
+          <polygon points="574,472 716,414 716,795 574,795"/>
+          <rect x="712" y="425" width="86" height="370"/>
+          <rect x="856" y="450" width="82" height="345"/>
+          <path d="M938,795 L938,402 Q938,318 1026,318 Q1114,318 1114,402 L1114,795 Z"/>
+          <rect x="1125" y="486" width="110" height="309"/>
+          <rect x="1297" y="392" width="11" height="60"/>
+          <rect x="1255" y="430" width="92" height="365"/>
+          <path d="M1362,795 L1362,520 Q1392,470 1422,520 L1422,795 Z"/>
+          <rect x="1432" y="545" width="42" height="250"/>
+          <path d="M1478,795 L1478,540 Q1508,486 1538,540 L1538,795 Z"/>
+          <polygon points="1444,548 1453,505 1462,548"/>
+        </g>
+        <g fill="#000000" stroke="#ffffff" stroke-width="11" stroke-linejoin="miter">
+          <path d="M766,455 L858,455 L858,795 L826,795 L826,520 L798,520 L798,795 L766,795 Z"/>
+          <rect x="766" y="648" width="92" height="147"/>
+        </g>
+        <rect x="68" y="748" width="1464" height="196" fill="#000000"/>
+        <text x="837" y="893" fill="#ffffff" text-anchor="middle"
+              font-family="'Times New Roman', Times, Georgia, serif"
+              font-size="146" letter-spacing="74">HORIZON</text>
+      </svg>
+      <p class="descriptor">Websites &middot; Design &middot; Social &middot; Local search</p>
+    </div>
+    <p class="reach">
+      <span class="tel placeholder">(000) 000&ndash;0000</span>
+      <span class="rest">Matthew.c.sharpe@gmail.com</span>
+      <span class="meta">Englewood, Colorado &middot; Rates for 2026</span>
+    </p>
+  </header>
+
+  <h1 class="headline">Websites, and the marketing that keeps them busy.</h1>
+  <p class="sub">Sites, print, social, local search, and the tracking underneath that tells you where leads actually came from &mdash; five things usually sold as five contracts by five companies. <b>You deal with me directly</b>, not an account manager. Here is what all of it costs.</p>
+
+  <!-- Tiers -------------------------------------------------------- -->
+  <div class="shead">
+    <h2>Monthly, three tiers</h2>
+    <span class="note">No setup fee &middot; nothing longer than twelve months</span>
+  </div>
+
+  <div class="tiers">
+
+    <div class="tier">
+      <div class="cap">
+        <h3>Foundation</h3>
+        <p class="who">For a business whose online presence does not currently work.</p>
+      </div>
+      <div class="money">
+        <span class="mo">$700</span><span class="per">/ month</span>
+        <span class="wk"><b>$200</b>a week</span>
+      </div>
+      <p class="save">$100 off for committing to a month</p>
+      <ul>
+        <li>Your site hosted, maintained and updated &mdash; up to 7 pages</li>
+        <li>Two content updates a month</li>
+        <li>Google Business Profile set up and optimised</li>
+        <li>Four social posts a month, one platform</li>
+        <li>A one-page report every month</li>
+      </ul>
+    </div>
+
+    <div class="tier pick">
+      <div class="cap">
+        <h3>Engine</h3>
+        <p class="who">For a business that wants steady output rather than a one-off fix.</p>
+      </div>
+      <div class="money">
+        <span class="mo">$1,400</span><span class="per">/ month</span>
+        <span class="wk"><b>$400</b>a week</span>
+      </div>
+      <p class="save">$200 off for committing to a month</p>
+      <ul>
+        <li class="carry">Everything in Foundation</li>
+        <li>Up to 15 pages, unlimited edits, one new page a month</li>
+        <li>Twelve posts a month across two platforms, plus a designed graphic</li>
+        <li>Weekly Google posts, review requests, listings cleaned up</li>
+        <li>A campaign landing page every quarter</li>
+        <li>Lead forms with call and form tracking</li>
+        <li>A working session with me every month</li>
+      </ul>
+    </div>
+
+    <div class="tier">
+      <div class="cap">
+        <h3>Pipeline</h3>
+        <p class="who">For a business with demand already, and nothing catching it.</p>
+      </div>
+      <div class="money">
+        <span class="mo">$2,800</span><span class="per">/ month</span>
+        <span class="wk"><b>$800</b>a week</span>
+      </div>
+      <p class="save">$400 off for committing to a month</p>
+      <ul>
+        <li class="carry">Everything in Engine</li>
+        <li>Your Google and Meta ads managed on up to $10,000 a month of your own ad spend &mdash; creative and copy included, and you pay the platforms directly</li>
+        <li>Twenty posts a month across three platforms, plus two designed graphics</li>
+        <li>Two researched articles a month for your site</li>
+        <li>Lead response and tracking built and maintained</li>
+        <li>A strategy review each quarter, print work as needed</li>
+        <li>A report every week</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="honest"><b>Weekly and monthly buy exactly the same work.</b> The weekly rate is a quarter of the standard monthly one, so four weeks of Engine is $1,600. Commit to a single month and $200 of that comes off. A month also averages 4.33 weeks rather than four, so roughly every third month carries a fifth week at no extra charge. Over a year that is $16,800 monthly against $20,800 weekly &mdash; and weekly still lets you stop on a week&rsquo;s notice.</p>
+
+  <!-- Builds + one-off --------------------------------------------- -->
+  <div class="band">
+
+    <section>
+      <div class="shead">
+        <h2>Websites</h2>
+        <span class="note">Separate from the monthly</span>
+      </div>
+      <table class="rows">
+        <tr class="big"><td>Starter <small>up to 7 pages</small></td><td class="p">$2,200</td></tr>
+        <tr class="big"><td>Standard <small>8 to 15 pages</small></td><td class="p">$4,500</td></tr>
+        <tr class="big"><td>Custom <small>16 to 30 pages, data-driven</small></td><td class="p">$8,000</td></tr>
+      </table>
+      <p class="terms-line"><b>The monthly tiers run your site. They don&rsquo;t build it.</b> An existing site is picked up as it is, with no build fee. A new one, or a replacement, is the number above &mdash; paid once, half at signing and half at launch. You own the site and the source files once it is paid for.</p>
+      <p class="lever"><b>A year of Engine or Pipeline includes the website.</b><br>Commit to twelve months on either tier and there is no build fee at all &mdash; up to 15 pages on Engine, up to 30 on Pipeline.</p>
+
+    </section>
+
+    <section>
+      <div class="shead">
+        <h2>One-off work</h2>
+        <span class="note">Bought on its own, no monthly</span>
+      </div>
+      <div class="cols2">
+        <table class="rows">
+          <tr><td>Brand identity <small>mark, colours, type, usage rules</small></td><td class="p">$1,500</td></tr>
+          <tr><td>Logo on its own</td><td class="p">$600</td></tr>
+          <tr><td>Landing page</td><td class="p">$900</td></tr>
+          <tr><td>Printed document set <small>agreements, checklists, field sheets</small></td><td class="p">$850</td></tr>
+          <tr><td>Infographic or carousel</td><td class="p">$250</td></tr>
+          <tr><td>Set of four graphics</td><td class="p">$900</td></tr>
+          <tr><td>Social profile and banner set</td><td class="p">$350</td></tr>
+          <tr><td>Branded QR codes</td><td class="p">$120</td></tr>
+          <tr><td>Researched article <small>1,200&ndash;1,600 words, sourced</small></td><td class="p">$400</td></tr>
+          <tr><td>Twelve social posts, one platform</td><td class="p">$500</td></tr>
+          <tr><td>Competitor and market research report</td><td class="p">$1,200</td></tr>
+          <tr><td>Marketing plan <small>phases, budget, measures</small></td><td class="p">$1,800</td></tr>
+        </table>
+      </div>
+
+      <div class="shead">
+        <h2>One thing, before you ask</h2>
+        <span class="note">Better here than later</span>
+      </div>
+      <p class="terms-line"><b>Anything I write for you, I check first.</b> A number or claim going on your site comes from an original source and I keep a record of what I checked.</p>
+    </section>
+
+  </div>
+
+  <!-- Terms strip -------------------------------------------------- -->
+  <div class="strip">
+    <div>
+      <span>None</span>
+      <p>Setup or onboarding fee</p>
+    </div>
+    <div>
+      <span>30 days</span>
+      <p>Notice to stop, or a week on weekly</p>
+    </div>
+    <div>
+      <span>12 months</span>
+      <p>Longest commitment I ask for, and how long these rates hold from signing</p>
+    </div>
+    <div>
+      <span>Yours</span>
+      <p>Every file, once paid for. Your Google profile and ad accounts stay in your name</p>
+    </div>
+  </div>
+
+  <!-- Footer ------------------------------------------------------- -->
+  <div class="foot">
+    <div>
+      <h2>Tell me what the business does and where the work comes from now.</h2>
+      <p>That is genuinely enough to start with. You get me on the phone, not a receptionist and not a queue. If I don&rsquo;t think I am the right fit, I will say so instead.</p>
+    </div>
+    <div class="contact">
+      <span class="tel placeholder">(000) 000&ndash;0000</span>
+      <span class="em">Matthew.c.sharpe@gmail.com</span>
+      <span class="loc">Englewood, Colorado</span>
+    </div>
+  </div>
+
+</div>
+
+

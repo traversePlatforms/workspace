@@ -1,0 +1,1082 @@
+<title>Charity Partner Standards Review</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#f7f8fa;
+    --card:#ffffff;
+    --ink:#1a1d21;
+    --ink-soft:#55606b;
+    --ink-faint:#8b95a1;
+    --rule:#dce0e5;
+    --rule-strong:#c3cad2;
+    --field:#ffffff;
+    --accent:#1f3d5c;
+    --accent-ink:#1f3d5c;
+    --accent-soft:#eaeff4;
+    --pass:#2e7d4f;      --pass-bg:#e6f0e9;
+    --minor:#9a6b16;     --minor-bg:#f5eedc;
+    --concern:#b0512a;   --concern-bg:#f4e6df;
+    --fail:#a12e2e;      --fail-bg:#f3e1e1;
+    --na:#626b76;        --na-bg:#e9ebee;
+    --shadow:0 1px 2px rgba(26,29,33,.06), 0 1px 1px rgba(26,29,33,.04);
+    --maxw:52rem;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#121519;
+      --card:#191d22;
+      --ink:#e8eaed;
+      --ink-soft:#a7b0ba;
+      --ink-faint:#727d89;
+      --rule:#2b323a;
+      --rule-strong:#3b444e;
+      --field:#0f1216;
+      --accent:#8fb4da;
+      --accent-ink:#a9c6e4;
+      --accent-soft:#1c2836;
+      --pass:#6cc08a;      --pass-bg:#17281e;
+      --minor:#d0a862;     --minor-bg:#2a2313;
+      --concern:#dd8a63;   --concern-bg:#2c1e17;
+      --fail:#e08585;      --fail-bg:#2c1717;
+      --na:#8a939e;        --na-bg:#22262b;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#121519; --card:#191d22; --ink:#e8eaed; --ink-soft:#a7b0ba; --ink-faint:#727d89;
+    --rule:#2b323a; --rule-strong:#3b444e; --field:#0f1216;
+    --accent:#8fb4da; --accent-ink:#a9c6e4; --accent-soft:#1c2836;
+    --pass:#6cc08a; --pass-bg:#17281e; --minor:#d0a862; --minor-bg:#2a2313;
+    --concern:#dd8a63; --concern-bg:#2c1e17; --fail:#e08585; --fail-bg:#2c1717;
+    --na:#8a939e; --na-bg:#22262b; --shadow:none;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem) 6rem}
+  p{max-width:64ch}
+
+  /* ---- sticky progress bar (screen only) ---- */
+  .tally{
+    position:sticky;top:0;z-index:20;
+    background:var(--card);
+    border-bottom:1px solid var(--rule-strong);
+    box-shadow:var(--shadow);
+  }
+  .tally-inner{
+    max-width:var(--maxw);margin:0 auto;
+    padding:.6rem clamp(1rem,4vw,2.5rem);
+    display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .9rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.74rem;
+  }
+  .tally-inner .lead{
+    font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-soft);margin-right:.2rem;
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:.4rem;
+    padding:.16rem .5rem;border-radius:2px;border:1px solid var(--rule-strong);
+    white-space:nowrap;font-variant-numeric:tabular-nums;
+  }
+  .chip b{font-weight:600}
+  .chip.pass{background:var(--pass-bg);border-color:var(--pass);color:var(--pass)}
+  .chip.minor{background:var(--minor-bg);border-color:var(--minor);color:var(--minor)}
+  .chip.concern{background:var(--concern-bg);border-color:var(--concern);color:var(--concern)}
+  .chip.fail{background:var(--fail-bg);border-color:var(--fail);color:var(--fail)}
+  .chip.na{background:var(--na-bg);border-color:var(--na);color:var(--na)}
+  .tally .actions{margin-left:auto;display:flex;gap:.5rem}
+  .btn{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;
+    letter-spacing:.04em;
+    padding:.3rem .7rem;border-radius:2px;cursor:pointer;
+    background:var(--accent);color:#fff;border:1px solid var(--accent);
+  }
+  :root[data-theme="dark"] .btn,
+  :root:not([data-theme="light"]) .btn{color:#0f1216}
+  @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .btn{color:#fff}}
+  .btn.ghost{background:transparent;color:var(--ink-soft);border-color:var(--rule-strong)}
+  .btn:focus-visible,.opt:focus-within,a:focus-visible,input:focus-visible,textarea:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+
+  /* ---- masthead ---- */
+  header.mast{padding:3rem 0 1.5rem}
+  .kicker{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent-ink);margin:0 0 .9rem;
+  }
+  h1{
+    font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+    font-size:clamp(1.9rem,4.6vw,2.7rem);line-height:1.1;
+    letter-spacing:-.01em;margin:0 0 .7rem;text-wrap:balance;
+  }
+  .standfirst{font-size:1.02rem;color:var(--ink-soft);margin:.2rem 0 0}
+  .confidential{
+    display:inline-block;margin-top:1.3rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;
+    letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-soft);border:1px solid var(--rule-strong);
+    padding:.28rem .6rem;border-radius:2px;
+  }
+
+  .note{
+    margin:2rem 0;padding:1.1rem 1.25rem;
+    background:var(--accent-soft);border:1px solid var(--rule);border-radius:3px;
+  }
+  .note h2{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;
+    margin:0 0 .5rem;color:var(--accent-ink);
+  }
+  .note p{margin:.4rem 0 0;font-size:.95rem;color:var(--ink-soft)}
+  .note p:first-of-type{margin-top:0}
+
+  /* ---- fillable identification grid ---- */
+  .idblock{
+    margin:2rem 0 1rem;border:1px solid var(--rule-strong);border-radius:3px;
+    background:var(--card);
+  }
+  .idblock .hd{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+    padding:.7rem 1rem;border-bottom:1px solid var(--rule);color:var(--ink-soft);
+  }
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0}
+  .grid .f{padding:.8rem 1rem;border-bottom:1px solid var(--rule)}
+  .grid .f:nth-child(odd){border-right:1px solid var(--rule)}
+  .grid .f.full{grid-column:1/-1}
+  .grid .f:last-child,.grid .f:nth-last-child(2):nth-child(odd){border-bottom:none}
+  label.lbl,.flabel{
+    display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:.35rem;
+  }
+  input[type=text],textarea{
+    width:100%;font:inherit;font-size:.92rem;color:var(--ink);
+    background:var(--field);border:1px solid var(--rule-strong);border-radius:2px;
+    padding:.4rem .55rem;
+  }
+  textarea{resize:vertical;min-height:2.4rem;line-height:1.5}
+  .checkrow{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin-top:.15rem}
+  .checkrow label{
+    display:inline-flex;align-items:center;gap:.4rem;font-size:.9rem;color:var(--ink-soft);
+  }
+  input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:1rem;height:1rem;flex:none}
+
+  /* ---- parts & sections ---- */
+  .part{margin:3.5rem 0 0}
+  .part > .part-hd{
+    display:flex;align-items:baseline;gap:.9rem;
+    border-bottom:2px solid var(--accent);padding-bottom:.5rem;margin-bottom:.4rem;
+  }
+  .part-hd .pnum{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;
+    font-size:.8rem;letter-spacing:.1em;color:var(--accent-ink);
+  }
+  .part-hd h2{
+    font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+    font-size:1.15rem;margin:0;letter-spacing:-.005em;
+  }
+  .part-sub{font-size:.9rem;color:var(--ink-faint);margin:.15rem 0 0}
+
+  section.crit{
+    margin-top:1.6rem;padding-top:1.5rem;border-top:1px solid var(--rule);
+    break-inside:avoid;
+  }
+  .crit-hd{display:flex;gap:.75rem;align-items:baseline}
+  .crit-hd .n{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;
+    font-size:1rem;color:var(--accent-ink);flex:none;font-variant-numeric:tabular-nums;
+  }
+  .crit-hd h3{
+    font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+    font-size:1.22rem;line-height:1.25;margin:0;letter-spacing:-.008em;text-wrap:balance;
+  }
+  .purpose{margin:.5rem 0 1.1rem;font-size:.96rem;color:var(--ink-soft);font-style:italic}
+  .purpose.plain{font-style:normal}
+
+  .block{margin:1rem 0}
+  .block > .blabel{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;
+  }
+  .block > .blabel::after{content:"";flex:1;height:1px;background:var(--rule)}
+  ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}
+  ul.list li{display:flex;gap:.6rem;font-size:.95rem;line-height:1.5}
+  ul.list.check li > input{margin-top:.28rem}
+  ul.list li .txt{color:var(--ink)}
+  ul.list li .txt b{font-weight:600}
+  ul.list.warn{
+    background:var(--fail-bg);border:1px solid color-mix(in srgb,var(--fail) 30%,transparent);
+    border-radius:3px;padding:.8rem .9rem;
+  }
+  ul.list.warn li{color:var(--fail)}
+  ul.list.warn li::before{content:"\25B2";color:var(--fail);font-size:.62rem;margin-top:.3rem;flex:none}
+  :root[data-theme="dark"] ul.list.warn li,
+  :root:not([data-theme="light"]) ul.list.warn li{color:var(--fail)}
+
+  /* ---- rating control ---- */
+  .rate{
+    margin-top:1.25rem;padding:.9rem;border:1px solid var(--rule-strong);
+    border-radius:3px;background:var(--card);
+  }
+  .rate > .rlabel{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:.55rem;
+  }
+  .opts{display:flex;flex-wrap:wrap;gap:.4rem}
+  .opt{
+    position:relative;display:inline-flex;align-items:center;gap:.4rem;
+    padding:.34rem .6rem;border:1px solid var(--rule-strong);border-radius:2px;
+    font-size:.82rem;cursor:pointer;color:var(--ink-soft);background:var(--paper);
+    user-select:none;
+  }
+  .opt input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer;margin:0}
+  .opt .dot{width:.6rem;height:.6rem;border-radius:50%;flex:none;background:currentColor;opacity:.55}
+  .opt[data-v=pass]{color:var(--pass)} .opt[data-v=minor]{color:var(--minor)}
+  .opt[data-v=concern]{color:var(--concern)} .opt[data-v=fail]{color:var(--fail)}
+  .opt[data-v=na]{color:var(--na)}
+  .opt:has(input:checked){background:var(--card);border-color:currentColor;font-weight:600}
+  .opt:has(input:checked) .dot{opacity:1}
+  .opt:has(input:checked)[data-v=pass]{background:var(--pass-bg)}
+  .opt:has(input:checked)[data-v=minor]{background:var(--minor-bg)}
+  .opt:has(input:checked)[data-v=concern]{background:var(--concern-bg)}
+  .opt:has(input:checked)[data-v=fail]{background:var(--fail-bg)}
+  .opt:has(input:checked)[data-v=na]{background:var(--na-bg)}
+  .rate .findings{margin-top:.7rem}
+  .rate .findings textarea{min-height:3.2rem}
+
+  /* ---- closing blocks ---- */
+  .close{margin-top:3.5rem;padding-top:1.5rem;border-top:2px solid var(--accent)}
+  table.rem{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.9rem}
+  table.rem th,table.rem td{border:1px solid var(--rule-strong);padding:.5rem .6rem;text-align:left;vertical-align:top}
+  table.rem th{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.66rem;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);background:var(--accent-soft);
+  }
+  table.rem td input{border:none;background:transparent;padding:.15rem 0}
+  .signoff{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:1.5rem}
+  .refs{margin-top:3rem;font-size:.85rem;color:var(--ink-soft)}
+  .refs h3{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 .6rem;
+  }
+  .refs ul{padding-left:1.1rem;display:flex;flex-direction:column;gap:.3rem;margin:0 0 1rem}
+  .refs .scope{
+    border-left:2px solid var(--rule-strong);padding-left:.9rem;font-style:italic;color:var(--ink-faint);
+  }
+
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .grid .f:nth-child(odd){border-right:none}
+    .signoff{grid-template-columns:1fr}
+    .tally-inner .actions{margin-left:0;width:100%}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .opt,.btn{transition:background .12s ease,border-color .12s ease,color .12s ease}
+  }
+
+  /* ---- print ---- */
+  @media print{
+    :root{--paper:#fff;--card:#fff;--ink:#000;--ink-soft:#222;--ink-faint:#444;
+      --rule:#bbb;--rule-strong:#888;--accent:#000;--accent-ink:#000;--accent-soft:#f0f0f0}
+    body{font-size:10.5pt;line-height:1.4}
+    .tally{display:none}
+    .wrap{max-width:none;padding:0}
+    header.mast{padding:0 0 .5rem}
+    h1{font-size:19pt}
+    .part{margin-top:1.4rem;break-before:auto}
+    .part:first-of-type{break-before:avoid}
+    section.crit{break-inside:avoid}
+    ul.list.warn{background:#f4f4f4 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .opt:has(input:checked){outline:1.5pt solid #000}
+    .confidential{border-color:#000}
+    a{color:#000;text-decoration:underline}
+    .btn{display:none}
+  }
+</style>
+
+<div class="tally" role="region" aria-label="Review progress">
+  <div class="tally-inner">
+    <span class="lead">Tally</span>
+    <span class="chip pass"><span class="dot"></span>Meets <b data-t="pass">0</b></span>
+    <span class="chip minor">Minor <b data-t="minor">0</b></span>
+    <span class="chip concern">Concern <b data-t="concern">0</b></span>
+    <span class="chip fail">Fails <b data-t="fail">0</b></span>
+    <span class="chip na">N/A <b data-t="na">0</b></span>
+    <span class="chip">Unrated <b data-t="none">11</b></span>
+    <span class="actions">
+      <button class="btn" id="printBtn" type="button">Print / Save PDF</button>
+      <button class="btn ghost" id="clearBtn" type="button">Clear form</button>
+    </span>
+  </div>
+</div>
+
+<div class="wrap">
+<header class="mast">
+  <p class="kicker">Nonprofit fundraising partnerships &middot; Assessment instrument</p>
+  <h1>Charity Partner Standards Review</h1>
+  <p class="standfirst">A structured review of a charitable organization against eleven evidence-based
+  criteria &mdash; used to decide whether to begin a fundraising engagement, and to review an
+  organization already under engagement against the same bar.</p>
+  <span class="confidential">Confidential &mdash; internal use only</span>
+</header>
+
+<div class="note">
+  <h2>How to use this document</h2>
+  <p>Work through every criterion in order. For each one, gather the evidence listed under
+  <b>Collect</b>, compare what you find against <b>Meets the standard</b> and <b>Warning signs</b>,
+  then record a rating and your specific findings. The same form serves two purposes and is not
+  weighted toward either: for a <b>prospective</b> organization it is a go / no-go screen; for a
+  <b>current</b> organization it is a periodic audit against the standard it was accepted on.</p>
+  <p>A single <b>Fails</b> is a blocker &mdash; it must be resolved before an engagement proceeds, or
+  it triggers a corrective-action plan for a current partner. <b>Material concern</b> and
+  <b>Minor gaps</b> are recorded with a remediation item, an owner and a date in the closing section.
+  Rate <b>N/A</b> only with a written reason.</p>
+</div>
+
+<div class="idblock">
+  <div class="hd">Organization under review</div>
+  <div class="grid">
+    <div class="f full"><span class="flabel">Legal name / DBA</span><input type="text" data-k="org-name"></div>
+    <div class="f"><span class="flabel">EIN</span><input type="text" data-k="org-ein" placeholder="00-0000000"></div>
+    <div class="f"><span class="flabel">State of incorporation / Year founded</span><input type="text" data-k="org-inc"></div>
+    <div class="f full"><span class="flabel">Principal address</span><input type="text" data-k="org-addr"></div>
+    <div class="f"><span class="flabel">Primary contact &mdash; name &amp; title</span><input type="text" data-k="org-contact"></div>
+    <div class="f"><span class="flabel">Contact email &amp; phone</span><input type="text" data-k="org-contact2"></div>
+    <div class="f"><span class="flabel">Website</span><input type="text" data-k="org-web"></div>
+    <div class="f"><span class="flabel">Charity watchdog profiles seen</span><input type="text" data-k="org-watch" placeholder="Candid / Charity Navigator / BBB / CharityWatch"></div>
+    <div class="f full">
+      <span class="flabel">Purpose of this review</span>
+      <div class="checkrow" role="radiogroup" aria-label="Purpose of review">
+        <label><input type="radio" name="purpose" data-k="purpose" value="prospective"> Prospective &mdash; considering an engagement</label>
+        <label><input type="radio" name="purpose" data-k="purpose" value="current"> Current &mdash; periodic review of an active partner</label>
+      </div>
+    </div>
+    <div class="f full">
+      <span class="flabel">Fundraising activity in scope</span>
+      <div class="checkrow">
+        <label><input type="checkbox" data-k="act-d2d"> Door-to-door</label>
+        <label><input type="checkbox" data-k="act-canvass"> Street / public canvassing</label>
+        <label><input type="checkbox" data-k="act-events"> Events &amp; booths</label>
+        <label><input type="checkbox" data-k="act-phone"> Telephone</label>
+        <label><input type="checkbox" data-k="act-digital"> Digital</label>
+        <label><input type="checkbox" data-k="act-other"> Other</label>
+      </div>
+    </div>
+    <div class="f full"><span class="flabel">States / localities where solicitation will occur</span><input type="text" data-k="org-juris"></div>
+    <div class="f"><span class="flabel">Reviewer</span><input type="text" data-k="rev-name"></div>
+    <div class="f"><span class="flabel">Date of review / period covered</span><input type="text" data-k="rev-date"></div>
+  </div>
+</div>
+
+<div class="note">
+  <h2>Rating scale</h2>
+  <p><b>Meets standard</b> &mdash; evidence is present, current and adequate for the activity in scope.</p>
+  <p><b>Minor gaps</b> &mdash; substantially in place; specific items to tidy up, not a barrier on their own.</p>
+  <p><b>Material concern</b> &mdash; a real weakness that needs a written remediation plan and a re-check before it can be relied on.</p>
+  <p><b>Fails</b> &mdash; absent, expired or deficient enough to block a new engagement or to require corrective action on a current one.</p>
+  <p><b>N/A</b> &mdash; genuinely not applicable to this organization or this engagement. State why in the findings box.</p>
+</div>
+
+
+<!-- ============================ PART A ============================ -->
+<div class="part">
+  <div class="part-hd"><span class="pnum">PART A</span><h2>Legal &amp; regulatory standing</h2></div>
+  <p class="part-sub">Is the organization what it says it is, and is it allowed to raise money the way it plans to?</p>
+
+  <section class="crit" id="c1">
+    <div class="crit-hd"><span class="n">1</span><h3>Tax-exempt status: 501(c)(3) determination &amp; IRS Form 990</h3></div>
+    <p class="purpose">Confirms the organization is a recognised tax-exempt public charity in good standing, and that its finances hold up to inspection &mdash; donors and property owners routinely ask a rep to prove both.</p>
+
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c1-col-1"><span class="txt">The <b>IRS determination letter</b> granting 501(c)(3) status, in the organization's current legal name.</span></li>
+        <li><input type="checkbox" data-k="c1-col-2"><span class="txt">A screenshot of the organization's active listing in <b>IRS Tax Exempt Organization Search</b>, and confirmation it is <b>not</b> on the automatic-revocation list.</span></li>
+        <li><input type="checkbox" data-k="c1-col-3"><span class="txt">The <b>three most recent Forms 990</b> as filed (990, 990-EZ or 990-N as applicable), with all schedules.</span></li>
+        <li><input type="checkbox" data-k="c1-col-4"><span class="txt">The most recent <b>audited or reviewed financial statements</b>, and the board-approved annual budget.</span></li>
+        <li><input type="checkbox" data-k="c1-col-5"><span class="txt">If the organization operates under a <b>fiscal sponsor</b>: the written fiscal-sponsorship agreement and the sponsor's own status.</span></li>
+        <li><input type="checkbox" data-k="c1-col-6"><span class="txt">Any state income / franchise / sales-tax exemption confirmations relevant to where it operates.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c1-std-1"><span class="txt">Valid determination letter; classified as a <b>public charity</b> (e.g. 509(a)(1) or (a)(2)), not a private foundation, unless the engagement specifically contemplates otherwise.</span></li>
+        <li><input type="checkbox" data-k="c1-std-2"><span class="txt">Name and <b>EIN match</b> across the letter, the 990s, the website and the bank details.</span></li>
+        <li><input type="checkbox" data-k="c1-std-3"><span class="txt">990s filed <b>on time</b>; the full form (not just the 990-N postcard) where revenue requires it.</span></li>
+        <li><input type="checkbox" data-k="c1-std-4"><span class="txt"><b>Program-service expense</b> is a clear majority of total expense; fundraising and management/general are reasonable and stable year to year.</span></li>
+        <li><input type="checkbox" data-k="c1-std-5"><span class="txt">Revenue is stable or growing; an operating reserve exists; no going-concern language in the audit.</span></li>
+        <li><input type="checkbox" data-k="c1-std-6"><span class="txt">Executive compensation is disclosed and reasonable for the organization's size and region.</span></li>
+        <li><input type="checkbox" data-k="c1-std-7"><span class="txt">Governance section of the 990 is clean: independent board majority, and conflict-of-interest, whistleblower and document-retention policies in place; the board reviews the 990 before filing.</span></li>
+        <li><input type="checkbox" data-k="c1-std-8"><span class="txt">Schedule G (fundraising) and Schedule L (interested-person transactions) contain nothing unexplained.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">Cannot produce the determination letter; status is &ldquo;pending&rdquo;; fiscal sponsorship with no written agreement.</span></li>
+        <li><span class="txt">On the automatic-revocation list, lapsed, or recently reinstated after revocation with no clear explanation.</span></li>
+        <li><span class="txt">Missing or late 990 years; a 990-N filed while revenue clearly exceeds the threshold.</span></li>
+        <li><span class="txt">Fundraising cost is a large or fast-rising share of contributions; multi-year deficits; negative net assets.</span></li>
+        <li><span class="txt">Payments to companies tied to board or staff; loans to officers; large unexplained &ldquo;miscellaneous&rdquo; lines.</span></li>
+        <li><span class="txt">One donor or grant is effectively the entire budget; public impact claims that the 990 does not support.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 1</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 1">
+        <label class="opt" data-v="pass"><input type="radio" name="r1" data-k="r1" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r1" data-k="r1" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r1" data-k="r1" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r1" data-k="r1" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r1" data-k="r1" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r1-note"></textarea></div>
+    </div>
+  </section>
+
+  <section class="crit" id="c2">
+    <div class="crit-hd"><span class="n">2</span><h3>Charitable-solicitation registration, fundraiser bond &amp; permits</h3></div>
+    <p class="purpose">Paid, in-person fundraising is regulated state by state and often locally. This criterion confirms the organization &mdash; and the fundraising firm acting for it &mdash; is registered, bonded and permitted everywhere the work will happen.</p>
+    <p class="purpose plain">Requirements, dollar thresholds and exemptions vary widely by jurisdiction and change often. Treat the items below as prompts and confirm the current rule for each state and locality with qualified counsel.</p>
+
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c2-col-1"><span class="txt">Proof of <b>charitable-solicitation registration</b> in every state where the organization solicits (most states require it; some exempt very small organizations).</span></li>
+        <li><input type="checkbox" data-k="c2-col-2"><span class="txt">Registration or licensing of the <b>professional fundraiser / professional solicitor / fundraising counsel</b> as each state defines those roles.</span></li>
+        <li><input type="checkbox" data-k="c2-col-3"><span class="txt">The <b>surety bond</b> on file wherever a state requires paid solicitors to be bonded &mdash; amount, carrier and expiration date.</span></li>
+        <li><input type="checkbox" data-k="c2-col-4"><span class="txt">The <b>written contract</b> between the organization and the fundraising firm, filed with the state where required, carrying the state-mandated disclosures.</span></li>
+        <li><input type="checkbox" data-k="c2-col-5"><span class="txt"><b>Local permits</b> &mdash; canvassing, peddler, solicitation or door-to-door permits &mdash; for the specific municipalities to be worked.</span></li>
+        <li><input type="checkbox" data-k="c2-col-6"><span class="txt">Copies of the organization's <b>annual financial reports to state charity regulators</b> for the last two years.</span></li>
+        <li><input type="checkbox" data-k="c2-col-7"><span class="txt">Any raffle, gaming or sales-tax permits if those activities occur alongside solicitation.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c2-std-1"><span class="txt">All registrations are <b>active, unexpired</b>, and renewals are tracked on a calendar with a named owner.</span></li>
+        <li><input type="checkbox" data-k="c2-std-2"><span class="txt">Fundraiser registration and bond are current; the bond amount meets or exceeds the state minimum.</span></li>
+        <li><input type="checkbox" data-k="c2-std-3"><span class="txt">State annual financial reports have been filed for every required year.</span></li>
+        <li><input type="checkbox" data-k="c2-std-4"><span class="txt">The charity&ndash;firm contract carries the state-mandated clauses &mdash; the <b>charity's</b> right to cancel the contract, the percentage or fee split stated plainly, and the paid-solicitor disclosure reps must give at the point of solicitation.</span></li>
+        <li><input type="checkbox" data-k="c2-std-5"><span class="txt">The organization can name the person responsible for solicitation compliance and show how new jurisdictions get cleared before work starts.</span></li>
+        <li><input type="checkbox" data-k="c2-std-6"><span class="txt">No open or recent enforcement matters with any state attorney general or charity regulator.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">&ldquo;We don't need to register&rdquo; with no written legal basis; active solicitation in states with no registration on file.</span></li>
+        <li><span class="txt">Expired or lapsed registrations; unfiled state annual reports.</span></li>
+        <li><span class="txt">No bond where one is required, or a bond past its expiration date.</span></li>
+        <li><span class="txt">No written contract, or one missing the state-mandated disclosures.</span></li>
+        <li><span class="txt">Any history of fines, cease-and-desist orders, or an assurance of voluntary compliance with a state regulator over solicitation practices.</span></li>
+        <li><span class="txt">Pressure to start in the field before permits or registrations are confirmed.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 2</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 2">
+        <label class="opt" data-v="pass"><input type="radio" name="r2" data-k="r2" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r2" data-k="r2" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r2" data-k="r2" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r2" data-k="r2" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r2" data-k="r2" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r2-note"></textarea></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================ PART B ============================ -->
+<div class="part">
+  <div class="part-hd"><span class="pnum">PART B</span><h2>Public identity &amp; communications</h2></div>
+  <p class="part-sub">Does the organization present itself consistently and credibly to the public a rep will be talking to?</p>
+
+  <section class="crit" id="c3">
+    <div class="crit-hd"><span class="n">3</span><h3>Website</h3></div>
+    <p class="purpose">The first place a donor checks after a doorstep conversation. It has to confirm the organization is real, current and transparent within about thirty seconds.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c3-col-1"><span class="txt">The live URL, plus a <b>WHOIS / domain-registration</b> check showing the organization owns the domain.</span></li>
+        <li><input type="checkbox" data-k="c3-col-2"><span class="txt">The <b>About / Leadership / Board</b> page, the <b>financials / annual report</b> page, and the <b>donate</b> flow.</span></li>
+        <li><input type="checkbox" data-k="c3-col-3"><span class="txt">The <b>privacy policy</b> and any donor-privacy statement.</span></li>
+        <li><input type="checkbox" data-k="c3-col-4"><span class="txt">The date of the most recent news / blog / event post.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c3-std-1"><span class="txt">Organization-owned domain; loads over <b>HTTPS</b>; design consistent with its other materials.</span></li>
+        <li><input type="checkbox" data-k="c3-std-2"><span class="txt">Clear statement of mission, the specific programs, who is served and where.</span></li>
+        <li><input type="checkbox" data-k="c3-std-3"><span class="txt">Named leadership and board with short bios; a <b>real address</b> and a working phone and email.</span></li>
+        <li><input type="checkbox" data-k="c3-std-4"><span class="txt">Financial transparency on the site: annual report, audited financials or the 990, and/or an impact report.</span></li>
+        <li><input type="checkbox" data-k="c3-std-5"><span class="txt">A secure donate path that explains how gifts are used and offers a recurring option; card processing on a reputable platform.</span></li>
+        <li><input type="checkbox" data-k="c3-std-6"><span class="txt">Updated within roughly the last quarter; third-party trust marks (Candid Seal, Charity Navigator, BBB) that resolve to a real profile.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">Domain registered very recently or to an unrelated party; no HTTPS; broken or placeholder pages.</span></li>
+        <li><span class="txt">No named leadership, no address, contact only through a form.</span></li>
+        <li><span class="txt">No financial information anywhere; donate button links to a personal payment handle.</span></li>
+        <li><span class="txt">Nothing updated in a year or more; impact numbers with no source; claims that conflict with the 990.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 3</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 3">
+        <label class="opt" data-v="pass"><input type="radio" name="r3" data-k="r3" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r3" data-k="r3" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r3" data-k="r3" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r3" data-k="r3" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r3" data-k="r3" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r3-note"></textarea></div>
+    </div>
+  </section>
+
+  <section class="crit" id="c4">
+    <div class="crit-hd"><span class="n">4</span><h3>Social media</h3></div>
+    <p class="purpose">Shows whether the organization is active, whether real people engage with it, and how it handles questions and criticism in public.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c4-col-1"><span class="txt">Handles for each platform, <b>linked from the website</b> so they are verifiably official.</span></li>
+        <li><input type="checkbox" data-k="c4-col-2"><span class="txt">Screenshots of the last month or two of posts on each active account.</span></li>
+        <li><input type="checkbox" data-k="c4-col-3"><span class="txt">A follower / engagement snapshot per platform.</span></li>
+        <li><input type="checkbox" data-k="c4-col-4"><span class="txt">Examples of how the organization has replied to a public question or complaint.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c4-std-1"><span class="txt">Consistent name, handle and branding across platforms, matching the website.</span></li>
+        <li><input type="checkbox" data-k="c4-std-2"><span class="txt">Posts at least monthly &mdash; ideally weekly &mdash; with genuine program content, not only donation asks.</span></li>
+        <li><input type="checkbox" data-k="c4-std-3"><span class="txt">Engagement is proportionate to the audience and looks organic; the organization answers questions and complaints professionally, in public.</span></li>
+        <li><input type="checkbox" data-k="c4-std-4"><span class="txt">No misleading urgency, no fabricated matching-gift claims, tone appropriate to a charity.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">Dormant or abandoned accounts; last post long ago.</span></li>
+        <li><span class="txt">Follower count wildly out of line with engagement (purchased following).</span></li>
+        <li><span class="txt">Unanswered complaints, or defensive / hostile replies.</span></li>
+        <li><span class="txt">Content that contradicts the organization's own program claims or filings.</span></li>
+        <li><span class="txt">No presence at all for an organization that solicits the general public.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 4</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 4">
+        <label class="opt" data-v="pass"><input type="radio" name="r4" data-k="r4" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r4" data-k="r4" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r4" data-k="r4" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r4" data-k="r4" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r4" data-k="r4" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r4-note"></textarea></div>
+    </div>
+  </section>
+
+  <section class="crit" id="c5">
+    <div class="crit-hd"><span class="n">5</span><h3>Newsletters &amp; donor communications</h3></div>
+    <p class="purpose">Regular reporting back to donors is the clearest sign an organization treats a gift as the start of a relationship rather than the end of a transaction.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c5-col-1"><span class="txt">The last <b>three to four issues</b> of the email and/or print newsletter.</span></li>
+        <li><input type="checkbox" data-k="c5-col-2"><span class="txt">The <b>publishing cadence</b> (monthly, quarterly) and the list size / open rates if the organization will share them.</span></li>
+        <li><input type="checkbox" data-k="c5-col-3"><span class="txt">A sample <b>gift acknowledgement</b> and a sample <b>year-end tax receipt</b>.</span></li>
+        <li><input type="checkbox" data-k="c5-col-4"><span class="txt">The <b>subscribe</b> mechanism and the <b>unsubscribe</b> / preference process.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c5-std-1"><span class="txt">Predictable cadence with several recent issues; content is <b>program and impact reporting</b>, not a continuous appeal.</span></li>
+        <li><input type="checkbox" data-k="c5-std-2"><span class="txt">Acknowledgements are prompt and carry the IRS-required elements &mdash; the organization's name, the amount of cash or a description of any non-cash gift, and whether any goods or services were given in return (with a good-faith value if so).</span></li>
+        <li><input type="checkbox" data-k="c5-std-3"><span class="txt">Clear, honoured unsubscribe; a stated approach to how often the organization contacts donors.</span></li>
+        <li><input type="checkbox" data-k="c5-std-4"><span class="txt">Stories about beneficiaries are told with dignity and, where identifiable, with consent.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">No donor communication at all, or nothing sent in the last year.</span></li>
+        <li><span class="txt">Every message is an emergency appeal; no reporting on what prior gifts achieved.</span></li>
+        <li><span class="txt">Acknowledgements missing required elements, or not sent.</span></li>
+        <li><span class="txt">No way to opt out, or opt-outs ignored.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 5</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 5">
+        <label class="opt" data-v="pass"><input type="radio" name="r5" data-k="r5" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r5" data-k="r5" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r5" data-k="r5" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r5" data-k="r5" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r5" data-k="r5" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r5-note"></textarea></div>
+    </div>
+  </section>
+
+  <section class="crit" id="c6">
+    <div class="crit-hd"><span class="n">6</span><h3>Letterhead &amp; official stationery</h3></div>
+    <p class="purpose">Field reps carry a letter of authorization on the organization's letterhead; donors and property owners ask to see it. The stationery set is a quick read on organizational maturity and on whether the engagement is properly documented.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c6-col-1"><span class="txt">The <b>letterhead template</b> (print and digital).</span></li>
+        <li><input type="checkbox" data-k="c6-col-2"><span class="txt">A current, <b>signed authorization letter</b> on letterhead naming the fundraising firm, the territory and the campaign date range.</span></li>
+        <li><input type="checkbox" data-k="c6-col-3"><span class="txt">The <b>gift-acknowledgement / receipt template</b>.</span></li>
+        <li><input type="checkbox" data-k="c6-col-4"><span class="txt">Rep-facing identification: <b>ID badge</b> and <b>business-card</b> templates, and any branded canvassing materials.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c6-std-1"><span class="txt">Professionally designed letterhead showing the <b>legal name, address, phone, website, EIN</b> and a 501(c)(3) line.</span></li>
+        <li><input type="checkbox" data-k="c6-std-2"><span class="txt">Authorization letter is <b>dated, signed by an officer</b>, and specific about who is authorized to do what, where and when.</span></li>
+        <li><input type="checkbox" data-k="c6-std-3"><span class="txt">Acknowledgement text includes every IRS-required element for substantiation.</span></li>
+        <li><input type="checkbox" data-k="c6-std-4"><span class="txt">Branding on the letterhead, website and social accounts is visibly the same organization.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">No letterhead, or an informal / inconsistent template.</span></li>
+        <li><span class="txt">No authorization letter, or one that is undated, unsigned, or generic about scope.</span></li>
+        <li><span class="txt">Receipt text missing required IRS language.</span></li>
+        <li><span class="txt">Letterhead shows a different legal name or address than the determination letter.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 6</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 6">
+        <label class="opt" data-v="pass"><input type="radio" name="r6" data-k="r6" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r6" data-k="r6" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r6" data-k="r6" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r6" data-k="r6" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r6" data-k="r6" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r6-note"></textarea></div>
+    </div>
+  </section>
+
+  <section class="crit" id="c7">
+    <div class="crit-hd"><span class="n">7</span><h3>Public relations &amp; reputation</h3></div>
+    <p class="purpose">Independent coverage and watchdog ratings are borrowed credibility a rep can point to. A reputation search is also where solicitation complaints and regulator actions surface before they become the firm's problem.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c7-col-1"><span class="txt">The <b>media / press page</b>, recent press releases, and a list of earned coverage (articles, broadcast, podcasts).</span></li>
+        <li><input type="checkbox" data-k="c7-col-2"><span class="txt">A named <b>media contact</b> or agency, and any crisis-communications plan or designated spokesperson.</span></li>
+        <li><input type="checkbox" data-k="c7-col-3"><span class="txt">Results of an <b>independent reputation search</b> &mdash; news, court records, state regulator actions, forums, complaint sites, BBB complaints, employee-review sites.</span></li>
+        <li><input type="checkbox" data-k="c7-col-4"><span class="txt">Watchdog profiles: <b>Charity Navigator</b> score, <b>Candid / GuideStar</b> Seal of Transparency level, <b>BBB Wise Giving Alliance</b> standards result, <b>CharityWatch</b> grade.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c7-std-1"><span class="txt">Some verifiable <b>earned</b> media or third-party recognition, not only paid placements.</span></li>
+        <li><input type="checkbox" data-k="c7-std-2"><span class="txt">Watchdog profiles are claimed, complete and rate acceptably; BBB Wise Giving standards met.</span></li>
+        <li><input type="checkbox" data-k="c7-std-3"><span class="txt">No material litigation, no regulator actions, no pattern of donor or consumer complaints.</span></li>
+        <li><input type="checkbox" data-k="c7-std-4"><span class="txt">A named person owns fundraising-related inquiries and complaints, with a plan for handling a news query.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">No third-party footprint at all, or only sponsored content.</span></li>
+        <li><span class="txt">Low watchdog ratings, or profiles that are unclaimed and thin.</span></li>
+        <li><span class="txt">Active lawsuits, attorney-general inquiries, or coverage alleging misuse of funds or deceptive solicitation.</span></li>
+        <li><span class="txt">Recurring public complaints about aggressive or misleading fundraising.</span></li>
+        <li><span class="txt">No spokesperson and no plan &mdash; every inquiry would default to the fundraising firm.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 7</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 7">
+        <label class="opt" data-v="pass"><input type="radio" name="r7" data-k="r7" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r7" data-k="r7" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r7" data-k="r7" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r7" data-k="r7" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r7" data-k="r7" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r7-note"></textarea></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================ PART C ============================ -->
+<div class="part">
+  <div class="part-hd"><span class="pnum">PART C</span><h2>Programs &amp; evidence</h2></div>
+  <p class="part-sub">Can every claim a rep will make on the doorstep be traced to a real program and a countable source?</p>
+
+  <section class="crit" id="c8">
+    <div class="crit-hd"><span class="n">8</span><h3>Program content &amp; documented outcomes</h3></div>
+    <p class="purpose">The specific, checkable description of what the organization does &mdash; &ldquo;counselling for 77 veterans this year,&rdquo; not &ldquo;helping those in need.&rdquo; This is the content reps are trained on and the content that has to hold up if a donor probes.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c8-col-1"><span class="txt">A <b>written description of every program</b>: who it serves, eligibility, what is delivered, where, by whom, and at what volume.</span></li>
+        <li><input type="checkbox" data-k="c8-col-2"><span class="txt">A <b>logic model or theory of change</b> &mdash; inputs, activities, outputs, outcomes.</span></li>
+        <li><input type="checkbox" data-k="c8-col-3"><span class="txt"><b>Current-year output numbers</b> (people served, sessions, meals, beds, grants) and a note on <b>how each is counted</b>.</span></li>
+        <li><input type="checkbox" data-k="c8-col-4"><span class="txt"><b>Outcome measures</b> &mdash; what changed for the people served, how it is measured, over what period.</span></li>
+        <li><input type="checkbox" data-k="c8-col-5"><span class="txt">The most recent <b>impact / annual report</b> and any independent program evaluation.</span></li>
+        <li><input type="checkbox" data-k="c8-col-6"><span class="txt">Enough of the <b>underlying data source</b> (case-management system, intake records, surveys) to see the headline numbers are real.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c8-std-1"><span class="txt">Every public impact claim traces to a <b>specific program</b> and a <b>countable source</b>.</span></li>
+        <li><input type="checkbox" data-k="c8-std-2"><span class="txt">Outputs and outcomes are distinguished &mdash; e.g. &ldquo;1,200 counselling sessions delivered to 77 veterans&rdquo; <em>and</em> &ldquo;68% reported reduced symptoms at 90 days.&rdquo;</span></li>
+        <li><input type="checkbox" data-k="c8-std-3"><span class="txt">The numbers are <b>internally consistent</b> across program documents, the website, social posts and the 990.</span></li>
+        <li><input type="checkbox" data-k="c8-std-4"><span class="txt">Programs match the <b>exempt purpose</b> in the determination letter.</span></li>
+        <li><input type="checkbox" data-k="c8-std-5"><span class="txt">Cost per person served / per outcome is explainable and reasonable.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">Vague mission language, no specific programs, no numbers.</span></li>
+        <li><span class="txt">Large round claims (&ldquo;changed thousands of lives&rdquo;) with no denominator and no source.</span></li>
+        <li><span class="txt">Figures that conflict between documents.</span></li>
+        <li><span class="txt">The &ldquo;program&rdquo; is mostly awareness or marketing, with little direct service.</span></li>
+        <li><span class="txt">Staff cannot say how a headline number was counted.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 8</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 8">
+        <label class="opt" data-v="pass"><input type="radio" name="r8" data-k="r8" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r8" data-k="r8" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r8" data-k="r8" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r8" data-k="r8" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r8" data-k="r8" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r8-note"></textarea></div>
+    </div>
+  </section>
+
+  <section class="crit" id="c9">
+    <div class="crit-hd"><span class="n">9</span><h3>Testimonials &amp; third-party validation</h3></div>
+    <p class="purpose">Independent voices &mdash; beneficiaries, partner institutions, funders &mdash; corroborate the program story. Funders in particular have done their own diligence, so their involvement is a useful shortcut.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c9-col-1"><span class="txt"><b>Beneficiary testimonials</b> with consent / release on file, ideally attributable or with verifiable context.</span></li>
+        <li><input type="checkbox" data-k="c9-col-2"><span class="txt"><b>Donor and volunteer</b> testimonials.</span></li>
+        <li><input type="checkbox" data-k="c9-col-3"><span class="txt">A <b>partner list</b> &mdash; other nonprofits, agencies, hospitals, schools, employers &mdash; with a contact who will confirm the relationship.</span></li>
+        <li><input type="checkbox" data-k="c9-col-4"><span class="txt">A <b>funder list</b> (foundations, government grants), plus awards, accreditations and coalition memberships.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c9-std-1"><span class="txt">Testimonials are <b>specific and attributable</b>, not anonymous one-liners.</span></li>
+        <li><input type="checkbox" data-k="c9-std-2"><span class="txt">At least a few <b>named institutional partners or funders</b> who can be contacted for a reference.</span></li>
+        <li><input type="checkbox" data-k="c9-std-3"><span class="txt">Consent / releases on file for anyone featured, especially minors or patients.</span></li>
+        <li><input type="checkbox" data-k="c9-std-4"><span class="txt">Third-party validation is recent (last year or two), not a single decade-old award.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">Only anonymous, generic quotes; stock imagery presented as beneficiaries.</span></li>
+        <li><span class="txt">No institutional partners or funders; unable to supply any reference.</span></li>
+        <li><span class="txt">Testimonials that cannot be corroborated or that read as written in-house.</span></li>
+        <li><span class="txt">Identifiable vulnerable people featured with no evidence of consent.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 9</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 9">
+        <label class="opt" data-v="pass"><input type="radio" name="r9" data-k="r9" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r9" data-k="r9" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r9" data-k="r9" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r9" data-k="r9" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r9" data-k="r9" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r9-note"></textarea></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================ PART D ============================ -->
+<div class="part">
+  <div class="part-hd"><span class="pnum">PART D</span><h2>Organizational clarity</h2></div>
+  <p class="part-sub">Can the organization state plainly what it is, who runs it and how big it is &mdash; and does that match its filings?</p>
+
+  <section class="crit" id="c10">
+    <div class="crit-hd"><span class="n">10</span><h3>Defined structure, stats, facts &amp; figures</h3></div>
+    <p class="purpose">A single fact sheet the organization can stand behind: governance, leadership, the key numbers, and &mdash; for a current partner &mdash; a clean record of what past campaigns actually produced.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c10-col-1"><span class="txt">An <b>org chart</b> covering governance and staff.</span></li>
+        <li><input type="checkbox" data-k="c10-col-2"><span class="txt"><b>Board roster</b>: names, outside affiliations, roles, terms and committee assignments; confirmation the board meets and keeps minutes.</span></li>
+        <li><input type="checkbox" data-k="c10-col-3"><span class="txt"><b>Leadership bios</b> with tenure for the executive director / CEO and senior staff.</span></li>
+        <li><input type="checkbox" data-k="c10-col-4"><span class="txt"><b>Bylaws</b> and the key governance policies &mdash; conflict of interest (signed annually), whistleblower, document retention, gift acceptance, financial controls.</span></li>
+        <li><input type="checkbox" data-k="c10-col-5"><span class="txt">A <b>facts block</b>: legal name, DBA, EIN, state of incorporation, year founded, fiscal year end, staff headcount, volunteer count, annual operating budget, service area, number served per year.</span></li>
+        <li><input type="checkbox" data-k="c10-col-6"><span class="txt">For a <b>current partner</b>: historical fundraising results &mdash; funds raised, donors acquired, retention, cost ratio &mdash; each with a date range and the internal system it came from.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c10-std-1"><span class="txt">Every fact above is available on request and is <b>consistent with the 990 and the website</b>.</span></li>
+        <li><input type="checkbox" data-k="c10-std-2"><span class="txt"><b>Independent board majority</b>; more than three directors; not family-controlled; the same person is not chair, treasurer and executive director.</span></li>
+        <li><input type="checkbox" data-k="c10-std-3"><span class="txt">Documented <b>internal financial controls</b> &mdash; dual signature, bank reconciliation, budget-versus-actual reporting to the board.</span></li>
+        <li><input type="checkbox" data-k="c10-std-4"><span class="txt">A named person on the organization's side <b>owns the fundraising relationship</b>.</span></li>
+        <li><input type="checkbox" data-k="c10-std-5"><span class="txt">For current partners: results are <b>scoped</b> (period, campaign, geography) and pulled from a named system, not recalled from memory.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">No org chart or no current board list.</span></li>
+        <li><span class="txt">Tiny or family board; officers also paid as board members.</span></li>
+        <li><span class="txt">No bylaws, no policies, no minutes.</span></li>
+        <li><span class="txt">Facts that change between conversations or do not match the filings.</span></li>
+        <li><span class="txt">For current partners: no clean data on what previous campaigns raised or cost.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 10</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 10">
+        <label class="opt" data-v="pass"><input type="radio" name="r10" data-k="r10" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r10" data-k="r10" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r10" data-k="r10" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r10" data-k="r10" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r10" data-k="r10" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r10-note"></textarea></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================ PART E ============================ -->
+<div class="part">
+  <div class="part-hd"><span class="pnum">PART E</span><h2>Fundraising oversight</h2></div>
+  <p class="part-sub">How the organization supports and controls the people raising money in its name.</p>
+
+  <section class="crit" id="c11">
+    <div class="crit-hd"><span class="n">11</span><h3>Representative management &amp; field conduct</h3></div>
+    <p class="purpose">The engagement puts people on the street speaking for the organization. This criterion checks that the relationship is documented, that reps have approved messaging and identification, and that complaints have somewhere to go.</p>
+    <div class="block">
+      <div class="blabel">Collect</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c11-col-1"><span class="txt">The <b>written agreement / statement of work</b> between the organization and the fundraising firm: scope, territory, dates, supervision, compensation basis, required disclosures, termination, indemnification, insurance, data ownership, brand use.</span></li>
+        <li><input type="checkbox" data-k="c11-col-2"><span class="txt">A <b>code of conduct</b> for anyone soliciting in the organization's name.</span></li>
+        <li><input type="checkbox" data-k="c11-col-3"><span class="txt">The <b>approved script and FAQ</b>, and the list of what reps may and may not say (no guaranteed outcomes; disclose paid-solicitor status and the fee arrangement where required).</span></li>
+        <li><input type="checkbox" data-k="c11-col-4"><span class="txt"><b>Rep identification</b>: badges, branded materials, and a public <b>verification path</b> (phone line or web page) to confirm a rep is authorized.</span></li>
+        <li><input type="checkbox" data-k="c11-col-5"><span class="txt"><b>Donor-data handling</b>: what is collected, how it is transmitted, retention, do-not-contact / suppression process, card-data handling, breach procedure.</span></li>
+        <li><input type="checkbox" data-k="c11-col-6"><span class="txt"><b>Complaint handling</b>: intake channel, response-time commitment, who investigates, how findings feed back to the firm, and the triggers for discipline or termination.</span></li>
+        <li><input type="checkbox" data-k="c11-col-7"><span class="txt">The organization's <b>designated relationship owner</b> and escalation contacts, including after hours.</span></li>
+        <li><input type="checkbox" data-k="c11-col-7b"><span class="txt">Who <b>speaks for the organization to the press or on social media</b> if a fundraising incident draws attention, and how that ties back to the firm.</span></li>
+        <li><input type="checkbox" data-k="c11-col-8"><span class="txt">Training the organization requires or provides, and any <b>quality checks</b> it runs (field checks, mystery donations, social listening).</span></li>
+        <li><input type="checkbox" data-k="c11-col-9"><span class="txt"><b>Insurance</b> the organization carries or requires &mdash; general liability, directors &amp; officers &mdash; and whether the firm must name the organization as additional insured.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Meets the standard</div>
+      <ul class="list check">
+        <li><input type="checkbox" data-k="c11-std-1"><span class="txt">A <b>signed, current contract</b> covering all of the above; both sides can produce it.</span></li>
+        <li><input type="checkbox" data-k="c11-std-2"><span class="txt">Written code of conduct and approved messaging; disclosure practice matches the rules for every state worked.</span></li>
+        <li><input type="checkbox" data-k="c11-std-3"><span class="txt">A <b>working public verification path</b> for reps.</span></li>
+        <li><input type="checkbox" data-k="c11-std-4"><span class="txt">Documented complaint process with named owners and timelines, and evidence it has actually been used.</span></li>
+        <li><input type="checkbox" data-k="c11-std-5"><span class="txt">The organization <b>actively monitors</b> field conduct rather than delegating it entirely.</span></li>
+        <li><input type="checkbox" data-k="c11-std-6"><span class="txt">Clean donor-data pipeline; suppression / do-not-contact honoured; card data never handled outside policy.</span></li>
+      </ul>
+    </div>
+    <div class="block">
+      <div class="blabel">Warning signs</div>
+      <ul class="list warn">
+        <li><span class="txt">Handshake deal, expired contract, or a contract that offloads all compliance onto the firm.</span></li>
+        <li><span class="txt">No code of conduct; scripts that promise outcomes, hide paid-solicitor status, or apply pressure.</span></li>
+        <li><span class="txt">No way for a donor to verify a rep is legitimate.</span></li>
+        <li><span class="txt">Complaints have nowhere to go; no response commitment; no feedback loop to the firm.</span></li>
+        <li><span class="txt">The organization &ldquo;does not get involved&rdquo; in how its name is used in the field.</span></li>
+        <li><span class="txt">Donor data sent in plain text; no suppression process; card details captured on paper.</span></li>
+      </ul>
+    </div>
+    <div class="rate"><div class="rlabel">Rating &mdash; criterion 11</div>
+      <div class="opts" role="radiogroup" aria-label="Rating for criterion 11">
+        <label class="opt" data-v="pass"><input type="radio" name="r11" data-k="r11" value="pass"><span class="dot"></span>Meets standard</label>
+        <label class="opt" data-v="minor"><input type="radio" name="r11" data-k="r11" value="minor"><span class="dot"></span>Minor gaps</label>
+        <label class="opt" data-v="concern"><input type="radio" name="r11" data-k="r11" value="concern"><span class="dot"></span>Material concern</label>
+        <label class="opt" data-v="fail"><input type="radio" name="r11" data-k="r11" value="fail"><span class="dot"></span>Fails</label>
+        <label class="opt" data-v="na"><input type="radio" name="r11" data-k="r11" value="na"><span class="dot"></span>N/A</label>
+      </div>
+      <div class="findings"><span class="flabel">Findings &amp; evidence reviewed</span><textarea data-k="r11-note"></textarea></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ============================ CLOSE ============================ -->
+<div class="close">
+  <div class="part-hd"><span class="pnum">CLOSE</span><h2>Findings &amp; determination</h2></div>
+
+  <section class="crit" style="border-top:none;padding-top:1rem">
+    <div class="block">
+      <div class="blabel">Blockers &mdash; every criterion rated &ldquo;Fails&rdquo;</div>
+      <p style="font-size:.92rem;color:var(--ink-soft);margin:.2rem 0 .5rem">List each one and what has to change. A blocker stops a new engagement from starting, or opens a corrective-action plan for a current partner.</p>
+      <textarea data-k="close-blockers" style="width:100%;min-height:4rem"></textarea>
+    </div>
+
+    <div class="block">
+      <div class="blabel">Remediation items &mdash; &ldquo;Material concern&rdquo; and &ldquo;Minor gaps&rdquo;</div>
+      <table class="rem">
+        <thead><tr><th style="width:44%">Item</th><th>Owner</th><th>Due</th><th>Re-check</th></tr></thead>
+        <tbody>
+          <tr><td><input type="text" data-k="rem-1a"></td><td><input type="text" data-k="rem-1b"></td><td><input type="text" data-k="rem-1c"></td><td><input type="text" data-k="rem-1d"></td></tr>
+          <tr><td><input type="text" data-k="rem-2a"></td><td><input type="text" data-k="rem-2b"></td><td><input type="text" data-k="rem-2c"></td><td><input type="text" data-k="rem-2d"></td></tr>
+          <tr><td><input type="text" data-k="rem-3a"></td><td><input type="text" data-k="rem-3b"></td><td><input type="text" data-k="rem-3c"></td><td><input type="text" data-k="rem-3d"></td></tr>
+          <tr><td><input type="text" data-k="rem-4a"></td><td><input type="text" data-k="rem-4b"></td><td><input type="text" data-k="rem-4c"></td><td><input type="text" data-k="rem-4d"></td></tr>
+          <tr><td><input type="text" data-k="rem-5a"></td><td><input type="text" data-k="rem-5b"></td><td><input type="text" data-k="rem-5c"></td><td><input type="text" data-k="rem-5d"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="blabel">Overall outcome</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div>
+          <span class="flabel">If prospective</span>
+          <div class="checkrow" style="flex-direction:column;gap:.35rem" role="radiogroup" aria-label="Outcome if prospective">
+            <label><input type="radio" name="out-p" data-k="out-p" value="proceed"> Proceed</label>
+            <label><input type="radio" name="out-p" data-k="out-p" value="conditions"> Proceed with conditions (list above)</label>
+            <label><input type="radio" name="out-p" data-k="out-p" value="hold"> Hold pending remediation</label>
+            <label><input type="radio" name="out-p" data-k="out-p" value="decline"> Decline</label>
+          </div>
+        </div>
+        <div>
+          <span class="flabel">If current partner</span>
+          <div class="checkrow" style="flex-direction:column;gap:.35rem" role="radiogroup" aria-label="Outcome if current partner">
+            <label><input type="radio" name="out-c" data-k="out-c" value="continue"> Continue</label>
+            <label><input type="radio" name="out-c" data-k="out-c" value="cap"> Continue with corrective-action plan</label>
+            <label><input type="radio" name="out-c" data-k="out-c" value="suspend"> Suspend pending remediation</label>
+            <label><input type="radio" name="out-c" data-k="out-c" value="exit"> Begin exit</label>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:.9rem"><span class="flabel">Rationale for the outcome</span><textarea data-k="close-rationale" style="width:100%;min-height:3.5rem"></textarea></div>
+    </div>
+
+    <div class="signoff">
+      <div><span class="flabel">Reviewed by / date</span><input type="text" data-k="sign-rev"></div>
+      <div><span class="flabel">Approved by / date</span><input type="text" data-k="sign-app"></div>
+      <div><span class="flabel">Next scheduled review</span><input type="text" data-k="sign-next"></div>
+      <div><span class="flabel">File reference</span><input type="text" data-k="sign-ref"></div>
+    </div>
+  </section>
+
+  <div class="refs">
+    <h3>References &amp; scope</h3>
+    <ul>
+      <li>IRS <b>Tax Exempt Organization Search</b> &mdash; verify exempt status, and view determination letters and Forms 990.</li>
+      <li>IRS <b>Form 990 series</b> and instructions (990, 990-EZ, 990-N, 990-PF); Schedules A, G, L and O.</li>
+      <li>IRS <b>Publication 1771</b>, <i>Charitable Contributions &mdash; Substantiation and Disclosure Requirements</i>, for acknowledgement and receipt language.</li>
+      <li><b>State charitable-solicitation registration</b> &mdash; administered by state attorneys general or secretaries of state; required in most states, with varying thresholds and exemptions. Multi-state filers may use the Unified Registration Statement or state single-portal systems.</li>
+      <li><b>Professional fundraiser / solicitor / fundraising-counsel registration and surety-bond requirements</b> &mdash; set separately by each state; triggers and bond amounts vary.</li>
+      <li>Watchdogs: <b>Candid (GuideStar)</b> Seal of Transparency; <b>Charity Navigator</b>; <b>BBB Wise Giving Alliance</b> Standards for Charity Accountability; <b>CharityWatch</b>.</li>
+    </ul>
+    <p class="scope">This is an internal screening tool, not legal advice. Registration, bonding, disclosure-language and permit requirements are specific to each state and locality and change over time. Confirm the current requirements for every jurisdiction where solicitation will occur with qualified counsel before relying on this document for a compliance decision. Dollar thresholds and required contract clauses are deliberately not stated here.</p>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "charity-partner-standards-review.v1";
+  var root = document;
+  var fields = Array.prototype.slice.call(root.querySelectorAll("[data-k]"));
+
+  function load(){
+    var raw;
+    try { raw = localStorage.getItem(KEY); } catch(e){ return; }
+    if(!raw) return;
+    var data;
+    try { data = JSON.parse(raw); } catch(e){ return; }
+    fields.forEach(function(el){
+      var k = el.getAttribute("data-k");
+      if(!(k in data)) return;
+      var v = data[k];
+      if(el.type === "checkbox"){ el.checked = !!v; }
+      else if(el.type === "radio"){ if(el.value === v) el.checked = true; }
+      else { el.value = v; }
+    });
+  }
+  function save(){
+    var data = {};
+    fields.forEach(function(el){
+      var k = el.getAttribute("data-k");
+      if(el.type === "checkbox"){ if(el.checked) data[k] = true; }
+      else if(el.type === "radio"){ if(el.checked) data[k] = el.value; }
+      else if(el.value){ data[k] = el.value; }
+    });
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
+  }
+
+  var counts = ["pass","minor","concern","fail","na"];
+  function tally(){
+    var c = { pass:0, minor:0, concern:0, fail:0, na:0 }, rated = 0;
+    for(var i=1;i<=11;i++){
+      var sel = root.querySelector('input[name="r'+i+'"]:checked');
+      if(sel){ c[sel.value]++; rated++; }
+    }
+    counts.forEach(function(v){
+      var el = root.querySelector('[data-t="'+v+'"]');
+      if(el) el.textContent = c[v];
+    });
+    var none = root.querySelector('[data-t="none"]');
+    if(none) none.textContent = (11 - rated);
+  }
+
+  root.addEventListener("change", function(){ save(); tally(); });
+  root.addEventListener("input", function(e){
+    if(e.target && e.target.matches("input[type=text], textarea")) save();
+  });
+
+  var printBtn = root.getElementById("printBtn");
+  if(printBtn) printBtn.addEventListener("click", function(){ window.print(); });
+
+  var clearBtn = root.getElementById("clearBtn");
+  if(clearBtn) clearBtn.addEventListener("click", function(){
+    if(!window.confirm("Clear every answer and note on this form? This cannot be undone.")) return;
+    try { localStorage.removeItem(KEY); } catch(e){}
+    fields.forEach(function(el){
+      if(el.type === "checkbox" || el.type === "radio"){ el.checked = false; }
+      else { el.value = ""; }
+    });
+    tally();
+  });
+
+  load();
+  tally();
+})();
+</script>

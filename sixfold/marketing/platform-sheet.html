@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Platform Sheet</title>
+<style>
+  /* ---- Tokens: dark-first, shared with the marketing plan sheet ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 13.5rem minmax(0, 1fr); }
+  }
+
+  /* ---- Rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 2.6rem 1.4rem 2.6rem var(--pad);
+      border-right: 1px solid var(--seam);
+    }
+  }
+  .rail-title {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.36rem;
+    counter-reset: rl;
+  }
+  .rail a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.4rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    padding: 0.2rem 0;
+  }
+  .rail a::before {
+    counter-increment: rl;
+    content: counter(rl, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    padding-top: 0.15rem;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--ember); }
+  .rail a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  main { padding: 0 var(--pad) 5rem; min-width: 0; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 3.2rem 0 2rem;
+    border-bottom: 3px solid var(--ember);
+  }
+  .brandline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .mark { width: 62px; height: 62px; flex: none; display: block; }
+  .peak { transform-box: fill-box; transform-origin: 50% 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .peak { animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both; }
+    .peak:nth-of-type(1) { animation-delay: 0.05s; }
+    .peak:nth-of-type(2) { animation-delay: 0.14s; }
+    .peak:nth-of-type(3) { animation-delay: 0.23s; }
+    .peak:nth-of-type(4) { animation-delay: 0.32s; }
+    .peak:nth-of-type(5) { animation-delay: 0.41s; }
+  }
+  @keyframes grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0.5rem 0 0;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.9rem 0 0;
+    color: var(--ink);
+  }
+  .metastrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin: 1.2rem 0 0;
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block;
+    margin: 1.3rem 0 0;
+    padding: 0.4rem 0.7rem;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+    font-family: var(--f-data);
+    font-size: 0.73rem;
+    color: var(--ink);
+  }
+
+  /* ---- Thesis ---- */
+  .thesis { margin: 2.6rem 0 0; padding: 1.9rem 0 0; }
+  .thesis p.claim {
+    font-family: var(--f-display);
+    font-size: clamp(1.55rem, 4.6vw, 2.35rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ember);
+  }
+  .thesis p.sub { max-width: var(--measure); color: var(--ink-dim); margin: 1rem 0 0; }
+
+  /* ---- Sections ---- */
+  section { padding: 3.1rem 0 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.7rem;
+    align-items: baseline;
+    border-top: 1px solid var(--seam);
+    padding-top: 1rem;
+    margin-bottom: 1.3rem;
+  }
+  .sec-num { font-family: var(--f-data); font-size: 0.78rem; color: var(--ember); }
+  .sec-head h2 {
+    font-family: var(--f-display);
+    font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .sec-head .kicker {
+    grid-column: 2;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-size: 0.98rem;
+    font-weight: 650;
+    margin: 2rem 0 0.55rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 1.6rem 0 0.5rem;
+  }
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 0.95rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0 0 0.5rem; }
+  li::marker { color: var(--moss); }
+  strong { font-weight: 650; }
+  em { font-style: italic; color: var(--ink); }
+  a { color: var(--ember); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+  .lede { font-size: 1.06rem; color: var(--ink); }
+
+  /* ---- Gate strip: what must be true before a tier opens ---- */
+  .gate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.8rem;
+    padding: 0.7rem 0.95rem;
+    margin: 0 0 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    font-size: 0.87rem;
+    color: var(--ink-dim);
+    max-width: none;
+  }
+  .gate.clear { border-left-color: var(--moss); }
+  .gate .glabel {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ember);
+    flex: none;
+  }
+  .gate.clear .glabel { color: var(--moss); }
+  .gate p { margin: 0; max-width: none; }
+
+  /* ---- Platform blocks ---- */
+  .platform {
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--moss);
+    background: var(--surface);
+    padding: 1.4rem 1.3rem;
+    margin: 1.4rem 0;
+  }
+  .platform.hold { border-left-color: var(--ember); }
+  .phead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.9rem;
+    margin: 0 0 0.7rem;
+  }
+  .phead h3 { margin: 0; font-size: 1.12rem; font-family: var(--f-display); font-weight: 400; }
+  .chip {
+    font-family: var(--f-data);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--moss);
+    color: var(--moss);
+    background: var(--moss-quiet);
+    flex: none;
+  }
+  .chip.wait { border-color: var(--ember); color: var(--ember); background: var(--ember-quiet); }
+  .chip.off { border-color: var(--seam); color: var(--ink-faint); background: transparent; }
+  .platform > p:last-child, .platform > ul:last-child { margin-bottom: 0; }
+  .platform .why {
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    margin: 0 0 0.9rem;
+    max-width: none;
+  }
+
+  /* ---- Compact card grid for shorter entries ---- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1px;
+    background: var(--seam);
+    border: 1px solid var(--seam);
+    margin: 1.4rem 0 1.7rem;
+  }
+  .card {
+    background: var(--lift);
+    padding: 1.15rem 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card .cname {
+    font-family: var(--f-display);
+    font-size: 1.12rem;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .card .cnote { font-size: 0.87rem; color: var(--ink-dim); margin: 0; max-width: none; }
+  .card .chip { align-self: flex-start; }
+
+  /* ---- Callouts ---- */
+  .stop, .keep {
+    padding: 1.05rem 1.15rem;
+    margin: 1.4rem 0;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+  }
+  .keep { background: var(--moss-quiet); border-left-color: var(--moss); }
+  .stop > :last-child, .keep > :last-child { margin-bottom: 0; }
+  .stop h4 { color: var(--ember); margin-top: 0; }
+  .keep h4 { color: var(--moss); margin-top: 0; }
+
+  /* ---- Ordered run of operations ---- */
+  .runlist { counter-reset: rn; list-style: none; padding: 0; margin: 1.3rem 0 1.6rem; max-width: var(--measure); }
+  .runlist li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--seam);
+    margin: 0;
+  }
+  .runlist li:last-child { border-bottom: 0; }
+  .runlist li::before {
+    counter-increment: rn;
+    content: counter(rn, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ember);
+    padding-top: 0.22rem;
+  }
+
+  /* ---- Log ---- */
+  .log { display: flex; flex-direction: column; gap: 1px; background: var(--seam); border: 1px solid var(--seam); margin: 1.3rem 0; }
+  .log > div { background: var(--lift); padding: 1.1rem 1.15rem; }
+  .log h4 { margin-top: 0; }
+  .log ul { margin-bottom: 0; max-width: none; }
+  .log li { font-size: 0.88rem; color: var(--ink-dim); }
+  .tag-open h4 { color: var(--ember); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Contents</p>
+    <ol>
+      <li><a href="#s1">The gate before everything</a></li>
+      <li><a href="#s2">Tier 1 — set up now</a></li>
+      <li><a href="#s3">Tier 2 — gated on insurance</a></li>
+      <li><a href="#s4">Tier 3 — phase 2 and later</a></li>
+      <li><a href="#s5">Deliberately not doing</a></li>
+      <li><a href="#s6">Order of operations</a></li>
+      <li><a href="#s7">Fact-check log</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="brandline">
+        <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Sixfold Ridge mark">
+          <path class="peak" d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+          <path class="peak" d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+          <path class="peak" d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+          <path class="peak" d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+          <path class="peak" d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+          <rect x="4" y="86" width="92" height="5" fill="#8AA07A"/>
+        </svg>
+        <div>
+          <p class="wordmark">Sixfold</p>
+          <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+        </div>
+      </div>
+
+      <h1 class="doctitle">Which platforms, in what order, and what has to be true first</h1>
+
+      <div class="metastrip">
+        <span><b>Prepared</b> 2026-08-18</span>
+        <span><b>Companion to</b> Marketing plan §7</span>
+        <span><b>Scope</b> Named accounts, not channel strategy</span>
+      </div>
+
+      <p class="stamp">Draft. Nothing here has been published, posted, scheduled, or registered.</p>
+    </header>
+
+    <div class="thesis">
+      <p class="claim">A twenty-dollar domain is blocking a free channel.</p>
+      <p class="sub">The marketing plan ranks ten <em>channels</em>. This sheet names the actual <em>platforms</em> and sorts them by what gates each one. Working through that produced one finding that changes sequencing: every platform binds ownership to the email used at signup, and the only address Sixfold has belongs to Surge. The domain was already blocking print. It now blocks the two free platforms as well, which moves it ahead of insurance in the order of work.</p>
+    </div>
+
+    <section id="s1">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>The gate before every platform</h2>
+        <p class="kicker">Register the domain first</p>
+      </div>
+
+      <p class="lede">Register <code>sixfoldland.com</code> and stand up an email on it before creating a single account.</p>
+
+      <p>The only address available right now is <code>m.sharpe@surgeftw.com</code>, which is Surge's domain. Signing up with it does three things, all bad:</p>
+
+      <ul>
+        <li><strong>It makes Sixfold's accounts traceable to Surge</strong>, on top of the shared address at 333 W Hampden. §2 of the plan already flags the related-party structure as a live exposure; this makes it publicly visible rather than visible only to the books.</li>
+        <li><strong>Ownership transfer on a verified Google Business Profile is a recovery process, not a settings change.</strong> Doing it later means a week of support tickets against a listing that is by then carrying reviews.</li>
+        <li><strong>Any platform that mails a verification code to a business address</strong> inherits the Surge address problem permanently.</li>
+      </ul>
+
+      <div class="keep">
+        <h4>Why this reorders the plan</h4>
+        <p>Domain registration was already item 3 on the README's next-up list, blocking print. It now blocks platform setup too — and platform setup is otherwise free and available today, while everything in tier 2 waits on insurance quotes that take weeks. A cheap task is holding up the only work that can start immediately.</p>
+      </div>
+    </section>
+
+    <section id="s2">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Tier 1 — set up now</h2>
+        <p class="kicker">Free, and gated on nothing but the domain</p>
+      </div>
+
+      <div class="gate clear">
+        <span class="glabel">Gate</span>
+        <p>Domain and email only. No insurance, no certification, no portfolio required.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Google Business Profile</h3>
+          <span class="chip">Set up first</span>
+        </div>
+        <p class="why">Where a homeowner checks whether a contractor exists before calling</p>
+
+        <p>The one non-negotiable, and the container the phase 1 reviews accumulate in.</p>
+
+        <p>Set it up as a <strong>service-area business</strong> with the address removed. Google's guidance is that a business without a storefront and permanent on-site signage is not eligible as a storefront and should be listed as service-area, and that a business not serving customers at its address should remove it. Sixfold qualifies on both counts — which solves the shared-address problem for free.</p>
+
+        <h4>Constraints, from Google's documentation</h4>
+        <ul>
+          <li>Service areas are specified <strong>by city or postal code</strong>, not by radius. Up to 20 distinct areas.</li>
+          <li>The overall area <strong>should not exceed about 2 hours of driving time</strong> from where the business is based. Monument out to the El Paso, Teller and southern Douglas County foothills sits comfortably inside that, so the whole phase 1 target geography is coverable.</li>
+          <li>Service-area edits go through review and can take up to 48 hours to appear.</li>
+        </ul>
+
+        <p>Two things to get right at setup. <strong>Categories</strong> determine which searches the profile can surface for, and the primary one is weighted most heavily — pick against what a homeowner would actually type, not how the trade describes itself. And <strong>the service area is a claim about where Sixfold works, not a limit on it</strong>, the same principle as the site copy rule in §5 of the plan.</p>
+
+        <div class="stop">
+          <h4>Do not</h4>
+          <p>No "licensed and insured" in the profile description. The §1 hard rule covers platform bios exactly as it covers print.</p>
+        </div>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Nextdoor</h3>
+          <span class="chip">Claim now, pays later</span>
+        </div>
+        <p class="why">Neighbourhood-scoped — the same geography the canvass thesis rests on</p>
+
+        <p>Structurally the closest match to the plan's core argument. Wildfire risk maps to specific streets, Nextdoor is organised by those streets, and it is where a homeowner who has just opened an HB25&#8209;1182 risk-score notice asks what it means. §2's point — that the trigger event arrives by mail with no vendor attached — describes a Nextdoor thread as accurately as it describes a doorstep.</p>
+
+        <p>Claiming a Business Page is free. What matters is <strong>where the value actually comes from</strong>, because it is not cold posting:</p>
+
+        <ul>
+          <li><strong>Recommendations are the mechanism.</strong> Nextdoor's model is neighbour-to-neighbour, and a recommendation surfaces in the recommender's own neighbourhood. A completed job in a foothill subdivision generates visibility <em>in that subdivision</em> — precisely the geography the canvass wants, and precisely the geography an Monument-based page cannot reach on its own.</li>
+          <li><strong>So the page's value is downstream of phase 1 jobs, not upstream of them.</strong> Claim it now so recommendations have somewhere to land from job one. Do not expect cold leads before there are jobs.</li>
+        </ul>
+
+        <div class="stop">
+          <h4>Two cautions</h4>
+          <p><strong>Nextdoor punishes overt selling.</strong> The register has to match the door script in §2 — the change in the law, what it means, here is the one-pager. Sales posts get flagged by neighbours, and being flagged there is worse than being absent.</p>
+          <p><strong>It compounds with the canvass rather than adding to it.</strong> If a canvasser irritates a street, Nextdoor is where that gets posted, with a company name attached, to exactly the neighbourhood being worked. Confirm solicitation permits and drill the script <em>before</em> the page is live and the canvass is running.</p>
+        </div>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Facebook — local and HOA groups</h3>
+          <span class="chip">Join, read, wait</span>
+        </div>
+        <p class="why">Where FRWRM conversation happens ahead of the 8 Oct deadline</p>
+
+        <p>Groups, not a business page, and emphatically not ads. Neighbourhood and HOA groups are where board members discuss grant applications, and where the same insurance-notice question gets asked as on Nextdoor.</p>
+
+        <p>Same register rule. Most local groups carry an explicit no-promotion policy and a moderator who enforces it — answering a question usefully is permitted almost everywhere, posting an offer is not. Read each group's rules before posting once.</p>
+
+        <p>A business page is worth creating only as the thing a group comment can link back to. It is a credential, not a channel.</p>
+      </div>
+    </section>
+
+    <section id="s3">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Tier 2 — gated on insurance</h2>
+        <p class="kicker">Highest intent in the market, and all of it locked</p>
+      </div>
+
+      <div class="gate">
+        <span class="glabel">Gate</span>
+        <p>General liability and workers comp in force. Nothing in this tier can be joined, advertised, or referenced in copy before then.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <span class="chip wait">Blocked</span>
+          <span class="cname">Douglas County approved contractor list</span>
+          <p class="cnote">Channel #2 in the plan. Requirements unknown — needs the phone call to the Building Division. Feeds homeowners who already hold cost-share funding and must obtain two bids from the list.</p>
+        </div>
+        <div class="card">
+          <span class="chip wait">Blocked</span>
+          <span class="cname">Other county cost-share programmes</span>
+          <p class="cnote">The same work applies to any county running one. Worth asking on the Douglas call which neighbouring counties operate equivalents.</p>
+        </div>
+        <div class="card">
+          <span class="chip wait">Unconfirmed</span>
+          <span class="cname">Fire district &amp; CSFS vendor lists</span>
+          <p class="cnote">Not confirmed to exist as formal lists. One question on the county call, one to a district office. If real, they are free referral channels feeding pre-funded work.</p>
+        </div>
+      </div>
+
+      <div class="stop">
+        <h4>Copy rule carries over</h4>
+        <p>The §1 rule against advertising the Douglas County cost-share before listing applies to platform bios and posts as well as to print — and to what a canvasser says out loud.</p>
+      </div>
+    </section>
+
+    <section id="s4">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Tier 3 — phase 2 and later</h2>
+        <p class="kicker">Real, but they lag on content or proof</p>
+      </div>
+
+      <div class="gate">
+        <span class="glabel">Gate</span>
+        <p>Completed jobs, photographs, and reviews. These convert against evidence that phase 1 has not produced yet.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <span class="chip off">Phase 2</span>
+          <span class="cname">The site at sixfoldland.com</span>
+          <p class="cnote">The funding explainer is the search asset (§5). Lags because it needs content and real job costs to publish pricing from.</p>
+        </div>
+        <div class="card">
+          <span class="chip off">Shoot now, publish later</span>
+          <span class="cname">YouTube and Instagram</span>
+          <p class="cnote">Strong raw material: felling, chipping, fixed-angle before-and-afters. Footage cost is already zero, because §4 requires those photo sets on every job for insurance documentation anyway. Builds brand rather than local leads, which is why it is not tier 1.</p>
+        </div>
+        <div class="card">
+          <span class="chip off">Phase 3, capped</span>
+          <span class="cname">Paid search</span>
+          <p class="cnote">The plan's read stands — a capped test at most, and only once a site and reviews exist to convert against.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="s5">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Deliberately not doing</h2>
+        <p class="kicker">Decided against, with the reason recorded</p>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Lead marketplaces — Angi, Thumbtack, HomeAdvisor</h3>
+          <span class="chip off">Skip</span>
+        </div>
+        <p>Not a cost objection, a strategy objection. Their model sells the same lead to several contractors at once, which turns every conversation into a price comparison. Sixfold's entire differentiator is a two-minute conversation about where the money comes from, and that conversation does not survive a lead form. They also push toward lead volume when phase 1 needs ten well-documented jobs, and they compete on exactly the credential axis §1 concluded Sixfold loses this year.</p>
+        <p>Revisit only if phase 1 and 2 fail to fill winter capacity — as a stopgap with a hard spend cap, not as a channel.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <span class="chip off">Skip</span>
+          <span class="cname">Paid social &amp; display</span>
+          <p class="cnote">Unchanged from §7. Fire mitigation is a considered, geographic, trigger-driven purchase, and there is nothing to convert against yet.</p>
+        </div>
+        <div class="card">
+          <span class="chip off">Skip</span>
+          <span class="cname">LinkedIn</span>
+          <p class="cnote">Weak fit. HOA and fire-district board members are volunteers reached through their district, their management company, and their own email threads — not a professional network. FRWRM is a relationship motion, not a platform one.</p>
+        </div>
+        <div class="card">
+          <span class="chip off">Skip</span>
+          <span class="cname">TikTok</span>
+          <p class="cnote">The content would perform. The audience is not Front Range homeowners with a risk score and an insurance notice on the counter, and phase 1 cannot service leads it cannot geographically qualify.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="s6">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Order of operations</h2>
+        <p class="kicker">A real sequence — each step unblocks the next</p>
+      </div>
+
+      <ol class="runlist">
+        <li><span>Register <code>sixfoldland.com</code>; set up a forwarder or mailbox on it</span></li>
+        <li><span>Create the Google Business Profile as a service-area business, address hidden, categories chosen deliberately</span></li>
+        <li><span>Claim the Nextdoor Business Page</span></li>
+        <li><span>Read the rules of three to five local and HOA groups covering the phase 1 geography; join, do not post yet</span></li>
+        <li><span><strong>Decide the review ask before job one</strong> — see below</span></li>
+        <li><span>Insurance bound → apply to the Douglas County list and anything else in tier 2</span></li>
+        <li><span>Phase 2 → the site, then the video decision</span></li>
+      </ol>
+
+      <h3>The review ask needs a named platform</h3>
+      <p>§4 requires asking for the review at completion, on site, phone in hand. That instruction is incomplete until it names a platform, because asking for two at once reliably produces neither.</p>
+      <p><strong>Google first, every time</strong> — it is where the next homeowner checks. Nextdoor second, and only from customers in the foothill subdivisions where a neighbourhood recommendation carries the geographic value described above.</p>
+
+      <div class="stop">
+        <h4>Blocked on</h4>
+        <p>Check each platform's review policy before writing the ask script. Both restrict incentivised reviews, and the exact wording a contractor may use is a live compliance question, not a style question. Not verified here.</p>
+      </div>
+    </section>
+
+    <section id="s7">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>Fact-check log</h2>
+        <p class="kicker">What is sourced, what was corrected, what is still open</p>
+      </div>
+
+      <div class="log">
+        <div>
+          <h4>Verified — first-party sources</h4>
+          <ul>
+            <li><strong>Google Business Profile service-area rules:</strong> address should be removed where customers are not served at the business address; a business without a storefront and permanent on-site signage should be listed as service-area; areas specified by city or postal code with up to 20 areas; overall area should not exceed about 2 hours of driving time from base; edits take up to 48 hours after review — <a href="https://support.google.com/business/answer/9157481?hl=en">Google Business Profile Help, service areas</a> and <a href="https://support.google.com/business/answer/2853879?hl=en">manage your business address</a></li>
+            <li><strong>Nextdoor Business Pages</strong> are free to claim, and the free tier includes collecting recommendations and posting to selected neighbourhoods with an adjustable radius — <a href="https://business.nextdoor.com/en-us/getting-started/business-page">Nextdoor Business, free business page</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Corrected during research</h4>
+          <ul>
+            <li>Secondary write-ups state that free Nextdoor business posts reach only neighbours <strong>within two miles</strong> and are capped at <strong>twice per month</strong>. Nextdoor's own page states unlimited free posts with manually selectable neighbourhoods and an adjustable radius. The two conflict and the first-party source wins, so the aggregator figures are not used. A textbook instance of the pattern the research standard exists for — three of the sources carrying those figures were SEO content sites.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved — flagged, not guessed</h4>
+          <ul>
+            <li><strong>How far Nextdoor free-post reach extends</strong> from a Monument business address. Nextdoor documents an adjustable radius but states no maximum for the free tier. This determines whether Nextdoor is a cold channel into the foothills or purely a recommendation surface. The sheet assumes the conservative reading; confirm in the account once the page exists.</li>
+            <li><strong>Google and Nextdoor review-solicitation policies</strong> — what a contractor may ask for on site. Blocks the closeout script wording.</li>
+            <li><strong>Whether fire protection districts or CSFS maintain formal vendor lists.</strong> Assumed possible, not confirmed.</li>
+            <li><strong>Nextdoor and Facebook group promotion rules</strong> per group. Vary by moderator; read before posting.</li>
+            <li><strong>Google Business Profile verification method</strong> for a service-area business with a hidden address, and whether verification must complete before the address can be hidden. Community threads report friction; not confirmed against Google's documentation.</li>
+            <li><strong>Lead marketplace terms.</strong> The shared-lead model is the structural objection and is well established, but current per-lead pricing and exclusivity options for this trade were not researched, because the recommendation is to skip them regardless.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>Sixfold LLC · Monument, CO · Platform sheet prepared 2026-08-18 · Companion to the marketing plan, August 2026 – May 2027.</p>
+      <p>Nothing in this sheet has been published, posted or scheduled, and nothing will be without explicit per-request authorisation. Claiming a profile is not publishing; posting to one is.</p>
+    </footer>
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+/*
+  Sixfold — social profile and banner generator.
+
+  Renders every profile picture and banner at exact upload pixel dimensions by
+  writing one HTML page per asset and screenshotting it in headless Chrome at
+  that window size with device scale factor 1. One artwork definition, many
+  sizes: change the composition here and every platform re-exports consistently.
+
+  Mark: RIDGE, single colour, Ember (#E4703A) — the "ember single colour"
+  format. The mark itself is the revised tree-and-roots Ridge from
+  ../sixfold-mark-ridge-mono.svg, which uses currentColor, so colour is set on
+  the wrapper and never inside the path data.
+
+  NOTE ON THE MARK CHOICE: the project README still lists the A (Sweep) vs
+  C (Ridge) decision as Brandon's open call. Ridge is what every built Sixfold
+  asset uses and what the flyer settled on, so it is what these use. If Sweep
+  wins, swap MARK below and re-run — nothing else changes.
+
+  Run:  node build-social.mjs
+  Needs Chrome. Outputs .png beside this file.
+*/
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const tmp = join(here, '.build');
+mkdirSync(tmp, { recursive: true });
+
+const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+
+/* Palette — the agreed Sixfold five. */
+const PINE = '#0E1512';
+const EMBER = '#E4703A';
+const BONE = '#EDE7DC';
+const MOSS = '#8AA07A';
+
+/* ---------------------------------------------------------------------------
+   The Ridge mark, single colour. viewBox 0 0 100 116.
+   `full` includes the roots; `crest` stops at the ground line.
+
+   Why two: the ten root strands run 0.75–1.6 units wide on a 100-unit canvas.
+   At a 48px avatar that is a third of a pixel and they render as grey mush that
+   dirties the silhouette. The crest variant exists for small circular crops.
+   Above the ground line the two are identical.
+--------------------------------------------------------------------------- */
+const RIDGE_CREST = `
+  <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+  <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+  <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+  <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+  <rect x="20.4" y="77" width="3.2" height="7"/>
+  <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+  <path d="M22 62 L12 74 L32 74 Z"/>
+  <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+  <rect x="4" y="86" width="92" height="5"/>`;
+
+const RIDGE_ROOTS = `
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+    <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+    <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+    <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+    <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+    <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+    <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+    <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+    <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+    <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+  </g>`;
+
+/**
+ * roots=true → the full revised mark. roots=false → crest only, for small crops.
+ *
+ * The viewBox is TIGHT to the drawn artwork rather than the source file's
+ * 0 0 100 116 canvas. The source leaves 14 units of air above the tallest peak
+ * and, without roots, 25 below the ground line. Inside a circular avatar that
+ * padding is what made the mark read small and sit low — the empty canvas was
+ * being centred, not the mark. Drawn extents: x 4→98; y 14→113 with roots,
+ * 14→91 without.
+ */
+const mark = (roots) =>
+  `<svg class="mark" viewBox="4 14 94 ${roots ? 99 : 77}" role="img" aria-label="Sixfold">
+     <g fill="currentColor">${RIDGE_CREST}</g>${roots ? RIDGE_ROOTS : ''}
+   </svg>`;
+
+/* ---------------------------------------------------------------------------
+   Compositions.
+--------------------------------------------------------------------------- */
+
+/**
+ * Square profile mark. Everything sits inside a centred circle of 0.86×side,
+ * because all three platforms crop the avatar to a circle and Google may also
+ * show it square — so the artwork has to read either way.
+ */
+const profile = ({ ground, ink, roots }) => `
+<div class="art profile" style="background:${ground};color:${ink}">
+  <div class="markwrap">${mark(roots)}</div>
+</div>`;
+
+/**
+ * Banner. Composition is CENTRE-WEIGHTED on purpose: Facebook renders a page
+ * cover at a wider ratio on desktop than on a phone and crops the sides to do
+ * it, and neither Facebook nor Nextdoor publishes the crop. Anything that has
+ * to survive lives inside the middle 58% of the width, marked by the safe area.
+ */
+const banner = ({ w, h }) => {
+  /*
+    One unit = 1% of the SHORTER of the canvas height and the width divided by
+    the reference 2.63:1 cover proportion. Scaling off height alone blows the
+    lockup up on a 16:9 canvas — at 1920×1080 the wordmark came out 324px on a
+    1920-wide banner. This keeps the composition the same relative size
+    whichever ratio it is exported at.
+  */
+  const u = Math.min(h, w / 2.63) / 100;
+  return `
+<div class="art banner" style="background:${PINE};width:${w}px;height:${h}px;--u:${u}px">
+  <div class="glow"></div>
+  <div class="stack">
+    <div class="lockup">
+      <div class="markwrap" style="color:${EMBER}">${mark(true)}</div>
+      <div class="wordmark" style="color:${BONE}">Sixfold</div>
+    </div>
+    <div class="descriptor" style="color:${MOSS}">Land &amp; Fire</div>
+    <div class="rule" style="background:${EMBER}"></div>
+    <div class="line" style="color:${BONE}">We do the work and show you who pays for it.</div>
+    <div class="phone" style="color:${MOSS}">Fire mitigation · Front Range · (720) 772-6146</div>
+  </div>
+</div>`;
+};
+
+const CSS = `
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .art{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+
+  /* --- profile ---
+     68% width sits inside the inscribed circle with room to spare, and the
+     tight viewBox means that 68% is 68% of actual mark, not of empty canvas.
+     The 2% upward nudge is optical: the ground line and roots weight the mark
+     low, so geometric centring reads as sagging. */
+  .profile{width:100%;height:100%}
+  .profile .markwrap{width:62%;display:flex;align-items:center;justify-content:center;transform:translateY(-2%)}
+  .profile .mark{width:100%;height:auto;display:block}
+
+  /* --- banner --- */
+  .banner .glow{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 150% at 50% 118%, rgba(228,112,58,0.20) 0%, rgba(228,112,58,0.055) 38%, rgba(228,112,58,0) 66%);
+  }
+  /* Everything is centred and symmetric. That is not a style preference:
+     neither Facebook nor Nextdoor publishes its cover crop, and a symmetric
+     composition loses the same amount from both sides whatever they take. */
+  .stack{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:0 6%}
+  .lockup{display:flex;align-items:center;gap:calc(var(--u)*4.5)}
+  .lockup .markwrap{width:calc(var(--u)*23)}
+  .lockup .mark{width:100%;height:auto;display:block}
+  .wordmark{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:0.84;letter-spacing:-0.018em;
+  }
+  .descriptor{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*4.4);letter-spacing:0.34em;text-transform:uppercase;
+    margin-top:calc(var(--u)*2.6);text-indent:0.34em;
+  }
+  .rule{width:calc(var(--u)*20);height:calc(var(--u)*0.85);opacity:0.95;margin-top:calc(var(--u)*5.5)}
+  .line{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*8.8);line-height:1.16;text-align:center;text-wrap:balance;max-width:80%;
+    margin-top:calc(var(--u)*5);
+  }
+  .phone{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*4.2);letter-spacing:0.2em;text-transform:uppercase;text-align:center;
+    margin-top:calc(var(--u)*4.6);text-indent:0.2em;
+  }
+`;
+
+/* ---------------------------------------------------------------------------
+   Asset list. `note` is carried into the README so the provenance of every
+   dimension travels with the file.
+--------------------------------------------------------------------------- */
+const ASSETS = [
+  // Profile / logo — one artwork, the sizes each platform documents or accepts.
+  { file: 'sixfold-profile-ember-1024.png', w: 1024, h: 1024,
+    html: profile({ ground: PINE, ink: EMBER, roots: true }) },
+  { file: 'sixfold-profile-ember-720.png', w: 720, h: 720,
+    html: profile({ ground: PINE, ink: EMBER, roots: true }) },
+  { file: 'sixfold-profile-ember-small-512.png', w: 512, h: 512,
+    html: profile({ ground: PINE, ink: EMBER, roots: false }) },
+  { file: 'sixfold-profile-ember-on-bone-1024.png', w: 1024, h: 1024,
+    html: profile({ ground: BONE, ink: EMBER, roots: true }) },
+
+  // Banners.
+  { file: 'sixfold-banner-facebook-1640x624.png', w: 1640, h: 624, html: banner({ w: 1640, h: 624 }) },
+  { file: 'sixfold-banner-16x9-1920x1080.png',    w: 1920, h: 1080, html: banner({ w: 1920, h: 1080 }) },
+  { file: 'sixfold-banner-16x9-1024x576.png',     w: 1024, h: 576,  html: banner({ w: 1024, h: 576 }) },
+];
+
+for (const a of ASSETS) {
+  const page = `<!doctype html><meta charset="utf-8"><style>${CSS}
+    body{width:${a.w}px;height:${a.h}px}
+    .art{width:${a.w}px;height:${a.h}px}</style>${a.html}`;
+  const src = join(tmp, a.file.replace('.png', '.html'));
+  writeFileSync(src, page, 'utf8');
+
+  execFileSync(CHROME, [
+    '--headless=new', '--disable-gpu', '--hide-scrollbars',
+    '--force-device-scale-factor=1', '--force-prefers-reduced-motion',
+    '--default-background-color=00000000',
+    `--virtual-time-budget=3000`,
+    `--window-size=${a.w},${a.h}`,
+    `--screenshot=${join(here, a.file)}`,
+    `file:///${src.replace(/\\/g, '/')}`,
+  ], { stdio: 'ignore' });
+
+  console.log(`${a.file}  ${a.w}x${a.h}`);
+}

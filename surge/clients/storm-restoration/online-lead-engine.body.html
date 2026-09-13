@@ -1,0 +1,462 @@
+<style>
+  /* ---- Extensions to the shared platform-sheet block. Additions only. ---- */
+  .internal {
+    padding: 1.15rem 1.25rem;
+    margin: 1.5rem 0;
+    background: var(--halt-quiet);
+    border: 1px solid var(--halt);
+    border-left: 3px solid var(--halt);
+  }
+  .internal .lock {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--halt);
+    margin: 0 0 0.65rem;
+    max-width: none;
+  }
+  .internal > :last-child { margin-bottom: 0; }
+  .internal ul { margin-bottom: 0.95rem; }
+
+  .twoup {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0 1.7rem;
+  }
+  .twoup > div {
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    border-top: 3px solid var(--green);
+    padding: 1.25rem 1.2rem;
+  }
+  .twoup .mname {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 1.2rem;
+    line-height: 1.15;
+    color: var(--ink);
+    margin: 0 0 0.4rem;
+  }
+  .twoup p { margin: 0; font-size: 0.87rem; color: var(--ink-dim); max-width: none; }
+
+  tbody td { font-variant-numeric: tabular-nums; }
+  tbody tr.key td { background: var(--green-quiet); color: var(--ink); }
+
+  .steps { counter-reset: sn; }
+  .kills li::marker { color: var(--halt); }
+</style>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Contents</p>
+    <ol>
+      <li><a href="#s1">What a lead is worth</a></li>
+      <li><a href="#s2">Stage 0 — the plumbing</a></li>
+      <li><a href="#s3">Tier 1 — free, available now</a></li>
+      <li><a href="#s4">Tier 2 — paid and capped</a></li>
+      <li><a href="#s5">Tier 3 — compounding</a></li>
+      <li><a href="#s6">Speed to lead</a></li>
+      <li><a href="#s7">The funnel you hold</a></li>
+      <li><a href="#s8">Build order</a></li>
+      <li><a href="#s9">What kills this</a></li>
+      <li><a href="#s10">Fact-check log</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="brandline">
+        <img src="__LOGO__" alt="Surge">
+        <p class="descriptor">Online Lead Generation</p>
+      </div>
+
+      <h1 class="doctitle">How a lead arrives on a screen and leaves as a booked inspection</h1>
+
+      <div class="metastrip">
+        <span><b>Prepared</b> 2026-08-18</span>
+        <span><b>Companion to</b> the platform sheet</span>
+        <span><b>Scope</b> Online only — no doors, no bought lists</span>
+      </div>
+
+      <p class="stamp">Plan. Nothing built, spent, published or scheduled.</p>
+
+      <div class="restricted">
+        <h4>Restricted — internal, context only</h4>
+        <p>This sheet names the client, and §1 contains the commission structure, which is <strong>never publishable in any register</strong> — not the splits, not the stages, not the income motive. Client identity is Tier&nbsp;4: sector only. Nothing here goes into a draft, a caption, alt text, a filename or a payload.</p>
+      </div>
+    </header>
+
+    <div class="thesis">
+      <p class="claim">Online-only doesn't change what converts. It changes where the lead starts.</p>
+      <p class="sub">The field engine already works — a rep inspects, same day, free, and the client closes and repairs. Take away the door and the call list and everything downstream of the inspection is unchanged. What changes is the top: a lead now arrives from someone who has never met anyone from Surge, whose interest decays by the hour, and who is being called by three other contractors at the same time. That moves the bottleneck onto two numbers nobody currently tracks — <em>cost per booked inspection</em> and <em>median minutes to first call</em>. Everything here exists to produce them.</p>
+    </div>
+
+    <section id="s1">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>What an online lead is, and what each stage is worth</h2>
+        <p class="kicker">The definition decides the metric</p>
+      </div>
+
+      <p class="lede"><strong>A lead is not a form fill.</strong> A lead is a property owner with plausible storm damage who has a free inspection on the calendar. Anything short of that is a phone number.</p>
+
+      <p>That distinction is not pedantry, and the reason is economic.</p>
+
+      <div class="internal">
+        <p class="lock">Internal — never publishable, in any register</p>
+        <p>The commission splits into three equal parts by pipeline stage — <strong>lead, inspection, close: one third each.</strong></p>
+        <ul>
+          <li>Generate the lead alone — <strong>one third</strong>.</li>
+          <li>Generate it <em>and</em> inspect it — <strong>two thirds</strong>.</li>
+        </ul>
+        <p>A 100% increase in the take, for work Surge already performs, same day, for free. Which settles the metric: <strong>never cost per lead</strong>, always cost per <em>booked inspection</em> — because the inspection is where the second third lives.</p>
+        <p>It also reframes every cold form fill. An unanswered lead does not waste one third. It wastes two.</p>
+        <p>Pay structure, splits and the income motive stay out of drafts, site copy, flyers and captions entirely. Prioritisation context, nothing else.</p>
+      </div>
+
+      <div class="keep">
+        <h4>The practical consequence</h4>
+        <p>A channel producing 100 form fills and 8 inspections is worse than one producing 30 form fills and 15, at any price. Optimise the ads, the form and the follow-up for booked inspections, and treat lower raw volume as a feature rather than a problem.</p>
+      </div>
+    </section>
+
+    <section id="s2">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Stage 0 — the plumbing, before a dollar of spend</h2>
+        <p class="kicker">Five prerequisites, not a sequence</p>
+      </div>
+
+      <p>None costs money, all are load-bearing, and the order barely matters. What matters is that spending before they exist buys leads that leak out of a system which cannot hold them.</p>
+
+      <div class="cards">
+        <div class="card">
+          <span class="cname">A destination that can book</span>
+          <p class="cnote">Not a phone number. Visible <strong>same-day slot</strong>, address, damage type, optional photo. The homeowner's question is <em>when can someone look at it</em>.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Routing with an owner and a clock</span>
+          <p class="cnote">Who receives it, on which device, within how many minutes, and what happens if they don't. A rota, not a piece of software.</p>
+        </div>
+        <div class="card">
+          <span class="cname">The consent line</span>
+          <p class="cnote">One paragraph. Gate 3 of the platform sheet, and it blocks every paid channel until it is written.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Tracking that survives the handoff</span>
+          <p class="cnote">Source on every lead, carried through to booked, inspected and closed. Also the only proof of which leads were Surge's.</p>
+        </div>
+        <div class="card">
+          <span class="cname">A written follow-up sequence</span>
+          <p class="cnote">Text within minutes, call, second call next day, one more at day four, then stop. Written down, not remembered.</p>
+        </div>
+      </div>
+
+      <div class="stop">
+        <h4>Do not spend until the destination, the routing, the consent line and the tracking exist</h4>
+        <p>The platform sheet's gates are legal. These are operational, and skipping them is how a campaign produces leads, no revenue, and no explanation of why.</p>
+      </div>
+    </section>
+
+    <section id="s3">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Tier 1 — free, and available now</h2>
+        <p class="kicker">Costs time and nothing else</p>
+      </div>
+
+      <div class="gate clear">
+        <span class="glabel">Gate</span>
+        <p>The brand decision from the platform sheet. Nothing else.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>The client's Google Business Profile</h3>
+          <span class="chip">Ask for access</span>
+        </div>
+        <p class="why">The highest-value free asset in the campaign — and it is theirs, not Surge's</p>
+        <p>Once manager access exists: primary category, service area, photos, seeded Q&amp;A, and above all <strong>reviews</strong>.</p>
+        <p><strong>Reviews are the conversion asset for every other channel on this sheet.</strong> A paid click lands on a company name, and the homeowner searches that name before they call. Every dollar of Tier 2 is priced by what they find.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>The review engine</h3>
+          <span class="chip">Only thing that compounds</span>
+        </div>
+        <p class="why">Asked at completion, on site, phone in hand</p>
+        <p><strong>One platform named</strong> — Google first, every time. Asking for two at once reliably produces neither. Everything else in Tier 1 is a channel; this is an asset, and it is the one that makes the paid tiers cheaper over time.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Neighbourhood surfaces, after a storm</h3>
+          <span class="chip">Same day or not at all</span>
+        </div>
+        <p class="why">Nextdoor and local Facebook groups</p>
+        <p>Information-first: what the storm did, what a claim deadline looks like, free inspection available. Geographically identical to the swath and the fastest-moving surface there is. The register cautions in the platform sheet are not optional here — storm-chasing contractors are the most-flagged category on these platforms.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Storm-event pages</h3>
+          <span class="chip">Accumulates</span>
+        </div>
+        <p class="why">One page per named hail or wind event</p>
+        <p>The date, the counties hit, what it did, what a claim looks like, how to get looked at. Free, searchable, and factual — NOAA's public storm reports supply the specifics. The only organic asset that captures the exact moment of intent, and they stack up across seasons.</p>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Organic social on the existing accounts</h3>
+          <span class="chip wait">Not a lead channel</span>
+        </div>
+        <p class="why">Inspection footage, on accounts Surge already has</p>
+        <p>A credibility channel. It makes every paid channel cheaper by improving what the homeowner finds when they check — but counting leads from it will make it look like a failure, because that is not its job.</p>
+      </div>
+    </section>
+
+    <section id="s4">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Tier 2 — paid, capped, and testable</h2>
+        <p class="kicker">One channel at a time</p>
+      </div>
+
+      <div class="gate">
+        <span class="glabel">Gate</span>
+        <p>Consent line written, tracking live, someone on the clock to answer, credentials on the client's side.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Meta lead ads</h3>
+          <span class="chip">Start here</span>
+        </div>
+        <p class="why">The only channel where the form can be qualified before it reaches a human</p>
+
+        <ul>
+          <li><strong>Use the higher-intent instant form, not the volume one.</strong> Meta's instant form types include more volume, higher intent and rich creative; the higher-intent version adds a review step so the person confirms their details before submitting.</li>
+          <li><strong>Add qualifying questions with conditional answers</strong>, so a wrong answer routes out rather than into the pipeline.</li>
+          <li><strong>Fewer and better, not cheaper.</strong> The room has a finite number of dials in an hour. Every dial spent on an unqualified form is a qualified lead going cold somewhere else.</li>
+          <li><strong>Geo to the swath, not the metro.</strong> The damage has a shape; the targeting should have the same shape.</li>
+          <li><strong>The creative is the inspection, not the roof.</strong> Same-day, at the door, free — the three things no competitor is advertising.</li>
+          <li><strong>Real-time delivery to the person who calls.</strong> Not a CSV somebody downloads on Monday. A Monday CSV is a bin.</li>
+        </ul>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Google Search</h3>
+          <span class="chip wait">Second, not first</span>
+        </div>
+        <p class="why">Highest intent, highest cost</p>
+        <p><strong>Negative keywords matter more than keywords</strong> — strip DIY, jobs, salary, "how to", training and insurance-advice traffic before it spends anything. Landing page must be the licensed party's, and every headline runs through gate 2 of the platform sheet.</p>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Local Services Ads</h3>
+          <span class="chip wait">Client's account, out of season</span>
+        </div>
+        <p class="why">Three-to-four week screening on their credentials</p>
+        <p>It does not fit inside a hail response. Either it is started well before a season or it is not started.</p>
+      </div>
+
+      <div class="stop">
+        <h4>One channel, capped, for one storm cycle</h4>
+        <p>Two at once means neither can be diagnosed — and the entire purpose of Tier 2 is to produce a cost per booked inspection that can be trusted.</p>
+      </div>
+    </section>
+
+    <section id="s5">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Tier 3 — compounding</h2>
+        <p class="kicker">Real, and none of it is next</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <span class="cname">Retargeting</span>
+          <span class="chip off">Needs traffic first</span>
+          <p class="cnote">Only once there is enough traffic to retarget and a page worth returning to.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Spanish-language campaigns</span>
+          <span class="chip off">Cheap edge, real work</span>
+          <p class="cnote">The client's site is already localised and Denver metro has the audience. Needs a Spanish-speaking rep on the call, or it produces leads nobody can close.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Inspection walkthrough video</span>
+          <span class="chip off">Search-durable</span>
+          <p class="cnote">Keeps working, unlike feed content. Depends on banked, clearance-checked footage.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Email and SMS to the non-converted</span>
+          <span class="chip off">Within consent</span>
+          <p class="cnote">Inside the consent that was actually captured, and not one step beyond it.</p>
+        </div>
+        <div class="card">
+          <span class="cname">The client's referral programme</span>
+          <span class="chip off">Ask before building</span>
+          <p class="cnote">Their site carries per-user referral links with configurable payouts, currently marked inactive. A mechanism may already exist.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="s6">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Speed to lead — the operational rule</h2>
+        <p class="kicker">Real evidence, heavily distorted in circulation</p>
+      </div>
+
+      <p><strong>What the research says.</strong> <em>The Short Life of Online Sales Leads</em>, Harvard Business Review, March 2011 — Oldroyd, McElheran and Elkington audited 2,241 US companies with test web leads. 23% never responded at all, and the average response among those who did was 42 hours. Firms attempting contact <strong>within an hour</strong> were nearly <strong>7 times</strong> as likely to qualify the lead as those attempting an hour later, and more than <strong>60 times</strong> as likely as those waiting 24 hours or more.</p>
+
+      <div class="stop">
+        <h4>What it does not say</h4>
+        <p>The widely-quoted "call within 5 minutes and you are 21 times more likely to convert" is <strong>not</strong> from HBR. It comes from a separate vendor study by the company one of the authors led, and it is repeated everywhere without that attribution. Not used here.</p>
+      </div>
+
+      <p><strong>The rule for Surge:</strong> <em>someone attempts contact inside the hour, every hour the ads are running.</em> That forces a decision rather than a preference — either the ads run only while the room is staffed, or someone carries the phone outside those hours. Both are real choices with real costs, and pretending the question does not exist is exactly what produces a 42-hour average.</p>
+
+      <div class="keep">
+        <h4>The cheapest advantage on this sheet</h4>
+        <p>Every competitor buys the same clicks in the same swath at the same price. The one who calls first books the inspection — and the inspection is the second third.</p>
+      </div>
+    </section>
+
+    <section id="s7">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>The funnel you hold</h2>
+        <p class="kicker">A shape to fill, not numbers to expect</p>
+      </div>
+
+      <p><strong>There are no benchmark figures in this section, deliberately.</strong> No credible cost-per-lead or conversion number exists for this campaign, in this market, at this moment — and the ones published by agencies in this trade are either from a different market or invented outright. The first capped test produces the real ones.</p>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Stage</th><th>Record</th><th>Why it exists</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Clicks and impressions</td><td>spend, source, geo</td><td>The cost floor, nothing more</td></tr>
+            <tr><td>Form fills</td><td>source, timestamp</td><td>Raw volume — the vanity number</td></tr>
+            <tr><td>Contacted</td><td><strong>minutes to first attempt</strong></td><td>The only lever entirely inside Surge's control</td></tr>
+            <tr class="key"><td><strong>Booked inspections</strong></td><td>source</td><td><strong>The real denominator</strong></td></tr>
+            <tr><td>Inspected</td><td>same-day yes/no</td><td>Whether the promise in the ad was kept</td></tr>
+            <tr><td>Closed by the client</td><td>source</td><td>The number that actually pays</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Two numbers run the whole thing</h3>
+
+      <div class="twoup">
+        <div>
+          <span class="mname">Cost per booked inspection</span>
+          <p>By source. The only figure that can compare one channel against another honestly.</p>
+        </div>
+        <div>
+          <span class="mname">Median minutes to first contact</span>
+          <p>The lever that costs nothing to move and changes everything downstream of it.</p>
+        </div>
+      </div>
+
+      <p>Everything else on that table is diagnostics for when one of those two moves the wrong way.</p>
+    </section>
+
+    <section id="s8">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Build order</h2>
+        <p class="kicker">Free and blocking first, paid and measurable last</p>
+      </div>
+
+      <ol class="runlist steps">
+        <li><strong>Answer gate 1 of the platform sheet</strong> — whose brand runs the ads. Nothing below survives a different answer.</li>
+        <li><strong>Write the consent line.</strong> One paragraph; it unblocks every paid channel.</li>
+        <li><strong>Build the destination page</strong> with a visible same-day slot and a real booking action.</li>
+        <li><strong>Write the routing rota</strong> — named owner, device, response window, escalation.</li>
+        <li><strong>Stand up tracking</strong> from source through to booked and closed, and confirm it survives the handoff to the client.</li>
+        <li><strong>Write the follow-up sequence and the review-ask script.</strong> One platform named in the ask.</li>
+        <li><strong>Request manager access</strong> to the client's Business Profile; fix category, service area and photos.</li>
+        <li><strong>Start the review engine on the next inspection</strong>, before any ad spend — it prices everything that follows.</li>
+        <li><strong>Publish the first storm-event page</strong> off NOAA data for the most recent event.</li>
+        <li><strong>Run one capped Meta lead-ad test</strong> — higher-intent form, geo to the swath, real-time delivery.</li>
+        <li><strong>Hold it for one storm cycle</strong> and produce the two numbers. Change nothing mid-test.</li>
+        <li><strong>Then, and only then, add the second channel.</strong></li>
+      </ol>
+    </section>
+
+    <section id="s9">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>What kills this in this trade</h2>
+        <p class="kicker">Failure modes, in order of how often they happen</p>
+      </div>
+
+      <ul class="kills">
+        <li><strong>Buying volume the room cannot answer.</strong> The leads do not wait, and the unanswered ones cost two thirds, not one.</li>
+        <li><strong>Measuring cost per lead.</strong> It systematically rewards the cheapest and worst leads, and it will make the wrong channel look like the winner.</li>
+        <li><strong>Running ads outside staffed hours.</strong> A form submitted at 9pm and called at 10am is, on the HBR numbers, a different business.</li>
+        <li><strong>Letting the landing page make insurance promises.</strong> Straight into gate 2 of the platform sheet — and the penalty lands on the estimate for every job that ad produced.</li>
+        <li><strong>Routing that lives in one person's head.</strong> It works until that person is on a roof.</li>
+        <li><strong>Starting two channels at once.</strong> Guarantees neither can be diagnosed.</li>
+        <li><strong>Treating the form fill as the deliverable.</strong> It is the raw material. The booked inspection is the deliverable.</li>
+      </ul>
+    </section>
+
+    <section id="s10">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>Fact-check log</h2>
+        <p class="kicker">What was verified, corrected, and left open</p>
+      </div>
+
+      <div class="log">
+        <div>
+          <h4>Verified</h4>
+          <ul>
+            <li><strong>Lead response time</strong>: <em>The Short Life of Online Sales Leads</em>, Harvard Business Review, March 2011, by James B. Oldroyd, Kristina McElheran and David Elkington — <a href="https://hbr.org/2011/03/the-short-life-of-online-sales-leads">hbr.org</a>. Audit of 2,241 US companies; 23% never responded; 42-hour average among responders; contact within the hour nearly 7× as likely to qualify a lead as an hour later, and more than 60× as likely as 24 hours or more. <strong>Flag: the article body is paywalled.</strong> Authors, journal and date are confirmed; the figures come from a search summary rather than the body, and both HBR and the HBS faculty page refused automated fetch. Directionally safe to act on — confirm the specific multipliers against a copy of the article before they appear anywhere public.</li>
+            <li><strong>The "21× in 5 minutes" figure is excluded.</strong> It traces to a vendor study by InsideSales, the company one of the HBR authors led — not to the HBR research it is routinely attributed to.</li>
+            <li><strong>Meta instant forms</strong>: types include more volume, higher intent and rich creative, with the higher-intent type adding a review step for the person to confirm their information; conditional questions are supported and uploaded as a UTF-8 CSV — <a href="https://www.facebook.com/business/help/252352181957512/">About instant form types</a> and <a href="https://www.facebook.com/business/help/154286325106161">Add conditional answers to your instant form</a>. <strong>Flag:</strong> both pages are login-walled to automated fetch, including with a browser user agent; wording is from Meta's own help-centre listings rather than the rendered pages. Confirm behaviour in Ads Manager at build time.</li>
+            <li><strong>NOAA storm data</strong> for storm-event pages: SPC publishes preliminary storm reports with hail and wind archived from 1955, and NCEI's Storm Events Database holds records from 1950 — <a href="https://www.spc.noaa.gov/climo/">SPC storm reports</a>, <a href="https://www.ncei.noaa.gov/stormevents/">NCEI Storm Events Database</a>. Public domain.</li>
+            <li><strong>Everything legal or eligibility-related is carried by reference</strong> to the platform sheet rather than restated — Business Profile lead-generation ineligibility, LSA prerequisites and screening time, C.R.S. § 6-22-105, and Colorado telemarketer registration. Sources are logged there.</li>
+            <li><strong>Commission structure</strong> — stated by Matthew, 2026-08-18. Internal, unverified against any contract, and never content.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Corrected during research</h4>
+          <ul>
+            <li><strong>Agency blogs on Meta lead forms carried very specific unattributed figures, and they are not Meta's</strong>: that the higher-intent form "cuts raw lead volume by 30% but increases the qualify rate from 30% to 65–70%"; that "leads contacted within 5 minutes convert at rates up to 8 times higher"; and a named customer's "32% drop in invalid phone numbers and 2.2× more conversions." None traceable to Meta's own documentation. All excluded.</li>
+            <li><strong>Third instance this week</strong> of the same pattern, after the LSA insurance floors and the Google Guaranteed / Verified contradiction in the platform sheet. The home-services trade press fabricates specifics at a consistent rate, and the tell is always an unattributed percentage.</li>
+          </ul>
+        </div>
+
+        <div class="tag-open">
+          <h4>Unresolved — flagged, not guessed</h4>
+          <ul>
+            <li><strong>No cost-per-lead expectation for this market.</strong> Deliberate, not an omission. The first capped test produces it.</li>
+            <li><strong>Whether the call room can be staffed to answer inside the hour, and during which hours.</strong> This decides whether ads can run outside those hours at all.</li>
+            <li><strong>Whether the client's CRM or portal can accept a lead in real time</strong>, or whether Surge holds the record and passes it on.</li>
+            <li><strong>Whether attribution back to Surge survives the handoff.</strong> The commission depends on knowing which leads were Surge's, and nothing verifies it today. Highest-value open item on the sheet, entirely internal, and worth resolving before volume makes it expensive.</li>
+            <li><strong>The consent line wording.</strong> Still blocking every paid channel.</li>
+            <li><strong>Who owns the destination page and the phone number on it.</strong> Follows from gate 1, and it determines who keeps the pipeline if the relationship ends.</li>
+          </ul>
+        </div>
+      </div>
+
+      <footer>
+        <p>Nothing in this sheet has been built, spent, published, posted or scheduled, and nothing will be without explicit per-request authorisation.</p>
+        <p>Internal, context only. The commission structure in §1 is never publishable in any register. Client identity is Tier 4 — sector only, at any resolution.</p>
+      </footer>
+    </section>
+  </main>
+</div>

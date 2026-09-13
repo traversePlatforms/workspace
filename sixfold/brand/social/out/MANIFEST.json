@@ -1,0 +1,163 @@
+[
+  {
+    "file": "sixfold-avatar-linkedin-400.png",
+    "size": "400x400",
+    "platform": "LinkedIn (Sixfold Colorado page)",
+    "field": "Admin › Edit page › Page logo. Square, min 300px. Shown small — crest, no roots.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-facebook-500.png",
+    "size": "500x500",
+    "platform": "Facebook (Sixfold Colorado page)",
+    "field": "Settings › Page details › Profile picture. Circle crop, shown 176/196px — crest.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-instagram-320.png",
+    "size": "320x320",
+    "platform": "Instagram (Sixfold Colorado)",
+    "field": "Edit profile › Change profile photo. Circle crop — crest.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-x-400.png",
+    "size": "400x400",
+    "platform": "X (Sixfold Colorado)",
+    "field": "Profile › Edit profile. Circle crop — crest.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-nextdoor-1200.png",
+    "size": "1200x1200",
+    "platform": "Nextdoor (Sixfold Colorado business page)",
+    "field": "Business page › Edit › Business logo. Circle crop. Full mark with roots.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-youtube-800.png",
+    "size": "800x800",
+    "platform": "YouTube (Sixfold Colorado channel)",
+    "field": "Customise channel › Branding › Picture. Min 98px, 4MB max. Full mark.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-logo-google-720.png",
+    "size": "720x720",
+    "platform": "Google Business Profile (Sixfold Colorado)",
+    "field": "Photos › Logo. Google recommends exactly 720×720; min 250; 10KB–5MB. Logo shows only once the profile carries name, address, category, phone, hours.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-on-bone-1024.png",
+    "size": "1024x1024",
+    "platform": "— light-ground alternate —",
+    "field": "Any placement that sits the avatar on dark chrome and needs a light tile.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-avatar-master-1024.png",
+    "size": "1024x1024",
+    "platform": "— master —",
+    "field": "Fallback for any field not listed. Downscale as needed.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-linkedin-company-1128x191.png",
+    "size": "1128x191",
+    "platform": "LinkedIn (Sixfold Colorado page)",
+    "field": "Admin › Edit page › Cover image. 1128×191 min (~4:1). Keep lower-left ~180px clear — logo tile sits there.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-linkedin-personal-1584x396.png",
+    "size": "1584x396",
+    "platform": "LinkedIn (personal profile — optional)",
+    "field": "Profile › camera icon on the background › Add photo. 1584×396 (4:1). Lower-left covered by the profile photo.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-facebook-1640x624.png",
+    "size": "1640x624",
+    "platform": "Facebook (Sixfold Colorado page)",
+    "field": "Page › Edit cover photo. Uploads 1640×624; desktop shows ~820×312, mobile crops toward centre — content is centred for that.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-x-1500x500.png",
+    "size": "1500x500",
+    "platform": "X (Sixfold Colorado)",
+    "field": "Profile › Edit profile › header photo. 1500×500 (3:1). Lower-left covered by the profile photo.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-nextdoor-1440x400.png",
+    "size": "1440x400",
+    "platform": "Nextdoor (Sixfold Colorado business page)",
+    "field": "Business page › Edit › Cover photo. 1440×400 working assumption (~3.6:1) — confirm the crop box in the dialog.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-youtube-2560x1440.png",
+    "size": "2560x1440",
+    "platform": "YouTube (Sixfold Colorado channel)",
+    "field": "Customise channel › Branding › Banner image. Upload 2560×1440; only the centre 1546×423 shows on every device — the lockup is inside it.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-google-1024x576.png",
+    "size": "1024x576",
+    "platform": "Google Business Profile (Sixfold Colorado)",
+    "field": "Photos › Cover. 16:9. Setting a cover does not guarantee it shows first.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-banner-16x9-1920x1080.png",
+    "size": "1920x1080",
+    "platform": "— general 16:9 —",
+    "field": "Any other 16:9 slot.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-ig-highlight-1-tree.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Sixfold Colorado) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-ig-highlight-2-flame.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Sixfold Colorado) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-ig-highlight-3-axe.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Sixfold Colorado) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-ig-highlight-4-chipper.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Sixfold Colorado) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-ig-highlight-5-shield.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Sixfold Colorado) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only.",
+    "note": ""
+  },
+  {
+    "file": "sixfold-ig-highlight-6-doc.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Sixfold Colorado) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only.",
+    "note": ""
+  }
+]

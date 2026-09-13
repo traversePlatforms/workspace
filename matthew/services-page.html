@@ -1,0 +1,1171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matthew Sharpe — Websites &amp; Marketing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Newsreader:opsz,wght@6..72,300..600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* ============================================================
+     PALETTE
+     Own identity, not Surge's green/near-black.
+
+     Brass is the primary accent and owns prices and calls to
+     action. Five secondary hues are NOT decoration — one per
+     service line, and each recurs wherever that service appears,
+     so colour tells you which of the five things you are reading
+     about. Light theme redefines every one; nothing is inverted.
+     ============================================================ */
+  :root {
+    --ground:      #F2F0EA;
+    --ground-deep: #E8E5DC;
+    --surface:     #E9E6DE;
+    --lift:        #E1DDD2;
+    --seam:        #C8C3B5;
+    --seam-soft:   #D9D4C7;
+    --ink:         #14151B;
+    --ink-dim:     #4A4C56;
+    --ink-faint:   #767781;
+
+    --brass:       #9A6B12;
+    --brass-hi:    #C08A1E;
+    --brass-quiet: rgba(154, 107, 18, 0.11);
+    --brass-line:  rgba(154, 107, 18, 0.38);
+
+    /* Five service hues */
+    --c-web:    #1F7A96;
+    --c-print:  #A66A12;
+    --c-social: #B23A55;
+    --c-local:  #2C7A4B;
+    --c-plan:   #5B4BA8;
+
+    --aurora-a: rgba(31, 122, 150, 0.30);
+    --aurora-b: rgba(178, 58, 85, 0.22);
+    --aurora-c: rgba(192, 138, 30, 0.28);
+    --aurora-d: rgba(91, 75, 168, 0.20);
+    --aurora-op: 0.75;
+
+    /* The statement band is a dark slab in BOTH themes — it is the page's
+       loudest moment, so these five tokens are defined once and never
+       redefined per theme. A light-theme override here would put near-white
+       text on a light ground. */
+    --band-bg:   #12131A;
+    --band-ink:  #F4F1E9;
+    --band-dim:  rgba(244, 241, 233, 0.76);
+    --band-a:    rgba(94, 200, 229, 0.34);
+    --band-b:    rgba(238, 115, 145, 0.28);
+    --band-c:    rgba(242, 169, 59, 0.32);
+
+    --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Newsreader", Georgia, "Times New Roman", serif;
+    --f-data:    "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+    --measure: 60ch;
+    --pad: clamp(1.15rem, 5vw, 3.5rem);
+    --maxw: 1240px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0F1017;
+      --ground-deep: #0A0B10;
+      --surface:     #191B24;
+      --lift:        #21232E;
+      --seam:        #33363F;
+      --seam-soft:   #262933;
+      --ink:         #F4F1E9;
+      --ink-dim:     #AFAEA6;
+      --ink-faint:   #7D7E88;
+
+      --brass:       #EDB958;
+      --brass-hi:    #FFD27F;
+      --brass-quiet: rgba(237, 185, 88, 0.12);
+      --brass-line:  rgba(237, 185, 88, 0.36);
+
+      --c-web:    #5EC8E5;
+      --c-print:  #F2A93B;
+      --c-social: #EE7391;
+      --c-local:  #62C98C;
+      --c-plan:   #A596F0;
+
+      --aurora-a: rgba(94, 200, 229, 0.34);
+      --aurora-b: rgba(238, 115, 145, 0.26);
+      --aurora-c: rgba(242, 169, 59, 0.30);
+      --aurora-d: rgba(165, 150, 240, 0.26);
+      --aurora-op: 1;
+
+
+
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #0F1017;
+    --ground-deep: #0A0B10;
+    --surface:     #191B24;
+    --lift:        #21232E;
+    --seam:        #33363F;
+    --seam-soft:   #262933;
+    --ink:         #F4F1E9;
+    --ink-dim:     #AFAEA6;
+    --ink-faint:   #7D7E88;
+
+    --brass:       #EDB958;
+    --brass-hi:    #FFD27F;
+    --brass-quiet: rgba(237, 185, 88, 0.12);
+    --brass-line:  rgba(237, 185, 88, 0.36);
+
+    --c-web:    #5EC8E5;
+    --c-print:  #F2A93B;
+    --c-social: #EE7391;
+    --c-local:  #62C98C;
+    --c-plan:   #A596F0;
+
+    --aurora-a: rgba(94, 200, 229, 0.34);
+    --aurora-b: rgba(238, 115, 145, 0.26);
+    --aurora-c: rgba(242, 169, 59, 0.30);
+    --aurora-d: rgba(165, 150, 240, 0.26);
+    --aurora-op: 1;
+
+
+
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  /* ---- Type roles ---- */
+  .eyebrow {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 1rem;
+  }
+  h1, h2, h3 { font-family: var(--f-display); font-weight: 800; margin: 0; }
+  h1 {
+    font-variation-settings: "wdth" 112;
+    font-size: clamp(2.4rem, 7.6vw, 5rem);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  h2 {
+    font-variation-settings: "wdth" 108;
+    font-size: clamp(1.7rem, 4.4vw, 2.75rem);
+    line-height: 1.03;
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+  }
+  h3 {
+    font-variation-settings: "wdth" 100;
+    font-weight: 700;
+    font-size: 1.06rem;
+    line-height: 1.2;
+  }
+  p { margin: 0 0 1.1rem; }
+  a { color: var(--brass); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 2px; }
+  strong { font-weight: 600; color: var(--ink); }
+
+  /* Gradient headline word — the one type flourish on the page */
+  .grad {
+    background-image: linear-gradient(96deg, var(--c-web), var(--brass-hi) 42%, var(--c-social));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: var(--brass);
+  }
+  @supports (-webkit-text-fill-color: transparent) {
+    .grad { -webkit-text-fill-color: transparent; }
+  }
+
+  /* ============================================================
+     HERO — ambient aurora wash. The page sells web work, so the
+     page itself has to demonstrate some.
+     ============================================================ */
+  .herowrap { position: relative; isolation: isolate; overflow: hidden; }
+  .aurora {
+    position: absolute;
+    inset: -35% -25% auto -25%;
+    height: 165%;
+    z-index: -1;
+    opacity: var(--aurora-op);
+    pointer-events: none;
+    filter: blur(80px);
+    background:
+      radial-gradient(38% 44% at 18% 26%, var(--aurora-a) 0%, transparent 68%),
+      radial-gradient(34% 40% at 78% 18%, var(--aurora-c) 0%, transparent 66%),
+      radial-gradient(40% 46% at 62% 72%, var(--aurora-b) 0%, transparent 68%),
+      radial-gradient(36% 42% at 30% 82%, var(--aurora-d) 0%, transparent 66%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .aurora { animation: drift 26s ease-in-out infinite alternate; }
+    @keyframes drift {
+      0%   { transform: translate3d(0, 0, 0) scale(1); }
+      50%  { transform: translate3d(2.5%, -2%, 0) scale(1.07); }
+      100% { transform: translate3d(-2%, 2.5%, 0) scale(1.03); }
+    }
+  }
+
+  .hero { padding: clamp(2.4rem, 6vw, 4rem) 0 clamp(3rem, 7vw, 5rem); }
+
+  .nameplate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.7rem 1.5rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: clamp(2.2rem, 6vw, 3.6rem);
+    border-bottom: 1px solid var(--seam);
+  }
+  .idmark { display: flex; align-items: center; gap: 0.72rem; }
+  /* Five dots = the five service lines. It is the whole identity. */
+  .dots5 { display: flex; gap: 0.28rem; }
+  .dots5 i { width: 0.46rem; height: 0.46rem; border-radius: 50%; display: block; }
+  .dots5 i:nth-child(1) { background: var(--c-web); }
+  .dots5 i:nth-child(2) { background: var(--c-print); }
+  .dots5 i:nth-child(3) { background: var(--c-social); }
+  .dots5 i:nth-child(4) { background: var(--c-local); }
+  .dots5 i:nth-child(5) { background: var(--c-plan); }
+  @media (prefers-reduced-motion: no-preference) {
+    .dots5 i { animation: pulse 4.5s ease-in-out infinite; }
+    .dots5 i:nth-child(2) { animation-delay: 0.5s; }
+    .dots5 i:nth-child(3) { animation-delay: 1s; }
+    .dots5 i:nth-child(4) { animation-delay: 1.5s; }
+    .dots5 i:nth-child(5) { animation-delay: 2s; }
+    @keyframes pulse { 0%, 70%, 100% { transform: scale(1); } 82% { transform: scale(1.45); } }
+  }
+  .nameplate .who {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 96;
+    font-weight: 700;
+    font-size: 1.04rem;
+  }
+  .nameplate .where {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .herogrid { display: grid; grid-template-columns: 1fr; gap: 2.6rem; align-items: start; }
+  @media (min-width: 940px) {
+    .herogrid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 4rem; }
+  }
+  .hero .lede {
+    font-size: clamp(1.12rem, 2.1vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--ink-dim);
+    max-width: 46ch;
+    margin: 1.9rem 0 0;
+  }
+  .hero .lede b { color: var(--ink); font-weight: 600; }
+
+  .fromline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin: 2.4rem 0 0;
+    padding: 1.15rem 0 0;
+    border-top: 2px solid var(--brass);
+    max-width: 46ch;
+  }
+  .fromline .fnum {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 105;
+    font-weight: 800;
+    font-size: clamp(2rem, 4.8vw, 2.8rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .fromline .fnote {
+    font-family: var(--f-data);
+    font-size: 0.76rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    line-height: 1.45;
+  }
+
+  /* At-a-glance card */
+  .glance {
+    border: 1px solid var(--seam);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: blur(8px);
+    padding: 1.45rem 1.5rem 1.55rem;
+    border-radius: 3px;
+  }
+  .gtitle {
+    font-family: var(--f-data);
+    font-size: 0.63rem;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1rem;
+  }
+  .glance dl { margin: 0; display: flex; flex-direction: column; }
+  .glance .grow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.72rem 0;
+    border-top: 1px solid var(--seam-soft);
+  }
+  .glance .grow:first-child { border-top: 0; padding-top: 0; }
+  .glance dt { font-size: 0.92rem; color: var(--ink-dim); }
+  .glance dd {
+    margin: 0;
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 98;
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .glance dd.yes { color: var(--c-local); }
+
+  /* ============================================================
+     SECTION frame
+     ============================================================ */
+  section { padding: clamp(3.4rem, 8vw, 5.8rem) 0; border-top: 1px solid var(--seam); }
+  section.noline { border-top: 0; }
+  .sechead { margin-bottom: clamp(1.8rem, 4vw, 2.8rem); }
+  .sechead p { color: var(--ink-dim); margin: 0.9rem 0 0; max-width: var(--measure); }
+
+  /* ============================================================
+     MODULE 1 — capability rows, one hue each.
+     ============================================================ */
+  .caplist { display: flex; flex-direction: column; gap: 0.55rem; }
+  .caprow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem 3rem;
+    padding: 1.3rem 0 1.35rem 1.4rem;
+    border-left: 3px solid var(--hue);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--hue) 9%, transparent), transparent 46%);
+  }
+  @media (min-width: 820px) {
+    .caprow { grid-template-columns: 15rem minmax(0, 1fr); gap: 0 3rem; }
+  }
+  .caprow:nth-child(1) { --hue: var(--c-web); }
+  .caprow:nth-child(2) { --hue: var(--c-print); }
+  .caprow:nth-child(3) { --hue: var(--c-social); }
+  .caprow:nth-child(4) { --hue: var(--c-local); }
+  .caprow:nth-child(5) { --hue: var(--c-plan); }
+  .caprow h3 { color: var(--hue); font-variation-settings: "wdth" 104; font-size: 1.12rem; }
+  .caprow .capnote { margin: 0; color: var(--ink-dim); font-size: 0.98rem; }
+  .caprow .capnote b { color: var(--ink); font-weight: 600; }
+
+  /* ============================================================
+     MODULE 2 — pricing panels
+     ============================================================ */
+  .weeknote {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding: 1.05rem 1.25rem;
+    margin: 0 0 2.2rem;
+    background: color-mix(in srgb, var(--c-web) 10%, transparent);
+    border-left: 2px solid var(--c-web);
+    max-width: 62ch;
+    border-radius: 0 3px 3px 0;
+  }
+  .weeknote .wl {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-web);
+    padding-top: 0.34rem;
+    flex: none;
+  }
+  .weeknote p { margin: 0; font-size: 0.95rem; color: var(--ink-dim); }
+
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
+    gap: 1.1rem;
+    align-items: start;
+  }
+  .tier {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-radius: 4px;
+    padding: 1.7rem 1.5rem 1.8rem;
+  }
+  .tier::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    border-radius: 4px 4px 0 0;
+    background: var(--thue);
+  }
+  .tier:nth-child(1) { --thue: var(--c-web); }
+  .tier:nth-child(2) { --thue: linear-gradient(90deg, var(--c-print), var(--brass-hi), var(--c-social)); }
+  .tier:nth-child(3) { --thue: var(--c-plan); }
+
+  .tier.feature {
+    background: var(--lift);
+    border-color: var(--brass-line);
+    box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--brass-quiet);
+  }
+  @media (min-width: 900px) { .tier.feature { margin-top: -0.9rem; padding-bottom: 2.3rem; } }
+
+  .tier .tflag {
+    font-family: var(--f-data);
+    font-size: 0.6rem;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 0.7rem;
+    min-height: 1rem;
+  }
+  .tier h3 {
+    font-variation-settings: "wdth" 106;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 0.3rem;
+  }
+  .tier .tsub { margin: 0 0 1.4rem; font-size: 0.93rem; color: var(--ink-faint); }
+  .tprice { display: flex; align-items: baseline; gap: 0.4rem; }
+  .tprice .amt {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 104;
+    font-weight: 800;
+    font-size: 2.6rem;
+    line-height: 1;
+    letter-spacing: -0.022em;
+    font-variant-numeric: tabular-nums;
+  }
+  .tprice .per { font-family: var(--f-data); font-size: 0.72rem; letter-spacing: 0.09em; color: var(--ink-faint); text-transform: uppercase; }
+  .tweek {
+    font-family: var(--f-data);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    margin: 0.55rem 0 1.3rem;
+    padding-bottom: 1.3rem;
+    border-bottom: 1px solid var(--seam);
+    font-variant-numeric: tabular-nums;
+  }
+  .tweek b { color: var(--ink); font-weight: 500; }
+  .tier ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.64rem; }
+  .tier li {
+    position: relative;
+    padding-left: 1.2rem;
+    font-size: 0.945rem;
+    line-height: 1.45;
+    color: var(--ink-dim);
+  }
+  .tier li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 0.46rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--tdot, var(--brass));
+  }
+  .tier:nth-child(1) li::before { --tdot: var(--c-web); }
+  .tier:nth-child(2) li::before { --tdot: var(--brass); }
+  .tier:nth-child(3) li::before { --tdot: var(--c-plan); }
+  .tier li b { color: var(--ink); font-weight: 600; }
+
+  /* ============================================================
+     FULL-BLEED STATEMENT BAND — the page's loudest moment
+     ============================================================ */
+  .band {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--band-bg);
+    padding: clamp(3.4rem, 8vw, 5.6rem) 0;
+    border-top: 0;
+  }
+  .band::before {
+    content: "";
+    position: absolute;
+    inset: -60% -20%;
+    z-index: -1;
+    filter: blur(72px);
+    opacity: 0.9;
+    background:
+      radial-gradient(40% 60% at 12% 40%, var(--band-c) 0%, transparent 68%),
+      radial-gradient(42% 62% at 84% 58%, var(--band-b) 0%, transparent 68%),
+      radial-gradient(38% 55% at 52% 8%, var(--band-a) 0%, transparent 66%);
+  }
+  .band .bq {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 106;
+    font-weight: 800;
+    font-size: clamp(1.75rem, 4.6vw, 3rem);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    color: var(--band-ink);
+    text-wrap: balance;
+    max-width: 22ch;
+    margin: 0;
+  }
+  .band .bsub {
+    margin: 1.4rem 0 0;
+    max-width: 52ch;
+    color: var(--band-dim);
+    font-size: 1.03rem;
+  }
+  .bandrow { display: grid; grid-template-columns: 1fr; gap: 2rem; align-items: end; }
+  @media (min-width: 900px) { .bandrow { grid-template-columns: 1.35fr 1fr; gap: 4rem; } }
+  .bandstats { display: flex; flex-direction: column; gap: 0.9rem; }
+  .bstat { display: flex; align-items: baseline; gap: 0.85rem; }
+  .bstat .bv {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 100;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--band-ink);
+    font-variant-numeric: tabular-nums;
+    min-width: 5.4rem;
+  }
+  .bstat .bl { font-size: 0.95rem; color: var(--band-dim); }
+
+  /* ============================================================
+     MODULE 3 — build fees
+     ============================================================ */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--seam); background: var(--surface); max-width: 40rem; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; min-width: 26rem; }
+  thead th {
+    text-align: left;
+    font-family: var(--f-data);
+    font-weight: 400;
+    font-size: 0.63rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--seam);
+  }
+  thead th.r, td.r { text-align: right; }
+  tbody td { padding: 1rem 1.1rem; border-bottom: 1px solid var(--seam-soft); color: var(--ink-dim); font-size: 0.97rem; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody td.item { color: var(--ink); }
+  tbody td.amt {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 100;
+    font-weight: 700;
+    color: var(--c-web);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .terms { margin: 1.5rem 0 0; color: var(--ink-dim); max-width: var(--measure); font-size: 0.97rem; }
+
+  .lever {
+    margin: 1.7rem 0 0;
+    padding: 1.3rem 1.4rem;
+    background: linear-gradient(120deg, var(--brass-quiet), transparent 78%);
+    border: 1px solid var(--brass-line);
+    border-radius: 4px;
+    max-width: 62ch;
+  }
+  .lever h3 { color: var(--brass); font-size: 1rem; margin: 0 0 0.5rem; }
+  .lever p { margin: 0; font-size: 0.96rem; color: var(--ink-dim); }
+
+  /* ============================================================
+     MODULE 4 — one-off list
+     ============================================================ */
+  .pricelist { columns: 2 17rem; column-gap: 3.2rem; }
+  .pl {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.62rem 0;
+    border-bottom: 1px solid var(--seam-soft);
+    break-inside: avoid;
+    font-size: 0.95rem;
+  }
+  .pl .pn { color: var(--ink-dim); }
+  .pl .dots { flex: 1; border-bottom: 1px dotted var(--seam); transform: translateY(-0.22em); min-width: 1rem; }
+  .pl .pv {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 98;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .pl.hl .pv { color: var(--c-social); }
+
+  /* ============================================================
+     MODULE 5 — ordered sequence
+     ============================================================ */
+  .steps { counter-reset: st; display: flex; flex-direction: column; max-width: 72ch; }
+  .step {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0 1.2rem;
+    padding: 1.35rem 0;
+    border-top: 1px solid var(--seam-soft);
+  }
+  .step:first-child { border-top: 0; padding-top: 0; }
+  .step::before {
+    counter-increment: st;
+    content: counter(st, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.82rem;
+    color: var(--shue);
+    padding-top: 0.3rem;
+  }
+  .step:nth-child(1) { --shue: var(--c-web); }
+  .step:nth-child(2) { --shue: var(--c-print); }
+  .step:nth-child(3) { --shue: var(--c-social); }
+  .step:nth-child(4) { --shue: var(--c-local); }
+  .step:nth-child(5) { --shue: var(--c-plan); }
+  .step h3 { margin: 0 0 0.32rem; }
+  .step p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
+
+  /* ============================================================
+     MODULE 6 — the honesty grid
+     ============================================================ */
+  .plainlist { display: grid; grid-template-columns: 1fr; gap: 1.5rem 3rem; }
+  @media (min-width: 900px) { .plainlist { grid-template-columns: 1fr 1fr; } }
+  .plainlist > div { padding-left: 1.4rem; border-left: 2px solid var(--phue, var(--seam)); }
+  .plainlist > div:nth-child(1) { --phue: var(--c-social); }
+  .plainlist > div:nth-child(2) { --phue: var(--c-print); }
+  .plainlist > div:nth-child(3) { --phue: var(--c-web); }
+  .plainlist > div:nth-child(4) { --phue: var(--c-local); }
+  .plainlist > div:nth-child(5) { --phue: var(--c-local); }
+  .plainlist > div:nth-child(6) { --phue: var(--c-plan); }
+  .plainlist h3 { margin: 0 0 0.35rem; color: var(--phue); }
+  .plainlist p { margin: 0; color: var(--ink-dim); font-size: 0.97rem; }
+
+  /* ============================================================
+     CONTACT
+     ============================================================ */
+  .contact { position: relative; isolation: isolate; overflow: hidden; border-top: 2px solid var(--brass); }
+  .contact::before {
+    content: "";
+    position: absolute;
+    inset: -50% -30% auto;
+    height: 200%;
+    z-index: -1;
+    filter: blur(80px);
+    opacity: calc(var(--aurora-op) * 0.85);
+    background:
+      radial-gradient(36% 50% at 22% 30%, var(--aurora-c) 0%, transparent 66%),
+      radial-gradient(34% 48% at 80% 60%, var(--aurora-a) 0%, transparent 66%);
+  }
+  .contact h2 { margin-bottom: 1.2rem; }
+  .contact .cintro { color: var(--ink-dim); max-width: var(--measure); margin-bottom: 2.2rem; }
+  .contactgrid { display: grid; grid-template-columns: 1fr; gap: 2.4rem; align-items: start; }
+  @media (min-width: 900px) { .contactgrid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 4rem; } }
+  .cmethods { display: flex; flex-direction: column; gap: 1.5rem; }
+  .cmethod .clabel {
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.4rem;
+  }
+  .cmethod .cval {
+    font-family: var(--f-display);
+    font-variation-settings: "wdth" 100;
+    font-weight: 700;
+    font-size: clamp(1.05rem, 2.6vw, 1.42rem);
+    letter-spacing: -0.01em;
+    margin: 0;
+    word-break: break-word;
+  }
+  /* Unmistakable placeholder — swap the text and the tel: href, then delete this class. */
+  .needsnumber {
+    color: var(--c-social);
+    text-decoration: none;
+    border-bottom: 2px dashed var(--c-social);
+    display: inline-block;
+    padding-bottom: 0.12rem;
+  }
+  .askfor { border-left: 2px solid var(--c-local); padding-left: 1.5rem; }
+  .askfor ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .askfor li {
+    position: relative;
+    padding-left: 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--ink-dim);
+  }
+  .askfor li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 0.46rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--c-local);
+  }
+
+  footer {
+    padding: 2rem 0 3.5rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+  footer p { margin: 0; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .tier { transition: transform 180ms ease, box-shadow 180ms ease; }
+    .tier:hover { transform: translateY(-3px); box-shadow: 0 22px 50px -26px rgba(0,0,0,0.5); }
+    .caprow { transition: background 200ms ease; }
+  }
+
+  /* ============================================================
+     PRINT — for "Save as PDF" when the page is emailed as an
+     attachment rather than a link. Forces the light palette (a
+     dark ground would drink a cartridge), drops the ambient
+     gradients, and keeps each priced block off a page seam.
+     ============================================================ */
+  @media print {
+    :root, :root[data-theme="dark"] {
+      --ground:      #FFFFFF;
+      --surface:     #FFFFFF;
+      --lift:        #F6F4EE;
+      --seam:        #B9B4A6;
+      --seam-soft:   #D6D1C4;
+      --ink:         #101116;
+      --ink-dim:     #33353D;
+      --ink-faint:   #5E606A;
+      --brass:       #8A5F10;
+      --brass-hi:    #8A5F10;
+      --brass-quiet: rgba(138, 95, 16, 0.09);
+      --brass-line:  rgba(138, 95, 16, 0.42);
+      --c-web:    #17627A;
+      --c-print:  #8A5710;
+      --c-social: #962E46;
+      --c-local:  #216340;
+      --c-plan:   #4A3C92;
+      --band-bg:  #F6F4EE;
+      --band-ink: #101116;
+      --band-dim: #33353D;
+      --maxw: 100%;
+      --pad: 0;
+    }
+    @page { margin: 14mm 13mm; }
+
+    body { font-size: 10.5pt; line-height: 1.45; background: #fff; }
+    .aurora, .band::before, .contact::before { display: none !important; }
+    .band, .contact { background: var(--band-bg); }
+    .contact { border-top: 2px solid var(--brass); }
+
+    /* Gradient text does not survive a print pipeline — force flat ink. */
+    .grad {
+      background-image: none !important;
+      color: var(--brass) !important;
+      -webkit-text-fill-color: var(--brass) !important;
+    }
+
+    h1 { font-size: 27pt; }
+    h2 { font-size: 15pt; }
+    .band .bq { font-size: 16pt; }
+    .hero { padding: 0 0 14pt; }
+    section { padding: 16pt 0 0; }
+    .tier .tprice .amt { font-size: 20pt; }
+
+    /* Nothing priced may straddle a page break. */
+    .tier, .caprow, .step, .lever, .weeknote, .pl,
+    .plainlist > div, .tablewrap, .bandrow, .glance { break-inside: avoid; }
+    h1, h2, h3 { break-after: avoid; }
+    section { break-inside: auto; }
+    .band { break-before: auto; }
+
+    /* A printed page is ~794px wide, so every min-width breakpoint above
+       820px misses and each two-up block stacks. Restore them by hand —
+       left as one column this ran to eleven pages instead of six. */
+    .herogrid { grid-template-columns: 1.45fr 1fr; gap: 16pt; }
+    .caprow { grid-template-columns: 8.5rem minmax(0, 1fr); gap: 0 14pt; padding: 7pt 0 7pt 9pt; }
+    .bandrow { grid-template-columns: 1.35fr 1fr; gap: 18pt; }
+    .bstat .bv { min-width: 4.4rem; white-space: nowrap; font-size: 13pt; }
+    .contactgrid { grid-template-columns: 1.1fr 1fr; gap: 18pt; }
+    .pricelist { columns: 2 12rem; column-gap: 20pt; }
+    .steps { max-width: 100%; }
+    .step { padding: 7pt 0; }
+    .band { padding: 14pt 0; }
+    .sechead { margin-bottom: 10pt; }
+    .weeknote { margin-bottom: 12pt; }
+    p { margin-bottom: 6pt; }
+
+    .tiers { grid-template-columns: repeat(3, 1fr); gap: 8pt; }
+    .tier.feature { margin-top: 0; box-shadow: none; border: 1.5pt solid var(--brass); }
+    .tier { box-shadow: none; }
+    .plainlist { grid-template-columns: 1fr 1fr; }
+    .askfor, .contactgrid { break-inside: avoid; }
+
+    a { text-decoration: none; color: var(--ink); }
+    .cmethod .cval a { color: var(--brass); }
+    .needsnumber { border-bottom: 1.5pt dashed var(--c-social); color: var(--c-social); }
+  }
+</style>
+</head>
+<body>
+
+<div class="herowrap">
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="hero">
+      <div class="nameplate">
+        <span class="idmark">
+          <span class="dots5" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <span class="who">Matthew Sharpe</span>
+        </span>
+        <span class="where">Websites &amp; Marketing · Englewood, Colorado</span>
+      </div>
+
+      <div class="herogrid">
+        <div>
+          <p class="eyebrow">Rates for 2026</p>
+          <h1>I build websites and run the <span class="grad">marketing</span> for small businesses.</h1>
+          <p class="lede">Sites, social, local search, print, and the tracking underneath it that tells you where your leads actually came from. <b>You deal with me directly</b>, not an account manager who passes your job to someone you never meet.</p>
+
+          <div class="fromline">
+            <span class="fnum grad">$700</span>
+            <span class="fnote">a month to start, or $200 a week.<br>Websites are priced separately, from $2,200.</span>
+          </div>
+        </div>
+
+        <div class="glance">
+          <p class="gtitle">At a glance</p>
+          <dl>
+            <div class="grow"><dt>Monthly, three tiers</dt><dd>$700 – $2,800</dd></div>
+            <div class="grow"><dt>Weekly, same work</dt><dd>$200 – $800</dd></div>
+            <div class="grow"><dt>Website build</dt><dd>$2,200 – $8,000</dd></div>
+            <div class="grow"><dt>Setup fee</dt><dd class="yes">None</dd></div>
+            <div class="grow"><dt>Notice to stop</dt><dd>30 days</dd></div>
+            <div class="grow"><dt>Who owns the work</dt><dd class="yes">You do</dd></div>
+          </dl>
+        </div>
+      </div>
+    </header>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="noline">
+    <div class="sechead">
+      <p class="eyebrow">What I do</p>
+      <h2>Five things, and I do all of them myself.</h2>
+      <p>Most of this gets sold as five separate contracts by five separate companies. It is the same five things either way.</p>
+    </div>
+
+    <div class="caplist">
+      <div class="caprow">
+        <h3>Websites</h3>
+        <p class="capnote">Sites written in code rather than assembled in a page builder, so they load fast and nothing breaks when a plugin updates. Landing pages for a specific offer or season. Copy for the pages, forms that capture leads, and the tracking that says which channel sent them. <b>This page is a fair sample</b> — I built it the same way I would build yours.</p>
+      </div>
+      <div class="caprow">
+        <h3>Design and print</h3>
+        <p class="capnote">Logos, colours and type set up as a system so they still work in two years. Flyers, one-pagers, door hangers, service agreements, field sheets and checklists — tested to an exact page count and handed over as a print-ready PDF. Social profile and banner sets, branded QR codes, photo cleanup and cutouts.</p>
+      </div>
+      <div class="caprow">
+        <h3>Social and content</h3>
+        <p class="capnote">Posts written for the platform they go on instead of one post copied across five. Carousels, infographics and feed graphics. Articles for your own site. Every post comes with alternate openings and the lines I cut, so it can be reused later without starting over.</p>
+      </div>
+      <div class="caprow">
+        <h3>Local search and leads</h3>
+        <p class="capnote">Your Google Business Profile set up properly and posted to, a system for asking customers for reviews, and Google and Meta ads built with a spend cap so a test cannot run away from you. Plus the unglamorous part — how fast someone answers a new lead, which decides more than the ads do.</p>
+      </div>
+      <div class="caprow">
+        <h3>Research and planning</h3>
+        <p class="capnote">A written plan with phases, a budget, and what we measure. What your competitors are actually doing, read page by page rather than guessed at. And a check on the advertising rules for your trade before copy goes out, which matters more in some trades than others.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">What it costs</p>
+      <h2>Three tiers. No setup fee, no contract past twelve months.</h2>
+      <p>Weekly and monthly buy exactly the same work. The difference is how long you are committed for.</p>
+    </div>
+
+    <div class="weeknote">
+      <span class="wl">Note</span>
+      <p>Weekly is a quarter of the monthly rate, and there are fifty-two weeks in a year rather than forty-eight. So paying weekly costs you about one extra month over a year. Monthly is cheaper, weekly lets you stop sooner — I would rather say that up front than have you work it out later.</p>
+    </div>
+
+    <div class="tiers">
+
+      <div class="tier">
+        <p class="tflag">&nbsp;</p>
+        <h3>Foundation</h3>
+        <p class="tsub">For a business whose online presence does not currently work.</p>
+        <div class="tprice"><span class="amt">$700</span><span class="per">/ month</span></div>
+        <p class="tweek">or <b>$200</b> a week &middot; $100 off for committing to a month</p>
+        <ul>
+          <li>Your site hosted, maintained and updated &mdash; up to <b>7 pages</b></li>
+          <li>Two content updates a month</li>
+          <li>Google Business Profile set up and optimised</li>
+          <li>Four social posts a month on one platform</li>
+          <li>A one-page report every month</li>
+        </ul>
+      </div>
+
+      <div class="tier feature">
+        <p class="tflag">Recommended</p>
+        <h3>Engine</h3>
+        <p class="tsub">For a business that wants steady output rather than a one-off fix.</p>
+        <div class="tprice"><span class="amt grad">$1,400</span><span class="per">/ month</span></div>
+        <p class="tweek">or <b>$400</b> a week &middot; $200 off for committing to a month</p>
+        <ul>
+          <li>Everything in Foundation</li>
+          <li>Up to <b>15 pages</b>, unlimited small edits, one new page a month</li>
+          <li><b>Twelve posts a month</b> across two platforms, plus a designed graphic</li>
+          <li>Weekly Google profile posts, review requests, listings cleaned up</li>
+          <li>A campaign landing page every quarter</li>
+          <li>Lead forms with call and form tracking</li>
+          <li>A working session with me every month</li>
+        </ul>
+      </div>
+
+      <div class="tier">
+        <p class="tflag">&nbsp;</p>
+        <h3>Pipeline</h3>
+        <p class="tsub">For a business with demand already, and nothing catching it.</p>
+        <div class="tprice"><span class="amt">$2,800</span><span class="per">/ month</span></div>
+        <p class="tweek">or <b>$800</b> a week &middot; $400 off for committing to a month</p>
+        <ul>
+          <li>Everything in Engine</li>
+          <li><b>Google and Meta ads managed</b>, creative and copy included, on up to $10,000 a month of ad spend</li>
+          <li>Twenty posts a month across three platforms, plus two designed graphics</li>
+          <li>Two researched articles a month for your site</li>
+          <li>Lead response and tracking built and maintained</li>
+          <li>A strategy review each quarter, and print work as you need it</li>
+          <li>A report every week</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<section class="band">
+  <div class="wrap">
+    <div class="bandrow">
+      <div>
+        <p class="bq">You own the website, the files and the logins.</p>
+        <p class="bsub">If we stop working together, nothing switches off and nothing gets held back. The site, the source files, the artwork, the ad accounts and your Google profile are all in your name from day one — not mine, and not on my card.</p>
+      </div>
+      <div class="bandstats">
+        <div class="bstat"><span class="bv">None</span><span class="bl">Setup or onboarding fee</span></div>
+        <div class="bstat"><span class="bv">30 days</span><span class="bl">Notice to stop, or a week on weekly</span></div>
+        <div class="bstat"><span class="bv">12 mo</span><span class="bl">Longest commitment I will ask for</span></div>
+        <div class="bstat"><span class="bv">Yours</span><span class="bl">Every file, once it is paid for</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <section class="noline">
+    <div class="sechead">
+      <p class="eyebrow">Websites</p>
+      <h2>Priced separately, because a build is not a monthly job.</h2>
+      <p>A retainer covers running the site. Building it in the first place is its own piece of work, so it gets its own number.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Build</th><th class="r">Price</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="item">Starter — up to 7 pages</td><td class="r amt">$2,200</td></tr>
+          <tr><td class="item">Standard — 8 to 15 pages</td><td class="r amt">$4,500</td></tr>
+          <tr><td class="item">Custom — 16 to 30 pages</td><td class="r amt">$8,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="terms">Half at signing, half when it goes live. You own the site and the source files once it is paid for — I do not hold anyone's website as a way of keeping them.</p>
+
+    <div class="lever">
+      <h3>A year of Engine or Pipeline includes the website.</h3>
+      <p>Commit to twelve months on either tier and there is no build fee at all &mdash; up to 15 pages on Engine, up to 30 on Pipeline. It is the cheapest way to get a proper site and someone running it at the same time.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">One-off work</p>
+      <h2>If you don't want a retainer.</h2>
+      <p>Anything on this list can be bought on its own. Retainer clients take 15% off it.</p>
+    </div>
+
+    <div class="pricelist">
+      <div class="pl"><span class="pn">Brand identity — logo, colours, type, usage rules</span><span class="dots"></span><span class="pv">$1,500</span></div>
+      <div class="pl"><span class="pn">Logo on its own</span><span class="dots"></span><span class="pv">$600</span></div>
+      <div class="pl"><span class="pn">Landing page</span><span class="dots"></span><span class="pv">$900</span></div>
+      <div class="pl"><span class="pn">Print flyer, print-ready</span><span class="dots"></span><span class="pv">$250</span></div>
+      <div class="pl"><span class="pn">Two flyer designs to compare</span><span class="dots"></span><span class="pv">$400</span></div>
+      <div class="pl"><span class="pn">Printed document set — agreements, checklists, field sheets</span><span class="dots"></span><span class="pv">$850</span></div>
+      <div class="pl"><span class="pn">Infographic or carousel</span><span class="dots"></span><span class="pv">$250</span></div>
+      <div class="pl"><span class="pn">Set of four graphics</span><span class="dots"></span><span class="pv">$900</span></div>
+      <div class="pl"><span class="pn">Social profile and banner set</span><span class="dots"></span><span class="pv">$350</span></div>
+      <div class="pl"><span class="pn">Branded QR codes</span><span class="dots"></span><span class="pv">$120</span></div>
+      <div class="pl"><span class="pn">Photo cleanup, per image</span><span class="dots"></span><span class="pv">$25</span></div>
+      <div class="pl"><span class="pn">Ten images</span><span class="dots"></span><span class="pv">$200</span></div>
+      <div class="pl"><span class="pn">Researched article, 1,200–1,600 words</span><span class="dots"></span><span class="pv">$400</span></div>
+      <div class="pl"><span class="pn">Twelve social posts, one platform</span><span class="dots"></span><span class="pv">$500</span></div>
+      <div class="pl"><span class="pn">Competitor and market research report</span><span class="dots"></span><span class="pv">$1,200</span></div>
+      <div class="pl"><span class="pn">Marketing plan — phases, budget, measures</span><span class="dots"></span><span class="pv">$1,800</span></div>
+      <div class="pl hl"><span class="pn">Hourly, for odd jobs</span><span class="dots"></span><span class="pv">$85</span></div>
+      <div class="pl hl"><span class="pn">Day rate</span><span class="dots"></span><span class="pv">$600</span></div>
+    </div>
+
+    <p class="terms">Running ads without a retainer is 12% of your ad spend, minimum $350 a month. You pay Google and Meta directly and the accounts stay in your name.</p>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">How it goes</p>
+      <h2>What actually happens after you get in touch.</h2>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div>
+          <h3>A call, about thirty minutes</h3>
+          <p>You tell me what the business does and where the work currently comes from. I ask what you have already tried, including what didn't work, which is usually the more useful half.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <h3>I write it down and send it to you</h3>
+          <p>A page or two: what I think the problem is, what I would do first, and what it costs. If I think you do not need a retainer I will say so — a one-off build and a Google profile is the right answer more often than people selling retainers admit.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <h3>You pick a tier, or you don't</h3>
+          <p>No pressure call afterwards. The written version is there so you can think about it without me in the room.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <h3>First two weeks</h3>
+          <p>Access, accounts, and the parts that are broken. Google profile, tracking, and whatever is currently costing you leads gets fixed before anything new gets built.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <h3>Then it is a routine</h3>
+          <p>Work goes out on a schedule, you get a report, and we talk once a month. You can stop with thirty days' notice on monthly, or a week on weekly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">Worth knowing</p>
+      <h2>A few things worth knowing before you sign.</h2>
+      <p>Most of this only comes up after someone has signed, so it may as well be on the page.</p>
+    </div>
+
+    <div class="plainlist">
+      <div>
+        <h3>I don't guarantee rankings, lead volume or revenue</h3>
+        <p>Nobody can, and anyone putting a number in writing is either guessing or counting on you not checking. I will tell you what I expect and I will show you the numbers either way.</p>
+      </div>
+      <div>
+        <h3>I don't do video production or on-site photography</h3>
+        <p>It isn't my trade. I will work with footage or photos you already have, or point you at someone who does it properly, rather than sell it and quietly hand it to a stranger.</p>
+      </div>
+      <div>
+        <h3>Your Google Business Profile stays yours</h3>
+        <p>I manage it, I never own it. Same with your ad accounts — you pay Google and Meta directly, on your own card, and if we stop working together nothing gets switched off.</p>
+      </div>
+      <div>
+        <h3>You own everything, including the files</h3>
+        <p>Website, source files, logos, artwork. Once it is paid for it is yours to take anywhere.</p>
+      </div>
+      <div>
+        <h3>Anything I write for you, I check first</h3>
+        <p>If a number or a claim goes on your website or in an ad, it comes from an original source and I keep a record of what I checked. It is not a clever process, it is just doing it — but a lot of marketing copy is confidently wrong and it is your name on it, not mine.</p>
+      </div>
+      <div>
+        <h3>My rates are lower than the agencies here, on purpose</h3>
+        <p>I am building a client list, so I priced under the market rather than at it. That holds for twelve months from the day you sign, and I will put the date in the agreement so it isn't a surprise later.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="contact">
+  <div class="wrap">
+    <p class="eyebrow">Getting started</p>
+    <h2>Call me, or email and tell me what the business does.</h2>
+    <p class="cintro">That is genuinely enough to start with. You get me on the phone, not a receptionist and not a queue. If I don't think I am the right fit I will say that instead.</p>
+
+    <div class="contactgrid">
+      <div class="cmethods">
+        <div class="cmethod">
+          <p class="clabel">Phone</p>
+          <!-- REPLACE: put the real number in the link text AND the tel: href,
+               then remove class="needsnumber" to drop the dashed placeholder styling. -->
+          <p class="cval"><a class="needsnumber" href="tel:">Your number goes here</a></p>
+        </div>
+        <div class="cmethod">
+          <p class="clabel">Email</p>
+          <p class="cval"><a href="mailto:Matthew.c.sharpe@gmail.com">Matthew.c.sharpe@gmail.com</a></p>
+        </div>
+      </div>
+
+      <div class="askfor">
+        <p class="gtitle">Useful to include, if you have it</p>
+        <ul>
+          <li>What the business does, and roughly how long it has been going</li>
+          <li>Where the work comes from now — referrals, ads, walk-ins, or nothing reliable</li>
+          <li>Your website address, if there is one</li>
+          <li>What you have already tried that didn't work</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer>
+    <span class="dots5" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <p>Matthew Sharpe · Englewood, Colorado · Rates current for 2026</p>
+  </footer>
+</div>
+
+</body>
+</html>

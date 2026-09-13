@@ -1,0 +1,508 @@
+<title>Sixfold Rate Sheet B</title>
+<style>
+  /* ------------------------------------------------------------------
+     Print register. Committed single visual world: ink on paper.
+     No dark theme by design — this sheet exists to be sent and printed,
+     and a dark ground is unprintable. Every colour is painted
+     explicitly so the page holds on any host background.
+
+     Tokens are the funding one-pager's print set, unchanged, so the two
+     sheets read as one company. Layout is new: a two-column rate body
+     rather than stacked money blocks.
+
+     ONE PAGE IS THE SPEC. Verified by printing to PDF and counting,
+     not by looking at the screen — screen height lies about page fit.
+
+     VARIANT B. Identical to pricing-onesheet.html except that slash
+     piling and rounds are charged rather than included. Built as a pair
+     for review — a change to one must be made to the other.
+     ------------------------------------------------------------------ */
+  :root {
+    --paper: #FFFFFF;
+    --tint: #F3EFE6;          /* Bone, lightened for block fills */
+    --tint-edge: #DED5C4;
+    --ink: #14201B;           /* Pine Black, a touch lifted for print */
+    --ink-mid: #46534B;
+    --ink-soft: #6E7A72;
+    --ember: #E4703A;         /* display figures and rules only */
+    --ember-text: #B84C15;    /* small text — passes contrast on white */
+    --moss-text: #45583A;
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: #4A5550; }
+
+  body {
+    margin: 0;
+    background: #4A5550;
+    color: var(--ink);
+    font-family: var(--f-body);
+    padding: 24px 12px 48px;
+  }
+
+  .sheet {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.42in 0.5in 0.34in;
+    font-size: 8.7pt;
+    line-height: 1.38;
+    box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Masthead ------------------------------------------------------- */
+  .top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.3in;
+    border-bottom: 2.5pt solid var(--ember);
+    padding-bottom: 7pt;
+  }
+  .brand { display: flex; align-items: flex-end; gap: 8pt; }
+  .mark { width: 32pt; height: 37pt; flex: none; display: block; }
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: 21pt;
+    line-height: 0.9;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--ink);
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 6pt;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--moss-text);
+    margin: 4pt 0 0;
+  }
+  .reach {
+    text-align: right;
+    margin: 0;
+    padding-top: 2pt;
+    line-height: 1.5;
+  }
+  .reach .tel {
+    font-family: var(--f-display);
+    font-size: 12pt;
+    color: var(--ink);
+    display: block;
+  }
+  .reach .rest {
+    font-family: var(--f-data);
+    font-size: 6.6pt;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    display: block;
+    margin-top: 2pt;
+  }
+  .reach .meta {
+    font-family: var(--f-data);
+    font-size: 6pt;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--moss-text);
+    display: block;
+    margin-top: 4pt;
+    line-height: 1.55;
+  }
+
+  /* Headline ------------------------------------------------------- */
+  .headline {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 16.8pt;
+    line-height: 1.06;
+    text-wrap: balance;
+    margin: 9pt 0 0;
+    color: var(--ink);
+  }
+  .standfirst {
+    font-size: 9.5pt;
+    line-height: 1.38;
+    color: var(--ink-mid);
+    margin: 6pt 0 0;
+    max-width: 6.4in;
+  }
+  .standfirst b { color: var(--ember-text); font-weight: 650; }
+
+  /* Two-column rate body ------------------------------------------- */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 0.3in;
+    margin-top: 9pt;
+    align-items: start;
+  }
+
+  .grp { break-inside: avoid; }
+  .grp + .grp { margin-top: 8.5pt; }
+
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 11.9pt;
+    line-height: 1.1;
+    margin: 0 0 1pt;
+    color: var(--ink);
+  }
+  .kick {
+    font-family: var(--f-data);
+    font-size: 6pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--moss-text);
+    margin: 0 0 4pt;
+  }
+
+  /* Rate rows ------------------------------------------------------ */
+  .rows { border-top: 0.75pt solid var(--tint-edge); }
+  .row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8pt;
+    padding: 2.5pt 0;
+    border-bottom: 0.5pt solid var(--tint-edge);
+  }
+  .row .what { color: var(--ink); }
+  .row .what i {
+    display: block;
+    font-style: normal;
+    font-size: 7.3pt;
+    color: var(--ink-soft);
+    line-height: 1.34;
+  }
+  .row .amt {
+    font-family: var(--f-display);
+    font-size: 10.8pt;
+    color: var(--ember-text);
+    white-space: nowrap;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .row .amt.free { color: var(--moss-text); font-size: 9.4pt; }
+  .row .amt small { font-size: 7.4pt; display: block; color: var(--ink-soft); }
+
+  .note {
+    font-size: 7.3pt;
+    line-height: 1.35;
+    color: var(--ink-mid);
+    margin: 4pt 0 0;
+  }
+  .note b { color: var(--ink); font-weight: 650; }
+
+  /* Money band ----------------------------------------------------- */
+  .money {
+    margin-top: 9pt;
+    background: var(--tint);
+    border: 0.75pt solid var(--tint-edge);
+    border-left: 2.5pt solid var(--ember);
+    padding: 7pt 10pt 8pt;
+    break-inside: avoid;
+  }
+  .money h2 { font-size: 11.9pt; margin-bottom: 3pt; }
+  .money .three {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 13pt;
+    margin-top: 6pt;
+  }
+  .money .three > div + div {
+    border-left: 0.5pt solid var(--tint-edge);
+    padding-left: 13pt;
+  }
+  .money b.lbl {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 6pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss-text);
+    font-weight: 400;
+    margin-bottom: 2pt;
+  }
+  .money .fig {
+    font-family: var(--f-display);
+    font-size: 13.8pt;
+    line-height: 1;
+    color: var(--ember-text);
+    display: block;
+    margin-bottom: 3pt;
+  }
+  .money p { font-size: 7.3pt; line-height: 1.36; color: var(--ink-mid); margin: 0; }
+
+  /* Footer strip --------------------------------------------------- */
+  .fine {
+    margin-top: 8pt;
+    padding-top: 6.5pt;
+    border-top: 2.5pt solid var(--ember);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12pt;
+    break-inside: avoid;
+  }
+  .fine .ask { display: flex; flex-direction: column; justify-content: space-between; }
+  .fine .ask .line {
+    font-family: var(--f-display);
+    font-size: 9.6pt;
+    line-height: 1.16;
+    color: var(--ink);
+    margin: 0 0 5pt;
+    text-wrap: balance;
+  }
+  .fine .ask .ways {
+    font-family: var(--f-data);
+    font-size: 6.4pt;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin: 0;
+  }
+  .fine .ask .ways b { font-family: var(--f-display); font-size: 11pt; color: var(--ink); letter-spacing: 0; }
+  .fine > div + div { border-left: 0.5pt solid var(--tint-edge); padding-left: 12pt; }
+  .fine b {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 6pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin-bottom: 3pt;
+  }
+  .fine p { font-size: 7.3pt; line-height: 1.36; color: var(--ink-mid); margin: 0; }
+  .fine p + p { margin-top: 3pt; }
+  .fine p strong { color: var(--ink); font-weight: 650; }
+
+  .signoff {
+    margin-top: auto;
+    padding-top: 6pt;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12pt;
+    border-top: 2.5pt solid var(--ember);
+  }
+  .signoff .line {
+    font-family: var(--f-display);
+    font-size: 10.4pt;
+    color: var(--ink);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .signoff .ways {
+    font-family: var(--f-data);
+    font-size: 6.6pt;
+    letter-spacing: 0.07em;
+    color: var(--ink-soft);
+    text-align: right;
+    margin: 0;
+    line-height: 1.6;
+  }
+  .signoff .ways b { color: var(--ink); font-weight: 650; }
+
+  /* Screen-only proof chrome --------------------------------------- */
+  .proof {
+    width: 8.5in;
+    margin: 12px auto 0;
+    font-family: var(--f-data);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #C8CFC9;
+  }
+
+  @media print {
+    html, body { background: #FFF; padding: 0; margin: 0; }
+    /* Tint fills and rules are information here, not decoration — force
+       them through the browser's "background graphics off" default. */
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .proof { display: none; }
+    .sheet {
+      width: auto;
+      min-height: 0;
+      box-shadow: none;
+      margin: 0;
+      padding: 0;
+    }
+    @page { size: letter; margin: 0.4in 0.5in 0.34in; }
+  }
+
+  /* Narrow SCREENS only. Scoped to `screen` on purpose: a bare
+     max-width query fires in print too — a printed page measures about
+     8.27in — and silently hijacks the print layout. */
+  @media screen and (max-width: 8.9in) {
+    .sheet { width: 100%; min-height: 0; }
+    .proof { width: 100%; }
+    .top { flex-direction: column; gap: 9pt; }
+    .reach { text-align: left; }
+    .cols { grid-template-columns: 1fr; gap: 12pt 0; }
+    .money .three, .fine { grid-template-columns: 1fr; gap: 9pt 0; }
+    .money .three > div + div, .fine > div + div { border-left: 0; padding-left: 0; }
+    .fine .ask { border-left: 0; padding-left: 0; }
+  }
+</style>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+        <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+        <g fill="#6E8560">
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        </g>
+        <rect x="4" y="86" width="92" height="5" fill="#6E8560"/>
+        <g fill="none" stroke="#6E8560" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+          <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+          <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+          <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+          <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+          <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+          <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+          <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire &middot; Monument, CO</p>
+      </div>
+    </div>
+    <p class="reach">
+      <span class="tel">(720) 772-6146</span>
+      <span class="rest">Contact@SixfoldColorado.com</span>
+      <span class="meta">Rates as of 24 Aug 2026<br>Arapahoe &middot; Douglas &middot; Jefferson &middot; the foothills</span>
+    </p>
+  </div>
+
+  <h1 class="headline">Tree work and fire mitigation &mdash; what it costs</h1>
+
+  <div class="cols">
+
+    <!-- Left column: the work itself -->
+    <div>
+      <div class="grp">
+        <h2>Taking trees down</h2>
+        <p class="kick">Per tree, by height</p>
+        <div class="rows">
+          <div class="row"><span class="what">Under 30 ft</span><span class="amt">$142 &ndash; $475</span></div>
+          <div class="row"><span class="what">30 &ndash; 60 ft</span><span class="amt">$475 &ndash; $950</span></div>
+          <div class="row"><span class="what">60 &ndash; 80 ft</span><span class="amt">$950 &ndash; $1,900</span></div>
+          <div class="row"><span class="what">Over 80 ft</span><span class="amt">up to $3,800</span></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h2>Grinding stumps flat</h2>
+        <p class="kick">Per diameter inch &middot; ground to grade, so it mows over</p>
+        <div class="rows">
+          <div class="row"><span class="what">Grinding, per diameter inch</span><span class="amt">$4.75 &ndash; $8.55</span></div>
+          <div class="row"><span class="what">Minimum, one stump to 18 in</span><span class="amt">$179</span></div>
+          <div class="row"><span class="what">Stumps over 36 in, add</span><span class="amt">$0.95<small>per inch</small></span></div>
+          <div class="row"><span class="what">Grindings hauled away</span><span class="amt">$3.80<small>per inch</small></span></div>
+          <div class="row"><span class="what">Grindings raked flat and left</span><span class="amt free">No charge</span></div>
+        </div>
+        <p class="note">Measured at the soil, root flare included &mdash; a stump that looks 14 inches at eye level is often 22 at the ground. Softwood in open soil is the bottom of the band; hard wood or tight access is the top.</p>
+      </div>
+
+      <div class="grp">
+        <h2>By the acre</h2>
+        <p class="kick">Defensible space &middot; hand and saw work, Zones 1 and 2</p>
+        <div class="rows">
+          <div class="row"><span class="what">One acre around the home</span><span class="amt">$3,040 &ndash; $5,795</span></div>
+          <div class="row"><span class="what">Thinning, lightly wooded acre</span><span class="amt">$696 &ndash; $2,216</span></div>
+          <div class="row"><span class="what">Thinning, heavy forest acre</span><span class="amt">$3,225 &ndash; $5,847</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: the choices -->
+    <div>
+      <div class="grp">
+        <h2>What happens to the wood</h2>
+        <p class="kick">Your call &mdash; the choice that moves your price most</p>
+        <div class="rows">
+          <div class="row"><span class="what">Left where it falls<i>Cut down under 24 in and scattered</i></span><span class="amt free">Included</span></div>
+          <div class="row"><span class="what">Stacked into slash piles<i>Built where you point, about a truck load each</i></span><span class="amt">$65<small>per pile</small></span></div>
+          <div class="row"><span class="what">Cut to rounds and stacked<i>16 in unless you say otherwise. Green &mdash; needs a season to dry</i></span><span class="amt">$95<small>per cord</small></span></div>
+          <div class="row"><span class="what">Chipped on site<i>Chips spread or left in a heap</i></span><span class="amt">$118<small>per hour</small></span></div>
+          <div class="row"><span class="what">Hauled off site<i>Disposal fees included</i></span><span class="amt">$142 &ndash; $190<small>per truck load</small></span></div>
+        </div>
+        <p class="note">Leaving it where it falls is free &mdash; that is the default finish and the saw is already running. Everything below it is labour: gathering and stacking, bucking to length, a second pass with the chipper, or a drive and a tipping fee. <b>Most companies fold all of this into one number.</b> Here it is broken out, so you can decline what you don&rsquo;t want.</p>
+        
+      </div>
+
+      <div class="grp">
+        <h2>Crew time</h2>
+        <p class="kick">For work easier to price by the hour than by the trunk</p>
+        <div class="rows">
+          <div class="row"><span class="what">Two people with saws</span><span class="amt">$95<small>per hour</small></span></div>
+          <div class="row"><span class="what">Crew with chipper</span><span class="amt">$118<small>per hour</small></span></div>
+          <div class="row"><span class="what">Full day, 8 hours</span><span class="amt">$895</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="money">
+    <h2>Help paying for it</h2>
+    <div class="three">
+      <div>
+        <b class="lbl">Colorado tax credit</b>
+        <span class="fig">$1,000</span>
+        <p>100% of qualifying vegetation work, up to $1,000, with an income limit. <strong>$2,000 and refundable</strong> from tax year 2027. About <strong>450 people in the whole state</strong> claimed it last time.</p>
+      </div>
+      <div>
+        <b class="lbl">Your insurer, since</b>
+        <span class="fig">1 Jul 2026</span>
+        <p>An insurer using a wildfire risk score to price or non-renew your policy must now send you that score yearly, say what discounts exist, and <strong>discount documented mitigation</strong>. You can appeal it.</p>
+      </div>
+      <div>
+        <b class="lbl">What you get from us</b>
+        <span class="fig">The file</span>
+        <p>An itemised invoice separating the qualifying work, plus before-and-after photographs &mdash; what your accountant and your insurer will ask for. Whether you qualify is their call; we don&rsquo;t give tax advice.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fine">
+    <div>
+      <b>Getting started</b>
+      <p><strong>Estimates are free and written.</strong> The price is fixed before a saw starts and doesn&rsquo;t move unless you add work.</p>
+      <p><strong>Minimum visit $179.</strong> One small tree, one stump, or an hour of saw work all clear it.</p>
+    </div>
+    <div>
+      <b>Your protection</b>
+      <p><strong>Sign at your home and you have three business days to cancel</strong> &mdash; in writing, any reason, no fee. Colorado law, and not waivable. We don&rsquo;t start until those days have run.</p>
+    </div>
+  </div>
+
+  <div class="signoff">
+    <p class="line">Tell us what you want gone. We&rsquo;ll tell you what it costs.</p>
+    <p class="ways"><b>(720) 772-6146</b> &middot; call or text &middot; Contact@SixfoldColorado.com</p>
+  </div>
+
+</div>
+
+<p class="proof">Screen proof &mdash; print to PDF at Letter, 0.45 &times; 0.5 in margins, backgrounds on. One page.</p>

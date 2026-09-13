@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Ad Script Kit</title>
+<style>
+  /* ---- Tokens: dark-first, shared with the marketing plan sheet ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 66ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--pad) 5rem; }
+
+  /* ---- Masthead ---- */
+  .masthead { padding: 3rem 0 1.6rem; border-bottom: 1px solid var(--seam); }
+  .eyebrow {
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 0.9rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: clamp(2rem, 5.2vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-size: 1.06rem;
+    color: var(--ink-dim);
+    max-width: var(--measure);
+    margin: 0 0 1.4rem;
+  }
+  .stamp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    padding-bottom: 1.4rem;
+  }
+  .stamp b { color: var(--ink-dim); font-weight: 500; }
+
+  /* ---- Sections ---- */
+  section { padding-top: 2.9rem; }
+  .sec-head { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.4rem; }
+  .sec-num {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    color: var(--ember);
+    letter-spacing: 0.1em;
+    padding-top: 0.15rem;
+  }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede { color: var(--ink-dim); max-width: var(--measure); margin: 0.5rem 0 1.3rem; }
+  p { max-width: var(--measure); }
+
+  /* ---- The thesis block ---- */
+  .thesis {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    padding: 1.5rem 1.6rem;
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 0.4rem;
+  }
+  .thesis dl { margin: 0; display: grid; gap: 0.75rem; }
+  @media (min-width: 720px) { .thesis dl { grid-template-columns: 9.5rem 1fr; gap: 0.75rem 1.4rem; } }
+  .thesis dt {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-top: 0.28rem;
+  }
+  .thesis dd { margin: 0; font-size: 1.02rem; }
+  .thesis dd small { display: block; color: var(--ink-faint); font-size: 0.82rem; margin-top: 0.15rem; }
+
+  /* ---- Checklist ---- */
+  ul.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  ul.check li {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.7rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 0.8rem 0.95rem;
+  }
+  ul.check li::before {
+    content: "";
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-top: 0.28rem;
+    border: 1.5px solid var(--ink-faint);
+    display: block;
+  }
+  ul.check li.gate::before { border-color: var(--ember); box-shadow: inset 0 0 0 2px var(--ember-quiet); }
+  ul.check .t { font-weight: 600; }
+  ul.check .d { display: block; color: var(--ink-dim); font-size: 0.9rem; margin-top: 0.18rem; }
+  ul.check .d em { color: var(--ember); font-style: normal; }
+
+  /* ---- Card grid ---- */
+  .grid { display: grid; gap: 0.9rem; }
+  @media (min-width: 760px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 760px) { .grid.three { grid-template-columns: repeat(3, 1fr); } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 1.1rem 1.15rem;
+  }
+  .card h3 {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--seam);
+  }
+  .card.have h3 { color: var(--moss); }
+  .card.gap h3 { color: var(--ember); }
+  .card ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+  .card li { font-size: 0.93rem; }
+  .card p { font-size: 0.93rem; margin: 0.6rem 0 0; color: var(--ink-dim); }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 0.68rem 0.9rem; border-bottom: 1px solid var(--seam); vertical-align: top; }
+  thead th {
+    background: var(--lift);
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- Cut list ---- */
+  ul.cut { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+  ul.cut li {
+    display: grid;
+    grid-template-columns: 1.4rem 1fr;
+    gap: 0.6rem;
+    padding: 0.62rem 0;
+    border-bottom: 1px solid var(--seam);
+  }
+  ul.cut li::before {
+    content: "\00d7";
+    color: var(--ink-faint);
+    font-family: var(--f-data);
+    line-height: 1.5;
+  }
+  ul.cut b { font-weight: 600; color: var(--ink); }
+  ul.cut span { color: var(--ink-dim); }
+
+  /* ---- Sequence ---- */
+  ol.seq { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0; }
+  ol.seq li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.9rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--seam);
+  }
+  ol.seq li::before {
+    content: counter(s, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ember);
+    padding-top: 0.16rem;
+  }
+  ol.seq .txt { min-width: 0; }
+  ol.seq b { display: block; }
+  ol.seq .txt span { display: block; color: var(--ink-dim); font-size: 0.93rem; margin-top: 0.12rem; }
+
+  /* ---- Forbidden lines ---- */
+  .forbid { display: grid; gap: 0.7rem; }
+  .forbid div {
+    border-left: 3px solid var(--ember);
+    background: var(--ember-quiet);
+    padding: 0.75rem 1rem;
+  }
+  .forbid q { display: block; font-family: var(--f-display); font-size: 1.05rem; }
+  .forbid small { display: block; color: var(--ink-dim); margin-top: 0.3rem; font-size: 0.87rem; }
+
+  /* ---- Callout ---- */
+  .note {
+    border: 1px dashed var(--seam);
+    background: var(--moss-quiet);
+    padding: 1rem 1.15rem;
+    margin-top: 1.2rem;
+  }
+  .note p { margin: 0; font-size: 0.93rem; max-width: none; }
+  .note b { color: var(--moss); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--seam);
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+  footer b { color: var(--ink-dim); font-weight: 500; }
+
+  a { color: var(--ember); }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    section { break-inside: avoid; }
+    .card, ul.check li, .thesis { border-color: #999; background: #fff; }
+  }
+
+  /* ============================================================
+     Extensions for the ad script kit. The block above is the
+     shared Sixfold sheet system, lifted verbatim from
+     minimum-viable-start.html — do not restyle it, only add.
+     ============================================================ */
+
+  /* ---- Sub-heading inside a section ---- */
+  h3.sub {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moss);
+    font-weight: 700;
+    margin: 2rem 0 0.7rem;
+  }
+
+  /* ---- Worked script. Set wider and looser than body copy: it is
+     meant to be read aloud off the page, not scanned. ---- */
+  .script {
+    border-left: 3px solid var(--ember);
+    background: var(--surface);
+    padding: 1.1rem 1.3rem;
+  }
+  .script p {
+    font-family: var(--f-display);
+    font-size: 1.06rem;
+    line-height: 1.55;
+    margin: 0 0 0.85rem;
+    max-width: 54ch;
+  }
+  .script p:last-child { margin-bottom: 0; }
+  .script em { color: var(--ink-faint); font-style: normal; font-family: var(--f-data); font-size: 0.85rem; }
+  .script .meta {
+    font-family: var(--f-data);
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--seam);
+    padding-top: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  /* ---- One impulse lever ---- */
+  .lever {
+    border-top: 1px solid var(--seam);
+    padding-top: 1.2rem;
+    margin-top: 1.5rem;
+  }
+  .lever h3 {
+    font-family: var(--f-display);
+    font-size: 1.14rem;
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+    color: var(--ink);
+  }
+  .lever p { margin: 0 0 0.7rem; font-size: 0.95rem; }
+
+  /* ---- Quotable lines. The display face marks them as speech
+     rather than instruction — the difference matters on a sheet
+     where most of the text is telling someone what not to do. ---- */
+  ul.bank { list-style: none; margin: 0.7rem 0 0.9rem; padding: 0; display: grid; gap: 0.4rem; }
+  ul.bank li {
+    font-family: var(--f-display);
+    font-size: 1.02rem;
+    line-height: 1.45;
+    color: var(--ink);
+    border-left: 2px solid var(--moss);
+    padding: 0.3rem 0 0.3rem 0.8rem;
+  }
+  ul.bank li em { color: var(--ink-faint); font-style: normal; font-family: var(--f-data); font-size: 0.82rem; }
+
+  ul.plain { margin: 0.6rem 0 0.9rem; padding-left: 1.1rem; display: grid; gap: 0.45rem; }
+  ul.plain li { font-size: 0.95rem; }
+
+  .never {
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+    padding: 0.6rem 0.9rem;
+    font-size: 0.9rem;
+    margin: 0.4rem 0 0;
+    max-width: none;
+  }
+  .never q { font-style: italic; }
+
+  /* ---- A group in the line bank ---- */
+  .bankgroup {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 0.95rem 1.1rem 1.1rem;
+  }
+  .bankgroup h3 {
+    font-family: var(--f-data);
+    font-size: 0.63rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ember);
+    font-weight: 700;
+    margin: 0 0 0.2rem;
+  }
+  .bankgroup ul.bank { margin-top: 0.5rem; margin-bottom: 0; }
+
+  @media print {
+    /* This sheet is far longer than a page, so sections cannot be held
+       whole the way the shorter sheets hold them. Hold the parts instead. */
+    section { break-inside: auto; }
+    .script, .lever, .bankgroup, .card, .note, .forbid div { break-inside: avoid; }
+    /* A section heading must never be the last thing on a page. */
+    .sec-head, .lede, h3.sub, .bankgroup h3, .lever h3 { break-after: avoid-page; }
+    .sec-head, .lede { break-inside: avoid-page; }
+    /* Grid list items collapse to one word per line if they are ever
+       fragmented across a page break — block them out for print. The
+       markers are put back inline so the numbers and boxes still print. */
+    ul.check li, ol.seq li, ul.cut li { display: block; }
+    ul.check li::before, ol.seq li::before, ul.cut li::before {
+      display: inline-block;
+      margin-right: 0.55rem;
+      vertical-align: baseline;
+      margin-top: 0;
+    }
+    ul.check .t, ol.seq b { font-weight: 700; display: inline; }
+    .script, .bankgroup, .card, .thesis { background: #fff; border-color: #999; }
+    ul.bank li { border-left-color: #666; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Sixfold LLC &middot; Land &amp; Fire &middot; internal</p>
+    <h1>Ad script kit &mdash; for Brad</h1>
+    <p class="standfirst">Not a script. The material a script gets built out of: who the ad is for, what it says, why it exists this month, a story spine, the impulse levers rewritten for a camera instead of a doorstep, and a bank of lines already checked so nothing has to be invented on the day.</p>
+    <div class="stamp">
+      <span><b>Prepared</b> 26 Aug 2026</span>
+      <span><b>Sources</b> content set &middot; services sheet D &middot; funding one-pager</span>
+      <span><b>Status</b> draft &mdash; nothing filmed, nothing placed</span>
+    </div>
+  </header>
+
+  <div class="note" style="margin-top:1.6rem">
+    <p><b>Every fact in the line bank traces to a source in &sect;10.</b> The lines are safe to say as written. Changing the numbers is where this goes wrong.</p>
+  </div>
+
+  <section id="different">
+    <div class="sec-head"><span class="sec-num">01</span><h2>The thing that makes this ad different</h2></div>
+    <p class="lede">Every competitor sells the work. Nobody sells the money.</p>
+    <p>Search any Front Range tree or mitigation company and it is the same ad: a truck, a chainsaw, a before-and-after, a phone number. That ad is already made, several times over, by people with ten years of photographs.</p>
+    <p>Four parties will pay for this work and most homeowners know about none of them. That gap is the ad. It is also the answer to Sixfold's real problem &mdash; a new company cannot out-credential a veteran-owned outfit with certified sawyers, but it can be the one that turns up knowing how the money works.</p>
+    <div class="note">
+      <p><b>So: do not open on a chainsaw.</b> The saw is in the ad. It is not the first thing in the ad.</p>
+    </div>
+  </section>
+
+  <section id="who">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Who &mdash; pick one person, not &ldquo;homeowners&rdquo;</h2></div>
+    <p class="lede">An ad aimed at homeowners reaches nobody. Three real people, each with a different opening.</p>
+    <div class="grid three">
+      <div class="card have">
+        <h3>A &middot; The one holding the letter</h3>
+        <p>Got a wildfire risk score from their insurer this summer. Mildly annoyed, does not know what the number means, does not know they can argue with it.</p>
+        <p><b>Strongest for a first ad.</b> There is a physical object in their hand, two real deadlines attached to it, and a reason the ad exists this month rather than any other.</p>
+      </div>
+      <div class="card">
+        <h3>B &middot; The one who thinks it is not about them</h3>
+        <p>Plains edge, backs onto open space, no forest in sight. <q>We're not in the mountains.</q></p>
+        <p>The Marshall Fire is the answer, and it is a story rather than a statistic &mdash; which is what a camera wants.</p>
+      </div>
+      <div class="card">
+        <h3>C &middot; The one already planning the work</h3>
+        <p>Deciding between this year and next, or between three quotes.</p>
+        <p>The tax credit changes their calendar and nobody has told them.</p>
+      </div>
+    </div>
+    <div class="note">
+      <p><b>Pick one and write the whole ad to them.</b> If all three are wanted, that is three ads sharing a close &mdash; not one ad with three openings.</p>
+    </div>
+  </section>
+
+  <section id="what">
+    <div class="sec-head"><span class="sec-num">03</span><h2>What &mdash; say the physical thing first</h2></div>
+    <p class="lede">Public copy opens on what the company physically does. The positioning insight is the second beat. An ad that opens on tax policy is an ad about tax policy.</p>
+    <div class="thesis">
+      <dl>
+        <dt>The work</dt>
+        <dd>Felling, full tree removal, full tree trimming, full brush removal, slashing, chipping, landscaping, and defensible space or thinning by the acre.
+          <small>What happens to the wood is a choice &mdash; chipped, hauled, or left on site.</small></dd>
+        <dt>Then the turn</dt>
+        <dd>Every job produces a written scope of what was cut and where, an itemised invoice separating the qualifying vegetation work, and photographs from fixed positions before and after.
+          <small>One document set that serves both a tax return and an insurance file. This is the differentiator, and it is the second beat, never the first.</small></dd>
+        <dt>The ask</dt>
+        <dd>One action, said once, at the end.
+          <small>Not &ldquo;call, or DM, or visit the website.&rdquo;</small></dd>
+      </dl>
+    </div>
+    <div class="note">
+      <p><b>The service list is provisional.</b> It is scoped to what the crew and kit can take on as of 25 August 2026, and Brandon has said he will confirm what the crew is actually limited to. <b>Stump grinding is deliberately off it and must not appear on camera.</b></p>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Why now &mdash; three real reasons, strongest first</h2></div>
+    <ol class="seq">
+      <li><div class="txt"><b>The law changed six weeks ago.</b><span>Since 1 July 2026 any insurer using a wildfire risk score to price, renew or decline a Colorado homeowners policy must tell the homeowner the score in writing, what drove it, and what each mitigation action would do to it. Notices are landing now. This is the only reason-now with a clock on it.</span></div></li>
+      <li><div class="txt"><b>The money on the table is unclaimed.</b><span>The state credit covers 100% of what a homeowner pays a contractor for qualifying work, up to $1,000. In tax year 2023 about 450 people in the entire state claimed it, and the state's own evaluators found fewer than half of surveyed landowners had heard of it.</span></div></li>
+      <li><div class="txt"><b>The calendar is upside down.</b><span>The work is easiest and safest in the dormant months; demand peaks in spring as fire season approaches. Useful framing &mdash; but <b>do not tell anyone to defer mitigation for a tax reason.</b> That is advice against the viewer's interest in a bad fire year, and it is not Sixfold's call to give.</span></div></li>
+    </ol>
+  </section>
+
+  <section id="spine">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Build the story &mdash; the spine</h2></div>
+    <p class="lede">Five beats. They work at either length; only the word budget changes.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Beat</th><th>What it does</th><th>:30</th><th>:60</th></tr></thead>
+        <tbody>
+          <tr><td><b>1. The object</b></td><td>One specific thing the viewer owns or can see &mdash; the letter, the fence line, the five feet of dirt against the wall</td><td class="num">~12 words</td><td class="num">~20 words</td></tr>
+          <tr><td><b>2. What it means</b></td><td>One fact, said plainly. No stacking</td><td class="num">~15 words</td><td class="num">~30 words</td></tr>
+          <tr><td><b>3. The turn</b></td><td>Someone will pay for this, and almost nobody claims it</td><td class="num">~15 words</td><td class="num">~35 words</td></tr>
+          <tr><td><b>4. What we do</b></td><td>The work, then the document set</td><td class="num">~20 words</td><td class="num">~45 words</td></tr>
+          <tr><td><b>5. The ask</b></td><td>One action</td><td class="num">~10 words</td><td class="num">~15 words</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <p><b>Word budget.</b> Spoken delivery runs about 140 words a minute when it is not rushed. <b>A :30 is roughly 70 words. A :60 is roughly 145.</b> Write to that and cut, rather than writing long and speeding up &mdash; a rushed read is the most recognisable thing about a cheap ad.</p>
+    </div>
+    <p><b>Beat 1 is the whole ad.</b> If the first six seconds are a logo or a truck, the rest does not get watched. Open on the object, in shot, in hand.</p>
+
+    <h3 class="sub">Worked example &mdash; :30, audience A</h3>
+    <div class="script">
+      <p><em>(Holding an envelope, walking)</em> This came from your insurance company this summer. There's a score on it.</p>
+      <p>Since July they've had to tell you that number &mdash; and tell you exactly what would change it.</p>
+      <p>Colorado will also pay you back for the work. All of it, up to a thousand dollars. Last year about four hundred and fifty people in the whole state claimed it.</p>
+      <p>We cut the fuel back, and we hand you the paperwork both of them ask for. Written scope, itemised invoice, photos before and after.</p>
+      <p>Free written estimate. <em>(number)</em></p>
+      <p class="meta">74 words. Beat 3 and beat 4 carry the load; beat 5 is deliberately flat.</p>
+    </div>
+
+    <h3 class="sub">Worked example &mdash; :60, audience B</h3>
+    <div class="script">
+      <p>The most destructive fire in Colorado history was a grass fire. It happened in December, and it snowed the next afternoon.</p>
+      <p>Six thousand acres. That's small, as fires go. It destroyed one thousand and eighty-four homes.</p>
+      <p>The most common thing people tell me on the Front Range is &ldquo;we're not in the mountains.&rdquo; Marshall is the reason that doesn't hold. Grass, a fence line, a mulch bed and a wind event is the whole recipe.</p>
+      <p>Here's the part nobody gets told. The first five feet around your house matters more than anything else on the property &mdash; and you don't need us for that. That's a Saturday and a wheelbarrow.</p>
+      <p>What you need us for is everything past it. Trees down, brush out, slash chipped or hauled. And when we're done you get a written scope of what was cut, an itemised invoice, and photographs before and after &mdash; because your insurer and your tax return both want exactly that.</p>
+      <p>Free written estimate, and I'll tell you what I'd do even if you never hire us. <em>(number)</em></p>
+      <p class="meta">160 words &mdash; trim beat 2 to land at :60.</p>
+    </div>
+  </section>
+
+  <section id="impulse">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Impulse factors, translated for camera</h2></div>
+    <p class="lede">The five levers from the field training, rewritten for a lens. They work differently on video: there is no back foot to lean on, no product to pack up, and no way to read the room. What survives is what is said, and how fast.</p>
+    <div class="forbid">
+      <div>
+        <q>An impulse lever is only usable when the fact underneath it is literally true.</q>
+        <small>On a doorstep a manufactured deadline is a bad practice. On camera it is a false statement made to induce a payment, it is permanent, and it is the kind of thing that produces the complaints that produce the threads. <b>Every lever below has a true version available. Use those.</b></small>
+      </div>
+    </div>
+
+    <div class="lever">
+      <h3>1 &middot; Social proof &mdash; &ldquo;everyone has one of these&rdquo;</h3>
+      <p><b>On camera:</b> the shared object, not the happy customer. Sixfold has no completed jobs, no reviews and no portfolio, so testimonial-shaped proof is off the table entirely.</p>
+      <p><b>True version:</b> every scored property on the street got the same letter. Everyone in Colorado holding a policy is in the same system.</p>
+      <ul class="bank">
+        <li>Everybody on this street got one of these.</li>
+        <li>There's a number attached to every house here now.</li>
+      </ul>
+      <p class="never"><b>Never:</b> any claim about how many people have hired Sixfold, any implied review, any &ldquo;trusted by.&rdquo;</p>
+    </div>
+
+    <div class="lever">
+      <h3>2 &middot; Take-away &mdash; be the opposite of a salesperson</h3>
+      <p><b>The strongest lever available, and the only one where honesty makes it hit harder.</b> Telling someone the best thing they can do is free, and that they do not need you for it, is disarming precisely because nobody else in the trade says it. It also solves the delivery problem &mdash; a line that gives something away can be read flat and still land.</p>
+      <ul class="bank">
+        <li>The first five feet is the part that matters most, and you don't need us for it.</li>
+        <li>Most of what I'd tell you to do, you can do yourself. Call us for the part that needs a saw.</li>
+        <li>I'll tell you what I'd do even if you never hire us.</li>
+      </ul>
+    </div>
+
+    <div class="lever">
+      <h3>3 &middot; Fear of loss &mdash; use the real clocks</h3>
+      <p>There are three genuine deadlines. None of them need inflating.</p>
+      <ul class="plain">
+        <li><b>Ten days and thirty days.</b> If a score looks wrong, the insurer has 10 calendar days to acknowledge an appeal in writing and 30 for a written decision.</li>
+        <li><b>The credit does not roll over.</b> Right now, credit worth more than the state tax owed is neither refunded nor carried forward. It is simply lost. That changes for work done in 2027.</li>
+        <li><b>The dormant season.</b> The work is easiest and safest when the trees are dormant; demand runs the other way.</li>
+      </ul>
+      <p class="never"><b>Never:</b> <q>last chance</q>, <q>spots are filling</q>, <q>prices go up next month</q>, or anything implying the credit is about to end. It runs through tax year 2030 and the statute sits on the books to 2040. Saying otherwise on video is a checkable lie.</p>
+    </div>
+
+    <div class="lever">
+      <h3>4 &middot; Delivery &mdash; it is how it is said</h3>
+      <p><b>On camera this is pace and pause, not volume.</b> Three things do more than anything else: slow down about 15% from conversational speed, put a full stop where the instinct is a comma, and stop talking after the ask. Dead air after a number reads as confidence; filling it reads as needing the sale.</p>
+      <p class="never"><b>Never:</b> the 55% / 38% / 7% body-language statistic, in any script, caption or training note. It is a misquoted 1967 study about how people infer <em>liking</em> from single words in a lab, the author spent decades objecting to the generalisation, and it is trivially checkable in a comment section. The underlying point survives without the fake numbers.</p>
+    </div>
+
+    <div class="lever">
+      <h3>5 &middot; Motion &mdash; action beats reaction</h3>
+      <p><b>Open mid-action.</b> Already walking, already holding the envelope, already halfway through the sentence. No logo card, no slow push-in, no &ldquo;hi, I'm ___ from ___.&rdquo; The first frame should look like the middle of something.</p>
+      <p><b>Cut on movement.</b> Short takes read as urgent; a single locked-off take reads as a lecture, no matter what is said in it.</p>
+      <ul class="bank">
+        <li>Two seconds and I'll show you.</li>
+        <li>Come round here.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="bank">
+    <div class="sec-head"><span class="sec-num">07</span><h2>The line bank</h2></div>
+    <p class="lede">Every line below is checked and safe as written.</p>
+
+    <div class="grid two">
+      <div class="bankgroup">
+        <h3>Openers &mdash; A, the letter</h3>
+        <ul class="bank">
+          <li>This came from your insurance company this summer. There's a score on it.</li>
+          <li>There's a number attached to your house that used to be invisible. Since July, they have to show it to you.</li>
+          <li>Ten days and thirty days. Those are the two numbers on that letter, and nobody mentions them.</li>
+          <li>Most people file this one without reading it. This year it has a score on it.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>Openers &mdash; B, not in the mountains</h3>
+        <ul class="bank">
+          <li>The most destructive fire in Colorado history was a grass fire. It happened in December.</li>
+          <li>Six thousand acres. That's a small fire. It destroyed one thousand and eighty-four homes.</li>
+          <li>&ldquo;We're not in the mountains&rdquo; is the most common thing people say about this. Here's why it doesn't hold.</li>
+          <li>Houses in wildfires mostly don't catch from the flame front. They catch from embers landing in the five feet of ground nobody thinks about.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>Openers &mdash; C, already planning</h3>
+        <ul class="bank">
+          <li>If you're cutting back the trees around your house, the year you do it in is now worth real money.</li>
+          <li>Colorado pays back 100% of what you pay a contractor for this. Last year about 450 people in the entire state claimed it.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>The take-away</h3>
+        <ul class="bank">
+          <li>If you only do one thing to your property this year, do the first five feet. That one's free.</li>
+          <li>Wood mulch against the foundation is the most common thing I'd ask you to change, and it costs a trip to the landscape yard.</li>
+          <li>A wooden fence attached to the house is a fuse with a handle on it.</li>
+          <li>You don't have to hire anyone for that part.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>The money &mdash; the state credit</h3>
+        <ul class="bank">
+          <li>The state covers 100% of what you pay a contractor for qualifying work, up to $1,000.</li>
+          <li>There's no application and no waiting list. It goes on your state return with the receipts attached.</li>
+          <li>Right now, anything worth more than you owe the state is just gone. It isn't refunded and it doesn't carry forward.</li>
+          <li>For work done in 2027 the cap doubles to $2,000, and it becomes refundable &mdash; you get it even if you owe nothing.</li>
+          <li>It only counts if you pay someone else to do it. Renting a chipper and doing it yourself hasn't qualified since 2024.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>The money &mdash; insurance</h3>
+        <ul class="bank">
+          <li>Since July, if your insurer scores your property for wildfire, they have to tell you the score, what drove it, and what each thing you could do would change it.</li>
+          <li>You can appeal it. Ten days to acknowledge in writing, thirty days for a decision.</li>
+          <li>You don't have to wait for renewal. Do the work, ask for a revised score, and they've got thirty days.</li>
+          <li>They also have to publish which actions earn a discount and what each one is worth.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>The proof &mdash; what Sixfold hands over</h3>
+        <ul class="bank">
+          <li>Every job comes with a written scope of exactly what was cut and where.</li>
+          <li>An itemised invoice that separates out the qualifying vegetation work &mdash; that's what the claim needs attached.</li>
+          <li>Photographs from fixed positions, before and after.</li>
+          <li>One set of documents. It serves your tax return and it serves your carrier.</li>
+          <li>We can't file your return and we can't promise your insurer a number. We can make sure you're holding what they both ask for.</li>
+        </ul>
+      </div>
+      <div class="bankgroup">
+        <h3>The close &mdash; pick one, say it once</h3>
+        <ul class="bank">
+          <li>Free written estimate. <em>(number)</em></li>
+          <li>I'll walk the property and tell you what I'd do. No charge, and no obligation.</li>
+          <li>If what you need isn't something we do, I'll say so.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="never">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Do not say this on camera</h2></div>
+    <p class="lede">Video is permanent, it gets clipped, and it is the worst possible place for any of the following.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Don't say</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><b>&ldquo;Licensed and insured&rdquo;</b></td><td>Standing project rule. Not until the insurance exists, and it does not. <b>The single most likely thing to come out by reflex.</b></td></tr>
+          <tr><td><b>&ldquo;Certified,&rdquo; &ldquo;Firewise,&rdquo; &ldquo;NFPA,&rdquo; &ldquo;veteran-owned,&rdquo; &ldquo;family-owned&rdquo;</b></td><td>None are established. Each is checkable.</td></tr>
+          <tr><td>Anything implying past jobs &mdash; &ldquo;we've helped hundreds,&rdquo; &ldquo;our customers,&rdquo; a review, a testimonial</td><td>There are no completed jobs. Fabricated proof on video is not recoverable.</td></tr>
+          <tr><td><b>Before-and-after footage that isn't a real Sixfold job</b></td><td>Staged footage presented as work done is fabrication, whoever's property it is. If a demonstration is filmed, it is a demonstration and it says so on screen.</td></tr>
+          <tr><td><b>&ldquo;We'll lower your premium,&rdquo; &ldquo;you'll get a discount,&rdquo; any percentage</b></td><td>The statute entitles a homeowner to a re-score, not a better one. The discount duty is conditional. No statewide figure exists.</td></tr>
+          <tr><td><b>&ldquo;We handle your taxes / the paperwork for you&rdquo;</b></td><td>Supplying documents is a service. Filing a return is a licensed activity &mdash; and Sixfold is the vendor whose invoice is being claimed.</td></tr>
+          <tr><td><b>&ldquo;You'll get $2,000 back&rdquo;</b></td><td>Tax advice from a tree company. State the terms; point at their accountant.</td></tr>
+          <tr><td><b>Any county cost-share programme by name</b></td><td>Hard rule until Sixfold is on an approved contractor list. Advertising it first promises something that cannot be delivered.</td></tr>
+          <tr><td><b>&ldquo;Last chance,&rdquo; &ldquo;spots filling,&rdquo; &ldquo;the credit ends this year,&rdquo; &ldquo;price goes up&rdquo;</b></td><td>None are true. See &sect;6.3.</td></tr>
+          <tr><td><b>The 55% / 38% / 7% communication statistic</b></td><td>False, and trivially checkable.</td></tr>
+          <tr><td><b>Stump grinding</b></td><td>Off the service list on instruction, and regulated as excavation &mdash; Colorado 811 needs up to three business days' notice, so it cannot be sold same-day.</td></tr>
+          <tr><td><b>Anything about aeration</b></td><td>Fire is the only line described in Sixfold's public copy.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <p><b>Two practical ones for the shoot.</b> A <b>written release before anyone or any property appears</b> &mdash; every person on camera, and the owner of any property filmed, at the time and in writing, not afterwards. And <b>nothing identifiable in the background that isn't cleared</b>: house numbers, plates, a neighbour's property, or another company's mark on a piece of kit.</p>
+    </div>
+  </section>
+
+  <section id="decide">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Decide before filming</h2></div>
+    <ul class="check">
+      <li class="gate"><span class="t">Which offer, if any.</span><span class="d">The two launch flyers carry different offers &mdash; <em>bring us your quote, we'll cut it in half</em> versus <em>first ten properties, 40% off</em> &mdash; and <em>Brandon has not picked one.</em> They are not compatible in the same market, and the minimum job size has not been set for either. The scripts above leave the offer out entirely and still work; if one goes in, it goes in beat 5 and nowhere else.</span></li>
+      <li class="gate"><span class="t">The call to action.</span><span class="d">The phone number is live and confirmed, and <b>Contact@SixfoldColorado.com is a real Sixfold address</b> &mdash; the old problem of Sixfold sheets carrying a Surge email is closed, so the email is safe on screen. <em>The domain is owned but has no hosting: SixfoldColorado.com resolves to nothing.</em> Do not say it on camera and do not put it on an end card &mdash; a URL that returns an error is worse than no URL. <b>linktr.ee/SixFoldColorado</b> is live and is what the QR code points at. <em>Several sheets still recommend sixfoldland.com; that name is superseded and must not be used.</em></span></li>
+      <li><span class="t">The service region.</span><span class="d">From Monument the reach is El Paso, Teller and southern Douglas. <em>The rate sheets still say Arapahoe, Douglas and Jefferson</em> and have not been reconciled. If the ad names counties, use the Monument set &mdash; and the sheets need fixing either way.</span></li>
+      <li><span class="t">Where it runs.</span><span class="d">Nextdoor punishes anything that reads as selling, and it is the platform where this content performs best organically. A paid placement and a Nextdoor post are not the same cut.</span></li>
+      <li><span class="t">Who is on camera.</span><span class="d">A named person saying &ldquo;I&rdquo; is much stronger than a voiceover, and it commits that person to the claims. Worth deciding before the script is written rather than after.</span></li>
+    </ul>
+  </section>
+
+  <section id="factcheck">
+    <div class="sec-head"><span class="sec-num">10</span><h2>Fact-check log</h2></div>
+    <p class="lede">Nothing in the line bank is new research. Every figure was already checked against primary source in the file named, and is carried here unchanged.</p>
+
+    <h3 class="sub">The state tax credit</h3>
+    <p>From the fact-check log of <b>content/02-tax-credit-post.md</b>, which reads the enacted text of HB26-1289 amending C.R.S. 39-22-543, the Colorado Department of Revenue topic page, and the General Assembly's 2026 tax expenditure evaluation (2026-TE4).</p>
+    <ul class="plain">
+      <li>100% of qualifying costs, cap <b>$1,000</b>, tax years 2025 and 2026.</li>
+      <li>Tax years 2027&ndash;2030: cap <b>$2,000</b>, AGI limit <b>$300,000</b>, and the excess is <b>refunded</b> &mdash; &sect;(4)(c) and &sect;(5)(b).</li>
+      <li><b>Before 2027 the excess is neither refunded nor carried forward</b> &mdash; &sect;(5)(a). This is the &ldquo;it's just gone&rdquo; line, and commercially the most useful fact in the set.</li>
+      <li>Only costs <b>paid to a third-party contractor</b> qualify, since August 2024 (HB24-1036).</li>
+      <li>About <b>450 claims statewide in TY2023</b>, reimbursing about $200,000 to 457 landowners. Fewer than 50% of 360 survey respondents had heard of the credit; over 70% said landowners are generally unaware.</li>
+    </ul>
+
+    <h3 class="sub">The insurance disclosure law</h3>
+    <p>From <b>content/01-insurance-risk-score-post.md</b>: HB25-1182 / C.R.S. 10-4-124, effective <b>1 July 2026</b>. Score, range, position in range, the features that drove it, and the effect of each mitigation action, in writing. Appeal acknowledged in writing within <b>10 calendar days</b>, decision within <b>30</b>. Re-score on request within <b>30 days</b>. Insurers must publish which actions earn a discount and by how much.</p>
+
+    <h3 class="sub">The first five feet, and the Marshall Fire</h3>
+    <p>From <b>content/03-first-five-feet-post.md</b>: a study of more than 71,000 properties inside wildfire perimeters 2016&ndash;2019 found buildings with heavy vegetation within five feet of the walls were destroyed <b>78%</b> of the time, close to twice the rate of those with little. CSFS Zone 1 guidance.</p>
+    <p>From <b>content/05-grass-not-forest-post.md</b>: 30 December 2021, cured grass, ~20% relative humidity, gusts 70&ndash;100 mph, about <b>6,000 acres</b>, <b>1,084 homes</b> and seven commercial buildings destroyed, 149 damaged, two deaths.</p>
+
+    <h3 class="sub">The service list</h3>
+    <p>Brandon, 2026-08-25, verbatim, recorded in <b>services-onesheet-d.md</b>. Provisional by his own instruction.</p>
+
+    <h3 class="sub">Deliberately not used</h3>
+    <ul class="cut">
+      <li><b>The $3,200&ndash;$6,100 one-acre defensible space benchmark.</b> <span>Real and CSFS-sourced, but no job cost goes on camera before Sixfold has priced ten real jobs.</span></li>
+      <li><b>Any county cost-share figure.</b> <span>Hard rule until listing.</span></li>
+      <li><b>The &ldquo;thinning woody vegetation now qualifies&rdquo; framing.</b> <span>It overstates the 2027 change &mdash; thinning for the primary purpose of reducing risk to structures was <b>already</b> qualifying. What HB26-1289 adds is a narrower category for vegetation at risk of or killed by mountain pine or spruce beetle. <b>The funding one-pager still carries the overstated line and needs correcting</b> &mdash; it predates the correction by one day.</span></li>
+      <li><b>Any premium saving, in dollars or percent.</b> <span>No statewide figure exists.</span></li>
+    </ul>
+
+    <h3 class="sub">Unresolved</h3>
+    <ul class="plain">
+      <li><b>The 2026 federal-taxable-income limit</b> for the credit is genuinely unpublished &mdash; DOR shows &ldquo;TBD&rdquo;. If a viewer asks, the honest answer is that it has not been announced. <b>Do not put an income figure for 2026 on camera.</b></li>
+      <li><b>Whether &ldquo;adjusted gross income&rdquo; in &sect;(4)(c) means federal AGI.</b> A different number for some filers; worth an accountant's read before it appears in print or on screen.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><b>Sixfold LLC</b> &middot; Monument, Colorado &middot; internal working document, 26 August 2026.</p>
+    <p>Source of truth is <b>ad-script-kit.md</b>; this sheet is the presentation layer. <b>Nothing filmed, nothing published, nothing placed or scheduled.</b></p>
+  </footer>
+
+</div>
+</body>
+</html>

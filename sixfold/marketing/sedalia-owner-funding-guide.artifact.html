@@ -1,0 +1,390 @@
+<title>Sedalia Mitigation Funding Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   Sixfold — Sedalia owner funding guide (client handout)
+   Dark-first house register; light print + light-OS register.
+   Palette: Pine Black / Timber / Bone / Ember / Moss.
+   ============================================================ */
+:root{
+  --pine:#0E1512; --pine-2:#131C18; --timber:#1F2A25; --timber-2:#26332C;
+  --bone:#EDE7DC; --bark:#97A499; --ember:#E4703A; --ember-ink:#F0824E;
+  --moss:#8AA07A; --moss-ink:#9DB78C;
+  --rule:rgba(237,231,220,.14); --rule-2:rgba(237,231,220,.30);
+  --ground:var(--pine); --surface:var(--timber); --ink:var(--bone);
+  --measure:68ch; --pad:clamp(1.1rem,4vw,2.4rem);
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --pine:#F3EFE6; --pine-2:#EEE9DD; --timber:#FBF8F2; --timber-2:#F4EFE4;
+    --bone:#1B211E; --bark:#5E6B60; --ember:#BE4E1C; --ember-ink:#B6480F;
+    --moss:#5C7350; --moss-ink:#4F6644;
+    --rule:rgba(20,30,25,.14); --rule-2:rgba(20,30,25,.26);
+  }
+}
+:root[data-theme="light"]{
+  --pine:#F3EFE6; --pine-2:#EEE9DD; --timber:#FBF8F2; --timber-2:#F4EFE4;
+  --bone:#1B211E; --bark:#5E6B60; --ember:#BE4E1C; --ember-ink:#B6480F;
+  --moss:#5C7350; --moss-ink:#4F6644;
+  --rule:rgba(20,30,25,.14); --rule-2:rgba(20,30,25,.26);
+}
+:root[data-theme="dark"]{
+  --pine:#0E1512; --pine-2:#131C18; --timber:#1F2A25; --timber-2:#26332C;
+  --bone:#EDE7DC; --bark:#97A499; --ember:#E4703A; --ember-ink:#F0824E;
+  --moss:#8AA07A; --moss-ink:#9DB78C;
+  --rule:rgba(237,231,220,.14); --rule-2:rgba(237,231,220,.30);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:52rem;margin:0 auto;padding:0 var(--pad) 5rem}
+p{max-width:var(--measure)}
+a{color:var(--ember-ink)}
+
+/* header */
+header.mast{padding:3rem 0 1.4rem;border-bottom:2px solid var(--ember)}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.72rem;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ember-ink);margin:0 0 .8rem;
+}
+h1{
+  font-family:Bitter,Georgia,serif;font-weight:700;
+  font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.12;margin:0 0 .6rem;
+  letter-spacing:-.01em;text-wrap:balance;
+}
+.prepared{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.78rem;
+  color:var(--bark);line-height:1.7;margin:.9rem 0 0;
+}
+.prepared b{color:var(--ink);font-weight:600}
+
+.lede{font-size:1.05rem;margin:1.8rem 0 0}
+.callout{
+  margin:1.6rem 0;padding:1rem 1.2rem;background:var(--surface);
+  border:1px solid var(--rule-2);border-left:3px solid var(--moss);border-radius:3px;
+}
+.callout p{margin:0;color:var(--ink)}
+.callout .k{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--moss-ink);
+  display:block;margin-bottom:.35rem;
+}
+
+h2{
+  font-family:Bitter,Georgia,serif;font-weight:600;font-size:1.35rem;
+  margin:3rem 0 .3rem;letter-spacing:-.005em;text-wrap:balance;
+  padding-top:1.4rem;border-top:1px solid var(--rule-2);
+}
+h2:first-of-type{border-top:none;padding-top:0}
+.sec-sub{color:var(--bark);margin:.2rem 0 1.4rem;font-size:.98rem}
+
+.prog{
+  margin:1.1rem 0;padding:1.15rem 1.25rem;background:var(--surface);
+  border:1px solid var(--rule-2);border-radius:4px;
+}
+.prog .tag{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.66rem;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--bark);
+  display:flex;flex-wrap:wrap;gap:.3rem .7rem;margin-bottom:.5rem;
+}
+.prog .tag .hot{color:var(--ember-ink)}
+.prog .tag .later{color:var(--moss-ink)}
+.prog h3{
+  font-family:Bitter,Georgia,serif;font-weight:600;font-size:1.12rem;
+  margin:0 0 .6rem;line-height:1.3;
+}
+.prog dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:.35rem .9rem}
+.prog dt{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--bark);
+  padding-top:.2rem;white-space:nowrap;
+}
+.prog dd{margin:0}
+.prog dd + dt{border-top:1px solid var(--rule);padding-top:.55rem}
+.prog dd.brk{padding-top:.55rem;border-top:1px solid var(--rule)}
+.prog .note{
+  margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--rule);
+  font-size:.92rem;color:var(--bark);
+}
+.prog .note b{color:var(--ink);font-weight:600}
+
+ul.plain{padding-left:1.15rem;margin:.6rem 0;max-width:var(--measure)}
+ul.plain li{margin:.35rem 0}
+
+.foot{margin-top:3.5rem;padding-top:1.4rem;border-top:2px solid var(--ember);font-size:.86rem;color:var(--bark)}
+.foot p{max-width:none}
+.foot b{color:var(--ink)}
+.foot h3{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--bark);margin:1.4rem 0 .5rem;
+}
+.foot ul{padding-left:1.1rem;margin:0;display:flex;flex-direction:column;gap:.28rem}
+
+@media (max-width:560px){
+  .prog dl{grid-template-columns:1fr}
+  .prog dd + dt{border-top:none;padding-top:.2rem}
+  .prog dt{padding-top:.4rem}
+}
+
+@media print{
+  :root{
+    --pine:#fff; --pine-2:#fff; --timber:#f6f4ef; --timber-2:#f6f4ef;
+    --bone:#000; --bark:#333; --ember:#8a3a12; --ember-ink:#8a3a12;
+    --moss:#3f5136; --moss-ink:#3f5136; --rule:#ccc; --rule-2:#999;
+  }
+  body{font-size:10.5pt;line-height:1.4}
+  .wrap{max-width:none;padding:0}
+  header.mast{padding:0 0 .5rem}
+  h1{font-size:18pt}
+  h2{font-size:13pt;margin-top:1.4rem}
+  .prog,.callout{break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  a{color:#000}
+}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="eyebrow">Wildfire mitigation &middot; Cost recovery &middot; Sedalia, Colorado</p>
+  <h1>Ways to recover the cost of your mitigation work</h1>
+  <p class="prepared">
+    Prepared for &nbsp;<b>Lonnie</b> &mdash; property in Sedalia, Douglas County, Colorado<br>
+    Prepared by &nbsp;<b>Sixfold Colorado</b> &nbsp;&middot;&nbsp; September 2026<br>
+    Informational only &mdash; not tax, legal, or insurance advice.
+  </p>
+</header>
+
+<p class="lede">Here is what applies to a property in Sedalia &mdash; the statewide programs and the
+Douglas County ones, and nothing from other counties you can't claim from here.</p>
+
+<div class="callout">
+  <p><span class="k">Read this first</span>
+  The programs split into two groups. <b>Group 1</b> can be used for this project once it's
+  finished and paid for. <b>Group 2</b> has to be approved <i>before</i> the work starts &mdash;
+  so it can't be applied to the work wrapping up now, but line it up before any additional
+  phase. Every figure and date below can change year to year; confirm the current terms with
+  the program, and your own eligibility with your accountant and your insurer.</p>
+</div>
+
+
+<h2>Group 1 &mdash; for this project</h2>
+<p class="sec-sub">No application, no waiting list. Both are claimed once the work is done and paid for, using your invoice and photos.</p>
+
+<div class="prog">
+  <div class="tag"><span class="hot">Statewide</span><span>Colorado income tax credit</span><span>C.R.S. 39-22-543</span></div>
+  <h3>Colorado wildfire-mitigation income tax credit</h3>
+  <dl>
+    <dt>What it is</dt>
+    <dd>A credit on your Colorado state income tax return for what you paid a contractor to
+        reduce wildfire risk on your own land.</dd>
+    <dt>How much</dt>
+    <dd>100% of the qualifying cost, capped at <b>$1,000</b> for tax years 2025 and 2026.
+        The cap rises to <b>$2,000</b> for tax years 2027&ndash;2030, and in those years it
+        becomes <b>refundable</b> &mdash; you can receive it even if you owe no state tax.
+        Income limits apply (roughly $300,000 AGI from 2027; the 2026 limit had not been
+        published as of this writing).</dd>
+    <dt>Applies to</dt>
+    <dd>Any private land in Colorado &mdash; there is no wildland-urban-interface test. Only
+        paid third-party contractor work counts (your Sixfold invoice); your own equipment
+        or DIY labor does not.</dd>
+    <dt>Qualifying work</dt>
+    <dd>Creating defensible space, building fuel breaks, thinning woody vegetation to protect
+        structures, and treating the resulting slash (chipping, hauling off, lop-and-scatter,
+        piling, or pile burning) &mdash; done to Colorado State Forest Service or Division of
+        Fire Prevention &amp; Control standards.</dd>
+    <dt>How to claim</dt>
+    <dd>Your accountant files <b>Form DR 0104CR</b> with your Colorado return for the tax year
+        you paid, keeping the invoice and a note of the standard the work met. Sixfold does
+        not prepare or file returns.</dd>
+  </dl>
+  <p class="note"><b>Worth checking:</b> the credit is for work whose main purpose is
+  reducing wildfire risk to structures. If your project was mainly downed-wood and slash
+  cleanup, ask your accountant whether it meets that purpose test before claiming &mdash;
+  and keep the invoice either way. Sixfold can give you an itemized invoice that separates
+  the vegetation work from anything non-qualifying, plus a short written statement of the
+  standard the crew worked to.</p>
+</div>
+
+<div class="prog">
+  <div class="tag"><span class="hot">Statewide</span><span>Insurance</span><span>Colorado HB25-1182</span></div>
+  <h3>Wildfire-mitigation discount on your homeowners insurance</h3>
+  <dl>
+    <dt>What it is</dt>
+    <dd>Since <b>July 1, 2026</b>, Colorado law requires an insurer that uses a wildfire risk
+        score to: tell you your score in writing every year; tell you what mitigation
+        discounts are available; factor the defensible-space work you've actually done into
+        your score and price; give you a discount for documented mitigation even if it has no
+        formal model of its own; and let you appeal the score.</dd>
+    <dt>How much</dt>
+    <dd>There is <b>no set percentage</b> &mdash; it varies by carrier. Expect it to count in
+        your favor; don't expect a specific number.</dd>
+    <dt>How to use it</dt>
+    <dd>Send your carrier or agent documentation of what was cleared, where, and to what
+        spacing &mdash; before and after &mdash; and ask them to re-evaluate your wildfire
+        risk score or apply the mitigation discount. If the score looks wrong, use the
+        appeal right. Sixfold can give you dated before-and-after photos from fixed
+        positions and a written scope of exactly what was cut and where &mdash; the package
+        carriers ask for. Sixfold will not contact your insurer or promise a discount
+        amount.</dd>
+    <dt>Backstop</dt>
+    <dd>If you can't get or keep coverage, the Colorado FAIR Plan (started April 2025) offers
+        up to $750,000 residential, on an actual-cash-value basis. A last resort, not a
+        target.</dd>
+  </dl>
+</div>
+
+
+<h2>Group 2 &mdash; if you do more mitigation</h2>
+<p class="sec-sub">Each of these must be approved before the work begins, so they can't be applied to the project you're finishing now. Line them up before any additional work.</p>
+
+<div class="prog">
+  <div class="tag"><span class="later">Douglas County</span><span>Cost-share grant</span><span>Future work only</span></div>
+  <h3>Douglas County Wildfire Mitigation Cost-Share Program</h3>
+  <dl>
+    <dt>What it is</dt>
+    <dd>The county pays <b>50%</b> of an approved defensible-space or fuels-reduction project,
+        up to <b>$25,000</b> for an individual property. Larger pots exist for community
+        projects (up to $50,000) and community chipping or slash pickup (up to $7,000).</dd>
+    <dt>The catch</dt>
+    <dd>You apply and are selected <b>before</b> doing the work. The 2026 application window
+        was <b>April 13 &ndash; May 13</b>; a second window was anticipated for late 2026 &mdash;
+        check the county for current dates. Selected projects are notified in the fall; the
+        county inspects the finished work and releases its share after you show proof you paid
+        your part.</dd>
+    <dt>Application needs</dt>
+    <dd>A detailed scope of work, a site map, and <b>two estimates from contractors on the
+        county's approved list</b>. The county maintains that list &mdash; ask the Building
+        Division.</dd>
+    <dt>Where</dt>
+    <dd>Douglas County &mdash; Building Division, Wildfire Mitigation
+        (<span style="white-space:nowrap">douglasco.gov</span> &rarr; Building Division &rarr;
+        Wildfire Mitigation).</dd>
+  </dl>
+  <p class="note">This is a Douglas County program. The county runs it and maintains the
+  approved-contractor list &mdash; Sixfold does not administer it.</p>
+</div>
+
+<div class="prog">
+  <div class="tag"><span class="later">State &mdash; mapped areas</span><span>Cost-share</span><span>Future work only</span></div>
+  <h3>Colorado Strategic Wildfire Action Program (COSWAP) &mdash; landowner cost-share</h3>
+  <dl>
+    <dt>What it is</dt>
+    <dd>A state program that reimburses a private landowner <b>up to 50%</b> of a wildfire
+        mitigation project, after a free home wildfire risk assessment. Douglas County is one
+        of COSWAP's focus areas.</dd>
+    <dt>The catch</dt>
+    <dd>Available only to parcels inside COSWAP's <b>current mapped program area</b>; the free
+        assessment comes first, and only work started <b>after</b> your application is approved
+        counts. The mapped areas change from cycle to cycle.</dd>
+    <dt>Where</dt>
+    <dd>Colorado Department of Natural Resources / Colorado State Forest Service. Some of this
+        money is delivered through the Douglas County program above rather than as a separate
+        application &mdash; ask the county or a State Forest Service forester whether your
+        address is in a current COSWAP area and how to reach the funds.</dd>
+  </dl>
+</div>
+
+<div class="prog">
+  <div class="tag"><span class="later">Federal &mdash; statewide</span><span>USDA NRCS</span><span>Land must qualify</span></div>
+  <h3>NRCS Environmental Quality Incentives Program (EQIP)</h3>
+  <dl>
+    <dt>What it is</dt>
+    <dd>Federal cost-share for brush management, fuel breaks, forest-stand improvement, and
+        thinning &mdash; but only on land that qualifies as agricultural or non-industrial
+        private forestland. A standard subdivided house lot generally does not qualify;
+        real acreage may.</dd>
+    <dt>The catch</dt>
+    <dd>Apply through your local USDA / NRCS field office <b>before</b> the work. It's a
+        planned program with competitive ranking, not a quick reimbursement.</dd>
+    <dt>Where</dt>
+    <dd>USDA Service Center for Douglas County / Colorado NRCS.</dd>
+  </dl>
+</div>
+
+<div class="prog">
+  <div class="tag"><span class="later">Statewide</span><span>Property-tax classification</span><span>40+ forested acres</span></div>
+  <h3>Colorado State Forest Service &ldquo;Forest Ag&rdquo; property-tax classification</h3>
+  <dl>
+    <dt>What it is</dt>
+    <dd>Not a rebate &mdash; a change to how your land is taxed. If you own <b>40 or more
+        contiguous forested acres</b> and manage them under a forest management plan approved
+        by the Colorado State Forest Service, the land can be valued for property tax as
+        agricultural instead of residential or vacant &mdash; usually a large, ongoing
+        reduction.</dd>
+    <dt>The catch</dt>
+    <dd>Apply by <b>October 1</b> with a completed forest management plan and an inspection
+        request. Mitigation work done to that plan can help satisfy the plan requirement.</dd>
+    <dt>Where</dt>
+    <dd>Colorado State Forest Service, plus the Douglas County Assessor.</dd>
+  </dl>
+</div>
+
+
+<h2>What won't apply &mdash; so you don't chase it</h2>
+<ul class="plain">
+  <li><b>Disaster programs</b> &mdash; casualty-loss tax deductions, FEMA assistance, SBA
+      disaster loans &mdash; are for property damaged in a federally declared disaster, not
+      for preventive work.</li>
+  <li><b>The old Colorado tax <i>subtraction</i></b> (a separate, expired benefit that ended
+      after tax year 2024) and the <b>Wildfire Resilient Homes Grant</b> (repealed, ended
+      July 1, 2026). Some older guides still list both.</li>
+  <li><b>Other counties' homeowner programs</b> &mdash; Boulder County's Wildfire Partners,
+      and similar programs in Grand, Eagle, Larimer and elsewhere &mdash; are limited to
+      residents of those counties and can't be claimed from Douglas County.</li>
+  <li><b>State and federal fuels grants</b> (FRWRM, Community Wildfire Defense Grant, FEMA
+      BRIC) &mdash; real money, but only HOAs, fire districts, water providers and nonprofits
+      can apply, not individuals.</li>
+</ul>
+
+
+<h2>One rule if you combine them</h2>
+<p>Colorado's tax credit specifically excludes any cost that was paid or reimbursed by a
+grant. So if a future phase gets the Douglas County 50% match, the state credit applies only
+to <i>your</i> half. The programs can be combined &mdash; your accountant can tell you how
+they interact &mdash; but the same dollar can't be covered twice. And if you do receive a
+grant or cost-share payment, ask your tax preparer how it's treated on your federal return.</p>
+
+
+<h2>Documents to keep</h2>
+<p>For any of these you'll need proof of the work and what you paid:</p>
+<ul class="plain">
+  <li>An itemized invoice showing the amount paid and what it was for</li>
+  <li>A written description of what was cleared or cut, and where</li>
+  <li>Before-and-after photos</li>
+</ul>
+<p>Sixfold provides all three with the job &mdash; ask if you need another copy.</p>
+
+
+<div class="foot">
+  <p><b>Prepared by Sixfold Colorado for Lonnie &mdash; September 2026.</b>
+  Informational only; not tax, legal, or insurance advice. Program terms, dollar caps, income
+  limits, and application windows change from year to year &mdash; confirm the current rules
+  with each program, and your own eligibility with your accountant and your insurer, before
+  relying on anything here.</p>
+  <p style="margin-top:.6rem">Questions about the work or the paperwork Sixfold provides:
+  (303)&nbsp;915-1045 &nbsp;&middot;&nbsp; Contact@SixfoldColorado.com</p>
+
+  <h3>Sources</h3>
+  <ul>
+    <li>Colorado Department of Revenue &mdash; <i>Income Tax Topics: Wildfire Mitigation
+        Measures</i> / <i>Wildfire Tax Benefits</i>; C.R.S. 39-22-543 as amended by HB24-1036
+        and HB26-1289; Colorado General Assembly 2026 tax-expenditure evaluation (2026-TE4).</li>
+    <li>Colorado HB25-1182 (leg.colorado.gov); Colorado Division of Insurance; Colorado FAIR
+        Plan.</li>
+    <li>Douglas County Wildfire Mitigation Cost-Share Program (douglasco.gov); <i>Denver
+        Gazette</i>, April 1, 2026.</li>
+    <li>Colorado Strategic Wildfire Action Program (COSWAP) &mdash; Colorado Department of
+        Natural Resources / Colorado State Forest Service; Governor's Office program updates.</li>
+    <li>USDA Natural Resources Conservation Service &mdash; Environmental Quality Incentives
+        Program, Colorado.</li>
+    <li>Colorado State Forest Service &mdash; Forest Agricultural Land Recognition program
+        (enacted by HB90-1229).</li>
+  </ul>
+</div>
+</div>

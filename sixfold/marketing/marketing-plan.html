@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Marketing Plan</title>
+<style>
+  /* ---- Tokens: dark-first. Bare :root is the dark palette. ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 13.5rem minmax(0, 1fr); }
+  }
+
+  /* ---- Rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 2.6rem 1.4rem 2.6rem var(--pad);
+      border-right: 1px solid var(--seam);
+    }
+  }
+  .rail-title {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.36rem;
+    counter-reset: rl;
+  }
+  .rail a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.4rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid transparent;
+  }
+  .rail a::before {
+    counter-increment: rl;
+    content: counter(rl, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    padding-top: 0.15rem;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--ember); }
+  .rail a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  main { padding: 0 var(--pad) 5rem; min-width: 0; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 3.2rem 0 2rem;
+    border-bottom: 3px solid var(--ember);
+  }
+  .brandline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .mark { width: 62px; height: 62px; flex: none; display: block; }
+  .peak { transform-box: fill-box; transform-origin: 50% 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .peak { animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both; }
+    .peak:nth-of-type(1) { animation-delay: 0.05s; }
+    .peak:nth-of-type(2) { animation-delay: 0.14s; }
+    .peak:nth-of-type(3) { animation-delay: 0.23s; }
+    .peak:nth-of-type(4) { animation-delay: 0.32s; }
+    .peak:nth-of-type(5) { animation-delay: 0.41s; }
+  }
+  @keyframes grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0.5rem 0 0;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.9rem 0 0;
+    color: var(--ink);
+  }
+  .metastrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin: 1.2rem 0 0;
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block;
+    margin: 1.3rem 0 0;
+    padding: 0.4rem 0.7rem;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+    font-family: var(--f-data);
+    font-size: 0.73rem;
+    color: var(--ink);
+  }
+
+  /* ---- Thesis ---- */
+  .thesis {
+    margin: 2.6rem 0 0;
+    padding: 1.9rem 0 0;
+  }
+  .thesis p.claim {
+    font-family: var(--f-display);
+    font-size: clamp(1.55rem, 4.6vw, 2.35rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ember);
+  }
+  .thesis p.sub {
+    max-width: var(--measure);
+    color: var(--ink-dim);
+    margin: 1rem 0 0;
+  }
+
+  /* ---- Sections ---- */
+  section { padding: 3.1rem 0 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.7rem;
+    align-items: baseline;
+    border-top: 1px solid var(--seam);
+    padding-top: 1rem;
+    margin-bottom: 1.3rem;
+  }
+  .sec-num {
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ember);
+  }
+  .sec-head h2 {
+    font-family: var(--f-display);
+    font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .sec-head .kicker {
+    grid-column: 2;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-size: 0.98rem;
+    font-weight: 650;
+    letter-spacing: 0.005em;
+    margin: 2rem 0 0.55rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 1.6rem 0 0.5rem;
+  }
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 0.95rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0 0 0.5rem; }
+  li::marker { color: var(--moss); }
+  strong { font-weight: 650; }
+  em { font-style: italic; color: var(--ink); }
+  a { color: var(--ember); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+
+  .lede { font-size: 1.06rem; color: var(--ink); }
+
+  /* ---- Funding cards ---- */
+  .funding {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    background: var(--seam);
+    border: 1px solid var(--seam);
+    margin: 1.5rem 0 1.8rem;
+  }
+  .fund {
+    background: var(--lift);
+    padding: 1.15rem 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fund .who {
+    font-family: var(--f-data);
+    font-size: 0.63rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--moss);
+  }
+  .fund .amt {
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    line-height: 1.05;
+    color: var(--ember);
+    font-variant-numeric: tabular-nums;
+  }
+  .fund .note { font-size: 0.85rem; color: var(--ink-dim); margin: 0; max-width: none; }
+
+  /* ---- Tables ---- */
+  .tw { overflow-x: auto; margin: 1.2rem 0 1.6rem; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--f-body); font-size: 0.875rem; }
+  caption {
+    text-align: left;
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.7rem 0.85rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--seam);
+  }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--seam);
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+  thead th {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    background: var(--surface);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(odd) td { background: var(--surface); }
+  tbody tr:nth-child(even) td { background: var(--lift); }
+  td.rank { font-family: var(--f-data); color: var(--ember); width: 2.2rem; }
+
+  /* ---- Callouts ---- */
+  .stop, .keep {
+    padding: 1.05rem 1.15rem;
+    margin: 1.4rem 0;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+  }
+  .keep { background: var(--moss-quiet); border-left-color: var(--moss); }
+  .stop > :last-child, .keep > :last-child { margin-bottom: 0; }
+  .stop h4 { color: var(--ember); margin-top: 0; }
+  .keep h4 { color: var(--moss); margin-top: 0; }
+
+  /* ---- Phase blocks ---- */
+  .phase {
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--moss);
+    background: var(--surface);
+    padding: 1.4rem 1.3rem;
+    margin: 1.4rem 0;
+  }
+  .phase.now { border-left-color: var(--ember); }
+  .phase .when {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 0.3rem;
+  }
+  .phase h3 { margin-top: 0; font-size: 1.12rem; }
+  .phase .goal { color: var(--ink-dim); }
+  .done {
+    margin-top: 0;
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+  }
+  .done b { color: var(--ink); font-weight: 650; }
+
+  /* ---- Log ---- */
+  .log { display: flex; flex-direction: column; gap: 1px; background: var(--seam); border: 1px solid var(--seam); margin: 1.3rem 0; }
+  .log > div { background: var(--lift); padding: 1.1rem 1.15rem; }
+  .log h4 { margin-top: 0; }
+  .log ul { margin-bottom: 0; max-width: none; }
+  .log li { font-size: 0.88rem; color: var(--ink-dim); }
+  .tag-open h4 { color: var(--ember); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Contents</p>
+    <ol>
+      <li><a href="#s1">Situation &amp; positioning</a></li>
+      <li><a href="#s2">The unfair advantage</a></li>
+      <li><a href="#s3">The seasonal frame</a></li>
+      <li><a href="#s4">Phase 1 — Prove it</a></li>
+      <li><a href="#s5">Phase 2 — Build the machine</a></li>
+      <li><a href="#s6">Phase 3 — Spring push</a></li>
+      <li><a href="#s7">Channels, budget, metrics, risks</a></li>
+      <li><a href="#s8">Open decisions</a></li>
+      <li><a href="#s9">Fact-check log</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="brandline">
+        <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Sixfold Ridge mark">
+          <path class="peak" d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+          <path class="peak" d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+          <path class="peak" d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+          <path class="peak" d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+          <path class="peak" d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+          <rect x="4" y="86" width="92" height="5" fill="#8AA07A"/>
+        </svg>
+        <div>
+          <p class="wordmark">Sixfold</p>
+          <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+        </div>
+      </div>
+
+      <h1 class="doctitle">Marketing plan, August 2026 through May 2027</h1>
+
+      <div class="metastrip">
+        <span><b>Prepared</b> 2026-08-18</span>
+        <span><b>Horizon</b> 10 months, three phases</span>
+        <span><b>Source</b> Phase 1 market research + name clearance screen</span>
+      </div>
+
+      <p class="stamp">Draft. Nothing in this plan has been published, posted, or scheduled.</p>
+    </header>
+
+    <div class="thesis">
+      <p class="claim">Every competitor sells the work. Nobody sells the money.</p>
+      <p class="sub">Four separate parties will pay for fire mitigation in Colorado, and the state's own auditors have concluded homeowners do not know it. The wildfire mitigation tax credit drew roughly <strong>450 claims in the entire state</strong> in tax year 2023 — against more than a million buildings in the wildland-urban interface. That gap is the whole plan.</p>
+
+      <div class="funding">
+        <div class="fund">
+          <span class="who">State tax credit</span>
+          <span class="amt">$2,000</span>
+          <p class="note">100% of costs up to $1,000 today; $2,000 and <strong>refundable</strong> from tax year 2027, income limit $300k AGI, extended through 2030. No application, no list, statewide.</p>
+        </div>
+        <div class="fund">
+          <span class="who">County cost-share</span>
+          <span class="amt">$25,000</span>
+          <p class="note">Douglas County pays 50% up to $25,000, on verified completion. Requires two bids <strong>from the county's approved contractor list</strong>. That list is a gate, not a marketing task.</p>
+        </div>
+        <div class="fund">
+          <span class="who">State FRWRM grants</span>
+          <span class="amt">$7.04M</span>
+          <p class="note">Open now, deadline 8 Oct 2026. Contractors cannot apply — HOAs, fire districts, nonprofits and utilities can. Sixfold is the contractor they hire.</p>
+        </div>
+        <div class="fund">
+          <span class="who">Insurance</span>
+          <span class="amt">HB25&#8209;1182</span>
+          <p class="note">In effect since 1 July 2026. Insurers must disclose each property's wildfire risk score annually and discount documented mitigation. Score notices are landing now.</p>
+        </div>
+      </div>
+    </div>
+
+    <section id="s1">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>Situation and positioning</h2>
+        <p class="kicker">Where Sixfold actually stands</p>
+      </div>
+
+      <p class="lede">Sixfold is an LLC with a bank account, a logo in two directions, and tools that can fell, grind, pile, chip, cut and haul. It has no insurance, no workers comp, no certifications, no portfolio, no reviews, and no website. It sits inside the largest wildfire-exposed suburban market in Colorado — about 4.5 million acres of wildland-urban interface holding more than a million buildings — against eight named competitors who all lead with credentials Sixfold does not yet have.</p>
+
+      <p>Competing on credentials is a fight Sixfold loses this year and possibly next. So don't take it.</p>
+
+      <h3>The positioning</h3>
+      <p><strong>Sixfold is the fire mitigation company that gets the homeowner paid.</strong></p>
+      <p>Not "we do defensible space" — everyone does defensible space. The offer is: <em>we will show you the four places this money can come from, tell you which ones you qualify for, and do the work to the standard those programs require.</em></p>
+
+      <h3>Why this beats a credentials strategy right now</h3>
+      <p>A new company cannot manufacture a ten-year portfolio. It can manufacture the most useful conversation in the market inside a week. The funding knowledge is public, checkable, and nobody is using it as a sales motion — and it happens to be legible proof of competence. A contractor who can explain the credit's income limits and the county's two-bid requirement is obviously not a truck-and-a-chainsaw operation.</p>
+      <p>It also compounds <em>into</em> the credentials strategy rather than competing with it. Every funding channel has a paperwork gate: county lists want insurance and workers comp, cost-share wants a scope of work and a site map, insurance discounts want documentation of what was cut and where. Building the business to satisfy those gates <em>is</em> building the credentials.</p>
+
+      <div class="stop">
+        <h4>Hard limits on copy — not preferences</h4>
+        <ul>
+          <li><strong>No "licensed and insured"</strong> on anything — no flyer, site, door hanger or truck — until general liability and workers comp are in force. Fastest way to turn a marketing asset into a liability.</li>
+          <li><strong>Do not advertise the Douglas County cost-share</strong> until Sixfold is on the approved contractor list. Pointing a homeowner at money they can only claim with two bids from a list Sixfold isn't on produces a dead lead and a bad first impression.</li>
+          <li><strong>No claim of certification, accreditation or NFPA/Firewise standing</strong> that hasn't been verified as held. Competitors lead with this language; borrowing it is the one mistake that ends a new company's credibility permanently.</li>
+          <li><strong>No aeration sector specifics.</strong> The mark is built as a parent brand and Sixfold is the entity that will carry the aeration business, but which kind is still unestablished. Fire is the only line described.</li>
+          <li><strong>Funding language stays descriptive, never advisory.</strong> "The credit covers 100% of costs up to $1,000, rising to $2,000 and refundable for tax year 2027" is a fact with a source. "You'll get $2,000 back" is tax advice from a tree company. Every funding claim ships with its source and a line pointing to the homeowner's accountant or carrier.</li>
+        </ul>
+      </div>
+
+      <h3>What honestly cannot be sold yet</h3>
+      <p><strong>Mastication at scale.</strong> There is no masticator or mulching head in the equipment list, and Bear Claw's entire published product ladder is built on a forestry mulching skid steer. Sixfold sells handwork and chipping — genuinely the right product for Zone 1 and Zone 2 work close to a house, where machines struggle and homeowners are nervous. But it is a real gap on open acreage, and quoting large acre jobs against mulching competitors will lose on price. Pitch and price accordingly; don't pretend the gap isn't there.</p>
+    </section>
+
+    <section id="s2">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>The unfair advantage</h2>
+        <p class="kicker">Nobody in fire mitigation canvasses</p>
+      </div>
+
+      <p>Brandon already runs field canvassing infrastructure — recruiting, onboarding, training and managing door-to-door teams. In fire mitigation, nobody canvasses. The eight operators found in research are assessment-led, referral-led or credential-led; their pipeline is inbound. That matters more here than in most trades, for three reasons.</p>
+
+      <h4>The product is only visible in the yard</h4>
+      <p>A homeowner cannot judge their own fuel load. Standing in the driveway pointing at the juniper against the south wall, the dead limb over the roofline, and the twelve feet of grass to the fence line converts an abstract worry into a specific list. That conversation cannot happen over a search ad.</p>
+
+      <h4>The trigger event arrives by mail with no vendor attached</h4>
+      <p>Since 1 July 2026, insurers must send each Colorado policyholder an annual notice with their wildfire risk score and available mitigation discounts. Those notices are landing now. A homeowner holding one has been told they have a problem and given nobody to call. A canvasser on that street the same month is the only person answering a question the mail just asked.</p>
+
+      <h4>Risk is geographic, and so is canvassing</h4>
+      <p>Wildfire risk maps to specific streets — the ones backing onto open space, the foothill subdivisions, the drainages. Paid search cannot buy a street. Doors can walk one.</p>
+
+      <div class="stop">
+        <h4>Three cautions — this advantage is also the plan's biggest exposure</h4>
+        <ul>
+          <li><strong>Sixfold and Surge are separate companies.</strong> Using Surge's people or infrastructure for Sixfold's revenue is a related-party arrangement with tax and liability implications, and the shared address makes it visible. Structure it deliberately — Sixfold contracting Surge at an arm's-length rate, or reps engaged by Sixfold directly — before the first door is knocked. <strong>Flagged for Brandon and whoever does the books; not a marketing decision.</strong></li>
+          <li><strong>Solicitation rules vary by jurisdiction.</strong> Several Front Range municipalities require a solicitor's licence and set hours; subdivisions and HOAs post no-soliciting rules enforced socially even where not legally binding. Not verified in research — <strong>confirm per municipality.</strong> Getting run off a neighbourhood in month one costs more than the permit.</li>
+          <li><strong>The register is "friendly neighbourhood," and canvassing wrecks that fast.</strong> No urgency theatre, no fear selling, no "your insurance is going to drop you." The homeowner already has the fear — the notice supplied it. Sixfold's job is to be the calm one with the answer.</li>
+        </ul>
+      </div>
+
+      <h3>The canvass motion</h3>
+      <p>A script shape to be tested against real doors, not assumed:</p>
+      <ul>
+        <li><strong>Open on the change, not the sale</strong> — the insurance law, the tax credit, or the county programme, whichever applies to that street.</li>
+        <li><strong>Hand over the one-pager.</strong> Physical, plain, checkable, sources printed on it. It survives the door closing, which no pitch does.</li>
+        <li><strong>Ask for the walk, not the contract.</strong> "Would it help if I walked the property and told you what a program would want cut?" A free assessment is a low-friction yes — and it is also the scope of work a cost-share application requires. One visit produces the lead, the quote and the paperwork.</li>
+        <li><strong>Log every door</strong> — address, outcome, risk observations, insurance-notice status. That log becomes the spring campaign's target list.</li>
+      </ul>
+
+      <div class="keep">
+        <h4>Two lead pools the canvass can work now</h4>
+        <p><strong>Jefferson County SLASH sites</strong> — weekends, 15 May – 25 Oct 2026, $24 per 6-cubic-yard load. Everyone in that queue has self-identified as having more slash than they can handle and is paying to solve it. Confirm site rules on contractor presence before showing up.</p>
+        <p><strong>HOAs and fire protection districts</strong> in Douglas and Jefferson counties — the eligible FRWRM applicants, with a live 8 October 2026 deadline. A contractor who helps assemble an application is the contractor that application names.</p>
+      </div>
+    </section>
+
+    <section id="s3">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>The seasonal frame</h2>
+        <p class="kicker">Demand and workability run opposite</p>
+      </div>
+
+      <p>This is the structural fact the whole calendar hangs on. Demand peaks in spring, as fire season approaches and the yard becomes visible again. The work is easiest and safest in the dormant season — late fall through early spring — when sap is down, ground is firm, there's no nesting activity and no burn-restriction anxiety. <strong>The busy months are the wrong months to be selling, and the good months are the ones when nobody calls.</strong></p>
+
+      <p>Two ways to use that rather than fight it. <strong>Sell the quiet season as the better season, with reasons</strong> — dormant work is genuinely better for the property, and a new company with open capacity can price it that way honestly. And <strong>treat the quiet months as build months</strong>: November through February is when insurance gets bought, county lists get joined, the site gets built, reviews get collected and the canvass gets trained.</p>
+
+      <div class="tw">
+        <table>
+          <caption>The dated calendar — conflicts marked, not resolved</caption>
+          <thead>
+            <tr><th scope="col">When</th><th scope="col">What</th><th scope="col">Why it matters</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Now</strong></td><td>HB25-1182 in effect since 1 Jul 2026; risk-score notices landing</td><td>The live demand event. Six weeks old.</td></tr>
+            <tr><td>Now – 25 Oct 2026</td><td>JeffCo SLASH sites open weekends</td><td>A queue of self-identified prospects</td></tr>
+            <tr><td><strong>8 Oct 2026</strong>, 5:00 p.m.</td><td>FRWRM deadline, $7.04M open</td><td>HOAs and districts are assembling applications now</td></tr>
+            <tr><td>Late 2026</td><td>DougCo cost-share second window <em>anticipated</em></td><td><strong>Dates conflict across sources — verify by phone.</strong> Sixfold must be listed before it opens</td></tr>
+            <tr><td>Late fall – early spring</td><td>Dormant season</td><td>Best conditions, lowest demand, open capacity</td></tr>
+            <tr><td>Jan – Apr 2027</td><td>Tax filing season</td><td>When the credit becomes real money in a homeowner's hand</td></tr>
+            <tr><td>Tax year 2027</td><td>Credit rises to $2,000, becomes <strong>refundable</strong>; limit $300k AGI; thinning woody vegetation added as qualifying work</td><td>The strongest funding story Sixfold will ever have — applies to work done in 2027</td></tr>
+            <tr><td>31 Mar 2027</td><td>FRWRM awards announced</td><td>Grantees suddenly need contractors</td></tr>
+            <tr><td>Spring 2027</td><td>Demand peak, insurance renewal cycle</td><td>The push</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="stop">
+        <h4>The one seasonal trap</h4>
+        <p>Spring is also when every competitor is booked and every homeowner wants it done yesterday. A new company with no crew depth can take work it cannot deliver on time — and the reviews it spent all winter earning are exactly what it loses. <strong>Capacity, not leads, is the spring constraint.</strong> Phase 3 sets a booking limit rather than a lead target.</p>
+      </div>
+    </section>
+
+    <section id="s4">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Phase 1 — Prove it</h2>
+        <p class="kicker">Now through end of October 2026 · roughly ten weeks</p>
+      </div>
+
+      <div class="phase now">
+        <p class="when">Goal</p>
+        <h3>Finish the year with evidence, not revenue</h3>
+        <p class="goal">Completed jobs, photographs, reviews, verified programme knowledge, and the gates opened. There is a hard sequencing reality: almost nothing scales until insurance exists, so the unblocking tasks come first even though they aren't marketing.</p>
+      </div>
+
+      <h4>Unblock — week 1–2, in this order</h4>
+      <ol>
+        <li><strong>Get real insurance quotes.</strong> Indicative Colorado figures: GL $900–$2,600/yr, workers comp $7–$13 per $100 of payroll, $1M/$2M typical minimum, full package $3,000–$10,000. <strong>These are broker-site figures — get actual quotes.</strong> Colorado has a strict one-employee workers comp threshold.</li>
+        <li><strong>Phone the Douglas County Building Division</strong> about the approved contractor list. The county site returns HTTP 403 to automated fetch, so requirements cannot be desk-researched. Ask what the list requires, when the next window opens, and how long listing takes. The highest-leverage twenty minutes available.</li>
+        <li><strong>Register <code>sixfoldland.com</code></strong> — clear on DNS, carries both businesses, doesn't pin the brand to fire. Confirm at the registrar. Before anything is printed.</li>
+        <li><strong>Book the trademark attorney call</strong> — USPTO classes 37 and 44, with Sixfold AI, Inc. as the known conflict to raise. Cheap now, expensive after a truck is wrapped.</li>
+        <li><strong>Establish what Sixfold actually holds</strong> in licensing and certification, and what the market treats as table stakes. This determines what the copy is allowed to say.</li>
+      </ol>
+
+      <h4>Build the one asset that does the work — week 2–3</h4>
+      <p><strong>The funding one-pager.</strong> Physical first, a site page later. Plain layout, no salesmanship, four sources with citations printed on it: the state credit table by tax year, the county cost-share terms, the insurance disclosure law, and what documentation each one wants — with a line pointing the reader to their accountant and their carrier.</p>
+      <p>This <em>is</em> the campaign; everything else distributes it. It works at a door, at a SLASH site, in an HOA meeting, and attached to a quote — and it is the only asset that makes a brand-new company look like the most informed operator on the street.</p>
+
+      <h4>Sell — weeks 3–10</h4>
+      <ul>
+        <li><strong>Target the first ten jobs deliberately close to home</strong> — Monument outward into the Rampart Range and southern Douglas foothills. Short mobilisation keeps a cheap launch job survivable.</li>
+        <li><strong>Run the launch offer</strong> — version A, B or the middle path, still Brandon's call. Whichever it is, the offer is a <em>known, bounded</em> cost of buying a portfolio, and it ends when the ten are done.</li>
+        <li><strong>Work the SLASH queue</strong> through 25 October, weekends, site rules confirmed first.</li>
+        <li><strong>Approach HOAs and fire districts before 8 October</strong> on FRWRM. Even a failed application builds the relationship that matters when awards land in March.</li>
+        <li><strong>Sell the disposal choice explicitly.</strong> Haul-off vs. leave on site vs. chip vs. rounds is the biggest swing in any quote. Competitors bury it in an assumption; pricing each option is both honest and a visibly better buying experience.</li>
+      </ul>
+
+      <h4>Harvest — every single job, no exceptions</h4>
+      <p>This is the part that gets skipped when the crew is tired, and it is the entire point of phase 1.</p>
+      <ul>
+        <li><strong>Photographs: same angle, before and after.</strong> Fixed positions, from the property line and from the house, wide enough to read the whole zone. This is the portfolio — and by winter it is also the proof-of-mitigation documentation an insurance discount asks for.</li>
+        <li><strong>A written scope on every job</strong> — what was cut, where, to what spacing, what happened to the material. It becomes the county's scope-of-work format, the insurer's documentation, and the homeowner's tax-credit receipt trail. One document, three uses.</li>
+        <li><strong>Ask for the review at completion, on site, phone in hand.</strong> Not by email later. Ten reviews from ten jobs is achievable; asking a month later gets three.</li>
+        <li><strong>Log every property</strong>, worked or not, into the canvass database.</li>
+        <li><strong>No customer named without written permission.</strong> A photograph of someone's house is identifiable, and their address is private by default.</li>
+      </ul>
+
+      <div class="phase now">
+        <p class="done"><b>Phase 1 done looks like:</b> insurance quoted and bought · DougCo list requirements known and application in · domain registered, attorney consulted · ten jobs completed, photographed, scoped and reviewed · one-pager in circulation · a property log with real addresses in it · zero published claims that cannot be substantiated.</p>
+      </div>
+    </section>
+
+    <section id="s5">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Phase 2 — Build the machine</h2>
+        <p class="kicker">November 2026 – February 2027 · the quiet quarter</p>
+      </div>
+
+      <div class="phase">
+        <p class="when">Goal</p>
+        <h3>Turn ten jobs into a company that can catch spring</h3>
+        <p class="goal">This is where the compounding happens. Nothing here is urgent, which is exactly why it gets dropped — and dropping it means arriving at April with leads and no machine.</p>
+      </div>
+
+      <h4>Close the gates</h4>
+      <ul>
+        <li><strong>Insurance in force</strong> — GL and workers comp. Everything downstream unlocks, including the word "insured," which becomes usable the day it is true and not before.</li>
+        <li><strong>Get on every county list that exists.</strong> Douglas is the priority, but the same work applies to any county running a cost-share or approved-contractor programme. Each list is a referral channel with no per-lead cost.</li>
+        <li><strong>Certification.</strong> Establish what the market's table stakes actually are — competitors lead with certified sawyers and NFPA 1144 / Firewise language — and get the one that opens the most doors. This is the credential gap closing.</li>
+        <li><strong>Decide the mastication question</strong> — rent, subcontract, or stay handwork-only. It determines whether Sixfold can quote acreage in spring or keeps declining it. A rental rate on a mulching head is a cheaper answer than a purchase, and worth pricing this quarter.</li>
+      </ul>
+
+      <h4>Build the site at sixfoldland.com</h4>
+      <p>Small and useful beats broad:</p>
+      <ul>
+        <li>The funding explainer as the centrepiece — the page that earns links, gets shared in HOA email threads, and answers a search nobody else is answering.</li>
+        <li>Before/after galleries from phase 1, organised by job type.</li>
+        <li><strong>Published pricing, or at least published ranges.</strong> Almost nobody in the market does this; Bear Claw is the exception, and their card is resort-county pricing that doesn't transfer to the Front Range. Plain numbers are a real differentiator against a field of "call for a quote." Base them on Sixfold's own ten completed jobs — actual costs, actual hours — <strong>not</strong> on the CSFS 2020 table, which is six years stale, excludes 35–51% overhead, and has no verified escalation index applied.</li>
+        <li>Service area stated as <em>where Sixfold works</em>, never as a limit. One office is not a service area.</li>
+        <li>Contact that works on a phone, because it will be opened at a door.</li>
+      </ul>
+
+      <h4>Build the reviews engine</h4>
+      <p>Reviews are the credential a new company <em>can</em> buy with effort rather than years. Make asking systematic — part of job closeout, not a favour someone remembers. Google Business Profile first, since that's where a homeowner checking a contractor actually looks.</p>
+
+      <h4>Sell the dormant season</h4>
+      <p>The winter offer, honestly argued: better for the property, better conditions, open capacity, empty calendar. Target the phase 1 property log first — the people who got a walk and a one-pager and said "not yet."</p>
+
+      <h4>Land the Q1 tax-credit push</h4>
+      <p>January through April is when the credit stops being abstract. Two audiences:</p>
+      <ul>
+        <li><strong>Homeowners who did work in 2026</strong> — a short "here's how to claim it, here's your scope document, here's the form" note to every phase 1 customer. Costs nothing, generates referrals, and is the most concrete possible demonstration of the positioning.</li>
+        <li><strong>Homeowners considering 2027 work</strong> — tax year 2027 is when the credit hits $2,000, becomes refundable, raises the limit to $300k AGI, and explicitly adds thinning woody vegetation. The strongest version of the story, and it applies to work booked in spring.</li>
+      </ul>
+
+      <h4>Train the canvass</h4>
+      <p>Recruit and train against the phase 1 door log, with the script that survived contact, permits confirmed per municipality. The goal is that the canvass is <em>ready</em> in February, not starting in April.</p>
+    </section>
+
+    <section id="s6">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Phase 3 — The spring push</h2>
+        <p class="kicker">March – May 2027</p>
+      </div>
+
+      <div class="phase">
+        <p class="when">Goal</p>
+        <h3>Convert the machine into booked, deliverable revenue</h3>
+        <p class="goal">Without overselling capacity — the one failure mode that undoes both previous phases.</p>
+      </div>
+
+      <h4>Four things converge</h4>
+      <ol>
+        <li><strong>Demand peaks</strong> as fire season approaches and yards become visible.</li>
+        <li><strong>Insurance renewals and annual score notices cycle again</strong>, with a year of documented mitigation now behind phase 1 and 2 customers.</li>
+        <li><strong>FRWRM awards are announced 31 March 2027.</strong> Grantees — HOAs, districts, nonprofits — have money and need contractors. Any relationship built the previous September pays here.</li>
+        <li><strong>The Douglas County window</strong>, if the anticipated late-2026 round slipped or a 2027 round opens on the April–May pattern the 2026 window followed. Being listed makes Sixfold one of the two bids applicants must obtain.</li>
+      </ol>
+
+      <h4>The motion</h4>
+      <ul>
+        <li><strong>Canvass at scale</strong>, targeting logged streets first: properties walked but not sold, and neighbours of completed jobs. A finished job with visible before/after next door is the best canvassing asset in existence — work outward from it.</li>
+        <li><strong>Lead with proof now, funding second.</strong> The order flips. Phase 1 and 2 bought photographs and reviews; in spring the funding explainer becomes the closer rather than the opener.</li>
+        <li><strong>Book to a stated capacity limit and publish the lead time.</strong> "Next availability is three weeks" is more credible than instant availability, and it protects the reviews. When the calendar fills, stop selling and say why.</li>
+        <li><strong>Convert grantees and HOAs</strong> on common-area and community chipping work — including Douglas County's up-to-$7,000 community chipping money, once listing allows it to be mentioned.</li>
+      </ul>
+
+      <div class="phase">
+        <p class="done"><b>Phase 3 done looks like:</b> a booked spring delivered on time · reviews still climbing · a repeatable canvass with known cost per lead and per job · at least one grant-funded or cost-share job completed · enough real cost data to price 2027–28 properly.</p>
+      </div>
+    </section>
+
+    <section id="s7">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>Channels, budget, metrics, risks</h2>
+        <p class="kicker">The operating detail</p>
+      </div>
+
+      <h3>Channels ranked</h3>
+      <p>Ranked by expected return per dollar for <em>this</em> company in <em>this</em> year — no reviews, no portfolio, and an owner who runs canvassing infrastructure. The ranking would look different for an established competitor.</p>
+
+      <div class="tw">
+        <table>
+          <caption>Channel ranking</caption>
+          <thead>
+            <tr><th scope="col">#</th><th scope="col">Channel</th><th scope="col">Why here</th><th scope="col">Starts</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="rank">01</td><td><strong>Door canvassing</strong> on risk-mapped streets</td><td>The one thing no competitor does and Sixfold already knows how to run. Reaches homeowners holding an insurance notice with nobody to call. Buys a street, which no ad can.</td><td>Pilot P1, scale P3</td></tr>
+            <tr><td class="rank">02</td><td><strong>County approved-contractor lists</strong></td><td>Referral channel with no per-lead cost, feeding homeowners who already have funding and must obtain two bids. Gated on insurance.</td><td>Apply P1</td></tr>
+            <tr><td class="rank">03</td><td><strong>The funding one-pager</strong> (print + web)</td><td>Not a channel so much as the payload every channel carries. Cheapest asset in the plan, highest differentiation.</td><td>P1, week 2</td></tr>
+            <tr><td class="rank">04</td><td><strong>HOAs and fire protection districts</strong></td><td>Eligible FRWRM applicants with grant money and common-area acreage; one relationship is worth many homeowners. Slow, relationship-paced.</td><td>Before 8 Oct</td></tr>
+            <tr><td class="rank">05</td><td><strong>Google Business Profile + reviews</strong></td><td>Where a homeowner checks a contractor. Free, compounding, and the only credential a new company accumulates quickly.</td><td>P1, from job one</td></tr>
+            <tr><td class="rank">06</td><td><strong>SLASH sites and chipping days</strong></td><td>A physical queue of self-identified prospects, seasonal. Confirm site rules on contractor presence.</td><td>Now – 25 Oct</td></tr>
+            <tr><td class="rank">07</td><td><strong>Website as search asset</strong></td><td>Answers a question nobody else answers; earns links and HOA email-thread shares. Needs content, so it lags.</td><td>P2</td></tr>
+            <tr><td class="rank">08</td><td><strong>Referrals and neighbour effect</strong></td><td>Visible work sells the street it happens on. Systematise the ask; don't wait for it.</td><td>P2 onward</td></tr>
+            <tr><td class="rank">09</td><td><strong>Paid search</strong></td><td>Expensive, competitive against established operators, and cannot target a street. A small test only once reviews and a site exist to convert against.</td><td>P3 test, if at all</td></tr>
+            <tr><td class="rank">10</td><td><strong>Paid social / display</strong></td><td>Poor fit. This is a considered, geographic, trigger-driven purchase. Organic before/after content is worth more than the spend.</td><td>Not this year</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Budget</h3>
+      <div class="stop">
+        <p><strong>These are allocation recommendations, not researched costs.</strong> The only sourced figures below are the insurance ranges, and those are indicative broker-site numbers pending real quotes. Everything else is a planning envelope for Brandon to set against actual cash — a shape for the spend, not a forecast.</p>
+      </div>
+
+      <div class="tw">
+        <table>
+          <caption>Spend envelope by phase</caption>
+          <thead>
+            <tr><th scope="col">Line</th><th scope="col">Phase</th><th scope="col">Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>GL + workers comp</strong></td><td>1 → ongoing</td><td>Indicative: GL $900–$2,600/yr; WC $7–$13 per $100 payroll ($400–$3,000/yr); full package $3,000–$10,000. <strong>Get real quotes.</strong> Largest and least optional line.</td></tr>
+            <tr><td>Domain + basic site</td><td>1–2</td><td>Domain trivial. Site build is time, not cash, if built in-house.</td></tr>
+            <tr><td>Trademark attorney consult</td><td>1</td><td>One-off, small, high value against the Sixfold AI conflict.</td></tr>
+            <tr><td>Certification</td><td>2</td><td>Unknown until §4 item 5 establishes what is held and what is standard.</td></tr>
+            <tr><td>Print — one-pagers, door hangers, cards</td><td>1 → ongoing</td><td>Highest-return print item in the plan. Short runs; copy will change as programme details are confirmed.</td></tr>
+            <tr><td>Launch offer discount</td><td>1</td><td>Not a ledger marketing line, but it is the real cost of buying a portfolio. Bound it and count it.</td></tr>
+            <tr><td>Canvass labour</td><td>1 pilot, 3 scale</td><td>Structure the Surge relationship first (§2). Dominant variable spend in phase 3.</td></tr>
+            <tr><td>Solicitation permits</td><td>1–3</td><td>Per municipality, unverified. Small, but blocking.</td></tr>
+            <tr><td>Mastication rental / subcontract</td><td>2 decision</td><td>Price it before spring rather than declining acreage jobs.</td></tr>
+            <tr><td>Paid search test</td><td>3</td><td>Capped, and only if reviews and site exist. First money to cut.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Two spending principles: <strong>nothing is printed or published before the claim on it is verified</strong>, and <strong>capacity is bought before demand is</strong> — leads that can't be delivered on time cost reviews, which are the scarcest asset Sixfold has.</p>
+
+      <h3>Metrics</h3>
+      <p>Small and honest. Vanity metrics are the failure mode here.</p>
+
+      <div class="log">
+        <div>
+          <h4>Phase 1 — evidence</h4>
+          <ul>
+            <li>Jobs completed (target 10)</li>
+            <li>Before/after photo sets captured — should equal jobs completed, no exceptions</li>
+            <li>Reviews collected (target 8–10 from 10 jobs; asked on site, not by email)</li>
+            <li>DougCo list: requirements known → application submitted → listed</li>
+            <li>Insurance: quoted → bound</li>
+            <li>Properties logged in the canvass database</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Phase 2 — machine</h4>
+          <ul>
+            <li>Reviews total and average rating</li>
+            <li>One-pagers distributed / assessments booked from them</li>
+            <li>County lists joined</li>
+            <li>Dormant-season jobs sold from the phase 1 property log</li>
+            <li>Site live with pricing based on real job costs</li>
+            <li>Phase 1 customers given their tax-credit paperwork (should be 100%)</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Phase 3 — conversion</h4>
+          <ul>
+            <li>Doors knocked → assessments booked → jobs sold. These two conversion rates are the numbers the whole canvass thesis lives or dies on</li>
+            <li>Cost per lead and cost per job by channel</li>
+            <li>Booked lead time, and jobs delivered on the promised date</li>
+            <li>Grant-funded or cost-share jobs completed</li>
+            <li>Repeat and referral share of revenue</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>The number that matters most across all three phases: <strong>jobs delivered on the date promised.</strong> Everything else is recoverable.</p>
+
+      <h3>Risks</h3>
+      <div class="tw">
+        <table>
+          <caption>Risk register</caption>
+          <thead>
+            <tr><th scope="col">Risk</th><th scope="col">Exposure</th><th scope="col">Mitigation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Marketing runs ahead of insurance</strong></td><td>A single uninsured injury claim ends the company; "licensed and insured" in print before it's true is fraud-adjacent</td><td>Insurance is phase 1 item 1. No copy asserts coverage until bound.</td></tr>
+            <tr><td><strong>DougCo list is stricter or slower than assumed</strong></td><td>The #2 channel doesn't open in time for the window</td><td>Phone call in week 1, not week 8. If listing is slow, phase 2 leans on HOAs and organic.</td></tr>
+            <tr><td><strong>Cost-share advertised before listing</strong></td><td>Dead leads, damaged first impression</td><td>Hard copy rule in §1 — applies to canvassers verbally too, which makes it a training item.</td></tr>
+            <tr><td><strong>Spring overselling</strong></td><td>Late jobs destroy the reviews winter was spent earning</td><td>Published lead time, stated capacity limit, stop selling when full.</td></tr>
+            <tr><td><strong>Related-party Surge/Sixfold structure</strong></td><td>Tax and liability exposure; shared address makes it visible</td><td>Structure before the first door. Not a marketing call.</td></tr>
+            <tr><td><strong>Trademark challenge from Sixfold AI</strong></td><td>Rebrand after assets are printed and a truck is wrapped</td><td>Attorney consult in phase 1, before printing at volume.</td></tr>
+            <tr><td><strong>Pricing set off stale data</strong></td><td>Quoting 2020 CSFS numbers, minus 35–51% overhead, loses money on every job</td><td>Price off Sixfold's own ten jobs. The CSFS table is context, never a price list.</td></tr>
+            <tr><td><strong>Programme terms change</strong></td><td>The plan leans hard on the tax credit and HB25-1182; statutes and county windows move</td><td>Every published funding claim carries its source and date. Re-verify before each reprint.</td></tr>
+            <tr><td><strong>Mastication gap on acreage</strong></td><td>Lost bids against mulching competitors, invisibly</td><td>Decide rent/sub/decline in phase 2. Compete on Zone 1–2 handwork where the gap doesn't bind.</td></tr>
+            <tr><td><strong>Fear-based selling in the field</strong></td><td>Wrecks the "friendly neighbourhood" register and invites scrutiny on insurance claims</td><td>Script discipline, information-first opening, no premium promises.</td></tr>
+            <tr><td><strong>Aeration specifics leak into fire copy</strong></td><td>Publishing an unestablished business line</td><td>Fire is the only line described until the aeration question is settled.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="s8">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Open decisions this plan is waiting on</h2>
+        <p class="kicker">Mostly Brandon's, one phone call, one broker</p>
+      </div>
+
+      <div class="tw">
+        <table>
+          <caption>Decisions and what they block</caption>
+          <thead>
+            <tr><th scope="col">Decision</th><th scope="col">Owner</th><th scope="col">Blocks</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Logo direction — Sweep or Ridge</td><td>Brandon</td><td>Print at volume, site, any wrap</td></tr>
+            <tr><td><strong>Launch offer</strong> — A ("bring your quote, we'll halve it"), B ("first ten properties, 40% off"), or the middle path ("beat any quote by 40%, down to our minimum")</td><td>Brandon</td><td>Phase 1 selling. <strong>A has an open floor and no cap; the middle path closes that.</strong> Recommend the middle path unless Brandon wants A's simplicity at the door.</td></tr>
+            <tr><td>Surge/Sixfold canvass structure</td><td>Brandon + books</td><td>Canvassing at any scale</td></tr>
+            <tr><td>Mastication: rent, subcontract, or decline</td><td>Brandon</td><td>Spring acreage quoting</td></tr>
+            <tr><td>DougCo list requirements and window dates</td><td>Phone call</td><td>Channel #2, and all cost-share copy</td></tr>
+            <tr><td>Insurance quotes</td><td>Broker</td><td>Nearly everything</td></tr>
+            <tr><td>Domain registration</td><td>—</td><td>All print</td></tr>
+            <tr><td>USPTO / attorney review</td><td>Attorney</td><td>Volume print, wrap</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="s9">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>Fact-check log</h2>
+        <p class="kicker">What's verified, what was deliberately left out, what's still open</p>
+      </div>
+
+      <div class="log">
+        <div>
+          <h4>Verified — primary or first-party sources</h4>
+          <p>Full citations live in the research file. Every figure in this plan traces to one of these.</p>
+          <ul>
+            <li>WUI acreage, building and population figures — CSFS, 28 Sep 2023, on end-of-2022 CO-WRA data</li>
+            <li>Tax credit percentages, caps, income limits, refundability from TY2027, the ~450 TY2023 claims, the underutilisation finding, extension through 2030, and the addition of thinning woody vegetation — Colorado General Assembly 2026 tax expenditure evaluation (2026-TE4)</li>
+            <li>HB25-1182 requirements and the 1 July 2026 effective date — bill page and Colorado House Democrats joint release</li>
+            <li>FRWRM open funding ($7.04M), 8 Oct 2026 deadline, 31 Mar 2027 awards, contractor ineligibility — CSFS announcements, 31 Mar and 3 Aug 2026</li>
+            <li>DougCo cost-share terms: 50% up to $25,000, $50k community, $7k chipping, two bids from the approved list — county programme page and Denver Gazette, 1 Apr 2026</li>
+            <li>JeffCo SLASH dates, weekends, $24 per 6-cubic-yard load — Jefferson County</li>
+            <li>Bear Claw as the only operator publishing a rate card, and its resort-county service area — Bear Claw's own pricing page</li>
+            <li>Sixfold LLC formed 25 Nov 2025, good standing, registered address Englewood (the register still shows the old address; the operating base moved to Monument 2026-08-25); Sixfold AI, Inc. as the one real name conflict; <code>sixfoldland.com</code> clear on DNS — Colorado Open Data entity dataset and DNS check</li>
+            <li>One-acre defensible space benchmark $3,200–$6,100 — CSFS data via the 2026 legislative evaluation</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Deliberately not used</h4>
+          <ul>
+            <li><strong>The CSFS 2020 per-acre cost table as a pricing basis.</strong> Real figures, wrong use — six years stale with no verified escalation index available, and CSFS excludes overhead running 35–51%. Kept as context for what work costs; excluded from any price list.</li>
+            <li><strong>The "$1,700 per acre statewide average"</strong> circulating on SEO and consulting blogs attributed to CSFS. It is the Northeast-area lodgepole pine average specifically; the statewide framing is aggregator drift.</li>
+            <li><strong>Per-county property risk counts</strong> from the Colorado Sun / First Street reporting. The article returned HTTP 403 and the summary figures were internally inconsistent. Only the directional finding is used — suburban plains counties carry the greatest property exposure.</li>
+            <li><strong>Any engagement or conversion benchmark</strong> for canvassing, print or search in this trade. None found from a source worth trusting, so the plan sets no rate targets — phase 1 measures the real ones instead.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved — flagged, not guessed</h4>
+          <ul>
+            <li><strong>DougCo approved-contractor list requirements</strong> and second-window dates. County site returns HTTP 403 to automated fetch; reported dates conflict across sources. Needs the phone call.</li>
+            <li><strong>Door-to-door solicitation permit requirements</strong> per Front Range municipality. Not researched. Confirm before canvassing each jurisdiction.</li>
+            <li><strong>SLASH site rules on contractor presence.</strong> Assumed permissible because sites are public and fee-based; not confirmed.</li>
+            <li><strong>Insurance costs.</strong> All figures indicative, from broker sites. Real quotes pending.</li>
+            <li><strong>What Sixfold holds</strong> in licensing and certification, and the market's actual table stakes. Determines what copy may claim.</li>
+            <li><strong>Whether the 2025 CO-WRA data refresh has landed.</strong> End-of-2022 data is due for replacement; re-check before the WUI figures go into published copy.</li>
+            <li><strong>El Paso County and Colorado Springs programme details</strong> — not pulled. Relevant to a later expansion.</li>
+            <li><strong>USPTO classes 37 and 44</strong> on "Sixfold" — could not be reached.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>Sixfold LLC · [Monument address — TBC] · plan prepared 2026-08-18. Nothing in this document has been published, posted or scheduled, and nothing will be without explicit per-request authorisation. Funding figures are descriptive of published programme terms as of this date and are not tax or insurance advice — homeowners confirm with their accountant and their carrier.</p>
+    </footer>
+  </main>
+</div>
+
+</body>
+</html>

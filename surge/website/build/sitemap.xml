@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://surgeftw.com/</loc></url>
+  <url><loc>https://surgeftw.com/what-we-do/</loc></url>
+  <url><loc>https://surgeftw.com/about/</loc></url>
+  <url><loc>https://surgeftw.com/team/</loc></url>
+  <url><loc>https://surgeftw.com/team/brandon-long/</loc></url>
+  <url><loc>https://surgeftw.com/team/matthew-sharpe/</loc></url>
+  <url><loc>https://surgeftw.com/team/myles-zoutte/</loc></url>
+  <url><loc>https://surgeftw.com/team/lance-axon/</loc></url>
+  <url><loc>https://surgeftw.com/team/cai-silva/</loc></url>
+  <url><loc>https://surgeftw.com/team/maya-ogea/</loc></url>
+  <url><loc>https://surgeftw.com/team/ryan-conger/</loc></url>
+  <url><loc>https://surgeftw.com/team/paige-bennett/</loc></url>
+  <url><loc>https://surgeftw.com/team/jon-wallace/</loc></url>
+  <url><loc>https://surgeftw.com/team/nneka-smith/</loc></url>
+  <url><loc>https://surgeftw.com/careers/</loc></url>
+  <!-- /blog/ only. Each post gets its own <url> as it is published.
+       /blog/_template/ is never listed and never ships: make-bundle.mjs
+       excludes any path segment starting with an underscore. -->
+  <url><loc>https://surgeftw.com/blog/</loc></url>
+  <url><loc>https://surgeftw.com/blog/talk-ratio/</loc></url>
+  <url><loc>https://surgeftw.com/blog/discovery-questions/</loc></url>
+  <url><loc>https://surgeftw.com/blog/training-retention/</loc></url>
+  <url><loc>https://surgeftw.com/contact/</loc></url>
+  <url><loc>https://surgeftw.com/book/</loc></url>
+  <url><loc>https://surgeftw.com/privacy/</loc></url>
+  <url><loc>https://surgeftw.com/terms/</loc></url>
+</urlset>

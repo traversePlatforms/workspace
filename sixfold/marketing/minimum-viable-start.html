@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Minimum Viable Start</title>
+<style>
+  /* ---- Tokens: dark-first, shared with the marketing plan sheet ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 66ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--pad) 5rem; }
+
+  /* ---- Masthead ---- */
+  .masthead { padding: 3rem 0 1.6rem; border-bottom: 1px solid var(--seam); }
+  .eyebrow {
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 0.9rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: clamp(2rem, 5.2vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-size: 1.06rem;
+    color: var(--ink-dim);
+    max-width: var(--measure);
+    margin: 0 0 1.4rem;
+  }
+  .stamp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    padding-bottom: 1.4rem;
+  }
+  .stamp b { color: var(--ink-dim); font-weight: 500; }
+
+  /* ---- Sections ---- */
+  section { padding-top: 2.9rem; }
+  .sec-head { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.4rem; }
+  .sec-num {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    color: var(--ember);
+    letter-spacing: 0.1em;
+    padding-top: 0.15rem;
+  }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede { color: var(--ink-dim); max-width: var(--measure); margin: 0.5rem 0 1.3rem; }
+  p { max-width: var(--measure); }
+
+  /* ---- The thesis block ---- */
+  .thesis {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    padding: 1.5rem 1.6rem;
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 0.4rem;
+  }
+  .thesis dl { margin: 0; display: grid; gap: 0.75rem; }
+  @media (min-width: 720px) { .thesis dl { grid-template-columns: 9.5rem 1fr; gap: 0.75rem 1.4rem; } }
+  .thesis dt {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-top: 0.28rem;
+  }
+  .thesis dd { margin: 0; font-size: 1.02rem; }
+  .thesis dd small { display: block; color: var(--ink-faint); font-size: 0.82rem; margin-top: 0.15rem; }
+
+  /* ---- Checklist ---- */
+  ul.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  ul.check li {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.7rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 0.8rem 0.95rem;
+  }
+  ul.check li::before {
+    content: "";
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-top: 0.28rem;
+    border: 1.5px solid var(--ink-faint);
+    display: block;
+  }
+  ul.check li.gate::before { border-color: var(--ember); box-shadow: inset 0 0 0 2px var(--ember-quiet); }
+  ul.check .t { font-weight: 600; }
+  ul.check .d { display: block; color: var(--ink-dim); font-size: 0.9rem; margin-top: 0.18rem; }
+  ul.check .d em { color: var(--ember); font-style: normal; }
+
+  /* ---- Card grid ---- */
+  .grid { display: grid; gap: 0.9rem; }
+  @media (min-width: 760px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 760px) { .grid.three { grid-template-columns: repeat(3, 1fr); } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 1.1rem 1.15rem;
+  }
+  .card h3 {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--seam);
+  }
+  .card.have h3 { color: var(--moss); }
+  .card.gap h3 { color: var(--ember); }
+  .card ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+  .card li { font-size: 0.93rem; }
+  .card p { font-size: 0.93rem; margin: 0.6rem 0 0; color: var(--ink-dim); }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 0.68rem 0.9rem; border-bottom: 1px solid var(--seam); vertical-align: top; }
+  thead th {
+    background: var(--lift);
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- Cut list ---- */
+  ul.cut { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+  ul.cut li {
+    display: grid;
+    grid-template-columns: 1.4rem 1fr;
+    gap: 0.6rem;
+    padding: 0.62rem 0;
+    border-bottom: 1px solid var(--seam);
+  }
+  ul.cut li::before {
+    content: "\00d7";
+    color: var(--ink-faint);
+    font-family: var(--f-data);
+    line-height: 1.5;
+  }
+  ul.cut b { font-weight: 600; color: var(--ink); }
+  ul.cut span { color: var(--ink-dim); }
+
+  /* ---- Sequence ---- */
+  ol.seq { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0; }
+  ol.seq li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.9rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--seam);
+  }
+  ol.seq li::before {
+    content: counter(s, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ember);
+    padding-top: 0.16rem;
+  }
+  ol.seq .txt { min-width: 0; }
+  ol.seq b { display: block; }
+  ol.seq .txt span { display: block; color: var(--ink-dim); font-size: 0.93rem; margin-top: 0.12rem; }
+
+  /* ---- Forbidden lines ---- */
+  .forbid { display: grid; gap: 0.7rem; }
+  .forbid div {
+    border-left: 3px solid var(--ember);
+    background: var(--ember-quiet);
+    padding: 0.75rem 1rem;
+  }
+  .forbid q { display: block; font-family: var(--f-display); font-size: 1.05rem; }
+  .forbid small { display: block; color: var(--ink-dim); margin-top: 0.3rem; font-size: 0.87rem; }
+
+  /* ---- Callout ---- */
+  .note {
+    border: 1px dashed var(--seam);
+    background: var(--moss-quiet);
+    padding: 1rem 1.15rem;
+    margin-top: 1.2rem;
+  }
+  .note p { margin: 0; font-size: 0.93rem; max-width: none; }
+  .note b { color: var(--moss); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--seam);
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+  footer b { color: var(--ink-dim); font-weight: 500; }
+
+  a { color: var(--ember); }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    section { break-inside: avoid; }
+    .card, ul.check li, .thesis { border-color: #999; background: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Sixfold LLC &middot; Land &amp; Fire</p>
+    <h1>The smallest version of this company that can take money.</h1>
+    <p class="standfirst">Everything in the marketing plan that is not required to complete job&nbsp;#1 and get paid for it has been cut out of this sheet. What is left is the floor: one service, one gate, four pieces of paper, one way of finding customers.</p>
+    <div class="stamp">
+      <span><b>Built</b> 18 Aug 2026</span>
+      <span><b>Source</b> marketing-plan.md &middot; fire-mitigation-market-research.md</span>
+      <span><b>Status</b> internal &mdash; nothing published</span>
+    </div>
+  </header>
+
+  <section id="concept">
+    <div class="sec-head"><span class="sec-num">01</span><h2>The concept in six lines</h2></div>
+    <p class="lede">If someone asks what the business is on day one, this is the whole answer. No aeration, no second service line, no acreage contracts.</p>
+    <div class="thesis">
+      <dl>
+        <dt>What</dt>
+        <dd>Defensible space by hand. Fell, limb, grind stumps, pile slash, chip, cut rounds, haul off or leave on site.
+          <small>Zone 1 and Zone 2 work close to the house &mdash; exactly where machines struggle and homeowners are nervous.</small></dd>
+
+        <dt>Who</dt>
+        <dd>Homeowners, direct. El Paso County first, southern Douglas County second.
+          <small>Both are a short drive from Monument. Mobilisation distance is the cost that kills a cheap launch job.</small></dd>
+
+        <dt>The hook</dt>
+        <dd>Four parties will pay for this work and most homeowners know about none of them.
+          <small>Every competitor sells the cutting. Sixfold turns up knowing where the money is.</small></dd>
+
+        <dt>The pitch</dt>
+        <dd>&ldquo;Can I walk the property and tell you what a programme would want cut?&rdquo;
+          <small>A free walk is a low-friction yes, and it produces the lead, the quote and the paperwork in one visit.</small></dd>
+
+        <dt>The price</dt>
+        <dd>Quoted per property against a $3,200&ndash;$6,100 benchmark for a one-acre defensible space job.
+          <small>CSFS figure via the 2026 state legislative evaluation. Read section 06 before quoting anything.</small></dd>
+
+        <dt>Getting paid</dt>
+        <dd>Deposit on scheduling, balance on completion, invoice from the LLC bank account.
+          <small>The account exists. That is the only piece of financial infrastructure this needs to start.</small></dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="gate">
+    <div class="sec-head"><span class="sec-num">02</span><h2>The gate: four things that must be true before a saw runs</h2></div>
+    <p class="lede">These are not marketing tasks and they are not optional. Everything else on this sheet can be improvised; these cannot.</p>
+    <ul class="check">
+      <li class="gate"><span><span class="t">General liability in force.</span>
+        <span class="d">Indicative Colorado range $900&ndash;$2,600/yr, $1M/$2M typical minimum. <em>Broker-site figures &mdash; get real quotes.</em> Cutting trees over someone's roof without this is the single largest exposure in the business.</span></span></li>
+      <li class="gate"><span><span class="t">Workers comp, the moment anyone else swings a saw.</span>
+        <span class="d">Colorado has a strict one-employee threshold. Indicative $7&ndash;$13 per $100 of payroll. Solo, it is a different question; with one helper it stops being one.</span></span></li>
+      <li class="gate"><span><span class="t">The Surge relationship structured on paper.</span>
+        <span class="d">Sixfold and Surge are separate companies sharing one address. Using Surge people for Sixfold revenue is a related-party arrangement with tax and liability consequences. <em>Settle it before the first door is knocked</em>, not after.</span></span></li>
+      <li class="gate"><span><span class="t">A number a customer can call and a name on the invoice.</span>
+        <span class="d">Phone (720)&nbsp;772-6146 is live. Email currently routes to a Surge address &mdash; acceptable for the first jobs, replace before anything is printed in volume.</span></span></li>
+    </ul>
+    <div class="note"><p><b>The honest read:</b> insurance is the only thing on this entire sheet that costs real money before revenue, and it blocks almost everything downstream. If one call gets made this week, it is the broker.</p></div>
+  </section>
+
+  <section id="kit">
+    <div class="sec-head"><span class="sec-num">03</span><h2>The kit</h2></div>
+    <p class="lede">Nothing needs to be bought to start. One gap needs to be known and priced around.</p>
+    <div class="grid three">
+      <div class="card have">
+        <h3>Already have</h3>
+        <ul>
+          <li>Saws &mdash; felling and limbing</li>
+          <li>Stump grinder</li>
+          <li>Chipper</li>
+          <li>Haul capacity</li>
+          <li>An LLC and a bank account</li>
+          <li>Canvassing know-how nobody else in this trade has</li>
+        </ul>
+      </div>
+      <div class="card gap">
+        <h3>The one real gap</h3>
+        <ul>
+          <li>No masticator / mulching head</li>
+        </ul>
+        <p>That rules out mastication at scale and loses on price against mulching competitors on open acreage. It does not touch Zone&nbsp;1 and Zone&nbsp;2 work near the house, which is what is being sold. Price the gap in; do not pretend it isn't there.</p>
+      </div>
+      <div class="card">
+        <h3>Skip for now</h3>
+        <ul>
+          <li>Truck wrap</li>
+          <li>Uniforms</li>
+          <li>Rented mastication</li>
+          <li>Any new machine</li>
+        </ul>
+        <p>Revisit mastication as a rental or subcontract decision before spring, not before job one.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="paper">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Four pieces of paper</h2></div>
+    <p class="lede">One page each. Three of them already exist or are trivial; the fourth is the whole campaign.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Document</th><th>What it is</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>The funding one-pager</b></td>
+            <td>Four ways this gets paid for, each with its source printed on it, and a line sending the reader to their accountant and carrier. It works at a door, at a slash site, in an HOA meeting and stapled to a quote.</td>
+            <td>Built &mdash; <span class="num">funding-one-pager.html</span></td>
+          </tr>
+          <tr>
+            <td><b>The quote</b></td>
+            <td>Scope, price, and the disposal choice priced as three options: haul off, leave on site, chip. The biggest swing in any quote &mdash; competitors bury it in an assumption.</td>
+            <td>Not built &mdash; one page, needed before job one</td>
+          </tr>
+          <tr>
+            <td><b>The written scope</b></td>
+            <td>What was cut, where, to what spacing, and what happened to the material. One document with three uses: the county's scope format, the insurer's proof of mitigation, the homeowner's tax-credit receipt trail.</td>
+            <td>Not built &mdash; write it once, reuse forever</td>
+          </tr>
+          <tr>
+            <td><b>The invoice</b></td>
+            <td>LLC name, address, the scope, the amount. Nothing clever.</td>
+            <td>Whatever the bank or a free template gives you</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="find">
+    <div class="sec-head"><span class="sec-num">05</span><h2>One channel, one asset</h2></div>
+    <p class="lede">No website, no ads, no social presence is required to sell the first ten jobs. Doors and a piece of paper are.</p>
+    <div class="grid two">
+      <div class="card">
+        <h3>Walk the streets that back onto open space</h3>
+        <ul>
+          <li>Since 1&nbsp;July&nbsp;2026 insurers must send every Colorado policyholder an annual wildfire risk score and the mitigation discounts available. Those notices are landing now.</li>
+          <li>A homeowner holding one has been told they have a problem and given nobody to call.</li>
+          <li>Open on the change, not the sale. Hand over the one-pager. Ask for the walk, not the contract.</li>
+          <li>Log every door &mdash; address, outcome, what you saw in the yard. That log is next spring's target list.</li>
+        </ul>
+        <p>Check the solicitation rules per municipality first. Getting run off a neighbourhood in month one costs more than the permit.</p>
+      </div>
+      <div class="card">
+        <h3>Stand near people already carrying slash</h3>
+        <ul>
+          <li>Jefferson County SLASH sites run weekends through <b>25 Oct 2026</b>, $24 per 6&nbsp;cubic-yard load.</li>
+          <li>Everyone in that queue has self-identified as having more slash than they can handle and is paying to solve it.</li>
+          <li>Confirm site rules on contractor presence before turning up.</li>
+        </ul>
+        <p>Free, seasonal, and the highest-density prospecting available before winter.</p>
+      </div>
+    </div>
+    <div class="note"><p><b>Then, from job one:</b> a Google Business Profile and a review asked for on site, phone in hand, at completion. Free, and the only credential a brand-new company can build quickly. Asking by email a month later gets a third of them.</p></div>
+  </section>
+
+  <section id="money">
+    <div class="sec-head"><span class="sec-num">06</span><h2>The money</h2></div>
+    <p class="lede">There is no researched price list, and inventing one is how a wrong number becomes a confident one. What exists is a benchmark and a set of adjustments.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Anchor</th><th>Figure</th><th>Before it touches a quote</th></tr></thead>
+        <tbody>
+          <tr><td>One-acre defensible space job around a home</td><td class="num">$3,200 &ndash; $6,100</td><td>The most recent CSFS-sourced figure available. Use this as the residential anchor.</td></tr>
+          <tr><td>Ponderosa pine, per acre, Front Range</td><td class="num">$1,200 &ndash; $3,500</td><td>2020 dollars. Escalate. Excludes overhead.</td></tr>
+          <tr><td>Mixed conifer, per acre</td><td class="num">$1,400 &ndash; $3,000</td><td>Same caveats.</td></tr>
+          <tr><td>Overhead CSFS excludes from all of the above</td><td class="num">35% &ndash; 51%</td><td>Add it on top. CSFS states this explicitly.</td></tr>
+          <tr><td>Work in the wildland-urban interface</td><td class="num">Costs rise</td><td>CSFS flags it; every job Sixfold sells is in it.</td></tr>
+          <tr><td>Firewood, softwood cord, Denver metro</td><td class="num">$150 &ndash; $300</td><td>Margin recovery on wood already on the truck. Not a business.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:1.1rem">A launch discount is not a marketing line, it is the cost of buying a portfolio. Whatever version Brandon picks, bound it and count it, and let it end when the first ten jobs are done.</p>
+  </section>
+
+  <section id="cut">
+    <div class="sec-head"><span class="sec-num">07</span><h2>What is deliberately not being done yet</h2></div>
+    <p class="lede">All of this is in the full plan. None of it is required to complete a paid job, and each one is a week that does not get spent on doors.</p>
+    <ul class="cut">
+      <li><span><b>A website.</b> <span>Phase 2. The one-pager does the work a site would do, in the hand, at the door.</span></span></li>
+      <li><span><b>Paid search and paid social.</b> <span>Expensive against established operators, and neither can target a street. Doors can.</span></span></li>
+      <li><span><b>Choosing the logo and the offer version.</b> <span>Brandon's calls, and neither blocks a job. Print short runs until they settle.</span></span></li>
+      <li><span><b>The Douglas County approved-contractor list.</b> <span>Worth applying to early, but it gates a referral channel, not the ability to work. And nothing about the county cost-share may be advertised until Sixfold is actually listed.</span></span></li>
+      <li><span><b>Certifications and accreditation.</b> <span>Sixfold cannot out-credential a veteran-owned outfit with certified sawyers this year. It can be the one that shows up with the paperwork.</span></span></li>
+      <li><span><b>HOA and fire-district grant work.</b> <span>Real money, slow relationships. Worth a conversation before the 8&nbsp;Oct FRWRM deadline, but it will not pay for anything this autumn.</span></span></li>
+      <li><span><b>Aeration, in any form.</b> <span>The entity exists for it and the mark is built for it. Until which kind is established, it is not described anywhere.</span></span></li>
+      <li><span><b>A second service line, an office, a hire, a wrap.</b> <span>All of it after ten completed jobs, not before.</span></span></li>
+    </ul>
+    <div class="note"><p><b>Two exceptions worth doing while waiting on insurance quotes</b> &mdash; both cheap now and expensive later: register <span class="num">sixfoldland.com</span>, and book a twenty-minute trademark call on classes 37 and 44 with Sixfold AI, Inc. as the conflict to raise. Neither blocks a job; both get costlier the day a truck is wrapped.</p></div>
+  </section>
+
+  <section id="seq">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Day one to first paid job</h2></div>
+    <p class="lede">Ordered by what blocks what, not by what is most interesting.</p>
+    <ol class="seq">
+      <li><span class="txt"><b>Call an insurance broker.</b> <span>General liability, and workers comp priced for one and for two people. Everything downstream waits on this.</span></span></li>
+      <li><span class="txt"><b>Call the Douglas County Building Division.</b> <span>What the approved contractor list requires, when the next cost-share window opens, how long listing takes. The county site blocks automated fetch, so this cannot be desk-researched. Twenty minutes, highest leverage available.</span></span></li>
+      <li><span class="txt"><b>Settle the Surge labour question.</b> <span>Arm's-length contract, or reps engaged by Sixfold directly. Before the first door.</span></span></li>
+      <li><span class="txt"><b>Write the quote sheet and the scope sheet.</b> <span>One page each. Half a day, once.</span></span></li>
+      <li><span class="txt"><b>Print the one-pager.</b> <span>Short run. The copy changes as programme details get confirmed.</span></span></li>
+      <li><span class="txt"><b>Walk one street.</b> <span>Foothill edge, backs onto open space. Log every door. The purpose of the first street is to find out what the script gets wrong.</span></span></li>
+      <li><span class="txt"><b>Book the first walk-through, quote it, do it.</b> <span>Photograph before and after from the same fixed positions &mdash; from the property line and from the house.</span></span></li>
+      <li><span class="txt"><b>Ask for the review on site, at completion, phone in hand.</b> <span>Then hand over the written scope and the tax-credit paperwork.</span></span></li>
+      <li><span class="txt"><b>Repeat nine more times.</b> <span>Ten jobs, ten photo sets, eight to ten reviews. That is the whole of this year's goal.</span></span></li>
+    </ol>
+  </section>
+
+  <section id="never">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Lines that may not be said</h2></div>
+    <p class="lede">Not preferences. These are the ways a brand-new company ends its own credibility.</p>
+    <div class="forbid">
+      <div><q>Licensed and insured</q><small>Not on a flyer, a card, a truck or a website until general liability and workers comp are actually in force.</small></div>
+      <div><q>We're on the county's approved list</q><small>Not until Sixfold is. Pointing a homeowner at money they can only claim with two bids from a list you're not on produces a dead lead and a bad first impression.</small></div>
+      <div><q>Certified / accredited / Firewise</q><small>No standing that has not been verified as held. Competitors lead with this language; borrowing it is unrecoverable.</small></div>
+      <div><q>You'll get $2,000 back</q><small>That is tax advice from a tree company. The fact, with its source, is: the state credit covers 100% of costs up to $1,000, and rises to $2,000 and becomes refundable for tax year 2027. Then point at their accountant.</small></div>
+      <div><q>Your insurer is going to drop you</q><small>No urgency theatre and no fear selling. The homeowner already has the fear &mdash; the notice in their mail supplied it. The job is to be the calm one with the answer.</small></div>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Where the numbers come from.</b> Insurance ranges are indicative broker-site figures, not quotes. Per-acre costs are CSFS 2020 Colorado Forest Action Plan, Appendix 7, Northeast area &mdash; 2020 dollars, overhead excluded. The $3,200&ndash;$6,100 per-home benchmark is CSFS via the 2026 state legislative evaluation of the tax credit. Tax credit terms, HB25-1182 and the SLASH dates are as recorded in the market research file. The Douglas County contractor-list requirements are <b>unknown</b> &mdash; the county site returns HTTP 403 to automated fetch, and reported window dates conflict across sources.</p>
+    <p style="margin-top:0.9rem">Internal working document. Nothing here is published or scheduled anywhere.</p>
+  </footer>
+
+</div>
+</body>
+</html>

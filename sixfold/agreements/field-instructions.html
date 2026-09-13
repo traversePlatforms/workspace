@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signing At The Door</title>
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — tax credit notebook, shared print register.
+
+   Extended from marketing/funding-one-pager.html. Same tokens, same
+   type stack, same ink-on-paper commitment: these sheets exist to be
+   printed and put in a binder, so there is no dark theme and every
+   colour is painted explicitly.
+
+   What is NEW here, over the one-pager:
+     - multi-sheet pagination (.sheet + page-break-after)
+     - fill-in furniture: .rule, .box, .grid-form, .tbl
+     - .internal / .clientfacing masthead flags
+   Do not restyle. Extend.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #FFFFFF;
+  --tint: #F3EFE6;
+  --tint-edge: #DED5C4;
+  --ink: #14201B;
+  --ink-mid: #46534B;
+  --ink-soft: #6E7A72;
+  --ember: #E4703A;
+  --ember-text: #B84C15;
+  --moss-text: #45583A;
+
+  --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+  --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: #4A5550; }
+body {
+  margin: 0;
+  background: #4A5550;
+  color: var(--ink);
+  font-family: var(--f-body);
+  padding: 24px 12px 48px;
+}
+
+/* The sheet -------------------------------------------------------- */
+.sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 22px;
+  background: var(--paper);
+  color: var(--ink);
+  /* Matches @page below exactly, so the on-screen sheet is a true proof:
+     11in tall minus 0.5in top and bottom leaves the 10in the printer gives
+     you. If content clears the white here, it clears one printed page. */
+  padding: 0.5in 0.55in;
+  font-size: 9.5pt;
+  line-height: 1.34;
+  box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Masthead --------------------------------------------------------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3in;
+  border-bottom: 2.5pt solid var(--ember);
+  padding-bottom: 6pt;
+}
+.brand { display: flex; align-items: flex-end; gap: 8pt; }
+.mark { width: 33pt; height: 38pt; flex: none; display: block; color: var(--ink); }
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 19pt;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.descriptor {
+  font-family: var(--f-data);
+  font-size: 6pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 4pt 0 0;
+}
+.whatitis {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0;
+  padding-top: 3pt;
+  max-width: 2.3in;
+  line-height: 1.7;
+}
+.whatitis b { color: var(--ember-text); font-weight: 400; display: block; }
+
+/* Sheet headline --------------------------------------------------- */
+.sheetnum {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+}
+h1.headline {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.09;
+  text-wrap: balance;
+  margin: 4pt 0 0;
+  color: var(--ink);
+}
+.standfirst {
+  font-size: 9.6pt;
+  line-height: 1.4;
+  color: var(--ink-mid);
+  margin: 5pt 0 0;
+  max-width: 6.5in;
+}
+
+h2.sec {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 12.5pt;
+  line-height: 1.12;
+  margin: 9pt 0 4pt;
+  color: var(--ember-text);
+}
+h3.sub {
+  font-family: var(--f-data);
+  font-size: 6.6pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 8pt 0 4pt;
+  font-weight: 400;
+}
+p { margin: 0 0 5pt; }
+
+/* Blocks ----------------------------------------------------------- */
+.block {
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 10pt 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin: 8pt 0 0;
+}
+.block.moss { border-left-color: var(--moss-text); background: var(--paper); }
+.block > :last-child { margin-bottom: 0; }
+.block-eyebrow {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 0 0 5pt;
+}
+
+/* Lists ------------------------------------------------------------ */
+ul.terms { margin: 0 0 5pt; padding-left: 12pt; list-style: none; }
+ul.terms li { position: relative; margin-bottom: 3pt; padding-left: 1pt; }
+ul.terms li::before {
+  content: "";
+  position: absolute;
+  left: -10pt;
+  top: 0.42em;
+  width: 4pt;
+  height: 4pt;
+  background: var(--moss-text);
+}
+ul.terms li:last-child { margin-bottom: 0; }
+ul.terms.no li::before { background: var(--ember-text); }
+
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 24pt;
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1pt;
+  width: 18pt;
+  height: 18pt;
+  background: var(--ember);
+  color: #FFF;
+  font-family: var(--f-data);
+  font-size: 9pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ol.steps > li:last-child { margin-bottom: 0; }
+ol.steps b { display: block; color: var(--ink); }
+ol.steps p { margin: 1pt 0 0; color: var(--ink-mid); font-size: 8.9pt; }
+
+/* Tables ----------------------------------------------------------- */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  margin: 0 0 5pt;
+}
+table.tbl th {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  font-weight: 400;
+  padding: 0 6pt 4pt 0;
+  border-bottom: 1.25pt solid var(--ink);
+  vertical-align: bottom;
+}
+table.tbl td {
+  padding: 3.5pt 6pt 3.5pt 0;
+  border-bottom: 0.75pt solid var(--tint-edge);
+  vertical-align: top;
+  line-height: 1.35;
+}
+table.tbl td:last-child, table.tbl th:last-child { padding-right: 0; }
+table.tbl .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.tbl tr.hi td { background: #FBE6DC; font-weight: 600; }
+table.tbl tr.dim td { color: var(--ink-soft); }
+
+/* Fill-in furniture ------------------------------------------------ */
+.rule {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-soft);
+  min-width: 1in;
+  height: 1.05em;
+  vertical-align: baseline;
+}
+.rule.w2 { min-width: 2in; }
+.rule.w3 { min-width: 3in; }
+.rule.fill { display: block; width: 100%; }
+
+.grid-form { display: flex; flex-wrap: wrap; gap: 7pt 12pt; margin: 0 0 6pt; }
+.field { flex: 1 1 2.2in; min-width: 1.6in; }
+.field.wide { flex: 1 1 100%; }
+.field.half { flex: 1 1 3.1in; }
+.field label {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8pt;
+}
+.field .line { border-bottom: 0.75pt solid var(--ink-mid); height: 2pt; }
+.field .hint { font-size: 7.4pt; color: var(--ink-soft); margin: 3pt 0 0; line-height: 1.35; }
+
+.tick { display: flex; align-items: flex-start; gap: 6pt; margin-bottom: 3pt; break-inside: avoid; }
+.tick .sq {
+  flex: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin-top: 1.5pt;
+  background: var(--paper);
+}
+.tick .lbl { flex: 1; line-height: 1.38; }
+.tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
+.ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+.ticks.two .tick { flex: 1 1 2.7in; }
+
+.yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
+.yn span {
+  display: inline-block;
+  width: 9pt; height: 9pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin: 0 3pt 0 8pt;
+  vertical-align: -1pt;
+}
+
+.sign { display: flex; gap: 16pt; margin-top: 10pt; }
+.sign .field { flex: 1 1 auto; }
+.sign .field.date { flex: 0 0 1.5in; }
+
+/* Callouts --------------------------------------------------------- */
+.warn {
+  border: 0.9pt solid var(--ember-text);
+  background: #FBE6DC;
+  padding: 7pt 10pt;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+.warn .block-eyebrow { color: var(--ember-text); }
+.warn > :last-child { margin-bottom: 0; }
+
+.note {
+  font-family: var(--f-data);
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-top: 0.75pt solid var(--tint-edge);
+  padding-top: 5pt;
+  margin: 7pt 0 0;
+}
+.note b { color: var(--ink-mid); font-weight: 400; }
+
+/* Footer ----------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding-top: 6pt;
+  border-top: 0.75pt solid var(--tint-edge);
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4pt 12pt;
+  font-family: var(--f-data);
+  font-size: 7.4pt;
+  letter-spacing: 0.05em;
+  color: var(--ink-mid);
+}
+.contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+.contact .pg { margin-left: auto; color: var(--ink-soft); }
+.disclaimer {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+  max-width: 6.6in;
+}
+
+/* Print ------------------------------------------------------------ */
+@media print {
+  html, body { background: #FFF; padding: 0; margin: 0; }
+  .sheet {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+  @page { size: letter; margin: 0.5in 0.55in; }
+  .screenonly { display: none !important; }
+}
+
+@media screen and (max-width: 8.9in) {
+  .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+  .top { flex-direction: column; gap: 10pt; }
+  .whatitis { text-align: left; max-width: none; }
+}
+
+/* ==================================================================
+   CONTRACT FURNITURE — added for the service agreement.
+   Extends the notebook print register; nothing above is overridden.
+   ================================================================== */
+
+/* Numbered clauses. The numbers are real references — a change order or a
+   dispute needs to be able to cite one — so they are not decoration. */
+ol.clauses { margin: 0; padding: 0; list-style: none; counter-reset: cl; }
+ol.clauses > li {
+  counter-increment: cl;
+  position: relative;
+  padding-left: 20pt;
+  margin-bottom: 5pt;
+  break-inside: avoid;
+}
+ol.clauses > li::before {
+  content: counter(cl) ".";
+  position: absolute; left: 0; top: 0;
+  font-family: var(--f-data);
+  font-size: 8pt;
+  color: var(--ember-text);
+}
+ol.clauses > li:last-child { margin-bottom: 0; }
+ol.clauses b.h { display: block; color: var(--ink); }
+
+/* Inline fill-in rule that sits in running text. */
+.fi {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-mid);
+  min-width: 0.9in;
+  height: 1.02em;
+  vertical-align: -0.2em;
+}
+.fi.w2 { min-width: 1.8in; }
+.fi.w3 { min-width: 2.7in; }
+
+/* Money line. Tabular figures and a box, so a filled-in price is unambiguous
+   and hard to alter after signing. */
+.money { display: flex; flex-wrap: wrap; gap: 10pt; margin: 6pt 0 0; }
+.money .m { flex: 1 1 2in; border: 0.9pt solid var(--ink-mid); padding: 5pt 8pt 6pt; }
+.money .m span {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 8pt;
+}
+.money .m .amt {
+  font-family: var(--f-data); font-size: 12pt; color: var(--ink);
+  border-bottom: 0.9pt solid var(--ink-mid); padding-bottom: 2pt;
+}
+
+/* THE CANCELLATION STATEMENT.
+   16 CFR 429.1(a) requires this in bold face type of a minimum size of TEN
+   POINTS, in immediate proximity to the buyer's signature space. The register's
+   body copy is 9.5pt, so this is set explicitly and must not be reduced to make
+   a page fit. Same for the notice forms — 429.1(b) sets the same floor. */
+.legal10 { font-size: 10.5pt; font-weight: 700; line-height: 1.34; }
+.cancelbox {
+  border: 1.4pt solid var(--ink);
+  padding: 9pt 11pt;
+  margin: 10pt 0 0;
+  break-inside: avoid;
+}
+
+/* Signature blocks. */
+.sigs { display: flex; flex-wrap: wrap; gap: 14pt 20pt; margin-top: 12pt; }
+.sigs .s { flex: 1 1 2.9in; }
+.sigs .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigs .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+/* The statutory notice form — plain, boxed, unmistakably a separate document. */
+.noticeform { border: 1.4pt solid var(--ink); padding: 14pt 16pt 16pt; margin-top: 10pt; }
+.noticeform h2 {
+  font-family: var(--f-data); font-size: 12pt; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  margin: 0 0 10pt; color: var(--ink);
+}
+.noticeform p { font-size: 10.5pt; font-weight: 700; line-height: 1.34; margin: 0 0 8pt; }
+.noticeform .datefield { margin: 0 0 10pt; }
+
+/* Internal sheet flag — never appears on a customer-facing page. */
+.internalflag {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--f-data); font-size: 7pt;
+  letter-spacing: .2em; text-transform: uppercase;
+  padding: 3pt 7pt; display: inline-block;
+}
+
+/* ==================================================================
+   PAGINATION HARDENING — added 2026-08-21.
+
+   Each .sheet is designed to be exactly one printed page and is
+   measured to fit. This block is the safety net for when it is not:
+   if a page shrinks (a printer with a larger unprintable margin, or
+   browser headers/footers left switched on), content must break at a
+   clean boundary rather than mid-topic. Better an extra page than a
+   heading stranded at the bottom or a table cut in half.
+   ================================================================== */
+h1.headline, h2.sec, h3.sub, .sheetnum, .block-eyebrow {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+.block, .warn, .noticeform, .money, .totals, .grid-form, .ticks,
+.sigs, .catkey, .figures, .paperwork, footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+ol.clauses > li, ol.steps > li, ul.terms li, .tick, .field, .money .m {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.tbl { break-inside: auto; page-break-inside: auto; }
+table.tbl tr, table.tbl thead { break-inside: avoid; page-break-inside: avoid; }
+table.tbl thead { break-after: avoid-page; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+
+/* Signature rows — one party per row, three columns.
+   The previous flat .sigs flex wrapped six equal items two-per-row, which
+   put the Sixfold representative's signature beside the owner's date. It
+   read as one muddled grid instead of two signature blocks. */
+.sigrow { display: flex; gap: 10pt 18pt; margin-top: 11pt; break-inside: avoid; page-break-inside: avoid; }
+.sigrow .s { flex: 1 1 0; min-width: 0; }
+.sigrow .s.wide { flex: 1.5 1 0; }
+.sigrow .s.narrow { flex: 0.75 1 0; }
+.sigrow .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigrow .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Englewood, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Internal</b>Sheet 1 of 2<br>Do not hand to a customer</p>
+  </div>
+
+  <p class="sheetnum">Field crib sheet · signing an agreement at the door</p>
+  <h1 class="headline">Six things to get right at the door</h1>
+
+  <div class="block moss">
+    <p class="block-eyebrow">First, the opening thirty seconds</p>
+    <p>Colorado makes it a deceptive trade practice to solicit door-to-door unless, <strong>within thirty seconds of starting the conversation</strong>, you say <strong>who you are, who you represent, and why you are there</strong>. Easy to fail by opening with a question instead. <em>"Morning — I'm ___ with Sixfold, we do fire mitigation on the Front Range, and I'm knocking about the wildfire risk notices going out this summer."</em></p>
+  </div>
+
+  <div class="warn">
+    <p class="legal10" style="margin:0 0 5pt">Do not start cutting before the cancellation period is over.</p>
+    <p>Colorado law: <strong>if the customer cancels, the seller gets no compensation for services already performed.</strong> Not a reduced amount — nothing. Fell three trees on day one, they cancel on day two, and Sixfold has worked a free day and still owes the deposit back. <strong>There is no waiver and you must never ask for one</strong> — a clause waiving the right to cancel is prohibited, and asking is itself a violation.</p>
+    <p style="margin-bottom:0">And if the cancellation notice is missing, wrong or badly filled in, the three-day window <strong>never starts</strong> — the right to cancel then stays open for <strong>three years</strong>. A job signed today can be unwound in 2029, with no compensation for the work, because someone left a date blank.</p>
+  </div>
+
+  <h2 class="sec">Before you hand the paperwork over</h2>
+  <ol class="clauses">
+    <li><b class="h">Date it the day they actually sign</b>
+      Not the day you walked it or wrote the quote.</li>
+    <li><b class="h">Work out the deadline, and write it in three places</b>
+      Midnight of the <strong>third business day</strong> after signing — any day except <strong>Sunday and federal holidays</strong>, so Saturday counts. It goes on page 2 section 6 and on <strong>both</strong> cancellation forms.</li>
+    <li><b class="h">Complete both cancellation forms before handing them over</b>
+      Seller name, seller address, date of transaction, deadline date. The law requires you to fill these in, not the customer.</li>
+    <li><b class="h">Say it out loud</b>
+      You must tell them verbally as they sign, not just point at the box. <em>"You have three business days to change your mind, and these forms are how."</em></li>
+    <li><b class="h">Leave a signed copy and both cancellation forms</b>
+      All five pages. They keep one form and send the other if they want out.</li>
+    <li><b class="h">If they cancel, refund everything within ten days</b>
+      Deposit included, in full, no deduction. Tell the office the day it arrives.</li>
+  </ol>
+
+  <h2 class="sec">Things not to say or do</h2>
+  <ul class="terms no">
+    <li><strong>Never say licensed, insured, bonded, certified or Firewise.</strong> None of it is true yet.</li>
+    <li><strong>Never promise a tax credit amount, a refund or an insurance discount</strong>, and <strong>never name a county cost-share</strong> until Sixfold is on the approved list. Describe what a programme says; what they get is between them and their accountant or carrier.</li>
+    <li><strong>Never agree to extra work verbally.</strong> Scope and price changes go on a signed change order before the work, or it is not owed and you are the one arguing about it.</li>
+    <li><strong>Never fill in a price the office has not agreed</strong>, and never leave a signed agreement with the price blank.</li>
+  </ul>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Internal · 1 of 2</span>
+    </div>
+    <p class="disclaimer">Sources: 16 CFR Part 429 (FTC cooling-off rule for sales made at homes); C.R.S. 5-3-401 to 5-3-405 (home solicitation sales); C.R.S. 6-1-105 (1)(p) (door-to-door identification). Not legal advice — see the folder README for what still needs an attorney's eye.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     SHEET 2 — STARTING THE SAME DAY, AND THE EMERGENCY EXCEPTION
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Englewood, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Internal</b>Sheet 2 of 2<br>Do not hand to a customer</p>
+  </div>
+
+  <p class="sheetnum">Starting work the same day</p>
+  <h1 class="headline">You can start today. Decide what you will do for free.</h1>
+
+  <div class="warn">
+    <p class="legal10" style="margin:0 0 5pt">Nothing in the law stops you starting the same day.</p>
+    <p style="margin-bottom:0">It only decides what happens to the money. <strong>Cancel inside the window and you refund everything, paid nothing for work already done.</strong> That is the whole exposure, and it is bounded by how much you chose to do in three days.</p>
+  </div>
+
+  <h2 class="sec">Sequence the job so the window costs least</h2>
+  <table class="tbl">
+    <tbody>
+      <tr><td style="width:1.35in"><strong>Do first</strong></td><td>Labour you would be repeating anyway if they cancel — hand thinning and limbing, lop and scatter, clearing the first five feet.</td></tr>
+      <tr><td><strong>Hold back</strong></td><td>Anything unrecoverable: <strong>haul-off</strong>, gone once it is tipped; <strong>chipping</strong>, where the cost is fuel and machine hours; <strong>stump grinding</strong>, which is irreversible.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="block">
+    <p class="block-eyebrow">Stump grinding cannot be same-day anyway</p>
+    <p>Colorado requires notice to the notification association <strong>at least two business days before excavation begins</strong>, not counting the day the notice is given. The locate wait and the cancellation window run side by side, so grinding lands after both. That is scheduling, not a delay you have to explain.</p>
+  </div>
+
+  <h2 class="sec">Money, while the window is open</h2>
+  <ul class="terms">
+    <li><strong>Take a small deposit, or none</strong> — it comes back in full regardless, and a large one turns a cancellation into an argument. <strong>Do not invoice for work done before a cancellation</strong>; you are not entitled to it.</li>
+    <li><strong>If they cancel: stop, refund within ten days, no deduction.</strong> Tell the office that day.</li>
+  </ul>
+
+  <h2 class="sec">The emergency exception — narrow, and all three must be true</h2>
+  <ol class="clauses">
+    <li><b class="h">The customer contacted you</b>
+      Not the other way round. <strong>If you knocked on the door, this does not apply</strong> — no exceptions.</li>
+    <li><b class="h">There is an actual emergency</b>
+      A risk to health, safety or property that cannot wait three days — a hazard tree over a bedroom, storm damage.</li>
+    <li><b class="h">They write the statement themselves, by hand, dated and signed</b>
+      Covering what the emergency is, why it cannot wait, that they are asking Sixfold to start now, and that they know they are giving up the three-day right.</li>
+  </ol>
+
+  <div class="warn">
+    <p class="block-eyebrow">You cannot hand them a form for this</p>
+    <p style="margin-bottom:0">The statute only accepts a statement that is <strong>not a printed form as to its material provisions</strong> — that is the point of it. No template, no dictating the wording, nothing written out for them to copy. Tell them what it has to cover and let them write it. Colorado also requires Sixfold to make a genuine substantial start before any cancellation arrives.</p>
+  </div>
+
+  <div class="block moss">
+    <p class="block-eyebrow">What is not an emergency</p>
+    <p>A canvassed job. Wanting it done before a party or a house sale. A good price today. Fire season in general — the exception is about <em>this</em> property, <em>now</em>. <strong>If you are talking someone into calling it an emergency, it is not one</strong>, and a wrongly claimed one is worse than waiting: the exception fails and the three-year window opens.</p>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Internal · 2 of 2</span>
+    </div>
+    <p class="disclaimer">Sources: 16 CFR 429.0 (a)(3) and C.R.S. 5-3-402 (5) (emergency exception); C.R.S. 5-3-405 (3) (no compensation on cancellation); C.R.S. 9-1.5-103 (3)(b) (two business days' excavation notice). Not legal advice.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+[
+  {
+    "file": "surge-avatar-linkedin-400.png",
+    "size": "400x400",
+    "platform": "LinkedIn (Surge company page)",
+    "field": "Admin view › Edit page › Page logo. Square, min 268px, shown ~60–130px.",
+    "note": ""
+  },
+  {
+    "file": "surge-avatar-facebook-500.png",
+    "size": "500x500",
+    "platform": "Facebook (Surge page)",
+    "field": "Settings › Page details › Profile picture. Circle crop, shown 176px desktop / 196px mobile.",
+    "note": ""
+  },
+  {
+    "file": "surge-avatar-instagram-320.png",
+    "size": "320x320",
+    "platform": "Instagram (Surge)",
+    "field": "Edit profile › Change profile photo. Circle crop, shown ~110–180px.",
+    "note": ""
+  },
+  {
+    "file": "surge-avatar-x-400.png",
+    "size": "400x400",
+    "platform": "X (Surge)",
+    "field": "Profile › Edit profile › profile photo. Circle crop, shown ~133px.",
+    "note": ""
+  },
+  {
+    "file": "surge-avatar-nextdoor-1200.png",
+    "size": "1200x1200",
+    "platform": "Nextdoor (Surge business page)",
+    "field": "Business page › Edit › Business logo / profile photo. Circle crop.",
+    "note": ""
+  },
+  {
+    "file": "surge-avatar-youtube-800.png",
+    "size": "800x800",
+    "platform": "YouTube (Surge channel)",
+    "field": "Customise channel › Branding › Picture. Min 98px, 4MB max. Circle crop.",
+    "note": ""
+  },
+  {
+    "file": "surge-logo-google-720.png",
+    "size": "720x720",
+    "platform": "Google Business Profile (Surge)",
+    "field": "Photos › Logo. Google recommends exactly 720×720; min 250×250; 10KB–5MB.",
+    "note": ""
+  },
+  {
+    "file": "surge-avatar-master-1024.png",
+    "size": "1024x1024",
+    "platform": "— master —",
+    "field": "Fallback / any field not listed. Downscale as needed.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-linkedin-company-1128x191.png",
+    "size": "1128x191",
+    "platform": "LinkedIn (Surge company page)",
+    "field": "Admin view › Edit page › Cover image. 1128×191 min, ~4:1. Keep the lower-left ~180px clear — the page tucks the logo tile there.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-linkedin-personal-1584x396.png",
+    "size": "1584x396",
+    "platform": "LinkedIn (personal profile — optional)",
+    "field": "Profile › camera icon on the background › Add photo. 1584×396 (4:1). Lower-left is covered by the profile photo.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-facebook-1640x624.png",
+    "size": "1640x624",
+    "platform": "Facebook (Surge page)",
+    "field": "Page › Edit cover photo. Uploads at 1640×624; desktop shows ~820×312, mobile crops to the centre ~640 wide — content is centred for that.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-x-1500x500.png",
+    "size": "1500x500",
+    "platform": "X (Surge)",
+    "field": "Profile › Edit profile › header photo. 1500×500 (3:1). Lower-left is covered by the profile photo.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-nextdoor-1440x400.png",
+    "size": "1440x400",
+    "platform": "Nextdoor (Surge business page)",
+    "field": "Business page › Edit › Cover photo. 1440×400 working assumption (~3.6:1) — confirm the crop box in the dialog.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-youtube-2560x1440.png",
+    "size": "2560x1440",
+    "platform": "YouTube (Surge channel)",
+    "field": "Customise channel › Branding › Banner image. Upload 2560×1440; only the centre 1546×423 is guaranteed on every device — the lockup is inside it.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-google-1024x576.png",
+    "size": "1024x576",
+    "platform": "Google Business Profile (Surge)",
+    "field": "Photos › Cover. 16:9. Setting a cover does not guarantee it shows first.",
+    "note": ""
+  },
+  {
+    "file": "surge-banner-16x9-1920x1080.png",
+    "size": "1920x1080",
+    "platform": "— general 16:9 —",
+    "field": "Any other 16:9 slot (event headers, slide backplate, etc.).",
+    "note": ""
+  },
+  {
+    "file": "surge-ig-highlight-1-door.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Surge) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only; icons are centred for that.",
+    "note": ""
+  },
+  {
+    "file": "surge-ig-highlight-2-phone.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Surge) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only; icons are centred for that.",
+    "note": ""
+  },
+  {
+    "file": "surge-ig-highlight-3-headset.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Surge) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only; icons are centred for that.",
+    "note": ""
+  },
+  {
+    "file": "surge-ig-highlight-4-booth.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Surge) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only; icons are centred for that.",
+    "note": ""
+  },
+  {
+    "file": "surge-ig-highlight-5-team.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Surge) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only; icons are centred for that.",
+    "note": ""
+  },
+  {
+    "file": "surge-ig-highlight-6-chart.png",
+    "size": "1080x1080",
+    "platform": "Instagram (Surge) — Story Highlight cover",
+    "field": "Add to a Highlight › Edit › cover. Instagram shows the centre circle only; icons are centred for that.",
+    "note": ""
+  }
+]

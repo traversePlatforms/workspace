@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Social Assets</title>
+<style>
+  :root{
+    --pine:#0E1512; --timber:#1F2A25; --ember:#E4703A; --bone:#EDE7DC; --moss:#8AA07A;
+    --edge:#2C3A33; --dim:#8C9A92;
+    --f-display:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    --f-body:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --f-data:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--pine);color:var(--bone);font-family:var(--f-body);padding:44px 32px 90px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-family:var(--f-display);font-weight:400;font-size:38px;line-height:1.05;margin-bottom:8px}
+  .sub{color:var(--dim);max-width:62ch;margin-bottom:34px}
+  h2{font-family:var(--f-display);font-weight:400;font-size:24px;color:var(--ember);margin:44px 0 4px}
+  h2:first-of-type{margin-top:30px}
+  .note{color:var(--dim);font-size:14px;max-width:74ch;margin-bottom:16px}
+  .eyebrow{font-family:var(--f-data);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss);margin-bottom:9px}
+
+  .row{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end;margin-bottom:8px}
+  .spec{font-family:var(--f-data);font-size:10.5px;letter-spacing:.09em;color:var(--dim);margin-top:9px;text-align:center}
+  .circ{border-radius:50%;display:block;background:#000}
+  .sq{display:block;background:#000}
+  figure{display:flex;flex-direction:column;align-items:center}
+
+  .bannerbox{position:relative;border:1px solid var(--edge);margin-bottom:6px;overflow:hidden}
+  .bannerbox img{display:block;width:100%;height:auto}
+  /* Crop probes: the band each platform might actually show. */
+  .crop{position:absolute;top:0;bottom:0;border-left:2px dashed rgba(228,112,58,.85);border-right:2px dashed rgba(228,112,58,.85);
+        background:rgba(228,112,58,.05);pointer-events:none}
+  .crop span{position:absolute;top:6px;left:6px;font-family:var(--f-data);font-size:10px;letter-spacing:.12em;
+             color:var(--ember);background:rgba(14,21,18,.86);padding:2px 6px}
+  .shade{position:absolute;top:0;bottom:0;background:rgba(14,21,18,.72);pointer-events:none}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+  th{font-family:var(--f-data);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--moss);
+     text-align:left;font-weight:400;padding:0 12px 7px 0;border-bottom:1px solid var(--edge)}
+  td{padding:8px 12px 8px 0;border-bottom:1px solid var(--edge);vertical-align:top}
+  td:last-child,th:last-child{padding-right:0}
+  code{font-family:var(--f-data);font-size:12px;color:var(--bone);background:var(--timber);padding:1px 5px}
+  .ok{color:var(--moss)} .warn{color:var(--ember)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Sixfold social assets — Ridge, ember single colour</h1>
+  <p class="sub">Profile marks and banners for Facebook, Nextdoor and Google Business Profile. This page is the proof: every asset shown at the size it will actually be seen at, and every banner shown under the crop it will actually get.</p>
+
+  <h2>Profile mark at real display sizes</h2>
+  <p class="note">All three platforms crop the avatar to a circle. The large sizes are what you upload; the small ones are what a neighbour actually sees next to a comment. <span class="warn">The roots stop reading below roughly 96px</span> — which is why there is a crest-only variant underneath.</p>
+
+  <p class="eyebrow">Full mark, with roots — <code>sixfold-profile-ember-1024.png</code></p>
+  <div class="row">
+    <figure><img class="circ" src="sixfold-profile-ember-1024.png" width="180" height="180" alt=""><figcaption class="spec">180 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-1024.png" width="128" height="128" alt=""><figcaption class="spec">128 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-1024.png" width="96" height="96" alt=""><figcaption class="spec">96 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-1024.png" width="64" height="64" alt=""><figcaption class="spec">64 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-1024.png" width="48" height="48" alt=""><figcaption class="spec">48 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-1024.png" width="32" height="32" alt=""><figcaption class="spec">32 px</figcaption></figure>
+  </div>
+
+  <p class="eyebrow" style="margin-top:26px">Crest only, no roots — <code>sixfold-profile-ember-small-512.png</code></p>
+  <div class="row">
+    <figure><img class="circ" src="sixfold-profile-ember-small-512.png" width="180" height="180" alt=""><figcaption class="spec">180 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-small-512.png" width="128" height="128" alt=""><figcaption class="spec">128 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-small-512.png" width="96" height="96" alt=""><figcaption class="spec">96 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-small-512.png" width="64" height="64" alt=""><figcaption class="spec">64 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-small-512.png" width="48" height="48" alt=""><figcaption class="spec">48 px</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-small-512.png" width="32" height="32" alt=""><figcaption class="spec">32 px</figcaption></figure>
+  </div>
+
+  <p class="eyebrow" style="margin-top:26px">Square crop, and the light-ground alternate</p>
+  <div class="row">
+    <figure><img class="sq" src="sixfold-profile-ember-1024.png" width="150" height="150" alt=""><figcaption class="spec">Square · Google may show it uncropped</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-on-bone-1024.png" width="150" height="150" alt=""><figcaption class="spec">Ember on Bone · circle</figcaption></figure>
+    <figure><img class="sq" src="sixfold-profile-ember-on-bone-1024.png" width="150" height="150" alt=""><figcaption class="spec">Ember on Bone · square</figcaption></figure>
+    <figure><img class="circ" src="sixfold-profile-ember-on-bone-1024.png" width="48" height="48" alt=""><figcaption class="spec">48 px</figcaption></figure>
+  </div>
+
+  <h2>Banner, and what each platform will cut off</h2>
+  <p class="note">The dashed band is what survives a narrower crop. Facebook shows a page cover wider on desktop than on a phone and takes the difference off the sides; Nextdoor and Google crop to their own frames. Nothing that matters is allowed outside the band.</p>
+
+  <p class="eyebrow"><code>sixfold-banner-facebook-1640x624.png</code> · 1640 × 624 · shown with a phone-width crop probe</p>
+  <div class="bannerbox">
+    <img src="sixfold-banner-facebook-1640x624.png" alt="Sixfold banner">
+    <div class="shade" style="left:0;width:11%"></div>
+    <div class="shade" style="right:0;width:11%"></div>
+    <div class="crop" style="left:11%;right:11%"><span>centre 78% — survives</span></div>
+  </div>
+
+  <p class="eyebrow" style="margin-top:30px"><code>sixfold-banner-16x9-1920x1080.png</code> · 16:9 · Nextdoor and general use</p>
+  <div class="bannerbox">
+    <img src="sixfold-banner-16x9-1920x1080.png" alt="Sixfold banner, 16:9">
+  </div>
+
+  <p class="eyebrow" style="margin-top:30px"><code>sixfold-banner-16x9-1024x576.png</code> · 16:9 · Google cover photo</p>
+  <div class="bannerbox">
+    <img src="sixfold-banner-16x9-1024x576.png" alt="Sixfold banner, 16:9 small">
+  </div>
+
+  <h2>Which file goes where</h2>
+  <table>
+    <thead>
+      <tr><th style="width:150px">Platform</th><th style="width:110px">Slot</th><th>File</th><th style="width:230px">Where the size came from</th></tr>
+    </thead>
+    <tbody>
+      <tr><td rowspan="2">Google Business Profile</td><td>Logo</td><td><code>sixfold-profile-ember-720.png</code></td><td class="ok">Verified — Google documents 720×720 recommended, 250×250 minimum, JPG or PNG, 10 KB–5 MB</td></tr>
+      <tr><td>Cover photo</td><td><code>sixfold-banner-16x9-1024x576.png</code></td><td class="warn">Google publishes no cover aspect ratio — only the 720×720 figure above. 16:9 is a working choice, not a documented spec</td></tr>
+      <tr><td rowspan="2">Facebook page</td><td>Profile</td><td><code>sixfold-profile-ember-1024.png</code></td><td class="warn">Meta's help centre refuses automated requests. 1024 square clears every plausible minimum</td></tr>
+      <tr><td>Cover</td><td><code>sixfold-banner-facebook-1640x624.png</code></td><td class="warn">2.63:1 is the long-standing page-cover proportion, not confirmed first-party. Check the upload dialog</td></tr>
+      <tr><td rowspan="2">Nextdoor</td><td>Profile</td><td><code>sixfold-profile-ember-1024.png</code></td><td class="warn">Nextdoor publishes no image specs. Square, oversized, safe</td></tr>
+      <tr><td>Cover</td><td><code>sixfold-banner-16x9-1920x1080.png</code></td><td class="warn">16:9 as the safe general ratio. Confirm in the page editor</td></tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>

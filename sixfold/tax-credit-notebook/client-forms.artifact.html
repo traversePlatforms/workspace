@@ -1,0 +1,848 @@
+<title>Wildfire Credit Client Forms</title>
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — tax credit notebook, shared print register.
+
+   Extended from marketing/funding-one-pager.html. Same tokens, same
+   type stack, same ink-on-paper commitment: these sheets exist to be
+   printed and put in a binder, so there is no dark theme and every
+   colour is painted explicitly.
+
+   What is NEW here, over the one-pager:
+     - multi-sheet pagination (.sheet + page-break-after)
+     - fill-in furniture: .rule, .box, .grid-form, .tbl
+     - .internal / .clientfacing masthead flags
+   Do not restyle. Extend.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #FFFFFF;
+  --tint: #F3EFE6;
+  --tint-edge: #DED5C4;
+  --ink: #14201B;
+  --ink-mid: #46534B;
+  --ink-soft: #6E7A72;
+  --ember: #E4703A;
+  --ember-text: #B84C15;
+  --moss-text: #45583A;
+
+  --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+  --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: #4A5550; }
+body {
+  margin: 0;
+  background: #4A5550;
+  color: var(--ink);
+  font-family: var(--f-body);
+  padding: 24px 12px 48px;
+}
+
+/* The sheet -------------------------------------------------------- */
+.sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 22px;
+  background: var(--paper);
+  color: var(--ink);
+  /* Matches @page below exactly, so the on-screen sheet is a true proof:
+     11in tall minus 0.5in top and bottom leaves the 10in the printer gives
+     you. If content clears the white here, it clears one printed page. */
+  padding: 0.5in 0.55in;
+  font-size: 9.5pt;
+  line-height: 1.34;
+  box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Masthead --------------------------------------------------------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3in;
+  border-bottom: 2.5pt solid var(--ember);
+  padding-bottom: 6pt;
+}
+.brand { display: flex; align-items: flex-end; gap: 8pt; }
+.mark { width: 33pt; height: 38pt; flex: none; display: block; color: var(--ink); }
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 19pt;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.descriptor {
+  font-family: var(--f-data);
+  font-size: 6pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 4pt 0 0;
+}
+.whatitis {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0;
+  padding-top: 3pt;
+  max-width: 2.3in;
+  line-height: 1.7;
+}
+.whatitis b { color: var(--ember-text); font-weight: 400; display: block; }
+
+/* Sheet headline --------------------------------------------------- */
+.sheetnum {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+}
+h1.headline {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.09;
+  text-wrap: balance;
+  margin: 4pt 0 0;
+  color: var(--ink);
+}
+.standfirst {
+  font-size: 9.6pt;
+  line-height: 1.4;
+  color: var(--ink-mid);
+  margin: 5pt 0 0;
+  max-width: 6.5in;
+}
+
+h2.sec {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 12.5pt;
+  line-height: 1.12;
+  margin: 9pt 0 4pt;
+  color: var(--ember-text);
+}
+h3.sub {
+  font-family: var(--f-data);
+  font-size: 6.6pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 8pt 0 4pt;
+  font-weight: 400;
+}
+p { margin: 0 0 5pt; }
+
+/* Blocks ----------------------------------------------------------- */
+.block {
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 10pt 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin: 8pt 0 0;
+}
+.block.moss { border-left-color: var(--moss-text); background: var(--paper); }
+.block > :last-child { margin-bottom: 0; }
+.block-eyebrow {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 0 0 5pt;
+}
+
+/* Lists ------------------------------------------------------------ */
+ul.terms { margin: 0 0 5pt; padding-left: 12pt; list-style: none; }
+ul.terms li { position: relative; margin-bottom: 3pt; padding-left: 1pt; }
+ul.terms li::before {
+  content: "";
+  position: absolute;
+  left: -10pt;
+  top: 0.42em;
+  width: 4pt;
+  height: 4pt;
+  background: var(--moss-text);
+}
+ul.terms li:last-child { margin-bottom: 0; }
+ul.terms.no li::before { background: var(--ember-text); }
+
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 24pt;
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1pt;
+  width: 18pt;
+  height: 18pt;
+  background: var(--ember);
+  color: #FFF;
+  font-family: var(--f-data);
+  font-size: 9pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ol.steps > li:last-child { margin-bottom: 0; }
+ol.steps b { display: block; color: var(--ink); }
+ol.steps p { margin: 1pt 0 0; color: var(--ink-mid); font-size: 8.9pt; }
+
+/* Tables ----------------------------------------------------------- */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  margin: 0 0 5pt;
+}
+table.tbl th {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  font-weight: 400;
+  padding: 0 6pt 4pt 0;
+  border-bottom: 1.25pt solid var(--ink);
+  vertical-align: bottom;
+}
+table.tbl td {
+  padding: 3.5pt 6pt 3.5pt 0;
+  border-bottom: 0.75pt solid var(--tint-edge);
+  vertical-align: top;
+  line-height: 1.35;
+}
+table.tbl td:last-child, table.tbl th:last-child { padding-right: 0; }
+table.tbl .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.tbl tr.hi td { background: #FBE6DC; font-weight: 600; }
+table.tbl tr.dim td { color: var(--ink-soft); }
+
+/* Fill-in furniture ------------------------------------------------ */
+.rule {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-soft);
+  min-width: 1in;
+  height: 1.05em;
+  vertical-align: baseline;
+}
+.rule.w2 { min-width: 2in; }
+.rule.w3 { min-width: 3in; }
+.rule.fill { display: block; width: 100%; }
+
+.grid-form { display: flex; flex-wrap: wrap; gap: 7pt 12pt; margin: 0 0 6pt; }
+.field { flex: 1 1 2.2in; min-width: 1.6in; }
+.field.wide { flex: 1 1 100%; }
+.field.half { flex: 1 1 3.1in; }
+.field label {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8pt;
+}
+.field .line { border-bottom: 0.75pt solid var(--ink-mid); height: 2pt; }
+.field .hint { font-size: 7.4pt; color: var(--ink-soft); margin: 3pt 0 0; line-height: 1.35; }
+
+.tick { display: flex; align-items: flex-start; gap: 6pt; margin-bottom: 4pt; break-inside: avoid; }
+.tick .sq {
+  flex: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin-top: 1.5pt;
+  background: var(--paper);
+}
+.tick .lbl { flex: 1; line-height: 1.38; }
+.tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
+.ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+.ticks.two .tick { flex: 1 1 2.7in; }
+
+.yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
+.yn span {
+  display: inline-block;
+  width: 9pt; height: 9pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin: 0 3pt 0 8pt;
+  vertical-align: -1pt;
+}
+
+.sign { display: flex; gap: 16pt; margin-top: 10pt; }
+.sign .field { flex: 1 1 auto; }
+.sign .field.date { flex: 0 0 1.5in; }
+
+/* Callouts --------------------------------------------------------- */
+.warn {
+  border: 0.9pt solid var(--ember-text);
+  background: #FBE6DC;
+  padding: 8pt 10pt;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+.warn .block-eyebrow { color: var(--ember-text); }
+.warn > :last-child { margin-bottom: 0; }
+
+.note {
+  font-family: var(--f-data);
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-top: 0.75pt solid var(--tint-edge);
+  padding-top: 5pt;
+  margin: 7pt 0 0;
+}
+.note b { color: var(--ink-mid); font-weight: 400; }
+
+/* Footer ----------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding-top: 6pt;
+  border-top: 0.75pt solid var(--tint-edge);
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4pt 12pt;
+  font-family: var(--f-data);
+  font-size: 7.4pt;
+  letter-spacing: 0.05em;
+  color: var(--ink-mid);
+}
+.contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+.contact .pg { margin-left: auto; color: var(--ink-soft); }
+.disclaimer {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+  max-width: 6.6in;
+}
+
+/* Print ------------------------------------------------------------ */
+@media print {
+  html, body { background: #FFF; padding: 0; margin: 0; }
+  .sheet {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+  @page { size: letter; margin: 0.5in 0.55in; }
+  .screenonly { display: none !important; }
+}
+
+@media screen and (max-width: 8.9in) {
+  .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+  .top { flex-direction: column; gap: 10pt; }
+  .whatitis { text-align: left; max-width: none; }
+}
+
+/* ==================================================================
+   PAGINATION HARDENING — added 2026-08-21.
+
+   Each .sheet is designed to be exactly one printed page and is
+   measured to fit. This block is the safety net for when it is not:
+   if a page shrinks (a printer with a larger unprintable margin, or
+   browser headers/footers left switched on), content must break at a
+   clean boundary rather than mid-topic. Better an extra page than a
+   heading stranded at the bottom or a table cut in half.
+   ================================================================== */
+h1.headline, h2.sec, h3.sub, .sheetnum, .block-eyebrow {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+.block, .warn, .noticeform, .money, .totals, .grid-form, .ticks,
+.sigs, .catkey, .figures, .paperwork, footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+ol.clauses > li, ol.steps > li, ul.terms li, .tick, .field, .money .m {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.tbl { break-inside: auto; page-break-inside: auto; }
+table.tbl tr, table.tbl thead { break-inside: avoid; page-break-inside: avoid; }
+table.tbl thead { break-after: avoid-page; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+</style>
+<style>
+  /* Form-only additions. Everything else is the shared print register. */
+  .formflag { color: var(--ember-text) !important; }
+  table.tbl td.blank { height: 26pt; }
+  table.tbl.rows td { border-bottom: 0.75pt solid var(--ink-soft); }
+  .catkey {
+    font-family: var(--f-data);
+    font-size: 7.2pt;
+    line-height: 1.5;
+    color: var(--ink-mid);
+    background: var(--tint);
+    border: 0.75pt solid var(--tint-edge);
+    padding: 7pt 9pt;
+    margin: 0 0 8pt;
+  }
+  .catkey b { color: var(--ink); font-weight: 600; }
+  .totals { display: flex; gap: 10pt; margin: 8pt 0 0; }
+  .totals .t {
+    flex: 1;
+    border: 0.75pt solid var(--tint-edge);
+    border-top: 2pt solid var(--moss-text);
+    padding: 7pt 9pt 9pt;
+  }
+  .totals .t.q { border-top-color: var(--ember); }
+  .totals .t span {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 6.2pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 12pt;
+  }
+  .totals .t .line { border-bottom: 0.9pt solid var(--ink-mid); height: 2pt; }
+</style>
+
+<!-- ================================================================
+     FORM A — LANDOWNER ELIGIBILITY RECORD
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+          <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+          <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b class="formflag">Form A</b>Landowner<br>eligibility record</p>
+  </div>
+
+  <p class="sheetnum">Completed by the property owner · at the site walk</p>
+  <h1 class="headline">Before we start: who owns it, and who else is paying</h1>
+  <p class="standfirst">Colorado's wildfire mitigation tax credit has a few rules that decide it before any work happens. Five minutes here means the invoice we hand you at the end matches what your accountant needs. <strong>Nothing on this form is filed with the state — Sixfold does not send it anywhere.</strong></p>
+
+  <h2 class="sec">The property</h2>
+  <div class="grid-form">
+    <div class="field wide"><label>Property address</label><div class="line"></div></div>
+    <div class="field"><label>County</label><div class="line"></div></div>
+    <div class="field"><label>Parcel / schedule no. (optional)</label><div class="line"></div></div>
+    <div class="field"><label>Date of walk</label><div class="line"></div></div>
+  </div>
+
+  <h2 class="sec">The owner of record</h2>
+  <div class="grid-form">
+    <div class="field wide"><label>Name(s) exactly as they appear on the deed</label><div class="line"></div></div>
+    <div class="field half"><label>Contact phone</label><div class="line"></div></div>
+    <div class="field half"><label>Email</label><div class="line"></div></div>
+  </div>
+
+  <h3 class="sub">What interest do you hold in this land?</h3>
+  <div class="ticks two">
+    <div class="tick"><span class="sq"></span><span class="lbl">Fee interest — I own it outright</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Easement or right-of-way</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Recorded lease <small>Has to be properly recorded to count.</small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Owned by an LLC, partnership or S corporation <small>Ask your accountant first.</small></span></div>
+  </div>
+
+  <div class="block moss">
+    <p class="block-eyebrow">How is it held? If more than one of you owns it, only one may claim</p>
+    <div class="ticks two">
+      <div class="tick"><span class="sq"></span><span class="lbl">Solely, by one person</span></div>
+      <div class="tick"><span class="sq"></span><span class="lbl">Jointly, or as tenants in common</span></div>
+    </div>
+    <p style="margin-top:5pt">Where property is held by joint tenants or tenants in common, the credit is allowed to <strong>one individual of the ownership group</strong>. Two owners do not get two credits, and a joint return shares one cap.</p>
+    <div class="grid-form" style="margin:6pt 0 0">
+      <div class="field wide"><label>Which one of you intends to claim it?</label><div class="line"></div></div>
+    </div>
+  </div>
+
+  <h2 class="sec">Is anyone else paying toward this work?</h2>
+  <p>The question that most often changes the answer. <strong>Costs paid or reimbursed by a grant, an incentive, or a cost-share arrangement do not qualify</strong> — you can only claim what you actually pay out of pocket.</p>
+
+  <table class="tbl">
+    <tbody>
+      <tr>
+        <td>A government or nonprofit <strong>grant</strong> is covering part of this work</td>
+        <td class="num" style="width:1.5in"><span class="yn">Yes<span></span> No<span></span></span></td>
+      </tr>
+      <tr>
+        <td>A county or district <strong>cost-share programme</strong> is covering part of this work</td>
+        <td class="num"><span class="yn">Yes<span></span> No<span></span></span></td>
+      </tr>
+      <tr>
+        <td>An <strong>insurance payment</strong> is covering part of this work</td>
+        <td class="num"><span class="yn">Yes<span></span> No<span></span></span></td>
+      </tr>
+      <tr>
+        <td>I am <strong>splitting the cost with a neighbour</strong> or another landowner</td>
+        <td class="num"><span class="yn">Yes<span></span> No<span></span></span></td>
+      </tr>
+      <tr>
+        <td>Any part of the area to be worked is <strong>publicly owned land</strong> — which never qualifies</td>
+        <td class="num"><span class="yn">Yes<span></span> No<span></span></span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="grid-form">
+    <div class="field wide"><label>If yes to any of the above — which programme or arrangement, and roughly what share</label><div class="line"></div></div>
+  </div>
+
+  <div class="sign">
+    <div class="field"><label>Signature</label><div class="line"></div></div>
+    <div class="field date"><label>Date</label><div class="line"></div></div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>Monument, Colorado</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Form A</span>
+    </div>
+    <p class="disclaimer">Sixfold does not give tax advice, certify work, or prepare or file returns. This form helps us produce an invoice your accountant can use; whether you qualify is a question for them. Reference: C.R.S. 39-22-543; Colorado Department of Revenue, <em>Income Tax Topics: Wildfire Mitigation Measures</em>.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     FORM B — WORK RECORD AND COST BREAKDOWN
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 116" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b class="formflag">Form B</b>Work record and<br>cost breakdown</p>
+  </div>
+
+  <p class="sheetnum">Completed by Sixfold · issued with the invoice · the homeowner keeps this</p>
+  <h1 class="headline">What was done, to what standard, and what it cost</h1>
+  <p class="standfirst">Keep this with your invoice and your receipt. It sets out which lines on the bill are wildfire mitigation measures and which are not.</p>
+
+  <div class="grid-form">
+    <div class="field"><label>Job reference</label><div class="line"></div></div>
+    <div class="field"><label>Property address</label><div class="line"></div></div>
+    <div class="field"><label>Work started</label><div class="line"></div></div>
+    <div class="field"><label>Work completed</label><div class="line"></div></div>
+  </div>
+
+  <h2 class="sec">Qualifying wildfire mitigation measures</h2>
+  <p class="catkey">
+    <b>Category codes.</b>
+    <b>DS</b> defensible space around structures &nbsp;·&nbsp;
+    <b>FB</b> fuel breaks &nbsp;·&nbsp;
+    <b>TH</b> thinning of woody vegetation, primary purpose reducing risk to structures &nbsp;·&nbsp;
+    <b>ST</b> secondary treatment of woody fuels — lopping and scattering, piling, chipping, removal from site, prescribed burning
+  </p>
+
+  <table class="tbl rows">
+    <thead>
+      <tr>
+        <th style="width:0.55in">Cat.</th>
+        <th>Description of work and location on the property</th>
+        <th style="width:1.15in">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="blank"></td><td></td><td></td></tr>
+      <tr><td class="blank"></td><td></td><td></td></tr>
+      <tr><td class="blank"></td><td></td><td></td></tr>
+      <tr><td class="blank"></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">Other work on this invoice — not wildfire mitigation</h2>
+  <table class="tbl rows">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th style="width:1.15in">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="blank"></td><td></td></tr>
+      <tr><td class="blank"></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="t q"><span>Total qualifying measures</span><div class="line"></div></div>
+    <div class="t"><span>Total other work</span><div class="line"></div></div>
+    <div class="t"><span>Invoice total</span><div class="line"></div></div>
+  </div>
+
+  <div class="grid-form" style="margin-top:11pt">
+    <div class="field"><label>Date paid in full</label><div class="line"></div><p class="hint">The credit follows the year you <em>pay</em>.</p></div>
+    <div class="field"><label>Method of payment</label><div class="line"></div></div>
+    <div class="field"><label>Receipt number</label><div class="line"></div></div>
+  </div>
+
+  <div class="block">
+    <p class="block-eyebrow">Standard the crew worked to</p>
+    <p>The measures above were performed to meet or exceed the applicable wildfire mitigation standards of the <strong>Colorado State Forest Service</strong> and the <strong>Division of Fire Prevention and Control</strong> — the standard the credit refers to, published at <span class="num">csfs.colostate.edu/wildfire-mitigation/</span> and <span class="num">dfpc.colorado.gov</span>. <strong>This is a statement of the standard we worked to, not a certification</strong> — no third party has inspected this work, and Sixfold does not issue certifications.</p>
+  </div>
+
+  <div class="sign">
+    <div class="field"><label>Crew lead</label><div class="line"></div></div>
+    <div class="field"><label>Signature</label><div class="line"></div></div>
+    <div class="field date"><label>Date</label><div class="line"></div></div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Form B</span>
+    </div>
+    <p class="disclaimer">Not tax advice. Copies of receipts must be submitted with your Colorado return — keep the original invoice with this sheet.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     FORM C — HOMEOWNER'S CLAIM FILE CHECKLIST
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 116" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b class="formflag">Form C</b>Your claim file<br>checklist</p>
+  </div>
+
+  <p class="sheetnum">Yours to keep · give it to whoever prepares your return</p>
+  <h1 class="headline">What to hand your accountant, and when</h1>
+  <p class="standfirst">There is no application and no waiting list for Colorado's wildfire mitigation tax credit. It is claimed on your ordinary state income tax return, with receipts attached.</p>
+
+  <h2 class="sec">Put these four things in one folder</h2>
+  <div class="ticks">
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Your invoice from Sixfold</strong><small>Itemised, with the qualifying measures totalled separately.</small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Your receipt or proof of payment</strong><small>Copies of receipts documenting actual out-of-pocket expense have to be submitted with the return. This is the part people lose.</small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Form B — the work record</strong><small>What was done, in which category, and to what standard.</small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Your before-and-after photographs</strong><small>Not required for the tax credit. Required in practice by your insurer — see the bottom of this sheet.</small></span></div>
+  </div>
+
+  <h2 class="sec">Fill this in while it is fresh</h2>
+  <div class="grid-form">
+    <div class="field"><label>Total paid to Sixfold</label><div class="line"></div></div>
+    <div class="field"><label>Of which qualifying measures</label><div class="line"></div></div>
+    <div class="field"><label>Date paid in full</label><div class="line"></div></div>
+    <div class="field"><label>Tax year that falls in</label><div class="line"></div></div>
+    <div class="field wide"><label>Any grant, cost-share, insurance payment or split cost that covered part of this bill — and how much</label><div class="line"></div><p class="hint">Costs paid or reimbursed by a grant or incentive do not qualify. Your accountant needs to know this figure.</p></div>
+  </div>
+
+  <h2 class="sec">The two forms it is claimed on</h2>
+  <table class="tbl">
+    <tbody>
+      <tr><td class="num" style="width:1.35in"><strong>DR 0104</strong></td><td>Colorado Individual Income Tax Return — your return</td></tr>
+      <tr><td class="num"><strong>DR 0104CR</strong></td><td>Individual Credit Schedule — the credit is claimed here, submitted with your DR 0104</td></tr>
+    </tbody>
+  </table>
+  <p>Copies of your receipts go in with the paper return, or uploaded using the <strong>E-Filer Attachment</strong> function in Revenue Online. Both forms are at <span class="num">tax.colorado.gov</span>.</p>
+
+  <div class="warn">
+    <p class="block-eyebrow">Two things worth knowing before you assume a number</p>
+    <ul class="terms no" style="margin-bottom:0">
+      <li><strong>Through tax year 2026 the credit cannot exceed what you owe.</strong> If your Colorado tax bill is $600 and the credit is $1,000, it is worth $600 to you. The remainder is not refunded and cannot be carried forward.</li>
+      <li><strong>For work paid for in 2027 that changes.</strong> The cap doubles to $2,000 and the excess is refunded — paid out even if it is more than you owe. Which year you pay in matters.</li>
+    </ul>
+  </div>
+
+  <div class="block moss">
+    <p class="block-eyebrow">While the folder is open — your insurer</p>
+    <p>Since <strong>1 July 2026</strong>, a Colorado insurer that uses a wildfire risk score to price or underwrite your policy has to tell you that score in writing every year, tell you what mitigation discounts are available, count documented mitigation in how it scores and prices the property, and let you appeal the score. The same photographs and invoice are the documentation for that. What the discount is worth is a question for your carrier &mdash; the law requires one but does not set a rate.</p>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>Monument, Colorado</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Form C</span>
+    </div>
+    <p class="disclaimer">This sheet describes published Colorado programme terms as of August 2026. <strong>It is not tax advice</strong> — Sixfold does not prepare or file returns and cannot tell you what you will receive. Confirm your own position with your accountant, and your policy with your carrier. Reference: C.R.S. 39-22-543 as amended by HB26-1289; Colorado Department of Revenue, <em>Income Tax Topics: Wildfire Mitigation Measures</em>; Colorado HB25-1182.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     FORM D — PHOTOGRAPH LOG
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 116" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b class="formflag">Form D</b>Photograph log<br>before and after</p>
+  </div>
+
+  <p class="sheetnum">Completed by the crew lead · copy to the homeowner with the invoice</p>
+  <h1 class="headline">Before and after, from the same spot</h1>
+  <p class="standfirst">Photographs taken from a fixed position, before and after, are what makes mitigation documentable to an insurer. Stand in the same place both times &mdash; a pair shot from two different angles proves nothing to anybody.</p>
+
+  <div class="grid-form">
+    <div class="field"><label>Job reference</label><div class="line"></div></div>
+    <div class="field"><label>Property address</label><div class="line"></div></div>
+    <div class="field"><label>Crew lead</label><div class="line"></div></div>
+  </div>
+
+  <table class="tbl rows">
+    <thead>
+      <tr>
+        <th style="width:0.45in">Pos.</th>
+        <th>Where you stood, and what you framed</th>
+        <th style="width:0.85in">Before</th>
+        <th style="width:0.85in">After</th>
+        <th style="width:1.35in">File names</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="blank num">1</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="blank num">2</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="blank num">3</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="blank num">4</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="blank num">5</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="blank num">6</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td class="blank num">7</td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">Positions to cover on every job</h2>
+  <div class="ticks two">
+    <div class="tick"><span class="sq"></span><span class="lbl">Each elevation of the house, shot from the property line inward</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">The first five feet around the structure, looking down</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Any fuel break, along its length</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Slash piles built, or the ground where chip was spread</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Access route and driveway clearance</span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl">Anything left standing that a homeowner might later think we missed</span></div>
+  </div>
+
+  <div class="block">
+    <p class="block-eyebrow">Two rules that make the set usable</p>
+    <ul class="terms" style="margin-bottom:0">
+      <li><strong>Same position, same framing, both visits.</strong> Note a landmark in the description so the after shot can be lined up months later.</li>
+      <li><strong>Leave the camera's date stamp on.</strong> Undated photographs are worth much less in an insurance conversation, and the dates are the only thing tying the set to the invoice.</li>
+    </ul>
+  </div>
+
+  <div class="block moss">
+    <p class="block-eyebrow">Before these go anywhere but the customer's file</p>
+    <p><strong>Photographs of a customer's property are not marketing material by default.</strong> Written permission from the owner is needed before any of these appear in print, on a profile, or in a portfolio — ask at the walkthrough, not afterwards.</p>
+  </div>
+
+  <div class="sign">
+    <div class="field"><label>Set complete — signature</label><div class="line"></div></div>
+    <div class="field date"><label>Date</label><div class="line"></div></div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Form D</span>
+    </div>
+    <p class="disclaimer">Photographs are not required to claim the Colorado wildfire mitigation tax credit — receipts are. They are documentation for your insurer under HB25-1182, in effect since 1 July 2026.</p>
+  </footer>
+
+</div>

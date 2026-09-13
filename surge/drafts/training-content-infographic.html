@@ -1,0 +1,419 @@
+<title>Surge — Training Board</title>
+
+<style>
+  :root {
+    color-scheme: light dark;
+
+    --board:      #F1F4F1;
+    --board-lip:  #C9CFCB;
+    --trim:       #A8B0AB;
+    --ghost:      #DEE4E0;
+    --ink:        #2B2E2C;
+    --ink-soft:   #636965;
+    --blue:       #1E5FA8;   /* the move — what to actually do */
+    --red:        #C0392C;   /* the common mistake */
+    --green:      #3C7A4B;   /* your material still needed here */
+    --slip-bg:    #FBFAF6;
+    --slip-edge:  #DCD8CC;
+    --tape:       rgba(214, 206, 176, .55);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --board:#21252B; --board-lip:#14171B; --trim:#3A4048; --ghost:#2A2F36;
+      --ink:#E7ECE8; --ink-soft:#9AA3A0; --blue:#62B4EA; --red:#F0705F; --green:#6FCE8B;
+      --slip-bg:#2B3038; --slip-edge:#3E454E; --tape:rgba(120,128,140,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --board:#21252B; --board-lip:#14171B; --trim:#3A4048; --ghost:#2A2F36;
+    --ink:#E7ECE8; --ink-soft:#9AA3A0; --blue:#62B4EA; --red:#F0705F; --green:#6FCE8B;
+    --slip-bg:#2B3038; --slip-edge:#3E454E; --tape:rgba(120,128,140,.35);
+  }
+  :root[data-theme="light"] {
+    --board:#F1F4F1; --board-lip:#C9CFCB; --trim:#A8B0AB; --ghost:#DEE4E0;
+    --ink:#2B2E2C; --ink-soft:#636965; --blue:#1E5FA8; --red:#C0392C; --green:#3C7A4B;
+    --slip-bg:#FBFAF6; --slip-edge:#DCD8CC; --tape:rgba(214,206,176,.55);
+  }
+
+  :root {
+    --marker: "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive;
+    --slip: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+  }
+
+  body {
+    margin: 0;
+    padding: clamp(12px, 3vw, 40px);
+    background: var(--board-lip);
+    font-family: var(--marker);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .board {
+    position: relative;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 52px) clamp(18px, 4vw, 56px) 0;
+    border: 6px solid var(--trim);
+    border-radius: 4px;
+    background:
+      radial-gradient(130% 70% at 18% -10%, rgba(255,255,255,.55), transparent 62%),
+      radial-gradient(90% 60% at 88% 110%, rgba(255,255,255,.22), transparent 60%),
+      var(--board);
+    box-shadow: 0 18px 44px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.25);
+    overflow: hidden;
+  }
+  @media (prefers-color-scheme: dark) {
+    .board {
+      background:
+        radial-gradient(130% 70% at 18% -10%, rgba(255,255,255,.07), transparent 62%),
+        radial-gradient(90% 60% at 88% 110%, rgba(255,255,255,.04), transparent 60%),
+        var(--board);
+    }
+  }
+
+  .ghost { position: absolute; background: var(--ghost); filter: blur(9px); opacity: .7; pointer-events: none; }
+  .g1 { top: 9%;  right: -6%; width: 40%; height: 44px; transform: rotate(1.9deg); }
+  .g2 { top: 52%; left: -8%;  width: 36%; height: 58px; transform: rotate(-1.4deg); }
+  .g3 { bottom: 22%; right: 18%; width: 28%; height: 32px; transform: rotate(1.2deg); }
+
+  .stack { position: relative; display: grid; gap: clamp(30px, 4vw, 46px); }
+
+  .eyebrow {
+    font-family: var(--slip);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(29px, 5vw, 52px);
+    line-height: 1.07;
+    font-weight: 700;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  h1 .b { color: var(--blue); }
+  .standfirst {
+    margin: 16px 0 0;
+    font-size: clamp(16px, 1.9vw, 20px);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+
+  .rule { display: block; width: 100%; height: 12px; color: var(--ink); opacity: .55; }
+
+  /* ---- the spine: when each lesson actually bites ---- */
+  .spine {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: clamp(20px, 3vw, 34px);
+  }
+  .station { display: grid; gap: 10px; align-content: start; }
+  .when {
+    font-family: var(--slip);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+  .station h2 { margin: 0; font-size: clamp(19px, 2.3vw, 23px); line-height: 1.2; font-weight: 700; }
+  .station p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+
+  h3 {
+    margin: 0 0 6px;
+    font-size: clamp(20px, 2.5vw, 26px);
+    font-weight: 700;
+    line-height: 1.18;
+  }
+  .kicker { margin: 0 0 20px; font-size: 15.5px; line-height: 1.55; color: var(--ink-soft); max-width: 64ch; }
+
+  .wrong { color: var(--red); }
+  .right { color: var(--blue); }
+
+  /* ---- fill-in slot, drawn as a real blank on the board ---- */
+  .slot {
+    display: grid;
+    gap: 6px;
+    padding: 16px 18px;
+    border: 2px dashed var(--green);
+    border-radius: 6px;
+    max-width: 62ch;
+  }
+  .slot .tag {
+    font-family: var(--slip);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+  .slot p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+
+  figure { margin: 0; }
+  .scroller { overflow-x: auto; padding-bottom: 4px; }
+  svg.dg { display: block; width: 100%; min-width: 620px; height: auto; color: var(--ink); }
+
+  .dg .box { fill: none; stroke: currentColor; stroke-width: 2.1; }
+  .dg .box-hot { stroke: var(--blue); stroke-width: 2.6; }
+  .dg .box-bad { stroke: var(--red); stroke-width: 2.1; }
+  .dg .line { stroke: currentColor; stroke-width: 2.1; fill: none; stroke-linecap: round; }
+  .dg .line-hot { stroke: var(--blue); stroke-width: 2.6; }
+  .dg .line-bad { stroke: var(--red); stroke-width: 2.1; stroke-dasharray: 7 6; fill: none; stroke-linecap: round; }
+  .dg text { font-family: var(--marker); fill: currentColor; }
+  .dg .t { font-size: 14.5px; font-weight: 700; }
+  .dg .s { font-size: 12.5px; }
+  .dg .m { font-size: 11px; fill: var(--ink-soft); font-family: var(--slip); letter-spacing: .05em; }
+  .dg .strike { stroke: var(--red); stroke-width: 2.4; stroke-linecap: round; }
+
+  figcaption { margin-top: 14px; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); max-width: 70ch; }
+
+  .pull { position: relative; padding: clamp(20px, 3vw, 30px) clamp(20px, 3vw, 32px); }
+  .pull .frame { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--blue); }
+  .pull p { position: relative; margin: 0; font-size: clamp(17px, 2.1vw, 21px); line-height: 1.5; max-width: 52ch; }
+
+  .slip {
+    position: relative;
+    margin: 8px auto 0;
+    max-width: 720px;
+    padding: 24px 26px 22px;
+    background: var(--slip-bg);
+    border: 1px solid var(--slip-edge);
+    box-shadow: 0 6px 18px rgba(0,0,0,.14);
+    transform: rotate(.6deg);
+    font-family: var(--slip);
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .slip::before, .slip::after {
+    content: ""; position: absolute; top: -13px; width: 92px; height: 26px; background: var(--tape);
+  }
+  .slip::before { left: 30px; transform: rotate(2.4deg); }
+  .slip::after { right: 30px; transform: rotate(-3deg); }
+  .slip h4 { margin: 0 0 12px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); }
+  .slip p { margin: 0 0 12px; }
+  .slip p:last-child { margin-bottom: 0; }
+  .slip b { color: var(--ink); font-weight: 700; }
+
+  .tray {
+    position: relative;
+    margin: clamp(30px, 4vw, 44px) calc(clamp(18px, 4vw, 56px) * -1) 0;
+    padding: 18px clamp(18px, 4vw, 56px) 20px;
+    background: linear-gradient(var(--board-lip), color-mix(in srgb, var(--board-lip) 82%, #000));
+    border-top: 2px solid var(--trim);
+    display: flex; flex-wrap: wrap; gap: 12px 30px; align-items: center;
+  }
+  .pen { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink); }
+  .pen i {
+    display: block; width: 46px; height: 11px; border-radius: 2px 5px 5px 2px;
+    background: linear-gradient(90deg, var(--pc) 0 72%, color-mix(in srgb, var(--pc) 55%, #ffffff) 72% 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,.3); flex: none;
+  }
+
+  @media (max-width: 600px) {
+    .board { padding-left: 18px; padding-right: 18px; }
+    .slip { transform: none; }
+    .pull { padding-left: 18px; padding-right: 18px; }
+  }
+</style>
+
+<div class="board">
+  <div class="ghost g1"></div>
+  <div class="ghost g2"></div>
+  <div class="ghost g3"></div>
+
+  <div class="stack">
+
+    <header>
+      <p class="eyebrow">Surge &middot; training board &middot; field sales</p>
+      <h1>The manual gives you the words. The door gives you the <span class="b">timing</span>.</h1>
+      <p class="standfirst">Three things we teach, and roughly when each one starts to matter. None of it is a new idea &mdash; the difference is how early somebody hears it and how specifically it gets debriefed.</p>
+    </header>
+
+    <svg class="rule" viewBox="0 0 1000 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M2 7 C 170 2, 310 11, 480 5 S 770 10, 998 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+
+    <section class="spine" aria-label="When each lesson starts to matter">
+      <div class="station">
+        <span class="when">Week one</span>
+        <h2>Talking too much</h2>
+        <p>The pitch gets memorised, so the conversation becomes a delivery problem. The door opens and the rep presents at somebody who hasn&rsquo;t said anything yet.</p>
+      </div>
+      <div class="station">
+        <span class="when">Every week after</span>
+        <h2>&ldquo;I need to think about it&rdquo;</h2>
+        <p>Handled worst of any objection, because it doesn&rsquo;t sound like one. It sounds reasonable, so it gets accepted and the rep leaves.</p>
+      </div>
+      <div class="station">
+        <span class="when">Month two</span>
+        <h2>Rejection tolerance</h2>
+        <p>The point where people quit. The manual covers rejection and the coverage is fine, but reading it does almost nothing on an actual doorstep.</p>
+      </div>
+    </section>
+
+    <svg class="rule" viewBox="0 0 1000 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M2 6 C 220 11, 350 3, 530 8 S 810 3, 998 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+
+    <section>
+      <h3>Week one &mdash; ask one question, then stop</h3>
+      <p class="kicker">The fix is small and it feels wrong the first time. What makes it hard isn&rsquo;t the technique &mdash; it&rsquo;s that the silence after a question feels like losing control, and the instinct is to fill it. Learning to leave it alone is most of the job.</p>
+      <div class="slot">
+        <span class="tag">Needs your material</span>
+        <p>The actual opening question you teach goes here. It should be answerable in a sentence without committing the person to anything &mdash; but the wording is yours, not mine.</p>
+      </div>
+    </section>
+
+    <section>
+      <h3>The objection that isn&rsquo;t one</h3>
+      <p class="kicker">&ldquo;I need to think about it&rdquo; is a surface signal with three different causes underneath, and each one needs a different response. Which is why trying to overcome it directly is the wrong move.</p>
+      <figure>
+        <div class="scroller">
+          <svg class="dg" viewBox="0 0 720 300" role="img"
+               aria-label="Diagram: the objection I need to think about it has three possible causes — no money, cannot decide alone, or something did not land. Pushing straight to a close is struck out; asking what they want to think about identifies the cause, which then determines the response.">
+            <defs>
+              <filter id="tr1" x="-6%" y="-6%" width="112%" height="112%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="2" seed="11" result="n"/>
+                <feDisplacementMap in="SourceGraphic" in2="n" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+              <marker id="tra" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+              <marker id="trb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--blue)"/>
+              </marker>
+              <marker id="trc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--red)"/>
+              </marker>
+            </defs>
+
+            <g filter="url(#tr1)">
+              <rect class="box" x="12" y="112" width="176" height="62" rx="7"/>
+
+              <path class="line-bad" d="M196 128 C 260 96, 300 66, 352 60" marker-end="url(#trc)"/>
+              <rect class="box box-bad" x="360" y="34" width="150" height="48" rx="7"/>
+              <line class="strike" x1="368" y1="76" x2="502" y2="40"/>
+
+              <path class="line line-hot" d="M196 158 C 250 176, 280 186, 330 186" marker-end="url(#trb)"/>
+
+              <rect class="box box-hot" x="338" y="160" width="164" height="52" rx="7"/>
+
+              <path class="line" d="M510 176 C 552 168, 560 138, 596 132" marker-end="url(#tra)"/>
+              <path class="line" d="M510 186 C 556 186, 566 186, 596 186" marker-end="url(#tra)"/>
+              <path class="line" d="M510 198 C 552 206, 560 234, 596 240" marker-end="url(#tra)"/>
+
+              <rect class="box" x="600" y="110" width="108" height="44" rx="6"/>
+              <rect class="box" x="600" y="164" width="108" height="44" rx="6"/>
+              <rect class="box" x="600" y="218" width="108" height="44" rx="6"/>
+            </g>
+
+            <text class="t" x="30" y="138">&ldquo;I need to</text>
+            <text class="t" x="30" y="160">think about it&rdquo;</text>
+
+            <text class="t" x="378" y="55">Close harder</text>
+            <text class="m" x="378" y="72" style="fill:var(--red)">DOESN&rsquo;T WORK</text>
+            <text class="m" x="252" y="92" text-anchor="middle" style="fill:var(--red)">OVERCOME IT</text>
+
+            <text class="t" x="356" y="185" style="fill:var(--blue)">Ask what they want</text>
+            <text class="t" x="356" y="204" style="fill:var(--blue)">to think about</text>
+            <text class="m" x="262" y="200" text-anchor="middle" style="fill:var(--blue)">NO PRESSURE</text>
+
+            <text class="s" x="614" y="130">No money</text>
+            <text class="s" x="614" y="184">Can&rsquo;t decide</text>
+            <text class="s" x="614" y="200">alone</text>
+            <text class="s" x="614" y="238">Something</text>
+            <text class="s" x="614" y="254">didn&rsquo;t land</text>
+
+            <text class="m" x="600" y="288">THREE CAUSES, THREE DIFFERENT RESPONSES</text>
+          </svg>
+        </div>
+        <figcaption>The reps who struggle are trying to save the sale; the ones who do it well are trying to find out whether there is one. You can&rsquo;t choose a response until you know which of the three you&rsquo;re looking at, which is the entire reason the direct close fails here.</figcaption>
+      </figure>
+      <div class="slot" style="margin-top: 22px">
+        <span class="tag">Needs your material</span>
+        <p>Your actual phrasing for asking what they want to think about. The wording matters more here than anywhere else on this board.</p>
+      </div>
+    </section>
+
+    <section>
+      <h3>Month two &mdash; what the manual can&rsquo;t do</h3>
+      <p class="kicker">The manual has a section on rejection and it says what you&rsquo;d expect: don&rsquo;t take it personally, it isn&rsquo;t about you, go to the next door. That teaches the concept. It doesn&rsquo;t build the tolerance, and only one of those gets somebody through their second month.</p>
+      <figure>
+        <div class="scroller">
+          <svg class="dg" viewBox="0 0 720 236" role="img"
+               aria-label="Diagram: a repeating loop — go out with an experienced rep, hear no repeatedly, then debrief three of those noes on what was said, what the rep did, and what they would change, producing a short list of adjustments that feeds back into the next round.">
+            <defs>
+              <filter id="tr2" x="-6%" y="-8%" width="112%" height="116%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="2" seed="31" result="n2"/>
+                <feDisplacementMap in="SourceGraphic" in2="n2" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+              <marker id="tr2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+              <marker id="tr2b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--blue)"/>
+              </marker>
+            </defs>
+
+            <g filter="url(#tr2)">
+              <rect class="box" x="10" y="58" width="148" height="58" rx="7"/>
+              <rect class="box box-bad" x="196" y="58" width="128" height="58" rx="7"/>
+              <rect class="box box-hot" x="362" y="46" width="176" height="82" rx="7"/>
+              <rect class="box" x="576" y="58" width="132" height="58" rx="7"/>
+
+              <line class="line" x1="162" y1="87" x2="188" y2="87" marker-end="url(#tr2a)"/>
+              <line class="line" x1="328" y1="87" x2="354" y2="87" marker-end="url(#tr2b)"/>
+              <line class="line" x1="542" y1="87" x2="568" y2="87" marker-end="url(#tr2a)"/>
+
+              <path class="line" d="M642 120 C 642 186, 300 200, 84 190 C 60 188, 58 140, 62 122" marker-end="url(#tr2a)"/>
+            </g>
+
+            <text class="t" x="26" y="82">Go out with</text>
+            <text class="t" x="26" y="102">someone senior</text>
+
+            <text class="t" x="212" y="82" style="fill:var(--red)">Hear no,</text>
+            <text class="t" x="212" y="102" style="fill:var(--red)">repeatedly</text>
+
+            <text class="t" x="380" y="74" style="fill:var(--blue)">Debrief three of them</text>
+            <text class="s" x="380" y="94" style="fill:var(--blue)">what was said &middot; what you did</text>
+            <text class="s" x="380" y="112" style="fill:var(--blue)">what you&rsquo;d change</text>
+
+            <text class="t" x="592" y="82">A short list</text>
+            <text class="t" x="592" y="102">of adjustments</text>
+
+            <text class="m" x="360" y="212" text-anchor="middle">NEXT TIME OUT, WITH SOMETHING SPECIFIC TO TRY</text>
+          </svg>
+        </div>
+        <figcaption>Not a session about attitude. The debrief turns an undifferentiated wall of rejection into three or four things a person can actually change &mdash; which is what makes the next round survivable rather than just shorter.</figcaption>
+      </figure>
+    </section>
+
+    <section class="pull">
+      <svg class="frame" viewBox="0 0 1000 190" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path d="M6 9 C 270 3, 620 15, 994 7 C 998 62, 996 128, 993 182 C 700 176, 300 188, 8 180 C 4 120, 3 62, 6 9 Z"
+              fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+      </svg>
+      <p>None of this is a method nobody else has. It&rsquo;s ordinary craft, taught early and debriefed specifically &mdash; and that turns out to be the part most teams skip.</p>
+    </section>
+
+    <div class="slip">
+      <h4>Board notes</h4>
+      <p><b>Two blanks are real.</b> The green dashed boxes are where your own wording goes &mdash; the opening question and the phrasing for &ldquo;what do you want to think about.&rdquo; Both were left empty on purpose rather than filled with a plausible guess.</p>
+      <p><b>Craft claims are yours, written as yours.</b> That talking too much is the top week-one error, and that &ldquo;I need to think about it&rdquo; resolves to money, authority, or an unaddressed concern. Standard in sales training and defensible, but confirm they match what you actually teach before this goes anywhere.</p>
+      <p><b>Not on this board:</b> any statistic, any client name, any claim about pay or advancement, and the invented &ldquo;two pages&rdquo; detail from the draft. No figures were available, so none were estimated.</p>
+    </div>
+
+  </div>
+
+  <div class="tray" aria-label="Marker key">
+    <span class="pen" style="--pc: var(--ink)"><i></i>the teaching</span>
+    <span class="pen" style="--pc: var(--blue)"><i></i>the move that works</span>
+    <span class="pen" style="--pc: var(--red)"><i></i>the common mistake</span>
+    <span class="pen" style="--pc: var(--green)"><i></i>your material still needed</span>
+  </div>
+</div>

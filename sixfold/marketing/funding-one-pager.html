@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wildfire Funding Sheet</title>
+<style>
+  /* ------------------------------------------------------------------
+     Print register. Committed single visual world: ink on paper.
+     No dark theme by design — this sheet exists to be printed, and a
+     dark ground is unprintable. Every colour is painted explicitly so
+     the page holds on any host background.
+     ------------------------------------------------------------------ */
+  :root {
+    --paper: #FFFFFF;
+    --tint: #F3EFE6;          /* Bone, lightened for block fills */
+    --tint-edge: #DED5C4;
+    --ink: #14201B;           /* Pine Black, a touch lifted for print */
+    --ink-mid: #46534B;
+    --ink-soft: #6E7A72;
+    --ember: #E4703A;         /* display figures and rules only */
+    --ember-text: #B84C15;    /* small text — passes contrast on white */
+    --moss-text: #45583A;
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: #4A5550; }
+
+  body {
+    margin: 0;
+    background: #4A5550;
+    color: var(--ink);
+    font-family: var(--f-body);
+    padding: 24px 12px 48px;
+  }
+
+  /* The sheet ------------------------------------------------------- */
+  .sheet {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.5in 0.55in 0.45in;
+    font-size: 10.4pt;
+    line-height: 1.46;
+    box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Masthead ------------------------------------------------------- */
+  .top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.3in;
+    border-bottom: 2.5pt solid var(--ember);
+    padding-bottom: 9pt;
+  }
+  .brand { display: flex; align-items: flex-end; gap: 9pt; }
+  .mark { width: 42pt; height: 42pt; flex: none; display: block; }
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: 25pt;
+    line-height: 0.9;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--ink);
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 6.2pt;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--moss-text);
+    margin: 4pt 0 0;
+  }
+  .whatitis {
+    font-family: var(--f-data);
+    font-size: 6.6pt;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: right;
+    margin: 0;
+    padding-top: 4pt;
+    max-width: 2.1in;
+    line-height: 1.7;
+  }
+
+  /* Headline ------------------------------------------------------- */
+  .headline {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 21pt;
+    line-height: 1.1;
+    text-wrap: balance;
+    margin: 15pt 0 0;
+    color: var(--ink);
+  }
+  .standfirst {
+    font-size: 10.8pt;
+    line-height: 1.45;
+    color: var(--ink-mid);
+    margin: 7pt 0 0;
+    max-width: 6.2in;
+  }
+
+  /* Money blocks --------------------------------------------------- */
+  .blocks { display: flex; flex-direction: column; gap: 11pt; margin-top: 15pt; }
+
+  .block {
+    background: var(--tint);
+    border: 0.75pt solid var(--tint-edge);
+    border-left: 3pt solid var(--ember);
+    padding: 11pt 13pt 12pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .block-eyebrow {
+    font-family: var(--f-data);
+    font-size: 6.4pt;
+    letter-spacing: 0.19em;
+    text-transform: uppercase;
+    color: var(--moss-text);
+    margin: 0 0 5pt;
+  }
+  .block h2 {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 15.5pt;
+    line-height: 1.12;
+    margin: 0 0 6pt;
+    color: var(--ember-text);
+    text-wrap: balance;
+  }
+  .block p { margin: 0 0 6pt; }
+  .block p:last-child { margin-bottom: 0; }
+
+  .figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7pt;
+    margin: 9pt 0 8pt;
+  }
+  .fig {
+    flex: 1 1 1.9in;
+    background: var(--paper);
+    border: 0.75pt solid var(--tint-edge);
+    padding: 8pt 9pt 9pt;
+  }
+  .fig .yr {
+    font-family: var(--f-data);
+    font-size: 6.4pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 2pt;
+  }
+  .fig .amt {
+    font-family: var(--f-display);
+    font-size: 27pt;
+    line-height: 0.95;
+    color: var(--ember);
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .fig .cond {
+    font-size: 8.6pt;
+    line-height: 1.35;
+    color: var(--ink-mid);
+    display: block;
+    margin-top: 4pt;
+  }
+  .fig .cond b { color: var(--ink); }
+
+  ul.terms {
+    margin: 0 0 7pt;
+    padding-left: 12pt;
+    list-style: none;
+  }
+  ul.terms li {
+    position: relative;
+    margin-bottom: 4pt;
+    padding-left: 1pt;
+  }
+  ul.terms li::before {
+    content: "";
+    position: absolute;
+    left: -10pt;
+    top: 0.42em;
+    width: 4pt;
+    height: 4pt;
+    background: var(--moss-text);
+  }
+  ul.terms li:last-child { margin-bottom: 0; }
+
+  .source {
+    font-family: var(--f-data);
+    font-size: 7.1pt;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    border-top: 0.75pt solid var(--tint-edge);
+    padding-top: 6pt;
+    margin: 9pt 0 0;
+  }
+  .source b { color: var(--ink-mid); font-weight: 400; }
+
+  /* Paperwork block ------------------------------------------------ */
+  .paperwork {
+    border: 0.75pt solid var(--tint-edge);
+    border-left: 3pt solid var(--moss-text);
+    padding: 11pt 13pt 12pt;
+    margin-top: 11pt;
+    background: var(--paper);
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .paperwork h2 {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 14pt;
+    line-height: 1.14;
+    margin: 0 0 6pt;
+    color: var(--moss-text);
+  }
+  .needs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9pt;
+    margin: 8pt 0 9pt;
+  }
+  .need {
+    flex: 1 1 2.2in;
+    border-top: 1.5pt solid var(--tint-edge);
+    padding-top: 5pt;
+  }
+  .need .for {
+    font-family: var(--f-data);
+    font-size: 6.4pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 3pt;
+  }
+  .need p { margin: 0; font-size: 9.4pt; line-height: 1.4; }
+  .weprovide {
+    background: var(--tint);
+    border: 0.75pt solid var(--tint-edge);
+    padding: 8pt 10pt;
+    margin: 0;
+    font-size: 9.8pt;
+    line-height: 1.44;
+  }
+
+  /* Footer --------------------------------------------------------- */
+  footer {
+    margin-top: auto;
+    padding-top: 12pt;
+    border-top: 0.75pt solid var(--tint-edge);
+  }
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4pt 12pt;
+    font-family: var(--f-data);
+    font-size: 7.8pt;
+    letter-spacing: 0.05em;
+    color: var(--ink-mid);
+  }
+  .contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+  .slot {
+    background: #FBE6DC;
+    border: 0.75pt dashed var(--ember-text);
+    color: var(--ember-text);
+    padding: 1pt 4pt;
+  }
+  .disclaimer {
+    font-size: 7.4pt;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 7pt 0 0;
+    max-width: 6.4in;
+  }
+
+  /* Proof annotations — screen only, never printed ----------------- */
+  .proof {
+    width: 8.5in;
+    margin: 14px auto 0;
+    background: #22302A;
+    border: 1px solid #3D4F45;
+    border-left: 3px solid var(--ember);
+    color: #DCE3D9;
+    font-family: var(--f-data);
+    font-size: 11px;
+    line-height: 1.62;
+    padding: 13px 15px;
+  }
+  .proof h3 {
+    font-size: 9.5px;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 7px;
+    font-weight: 400;
+  }
+  .proof ul { margin: 0; padding-left: 15px; }
+  .proof li { margin-bottom: 4px; }
+  .proof li:last-child { margin-bottom: 0; }
+  .proof b { color: #FFF; font-weight: 500; }
+
+  @media print {
+    html, body { background: #FFF; padding: 0; margin: 0; }
+    .sheet { width: auto; min-height: 0; box-shadow: none; margin: 0; }
+    .proof { display: none; }
+    @page { size: letter; margin: 0.5in 0.55in; }
+    .sheet { padding: 0; }
+  }
+
+  @media (max-width: 8.9in) {
+    .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+    .proof { width: 100%; }
+    .top { flex-direction: column; gap: 10pt; }
+    .whatitis { text-align: left; max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Sixfold Ridge mark">
+        <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+        <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+        <rect x="4" y="86" width="92" height="5" fill="#8AA07A"/>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis">Who pays for<br>wildfire mitigation<br>in Colorado</p>
+  </div>
+
+  <h1 class="headline">The rules on paying for wildfire mitigation changed this year.</h1>
+  <p class="standfirst">Two of the changes are statewide. Neither one needs an application or a waiting list, and most people on this street haven't been told about either.</p>
+
+  <div class="blocks">
+
+    <section class="block">
+      <p class="block-eyebrow">Change one · Colorado income tax credit</p>
+      <h2>The state covers the cost of the work, up to a cap</h2>
+      <p>Colorado's wildfire mitigation tax credit reimburses <strong>100% of what you spend</strong> on qualifying vegetation work, up to the cap for that year. There is no application and no waiting list — you claim it on your state income tax return.</p>
+
+      <div class="figures">
+        <div class="fig">
+          <span class="yr">Tax year 2026</span>
+          <span class="amt">$1,000</span>
+          <span class="cond">Up to <b>$1,000</b> back, at 100% of what the work costs.</span>
+        </div>
+        <div class="fig">
+          <span class="yr">Tax year 2027</span>
+          <span class="amt">$2,000</span>
+          <span class="cond">Cap doubles, and the credit becomes <b>refundable</b> — you can receive it even if you owe no state tax.</span>
+        </div>
+      </div>
+
+      <ul class="terms">
+        <li><strong>Thinning woody vegetation qualifies explicitly.</strong> That is the core of this work.</li>
+        <li>Available through <strong>tax year 2030</strong>.</li>
+        <li>Income limits apply. For tax year 2027 the limit rises to <strong>$300,000</strong> AGI.</li>
+        <li>Covers vegetation work — <strong>not</strong> structural work like roofing, vents or siding.</li>
+      </ul>
+
+      <p class="source"><b>Source:</b> Colorado General Assembly 2026 tax expenditure evaluation; Colorado Department of Revenue — tax.colorado.gov/wildfire-tax-benefits. Confirm your own eligibility with your accountant.</p>
+    </section>
+
+    <section class="block">
+      <p class="block-eyebrow">Change two · Insurance disclosure law</p>
+      <h2>Your insurer now has to tell you your risk score — and discount the work you've done</h2>
+      <p>Since <strong>1 July 2026</strong>, this is law rather than courtesy. If your insurer uses a wildfire risk score to price, underwrite, non-renew or surcharge your policy, they must:</p>
+
+      <ul class="terms">
+        <li>Tell you your property's <strong>wildfire risk score, in writing, every year</strong></li>
+        <li>State <strong>what mitigation discounts are available</strong> to you</li>
+        <li>Count the work you have actually done — <strong>defensible space specifically</strong> — in how they score and price the property</li>
+        <li>Give you a <strong>discount for documented mitigation</strong>, even if they have no formal mitigation model of their own</li>
+        <li>Let you <strong>appeal the score</strong> if you believe it is wrong</li>
+      </ul>
+
+      <p>If a score notice arrived in your mail this summer, that law is why.</p>
+
+      <p class="source"><b>Source:</b> Colorado HB25-1182, effective 1 July 2026 — leg.colorado.gov/bills/hb25-1182. Confirm what your own policy qualifies for with your carrier.</p>
+    </section>
+  </div>
+
+  <section class="paperwork">
+    <h2>What stops people claiming any of it</h2>
+    <p>The money is real. What people lose it to is documentation nobody told them to keep.</p>
+
+    <div class="needs">
+      <div class="need">
+        <span class="for">The tax credit needs</span>
+        <p>What you spent, and evidence the work was qualifying vegetation work.</p>
+      </div>
+      <div class="need">
+        <span class="for">Your insurer needs</span>
+        <p>Evidence of what was cut, where, and to what spacing — before and after.</p>
+      </div>
+    </div>
+
+    <p class="weprovide"><strong>Every Sixfold job comes with both, whether or not you ask for them.</strong> A written scope of exactly what was cut and where, and photographs from fixed positions before and after. One set of documents, and it serves your tax return and your carrier.</p>
+  </section>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold LLC</span>
+      <span>Monument, Colorado</span>
+      <span>(720) 772-6146</span>
+      <span>m.sharpe@surgeftw.com</span>
+    </div>
+    <p class="disclaimer">This sheet describes published Colorado programme terms as of August 2026 and is not tax or insurance advice. Programme terms change — confirm your own position with your accountant and your carrier before relying on any figure here.</p>
+  </footer>
+</div>
+
+<aside class="proof">
+  <h3>Proof notes — screen only, does not print</h3>
+  <ul>
+    <li><b>Two channels, not four.</b> The Douglas County cost-share block is written and held in <b>funding-one-pager.md</b> — it cannot go on a public sheet until Sixfold is on the county's approved contractor list. FRWRM is off this sheet entirely: neither the homeowner nor Sixfold can apply, so it belongs on a separate sheet aimed at HOA and fire-district boards.</li>
+    <li><b>Contact is live.</b> Phone and email confirmed 18 Aug 2026. The email is a Surge domain — worth replacing with a Sixfold-domain forwarder once the domain is registered, so a homeowner who searches the address lands on this company rather than a different one. No domain appears on the sheet yet: <b>sixfoldland.com</b> is clear on DNS but unregistered.</li>
+    <li><b>No 2026 income limit is stated.</b> The source lists tax year 2026 as TBD, so only the published 2027 figure appears.</li>
+    <li><b>No insurance discount percentage is stated.</b> The law requires a discount; it does not set a rate, and no verified figure exists.</li>
+    <li><b>Nothing claims licensed, insured, certified or Firewise.</b> None of it is true yet.</li>
+    <li>Print at Letter. Every colour is set for white stock; the sheet has no dark theme by design.</li>
+  </ul>
+</aside>
+
+</body>
+</html>

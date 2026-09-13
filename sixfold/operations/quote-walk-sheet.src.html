@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quote Walk Sheet</title>
+<!--STYLE-->
+<style>
+/* One page. It has to carry the billable count, the cost side and a notes box
+   that is actually big enough to write in, so the vertical rhythm is pulled in
+   across the sheet. Nothing in the shared register changes for any other
+   document. */
+.sheet h2.sec     { margin: 6pt 0 3pt; }
+.sheet table.tbl  { margin-bottom: 2pt; font-size: 8.6pt; }
+.sheet table.tbl td { padding: 3.2pt 6pt 3.2pt 0; }
+.bx   { display:inline-block; width:10pt; height:10pt; border:0.9pt solid #46534B; background:#FFF; }
+.unit { font-family: var(--f-data); font-size: 7.2pt; letter-spacing:.06em; color: var(--ember-text); }
+/* Notes box — ruled lines, because the whole point is that somebody writes in it. */
+.notes { border:0.9pt solid var(--ink-mid); padding:7pt 10pt 10pt; margin-top:4pt; }
+.notes .ln { border-bottom:0.75pt solid var(--tint-edge); height:17pt; }
+.notes .ln:last-child { border-bottom-color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Internal</b>Quote walk sheet<br>Job <span style="border-bottom:0.75pt solid #6E7A72;display:inline-block;min-width:0.9in">&nbsp;</span> Date <span style="border-bottom:0.75pt solid #6E7A72;display:inline-block;min-width:0.7in">&nbsp;</span></p>
+  </div>
+
+  <h1 class="headline" style="margin-top:7pt">What we can charge for, and what it takes to do it</h1>
+
+  <h2 class="sec">1 · The work — what gets counted and charged</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:0.25in"></th><th style="width:3.5in">What is there</th><th>How many / how much</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — under 30 ft</strong></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — 30 to 60 ft</strong></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — 60 to 80 ft</strong></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — over 80 ft</strong> <span class="unit">CALL IN FIRST</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Of those, how many come down <strong>over a roof, fence, line or drive</strong></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Trees to limb or trim, not remove</td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Logs to be bucked</strong> — and the length they want <span class="unit">ROUNDS · INCHES</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Dead fall already on the ground <span class="unit">PILES</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Brush, branches, twigs</strong> <span class="unit">PILES, OR TRUCK LOADS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Material to run through the chipper <span class="unit">HOURS OF FEEDING</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Slash piles to build, and where <span class="unit">COUNT</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Stumps to grind</strong> — measured at the ground <span class="unit">COUNT + DIAMETER INCHES</span></td><td><span class="rule fill"></span></td></tr>
+      <tr class="hi"><td><span class="bx"></span></td><td><strong>Loads to haul off</strong> — count the pile twice <span class="unit">LOADS · BOTH COUNTS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>What stays on site instead <span class="unit">CHIPS · ROUNDS · SLASH</span></td><td><span class="rule fill"></span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">2 · What it takes — the cost of doing it</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:0.25in"></th><th style="width:3.5in">What the job burns or needs</th><th>How many / how much</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bx"></span></td><td><strong>Crew</strong> — people on site, and days <span class="unit">PEOPLE × DAYS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Chains</strong> — how many on the job, and sharpenings</td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Gas, two-stroke mix and bar oil</strong> <span class="unit">GALLONS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Chipper</strong> — ours, or rented? <span class="unit">DAYS · RENTAL COST</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trailer</strong> — ours, or rented? <span class="unit">DAYS · RENTAL COST</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Stump grinder <span class="unit">DAYS · RENTAL COST</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Anything else hired or bought for this job</td><td><span class="rule fill"></span></td></tr>
+      <tr class="hi"><td><span class="bx"></span></td><td><strong>Dump fees</strong> — call and confirm today's figure <span class="unit">PER LOAD × LOADS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Truck fuel — round trips the job needs <span class="unit">TRIPS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Second trip needed? <span class="unit">STUMPS NEED THE 811 LOCATE FIRST — 3 DAYS</span></td><td><span class="rule fill"></span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">3 · Additional notes</h2>
+  <p style="font-size:8.2pt;color:var(--ink-mid);margin:0 0 3pt">Anything that slows the crew or changes the job — access, slope, drag to the truck, power lines, septic, neighbours, what was asked for, what was promised.</p>
+  <div class="notes">
+    <div class="ln"></div><div class="ln"></div>
+    <div class="ln"></div><div class="ln"></div>
+  </div>
+
+  <p class="note"><b>No price is given on the property</b> — not a figure, not a range. Counts come back, the estimate goes out in writing. <b>Stop and call in</b> if anything is over 80ft, on a structure, under tension, or near a line.</p>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold LLC</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span>(720) 772-6146</span>
+      <span class="pg">Walked by <span style="border-bottom:0.75pt solid #6E7A72;display:inline-block;min-width:1.2in">&nbsp;</span></span>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>

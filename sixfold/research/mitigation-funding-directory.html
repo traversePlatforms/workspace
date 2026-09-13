@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Pays for Mitigation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   Sixfold — Fire-Mitigation Funding Directory
+   Dark-first (house register); light print + light-OS register.
+   Palette: Pine Black / Timber / Bone / Ember / Moss.
+   ============================================================ */
+
+:root {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --ground:    var(--pine);
+  --surface:   var(--timber);
+  --surface-2: var(--timber-2);
+  --ink:       var(--bone);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+  --measure: 70ch;
+  --pad: clamp(1.1rem, 4vw, 2.6rem);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pine:      #F3EFE6;
+    --pine-2:    #EEE9DD;
+    --timber:    #FBF8F2;
+    --timber-2:  #F4EFE4;
+    --bone:      #1B211E;
+    --bark:      #5E6B60;
+    --ember:     #BE4E1C;
+    --ember-ink: #B6480F;
+    --moss:      #5C7350;
+    --moss-ink:  #4F6644;
+    --rule:      rgba(20, 30, 25, 0.14);
+    --rule-2:    rgba(20, 30, 25, 0.26);
+    --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+  }
+}
+
+:root[data-theme="light"] {
+  --pine:      #F3EFE6;
+  --pine-2:    #EEE9DD;
+  --timber:    #FBF8F2;
+  --timber-2:  #F4EFE4;
+  --bone:      #1B211E;
+  --bark:      #5E6B60;
+  --ember:     #BE4E1C;
+  --ember-ink: #B6480F;
+  --moss:      #5C7350;
+  --moss-ink:  #4F6644;
+  --rule:      rgba(20, 30, 25, 0.14);
+  --rule-2:    rgba(20, 30, 25, 0.26);
+  --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+}
+
+:root[data-theme="dark"] {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap { max-width: 62rem; margin: 0 auto; padding: clamp(1.5rem, 5vw, 4rem) var(--pad) 5rem; }
+
+h1, h2, h3, h4 {
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  line-height: 1.18;
+  text-wrap: balance;
+  color: var(--ink);
+}
+h1 { font-size: clamp(2rem, 6vw, 3.1rem); font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.5rem; }
+h2 { font-size: clamp(1.4rem, 3.4vw, 1.9rem); margin: 0; letter-spacing: -0.005em; }
+h3 { font-size: 1.16rem; font-weight: 700; margin: 2rem 0 0.4rem; color: var(--ink); }
+h4 { font-size: 1rem; font-weight: 700; margin: 1.4rem 0 0.3rem; }
+
+p { margin: 0 0 1rem; max-width: var(--measure); }
+strong { font-weight: 600; }
+em { font-style: italic; }
+ul, ol { max-width: var(--measure); }
+li { margin-bottom: 0.35rem; }
+
+a {
+  color: var(--ember-ink);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  word-break: break-word;
+}
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 2px solid var(--ember-ink); outline-offset: 2px; border-radius: 2px; }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  margin: 0 0 0.6rem;
+}
+
+/* masthead */
+.masthead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1rem, 4vw, 2rem);
+  align-items: start;
+  padding-bottom: 1.8rem;
+  border-bottom: 2px solid var(--rule-2);
+}
+.mark { width: clamp(52px, 12vw, 78px); height: auto; color: var(--ember); flex: none; }
+.masthead .lede { font-size: clamp(1rem, 2.4vw, 1.15rem); color: var(--bark); max-width: 48ch; margin: 0.4rem 0 0; }
+.meta {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--bark);
+}
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* callout */
+.callout {
+  margin: 2rem 0;
+  padding: 1.2rem 1.3rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ember);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout.moss { border-left-color: var(--moss); }
+.callout p { max-width: 64ch; }
+.callout .eyebrow { color: var(--ember-ink); }
+.callout.moss .eyebrow { color: var(--moss-ink); }
+
+/* sections */
+section { margin-top: 3.2rem; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.tag {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ember-ink);
+  flex: none;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scope { color: var(--bark); font-size: 0.95rem; margin: 0.5rem 0 1.1rem; max-width: var(--measure); }
+
+/* program card */
+.prog {
+  margin: 1.3rem 0;
+  padding: 1.15rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+}
+.prog h3 { margin-top: 0; }
+.prog .who {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bark);
+  margin: 0 0 0.7rem;
+}
+.prog p { max-width: none; }
+.prog dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0.7rem 0 0;
+  font-size: 0.92rem;
+}
+.prog dt {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  padding-top: 0.18rem;
+}
+.prog dd { margin: 0; }
+.prog .sixfold {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--rule-2);
+  font-size: 0.92rem;
+}
+.prog .sixfold b {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ember-ink);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+/* tables */
+.twrap {
+  overflow-x: auto;
+  margin: 1.1rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 46rem; }
+thead th {
+  text-align: left;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--bark);
+  background: var(--surface);
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--rule-2);
+  position: sticky;
+  top: 0;
+}
+tbody td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface) 45%, transparent); }
+td .prog-name { font-weight: 600; color: var(--ink); display: block; }
+td.amt {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+}
+
+/* badges + pills */
+.badge {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.42rem;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+.badge.t1 { color: var(--moss-ink); }
+.badge.t2 { color: var(--ember-ink); }
+.badge.t3 { color: #C9962F; }
+.badge.t4 { color: var(--bark); }
+:root[data-theme="light"] .badge.t3, :root:not([data-theme="dark"]) .badge.t3 { color: #9A6B12; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .badge.t3 { color: #9A6B12; } }
+
+.pill {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.14rem 0.44rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.owner { color: var(--moss-ink); border: 1px solid var(--moss); }
+.pill.contractor { color: var(--ember-ink); border: 1px solid var(--ember); }
+.pill.entity { color: #C9962F; border: 1px solid currentColor; }
+
+.bottom-line {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  max-width: none;
+}
+.bottom-line b {
+  color: var(--moss-ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.fc h3 { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ember-ink); }
+.fc ul { padding-left: 1.1rem; max-width: var(--measure); }
+.fc li { margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+.sources { font-size: 0.82rem; color: var(--bark); }
+.sources li { margin-bottom: 0.35rem; word-break: break-word; }
+
+hr.div { border: none; border-top: 1px solid var(--rule-2); margin: 3rem 0 0; }
+
+.foot {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid var(--rule-2);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--bark);
+  letter-spacing: 0.03em;
+}
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ============================================================
+   PRINT — force the light register, Letter sheet, tight type.
+   ============================================================ */
+@page { size: Letter; margin: 15mm 16mm 16mm; }
+
+@media print {
+  :root, :root[data-theme="dark"] {
+    --pine: #ffffff; --pine-2: #f6f3ec; --timber: #f6f3ec; --timber-2: #efe9dd;
+    --bone: #17201b; --bark: #4c574d;
+    --ember: #A8410F; --ember-ink: #9c3c0c;
+    --moss: #4a6140; --moss-ink: #3f5537;
+    --rule: rgba(20,30,25,0.22); --rule-2: rgba(20,30,25,0.4);
+    --shadow: none;
+  }
+  body { font-size: 9.6pt; line-height: 1.44; background: #fff; }
+  .wrap { max-width: none; margin: 0; padding: 0; }
+  a { color: inherit; text-decoration: none; }
+  .masthead { border-bottom-width: 1.5pt; }
+  .mark { color: #A8410F; width: 58px; }
+  thead th { position: static; font-size: 6pt; }
+  table { font-size: 8pt; min-width: 0; }
+  .twrap { overflow: visible; break-inside: auto; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  h2, h3, h4, .section-head { break-after: avoid; }
+  section { break-inside: auto; margin-top: 1.5rem; }
+  .prog, .callout, .bottom-line { break-inside: avoid; }
+  .badge, .pill { border-color: #7c7c7c !important; color: #333 !important; }
+  .foot { break-before: avoid; }
+  p, li { orphans: 3; widows: 3; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+      <g fill="currentColor">
+        <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        <rect x="4" y="86" width="92" height="5"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+        <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+        <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+        <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+        <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+        <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+        <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Sixfold LLC &nbsp;·&nbsp; Internal — Operations</p>
+      <h1>Who Pays for Mitigation</h1>
+      <p class="lede">Every route a Colorado property owner has to get money back on fire-mitigation work — tax, insurance, county cost-share, state and federal grants — with the catch on each one spelled out.</p>
+      <div class="meta">
+        <span>Prepared <b>2026-09-08</b></span>
+        <span>Base <b>Monument, CO</b></span>
+        <span>Every figure to be re-verified before it is quoted to a client</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="callout">
+    <p class="eyebrow">Why this document exists</p>
+    <p>Every competitor sells the work. Almost nobody explains the money. Four kinds of party will pay toward fire mitigation and most homeowners know about none of them — the state's own evaluation of the tax credit found fewer than half of surveyed landowners had ever heard of it. If Sixfold is the crew that shows up understanding what the client can claim, that is a real advantage a new company can hold without out-crediting a veteran outfit. <strong>This is a briefing for the office and the crew, not a customer handout, and nothing in it is tax or legal advice to give a client.</strong></p>
+  </div>
+
+  <div class="callout moss">
+    <p class="eyebrow">The one rule that governs all of this — the stacking limit</p>
+    <p>The Colorado state income tax credit <strong>explicitly excludes any cost that was paid from, or reimbursed by, a grant or incentive.</strong> So a homeowner who gets Douglas County to cover 50% of a $20,000 job can claim the state credit only against <em>their own</em> $10,000 — not the county's half. The programs below combine, but they do not double-dip: grant money and the tax credit cannot both land on the same dollar. Say &ldquo;these can often be combined&rdquo; and stop there; let the client's accountant do the arithmetic.</p>
+  </div>
+
+  <!-- ============ AT A GLANCE ============ -->
+  <section id="matrix">
+    <div class="section-head"><h2>At a glance</h2></div>
+    <p class="scope">Tiers run from most universal to most specialised. &ldquo;Paid to&rdquo; matters for how a job is invoiced: <span class="pill owner">owner</span> means the client is reimbursed and pays Sixfold in full up front; <span class="pill contractor">contractor</span> means the program pays Sixfold directly for its share; <span class="pill entity">entity</span> means an HOA, district or nonprofit is the applicant and Sixfold is their hired contractor.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Program</th><th>Who runs it</th><th>Covers</th><th>Ceiling</th><th>Paid to</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge t1">Tier 1</span><br><span class="prog-name">State wildfire-mitigation income tax credit</span></td>
+          <td>CO Dept of Revenue</td>
+          <td class="amt">100% of contractor costs for defensible space, fuel breaks, thinning, slash treatment</td>
+          <td class="amt">$1,000 (2025–26) → $2,000 (2027–30)</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Any private CO land</td>
+        </tr>
+        <tr>
+          <td><span class="badge t1">Tier 1</span><br><span class="prog-name">Insurance mitigation discount</span></td>
+          <td>Each insurer (per HB25-1182)</td>
+          <td class="amt">Premium reduction for documented defensible space / home hardening</td>
+          <td class="amt">No set rate — varies by carrier</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Statewide, from 1 Jul 2026</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">Douglas County Wildfire Mitigation Cost-Share</span></td>
+          <td>Douglas County</td>
+          <td class="amt">50% match on defensible space, fuel reduction; community projects; chipping</td>
+          <td class="amt">$25,000 home · $50,000 community · $7,000 chipping</td>
+          <td><span class="pill contractor">contractor</span></td>
+          <td>Douglas County</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">COSWAP landowner cost-share</span></td>
+          <td>CO DNR / CSFS, via Wildfire Adapted Partnership</td>
+          <td class="amt">Up to 50% of a mitigation project after a free risk assessment</td>
+          <td class="amt">Set per parcel by the assessment</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Mapped COSWAP areas</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">Wildfire Partners rebate</span></td>
+          <td>Boulder County</td>
+          <td class="amt">Labor and cash costs of eligible mitigation actions</td>
+          <td class="amt">$500 per household</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Boulder County</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">Grand County Wildfire Council cost-share</span></td>
+          <td>Grand County Wildfire Council</td>
+          <td class="amt">Home hardening + first-5-ft + vent screening (a separate fuels pot exists)</td>
+          <td class="amt">$1,000 per property, or 50%, whichever is less</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Grand County</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">Eagle County REALFire cost-share</span></td>
+          <td>Eagle County</td>
+          <td class="amt">Portion of defensible space / home hardening tied to a REALFire assessment</td>
+          <td class="amt">Set per assessment</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Eagle County</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">WAP Defensible Space Cost Share</span></td>
+          <td>Wildfire Adapted Partnership</td>
+          <td class="amt">Partial reimbursement after a HIZ assessment and completed work</td>
+          <td class="amt">Set per parcel; not published</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>SW Colorado grant geography</td>
+        </tr>
+        <tr>
+          <td><span class="badge t2">Tier 2</span><br><span class="prog-name">Routt County corridor cost-share</span></td>
+          <td>Routt County OEM + Wildfire Mitigation Council</td>
+          <td class="amt">50% reimbursement, prioritised along evacuation corridors</td>
+          <td class="amt">Pooled ~$120k county-wide in 2026</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Routt County</td>
+        </tr>
+        <tr>
+          <td><span class="badge t3">Tier 3</span><br><span class="prog-name">CSFS Forest Restoration &amp; Wildfire Risk Mitigation (FRWRM)</span></td>
+          <td>Colorado State Forest Service</td>
+          <td class="amt">Landscape fuels reduction, thinning, slash disposal, capacity building</td>
+          <td class="amt">Share of ~$7.04M; 1:1 match (25% match in under-resourced areas)</td>
+          <td><span class="pill entity">entity</span></td>
+          <td>Statewide, WUI</td>
+        </tr>
+        <tr>
+          <td><span class="badge t3">Tier 3</span><br><span class="prog-name">USFS Community Wildfire Defense Grant (CWDG)</span></td>
+          <td>US Forest Service, via CSFS</td>
+          <td class="amt">CWPP writing + implementation; can fund homeowner defensible-space incentives</td>
+          <td class="amt">Large multi-year awards</td>
+          <td><span class="pill entity">entity</span></td>
+          <td>At-risk communities</td>
+        </tr>
+        <tr>
+          <td><span class="badge t3">Tier 3</span><br><span class="prog-name">FEMA Hazard Mitigation Assistance (HMGP / BRIC)</span></td>
+          <td>FEMA, via CO DHSEM + local govt</td>
+          <td class="amt">Coordinated defensible space across many parcels; fuel breaks</td>
+          <td class="amt">Program-dependent</td>
+          <td><span class="pill entity">entity</span></td>
+          <td>Post-disaster (HMGP) / competitive (BRIC)</td>
+        </tr>
+        <tr>
+          <td><span class="badge t4">Tier 4</span><br><span class="prog-name">NRCS EQIP</span></td>
+          <td>USDA Natural Resources Conservation Service</td>
+          <td class="amt">Brush management, fuel breaks, forest stand improvement, thinning on working land</td>
+          <td class="amt">Per CO practice payment schedule</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>Ag / non-industrial private forest land</td>
+        </tr>
+        <tr>
+          <td><span class="badge t4">Tier 4</span><br><span class="prog-name">CSFS Forest Ag property-tax classification</span></td>
+          <td>Colorado State Forest Service + county assessor</td>
+          <td class="amt">Agricultural tax valuation for managed forest land — not a rebate</td>
+          <td class="amt">Ongoing lower property tax</td>
+          <td><span class="pill owner">owner</span></td>
+          <td>40+ forested acres, statewide</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ TIER 1 ============ -->
+  <section id="tier-1">
+    <div class="section-head"><span class="tag">Tier 1</span><h2>Available to almost any Colorado owner</h2></div>
+    <p class="scope">These two do not care which county the property sits in. They are the universal story to tell every client, and the only ones Sixfold can reliably point to on a first visit anywhere in the state.</p>
+
+    <div class="prog">
+      <h3>Colorado wildfire-mitigation measures income tax credit</h3>
+      <p class="who">Colorado Department of Revenue &nbsp;·&nbsp; C.R.S. 39-22-543 &nbsp;·&nbsp; claimed on <strong>DR&nbsp;0104CR</strong> with the DR&nbsp;0104</p>
+      <p>A state income-tax credit for what a landowner pays a contractor to reduce wildfire risk on their own private Colorado land. Since August 2024 (HB24-1036) <strong>only costs paid to a third-party contractor qualify</strong> — a homeowner buying or renting equipment to do it themselves does not. The four qualifying measures must meet or exceed Colorado State Forest Service or Division of Fire Prevention &amp; Control standards: creating defensible space around structures; establishing fuel breaks; thinning woody vegetation for the primary purpose of reducing risk to structures; and secondary treatment of the resulting fuels by lopping and scattering, piling, chipping, removing from the site, or prescribed burning. That list is Sixfold's core work almost line for line.</p>
+      <dl>
+        <dt>Amount</dt><dd><strong>Tax year 2025:</strong> 100% of qualifying cost, capped at <strong>$1,000</strong>, for filers with federal taxable income at or below $129,200. &nbsp; <strong>2026:</strong> same 100% / $1,000; the income limit for 2026 is <em>not yet published</em> by Revenue. &nbsp; <strong>2027–2030:</strong> cap rises to <strong>$2,000</strong>, income test becomes <strong>AGI at or below $300,000</strong>, and the excess over tax liability becomes <strong>refundable</strong> (paid out even if larger than the bill). Before 2027 any excess is simply lost — not refunded, not carried forward.</dd>
+        <dt>Eligible owner</dt><dd>Owner of record of private CO land — fee, easement, right-of-way, or a <strong>recorded</strong> lease. Held solely, jointly or in common, but <strong>only one individual of an ownership group may claim.</strong> Public land never qualifies. There is <strong>no wildland-urban-interface test</strong> — the credit says only &ldquo;real property located in Colorado&rdquo;.</dd>
+        <dt>Does NOT cover</dt><dd>Property purchase price; the landowner's own equipment purchase or rental; inspection or certification fees; in-kind or donated work; cost-sharing between neighbours; and <strong>any cost paid from or reimbursed by a grant or incentive</strong>.</dd>
+        <dt>How claimed</dt><dd>The homeowner files it themselves on DR&nbsp;0104CR with their return, with copies of receipts attached or uploaded through Revenue Online. There is no state form Sixfold submits.</dd>
+        <dt>New for 2027</dt><dd>A separate, narrower category — &ldquo;infestation mitigation measures&rdquo;: thinning of woody vegetation at risk of or killed by mountain pine beetle or spruce beetle. This is an <em>addition</em>, not a broadening of the existing thinning line.</dd>
+      </dl>
+      <div class="sixfold">
+        <b>What Sixfold does with it</b>
+        Supply an itemised invoice that separates qualifying mitigation work from anything non-qualifying, plus a written statement of the standard the crew worked to. <strong>Never say &ldquo;we handle the paperwork for you&rdquo;</strong> and never file or prepare a return — that reads as tax preparation. The eligibility questions to settle before work starts (who is the owner of record, which one person in a group is claiming, is any grant money covering part of the bill) are already on Form&nbsp;A of the tax-credit notebook.
+      </div>
+    </div>
+
+    <div class="prog">
+      <h3>Insurance premium discount for documented mitigation</h3>
+      <p class="who">Each admitted insurer &nbsp;·&nbsp; Colorado <strong>HB25-1182</strong>, effective 1 July 2026 &nbsp;·&nbsp; DOI disclosure regulation effective 1 October 2026</p>
+      <p>Colorado law now requires an insurer that uses a wildfire risk model or score to send each policyholder an <strong>annual written disclosure</strong> of their property's wildfire risk score, the mitigation discounts available, and how mitigation is factored into pricing — plus a <strong>right to appeal</strong> the score. Where a carrier's model does not already credit a property's mitigation, the carrier must apply a discount when the owner documents it. The law <strong>does not set a discount percentage</strong>; it varies by carrier filing, and no regulator dictates the number.</p>
+      <dl>
+        <dt>Amount</dt><dd>Carrier-specific. Do not put a percentage in front of a client — there isn't one to quote.</dd>
+        <dt>What counts</dt><dd>Documented defensible space and home-hardening actions. Score notices are landing on Colorado properties now; a client may already be holding one.</dd>
+        <dt>Backstop</dt><dd>If a property is non-renewed and no carrier will write it, the <strong>Colorado FAIR Plan</strong> (launched April 2025) offers up to $750,000 of residential coverage on an actual-cash-value basis — a last resort, not a target.</dd>
+      </dl>
+      <div class="sixfold">
+        <b>What Sixfold does with it</b>
+        The photograph log and dated before/after record (Form&nbsp;D of the notebook) is built for exactly this. Sixfold assembles the documentation package and can help the owner draft a re-score request; it does <strong>not</strong> contact the insurer, promise a lower premium, or put a number on any discount.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TIER 2 ============ -->
+  <section id="tier-2">
+    <div class="section-head"><span class="tag">Tier 2</span><h2>County and regional cost-share — depends where the property is</h2></div>
+    <p class="scope">These pay a percentage of the actual mitigation work, but only inside their boundary and usually only after a required risk assessment. Most reimburse the homeowner after the job is done and paid in full; Douglas County is the exception that pays the contractor directly. Nearly all are first-come until the season's money runs out.</p>
+
+    <div class="prog">
+      <h3>Douglas County Wildfire Mitigation Cost-Share Program</h3>
+      <p class="who">Douglas County Building Division / Wildfire Mitigation &nbsp;·&nbsp; douglas.co.us/building-division/wildfire-mitigation</p>
+      <p>The strongest county program in Sixfold's service area, and the one already flagged as a business priority. A <strong>50% financial match</strong> for work that creates defensible space, reduces vegetation density, and breaks up fuel continuity.</p>
+      <dl>
+        <dt>Amount</dt><dd><strong>Up to $25,000</strong> to a homeowner (50% match). <strong>Up to $50,000</strong> for a community project. <strong>Up to $7,000</strong> for community chipping or slash pickup.</dd>
+        <dt>To apply</dt><dd>A detailed scope of work, a site map, and <strong>two contractor estimates from the county's approved contractor list</strong>.</dd>
+        <dt>Timing</dt><dd>2026 primary application window ran roughly <strong>13 April – 13 May</strong>; a second window was anticipated in late 2026. Awardees have about 10 months to complete.</dd>
+        <dt>Payment</dt><dd>On completion, county staff inspect the property. The homeowner pays the contractor their (owner) share; once the owner submits the final invoice and proof of payment, <strong>Douglas County Finance releases the 50% match directly to the contractor</strong>.</dd>
+      </dl>
+      <div class="sixfold">
+        <b>What Sixfold does with it</b>
+        <strong>Getting Sixfold onto the approved contractor list is a gate, not a marketing task</strong> — a homeowner needs two bids from that list, so until Sixfold is on it, naming this program to a Douglas County client sends them toward money Sixfold cannot help them get. This is the single highest-leverage phone call on the whole funding picture: Douglas County Building Division about the approved-contractor requirements.
+      </div>
+    </div>
+
+    <div class="prog">
+      <h3>Colorado Strategic Wildfire Action Program (COSWAP) — landowner cost-share</h3>
+      <p class="who">Colorado Department of Natural Resources / CSFS &nbsp;·&nbsp; delivered by Wildfire Adapted Partnership (WAP)</p>
+      <p>State-funded cost-share for private landowners inside a <strong>mapped COSWAP program area</strong>. The owner books a free home wildfire risk assessment through WAP, tells the assessor they want the COSWAP grant, hires a contractor, completes the work, and is then reimbursed <strong>up to 50%</strong> of the project. (COSWAP also runs large workforce-development grants — $6.9M to 24 projects in February 2026 — but those fund youth corps and inmate fire crews, not homeowner work.)</p>
+      <dl>
+        <dt>Amount</dt><dd>Up to 50%, set per parcel by the assessment (home-site size, vegetation, terrain).</dd>
+        <dt>Catch</dt><dd>Only inside the mapped area, and the assessment must come first — work started before the award letter is signed is not covered.</dd>
+        <dt>Where</dt><dd>Program maps shift each cycle; WAP and the county emergency-management office confirm whether a given address is in.</dd>
+      </dl>
+      <div class="sixfold"><b>What Sixfold does with it</b> Ask the client whether they have had a WAP or COSWAP assessment; if not and they are rural, point them at it before the crew is scheduled, because the timing rule is strict.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Wildfire Partners — Boulder County</h3>
+      <p class="who">Boulder County &nbsp;·&nbsp; wildfirepartners.org</p>
+      <p>Wildfire Partners is best known for its <strong>assessment and certification</strong> (the certificate is what several insurers want to see). Its cash side is now a <strong>rebate, not a large cost-share</strong>: up to <strong>$500 per Boulder County household</strong> for labor and cash costs of eligible mitigation actions, one per property, first-come until the pot is empty. A parallel multi-family program offers up to $500 per unit for common-area work. 2026 application deadline is <strong>8 October 2026</strong>; roughly $1.625M is budgeted across the rebate programs.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Small money, but the certification is the real prize for a Boulder-area client's insurance file. The City of Boulder runs a separate Wildfire Resilience Assistance Program (WRAP) for properties inside city limits — confirm which applies.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Grand County Wildfire Council — cost-share</h3>
+      <p class="who">Grand County Wildfire Council &nbsp;·&nbsp; bewildfireready.org</p>
+      <p>A <strong>Home Hardening Cost Share</strong> reimbursing the lesser of <strong>$1,000 per property or 50% of cost</strong>, after the project is complete and fully paid, first-come. Covers home hardening plus the first five feet (gravel and landscape fabric) and vent screening to &#8539;-inch metal mesh. An HIZ assessment with the Council or a fire district is required first. A separate <strong>Fuels Reduction Cost-Share</strong> also exists for tree thinning and defensible space — confirm current terms with the Council.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Middle Park is outside Sixfold's stated service area, but the structure — assessment first, homeowner bids, reimbursement after full payment — is the pattern most Colorado county programs follow.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Eagle County — REALFire cost-share</h3>
+      <p class="who">Eagle County &nbsp;·&nbsp; realfire.net</p>
+      <p>A free REALFire property assessment by trained fire professionals <strong>may qualify the owner for a cost-share grant</strong> covering a portion of the mitigation work identified. Property owners acting on REALFire assessments have drawn more than $250,000 in cost-share awards to date; the county's goal is 750 assessed homes by 2028.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Same assessment-gated pattern; the award size is set by the assessment, so there is no headline number to quote.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Wildfire Adapted Partnership — Defensible Space Cost Share &amp; Chipper Rebate</h3>
+      <p class="who">Wildfire Adapted Partnership (WAP) &nbsp;·&nbsp; wildfireadapted.org &nbsp;·&nbsp; southwest Colorado</p>
+      <p>WAP is the delivery partner for COSWAP and for its own <strong>Defensible Space Cost Share</strong> across a southwest-Colorado grant geography (Archuleta, La Plata, Montezuma and neighbouring counties, varying by cycle). Free HIZ assessment first, a signed award letter <strong>before</strong> any contractor work, then a partial reimbursement to the homeowner after the job is completed and paid in full — the amount set by home-site size, vegetation and terrain. A separate <strong>Chipper Rebate</strong> offsets the cost of chipping slash.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Outside the current service area, but the model to understand: one nonprofit runs both the state (COSWAP) and regional cost-share through a single assessment.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Larimer County — Community Mitigation Grant</h3>
+      <p class="who">Larimer County Office of Emergency Management</p>
+      <p><strong>Not an individual-homeowner program.</strong> Funds neighbourhoods, HOAs, and local nonprofits for hazardous-fuels reduction, community chipping and slash removal, firewood banks, and equipment. 2026 saw record demand; the performance period for 2026 projects ends 2 November 2026. Larimer also runs a Wildfire Partner Program (Sheriff's Office) that does assessments.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> This is a Tier-3-style pattern at county scale: the money goes to an <span class="pill entity">entity</span>, and Sixfold's route in is being the contractor an HOA hires with the grant.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Routt County — evacuation-corridor cost-share</h3>
+      <p class="who">Routt County Office of Emergency Management + Routt County Wildfire Mitigation Council</p>
+      <p>Landowners along priority evacuation corridors pay for hazardous-fuels work up front and receive <strong>50% reimbursement</strong> through state (FRWRM) grant funds, letting the county extend treatment past public rights-of-way. 2026 budget was up to ~$120,000 county-wide, half state-reimbursed, plus a $10,000 Council contribution.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Corridor-prioritised and pooled — a client's eligibility depends on where their driveway meets the road, not just the county line.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Summit County — free chipping and CWPP grants</h3>
+      <p class="who">Summit County Government / CSU Extension Forest Health</p>
+      <p>Summit County does <strong>not</strong> run a homeowner defensible-space cash cost-share. It provides <strong>free chipping and haul-away</strong> of slash piles (trees, logs, branches up to 12&nbsp;in diameter, no willows) on a neighbourhood-week schedule, and free fire-district home assessments. Its CWPP Grant Program makes matching grants for life-safety, critical-infrastructure, evacuation-route and education projects — not routine defensible space.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> The free chipping changes the disposal math for a Summit job (see the disposal directory), and it means a Summit client's &ldquo;money back&rdquo; is the state credit and insurance, not a county cheque.</div>
+    </div>
+
+    <div class="prog">
+      <h3>El Paso &amp; Teller counties — what actually exists</h3>
+      <p class="who">Sixfold's home turf — and the thinnest county-money picture in the service area</p>
+      <p><strong>No confirmed standing homeowner cost-share was found for El Paso County</strong> as of this research. The routes for an El Paso or Teller client are the state tax credit, the insurance discount, EQIP if the land is rural/agricultural, and whatever homeowner incentives local fire districts stand up with grant money. Teller County's Coalition for the Upper South Platte (CUSP) runs free/low-cost slash sites and neighbourhood chipping (homeowner-facing — see the disposal directory) and CSFS administers cost-share for larger projects in that watershed. <strong>Confirm directly</strong> with El Paso County Community Services / Environmental Division, and with Black Forest Fire, Tri-Lakes-Monument Fire and the Woodland Park / Teller districts, whether any current CWDG- or FRWRM-funded rebate is running.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> For the counties Sixfold works most, lead every client conversation with Tier 1. Do not imply an El Paso County cheque exists until one is confirmed by name.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Jefferson County — homeowner incentives, emerging</h3>
+      <p class="who">Jefferson County Sheriff's Office</p>
+      <p>In July 2026 the Jefferson County Sheriff's Office was awarded a <strong>$9.67M USFS Community Wildfire Defense Grant</strong>, a five-year award that will fund mitigation staff, equipment, roadside vegetation projects, and <strong>homeowner incentives for creating defensible space and hardening homes</strong>. The homeowner-facing mechanism was not yet published at research time.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Watch this one — it is the clearest sign that CWDG money is turning into homeowner cost-share on the Front Range. Check JeffCo's wildfire pages before quoting a foothills job.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Other counties with programs on record</h3>
+      <p class="who">Confirm terms first-party before relying on any figure</p>
+      <ul>
+        <li><strong>Delta County</strong> (West Region Wildfire Council) — a Vegetation Management Cost-Share reported to reimburse <strong>up to 75%</strong> of defensible space, thinning and vegetation management on private property. West Slope; verify current cap and geography.</li>
+        <li><strong>Boulder Mountain Fire, Golden Gate Fire and other Front Range mountain fire districts</strong> — periodic district-run chipping and mitigation-grant offers, funded from CWDG/FRWRM pass-through. District by district, year by year.</li>
+        <li><strong>La Plata / SW counties</strong> — covered by WAP above.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ TIER 3 ============ -->
+  <section id="tier-3">
+    <div class="section-head"><span class="tag">Tier 3</span><h2>Grants that fund the work at scale — Sixfold is the hired contractor, not the applicant</h2></div>
+    <p class="scope">These do not pay individual homeowners. An HOA, fire district, water provider, county or nonprofit applies, wins the grant, and hires a contractor to do the work. For Sixfold this tier is a business-development channel: court the entities that can apply, and be the crew they name in the application.</p>
+
+    <div class="prog">
+      <h3>CSFS Forest Restoration &amp; Wildfire Risk Mitigation grant (FRWRM)</h3>
+      <p class="who">Colorado State Forest Service &nbsp;·&nbsp; csfs.colostate.edu/grants</p>
+      <p>The state's main competitive fuels-reduction grant. Roughly <strong>$7.04M available for the 2026–27 cycle</strong>, application window <strong>3 August – 8 October 2026</strong> (pre-award notifications February 2027, projects complete by March 2031). Funds defensible-space creation, mechanical thinning, prescribed fire, <strong>slash disposal</strong>, replanting and restoration, plus a capacity-building track (staffing, equipment, CWPP writing).</p>
+      <dl>
+        <dt>Who can apply</dt><dd>Community groups and HOAs, local governments, fire districts, public/private utilities and water providers, state agencies, tribes, and fuels-reduction nonprofits. <strong>An individual homeowner cannot apply alone</strong> — only in collaboration with an eligible entity and only where the project benefits more than their own property.</dd>
+        <dt>Match</dt><dd>Minimum <strong>1:1 (50%)</strong>; reduced to <strong>25% match (75% grant)</strong> in areas with fewer economic resources. Cash, in-kind, equipment and volunteer labor count toward match.</dd>
+        <dt>Contractors</dt><dd>Not eligible to apply, but hired by the applicant to do the work.</dd>
+      </dl>
+      <div class="sixfold"><b>What Sixfold does with it</b> The HOA/fire-district-board version of the funding one-pager is aimed at exactly this audience, and the 8 October 2026 deadline makes it time-sensitive. Being an early named implementation partner in an application is how a new contractor gets landscape-scale volume.</div>
+    </div>
+
+    <div class="prog">
+      <h3>USFS Community Wildfire Defense Grant (CWDG)</h3>
+      <p class="who">US Forest Service (BIL-funded) &nbsp;·&nbsp; administered in Colorado by CSFS</p>
+      <p>Federal grants to <strong>at-risk communities</strong>: local governments, tribes, and nonprofits (including HOAs) that assist such communities, plus state forestry agencies. Funds Community Wildfire Protection Plans and their implementation. Prioritises high/very-high hazard, low-income, and recently disaster-impacted communities. Recent Colorado awards have been large and multi-year — the Jefferson County Sheriff's $9.67M award (Tier 2 above) is a CWDG grant, and it is explicitly funding homeowner defensible-space incentives.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Same play as FRWRM — the money reaches homeowners only after a community entity wins it and builds a program. Track which Front Range counties and districts hold active CWDG awards.</div>
+    </div>
+
+    <div class="prog">
+      <h3>FEMA Hazard Mitigation Assistance — HMGP and BRIC</h3>
+      <p class="who">FEMA, via Colorado DHSEM and a local-government sub-applicant</p>
+      <p>The <strong>Hazard Mitigation Grant Program</strong> becomes available after a presidential disaster declaration and can fund wildfire mitigation — including coordinated defensible space across many parcels and fuel breaks — through a state/local sub-applicant. <strong>BRIC</strong> (Building Resilient Infrastructure and Communities) is the competitive, non-disaster version. Neither takes a direct homeowner application; a county or municipality is the applicant.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> Long lead times and heavy administration. Relevant only if a county Sixfold works in is running an HMGP-funded mitigation project and contracting the fieldwork.</div>
+    </div>
+
+    <div class="prog">
+      <h3>Watershed and water-provider partnerships</h3>
+      <p class="who">Denver Water &ldquo;From Forests to Faucets&rdquo;; Northern Water; Colorado Springs Utilities; and others</p>
+      <p>Water providers co-fund forest treatment in the watersheds that feed their reservoirs. From Forests to Faucets (Denver Water with the US Forest Service, CSFS and NRCS) has put roughly <strong>$96M</strong> into more than <strong>120,000 acres</strong> since 2010, including on private land through partners. This is <strong>landscape-scale work arranged through partnerships</strong>, not a rebate a homeowner applies for — but a private parcel inside a priority watershed can sometimes be folded into a partner-led project.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> If a job sits in a named source watershed, ask the county forester or CSFS field office whether a water-provider-funded project covers the area.</div>
+    </div>
+  </section>
+
+  <!-- ============ TIER 4 ============ -->
+  <section id="tier-4">
+    <div class="section-head"><span class="tag">Tier 4</span><h2>Federal cost-share and tax treatment for rural, agricultural and forest land</h2></div>
+    <p class="scope">These reach an individual owner directly, but only if the land qualifies as working agricultural or non-industrial private forest land — not a typical WUI house lot. Worth raising with a client on acreage.</p>
+
+    <div class="prog">
+      <h3>NRCS Environmental Quality Incentives Program (EQIP)</h3>
+      <p class="who">USDA Natural Resources Conservation Service &nbsp;·&nbsp; local NRCS field office / conservation district</p>
+      <p>The only NRCS financial-assistance program that covers forestry resource concerns. Provides planning and cost-share payments to <strong>agricultural producers and owners of non-industrial private forestland</strong> (and tribes) for practices that reduce wildfire risk: <strong>Brush Management (Practice 314)</strong>, fuel-break construction, forest stand improvement, thinning and prescribed burning. Applications are accepted continuously with competitive ranking cutoffs; Colorado payment schedules are updated in the first quarter of each federal fiscal year.</p>
+      <dl>
+        <dt>Land test</dt><dd>Cropland, rangeland, pastureland, non-industrial private forestland, or other farm/ranch land. A standard subdivided house lot generally does not qualify.</dd>
+        <dt>Amount</dt><dd>Set by the Colorado practice payment schedule for each practice and scenario.</dd>
+      </dl>
+      <div class="sixfold"><b>What Sixfold does with it</b> For a client with real acreage, &ldquo;talk to your NRCS field office about EQIP before you schedule us&rdquo; is a genuinely useful, no-risk thing to say.</div>
+    </div>
+
+    <div class="prog">
+      <h3>CSFS Forest Ag Program — agricultural property-tax classification</h3>
+      <p class="who">Colorado State Forest Service + county assessor &nbsp;·&nbsp; C.R.S. via HB90-1229</p>
+      <p><strong>Not a rebate — a property-tax classification.</strong> An owner of <strong>at least 40 forested acres</strong> who has an approved forest management plan and manages the land to produce wood products for profit can have the land valued for property tax as agricultural land rather than residential/vacant, which is typically a large ongoing reduction. Apply with a completed forest management plan and inspection request by <strong>1 October</strong>; CSFS recommends eligible properties to the county assessor annually.</p>
+      <div class="sixfold"><b>What Sixfold does with it</b> A thinning project done to a management plan can support the plan requirement. Mention it to large-acreage clients; it is a tax-status question for their assessor and a forester, not something Sixfold administers.</div>
+    </div>
+  </section>
+
+  <!-- ============ ENDED / MISLEADING ============ -->
+  <section id="ended">
+    <div class="section-head"><h2>Ended, retired, or not what the name suggests</h2></div>
+    <div class="twrap"><table>
+      <thead><tr><th>Program</th><th>Status</th><th>Why it's here</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="prog-name">Colorado Wildfire Resilient Homes Grant</span> (DFPC home-hardening pilot)</td>
+          <td class="amt"><strong>Repealed.</strong> HB26-1395 ended the program effective 1 July 2026 and swept the fund balance to the General Fund. Last application period closed April 2024.</td>
+          <td>It still appears in older guides and contractor blogs as a live home-hardening grant. It is not.</td>
+        </tr>
+        <tr>
+          <td><span class="prog-name">State wildfire-mitigation income tax <em>subtraction</em></span> (DR 0104AD)</td>
+          <td class="amt"><strong>Expired.</strong> 100% for 2017–2019, then 50% for 2020–2024 (cap $2,500, WUI only). Not available for tax year 2025 onward.</td>
+          <td>Easy to confuse with the still-active <em>credit</em> (DR 0104CR). For 2023–24 a landowner could claim both; from 2025 only the credit remains.</td>
+        </tr>
+        <tr>
+          <td><span class="prog-name">HB23-1240 wildfire-disaster sales &amp; use tax refund</span></td>
+          <td class="amt"><strong>Active but unrelated.</strong> Refunds sales/use tax on materials to <em>rebuild</em> a home destroyed in a declared wildfire disaster, 2020–2022.</td>
+          <td>It comes up in the same Department of Revenue pages as the mitigation credit. It has nothing to do with mitigation work and does not apply to Sixfold's clients.</td>
+        </tr>
+        <tr>
+          <td><span class="prog-name">&ldquo;Strengthen Colorado Homes&rdquo; (SB26-155)</span></td>
+          <td class="amt"><strong>Different hazard.</strong> Grants for <em>hail-resistant roof</em> retrofits on owner-occupied primary residences.</td>
+          <td>Sometimes cited alongside wildfire programs because it is also a roof-retrofit incentive. It is a hail program, not a wildfire one.</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ WHAT THIS MEANS FOR SIXFOLD ============ -->
+  <section id="takeaways">
+    <div class="section-head"><h2>What this means for Sixfold</h2></div>
+    <ol>
+      <li><strong>Tier 1 is the universal pitch.</strong> The state tax credit and the insurance discount apply to essentially every client regardless of county. They are the two things every rep and crew lead should be able to describe accurately, and the only funding Sixfold can point to on a first visit anywhere.</li>
+      <li><strong>Douglas County is the one local cheque worth chasing — and it is gated.</strong> Getting on the county's approved contractor list is the highest-leverage action on this document. Until then, Sixfold can describe the program but cannot help a client access it, because two bids must come from that list.</li>
+      <li><strong>El Paso County, where Sixfold is based, has the thinnest county-money picture.</strong> Do not imply a local cost-share exists there until one is confirmed by name. Sell Tier 1.</li>
+      <li><strong>The grant tier (Tier 3) is a reason to court HOAs, fire districts and water providers</strong>, not homeowners. The HOA/fire-district funding one-pager and the 8 October 2026 FRWRM deadline are the concrete openings.</li>
+      <li><strong>The stacking rule shapes how Sixfold talks about combining money.</strong> &ldquo;These can often be combined; your accountant can tell you how they interact&rdquo; is safe. A worked example of grant-plus-credit on the same invoice is not — the credit cannot touch a dollar a grant already paid.</li>
+      <li><strong>Every number in this document is provisional.</strong> Program caps, income limits, application windows and even whole programs change yearly. Re-verify against the primary source before any figure goes in front of a client or into a quote.</li>
+    </ol>
+  </section>
+
+  <hr class="div">
+
+  <!-- ============ FACT-CHECK LOG ============ -->
+  <section id="fact-check" class="fc">
+    <div class="section-head"><h2>Fact-check log</h2></div>
+
+    <h3>Confirmed first-party or against the enacted statute</h3>
+    <ul>
+      <li><strong>State tax credit (C.R.S. 39-22-543).</strong> Carried from the project's own verification: Colorado Dept of Revenue <em>Income Tax Topics: Wildfire Mitigation Measures</em> and <em>Wildfire Tax Benefits</em> (read in full 2026-08-21, browser user agent — the page 403s to a plain fetch); HB26-1289 Final Act amending the statute (read in full 2026-08-19); 2026 tax-expenditure evaluation 2026-TE4. Credit table 2023 $625 / 2024 $625 / 2025 $1,000 (FTI ≤ $129,200) / 2026 $1,000 (FTI TBD) / 2027–2030 $2,000 (AGI ≤ $300,000, refundable). Third-party-contractor-only since Aug 2024 (HB24-1036). Grant/incentive-funded costs excluded. One claimant per ownership group; recorded lease qualifies; no WUI test. New &ldquo;infestation mitigation measures&rdquo; category from 2027. Retired subtraction: 50% for 2020–2024, WUI only, $2,500 cap, DR 0104AD. HB23-1240 rebuild sales-tax refund is separate. See <em>tax-credit-notebook/README.md</em> for the full log and the unresolved points (2026 FTI limit unpublished; whether &ldquo;AGI&rdquo; in §(4)(c) is federal AGI; whether entity-owned land still qualifies from 2026).</li>
+      <li><strong>HB25-1182</strong> (insurance risk-model use), effective 1 July 2026 — annual written risk-score disclosure, disclosure of available discounts, parcel-level mitigation in scoring, a discount for documented mitigation even absent a formal model, right of appeal; no statutory discount percentage. (leg.colorado.gov/bills/hb25-1182; Colorado House/Senate Democrats joint release.) Colorado Division of Insurance disclosure regulation (Reg 5-1-28 / 3 CCR 702-5) effective 1 October 2026 — public disclosure of how mitigation and risk models are used in underwriting and pricing. Colorado FAIR Plan launched April 2025, up to $750,000 residential, actual-cash-value basis.</li>
+      <li><strong>Douglas County Wildfire Mitigation Cost-Share</strong> — 50% match, $25,000 home / $50,000 community / $7,000 chipping; two estimates from the county approved contractor list plus scope and site map; 2026 primary window ~April 13 – May 13, second window anticipated late 2026; county inspects on completion, homeowner pays their share, Douglas County Finance releases the 50% match directly to the contractor. (douglas.co.us/building-division/wildfire-mitigation and douglasco.gov/wildfires; Denver Gazette 2026-04-01; hoodline 2026-04.)</li>
+      <li><strong>COSWAP landowner cost-share</strong> — private landowners in the mapped area, free WAP risk assessment first, hire a contractor, reimbursed up to 50%; Feb 2026 workforce-development round $6.9M to 24 projects. (dnr.colorado.gov/co-strategic-wildfire-action-program; lpcgov.org/departments/emergency_management/coswap.php; Governor's Office release.)</li>
+      <li><strong>Wildfire Partners (Boulder County)</strong> — general rebate up to $500 per household/property, one per property, first-come, 2026 deadline 8 October 2026, ~$1.625M across rebate programs; multi-family up to $500 per unit for common areas. (wildfirepartners.org/rebate and /general-rebate-program; bouldercounty.gov news.) City of Boulder WRAP is a separate city program (bouldercolorado.gov/WRAP).</li>
+      <li><strong>Grand County Wildfire Council</strong> — Home Hardening Cost Share reimburses the lesser of $1,000 per property or 50%, after completion and full payment, first-come; HIZ assessment required; covers home hardening, first 5 ft, &#8539;-in vent mesh. A separate Fuels Reduction Cost-Share exists. (bewildfireready.org/home-hardening and /programs/cost-share.)</li>
+      <li><strong>Eagle County REALFire</strong> — free assessment may qualify an owner for cost-share on a portion of the work; >$250,000 in awards to date; 750-home goal by 2028. (eaglecounty.us news; realfire.net.)</li>
+      <li><strong>Wildfire Adapted Partnership Defensible Space Cost Share</strong> — SW Colorado grant geography; free HIZ assessment, signed award letter before work, homeowner reimbursed after paying in full, amount set by site size/vegetation/terrain; separate Chipper Rebate. (wildfireadapted.org/cost-share, /chipper-rebate, /all-programs.)</li>
+      <li><strong>Larimer County Community Mitigation Grant</strong> — community groups, HOAs, nonprofits only (not individuals); funds fuels reduction, community chipping/slash, firewood banks, equipment; 2026 performance period ends 2 November 2026. (larimer.gov/emergency/community-mitigation-grant-program; larimer.gov spotlight 2026-05-14.)</li>
+      <li><strong>Routt County</strong> — landowners along evacuation corridors pay up front, 50% reimbursed via state (FRWRM) grant; 2026 budget up to ~$120,000 county-wide, $60,000 state-reimbursed, plus $10,000 from the Wildfire Mitigation Council. (SteamboatToday / Steamboat Pilot, 2026.)</li>
+      <li><strong>Summit County</strong> — free chipping and haul-away of slash piles (trees/logs/branches ≤ 12 in, no willows) on a neighbourhood-week schedule; free fire-district assessments; CWPP matching grants for life-safety/infrastructure/evacuation/education, not routine defensible space. (summitcountyco.gov CSU Extension forest-health / wildfire-programs.)</li>
+      <li><strong>CSFS FRWRM grant</strong> — ~$7.04M for 2026–27, application 3 Aug – 8 Oct 2026, pre-awards 10 Feb 2027, complete by 31 Mar 2031; eligible applicants are community groups/HOAs, local governments, fire districts, utilities/water providers, state agencies, tribes, nonprofits — homeowners only in collaboration with an eligible entity and with benefits beyond their own property; 1:1 match, reduced to 25% in under-resourced areas; funds defensible space, thinning, prescribed fire, slash disposal, replanting, capacity building. (csfs.colostate.edu/grants/forest-restoration-wildfire-risk-mitigation.)</li>
+      <li><strong>USFS Community Wildfire Defense Grant</strong> — eligible applicants are local governments, tribes, nonprofits (incl. HOAs) assisting at-risk communities, and state forestry agencies; funds CWPPs and implementation; prioritises high-hazard, low-income and disaster-impacted communities; administered in Colorado by CSFS; Round 3 closed 11 March 2025. Jefferson County Sheriff's Office awarded $9,668,390 (announced July 2026) to fund staff, equipment, roadside projects and homeowner defensible-space/home-hardening incentives. (fs.usda.gov/managing-land/fire/grants/cwdg; csfs.colostate.edu/grants/cwdg; Denver Gazette / KKTV 2026-07.)</li>
+      <li><strong>NRCS EQIP</strong> — eligible: agricultural producers, owners of non-industrial private forestland, tribes; eligible land: cropland, rangeland, pastureland, NIPF; wildfire practices include Brush Management (314), fuel breaks, forest stand improvement, thinning, prescribed burn; continuous application with ranking cutoffs; CO payment schedules updated Q1 each fiscal year. (nrcs.usda.gov EQIP Colorado; Fire Adapted Communities Learning Network.)</li>
+      <li><strong>CSFS Forest Ag Program</strong> — agricultural property-tax valuation for ≥ 40 forested acres with an approved forest management plan managed for wood-product profit; apply by 1 October; CSFS recommends to the county assessor annually; enacted by HB90-1229. (csfs.colostate.edu/forest-ag-program.)</li>
+      <li><strong>Colorado Wildfire Resilient Homes Grant repealed</strong> — HB26-1395, effective 1 July 2026, fund balance transferred to the General Fund on 30 June 2026; House passed 11 April 2026, Senate 16 April 2026. (leg.colorado.gov/bills/HB26-1395; LegiScan.)</li>
+      <li><strong>From Forests to Faucets</strong> — Denver Water with USFS, CSFS and NRCS; ~$96M invested, 120,000+ acres treated 2010 through work planned to 2027; explicitly includes private land through partners. (denverwater.org watershed-protection pages; csfs.colostate.edu.)</li>
+    </ul>
+
+    <h3>Reported but not confirmed first-party — verify before use</h3>
+    <ul>
+      <li><strong>Delta County / West Region Wildfire Council Vegetation Management Cost-Share — &ldquo;up to 75%&rdquo;.</strong> Appears in a secondary summary (Smart Home America). Confirm the percentage, cap and geography with the West Region Wildfire Council before repeating it.</li>
+      <li><strong>&ldquo;El Paso County offers cost-share grants&rdquo;.</strong> Stated only by contractor-marketing sites (defensiblehome.com and similar). No El Paso County program page was found. Treated in the body as unconfirmed and something to check by phone.</li>
+      <li><strong>Grand County Fuels Reduction Cost-Share terms.</strong> The dedicated page returned a 404 at research time; only the Home Hardening pot's numbers are confirmed.</li>
+    </ul>
+
+    <h3>Not obtained — needs a call or a fresh check</h3>
+    <ul>
+      <li>The 2026 federal-taxable-income limit for the state credit (Revenue lists it as TBD).</li>
+      <li>Douglas County's approved-contractor-list requirements and the exact second-2026 application window — the county site 403s to automated fetch; needs a phone call to the Building Division. (This is already the project's standing #1 action item.)</li>
+      <li>Whether any El Paso County, Teller County, or their fire districts (Black Forest Fire, Tri-Lakes-Monument Fire, Woodland Park / NE Teller) run a current homeowner mitigation rebate funded by CWDG or FRWRM pass-through.</li>
+      <li>Jefferson County's homeowner-incentive mechanism under its new $9.67M CWDG award — not yet published.</li>
+      <li>Whether DFPC still runs any &ldquo;Home Hardening Grant&rdquo; distinct from the repealed Wildfire Resilient Homes Grant — the DFPC grants page 403s to automated fetch.</li>
+      <li>Current-cycle COSWAP program-area maps — change each round.</li>
+      <li>City of Boulder WRAP terms and caps.</li>
+    </ul>
+
+    <h3>Structural notes</h3>
+    <ul>
+      <li><strong>The stacking exclusion is the load-bearing fact.</strong> C.R.S. 39-22-543 excludes any cost paid from or reimbursed by a grant or incentive, so grant money and the state credit cannot both apply to the same dollar. This is verified project knowledge, not new research.</li>
+      <li>Most Tier-2 programs follow one pattern: <em>free assessment first → signed award before work → homeowner pays in full → partial reimbursement to the homeowner</em>. Douglas County is the notable exception (pays the contractor directly).</li>
+      <li>Nearly every county and rebate pot is <strong>first-come until exhausted</strong> and reopens on an annual cycle — a &ldquo;yes&rdquo; in spring can be a &ldquo;closed&rdquo; by August.</li>
+      <li>Sixfold's role across all of this is documentation and referral, never administration: no returns filed, no certifications issued, no insurer contacted, no discount or reimbursement amount promised. The banned phrase remains <em>&ldquo;we handle the paperwork for you.&rdquo;</em></li>
+    </ul>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section id="sources">
+    <div class="section-head"><h2>Sources</h2></div>
+    <ul class="sources">
+      <li>State tax credit — Colorado Dept of Revenue, <em>Income Tax Topics: Wildfire Mitigation Measures</em> and <em>Wildfire Tax Benefits</em>; HB26-1289 Final Act (leg.colorado.gov bill file 116779) amending C.R.S. 39-22-543; 2026 tax-expenditure evaluation 2026-TE4 (content.leg.colorado.gov). Full working notes: <em>sixfold/tax-credit-notebook/README.md</em>, <em>sixfold/content/02-tax-credit-post.md</em>.</li>
+      <li>Insurance — leg.colorado.gov/bills/hb25-1182 ; cohousedems.com / senatedems.co joint release ; ilsainc.com and resourcepro compliance bulletin on the DOI disclosure regulation ; Colorado FAIR Plan (coloradofairplan.com background via secondary coverage).</li>
+      <li>Douglas County — douglas.co.us/building-division/wildfire-mitigation/wildfire-mitigation-cost-share-program/ ; douglasco.gov/wildfires/wildfire-mitigation-cost-share-program/ ; denvergazette.com 2026-04-01 ; hoodline.com 2026-04.</li>
+      <li>COSWAP — dnr.colorado.gov/co-strategic-wildfire-action-program ; lpcgov.org/departments/emergency_management/coswap.php ; governorsoffice.colorado.gov.</li>
+      <li>Wildfire Partners — wildfirepartners.org/rebate/ ; wildfirepartners.org/general-rebate-program/ ; bouldercounty.gov/news ; bouldercolorado.gov/WRAP.</li>
+      <li>Grand County Wildfire Council — bewildfireready.org/home-hardening ; bewildfireready.org/programs/cost-share ; bewildfireready.org/news/207-colorado-wildfire-resilient-homes-grant.</li>
+      <li>Eagle County — eaglecounty.us/news_detail_T24_R607.php ; realfire.net.</li>
+      <li>Wildfire Adapted Partnership — wildfireadapted.org/cost-share ; wildfireadapted.org/chipper-rebate ; wildfireadapted.org/all-programs.</li>
+      <li>Larimer County — larimer.gov/emergency/community-mitigation-grant-program ; larimer.gov/spotlights/2026/05/14/2026-community-mitigation-grant-award-recipients ; larimer.gov/sheriff/support-services/emergency-services/wpp.</li>
+      <li>Routt County — steamboatpilot.com 2026 (evacuation-corridor mitigation program coverage).</li>
+      <li>Summit County — summitcountyco.gov/services/community_development/csu_extension/forest_health/wildfire_programs.php ; townofblueriver.colorado.gov/summit-county-slash-program.</li>
+      <li>CSFS FRWRM — csfs.colostate.edu/grants/forest-restoration-wildfire-risk-mitigation/ ; csfs.colostate.edu/grants/.</li>
+      <li>CWDG — fs.usda.gov/managing-land/fire/grants/cwdg ; fs.usda.gov/managing-land/fire/grants/cwdg/how-to-apply ; csfs.colostate.edu/grants/cwdg/ ; denvergazette.com 2026-07-10 ; kktv.com 2026-07-09.</li>
+      <li>FEMA HMA — fema.gov/locations/risk-reduction/colorado ; dhsem.colorado.gov.</li>
+      <li>NRCS EQIP — nrcs.usda.gov/programs-initiatives/environmental-quality-incentives-program/colorado ; nrcs.usda.gov/conservation-basics/conservation-state/colorado/payment-schedule ; fireadaptednetwork.org (USDA-NRCS wildfire assistance overview).</li>
+      <li>Forest Ag Program — csfs.colostate.edu/forest-ag-program/ ; jeffco.us landowner forest-management-plan guidelines.</li>
+      <li>HB26-1395 repeal — leg.colorado.gov/bills/HB26-1395 ; legiscan.com/CO/bill/HB1395/2026.</li>
+      <li>From Forests to Faucets — denverwater.org/your-water/water-supply-and-planning/watershed-protection-and-management ; csfs.colostate.edu.</li>
+      <li>Jefferson County landowner assistance — jeffco.us FAQ &ldquo;Forest Management and Fire Mitigation for Landowners&rdquo; ; jcd.colorado.gov (Jefferson Conservation District).</li>
+    </ul>
+  </section>
+
+  <p class="foot">Sixfold LLC &mdash; internal operations reference &mdash; prepared 2026-09-08 &mdash; not tax or legal advice &mdash; not for customer distribution &mdash; every figure to be re-verified against its primary source before it is used with a client.</p>
+
+</div>
+</body>
+</html>

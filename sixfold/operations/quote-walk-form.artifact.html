@@ -1,0 +1,553 @@
+<title>Sixfold Walk Sheet</title>
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — quote walk form, field version.
+
+   Same palette and the same three type roles as the printed sheet in
+   operations/quote-walk-sheet.html, so the phone and the clipboard read
+   as one document. No webfont on purpose: this gets opened on a phone
+   at a property where signal drops, and a face that fails to load
+   silently changes the sheet.
+   ------------------------------------------------------------------ */
+:root {
+  --paper:#FFFFFF;
+  --ground:#F3EFE6;
+  --edge:#DED5C4;
+  --ink:#14201B;
+  --ink-mid:#46534B;
+  --ink-soft:#6E7A72;
+  --ember:#E4703A;
+  --ember-text:#B84C15;
+  --ember-wash:#FBE6DC;
+  --moss:#45583A;
+  --focus:#B84C15;
+
+  --f-display:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+  --f-body:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-data:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#1D2521;
+    --ground:#151B18;
+    --edge:#313D36;
+    --ink:#E7EDE9;
+    --ink-mid:#B3BFB8;
+    --ink-soft:#8E9B93;
+    --ember:#F08A55;
+    --ember-text:#F0966A;
+    --ember-wash:#3A2319;
+    --moss:#A8BE96;
+    --focus:#F08A55;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#1D2521;
+  --ground:#151B18;
+  --edge:#313D36;
+  --ink:#E7EDE9;
+  --ink-mid:#B3BFB8;
+  --ink-soft:#8E9B93;
+  --ember:#F08A55;
+  --ember-text:#F0966A;
+  --ember-wash:#3A2319;
+  --moss:#A8BE96;
+  --focus:#F08A55;
+}
+
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:16px;
+  line-height:1.45;
+  -webkit-text-size-adjust:100%;
+}
+.wrap { max-width:640px; margin:0 auto; padding:0 14px 150px; }
+
+/* Masthead ---------------------------------------------------------- */
+header.top {
+  position:sticky; top:0; z-index:20;
+  background:var(--ground);
+  border-bottom:2.5px solid var(--ember);
+  padding:12px 0 9px;
+}
+.brandrow { display:flex; align-items:center; gap:9px; }
+.mark { width:30px; height:34px; flex:none; color:var(--ink); }
+.wordmark { font-family:var(--f-display); font-size:21px; line-height:.9; margin:0; }
+.descriptor {
+  font-family:var(--f-data); font-size:9px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--moss); margin:3px 0 0;
+}
+.savestate {
+  margin-left:auto; text-align:right;
+  font-family:var(--f-data); font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink-soft); max-width:40%;
+}
+.savestate b { display:block; color:var(--ember-text); font-weight:400; }
+
+h1 {
+  font-family:var(--f-display); font-weight:400; font-size:26px;
+  line-height:1.1; text-wrap:balance; margin:18px 0 4px;
+}
+.standfirst { color:var(--ink-mid); margin:0 0 6px; font-size:15px; }
+
+/* Sections ---------------------------------------------------------- */
+section { margin-top:22px; }
+.sechead { display:flex; align-items:baseline; gap:9px; border-bottom:1px solid var(--edge); padding-bottom:5px; }
+.secnum {
+  font-family:var(--f-data); font-size:11px; color:var(--paper);
+  background:var(--ember); width:20px; height:20px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+}
+.sechead h2 { font-family:var(--f-display); font-weight:400; font-size:19px; margin:0; color:var(--ember-text); }
+.sechead .sub { margin-left:auto; font-family:var(--f-data); font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft); }
+
+h3.grp {
+  font-family:var(--f-data); font-size:10px; letter-spacing:.19em;
+  text-transform:uppercase; color:var(--moss); margin:16px 0 6px; font-weight:400;
+}
+
+/* Rows -------------------------------------------------------------- */
+.row {
+  display:flex; align-items:center; gap:10px;
+  background:var(--paper); border:1px solid var(--edge);
+  border-left:3px solid var(--edge);
+  padding:9px 11px; margin-bottom:6px;
+}
+.row:focus-within { border-left-color:var(--ember); }
+.row .lbl { flex:1 1 auto; min-width:0; font-size:14.5px; line-height:1.3; }
+.row .lbl small { display:block; color:var(--ink-soft); font-size:12px; margin-top:2px; }
+.row.strong .lbl { font-weight:600; }
+.row .ctl { flex:none; display:flex; gap:6px; align-items:center; }
+
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  font-family:var(--f-body); font-size:16px; color:var(--ink);
+  background:var(--ground); border:1px solid var(--edge);
+  border-radius:0; padding:8px 9px; width:100%;
+}
+input[type="number"] { font-family:var(--f-data); font-variant-numeric:tabular-nums; width:76px; text-align:right; }
+input.wide { width:100%; }
+select { padding:8px 6px; width:auto; min-width:86px; }
+textarea { min-height:132px; resize:vertical; line-height:1.5; }
+:is(input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:1px; }
+input::placeholder, textarea::placeholder { color:var(--ink-soft); opacity:1; }
+
+/* a pair of number boxes with a × between (people × days) */
+.pair { display:flex; align-items:center; gap:5px; }
+.pair span { font-family:var(--f-data); font-size:12px; color:var(--ink-soft); }
+
+/* Stacked rows for free-text fields */
+.stack { background:var(--paper); border:1px solid var(--edge); border-left:3px solid var(--edge); padding:9px 11px; margin-bottom:6px; }
+.stack:focus-within { border-left-color:var(--ember); }
+.stack label { display:block; font-size:14.5px; margin-bottom:6px; }
+.stack label small { display:block; color:var(--ink-soft); font-size:12px; margin-top:2px; }
+
+/* Job identity strip */
+.ident { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; }
+.ident .stack { margin-bottom:0; }
+.ident .stack.full { grid-column:1 / -1; }
+
+/* Caution ----------------------------------------------------------- */
+.caution {
+  border:1px solid var(--ember-text); background:var(--ember-wash);
+  padding:9px 11px; margin:2px 0 8px; font-size:13.5px; line-height:1.4;
+}
+.caution b { color:var(--ember-text); }
+
+/* Costs readout ----------------------------------------------------- */
+.costs {
+  display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+  border:1px solid var(--edge); border-top:3px solid var(--moss);
+  background:var(--paper); padding:11px 12px; margin-top:10px;
+}
+.costs .k { font-family:var(--f-data); font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--moss); }
+.costs .v { font-family:var(--f-data); font-size:22px; font-variant-numeric:tabular-nums; margin-left:auto; }
+.costs .note { flex:1 1 100%; font-size:12.5px; color:var(--ink-soft); }
+
+/* Buttons ----------------------------------------------------------- */
+.bar {
+  position:fixed; left:0; right:0; bottom:0; z-index:30;
+  background:var(--ground); border-top:1px solid var(--edge);
+  padding:9px 14px calc(9px + env(safe-area-inset-bottom));
+}
+.bar .inner { max-width:640px; margin:0 auto; display:flex; gap:7px; }
+button {
+  font-family:var(--f-body); font-size:15px; font-weight:600;
+  padding:12px 14px; border:1px solid var(--ink); border-radius:0;
+  background:var(--paper); color:var(--ink); cursor:pointer; flex:1 1 auto;
+}
+button.primary { background:var(--ember-text); border-color:var(--ember-text); color:#FFF; }
+button.ghost { flex:0 0 auto; font-weight:400; border-color:var(--edge); color:var(--ink-mid); }
+button:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+button[disabled] { opacity:.45; cursor:default; }
+
+/* Saved walks ------------------------------------------------------- */
+.saved li {
+  display:flex; align-items:center; gap:10px;
+  background:var(--paper); border:1px solid var(--edge);
+  padding:9px 11px; margin-bottom:6px;
+}
+.saved ul { list-style:none; margin:0; padding:0; }
+.saved .who { flex:1 1 auto; min-width:0; font-size:14px; }
+.saved .who small { display:block; font-family:var(--f-data); font-size:11px; color:var(--ink-soft); margin-top:2px; }
+.saved button { flex:0 0 auto; font-size:13px; padding:7px 10px; font-weight:400; }
+.empty { color:var(--ink-soft); font-size:14px; border:1px dashed var(--edge); padding:14px; text-align:center; }
+
+.foot { font-family:var(--f-data); font-size:11.5px; line-height:1.6; color:var(--ink-soft); border-top:1px solid var(--edge); padding-top:9px; margin-top:24px; }
+.foot b { color:var(--ink-mid); font-weight:400; }
+
+@media (max-width:460px) {
+  .row { flex-wrap:wrap; }
+  .row .ctl { margin-left:auto; }
+  .ident { grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion:reduce) { * { transition:none !important; animation:none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="brandrow">
+    <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+      <g fill="currentColor">
+        <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        <rect x="4" y="86" width="92" height="5"/>
+      </g>
+    </svg>
+    <div>
+      <p class="wordmark">Sixfold</p>
+      <p class="descriptor">Land &amp; Fire · Internal</p>
+    </div>
+    <p class="savestate" id="savestate"><b>Not saved</b>yet</p>
+  </div>
+</header>
+
+<h1>What we can charge for, and what it takes to do it</h1>
+<p class="standfirst">Fill it in on the property. Counts go back to the desk — <strong>no price is given on the lawn.</strong></p>
+
+<div class="ident">
+  <div class="stack full"><label for="job">Job</label><input type="text" id="job" data-f="job" class="wide" placeholder="Customer surname, or the road"></div>
+  <div class="stack"><label for="date">Date</label><input type="date" id="date" data-f="date" class="wide"></div>
+  <div class="stack"><label for="by">Walked by</label><input type="text" id="by" data-f="by" class="wide" placeholder="Name"></div>
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<section>
+  <div class="sechead"><span class="secnum">1</span><h2>The work</h2><span class="sub">What gets charged for</span></div>
+
+  <h3 class="grp">Trees to take down</h3>
+  <div class="row strong"><span class="lbl">Under 30 ft</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="t_u30" aria-label="Trees under 30 feet"></span></div>
+  <div class="row strong"><span class="lbl">30 to 60 ft</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="t_30_60" aria-label="Trees 30 to 60 feet"></span></div>
+  <div class="row strong"><span class="lbl">60 to 80 ft</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="t_60_80" aria-label="Trees 60 to 80 feet"></span></div>
+  <div class="row strong"><span class="lbl">Over 80 ft</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="t_80up" aria-label="Trees over 80 feet"></span></div>
+  <div class="caution" id="tallwarn" hidden><b>Call in before committing.</b> Over 80 ft, on a structure, under tension, or near a line you cannot measure the clearance to — that is not a driveway decision.</div>
+  <div class="row"><span class="lbl">Of those, how many come down <strong>over a roof, fence, line or drive</strong><small>Turns a one-cut tree into a rigged removal</small></span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="t_over" aria-label="Trees coming down over something"></span></div>
+  <div class="row"><span class="lbl">Trees to limb or trim, not remove</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="t_limb" aria-label="Trees to limb or trim"></span></div>
+
+  <h3 class="grp">Material on the ground</h3>
+  <div class="row strong"><span class="lbl">Logs to be bucked<small>Count, and the round length they want</small></span><span class="ctl"><span class="pair"><input type="number" inputmode="numeric" min="0" data-f="logs" aria-label="Logs to be bucked"><span>in</span><input type="number" inputmode="numeric" min="0" data-f="round_len" aria-label="Round length in inches" style="width:62px"></span></span></div>
+  <div class="row"><span class="lbl">Dead fall already down<small>Piles</small></span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="deadfall" aria-label="Dead fall piles"></span></div>
+  <div class="row strong"><span class="lbl">Brush, branches, twigs<small>Piles, or truck loads</small></span><span class="ctl"><input type="text" data-f="brush" style="width:112px" aria-label="Brush, branches and twigs"></span></div>
+  <div class="row"><span class="lbl">Chipper feeding<small>Hours</small></span><span class="ctl"><input type="number" inputmode="decimal" min="0" step="0.5" data-f="chip_hrs" aria-label="Chipper feeding hours"></span></div>
+  <div class="row"><span class="lbl">Slash piles to build</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="slash" aria-label="Slash piles to build"></span></div>
+
+  <h3 class="grp">Stumps</h3>
+  <div class="row strong"><span class="lbl">Stumps to grind<small>Count, and total diameter inches — measured at the ground, root flare included</small></span><span class="ctl"><span class="pair"><input type="number" inputmode="numeric" min="0" data-f="stumps" aria-label="Stumps to grind"><span>in</span><input type="number" inputmode="numeric" min="0" data-f="stump_in" aria-label="Total stump diameter inches" style="width:62px"></span></span></div>
+
+  <h3 class="grp">Haul</h3>
+  <div class="row strong"><span class="lbl">Loads to haul off<small>Count the pile twice — write both counts</small></span><span class="ctl"><span class="pair"><input type="number" inputmode="numeric" min="0" data-f="loads_a" aria-label="Loads, first count"><span>/</span><input type="number" inputmode="numeric" min="0" data-f="loads_b" aria-label="Loads, second count"></span></span></div>
+  <div class="stack"><label for="stays">What stays on site instead<small>Chips, rounds, slash — and where they want it</small></label><input type="text" id="stays" data-f="stays" class="wide"></div>
+</section>
+
+<!-- ============ SECTION 2 ============ -->
+<section>
+  <div class="sechead"><span class="secnum">2</span><h2>What it takes</h2><span class="sub">The cost of doing it</span></div>
+
+  <h3 class="grp">Labour and consumables</h3>
+  <div class="row strong"><span class="lbl">Crew<small>People on site × days</small></span><span class="ctl"><span class="pair"><input type="number" inputmode="numeric" min="0" data-f="crew_n" aria-label="Crew people"><span>×</span><input type="number" inputmode="decimal" min="0" step="0.5" data-f="crew_d" aria-label="Crew days"></span></span></div>
+  <div class="row strong"><span class="lbl">Chains<small>On the job, and sharpenings</small></span><span class="ctl"><span class="pair"><input type="number" inputmode="numeric" min="0" data-f="chains" aria-label="Chains on the job"><span>+</span><input type="number" inputmode="numeric" min="0" data-f="sharp" aria-label="Sharpenings"></span></span></div>
+  <div class="row strong"><span class="lbl">Gas, mix and bar oil<small>Gallons</small></span><span class="ctl"><input type="number" inputmode="decimal" min="0" step="0.5" data-f="fuel" aria-label="Gallons of fuel and oil"></span></div>
+
+  <h3 class="grp">Machines — ours, or rented?</h3>
+  <div class="row"><span class="lbl">Chipper</span><span class="ctl"><select data-f="chip_own" aria-label="Chipper ours or rented"><option value="">—</option><option>Ours</option><option>Rented</option></select><input type="number" inputmode="numeric" min="0" data-f="chip_days" placeholder="days" aria-label="Chipper days" style="width:64px"><input type="number" inputmode="decimal" min="0" data-f="chip_cost" placeholder="$" aria-label="Chipper rental cost" style="width:70px"></span></div>
+  <div class="row"><span class="lbl">Trailer</span><span class="ctl"><select data-f="tr_own" aria-label="Trailer ours or rented"><option value="">—</option><option>Ours</option><option>Rented</option></select><input type="number" inputmode="numeric" min="0" data-f="tr_days" placeholder="days" aria-label="Trailer days" style="width:64px"><input type="number" inputmode="decimal" min="0" data-f="tr_cost" placeholder="$" aria-label="Trailer rental cost" style="width:70px"></span></div>
+  <div class="row"><span class="lbl">Stump grinder</span><span class="ctl"><select data-f="gr_own" aria-label="Grinder ours or rented"><option value="">—</option><option>Ours</option><option>Rented</option></select><input type="number" inputmode="numeric" min="0" data-f="gr_days" placeholder="days" aria-label="Grinder days" style="width:64px"><input type="number" inputmode="decimal" min="0" data-f="gr_cost" placeholder="$" aria-label="Grinder rental cost" style="width:70px"></span></div>
+  <div class="stack"><label for="other">Anything else hired or bought for this job</label><input type="text" id="other" data-f="other" class="wide"></div>
+
+  <h3 class="grp">Disposal and driving</h3>
+  <div class="row strong"><span class="lbl">Dump fee<small>Per load × loads — call and confirm today's figure</small></span><span class="ctl"><span class="pair"><input type="number" inputmode="decimal" min="0" data-f="dump_fee" aria-label="Dump fee per load"><span>×</span><input type="number" inputmode="numeric" min="0" data-f="dump_loads" aria-label="Number of dump loads"></span></span></div>
+  <div class="row"><span class="lbl">Truck round trips the job needs</span><span class="ctl"><input type="number" inputmode="numeric" min="0" data-f="trips" aria-label="Truck round trips"></span></div>
+  <div class="row"><span class="lbl">Second trip needed?<small>Stumps cannot be ground the same day — the 811 locate takes three business days</small></span><span class="ctl"><select data-f="second" aria-label="Second trip needed"><option value="">—</option><option>No</option><option>Yes</option></select></span></div>
+
+  <div class="costs">
+    <span class="k">Hard costs recorded</span>
+    <span class="v" id="hardcost">$0</span>
+    <span class="note">Dump fees plus anything rented. <strong>This is a cost, not a price</strong> — it does not include labour, wear on our own machines, or margin, and it is never shown to a customer.</span>
+  </div>
+</section>
+
+<!-- ============ SECTION 3 ============ -->
+<section>
+  <div class="sechead"><span class="secnum">3</span><h2>Additional notes</h2><span class="sub">Worth knowing, not billable</span></div>
+  <div class="stack">
+    <label for="notes">Anything that slows the crew or changes the job<small>Access, slope, drag to the truck, power lines, septic, neighbours, what was asked for, what was promised</small></label>
+    <textarea id="notes" data-f="notes" placeholder="Gate is 7ft — chipper fits, trailer does not. Steep behind the shed…"></textarea>
+  </div>
+</section>
+
+<!-- ============ SAVED ============ -->
+<section class="saved">
+  <div class="sechead"><span class="secnum">4</span><h2>Walks saved</h2><span class="sub" id="savedcount"></span></div>
+  <div id="savedlist"><p class="empty">Nothing saved yet. Fill this in and press <strong>Save walk</strong> — it goes to the shared log so the desk can price it.</p></div>
+</section>
+
+<p class="foot" id="foot"><b>No price is given on the property</b> — not a figure, not a range. Counts come back, the estimate goes out in writing. Nothing here is said out loud as a promise: not licensed, not insured, not bonded, not certified.</p>
+
+</div>
+
+<div class="bar">
+  <div class="inner">
+    <button class="primary" id="save" type="button">Save walk</button>
+    <button class="ghost" id="export" type="button" hidden>Export</button>
+    <button class="ghost" id="new" type="button">New</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DRAFT = "sixfold-walk-draft";
+  var els = Array.prototype.slice.call(document.querySelectorAll("[data-f]"));
+  var state = { id: newId(), savedAt: null };
+  var db = null, downloads = null;
+
+  function newId() {
+    try {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    } catch (e) {}
+    return "w" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  /* ---- form <-> plain object ------------------------------------- */
+  function read() {
+    var o = {};
+    els.forEach(function (el) { o[el.dataset.f] = el.value; });
+    return o;
+  }
+  function write(o) {
+    els.forEach(function (el) { el.value = (o && o[el.dataset.f] != null) ? o[el.dataset.f] : ""; });
+    recalc();
+  }
+  function num(k, o) {
+    var v = parseFloat((o || read())[k]);
+    return isFinite(v) ? v : 0;
+  }
+
+  /* ---- live readouts --------------------------------------------- */
+  function recalc() {
+    var o = read();
+    var hard = num("dump_fee", o) * num("dump_loads", o) +
+               num("chip_cost", o) + num("tr_cost", o) + num("gr_cost", o);
+    document.getElementById("hardcost").textContent =
+      "$" + hard.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    document.getElementById("tallwarn").hidden = !(num("t_80up", o) > 0);
+  }
+
+  /* ---- local draft ----------------------------------------------- */
+  function saveDraft() {
+    try { localStorage.setItem(DRAFT, JSON.stringify({ id: state.id, v: read() })); } catch (e) {}
+  }
+  function loadDraft() {
+    try {
+      var raw = localStorage.getItem(DRAFT);
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (!d || !d.v) return false;
+      state.id = d.id || state.id;
+      write(d.v);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function status(main, sub) {
+    document.getElementById("savestate").innerHTML =
+      "<b>" + main + "</b>" + (sub || "");
+  }
+
+  /* ---- wiring ----------------------------------------------------- */
+  els.forEach(function (el) {
+    el.addEventListener("input", function () { saveDraft(); recalc(); markDirty(); });
+    el.addEventListener("change", function () { saveDraft(); recalc(); markDirty(); });
+  });
+  function markDirty() {
+    if (state.savedAt) status("Unsaved changes", "on this device");
+  }
+
+  if (!loadDraft()) {
+    var d = document.querySelector('[data-f="date"]');
+    if (d) { d.value = new Date().toISOString().slice(0, 10); saveDraft(); }
+  }
+  recalc();
+  status("Not saved", "yet");
+
+  document.getElementById("new").addEventListener("click", function () {
+    if (!confirm("Start a new walk? Anything not saved to the log is cleared.")) return;
+    state.id = newId(); state.savedAt = null;
+    write({});
+    var d = document.querySelector('[data-f="date"]');
+    if (d) d.value = new Date().toISOString().slice(0, 10);
+    saveDraft();
+    status("Not saved", "yet");
+    window.scrollTo({ top: 0 });
+  });
+
+  /* ---- summary for export ---------------------------------------- */
+  var LABELS = [
+    ["job", "Job"], ["date", "Date"], ["by", "Walked by"],
+    ["t_u30", "Trees under 30ft"], ["t_30_60", "Trees 30-60ft"],
+    ["t_60_80", "Trees 60-80ft"], ["t_80up", "Trees over 80ft"],
+    ["t_over", "Of those, over a roof/fence/line/drive"], ["t_limb", "Trees to limb or trim"],
+    ["logs", "Logs to buck"], ["round_len", "Round length (in)"],
+    ["deadfall", "Dead fall piles"], ["brush", "Brush, branches, twigs"],
+    ["chip_hrs", "Chipper feeding (hrs)"], ["slash", "Slash piles to build"],
+    ["stumps", "Stumps to grind"], ["stump_in", "Stump diameter inches, total"],
+    ["loads_a", "Loads, first count"], ["loads_b", "Loads, second count"],
+    ["stays", "Stays on site"],
+    ["crew_n", "Crew people"], ["crew_d", "Crew days"],
+    ["chains", "Chains"], ["sharp", "Sharpenings"], ["fuel", "Fuel + bar oil (gal)"],
+    ["chip_own", "Chipper ours/rented"], ["chip_days", "Chipper days"], ["chip_cost", "Chipper cost"],
+    ["tr_own", "Trailer ours/rented"], ["tr_days", "Trailer days"], ["tr_cost", "Trailer cost"],
+    ["gr_own", "Grinder ours/rented"], ["gr_days", "Grinder days"], ["gr_cost", "Grinder cost"],
+    ["other", "Else hired or bought"],
+    ["dump_fee", "Dump fee per load"], ["dump_loads", "Dump loads"],
+    ["trips", "Truck round trips"], ["second", "Second trip needed"],
+    ["notes", "Additional notes"]
+  ];
+  function csv() {
+    var o = read();
+    var q = function (s) { return '"' + String(s == null ? "" : s).replace(/"/g, '""') + '"'; };
+    var lines = ["Field,Value"];
+    LABELS.forEach(function (p) { lines.push(q(p[1]) + "," + q(o[p[0]])); });
+    return lines.join("\r\n");
+  }
+  function fileName() {
+    var o = read();
+    var j = (o.job || "walk").replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-|-$/g, "") || "walk";
+    return "sixfold-walk-" + j + "-" + (o.date || "") + ".csv";
+  }
+
+  /* ---- saved list -------------------------------------------------- */
+  function renderSaved(docs) {
+    var host = document.getElementById("savedlist");
+    document.getElementById("savedcount").textContent =
+      docs.length ? docs.length + (docs.length === 1 ? " walk" : " walks") : "";
+    if (!docs.length) {
+      host.innerHTML = '<p class="empty">Nothing saved yet. Fill this in and press <strong>Save walk</strong> — it goes to the shared log so the desk can price it.</p>';
+      return;
+    }
+    var ul = document.createElement("ul");
+    docs.forEach(function (snap) {
+      var d = snap.data() || {};
+      var v = d.v || {};
+      var li = document.createElement("li");
+
+      var who = document.createElement("div");
+      who.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = v.job || "(no job name)";
+      var small = document.createElement("small");
+      small.textContent = [v.date || "no date", v.by || "no name",
+        (v.loads_a ? v.loads_a + " loads" : "")].filter(Boolean).join("  ·  ");
+      who.appendChild(strong); who.appendChild(small);
+
+      var open = document.createElement("button");
+      open.type = "button"; open.textContent = "Open";
+      open.addEventListener("click", function () {
+        state.id = snap.id; state.savedAt = d.savedAt || null;
+        write(v); saveDraft();
+        status("Opened", (v.job || "walk"));
+        window.scrollTo({ top: 0 });
+      });
+
+      var del = document.createElement("button");
+      del.type = "button"; del.textContent = "Delete";
+      del.addEventListener("click", function () {
+        if (!db) return;
+        if (!confirm('Delete "' + (v.job || "this walk") + '" from the log? It cannot be undone.')) return;
+        db.collection("walks").doc(snap.id).delete().catch(function () {
+          status("Delete failed", "try again");
+        });
+      });
+
+      li.appendChild(who); li.appendChild(open); li.appendChild(del);
+      ul.appendChild(li);
+    });
+    host.innerHTML = "";
+    host.appendChild(ul);
+  }
+
+  /* ---- save ------------------------------------------------------- */
+  var saveBtn = document.getElementById("save");
+  saveBtn.addEventListener("click", function () {
+    var v = read();
+    if (!v.job) {
+      status("Needs a job name", "");
+      var j = document.getElementById("job"); j.focus(); j.scrollIntoView({ block: "center" });
+      return;
+    }
+    saveDraft();
+    if (!db) { status("Saved", "on this device only"); state.savedAt = new Date().toISOString(); return; }
+    saveBtn.disabled = true;
+    var now = new Date().toISOString();
+    db.collection("walks").doc(state.id).set({ v: v, savedAt: now, updatedAt: now })
+      .then(function () {
+        state.savedAt = now;
+        status("Saved to the log", new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      })
+      .catch(function (e) {
+        var m = e && e.code === "quota_exceeded" ? "log is full — delete old walks"
+              : e && e.code === "not_granted" ? "no access to the log"
+              : "try again";
+        status("Save failed", m);
+      })
+      .then(function () { saveBtn.disabled = false; });
+  });
+
+  /* ---- capabilities light up later -------------------------------- */
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("db").then(function (ns) {
+      if (!ns) return;
+      db = ns;
+      db.collection("walks").orderBy("updatedAt", "desc").limit(50)
+        .onSnapshot(function (snap) { renderSaved(snap.docs); },
+                    function () { /* listener dead; the form still works */ });
+    }).catch(function () {});
+
+    window.claude.use("downloads").then(function (ns) {
+      if (!ns) return;
+      downloads = ns;
+      var b = document.getElementById("export");
+      b.hidden = false;
+      b.addEventListener("click", function () {
+        downloads.save({ filename: fileName(), data: csv() })
+          .then(function () { status("Exported", "csv"); })
+          .catch(function (e) {
+            if (e && e.code === "declined") return;
+            status("Export failed", "try again");
+          });
+      });
+    }).catch(function () {});
+  }
+})();
+</script>

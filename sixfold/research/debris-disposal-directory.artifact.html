@@ -1,0 +1,971 @@
+<title>Where the Debris Goes</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   Sixfold — Woody-Debris Disposal Directory
+   Dark-first (house register); light print + light-OS register.
+   Palette: Pine Black / Timber / Bone / Ember / Moss.
+   ============================================================ */
+
+:root {
+  /* dark register — the default, per the Sixfold house style */
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;   /* muted text, green-biased neutral */
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;   /* links / figures on the dark ground */
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --ground:    var(--pine);
+  --surface:   var(--timber);
+  --surface-2: var(--timber-2);
+  --ink:       var(--bone);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+
+  --measure: 70ch;
+  --pad: clamp(1.1rem, 4vw, 2.6rem);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pine:      #F3EFE6;
+    --pine-2:    #EEE9DD;
+    --timber:    #FBF8F2;
+    --timber-2:  #F4EFE4;
+    --bone:      #1B211E;
+    --bark:      #5E6B60;
+    --ember:     #BE4E1C;
+    --ember-ink: #B6480F;
+    --moss:      #5C7350;
+    --moss-ink:  #4F6644;
+    --rule:      rgba(20, 30, 25, 0.14);
+    --rule-2:    rgba(20, 30, 25, 0.26);
+    --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+  }
+}
+
+:root[data-theme="light"] {
+  --pine:      #F3EFE6;
+  --pine-2:    #EEE9DD;
+  --timber:    #FBF8F2;
+  --timber-2:  #F4EFE4;
+  --bone:      #1B211E;
+  --bark:      #5E6B60;
+  --ember:     #BE4E1C;
+  --ember-ink: #B6480F;
+  --moss:      #5C7350;
+  --moss-ink:  #4F6644;
+  --rule:      rgba(20, 30, 25, 0.14);
+  --rule-2:    rgba(20, 30, 25, 0.26);
+  --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+}
+
+:root[data-theme="dark"] {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 4rem) var(--pad) 5rem;
+}
+
+/* ---------- typography ---------- */
+
+h1, h2, h3, h4 {
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  line-height: 1.18;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+h1 {
+  font-size: clamp(2rem, 6vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: clamp(1.4rem, 3.4vw, 1.9rem);
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin: 2.2rem 0 0.5rem;
+  color: var(--ink);
+}
+
+p { margin: 0 0 1rem; max-width: var(--measure); }
+strong { font-weight: 600; }
+em { font-style: italic; }
+
+a {
+  color: var(--ember-ink);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  word-break: break-word;
+}
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible {
+  outline: 2px solid var(--ember-ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  margin: 0 0 0.6rem;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1rem, 4vw, 2rem);
+  align-items: start;
+  padding-bottom: 1.8rem;
+  border-bottom: 2px solid var(--rule-2);
+}
+.mark {
+  width: clamp(52px, 12vw, 78px);
+  height: auto;
+  color: var(--ember);
+  flex: none;
+}
+.masthead .lede {
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  color: var(--bark);
+  max-width: 46ch;
+  margin: 0.4rem 0 0;
+}
+.meta {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--bark);
+}
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* ---------- callout ---------- */
+
+.callout {
+  margin: 2rem 0;
+  padding: 1.2rem 1.3rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ember);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout.moss { border-left-color: var(--moss); }
+.callout p { max-width: 64ch; }
+.callout .eyebrow { color: var(--ember-ink); }
+.callout.moss .eyebrow { color: var(--moss-ink); }
+
+/* ---------- section rhythm ---------- */
+
+section { margin-top: 3.4rem; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.tag {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ember-ink);
+  flex: none;
+}
+.scope {
+  color: var(--bark);
+  font-size: 0.95rem;
+  margin: 0.5rem 0 1.1rem;
+  max-width: var(--measure);
+}
+.bottom-line {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  max-width: none;
+}
+.bottom-line b { color: var(--moss-ink); font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; display: inline-block; margin-right: 0.5rem; }
+
+/* ---------- tables ---------- */
+
+.twrap {
+  overflow-x: auto;
+  margin: 1.1rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  min-width: 40rem;
+}
+.rank-table, .access-table { min-width: 34rem; }
+thead th {
+  text-align: left;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bark);
+  background: var(--surface);
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--rule-2);
+  position: sticky;
+  top: 0;
+}
+tbody td {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface) 45%, transparent); }
+td .site { font-weight: 600; color: var(--ink); display: block; }
+td .addr { color: var(--bark); font-size: 0.85rem; display: block; margin-top: 0.15rem; }
+td.rate {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+  color: var(--ink);
+}
+td.notes { font-size: 0.9rem; color: var(--bone); }
+td.notes strong { color: var(--ink); }
+
+/* cost-tier chip */
+.tier {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  margin-bottom: 0.4rem;
+}
+.tier::before { content: "● "; }
+.tier.hot  { color: var(--ember-ink); }
+.tier.mid  { color: #C9962F; }
+.tier.low  { color: var(--moss-ink); }
+.tier.free { color: var(--moss-ink); background: color-mix(in srgb, var(--moss) 16%, transparent); }
+.tier.call { color: var(--bark); }
+:root[data-theme="light"] .tier.mid,
+:root:not([data-theme="dark"]) .tier.mid { color: #9A6B12; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .tier.mid { color: #9A6B12; }
+}
+
+/* access pill */
+.pill {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.yes { color: var(--moss-ink); border: 1px solid var(--moss); }
+.pill.lim { color: #C9962F; border: 1px solid currentColor; }
+.pill.no  { color: var(--ember-ink); border: 1px solid var(--ember); }
+
+/* ---------- the ranking ladder ---------- */
+
+.ladder {
+  list-style: none;
+  margin: 1.4rem 0 0;
+  padding: 0 0 0 1.1rem;
+  border-left: 4px solid transparent;
+  border-image: linear-gradient(to bottom, var(--moss) 0%, #C9962F 55%, var(--ember) 100%) 1;
+}
+.ladder li {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr;
+  gap: 0.2rem 0.9rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.ladder li:last-child { border-bottom: none; }
+.ladder .n {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--moss-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ladder li:nth-last-child(-n+4) .n { color: var(--ember-ink); }
+.ladder .what { font-weight: 600; color: var(--ink); }
+.ladder .where { color: var(--bark); font-size: 0.9rem; }
+.ladder .r {
+  grid-column: 2;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ladder .r .sep { color: var(--bark); padding: 0 0.5rem; }
+
+/* ---------- fact-check + sources ---------- */
+
+.fc h3 { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ember-ink); }
+.fc ul { padding-left: 1.1rem; max-width: var(--measure); }
+.fc li { margin-bottom: 0.5rem; font-size: 0.9rem; }
+.fc.small li { font-size: 0.84rem; color: var(--bone); }
+
+.sources { font-size: 0.82rem; color: var(--bark); }
+.sources li { margin-bottom: 0.35rem; word-break: break-word; }
+
+hr.div {
+  border: none;
+  border-top: 1px solid var(--rule-2);
+  margin: 3rem 0 0;
+}
+
+.foot {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid var(--rule-2);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--bark);
+  letter-spacing: 0.03em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ============================================================
+   PRINT — force the light register, Letter sheet, tight type.
+   Sent to Sixfold as a PDF; must read as ink on paper.
+   ============================================================ */
+@page { size: Letter; margin: 15mm 16mm 16mm; }
+
+@media print {
+  :root, :root[data-theme="dark"] {
+    --pine: #ffffff; --pine-2: #f6f3ec; --timber: #f6f3ec; --timber-2: #efe9dd;
+    --bone: #17201b; --bark: #4c574d;
+    --ember: #A8410F; --ember-ink: #9c3c0c;
+    --moss: #4a6140; --moss-ink: #3f5537;
+    --rule: rgba(20,30,25,0.22); --rule-2: rgba(20,30,25,0.4);
+    --shadow: none;
+  }
+  body { font-size: 9.6pt; line-height: 1.44; background: #fff; }
+  .wrap { max-width: none; margin: 0; padding: 0; }
+  a { color: inherit; text-decoration: none; }
+  .masthead { border-bottom-width: 1.5pt; }
+  .mark { color: #A8410F; width: 58px; }
+  thead th { position: static; font-size: 6pt; }
+  table { font-size: 8pt; min-width: 0; }
+  .twrap { overflow: visible; break-inside: auto; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  h2, h3, .section-head { break-after: avoid; }
+  section { break-inside: auto; margin-top: 1.6rem; }
+  .callout, .bottom-line, .ladder li { break-inside: avoid; }
+  .ladder { border-image: linear-gradient(to bottom, #4a6140, #9A6B12, #A8410F) 1; }
+  .tier, .pill { border-color: #7c7c7c !important; color: #333 !important; }
+  .foot { break-before: avoid; }
+  p, li { orphans: 3; widows: 3; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+      <g fill="currentColor">
+        <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        <rect x="4" y="86" width="92" height="5"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+        <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+        <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+        <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+        <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+        <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+        <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Sixfold LLC &nbsp;·&nbsp; Internal — Operations</p>
+      <h1>Where the Debris Goes</h1>
+      <p class="lede">A hauling reference for Colorado&rsquo;s fire-mitigation regions: every disposal site we could confirm, grouped by area and ranked <strong>cheapest first</strong>.</p>
+      <div class="meta">
+        <span>Prepared <b>2026-09-08</b></span>
+        <span>Base <b>Monument, CO</b></span>
+        <span>Phase 1 &mdash; call before the first haul</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="callout">
+    <p class="eyebrow">The one thing to take from this</p>
+    <p>Most of Colorado&rsquo;s cheap and free drop-offs are <strong>community slash programs funded for homeowners</strong>. Several bar commercial haulers outright. For a paid Sixfold job with haul-off in the contract, the usable sites are the <strong>commercial landfills</strong>, <strong>Rocky Top Resources</strong>, <strong>A1 Organics</strong>, and the <strong>Black Forest Slash &amp; Mulch</strong> site &mdash; everything else is a homeowner-haul or chipping-day tool. Rates and season dates at these sites change every year and sometimes mid-season; re-verify before any quote that commits us to a haul-off price.</p>
+  </div>
+
+  <section id="how-to-read">
+    <div class="section-head"><h2>How to read this</h2></div>
+    <p>Sixfold&rsquo;s tool list is &ldquo;fell trees, grind stumps, build slash piles, chip, cut rounds, haul off or leave on site.&rdquo; This document is only about the <strong>haul-off</strong> line &mdash; where the material goes and what the gate charges. Three things decide the real cost of a run, in this order:</p>
+    <ol>
+      <li><strong>Drive time.</strong> A loaded round trip is roughly $60&ndash;$120 per hour of truck-and-operator time before the gate fee. A free site 90 minutes away usually loses to a paid site 20 minutes away. Distances below are rough drive estimates from Monument and are flagged as estimates.</li>
+      <li><strong>Whether the site takes a contractor load at all.</strong> See the box below &mdash; this is the biggest filter on the list.</li>
+      <li><strong>The gate fee</strong>, quoted three different ways: <strong>per ton</strong> (weighed), <strong>per cubic yard</strong> (eyeballed at the scale house), or <strong>per load</strong> (a pickup bed or a defined trailer size). Rough conversions: loose slash &asymp; 200&ndash;400&nbsp;lb/cy; chipped material &asymp; 500&ndash;800&nbsp;lb/cy; green rounds and logs &asymp; 800&ndash;1,000&nbsp;lb/cy. A pickup bed is &asymp; 2.5&nbsp;cy &mdash; so a pickup of loose slash is a quarter to half a ton; a pickup of green rounds is a ton or more.</li>
+    </ol>
+    <p>Within each region, sites are ordered <strong>cheapest first</strong> on their headline rate for mixed slash-and-wood, so the best deal is at the top. A site that is free but closed to contractors is still listed &mdash; a client may be able to haul their own, and a chipping-day arrangement can sometimes use it.</p>
+    <p><strong>On the very low numbers:</strong> the $5 &ldquo;wood chips&rdquo; rates at SCRAP and Eagle County are quoted straight off those landfills&rsquo; own fee pages &mdash; they are that cheap because the material is <em>already chipped</em> (2&nbsp;in max) and the site reuses it as cover. That is <strong>not</strong> a rate for slash, branches or logs, which price higher on the same schedules. Confidence on every figure is in the fact-check log: about twenty sites are confirmed against the operator&rsquo;s own page today, a handful are flagged &ldquo;Call&rdquo; because no rate is published, and two (Chaffee, Pitkin) are carried from older reporting.</p>
+    <p>Cost tiers: <span class="tier free">Free</span> &nbsp; <span class="tier low">Low</span> under ~$15/ton or ≤ $12/load &nbsp; <span class="tier mid">Mid</span> ~$20&ndash;$35/ton or a paid load &nbsp; <span class="tier hot">Hot</span> $40+/ton or wood billed as trash &nbsp; <span class="tier call">Call</span> not published.</p>
+  </section>
+
+  <section id="access">
+    <div class="section-head"><h2>The contractor-access problem</h2><span class="tag">read first</span></div>
+    <div class="twrap">
+      <table class="access-table">
+        <thead><tr><th>Site type</th><th>Typical contractor rule</th></tr></thead>
+        <tbody>
+          <tr><td><span class="site">CUSP community slash sites</span><span class="addr">Bailey · Fairplay · Divide</span></td><td class="notes"><strong>&ldquo;No Contractors Please.&rdquo;</strong> Home and property owners only. Stated on baileyslashsite.com.</td></tr>
+          <tr><td><span class="site">County slash / mulch programs</span><span class="addr">Douglas · Jefferson · El Paso / Black Forest</span></td><td class="notes">Built for residents. Jeffco and Black Forest publish no contractor ban but price and rules assume a homeowner; Douglas is &ldquo;residents only, bring ID.&rdquo; Confirm per program whether the crew may deliver on a resident&rsquo;s behalf.</td></tr>
+          <tr><td><span class="site">Boulder County Sort Yards</span><span class="addr">Nederland · Meeker Park</span></td><td class="notes"><strong>Contractors allowed</strong>, but must complete a registration form for <em>each</em> client&rsquo;s property &mdash; address and owner per load. Free.</td></tr>
+          <tr><td><span class="site">Commercial landfills &amp; organics yards</span><span class="addr">Front Range · DADS · Larimer · SCRAP · Eagle · Pitkin · Milner · Rocky Top · A1 Organics</span></td><td class="notes">Open to commercial haulers at the posted rate. This is where Sixfold&rsquo;s routine haul-off volume goes.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ REGION A ============ -->
+  <section id="region-a">
+    <div class="section-head"><span class="tag">A</span><h2>El Paso County &amp; the Pikes Peak area</h2></div>
+    <p class="scope">Home region. Monument, Palmer Lake, Black Forest, Colorado Springs, Woodland Park, Divide, Florissant &mdash; Sixfold&rsquo;s core service area alongside Douglas and Teller.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Divide Transfer Station (Apex Waste)</span><span class="addr">Woodland Park / Divide</span></td>
+          <td class="rate"><span class="tier low">Low</span>$5 per load recycling for WP / Teller residents · bulk yard waste quoted per job</td>
+          <td class="notes">Teller County and the City of Woodland Park run a <strong>free residential pine-needle and leaf program in May&ndash;June</strong> with Apex and the fire department. Bulk yard waste: Apex quotes per job, (719) 686-7517. Resident-facing.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Black Forest Slash &amp; Mulch</span><span class="addr">SAMCOM · Black Forest (Shoup Rd area; exact address not published)</span></td>
+          <td class="rate"><span class="tier low">Low</span>$10 per load, any size · loyalty 6 for $50 · cash or check to &ldquo;SAMCOM&rdquo; only</td>
+          <td class="notes">Cheapest structured option near base and <strong>no stated contractor ban</strong> &mdash; but strict: tree and brush debris only, <strong>max 6&nbsp;ft length, 8&nbsp;in diameter</strong>, no stumps, no roots, no lumber, no bulk pine needles. 2026 season: opens May&nbsp;2, last slash day Sept&nbsp;12, last mulch day Sept&nbsp;19. Tue &amp; Thu 5:00&ndash;7:30&nbsp;pm, Sat 8:00&nbsp;am&ndash;4:00&nbsp;pm, no Sundays. ~15&ndash;20&nbsp;min from Monument. Good for a clean chip-and-limb load; useless for rounds or grindings.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Divide Slash Site (CUSP)</span><span class="addr">E of Hwy 24 / Hwy 67, S on Hybrook Rd past the post office, Divide</span></td>
+          <td class="rate"><span class="tier mid">Mid</span>$20 per load (&asymp; one full pickup bed) · mulch free when available</td>
+          <td class="notes"><strong>Homeowners only &mdash; &ldquo;No Contractors Please.&rdquo;</strong> Season roughly May&ndash;late Sept, Saturdays 9&nbsp;am&ndash;4&nbsp;pm (2026 dates vary &mdash; check baileyslashsite.com/divide-slashsite). No stumps, roots, lumber, ties, dirt, trash, metal, weeds, grass, bark or bagged cones. Teller County&rsquo;s main homeowner slash outlet; to Sixfold, a client-haul or chipping-day destination only. ~35&nbsp;min west of Monument.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Rocky Top Resources</span><span class="addr">1755 E Las Vegas St, Colorado Springs</span></td>
+          <td class="rate"><span class="tier call">Call</span>contractor loads at posted cubic-yard rate ("Price Guide" PDF not online) · delivery from $85 · (719) 579-9103</td>
+          <td class="notes">The main commercial wood-recycling yard for the Springs. Branches, brush, junipers, logs, untreated fencing, pallets, needles, leaves, old mulch. Stumps generally <strong>not</strong> listed. Mon&ndash;Fri 7:30&ndash;5, Sat 8&ndash;4. ~25&ndash;30&nbsp;min south of Monument. The advertised <strong>$10 Saturday rate is residents only and excludes contractors.</strong> Free mulch back-haul.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Midway Landfill (WM)</span><span class="addr">8925 Rancho Colorado Blvd, Fountain · I-25 exit 119</span></td>
+          <td class="rate"><span class="tier call">Call</span>wood / yard-waste rate not posted online; MSW gate rate otherwise · (719) 382-8383</td>
+          <td class="notes">Full-service landfill, accepts yard, green and wood waste for composting per WM&rsquo;s fact sheet &mdash; a green-waste rate below MSW likely exists but is not published. ~40&ndash;50&nbsp;min south of Monument, past Colorado Springs. The nearest true full-service landfill: best for <strong>stumps, root balls, oversized rounds and contaminated loads</strong> the slash sites reject.</td>
+        </tr>
+        <tr>
+          <td><span class="site">City of Colorado Springs Forestry &mdash; free mulch pile</span><span class="addr">1601 Recreation Way</span></td>
+          <td class="rate"><span class="tier call">n/a</span>not a drop-off</td>
+          <td class="notes">Listed to correct a common assumption: the City runs <strong>no public dump site</strong>. It gives mulch away (bring your own tools, no commercial use) and points residents to Rocky Top for disposal.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Routine crew haul-off goes to <strong>Rocky Top Resources</strong> (call for the contractor cy rate) or, for clean limb-and-chip loads under the size limit, <strong>Black Forest Slash &amp; Mulch at $10/load</strong>. Stumps, root balls and oversized rounds go to <strong>Midway Landfill</strong> at Fountain. The Teller County sites are homeowner-only.</p>
+  </section>
+
+  <!-- ============ REGION B ============ -->
+  <section id="region-b">
+    <div class="section-head"><span class="tag">B</span><h2>Douglas County</h2></div>
+    <p class="scope">Sedalia, Castle Rock, Larkspur, Franktown, The Pinery, Roxborough. Sixfold has a live quote in S&nbsp;Sedalia and this is the county with the cost-share program.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Douglas County Slash-Mulch Program</span><span class="addr">GreenWorks site (year-round) + seasonal Sedalia site, 5675 Delva Way, Sedalia</span></td>
+          <td class="rate"><span class="tier free">Free</span></td>
+          <td class="notes"><strong>Residents only &mdash; bring ID / proof of residency.</strong> Loader on site; free wood chips back to residents as supply allows. Main site Mon&ndash;Sat 8&nbsp;am&ndash;5&nbsp;pm (closed county holidays); Sedalia seasonal site Saturdays 7&nbsp;am&ndash;5&nbsp;pm through October. <strong>A contractor delivering on a resident&rsquo;s behalf is not addressed in the published rules &mdash; confirm by phone (303-663-6274) before relying on it.</strong> Separately, Douglas County cost-share includes up to $7,000 for community chipping, paid toward the contractor.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Castle Rock / Castle Pines town clean-up events</span><span class="addr">town-wide</span></td>
+          <td class="rate"><span class="tier free">Free</span>to town residents, a few weekends a year</td>
+          <td class="notes">Event-based, not a standing site. Watch crgov.com/2866 and the town calendars. Homeowner-facing.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Denver Arapahoe Disposal Site (DADS, WM)</span><span class="addr">3500 S Gun Club Rd, Aurora</span></td>
+          <td class="rate"><span class="tier call">Call</span>charged by weight; green / organics-for-compost rate not obtained · (720) 876-2650</td>
+          <td class="notes">Nearest large full-service landfill to N Douglas County; accepts municipal, C&amp;D, and yard / organics for composting. Sells compost and mulch. Open 6&nbsp;am&ndash;8:30&nbsp;pm Mon&ndash;Fri, 7&ndash;5 Sat. Best Douglas-area option for <strong>stumps and mixed loads</strong>. ~35&ndash;45&nbsp;min from central Douglas County; ~50&nbsp;min from Monument.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> The county slash-mulch site is free but resident-gated; get a definitive answer on contractor drop-off before quoting a Douglas job as &ldquo;haul included.&rdquo; Failing that, mixed loads and stumps go to <strong>DADS</strong> in Aurora at the (unconfirmed) weight rate.</p>
+  </section>
+
+  <!-- ============ REGION C ============ -->
+  <section id="region-c">
+    <div class="section-head"><span class="tag">C</span><h2>Jefferson County, Clear Creek &amp; Gilpin</h2></div>
+    <p class="scope">Front Range foothills. Evergreen, Conifer, the Bailey corridor, Golden, Idaho Springs, Black Hawk, Coal Creek Canyon. Dense WUI and the contested ground against the established outfits.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Clear Creek County Slash Site</span><span class="addr">1531 Soda Creek Rd, Idaho Springs</span></td>
+          <td class="rate"><span class="tier free">Free</span>to Clear Creek residents · <span class="tier call">fee</span> out-of-county (not published) · (303) 679-2482</td>
+          <td class="notes">Open Tue, Wed, Fri, Sat 8&nbsp;am&ndash;5&nbsp;pm. The out-of-county fee makes this marginal for a Sixfold job unless the property is in-county.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Gilpin County Slash Site</span><span class="addr">278 Jankowski Drive, Black Hawk</span></td>
+          <td class="rate"><span class="tier free">Free</span>to Gilpin residents · <span class="tier call">fee</span> non-residents per county schedule · (303) 582-5004</td>
+          <td class="notes">2026 season Apr&nbsp;22&ndash;Nov&nbsp;8, Wed&ndash;Sat 7:00&nbsp;am&ndash;2:30&nbsp;pm, Sun 8:00&nbsp;am&ndash;1:00&nbsp;pm. Co-located with the county transfer station. Same in-county / out-of-county split as Clear Creek.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Jefferson County SLASH</span><span class="addr">Rotating yards: Marshdale, 26624 N Turkey Creek Rd, Evergreen · Tincup Ridge, 101 Rooney Rd · Settlers Drive (in design)</span></td>
+          <td class="rate"><span class="tier mid">Mid</span>$24 per load · 1 load = 6 cubic yards (pickup to cab height, or trailer 8 × 5 × 4 ft) · credit cards only</td>
+          <td class="notes">2026 season starts May&nbsp;15, weekend operation on a rotating calendar (jeffco.us/slash) through late October. Tree limbs, prunings, pine cones, woody debris; needles accepted but separated. <strong>No stumps, no lumber, no detached leaves, no construction material.</strong> &ldquo;Residents only, though you do not need to be a JeffCo resident&rdquo; &mdash; a contractor ban is not stated but the program is built around homeowners; confirm before hauling crew loads.</td>
+        </tr>
+        <tr>
+          <td><span class="site">City of Golden</span><span class="addr">city limits</span></td>
+          <td class="rate"><span class="tier call">n/a</span>no city slash site</td>
+          <td class="notes">Golden runs curbside organics for city homeowners and points residents to the Jeffco SLASH and Clear Creek / Gilpin sites. Listed to correct the assumption of a Golden drop-off.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Jeffco SLASH at <strong>$24 / 6-cy load</strong> is the workable number if crew loads are accepted &mdash; get that confirmed. Clear Creek and Gilpin only make sense when the job itself is in that county (residents free). None take stumps.</p>
+  </section>
+
+  <!-- ============ REGION D ============ -->
+  <section id="region-d">
+    <div class="section-head"><span class="tag">D</span><h2>Boulder County</h2></div>
+    <p class="scope">Boulder foothills, Nederland, Allenspark, Ward, Jamestown, Coal Creek Canyon, the Marshall / Superior grassland edge. Post-Marshall and post-CalWood, the most mitigation-literate market in the state.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Boulder County Community Forestry Sort Yards</span><span class="addr">Nederland: 291 Ridge Road · Meeker Park: 8200 Hwy 7, Allenspark</span></td>
+          <td class="rate"><span class="tier free">Free</span>logs, slash and timber</td>
+          <td class="notes"><strong>Contractors accepted</strong> but must complete a registration form <em>for each client&rsquo;s property</em> (address + owner). 2026: Nederland May&nbsp;7&ndash;Nov&nbsp;14, Meeker Park May&nbsp;13&ndash;Oct&nbsp;31, both Wed&ndash;Sat 9&nbsp;am&ndash;5&nbsp;pm. Logs / chunk wood 4&nbsp;in min diameter, squared ends; slash / branches <strong>4&nbsp;in max diameter</strong>; decayed wood (no roots); bagged grass / leaves / weeds. <strong>Not accepted:</strong> logs with branches attached, <strong>beetle-infested logs July&nbsp;15&ndash;Sept&nbsp;15</strong>, treated / dimensional lumber, <strong>stumps or root balls</strong>, loose grass, loads with rock / dirt / metal. Daily status 303-678-6368. Best free contractor-accessible option in the state &mdash; but the 4&nbsp;in cap and no-stump rule mean the crew still needs a landfill for the heavy fraction.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Wildfire Partners community chipping</span><span class="addr">countywide</span></td>
+          <td class="rate"><span class="tier free">Free</span>chipping for enrolled properties, 2026 season open</td>
+          <td class="notes">A chipping program, not a tip site &mdash; relevant if Sixfold subcontracts or coordinates. wildfirepartners.org/chipping-program.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Western Disposal / Eco-Cycle facilities</span><span class="addr">City of Boulder</span></td>
+          <td class="rate"><span class="tier call">Call</span>yard-waste and wood rates vary; not obtained</td>
+          <td class="notes">Commercial organics acceptance exists in the city; call for contractor rates if working the Boulder plains rather than the foothills.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Front Range Landfill (Waste Connections)</span><span class="addr">1830 Weld County Rd 5, Erie</span></td>
+          <td class="rate"><span class="tier hot">Hot</span>wood billed as general MSW: $98.00/ton, $196 minimum · clean soil / sod / mulch $18.00/ton · effective Dec&nbsp;1&nbsp;2024</td>
+          <td class="notes">The most expensive place on this list to take wood &mdash; it has <strong>no separate brush rate</strong>, so a chipped load prices the same as household trash. Use only for stumps and contaminated debris the sort yards reject, and only when Erie is genuinely the closest gate. Mon&ndash;Fri 6&nbsp;am&ndash;5&nbsp;pm, Sat 6&nbsp;am&ndash;2&nbsp;pm. Safety vest required outside the vehicle; uncovered loads charged double.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Take clean slash (≤ 4&nbsp;in) and logs to the <strong>Nederland or Meeker Park sort yard for free</strong>, registering each property. Send stumps, root balls and big rounds to a landfill &mdash; but <strong>not Front Range Landfill unless unavoidable</strong>, because wood there is $98/ton.</p>
+  </section>
+
+  <!-- ============ REGION E ============ -->
+  <section id="region-e">
+    <div class="section-head"><span class="tag">E</span><h2>Larimer County &amp; the Estes Valley</h2></div>
+    <p class="scope">Fort Collins foothills, Loveland, Masonville, Rist Canyon, Red Feather Lakes, Glen Haven, Estes Park. <strong>The disposal map changed in August 2026</strong> &mdash; the old Larimer County Landfill on Taft Hill Rd closed and operations split across new sites.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Estes Valley Watershed Coalition community slash drop-off</span><span class="addr">Estes Valley</span></td>
+          <td class="rate"><span class="tier free">Free</span>seasonal roll-off containers for slash, pinecones, needles</td>
+          <td class="notes">2026 Community Drop-off Days: <strong>July&nbsp;18, Aug&nbsp;15, Sept&nbsp;19, 9&nbsp;am&ndash;12&nbsp;pm</strong> (EVWC with the fire district, WM and partners). Homeowner-facing; a Sixfold job in the Estes Valley might time a client haul to these dates. Estes Valley Fire 970-577-0900.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Larimer County North Landfill</span><span class="addr">15669 N County Road 9, Wellington</span></td>
+          <td class="rate"><span class="tier low">Low</span>Green waste: $9 flat (car/SUV), $16 flat (pickup/cargo van), or $13.00/cubic yard for trailers under 1,000&nbsp;lb/cy &mdash; no state surcharge · compacted MSW $35/ton for comparison</td>
+          <td class="notes">Opened Aug&nbsp;3&nbsp;2026 for commercial haulers and for residents within ~10&nbsp;miles (Wellington area). Green waste must be <strong>clean and separated by type</strong> (pallets / green waste / logs / yard waste) &mdash; mixed loads are landfilled instead. Tree trunks accepted only if <strong>≤ 6&nbsp;ft long and ≤ 2&nbsp;ft diameter</strong>; <strong>root balls excluded</strong>, treated / painted wood excluded. Per-ton green-waste rate for heavier loads not published &mdash; call (970) 498-5771. Ground on site.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Larimer County Central Diversion &amp; Transfer Station</span><span class="addr">2388 W Trilby Road, Fort Collins</span></td>
+          <td class="rate"><span class="tier low">Low</span>same green-waste flat / cy structure as above · transfer-station MSW $45/ton from 7/1/2026</td>
+          <td class="notes">The Fort Collins / Loveland drop-off point after the old landfill closed. Same green-waste separation rules. The practical Sixfold tip for the Fort Collins&ndash;Loveland&ndash;Masonville foothills.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Wellington / Red Feather Convenience Center</span><span class="addr">Red Feather Lakes / Crystal Lakes area</span></td>
+          <td class="rate"><span class="tier mid">Mid</span>loose waste $20 / car or pickup (1 cy min) + additional cy · no separate green-waste rate</td>
+          <td class="notes">Serves the Red Feather Lakes fire country. Prices slash as loose waste, so only worth it for a small load close by.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Estes Park Convenience Center (Larimer County)</span><span class="addr">Estes Park</span></td>
+          <td class="rate"><span class="tier mid">Mid</span>loose waste $25.91/cy + surcharge · minimum load (&lt; ½ cy) $22.00 · rock/rubble $41/cy · <strong>no dedicated green-waste line</strong></td>
+          <td class="notes">In the Estes Valley the cheaper route is the seasonal slash roll-offs above, not the convenience center &mdash; the center prices slash as loose waste.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Larimer green waste is <strong>cheap where it is offered</strong> &mdash; $9&ndash;$16 flat per vehicle, $13/cy for a small trailer &mdash; at the <strong>North Landfill (Wellington)</strong> or the <strong>Trilby Rd transfer station (Fort Collins)</strong>, provided the load is clean and sorted and trunks are under 2&nbsp;ft. Stumps and root balls are excluded there. The Estes Valley has no cheap standing site &mdash; use the free EVWC drop-off days or carry Estes material down to Trilby Rd.</p>
+  </section>
+
+  <!-- ============ REGION F ============ -->
+  <section id="region-f">
+    <div class="section-head"><span class="tag">F</span><h2>Summit County</h2></div>
+    <p class="scope">Breckenridge, Frisco, Dillon, Silverthorne, Keystone, Blue River. Dense lodgepole, heavy beetle-kill history.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">SCRAP &mdash; Summit County Resource Allocation Park</span><span class="addr">639 Landfill Rd, Keystone</span></td>
+          <td class="rate"><span class="tier low">Low</span>Wood chips $5/ton (min $5, 2&nbsp;in max &mdash; <em>chips only, not slash</em>) · Wood slash $12/ton (min $10) · Yard waste, leaves &amp; grass $31/ton (min $10) · Wood stumps $35/ton (min $15) · + $1.74/ton CDPHE fee (7/1/2026&ndash;6/30/2027) · unsorted C&amp;D $150/ton</td>
+          <td class="notes">The cleanest fee structure on this list: slash, stumps and chips are each priced separately and <strong>must be separate loads</strong> to get the low rate &mdash; a mixed slash/stump load prices higher, and any dirt, rock or trash contamination bumps the whole load to the loose-trash rate plus surcharge and hauling. Mon&ndash;Fri 7&nbsp;am&ndash;3:30&nbsp;pm, Sat 7&nbsp;am&ndash;11:30&nbsp;am. Summit County also runs a free residents&rsquo; chipping program in season. Contractors accepted at the posted rates.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> SCRAP at <strong>$12/ton for slash, $35/ton for stumps</strong> is workable and predictable &mdash; the discipline required is keeping slash, stumps and chips in separate clean loads.</p>
+  </section>
+
+  <!-- ============ REGION G ============ -->
+  <section id="region-g">
+    <div class="section-head"><span class="tag">G</span><h2>Eagle County</h2></div>
+    <p class="scope">Vail, Avon, Edwards, Eagle, Gypsum, Basalt (north side), Wolcott.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Eagle County Landfill</span><span class="addr">815 Ute Creek, Wolcott</span></td>
+          <td class="rate"><span class="tier mid">Mid</span>Wood chips $5.00/load (<em>chips only</em>) · <strong>Trees / limbs 2&nbsp;in diameter or larger: $21.00/ton</strong> · Landscaping material $48.00/ton · Mixed household waste $48.00/ton · minimum charge $6.00 · effective Jan&nbsp;1&nbsp;2026</td>
+          <td class="notes">The &ldquo;trees / limbs ≥ 2&nbsp;in&rdquo; rate at <strong>$21/ton is less than half the landscaping rate</strong> &mdash; a clean load of limbs and rounds is cheap, but grass, needles, brush under 2&nbsp;in and mixed yard debris all price at $48/ton. Sort aggressively at the job. Mon&ndash;Fri 8&nbsp;am&ndash;4:30&nbsp;pm, Sat 8&nbsp;am&ndash;3&nbsp;pm. Resident punch pass and senior fee-waiver don&rsquo;t help a contractor load.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Load <strong>clean limbs and rounds only</strong> and pay <strong>$21/ton</strong>; anything mixed doubles to $48/ton. Already-chipped material is $5/load.</p>
+  </section>
+
+  <!-- ============ REGION H ============ -->
+  <section id="region-h">
+    <div class="section-head"><span class="tag">H</span><h2>Grand County &amp; Middle Park</h2></div>
+    <p class="scope">Granby, Grand Lake, Winter Park, Fraser, Tabernash, Hot Sulphur Springs, Kremmling, Walden. Historic epicentre of the mountain-pine-beetle epidemic.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Confluence Energy</span><span class="addr">Kremmling (and Walden)</span></td>
+          <td class="rate"><span class="tier free">$0 or better</span>historically bought / accepted beetle-kill logs, logging scrap and deadwood &mdash; <strong>2025&ndash;2026 intake status unconfirmed</strong></td>
+          <td class="notes">Ran a 10-year Forest Service stewardship agreement to take beetle-kill pine, scrap and deadwood for wood pellets, pet bedding and absorbent. The company has had well-documented financial turbulence. If still taking clean conifer logs, potentially a <strong>zero- or negative-cost outlet</strong> for the log fraction. Call direct (confluenceenergy.com) before any Middle Park work.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Ranch Creek Waste</span><span class="addr">441 State Highway 125, Granby</span></td>
+          <td class="rate"><span class="tier call">Call</span>rate not published · (970) 887-3618</td>
+          <td class="notes">Grand County&rsquo;s main local hauler; operates transfer capacity.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Granby Transfer Station (The Trash Company)</span><span class="addr">726 County Road 612, Granby</span></td>
+          <td class="rate"><span class="tier call">Call</span>rate not published · <strong>Grand County&rsquo;s landfills are permanently closed</strong> &mdash; disposal routes through transfer stations, adding long-haul cost</td>
+          <td class="notes">Single-stream and C&amp;D recycling plus transfer. The long-haul-to-Denver economics mean gate fees trend high; get a quote before committing a haul-off job in Grand County.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Kremmling town recycling drop-off</span><span class="addr">301 Central Ave</span></td>
+          <td class="rate"><span class="tier call">n/a</span>$4 per 30-gallon bag · 4th Saturday monthly 10&nbsp;am&ndash;2&nbsp;pm</td>
+          <td class="notes">Household recycling only &mdash; not a slash outlet. Noted so it is not mistaken for one.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> No standing cheap slash site &mdash; Grand County disposal is transfer-station priced and the numbers need a phone call. The wildcard is <strong>Confluence Energy in Kremmling</strong>: if it is still accepting logs, route the log fraction there and take only true slash and grindings to the transfer station.</p>
+  </section>
+
+  <!-- ============ REGION I ============ -->
+  <section id="region-i">
+    <div class="section-head"><span class="tag">I</span><h2>Pitkin County &amp; the Roaring Fork</h2></div>
+    <p class="scope">Aspen, Snowmass, Woody Creek, Basalt (south side), the Frying Pan.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Pitkin County Solid Waste Center (Landfill)</span><span class="addr">Aspen</span></td>
+          <td class="rate"><span class="tier hot">Hot</span><strong>separated clean wood, branches, light organics &asymp; $45/ton</strong> · compactor / mixed trash &asymp; $64.50/ton · commercial recycling &asymp; $35.50/ton · <em>figures 2022&ndash;2024 &mdash; verify</em></td>
+          <td class="notes">Runs a large, well-regarded compost operation and <strong>requires 35% diversion</strong> on projects in unincorporated Pitkin County (up from 25%), which pushes toward sorting wood out anyway. Sells finished compost. Contractors accepted; the diversion mandate is itself a reason a mitigation contractor is welcome.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Sort the wood &mdash; separated branches at &asymp; $45/ton beat the &asymp; $64.50/ton mixed rate, and the county&rsquo;s diversion rule effectively requires it. Confirm the current numbers; the ones on file are a couple of years old.</p>
+  </section>
+
+  <!-- ============ REGION J ============ -->
+  <section id="region-j">
+    <div class="section-head"><span class="tag">J</span><h2>Routt County (Steamboat)</h2></div>
+    <p class="scope">Steamboat Springs, Oak Creek, Yampa, Clark, Milner.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Milner Landfill (Apex Waste Solutions, formerly Twin Enviro)</span><span class="addr">near Milner, ~10&nbsp;mi west of Steamboat on US 40</span></td>
+          <td class="rate"><span class="tier call">Call</span>yard waste / organics at a &ldquo;reduced rate&rdquo; in the organics area &mdash; specific figure not published · (970) 879-6985</td>
+          <td class="notes">The <strong>only landfill in Routt County</strong> and the only local MRF, so there is no competitor to shop against; the county has publicly discussed revisiting the permit and tipping fees. An organics area exists, so slash prices below MSW &mdash; but you must phone for the number. Ownership moved to Apex in 2024.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> One gate, no alternatives &mdash; call Milner for the organics rate before quoting Steamboat work.</p>
+  </section>
+
+  <!-- ============ REGION K ============ -->
+  <section id="region-k">
+    <div class="section-head"><span class="tag">K</span><h2>Southwest Colorado (La Plata / Durango)</h2></div>
+    <p class="scope">Durango, Bayfield, Hesperus, Vallecito, the Missionary Ridge burn-scar country. Outside Sixfold&rsquo;s current reach but a major fire-mitigation area by any measure.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">City of Durango spring &amp; fall clean-up</span><span class="addr">city-wide</span></td>
+          <td class="rate"><span class="tier free">Free</span>to city residents, twice a year</td>
+          <td class="notes">Event-based, homeowner-facing.</td>
+        </tr>
+        <tr>
+          <td><span class="site">La Plata County Bayfield Transfer Station</span><span class="addr">4496 CR 223, roughly halfway Durango&ndash;Bayfield</span></td>
+          <td class="rate"><span class="tier call">Call</span>fee schedule per BOCC Resolution #2025-14, eff. Aug&nbsp;1&nbsp;2025 &mdash; yard-waste figure not obtained · (970) 749-0738</td>
+          <td class="notes"><strong>Yard waste is accepted only at the Bayfield station</strong>, not the main Durango transfer station. The old county landfill is under a state-funded closure / clean-up. Mulch is produced and offered back.</td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> Thin infrastructure &mdash; yard waste funnels to the single Bayfield station and the rate needs a call.</p>
+  </section>
+
+  <!-- ============ REGION L ============ -->
+  <section id="region-l">
+    <div class="section-head"><span class="tag">L</span><h2>Chaffee County &amp; the Upper Arkansas</h2></div>
+    <p class="scope">Salida, Buena Vista, Poncha Springs, Nathrop. Pi&ntilde;on-juniper and ponderosa; growing WUI around Salida and BV.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Chaffee County Landfill</span><span class="addr">near Poncha Springs (US 285 / CR 175 area)</span></td>
+          <td class="rate"><span class="tier mid">Mid</span>brush / yard waste for in-county users <strong>raised to $40/ton</strong> &mdash; but that figure is from an <strong>April 2020</strong> rate change and is very likely stale · &ldquo;dirty dumper&rdquo; contamination surcharge in effect</td>
+          <td class="notes">The only public disposal in the county. Current schedule at chaffeecounty.org/departments/landfill (the page blocks automated reads &mdash; call the landfill). <strong>Do not quote off the $40 figure.</strong></td>
+        </tr>
+      </tbody>
+    </table></div>
+    <p class="bottom-line"><b>Bottom line</b> One site, and the only fee on record is five years old &mdash; phone before relying on any number here.</p>
+  </section>
+
+  <!-- ============ REGION M ============ -->
+  <section id="region-m">
+    <div class="section-head"><span class="tag">M</span><h2>Front Range metro landfills &amp; organics yards</h2></div>
+    <p class="scope">Regional catch-all &mdash; for jobs on the Denver-metro plains edge, or when a mountain haul-off is routed back toward base. These take contractor loads without a residency test.</p>
+    <div class="twrap"><table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="site">Larimer North Landfill / Trilby transfer</span><span class="addr">Wellington / Fort Collins (see Region E)</span></td>
+          <td class="rate"><span class="tier low">Low</span>green waste $9&ndash;$16 flat / $13 per cy</td>
+          <td class="notes">Cheapest metro-adjacent green-waste gate found, if the load is clean, sorted, and trunks are under 2&nbsp;ft.</td>
+        </tr>
+        <tr>
+          <td><span class="site">A1 Organics</span><span class="addr">Eaton (HQ) · Keenesburg (largest, by appointment only) · Commerce City · Front Range mobile service</span></td>
+          <td class="rate"><span class="tier call">Call</span>commercial organics-recycling rates by material &mdash; not published online · 1-800-776-1644</td>
+          <td class="notes">Purpose-built for this waste stream: the <strong>Eaton</strong> site&rsquo;s acceptance list is grass &amp; yard trimmings, brush &amp; limb, wood chips, <strong>logs</strong>, leaves, <strong>clean wood</strong>, clean soil. No 4-in or 6-ft size caps like the community sort yards. If the rate is competitive this is the cleanest contractor fit on the north Front Range &mdash; get a quote. Keenesburg needs an appointment. CSFS lists A1 among its forest-products outlets.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Denver Arapahoe Disposal Site (DADS)</span><span class="addr">Aurora (see Region B)</span></td>
+          <td class="rate"><span class="tier call">Call</span>weight-based; green / organics-for-compost rate not obtained</td>
+          <td class="notes">Large, long hours, sells compost / mulch. The default metro option for stumps and mixed loads if the green-waste rate proves reasonable &mdash; confirm it.</td>
+        </tr>
+        <tr>
+          <td><span class="site">Front Range Landfill</span><span class="addr">Erie (see Region D)</span></td>
+          <td class="rate"><span class="tier hot">Hot</span>wood = MSW $98/ton, $196 min</td>
+          <td class="notes">Repeated here only as the price ceiling. Avoid for wood.</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ STATEWIDE RANKING ============ -->
+  <section id="ranking">
+    <div class="section-head"><h2>Statewide ranking &mdash; cheapest first</h2></div>
+    <p class="scope">Headline rate for a contractor load, best deal at the top. Units are <em>not</em> equivalent &mdash; a per-ton rate that looks cheap can beat a $10 load rate once a full weighed load is on the scale, and a free site 90 minutes away can cost more in truck time than a $35/ton gate 15 minutes away. Treat this as a first sort, not a routing decision.</p>
+    <ol class="ladder">
+      <li><span class="n">1</span><div><span class="what">Confluence Energy</span> <span class="where">&mdash; Grand &mdash; if still accepting</span></div><span class="r">$0 or better for clean logs<span class="sep">·</span><span class="pill lim">status unconfirmed</span></span></li>
+      <li><span class="n">2</span><div><span class="what">Boulder County Sort Yards</span> <span class="where">&mdash; Nederland, Meeker Park</span></div><span class="r">Free<span class="sep">·</span><span class="pill lim">register each property; ≤ 4&nbsp;in, no stumps</span></span></li>
+      <li><span class="n">3</span><div><span class="what">Douglas County Slash-Mulch</span> <span class="where">&mdash; Douglas</span></div><span class="r">Free<span class="sep">·</span><span class="pill lim">residents only &mdash; confirm</span></span></li>
+      <li><span class="n">4</span><div><span class="what">Estes Valley Watershed Coalition drop-off days</span> <span class="where">&mdash; Estes Valley</span></div><span class="r">Free<span class="sep">·</span><span class="pill no">homeowner-facing; 3 dates in 2026</span></span></li>
+      <li><span class="n">5</span><div><span class="what">SCRAP / Eagle &mdash; wood chips</span> <span class="where">&mdash; Summit / Eagle &mdash; chips only, not slash</span></div><span class="r">$5 / ton or / load<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">6</span><div><span class="what">Clear Creek County Slash Site</span> <span class="where">&mdash; Clear Creek</span></div><span class="r">free in-county / fee out-of-county<span class="sep">·</span><span class="pill lim">residents free</span></span></li>
+      <li><span class="n">7</span><div><span class="what">Gilpin County Slash Site</span> <span class="where">&mdash; Gilpin</span></div><span class="r">free in-county / fee out-of-county<span class="sep">·</span><span class="pill lim">residents free</span></span></li>
+      <li><span class="n">8</span><div><span class="what">Black Forest Slash &amp; Mulch</span> <span class="where">&mdash; El Paso</span></div><span class="r">$10 / load (6 for $50)<span class="sep">·</span><span class="pill lim">6&nbsp;ft × 8&nbsp;in cap</span></span></li>
+      <li><span class="n">9</span><div><span class="what">SCRAP</span> <span class="where">&mdash; Summit &mdash; wood slash</span></div><span class="r">$12/ton ($10 min)<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">10</span><div><span class="what">Larimer green waste</span> <span class="where">&mdash; Larimer &mdash; trailer</span></div><span class="r">$13/cy (or $9&ndash;$16 flat)<span class="sep">·</span><span class="pill lim">clean &amp; sorted only</span></span></li>
+      <li><span class="n">11</span><div><span class="what">Divide Slash Site (CUSP)</span> <span class="where">&mdash; Teller</span></div><span class="r">$20 / load<span class="sep">·</span><span class="pill no">homeowners only</span></span></li>
+      <li><span class="n">12</span><div><span class="what">Eagle County Landfill</span> <span class="where">&mdash; trees / limbs ≥ 2&nbsp;in</span></div><span class="r">$21/ton<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">13</span><div><span class="what">Jefferson County SLASH</span> <span class="where">&mdash; foothills</span></div><span class="r">$24 / 6-cy load<span class="sep">·</span><span class="pill lim">homeowner program &mdash; confirm</span></span></li>
+      <li><span class="n">14</span><div><span class="what">Estes Park Convenience Center</span> <span class="where">&mdash; Estes Valley &mdash; slash as loose waste</span></div><span class="r">$25.91/cy + surcharge<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">15</span><div><span class="what">SCRAP</span> <span class="where">&mdash; Summit &mdash; yard waste (leaves/grass)</span></div><span class="r">$31/ton ($10 min)<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">16</span><div><span class="what">SCRAP</span> <span class="where">&mdash; Summit &mdash; wood stumps</span></div><span class="r">$35/ton ($15 min)<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">17</span><div><span class="what">Chaffee County Landfill</span> <span class="where">&mdash; Upper Arkansas &mdash; brush</span></div><span class="r">$40/ton (2020 &mdash; stale)<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">18</span><div><span class="what">Pitkin County Landfill</span> <span class="where">&mdash; separated branches / clean wood</span></div><span class="r">&asymp; $45/ton (2022&ndash;24, verify)<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">19</span><div><span class="what">Eagle County Landfill</span> <span class="where">&mdash; Eagle &mdash; landscaping material</span></div><span class="r">$48/ton<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">20</span><div><span class="what">Pitkin County Landfill</span> <span class="where">&mdash; Roaring Fork &mdash; mixed</span></div><span class="r">&asymp; $64.50/ton<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">21</span><div><span class="what">Front Range Landfill</span> <span class="where">&mdash; Boulder / metro &mdash; wood = MSW</span></div><span class="r">$98/ton ($196 min)<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+      <li><span class="n">&mdash;</span><div><span class="what">Midway · DADS · Milner · Granby transfer · Bayfield · A1 Organics · Rocky Top contractor rate</span> <span class="where">&mdash; various</span></div><span class="r">no published rate &mdash; call<span class="sep">·</span><span class="pill yes">contractor OK</span></span></li>
+    </ol>
+  </section>
+
+  <hr class="div">
+
+  <!-- ============ FACT-CHECK LOG ============ -->
+  <section id="fact-check" class="fc">
+    <div class="section-head"><h2>Fact-check log</h2></div>
+
+    <h3>Confirmed first-party (operator&rsquo;s own site or fee schedule), 2026-09-08</h3>
+    <ul>
+      <li><strong>Black Forest Slash &amp; Mulch</strong> &mdash; $10/load, 6-for-$50, cash/check only, 6&nbsp;ft × 8&nbsp;in limit, no stumps/roots/bulk needles, 2026 season May&nbsp;2&ndash;Sept&nbsp;12/19, Tue/Thu 5&ndash;7:30pm &amp; Sat 8&ndash;4, no Sundays. (bfslash.org)</li>
+      <li><strong>Jefferson County SLASH</strong> &mdash; $24/load, 6&nbsp;cy / 162&nbsp;cu&nbsp;ft definition, cards only, 2026 start May&nbsp;15, Marshdale &amp; Tincup Ridge addresses, no stumps/lumber/detached leaves. (jeffco.us/2493)</li>
+      <li><strong>Boulder County Community Forestry Sort Yards</strong> &mdash; free; Nederland (291 Ridge Rd) May&nbsp;7&ndash;Nov&nbsp;14, Meeker Park (8200 Hwy&nbsp;7) May&nbsp;13&ndash;Oct&nbsp;31, Wed&ndash;Sat 9&ndash;5; 4&nbsp;in slash cap, 4&nbsp;in min log, no stumps/root balls, beetle-log ban Jul&nbsp;15&ndash;Sep&nbsp;15; contractors register per property. (bouldercounty.gov)</li>
+      <li><strong>SCRAP (Summit)</strong> &mdash; wood chips $5/ton (min $5, 2&nbsp;in max), wood slash $12/ton ($10 min), stumps $35/ton ($15 min), yard waste $31/ton ($10 min), separate-load requirement, unsorted C&amp;D $150/ton, $1.74/ton state fee 7/1/2026&ndash;6/30/2027; 639 Landfill Rd Keystone; M&ndash;F 7&ndash;3:30, Sat 7&ndash;11:30. (summitcountyco.gov; highcountryconservation.org)</li>
+      <li><strong>Eagle County Landfill</strong> &mdash; landscaping $48/ton, MSW $48/ton, <strong>trees/limbs ≥2&nbsp;in $21/ton</strong>, wood chips $5/load, $6 min, effective Jan&nbsp;1&nbsp;2026; 815 Ute Creek Wolcott; M&ndash;F 8&ndash;4:30, Sat 8&ndash;3. The $5 is for already-chipped material, not slash. (eaglecounty.us, fee schedule pulled verbatim 2026-09-08)</li>
+      <li><strong>Front Range Landfill</strong> &mdash; MSW/wood $98/ton ($196 min), clean soil/sod/mulch $18/ton ($36 min), effective Dec&nbsp;1&nbsp;2024; 1830 WCR&nbsp;5 Erie; M&ndash;F 6&ndash;5, Sat 6&ndash;2. No separate brush line found. (frontrangelandfill.com)</li>
+      <li><strong>Larimer County 2026 Solid Waste Fee Schedule</strong> &mdash; green waste $9 car / $16 pickup flat, $13/cy trailer &lt; 1,000&nbsp;lb/cy, no CO surcharge; compacted MSW $35/ton (landfill) / $45/ton (transfer, eff. 7/1/2026); Green Waste Program requires clean separated loads, trunks ≤ 6&nbsp;ft × 2&nbsp;ft dia, no root balls; Estes Park Convenience Center loose waste $25.91/cy, $22 min; Wellington/Red Feather $20/car-pickup. (larimer.gov fee PDF, updated 12/15/2025)</li>
+      <li><strong>Larimer facility change</strong> &mdash; old Larimer County Landfill (Taft Hill) closed Aug&nbsp;3&nbsp;2026; North Landfill 15669 N&nbsp;CR&nbsp;9 Wellington and Central Diversion &amp; Transfer Station 2388 W&nbsp;Trilby Rd now operating. (Estes Valley Voice, 2026-08-08; larimer.gov/solidwaste/wasteshed)</li>
+      <li><strong>Gilpin County Slash Site</strong> &mdash; 278 Jankowski Dr Black Hawk, 2026 season Apr&nbsp;22&ndash;Nov&nbsp;8, Wed&ndash;Sat 7&ndash;2:30 / Sun 8&ndash;1, residents free / non-residents per fee schedule. (gilpincounty.colorado.gov)</li>
+      <li><strong>Clear Creek County Slash Site</strong> &mdash; 1531 Soda Creek Rd Idaho Springs, Tue/Wed/Fri/Sat 8&ndash;5, out-of-county fee. (via City of Golden business directory + county)</li>
+      <li><strong>CUSP slash sites</strong> &mdash; Bailey (Hwy&nbsp;285 Deer Creek exit), Fairplay (waste transfer station off Hwy&nbsp;285), Divide (Hybrook Rd off Hwy&nbsp;24); <strong>&ldquo;No Contractors Please&rdquo;</strong> stated. Divide $20/load, ~one pickup bed, Saturdays in season, no stumps/roots/lumber/ties/dirt/metal/weeds/grass/bark/needles. (baileyslashsite.com; keepwoodlandparkbeautiful.org)</li>
+      <li><strong>Rocky Top Resources</strong> &mdash; 1755 E Las Vegas St Colorado Springs, M&ndash;F 7:30&ndash;5 / Sat 8&ndash;4, accepts branches/brush/junipers/logs/pallets/needles/leaves/old mulch, $10 Saturday rate residents-only and excludes contractors, delivery from $85. (rockytopresources.com; coloradosprings.gov/forestry)</li>
+      <li><strong>City of Colorado Springs Forestry</strong> &mdash; no public dump site; free mulch giveaway at 1601 Recreation Way, no commercial use. (coloradosprings.gov/forestry)</li>
+      <li><strong>Douglas County Slash-Mulch</strong> &mdash; free, residents only w/ ID, GreenWorks main site M&ndash;Sat 8&ndash;5, seasonal Sedalia site 5675 Delva Way Saturdays 7&ndash;5 through October, loader on site, free chips to residents. (douglasco.gov/slash-mulch-program &mdash; the page returns HTTP 403 to automated fetch; data via search index)</li>
+      <li><strong>Midway Landfill</strong> &mdash; 8925 Rancho Colorado Blvd, Fountain, I-25 exit 119, (719) 382-8383, accepts yard/green/wood waste for composting. (wmsolutions.com fact sheet)</li>
+      <li><strong>DADS</strong> &mdash; 3500 S Gun Club Rd Aurora, 6&ndash;8:30 M&ndash;F / 7&ndash;5 Sat, accepts yard/organics for composting, sells compost/mulch, (720) 876-2650. (wmsolutions.com; auroragov.org)</li>
+      <li><strong>A1 Organics</strong> &mdash; Eaton site accepts grass/yard trimmings, brush &amp; limb, wood chips, logs, leaves, clean wood, clean soil; Keenesburg by appointment; 1-800-776-1644. (a1organics.com; csfs.colostate.edu)</li>
+      <li><strong>Estes Valley Watershed Coalition 2026 community drop-off days</strong> &mdash; Jul&nbsp;18, Aug&nbsp;15, Sept&nbsp;19, 9am&ndash;12pm, free roll-offs for slash/cones/needles. (evwatershed.org; estesparknews.com)</li>
+      <li><strong>Grand County</strong> &mdash; landfills permanently closed; disposal via Granby transfer stations (The Trash Company 726 CR&nbsp;612; Ranch Creek Waste 441 SH&nbsp;125). (co.grand.co.us; the-trash-company.com)</li>
+      <li><strong>Confluence Energy</strong> &mdash; Kremmling + Walden, 10-year USFS stewardship agreement to take beetle-kill pine, logging scrap, deadwood for pellets/bedding/absorbent. (confluenceenergy.com; SteamboatToday)</li>
+      <li><strong>Milner Landfill</strong> &mdash; Apex Waste Solutions (ex-Twin Enviro), only landfill + MRF in Routt County, organics area at reduced rate, (970) 879-6985. (SteamboatPilot)</li>
+      <li><strong>La Plata County</strong> &mdash; yard waste accepted only at Bayfield Transfer Station (4496 CR&nbsp;223); fees per BOCC Resolution 2025-14 eff. Aug&nbsp;1&nbsp;2025; old county landfill under state-funded closure. (lpcgov.org; Durango Herald)</li>
+    </ul>
+
+    <h3>Carried from an older or secondary source &mdash; verify before use</h3>
+    <ul>
+      <li><strong>Chaffee County Landfill</strong> brush / yard-waste rate &mdash; <strong>$40/ton is an April 2020 figure</strong> (Ark Valley Voice). The current fee page blocks automated reads. Call the landfill.</li>
+      <li><strong>Pitkin County</strong> separated-wood (&asymp; $45/ton) and mixed (&asymp; $64.50/ton) rates &mdash; from 2022&ndash;2024 reporting (Waste Today, Aspen Daily News). Not confirmed for 2026.</li>
+    </ul>
+
+    <h3>Not obtained &mdash; need a phone call</h3>
+    <ul>
+      <li>Rocky Top Resources contractor per-cubic-yard rate (their &ldquo;Price Guide&rdquo; PDF is not on the indexed pages).</li>
+      <li>Midway Landfill wood / green-waste rate vs MSW rate.</li>
+      <li>DADS green-waste / organics-for-compost rate.</li>
+      <li>Larimer County per-ton green-waste rate for loads over 1,000&nbsp;lb/cy (only the flat and small-trailer rates are in the schedule).</li>
+      <li>Front Range Landfill separate brush rate &mdash; appears <strong>not to exist</strong>; wood is billed as MSW. Confirm there is no unlisted green-waste rate.</li>
+      <li>Granby transfer station, Milner organics area, Bayfield Transfer Station &mdash; all yard-waste rates.</li>
+      <li>Confluence Energy &mdash; <strong>current (2025&ndash;2026) intake status and terms for logs.</strong> The company has had public financial difficulty; do not assume the outlet is live.</li>
+      <li>Jefferson County SLASH, Douglas County Slash-Mulch &mdash; whether a <strong>contractor may deliver a crew load on a resident&rsquo;s behalf</strong>, or only the homeowner may haul. This determines whether &ldquo;haul-off included&rdquo; can be quoted on jobs in those counties.</li>
+      <li>Clear Creek and Gilpin <strong>non-resident fee schedules</strong> (dollar amounts).</li>
+    </ul>
+
+    <h3>Structural notes</h3>
+    <ul>
+      <li>Sixfold has <strong>no masticator / mulching head</strong>, so there is no on-site mulch-in-place option &mdash; everything not left in a slash pile is chipped, cut to rounds, or hauled. Disposal cost is a live line on most quotes.</li>
+      <li>Sixfold is a <strong>commercial hauler</strong>, which removes most of the free and cheap community sites from routine use. They stay relevant for (a) client-haul arrangements and (b) chipping days.</li>
+      <li>Distances in this document are <strong>rough drive estimates from Monument</strong> and are not sourced &mdash; planning approximations only.</li>
+      <li>Rates and season dates at these sites change annually and sometimes mid-season. Re-verify the sites for any region before a quote that commits Sixfold to a haul-off price.</li>
+    </ul>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section id="sources">
+    <div class="section-head"><h2>Sources</h2></div>
+    <ul class="sources">
+      <li>El Paso County &mdash; Black Forest Slash &amp; Mulch: bfslash.org ; communityresources.elpasoco.com/environmental-division/black-forest-slash-mulch/</li>
+      <li>Colorado Springs &mdash; Rocky Top Resources: rockytopresources.com/services ; City Forestry: coloradosprings.gov/forestry/page/public-programs-or-services</li>
+      <li>Midway Landfill: wmsolutions.com/pdf/factsheet/Midway_Landfill_Fact_Sheet.pdf</li>
+      <li>Douglas County Slash-Mulch: douglasco.gov/slash-mulch-program (403 to automated fetch; data via search index)</li>
+      <li>DADS: wmsolutions.com/locations/details/id/53 ; auroragov.org/residents/trash___recycling/recycling_opportunities/recycling_drop-_off</li>
+      <li>Jefferson County SLASH: jeffco.us/2493/Slash-Collection</li>
+      <li>City of Golden &mdash; tree limbs &amp; slash: cityofgolden.gov/business_detail_T31_R82.php</li>
+      <li>Clear Creek &amp; Gilpin: gilpincounty.colorado.gov/departments-offices/public-works/transfer-station-and-slash</li>
+      <li>CUSP slash sites: cusp.ws/forest-issues-2/chipper/ ; baileyslashsite.com ; keepwoodlandparkbeautiful.org/recyling-at-the-divide-transfer-station/</li>
+      <li>Boulder County Community Forestry Sort Yards: bouldercounty.gov/property-and-land/forest-health/community-forestry-sort-yards/ ; Wildfire Partners chipping: wildfirepartners.org/chipping-program/</li>
+      <li>Front Range Landfill: frontrangelandfill.com/services/ ; frontrangelandfill.com/materials/</li>
+      <li>Larimer County 2026 fee schedule: larimer.gov/sites/default/files/2026approved-fees.pdf ; Green Waste Program: larimer.gov/solidwaste/greenwaste ; facility change: estesvalleyvoice.com/2026/08/08/larimer-county-opens-new-transfer-station-landfill/ ; larimer.gov/solidwaste/wasteshed</li>
+      <li>Estes Valley Watershed Coalition: evwatershed.org/forest-projects</li>
+      <li>SCRAP (Summit): highcountryconservation.org/recycling/yard-waste-slash/ ; summitcountyco.gov/news_T15_R112.php ; summitcountyco.gov/services/public_works/landfill_recycling/index.php</li>
+      <li>Eagle County Landfill: eaglecounty.us/departments___services/solid_waste___recycling/landfill.php ; history: vaildaily.com/news/it-will-cost-more-to-take-landscaping-materials-to-the-eagle-county-landfill-next-year/</li>
+      <li>Grand County &mdash; landfills / transfer: co.grand.co.us/334/Trash-Recycling ; the-trash-company.com/services/landfill-transfer-stations ; ranchcreekwaste.com</li>
+      <li>Confluence Energy: confluenceenergy.com/process/ ; steamboatpilot.com/news/breaking-down-old-practices-confluence-energy-powering-the-future-with-diversity/</li>
+      <li>Pitkin County Landfill: wastetodaymagazine.com/news/colorado-tipping-fees-aspen-pitkin-diversion-landfill/ ; aspendailynews.com/pitkin-county-raising-tipping-fees-at-landfill/</li>
+      <li>Routt County &mdash; Milner Landfill: steamboatpilot.com/news/why-you-should-care-about-who-hauls-your-trash-in-routt-county-sponsored/ ; steamboatpilot.com/news/state-issues-twin-enviros-milner-landfill-compliance-advisory/</li>
+      <li>La Plata County: lpcgov.org/services/environmental_service/trash_information.php</li>
+      <li>Chaffee County Landfill: arkvalleyvoice.com/chaffee-county-landfill-fees-set-to-increase-april-1/ ; chaffeecounty.org/departments/landfill/landfill_fees.php (blocks automated fetch)</li>
+      <li>A1 Organics: a1organics.com/education/clean-wood-recycling-for-haulers-a1-organics-guide-for-acceptable-wood-material/ ; a1organics.com/corporate-headquarters-eaton/ ; csfs.colostate.edu/forest-products/a1-organics/</li>
+    </ul>
+  </section>
+
+  <p class="foot">Sixfold LLC &mdash; internal operations reference &mdash; prepared 2026-09-08 &mdash; not for customer distribution &mdash; every rate to be re-verified by phone before it is used in a quote.</p>
+
+</div>

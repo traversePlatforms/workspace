@@ -1,0 +1,462 @@
+<title>Ridge Mark Lineage</title>
+<style>
+  :root {
+    --ground: #0E1512; --surface: #18211D; --lift: #1F2A25; --seam: #2E3D35;
+    --ink: #EDE7DC; --ink-dim: #B4BEB3; --ink-faint: #869184;
+    --ember: #E4703A; --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A; --moss-quiet: rgba(138,160,122,0.13);
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC; --surface: #E5DED1; --lift: #DCD4C4; --seam: #C6BCA9;
+      --ink: #0E1512; --ink-dim: #3E4A43; --ink-faint: #6A766E;
+      --ember: #B84C15; --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640; --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC; --surface: #E5DED1; --lift: #DCD4C4; --seam: #C6BCA9;
+    --ink: #0E1512; --ink-dim: #3E4A43; --ink-faint: #6A766E;
+    --ember: #B84C15; --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640; --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground); color: var(--ink); font-family: var(--f-body);
+    font-size: 16px; line-height: 1.62; margin: 0; -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1140px; margin: 0 auto; padding: 0 var(--pad) 5rem; }
+
+  .masthead { padding: 3.2rem 0 1.7rem; border-bottom: 3px solid var(--ember); }
+  h1 {
+    font-family: var(--f-display); font-size: clamp(2.2rem, 6vw, 3.4rem);
+    letter-spacing: -0.02em; line-height: 1.02; margin: 0; max-width: 20ch;
+  }
+  .kicker {
+    font-family: var(--f-data); font-size: 0.64rem; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--moss); margin: 0 0 0.7rem;
+  }
+  .standfirst { max-width: 62ch; color: var(--ink-dim); font-size: 1.03rem; margin: 1.3rem 0 0; }
+
+  section { padding-top: 3.2rem; }
+  h2 {
+    font-family: var(--f-data); font-size: 0.68rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ember); margin: 0 0 0.4rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--seam); font-weight: 700;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  }
+  h2 .aside {
+    font-family: var(--f-body); font-size: 0.78rem; letter-spacing: 0;
+    text-transform: none; color: var(--ink-faint); font-weight: 400;
+  }
+  .lede { color: var(--ink-dim); font-size: 0.96rem; margin: 0.9rem 0 1.4rem; max-width: 64ch; }
+  p { margin: 0 0 0.9rem; max-width: 62ch; }
+
+  /* ---- The four, side by side ---- */
+  .strip {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+    background: var(--seam); border: 1px solid var(--seam); border-radius: 4px; overflow: hidden;
+  }
+  @media (min-width: 820px) { .strip { grid-template-columns: repeat(4, 1fr); } }
+  .slot { background: var(--surface); padding: 1.5rem 1.1rem 1.2rem; display: flex; flex-direction: column; gap: 0.9rem; }
+  .slot.current { background: var(--lift); }
+  .slot .art { display: flex; align-items: flex-start; justify-content: center; min-height: 0; }
+  .slot .art svg { width: 100%; max-width: 190px; display: block; }
+  .slotmeta { display: flex; flex-direction: column; gap: 0.2rem; margin-top: auto; }
+  .num {
+    font-family: var(--f-data); font-size: 0.62rem; letter-spacing: 0.14em; color: var(--ember); font-weight: 700;
+  }
+  .slot .name { font-family: var(--f-display); font-size: 1.06rem; line-height: 1.25; }
+  .slot .when {
+    font-family: var(--f-data); font-size: 0.58rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+  /* Badge sits on the number row so every slot keeps the same number of lines
+     and the names stay aligned across the strip. */
+  .numrow { display: flex; align-items: center; gap: 0.5rem; min-height: 1.15rem; }
+  .badge {
+    font-family: var(--f-data); font-size: 0.55rem;
+    letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700;
+    color: var(--ember); background: var(--ember-quiet); border: 1px solid var(--ember);
+    border-radius: 2px; padding: 0.1rem 0.4rem;
+  }
+
+  .controls { display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap; margin: 1.2rem 0 0; }
+  button.act {
+    font-family: var(--f-data); font-size: 0.66rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ember); background: var(--ember-quiet);
+    border: 1px solid var(--ember); border-radius: 3px; padding: 0.56rem 1.05rem;
+    cursor: pointer; font-weight: 700;
+  }
+  button.act:hover { background: var(--ember); color: var(--ground); }
+  button.act:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+  .hint { font-size: 0.84rem; color: var(--ink-faint); }
+
+  /* ---- Per-version bands ---- */
+  .band {
+    display: grid; grid-template-columns: 1fr; gap: 1.4rem;
+    padding: 1.7rem 0; border-bottom: 1px solid var(--seam); align-items: center;
+  }
+  @media (min-width: 700px) { .band { grid-template-columns: 210px minmax(0, 1fr); gap: 2.2rem; } }
+  .band:last-child { border-bottom: 0; }
+  .band .art { background: var(--surface); border: 1px solid var(--seam); border-radius: 4px; padding: 1.2rem; }
+  .band .art svg { width: 100%; display: block; }
+  .band h3 { font-family: var(--f-display); font-size: 1.36rem; margin: 0 0 0.15rem; font-weight: 600; }
+  .band .when {
+    font-family: var(--f-data); font-size: 0.6rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.7rem;
+  }
+  .band p { font-size: 0.95rem; color: var(--ink-dim); margin: 0 0 0.7rem; }
+  .verdict {
+    font-size: 0.9rem; border-left: 3px solid var(--moss);
+    padding: 0.15rem 0 0.15rem 0.85rem; color: var(--ink); max-width: 62ch;
+  }
+  .verdict.kept { border-left-color: var(--ember); }
+  .verdict b { font-family: var(--f-data); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-faint); display: block; }
+
+  /* ---- Size matrix ---- */
+  .matrix { width: 100%; overflow-x: auto; }
+  .matrix table { border-collapse: collapse; min-width: 560px; width: 100%; }
+  .matrix th, .matrix td { border-bottom: 1px solid var(--seam); padding: 0.85rem 0.7rem; text-align: center; vertical-align: bottom; }
+  .matrix th:first-child, .matrix td:first-child { text-align: left; vertical-align: middle; }
+  .matrix thead th {
+    font-family: var(--f-data); font-size: 0.6rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--ink-faint); font-weight: 700; vertical-align: bottom;
+  }
+  .matrix tbody th {
+    font-family: var(--f-data); font-size: 0.66rem; color: var(--ink-dim); font-weight: 400; white-space: nowrap;
+  }
+  .matrix svg { display: block; margin: 0 auto; }
+
+  /* ---- Grounds ---- */
+  .grounds { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .gcard { border: 1px solid var(--seam); border-radius: 4px; overflow: hidden; }
+  .gcard .field { padding: 1.5rem 1rem; display: flex; gap: 1rem; align-items: flex-start; justify-content: center; }
+  .gcard .field svg { width: 74px; display: block; }
+  .gcard .cap {
+    font-family: var(--f-data); font-size: 0.58rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--ink-faint);
+    padding: 0.5rem 0.7rem; border-top: 1px solid var(--seam); background: var(--surface);
+  }
+  .f-pine { background: #0E1512; } .f-bone { background: #EDE7DC; }
+  .f-timber { background: #1F2A25; } .f-ember { background: #E4703A; }
+
+  /* ---- Set aside ---- */
+  .aside-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(186px, 1fr)); }
+  .tried { background: var(--surface); border: 1px solid var(--seam); border-radius: 4px; padding: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .tried .art { background: var(--ground); border: 1px solid var(--seam); border-radius: 3px; padding: 0.5rem; }
+  .tried .art svg { width: 100%; display: block; }
+  .tried .why { font-size: 0.84rem; color: var(--ink-dim); margin: 0; }
+  .tried .why b { display: block; color: var(--ink); font-family: var(--f-body); font-size: 0.88rem; margin-bottom: 0.15rem; font-weight: 650; }
+
+  .notes { background: var(--lift); border-left: 3px solid var(--moss); border-radius: 0 4px 4px 0; padding: 1.2rem 1.4rem; }
+  .notes ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .notes li { color: var(--ink-dim); font-size: 0.94rem; }
+  code { font-family: var(--f-data); font-size: 0.88em; background: var(--ember-quiet); color: var(--ember); padding: 0.08em 0.34em; border-radius: 2px; }
+
+  /* ---- Sprout animation ---- */
+  .grow { transform-box: fill-box; transform-origin: 50% 100%; }
+  .rootline { stroke-dasharray: 100; stroke-dashoffset: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .anim .grow { animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both; }
+    .anim .g1 { animation-delay: 0.05s; } .anim .g2 { animation-delay: 0.14s; }
+    .anim .g3 { animation-delay: 0.23s; } .anim .g4 { animation-delay: 0.32s; }
+    .anim .g5 { animation-delay: 0.41s; }
+    .anim .rootline { animation: delve 0.72s cubic-bezier(.3,.7,.4,1) both; }
+    .anim .r1 { animation-delay: 0.58s; } .anim .r2 { animation-delay: 0.66s; }
+    .anim .r3 { animation-delay: 0.74s; } .anim .r4 { animation-delay: 0.62s; }
+    .anim .r5 { animation-delay: 0.70s; } .anim .r6 { animation-delay: 0.80s; }
+    .anim .r7 { animation-delay: 0.84s; } .anim .r8 { animation-delay: 0.78s; }
+    .anim .r9 { animation-delay: 0.86s; } .anim .r10 { animation-delay: 0.74s; }
+  }
+  @keyframes grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+  @keyframes delve { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+</style>
+
+<main>
+  <header class="masthead">
+    <p class="kicker">Sixfold · Land &amp; Fire</p>
+    <h1>Every Ridge mark, in the order we drew them</h1>
+    <p class="standfirst">Four versions. The ridge itself has never changed — same five slopes, same coordinates, since the mark was picked. What has changed is the left end and the ground line.</p>
+  </header>
+
+  <section>
+    <h2>The four <span class="aside">Same scale, aligned on the ground line</span></h2>
+    <div class="strip" id="strip"></div>
+    <div class="controls">
+      <button class="act" id="playall" type="button">Play the sprout</button>
+      <span class="hint">All four animate together, so the differences land side by side.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>What changed, and why</h2>
+    <div id="bands"></div>
+  </section>
+
+  <section>
+    <h2>At the sizes it will actually be used <span class="aside">104px letterhead · 40px avatar · 26px favicon</span></h2>
+    <p class="lede">This row decided three of the four revisions. A mark that only works at poster size is not finished.</p>
+    <div class="matrix"><table id="matrix"></table></div>
+  </section>
+
+  <section>
+    <h2>On the other grounds</h2>
+    <p class="lede">Version one and version four, on each of the brand's four fields. Single-colour versions use the same shapes with the ember stepping down in opacity.</p>
+    <div class="grounds" id="grounds"></div>
+  </section>
+
+  <section>
+    <h2>Tried and set aside</h2>
+    <p class="lede">Drawings that did not make it, kept because they are the argument for the one that did. Each failed on the same test — whether it still reads as a root system when it gets small.</p>
+    <div class="aside-grid" id="tried"></div>
+  </section>
+
+  <section>
+    <h2>For the record</h2>
+    <div class="notes">
+      <ul>
+        <li>The ridge silhouette is untouched across all four. Versions two to four sit on a taller canvas — <code>viewBox="0 0 100 116"</code> instead of <code>0 0 100 100</code> — and the extra 16 units are root depth only.</li>
+        <li>Nothing is published or live. The masters are <code>sixfold-mark-ridge.svg</code> and <code>sixfold-mark-ridge-mono.svg</code>; eleven copies of version one are still inlined across the marketing sheets, the content set and the flyers, and have deliberately not been swept.</li>
+        <li>Ridge still never rotates, and it was never tilted. Only Sweep rotates, and only in 60° steps.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+  var EMBER = '#E4703A', MOSS = '#8AA07A';
+
+  var PEAKS = [
+    ['M18 84 L36 48 L54 84 Z', 0.4],
+    ['M30 84 L50 38 L70 84 Z', 0.6],
+    ['M44 84 L66 26 L88 84 Z', 0.82],
+    ['M60 84 L79 14 L98 84 Z', 1]
+  ];
+  var SMALL_PEAK = 'M6 84 L22 58 L38 84 Z';
+  var TREE = '<rect x="20.4" y="77" width="3.2" height="7"/>' +
+             '<path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>' +
+             '<path d="M22 62 L12 74 L32 74 Z"/>' +
+             '<path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>';
+
+  var ROOTS_V2 = [
+    ['M94 91 L93.5 100 L90 113', 3.6],
+    ['M90.5 91 L88 99 L80 108', 2.6],
+    ['M86.5 91 L82 96 L71.5 101', 1.9],
+    ['M96 91 L97 99 L95.5 106', 1.9]
+  ];
+  var ROOTS_V3 = [
+    ['M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113', 3.4],
+    ['M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108', 2.5],
+    ['M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101', 1.8],
+    ['M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106', 1.8]
+  ];
+  var ROOTS_V4 = [
+    ['M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113', 1.6],
+    ['M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108', 1.35],
+    ['M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101', 1.1],
+    ['M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106', 1.15],
+    ['M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4', 1.05],
+    ['M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109', 0.9],
+    ['M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6', 0.85],
+    ['M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6', 0.8],
+    ['M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8', 0.75],
+    ['M95 91 L96.6 94.2 L94.4 96.6 L96.4 100', 0.85]
+  ];
+
+  var MONO_OP = [0.42, 0.55, 0.7, 0.85];
+
+  var VERSIONS = [
+    {
+      n: '01', name: 'Ridge, as approved', when: '18 Aug', tree: false, roots: [],
+      box: '0 0 100 100', badge: null,
+      what: 'Five slopes rising left to right, the smallest in moss, on a solid ground line. Chosen over Sweep for the flyers because it holds up better in the hand.',
+      verdictLabel: 'Where it stood', verdict: 'Signed off, and still the mark inside every sheet and flyer built so far.'
+    },
+    {
+      n: '02', name: 'Tree and first roots', when: '19 Aug · first pass', tree: true, roots: ROOTS_V2,
+      box: '0 0 100 116', badge: null,
+      what: 'The smallest slope becomes a conifer, drawn in front of the ridge rather than behind it, and the ground line puts roots down at its right corner. The canvas grew 16 units taller to make room.',
+      verdictLabel: 'Why it moved on', verdict: 'The tree landed. The roots did not — three thick strands all curving the same way read as a swoosh or a tail, not a root system.'
+    },
+    {
+      n: '03', name: 'Zigzag roots', when: '19 Aug · revision', tree: true, roots: ROOTS_V3,
+      box: '0 0 100 116', badge: null,
+      what: 'Each strand kinks five or six times instead of bending once, and the kinks are deliberately out of step with each other — roots change direction when they hit resistance, so a strand that bends on a regular beat still reads as decoration.',
+      verdictLabel: 'Why it moved on', verdict: 'Read as roots for the first time. Still heavy — four thick strands crowded the corner and the mass fought the ridge for attention.'
+    },
+    {
+      n: '04', name: 'Thin and branching', when: '19 Aug · current', tree: true, roots: ROOTS_V4,
+      box: '0 0 100 116', badge: 'Current',
+      what: 'The strands drop to roughly half weight, which frees room for ten instead of four. Six of them are finer, and two branch off strands already underground rather than starting at the line.',
+      verdictLabel: 'Where it stands', verdict: 'Thinning the four on their own went weak and sparse — thin only works at this density. Below about 32px the root mass softens into texture rather than separate roots.'
+    }
+  ];
+
+  function mark(v, o) {
+    o = o || {};
+    var ember = o.ember || EMBER, moss = o.moss || MOSS, anim = o.anim;
+    var s = '<svg viewBox="' + v.box + '" role="img" aria-label="Sixfold Ridge mark, version ' + v.n + '"';
+    if (o.w) {
+      var ratio = v.box === '0 0 100 100' ? 1 : 1.16;
+      s += ' width="' + o.w + '" height="' + Math.round(o.w * ratio) + '"';
+    }
+    s += '>';
+    if (!v.tree) {
+      s += '<path class="' + (anim ? 'grow g1' : '') + '" d="' + SMALL_PEAK +
+           '" fill="' + (o.monoOp ? ember : moss) + '" fill-opacity="' + (o.monoOp ? 0.3 : 0.5) + '"/>';
+    }
+    PEAKS.forEach(function (p, i) {
+      s += '<path class="' + (anim ? 'grow g' + (i + 2) : '') + '" d="' + p[0] +
+           '" fill="' + ember + '" fill-opacity="' + (o.monoOp ? o.monoOp[i] : p[1]) + '"/>';
+    });
+    if (v.tree) {
+      s += '<g class="' + (anim ? 'grow g1' : '') + '" fill="' + moss + '">' + TREE + '</g>';
+    }
+    s += '<rect x="4" y="86" width="92" height="5" fill="' + moss + '"/>';
+    if (v.roots.length) {
+      s += '<g fill="none" stroke="' + moss + '" stroke-linecap="round" stroke-linejoin="round">';
+      v.roots.forEach(function (r, i) {
+        s += '<path class="' + (anim ? 'rootline r' + (i + 1) : '') + '" pathLength="100" d="' +
+             r[0] + '" stroke-width="' + r[1] + '"/>';
+      });
+      s += '</g>';
+    }
+    return s + '</svg>';
+  }
+
+  // ---- The four, side by side ----
+  document.getElementById('strip').innerHTML = VERSIONS.map(function (v) {
+    return '<div class="slot' + (v.badge ? ' current' : '') + '">' +
+      '<div class="art">' + mark(v, { anim: true }) + '</div>' +
+      '<div class="slotmeta">' +
+        '<span class="numrow"><span class="num">' + v.n + '</span>' +
+          (v.badge ? '<span class="badge">' + v.badge + '</span>' : '') + '</span>' +
+        '<span class="name">' + v.name + '</span>' +
+        '<span class="when">' + v.when + '</span>' +
+      '</div></div>';
+  }).join('');
+
+  function playAll() {
+    var arts = document.querySelectorAll('#strip .art');
+    for (var i = 0; i < arts.length; i++) {
+      arts[i].className = 'art';
+      arts[i].innerHTML = mark(VERSIONS[i], { anim: true });
+      void arts[i].offsetWidth;
+      arts[i].className = 'art anim';
+    }
+  }
+  playAll();
+  document.getElementById('playall').addEventListener('click', playAll);
+
+  // ---- Per-version bands ----
+  document.getElementById('bands').innerHTML = VERSIONS.map(function (v) {
+    return '<div class="band">' +
+      '<div class="art">' + mark(v, {}) + '</div>' +
+      '<div><h3>' + v.n + ' · ' + v.name + '</h3>' +
+      '<p class="when">' + v.when + '</p>' +
+      '<p>' + v.what + '</p>' +
+      '<p class="verdict' + (v.badge ? ' kept' : '') + '"><b>' + v.verdictLabel + '</b>' + v.verdict + '</p>' +
+      '</div></div>';
+  }).join('');
+
+  // ---- Size matrix ----
+  var SIZES = [104, 64, 40, 26];
+  var mtx = '<thead><tr><th>Version</th>' +
+    SIZES.map(function (s) { return '<th>' + s + 'px</th>'; }).join('') + '</tr></thead><tbody>';
+  VERSIONS.forEach(function (v) {
+    mtx += '<tr><th>' + v.n + ' · ' + v.name + '</th>' +
+      SIZES.map(function (s) { return '<td>' + mark(v, { w: s }) + '</td>'; }).join('') + '</tr>';
+  });
+  document.getElementById('matrix').innerHTML = mtx + '</tbody>';
+
+  // ---- Grounds: first and current, together ----
+  var PAIR = [VERSIONS[0], VERSIONS[3]];
+  var GROUNDS = [
+    ['f-pine', 'Pine black', {}],
+    ['f-bone', 'Bone', {}],
+    ['f-timber', 'Timber, single colour', { ember: '#EDE7DC', moss: '#EDE7DC', monoOp: MONO_OP }],
+    ['f-ember', 'Ember, single colour', { ember: '#0E1512', moss: '#0E1512', monoOp: MONO_OP }]
+  ];
+  document.getElementById('grounds').innerHTML = GROUNDS.map(function (g) {
+    return '<div class="gcard"><div class="field ' + g[0] + '">' +
+      PAIR.map(function (v) { return mark(v, g[2]); }).join('') +
+      '</div><div class="cap">' + g[1] + '</div></div>';
+  }).join('');
+
+  // ---- Tried and set aside ----
+  // Each is the version-04 tree and ridge with a different root drawing, except the
+  // first, which is on the original shorter canvas and shows why the canvas grew.
+  function shallowMark() {
+    return '<svg viewBox="0 0 100 100" role="img" aria-label="Discarded root drawing, shallow canvas">' +
+      '<path d="M18 79 L36 43 L54 79 Z" fill="' + EMBER + '" fill-opacity="0.4"/>' +
+      '<path d="M30 79 L50 33 L70 79 Z" fill="' + EMBER + '" fill-opacity="0.6"/>' +
+      '<path d="M44 79 L66 21 L88 79 Z" fill="' + EMBER + '" fill-opacity="0.82"/>' +
+      '<path d="M60 79 L79 9 L98 79 Z" fill="' + EMBER + '"/>' +
+      '<g fill="' + MOSS + '"><rect x="20.4" y="72" width="3.2" height="7"/>' +
+      '<path d="M22 64 L9.5 76.5 L34.5 76.5 Z"/><path d="M22 57 L12 69 L32 69 Z"/>' +
+      '<path d="M22 50.5 L14.5 61.5 L29.5 61.5 Z"/></g>' +
+      '<rect x="4" y="81" width="92" height="5" fill="' + MOSS + '"/>' +
+      '<g fill="none" stroke="' + MOSS + '" stroke-linecap="round">' +
+      '<path d="M94 86 C94 90 92 93.5 88 97" stroke-width="3.2"/>' +
+      '<path d="M90 86 C89 89 85 91 79 94" stroke-width="2.2"/>' +
+      '<path d="M95.5 86 C96.5 89.5 96 92 94 94.5" stroke-width="1.6"/></g></svg>';
+  }
+
+  function variant(rootMarkup) {
+    var v = VERSIONS[3];
+    var s = '<svg viewBox="0 0 100 116" role="img" aria-label="Discarded root drawing">';
+    PEAKS.forEach(function (p) {
+      s += '<path d="' + p[0] + '" fill="' + EMBER + '" fill-opacity="' + p[1] + '"/>';
+    });
+    s += '<g fill="' + MOSS + '">' + TREE + '</g>';
+    s += '<rect x="4" y="86" width="92" height="5" fill="' + MOSS + '"/>';
+    return s + rootMarkup + '</svg>';
+  }
+  function strokes(list, join) {
+    return '<g fill="none" stroke="' + MOSS + '" stroke-linecap="round" stroke-linejoin="' +
+      (join || 'round') + '">' +
+      list.map(function (r) { return '<path d="' + r[0] + '" stroke-width="' + r[1] + '"/>'; }).join('') +
+      '</g>';
+  }
+
+  var TRIED = [
+    [shallowMark(), 'The first roots', 'Only twelve units of depth under the line. Everything curved the same way and it read as a flourish. This is why the canvas got taller.'],
+    [variant('<g fill="' + MOSS + '">' +
+      '<path d="M91.5 91 L96 91 L94.5 101 L90.6 113 L89.6 112.6 L92.4 100.5 Z"/>' +
+      '<path d="M86.5 91 L91 91 L86 99 L76 106 L75.4 104.7 L84.6 98 Z"/>' +
+      '<path d="M82.5 91 L86 91 L79 96.5 L71 99.5 L70.7 98.3 L78 95 Z"/></g>'),
+      'Tapered wedges', 'Solid shapes narrowing to a point, to match the flat triangles above. They tapered too far and went wispy — closer to grass than root.'],
+    [variant(strokes([
+      ['M94 91 L91.6 95.4 L94.8 99.6 L90.6 104 L92.8 108 L89.6 113', 3.4],
+      ['M90.5 91 L88.4 94.2 L85.4 96.4 L88 100 L82.6 103.4 L79.6 108', 2.5],
+      ['M86.5 91 L83.8 92.8 L85.4 95.6 L79.6 96.8 L77.4 100.4 L71.5 101', 1.8],
+      ['M96 91 L97.4 94 L95 96.4 L97.6 100 L95 103 L96 106', 1.8]
+    ], 'miter')), 'Harder kinks, sharp joins', 'Pushing the zigzag further and sharpening the corners tipped it into lightning, or cracked glass. There is a ceiling on how much a root can deviate.'],
+    [variant(strokes([
+      ['M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113', 0.7],
+      ['M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108', 0.7],
+      ['M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101', 0.7],
+      ['M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106', 0.7]
+    ])), 'Thin, but still four', 'The obvious way to go thin: keep the four strands and halve the weight. The corner went underfed, and the roots vanished below about 60px.'],
+    [variant(strokes([
+      ['M94 91 L92.2 94 L94.4 97.6 L91 101 L93 105.4 L90.4 108.6 L89.6 113', 3.4],
+      ['M90.5 91 L88.6 93.4 L85.6 95 L87.6 98.4 L83 101 L84 104.4 L79.6 108', 2.5],
+      ['M86.5 91 L84 92.4 L85.6 94.8 L80.6 96 L78 98.6 L74.6 99 L71.5 101', 1.8],
+      ['M96 91 L97.4 93.6 L95.2 96 L97.4 99.4 L95 102 L96 106', 1.8],
+      ['M91 101 L87.6 103.6 L86.4 107', 1.4],
+      ['M85.6 95 L82 94.6 L78.4 96.4', 1.2],
+      ['M93 105.4 L96 107.6 L96.4 110.4', 1.2]
+    ])), 'Thick, with branches', 'Branching roots off thick strands. It is the right idea at the wrong weight — the corner clotted into a single mass at anything under poster size.']
+  ];
+
+  document.getElementById('tried').innerHTML = TRIED.map(function (t) {
+    return '<div class="tried"><div class="art">' + t[0] + '</div>' +
+      '<p class="why"><b>' + t[1] + '</b>' + t[2] + '</p></div>';
+  }).join('');
+</script>

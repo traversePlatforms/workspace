@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Services &amp; Pricing — Rate Card</title>
+<style>
+  /* ---- Tokens: Surge palette, dark-first ----
+     Structural system is the Sixfold sheet's; the colour is Surge's own
+     (green #4abe4a / grey #ababab / near-black ink), plus one functional
+     token, --halt, used ONLY for statutory prohibitions. */
+  :root {
+    --ground: #0a0a0a;
+    --surface: #141414;
+    --lift: #1c1c1c;
+    --seam: #262626;
+    --ink: #f4f4f4;
+    --ink-dim: #b8b8b8;
+    --ink-faint: #7d817d;
+    --green: #4abe4a;
+    --green-quiet: rgba(74,190,74,0.13);
+    --grey: #ababab;
+    --grey-quiet: rgba(171,171,171,0.11);
+    --halt: #e2543d;
+    --halt-quiet: rgba(226,84,61,0.13);
+    --logo-filter: invert(1);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #f4f4f4;
+      --surface: #e9eae9;
+      --lift: #e0e2e0;
+      --seam: #c8ccc8;
+      --ink: #0a0a0a;
+      --ink-dim: #3c403c;
+      --ink-faint: #6b6f6b;
+      --green: #1c6b1c;
+      --green-quiet: rgba(28,107,28,0.10);
+      --grey: #5e625e;
+      --grey-quiet: rgba(94,98,94,0.09);
+      --halt: #a8331d;
+      --halt-quiet: rgba(168,51,29,0.09);
+      --logo-filter: none;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f4f4f4;
+    --surface: #e9eae9;
+    --lift: #e0e2e0;
+    --seam: #c8ccc8;
+    --ink: #0a0a0a;
+    --ink-dim: #3c403c;
+    --ink-faint: #6b6f6b;
+    --green: #1c6b1c;
+    --green-quiet: rgba(28,107,28,0.10);
+    --grey: #5e625e;
+    --grey-quiet: rgba(94,98,94,0.09);
+    --halt: #a8331d;
+    --halt-quiet: rgba(168,51,29,0.09);
+    --logo-filter: none;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 14rem minmax(0, 1fr); }
+  }
+
+  /* ---- Rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 2.6rem 1.4rem 2.6rem var(--pad);
+      border-right: 1px solid var(--seam);
+    }
+  }
+  .rail-title {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.36rem;
+    counter-reset: rl;
+  }
+  .rail a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.4rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    padding: 0.2rem 0;
+  }
+  .rail a::before {
+    counter-increment: rl;
+    content: counter(rl, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    padding-top: 0.15rem;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--green); }
+  .rail a:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+  main { padding: 0 var(--pad) 5rem; min-width: 0; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 3.2rem 0 2rem;
+    border-bottom: 3px solid var(--green);
+  }
+  .brandline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.1rem;
+    flex-wrap: wrap;
+  }
+  .brandline img {
+    width: 168px;
+    max-width: 46vw;
+    height: auto;
+    display: block;
+    filter: var(--logo-filter);
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin: 0 0 0.35rem;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.9rem 0 0;
+    color: var(--ink);
+  }
+  .metastrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin: 1.2rem 0 0;
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block;
+    margin: 1.3rem 0 0;
+    padding: 0.4rem 0.7rem;
+    background: var(--green-quiet);
+    border-left: 3px solid var(--green);
+    font-family: var(--f-data);
+    font-size: 0.73rem;
+    color: var(--ink);
+  }
+  .restricted {
+    margin: 1rem 0 0;
+    padding: 0.95rem 1.1rem;
+    background: var(--halt-quiet);
+    border: 1px solid var(--halt);
+    max-width: none;
+  }
+  .restricted h4 { color: var(--halt); margin: 0 0 0.4rem; }
+  .restricted p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); max-width: none; }
+
+  /* ---- Thesis ---- */
+  .thesis { margin: 2.6rem 0 0; padding: 1.9rem 0 0; }
+  .thesis p.claim {
+    font-family: var(--f-display);
+    font-size: clamp(1.55rem, 4.6vw, 2.35rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--green);
+  }
+  .thesis p.sub { max-width: var(--measure); color: var(--ink-dim); margin: 1rem 0 0; }
+
+  /* ---- Sections ---- */
+  section { padding: 3.1rem 0 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.7rem;
+    align-items: baseline;
+    border-top: 1px solid var(--seam);
+    padding-top: 1rem;
+    margin-bottom: 1.3rem;
+  }
+  .sec-num { font-family: var(--f-data); font-size: 0.78rem; color: var(--green); }
+  .sec-head h2 {
+    font-family: var(--f-display);
+    font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .sec-head .kicker {
+    grid-column: 2;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-size: 0.98rem;
+    font-weight: 650;
+    margin: 2rem 0 0.55rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin: 1.6rem 0 0.5rem;
+  }
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 0.95rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0 0 0.5rem; }
+  li::marker { color: var(--green); }
+  strong { font-weight: 650; }
+  em { font-style: italic; color: var(--ink); }
+  a { color: var(--green); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+  .lede { font-size: 1.06rem; color: var(--ink); }
+
+  /* ---- Gate strip ---- */
+  .gate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.8rem;
+    padding: 0.7rem 0.95rem;
+    margin: 0 0 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--halt);
+    font-size: 0.87rem;
+    color: var(--ink-dim);
+    max-width: none;
+  }
+  .gate.clear { border-left-color: var(--green); }
+  .gate .glabel {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--halt);
+    flex: none;
+  }
+  .gate.clear .glabel { color: var(--green); }
+  .gate p { margin: 0; max-width: none; }
+
+  /* ---- Platform blocks ---- */
+  .platform {
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--green);
+    background: var(--surface);
+    padding: 1.4rem 1.3rem;
+    margin: 1.4rem 0;
+  }
+  .platform.hold { border-left-color: var(--grey); }
+  .platform.no { border-left-color: var(--halt); }
+  .phead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.9rem;
+    margin: 0 0 0.7rem;
+  }
+  .phead h3 { margin: 0; font-size: 1.12rem; font-family: var(--f-display); font-weight: 400; }
+  .chip {
+    font-family: var(--f-data);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--green);
+    color: var(--green);
+    background: var(--green-quiet);
+    flex: none;
+  }
+  .chip.wait { border-color: var(--grey); color: var(--grey); background: var(--grey-quiet); }
+  .chip.stopchip { border-color: var(--halt); color: var(--halt); background: var(--halt-quiet); }
+  .chip.off { border-color: var(--seam); color: var(--ink-faint); background: transparent; }
+  .platform > p:last-child, .platform > ul:last-child { margin-bottom: 0; }
+  .platform .why {
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    margin: 0 0 0.9rem;
+    max-width: none;
+  }
+
+  /* ---- Card grid ---- */
+  .cards {
+    display: grid;
+    /* Wider min track keeps card copy off narrow ribbons. Hairlines live on
+       the cards, not on a container background, so a part-filled last row
+       cannot show empty seam-coloured cells. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0 1.7rem;
+  }
+  .card {
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    padding: 1.15rem 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card .cname {
+    font-family: var(--f-display);
+    font-size: 1.12rem;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .card .cnote { font-size: 0.87rem; color: var(--ink-dim); margin: 0; max-width: none; }
+  .card .chip { align-self: flex-start; }
+
+  /* ---- Callouts ---- */
+  .stop, .keep {
+    padding: 1.05rem 1.15rem;
+    margin: 1.4rem 0;
+    background: var(--halt-quiet);
+    border-left: 3px solid var(--halt);
+  }
+  .keep { background: var(--green-quiet); border-left-color: var(--green); }
+  .stop > :last-child, .keep > :last-child { margin-bottom: 0; }
+  .stop h4 { color: var(--halt); margin-top: 0; }
+  .keep h4 { color: var(--green); margin-top: 0; }
+
+  /* ---- Statute quote ---- */
+  .statute {
+    margin: 1.4rem 0;
+    padding: 1.1rem 1.2rem;
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    border-top: 3px solid var(--halt);
+    max-width: none;
+  }
+  .statute .cite {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--halt);
+    margin: 0 0 0.6rem;
+    max-width: none;
+  }
+  .statute blockquote {
+    margin: 0;
+    font-family: var(--f-display);
+    font-size: 1.06rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  /* ---- Table ---- */
+  .tablewrap { overflow-x: auto; margin: 1.4rem 0 1.7rem; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.89rem; }
+  thead th {
+    background: var(--lift);
+    text-align: left;
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--grey);
+    font-weight: 400;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--seam);
+  }
+  tbody td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--seam); color: var(--ink-dim); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody td:first-child { color: var(--ink); }
+
+  /* ---- Ordered run of operations ---- */
+  .runlist { counter-reset: rn; list-style: none; padding: 0; margin: 1.3rem 0 1.6rem; max-width: var(--measure); }
+  .runlist li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--seam);
+    margin: 0;
+  }
+  .runlist li:last-child { border-bottom: 0; }
+  .runlist li::before {
+    counter-increment: rn;
+    content: counter(rn, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--green);
+    padding-top: 0.22rem;
+  }
+
+  /* ---- Log ---- */
+  .log { display: flex; flex-direction: column; gap: 1px; background: var(--seam); border: 1px solid var(--seam); margin: 1.3rem 0; }
+  .log > div { background: var(--lift); padding: 1.1rem 1.15rem; }
+  .log h4 { margin-top: 0; }
+  .log ul { margin-bottom: 0; max-width: none; }
+  .log li { font-size: 0.88rem; color: var(--ink-dim); }
+  .tag-open h4 { color: var(--halt); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+</style>
+</head>
+<body>
+
+<style>
+  /* ---- Extensions to the shared marketing-sheet block. Additions only. ---- */
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 1.8rem;
+  }
+  .tier {
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    border-top: 3px solid var(--grey);
+    padding: 1.3rem 1.2rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .tier.pick { border-top-color: var(--green); background: var(--surface); box-shadow: inset 0 0 0 1px var(--green-quiet); }
+  .tier .tname {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 1.3rem;
+    line-height: 1.1;
+    color: var(--ink);
+    margin: 0 0 0.15rem;
+  }
+  .tier .tfor {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1rem;
+    max-width: none;
+  }
+  .tier.pick .tfor { color: var(--green); }
+  .priceblock {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    margin: 0 0 0.1rem;
+  }
+  .priceblock .amt {
+    font-family: var(--f-display);
+    font-size: 2.15rem;
+    line-height: 1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .tier.pick .priceblock .amt { color: var(--green); }
+  .priceblock .per {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .weekly {
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    margin: 0 0 0.9rem;
+    padding: 0 0 0.9rem;
+    border-bottom: 1px solid var(--seam);
+    max-width: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .weekly b { color: var(--ink); font-weight: 500; }
+  .tier ul { margin: 0 0 1rem; padding-left: 1.05rem; max-width: none; }
+  .tier li { font-size: 0.86rem; color: var(--ink-dim); margin: 0 0 0.42rem; }
+  .tier .capline {
+    margin: auto 0 0;
+    padding: 0.75rem 0 0;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    max-width: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Numeric emphasis inside tables */
+  tbody td { font-variant-numeric: tabular-nums; }
+  tbody tr.key td { background: var(--green-quiet); color: var(--ink); }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  td.price { color: var(--ink); font-weight: 650; }
+
+  /* Rejected-claim row in the fact-check log */
+  tbody tr.rejected td { background: var(--halt-quiet); }
+  tbody tr.rejected td:first-child { color: var(--halt); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+  .verdict {
+    font-family: var(--f-data);
+    font-size: 0.6rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    padding: 0.16rem 0.42rem;
+    border: 1px solid var(--green);
+    color: var(--green);
+    background: var(--green-quiet);
+    white-space: nowrap;
+  }
+  .verdict.weak { border-color: var(--grey); color: var(--grey); background: var(--grey-quiet); }
+  .verdict.no { border-color: var(--halt); color: var(--halt); background: var(--halt-quiet); }
+</style>
+
+<div class="shell">
+
+<nav class="rail" aria-label="Sections">
+  <p class="rail-title">Sections</p>
+  <ol>
+    <li><a href="#s1">What is actually being sold</a></li>
+    <li><a href="#s2">The three tiers</a></li>
+    <li><a href="#s3">Build fees</a></li>
+    <li><a href="#s4">À la carte</a></li>
+    <li><a href="#s5">Payment and terms</a></li>
+    <li><a href="#s6">Differentiator and limits</a></li>
+    <li><a href="#s7">Compliance gates</a></li>
+    <li><a href="#s8">The flag before it ships</a></li>
+    <li><a href="#s9">Fact-check log</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="brandline">
+    <p class="descriptor">Services &amp; Pricing · Rate Card</p>
+  </div>
+  <h1 class="doctitle">What the work is worth, what to charge for it, and the number under each one that makes it defensible</h1>
+  <div class="metastrip">
+    <span><b>Built</b> 2026-08-24</span>
+    <span><b>Status</b> Internal draft</span>
+    <span><b>Source</b> marketing/services-pricing.md</span>
+    <span><b>Tiers</b> 3, weekly and monthly</span>
+  </div>
+  <p class="stamp">Nothing sent, quoted, proposed or published. Numbers are a working position, not an offer.</p>
+  <div class="restricted">
+    <h4>Branding is deliberately absent</h4>
+    <p>This sheet carries no logo because the entity question in §8 is open. Under the Surge name every line becomes Surge public copy and inherits the full restriction set. Under a separate name it does not. Decide that before the sheet is shown to anyone.</p>
+  </div>
+</header>
+
+<div class="thesis">
+  <p class="claim">The middle of this market is a four-figure monthly retainer. The entry play is to sit just under it, not to halve it.</p>
+  <p class="sub">A local marketing agency is paid an average of <strong>$1,779 per client per month</strong>, and roughly half of all agencies hold a retainer minimum of <strong>$2,000/mo or less</strong>. Cutting to the bottom of that buys the worst clients in the market and sets a rate that cannot later be raised. Every price here sits about <strong>20–25% under the comparable market midpoint</strong> — enough to win a decision against a named agency, not enough to signal that the work is cheap.</p>
+</div>
+
+<section id="s1">
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <h2>What is actually being sold</h2>
+    <p class="kicker">Every item has been built at least once — nothing here is aspirational</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <span class="cname">Web</span>
+      <span class="chip">Built</span>
+      <p class="cnote">Custom coded sites in Astro, not a page builder — dark and light themes, responsive, content driven from data files so facts are auditable in one place. A 29-page site has been built end to end. Plus landing and campaign pages, researched site copy, content hubs where publishing an article is a data edit, forms and lead capture, and the attribution that says which channel produced a lead.</p>
+    </div>
+    <div class="card">
+      <span class="cname">Brand and design</span>
+      <span class="chip">Built</span>
+      <p class="cnote">SVG logo marks including animated variants, each with a defined animation rule rather than a generic fade. Palettes and type systems documented as tokens so they survive a rebuild. Social profile and banner sets, branded QR codes, photo retouching and cutouts. Print work — flyers, one-pagers, agreements, field sheets — tested to an exact page count and delivered as PDF, because screen measurement lies about page fit.</p>
+    </div>
+    <div class="card">
+      <span class="cname">Content and social</span>
+      <span class="chip">Built</span>
+      <p class="cnote">Platform-native drafts for LinkedIn, Facebook, Instagram, X and neighbourhood surfaces — written per platform, not one post reposted five times. Carousels and feed squares at real size in destination form. Alternate hooks and cut lines kept with every draft so a post can be re-angled later without re-researching it. Calendars and scheduling.</p>
+    </div>
+    <div class="card">
+      <span class="cname">Local and lead generation</span>
+      <span class="chip">Built</span>
+      <p class="cnote">Google Business Profile optimisation on a client-owned profile, review engines, Local Services Ads setup gated on the client's licence, Meta and Google lead ads built capped and testable, speed-to-lead design, and funnel plus attribution design.</p>
+    </div>
+    <div class="card">
+      <span class="cname">Strategy and research</span>
+      <span class="chip">Built</span>
+      <p class="cnote">Phased marketing plans with a budget envelope, metrics and a risk register. Platform sheets naming which channels in what order and what gates each one. Competitor benchmark studies read page by page. Compliance screens for state advertising law, door-to-door law and trademark clearance.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <h2>The three tiers</h2>
+    <p class="kicker">Both columns buy the same work — the difference is commitment, not scope</p>
+  </div>
+
+  <p class="lede">Weekly is priced at exactly one quarter of the monthly rate. Fifty-two weekly payments therefore come to <strong>thirteen months of billing against twelve</strong>: weekly costs about one extra month a year and buys the right to stop on a week's notice, monthly is cheaper and asks for thirty days.</p>
+
+  <div class="keep">
+    <h4>Say the weekly premium out loud</h4>
+    <p>State the thirteen-months-against-twelve arithmetic on the call, before the client works it out. A buyer who finds it later assumes the rest of the sheet is also arranged in your favour, and the premium is small enough that volunteering it costs nothing and buys the whole document credibility.</p>
+  </div>
+
+  <div class="tiers">
+    <div class="tier">
+      <span class="tname">Foundation</span>
+      <p class="tfor">No working presence yet</p>
+      <div class="priceblock"><span class="amt">$800</span><span class="per">/month</span></div>
+      <p class="weekly">or <b>$200</b> / week</p>
+      <ul>
+        <li>Website up to 7 pages, hosted and maintained — build fee separate</li>
+        <li>Two content updates a month</li>
+        <li>Google Business Profile set up and optimised, on the client's own profile</li>
+        <li>Four social posts a month, one platform, fact-checked</li>
+        <li>One-page monthly report</li>
+      </ul>
+      <p class="capline">~8 hrs/mo held · ~$100/hr effective<br>Market comparable $1,000–1,500</p>
+    </div>
+
+    <div class="tier pick">
+      <span class="tname">Engine</span>
+      <p class="tfor">The tier to sell</p>
+      <div class="priceblock"><span class="amt">$1,600</span><span class="per">/month</span></div>
+      <p class="weekly">or <b>$400</b> / week</p>
+      <ul>
+        <li>Everything in Foundation</li>
+        <li>Website up to 15 pages, unlimited small edits, one new page a month</li>
+        <li>Twelve social posts a month across two platforms, plus one designed asset</li>
+        <li>Local search — weekly profile posts, review engine, citation cleanup</li>
+        <li>One campaign landing page a quarter</li>
+        <li>Lead capture forms with call and form tracking</li>
+        <li>Monthly working session, plus the report</li>
+      </ul>
+      <p class="capline">~20 hrs/mo held · ~$80/hr effective<br>Market comparable $1,779–2,500</p>
+    </div>
+
+    <div class="tier">
+      <span class="tname">Pipeline</span>
+      <p class="tfor">Demand exists, the system doesn't</p>
+      <div class="priceblock"><span class="amt">$3,200</span><span class="per">/month</span></div>
+      <p class="weekly">or <b>$800</b> / week</p>
+      <ul>
+        <li>Everything in Engine</li>
+        <li><strong>Paid media managed</strong> — Meta and Google, creative and copy included, on up to $10,000/mo of spend; 12% of the excess above that</li>
+        <li>Twenty posts a month across three platforms, plus two designed assets</li>
+        <li>Two researched articles a month to the content hub</li>
+        <li>Speed-to-lead system and attribution, built and maintained</li>
+        <li>Quarterly strategy sheet; print collateral as needed</li>
+        <li>Weekly report</li>
+      </ul>
+      <p class="capline">~40 hrs/mo held · ~$80/hr effective<br>Market comparable $4,000–5,000</p>
+    </div>
+  </div>
+
+  <h3>The check that matters</h3>
+  <p>Effective rates land between the surveyed freelance average of <strong>$71.59/hr</strong> and the agency average of <strong>$98.90/hr</strong>. That is the test of whether a discount is survivable: it has to come out of the agency margin, not out of the hourly.</p>
+
+  <p>Foundation carries the <em>highest</em> effective rate, on purpose. Small engagements cost more per hour to run — the same setup, reporting and context-switching spread over a quarter of the work. Do not let that number drift down to match the others.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>&nbsp;</th><th class="num">Foundation</th><th class="num">Engine</th><th class="num">Pipeline</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Monthly</td><td class="num price">$800</td><td class="num price">$1,600</td><td class="num price">$3,200</td></tr>
+        <tr><td>Weekly</td><td class="num price">$200</td><td class="num price">$400</td><td class="num price">$800</td></tr>
+        <tr><td>Annual, paid monthly</td><td class="num">$9,600</td><td class="num">$19,200</td><td class="num">$38,400</td></tr>
+        <tr><td>Annual, paid weekly</td><td class="num">$10,400</td><td class="num">$20,800</td><td class="num">$41,600</td></tr>
+        <tr class="key"><td>Weekly premium per year</td><td class="num">$800</td><td class="num">$1,600</td><td class="num">$3,200</td></tr>
+        <tr><td>Hours held per month</td><td class="num">~8</td><td class="num">~20</td><td class="num">~40</td></tr>
+        <tr><td>Effective hourly</td><td class="num">~$100</td><td class="num">~$80</td><td class="num">~$80</td></tr>
+        <tr><td>Market comparable</td><td class="num">$1,000–1,500</td><td class="num">$1,779–2,500</td><td class="num">$4,000–5,000</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <h2>Build fees</h2>
+    <p class="kicker">A retainer cannot absorb a site build — quote these separately, before the retainer starts</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Build</th><th class="num">Price</th><th class="num">Market comparable</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Starter site — up to 7 pages</td><td class="num price">$2,200</td><td class="num">$2,000–8,000</td></tr>
+        <tr><td>Standard site — 8 to 15 pages</td><td class="num price">$4,500</td><td class="num">$5,000–8,000</td></tr>
+        <tr><td>Custom site — 16 to 30 pages, data-driven</td><td class="num price">$8,000</td><td class="num">$8,000–15,000 boutique</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Terms:</strong> half at signature, half at launch. Nothing goes live before the second half clears.</p>
+
+  <div class="keep">
+    <h4>The lever — halve the build fee for a twelve-month commitment</h4>
+    <p>The build fee is cut by half on a twelve-month Engine or Pipeline commitment. This is the strongest close available to a new provider: it moves the objection from a large one-time number to a monthly one, and it buys a year of revenue. Use it deliberately rather than by default, and never on Foundation — that tier does not carry enough monthly revenue to fund the giveaway.</p>
+  </div>
+</section>
+
+<section id="s4">
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <h2>À la carte</h2>
+    <p class="kicker">For non-retainer clients, and for work outside a tier — retainer clients take 15% off this list</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Item</th><th class="num">Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Brand identity — mark, palette, type, usage rules</td><td class="num price">$1,500</td></tr>
+        <tr><td>Logo only, with usage file</td><td class="num price">$600</td></tr>
+        <tr><td>Landing page, standalone</td><td class="num price">$900</td></tr>
+        <tr><td>Print flyer, print-ready PDF</td><td class="num price">$250</td></tr>
+        <tr><td>Flyer variant set — two designs, comparison sheet</td><td class="num price">$400</td></tr>
+        <tr><td>Multi-page printed document set — agreements, checklists, field sheets</td><td class="num price">$850</td></tr>
+        <tr><td>Infographic or carousel, each</td><td class="num price">$250</td></tr>
+        <tr><td>Four-asset set</td><td class="num price">$900</td></tr>
+        <tr><td>Social profile and banner set</td><td class="num price">$350</td></tr>
+        <tr><td>Branded QR set</td><td class="num price">$120</td></tr>
+        <tr><td>Photo retouching — per image</td><td class="num price">$25</td></tr>
+        <tr><td>Ten-image batch</td><td class="num price">$200</td></tr>
+        <tr><td>Researched article, 1,200–1,600 words, sourced</td><td class="num price">$400</td></tr>
+        <tr><td>Social post pack — twelve posts, one platform, fact-checked</td><td class="num price">$500</td></tr>
+        <tr><td>Market and competitor research report</td><td class="num price">$1,200</td></tr>
+        <tr><td>Marketing plan — phases, budget, metrics, risk register</td><td class="num price">$1,800</td></tr>
+        <tr class="key"><td>Hourly, ad-hoc</td><td class="num price">$85/hr</td></tr>
+        <tr class="key"><td>Day rate</td><td class="num price">$600</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Ad management outside Pipeline</h3>
+  <p>12% of monthly spend, minimum $350/mo. The market standard is 15–20%, with flat minimums of $500–750/mo on small accounts, so this sits under on both the percentage and the floor. The client pays the platforms directly and holds the accounts.</p>
+</section>
+
+<section id="s5">
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <h2>Payment and terms</h2>
+    <p class="kicker">Written down now, because every one of these is cheaper to set than to renegotiate</p>
+  </div>
+
+  <ul>
+    <li>Retainers billed <strong>in advance</strong> — monthly on the 1st, weekly on Monday.</li>
+    <li><strong>Thirty days' notice</strong> to cancel a monthly retainer; <strong>one week</strong> on weekly.</li>
+    <li>Build fees 50/50, second half before launch.</li>
+    <li>Founding rates hold <strong>twelve months from signature</strong>, then step to standard. Put the step date in the agreement, so the increase is a scheduled event rather than a renegotiation.</li>
+    <li>Client owns everything delivered, on final payment, source files included. Do not hold a client's own site hostage as a retention mechanism — it works once and it ends the referral.</li>
+    <li>Client pays ad platforms directly and holds the ad accounts. Never run client spend through a personal card.</li>
+    <li><strong>Portfolio use requires written permission</strong>, per client, in the agreement.</li>
+  </ul>
+
+  <div class="stop">
+    <h4>What makes a bad fit — say no out loud, and early</h4>
+    <p>A new business's worst outcome is a full calendar of clients it is losing money on. Decline these rather than discounting into them:</p>
+    <ul>
+      <li>A client who needs Engine work at the Foundation price. Quote the right tier or walk — a loss-making client is not a client win.</li>
+      <li>Anyone wanting reviews written, bought or filtered.</li>
+      <li>Anyone wanting a guarantee of ranking, lead volume or revenue.</li>
+      <li>Video production. It is not offered — see §6.</li>
+      <li>Anyone who will not sign the compliance language in §7.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-head">
+    <span class="sec-num">06</span>
+    <h2>The differentiator, and the honest limits</h2>
+    <p class="kicker">One real claim beats five unprovable ones</p>
+  </div>
+
+  <div class="keep">
+    <h4>What is genuinely different</h4>
+    <p>Every factual claim in every deliverable traces to a primary source or a named outlet, and each piece carries a written fact-check log — what was verified, what was corrected, what stayed unresolved. That is not standard practice in this market, and it is demonstrable in a way that "we care about quality" is not. Lead the pitch with a real fact-check log; §9 of this sheet is one.</p>
+  </div>
+
+  <p><strong>Do not claim a proprietary or unique process.</strong> The delivery method is not differentiated and saying otherwise is the first thing a competent buyer tests. The research standard is the differentiator, and it survives the test.</p>
+
+  <div class="stop">
+    <h4>Not offered — say it before it is asked</h4>
+    <ul>
+      <li><strong>Video production and editing.</strong> Footage cannot be reviewed here. Work from a transcript, a description or an exported still, or refer the job out. Do not sell it and subcontract it blind.</li>
+      <li><strong>On-site photography and videography.</strong></li>
+      <li><strong>Owning a client's Google Business Profile or Local Services Ads account.</strong> That is a platform rule, not a preference — see §7.</li>
+      <li><strong>Legal advice, public adjusting, or claim handling.</strong></li>
+      <li><strong>Ad budget.</strong> The client pays the platforms.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-head">
+    <span class="sec-num">07</span>
+    <h2>Compliance gates</h2>
+    <p class="kicker">These kill specific sentences, not whole campaigns — screen copy before it ships</p>
+  </div>
+
+  <p>The gates below apply to the client sectors most likely to buy this work: roofing, restoration and home services.</p>
+
+  <div class="gate">
+    <span class="glabel">Gate</span>
+    <p>Colorado restoration and insurance advertising — <strong>C.R.S. 6-22-105</strong></p>
+  </div>
+
+  <div class="statute">
+    <p class="cite">C.R.S. 6-22-105 — effect on copy</p>
+    <blockquote>Advertising that the client will pay or waive an insurance deductible is barred, as is acting as a public adjuster. The rebate carve-out is post-contract only.</blockquote>
+  </div>
+
+  <p>This kills "$0 out-of-pocket," "we handle your claim," and every variant of both. If a restoration client's existing copy already says it, <strong>flag it in writing before touching the account</strong> — inheriting the sentence is not a defence for continuing to run it.</p>
+
+  <div class="gate">
+    <span class="glabel">Gate</span>
+    <p>Google Business Profile and Local Services Ads — the profile is always the client's</p>
+  </div>
+
+  <p>Google bars lead-generation companies from owning Business Profiles, and Local Services Ads requires a verified profile plus the client's own licence and insurance. The service sold is <em>management</em> of a client-owned profile. Price it that way and describe it that way in the agreement, because the alternative is not available at any price.</p>
+
+  <div class="gate">
+    <span class="glabel">Gate</span>
+    <p>Door-to-door sales law — the client's paperwork is a campaign risk</p>
+  </div>
+
+  <p>Any agreement signed at a customer's home is regulated. A defective cancellation notice reopens the sale for <strong>three years</strong>, and a cancellation after work has started can leave the seller with nothing. No waiver is possible. If a campaign ends in an in-home signature, raise this with the client — it is not your liability, but it is the thing that turns a working campaign into a refund queue.</p>
+
+  <div class="gate">
+    <span class="glabel">Never</span>
+    <p>No ranking, lead-volume or revenue guarantee in writing. Any tier, any price, any client.</p>
+  </div>
+</section>
+
+<section id="s8">
+  <div class="sec-head">
+    <span class="sec-num">08</span>
+    <h2>The flag before it ships</h2>
+    <p class="kicker">One decision that belongs to you, and is cheaper made now</p>
+  </div>
+
+  <p>This offering overlaps Surge's own line of business. Surge sells outsourced sales and marketing; this sells marketing services to other companies. Whether that is a conflict, a subsidiary offering, or a separate entity is a call worth making deliberately and probably in writing — <strong>before the first client, not after one asks who they are contracting with.</strong></p>
+
+  <p>It also decides the branding on this sheet, which is currently blank on purpose. Under the Surge name, everything here becomes Surge public copy and inherits the full restriction set. Under a separate name, or your own, it does not.</p>
+</section>
+
+<section id="s9">
+  <div class="sec-head">
+    <span class="sec-num">09</span>
+    <h2>Fact-check log</h2>
+    <p class="kicker">What was verified, what was corrected, what stayed unresolved</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Claim</th><th>Source</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Local agencies paid avg <strong>$1,779/client/month</strong>; 49% under $1,000</td>
+          <td>BrightLocal local SEO agency research</td>
+          <td><span class="verdict">Verified</span> BrightLocal's own survey data, up from $1,670 in 2017. Note the age — treat as a floor, not a current midpoint.</td>
+        </tr>
+        <tr>
+          <td>Billing methods — 54% monthly on deliverables, 41% per project, 21% hourly, 9% per lead</td>
+          <td>BrightLocal, <em>Local Marketing Industry Survey: Agency Edition</em>, fielded Aug–Sep 2024, n=385</td>
+          <td><span class="verdict">Verified</span> With date and sample size.</td>
+        </tr>
+        <tr>
+          <td>Top agency services — GBP management 68%, SEO audits 65%, content 65%, technical SEO 63%, web design 60%</td>
+          <td>Same BrightLocal 2024 survey</td>
+          <td><span class="verdict">Verified</span></td>
+        </tr>
+        <tr>
+          <td>SEO retainers — agencies <strong>$3,209/mo</strong>, consultancies $3,250, freelancers <strong>$1,348.63</strong>; overall $2,917</td>
+          <td>Ahrefs, <em>SEO Pricing</em>, n=439, last updated 2024-08-15</td>
+          <td><span class="verdict">Verified</span> Two years old as of this build — flagged, not stale enough to discard.</td>
+        </tr>
+        <tr class="key">
+          <td>Hourly averages — agencies <strong>$98.90</strong>, freelancers <strong>$71.59</strong>, consultancies $171.18; most common band $75–100</td>
+          <td>Ahrefs, same poll</td>
+          <td><span class="verdict">Verified</span> This is the effective-rate check used in §2.</td>
+        </tr>
+        <tr>
+          <td>Local SEO <strong>$1,557/mo</strong> average; small-business SEO ~$1,557, 42% charging $250–1,000</td>
+          <td>Ahrefs, same poll</td>
+          <td><span class="verdict">Verified</span></td>
+        </tr>
+        <tr>
+          <td>Per-project SEO — most common band $2,501–5,000; freelancer avg $2,348.63</td>
+          <td>Ahrefs, same poll</td>
+          <td><span class="verdict">Verified</span></td>
+        </tr>
+        <tr>
+          <td>~50% of agencies hold a retainer minimum of <strong>$2,000/mo or less</strong>; 13.5% over $5,000; 8% none</td>
+          <td>Credo, <em>Digital Marketing Industry Pricing Survey</em></td>
+          <td><span class="verdict weak">Stale</span> Page last updated 2022-07-21, underlying survey appears to be 2019. Used only for the shape of the distribution, never as a current dollar figure.</td>
+        </tr>
+        <tr>
+          <td>Credo average hourly $138 worldwide / $137.94 agencies</td>
+          <td>Credo, same survey</td>
+          <td><span class="verdict weak">Superseded</span> Same age problem. The Ahrefs 2024 figures are preferred wherever the two overlap.</td>
+        </tr>
+        <tr>
+          <td>Social media management — basic programme $500–5,000/mo; freelance $20–150/hr</td>
+          <td>Sprout Social, <em>Social Media Management Pricing</em>, published 2026-04-28</td>
+          <td><span class="verdict">Verified</span> But Sprout's own totals are enterprise-scaled — a $19,000/mo composite. Only the basic-programme band and the freelance hourly are used here.</td>
+        </tr>
+        <tr>
+          <td>Small-business website $2,000–8,000; freelancer $1,500–8,000; agency $5,000–30,000</td>
+          <td>Multiple aggregators; Clutch for the $100–149/hr agency band</td>
+          <td><span class="verdict weak">Bracket only</span> The $100–149/hr figure is Clutch's own. The project ranges are consistent across many sources but no single authoritative survey was found — used as a bracket, not quoted as fact.</td>
+        </tr>
+        <tr>
+          <td><strong>65%</strong> of small businesses spent under $10,000 on a website</td>
+          <td>Clutch small-business website survey, <strong>2019</strong></td>
+          <td><span class="verdict">Verified</span> Seven years old. Stated only where the age is stated with it.</td>
+        </tr>
+        <tr class="rejected">
+          <td>"Clutch 2026 survey: 61% of small business buyers spent under $10,000, down from 68% in 2023"</td>
+          <td>Content aggregator</td>
+          <td><span class="verdict no">Rejected</span> Could not be verified and appears fabricated. Clutch's own published figure is 65%, from 2019 — no 2026 survey and no 68%/2023 figure exists on clutch.co. This is exactly the pattern the research standard is for. The number was dropped, not softened.</td>
+        </tr>
+        <tr>
+          <td>PPC management 10–20% of spend; small accounts $500–750/mo flat; setup $500–2,500</td>
+          <td>Multiple aggregators, incl. AgencyAnalytics</td>
+          <td><span class="verdict weak">Weak</span> Consistent across sources and matches long-standing practice, but no primary survey located. The 12% / $350 floor sits under the low end, so the imprecision is absorbed.</td>
+        </tr>
+        <tr>
+          <td>Website care plans $199–599/mo for SMBs</td>
+          <td>Aggregators only</td>
+          <td><span class="verdict weak">Unused</span> No maintenance-only tier is offered — maintenance folds into the retainers, so the figure informs nothing that is quoted.</td>
+        </tr>
+        <tr>
+          <td>Freelance logo $300–2,500; brand identity $1,000–5,000</td>
+          <td>Aggregators only, several visibly recycled</td>
+          <td><span class="verdict weak">Bracket only</span> $1,500 identity and $600 logo sit inside every version of the range found, so the spread does not change the price.</td>
+        </tr>
+        <tr>
+          <td>C.R.S. 6-22-105 — deductible advertising and public adjusting prohibitions</td>
+          <td>Colorado Revised Statutes</td>
+          <td><span class="verdict">Carried</span> Verified previously in this project. Re-read the statute text before it goes into a client agreement.</td>
+        </tr>
+        <tr>
+          <td>Google bars lead-gen companies from owning Business Profiles; LSA needs a verified profile</td>
+          <td>Google platform policy</td>
+          <td><span class="verdict">Carried</span> Verified previously in this project. Policy pages change — re-check before contracting on it.</td>
+        </tr>
+        <tr>
+          <td>Door-to-door: three-year reopen on defective cancellation notice; no waiver possible</td>
+          <td>Verified previously in this project</td>
+          <td><span class="verdict">Carried</span> Applies to the client's paperwork, not to the marketing engagement.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="log">
+    <div class="tag-open">
+      <h4>Unresolved — deliberately left open</h4>
+      <ul>
+        <li><strong>No Denver or Colorado-specific rate data was found.</strong> Every figure above is national or international. Local rates are plausibly below the national midpoint, which would compress the discount this sheet is built on. Worth one round of local quote-shopping before the first proposal goes out.</li>
+        <li><strong>Weekly retainers are genuinely uncommon.</strong> No survey found reports them as a billing method at all — BrightLocal's list has day rates at 9% and no weekly line. The weekly column is built as asked and the arithmetic is defensible, but it will be unfamiliar to buyers who have shopped other providers. Expect to explain it rather than have it recognised.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Internal working document. Nothing on this sheet has been sent, quoted, proposed or published, and no client has been approached. Source of truth is <code>marketing/services-pricing.md</code> — this page is presentation only and gets re-synced from it.</p>
+</footer>
+
+</main>
+</div>
+
+</body>
+</html>

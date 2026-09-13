@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden;
+       font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"DejaVu Sans Mono",monospace}
+  .art{position:relative;overflow:hidden}
+  svg{display:block}
+  .lift{position:absolute;inset:0;
+    background:radial-gradient(120% 120% at 30% 0%, rgba(255,255,255,.05), rgba(255,255,255,0) 60%)}
+
+  .avatar{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .avatar .wm-wrap{position:relative}
+
+  .hl{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .hl .hlicon{position:relative;width:34%;height:34%}
+
+  .banner .glow{position:absolute;inset:0;background:
+    radial-gradient(120% 150% at 50% 118%, rgba(74,190,74,.16) 0%, rgba(74,190,74,.04) 40%, rgba(74,190,74,0) 68%)}
+  .floor{position:absolute;left:0;right:0}
+  .stack{position:absolute;inset:0;display:flex;flex-direction:column;
+         align-items:center;justify-content:center;padding:0 5%}
+  .wm-wrap{position:relative}
+  .wm-wrap .wm{width:100%;height:auto;fill:currentColor}
+  .desc{text-transform:uppercase;letter-spacing:.2em;text-indent:.2em;
+        white-space:nowrap;font-weight:400}
+
+    body{width:1080px;height:1080px}
+    .art{width:1080px;height:1080px}</style>
+<div class="art hl" style="background:#0a0a0a">
+  <div class="lift"></div>
+  <svg class="hlicon" viewBox="0 0 48 48" fill="none" stroke="#4abe4a" stroke-width="2.4"
+       stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="19" r="6"/><circle cx="32" cy="19" r="6"/><path d="M8 40 c0-7 5-11 10-11 s10 4 10 11"/><path d="M22 40 c0-7 5-11 10-11 s10 4 10 11"/></svg>
+</div>

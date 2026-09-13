@@ -1,0 +1,64 @@
+# Surge site — Apache config for SiteGround (and most shared Apache hosts).
+# The local Node dev server does NOT read this; it mirrors the important bits.
+
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+AddDefaultCharset utf-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Force HTTPS
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Canonical host: www -> non-www. Flip both lines if you prefer www.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # Pages consolidated 2026-09-07 — redirect the retired URLs to their new homes.
+  # NE keeps the "#" fragment from being escaped to %23 in the Location header.
+  RewriteRule ^how-it-works/?$        /what-we-do/#how-an-engagement-runs [R=301,L,NE]
+  RewriteRule ^training/?$            /careers/#how-you-are-trained       [R=301,L,NE]
+  RewriteRule ^careers/apply/?$       /careers/#apply                     [R=301,L,NE]
+  # Sectors tabled 2026-09-07 — hub + all subpages fold to what-we-do.
+  RewriteRule ^sectors(/.*)?$         /what-we-do/                        [R=301,L]
+</IfModule>
+
+# Never serve notes, sources, logs, dotfiles
+<FilesMatch "\.(md|log|sh|mjs|map)$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  <FilesMatch "\.(?:css|js|svg|webp|jpg|jpeg|png|ico|woff2)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  <FilesMatch "\.(?:webmanifest|xml)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp        "access plus 1 year"
+  ExpiresByType image/jpeg        "access plus 1 year"
+  ExpiresByType image/png         "access plus 1 year"
+  ExpiresByType image/svg+xml     "access plus 1 year"
+  ExpiresByType font/woff2        "access plus 1 year"
+  ExpiresByType text/css          "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/xml application/javascript image/svg+xml application/json
+</IfModule>

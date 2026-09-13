@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------
+# What this repo is for: versioning the ~700 text files that get
+# edited — markdown, HTML, CSS, scripts, SVG, PDFs, the .docx
+# training sources. NOT a backup tool for 3.2 GB of raw footage.
+# Media excluded here still needs a real backup elsewhere.
+# ---------------------------------------------------------------
+
+# --- Raw video: 3.2 GB, never edited in place, back up separately
+*.mov
+*.MOV
+*.mp4
+*.MP4
+*.avi
+
+# --- Camera originals
+*.heic
+*.HEIC
+
+# --- Archives / site bundles
+*.zip
+*.wpress
+**/deploy/dist/
+
+# --- The big photo tree (~500 MB) — but keep the notes written inside it
+surge/brand/photos/**
+!surge/brand/photos/**/
+!surge/brand/photos/**/*.md
+
+# --- Archive payload: superseded, duplicated and unrelated material.
+#     Keep the record of what was set aside, not the bytes.
+_archive/**
+!_archive/
+!_archive/README.md
+!_archive/MOVE-MANIFEST-2026-09-13.csv
+
+# --- Regenerable dependency trees (npm install rebuilds)
+node_modules/
+
+# --- OS / editor cruft
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+*~

@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sixfold Launch Flyers</title>
+<style>
+  :root {
+    --bg: #0E1512;
+    --surface: #17201C;
+    --surface-2: #1F2A25;
+    --line: #2E3D36;
+    --line-soft: #232F29;
+    --text: #EDE7DC;
+    --text-dim: #9AA69B;
+    --text-faint: #6C7A70;
+    --accent: #E4703A;
+    --moss: #8AA07A;
+    --warn: #D2564A;
+
+    --f-display: "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --f-mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
+    --maxw: 1180px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #E6E8E2; --surface: #F2F3EE; --surface-2: #E9EBE4;
+      --line: #C6CCC0; --line-soft: #D7DBD2;
+      --text: #121A16; --text-dim: #4E5A52; --text-faint: #78857B;
+      --accent: #C25526; --moss: #5E7350; --warn: #B33B31;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #E6E8E2; --surface: #F2F3EE; --surface-2: #E9EBE4;
+    --line: #C6CCC0; --line-soft: #D7DBD2;
+    --text: #121A16; --text-dim: #4E5A52; --text-faint: #78857B;
+    --accent: #C25526; --moss: #5E7350; --warn: #B33B31;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--f-display); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  .eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  .label { font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint); margin: 0; }
+  h1 { font-size: clamp(36px,6.5vw,58px); font-weight: 800; letter-spacing: -.035em; line-height: 1.03; margin: 0; text-wrap: balance; }
+  h2 { font-size: clamp(23px,3.2vw,32px); font-weight: 800; letter-spacing: -.025em; line-height: 1.1; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  .lede { font-size: 17px; color: var(--text-dim); max-width: 64ch; }
+  .body { font-size: 15px; color: var(--text-dim); max-width: 62ch; }
+  strong { color: var(--text); font-weight: 650; }
+
+  header { border-bottom: 1px solid var(--line); padding: 56px 0 40px; }
+  .head-grid { display: grid; gap: 18px; }
+
+  /* ============ FLYER ============ */
+  .boards { display: grid; gap: 40px; padding: 52px 0; }
+  @media (min-width: 900px) { .boards { grid-template-columns: 1fr 1fr; gap: 36px; } }
+
+  .board-col { display: grid; gap: 18px; align-content: start; }
+  .board-tag { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .pill {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    border: 1px solid var(--line); padding: 3px 9px; color: var(--text-faint);
+  }
+  .pill-you { border-color: var(--accent); color: var(--accent); }
+
+  .flyer {
+    container-type: inline-size;
+    aspect-ratio: 8.5 / 11;
+    background: #0E1512;
+    color: #EDE7DC;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+
+  /* full-bleed hero — scene runs edge to edge, copy sits in the sky */
+  .f-hero { position: relative; flex: none; }
+  .f-hero-art { width: 100%; height: auto; display: block; }
+  .f-hero-copy {
+    position: absolute; inset: 0;
+    padding: 5.2cqw 6.5cqw 0;
+    display: flex; flex-direction: column;
+  }
+  .f-rest { padding: 0 6.5cqw 5.5cqw; display: flex; flex-direction: column; flex: 1; }
+
+  .f-top { display: flex; align-items: center; gap: 2.4cqw; }
+  .f-top svg { width: 7cqw; height: 7cqw; flex: none; }
+  .f-name { font-weight: 800; letter-spacing: -.03em; font-size: 5cqw; line-height: 1; color: #EDE7DC; }
+  .f-desc { font-family: var(--f-mono); font-size: 1.5cqw; letter-spacing: .26em; text-transform: uppercase; color: #7E8B80; line-height: 1; margin-top: .6cqw; }
+
+  .f-eyebrow {
+    font-family: var(--f-mono); font-size: 1.85cqw; letter-spacing: .2em; text-transform: uppercase;
+    color: #E4703A; margin-top: 3.4cqw;
+  }
+  .f-head {
+    font-size: 7.6cqw; font-weight: 800; letter-spacing: -.04em; line-height: .98;
+    margin-top: 1.8cqw; max-width: 78%; text-wrap: balance;
+  }
+  .f-head em { font-style: normal; color: #E4703A; }
+
+  .f-sub { font-size: 2.7cqw; line-height: 1.42; color: #B9C2B8; margin-top: 3.4cqw; max-width: 40ch; }
+
+  .f-services {
+    display: flex; flex-wrap: wrap; gap: 1.2cqw 2.6cqw;
+    margin-top: 2.8cqw; padding-top: 2.4cqw;
+    border-top: 1px solid #2E3D36;
+  }
+  .f-services span { font-size: 2.4cqw; color: #EDE7DC; display: flex; align-items: center; gap: 1.1cqw; }
+  .f-services span::before {
+    content: ""; width: 0; height: 0; flex: none;
+    border-left: .85cqw solid transparent; border-right: .85cqw solid transparent;
+    border-bottom: 1.5cqw solid #E4703A;
+  }
+
+  .f-money {
+    margin-top: auto;
+    background: #1F2A25;
+    border-left: .7cqw solid #E4703A;
+    padding: 2.7cqw 3.1cqw;
+  }
+  .f-money-h { font-size: 2.85cqw; font-weight: 750; letter-spacing: -.02em; line-height: 1.15; }
+  .f-money-b { font-size: 2.05cqw; line-height: 1.48; color: #A9B3A8; margin-top: 1.2cqw; }
+
+  .f-cta {
+    margin-top: 2.5cqw;
+    background: #E4703A; color: #0E1512;
+    padding: 2.7cqw 3.2cqw;
+    display: flex; align-items: center; justify-content: space-between; gap: 2cqw;
+  }
+  .f-cta-l { font-size: 2.8cqw; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .f-cta-r { font-family: var(--f-mono); font-size: 3cqw; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
+
+  .f-fine { font-size: 1.55cqw; line-height: 1.45; color: #6C7A70; margin-top: 2cqw; }
+
+  /* ============ social ============ */
+  .social { background: var(--surface); border: 1px solid var(--line); padding: 20px 22px; display: grid; gap: 12px; }
+  .social pre {
+    margin: 0; font-family: var(--f-display); font-size: 14.5px; line-height: 1.62;
+    color: var(--text-dim); white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* ============ comparison ============ */
+  .compare { padding: 52px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 26px; }
+  .ctable { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .ctable th, .ctable td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  .ctable thead th {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-faint); border-bottom: 1px solid var(--line); font-weight: 400;
+  }
+  .ctable td:first-child {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-faint); width: 22%;
+  }
+  .ctable td { color: var(--text-dim); }
+  .tw { overflow-x: auto; }
+
+  /* ============ checklist ============ */
+  .check { padding: 52px 0 72px; display: grid; gap: 24px; }
+  .check ul { margin: 0; padding: 0; list-style: none; display: grid; border-top: 1px solid var(--line-soft); }
+  .check li {
+    padding: 15px 0; border-bottom: 1px solid var(--line-soft);
+    display: grid; grid-template-columns: 26px 1fr; gap: 14px;
+    font-size: 15px; color: var(--text-dim); align-items: baseline;
+  }
+  .check .box { width: 13px; height: 13px; border: 1px solid var(--text-faint); }
+  .check .box-stop { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 22%, transparent); }
+  .check .box-done { border-color: var(--moss); background: var(--moss); }
+
+  .note { border-left: 2px solid var(--accent); padding: 4px 0 4px 18px; font-size: 15px; color: var(--text-dim); max-width: 64ch; }
+  .note-stop { border-left-color: var(--warn); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="glow">
+      <stop offset="0%" stop-color="#E4703A" stop-opacity=".52"/>
+      <stop offset="50%" stop-color="#E4703A" stop-opacity=".17"/>
+      <stop offset="100%" stop-color="#E4703A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="scrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0E1512" stop-opacity=".93"/>
+      <stop offset="58%" stop-color="#0E1512" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#0E1512" stop-opacity="0"/>
+    </linearGradient>
+    <!-- conifer from stacked triangles — same geometry as the Ridge mark -->
+    <symbol id="conifer" viewBox="0 0 20 40">
+      <polygon points="10,0 17,15 3,15" fill="#8AA07A" fill-opacity=".72"/>
+      <polygon points="10,9 18.5,26 1.5,26" fill="#8AA07A" fill-opacity=".86"/>
+      <polygon points="10,18 20,36 0,36" fill="#8AA07A"/>
+      <rect x="8.7" y="34" width="2.6" height="6" fill="#5E7350"/>
+    </symbol>
+    <!-- the scene: house with room around it, forest held back, ember beyond -->
+    <symbol id="scene" viewBox="0 0 400 250">
+      <path d="M0,177 L60,147 L112,169 L162,139 L218,167 L272,143 L332,173 L400,149 L400,215 L0,215 Z" fill="#8AA07A" fill-opacity=".14"/>
+      <ellipse cx="312" cy="175" rx="124" ry="46" fill="url(#glow)"/>
+      <rect x="0" y="0" width="264" height="215" fill="url(#scrim)"/>
+      <path d="M-4,225 L-4,207 L4,180 L12,207 L20,173 L28,207 L36,187 L44,207 L52,177 L60,207 L68,185 L76,207 L84,171 L92,207 L100,190 L108,207 L116,176 L124,207 L132,184 L140,207 L148,172 L156,207 L164,188 L172,207 L180,179 L188,207 L196,185 L204,207 L212,175 L220,207 L228,201 L236,213 L244,206 L252,213 L260,199 L268,213 L276,207 L284,213 L292,203 L300,213 L308,209 L316,213 L324,201 L332,213 L340,208 L348,213 L356,203 L364,207 L372,183 L380,207 L388,190 L396,207 L404,178 L404,225 Z" fill="#1A241F"/>
+      <rect x="0" y="224" width="400" height="3" fill="#2E3D36"/>
+      <path d="M184,225 A80,26 0 0 1 344,225" fill="none" stroke="#E4703A" stroke-opacity=".5" stroke-width="1.3" stroke-dasharray="5 5"/>
+      <use href="#conifer" x="194" y="195" width="15" height="30"/>
+      <use href="#conifer" x="222" y="201" width="12" height="24"/>
+      <use href="#conifer" x="332" y="193" width="16" height="32"/>
+      <use href="#conifer" x="360" y="199" width="13" height="26"/>
+      <rect x="302" y="185" width="6" height="14" fill="#C9C3B8"/>
+      <polygon points="244,209 284,189 324,209" fill="#EDE7DC"/>
+      <rect x="251" y="209" width="66" height="16" fill="#D8D2C6"/>
+      <rect x="278" y="216" width="11" height="9" fill="#0E1512"/>
+      <rect x="258" y="213" width="9" height="7" fill="#E4703A" fill-opacity=".8"/>
+      <rect x="299" y="213" width="9" height="7" fill="#E4703A" fill-opacity=".8"/>
+    </symbol>
+    <symbol id="ridgemark" viewBox="0 0 100 100">
+      <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity=".5"/>
+      <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity=".4"/>
+      <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity=".6"/>
+      <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity=".82"/>
+      <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+      <rect x="4" y="86" width="92" height="5" fill="#8AA07A"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header>
+  <div class="wrap head-grid">
+    <p class="eyebrow">Launch offer &middot; Two versions</p>
+    <h1>Sixfold Launch Flyers</h1>
+    <p class="lede">The same job &mdash; get the phone ringing, get before-and-afters, get reviews &mdash; run two ways. Version&nbsp;A is the offer as you described it. Version&nbsp;B keeps the low entry price but takes the floor back.</p>
+    <p class="note">Both use the <strong>Ridge</strong> mark, since it is the stronger performer on anything a homeowner holds. Swap to Sweep by changing one symbol if that is the direction Brandon picks.</p>
+    <div style="display:grid; gap:12px; padding-top:8px;">
+      <p class="label">Why the picture is what it is</p>
+      <p class="body">A flyer gets about a second on a doorstep before it is read or binned, so the scene has to say &ldquo;wildfire&rdquo; and &ldquo;this is what we do to your property&rdquo; before a single word is read. It shows a house with room around it, the forest held back, and the glow already on the horizon &mdash; the job, the reason and the stakes in one image.</p>
+      <p class="body">It is drawn in the same geometry as the logo. Conifers are stacked triangles, the ridgeline is triangles, the mark is triangles, and the service bullets are triangles &mdash; so the imagery reads as part of the brand rather than stock art dropped on top of it. The dashed arc is the defensible space; anyone who has had a county mailer will recognise it, and anyone who has not still reads it as &ldquo;a safe distance.&rdquo;</p>
+    </div>
+  </div>
+</header>
+
+<section class="wrap boards">
+
+  <!-- ============ A ============ -->
+  <div class="board-col">
+    <div class="board-tag">
+      <p class="eyebrow">Version A</p>
+      <span class="pill pill-you">As you described it</span>
+    </div>
+
+    <div class="flyer">
+      <div class="f-hero">
+        <svg class="f-hero-art" viewBox="0 0 400 250" role="img" aria-label="A home with well-spaced trees around it, dense forest held back beyond, and a wildfire glow on the horizon."><use href="#scene"/></svg>
+        <div class="f-hero-copy">
+          <div class="f-top">
+            <svg viewBox="0 0 100 100" role="img" aria-label="Sixfold"><use href="#ridgemark"/></svg>
+            <div>
+              <div class="f-name">SIXFOLD</div>
+              <div class="f-desc">Land &amp; Fire</div>
+            </div>
+          </div>
+          <p class="f-eyebrow">Wildfire mitigation &middot; Front Range</p>
+          <h2 class="f-head">Bring us your quote. We&rsquo;ll cut it <em>in half</em>.</h2>
+        </div>
+      </div>
+
+      <div class="f-rest">
+        <p class="f-sub">Any written estimate from another Colorado outfit. Same scope, same property, half the price.</p>
+
+        <div class="f-services">
+          <span>Trees down</span>
+          <span>Stumps ground</span>
+          <span>Slash chipped</span>
+          <span>Hauled or left</span>
+        </div>
+
+        <div class="f-money">
+          <p class="f-money-h">Colorado pays some of this back.</p>
+          <p class="f-money-b">The state wildfire mitigation tax credit covers 100% of what you spend, up to $1,000. Income limits apply. Almost nobody has heard of it &mdash; about 450 people in the whole state claimed it. Every job we do comes with the paperwork you need to claim it.</p>
+        </div>
+
+        <div class="f-cta">
+          <span class="f-cta-l">Text a photo<br>of your quote</span>
+          <span class="f-cta-r">(720) 772-6146</span>
+        </div>
+
+        <p class="f-fine">Written estimate from a Colorado business, dated within 30 days, same scope and same property. We confirm access, slope and tree count on site before we commit. One per property. Sixfold LLC &middot; Monument, CO &middot; m.sharpe@surgeftw.com</p>
+      </div>
+    </div>
+
+    <div class="social">
+      <p class="label">Social caption</p>
+      <pre>Got a quote for fire mitigation you didn't love?
+
+Send it to us. Same scope, same property, half the price.
+
+We're new on the Front Range and we're building our portfolio, so we're pricing to earn the work. Trees down, stumps ground, slash chipped, hauled or left — your call.
+
+One more thing most people don't know: Colorado's wildfire mitigation tax credit pays back 100% of what you spend, up to $1,000. About 450 people in the entire state claimed it last time. Every job we do comes with the paperwork you need to claim it.
+
+Text a photo of your quote to (720) 772-6146.</pre>
+    </div>
+  </div>
+
+  <!-- ============ B ============ -->
+  <div class="board-col">
+    <div class="board-tag">
+      <p class="eyebrow">Version B</p>
+      <span class="pill">Bounded alternative</span>
+    </div>
+
+    <div class="flyer">
+      <div class="f-hero">
+        <svg class="f-hero-art" viewBox="0 0 400 250" role="img" aria-label="A home with well-spaced trees around it, dense forest held back beyond, and a wildfire glow on the horizon."><use href="#scene"/></svg>
+        <div class="f-hero-copy">
+          <div class="f-top">
+            <svg viewBox="0 0 100 100" role="img" aria-label="Sixfold"><use href="#ridgemark"/></svg>
+            <div>
+              <div class="f-name">SIXFOLD</div>
+              <div class="f-desc">Land &amp; Fire</div>
+            </div>
+          </div>
+          <p class="f-eyebrow">Wildfire mitigation &middot; Front Range</p>
+          <h2 class="f-head">We&rsquo;re new here. First ten properties, <em>40% off</em>.</h2>
+        </div>
+      </div>
+
+      <div class="f-rest">
+        <p class="f-sub">We&rsquo;re new to the Front Range, let us show you what we&rsquo;re made of.</p>
+
+        <div class="f-services">
+          <span>Trees down</span>
+          <span>Stumps ground</span>
+          <span>Slash chipped</span>
+          <span>Hauled or left</span>
+        </div>
+
+        <div class="f-money">
+          <p class="f-money-h">Colorado pays some of this back.</p>
+          <p class="f-money-b">The state wildfire mitigation tax credit covers 100% of what you spend, up to $1,000. Income limits apply. Almost nobody has heard of it &mdash; about 450 people in the whole state claimed it. Every job we do comes with the paperwork you need to claim it.</p>
+        </div>
+
+        <div class="f-cta">
+          <span class="f-cta-l">Book a walkthrough<br>&mdash; it&rsquo;s free</span>
+          <span class="f-cta-r">(720) 772-6146</span>
+        </div>
+
+        <p class="f-fine">First ten properties booked by [DATE]. We confirm access, slope and tree count on site before we commit. One per property. Sixfold LLC &middot; Monument, CO &middot; m.sharpe@surgeftw.com</p>
+      </div>
+    </div>
+
+    <div class="social">
+      <p class="label">Social caption</p>
+      <pre>We're new on the Front Range, and we'd rather earn the work than advertise for it.
+
+First ten properties get 40% off wildfire mitigation.
+
+Trees down, stumps ground, slash chipped, hauled or left — your call.
+
+And one thing most people don't know: Colorado's wildfire mitigation tax credit pays back 100% of what you spend, up to $1,000. About 450 people in the entire state claimed it last time. Every job we do comes with the paperwork you need to claim it.
+
+Ten slots. Book a free walkthrough — (720) 772-6146.</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARISON ============ -->
+<section class="wrap compare">
+  <div style="display:grid; gap:10px;">
+    <p class="eyebrow">Side by side</p>
+    <h2>What actually differs</h2>
+    <p class="body">Both get you cheap jobs, photos and reviews. The difference is who controls the number and whether there is a reason to call today.</p>
+  </div>
+
+  <div class="tw">
+    <table class="ctable">
+      <thead>
+        <tr><th></th><th>A &mdash; Half your quote</th><th>B &mdash; First ten, 40% off</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Who sets the price</td><td>The competitor who quoted them</td><td>You</td></tr>
+        <tr><td>Your floor</td><td>Open &mdash; a lowball quote halved can land under cost</td><td>Known before you print it</td></tr>
+        <tr><td>Reason to call now</td><td>None. The offer is always there</td><td>Ten slots and a date</td></tr>
+        <tr><td>Who calls</td><td>People already shopping &mdash; they have a quote in hand</td><td>Anyone, including people who had not started looking</td></tr>
+        <tr><td>Reviews</td><td>Asked for in person, at completion</td><td>Same &mdash; deliberately kept off the paper and moved to the walkthrough</td></tr>
+        <tr><td>What it says about you</td><td>Cheapest on the street</td><td>New and hungry, which is true and forgivable</td></tr>
+        <tr><td>Raising prices later</td><td>Hard &mdash; you trained the market on half</td><td>Easy &mdash; the discount had a stated reason and an end</td></tr>
+        <tr><td>Real risk</td><td>Someone brings a $9,000/acre resort-county quote and you owe them a $4,500/acre job on a Front Range lot</td><td>Ten discounted jobs is a known, budgeted cost</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">If you want A&rsquo;s hook without A&rsquo;s exposure, the middle path is to keep the headline and add a floor: <strong>&ldquo;Bring us your quote &mdash; we&rsquo;ll beat it by 40%, down to our minimum.&rdquo;</strong> Same magnetism, and the minimum is yours to set.</p>
+</section>
+
+<!-- ============ CHECKLIST ============ -->
+<section class="wrap check">
+  <div style="display:grid; gap:10px;">
+    <p class="eyebrow">Before either one prints</p>
+    <h2>Fix list</h2>
+  </div>
+
+  <p class="note note-stop"><strong>Neither flyer says &ldquo;licensed and insured.&rdquo;</strong> That line is on almost every contractor flyer in Colorado and it is the first thing a homeowner looks for &mdash; but you do not have general liability or workers comp yet, and putting it on paper before you do is the kind of claim that follows a company around. Get the insurance, then add the line. It will do more for conversion than either discount.</p>
+
+  <ul>
+    <li><span class="box box-stop"></span><span><strong>Do not add the Douglas County cost-share to the flyer yet.</strong> It pays 50% up to $25,000, but it requires two bids from the county&rsquo;s approved contractor list and Sixfold is not on it. Advertising it before you qualify sets up a promise you cannot keep.</span></li>
+    <li><span class="box box-done"></span><span><strong>Phone number &mdash; done 18 Aug 2026.</strong> (720) 772-6146, live on both flyers and in both social captions.</span></li>
+    <li><span class="box"></span><span><strong>The email is a Surge address.</strong> m.sharpe@surgeftw.com now sits in the fine print on both. It works, but a homeowner who looks it up lands on a different company &mdash; register sixfoldland.com and forward an address into the same inbox before any volume print run.</span></li>
+    <li><span class="box"></span><span><strong>Domain.</strong> Still unregistered, so no web address appears on either flyer. sixfoldland.com was clear on the DNS check &mdash; confirm at a registrar.</span></li>
+    <li><span class="box"></span><span><strong>Date on Version B.</strong> Still <code>[DATE]</code> in the fine print. The deadline is what makes it work; without it, it is just a discount.</span></li>
+    <li><span class="box"></span><span><strong>Decide the minimum job size</strong> before either offer goes out. On a small lot the discount can leave the job below the cost of getting the truck there.</span></li>
+    <li><span class="box"></span><span><strong>Get a photo release in the paperwork.</strong> Neither flyer trades on before-and-afters any more &mdash; that ask moved to the walkthrough, where it belongs. You still need the release, because every job produces photos for the portfolio and for insurance documentation. Get written permission at signing, not after.</span></li>
+    <li><span class="box"></span><span><strong>The tax credit line is accurate as written and worth keeping on both.</strong> 100% of costs up to $1,000 for the current tax year, income limits apply, roughly 450 claims statewide. It rises to $2,000 and becomes refundable in 2027. It is the single most useful thing on the page and no competitor is saying it.</span></li>
+  </ul>
+</section>
+
+</body>
+</html>

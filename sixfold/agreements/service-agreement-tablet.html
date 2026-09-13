@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Agreement Tablet</title>
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — tax credit notebook, shared print register.
+
+   Extended from marketing/funding-one-pager.html. Same tokens, same
+   type stack, same ink-on-paper commitment: these sheets exist to be
+   printed and put in a binder, so there is no dark theme and every
+   colour is painted explicitly.
+
+   What is NEW here, over the one-pager:
+     - multi-sheet pagination (.sheet + page-break-after)
+     - fill-in furniture: .rule, .box, .grid-form, .tbl
+     - .internal / .clientfacing masthead flags
+   Do not restyle. Extend.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #FFFFFF;
+  --tint: #F3EFE6;
+  --tint-edge: #DED5C4;
+  --ink: #14201B;
+  --ink-mid: #46534B;
+  --ink-soft: #6E7A72;
+  --ember: #E4703A;
+  --ember-text: #B84C15;
+  --moss-text: #45583A;
+
+  --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+  --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: #4A5550; }
+body {
+  margin: 0;
+  background: #4A5550;
+  color: var(--ink);
+  font-family: var(--f-body);
+  padding: 24px 12px 48px;
+}
+
+/* The sheet -------------------------------------------------------- */
+.sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 22px;
+  background: var(--paper);
+  color: var(--ink);
+  /* Matches @page below exactly, so the on-screen sheet is a true proof:
+     11in tall minus 0.5in top and bottom leaves the 10in the printer gives
+     you. If content clears the white here, it clears one printed page. */
+  padding: 0.5in 0.55in;
+  font-size: 9.5pt;
+  line-height: 1.34;
+  box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Masthead --------------------------------------------------------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3in;
+  border-bottom: 2.5pt solid var(--ember);
+  padding-bottom: 6pt;
+}
+.brand { display: flex; align-items: flex-end; gap: 8pt; }
+.mark { width: 33pt; height: 38pt; flex: none; display: block; color: var(--ink); }
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 19pt;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.descriptor {
+  font-family: var(--f-data);
+  font-size: 6pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 4pt 0 0;
+}
+.whatitis {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0;
+  padding-top: 3pt;
+  max-width: 2.3in;
+  line-height: 1.7;
+}
+.whatitis b { color: var(--ember-text); font-weight: 400; display: block; }
+
+/* Sheet headline --------------------------------------------------- */
+.sheetnum {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+}
+h1.headline {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.09;
+  text-wrap: balance;
+  margin: 4pt 0 0;
+  color: var(--ink);
+}
+.standfirst {
+  font-size: 9.6pt;
+  line-height: 1.4;
+  color: var(--ink-mid);
+  margin: 5pt 0 0;
+  max-width: 6.5in;
+}
+
+h2.sec {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 12.5pt;
+  line-height: 1.12;
+  margin: 9pt 0 4pt;
+  color: var(--ember-text);
+}
+h3.sub {
+  font-family: var(--f-data);
+  font-size: 6.6pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 8pt 0 4pt;
+  font-weight: 400;
+}
+p { margin: 0 0 5pt; }
+
+/* Blocks ----------------------------------------------------------- */
+.block {
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 10pt 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin: 8pt 0 0;
+}
+.block.moss { border-left-color: var(--moss-text); background: var(--paper); }
+.block > :last-child { margin-bottom: 0; }
+.block-eyebrow {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 0 0 5pt;
+}
+
+/* Lists ------------------------------------------------------------ */
+ul.terms { margin: 0 0 5pt; padding-left: 12pt; list-style: none; }
+ul.terms li { position: relative; margin-bottom: 3pt; padding-left: 1pt; }
+ul.terms li::before {
+  content: "";
+  position: absolute;
+  left: -10pt;
+  top: 0.42em;
+  width: 4pt;
+  height: 4pt;
+  background: var(--moss-text);
+}
+ul.terms li:last-child { margin-bottom: 0; }
+ul.terms.no li::before { background: var(--ember-text); }
+
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 24pt;
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1pt;
+  width: 18pt;
+  height: 18pt;
+  background: var(--ember);
+  color: #FFF;
+  font-family: var(--f-data);
+  font-size: 9pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ol.steps > li:last-child { margin-bottom: 0; }
+ol.steps b { display: block; color: var(--ink); }
+ol.steps p { margin: 1pt 0 0; color: var(--ink-mid); font-size: 8.9pt; }
+
+/* Tables ----------------------------------------------------------- */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  margin: 0 0 5pt;
+}
+table.tbl th {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  font-weight: 400;
+  padding: 0 6pt 4pt 0;
+  border-bottom: 1.25pt solid var(--ink);
+  vertical-align: bottom;
+}
+table.tbl td {
+  padding: 3.5pt 6pt 3.5pt 0;
+  border-bottom: 0.75pt solid var(--tint-edge);
+  vertical-align: top;
+  line-height: 1.35;
+}
+table.tbl td:last-child, table.tbl th:last-child { padding-right: 0; }
+table.tbl .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.tbl tr.hi td { background: #FBE6DC; font-weight: 600; }
+table.tbl tr.dim td { color: var(--ink-soft); }
+
+/* Fill-in furniture ------------------------------------------------ */
+.rule {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-soft);
+  min-width: 1in;
+  height: 1.05em;
+  vertical-align: baseline;
+}
+.rule.w2 { min-width: 2in; }
+.rule.w3 { min-width: 3in; }
+.rule.fill { display: block; width: 100%; }
+
+.grid-form { display: flex; flex-wrap: wrap; gap: 7pt 12pt; margin: 0 0 6pt; }
+.field { flex: 1 1 2.2in; min-width: 1.6in; }
+.field.wide { flex: 1 1 100%; }
+.field.half { flex: 1 1 3.1in; }
+.field label {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8pt;
+}
+.field .line { border-bottom: 0.75pt solid var(--ink-mid); height: 2pt; }
+.field .hint { font-size: 7.4pt; color: var(--ink-soft); margin: 3pt 0 0; line-height: 1.35; }
+
+.tick { display: flex; align-items: flex-start; gap: 6pt; margin-bottom: 3pt; break-inside: avoid; }
+.tick .sq {
+  flex: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin-top: 1.5pt;
+  background: var(--paper);
+}
+.tick .lbl { flex: 1; line-height: 1.38; }
+.tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
+.ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+.ticks.two .tick { flex: 1 1 2.7in; }
+
+.yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
+.yn span {
+  display: inline-block;
+  width: 9pt; height: 9pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin: 0 3pt 0 8pt;
+  vertical-align: -1pt;
+}
+
+.sign { display: flex; gap: 16pt; margin-top: 10pt; }
+.sign .field { flex: 1 1 auto; }
+.sign .field.date { flex: 0 0 1.5in; }
+
+/* Callouts --------------------------------------------------------- */
+.warn {
+  border: 0.9pt solid var(--ember-text);
+  background: #FBE6DC;
+  padding: 7pt 10pt;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+.warn .block-eyebrow { color: var(--ember-text); }
+.warn > :last-child { margin-bottom: 0; }
+
+.note {
+  font-family: var(--f-data);
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-top: 0.75pt solid var(--tint-edge);
+  padding-top: 5pt;
+  margin: 7pt 0 0;
+}
+.note b { color: var(--ink-mid); font-weight: 400; }
+
+/* Footer ----------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding-top: 6pt;
+  border-top: 0.75pt solid var(--tint-edge);
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4pt 12pt;
+  font-family: var(--f-data);
+  font-size: 7.4pt;
+  letter-spacing: 0.05em;
+  color: var(--ink-mid);
+}
+.contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+.contact .pg { margin-left: auto; color: var(--ink-soft); }
+.disclaimer {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+  max-width: 6.6in;
+}
+
+/* Print ------------------------------------------------------------ */
+@media print {
+  html, body { background: #FFF; padding: 0; margin: 0; }
+  .sheet {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+  @page { size: letter; margin: 0.5in 0.55in; }
+  .screenonly { display: none !important; }
+}
+
+@media screen and (max-width: 8.9in) {
+  .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+  .top { flex-direction: column; gap: 10pt; }
+  .whatitis { text-align: left; max-width: none; }
+}
+
+/* ==================================================================
+   CONTRACT FURNITURE — added for the service agreement.
+   Extends the notebook print register; nothing above is overridden.
+   ================================================================== */
+
+/* Numbered clauses. The numbers are real references — a change order or a
+   dispute needs to be able to cite one — so they are not decoration. */
+ol.clauses { margin: 0; padding: 0; list-style: none; counter-reset: cl; }
+ol.clauses > li {
+  counter-increment: cl;
+  position: relative;
+  padding-left: 20pt;
+  margin-bottom: 5pt;
+  break-inside: avoid;
+}
+ol.clauses > li::before {
+  content: counter(cl) ".";
+  position: absolute; left: 0; top: 0;
+  font-family: var(--f-data);
+  font-size: 8pt;
+  color: var(--ember-text);
+}
+ol.clauses > li:last-child { margin-bottom: 0; }
+ol.clauses b.h { display: block; color: var(--ink); }
+
+/* Inline fill-in rule that sits in running text. */
+.fi {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-mid);
+  min-width: 0.9in;
+  height: 1.02em;
+  vertical-align: -0.2em;
+}
+.fi.w2 { min-width: 1.8in; }
+.fi.w3 { min-width: 2.7in; }
+
+/* Money line. Tabular figures and a box, so a filled-in price is unambiguous
+   and hard to alter after signing. */
+.money { display: flex; flex-wrap: wrap; gap: 10pt; margin: 6pt 0 0; }
+.money .m { flex: 1 1 2in; border: 0.9pt solid var(--ink-mid); padding: 5pt 8pt 6pt; }
+.money .m span {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 8pt;
+}
+.money .m .amt {
+  font-family: var(--f-data); font-size: 12pt; color: var(--ink);
+  border-bottom: 0.9pt solid var(--ink-mid); padding-bottom: 2pt;
+}
+
+/* THE CANCELLATION STATEMENT.
+   16 CFR 429.1(a) requires this in bold face type of a minimum size of TEN
+   POINTS, in immediate proximity to the buyer's signature space. The register's
+   body copy is 9.5pt, so this is set explicitly and must not be reduced to make
+   a page fit. Same for the notice forms — 429.1(b) sets the same floor. */
+.legal10 { font-size: 10.5pt; font-weight: 700; line-height: 1.34; }
+.cancelbox {
+  border: 1.4pt solid var(--ink);
+  padding: 9pt 11pt;
+  margin: 10pt 0 0;
+  break-inside: avoid;
+}
+
+/* Signature blocks. */
+.sigs { display: flex; flex-wrap: wrap; gap: 14pt 20pt; margin-top: 12pt; }
+.sigs .s { flex: 1 1 2.9in; }
+.sigs .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigs .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+/* The statutory notice form — plain, boxed, unmistakably a separate document. */
+.noticeform { border: 1.4pt solid var(--ink); padding: 14pt 16pt 16pt; margin-top: 10pt; }
+.noticeform h2 {
+  font-family: var(--f-data); font-size: 12pt; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  margin: 0 0 10pt; color: var(--ink);
+}
+.noticeform p { font-size: 10.5pt; font-weight: 700; line-height: 1.34; margin: 0 0 8pt; }
+.noticeform .datefield { margin: 0 0 10pt; }
+
+/* Internal sheet flag — never appears on a customer-facing page. */
+.internalflag {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--f-data); font-size: 7pt;
+  letter-spacing: .2em; text-transform: uppercase;
+  padding: 3pt 7pt; display: inline-block;
+}
+
+/* ==================================================================
+   PAGINATION HARDENING — added 2026-08-21.
+
+   Each .sheet is designed to be exactly one printed page and is
+   measured to fit. This block is the safety net for when it is not:
+   if a page shrinks (a printer with a larger unprintable margin, or
+   browser headers/footers left switched on), content must break at a
+   clean boundary rather than mid-topic. Better an extra page than a
+   heading stranded at the bottom or a table cut in half.
+   ================================================================== */
+h1.headline, h2.sec, h3.sub, .sheetnum, .block-eyebrow {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+.block, .warn, .noticeform, .money, .totals, .grid-form, .ticks,
+.sigs, .catkey, .figures, .paperwork, footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+ol.clauses > li, ol.steps > li, ul.terms li, .tick, .field, .money .m {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.tbl { break-inside: auto; page-break-inside: auto; }
+table.tbl tr, table.tbl thead { break-inside: avoid; page-break-inside: avoid; }
+table.tbl thead { break-after: avoid-page; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+
+/* Signature rows — one party per row, three columns.
+   The previous flat .sigs flex wrapped six equal items two-per-row, which
+   put the Sixfold representative's signature beside the owner's date. It
+   read as one muddled grid instead of two signature blocks. */
+.sigrow { display: flex; gap: 10pt 18pt; margin-top: 11pt; break-inside: avoid; page-break-inside: avoid; }
+.sigrow .s { flex: 1 1 0; min-width: 0; }
+.sigrow .s.wide { flex: 1.5 1 0; }
+.sigrow .s.narrow { flex: 0.75 1 0; }
+.sigrow .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigrow .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+</style>
+<style>
+/* ====================================================================
+   TABLET LAYER — screen-interactive, print-identical.
+
+   Pages 1 to 3 of the service agreement, fillable on a tablet. Pages 4
+   and 5, the two Notice of Cancellation copies, are deliberately NOT
+   here: they are pre-printed paper the rep completes by hand. Delivering
+   them electronically would drag the whole signing into the ESIGN
+   consumer-consent process (15 U.S.C. 7001(c)) — affirmative consent, a
+   paper-copy disclosure, a hardware and software statement, and proof
+   the customer can open the format. Getting that wrong makes the notice
+   defective, and a defective notice opens Colorado's three-year
+   cancellation window. The notices are static apart from two dates, so
+   paper is nearly free and removes the analysis entirely.
+
+   The rule everywhere below: generous tap targets on screen, compact in
+   print, so the printed sheet still lands on the same pages as the paper
+   version.
+   ==================================================================== */
+
+/* --- Toolbar, screen only ------------------------------------------ */
+.toolbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--ink); color: var(--paper);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 10px 14px; margin: -24px -12px 22px;
+  font-family: var(--f-data); font-size: 12px;
+}
+.toolbar .brandbit { letter-spacing: .18em; text-transform: uppercase; opacity: .75; }
+.toolbar button {
+  font: inherit; font-size: 12px; letter-spacing: .06em;
+  padding: 9px 15px; border: 0; border-radius: 3px; cursor: pointer;
+  background: var(--ember); color: #FFF;
+}
+.toolbar button.ghost { background: transparent; color: var(--paper); border: 1px solid #4A5A52; }
+.toolbar button:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+.toolbar .spacer { margin-left: auto; }
+.toolbar .status { opacity: .8; }
+.toolbar .status.warn { color: #FFB183; opacity: 1; font-weight: 600; }
+
+/* --- Fields --------------------------------------------------------- */
+.fld {
+  font: inherit; color: var(--ink); width: 100%;
+  border: 0; border-bottom: .75pt solid var(--ink-mid);
+  background: transparent; border-radius: 0;
+  -webkit-appearance: none; appearance: none;
+  padding: 2px 3px 3px;
+}
+.fld:focus { outline: 0; background: #FBE6DC; border-bottom-color: var(--ember-text); }
+.field label { margin-bottom: 3pt; }
+.fld[readonly] { color: var(--ember-text); font-family: var(--f-data); }
+
+/* Checkboxes keep the exact 10pt square of the paper version. */
+.tick input[type="checkbox"] {
+  flex: none; width: 10pt; height: 10pt; margin: 1.5pt 0 0;
+  border: .9pt solid var(--ink-mid); background: var(--paper);
+  -webkit-appearance: none; appearance: none; border-radius: 0; cursor: pointer;
+  display: grid; place-content: center;
+}
+.tick input[type="checkbox"]::after {
+  content: ""; width: 6pt; height: 6pt; transform: scale(0);
+  background: var(--ember-text);
+}
+.tick input[type="checkbox"]:checked::after { transform: scale(1); }
+.tick label { display: flex; gap: 6pt; align-items: flex-start; cursor: pointer; flex: 1; }
+
+.money .m .fld { font-family: var(--f-data); font-size: 12pt; border-bottom-width: .9pt; }
+.moneyrow { display: flex; align-items: baseline; gap: 4pt; }
+.moneyrow .cur { font-family: var(--f-data); font-size: 12pt; }
+
+/* --- Deadline helper, screen only ----------------------------------- */
+.helper {
+  border: .9pt solid var(--ember-text); background: #FBE6DC;
+  padding: 10pt 12pt; margin: 8pt 0 0;
+}
+.helper h4 {
+  font-family: var(--f-data); font-size: 6.4pt; letter-spacing: .19em;
+  text-transform: uppercase; color: var(--ember-text); margin: 0 0 5pt; font-weight: 400;
+}
+.helper .work { font-family: var(--f-data); font-size: 8.6pt; line-height: 1.7; color: var(--ink-mid); }
+.helper .work b { color: var(--ink); }
+.helper .big {
+  font-family: var(--f-display); font-size: 15pt; color: var(--ember-text);
+  margin: 4pt 0 0; line-height: 1.15;
+}
+
+/* --- Signature ------------------------------------------------------ */
+.sigpad { position: relative; }
+.sigpad canvas {
+  width: 100%; height: 62px; display: block;
+  border-bottom: .9pt solid var(--ink); touch-action: none; cursor: crosshair;
+}
+.sigpad .wipe {
+  position: absolute; top: 0; right: 0;
+  font-family: var(--f-data); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-soft);
+  background: transparent; border: 0; cursor: pointer; padding: 2px 4px;
+}
+.sigrow .s .ln { height: auto; border: 0; }
+/* Signature-row fields match the canvas height so the block stays one
+   unit. Sized by class, never inline — an inline min-height would win
+   over the print rules and push page 3 onto a fourth sheet. */
+.sigline { min-height: 62px; }
+
+/* --- Missing-field flag --------------------------------------------- */
+.fld.missing { background: #FBE6DC; border-bottom-color: var(--ember-text); }
+
+/* --- Screen comfort -------------------------------------------------- */
+@media screen {
+  .fld { font-size: 16px; min-height: 34px; }
+  .field label { font-size: 7pt; }
+  .tick input[type="checkbox"] { width: 20px; height: 20px; margin-top: 0; }
+  .tick input[type="checkbox"]::after { width: 12px; height: 12px; }
+  .tick label { align-items: center; padding: 5px 0; }
+  .sheet { font-size: 10.5pt; }
+}
+
+/* --- Print: collapse back to the paper document ---------------------- */
+@media print {
+  .toolbar, .helper, .sigpad .wipe { display: none !important; }
+  .fld {
+    font-size: 9.5pt; min-height: 0; height: 15px;
+    padding: 0 2px 1px; background: transparent !important;
+  }
+  .fld[readonly] { color: var(--ink); font-family: var(--f-body); }
+  .fld.missing { background: transparent !important; }
+  .field label { margin-bottom: 0; }
+  .money .m .fld { font-size: 11pt; height: 17px; }
+  .sigpad canvas, .sigline { height: 40px; min-height: 0; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body class="tb">
+
+<div class="toolbar">
+  <span class="brandbit">Sixfold · agreement, pages 1&ndash;3</span>
+  <button type="button" id="btnPrint">Print / save PDF</button>
+  <button type="button" class="ghost" id="btnClear">Clear form</button>
+  <span class="spacer status" id="status">Not started</span>
+</div>
+
+<!-- ================================================================
+     PAGE 1 — THE JOB
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Englewood, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Service agreement</b>Page 1 of 5<br>Agreement no. <input class="fld" id="agrNo" style="width:70px;display:inline-block" autocomplete="off"></p>
+  </div>
+
+  <p class="sheetnum">Fire mitigation and vegetation work · Colorado</p>
+  <h1 class="headline">Service Agreement</h1>
+
+  <div class="grid-form" style="margin-top:6pt">
+    <div class="field half">
+      <label>Date of this transaction — the date you sign</label>
+      <input type="date" class="fld" id="txDate" data-req>
+      <p class="hint">Your three business days to cancel run from this date — see section 7.</p>
+    </div>
+    <div class="field half">
+      <label>Cancellation period ends, midnight of</label>
+      <input class="fld" id="deadlineOut" readonly tabindex="-1" placeholder="set the date above">
+      <p class="hint">Calculated. Copy it onto <strong>both</strong> paper notices.</p>
+    </div>
+  </div>
+
+  <div class="helper" id="helper" hidden>
+    <h4>How that deadline was counted</h4>
+    <div class="work" id="helperWork"></div>
+    <p class="big" id="helperBig"></p>
+  </div>
+
+  <h2 class="sec">1 · The parties</h2>
+  <p><strong>Contractor:</strong> Sixfold, LLC · 333 W Hampden Ave, Suite 300, Englewood, Colorado 80110 · (720) 772-6146 · Contact@SixfoldColorado.com</p>
+  <div class="grid-form">
+    <div class="field half"><label>Property owner — full name(s)</label><input class="fld" data-req autocomplete="off"></div>
+    <div class="field half"><label>Phone</label><input class="fld" type="tel" data-req autocomplete="off"></div>
+    <div class="field wide"><label>Address of the property where the work will be done</label><input class="fld" data-req autocomplete="off"></div>
+    <div class="field half"><label>City, state, ZIP</label><input class="fld" data-req autocomplete="off"></div>
+    <div class="field half"><label>Email</label><input class="fld" type="email" autocomplete="off"></div>
+  </div>
+
+  <h2 class="sec">2 · The work</h2>
+  <div class="ticks two">
+    <div class="tick"><label><input type="checkbox"><span class="lbl"><strong>Felling</strong> — trees taken down</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl"><strong>Stump grinding</strong> — below grade</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl"><strong>Slash and chipping</strong></span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl"><strong>Rounds</strong> — cut to firewood length</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl"><strong>Defensible space</strong> around structures</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl"><strong>Fuel break</strong> / <strong>thinning</strong></span></label></div>
+  </div>
+  <div class="grid-form" style="margin-top:6pt">
+    <div class="field wide"><label>Exactly what is being done, and where on the property</label><input class="fld" data-req autocomplete="off"></div>
+    <div class="field wide"><label>How the vegetation to be removed is identified — flagged, painted, walked and agreed</label><input class="fld" autocomplete="off"></div>
+  </div>
+
+  <h2 class="sec">3 · What is not included</h2>
+  <p>Unless written below, this does <strong>not</strong> cover structural work of any kind (roofing, vents, siding, decking); landscaping, replanting or reseeding; repair of irrigation, fencing or lawn; hauling non-woody debris; work on land not identified as the owner's; or permit fees.</p>
+  <div class="grid-form">
+    <div class="field wide"><label>Added to the scope by agreement</label><input class="fld" autocomplete="off"></div>
+  </div>
+
+  <h2 class="sec">4 · What happens to the material</h2>
+  <div class="ticks two">
+    <div class="tick"><label><input type="checkbox"><span class="lbl">Chipped on site and spread</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl">Piled to standard for pickup</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl">Cut to rounds and stacked</span></label></div>
+    <div class="tick"><label><input type="checkbox"><span class="lbl">Hauled off site</span></label></div>
+  </div>
+
+  <h2 class="sec">5 · Price</h2>
+  <div class="money">
+    <div class="m"><span>Total price for the work above</span>
+      <div class="moneyrow"><span class="cur">$</span><input class="fld" inputmode="decimal" id="total" data-req autocomplete="off"></div></div>
+    <div class="m"><span>Deposit, if any, paid today</span>
+      <div class="moneyrow"><span class="cur">$</span><input class="fld" inputmode="decimal" id="deposit" autocomplete="off"></div></div>
+    <div class="m"><span>Balance, due on completion</span>
+      <div class="moneyrow"><span class="cur">$</span><input class="fld" inputmode="decimal" id="balance" readonly tabindex="-1"></div></div>
+  </div>
+  <p style="margin-top:6pt">This is the whole price for the work in section 2. Nothing further is owed unless the owner signs a written change order under clause 10. <strong>If this agreement is cancelled, every payment made — the deposit included — is returned in full.</strong></p>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(720) 772-6146</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Page 1 of 5</span>
+    </div>
+    <p class="disclaimer">Pages 4 and 5 are the owner's two copies of the Notice of Cancellation, given on paper at signing, and are part of this agreement.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     PAGE 2 — DATES AND TERMS 1–8
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Englewood, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Service agreement</b>Page 2 of 5<br>Dates and terms</p>
+  </div>
+
+  <p class="sheetnum">Dates, and terms 1 to 8 · these apply to the work described on page 1</p>
+
+  <h2 class="sec">6 · Dates</h2>
+  <div class="grid-form">
+    <div class="field"><label>Cancellation period ends (midnight)</label><input class="fld" id="deadlineOut2" readonly tabindex="-1"></div>
+    <div class="field"><label>Work begins on or after</label><input type="date" class="fld" autocomplete="off"></div>
+    <div class="field"><label>Estimated completion</label><input type="date" class="fld" autocomplete="off"></div>
+  </div>
+  <p>Dates are estimates. Weather, ground conditions and fire restrictions move them, and Sixfold will say so when they move.</p>
+
+  <h2 class="sec">Terms</h2>
+  <ol class="clauses" style="margin-top:6pt">
+    <li><b class="h">What Sixfold gives you with the job, whether or not you ask</b>
+      A written scope of exactly what was cut and where, photographs from fixed positions before and after, and an itemised invoice that separates qualifying wildfire mitigation work from anything else on the bill.</li>
+
+    <li><b class="h">Sixfold does not advise on tax or insurance</b>
+      Sixfold does not give tax or insurance advice, does not certify work, and does not prepare or file tax returns. It supplies documentation. <strong>Whether you qualify for the Colorado wildfire mitigation tax credit is a question for your accountant, and what your policy qualifies for is a question for your carrier.</strong> Nothing in this agreement is a promise that you will receive a credit, a refund, or a discount, or that any of them will be any particular amount.</li>
+
+    <li><b class="h">What this work does and does not do</b>
+      This work reduces fuel and creates defensible space. <strong>It does not make a property fireproof and does not guarantee any outcome in a wildfire.</strong> No one can promise that.</li>
+
+    <li><b class="h">You confirm you can authorise the work</b>
+      By signing, you confirm you are the owner of record of the property, or that you have the owner's authority to have this work done, and that no part of the area to be worked is on land belonging to someone else.</li>
+
+    <li><b class="h">Boundaries, buried lines and things we cannot see</b>
+      You will identify the property boundaries. Sixfold will request public utility locates through Colorado 811 before any stump grinding or ground disturbance. <strong>Private and unmarked lines are yours to point out</strong> — irrigation, septic tanks and leach fields, wells, invisible pet fencing, low-voltage lighting, buried propane, and anything else not on a public locate. Sixfold is not responsible for damage to a line it was not told about and that a public locate did not mark.</li>
+
+    <li><b class="h">Clearing the way</b>
+      Before the crew arrives, please move vehicles, secure pets and livestock, and keep people out of the work area while saws are running.</li>
+
+    <li><b class="h">HOA rules and permits</b>
+      Where a covenant, HOA architectural rule, or local permit applies to removing trees, obtaining that approval is the owner's responsibility unless section 3 says otherwise in writing.</li>
+
+    <li><b class="h">Access and ground conditions</b>
+      Equipment has to reach the work. Driveways, lawns and soft ground can rut or mark under machinery even when the crew is careful, and that kind of ordinary access marking is not damage under clause 12.</li>
+  </ol>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>333 W Hampden Ave, Ste 300, Englewood, CO 80110</span>
+      <span class="pg">Page 2 of 5</span>
+    </div>
+    <p class="disclaimer">Terms continue on page 3, where this agreement is signed.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     PAGE 3 — TERMS 9–14, RIGHT TO CANCEL, SIGNATURES
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Englewood, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Service agreement</b>Page 3 of 5<br>Terms and signatures</p>
+  </div>
+
+  <p class="sheetnum">Terms 9 to 14 · your right to cancel · signatures</p>
+
+  <ol class="clauses" style="margin-top:9pt;counter-reset:cl 8">
+    <li><b class="h">If we find something once we start</b>
+      Hidden rot, a hazard lean, a hornet nest, a stump on a boulder — if a condition appears that changes the work, the crew stops and tells you before continuing.</li>
+
+    <li><b class="h">Changes to the work</b>
+      <strong>Any change to the scope or the price has to be written down and signed by both of us before that work is done.</strong> A verbal agreement to do extra work does not create a charge you owe.</li>
+
+    <li><b class="h">Paying</b>
+      The balance is due when the work described in section 2 is complete. A deposit, if any, is shown in section 5 and is refundable in full if you cancel under section 7.</li>
+
+    <li><b class="h">Damage</b>
+      Sixfold is responsible for damage its crew causes by negligence in doing this work. Tell us within <strong>14 days</strong> of completion so we can look at it while the evidence is fresh. Sixfold is not responsible for pre-existing conditions, for the access marking described in clause 8, or for damage arising from a line or structure that was not disclosed under clause 5.</li>
+
+    <li><b class="h">Colorado law</b>
+      This agreement is governed by the law of the State of Colorado, and any dispute is brought in the county where the property is located.</li>
+
+    <li><b class="h">This document is the agreement</b>
+      What is written here and on pages 1, 2, 4 and 5 is the whole agreement. Nothing said at the door changes it. A change is only effective if it is in writing and signed by both of us.</li>
+  </ol>
+
+  <h2 class="sec">7 · Your right to cancel</h2>
+  <p>You may cancel this agreement, for any reason or none, until midnight of the third business day after the date you signed it. A business day is any day except Sunday and federal holidays. You do not have to give a reason and there is no penalty or fee. <strong>Pages 4 and 5 are your two copies of the Notice of Cancellation</strong> — send one to the address printed on it, or write to us any other way that says you do not want to go ahead. Everything you have paid comes back to you.</p>
+
+  <div class="cancelbox">
+    <p class="legal10" style="margin:0">You, the buyer, may cancel this transaction at any time prior to midnight of the third business day after the date of this transaction. See the attached notice of cancellation form for an explanation of this right.</p>
+  </div>
+
+  <div class="sigrow">
+    <div class="s wide">
+      <div class="sigpad">
+        <canvas id="sigOwner" aria-label="Property owner signature"></canvas>
+        <button type="button" class="wipe" data-wipe="sigOwner">Clear</button>
+      </div>
+      <label>Property owner — sign above</label>
+    </div>
+    <div class="s"><input class="fld sigline" data-req autocomplete="off"><label>Print name</label></div>
+    <div class="s narrow"><input type="date" class="fld sigline" id="ownDate"><label>Date signed</label></div>
+  </div>
+  <div class="sigrow">
+    <div class="s wide">
+      <div class="sigpad">
+        <canvas id="sigRep" aria-label="Sixfold representative signature"></canvas>
+        <button type="button" class="wipe" data-wipe="sigRep">Clear</button>
+      </div>
+      <label>Sixfold representative — sign above</label>
+    </div>
+    <div class="s"><input class="fld sigline" data-req autocomplete="off"><label>Print name</label></div>
+    <div class="s narrow"><input type="date" class="fld sigline" id="repDate"><label>Date</label></div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>333 W Hampden Ave, Ste 300, Englewood, CO 80110</span>
+      <span class="pg">Page 3 of 5</span>
+    </div>
+    <p class="disclaimer">A signed copy of this agreement, and both Notice of Cancellation forms, are given to the property owner at the time of signing.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==================================================================
+     FEDERAL HOLIDAYS
+
+     16 CFR 429.0(f): a business day is any calendar day except Sunday
+     or any federal holiday. The rule's own list is illustrative ("e.g.")
+     and predates Juneteenth, which became a federal holiday in 2021 — so
+     it is computed here too, because the definition says ANY federal
+     holiday, not only the ones the 1972 text happened to name.
+
+     Where a fixed-date holiday falls at a weekend the federal observance
+     shifts, so BOTH the actual date and the observed date are excluded.
+     That can only push the deadline later, never earlier, which is the
+     safe direction: a deadline that is too early is the defect that
+     opens Colorado's three-year cancellation window.
+     ================================================================== */
+  const iso = d => d.toISOString().slice(0, 10);
+  const mk = (y, m, d) => new Date(Date.UTC(y, m, d));
+
+  function nthWeekday(y, m, weekday, n) {
+    const first = mk(y, m, 1);
+    const shift = (weekday - first.getUTCDay() + 7) % 7;
+    return mk(y, m, 1 + shift + (n - 1) * 7);
+  }
+  function lastWeekday(y, m, weekday) {
+    const last = mk(y, m + 1, 0);
+    return mk(y, m, last.getUTCDate() - ((last.getUTCDay() - weekday + 7) % 7));
+  }
+  function holidays(y) {
+    const fixed = [mk(y, 0, 1), mk(y, 5, 19), mk(y, 6, 4), mk(y, 10, 11), mk(y, 11, 25)];
+    const set = new Set();
+    fixed.forEach(d => {
+      set.add(iso(d));
+      if (d.getUTCDay() === 6) set.add(iso(mk(y, d.getUTCMonth(), d.getUTCDate() - 1)));
+      if (d.getUTCDay() === 0) set.add(iso(mk(y, d.getUTCMonth(), d.getUTCDate() + 1)));
+    });
+    [nthWeekday(y, 0, 1, 3), nthWeekday(y, 1, 1, 3), lastWeekday(y, 4, 1),
+     nthWeekday(y, 8, 1, 1), nthWeekday(y, 9, 1, 2), nthWeekday(y, 10, 4, 4)]
+      .forEach(d => set.add(iso(d)));
+    return set;
+  }
+  const holidayCache = {};
+  function isHoliday(d) {
+    const y = d.getUTCFullYear();
+    if (!holidayCache[y]) holidayCache[y] = holidays(y);
+    return holidayCache[y].has(iso(d));
+  }
+  const isBusinessDay = d => d.getUTCDay() !== 0 && !isHoliday(d);
+
+  const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const pretty = d => DAYS[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MONS[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+
+  /** Third business day AFTER the transaction date, with the working shown. */
+  function deadlineFrom(dateStr) {
+    const parts = dateStr.split('-').map(Number);
+    if (parts.length !== 3 || !parts[0]) return null;
+    let d = mk(parts[0], parts[1] - 1, parts[2]);
+    if (isNaN(d)) return null;
+    const steps = [];
+    let counted = 0, guard = 0;
+    while (counted < 3 && guard++ < 40) {
+      d = mk(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+      if (isBusinessDay(d)) {
+        counted++;
+        steps.push({ d, n: counted, skip: false });
+      } else {
+        steps.push({ d, n: null, skip: true, why: d.getUTCDay() === 0 ? 'Sunday' : 'federal holiday' });
+      }
+    }
+    return { start: mk(parts[0], parts[1] - 1, parts[2]), end: d, steps };
+  }
+
+  /* ------------------------------------------------------------------ */
+  const $ = s => document.querySelector(s);
+  const txDate = $('#txDate');
+  const out1 = $('#deadlineOut'), out2 = $('#deadlineOut2');
+  const helper = $('#helper'), work = $('#helperWork'), big = $('#helperBig');
+
+  function refreshDeadline() {
+    const r = txDate.value ? deadlineFrom(txDate.value) : null;
+    if (!r) {
+      out1.value = out2.value = '';
+      helper.hidden = true;
+      return;
+    }
+    const text = pretty(r.end);
+    out1.value = out2.value = text;
+    work.innerHTML = 'Signed <b>' + pretty(r.start) + '</b><br>' +
+      r.steps.map(s => s.skip
+        ? '&nbsp;&nbsp;' + pretty(s.d) + ' — skipped, ' + s.why
+        : '&nbsp;&nbsp;' + pretty(s.d) + ' — business day <b>' + s.n + '</b>').join('<br>');
+    big.textContent = 'Midnight, ' + text;
+    helper.hidden = false;
+  }
+  txDate.addEventListener('change', () => { refreshDeadline(); save(); });
+  txDate.addEventListener('input', refreshDeadline);
+
+  /* --- Balance ------------------------------------------------------- */
+  const num = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; };
+  function refreshBalance() {
+    const t = $('#total').value.trim();
+    $('#balance').value = t === '' ? '' : (num(t) - num($('#deposit').value)).toFixed(2);
+  }
+  ['#total', '#deposit'].forEach(s => $(s).addEventListener('input', () => { refreshBalance(); save(); }));
+
+  /* --- Signature pads ------------------------------------------------
+     Sized to the element's real box and scaled for the device, otherwise
+     the stroke lands offset from the fingertip on a high-DPI tablet. */
+  /*
+    The pad keeps the signature as a MODEL — an array of strokes of
+    normalised 0..1 points — and redraws from it synchronously.
+
+    The obvious implementation instead round-trips the bitmap through
+    toDataURL and an Image on every resize. That is worse in two ways
+    that matter here: setting canvas.width blanks it immediately while
+    the Image loads asynchronously, so any resize leaves a window where
+    the signature is simply gone (which is exactly how it rendered blank
+    in testing); and a bitmap saved on one screen restores stretched on
+    another. Normalised points survive both, and are far smaller to
+    store than a PNG data URL.
+  */
+  function initPad(id) {
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    let strokes = [], cur = null, drawing = false, W = 1, H = 1;
+
+    function style() {
+      ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#14201B';
+    }
+    function redraw() {
+      ctx.clearRect(0, 0, W, H);
+      style();
+      for (const s of strokes) {
+        if (!s.length) continue;
+        ctx.beginPath();
+        ctx.moveTo(s[0].x * W, s[0].y * H);
+        if (s.length === 1) ctx.lineTo(s[0].x * W + 0.4, s[0].y * H);
+        else for (let i = 1; i < s.length; i++) ctx.lineTo(s[i].x * W, s[i].y * H);
+        ctx.stroke();
+      }
+    }
+    function fit() {
+      const r = c.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      W = Math.max(1, r.width); H = Math.max(1, r.height);
+      c.width = Math.round(W * dpr);
+      c.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      redraw();
+    }
+    const pt = e => {
+      const r = c.getBoundingClientRect();
+      return { x: (e.clientX - r.left) / Math.max(1, r.width),
+               y: (e.clientY - r.top) / Math.max(1, r.height) };
+    };
+
+    c.addEventListener('pointerdown', e => {
+      drawing = true;
+      // Capture keeps the stroke tracking a finger that leaves the box.
+      // Guarded: some browsers throw on an untracked pointer id, and a
+      // pad that silently stops working is worse than one losing capture.
+      try { c.setPointerCapture(e.pointerId); } catch (err) {}
+      cur = [pt(e)]; strokes.push(cur);
+      redraw(); e.preventDefault();
+    });
+    c.addEventListener('pointermove', e => {
+      if (!drawing || !cur) return;
+      const p = pt(e), last = cur[cur.length - 1];
+      // Skip sub-pixel jitter so a long signature stays a short model.
+      if (Math.abs(p.x - last.x) * W < 0.6 && Math.abs(p.y - last.y) * H < 0.6) return;
+      cur.push(p);
+      style();
+      ctx.beginPath();
+      ctx.moveTo(last.x * W, last.y * H);
+      ctx.lineTo(p.x * W, p.y * H);
+      ctx.stroke();
+      e.preventDefault();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+      c.addEventListener(ev, () => { if (drawing) { drawing = false; cur = null; save(); } }));
+
+    fit();
+    window.addEventListener('resize', fit);
+    return {
+      clear() { strokes = []; cur = null; redraw(); save(); },
+      data() { return strokes.length ? strokes : null; },
+      restore(v) { if (Array.isArray(v) && v.length) { strokes = v; redraw(); } },
+      isDirty() { return strokes.length > 0; }
+    };
+  }
+  const pads = { sigOwner: initPad('sigOwner'), sigRep: initPad('sigRep') };
+  document.querySelectorAll('[data-wipe]').forEach(b =>
+    b.addEventListener('click', () => pads[b.dataset.wipe].clear()));
+
+  /* --- Persistence ---------------------------------------------------
+     A half-filled agreement must survive a dropped tablet or a stray
+     refresh at someone's front door. Local to this device only. */
+  const fields = [...document.querySelectorAll('.fld, .tick input[type=checkbox]')];
+  fields.forEach((el, i) => el.dataset.k = 'f' + i);
+  const KEY = 'sixfold.agreement.v1';
+
+  function save() {
+    try {
+      const d = { v: {}, c: {}, s: {} };
+      fields.forEach(el => {
+        if (el.type === 'checkbox') d.c[el.dataset.k] = el.checked;
+        else if (!el.readOnly) d.v[el.dataset.k] = el.value;
+      });
+      d.s.sigOwner = pads.sigOwner.data();
+      d.s.sigRep = pads.sigRep.data();
+      localStorage.setItem(KEY, JSON.stringify(d));
+      flag();
+    } catch (e) { /* private mode, blocked storage — the form still works */ }
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      fields.forEach(el => {
+        if (el.type === 'checkbox') { if (d.c && d.c[el.dataset.k] != null) el.checked = d.c[el.dataset.k]; }
+        else if (d.v && d.v[el.dataset.k] != null && !el.readOnly) el.value = d.v[el.dataset.k];
+      });
+      if (d.s) { pads.sigOwner.restore(d.s.sigOwner); pads.sigRep.restore(d.s.sigRep); }
+    } catch (e) { /* ignore */ }
+  }
+  fields.forEach(el => el.addEventListener('input', save));
+  fields.forEach(el => { if (el.type === 'checkbox') el.addEventListener('change', save); });
+
+  /* --- Status and pre-print check ------------------------------------ */
+  const status = $('#status');
+  function missing() {
+    return fields.filter(el => el.dataset.req !== undefined && !el.value.trim());
+  }
+  function flag() {
+    const m = missing();
+    const anything = fields.some(el => el.type === 'checkbox' ? el.checked : (!el.readOnly && el.value.trim()));
+    if (!anything) { status.textContent = 'Not started'; status.className = 'spacer status'; return; }
+    if (m.length) {
+      status.textContent = m.length + ' required field' + (m.length > 1 ? 's' : '') + ' still empty';
+      status.className = 'spacer status warn';
+    } else if (!pads.sigOwner.isDirty()) {
+      status.textContent = 'Ready — owner still to sign';
+      status.className = 'spacer status warn';
+    } else {
+      status.textContent = 'Complete';
+      status.className = 'spacer status';
+    }
+  }
+
+  $('#btnPrint').addEventListener('click', () => {
+    const m = missing();
+    document.querySelectorAll('.fld.missing').forEach(el => el.classList.remove('missing'));
+    if (m.length) {
+      m.forEach(el => el.classList.add('missing'));
+      m[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (!confirm(m.length + ' required field(s) are still empty and are highlighted. Print anyway?')) return;
+    }
+    window.print();
+  });
+
+  $('#btnClear').addEventListener('click', () => {
+    if (!confirm('Clear every field and both signatures? This cannot be undone.')) return;
+    fields.forEach(el => { if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
+    pads.sigOwner.clear(); pads.sigRep.clear();
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    refreshDeadline(); refreshBalance(); flag();
+  });
+
+  /* --- Start ---------------------------------------------------------- */
+  load();
+  if (!txDate.value) {
+    const n = new Date();
+    txDate.value = [n.getFullYear(), String(n.getMonth() + 1).padStart(2, '0'), String(n.getDate()).padStart(2, '0')].join('-');
+  }
+  ['#ownDate', '#repDate'].forEach(s => { if (!$(s).value) $(s).value = txDate.value; });
+  refreshDeadline(); refreshBalance(); flag();
+})();
+</script>
+
+</body>
+</html>

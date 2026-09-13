@@ -1,0 +1,537 @@
+<title>Surge Homepage Rebuild</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
+
+<style>
+:root{
+  --ground:#f4f6f4;
+  --surface:#ffffff;
+  --surface-2:#e8ece9;
+  --line:#d3dad5;
+  --line-strong:#b0bab3;
+  --ink:#10130f;
+  --ink-2:#464f48;
+  --ink-3:#6d766f;
+  --green:#2c8a2c;
+  --green-flat:#4abe4a;
+  --amber:#8a6110;
+  --amber-flat:#d8a038;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0d100e;
+    --surface:#151915;
+    --surface-2:#1d221e;
+    --line:#293029;
+    --line-strong:#3d463f;
+    --ink:#edf1ee;
+    --ink-2:#a6b0a8;
+    --ink-3:#7b857d;
+    --green:#63d663;
+    --green-flat:#4abe4a;
+    --amber:#e0ae53;
+    --amber-flat:#d8a038;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0d100e;
+  --surface:#151915;
+  --surface-2:#1d221e;
+  --line:#293029;
+  --line-strong:#3d463f;
+  --ink:#edf1ee;
+  --ink-2:#a6b0a8;
+  --ink-3:#7b857d;
+  --green:#63d663;
+  --green-flat:#4abe4a;
+  --amber:#e0ae53;
+  --amber-flat:#d8a038;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font:400 1.02rem/1.62 Newsreader,Georgia,"Times New Roman",serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(1.1rem,4vw,3rem)}
+h1,h2,h3,h4,.mono,.eyebrow,.tag,.meta{font-family:Archivo,"Arial Black",system-ui,sans-serif}
+h1,h2,h3,h4{margin:0;text-wrap:balance}
+h1{font-weight:900;font-size:clamp(2.1rem,5.6vw,3.9rem);line-height:.98;letter-spacing:-.025em}
+h2{font-weight:800;font-size:clamp(1.4rem,3vw,2rem);line-height:1.06;letter-spacing:-.015em;text-transform:uppercase}
+h3{font-weight:800;font-size:1.12rem;letter-spacing:-.005em}
+h4{font-weight:700;font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+p{margin:0}
+a{color:var(--green)}
+a:focus-visible{outline:2px solid var(--green-flat);outline-offset:3px}
+
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.lede{font-size:1.18rem;line-height:1.55;color:var(--ink-2);max-width:64ch}
+.note{color:var(--ink-2);max-width:72ch}
+.small{font-size:.9rem;color:var(--ink-3)}
+
+section{padding-block:clamp(2.6rem,5.5vw,4.4rem)}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---- the comparison spine ---------------------------------------------- */
+.pair{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:1.2rem}
+@media(min-width:820px){.pair{grid-template-columns:1fr 1fr}}
+.side{background:var(--surface);display:flex;flex-direction:column}
+.side img{display:block;width:100%;height:auto}
+.side-head{display:flex;align-items:baseline;gap:.6rem;padding:.6rem .85rem;border-bottom:1px solid var(--line)}
+.side-head .tag{font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:.2rem .45rem;color:#0d100e}
+.tag-old{background:var(--line-strong)}
+.tag-new{background:var(--green-flat)}
+.side-head .url{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--ink-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.readout{display:grid;gap:1.1rem;margin-top:1.2rem}
+@media(min-width:820px){.readout{grid-template-columns:1fr 1fr}}
+.block{border-left:3px solid var(--line-strong);padding:.1rem 0 .1rem 1rem}
+.block--why{border-left-color:var(--green-flat)}
+.block h4{margin-bottom:.4rem}
+
+.item{margin-top:clamp(2.2rem,4vw,3.4rem)}
+.item-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem .9rem}
+.item-head .n{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;
+  color:var(--ink-3);text-transform:uppercase}
+
+/* ---- whole-page shape --------------------------------------------------- */
+.shape{display:grid;gap:1.4rem;align-items:start}
+@media(min-width:760px){.shape{grid-template-columns:1fr 1fr}}
+.shape figure{margin:0;border:1px solid var(--line);background:var(--surface)}
+.shape img{display:block;width:100%;height:auto}
+.shape figcaption{display:flex;justify-content:space-between;gap:.6rem;padding:.55rem .8rem;
+  border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:.68rem;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.shape figcaption b{color:var(--ink);font-weight:600}
+
+/* ---- tables ------------------------------------------------------------- */
+.scroll{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.94rem}
+th,td{text-align:left;padding:.65rem .85rem;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-family:Archivo,sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:700;white-space:nowrap}
+td q{quotes:"\201C" "\201D";font-style:italic}
+
+.panel{border:1px solid var(--line);background:var(--surface);padding:1.15rem 1.3rem}
+.panel--good{border-left:4px solid var(--green-flat)}
+.panel--open{border-left:4px solid var(--amber-flat)}
+.cols{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+ul{margin:.5rem 0 0;padding-left:1.15rem}
+li{margin-block:.4rem}
+li::marker{color:var(--ink-3)}
+
+.method{border:1px solid var(--line-strong);background:var(--surface-2);padding:1rem 1.2rem;
+  font-size:.92rem;color:var(--ink-2)}
+.method b{font-family:Archivo,sans-serif;text-transform:uppercase;letter-spacing:.05em;
+  font-size:.72rem;color:var(--ink)}
+
+.newonly{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:1.2rem}
+.newonly figure{margin:0;border:1px solid var(--line);background:var(--surface)}
+.newonly img{display:block;width:100%;height:auto}
+.newonly figcaption{padding:.75rem .9rem;font-size:.88rem;color:var(--ink-2);border-top:1px solid var(--line)}
+.newonly figcaption b{display:block;font-family:Archivo,sans-serif;font-size:.82rem;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--ink);margin-bottom:.3rem}
+
+footer{border-top:1px solid var(--line);padding-block:2rem 3.2rem;color:var(--ink-3);font-size:.88rem}
+</style>
+
+<div class="wrap">
+
+<header style="padding-block:clamp(2.6rem,7vw,5rem) 0">
+  <p class="eyebrow">Page 1 of 10 &middot; Homepage &middot; surgeftw.com against the new build</p>
+  <h1 style="margin-top:1rem">The same company,<br>described twice.</h1>
+  <p class="lede" style="margin-top:1.3rem">
+    Both homepages captured on 25 August 2026, at the same width, in the same browser, scrolled top to
+    bottom so nothing lazy-loaded was missed. The old site is still live, so every quote below can be
+    checked against it today.
+  </p>
+</header>
+
+<section>
+  <div class="method">
+    <b>How to read this.</b><br>
+    Left is <span class="mono">surgeftw.com</span> as it stands right now. Right is the new build,
+    served from <span class="mono">dist/</span> on this machine &mdash; it is not deployed anywhere.
+    Sections are paired by the job they do, not by their order on the page, so the new homepage's
+    proof band appears against the old homepage's award claim even though one sits higher than the
+    other. Three sections on the new page have no old counterpart and are shown separately.
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ============ SHAPE ============ -->
+<section>
+  <p class="eyebrow">The shape</p>
+  <h2 style="margin-top:.6rem">Same width, half again the length</h2>
+  <p class="note" style="margin-top:.8rem">
+    At 1440&nbsp;px wide the old homepage runs 4,999&nbsp;px top to bottom. The new one runs
+    7,943&nbsp;px &mdash; 59% longer. Almost all of that is content rather than air: the old page
+    spends its first 900&nbsp;px on a photograph of a forest.
+  </p>
+  <div class="shape" style="margin-top:1.4rem">
+    <figure>
+      <img src="__OLD_FULL__" alt="The old surgeftw.com homepage, full length">
+      <figcaption><span>Old &middot; surgeftw.com</span><b>4,999 px</b></figcaption>
+    </figure>
+    <figure>
+      <img src="__NEW_FULL__" alt="The new Surge homepage, full length">
+      <figcaption><span>New &middot; build</span><b>7,943 px</b></figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ============ PAIRS ============ -->
+<section>
+  <p class="eyebrow">Section by section</p>
+  <h2 style="margin-top:.6rem">Six things both pages try to do</h2>
+
+  <!-- 1 -->
+  <div class="item">
+    <div class="item-head">
+      <span class="n">Pair 01</span>
+      <h3>The first screen</h3>
+    </div>
+    <div class="pair">
+      <div class="side">
+        <div class="side-head"><span class="tag tag-old">Old</span><span class="url">surgeftw.com</span></div>
+        <img src="__OLD_FIRST__" alt="Old homepage hero: a pine forest photograph behind the headline">
+      </div>
+      <div class="side">
+        <div class="side-head"><span class="tag tag-new">New</span><span class="url">new build &middot; /</span></div>
+        <img src="__NEW_FIRST__" alt="New homepage hero: a photograph of the Surge office floor behind the headline">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="block">
+        <h4>What changed</h4>
+        <p class="note">The headline stops greeting and starts describing:
+        <q>welcome to Our Denver Outsource Sales and Marketing Firm</q> becomes
+        <q>We'll handle your entire sales team.</q> The hero photograph stops being stock pine forest
+        and becomes Surge's own floor. One button (<q>Call Us</q>) becomes two &mdash; one to talk,
+        one to read how an engagement actually runs. And the location line changes from Denver to
+        Englewood, CO.</p>
+      </div>
+      <div class="block block--why">
+        <h4>Why it matters</h4>
+        <p class="note">A visitor who lands and leaves without scrolling now knows what the company
+        sells. On the old page they leave knowing a city and a mood. The forest is the sharper
+        problem: it is the largest single element on the homepage of a business that has photographs
+        of its own rooms and people, and it says nothing about any of it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="item">
+    <div class="item-head">
+      <span class="n">Pair 02</span>
+      <h3>What you are being sold</h3>
+    </div>
+    <div class="pair">
+      <div class="side">
+        <div class="side-head"><span class="tag tag-old">Old</span><span class="url">Our Focus</span></div>
+        <img src="__OLD_OFFER__" alt="Old homepage: three cards headed Generate Revenue, Personal Growth and Career Growth over stock mountain photographs">
+      </div>
+      <div class="side">
+        <div class="side-head"><span class="tag tag-new">New</span><span class="url">The jobs you stop doing</span></div>
+        <img src="__NEW_OFFER__" alt="New homepage: a numbered list of four jobs — hiring, onboarding, training, management">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="block">
+        <h4>What changed</h4>
+        <p class="note">Three cards &mdash; Generate Revenue, Personal Growth, Career Growth &mdash;
+        each carrying a stock mountain photograph, become four numbered jobs the client stops doing:
+        hiring, onboarding, training, management. <q>Our strategy is built on a foundation of
+        cutting-edge solutions and a deep understanding of market dynamics</q> is gone, and nothing
+        replaces it.</p>
+      </div>
+      <div class="block block--why">
+        <h4>Why it matters</h4>
+        <p class="note">The old row mixes two audiences on one line. Generate Revenue is addressed to
+        a client; Personal Growth and Career Growth are addressed to someone thinking about applying.
+        Nothing marks which is which, so both readers get a third of a page each. The new section
+        picks one reader and answers one question &mdash; what do I hand over? The recruiting pitch
+        moves to <span class="mono">/careers/</span> rather than competing here.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="item">
+    <div class="item-head">
+      <span class="n">Pair 03</span>
+      <h3>The proof offered</h3>
+    </div>
+    <div class="pair">
+      <div class="side">
+        <div class="side-head"><span class="tag tag-old">Old</span><span class="url">An award-winning goal driven sales team</span></div>
+        <img src="__OLD_PROOF__" alt="Old homepage: the award-winning headline above vision, mission and process columns">
+      </div>
+      <div class="side">
+        <div class="side-head"><span class="tag tag-new">New</span><span class="url">What the work adds up to</span></div>
+        <img src="__NEW_PROOF__" alt="New homepage: four counted figures with a scope and source line beneath">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="block">
+        <h4>What changed</h4>
+        <p class="note">An unattached superlative becomes four counted figures &mdash; 106,000+
+        conversations, 37,600+ presentations, 8,900+ supporters signed on, 172 days in the field
+        &mdash; with the period, the campaign type, the supplier and the month printed underneath
+        them. Vision, Mission and Process, three columns of unfalsifiable sentences, come off.</p>
+      </div>
+      <div class="block block--why">
+        <h4>Why it matters</h4>
+        <p class="note">No award is named, dated or linked on the old page. The trade is a claim
+        nobody can verify for numbers somebody can. <b>It also raises the bar rather than clearing
+        it:</b> those figures are now the company's published position and have to hold. They are
+        scoped to nonprofit campaigns only, and their source is currently an internal summary handed
+        over in August rather than a filed report anyone could open.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="item">
+    <div class="item-head">
+      <span class="n">Pair 04</span>
+      <h3>Why this company</h3>
+    </div>
+    <div class="pair">
+      <div class="side">
+        <div class="side-head"><span class="tag tag-old">Old</span><span class="url">Why Work With Us?</span></div>
+        <img src="__OLD_WHY__" alt="Old homepage: Why Work With Us section beside an office photograph">
+      </div>
+      <div class="side">
+        <div class="side-head"><span class="tag tag-new">New</span><span class="url">Anyone can get the method</span></div>
+        <img src="__NEW_WHY__" alt="New homepage: the teaching section beside a photograph of a training room">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="block">
+        <h4>What changed</h4>
+        <p class="note">A recruiting pitch containing <q>we provide competitive compensation and
+        benefits to ensure our employees' well-being</q> becomes
+        <q>Anyone can get the method. The difference is the teaching.</q> Both sections carry a real
+        photograph of the office &mdash; this is the one place the old homepage was already doing the
+        right thing.</p>
+      </div>
+      <div class="block block--why">
+        <h4>Why it matters</h4>
+        <p class="note">Two separate problems come off the page. <q>Employees</q> asserts an
+        employment relationship the company has not settled internally, and an unspecified benefits
+        claim is a promise with no content behind it. The replacement concedes what critics say
+        anyway &mdash; that the method is not proprietary &mdash; and puts the argument somewhere it
+        can be tested. That is a harder line to attack than <q>cutting-edge</q>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="item">
+    <div class="item-head">
+      <span class="n">Pair 05</span>
+      <h3>Where the company is</h3>
+    </div>
+    <div class="pair">
+      <div class="side">
+        <div class="side-head"><span class="tag tag-old">Old</span><span class="url">Join The Surge Team &middot; Locations</span></div>
+        <img src="__OLD_WHERE__" alt="Old homepage: contact form beside a Locations list reading Denver CO, Houston TX, Asheville NC">
+      </div>
+      <div class="side">
+        <div class="side-head"><span class="tag tag-new">New</span><span class="url">You'll know everyone working on your campaign</span></div>
+        <img src="__NEW_WHERE__" alt="New homepage: the campaign team section beside a photograph of a trainer at a whiteboard">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="block">
+        <h4>What changed</h4>
+        <p class="note">A <q>Locations</q> block listing Denver&nbsp;CO, Houston&nbsp;TX and
+        Asheville&nbsp;NC becomes one room in Englewood, with the campaign team described as sitting
+        in it. The homepage contact form goes; the page routes to
+        <span class="mono">/contact/</span> instead.</p>
+      </div>
+      <div class="block block--why">
+        <h4>Why it matters</h4>
+        <p class="note">This is the most checkable false thing on the old homepage &mdash; two of
+        those three rooms are not operating, and anybody can pick up a phone. It also appears on
+        every page of the old site that carries a form, not just this one. Against that, note what
+        the new page gives up: the old homepage let someone enquire without a second click.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="item">
+    <div class="item-head">
+      <span class="n">Pair 06</span>
+      <h3>The close</h3>
+    </div>
+    <div class="pair">
+      <div class="side">
+        <div class="side-head"><span class="tag tag-old">Old</span><span class="url">Let's Create Something Legendary Together</span></div>
+        <img src="__OLD_CLOSE__" alt="Old homepage closing band: a second forest photograph with a yellow Contact Us button, above the footer">
+      </div>
+      <div class="side">
+        <div class="side-head"><span class="tag tag-new">New</span><span class="url">Tell us what you need sold</span></div>
+        <img src="__NEW_CLOSE__" alt="New homepage closing band: a green panel reading Tell us what you need sold, above the footer">
+      </div>
+    </div>
+    <div class="readout">
+      <div class="block">
+        <h4>What changed</h4>
+        <p class="note">A second stock forest, <q>Let's Create Something Legendary Together</q> and a
+        yellow button become a green band reading <q>Tell us what you need sold.</q> with the phone
+        number on the button itself. The footer gains a one-line description of the business and the
+        founding year; it loses the three-office list.</p>
+      </div>
+      <div class="block block--why">
+        <h4>Why it matters</h4>
+        <p class="note">The old close asks for a feeling and the new one asks a question the reader
+        can actually answer. Worth noticing that the old closing band is the second full-bleed
+        landscape photograph on a page that has three photographs total &mdash; two of them are
+        scenery.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ============ NEW ONLY ============ -->
+<section>
+  <p class="eyebrow">No counterpart</p>
+  <h2 style="margin-top:.6rem">Three sections the old homepage never had</h2>
+  <p class="note" style="margin-top:.8rem">
+    Not improvements to something &mdash; additions. Each answers a question the old page left a
+    reader to guess at.
+  </p>
+  <div class="newonly">
+    <figure>
+      <img src="__NEW_CHANNELS__" alt="New homepage: four channel cards — door-to-door, cold calling, events, booths">
+      <figcaption><b>Every channel ends with a person</b>
+      Door-to-door, cold calling, events, booths. The old homepage never says how the selling
+      physically happens, which leaves the most distinctive thing about the company invisible.</figcaption>
+    </figure>
+    <figure>
+      <img src="__NEW_SECTORS__" alt="New homepage: sector list — nonprofit organizations, roofing and storm restoration, aeration services">
+      <figcaption><b>The sectors we run now</b>
+      Nonprofit, roofing and storm restoration, aeration. Named by sector and never by client, which
+      is a consent rule rather than a modesty one.</figcaption>
+    </figure>
+    <figure>
+      <img src="__NEW_INSIGHTS__" alt="New homepage: three research cards, each showing its source">
+      <figcaption><b>We check the numbers everyone repeats</b>
+      Three research pieces with the source printed on the card. The old site has a blog; the new one
+      has this instead.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ============ CLAIMS TABLE ============ -->
+<section>
+  <p class="eyebrow">The specifics</p>
+  <h2 style="margin-top:.6rem">What came off, and why it could not ship</h2>
+  <p class="note" style="margin-top:.8rem">
+    Every line in the left column is live on surgeftw.com today and quoted exactly. Several of these
+    predate anyone currently working on the site.
+  </p>
+  <div class="scroll" style="margin-top:1.2rem">
+    <table>
+      <tr><th>On the old homepage</th><th>The problem</th><th>On the new one</th></tr>
+      <tr>
+        <td><q>An award-winning goal driven sales team</q></td>
+        <td>No award named, dated or sourced anywhere on the site.</td>
+        <td>Four counted figures with scope, period and supplier.</td>
+      </tr>
+      <tr>
+        <td><q>competitive compensation and benefits to ensure our employees' well-being</q></td>
+        <td>Two at once: an unspecified benefits promise, and an assertion about employment status
+        that is unresolved internally.</td>
+        <td>Nothing. The recruiting pitch lives on <span class="mono">/careers/</span>.</td>
+      </tr>
+      <tr>
+        <td><q>Denver, CO &middot; Houston, TX &middot; Asheville, NC</q></td>
+        <td>Publishes a three-office footprint. Two of the three are not operating.</td>
+        <td>Englewood, Colorado &mdash; one room, named.</td>
+      </tr>
+      <tr>
+        <td><q>our Denver business consulting firm</q></td>
+        <td>Describes a different business from the one Surge runs, and the office is in Englewood,
+        not Denver.</td>
+        <td><q>Outsourced sales and marketing</q>, in the hero eyebrow.</td>
+      </tr>
+      <tr>
+        <td><q>cutting-edge solutions and a deep understanding of market dynamics</q></td>
+        <td>Says nothing that can be true or false.</td>
+        <td>Removed, and contradicted: <q>Anyone can get the method.</q></td>
+      </tr>
+      <tr>
+        <td><q>Helping each employee achieve their full potential</q></td>
+        <td><q>Employee</q> again, in the client-facing half of the page.</td>
+        <td>Not present. The new page says <q>reps</q>.</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ============ HONEST ============ -->
+<section>
+  <div class="cols">
+    <div class="panel panel--good">
+      <h4>What the old homepage does better</h4>
+      <p class="note" style="margin-top:.5rem"><b>It invents nothing.</b> Across the whole old site
+      there is not one percentage, dollar figure, client count or timescale. Every problem found is a
+      claim of quality or a fact that has since changed &mdash; not a fabricated statistic. For a
+      site of this vintage in this sector that is genuinely unusual, and it is worth saying before
+      anything else.</p>
+      <p class="note" style="margin-top:.8rem"><b>And the right description already existed.</b> Not
+      on the homepage &mdash; two clicks down, on <span class="mono">/generate-revenue/</span>:
+      <q>Owning a business is no small task. Between hiring the right people, training them, and
+      driving sales, your time gets spread thin. That's why Surge exists.</q> That is, near enough,
+      what the new build leads with. The failure was never that nobody could describe the company. It
+      was that the description sat two clicks down while the homepage said welcome over a photograph
+      of a forest.</p>
+    </div>
+    <div class="panel panel--open">
+      <h4>Still open on the new page</h4>
+      <p class="note" style="margin-top:.5rem"><b>The title tag says Colorado.</b>
+      <span class="mono">Outsourced Field Sales Teams in Colorado</span> reads as a service area, and
+      Englewood runs campaigns for out-of-state clients. The visible page gets this right &mdash; the
+      hero says Englewood as a location, not a limit. The title tag is the one place it slips, and
+      unlike almost every other decision in this build it carries no comment explaining itself.
+      Worth a yes or no.</p>
+      <p class="note" style="margin-top:.8rem"><b>Both hero buttons land on a form that isn't
+      real.</b> <span class="mono">/contact/</span> and <span class="mono">/book/</span> are running
+      in demo mode: they fake a submission and confirm an appointment nobody has. That is not a
+      homepage fault, but it is where the homepage sends everybody, so it belongs on this page's
+      list.</p>
+      <p class="note" style="margin-top:.8rem"><b>The old homepage took an enquiry in place.</b> The
+      new one needs a click first. Deliberate, but it is a step added.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Homepage comparison &middot; captured 25 August 2026. Old site read live from surgeftw.com; new
+  build served locally from <span class="mono">dist/</span> and not deployed. Both captured at
+  1440&nbsp;px in the same browser with reduced motion forced, scrolled top to bottom before capture
+  so nothing lazy-loaded was missed. Next: <b>Our Focus &rarr; What we do</b>.</p>
+</footer>
+
+</div>

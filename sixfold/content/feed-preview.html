@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Content Set</title>
+<style>
+  /* ---- Tokens: dark-first, shared with the other Sixfold sheets ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+
+    /* The simulated screen. Deliberately fixed in both themes — it is a
+       picture of someone else's app, not a surface of this document. */
+    --screen: #FCFBF8;
+    --screen-ink: #161917;
+    --screen-dim: #5E6A62;
+    --screen-faint: #8A948C;
+    --screen-seam: #E4E0D7;
+    --screen-chip: #101614;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main { max-width: 1320px; margin: 0 auto; padding: 0 var(--pad) 4.5rem; }
+
+  /* ---- Masthead ---- */
+  .masthead { padding: 3rem 0 1.6rem; border-bottom: 3px solid var(--ember); }
+  .brandline { display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+  .mark { width: 56px; height: 56px; flex: none; display: block; }
+  .peak { transform-box: fill-box; transform-origin: 50% 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .peak { animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both; }
+    .peak:nth-of-type(1) { animation-delay: 0.05s; }
+    .peak:nth-of-type(2) { animation-delay: 0.14s; }
+    .peak:nth-of-type(3) { animation-delay: 0.23s; }
+    .peak:nth-of-type(4) { animation-delay: 0.32s; }
+    .peak:nth-of-type(5) { animation-delay: 0.41s; }
+  }
+  @keyframes grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0.45rem 0 0;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.45rem, 3.6vw, 1.95rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.7rem 0 0;
+  }
+  .sub { max-width: var(--measure); color: var(--ink-dim); margin: 0.8rem 0 0; }
+  .metastrip {
+    display: flex; flex-wrap: wrap; gap: 0.45rem 1.5rem;
+    margin: 1.1rem 0 0;
+    font-family: var(--f-data); font-size: 0.7rem; color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block; margin: 1.2rem 0 0; padding: 0.4rem 0.7rem;
+    background: var(--ember-quiet); border-left: 3px solid var(--ember);
+    font-family: var(--f-data); font-size: 0.72rem; color: var(--ink);
+  }
+
+  /* ---- The wall of screens ---- */
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 2.4rem 1.7rem;
+    margin: 2.6rem 0 0;
+    align-items: start;
+  }
+
+  .screen { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
+
+  .eyebrow {
+    display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+    border-top: 1px solid var(--seam); padding-top: 0.7rem;
+  }
+  .eyebrow .n {
+    font-family: var(--f-data); font-size: 0.74rem; color: var(--ember);
+  }
+  .eyebrow .t {
+    font-family: var(--f-body); font-size: 0.92rem; font-weight: 650; color: var(--ink);
+  }
+  .eyebrow .w {
+    font-family: var(--f-data); font-size: 0.62rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--ink-faint); margin-left: auto;
+  }
+
+  /* ---- The card: a picture of a neighbourhood feed, not a real platform ---- */
+  .card {
+    background: var(--screen);
+    color: var(--screen-ink);
+    border: 1px solid var(--screen-seam);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+  }
+  .cardhead {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.85rem 0.95rem 0.7rem;
+  }
+  .avatar {
+    width: 40px; height: 40px; flex: none; border-radius: 50%;
+    background: var(--screen-chip);
+    display: grid; place-items: center;
+  }
+  .avatar svg { width: 26px; height: 26px; display: block; }
+  .whoblock { min-width: 0; }
+  .whoblock .name {
+    font-size: 0.9rem; font-weight: 700; color: var(--screen-ink);
+    margin: 0; line-height: 1.25;
+  }
+  .whoblock .place {
+    font-size: 0.74rem; color: var(--screen-dim); margin: 0; line-height: 1.3;
+  }
+  .draftflag {
+    margin-left: auto; flex: none;
+    font-family: var(--f-data); font-size: 0.56rem; letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: #8A3D12;
+    background: rgba(184,76,21,0.11);
+    border: 1px solid rgba(184,76,21,0.3);
+    border-radius: 3px;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .cardbody { padding: 0 0.95rem 0.9rem; }
+  .cardbody p {
+    font-size: 0.925rem;
+    line-height: 1.55;
+    color: var(--screen-ink);
+    margin: 0 0 0.75rem;
+    max-width: none;
+  }
+  .cardbody p:last-child { margin-bottom: 0; }
+
+  .actions {
+    display: flex; gap: 1.5rem;
+    border-top: 1px solid var(--screen-seam);
+    padding: 0.6rem 0.95rem 0.65rem;
+    color: var(--screen-faint);
+    font-size: 0.78rem;
+  }
+  .actions span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .actions svg { width: 15px; height: 15px; display: block; }
+
+  /* ---- Under-card notes ---- */
+  .note {
+    font-size: 0.83rem; color: var(--ink-dim); margin: 0;
+    max-width: none;
+  }
+  .note b { color: var(--ink); font-weight: 650; }
+  .wc {
+    font-family: var(--f-data); font-size: 0.63rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0;
+  }
+
+  details {
+    border-left: 2px solid var(--seam);
+    padding-left: 0.8rem;
+  }
+  summary {
+    font-family: var(--f-data); font-size: 0.63rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--moss); cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "+ "; color: var(--ember); }
+  details[open] summary::before { content: "\2212 "; }
+  summary:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+  details ol {
+    margin: 0.6rem 0 0.3rem; padding-left: 1.05rem; max-width: none;
+  }
+  details li {
+    font-size: 0.83rem; color: var(--ink-dim); margin: 0 0 0.4rem;
+  }
+  details li::marker { color: var(--ember); }
+
+  /* ---- Closing ---- */
+  .rules {
+    margin: 3.2rem 0 0; padding: 1.2rem 1.3rem;
+    background: var(--ember-quiet); border-left: 3px solid var(--ember);
+  }
+  .rules h2 {
+    font-family: var(--f-data); font-size: 0.68rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ember); margin: 0 0 0.6rem; font-weight: 400;
+  }
+  .rules p { max-width: var(--measure); margin: 0 0 0.7rem; }
+  .rules p:last-child { margin-bottom: 0; }
+  a { color: var(--ember); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+  strong { font-weight: 650; }
+
+  footer {
+    margin-top: 2.6rem; padding-top: 1.1rem; border-top: 1px solid var(--seam);
+    font-family: var(--f-data); font-size: 0.7rem; color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); margin: 0 0 0.5rem; }
+</style>
+</head>
+<body>
+
+<main>
+  <header class="masthead">
+    <div class="brandline">
+      <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Sixfold Ridge mark">
+        <path class="peak" d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+        <path class="peak" d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+        <path class="peak" d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+        <path class="peak" d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+        <path class="peak" d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+
+    <h1 class="doctitle">Five posts, as a neighbour would see them</h1>
+    <p class="sub">Each card below is the finished post at reading size, in generic neighbourhood-feed chrome. The chrome is a stand-in, not any real platform's branding, and nothing shows reactions or comments because none of these have been posted.</p>
+
+    <div class="metastrip">
+      <span><b>Prepared</b> 19 Aug 2026</span>
+      <span><b>Register</b> Information first, no ask</span>
+      <span><b>For</b> Nextdoor · local and HOA groups · the door</span>
+      <span><b>Length</b> 211–242 words</span>
+    </div>
+
+    <p class="stamp">Drafts. Nothing has been published, posted or scheduled — and no Sixfold account exists to post from yet.</p>
+  </header>
+
+  <div class="wall">
+
+    <!-- 01 -->
+    <article class="screen">
+      <div class="eyebrow">
+        <span class="n">01</span>
+        <span class="t">The insurance risk score</span>
+        <span class="w">Post now</span>
+      </div>
+
+      <div class="card">
+        <div class="cardhead">
+          <div class="avatar">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+              <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+              <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+              <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+              <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+            </svg>
+          </div>
+          <div class="whoblock">
+            <p class="name">Sixfold</p>
+            <p class="place">Land &amp; Fire · Monument</p>
+          </div>
+          <span class="draftflag">Draft — not posted</span>
+        </div>
+
+        <div class="cardbody">
+          <p>If you've had a letter from your home insurer this year with a wildfire risk score on it, that letter is new — and it comes with a few rights most people don't know they have.</p>
+          <p>Since 1 July 2026, Colorado law requires any insurer that uses a wildfire risk model or score to price, renew or decline a homeowners policy to tell you in writing: your score, the full range of scores your property could have been given, where yours sits in that range, which features of your property drove it, and what each mitigation action would do to it. Policyholders get it with the renewal offer. Applicants get it within 15 days of a completed application.</p>
+          <p>Two parts people miss.</p>
+          <p>You can appeal it. If you think the score or the discount is wrong and you have evidence of work you've done, you appeal directly to the insurer. They have to acknowledge it in writing within 10 calendar days and give you a written decision within 30.</p>
+          <p>And you don't have to wait for renewal. If you've done mitigation work since you last renewed, you can ask for a revised score, and the insurer has 30 days to produce one.</p>
+          <p>Insurers also have to publish which actions earn a discount and how much each one is worth.</p>
+          <p>This isn't insurance advice — read your own notice and talk to your carrier. If it's useful, I'm happy to point anyone to the statute.</p>
+        </div>
+
+        <div class="actions">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"/></svg>Like</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>Comment</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share</span>
+        </div>
+      </div>
+
+      <p class="wc">242 words</p>
+      <p class="note"><b>Why it leads.</b> The law is six weeks old, the notices are landing now, and the re-score-on-request right appears in no secondary write-up — so this is genuinely new information to almost everyone reading it.</p>
+
+      <details>
+        <summary>Alternate openers</summary>
+        <ol>
+          <li>"There's a number attached to your house that used to be invisible. As of July, your insurer has to show it to you."</li>
+          <li>"Most people file the insurance letter without reading it. This year it has a score on it, and a deadline attached to arguing with it."</li>
+          <li>"Ten days and thirty days. Those are the two numbers to know if your wildfire risk score looks wrong."</li>
+        </ol>
+      </details>
+    </article>
+
+    <!-- 02 -->
+    <article class="screen">
+      <div class="eyebrow">
+        <span class="n">02</span>
+        <span class="t">The state tax credit</span>
+        <span class="w">Now, and Jan–Apr</span>
+      </div>
+
+      <div class="card">
+        <div class="cardhead">
+          <div class="avatar">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+              <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+              <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+              <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+              <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+            </svg>
+          </div>
+          <div class="whoblock">
+            <p class="name">Sixfold</p>
+            <p class="place">Land &amp; Fire · Monument</p>
+          </div>
+          <span class="draftflag">Draft — not posted</span>
+        </div>
+
+        <div class="cardbody">
+          <p>Colorado has an income tax credit that covers 100% of what you pay a contractor for wildfire mitigation work on your own land, up to $1,000. In tax year 2023 — the most recent year with data — about 450 people in the entire state claimed it.</p>
+          <p>The state's own evaluators went looking for why. They surveyed landowners and mitigation contractors, and fewer than half had heard of the credit before the survey asked them about it.</p>
+          <p>Three things worth knowing if you're weighing up work this year.</p>
+          <p>It only covers what you pay someone else. Since August 2024, buying or renting equipment and doing the work yourself doesn't qualify — it has to be a third-party contractor's invoice, and you attach the receipts to your return.</p>
+          <p>Right now it can't exceed what you owe. If your Colorado tax bill is $600, a $1,000 credit is worth $600 to you. The remainder isn't refunded and can't be carried forward.</p>
+          <p>That changes for work done in 2027. The cap doubles to $2,000, the income limit rises to $300,000, and the excess becomes refundable — paid out even if it's more than you owe.</p>
+          <p>None of this is tax advice, and your accountant is the right person to confirm any of it. But if you're deciding between this year and next, the difference is worth knowing before you decide.</p>
+        </div>
+
+        <div class="actions">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"/></svg>Like</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>Comment</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share</span>
+        </div>
+      </div>
+
+      <p class="wc">223 words</p>
+      <p class="note"><b>The honest bit is the hook.</b> Nobody else in this market tells a homeowner the credit is capped at what they owe. Saying so is what makes the 2027 change land instead of sounding like a sales line.</p>
+
+      <details>
+        <summary>Alternate openers</summary>
+        <ol>
+          <li>"About 450 people in Colorado claimed this last year. The state surveyed landowners to find out why so few, and fewer than half had heard of it."</li>
+          <li>"The state will reimburse 100% of what you pay a contractor to reduce fire risk on your land. The catch is that hardly anyone has been told."</li>
+          <li>"If you're planning to cut back the trees around your house, the calendar year you do it in is now worth real money."</li>
+        </ol>
+      </details>
+    </article>
+
+    <!-- 03 -->
+    <article class="screen">
+      <div class="eyebrow">
+        <span class="n">03</span>
+        <span class="t">The first five feet</span>
+        <span class="w">Evergreen</span>
+      </div>
+
+      <div class="card">
+        <div class="cardhead">
+          <div class="avatar">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+              <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+              <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+              <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+              <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+            </svg>
+          </div>
+          <div class="whoblock">
+            <p class="name">Sixfold</p>
+            <p class="place">Land &amp; Fire · Monument</p>
+          </div>
+          <span class="draftflag">Draft — not posted</span>
+        </div>
+
+        <div class="cardbody">
+          <p>If you only do one thing to your property this year, the research says do the first five feet.</p>
+          <p>A study of more than 71,000 properties inside wildfire perimeters between 2016 and 2019 found that buildings with a lot of vegetation within five feet of the walls were destroyed 78% of the time — close to twice the rate of buildings with little vegetation in that strip. The work is done by embers, not by a wall of flame. They land against the base of the house, find something that burns, and the house does the rest.</p>
+          <p>Colorado's forest service calls that strip Zone 1: the ground from the wall out to five feet. The guidance is unsentimental about it. Nothing in there should burn. That means pine needles cleared from the foundation and the deck, wood mulch swapped for gravel or rock, firewood moved out to 30 feet, and the first five feet of any wooden fence that touches the house replaced with something that doesn't.</p>
+          <p>That last one surprises people. A wooden fence attached to a house is a fuse with a handle on it.</p>
+          <p>None of this needs a contractor. It needs a Saturday and a wheelbarrow, and it's worth more than anything else you could spend the same day on.</p>
+        </div>
+
+        <div class="actions">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"/></svg>Like</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>Comment</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share</span>
+        </div>
+      </div>
+
+      <p class="wc">213 words</p>
+      <p class="note"><b>The one that gives the work away.</b> It tells a homeowner to do it themselves, for free. That is the post most likely to get shared into an HOA thread, and the one that makes the next conversation easy.</p>
+
+      <details>
+        <summary>Alternate openers</summary>
+        <ol>
+          <li>"Houses in wildfires mostly don't catch from the flame front. They catch from embers landing in the five feet of ground nobody thinks about."</li>
+          <li>"The cheapest wildfire work on your property is also the most effective, and you don't need to hire anyone to do it."</li>
+          <li>"Wood mulch against the foundation is the single most common thing we'd ask you to change, and it costs a trip to the landscape yard to fix."</li>
+        </ol>
+      </details>
+    </article>
+
+    <!-- 04 -->
+    <article class="screen">
+      <div class="eyebrow">
+        <span class="n">04</span>
+        <span class="t">What happens to the pile</span>
+        <span class="w">Sept–Nov</span>
+      </div>
+
+      <div class="card">
+        <div class="cardhead">
+          <div class="avatar">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+              <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+              <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+              <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+              <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+            </svg>
+          </div>
+          <div class="whoblock">
+            <p class="name">Sixfold</p>
+            <p class="place">Land &amp; Fire · Monument</p>
+          </div>
+          <span class="draftflag">Draft — not posted</span>
+        </div>
+
+        <div class="cardbody">
+          <p>If you've had pines thinned and the branches are still stacked in a pile out back, the pile is now the decision.</p>
+          <p>Fresh green pine slash is habitat. Ips beetles are active in Colorado from as early as late February through November and get through two to four generations in a season, and the state's guidance on them is blunt: don't stack green or infested conifer wood next to living conifers. Mountain pine beetles emerge from mid-June through September, with most leaving the tree in late July and mid-August. A pile of green rounds sitting through those months, ten feet from healthy trees, is doing something you didn't intend.</p>
+          <p>There are four honest things to do with cut material, and they cost different amounts: chip it, scatter it thin so it dries fast, haul it off the property, or cut it to rounds and season it well away from standing trees. Chipping and debarking both destroy the inner bark the larvae live in. Piling and forgetting is the only genuinely bad option.</p>
+          <p>It's also why winter is the better month to cut. The beetles aren't flying, the ground holds equipment better, and anyone doing this work has an open calendar between November and February that they will not have in April.</p>
+          <p>Happy to explain any of the four if you're staring at a pile.</p>
+        </div>
+
+        <div class="actions">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"/></svg>Like</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>Comment</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share</span>
+        </div>
+      </div>
+
+      <p class="wc">224 words</p>
+      <p class="note"><b>The dormant-season setup.</b> It argues for winter work without a discount or a countdown — the reason is beetles and ground conditions, which is true and checkable. Run it before the calendar turns.</p>
+
+      <details>
+        <summary>Alternate openers</summary>
+        <ol>
+          <li>"The tree work is the easy half. What you do with the pile afterwards is the half that decides whether you've helped your other trees or hurt them."</li>
+          <li>"Most people book tree work in April. The beetles are also booked for April."</li>
+          <li>"Chip it, scatter it, haul it, or round it. Those are the four options, and the prices are genuinely different — which is why nobody quotes them separately."</li>
+        </ol>
+      </details>
+    </article>
+
+    <!-- 05 -->
+    <article class="screen">
+      <div class="eyebrow">
+        <span class="n">05</span>
+        <span class="t">Grass, not forest</span>
+        <span class="w">Evergreen</span>
+      </div>
+
+      <div class="card">
+        <div class="cardhead">
+          <div class="avatar">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+              <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+              <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+              <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+              <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+            </svg>
+          </div>
+          <div class="whoblock">
+            <p class="name">Sixfold</p>
+            <p class="place">Land &amp; Fire · Monument</p>
+          </div>
+          <span class="draftflag">Draft — not posted</span>
+        </div>
+
+        <div class="cardbody">
+          <p>The most destructive fire in Colorado history didn't happen in a forest, and it didn't happen in fire season.</p>
+          <p>The Marshall Fire started on 30 December 2021, in cured grass near Marshall Road, with relative humidity around 20% and wind gusts running 70 to 100 mph. It reached Superior and Louisville in under an hour. By the next morning it had burned about 6,000 acres — small, as fires go — and destroyed 1,084 homes and seven commercial buildings, with another 149 homes damaged. Two people died. It snowed the following afternoon.</p>
+          <p>What made it possible was ordinary. A wet first half of 2021 grew tall, thick grass. Then July through December turned out to be the second warmest and by far the driest stretch in Denver's records since 1872. Fuel, then drought, then a windstorm.</p>
+          <p>The reason to bring it up isn't to alarm anybody. It's that "we're not in the mountains, so this isn't about us" is the most common thing homeowners say about wildfire on the Front Range, and Marshall is the reason it doesn't hold. Grass, a fence line, a mulch bed and a wind event are enough.</p>
+          <p>If your yard backs onto open space, the same five feet around the house matters here as it does in Evergreen.</p>
+        </div>
+
+        <div class="actions">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"/></svg>Like</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>Comment</span>
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>Share</span>
+        </div>
+      </div>
+
+      <p class="wc">211 words</p>
+      <p class="note"><b>The hardest one to keep clean.</b> Every instinct is to end on a warning. It ends on a fact instead, and hands the reader straight back to post 03.</p>
+
+      <details>
+        <summary>Alternate openers</summary>
+        <ol>
+          <li>"Six thousand acres. That's a small fire. It destroyed 1,084 homes."</li>
+          <li>"'We're not in the mountains' is the most common thing people say about wildfire risk here. The Marshall Fire is the reason it doesn't hold."</li>
+          <li>"The most destructive fire in Colorado history was a grass fire, and it snowed the next day."</li>
+        </ol>
+      </details>
+    </article>
+
+  </div>
+
+  <section class="rules">
+    <h2>What is deliberately not on these cards</h2>
+    <p><strong>No contact line.</strong> Printing the Surge email on Sixfold content re-creates the brand-separation problem. These wait for a <code>sixfoldland.com</code> address.</p>
+    <p><strong>No "licensed and insured,"</strong> no certification or Firewise claim, no county cost-share named until Sixfold is on a list, and no aeration. Tax and insurance language stays descriptive and sends the reader to their own accountant or carrier.</p>
+    <p><strong>No implied track record.</strong> There are no completed jobs, no portfolio and no reviews yet, and none of these posts pretend otherwise.</p>
+    <p><strong>No reactions or comment counts</strong> anywhere on this page. Nothing has been posted, so there is nothing to show — a mockup with invented engagement is a fake screenshot.</p>
+  </section>
+
+  <footer>
+    <p>Sixfold LLC · Monument, CO. Sources, alternate hooks in full, the lines cut with reasons, and a fact-check log for every claim live in the five markdown files alongside this page.</p>
+    <p>Drafts only. Nothing in this set has been published, posted or scheduled, and nothing will be without explicit per-request authorisation.</p>
+  </footer>
+</main>
+
+</body>
+</html>

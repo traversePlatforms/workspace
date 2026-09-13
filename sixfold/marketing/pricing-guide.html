@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Rate Card</title>
+<style>
+  /* ---- Tokens: dark-first. Bare :root is the dark palette. ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 13.5rem minmax(0, 1fr); }
+  }
+
+  /* ---- Rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 2.6rem 1.4rem 2.6rem var(--pad);
+      border-right: 1px solid var(--seam);
+    }
+  }
+  .rail-title {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.36rem;
+    counter-reset: rl;
+  }
+  .rail a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.4rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid transparent;
+  }
+  .rail a::before {
+    counter-increment: rl;
+    content: counter(rl, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    padding-top: 0.15rem;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--ember); }
+  .rail a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  main { padding: 0 var(--pad) 5rem; min-width: 0; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 3.2rem 0 2rem;
+    border-bottom: 3px solid var(--ember);
+  }
+  .brandline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .mark { width: 62px; height: 62px; flex: none; display: block; }
+  .peak { transform-box: fill-box; transform-origin: 50% 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .peak { animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both; }
+    .peak:nth-of-type(1) { animation-delay: 0.05s; }
+    .peak:nth-of-type(2) { animation-delay: 0.14s; }
+    .peak:nth-of-type(3) { animation-delay: 0.23s; }
+    .peak:nth-of-type(4) { animation-delay: 0.32s; }
+    .peak:nth-of-type(5) { animation-delay: 0.41s; }
+  }
+  @keyframes grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0.5rem 0 0;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.9rem 0 0;
+    color: var(--ink);
+  }
+  .metastrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin: 1.2rem 0 0;
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block;
+    margin: 1.3rem 0 0;
+    padding: 0.4rem 0.7rem;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+    font-family: var(--f-data);
+    font-size: 0.73rem;
+    color: var(--ink);
+  }
+
+  /* ---- Thesis ---- */
+  .thesis {
+    margin: 2.6rem 0 0;
+    padding: 1.9rem 0 0;
+  }
+  .thesis p.claim {
+    font-family: var(--f-display);
+    font-size: clamp(1.55rem, 4.6vw, 2.35rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ember);
+  }
+  .thesis p.sub {
+    max-width: var(--measure);
+    color: var(--ink-dim);
+    margin: 1rem 0 0;
+  }
+
+  /* ---- Sections ---- */
+  section { padding: 3.1rem 0 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.7rem;
+    align-items: baseline;
+    border-top: 1px solid var(--seam);
+    padding-top: 1rem;
+    margin-bottom: 1.3rem;
+  }
+  .sec-num {
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ember);
+  }
+  .sec-head h2 {
+    font-family: var(--f-display);
+    font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .sec-head .kicker {
+    grid-column: 2;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-size: 0.98rem;
+    font-weight: 650;
+    letter-spacing: 0.005em;
+    margin: 2rem 0 0.55rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 1.6rem 0 0.5rem;
+  }
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 0.95rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0 0 0.5rem; }
+  li::marker { color: var(--moss); }
+  strong { font-weight: 650; }
+  em { font-style: italic; color: var(--ink); }
+  a { color: var(--ember); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+
+  .lede { font-size: 1.06rem; color: var(--ink); }
+
+  /* ---- Funding cards ---- */
+  .funding {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    background: var(--seam);
+    border: 1px solid var(--seam);
+    margin: 1.5rem 0 1.8rem;
+  }
+  .fund {
+    background: var(--lift);
+    padding: 1.15rem 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fund .who {
+    font-family: var(--f-data);
+    font-size: 0.63rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--moss);
+  }
+  .fund .amt {
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    line-height: 1.05;
+    color: var(--ember);
+    font-variant-numeric: tabular-nums;
+  }
+  .fund .note { font-size: 0.85rem; color: var(--ink-dim); margin: 0; max-width: none; }
+
+  /* ---- Tables ---- */
+  .tw { overflow-x: auto; margin: 1.2rem 0 1.6rem; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--f-body); font-size: 0.875rem; }
+  caption {
+    text-align: left;
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.7rem 0.85rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--seam);
+  }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--seam);
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+  thead th {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    background: var(--surface);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(odd) td { background: var(--surface); }
+  tbody tr:nth-child(even) td { background: var(--lift); }
+  td.rank { font-family: var(--f-data); color: var(--ember); width: 2.2rem; }
+
+  /* ---- Callouts ---- */
+  .stop, .keep {
+    padding: 1.05rem 1.15rem;
+    margin: 1.4rem 0;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+  }
+  .keep { background: var(--moss-quiet); border-left-color: var(--moss); }
+  .stop > :last-child, .keep > :last-child { margin-bottom: 0; }
+  .stop h4 { color: var(--ember); margin-top: 0; }
+  .keep h4 { color: var(--moss); margin-top: 0; }
+
+  /* ---- Phase blocks ---- */
+  .phase {
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--moss);
+    background: var(--surface);
+    padding: 1.4rem 1.3rem;
+    margin: 1.4rem 0;
+  }
+  .phase.now { border-left-color: var(--ember); }
+  .phase .when {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 0.3rem;
+  }
+  .phase h3 { margin-top: 0; font-size: 1.12rem; }
+  .phase .goal { color: var(--ink-dim); }
+  .done {
+    margin-top: 0;
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+  }
+  .done b { color: var(--ink); font-weight: 650; }
+
+  /* ---- Log ---- */
+  .log { display: flex; flex-direction: column; gap: 1px; background: var(--seam); border: 1px solid var(--seam); margin: 1.3rem 0; }
+  .log > div { background: var(--lift); padding: 1.1rem 1.15rem; }
+  .log h4 { margin-top: 0; }
+  .log ul { margin-bottom: 0; max-width: none; }
+  .log li { font-size: 0.88rem; color: var(--ink-dim); }
+  .tag-open h4 { color: var(--ember); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+
+  /* ================================================================
+     Pricing guide extensions. Tokens and base rules above are the
+     shared marketing-plan.html block, unchanged. Everything below is
+     additive.
+     ================================================================ */
+
+  /* Revised Ridge mark — tree + roots, viewBox 0 0 100 116.
+     Delays sit on explicit classes, never :nth-of-type. */
+  .mark-ridge { width: 58px; height: 67px; flex: none; display: block; }
+  .mark-ridge .g1, .mark-ridge .g2, .mark-ridge .g3, .mark-ridge .g4 {
+    transform-box: fill-box; transform-origin: 50% 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mark-ridge .g1, .mark-ridge .g2, .mark-ridge .g3, .mark-ridge .g4 {
+      animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both;
+    }
+    .mark-ridge .g1 { animation-delay: 0.06s; }
+    .mark-ridge .g2 { animation-delay: 0.15s; }
+    .mark-ridge .g3 { animation-delay: 0.24s; }
+    .mark-ridge .g4 { animation-delay: 0.33s; }
+    .mark-ridge .roots path {
+      stroke-dasharray: 40; stroke-dashoffset: 40;
+      animation: draw 0.42s ease-out 0.58s both;
+    }
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  .stamp.hold { background: var(--moss-quiet); border-left-color: var(--moss); }
+
+  /* ---- The rule band, directly under the masthead ---- */
+  .rule-band {
+    margin: 2.4rem 0 0;
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    background: var(--surface);
+    padding: 1.6rem 1.5rem;
+  }
+  .rule-band p.big {
+    font-family: var(--f-display);
+    font-size: clamp(1.4rem, 3.9vw, 2rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ember);
+  }
+  .rule-band p.sub { color: var(--ink-dim); margin: 0.9rem 0 0; }
+  .rule-band p:last-child { margin-bottom: 0; }
+
+  /* ---- Service strip ---- */
+  .does {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--seam);
+    border: 1px solid var(--seam);
+    margin: 1.4rem 0 1.6rem;
+  }
+  @media (min-width: 620px) { .does { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .does div { background: var(--lift); padding: 0.95rem 1rem 1.05rem; }
+  .does b {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin-bottom: 0.34rem;
+    font-weight: 400;
+  }
+  .does span { font-size: 0.86rem; color: var(--ink-dim); line-height: 1.5; }
+
+  /* ---- Price tables ----
+     Three columns: what, the competitor's published figure, ours.
+     The Sixfold column is the one the eye should land on. */
+  table.price td.ours, table.price th.ours { text-align: right; white-space: nowrap; }
+  table.price td.ours {
+    font-family: var(--f-display);
+    font-size: 1.12rem;
+    line-height: 1.25;
+    color: var(--ember);
+    font-weight: 400;
+    border-left: 1px solid var(--seam);
+  }
+  table.price td.mkt, table.price th.mkt {
+    text-align: right;
+    white-space: nowrap;
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+  }
+  table.price td.what { color: var(--ink); }
+  table.price td.what small {
+    display: block;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin-top: 0.2rem;
+  }
+  table.price td.free { color: var(--moss); font-family: var(--f-display); font-size: 1.05rem; }
+  @media (max-width: 560px) {
+    table.price td.ours { font-size: 1rem; }
+    .hide-narrow { display: none; }
+  }
+
+  /* ---- Contact block ---- */
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1px;
+    background: var(--seam);
+    border: 1px solid var(--seam);
+    margin: 1.6rem 0 0;
+  }
+  @media (min-width: 520px) { .contact { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .contact div { background: var(--lift); padding: 1.1rem 1.1rem 1.2rem; }
+  .contact b {
+    display: block;
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    margin-bottom: 0.35rem;
+  }
+  .contact span, .contact a {
+    font-family: var(--f-display);
+    font-size: 1.08rem;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  .contact a { color: var(--ember); }
+  .contact a.email { font-size: 0.96rem; letter-spacing: -0.004em; }
+
+  /* ---- Internal band. Not part of the customer sheet. ---- */
+  .internal {
+    margin: 4.2rem 0 0;
+    border-top: 3px solid var(--moss);
+    padding-top: 1.4rem;
+  }
+  .internal > .flag {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0 0 1.1rem;
+  }
+  .internal h2 {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: clamp(1.3rem, 3.2vw, 1.6rem);
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+  .gate {
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    background: var(--surface);
+    padding: 1.3rem 1.25rem;
+    margin: 1.3rem 0;
+  }
+  .gate h3 { margin-top: 0; }
+  .gate > :last-child { margin-bottom: 0; }
+  .gate ol { margin-bottom: 0.9rem; }
+
+  /* ================================================================
+     Print. The rate card is dark-first on screen; on paper that is
+     unusable, so print forces the LIGHT palette regardless of the
+     reader's theme. Tokens only — no component is restyled.
+
+     The rail and the .shell grid both sit behind min-width:1000px
+     queries, which never fire in print (a Letter page measures about
+     794px), so they collapse on their own. The rail is hidden
+     explicitly anyway rather than relying on that.
+
+     This document is MULTI-PAGE by design — it is the internal one.
+     Only the one-sheets carry a one-page spec.
+     ================================================================ */
+  @media print {
+    :root {
+      --ground: #FFFFFF;
+      --surface: #F3EFE6;
+      --lift: #EDE7DC;
+      --seam: #C6BCA9;
+      --ink: #14201B;
+      --ink-dim: #46534B;
+      --ink-faint: #6E7A72;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #45583A;
+      --moss-quiet: rgba(79,102,64,0.10);
+      --measure: none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { size: letter; margin: 0.6in 0.7in; }
+
+    body { background: #FFFFFF; font-size: 10pt; line-height: 1.45; }
+    .rail { display: none !important; }
+    .shell { display: block; max-width: none; margin: 0; }
+    main { padding: 0; }
+
+    .masthead { padding: 0 0 1.1rem; }
+    .mark { width: 46px; height: 46px; }
+    h1.doctitle { margin-top: 1.1rem; }
+    .thesis { margin-top: 1.4rem; padding-top: 1.1rem; }
+
+    section { padding-top: 1.5rem; }
+    .sec-head { break-after: avoid; }
+    h2, h3, h4 { break-after: avoid; }
+    p, li { orphans: 3; widows: 3; }
+
+    /* Tables scroll on screen; on paper they must lay flat. */
+    .tw { overflow-x: visible; break-inside: avoid; }
+    table { font-size: 8.6pt; }
+    th, td { padding: 0.34rem 0.5rem; }
+
+    .stop, .keep, .gate, .fund, .log > div { break-inside: avoid; }
+    .funding { break-inside: avoid; }
+
+    /* The internal band starts its own page — it is the part that must
+       never be mistaken for the customer-facing sheet above it. */
+    .internal { break-before: page; margin-top: 0; }
+
+    /* Live links are noise on paper; keep the text, drop the colour. */
+    a { color: var(--ink); text-decoration: none; }
+
+    footer { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Rates</p>
+    <ol>
+      <li><a href="#s1">What we do</a></li>
+      <li><a href="#s2">Cutting trees down</a></li>
+      <li><a href="#s3">Grinding stumps</a></li>
+      <li><a href="#s4">What happens to the wood</a></li>
+      <li><a href="#s5">Crew time</a></li>
+      <li><a href="#s6">Whole-property mitigation</a></li>
+      <li><a href="#s7">What we don't do</a></li>
+      <li><a href="#s8">Help paying for it</a></li>
+      <li><a href="#s9">Terms</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="brandline">
+        <svg class="mark-ridge" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+          <path class="g1" d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+          <path class="g2" d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+          <path class="g3" d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+          <path class="g4" d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+          <g fill="#8AA07A">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <rect x="4" y="86" width="92" height="5" fill="#8AA07A"/>
+          <g class="roots" fill="none" stroke="#8AA07A" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+            <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+            <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+            <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+            <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+            <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+            <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+            <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+            <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+            <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+          </g>
+        </svg>
+        <div>
+          <p class="wordmark">Sixfold</p>
+          <p class="descriptor">Land &amp; Fire &middot; Monument, CO</p>
+        </div>
+      </div>
+
+      <h1 class="doctitle">Tree work and fire mitigation &mdash; what it costs</h1>
+
+      <div class="metastrip">
+        <span><b>Rates as of</b> 2026-08-24</span>
+        <span><b>Area</b> Arapahoe &middot; Douglas &middot; Jefferson &middot; the foothills</span>
+        <span><b>Estimates</b> Free and written</span>
+      </div>
+
+      <p class="stamp hold">Internal draft. Not printed, not sent, not published &mdash; see the two gates at the foot of this sheet.</p>
+    </header>
+
+    <div class="rule-band">
+      <p class="big">Every price here is a Colorado competitor&rsquo;s own published rate, minus 5%.</p>
+      <p class="sub">Not a guess at the market and not an average of guesses. Each table names the operator the figure was cut from, so you can open two tabs and check it. Where a company publishes a range because the job genuinely varies &mdash; tree height, stump diameter, acreage &mdash; both ends of that range come down 5%.</p>
+      <p class="sub">Almost nobody in this business publishes prices at all. Of eight Colorado operators we screened, one published a full rate card, and it serves the ski counties.</p>
+    </div>
+
+    <section id="s1">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>What we do</h2>
+        <p class="kicker">Six things, on a Front Range property</p>
+      </div>
+
+      <div class="does">
+        <div><b>Fell</b><span>Hazard trees, standing dead, beetle-killed, thinning to spacing.</span></div>
+        <div><b>Grind</b><span>Stumps taken down to grade, so it mows over.</span></div>
+        <div><b>Pile</b><span>Cut material stacked into slash piles where you point.</span></div>
+        <div><b>Chip</b><span>Brush and limbs through the chipper, chips spread or left.</span></div>
+        <div><b>Round</b><span>The trunk bucked to stove length and stacked.</span></div>
+        <div><b>Haul or leave</b><span>Your call, priced separately. See section 04.</span></div>
+      </div>
+
+      <p>That last one is the biggest single number in most quotes you will be given, and most companies fold it into the price without telling you. Here it is a line you can decline.</p>
+    </section>
+
+    <section id="s2">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Cutting trees down</h2>
+        <p class="kicker">Per tree, by height &middot; compared against Hawk Tree Service&rsquo;s published Colorado table</p>
+      </div>
+
+      <div class="tw">
+        <table class="price">
+          <caption>Tree removal</caption>
+          <thead>
+            <tr><th>Tree</th><th class="mkt">Published Colorado rate</th><th class="ours">Sixfold</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what">Under 30 ft</td><td class="mkt">$150 &ndash; $500</td><td class="ours">$142 &ndash; $475</td></tr>
+            <tr><td class="what">30 &ndash; 60 ft</td><td class="mkt">$500 &ndash; $1,000</td><td class="ours">$475 &ndash; $950</td></tr>
+            <tr><td class="what">60 &ndash; 80 ft</td><td class="mkt">$1,000 &ndash; $2,000</td><td class="ours">$950 &ndash; $1,900</td></tr>
+            <tr><td class="what">Over 80 ft</td><td class="mkt">up to $4,000</td><td class="ours">up to $3,800</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Where your tree lands inside its band comes down to what is underneath it. A pine standing in open ground at the back of a lot is the bottom of the band. The same pine leaning over a roof, a fence line or a neighbour&rsquo;s shed is the top of it, because it comes down in pieces on ropes instead of in one cut.</p>
+
+      <p><strong>Standing dead and beetle-killed</strong> price on the same table. They are usually faster to cut and less predictable to drop, and those two cancel out.</p>
+
+      <div class="keep">
+        <h4>Minimum charge for a visit</h4>
+        <p><strong>$179.</strong> One small tree, one stump, or an hour of saw work all clear it. Below that the drive costs more than the job, and we would rather say so than pad the estimate.</p>
+      </div>
+    </section>
+
+    <section id="s3">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Grinding stumps</h2>
+        <p class="kicker">Per diameter inch &middot; compared against A Stump Man and Flatirons Stump Removal</p>
+      </div>
+
+      <div class="tw">
+        <table class="price">
+          <caption>Stump grinding</caption>
+          <thead>
+            <tr><th>Item</th><th class="mkt">Published Colorado rate</th><th class="ours">Sixfold</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what">Grinding, per diameter inch</td><td class="mkt">$5.00 &ndash; $9.00</td><td class="ours">$4.75 &ndash; $8.55</td></tr>
+            <tr><td class="what">Minimum, one stump up to 18 in</td><td class="mkt">$189</td><td class="ours">$179</td></tr>
+            <tr><td class="what">Stumps over 36 in, add per inch</td><td class="mkt">+$1.00</td><td class="ours">+$0.95</td></tr>
+            <tr><td class="what">Grindings hauled away, per inch</td><td class="mkt">$4.00</td><td class="ours">$3.80</td></tr>
+            <tr><td class="what">Grindings raked flat and left</td><td class="mkt">&mdash;</td><td class="ours free">No charge</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Diameter is measured at the widest point where the stump meets the soil, root flare included &mdash; the same way both Denver-metro companies above measure it. A stump that looks like 14 inches at eye level is often 22 at the ground, so measure low.</p>
+
+      <p>Softwood in open soil sits at the bottom of the per-inch band. Hard wood, tight access, rock or landscaping packed in around the stump, or surface roots running out across a lawn sit at the top.</p>
+
+      <div class="stop">
+        <h4>Stump work cannot be booked same-day</h4>
+        <p>Colorado 811 lists stump grinding by name as excavation. The utility locate has to be requested and the lines marked before a grinder touches the ground &mdash; two business days by statute, three in practice. We file the locate, it is free, and it is not billed to you.</p>
+        <p>Book the felling now and the grinding for the following week, or book both at once and take the later date. Anyone offering to grind your stump this afternoon is skipping that step.</p>
+      </div>
+    </section>
+
+    <section id="s4">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>What happens to the wood</h2>
+        <p class="kicker">The choice that moves your price most &middot; all five available on any job</p>
+      </div>
+
+      <div class="tw">
+        <table class="price">
+          <caption>Disposal options</caption>
+          <thead>
+            <tr><th>Option</th><th class="ours">Sixfold</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what">Left where it falls, cut down under 24 in<small>Lop and scatter. The standard finish on acreage.</small></td><td class="ours free">Included</td></tr>
+            <tr><td class="what">Stacked into slash piles on site<small>Built where you point, clear of structures and off the drip line.</small></td><td class="ours free">Included</td></tr>
+            <tr><td class="what">Cut to rounds and stacked<small>16 in unless you name a different length.</small></td><td class="ours free">Included</td></tr>
+            <tr><td class="what">Chipped on site, chips spread or left<small>One hour minimum.</small></td><td class="ours">$118/hr</td></tr>
+            <tr><td class="what">Hauled off site<small>Disposal fees included in the price.</small></td><td class="ours">$142 &ndash; $190<br>per truck load</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The first three cost nothing because the material never leaves your property and the saw is already running. Chipping costs money because it is a second machine and a second pass. Hauling costs money because it is a drive and a tipping fee.</p>
+
+      <p><strong>About the rounds.</strong> This is green softwood off your own ground. It needs a season to dry before it burns well, and we do not split it or season it. Front Range firewood sellers get $150 to $300 for a delivered cord of seasoned softwood &mdash; rounds in a heap in your yard are not that, and nobody should tell you they are.</p>
+
+      <p><strong>Piles headed for a county slash site</strong> get stacked differently to piles headed for your own burn. Say which at the estimate.</p>
+
+      <p><strong>Burning is not offered.</strong> Pile burning is permit-gated and seasonal, and we do not hold the permit. We cut and stack; the burn is between you and your fire district.</p>
+    </section>
+
+    <section id="s5">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Crew time</h2>
+        <p class="kicker">For work that is easier to price by the hour than by the trunk</p>
+      </div>
+
+      <p>Clean-ups, an afternoon of limbing, chipping a pile you cut yourself. Compared against Hawk Tree Service&rsquo;s published Colorado labour rate of $65 to $140 an hour.</p>
+
+      <div class="tw">
+        <table class="price">
+          <caption>Crew rates</caption>
+          <thead>
+            <tr><th>Crew</th><th class="mkt">Comparable</th><th class="ours">Sixfold</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what">Two people with saws, per hour</td><td class="mkt">$100</td><td class="ours">$95</td></tr>
+            <tr><td class="what">Crew with chipper, per hour</td><td class="mkt">$125</td><td class="ours">$118</td></tr>
+            <tr><td class="what">Full day, 8 hours, saws and chipper</td><td class="mkt">$1,000</td><td class="ours">$895</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>One hour minimum. A booked full day is cheaper than eight hours bought piecemeal, because the truck gets loaded once.</p>
+
+      <p><strong>Travel is free within 35 miles of Monument</strong>, which covers El Paso and Teller counties and southern Douglas County as far as Castle Rock. Beyond that, <strong>$2.85 a mile</strong> each way, quoted in the estimate before you agree to anything.</p>
+    </section>
+
+    <section id="s6">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Whole-property fire mitigation</h2>
+        <p class="kicker">Defensible space by the acre</p>
+      </div>
+
+      <p>The one-acre figure is the Colorado State Forest Service&rsquo;s own cost for a defensible-space project around a home, as published in the legislature&rsquo;s 2026 evaluation of the wildfire mitigation tax credit.</p>
+
+      <div class="tw">
+        <table class="price">
+          <caption>Per acre</caption>
+          <thead>
+            <tr><th>Work</th><th class="mkt">Published Colorado figure</th><th class="ours">Sixfold</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="what">One acre of defensible space around a home<small>Zones 1 and 2.</small></td><td class="mkt">$3,200 &ndash; $6,100</td><td class="ours">$3,040 &ndash; $5,795</td></tr>
+            <tr><td class="what">Thinning, lightly wooded acre</td><td class="mkt">$733 &ndash; $2,333</td><td class="ours">$696 &ndash; $2,216</td></tr>
+            <tr><td class="what">Thinning, heavily forested acre</td><td class="mkt">$3,395 &ndash; $6,155</td><td class="ours">$3,225 &ndash; $5,847</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>This is hand and saw work: felling, limbing, spacing, ladder-fuel removal, clearing the first five feet around the structure, and whichever disposal option from section 04 you pick. It is not machine mulching &mdash; see section 07.</p>
+
+      <div class="keep">
+        <h4>For scale</h4>
+        <p>The only Colorado operator publishing a full fire-mitigation rate card charges $3,000, $4,500 and $9,000 an acre across three tiers. Those are Pitkin, Eagle and Summit County prices &mdash; resort rates on resort drive times. They are here for context and they are not what our numbers were set against.</p>
+      </div>
+    </section>
+
+    <section id="s7">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>What we don&rsquo;t do</h2>
+        <p class="kicker">Each with the reason, so you can tell a limit from a dodge</p>
+      </div>
+
+      <ul>
+        <li><strong>Forestry mulching and mastication.</strong> No masticator and no mulching head in our fleet. Acres of dense brush that want a machine rather than a saw get referred out rather than quoted badly.</li>
+        <li><strong>Tree work inside the City and County of Denver.</strong> Denver Revised Municipal Code Chapter 57 requires a Tree Service Company licence to prune or remove a tree for pay anywhere in the city. We work Arapahoe, Douglas, Jefferson and the foothills. Denver proper is a licence question, not a capability one.</li>
+        <li><strong>Pile burning.</strong> Permit-gated and seasonal.</li>
+        <li><strong>Emergency and storm call-outs.</strong> A damaged tree resting on a structure is a different job with different risk, and Colorado companies charge 25 to 50 percent more for it. We don&rsquo;t take it.</li>
+        <li><strong>Claim handling and tax advice.</strong> Section 08 gives you the facts and the paperwork. Which of it applies to your return is a question for your accountant, and anyone in a truck who tells you otherwise is guessing at your tax position.</li>
+      </ul>
+    </section>
+
+    <section id="s8">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Help paying for it</h2>
+        <p class="kicker">Both of these exist whether or not you hire us</p>
+      </div>
+
+      <div class="funding">
+        <div class="fund">
+          <span class="who">Colorado tax credit</span>
+          <span class="amt">$1,000</span>
+          <p class="note">100% of what you spend on qualifying vegetation work, up to $1,000, subject to an income limit. Rising to <strong>$2,000 and refundable</strong> from tax year 2027, income limit $300k AGI, running through 2030.</p>
+        </div>
+        <div class="fund">
+          <span class="who">Claimed statewide, TY2023</span>
+          <span class="amt">~450</span>
+          <p class="note">Roughly 450 people in the entire state claimed it. The legislature&rsquo;s own evaluation found the problem is that almost nobody has heard of it.</p>
+        </div>
+        <div class="fund">
+          <span class="who">Your insurer, since</span>
+          <span class="amt">1 Jul 2026</span>
+          <p class="note">A Colorado insurer using a wildfire risk score to price or non-renew your policy must now send you that score in writing each year, tell you what discounts exist, and <strong>discount for documented mitigation</strong>. You can appeal the score.</p>
+        </div>
+      </div>
+
+      <p>The credit does not cover structural work &mdash; roofs, vents, siding. It covers the vegetation.</p>
+
+      <p><strong>Every job comes with the file.</strong> An itemised invoice separating the qualifying work, plus before-and-after photographs of the areas treated. That is what your accountant needs and what your insurer will ask for. Whether you qualify is their call, not ours.</p>
+
+      <p>If you have had a risk-score letter or a non-renewal notice recently, bring it to the estimate. It usually names the specific thing the model doesn&rsquo;t like.</p>
+    </section>
+
+    <section id="s9">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>Terms</h2>
+        <p class="kicker">All of them</p>
+      </div>
+
+      <ul>
+        <li><strong>The estimate is free and written.</strong> The price is fixed in writing before a saw starts, and it does not move afterwards unless you add work.</li>
+        <li><strong>Payment on completion</strong> for jobs under $1,500. Above that, half at the start and half on completion.</li>
+        <li><strong>If you sign at your home, you have three business days to cancel</strong> &mdash; in writing, for any reason, with no fee. That is Colorado law and it cannot be waived. We don&rsquo;t start work until those three days have run, unless you ask us in writing for an earlier start.</li>
+        <li><strong>Everything cut stays yours.</strong> Wood we haul away is disposed of. Wood left on site is your firewood, your mulch or your pile.</li>
+        <li><strong>Nothing on this sheet expires.</strong> There is no launch window and no price that goes up if you wait. Where dates matter for your job they are calendar facts &mdash; the county slash site&rsquo;s season, the fire restriction stage, your insurer&rsquo;s renewal &mdash; and we will tell you which one you are up against.</li>
+      </ul>
+
+      <div class="contact">
+        <div><b>Call or text</b><span>(720) 772-6146</span></div>
+        <div><b>Email</b><a class="email" href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a></div>
+        <div><b>Based in</b><span>Monument, Colorado</span></div>
+      </div>
+    </section>
+
+    <div class="internal">
+      <p class="flag">Internal &mdash; not part of the customer sheet</p>
+      <h2>Two gates before this is released</h2>
+      <p>Neither is a copy problem. The customer-facing sheet above is finished.</p>
+
+      <div class="gate">
+        <h3>1. Insurance is not in place</h3>
+        <p>No general liability and no workers compensation. This sheet quotes felling trees over roofs and fence lines at up to $3,800 a tree. Handing it to a homeowner advertises work that cannot be safely taken on uninsured, and the first claim ends the company.</p>
+        <p>The sheet is deliberately silent on insurance rather than claiming it &mdash; but silence stops being enough the moment the sheet is the thing that wins the job. <strong>Get the quotes, bind the policy, then release.</strong></p>
+      </div>
+
+      <div class="gate">
+        <h3>2. The launch offer contradicts the rate card</h3>
+        <p>The two flyer offers on the table are &ldquo;bring us your quote and we&rsquo;ll halve it&rdquo; and &ldquo;first ten properties, 40% off.&rdquo; Either one printed next to a card that says 5% under market tells a customer the published number is fiction. Pick one:</p>
+        <ol>
+          <li><strong>Publish the card, drop the percentage offer.</strong> The card is the offer, and it is the harder one for a competitor to answer.</li>
+          <li><strong>Run the launch offer first</strong>, publish the card when it ends. Ten discounted jobs is a budgeted cost with an end date.</li>
+          <li><strong>Keep both and price the offer off the card</strong> &mdash; &ldquo;40% off our published rate&rdquo; is coherent where &ldquo;40% off&rdquo; floating in space is not.</li>
+        </ol>
+        <p>Recommendation is the first. A published number in a market of &ldquo;call for a quote&rdquo; is a durable advantage; 40% off is a one-season one, and it sets an anchor the business then has to climb back from.</p>
+      </div>
+
+      <div class="gate">
+        <h3>Smaller, still open</h3>
+        <ul>
+          <li><strong>The phone number is a Surge line.</strong> If Sixfold is getting its own, it belongs on the card before the card is printed.</li>
+          <li><strong>The Douglas County cost-share is deliberately absent.</strong> It pays 50% up to $25,000 and requires two bids from the county&rsquo;s approved contractor list, which Sixfold is not on. It goes on the day that changes.</li>
+          <li><strong>Denver&rsquo;s licence packet could not be read</strong> &mdash; classes, exam, insurance minimums and fees are in a PDF that would not parse. The requirement is confirmed; the terms need a call to (720) 913-0651.</li>
+          <li><strong>The chipping hourly is the weakest number here.</strong> No Colorado operator publishes a chipping rate &mdash; three were checked and all say &ldquo;call.&rdquo; Re-anchor $118 the first time a competitor&rsquo;s written quote is seen on a job.</li>
+          <li><strong>The removal table is Colorado Springs pricing.</strong> No Denver-metro operator publishes a size table. Front Range metro rates are plausibly higher, which would mean 5% understates the discount.</li>
+        </ul>
+      </div>
+
+      <h2>Where the numbers come from</h2>
+      <p>Every price is a named operator&rsquo;s published figure minus 5%. Tree removal by size, labour hourly and per-acre thinning: <strong>Hawk Tree Service</strong>, Colorado Springs. Stump grinding per inch: <strong>A Stump Man Tree Services</strong>, Littleton, whose stated service area includes Monument. Stump minimum, the over-36-inch adder and grindings haul-away: <strong>Flatirons Stump Removal</strong> &mdash; their standard $189, not their $169 promotion, because pricing against someone&rsquo;s discount is not pricing against the market. Per-acre defensible space: <strong>CSFS</strong> via the General Assembly&rsquo;s 2026 tax credit evaluation. The resort comparison: <strong>Bear Claw Fire Mitigation</strong>, re-checked 2026-08-24 and unchanged. Mileage: <strong>Firewood Factory</strong>, Wheat Ridge &mdash; a delivery rate, used because no tree company publishes one.</p>
+      <p><strong>Rejected during research:</strong> the &ldquo;$1,700 per acre average, $1,050&ndash;$2,100 range&rdquo; figure that search returned three separate ways attributed to CSFS. It is not a statewide average &mdash; it is the Northeast-area lodgepole pine figure with its context stripped by aggregators. The same error was caught in this project&rsquo;s market research on 2026-08-18 and is still circulating. Also rejected: a &ldquo;$96&ndash;$129 Denver stump removal average&rdquo; that sits below the published minimum charge of every Colorado stump grinder found.</p>
+      <p>Full log, including what stayed unresolved, is in <code>pricing-guide.md</code>.</p>
+    </div>
+
+    <footer>
+      <p>Sixfold LLC &middot; Monument, Colorado &middot; built 2026-08-24. Rates are the source-of-truth figures in <code>pricing-guide.md</code>; this sheet is presentation only and gets re-synced from it. Nothing here has been printed, sent, posted or published.</p>
+    </footer>
+  </main>
+</div>
+
+</body>
+</html>

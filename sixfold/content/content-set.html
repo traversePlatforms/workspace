@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Content Set</title>
+<style>
+  /* ---- Tokens: dark-first. Bare :root is the dark palette. ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 13.5rem minmax(0, 1fr); }
+  }
+
+  /* ---- Rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 2.6rem 1.4rem 2.6rem var(--pad);
+      border-right: 1px solid var(--seam);
+    }
+  }
+  .rail-title {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.36rem;
+    counter-reset: rl;
+  }
+  .rail a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.4rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid transparent;
+  }
+  .rail a::before {
+    counter-increment: rl;
+    content: counter(rl, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    padding-top: 0.15rem;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--ember); }
+  .rail a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  main { padding: 0 var(--pad) 5rem; min-width: 0; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 3.2rem 0 2rem;
+    border-bottom: 3px solid var(--ember);
+  }
+  .brandline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .mark { width: 62px; height: 62px; flex: none; display: block; }
+  .peak { transform-box: fill-box; transform-origin: 50% 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .peak { animation: grow 0.62s cubic-bezier(.22,.9,.3,1) both; }
+    .peak:nth-of-type(1) { animation-delay: 0.05s; }
+    .peak:nth-of-type(2) { animation-delay: 0.14s; }
+    .peak:nth-of-type(3) { animation-delay: 0.23s; }
+    .peak:nth-of-type(4) { animation-delay: 0.32s; }
+    .peak:nth-of-type(5) { animation-delay: 0.41s; }
+  }
+  @keyframes grow { from { transform: scaleY(0.04); } to { transform: scaleY(1); } }
+
+  .wordmark {
+    font-family: var(--f-display);
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0.5rem 0 0;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.9rem 0 0;
+    color: var(--ink);
+  }
+  .metastrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin: 1.2rem 0 0;
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block;
+    margin: 1.3rem 0 0;
+    padding: 0.4rem 0.7rem;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+    font-family: var(--f-data);
+    font-size: 0.73rem;
+    color: var(--ink);
+  }
+
+  /* ---- Thesis ---- */
+  .thesis {
+    margin: 2.6rem 0 0;
+    padding: 1.9rem 0 0;
+  }
+  .thesis p.claim {
+    font-family: var(--f-display);
+    font-size: clamp(1.55rem, 4.6vw, 2.35rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--ember);
+  }
+  .thesis p.sub {
+    max-width: var(--measure);
+    color: var(--ink-dim);
+    margin: 1rem 0 0;
+  }
+
+  /* ---- Sections ---- */
+  section { padding: 3.1rem 0 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.7rem;
+    align-items: baseline;
+    border-top: 1px solid var(--seam);
+    padding-top: 1rem;
+    margin-bottom: 1.3rem;
+  }
+  .sec-num {
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ember);
+  }
+  .sec-head h2 {
+    font-family: var(--f-display);
+    font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .sec-head .kicker {
+    grid-column: 2;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-size: 0.98rem;
+    font-weight: 650;
+    letter-spacing: 0.005em;
+    margin: 2rem 0 0.55rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 1.6rem 0 0.5rem;
+  }
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 0.95rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0 0 0.5rem; }
+  li::marker { color: var(--moss); }
+  strong { font-weight: 650; }
+  em { font-style: italic; color: var(--ink); }
+  a { color: var(--ember); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+
+  .lede { font-size: 1.06rem; color: var(--ink); }
+
+  /* ---- Funding cards ---- */
+  .funding {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    background: var(--seam);
+    border: 1px solid var(--seam);
+    margin: 1.5rem 0 1.8rem;
+  }
+  .fund {
+    background: var(--lift);
+    padding: 1.15rem 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fund .who {
+    font-family: var(--f-data);
+    font-size: 0.63rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--moss);
+  }
+  .fund .amt {
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    line-height: 1.05;
+    color: var(--ember);
+    font-variant-numeric: tabular-nums;
+  }
+  .fund .note { font-size: 0.85rem; color: var(--ink-dim); margin: 0; max-width: none; }
+
+  /* ---- Tables ---- */
+  .tw { overflow-x: auto; margin: 1.2rem 0 1.6rem; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--f-body); font-size: 0.875rem; }
+  caption {
+    text-align: left;
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.7rem 0.85rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--seam);
+  }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--seam);
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+  thead th {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    background: var(--surface);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(odd) td { background: var(--surface); }
+  tbody tr:nth-child(even) td { background: var(--lift); }
+  td.rank { font-family: var(--f-data); color: var(--ember); width: 2.2rem; }
+
+  /* ---- Callouts ---- */
+  .stop, .keep {
+    padding: 1.05rem 1.15rem;
+    margin: 1.4rem 0;
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+  }
+  .keep { background: var(--moss-quiet); border-left-color: var(--moss); }
+  .stop > :last-child, .keep > :last-child { margin-bottom: 0; }
+  .stop h4 { color: var(--ember); margin-top: 0; }
+  .keep h4 { color: var(--moss); margin-top: 0; }
+
+  /* ---- Log ---- */
+  .log { display: flex; flex-direction: column; gap: 1px; background: var(--seam); border: 1px solid var(--seam); margin: 1.3rem 0; }
+  .log > div { background: var(--lift); padding: 1.1rem 1.15rem; }
+  .log h4 { margin-top: 0; }
+  .log ul { margin-bottom: 0; max-width: none; }
+  .log li { font-size: 0.88rem; color: var(--ink-dim); }
+  .tag-open h4 { color: var(--ember); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+
+  /* ---- Extension: the post block itself ---- */
+  .post {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    padding: 1.5rem 1.5rem 1.1rem;
+    margin: 1.4rem 0 0.6rem;
+  }
+  .post p {
+    font-family: var(--f-display);
+    font-size: 1.07rem;
+    line-height: 1.58;
+    color: var(--ink);
+  }
+  .post p:last-of-type { margin-bottom: 0.4rem; }
+  .wc {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1.6rem;
+  }
+  .postmeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.4rem;
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    margin: 0 0 0.2rem;
+  }
+  .postmeta b { color: var(--moss); font-weight: 500; }
+  ol.hooks li { color: var(--ink-dim); }
+  ol.hooks li::marker { color: var(--ember); font-family: var(--f-data); font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Contents</p>
+    <ol>
+      <li><a href="#overview">The set at a glance</a></li>
+      <li><a href="#p1">The insurance risk score</a></li>
+      <li><a href="#p2">The state tax credit</a></li>
+      <li><a href="#p3">The first five feet</a></li>
+      <li><a href="#p4">What happens to the pile</a></li>
+      <li><a href="#p5">Grass, not forest</a></li>
+      <li><a href="#corrections">What the research changed</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="brandline">
+        <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Sixfold Ridge mark">
+          <path class="peak" d="M6 84 L22 58 L38 84 Z" fill="#8AA07A" fill-opacity="0.5"/>
+          <path class="peak" d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+          <path class="peak" d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+          <path class="peak" d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+          <path class="peak" d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+        </svg>
+        <div>
+          <p class="wordmark">Sixfold</p>
+          <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+        </div>
+      </div>
+
+      <h1 class="doctitle">Homeowner content set — five posts</h1>
+
+      <div class="metastrip">
+        <span><b>Prepared</b> 19 Aug 2026</span>
+        <span><b>Format</b> Neighbourhood register, ~210–240 words</span>
+        <span><b>For</b> Nextdoor · local and HOA groups · the door</span>
+        <span><b>Audience</b> Front Range homeowners</span>
+      </div>
+
+      <p class="stamp">Drafts. Nothing here has been published, posted or scheduled — and no Sixfold platform account exists to post them from yet.</p>
+    </header>
+
+    <div class="thesis">
+      <p class="claim">Information first. The sale is downstream.</p>
+      <p class="sub">Every one of these posts gives something away and asks for nothing. That is not modesty — it is the only register Nextdoor tolerates, and it is the same two-minute conversation the door script runs on. Four of the five close on an offer to explain something rather than an offer to quote. Each post below carries its alternate hooks, the lines cut with the reason, and a fact-check log.</p>
+    </div>
+
+    <section id="overview">
+      <div class="sec-head">
+        <span class="sec-num">00</span>
+        <h2>The set at a glance</h2>
+        <p class="kicker">Five topics, five anchoring facts</p>
+      </div>
+
+      <div class="funding">
+        <div class="fund">
+          <span class="who">01 · Insurance</span>
+          <span class="amt">10 / 30</span>
+          <p class="note">Days to acknowledge an appeal, and days to decide it. Plus a re-score on request that most homeowners don't know exists.</p>
+        </div>
+        <div class="fund">
+          <span class="who">02 · Tax credit</span>
+          <span class="amt">~450</span>
+          <p class="note">Claims in the entire state in tax year 2023. The state's own evaluators found fewer than half of those surveyed had heard of it.</p>
+        </div>
+        <div class="fund">
+          <span class="who">03 · Zone 1</span>
+          <span class="amt">78%</span>
+          <p class="note">Destruction rate for buildings with heavy vegetation within five feet — close to twice the rate of those without.</p>
+        </div>
+        <div class="fund">
+          <span class="who">04 · The pile</span>
+          <span class="amt">Jun–Sep</span>
+          <p class="note">Mountain pine beetle emergence. Green slash stacked through those months is doing something the homeowner didn't intend.</p>
+        </div>
+        <div class="fund">
+          <span class="who">05 · Marshall</span>
+          <span class="amt">1,084</span>
+          <p class="note">Homes destroyed by a December grass fire that burned about 6,000 acres. The answer to "we're not in the mountains."</p>
+        </div>
+      </div>
+
+      <div class="tw">
+        <table>
+          <caption>Running order and best window</caption>
+          <thead>
+            <tr><th>#</th><th>Post</th><th>Best window</th><th>Why then</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="rank">01</td><td>The insurance risk score</td><td><strong>Now</strong></td><td>The law is six weeks old and score notices are landing</td></tr>
+            <tr><td class="rank">02</td><td>The state tax credit</td><td>Now, and again Jan–Apr</td><td>Filing season makes it real money in hand</td></tr>
+            <tr><td class="rank">03</td><td>The first five feet</td><td>Any time</td><td>The evergreen one; strongest as a web page later</td></tr>
+            <tr><td class="rank">04</td><td>What happens to the pile</td><td>Sept–Nov</td><td>Sets up the dormant-season sell before winter</td></tr>
+            <tr><td class="rank">05</td><td>Grass, not forest</td><td>Any time</td><td>Strongest for plains-edge subdivisions</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="stop">
+        <h4>Rules applied to all five</h4>
+        <p>No "licensed and insured", no certification or NFPA/Firewise claim, no county cost-share named until Sixfold is on a list, no aeration. Tax and insurance language stays descriptive and points the reader to their own accountant or carrier. No implied track record — there are no completed jobs, no portfolio and no reviews yet, and none of these posts pretend otherwise.</p>
+        <p><strong>Contact is deliberately absent.</strong> Printing the Surge email on Sixfold content re-creates the brand-separation problem. These wait for a <code>sixfoldland.com</code> address.</p>
+      </div>
+    </section>
+
+    <section id="p1">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>Your insurer's wildfire risk score, and what the new law makes them tell you</h2>
+        <p class="kicker">HB25-1182 · C.R.S. 10-4-124</p>
+      </div>
+
+      <p class="postmeta"><span><b>Register</b> Information-first, no premium promises</span><span><b>Doubles as</b> A door opener on any street</span></p>
+
+      <div class="post">
+        <p>If you've had a letter from your home insurer this year with a wildfire risk score on it, that letter is new — and it comes with a few rights most people don't know they have.</p>
+        <p>Since 1 July 2026, Colorado law requires any insurer that uses a wildfire risk model or score to price, renew or decline a homeowners policy to tell you in writing: your score, the full range of scores your property could have been given, where yours sits in that range, which features of your property drove it, and what each mitigation action would do to it. Policyholders get it with the renewal offer. Applicants get it within 15 days of a completed application.</p>
+        <p>Two parts people miss.</p>
+        <p>You can appeal it. If you think the score or the discount is wrong and you have evidence of work you've done, you appeal directly to the insurer. They have to acknowledge it in writing within 10 calendar days and give you a written decision within 30.</p>
+        <p>And you don't have to wait for renewal. If you've done mitigation work since you last renewed, you can ask for a revised score, and the insurer has 30 days to produce one.</p>
+        <p>Insurers also have to publish which actions earn a discount and how much each one is worth.</p>
+        <p>This isn't insurance advice — read your own notice and talk to your carrier. If it's useful, I'm happy to point anyone to the statute.</p>
+      </div>
+      <p class="wc">242 words</p>
+
+      <h4>Alternate hooks</h4>
+      <ol class="hooks">
+        <li>"There's a number attached to your house that used to be invisible. As of July, your insurer has to show it to you."</li>
+        <li>"Most people file the insurance letter without reading it. This year it has a score on it, and a deadline attached to arguing with it."</li>
+        <li>"Ten days and thirty days. Those are the two numbers to know if your wildfire risk score looks wrong."</li>
+      </ol>
+
+      <h4>Lines cut, and why</h4>
+      <ul>
+        <li><strong>"Your premium is going up whether you act or not."</strong> — Fear selling and a prediction we cannot support.</li>
+        <li><strong>"We can get your score lowered."</strong> — The statute entitles a homeowner to a re-score, not to a better one.</li>
+        <li><strong>"Book a free assessment before renewal season."</strong> — Urgency theatre, and Nextdoor penalises it.</li>
+        <li><strong>"Insurers are using secret algorithms to drop Coloradans."</strong> — True-adjacent and inflammatory. The models are trade secrets under the act, but that framing invites a fight rather than a conversation.</li>
+        <li><strong>"The IBHS Wildfire Prepared Home designation is named in the statute, so get certified."</strong> — Accurate, but it leads a homeowner toward a certification we cannot supply or verify for them.</li>
+      </ul>
+
+      <div class="log">
+        <div>
+          <h4>Verified — enacted statute read in full</h4>
+          <ul>
+            <li>Effective <strong>1 July 2026</strong>; applies to policies <strong>issued or renewed on or after</strong> that date.</li>
+            <li>Notice must contain all five: plain-language explanation; the range of possible scores; <strong>the property's relative position within that range</strong>; a written explanation identifying <strong>the primary features that influenced the score</strong>; and the impact of each mitigation action — §(6)(b)(I)–(V).</li>
+            <li>Delivery: applicants <strong>within 15 days</strong>; policyholders <strong>in the offer of renewal</strong>; non-renewed <strong>with the nonrenewal notice</strong>; and after new mitigation, a revised score <strong>within 30 days of request</strong> — §(7)(a)–(d).</li>
+            <li>Appeal: written acknowledgement <strong>within 10 calendar days</strong>, written decision <strong>within 30</strong>; denials forwarded to the commissioner on request — §(8).</li>
+            <li>Insurers must publish the discounts, the qualifying actions, <strong>the amount attached to each</strong>, and the appeal process — §(5).</li>
+            <li>Applies to homeowner's policies, residential condo units, multifamily housing, and the Colorado FAIR Plan — §(9), §(10).</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Corrected during research</h4>
+          <ul>
+            <li>The <strong>10-day / 30-day</strong> appeal timeline is repeated by insurance-agency blogs and an SEO insurance-news site. Rather than cite those, the figures come from the statute, which confirms them and specifies <strong>calendar</strong> days.</li>
+            <li>Secondary sources describe the notice as arriving "at application, renewal, or nonrenewal." The statute is more specific and more useful — <strong>the re-score on request in §(7)(d) appears in no secondary source read.</strong></li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved</h4>
+          <ul>
+            <li>Whether the Division of Insurance has adopted <strong>implementing rules</strong> under §(11). Not checked.</li>
+            <li><strong>What the notices actually look like.</strong> Six weeks of them have landed; nobody at Sixfold has seen one. A real anonymised example would sharpen every line of this post.</li>
+            <li>Deliberately unused: <strong>any figure for what a discount is worth.</strong> Each insurer publishes its own; there is no statewide number and inventing one is the exact failure the research standard exists to prevent.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="p2">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>The state pays for this work, and almost nobody claims it</h2>
+        <p class="kicker">C.R.S. 39-22-543 · the wildfire mitigation credit</p>
+      </div>
+
+      <p class="postmeta"><span><b>Register</b> Descriptive about tax, never advisory</span><span><b>Doubles as</b> The strongest door opener of the five</span></p>
+
+      <div class="post">
+        <p>Colorado has an income tax credit that covers 100% of what you pay a contractor for wildfire mitigation work on your own land, up to $1,000. In tax year 2023 — the most recent year with data — about 450 people in the entire state claimed it.</p>
+        <p>The state's own evaluators went looking for why. They surveyed landowners and mitigation contractors, and fewer than half had heard of the credit before the survey asked them about it.</p>
+        <p>Three things worth knowing if you're weighing up work this year.</p>
+        <p>It only covers what you pay someone else. Since August 2024, buying or renting equipment and doing the work yourself doesn't qualify — it has to be a third-party contractor's invoice, and you attach the receipts to your return.</p>
+        <p>Right now it can't exceed what you owe. If your Colorado tax bill is $600, a $1,000 credit is worth $600 to you. The remainder isn't refunded and can't be carried forward.</p>
+        <p>That changes for work done in 2027. The cap doubles to $2,000, the income limit rises to $300,000, and the excess becomes refundable — paid out even if it's more than you owe.</p>
+        <p>None of this is tax advice, and your accountant is the right person to confirm any of it. But if you're deciding between this year and next, the difference is worth knowing before you decide.</p>
+      </div>
+      <p class="wc">223 words</p>
+
+      <h4>Alternate hooks</h4>
+      <ol class="hooks">
+        <li>"About 450 people in Colorado claimed this last year. The state surveyed landowners to find out why so few, and fewer than half had heard of it."</li>
+        <li>"The state will reimburse 100% of what you pay a contractor to reduce fire risk on your land. The catch is that hardly anyone has been told."</li>
+        <li>"If you're planning to cut back the trees around your house, the calendar year you do it in is now worth real money."</li>
+      </ol>
+
+      <h4>Lines cut, and why</h4>
+      <ul>
+        <li><strong>"Stack it with your county's cost-share and get most of the job paid for."</strong> — Costs reimbursed by a grant or cost-share <strong>do not qualify</strong> for the credit, so the stacking is far narrower than it sounds; and Sixfold is on no approved list yet, so it produces a dead lead.</li>
+        <li><strong>"You'll get $2,000 back in 2027."</strong> — Tax advice from a tree company.</li>
+        <li><strong>"Wait until 2027 — it's worth twice as much."</strong> — Advises deferring fire mitigation for a tax reason, against the reader's interest in a bad fire year.</li>
+        <li><strong>"We handle the paperwork for you."</strong> — We can supply an invoice and a written scope. We cannot file anyone's return.</li>
+        <li><strong>"Over a million buildings sit in Colorado's WUI."</strong> — Set next to the 450 claims it compares two different denominators. It does the argument's work too cheaply.</li>
+      </ul>
+
+      <div class="log">
+        <div>
+          <h4>Verified — enacted statute, DOR guidance, legislative evaluation</h4>
+          <ul>
+            <li><strong>Tax years 2027–2030:</strong> credit up to <strong>$2,000</strong>, adjusted gross income at or below <strong>$300,000</strong> — §(4)(c).</li>
+            <li><strong>Refundability:</strong> before 1 Jan 2027, excess is <strong>neither refunded nor carried forward</strong> — §(5)(a). From 1 Jan 2027, excess <strong>is refunded</strong> — §(5)(b).</li>
+            <li>Qualifying measures, which must meet or exceed CSFS or DFPC standards: defensible space; fuel breaks; thinning woody vegetation to reduce risk to structures; and secondary treatment by <strong>lopping and scattering, piling, chipping, removing from site</strong>, or prescribed burning.</li>
+            <li>Non-qualifying: equipment purchase or rental for own use; inspection or certification fees; in-kind contributions; cost-sharing between landowners; and <strong>any cost paid from or reimbursed by a grant</strong>.</li>
+            <li>Claimed on <strong>DR 0104CR</strong> with the <strong>DR 0104</strong>, with <strong>copies of receipts</strong>.</li>
+            <li>Evaluation: <strong>about 450 claims</strong> in TY2023; <strong>~$200,000 to 457 landowners</strong>; survey of <strong>360 respondents</strong> (241 landowners, 28 mitigation contractors) — <strong>fewer than 50%</strong> aware before the survey, <strong>over 70%</strong> saying landowners are generally unaware.</li>
+            <li>Since <strong>August 2024</strong>, only costs paid to a <strong>third-party service provider</strong> qualify.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Corrected — and all three also correct our own files</h4>
+          <ul>
+            <li><strong>The 2027 change is narrower than our files say.</strong> Both the research file and the marketing plan record HB26-1289 as having "added thinning woody vegetation." Thinning was <strong>already</strong> qualifying under §(2)(d). The bill adds a separate, narrower category — thinning of vegetation <strong>at risk of or killed by mountain pine beetle or spruce beetle</strong>. The plan's "precisely Sixfold's core service" overstates it.</li>
+            <li><strong>The fiscal note contradicts the enacted act.</strong> It says the credit "may be carried forward for five years"; the statute says excess "may not be carried forward and is refunded." The note describes a version that did not survive.</li>
+            <li><strong>The DOR guidance page is stale.</strong> Its table still shows 2027 at $1,000 with a "TBD" limit, and still describes a pass-through route. Use the statute for 2027 figures.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved</h4>
+          <ul>
+            <li>The <strong>2026 income limit</strong> is genuinely unpublished — the DOR table says "TBD." The honest answer to a homeowner is that it has not been announced.</li>
+            <li>Whether <strong>"adjusted gross income" in §(4)(c) means federal AGI.</strong> The statute drops the word "federal" that the earlier subsection uses. Different number for some filers — worth an accountant's read before print.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="p3">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>The first five feet</h2>
+        <p class="kicker">Zone 1 · the 0–5 ft noncombustible strip</p>
+      </div>
+
+      <p class="postmeta"><span><b>Register</b> Gives the work away for free</span><span><b>Doubles as</b> The driveway conversation, almost verbatim</span></p>
+
+      <div class="post">
+        <p>If you only do one thing to your property this year, the research says do the first five feet.</p>
+        <p>A study of more than 71,000 properties inside wildfire perimeters between 2016 and 2019 found that buildings with a lot of vegetation within five feet of the walls were destroyed 78% of the time — close to twice the rate of buildings with little vegetation in that strip. The work is done by embers, not by a wall of flame. They land against the base of the house, find something that burns, and the house does the rest.</p>
+        <p>Colorado's forest service calls that strip Zone 1: the ground from the wall out to five feet. The guidance is unsentimental about it. Nothing in there should burn. That means pine needles cleared from the foundation and the deck, wood mulch swapped for gravel or rock, firewood moved out to 30 feet, and the first five feet of any wooden fence that touches the house replaced with something that doesn't.</p>
+        <p>That last one surprises people. A wooden fence attached to a house is a fuse with a handle on it.</p>
+        <p>None of this needs a contractor. It needs a Saturday and a wheelbarrow, and it's worth more than anything else you could spend the same day on.</p>
+      </div>
+      <p class="wc">213 words</p>
+
+      <h4>Alternate hooks</h4>
+      <ol class="hooks">
+        <li>"Houses in wildfires mostly don't catch from the flame front. They catch from embers landing in the five feet of ground nobody thinks about."</li>
+        <li>"The cheapest wildfire work on your property is also the most effective, and you don't need to hire anyone to do it."</li>
+        <li>"Wood mulch against the foundation is the single most common thing we'd ask you to change, and it costs a trip to the landscape yard to fix."</li>
+      </ol>
+
+      <h4>Lines cut, and why</h4>
+      <ul>
+        <li><strong>"Clearing five feet cuts your risk of ignition in half."</strong> — How IBHS headlined it, and looser than its own finding. The post gives the actual comparison instead.</li>
+        <li><strong>"90% of homes lost in wildfires ignite from embers."</strong> — The most-repeated statistic in this trade, not traced to a source that survives checking. The mechanism is described without a number attached.</li>
+        <li><strong>"Book a free five-foot assessment."</strong> — The post is stronger giving the work away.</li>
+        <li><strong>"Your insurer will reward this."</strong> — The discount is the insurer's to define. Cross-reference post 01 instead of promising.</li>
+        <li><strong>"Zone 0."</strong> — California's term. Colorado's forest service numbers the same ground <strong>Zone 1</strong>, and the wrong vocabulary makes a local post feel imported.</li>
+      </ul>
+
+      <div class="log">
+        <div>
+          <h4>Verified — IBHS and CSFS, first-party</h4>
+          <ul>
+            <li>IBHS release, 8 Apr 2021 (Zesty.ai study): <strong>71,000+ properties</strong>, <strong>2016–2019</strong>, computer vision on satellite and aerial imagery. Heavy vegetation within 5 ft → destroyed <strong>78% of the time</strong>, "nearly twice as high" as those with little.</li>
+            <li>Second finding, unused: other structures 30–100 ft away in moderate-to-high vegetation → <strong>60%</strong> destroyed versus <strong>31%</strong> for isolated homes.</li>
+            <li>IBHS: all combustible items must be removed <strong>"even if they are labeled 'fire-resistant'"</strong> because "embers exploit the weakest link." Wood mulch named as "highly combustible."</li>
+            <li>CSFS checklists: pine needles cleared from a <strong>5-ft radius</strong> of foundation and deck; combustible fencing removed <strong>within 5 ft</strong>; firewood and chipped slash <strong>30 ft or more</strong>; <strong>6 inches</strong> of vertical clearance under siding.</li>
+            <li>CSFS zones: Zone 1 <strong>0–5 ft</strong>, Zone 2 <strong>5–30 ft</strong>, Zone 3 <strong>30–100 ft</strong>.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Corrected during research</h4>
+          <ul>
+            <li><strong>IBHS overstates its own study in its headline.</strong> "Cuts risk in half" reads as a promise about one house; the finding underneath compares destruction rates between two groups. The post uses the comparison.</li>
+            <li><strong>Zone numbering.</strong> Early drafting used "Zone 0" on the strength of national coverage. <strong>Colorado's zone numbers are not California's</strong> — using the wrong set in local copy is an immediate tell.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved</h4>
+          <ul>
+            <li>Whether the Zesty.ai study was ever <strong>peer-reviewed</strong>. What was read is the IBHS release describing it, and the study was run by a commercial vendor whose product is the wildfire score insurers buy. <strong>Not disqualifying, but disclose it if this is ever cited in print.</strong></li>
+            <li>The <strong>IBHS 2018 Near-Building Noncombustible Zone report</strong> — likely the strongest source for this post, not opened. Worth retrieving before this becomes a web page.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="p4">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>What happens to the pile, and why the month matters</h2>
+        <p class="kicker">Slash disposal · beetle flight timing</p>
+      </div>
+
+      <p class="postmeta"><span><b>Register</b> Practical; no funding angle at all</span><span><b>Doubles as</b> The conversation at a slash site</span></p>
+
+      <div class="post">
+        <p>If you've had pines thinned and the branches are still stacked in a pile out back, the pile is now the decision.</p>
+        <p>Fresh green pine slash is habitat. Ips beetles are active in Colorado from as early as late February through November and get through two to four generations in a season, and the state's guidance on them is blunt: don't stack green or infested conifer wood next to living conifers. Mountain pine beetles emerge from mid-June through September, with most leaving the tree in late July and mid-August. A pile of green rounds sitting through those months, ten feet from healthy trees, is doing something you didn't intend.</p>
+        <p>There are four honest things to do with cut material, and they cost different amounts: chip it, scatter it thin so it dries fast, haul it off the property, or cut it to rounds and season it well away from standing trees. Chipping and debarking both destroy the inner bark the larvae live in. Piling and forgetting is the only genuinely bad option.</p>
+        <p>It's also why winter is the better month to cut. The beetles aren't flying, the ground holds equipment better, and anyone doing this work has an open calendar between November and February that they will not have in April.</p>
+        <p>Happy to explain any of the four if you're staring at a pile.</p>
+      </div>
+      <p class="wc">224 words</p>
+
+      <h4>Alternate hooks</h4>
+      <ol class="hooks">
+        <li>"The tree work is the easy half. What you do with the pile afterwards is the half that decides whether you've helped your other trees or hurt them."</li>
+        <li>"Most people book tree work in April. The beetles are also booked for April."</li>
+        <li>"Chip it, scatter it, haul it, or round it. Those are the four options, and the prices are genuinely different — which is why nobody quotes them separately."</li>
+      </ol>
+
+      <h4>Lines cut, and why</h4>
+      <ul>
+        <li><strong>"Cut between October and April — the state says so."</strong> — Worth remembering. Widely repeated online and reads as official CSFS guidance, but it does <strong>not</strong> appear in the CSFS fact sheet where it is usually credited. The post argues the same timing from verified beetle flight periods instead.</li>
+        <li><strong>"Sap is down in winter, so the trees recover better."</strong> — Arborist folklore; no source found that survives checking.</li>
+        <li><strong>"Book now before spring fills up."</strong> — Urgency theatre. The open-calendar point is made as a fact about the trade, not a countdown.</li>
+        <li><strong>"Your slash pile is a fire hazard."</strong> — True of a pile near a house, but stacking two hazards in one paragraph makes both sound like sales pressure.</li>
+        <li><strong>"We can chip it for you."</strong> — Held. Nextdoor treats the offer to quote as advertising.</li>
+      </ul>
+
+      <div class="log">
+        <div>
+          <h4>Verified — CSU Extension 5.558 and CSFS 5.528</h4>
+          <ul>
+            <li><em>Ips Beetles</em> (Cranshaw &amp; Leatherman, rev. Aug 2025): adults active at <strong>50–60°F</strong> through <strong>November</strong>, observed as early as <strong>late February</strong>; <strong>two to four generations</strong> a year.</li>
+            <li><strong>"Never stack green or infested coniferous wood next to living coniferous trees."</strong> Green material should be <strong>chipped or debarked</strong> — larvae do not survive either. <strong>Scattering rather than piling</strong> promotes drying.</li>
+            <li><em>Mountain Pine Beetle</em> (5.528): emergence <strong>mid-June through September</strong>, the great majority exiting <strong>late July (lodgepole)</strong> and <strong>mid-August (ponderosa)</strong>.</li>
+            <li>Infested logs: peel the bark, burn or scorch <strong>preferably with snow on the ground</strong>, bury under <strong>8+ inches</strong> of soil, or chip. After emergence the wood is safe.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Corrected during research</h4>
+          <ul>
+            <li><strong>"Thinning and slash treatment should only occur from October through April."</strong> Returned confidently by search and reads as CSFS guidance. The CSFS fact sheet was <strong>read in full and contains no such window</strong> — its only April–July dates refer to <strong>preventive insecticide spraying</strong>, a different operation. The nearest source carrying it was a commercial pine-beetle services site. <strong>Not used.</strong></li>
+            <li>An early draft attributed that rule to CSFS in body copy — precisely the failure mode this project has been caught by before.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved</h4>
+          <ul>
+            <li>Whether CSFS or CSU publishes a defensible <strong>cutting-season window</strong> anywhere. One call to a district forester converts this post's central argument from inference to citation.</li>
+            <li><strong>Local slash-disposal options and fees</strong> beyond the JeffCo SLASH sites already in the research file.</li>
+            <li>Held back deliberately: <strong>the 2027 beetle-thinning credit</strong>, which fits this topic best but would make a practical post into a second funding post. Flagged as the January–February follow-up.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="p5">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>It was a grass fire, in December, and it took 1,084 homes</h2>
+        <p class="kicker">The Marshall Fire · 30 December 2021</p>
+      </div>
+
+      <p class="postmeta"><span><b>Register</b> Hardest of the five to keep out of fear selling</span><span><b>Doubles as</b> The answer to "we're not in the mountains"</span></p>
+
+      <div class="post">
+        <p>The most destructive fire in Colorado history didn't happen in a forest, and it didn't happen in fire season.</p>
+        <p>The Marshall Fire started on 30 December 2021, in cured grass near Marshall Road, with relative humidity around 20% and wind gusts running 70 to 100 mph. It reached Superior and Louisville in under an hour. By the next morning it had burned about 6,000 acres — small, as fires go — and destroyed 1,084 homes and seven commercial buildings, with another 149 homes damaged. Two people died. It snowed the following afternoon.</p>
+        <p>What made it possible was ordinary. A wet first half of 2021 grew tall, thick grass. Then July through December turned out to be the second warmest and by far the driest stretch in Denver's records since 1872. Fuel, then drought, then a windstorm.</p>
+        <p>The reason to bring it up isn't to alarm anybody. It's that "we're not in the mountains, so this isn't about us" is the most common thing homeowners say about wildfire on the Front Range, and Marshall is the reason it doesn't hold. Grass, a fence line, a mulch bed and a wind event are enough.</p>
+        <p>If your yard backs onto open space, the same five feet around the house matters here as it does in Evergreen.</p>
+      </div>
+      <p class="wc">211 words</p>
+
+      <h4>Alternate hooks</h4>
+      <ol class="hooks">
+        <li>"Six thousand acres. That's a small fire. It destroyed 1,084 homes."</li>
+        <li>"'We're not in the mountains' is the most common thing people say about wildfire risk here. The Marshall Fire is the reason it doesn't hold."</li>
+        <li>"The most destructive fire in Colorado history was a grass fire, and it snowed the next day."</li>
+      </ol>
+
+      <h4>Lines cut, and why</h4>
+      <ul>
+        <li><strong>"Could your neighbourhood be next?"</strong> — Fear selling. The facts are frightening enough stated flat; a rhetorical question turns reporting into a pitch.</li>
+        <li><strong>"Over $2 billion in insurance claims."</strong> — Verified and available, but money is the wrong unit here, and it pulls the post toward post 01's topic.</li>
+        <li><strong>"Don't wait until it's too late."</strong> — Every competitor's copy contains this sentence. It says nothing.</li>
+        <li><strong>"Homes with 30 to 50 feet of maintained lawn between the grass and their fences fared better."</strong> — Would be the most useful sentence in the post. Reported from the <em>Superior</em> after-action report; <strong>not found</strong> in the Boulder County report that was read in full, and the Superior document was not opened. <strong>Cut pending verification.</strong></li>
+        <li><strong>Photographs of the burn.</strong> Not ours, not cleared, and reusing disaster imagery to advertise a service is a bad look regardless of licensing.</li>
+      </ul>
+
+      <div class="log">
+        <div>
+          <h4>Verified — Boulder County after-action report, read in full</h4>
+          <ul>
+            <li>Dispatched <strong>11:05 a.m., 30 December 2021</strong>; "spread rapidly in <strong>cured grass fuels</strong> … with <strong>relative humidity around 20%</strong> and <strong>winds up to 100 mph</strong>."</li>
+            <li>Gusts of <strong>70 to 100 mph</strong> at the base of the foothills, from a mountain wave.</li>
+            <li><strong>1,084 homes and seven commercial structures destroyed; 149 homes and 30 commercial damaged.</strong> <strong>Two fatalities.</strong></li>
+            <li><strong>~6,000 acres</strong> by the morning of 31 December; <strong>four to eight inches of snow</strong> fell that afternoon.</li>
+            <li>A wet first half of 2021 produced "lush and tall grass growth"; <strong>1 July – 29 December 2021 ranked 2nd warmest and by far the driest in Denver's records since 1872.</strong></li>
+            <li>Crews "put out small fires in yards, on decks, on fences, trees, but efforts were overcome"; wind made it "difficult to stand up straight or open vehicle doors."</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Corrected during research</h4>
+          <ul>
+            <li><strong>Structure counts vary by source and by what is counted.</strong> The county AAR gives 1,084 destroyed / 149 damaged homes; the legislative evaluation, via RMIIA, gives "more than 1,200 properties lost or damaged" — the combined figure. Quoting one as the other is how this gets misreported. The post uses the breakdown and says which is which.</li>
+            <li><strong>"6,000 acres"</strong> is the size estimated on the morning of 31 December, not a final mapped perimeter. Stated as such.</li>
+          </ul>
+        </div>
+        <div class="tag-open">
+          <h4>Unresolved</h4>
+          <ul>
+            <li><strong>FEMA's Marshall Fire Mitigation Assessment Team homeowner's guide</strong> (Apr 2025) — the best source on <em>why individual houses</em> burned or survived. <strong>fema.gov returned HTTP 403 even to a browser user agent.</strong> Highest-value retrieval outstanding on the whole set.</li>
+            <li>The <strong>30–50 ft maintained-lawn observation</strong> attributed to the Superior report.</li>
+            <li>Not cited: a <strong>NIST investigation</strong>, searched for and not located as a published Marshall Fire report.</li>
+            <li>Deliberately excluded: <strong>cause of ignition</strong> — litigated, irrelevant to defensible space, and it invites a comment-thread argument.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="corrections">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>What the research changed, and what is still out of reach</h2>
+        <p class="kicker">Findings that affect files outside this folder</p>
+      </div>
+
+      <p class="lede">Verification for these posts went to enacted statute rather than summaries. Three findings correct our own files, and one of those sits inside a document that is already published as an artifact.</p>
+
+      <div class="stop">
+        <h4>Fix before either file is reused</h4>
+        <ul>
+          <li><strong>The 2027 tax credit change is narrower than recorded.</strong> The research file and the marketing plan both say HB26-1289 "added thinning woody vegetation." It was already qualifying; the bill adds a narrower beetle-specific category. The plan's line calling this "precisely Sixfold's core service" overstates it.</li>
+          <li><strong>The credit is neither refundable nor carry-forward until tax year 2027</strong> — excess over your tax liability is simply lost. This appears in none of our files and it is the most commercially useful fact for a homeowner deciding between this year and next.</li>
+          <li><strong>Don't use the HB26-1289 fiscal note</strong> for this bill; it contradicts the enacted act on refundability.</li>
+        </ul>
+        <p>The marketing plan is published as an artifact, so fixing the <code>.md</code> means republishing to the same URL. <strong>Not done — awaiting the call.</strong></p>
+      </div>
+
+      <div class="keep">
+        <h4>Two claims refused</h4>
+        <p>The ubiquitous <strong>"October–April cutting window"</strong> credited to CSFS is not in the CSFS fact sheet, which was read in full. <strong>"90% of homes ignite from embers"</strong> traces to no readable primary source. Neither is in any post.</p>
+      </div>
+
+      <h3>Highest-value retrievals still outstanding</h3>
+      <ul>
+        <li><strong>FEMA's Marshall Fire assessment team guide.</strong> 403s to a browser user agent. Would upgrade posts 03 and 05 together — it is the best existing source on why individual Front Range houses burned or survived.</li>
+        <li><strong>A real HB25-1182 risk-score notice</strong>, anonymised, from any homeowner willing to share one.</li>
+        <li><strong>A CSFS district forester on cutting-season timing</strong> — one phone call, and post 04's argument becomes a citation.</li>
+        <li><strong>The IBHS 2018 Near-Building Noncombustible Zone report</strong>, before post 03 becomes a web page.</li>
+      </ul>
+
+      <footer>
+        <p>Sixfold LLC · Monument, CO · Sources and full fact-check logs in the five markdown files alongside this sheet.</p>
+        <p>Drafts only. Nothing in this set has been published, posted or scheduled, and nothing will be without explicit per-request authorisation. Claiming a profile is not publishing; posting to one is.</p>
+      </footer>
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>

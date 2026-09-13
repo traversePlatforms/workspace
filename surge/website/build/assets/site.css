@@ -1,0 +1,965 @@
+/* ============================================================================
+   Surge site — shared stylesheet. Reconstructed from the lost dev/surge-site
+   build (see index-draft-notes.md). Dark-first; Anton display + Archivo body.
+
+   PALETTE — the four official brand colours (brand/guidelines/README.md,
+   supplied 2026-08-06) are green #4abe4a, grey #ababab, white #fff, black #000.
+   Everything else in :root is one of those four, or a documented near-black/
+   near-white step for the dark UI. The reference board's deep green #2e8b2e is
+   for light surfaces (infographics) and is deliberately not used here.
+   Consolidated 2026-09-03 — dropped an invented amber (#e0b341) and red
+   (#e0533f); folded six ad-hoc footer greys back onto --soft / --faint.
+   ============================================================================ */
+
+:root{
+  color-scheme:dark;
+
+  /* brand */
+  --brand-green:#4abe4a;   /* fills: primary buttons, the one CTA band, active states, footer rule */
+  --green:#4abe4a;         /* same hue as an accent: eyebrows, links, KPI rules, focus ring */
+  --white:#ffffff;
+  --black:#000000;         /* the logo-glyph black — for a surface that must sit below --ink */
+
+  /* dark-UI ramp — intentional deviation: #0a0a0a ground not pure #000 (true
+     black full-bleed is harsh and would hide the #000 footer as a step);
+     #f4f4f4 text not #fff (less glare on a dark ground) */
+  --ink:#0a0a0a;           /* page ground */
+  --lift:#232323;          /* raised band / section alternation — widened from #1c1c1c 2026-09-08 for depth on image-less pages */
+  --line:#333333;          /* hairlines, borders — widened from #262626 2026-09-08 so borders read on the dark ground */
+  --field:#1a1a1a;         /* form control fill — a real step above the ground, distinct from --lift */
+  --text:#f4f4f4;          /* body copy, headings */
+  --soft:#ababab;          /* secondary text — the brand grey, exactly */
+  --faint:#8a8a8a;         /* tertiary: meta, captions, legal line — a darkened brand grey */
+
+  --ease:cubic-bezier(0.16,0.84,0.44,1);
+  --measure:66ch;
+
+  /* legacy .band--paper / --paper-* markup now resolves to the dark lifted band */
+  --paper:#232323; --paper-ink:#f4f4f4; --paper-soft:#ababab;
+  --paper-line:#333333; --paper-green:#4abe4a;
+}
+
+*{box-sizing:border-box}
+/* scroll-padding, not per-element scroll-margin: .site-head is sticky, so an
+   anchor target would otherwise land underneath it. Added 2026-09-11 with the
+   nav dropdown, which made in-page anchors a primary way to navigate. */
+html{scroll-behavior:smooth;scroll-padding-top:5.5rem}
+body{
+  margin:0;background:var(--ink);color:var(--text);
+  font-family:Archivo,system-ui,-apple-system,sans-serif;
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+
+.wrap{width:min(100% - 2.5rem,64rem);margin-inline:auto}
+.narrow{width:min(100% - 2.5rem,48rem);margin-inline:auto}
+
+h1,h2,.display{
+  font-family:Anton,Impact,"Haettenschweiler","Arial Narrow Bold",sans-serif;
+  font-weight:400;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance;margin:0;
+}
+h1{font-size:clamp(2.6rem,1.4rem + 5vw,5rem);line-height:.94}
+h2{font-size:clamp(1.7rem,1.2rem + 1.8vw,2.6rem);line-height:1.02}
+h3{
+  font-family:Archivo,system-ui,sans-serif;font-weight:700;
+  font-size:1.06rem;line-height:1.25;letter-spacing:-.01em;margin:0 0 .4rem;
+}
+p{margin:0 0 1.05em;max-width:var(--measure)}
+p:last-child{margin-bottom:0}
+a{color:var(--green);text-underline-offset:.18em}
+a:focus-visible,button:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+
+/* visually-hidden text kept available to assistive tech (e.g. a <legend>) */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0
+}
+
+/* skip link — off-screen until focused, then pinned top-left */
+.skip-link{
+  position:absolute;left:-9999px;top:0;z-index:100;
+  background:var(--brand-green);color:var(--black);
+  padding:.7rem 1.1rem;font-weight:700;font-size:.78rem;
+  letter-spacing:.08em;text-transform:uppercase;text-decoration:none
+}
+.skip-link:focus{left:.5rem;top:.5rem}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-size:.74rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--green);margin:0 0 1rem;
+}
+.eyebrow::before{content:"";width:1.6rem;height:3px;background:currentColor}
+.lede{font-size:1.22rem;line-height:1.5;color:var(--soft);max-width:52ch}
+.note{color:var(--soft);max-width:60ch}
+.small{font-size:.85rem;color:var(--faint)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* ---- bands: dark panels carry a top hairline; white and green separate
+   themselves and get none ("Seams and Paper Breaks") ---------------------- */
+.band{padding-block:clamp(2.8rem,6vw,4.6rem);border-top:1px solid var(--line)}
+.band:first-of-type{border-top:0}
+.band--lift{background:var(--lift)}
+.band--paper{background:var(--paper);color:var(--paper-ink)}   /* now just a dark lifted band */
+.band--paper .note,.band--paper .lede{color:var(--paper-soft)}
+.band--paper .eyebrow,.band--paper a{color:var(--paper-green)}
+.band--black{background:var(--black);color:var(--text);border-top-color:var(--line)}
+.band--black .note{color:var(--soft)}
+
+/* ---- header ----------------------------------------------------------- */
+.site-head{
+  position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ink) 82%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid transparent;
+  transition:background .25s var(--ease),border-color .25s var(--ease),box-shadow .25s var(--ease)
+}
+.site-head.is-stuck{background:var(--ink);border-bottom-color:var(--brand-green);box-shadow:0 8px 26px rgba(0,0,0,.30)}
+.site-head .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-block:.85rem}
+.brand{display:flex;align-items:center;color:var(--text);text-decoration:none}
+.brand svg{width:116px;height:auto}
+nav.primary{display:flex;gap:1.35rem;align-items:center}
+nav.primary a{
+  font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  text-decoration:none;color:var(--soft)
+}
+nav.primary a:hover,nav.primary a[aria-current="page"]{color:var(--text)}
+nav.primary a[aria-current="page"]{text-decoration:underline;text-decoration-color:var(--green);text-underline-offset:5px}
+nav.primary .nav-cta{
+  display:inline-flex;align-items:center;gap:.45rem;color:var(--text);
+  padding:.55rem .95rem;border:1px solid var(--soft);
+  transition:color .18s var(--ease),border-color .18s var(--ease),background .18s var(--ease)
+}
+nav.primary .nav-cta:hover{color:var(--green);border-color:var(--green);background:rgba(74,190,74,.10)}
+nav.primary .nav-cta svg{width:.85em;height:.85em;fill:var(--green)}
+
+/* ---- nav dropdown — added 2026-09-11 ---------------------------------------
+   The competitor sites navigate by dropdown; this gets the same affordance
+   WITHOUT the page count, because every entry is an in-page anchor on a page
+   that already exists rather than a new thin page.
+   The parent stays a normal link (clicking "How Surge works" still goes to the
+   page); the chevron button is a separate control, so keyboard and touch users
+   have a way in that does not depend on hover. -------------------------------- */
+nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;gap:.3rem}
+.sub-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.3rem;height:1.3rem;padding:0;background:none;border:0;cursor:pointer;
+  color:var(--soft);transition:color .18s var(--ease),rotate .2s var(--ease)
+}
+.sub-toggle svg{width:.85rem;height:.85rem;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.sub-toggle:hover{color:var(--text)}
+.sub-toggle:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.subnav{
+  position:absolute;top:100%;left:-.9rem;min-width:16rem;z-index:30;
+  background:var(--ink);border:1px solid var(--line);border-top:2px solid var(--brand-green);
+  padding:.4rem 0;margin-top:.7rem;
+  opacity:0;visibility:hidden;translate:0 -.4rem;
+  transition:opacity .16s var(--ease),translate .16s var(--ease),visibility .16s
+}
+.subnav a{display:block;padding:.6rem .95rem;font-size:.7rem;color:var(--soft)}
+.subnav a:hover{color:var(--text);background:color-mix(in srgb,var(--brand-green) 10%,transparent)}
+/* hover for mice, focus-within for keyboards, [data-open] for the button */
+.has-sub:hover .subnav,
+.has-sub:focus-within .subnav,
+.subnav[data-open]{opacity:1;visibility:visible;translate:none}
+.has-sub:hover .sub-toggle,.sub-toggle[aria-expanded="true"]{rotate:180deg;color:var(--text)}
+/* a hover-bridge across the margin gap so the panel does not close in transit */
+.has-sub::after{content:"";position:absolute;inset:100% 0 auto;height:.8rem}
+@media (prefers-reduced-motion:reduce){
+  .subnav{transition:none}.sub-toggle{transition:color .18s var(--ease)}
+}
+
+/* ---- mobile nav toggle (<=940px) — hamburger + drop panel. Without
+   site.js the panel stays closed and the links are unreachable under
+   940px, same as before; the JS wires the toggle. --------------------- */
+.nav-toggle{
+  display:none;flex:none;width:2.75rem;height:2.75rem;padding:0;
+  align-items:center;justify-content:center;cursor:pointer;
+  background:transparent;border:1px solid var(--soft);color:var(--text);
+  transition:color .18s var(--ease),border-color .18s var(--ease)
+}
+.nav-toggle:hover{color:var(--green);border-color:var(--green)}
+.nav-toggle__bar,.nav-toggle__bar::before,.nav-toggle__bar::after{
+  display:block;width:1.15rem;height:2px;background:currentColor;
+  transition:transform .22s var(--ease),background .22s var(--ease)
+}
+.nav-toggle__bar{position:relative}
+.nav-toggle__bar::before,.nav-toggle__bar::after{content:"";position:absolute;left:0}
+.nav-toggle__bar::before{top:-6px}
+.nav-toggle__bar::after{top:6px}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar{background:transparent}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar::before{transform:translateY(6px) rotate(45deg)}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar::after{transform:translateY(-6px) rotate(-45deg)}
+
+@media(max-width:940px){
+  .site-head .wrap{flex-wrap:wrap}
+  .site-head:has(.nav-toggle[aria-expanded="true"]){background:var(--ink);border-bottom-color:var(--line)}
+  .nav-toggle{display:inline-flex}
+  nav.primary{
+    order:3;flex-basis:100%;flex-direction:column;align-items:stretch;gap:0;
+    max-height:0;overflow:hidden;transition:max-height .28s var(--ease)
+  }
+  nav.primary.is-open{max-height:80vh;overflow:auto}
+  nav.primary a:not(.nav-cta){
+    padding:.95rem .25rem;border-top:1px solid var(--line);
+    font-size:.8rem;color:var(--text)
+  }
+  /* the dropdown wrapper is now the first child, so the old
+     `a:first-child` border reset no longer matches anything */
+  nav.primary > a:not(.nav-cta):first-child,
+  nav.primary > .nav-item:first-child > a{border-top:0}
+  nav.primary .nav-cta{margin:1rem 0 .35rem;justify-content:center}
+
+  /* In the drop panel the subnav is a static, indented block revealed by the
+     chevron — no absolute positioning, no hover (there is no hover here). */
+  nav.primary .nav-item{display:flex;flex-wrap:wrap;align-items:center;gap:0}
+  nav.primary .nav-item > a{flex:1}
+  .sub-toggle{width:2.75rem;height:2.75rem;flex:none}
+  .sub-toggle svg{width:1rem;height:1rem}
+  .subnav{
+    position:static;flex-basis:100%;min-width:0;margin:0;padding:0;
+    border:0;border-top:1px solid var(--line);background:transparent;
+    display:none;opacity:1;visibility:visible;translate:none
+  }
+  .subnav[data-open]{display:block}
+  .has-sub:hover .subnav,.has-sub:focus-within .subnav{display:none}
+  .has-sub:hover .subnav[data-open],.has-sub:focus-within .subnav[data-open]{display:block}
+  .subnav a{padding:.75rem .25rem .75rem 1.3rem;font-size:.75rem;border-top:0}
+  nav.primary .subnav a:not(.nav-cta){border-top:0}
+  .has-sub:hover .sub-toggle{rotate:none}
+  .sub-toggle[aria-expanded="true"]{rotate:180deg}
+  .has-sub::after{content:none}
+}
+
+/* ---- hero (homepage only) ------------------------------------------------ */
+.hero{position:relative;padding-block:clamp(3rem,7vw,5.5rem);overflow:hidden}
+.hero__bg{position:absolute;inset:0;z-index:0}
+.hero__bg picture{display:block;width:100%;height:100%}
+.hero__bg img{width:100%;height:100%;object-fit:cover;filter:brightness(.26) saturate(.55) blur(3px);transform:scale(1.05)}
+/* Hero video sits over the still and shares its exact treatment, so the swap
+   from image to video is invisible. Opacity 0 until site.js confirms it is
+   playing — see the slot comment in index.html. It is under ::after, so the
+   darkening gradient lands on the video too. */
+.hero__video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  filter:brightness(.26) saturate(.55) blur(3px);transform:scale(1.05);
+  opacity:0;transition:opacity .9s var(--ease);pointer-events:none}
+.hero__video.is-playing{opacity:1}
+@media (prefers-reduced-motion:reduce){.hero__video{display:none}}
+.hero__bg::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(10,10,10,.72),rgba(10,10,10,.9))}
+.hero .wrap{position:relative;z-index:1}
+.hero h1{color:var(--text);margin-bottom:1.2rem;font-size:clamp(2.1rem,1.3rem + 3.4vw,3.6rem)}
+.hero .lede{color:var(--text);font-size:1.24rem}
+
+/* ---- page head (every page below the homepage opens on a headline,
+   flat ground, per "Thirteen Pages, One Shape") -------------------------- */
+.page-head{padding-block:clamp(3rem,7vw,5rem) clamp(2rem,4vw,3rem)}
+.page-head .lede{margin-top:1.2rem}
+.page-head--media-left{display:grid;gap:clamp(1.6rem,4vw,3rem);align-items:center}
+@media(min-width:900px){.page-head--media-left{grid-template-columns:.95fr 1.05fr}
+  .page-head--media-left .ph-media{order:-1}
+  /* --fill: let the figure match the full height of a tall text column
+     (e.g. About, where a long record list sits beside the headline) */
+  .page-head--media-left .ph-media--fill{align-self:stretch;display:flex;flex-direction:column}
+  .page-head--media-left .ph-media--fill picture{flex:1;min-height:0;display:block}
+  .page-head--media-left .ph-media--fill img{height:100%;aspect-ratio:auto}}
+.ph-media{margin:0;border:1px solid var(--line)}
+.ph-media img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
+
+/* ---- photo rotator — added 2026-09-11 --------------------------------------
+   Matthew's ask: show more photography without making pages longer. Several
+   frames share one slot instead of each needing its own.
+   Built so ONE frame behaves exactly like a plain figure — no stacking, no
+   controls, no timer — and a second <picture> is what switches it on. That way
+   a slot can be converted before the photos exist and lights up when they land.
+   With JS off, the first frame shows and the rest stay hidden: still correct,
+   just not rotating. ------------------------------------------------------- */
+.rot{position:relative}
+.rot__frames{position:relative;display:grid}
+/* every frame occupies the same grid cell, so the slot keeps one photo's height */
+.rot__frames > picture{grid-area:1/1;opacity:0;transition:opacity .7s var(--ease)}
+.rot__frames > picture:first-child{opacity:1}
+/* JS takes over once it has more than one frame to work with */
+.rot.is-live .rot__frames > picture{opacity:0}
+.rot.is-live .rot__frames > picture.is-on{opacity:1}
+.rot__dots{
+  position:absolute;right:.6rem;bottom:.6rem;display:none;gap:.4rem;
+  padding:.35rem .45rem;background:color-mix(in srgb,var(--black) 55%,transparent)
+}
+.rot.is-live .rot__dots{display:flex}
+.rot__dots button{
+  width:.55rem;height:.55rem;padding:0;border:1px solid var(--white);
+  background:transparent;cursor:pointer;transition:background .18s var(--ease)
+}
+.rot__dots button[aria-current="true"]{background:var(--brand-green);border-color:var(--brand-green)}
+.rot__dots button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+/* a single frame must not animate or show chrome, whatever JS thinks */
+.rot__frames > picture:only-child{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .rot__frames > picture{transition:none}
+}
+
+/* ---- buttons -------------------------------------------------------------- */
+.cta-row{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:1.9rem}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;font-family:Archivo,sans-serif;
+  font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  text-decoration:none;padding:.85rem 1.3rem;border:1px solid transparent;cursor:pointer
+}
+.btn--solid{background:var(--brand-green);color:var(--black);border-color:var(--brand-green)}
+.btn--ghost{background:transparent;color:var(--text);border-color:var(--soft)}
+.btn--ghost:hover{border-color:var(--text)}
+.hero .btn--ghost{background:rgba(255,255,255,.04);color:var(--text);border-color:rgba(255,255,255,.35)}
+.hero .btn--ghost:hover{border-color:var(--white)}
+
+/* ---- terminal CTA band — componentised 2026-09-11 --------------------------
+   Every content page now ends in one of these. It was previously hand-rolled
+   inline on 5 pages with drifting values; the inline version was left alone on
+   2026-09-09 as churn, but adding the booking CTA to 15 pages made a real
+   component cheaper and safer than 15 sets of inline styles.
+   The *copy* stays different on every page on purpose — that is what keeps it
+   from reading as boilerplate. Only the mechanism is shared.
+   Button roles inside the band: `.btn--onGreen` is the filled primary (black on
+   green) and `.btn--onGreenGhost` the outlined secondary. The band's own green
+   is the page's loudest surface, so the site's normal --brand-green buttons
+   would vanish into it. -------------------------------------------------- */
+.band--cta{background:var(--brand-green);color:var(--black);border-top:0}
+.band--cta h2{color:var(--black)}
+/* :not(.cta-tel) matters — the element selector in `>.wrap>p` (0,2,1) outranks
+   a bare `.band--cta .cta-tel` (0,2,0), so without it the phone line inherits
+   the lede's 1.1rem and 46ch cap instead of its own smaller treatment. */
+.band--cta .note,.band--cta>.wrap>p:not(.cta-tel){color:var(--black);max-width:46ch;margin-top:.9rem;font-size:1.1rem}
+.band--cta .btn{border-color:var(--black)}
+.band--cta .btn--onGreen{background:var(--black);color:var(--white)}
+.band--cta .btn--onGreen:hover{background:transparent;color:var(--black)}
+.band--cta .btn--onGreenGhost{background:transparent;color:var(--black)}
+.band--cta .btn--onGreenGhost:hover{background:var(--black);color:var(--white)}
+.band--cta .cta-tel{font-size:.9rem;margin-top:1.1rem;color:var(--black);max-width:none}
+.band--cta .cta-tel a{color:var(--black);font-weight:700}
+
+/* ---- numbered card grid (jobs) --------------------------------------- */
+.card-grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:1.8rem}
+@media(min-width:720px){.card-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1040px){.card-grid.cols-4{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:900px){.card-grid.cols-3{grid-template-columns:repeat(3,1fr)}}
+.card{background:var(--ink);padding:1.5rem 1.35rem 1.7rem}
+.band--lift .card{background:var(--lift)}
+.card .n{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;
+  letter-spacing:.14em;color:var(--green);display:block;margin-bottom:.7rem
+}
+.card p{font-size:.95rem;color:var(--soft)}
+.card-foot{margin-top:1.5rem}
+
+/* ---- KPI row ---------------------------------------------------------------
+   Comparison-doc target: a row of figures, each with a short green rule above
+   the number and a label below. No box, no count-up animation. -------------- */
+.kpi-grid{display:grid;gap:2rem 2.5rem;margin-top:1.8rem}
+@media(min-width:560px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1000px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+.kpi{padding-top:1rem;border-top:2px solid var(--green)}
+.kpi .n{font-family:Anton,Impact,sans-serif;font-size:clamp(2rem,4vw,2.8rem);line-height:1;display:block;font-variant-numeric:tabular-nums;color:var(--text)}
+.kpi .l{display:block;margin-top:.6rem;font-size:.84rem;color:var(--soft);max-width:22ch}
+.kpi .r{display:block;margin-top:.55rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.7rem;line-height:1.45;letter-spacing:.03em;color:var(--green);max-width:24ch}
+.kpi-scope{margin-top:1.6rem;font-size:.82rem;color:var(--faint);max-width:74ch}
+
+/* ---- client list: sector-only text list. Predates the logo wall below,
+   which is a separate component — this one names no organisation. -------- */
+.logo-wall{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-top:1.8rem}
+@media(min-width:600px){.logo-wall{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.logo-wall{grid-template-columns:repeat(6,1fr)}}
+.logo-wall span{background:var(--lift);aspect-ratio:16/7;display:grid;place-items:center;
+  color:var(--faint);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.1rem}
+.logo-wall span::after{content:"\2014"}
+
+/* ---- job list (homepage "The jobs you stop doing") -----------------------
+   Stacked vertical list: big green Anton number, heading + dim description,
+   full-width hairline between rows. Not a card grid. --------------------- */
+.job-intro{margin-top:1rem;max-width:44ch;color:var(--soft)}
+.job-list{margin-top:2rem;border-top:1px solid var(--line)}
+.job-row{display:grid;gap:.1rem 1.6rem;padding:1.6rem 0;border-bottom:1px solid var(--line)}
+@media(min-width:620px){.job-row{grid-template-columns:5rem 1fr}}
+.job-row .n{font-family:Anton,Impact,sans-serif;font-size:clamp(2.4rem,5vw,3.2rem);line-height:.85;color:var(--green)}
+.job-row h3{margin:0 0 .35rem;font-size:1.1rem}
+.job-row p{margin:0;font-size:.92rem;color:var(--soft);max-width:60ch}
+.job-tail{margin-top:1.4rem;font-size:.88rem;color:var(--soft);max-width:52ch}
+.job-tail a{font-weight:700}
+
+/* .sector-note outlived the sectors pages it was written for — the blog uses it. */
+.sector-note{margin-top:1.6rem;font-size:.88rem;color:var(--faint);max-width:60ch}
+
+/* ---- split rows --------------------------------------------------------- */
+.split{display:grid;gap:clamp(1.4rem,4vw,2.8rem);align-items:center}
+@media(min-width:880px){.split{grid-template-columns:1fr 1fr}.split--media-left .split__media{order:-1}}
+.split__media{margin:0;border:1px solid var(--line)}
+.split__media img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+/* trainer-presenting.jpg is a tall portrait source; a centered 3:2 crop lands on
+   floor and knees. Bias the crop up so the trainer and the whiteboard show. */
+.split__media img[src*="trainer-presenting"]{object-position:50% 8%}
+.split__media figcaption,.ph-media figcaption{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--faint);
+  padding:.55rem .75rem;border-top:1px solid var(--line)
+}
+.band--paper .split__media figcaption{color:var(--faint)}
+.split h2{margin-bottom:1rem}
+.split p+p{margin-top:.9rem}
+
+/* ---- channels (fixed-light strip) ---------------------------------------- */
+.chan-grid{display:grid;gap:1.1rem;margin-top:1.8rem}
+@media(min-width:560px){.chan-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:980px){.chan-grid{grid-template-columns:repeat(4,1fr)}}
+.chan{background:var(--ink);border:1px solid var(--line);padding:1.5rem 1.4rem 1.7rem;
+  font-family:Archivo,system-ui,sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.chan span{display:block;font-family:Archivo,sans-serif;font-weight:400;font-size:.9rem;
+  color:var(--soft);margin-top:.5rem}
+
+/* ---- record plate (about opens "as a record") ------------------------- */
+.record{margin-top:1.6rem;border-top:1px solid var(--line);padding-top:1.4rem;display:grid;gap:1px;background:var(--line)}
+.record div{background:var(--ink);display:grid;gap:.15rem .9rem;padding:.9rem 0}
+@media(min-width:620px){.record div{grid-template-columns:11rem 1fr;padding:.9rem}}
+.record dt{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin:0}
+.record dd{margin:0;color:var(--text)}
+
+/* ---- insights cards -------------------------------------------------- */
+.ins-grid{display:grid;gap:1.1rem;margin-top:1.6rem}
+@media(min-width:760px){.ins-grid{grid-template-columns:repeat(3,1fr)}}
+.ins-card{display:flex;flex-direction:column;gap:1.1rem;background:var(--lift);border:1px solid var(--line);padding:1.3rem;text-decoration:none;color:inherit}
+.ins-card:hover{border-color:var(--soft)}
+.ins-card .src{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.ins-card p{font-size:.92rem;color:var(--soft);margin:0}
+
+/* ---- source panel (insights pieces) ---------------------------------------
+   Printed at the foot of every insight: what the claim rests on. ---------- */
+.source-panel{margin-top:2.2rem;border:1px solid var(--line);border-top:2px solid var(--green);
+  background:var(--lift);padding:1.4rem 1.5rem}
+.source-panel h2{font-size:1.15rem;margin-bottom:.9rem}
+.source-panel dl{display:grid;gap:.9rem 1rem;margin:0}
+@media(min-width:620px){.source-panel dl{grid-template-columns:8.5rem 1fr}}
+.source-panel dt{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--green);margin:0}
+.source-panel dd{margin:0;font-size:.9rem;color:var(--soft)}
+.source-panel dd a{overflow-wrap:anywhere}
+
+/* ---- FAQ (accordion) -------------------------------------------------- */
+.faq{margin-top:1.6rem;border:1px solid var(--line)}
+.faq details{border-top:1px solid var(--line)}
+.faq details:first-child{border-top:0}
+.faq summary{
+  list-style:none;cursor:pointer;padding:1.1rem 1.3rem;display:flex;justify-content:space-between;gap:1rem;
+  font-family:Archivo,sans-serif;font-weight:700;font-size:1rem
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:ui-monospace,Menlo,monospace;color:var(--green);font-weight:400}
+.faq details[open] summary::after{content:"\2212"}
+.faq p{padding:0 1.3rem 1.2rem;color:var(--soft);max-width:70ch;margin:0}
+
+/* ---- contact page --------------------------------------------------------- */
+.contact-head{display:grid;gap:clamp(1.6rem,4vw,3rem)}
+@media(min-width:860px){.contact-head{grid-template-columns:1.15fr .85fr}}
+.contact-rail{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);align-self:start}
+.contact-rail div{background:var(--lift);display:grid;gap:.1rem .9rem;padding:.85rem .95rem}
+@media(min-width:420px){.contact-rail div{grid-template-columns:5.5rem 1fr}}
+.contact-rail dt{margin:0;font-family:ui-monospace,Menlo,monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+.contact-rail dd{margin:0}
+/* .audience is a <fieldset> (grouping the two radios); reset the UA chrome */
+.audience{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  margin:1.6rem 0 0;padding:0;min-inline-size:0}
+/* Three options since 2026-09-11 (client / applicant / feedback). The grid
+   paints its dividers with gap:1px over a --line background, so an odd cell
+   left empty reads as a broken tile rather than as whitespace — hence the
+   last-child span at the two-column width. Three abreast only once there is
+   room for an icon plus two lines of text in each. */
+@media(min-width:720px){
+  .audience{grid-template-columns:1fr 1fr}
+  .audience label:last-child{grid-column:1/-1}
+}
+@media(min-width:1040px){
+  .audience{grid-template-columns:repeat(3,1fr)}
+  .audience label:last-child{grid-column:auto}
+}
+.audience label{background:var(--lift);padding:1.3rem 1.4rem;display:flex;gap:.9rem;align-items:flex-start;cursor:pointer}
+.audience label:hover{background:#2d2d2d}
+.audience input{margin-top:.3rem;accent-color:var(--brand-green)}
+.audience b{display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:1.02rem}
+.audience span{display:block;font-size:.88rem;color:var(--soft);margin-top:.2rem}
+.audience input:checked ~ .a-text b{color:var(--green)}
+
+.form{margin-top:1.8rem;max-width:44rem}
+.form[hidden]{display:none}
+.form .row{display:grid;gap:1rem;margin-bottom:1rem}
+@media(min-width:560px){.form .row.two{grid-template-columns:1fr 1fr}}
+.form label{display:block;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin-bottom:.4rem}
+.form input,.form textarea,.form select{
+  width:100%;background:var(--field);color:var(--text);
+  border:1px solid #3d3d3d;padding:.7rem .8rem;font:inherit;font-size:.95rem
+}
+.form textarea{min-height:7rem;resize:vertical}
+.form input:focus,.form textarea:focus,.form select:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+/* form feedback carries no stoplight hue — success is green, error is a
+   heavier white emphasis bar and the message wording does the work
+   (brand palette has no amber or red; revisit if testing shows misses) */
+.form-msg{margin-top:1rem;padding:.9rem 1.1rem;border-left:3px solid var(--line);background:var(--lift);font-size:.92rem;color:var(--text)}
+.form-msg[hidden]{display:none}
+.form-msg--ok{border-left-color:var(--green);background:rgba(74,190,74,.09)}
+.form-msg--err{border-left:4px solid var(--white);background:rgba(244,244,244,.05)}
+.form .hp{position:absolute!important;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.form button[disabled]{opacity:.6;cursor:progress}
+.form input[type=file]{padding:.55rem .8rem;cursor:pointer}
+.form .field-hint{margin:.45rem 0 0;font-size:.8rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--soft)}
+.form .consent{display:grid;gap:.8rem;margin:.2rem 0 1.3rem}
+.form .check{display:flex;gap:.6rem;align-items:flex-start;margin:0;font-size:.9rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text);cursor:pointer}
+.form .check input{width:auto;flex:0 0 auto;margin-top:.15rem;accent-color:var(--brand-green)}
+
+/* ---- booking widget (/book/) -------------------------------------------
+   Client-side calendar + time-slot picker. Fills two hidden fields and shows
+   the selection; the form posts to api/submit.php and was tested live on
+   staging 2026-09-08. Plain JS, no libraries. ---------------------------- */
+.booking{border:1px solid var(--line);background:var(--lift);padding:1.1rem;margin-top:.4rem;max-width:24rem}
+.cal__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.cal__month{font-family:Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:.02em;font-size:1rem}
+.cal__nav{background:transparent;border:1px solid var(--line);color:var(--text);width:2rem;height:2rem;cursor:pointer;font-size:1.1rem;line-height:1;padding:0}
+.cal__nav:disabled{opacity:.35;cursor:not-allowed}
+.cal__nav:not(:disabled):hover{border-color:var(--green);color:var(--green)}
+.cal__grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal__dow{text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:.3rem 0}
+.cal__day{background:var(--ink);border:1px solid transparent;color:var(--text);font:inherit;font-size:.88rem;padding:.5rem 0;cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.cal__day.is-empty{background:transparent;border:0;cursor:default}
+.cal__day:disabled{color:var(--faint);opacity:.4;cursor:not-allowed}
+.cal__day:not(:disabled):not(.is-empty):hover{border-color:var(--green)}
+.cal__day.is-selected{background:var(--brand-green);color:var(--black);font-weight:700}
+.slots{margin-top:1rem}
+.slots[hidden]{display:none}
+.slots__label{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:0 0 .6rem}
+.slots__row{display:flex;flex-wrap:wrap;gap:.5rem}
+.slot{background:var(--ink);border:1px solid var(--line);color:var(--text);font:inherit;font-size:.82rem;padding:.5rem .8rem;cursor:pointer}
+.slot:hover{border-color:var(--green)}
+.slot.is-selected{background:var(--brand-green);color:var(--black);border-color:var(--brand-green);font-weight:700}
+.booking__chosen{margin-top:1rem;font-size:.9rem;color:var(--green);font-weight:700}
+.booking__chosen[hidden]{display:none}
+
+/* ---- team page: headshot bubbles + social row ------------------------- */
+.team-group{margin-top:2.2rem}
+.team-group > h2{margin-bottom:.4rem}
+.team-grid{display:grid;gap:2rem 1.4rem;margin-top:1.8rem}
+@media(min-width:560px){.team-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.team-grid{grid-template-columns:repeat(3,1fr)}}
+.member{display:flex;flex-direction:column;align-items:center;text-align:center}
+.member__link{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit}
+.member__photo{
+  position:relative;
+  width:132px;height:132px;border-radius:50%;overflow:hidden;background:var(--lift);
+  border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s var(--ease)
+}
+.member__photo img{width:100%;height:100%;object-fit:cover}
+.member__link:hover .member__photo,.member__link:focus-visible .member__photo{border-color:var(--green)}
+.member__mono{font-family:Anton,Impact,sans-serif;font-size:2.2rem;color:var(--soft);letter-spacing:.02em}
+.member__link{cursor:pointer}
+.member h3{margin:1rem 0 .15rem;font-size:1.02rem;transition:color .18s var(--ease)}
+.member__role{margin:0;font-size:.85rem;color:var(--soft)}
+.member.is-active .member__photo{border-color:var(--green);box-shadow:0 0 0 3px rgba(74,190,74,.22)}
+.member.is-active h3{color:var(--green)}
+.member__social{display:flex;gap:.55rem;margin-top:.7rem}
+.member__social a{
+  display:inline-flex;width:1.9rem;height:1.9rem;align-items:center;justify-content:center;
+  border:1px solid var(--line);color:var(--soft);
+  transition:color .18s var(--ease),border-color .18s var(--ease),background-color .18s var(--ease),box-shadow .18s var(--ease)
+}
+/* only real links are present now, so hover applies to all of them */
+/* An icon with no account behind it is now REMOVED, not rendered inert — a
+   placeholder that looks like a link and jumps the page to the top when clicked
+   is worse than an absent icon (2026-09-11, punch item 5). These rules beat the
+   `display:flex`/`inline-flex` above, which would otherwise defeat [hidden]. */
+.member__social a[hidden],.team-strip__social a[hidden]{display:none!important}
+.member__social a:hover{
+  color:var(--green);border-color:var(--green);
+  background:rgba(74,190,74,.16);
+  box-shadow:0 0 0 3px rgba(74,190,74,.22),0 0 14px rgba(74,190,74,.35)
+}
+.member__social svg{width:.95rem;height:.95rem;fill:currentColor}
+
+/* team page: detail panel + compact picker strip above the fold */
+.team-panel{display:grid;gap:1.8rem}
+.team-strip{display:flex;flex-wrap:wrap;gap:1.9rem 1.5rem}
+.team-strip__item{display:flex;flex-direction:column;align-items:center;gap:.55rem;width:8.5rem;text-align:center}
+.team-strip__pick{
+  display:flex;flex-direction:column;align-items:center;gap:.55rem;
+  text-decoration:none;color:var(--soft);cursor:pointer
+}
+.team-strip__photo{
+  position:relative;width:120px;height:120px;border-radius:50%;overflow:hidden;background:var(--lift);
+  border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+  transition:border-color .18s var(--ease),box-shadow .18s var(--ease)
+}
+.team-strip__photo .member__mono{font-size:2.4rem}
+.team-strip__pick:hover .team-strip__photo,.team-strip__pick:focus-visible .team-strip__photo{border-color:var(--green)}
+.team-strip__name{font-size:.9rem;line-height:1.25;color:var(--text);font-weight:600}
+.team-strip__role{font-size:.74rem;line-height:1.25;color:var(--faint);margin-top:.15rem}
+.team-strip__item.is-active .team-strip__name{color:var(--green)}
+.team-strip__item.is-active .team-strip__photo{border-color:var(--green);box-shadow:0 0 0 3px rgba(74,190,74,.22)}
+.team-strip__social{display:flex;gap:.45rem}
+.team-strip__social a{display:inline-flex;padding:.15rem;color:var(--faint);transition:color .15s var(--ease),filter .15s var(--ease)}
+.team-strip__social a:hover{color:var(--green);filter:drop-shadow(0 0 5px rgba(74,190,74,.6))}
+.team-strip__social svg{width:1rem;height:1rem;fill:currentColor}
+
+/* shared headshot treatment — bias the circular crop toward the face and feather
+   the rim into the panel. Matthew and Nneka were cut out and recomposited onto a
+   studio-grey field to match the set; Brandon stays on his original photo (his
+   source is a face-only crop that will not cut cleanly — see draft notes). */
+.team-strip__photo img,.team-detail .member__photo img,.person-head .member__photo img{
+  width:100%;height:100%;object-fit:cover;object-position:50% 26%
+}
+.team-strip__photo::after,.team-detail .member__photo::after,.person-head .member__photo::after{
+  content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,transparent 72%,rgba(28,28,28,.28) 100%)
+}
+/* per-person crop nudges — keyed off data-person (set on the roster,
+   the JS-swapped detail img, and the /team/<slug>/ page) so the crop no
+   longer depends on the alt text staying verbatim */
+img[data-person="cai-silva"]{object-position:50% 44% !important}
+img[data-person="brandon-long"]{object-position:50% 46% !important}
+img[data-person="matthew-sharpe"]{object-position:50% 34% !important}
+
+/* team detail panel (in-page bio swap) */
+.team-detail{display:grid;gap:clamp(1.3rem,4vw,2.4rem);align-items:start}
+@media(min-width:640px){.team-detail{grid-template-columns:160px 1fr}}
+/* Nobody is picked yet: the whole panel takes no space, not just an empty box.
+   The roster grid is the page's main content until a card is clicked. */
+.team-detail.is-empty{display:none}
+.team-detail .member__photo{width:176px;height:176px}
+.team-detail h2{font-size:clamp(1.7rem,1.2rem + 2vw,2.5rem);margin-bottom:.15rem}
+.team-detail .person-role{margin:.4rem 0 0}
+.team-detail .member__social{margin:.9rem 0 1.1rem}
+.team-detail .person-bio p{max-width:60ch}
+@media (prefers-reduced-motion:no-preference){
+  .team-detail.is-swapping h2,.team-detail.is-swapping .person-role,
+  .team-detail.is-swapping .member__social,.team-detail.is-swapping .person-bio{
+    animation:td-in .42s var(--ease) both
+  }
+  .team-detail.is-swapping .person-role{animation-delay:.04s}
+  .team-detail.is-swapping .member__social{animation-delay:.08s}
+  .team-detail.is-swapping .person-bio{animation-delay:.12s}
+  @keyframes td-in{from{opacity:0;translate:0 .55rem}to{opacity:1;translate:none}}
+}
+
+/* individual person page */
+.person-head{display:grid;gap:clamp(1.4rem,4vw,2.4rem);align-items:center}
+@media(min-width:640px){.person-head{grid-template-columns:auto 1fr}}
+.person-head .member__photo{width:150px;height:150px}
+.person-head h1{font-size:clamp(2rem,1.4rem + 3vw,3rem)}
+.person-role{margin:.5rem 0 0;font-size:1.1rem;color:var(--green);font-weight:700;
+  font-family:ui-monospace,Menlo,monospace;letter-spacing:.02em;text-transform:uppercase}
+.person-bio p{max-width:60ch}
+
+/* ---- client wall — added 2026-09-11 -------------------------------------------
+   Two logos, so this deliberately is not a 6-up grid with four empty cells.
+   The marks sit inline on one hairline rail, left-aligned with the copy, at a
+   size that reads as "these are the accounts we run" rather than a trophy case.
+   Adding a third or fourth mark needs no change — the rail just wraps.
+   Cells sit on the dark ground behind a hairline, NOT on white plates: the
+   InstaBuzz mark is drawn white-and-yellow with a black keyline, so it is
+   already built for a dark surface. If a client supplies a mark that only
+   works on white, give that one cell `.cw-plate` rather than switching the
+   whole row. ---------------------------------------------------------------- */
+.client-wall{margin-top:1.9rem}
+.client-wall ul{
+  list-style:none;margin:0;padding:0;
+  display:flex;flex-wrap:wrap;align-items:stretch;gap:1rem
+}
+/* No hover state on these cells — deliberate. They are not links, and the
+   green border-on-hover (copied in from the .card convention) promised a click
+   that does not exist. If client logos ever link out, add it back with the
+   <a> doing the work. */
+.client-wall li{
+  border:1px solid var(--line);padding:1.15rem 1.6rem;
+  display:grid;place-items:center;min-width:13rem;min-height:5.4rem
+}
+.client-wall li.cw-plate{background:var(--white)}
+/* a banner-shaped mark (wide, with its own baked-in background) needs more room
+   than a wordmark or it scales down to illegible — see the VAA note in /about/ */
+.client-wall li.cw-wide{min-width:19rem;padding:.9rem 1.1rem}
+.client-wall li.cw-wide img{max-height:4rem}
+.client-wall img{max-height:2.6rem;width:auto}
+.client-wall .cw-note{margin-top:1.4rem;color:var(--faint);font-size:.85rem;max-width:64ch}
+
+/* ---- footer -------------------------------------------------------------- */
+footer{background:var(--black);color:var(--faint);font-size:.86rem;padding-block:2.8rem 3.6rem;border-top:3px solid var(--brand-green)}
+footer .cols{display:grid;gap:2rem}
+/* 4th column added 2026-09-11 for .social-rail — it is icon-width, so it takes
+   auto rather than a fraction and the wordmark column keeps the slack */
+@media(min-width:720px){footer .cols{grid-template-columns:1.3fr 1fr 1fr}}
+@media(min-width:960px){footer .cols{grid-template-columns:1.3fr 1fr 1fr auto}}
+footer .brand{color:var(--soft)}
+footer .brand svg{width:96px}
+footer .tag{max-width:38ch;margin-top:.9rem;color:var(--faint)}
+footer .fcol h4{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-green);margin:0 0 .8rem;font-weight:700}
+footer .fcol a{color:var(--soft);text-decoration:none;display:block;margin:.35rem 0}
+footer .fcol a:hover{color:var(--white)}
+footer .fcol p{color:var(--faint);margin:.35rem 0;max-width:none}
+/* Book a consultation reads as a CTA in the footer, not one more link in the
+   list — but outlined, not filled, so it stays below the hero's solid green */
+footer .fcol a[href="/book/"]{
+  display:inline-block;margin-top:1.1rem;padding:.62rem 1.15rem;
+  background:transparent;color:var(--brand-green);font-weight:700;
+  border:1px solid var(--brand-green);letter-spacing:.01em
+}
+footer .fcol a[href="/book/"]:hover{background:var(--brand-green);color:var(--black)}
+/* ---- footer social rail — added 2026-09-11 ------------------------------------
+   Not the generic round bubble row. The tiles are square (the site has no
+   circles outside the team headshots) and each one sits on a green riser whose
+   height steps up left to right — the ascending-bars mark from the social kit
+   (drafts/social-kit/) rendered as the underline of the row. Hover knocks the
+   icon out to black on a green fill, the same move as every other CTA here.
+   A tile with href="#" is a placeholder for an account with no URL yet: it is
+   rendered as a <span>, not a link, so it is not focusable and not clickable. */
+.social-rail h4{
+  font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--brand-green);margin:0 0 .9rem;font-weight:700
+}
+.social-rail ul{
+  list-style:none;margin:0;padding:0;
+  /* flex-start so the tile tops line up and only the risers step — flex-end
+     made the tiles themselves sit at four different heights and read wobbly */
+  display:flex;align-items:flex-start;gap:.55rem
+}
+.social-rail li{display:flex;flex-direction:column;align-items:stretch}
+/* `footer .fcol a` (0,2,1) sets `margin:.35rem 0` and out-specifies a bare
+   `.social-rail .s-tile` (0,2,0) — which dropped the ONE tile that is an <a>
+   (the linked account) a few px below the <span> placeholders. Reset at
+   0,3,0 so linked and unlinked tiles sit on the same baseline. */
+footer .social-rail .s-tile{margin:0}
+.social-rail .s-tile{
+  width:2.6rem;height:2.6rem;display:grid;place-items:center;
+  border:1px solid var(--line);background:transparent;color:var(--soft);
+  transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease)
+}
+.social-rail .s-tile svg{width:1.05rem;height:1.05rem;fill:currentColor}
+.social-rail a.s-tile:hover,.social-rail a.s-tile:focus-visible{
+  background:var(--brand-green);color:var(--black);border-color:var(--brand-green)
+}
+/* the riser — stepping up per position. All green, including under the tiles
+   that have no URL yet: whether an account is linked is a temporary state and
+   should not show up as three dead-looking grey icons on the live site. */
+.social-rail .s-riser{background:var(--brand-green);margin-top:3px}
+/* starts at 5px, not 3px: below ~4px the bar antialiases into a hairline and
+   reads as a dim rule rather than as the short end of a green step */
+.social-rail li:nth-child(1) .s-riser{height:5px}
+.social-rail li:nth-child(2) .s-riser{height:8px}
+.social-rail li:nth-child(3) .s-riser{height:11px}
+.social-rail li:nth-child(4) .s-riser{height:14px}
+.social-rail li:nth-child(5) .s-riser{height:17px}
+
+footer .foot-legal{
+  margin-top:2.6rem;padding-top:1.4rem;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:.6rem 1.5rem;justify-content:space-between;
+  font-size:.8rem;color:var(--faint)
+}
+footer .foot-legal a{color:var(--faint);text-decoration:none}
+footer .foot-legal a:hover{color:var(--soft)}
+footer .foot-legal .links{display:flex;gap:1.2rem}
+
+/* ---- motion — recovered from the Surge Motion Inventory (2026-08-14).
+   Gated behind .anim (added by JS) so a no-JS visitor sees everything, and
+   behind prefers-reduced-motion. -------------------------------------------- */
+.ins-card,.card{transition:border-color .2s var(--ease),transform .2s var(--ease)}
+.ins-card:hover{transform:translateY(-3px)}
+@media (prefers-reduced-motion:no-preference){
+  .anim .reveal{opacity:0;translate:0 1rem;transition:opacity .55s var(--ease),translate .55s var(--ease)}
+  .anim .reveal.is-in{opacity:1;translate:none}
+  .anim .reveal.stagger>*{opacity:0;animation:surge-rise .55s var(--ease) both;animation-play-state:paused}
+  .anim .reveal.stagger.is-in>*{animation-play-state:running}
+  .anim .reveal.stagger.is-in>*:nth-child(2){animation-delay:.09s}
+  .anim .reveal.stagger.is-in>*:nth-child(3){animation-delay:.18s}
+  .anim .reveal.stagger.is-in>*:nth-child(4){animation-delay:.27s}
+  .anim .reveal.stagger.is-in>*:nth-child(5){animation-delay:.36s}
+  @keyframes surge-rise{from{opacity:0;translate:0 1rem}to{opacity:1;translate:none}}
+  .anim .split__media{overflow:hidden}
+  .anim .split__media.reveal img,.anim .ph-media.reveal img{scale:1.08;opacity:0;transition:scale 1s var(--ease),opacity .7s var(--ease)}
+  .anim .split__media.reveal.is-in img,.anim .ph-media.reveal.is-in img{scale:1;opacity:1}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  .anim .reveal,.anim .reveal.stagger>*,.anim .split__media.reveal img,.anim .ph-media.reveal img{opacity:1!important;translate:none!important;scale:1!important}
+}
+
+/* ---- homepage "lighten within dark" starter set — 2026-09-08 ------------
+   Additive colour + relief on the dark base, keeping the palette: a funnel
+   viz for the KPI figures, a green-line icon row on the Jobs section, one
+   faint green-tinted band, and green markers on the record plate. -------- */
+
+/* green-tinted band — on-palette (brand green over a base one step below --lift).
+   ~26% green: a clear green cast, same luminance as a dark band, well short of
+   the solid --brand-green CTA. Was 12% over --lift (≈#283628) — read as faded. */
+.band--green{background:color-mix(in srgb,#1e1e1e 74%,var(--brand-green))}
+.band--green .card,.band--green .mini-icons li{background:var(--ink)}
+
+/* KPI funnel — single-series magnitude, one hue; numbers wear text tokens */
+.funnel-viz{margin-top:1.9rem;display:flex;flex-direction:column;gap:.7rem;max-width:40rem}
+.fn-stage{display:flex;flex-direction:column;gap:.5rem}
+.fn-fig .n{display:block;font-family:Anton,Impact,sans-serif;font-size:clamp(1.7rem,1.2rem + 2vw,2.4rem);line-height:1;color:var(--text);font-variant-numeric:tabular-nums}
+.fn-fig .l{display:block;margin-top:.3rem;font-size:.82rem;color:var(--soft);max-width:40ch}
+.fn-bar{height:1.35rem;width:var(--w);min-width:2.75rem;border-radius:0 3px 3px 0;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--brand-green) 70%,#000),var(--brand-green))}
+.fn-link{display:flex;align-items:center;gap:.5rem;margin:0;max-width:none;
+  font-family:ui-monospace,Menlo,monospace;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--green)}
+.fn-link svg{flex:none;width:.9rem;height:.9rem;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* green-line icon row (visual index, not a content section) */
+.mini-icons{list-style:none;margin:2.1rem 0 0;padding:0;display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:560px){.mini-icons{grid-template-columns:repeat(4,1fr)}}
+.mini-icons li{background:var(--ink);display:flex;flex-direction:column;align-items:center;gap:.7rem;padding:1.55rem 1rem;text-align:center}
+.mini-icons .mi{width:2rem;height:2rem;stroke:var(--brand-green);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.mini-icons span{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+
+/* record plate: green diamond marker on each term */
+.record div{position:relative}
+.record dt{padding-left:1rem}
+.record dt::before{content:"";position:absolute;left:0;top:.5em;width:.42rem;height:.42rem;background:var(--green);transform:rotate(45deg)}
+
+/* motion: grow the funnel bars on reveal */
+@media (prefers-reduced-motion:no-preference){
+  .anim .funnel-viz.reveal .fn-bar{transform:scaleX(0);transform-origin:left}
+  .anim .funnel-viz.reveal.is-in .fn-bar{transform:scaleX(1);transition:transform .65s var(--ease)}
+}
+@media (prefers-reduced-motion:reduce){
+  .anim .funnel-viz.reveal .fn-bar{transform:none!important}
+}
+
+/* ---- additive set rolled out to the inner pages — 2026-09-08 -----------
+   The homepage starter kit applied page by page: one green-tinted band per
+   page, a green line-icon treatment on that page's primary list/grid, a
+   green stepper rail on numbered job-lists, and diamond markers on the
+   contact rails (parallel to .record). 1.6px monochrome line icons, always
+   paired with a heading or label — the Cydcor / Smart Circle register, no
+   decorative fills. */
+
+/* line icon above the number on a numbered .card (what-we-do "four jobs") */
+.card__ico{display:block;width:1.9rem;height:1.9rem;margin-bottom:.95rem;
+  stroke:var(--brand-green);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* small icon above the label in a channel cell (what-we-do channels) */
+.chan__ico{display:block;width:1.7rem;height:1.7rem;margin-bottom:.85rem;
+  stroke:var(--brand-green);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* a numbered job-list read as a stepper: green rail down the number gutter */
+@media(min-width:620px){
+  .job-list--stepped .job-row{position:relative}
+  .job-list--stepped .job-row::before{content:"";position:absolute;left:1.15rem;top:2.9rem;bottom:-1.6rem;
+    width:2px;background:linear-gradient(var(--brand-green),color-mix(in srgb,var(--brand-green) 20%,transparent))}
+  .job-list--stepped .job-row:last-child::before{display:none}
+}
+
+/* green line icon inside each option of the audience picker (contact) */
+.audience .a-ico{flex:none;width:1.6rem;height:1.6rem;margin-top:.15rem;
+  stroke:var(--brand-green);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* diamond marker on each term of the contact / book intro rail, like .record */
+.contact-rail dt{position:relative;padding-left:.95rem}
+.contact-rail dt::before{content:"";position:absolute;left:0;top:.42em;width:.4rem;height:.4rem;
+  background:var(--green);transform:rotate(45deg)}
+
+/* ---- breaking up the repeated 4-across grid — 2026-09-08 --------------
+   The green icon row worked on the homepage but reading four near-identical
+   dark grids down the site felt like one component pasted repeatedly. Each
+   four/five-item group now gets its own form. */
+
+/* what-we-do "four jobs": 2x2 cards, not 4-across, with a big faint Anton
+   number sitting behind the copy */
+@media(min-width:640px){.card-grid--jobs{grid-template-columns:repeat(2,1fr)}}
+.card-grid--jobs .card{position:relative;overflow:hidden;padding-top:1.7rem}
+.card-grid--jobs .card .n{position:absolute;top:.2rem;right:1rem;margin:0;
+  font-family:Anton,Impact,sans-serif;font-size:3.4rem;line-height:1;letter-spacing:0;
+  color:color-mix(in srgb,var(--brand-green) 26%,transparent);pointer-events:none}
+.card-grid--jobs .card__ico{width:2.2rem;height:2.2rem;position:relative}
+.card-grid--jobs .card h3{position:relative}
+
+/* what-we-do channels: an unboxed strip on a single hairline, one green node
+   per channel — reads as an index, not four cards */
+.chan-strip{margin-top:2rem;display:grid;gap:2rem 1.4rem;padding-top:1.9rem;
+  border-top:1px solid var(--line)}
+@media(min-width:720px){.chan-strip{grid-template-columns:repeat(4,1fr);gap:1.4rem}}
+.cs-item{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:.55rem}
+.cs-item::before{content:"";position:absolute;top:calc(-1.9rem - 4px);left:0;width:9px;height:9px;
+  border-radius:50%;background:var(--brand-green)}
+@media(max-width:719px){.cs-item::before{display:none}}
+.cs-item svg{width:2.3rem;height:2.3rem;stroke:var(--brand-green);fill:none;stroke-width:1.5;
+  stroke-linecap:round;stroke-linejoin:round}
+.cs-item b{font-family:Anton,Impact,sans-serif;font-weight:400;text-transform:uppercase;
+  font-size:1.05rem;letter-spacing:.02em}
+.cs-item span{font-size:.86rem;color:var(--soft)}
+
+/* about "The work": a three-step hand-off flow */
+.flow{margin-top:2rem;display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:780px){.flow{grid-template-columns:repeat(3,1fr)}}
+.flow__step{background:var(--ink);padding:1.5rem 1.4rem;display:flex;flex-direction:column;gap:.5rem}
+.flow__step .who{font-family:ui-monospace,Menlo,monospace;font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--green)}
+.flow__step b{font-family:Anton,Impact,sans-serif;font-weight:400;text-transform:uppercase;
+  font-size:1.15rem;letter-spacing:.01em;line-height:1.1}
+.flow__step span{font-size:.88rem;color:var(--soft)}
+.flow__step{position:relative}
+.flow__step:not(:last-child)::after{content:"";position:absolute;z-index:1;
+  background:var(--brand-green);width:11px;height:11px;
+  clip-path:polygon(0 0,100% 50%,0 100%,28% 50%)}
+@media(max-width:779px){.flow__step:not(:last-child)::after{left:1.4rem;bottom:-8px;transform:rotate(90deg)}}
+@media(min-width:780px){.flow__step:not(:last-child)::after{right:-7px;top:1.9rem}}
+
+/* careers "the roles": wrapping outlined chips, not a rigid grid */
+.role-chips{list-style:none;margin:1.7rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.7rem}
+.role-chips li{display:inline-flex;align-items:center;gap:.55rem;padding:.6rem .95rem;
+  border:1px solid color-mix(in srgb,var(--brand-green) 45%,var(--line));
+  background:color-mix(in srgb,var(--brand-green) 8%,transparent)}
+.role-chips svg{width:1.15rem;height:1.15rem;flex:none;stroke:var(--brand-green);fill:none;
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.role-chips span{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text)}
+
+/* ---- role list — /careers/, 2026-09-11 -------------------------------------
+   Supersedes .role-chips on that page (the rules above are kept: the chip is
+   still the right component anywhere a label just needs naming).
+   Built on native <details> so it works with JS off and gets keyboard support
+   and correct semantics for nothing. A grid rather than the old wrapping flex
+   row: an open item grows its own grid cell instead of shoving its neighbours
+   onto the next line. ------------------------------------------------------- */
+.role-list{list-style:none;margin:1.9rem 0 0;padding:0;
+  display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:720px){.role-list{grid-template-columns:1fr 1fr}}
+.role-list>li{background:var(--ink)}
+.band--green .role-list>li{background:var(--ink)}
+.role summary{
+  display:flex;align-items:center;gap:.65rem;padding:.95rem 1.15rem;cursor:pointer;
+  list-style:none;   /* Firefox */
+}
+.role summary::-webkit-details-marker{display:none}   /* Safari/old Chrome */
+.role summary:hover{background:color-mix(in srgb,var(--brand-green) 7%,transparent)}
+.role summary:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+.role summary svg{width:1.15rem;height:1.15rem;flex:none;stroke:var(--brand-green);fill:none;
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.role .r-name{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text)}
+.role .r-chev{margin-left:auto;width:1rem;height:1rem;stroke:var(--soft);
+  transition:rotate .18s var(--ease)}
+.role[open] .r-chev{rotate:180deg;stroke:var(--brand-green)}
+.role p{margin:0;padding:0 1.15rem 1.15rem;color:var(--soft);font-size:.92rem;max-width:46ch}
+@media (prefers-reduced-motion:reduce){.role .r-chev{transition:none}}
+
+/* team "One room": a plain taxonomy line, no grid */
+.taxo{margin-top:1.6rem;font-family:ui-monospace,Menlo,monospace;font-size:.74rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.taxo b{color:var(--green);font-weight:400}
+
+/* motion: nodes / chevrons arrive after their section reveals */
+@media (prefers-reduced-motion:no-preference){
+  .anim .chan-strip.reveal .cs-item::before{opacity:0;transform:scale(0)}
+  .anim .chan-strip.reveal.is-in .cs-item::before{opacity:1;transform:scale(1);
+    transition:opacity .4s var(--ease),transform .4s var(--ease)}
+  .anim .chan-strip.reveal.is-in .cs-item:nth-child(2)::before{transition-delay:.1s}
+  .anim .chan-strip.reveal.is-in .cs-item:nth-child(3)::before{transition-delay:.2s}
+  .anim .chan-strip.reveal.is-in .cs-item:nth-child(4)::before{transition-delay:.3s}
+  .anim .flow.reveal .flow__step::after{opacity:0}
+  .anim .flow.reveal.is-in .flow__step::after{opacity:1;transition:opacity .5s var(--ease) .35s}
+}
+@media (prefers-reduced-motion:reduce){
+  .anim .chan-strip .cs-item::before,.anim .flow .flow__step::after{opacity:1!important;transform:none!important}
+}

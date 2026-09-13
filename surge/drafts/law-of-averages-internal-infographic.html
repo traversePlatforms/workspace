@@ -1,0 +1,304 @@
+<title>Law of Averages — Training Board</title>
+
+<style>
+  :root {
+    color-scheme: light dark;
+    --board:#F1F4F1; --board-lip:#C9CFCB; --trim:#A8B0AB; --ghost:#DEE4E0;
+    --ink:#2B2E2C; --ink-soft:#636965;
+    --blue:#1E5FA8; --red:#C0392C; --green:#3C7A4B;
+    --slip-bg:#FBFAF6; --slip-edge:#DCD8CC; --tape:rgba(214,206,176,.55);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --board:#21252B; --board-lip:#14171B; --trim:#3A4048; --ghost:#2A2F36;
+      --ink:#E7ECE8; --ink-soft:#9AA3A0; --blue:#62B4EA; --red:#F0705F; --green:#6FCE8B;
+      --slip-bg:#2B3038; --slip-edge:#3E454E; --tape:rgba(120,128,140,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --board:#21252B; --board-lip:#14171B; --trim:#3A4048; --ghost:#2A2F36;
+    --ink:#E7ECE8; --ink-soft:#9AA3A0; --blue:#62B4EA; --red:#F0705F; --green:#6FCE8B;
+    --slip-bg:#2B3038; --slip-edge:#3E454E; --tape:rgba(120,128,140,.35);
+  }
+  :root[data-theme="light"] {
+    --board:#F1F4F1; --board-lip:#C9CFCB; --trim:#A8B0AB; --ghost:#DEE4E0;
+    --ink:#2B2E2C; --ink-soft:#636965; --blue:#1E5FA8; --red:#C0392C; --green:#3C7A4B;
+    --slip-bg:#FBFAF6; --slip-edge:#DCD8CC; --tape:rgba(214,206,176,.55);
+  }
+  :root {
+    --marker:"Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS",cursive;
+    --slip:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+  }
+
+  body { margin:0; padding:clamp(12px,3vw,40px); background:var(--board-lip);
+         font-family:var(--marker); color:var(--ink); -webkit-font-smoothing:antialiased; }
+
+  .board {
+    position:relative; max-width:1080px; margin:0 auto;
+    padding:clamp(20px,4vw,52px) clamp(18px,4vw,56px) 0;
+    border:6px solid var(--trim); border-radius:4px;
+    background:
+      radial-gradient(130% 70% at 18% -10%, rgba(255,255,255,.55), transparent 62%),
+      radial-gradient(90% 60% at 88% 110%, rgba(255,255,255,.22), transparent 60%),
+      var(--board);
+    box-shadow:0 18px 44px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.25);
+    overflow:hidden;
+  }
+  @media (prefers-color-scheme: dark) {
+    .board { background:
+      radial-gradient(130% 70% at 18% -10%, rgba(255,255,255,.07), transparent 62%),
+      radial-gradient(90% 60% at 88% 110%, rgba(255,255,255,.04), transparent 60%),
+      var(--board); }
+  }
+
+  .ghost { position:absolute; background:var(--ghost); filter:blur(9px); opacity:.7; pointer-events:none; }
+  .g1 { top:14%; left:-6%; width:42%; height:46px; transform:rotate(-2deg); }
+  .g2 { top:58%; right:-8%; width:36%; height:56px; transform:rotate(1.5deg); }
+
+  .stack { position:relative; display:grid; gap:clamp(30px,4vw,46px); }
+
+  .eyebrow { font-family:var(--slip); font-size:11px; letter-spacing:.16em;
+             text-transform:uppercase; color:var(--ink-soft); margin:0 0 14px; }
+  h1 { margin:0; font-size:clamp(32px,5.6vw,58px); line-height:1.05; font-weight:700;
+       text-wrap:balance; max-width:18ch; }
+  .standfirst { margin:16px 0 0; font-size:clamp(16px,1.9vw,20px); line-height:1.5;
+                color:var(--ink-soft); max-width:58ch; }
+
+  .acro { display:flex; flex-wrap:wrap; gap:10px 8px; margin-top:22px; align-items:baseline; }
+  .acro span { font-size:clamp(15px,1.8vw,18px); color:var(--ink-soft); }
+  .acro b { font-size:clamp(26px,3.4vw,34px); color:var(--blue); font-weight:700; }
+
+  .rule { display:block; width:100%; height:12px; color:var(--ink); opacity:.55; }
+
+  section { display:grid; gap:16px; }
+  .head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .letter { font-size:clamp(34px,4.6vw,48px); font-weight:700; color:var(--blue); line-height:1; }
+  h2 { margin:0; font-size:clamp(21px,2.7vw,28px); font-weight:700; line-height:1.15; }
+  .kicker { margin:0; font-size:15.5px; line-height:1.55; color:var(--ink-soft); max-width:64ch; }
+
+  figure { margin:0; }
+  .scroller { overflow-x:auto; padding-bottom:4px; }
+  svg.dg { display:block; width:100%; min-width:560px; height:auto; color:var(--ink); }
+  .dg .dot { fill:none; stroke:currentColor; stroke-width:1.9; }
+  .dg .dot-yes { fill:var(--blue); stroke:var(--blue); stroke-width:1.9; }
+  .dg .line { stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; }
+  .dg text { font-family:var(--marker); fill:currentColor; }
+  .dg .t { font-size:15px; font-weight:700; }
+  .dg .s { font-size:12.5px; }
+  .dg .m { font-size:11px; fill:var(--ink-soft); font-family:var(--slip); letter-spacing:.05em; }
+  figcaption { margin-top:14px; font-size:14.5px; line-height:1.55; color:var(--ink-soft); max-width:70ch; }
+
+  .pcts { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:18px; }
+  .pct .n { display:block; font-size:clamp(32px,4.4vw,46px); font-weight:700; line-height:1;
+            color:var(--blue); font-variant-numeric:tabular-nums; }
+  .pct .l { display:block; margin-top:7px; font-size:15px; color:var(--ink); }
+  .pct.zero .n { color:var(--ink-soft); }
+  .pct.all .n { color:var(--red); }
+
+  .shout { font-size:clamp(17px,2.1vw,21px); line-height:1.45; margin:0; max-width:44ch; }
+
+  .sys { display:flex; flex-wrap:wrap; gap:10px; }
+  .sys span { padding:9px 15px; border:2px dashed var(--green); border-radius:6px;
+              font-size:14.5px; color:var(--ink); }
+
+  .lines { display:grid; gap:11px; margin:0; padding:0; list-style:none; }
+  .lines li { font-size:16px; line-height:1.45; padding-left:20px; position:relative; }
+  .lines li::before { content:""; position:absolute; left:0; top:.62em; width:10px; height:2px;
+                      background:var(--ink); }
+  .lines li.no::before { background:var(--red); }
+  .lines li.no { color:var(--red); }
+
+  .slip { position:relative; margin:8px auto 0; max-width:720px; padding:24px 26px 22px;
+          background:var(--slip-bg); border:1px solid var(--slip-edge);
+          box-shadow:0 6px 18px rgba(0,0,0,.14); transform:rotate(-.5deg);
+          font-family:var(--slip); font-size:12px; line-height:1.65; color:var(--ink-soft); }
+  .slip::before, .slip::after { content:""; position:absolute; top:-13px; width:92px; height:26px;
+                                background:var(--tape); }
+  .slip::before { left:28px; transform:rotate(-3deg); }
+  .slip::after { right:28px; transform:rotate(2deg); }
+  .slip h4 { margin:0 0 12px; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink); }
+  .slip p { margin:0 0 12px; } .slip p:last-child { margin-bottom:0; }
+  .slip b { color:var(--ink); font-weight:700; }
+
+  .tray { position:relative; margin:clamp(30px,4vw,44px) calc(clamp(18px,4vw,56px) * -1) 0;
+          padding:18px clamp(18px,4vw,56px) 20px;
+          background:linear-gradient(var(--board-lip), color-mix(in srgb, var(--board-lip) 82%, #000));
+          border-top:2px solid var(--trim); display:flex; flex-wrap:wrap; gap:12px 30px; align-items:center; }
+  .pen { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--ink); }
+  .pen i { display:block; width:46px; height:11px; border-radius:2px 5px 5px 2px;
+           background:linear-gradient(90deg, var(--pc) 0 72%, color-mix(in srgb, var(--pc) 55%, #ffffff) 72% 100%);
+           box-shadow:0 1px 2px rgba(0,0,0,.3); flex:none; }
+
+  @media (max-width:600px) { .board { padding-left:18px; padding-right:18px; } .slip { transform:none; } }
+</style>
+
+<div class="board">
+  <div class="ghost g1"></div>
+  <div class="ghost g2"></div>
+
+  <div class="stack">
+
+    <header>
+      <p class="eyebrow">Surge &middot; training board &middot; internal</p>
+      <h1>Law of Averages</h1>
+      <p class="standfirst">Proven principles for maximizing success.</p>
+      <div class="acro">
+        <b>G</b><span>oals</span>
+        <b>R</b><span>atios</span>
+        <b>A</b><span>ttitude</span>
+        <b>C</b><span>onsistency</span>
+        <b>E</b><span>xposure</span>
+      </div>
+    </header>
+
+    <svg class="rule" viewBox="0 0 1000 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M2 7 C 170 2, 310 11, 480 5 S 770 10, 998 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+
+    <section>
+      <div class="head"><span class="letter">G</span><h2>Goals</h2></div>
+      <p class="kicker">Talk to 100 people.</p>
+      <figure>
+        <div class="scroller">
+          <svg class="dg" viewBox="0 0 700 400" role="img"
+               aria-label="One hundred circles: ninety open circles in a block of nine rows representing the people who say no, and ten filled circles below representing the ten who say yes.">
+            <defs>
+              <filter id="lr" x="-4%" y="-4%" width="108%" height="108%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="5" result="n"/>
+                <feDisplacementMap in="SourceGraphic" in2="n" scale="1.9" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+              <g id="rowNo">
+                <circle class="dot" cx="12" cy="12" r="10"/><circle class="dot" cx="46" cy="12" r="10"/>
+                <circle class="dot" cx="80" cy="12" r="10"/><circle class="dot" cx="114" cy="12" r="10"/>
+                <circle class="dot" cx="148" cy="12" r="10"/><circle class="dot" cx="182" cy="12" r="10"/>
+                <circle class="dot" cx="216" cy="12" r="10"/><circle class="dot" cx="250" cy="12" r="10"/>
+                <circle class="dot" cx="284" cy="12" r="10"/><circle class="dot" cx="318" cy="12" r="10"/>
+              </g>
+              <g id="rowYes">
+                <circle class="dot-yes" cx="12" cy="12" r="10"/><circle class="dot-yes" cx="46" cy="12" r="10"/>
+                <circle class="dot-yes" cx="80" cy="12" r="10"/><circle class="dot-yes" cx="114" cy="12" r="10"/>
+                <circle class="dot-yes" cx="148" cy="12" r="10"/><circle class="dot-yes" cx="182" cy="12" r="10"/>
+                <circle class="dot-yes" cx="216" cy="12" r="10"/><circle class="dot-yes" cx="250" cy="12" r="10"/>
+                <circle class="dot-yes" cx="284" cy="12" r="10"/><circle class="dot-yes" cx="318" cy="12" r="10"/>
+              </g>
+            </defs>
+
+            <g filter="url(#lr)" transform="translate(20 44)">
+              <use href="#rowNo" y="0"/>   <use href="#rowNo" y="34"/>  <use href="#rowNo" y="68"/>
+              <use href="#rowNo" y="102"/> <use href="#rowNo" y="136"/> <use href="#rowNo" y="170"/>
+              <use href="#rowNo" y="204"/> <use href="#rowNo" y="238"/> <use href="#rowNo" y="272"/>
+              <use href="#rowYes" y="326"/>
+            </g>
+
+            <text class="m" x="20" y="28">100 PEOPLE</text>
+            <text class="t" x="404" y="180">90 people say &ldquo;No&rdquo;</text>
+            <text class="t" x="404" y="392" style="fill:var(--blue)">10 people say &ldquo;yes&rdquo;</text>
+            <line class="line" x1="380" y1="176" x2="368" y2="176"/>
+            <line class="line" x1="380" y1="388" x2="368" y2="388" style="stroke:var(--blue)"/>
+          </svg>
+        </div>
+        <figcaption>The ninety are not failures, they are the cost of the ten. Every open circle has to be drawn before a filled one appears.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <div class="head"><span class="letter">R</span><h2>Ratios</h2></div>
+      <p class="kicker">How many conversations it takes to get one yes. Fewer is better.</p>
+      <figure>
+        <div class="scroller">
+          <svg class="dg" viewBox="0 0 700 230" role="img"
+               aria-label="Three ratio rows: training is one yes in fifteen conversations, standard is one in ten, great is one in five. Each row shows the conversations as circles with the yes filled at the end.">
+            <defs>
+              <filter id="lr2" x="-4%" y="-8%" width="108%" height="116%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="17" result="n2"/>
+                <feDisplacementMap in="SourceGraphic" in2="n2" scale="1.9" xChannelSelector="R" yChannelSelector="G"/>
+              </filter>
+            </defs>
+
+            <g filter="url(#lr2)">
+              <g transform="translate(196 44)">
+                <circle class="dot" cx="0" cy="0" r="9"/><circle class="dot" cx="30" cy="0" r="9"/>
+                <circle class="dot" cx="60" cy="0" r="9"/><circle class="dot" cx="90" cy="0" r="9"/>
+                <circle class="dot" cx="120" cy="0" r="9"/><circle class="dot" cx="150" cy="0" r="9"/>
+                <circle class="dot" cx="180" cy="0" r="9"/><circle class="dot" cx="210" cy="0" r="9"/>
+                <circle class="dot" cx="240" cy="0" r="9"/><circle class="dot" cx="270" cy="0" r="9"/>
+                <circle class="dot" cx="300" cy="0" r="9"/><circle class="dot" cx="330" cy="0" r="9"/>
+                <circle class="dot" cx="360" cy="0" r="9"/><circle class="dot" cx="390" cy="0" r="9"/>
+                <circle class="dot-yes" cx="420" cy="0" r="9"/>
+              </g>
+              <g transform="translate(196 116)">
+                <circle class="dot" cx="0" cy="0" r="9"/><circle class="dot" cx="30" cy="0" r="9"/>
+                <circle class="dot" cx="60" cy="0" r="9"/><circle class="dot" cx="90" cy="0" r="9"/>
+                <circle class="dot" cx="120" cy="0" r="9"/><circle class="dot" cx="150" cy="0" r="9"/>
+                <circle class="dot" cx="180" cy="0" r="9"/><circle class="dot" cx="210" cy="0" r="9"/>
+                <circle class="dot" cx="240" cy="0" r="9"/><circle class="dot-yes" cx="270" cy="0" r="9"/>
+              </g>
+              <g transform="translate(196 188)">
+                <circle class="dot" cx="0" cy="0" r="9"/><circle class="dot" cx="30" cy="0" r="9"/>
+                <circle class="dot" cx="60" cy="0" r="9"/><circle class="dot" cx="90" cy="0" r="9"/>
+                <circle class="dot-yes" cx="120" cy="0" r="9"/>
+              </g>
+            </g>
+
+            <text class="t" x="20" y="50">1:15</text>
+            <text class="s" x="92" y="50">Training</text>
+            <text class="t" x="20" y="122">1:10</text>
+            <text class="s" x="92" y="122">Standard</text>
+            <text class="t" x="20" y="194">1:05</text>
+            <text class="s" x="92" y="194">Great</text>
+          </svg>
+        </div>
+        <figcaption>The Standard row is the same claim as the hundred circles above, seen close up: one in ten. Getting great does not mean more yeses per day, it means fewer conversations spent on each one.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <div class="head"><span class="letter">A</span><h2>Attitude</h2></div>
+      <div class="pcts">
+        <div class="pct"><span class="n">99%</span><span class="l">attitude</span></div>
+        <div class="pct"><span class="n">1%</span><span class="l">ability</span></div>
+        <div class="pct zero"><span class="n">0%</span><span class="l">luck</span></div>
+        <div class="pct all"><span class="n">100%</span><span class="l">you</span></div>
+      </div>
+      <p class="shout">No bad weather, location, or event. Have fun!</p>
+    </section>
+
+    <section>
+      <div class="head"><span class="letter">C</span><h2>Consistency</h2></div>
+      <p class="shout">The pitch stays the same. The delivery changes.</p>
+      <p class="kicker">Work the system:</p>
+      <div class="sys">
+        <span>5 Steps</span>
+        <span>Successful Business Practices</span>
+        <span>Gifts</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="head"><span class="letter">E</span><h2>Exposure</h2></div>
+      <p class="shout">You miss 100% of the shots you don&rsquo;t take.</p>
+      <ul class="lines">
+        <li>It&rsquo;s a numbers game, not a sale game.</li>
+        <li class="no">No cherry-picking.</li>
+        <li class="no">No pre-judging.</li>
+        <li>Talk to everyone.</li>
+      </ul>
+    </section>
+
+    <div class="slip">
+      <h4>Board notes</h4>
+      <p><b>Source:</b> <code>training-source/Law of averages.docx</code>, extracted 2026-08-05. GRACE is reproduced as written, including the Attitude percentages and &ldquo;no bad weather, location, or event.&rdquo; Nothing was softened &mdash; this is the internal board.</p>
+      <p><b>Three references are named but not expanded</b> &mdash; 5 Steps, Successful Business Practices, and Gifts. They're in dashed boxes because the source doesn't say what's in them. Send those docs and they become their own boards.</p>
+      <p><b>The numbers agree with each other.</b> 100 people at 90/10 is exactly the 1:10 called Standard, so the Goals figure and the Ratios scale are one claim from two angles. Worth pointing out when teaching it.</p>
+      <p><b>Not for external use.</b> A public version of this board exists separately, with the Attitude section reframed.</p>
+    </div>
+
+  </div>
+
+  <div class="tray" aria-label="Marker key">
+    <span class="pen" style="--pc: var(--ink)"><i></i>the teaching</span>
+    <span class="pen" style="--pc: var(--blue)"><i></i>the numbers</span>
+    <span class="pen" style="--pc: var(--red)"><i></i>what costs you conversations</span>
+    <span class="pen" style="--pc: var(--green)"><i></i>covered in its own document</span>
+  </div>
+</div>

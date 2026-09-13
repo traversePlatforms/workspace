@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Lead Engine</title>
+<style>
+  /* ---- Tokens: Surge palette, dark-first ----
+     Structural system is the Sixfold sheet's; the colour is Surge's own
+     (green #4abe4a / grey #ababab / near-black ink), plus one functional
+     token, --halt, used ONLY for statutory prohibitions. */
+  :root {
+    --ground: #0a0a0a;
+    --surface: #141414;
+    --lift: #1c1c1c;
+    --seam: #262626;
+    --ink: #f4f4f4;
+    --ink-dim: #b8b8b8;
+    --ink-faint: #7d817d;
+    --green: #4abe4a;
+    --green-quiet: rgba(74,190,74,0.13);
+    --grey: #ababab;
+    --grey-quiet: rgba(171,171,171,0.11);
+    --halt: #e2543d;
+    --halt-quiet: rgba(226,84,61,0.13);
+    --logo-filter: invert(1);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #f4f4f4;
+      --surface: #e9eae9;
+      --lift: #e0e2e0;
+      --seam: #c8ccc8;
+      --ink: #0a0a0a;
+      --ink-dim: #3c403c;
+      --ink-faint: #6b6f6b;
+      --green: #1c6b1c;
+      --green-quiet: rgba(28,107,28,0.10);
+      --grey: #5e625e;
+      --grey-quiet: rgba(94,98,94,0.09);
+      --halt: #a8331d;
+      --halt-quiet: rgba(168,51,29,0.09);
+      --logo-filter: none;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f4f4f4;
+    --surface: #e9eae9;
+    --lift: #e0e2e0;
+    --seam: #c8ccc8;
+    --ink: #0a0a0a;
+    --ink-dim: #3c403c;
+    --ink-faint: #6b6f6b;
+    --green: #1c6b1c;
+    --green-quiet: rgba(28,107,28,0.10);
+    --grey: #5e625e;
+    --grey-quiet: rgba(94,98,94,0.09);
+    --halt: #a8331d;
+    --halt-quiet: rgba(168,51,29,0.09);
+    --logo-filter: none;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 14rem minmax(0, 1fr); }
+  }
+
+  /* ---- Rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1000px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 2.6rem 1.4rem 2.6rem var(--pad);
+      border-right: 1px solid var(--seam);
+    }
+  }
+  .rail-title {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.36rem;
+    counter-reset: rl;
+  }
+  .rail a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.4rem;
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    padding: 0.2rem 0;
+  }
+  .rail a::before {
+    counter-increment: rl;
+    content: counter(rl, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    padding-top: 0.15rem;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--green); }
+  .rail a:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+  main { padding: 0 var(--pad) 5rem; min-width: 0; }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 3.2rem 0 2rem;
+    border-bottom: 3px solid var(--green);
+  }
+  .brandline {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.1rem;
+    flex-wrap: wrap;
+  }
+  .brandline img {
+    width: 168px;
+    max-width: 46vw;
+    height: auto;
+    display: block;
+    filter: var(--logo-filter);
+  }
+  .descriptor {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin: 0 0 0.35rem;
+  }
+  h1.doctitle {
+    font-family: var(--f-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 1.9rem 0 0;
+    color: var(--ink);
+  }
+  .metastrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin: 1.2rem 0 0;
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  .metastrip b { color: var(--ink-dim); font-weight: 500; }
+  .stamp {
+    display: inline-block;
+    margin: 1.3rem 0 0;
+    padding: 0.4rem 0.7rem;
+    background: var(--green-quiet);
+    border-left: 3px solid var(--green);
+    font-family: var(--f-data);
+    font-size: 0.73rem;
+    color: var(--ink);
+  }
+  .restricted {
+    margin: 1rem 0 0;
+    padding: 0.95rem 1.1rem;
+    background: var(--halt-quiet);
+    border: 1px solid var(--halt);
+    max-width: none;
+  }
+  .restricted h4 { color: var(--halt); margin: 0 0 0.4rem; }
+  .restricted p { margin: 0; font-size: 0.9rem; color: var(--ink-dim); max-width: none; }
+
+  /* ---- Thesis ---- */
+  .thesis { margin: 2.6rem 0 0; padding: 1.9rem 0 0; }
+  .thesis p.claim {
+    font-family: var(--f-display);
+    font-size: clamp(1.55rem, 4.6vw, 2.35rem);
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--green);
+  }
+  .thesis p.sub { max-width: var(--measure); color: var(--ink-dim); margin: 1rem 0 0; }
+
+  /* ---- Sections ---- */
+  section { padding: 3.1rem 0 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.7rem;
+    align-items: baseline;
+    border-top: 1px solid var(--seam);
+    padding-top: 1rem;
+    margin-bottom: 1.3rem;
+  }
+  .sec-num { font-family: var(--f-data); font-size: 0.78rem; color: var(--green); }
+  .sec-head h2 {
+    font-family: var(--f-display);
+    font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+    font-weight: 400;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .sec-head .kicker {
+    grid-column: 2;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-size: 0.98rem;
+    font-weight: 650;
+    margin: 2rem 0 0.55rem;
+    color: var(--ink);
+  }
+  h4 {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin: 1.6rem 0 0.5rem;
+  }
+  p, ul, ol { max-width: var(--measure); }
+  p { margin: 0 0 0.95rem; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0 0 0.5rem; }
+  li::marker { color: var(--green); }
+  strong { font-weight: 650; }
+  em { font-style: italic; color: var(--ink); }
+  a { color: var(--green); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  code { font-family: var(--f-data); font-size: 0.9em; }
+  .lede { font-size: 1.06rem; color: var(--ink); }
+
+  /* ---- Gate strip ---- */
+  .gate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.8rem;
+    padding: 0.7rem 0.95rem;
+    margin: 0 0 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--halt);
+    font-size: 0.87rem;
+    color: var(--ink-dim);
+    max-width: none;
+  }
+  .gate.clear { border-left-color: var(--green); }
+  .gate .glabel {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--halt);
+    flex: none;
+  }
+  .gate.clear .glabel { color: var(--green); }
+  .gate p { margin: 0; max-width: none; }
+
+  /* ---- Platform blocks ---- */
+  .platform {
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--green);
+    background: var(--surface);
+    padding: 1.4rem 1.3rem;
+    margin: 1.4rem 0;
+  }
+  .platform.hold { border-left-color: var(--grey); }
+  .platform.no { border-left-color: var(--halt); }
+  .phead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.9rem;
+    margin: 0 0 0.7rem;
+  }
+  .phead h3 { margin: 0; font-size: 1.12rem; font-family: var(--f-display); font-weight: 400; }
+  .chip {
+    font-family: var(--f-data);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--green);
+    color: var(--green);
+    background: var(--green-quiet);
+    flex: none;
+  }
+  .chip.wait { border-color: var(--grey); color: var(--grey); background: var(--grey-quiet); }
+  .chip.stopchip { border-color: var(--halt); color: var(--halt); background: var(--halt-quiet); }
+  .chip.off { border-color: var(--seam); color: var(--ink-faint); background: transparent; }
+  .platform > p:last-child, .platform > ul:last-child { margin-bottom: 0; }
+  .platform .why {
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    margin: 0 0 0.9rem;
+    max-width: none;
+  }
+
+  /* ---- Card grid ---- */
+  .cards {
+    display: grid;
+    /* Wider min track keeps card copy off narrow ribbons. Hairlines live on
+       the cards, not on a container background, so a part-filled last row
+       cannot show empty seam-coloured cells. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0 1.7rem;
+  }
+  .card {
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    padding: 1.15rem 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card .cname {
+    font-family: var(--f-display);
+    font-size: 1.12rem;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .card .cnote { font-size: 0.87rem; color: var(--ink-dim); margin: 0; max-width: none; }
+  .card .chip { align-self: flex-start; }
+
+  /* ---- Callouts ---- */
+  .stop, .keep {
+    padding: 1.05rem 1.15rem;
+    margin: 1.4rem 0;
+    background: var(--halt-quiet);
+    border-left: 3px solid var(--halt);
+  }
+  .keep { background: var(--green-quiet); border-left-color: var(--green); }
+  .stop > :last-child, .keep > :last-child { margin-bottom: 0; }
+  .stop h4 { color: var(--halt); margin-top: 0; }
+  .keep h4 { color: var(--green); margin-top: 0; }
+
+  /* ---- Statute quote ---- */
+  .statute {
+    margin: 1.4rem 0;
+    padding: 1.1rem 1.2rem;
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    border-top: 3px solid var(--halt);
+    max-width: none;
+  }
+  .statute .cite {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--halt);
+    margin: 0 0 0.6rem;
+    max-width: none;
+  }
+  .statute blockquote {
+    margin: 0;
+    font-family: var(--f-display);
+    font-size: 1.06rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  /* ---- Table ---- */
+  .tablewrap { overflow-x: auto; margin: 1.4rem 0 1.7rem; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.89rem; }
+  thead th {
+    background: var(--lift);
+    text-align: left;
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--grey);
+    font-weight: 400;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--seam);
+  }
+  tbody td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--seam); color: var(--ink-dim); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody td:first-child { color: var(--ink); }
+
+  /* ---- Ordered run of operations ---- */
+  .runlist { counter-reset: rn; list-style: none; padding: 0; margin: 1.3rem 0 1.6rem; max-width: var(--measure); }
+  .runlist li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--seam);
+    margin: 0;
+  }
+  .runlist li:last-child { border-bottom: 0; }
+  .runlist li::before {
+    counter-increment: rn;
+    content: counter(rn, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--green);
+    padding-top: 0.22rem;
+  }
+
+  /* ---- Log ---- */
+  .log { display: flex; flex-direction: column; gap: 1px; background: var(--seam); border: 1px solid var(--seam); margin: 1.3rem 0; }
+  .log > div { background: var(--lift); padding: 1.1rem 1.15rem; }
+  .log h4 { margin-top: 0; }
+  .log ul { margin-bottom: 0; max-width: none; }
+  .log li { font-size: 0.88rem; color: var(--ink-dim); }
+  .tag-open h4 { color: var(--halt); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--seam);
+    font-family: var(--f-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+</style>
+</head>
+<body>
+
+<style>
+  /* ---- Extensions to the shared platform-sheet block. Additions only. ---- */
+  .internal {
+    padding: 1.15rem 1.25rem;
+    margin: 1.5rem 0;
+    background: var(--halt-quiet);
+    border: 1px solid var(--halt);
+    border-left: 3px solid var(--halt);
+  }
+  .internal .lock {
+    font-family: var(--f-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--halt);
+    margin: 0 0 0.65rem;
+    max-width: none;
+  }
+  .internal > :last-child { margin-bottom: 0; }
+  .internal ul { margin-bottom: 0.95rem; }
+
+  .twoup {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0 1.7rem;
+  }
+  .twoup > div {
+    background: var(--lift);
+    border: 1px solid var(--seam);
+    border-top: 3px solid var(--green);
+    padding: 1.25rem 1.2rem;
+  }
+  .twoup .mname {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 1.2rem;
+    line-height: 1.15;
+    color: var(--ink);
+    margin: 0 0 0.4rem;
+  }
+  .twoup p { margin: 0; font-size: 0.87rem; color: var(--ink-dim); max-width: none; }
+
+  tbody td { font-variant-numeric: tabular-nums; }
+  tbody tr.key td { background: var(--green-quiet); color: var(--ink); }
+
+  .steps { counter-reset: sn; }
+  .kills li::marker { color: var(--halt); }
+</style>
+
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <p class="rail-title">Contents</p>
+    <ol>
+      <li><a href="#s1">What a lead is worth</a></li>
+      <li><a href="#s2">Stage 0 — the plumbing</a></li>
+      <li><a href="#s3">Tier 1 — free, available now</a></li>
+      <li><a href="#s4">Tier 2 — paid and capped</a></li>
+      <li><a href="#s5">Tier 3 — compounding</a></li>
+      <li><a href="#s6">Speed to lead</a></li>
+      <li><a href="#s7">The funnel you hold</a></li>
+      <li><a href="#s8">Build order</a></li>
+      <li><a href="#s9">What kills this</a></li>
+      <li><a href="#s10">Fact-check log</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="brandline">
+        <img src="data:image/png;base64,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" alt="Surge">
+        <p class="descriptor">Online Lead Generation</p>
+      </div>
+
+      <h1 class="doctitle">How a lead arrives on a screen and leaves as a booked inspection</h1>
+
+      <div class="metastrip">
+        <span><b>Prepared</b> 2026-08-18</span>
+        <span><b>Companion to</b> the platform sheet</span>
+        <span><b>Scope</b> Online only — no doors, no bought lists</span>
+      </div>
+
+      <p class="stamp">Plan. Nothing built, spent, published or scheduled.</p>
+
+      <div class="restricted">
+        <h4>Restricted — internal, context only</h4>
+        <p>This sheet names the client, and §1 contains the commission structure, which is <strong>never publishable in any register</strong> — not the splits, not the stages, not the income motive. Client identity is Tier&nbsp;4: sector only. Nothing here goes into a draft, a caption, alt text, a filename or a payload.</p>
+      </div>
+    </header>
+
+    <div class="thesis">
+      <p class="claim">Online-only doesn't change what converts. It changes where the lead starts.</p>
+      <p class="sub">The field engine already works — a rep inspects, same day, free, and the client closes and repairs. Take away the door and the call list and everything downstream of the inspection is unchanged. What changes is the top: a lead now arrives from someone who has never met anyone from Surge, whose interest decays by the hour, and who is being called by three other contractors at the same time. That moves the bottleneck onto two numbers nobody currently tracks — <em>cost per booked inspection</em> and <em>median minutes to first call</em>. Everything here exists to produce them.</p>
+    </div>
+
+    <section id="s1">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>What an online lead is, and what each stage is worth</h2>
+        <p class="kicker">The definition decides the metric</p>
+      </div>
+
+      <p class="lede"><strong>A lead is not a form fill.</strong> A lead is a property owner with plausible storm damage who has a free inspection on the calendar. Anything short of that is a phone number.</p>
+
+      <p>That distinction is not pedantry, and the reason is economic.</p>
+
+      <div class="internal">
+        <p class="lock">Internal — never publishable, in any register</p>
+        <p>The commission splits into three equal parts by pipeline stage — <strong>lead, inspection, close: one third each.</strong></p>
+        <ul>
+          <li>Generate the lead alone — <strong>one third</strong>.</li>
+          <li>Generate it <em>and</em> inspect it — <strong>two thirds</strong>.</li>
+        </ul>
+        <p>A 100% increase in the take, for work Surge already performs, same day, for free. Which settles the metric: <strong>never cost per lead</strong>, always cost per <em>booked inspection</em> — because the inspection is where the second third lives.</p>
+        <p>It also reframes every cold form fill. An unanswered lead does not waste one third. It wastes two.</p>
+        <p>Pay structure, splits and the income motive stay out of drafts, site copy, flyers and captions entirely. Prioritisation context, nothing else.</p>
+      </div>
+
+      <div class="keep">
+        <h4>The practical consequence</h4>
+        <p>A channel producing 100 form fills and 8 inspections is worse than one producing 30 form fills and 15, at any price. Optimise the ads, the form and the follow-up for booked inspections, and treat lower raw volume as a feature rather than a problem.</p>
+      </div>
+    </section>
+
+    <section id="s2">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Stage 0 — the plumbing, before a dollar of spend</h2>
+        <p class="kicker">Five prerequisites, not a sequence</p>
+      </div>
+
+      <p>None costs money, all are load-bearing, and the order barely matters. What matters is that spending before they exist buys leads that leak out of a system which cannot hold them.</p>
+
+      <div class="cards">
+        <div class="card">
+          <span class="cname">A destination that can book</span>
+          <p class="cnote">Not a phone number. Visible <strong>same-day slot</strong>, address, damage type, optional photo. The homeowner's question is <em>when can someone look at it</em>.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Routing with an owner and a clock</span>
+          <p class="cnote">Who receives it, on which device, within how many minutes, and what happens if they don't. A rota, not a piece of software.</p>
+        </div>
+        <div class="card">
+          <span class="cname">The consent line</span>
+          <p class="cnote">One paragraph. Gate 3 of the platform sheet, and it blocks every paid channel until it is written.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Tracking that survives the handoff</span>
+          <p class="cnote">Source on every lead, carried through to booked, inspected and closed. Also the only proof of which leads were Surge's.</p>
+        </div>
+        <div class="card">
+          <span class="cname">A written follow-up sequence</span>
+          <p class="cnote">Text within minutes, call, second call next day, one more at day four, then stop. Written down, not remembered.</p>
+        </div>
+      </div>
+
+      <div class="stop">
+        <h4>Do not spend until the destination, the routing, the consent line and the tracking exist</h4>
+        <p>The platform sheet's gates are legal. These are operational, and skipping them is how a campaign produces leads, no revenue, and no explanation of why.</p>
+      </div>
+    </section>
+
+    <section id="s3">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Tier 1 — free, and available now</h2>
+        <p class="kicker">Costs time and nothing else</p>
+      </div>
+
+      <div class="gate clear">
+        <span class="glabel">Gate</span>
+        <p>The brand decision from the platform sheet. Nothing else.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>The client's Google Business Profile</h3>
+          <span class="chip">Ask for access</span>
+        </div>
+        <p class="why">The highest-value free asset in the campaign — and it is theirs, not Surge's</p>
+        <p>Once manager access exists: primary category, service area, photos, seeded Q&amp;A, and above all <strong>reviews</strong>.</p>
+        <p><strong>Reviews are the conversion asset for every other channel on this sheet.</strong> A paid click lands on a company name, and the homeowner searches that name before they call. Every dollar of Tier 2 is priced by what they find.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>The review engine</h3>
+          <span class="chip">Only thing that compounds</span>
+        </div>
+        <p class="why">Asked at completion, on site, phone in hand</p>
+        <p><strong>One platform named</strong> — Google first, every time. Asking for two at once reliably produces neither. Everything else in Tier 1 is a channel; this is an asset, and it is the one that makes the paid tiers cheaper over time.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Neighbourhood surfaces, after a storm</h3>
+          <span class="chip">Same day or not at all</span>
+        </div>
+        <p class="why">Nextdoor and local Facebook groups</p>
+        <p>Information-first: what the storm did, what a claim deadline looks like, free inspection available. Geographically identical to the swath and the fastest-moving surface there is. The register cautions in the platform sheet are not optional here — storm-chasing contractors are the most-flagged category on these platforms.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Storm-event pages</h3>
+          <span class="chip">Accumulates</span>
+        </div>
+        <p class="why">One page per named hail or wind event</p>
+        <p>The date, the counties hit, what it did, what a claim looks like, how to get looked at. Free, searchable, and factual — NOAA's public storm reports supply the specifics. The only organic asset that captures the exact moment of intent, and they stack up across seasons.</p>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Organic social on the existing accounts</h3>
+          <span class="chip wait">Not a lead channel</span>
+        </div>
+        <p class="why">Inspection footage, on accounts Surge already has</p>
+        <p>A credibility channel. It makes every paid channel cheaper by improving what the homeowner finds when they check — but counting leads from it will make it look like a failure, because that is not its job.</p>
+      </div>
+    </section>
+
+    <section id="s4">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Tier 2 — paid, capped, and testable</h2>
+        <p class="kicker">One channel at a time</p>
+      </div>
+
+      <div class="gate">
+        <span class="glabel">Gate</span>
+        <p>Consent line written, tracking live, someone on the clock to answer, credentials on the client's side.</p>
+      </div>
+
+      <div class="platform">
+        <div class="phead">
+          <h3>Meta lead ads</h3>
+          <span class="chip">Start here</span>
+        </div>
+        <p class="why">The only channel where the form can be qualified before it reaches a human</p>
+
+        <ul>
+          <li><strong>Use the higher-intent instant form, not the volume one.</strong> Meta's instant form types include more volume, higher intent and rich creative; the higher-intent version adds a review step so the person confirms their details before submitting.</li>
+          <li><strong>Add qualifying questions with conditional answers</strong>, so a wrong answer routes out rather than into the pipeline.</li>
+          <li><strong>Fewer and better, not cheaper.</strong> The room has a finite number of dials in an hour. Every dial spent on an unqualified form is a qualified lead going cold somewhere else.</li>
+          <li><strong>Geo to the swath, not the metro.</strong> The damage has a shape; the targeting should have the same shape.</li>
+          <li><strong>The creative is the inspection, not the roof.</strong> Same-day, at the door, free — the three things no competitor is advertising.</li>
+          <li><strong>Real-time delivery to the person who calls.</strong> Not a CSV somebody downloads on Monday. A Monday CSV is a bin.</li>
+        </ul>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Google Search</h3>
+          <span class="chip wait">Second, not first</span>
+        </div>
+        <p class="why">Highest intent, highest cost</p>
+        <p><strong>Negative keywords matter more than keywords</strong> — strip DIY, jobs, salary, "how to", training and insurance-advice traffic before it spends anything. Landing page must be the licensed party's, and every headline runs through gate 2 of the platform sheet.</p>
+      </div>
+
+      <div class="platform hold">
+        <div class="phead">
+          <h3>Local Services Ads</h3>
+          <span class="chip wait">Client's account, out of season</span>
+        </div>
+        <p class="why">Three-to-four week screening on their credentials</p>
+        <p>It does not fit inside a hail response. Either it is started well before a season or it is not started.</p>
+      </div>
+
+      <div class="stop">
+        <h4>One channel, capped, for one storm cycle</h4>
+        <p>Two at once means neither can be diagnosed — and the entire purpose of Tier 2 is to produce a cost per booked inspection that can be trusted.</p>
+      </div>
+    </section>
+
+    <section id="s5">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Tier 3 — compounding</h2>
+        <p class="kicker">Real, and none of it is next</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <span class="cname">Retargeting</span>
+          <span class="chip off">Needs traffic first</span>
+          <p class="cnote">Only once there is enough traffic to retarget and a page worth returning to.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Spanish-language campaigns</span>
+          <span class="chip off">Cheap edge, real work</span>
+          <p class="cnote">The client's site is already localised and Denver metro has the audience. Needs a Spanish-speaking rep on the call, or it produces leads nobody can close.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Inspection walkthrough video</span>
+          <span class="chip off">Search-durable</span>
+          <p class="cnote">Keeps working, unlike feed content. Depends on banked, clearance-checked footage.</p>
+        </div>
+        <div class="card">
+          <span class="cname">Email and SMS to the non-converted</span>
+          <span class="chip off">Within consent</span>
+          <p class="cnote">Inside the consent that was actually captured, and not one step beyond it.</p>
+        </div>
+        <div class="card">
+          <span class="cname">The client's referral programme</span>
+          <span class="chip off">Ask before building</span>
+          <p class="cnote">Their site carries per-user referral links with configurable payouts, currently marked inactive. A mechanism may already exist.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="s6">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Speed to lead — the operational rule</h2>
+        <p class="kicker">Real evidence, heavily distorted in circulation</p>
+      </div>
+
+      <p><strong>What the research says.</strong> <em>The Short Life of Online Sales Leads</em>, Harvard Business Review, March 2011 — Oldroyd, McElheran and Elkington audited 2,241 US companies with test web leads. 23% never responded at all, and the average response among those who did was 42 hours. Firms attempting contact <strong>within an hour</strong> were nearly <strong>7 times</strong> as likely to qualify the lead as those attempting an hour later, and more than <strong>60 times</strong> as likely as those waiting 24 hours or more.</p>
+
+      <div class="stop">
+        <h4>What it does not say</h4>
+        <p>The widely-quoted "call within 5 minutes and you are 21 times more likely to convert" is <strong>not</strong> from HBR. It comes from a separate vendor study by the company one of the authors led, and it is repeated everywhere without that attribution. Not used here.</p>
+      </div>
+
+      <p><strong>The rule for Surge:</strong> <em>someone attempts contact inside the hour, every hour the ads are running.</em> That forces a decision rather than a preference — either the ads run only while the room is staffed, or someone carries the phone outside those hours. Both are real choices with real costs, and pretending the question does not exist is exactly what produces a 42-hour average.</p>
+
+      <div class="keep">
+        <h4>The cheapest advantage on this sheet</h4>
+        <p>Every competitor buys the same clicks in the same swath at the same price. The one who calls first books the inspection — and the inspection is the second third.</p>
+      </div>
+    </section>
+
+    <section id="s7">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>The funnel you hold</h2>
+        <p class="kicker">A shape to fill, not numbers to expect</p>
+      </div>
+
+      <p><strong>There are no benchmark figures in this section, deliberately.</strong> No credible cost-per-lead or conversion number exists for this campaign, in this market, at this moment — and the ones published by agencies in this trade are either from a different market or invented outright. The first capped test produces the real ones.</p>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Stage</th><th>Record</th><th>Why it exists</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Clicks and impressions</td><td>spend, source, geo</td><td>The cost floor, nothing more</td></tr>
+            <tr><td>Form fills</td><td>source, timestamp</td><td>Raw volume — the vanity number</td></tr>
+            <tr><td>Contacted</td><td><strong>minutes to first attempt</strong></td><td>The only lever entirely inside Surge's control</td></tr>
+            <tr class="key"><td><strong>Booked inspections</strong></td><td>source</td><td><strong>The real denominator</strong></td></tr>
+            <tr><td>Inspected</td><td>same-day yes/no</td><td>Whether the promise in the ad was kept</td></tr>
+            <tr><td>Closed by the client</td><td>source</td><td>The number that actually pays</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Two numbers run the whole thing</h3>
+
+      <div class="twoup">
+        <div>
+          <span class="mname">Cost per booked inspection</span>
+          <p>By source. The only figure that can compare one channel against another honestly.</p>
+        </div>
+        <div>
+          <span class="mname">Median minutes to first contact</span>
+          <p>The lever that costs nothing to move and changes everything downstream of it.</p>
+        </div>
+      </div>
+
+      <p>Everything else on that table is diagnostics for when one of those two moves the wrong way.</p>
+    </section>
+
+    <section id="s8">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Build order</h2>
+        <p class="kicker">Free and blocking first, paid and measurable last</p>
+      </div>
+
+      <ol class="runlist steps">
+        <li><strong>Answer gate 1 of the platform sheet</strong> — whose brand runs the ads. Nothing below survives a different answer.</li>
+        <li><strong>Write the consent line.</strong> One paragraph; it unblocks every paid channel.</li>
+        <li><strong>Build the destination page</strong> with a visible same-day slot and a real booking action.</li>
+        <li><strong>Write the routing rota</strong> — named owner, device, response window, escalation.</li>
+        <li><strong>Stand up tracking</strong> from source through to booked and closed, and confirm it survives the handoff to the client.</li>
+        <li><strong>Write the follow-up sequence and the review-ask script.</strong> One platform named in the ask.</li>
+        <li><strong>Request manager access</strong> to the client's Business Profile; fix category, service area and photos.</li>
+        <li><strong>Start the review engine on the next inspection</strong>, before any ad spend — it prices everything that follows.</li>
+        <li><strong>Publish the first storm-event page</strong> off NOAA data for the most recent event.</li>
+        <li><strong>Run one capped Meta lead-ad test</strong> — higher-intent form, geo to the swath, real-time delivery.</li>
+        <li><strong>Hold it for one storm cycle</strong> and produce the two numbers. Change nothing mid-test.</li>
+        <li><strong>Then, and only then, add the second channel.</strong></li>
+      </ol>
+    </section>
+
+    <section id="s9">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>What kills this in this trade</h2>
+        <p class="kicker">Failure modes, in order of how often they happen</p>
+      </div>
+
+      <ul class="kills">
+        <li><strong>Buying volume the room cannot answer.</strong> The leads do not wait, and the unanswered ones cost two thirds, not one.</li>
+        <li><strong>Measuring cost per lead.</strong> It systematically rewards the cheapest and worst leads, and it will make the wrong channel look like the winner.</li>
+        <li><strong>Running ads outside staffed hours.</strong> A form submitted at 9pm and called at 10am is, on the HBR numbers, a different business.</li>
+        <li><strong>Letting the landing page make insurance promises.</strong> Straight into gate 2 of the platform sheet — and the penalty lands on the estimate for every job that ad produced.</li>
+        <li><strong>Routing that lives in one person's head.</strong> It works until that person is on a roof.</li>
+        <li><strong>Starting two channels at once.</strong> Guarantees neither can be diagnosed.</li>
+        <li><strong>Treating the form fill as the deliverable.</strong> It is the raw material. The booked inspection is the deliverable.</li>
+      </ul>
+    </section>
+
+    <section id="s10">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>Fact-check log</h2>
+        <p class="kicker">What was verified, corrected, and left open</p>
+      </div>
+
+      <div class="log">
+        <div>
+          <h4>Verified</h4>
+          <ul>
+            <li><strong>Lead response time</strong>: <em>The Short Life of Online Sales Leads</em>, Harvard Business Review, March 2011, by James B. Oldroyd, Kristina McElheran and David Elkington — <a href="https://hbr.org/2011/03/the-short-life-of-online-sales-leads">hbr.org</a>. Audit of 2,241 US companies; 23% never responded; 42-hour average among responders; contact within the hour nearly 7× as likely to qualify a lead as an hour later, and more than 60× as likely as 24 hours or more. <strong>Flag: the article body is paywalled.</strong> Authors, journal and date are confirmed; the figures come from a search summary rather than the body, and both HBR and the HBS faculty page refused automated fetch. Directionally safe to act on — confirm the specific multipliers against a copy of the article before they appear anywhere public.</li>
+            <li><strong>The "21× in 5 minutes" figure is excluded.</strong> It traces to a vendor study by InsideSales, the company one of the HBR authors led — not to the HBR research it is routinely attributed to.</li>
+            <li><strong>Meta instant forms</strong>: types include more volume, higher intent and rich creative, with the higher-intent type adding a review step for the person to confirm their information; conditional questions are supported and uploaded as a UTF-8 CSV — <a href="https://www.facebook.com/business/help/252352181957512/">About instant form types</a> and <a href="https://www.facebook.com/business/help/154286325106161">Add conditional answers to your instant form</a>. <strong>Flag:</strong> both pages are login-walled to automated fetch, including with a browser user agent; wording is from Meta's own help-centre listings rather than the rendered pages. Confirm behaviour in Ads Manager at build time.</li>
+            <li><strong>NOAA storm data</strong> for storm-event pages: SPC publishes preliminary storm reports with hail and wind archived from 1955, and NCEI's Storm Events Database holds records from 1950 — <a href="https://www.spc.noaa.gov/climo/">SPC storm reports</a>, <a href="https://www.ncei.noaa.gov/stormevents/">NCEI Storm Events Database</a>. Public domain.</li>
+            <li><strong>Everything legal or eligibility-related is carried by reference</strong> to the platform sheet rather than restated — Business Profile lead-generation ineligibility, LSA prerequisites and screening time, C.R.S. § 6-22-105, and Colorado telemarketer registration. Sources are logged there.</li>
+            <li><strong>Commission structure</strong> — stated by Matthew, 2026-08-18. Internal, unverified against any contract, and never content.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Corrected during research</h4>
+          <ul>
+            <li><strong>Agency blogs on Meta lead forms carried very specific unattributed figures, and they are not Meta's</strong>: that the higher-intent form "cuts raw lead volume by 30% but increases the qualify rate from 30% to 65–70%"; that "leads contacted within 5 minutes convert at rates up to 8 times higher"; and a named customer's "32% drop in invalid phone numbers and 2.2× more conversions." None traceable to Meta's own documentation. All excluded.</li>
+            <li><strong>Third instance this week</strong> of the same pattern, after the LSA insurance floors and the Google Guaranteed / Verified contradiction in the platform sheet. The home-services trade press fabricates specifics at a consistent rate, and the tell is always an unattributed percentage.</li>
+          </ul>
+        </div>
+
+        <div class="tag-open">
+          <h4>Unresolved — flagged, not guessed</h4>
+          <ul>
+            <li><strong>No cost-per-lead expectation for this market.</strong> Deliberate, not an omission. The first capped test produces it.</li>
+            <li><strong>Whether the call room can be staffed to answer inside the hour, and during which hours.</strong> This decides whether ads can run outside those hours at all.</li>
+            <li><strong>Whether the client's CRM or portal can accept a lead in real time</strong>, or whether Surge holds the record and passes it on.</li>
+            <li><strong>Whether attribution back to Surge survives the handoff.</strong> The commission depends on knowing which leads were Surge's, and nothing verifies it today. Highest-value open item on the sheet, entirely internal, and worth resolving before volume makes it expensive.</li>
+            <li><strong>The consent line wording.</strong> Still blocking every paid channel.</li>
+            <li><strong>Who owns the destination page and the phone number on it.</strong> Follows from gate 1, and it determines who keeps the pipeline if the relationship ends.</li>
+          </ul>
+        </div>
+      </div>
+
+      <footer>
+        <p>Nothing in this sheet has been built, spent, published, posted or scheduled, and nothing will be without explicit per-request authorisation.</p>
+        <p>Internal, context only. The commission structure in §1 is never publishable in any register. Client identity is Tier 4 — sector only, at any resolution.</p>
+      </footer>
+    </section>
+  </main>
+</div>
+
+</body>
+</html>

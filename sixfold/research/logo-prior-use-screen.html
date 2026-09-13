@@ -1,0 +1,226 @@
+<title>Has Anyone Else Drawn This Mark</title>
+<style>
+  :root {
+    --ground: #0E1512; --surface: #18211D; --lift: #1F2A25; --seam: #2E3D35;
+    --ink: #EDE7DC; --ink-dim: #B4BEB3; --ink-faint: #869184;
+    --ember: #E4703A; --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A; --moss-quiet: rgba(138,160,122,0.13);
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC; --surface: #E5DED1; --lift: #DCD4C4; --seam: #C6BCA9;
+      --ink: #0E1512; --ink-dim: #3E4A43; --ink-faint: #6A766E;
+      --ember: #B84C15; --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640; --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC; --surface: #E5DED1; --lift: #DCD4C4; --seam: #C6BCA9;
+    --ink: #0E1512; --ink-dim: #3E4A43; --ink-faint: #6A766E;
+    --ember: #B84C15; --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640; --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground); color: var(--ink); font-family: var(--f-body);
+    font-size: 16px; line-height: 1.62; margin: 0; -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1000px; margin: 0 auto; padding: 0 var(--pad) 5rem; }
+
+  .masthead { padding: 3rem 0 1.6rem; border-bottom: 3px solid var(--ember); display: flex; gap: 1.6rem; align-items: flex-start; flex-wrap: wrap; }
+  .masthead svg { width: 84px; flex: none; display: block; }
+  .kicker { font-family: var(--f-data); font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--moss); margin: 0 0 0.6rem; }
+  h1 { font-family: var(--f-display); font-size: clamp(2rem, 5.4vw, 3rem); letter-spacing: -0.02em; line-height: 1.05; margin: 0; max-width: 18ch; }
+  .standfirst { max-width: 60ch; color: var(--ink-dim); font-size: 1.02rem; margin: 1.1rem 0 0; }
+
+  section { padding-top: 2.9rem; }
+  h2 { font-family: var(--f-data); font-size: 0.67rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ember); margin: 0 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--seam); font-weight: 700; }
+  h3 { font-family: var(--f-display); font-size: 1.2rem; margin: 1.4rem 0 0.35rem; font-weight: 600; }
+  p { margin: 0 0 0.9rem; max-width: 64ch; }
+  a { color: var(--ember); }
+
+  .verdict { background: var(--lift); border-left: 4px solid var(--ember); border-radius: 0 5px 5px 0; padding: 1.3rem 1.5rem; }
+  .verdict p { margin: 0 0 0.7rem; }
+  .verdict p:last-child { margin: 0; }
+  .verdict strong { color: var(--ink); }
+
+  .caveat { background: var(--surface); border: 1px solid var(--ember); border-radius: 5px; padding: 1.2rem 1.4rem; }
+  .caveat .lab { font-family: var(--f-data); font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ember); font-weight: 700; display: block; margin-bottom: 0.5rem; }
+  .caveat p { font-size: 0.93rem; color: var(--ink-dim); margin: 0 0 0.6rem; }
+  .caveat p:last-child { margin: 0; }
+
+  .tbl { width: 100%; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.6rem 0.8rem 0.6rem 0; border-bottom: 1px solid var(--seam); vertical-align: top; }
+  thead th { font-family: var(--f-data); font-size: 0.58rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  td.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .op { font-weight: 650; }
+  .none { font-family: var(--f-data); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--moss); white-space: nowrap; }
+  .near { font-family: var(--f-data); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ember); white-space: nowrap; }
+  .na { font-family: var(--f-data); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; }
+
+  .split { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .split { grid-template-columns: 1fr 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--seam); border-radius: 5px; padding: 1.1rem 1.3rem; }
+  .card h4 { font-family: var(--f-body); font-size: 0.95rem; margin: 0 0 0.4rem; font-weight: 650; }
+  .card p { font-size: 0.9rem; color: var(--ink-dim); margin: 0; }
+  .card.generic { border-left: 3px solid var(--ink-faint); }
+  .card.ours { border-left: 3px solid var(--ember); }
+
+  ol.next { margin: 0; padding-left: 0; list-style: none; counter-reset: s; display: flex; flex-direction: column; gap: 0.9rem; }
+  ol.next li { display: grid; grid-template-columns: 1.9rem 1fr; gap: 0.5rem; align-items: start; }
+  ol.next li::before { counter-increment: s; content: counter(s, decimal-leading-zero); font-family: var(--f-data); font-size: 0.68rem; color: var(--ember); font-weight: 700; padding-top: 0.25rem; }
+  ol.next b { display: block; font-size: 0.97rem; }
+  ol.next span { font-size: 0.9rem; color: var(--ink-dim); }
+
+  .stat { display: flex; gap: 2rem; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--seam); border-radius: 5px; padding: 1.3rem 1.5rem; }
+  .stat div { min-width: 130px; }
+  .stat .n { font-family: var(--f-display); font-size: 2rem; color: var(--ember); line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 0.8rem; color: var(--ink-dim); margin-top: 0.3rem; display: block; }
+</style>
+
+<main>
+  <header class="masthead">
+    <span id="mark"></span>
+    <div>
+      <p class="kicker">Sixfold · Preliminary screen · 19 Aug 2026</p>
+      <h1>Has anyone else drawn this mark?</h1>
+    </div>
+  </header>
+  <p class="standfirst">A search of the US trademark register and of thirteen Colorado operators in the same trade, whose logos were downloaded and inspected one by one.</p>
+
+  <section>
+    <h2>The short answer</h2>
+    <div class="verdict">
+      <p><strong>Nothing found resembles it.</strong> No mark in the trade combines flat geometric ascending triangles with a tree and roots, and no "Sixfold" trademark exists in the land or construction classes.</p>
+      <p>The nuance worth carrying into the room: <strong>the ingredients are generic, the arrangement is not.</strong> Mountains and conifers are among the most heavily worked elements in this sector — 11,430 registered figurative marks carry one or the other in the two relevant service classes alone. What nobody else is doing is drawing them as flat overlapping triangles stepping up in opacity. And nobody at all is drawing roots.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What this screen could not do</h2>
+    <div class="caveat">
+      <span class="lab">Stated up front, not buried</span>
+      <p><strong>No reverse image search.</strong> That is the standard first tool for this question and I have no way to submit an image to one. It is the single largest gap here, and it is five minutes of work for anyone with a browser.</p>
+      <p><strong>No USPTO design-code search.</strong> The USPTO's search is a JavaScript application with no reachable public API — confirmed against four candidate endpoints. That is the one search that would authoritatively answer "does someone own this," and it needs a person at a browser or an attorney.</p>
+      <p>This is a preliminary screen, not a clearance, and not legal advice.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The name on the US register</h2>
+    <p>Searched through TMview, the multi-office database that mirrors USPTO records, and cross-checked against Justia's USPTO mirror. Three marks match on name — and <strong>none is in class 37 (construction, land clearing) or class 44 (forestry, agriculture, landscaping)</strong>.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Mark</th><th>Owner</th><th>App. no.</th><th>Status</th><th>Classes</th></tr></thead>
+        <tbody>
+          <tr><td class="op">SIXFOLD</td><td>Goodroot LLC</td><td class="num">99104283</td><td>Registered 2026-05-26</td><td class="num">35</td></tr>
+          <tr><td class="op">SIXFOLD</td><td>Sixfold GmbH</td><td class="num">88797645</td><td>Registered</td><td class="num">9, 35, 39, 42</td></tr>
+          <tr><td class="op">6F SIXFOLD</td><td>Sixfold NYC Inc.</td><td class="num">86645611</td><td>Ended</td><td class="num">18</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Two updates to the earlier name screen</h3>
+    <p>That screen could not reach USPTO at all, so both of these are new information rather than corrections of judgement.</p>
+    <div class="split">
+      <div class="card">
+        <h4>Sixfold AI looks unregistered</h4>
+        <p>The earlier screen flagged the New York insurance-AI company as the one real conflict and reasoned they were "likely to have filed." No US registration in their name appears in either database. That softens the urgency — but absence in a mirror is not proof of absence.</p>
+      </div>
+      <div class="card">
+        <h4>A new registration has appeared</h4>
+        <p>Goodroot LLC registered SIXFOLD in class 35 on 26 May 2026 — creative marketing plan development. Not the trade, so not a conflict, but it is the closest live commercial claim on the bare word and it is three months old.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Thirteen operators, marks inspected one by one</h2>
+    <p>This is the part that carries weight. A same-trade, same-state lookalike is the practical risk, registered or not — so each company's actual logo file was downloaded and viewed rather than inferred from its website copy.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Operator</th><th>What the mark actually is</th><th>Resemblance</th></tr></thead>
+        <tbody>
+          <tr><td class="op">Pikes Peak Forestry</td><td>Oval badge, illustrative snow-capped peak in purple and blue, conifer row at its base, arched type</td><td class="near">Closest subject</td></tr>
+          <tr><td class="op">Punchy Land Services</td><td>Hexagon badge, illustrative snow-capped range, trees, teal and cream</td><td class="near">Same subject</td></tr>
+          <tr><td class="op">Timberline Fire Mitigation</td><td>Circular badge, painted mountains, conifer forest and a river. Logo file is named <code>Gemini_Generated_Image_…</code></td><td class="near">Same subject</td></tr>
+          <tr><td class="op">Forestwerx</td><td>Circular black-and-white badge, three small conifers, "Urban Interface Contractors", est. 2020</td><td class="none">None</td></tr>
+          <tr><td class="op">Dove Creek Forestry</td><td>Two brown conifers flanking a shape, brown and tan wordmark</td><td class="none">None</td></tr>
+          <tr><td class="op">Splintered Forest</td><td>Splintered tree-stump icon plus wordmark, white</td><td class="none">None</td></tr>
+          <tr><td class="op">Bear Claw Fire Mitigation</td><td>Wordmark with orange claw slashes</td><td class="none">None</td></tr>
+          <tr><td class="op">Bear Claw Land Services</td><td>Four orange claw slashes — an unrelated company, same name, same idea</td><td class="none">None</td></tr>
+          <tr><td class="op">Fire Guard CO</td><td>Dark circular red emblem with a figure</td><td class="none">None</td></tr>
+          <tr><td class="op">Fire Mitigation Experts</td><td>Shield, "FME", flame droplet</td><td class="none">None</td></tr>
+          <tr><td class="op">Front Range Arborists</td><td>Site not reachable</td><td class="na">Not assessed</td></tr>
+          <tr><td class="op">Colorado Forestry &amp; Fire Mitigation</td><td>Site not reachable</td><td class="na">Not assessed</td></tr>
+          <tr><td class="op">Summit Forestry Management</td><td>Site reachable, no logo file locatable in the markup</td><td class="na">Not assessed</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>The pattern across all ten that resolved</h3>
+    <p>Every single one is a <strong>badge</strong> — circle, oval, hexagon or shield — holding either illustrative scenery or an animal-and-tool motif. Not one uses flat geometric shapes. Not one uses roots. The Sixfold mark does not look like this field, which answers the question asked and, separately, is an argument for the mark.</p>
+  </section>
+
+  <section>
+    <h2>How crowded the category is</h2>
+    <div class="stat">
+      <div><span class="n">11,430</span><span class="l">Registered figurative marks with a mountain or conifer code, service classes 37 + 44, all offices</span></div>
+      <div><span class="n">1,961</span><span class="l">Conifer-coded marks, US portion, all classes</span></div>
+      <div><span class="n">577</span><span class="l">Mountain-coded marks, US portion, all classes</span></div>
+    </div>
+    <p style="margin-top:1rem"><strong>Treat the two US figures as a bad undercount.</strong> The same database reports only <em>two</em> mountain-coded marks in class 37 across the entire US register, which cannot be true — the USPTO classifies designs under its own scheme rather than the international one, and that data travels across incompletely. The all-offices number is the honest one, and it points one way: a mountain or a conifer, on its own, is close to useless as a distinguishing element in this trade.</p>
+  </section>
+
+  <section>
+    <h2>Which parts of the mark are actually distinctive</h2>
+    <div class="split">
+      <div class="card generic">
+        <h4>Generic — do not rely on these</h4>
+        <p>A conifer. Triangular peaks. A horizontal ground line. Each appears in thousands of registrations, and none of them distinguishes anything on its own.</p>
+      </div>
+      <div class="card ours">
+        <h4>Distinctive — this is the mark</h4>
+        <p>Overlapping triangles stepping up in opacity as they ascend, and roots descending from one end of the ground line. Root imagery exists in logo design generally, but attached to a trunk — not hanging off a baseline under a mountain range. The two together turned up nothing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What to do next</h2>
+    <ol class="next">
+      <li><b>Run a reverse image search</b><span>Google Images, TinEye or Bing Visual Search. Drop the PNG in. This covers the ground I could not, and it takes five minutes.</span></li>
+      <li><b>Run a USPTO design-code search</b><span>Codes <code>05.01.01</code> (evergreen and conical trees) and <code>06.01.02</code> (mountains), crossed with classes 37 and 44, at tmsearch.uspto.gov. Trivial in a browser.</span></li>
+      <li><b>Attorney review before anything physical</b><span>Only if the mark is going onto vehicles, signage or apparel. The name screen already recommended this and the mark does not change it either way.</span></li>
+      <li><b>Nothing here blocks proceeding</b><span>Drafts, sheets and a website are fine. The exposure sits with durable physical application, not with digital work.</span></li>
+    </ol>
+  </section>
+</main>
+
+<script>
+  document.getElementById('mark').innerHTML =
+    '<svg viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">' +
+    '<path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>' +
+    '<path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>' +
+    '<path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>' +
+    '<path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>' +
+    '<g fill="#8AA07A"><rect x="20.4" y="77" width="3.2" height="7"/>' +
+    '<path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>' +
+    '<path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g>' +
+    '<rect x="4" y="86" width="92" height="5" fill="#8AA07A"/>' +
+    '<g fill="none" stroke="#8AA07A" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>' +
+    '<path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>' +
+    '<path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>' +
+    '<path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>' +
+    '<path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>' +
+    '<path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>' +
+    '<path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>' +
+    '<path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>' +
+    '<path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>' +
+    '<path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/></g></svg>';
+</script>
