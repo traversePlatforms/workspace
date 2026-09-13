@@ -55,7 +55,7 @@ Nothing here is referenced by live work. Delete any pile you're confident about.
 | `duplicate-photos/` | 46 files, 60 MB | Piles already labelled as duplicates, plus pre-rotation originals |
 | `surge-website-removed/` | 11 files | Pages and insight articles cut from the site |
 | `unrelated/` | 6 files | `claire-raccoon-manga/`, and a stray `sixfold$winrel.pdf` from the root |
-| `MOVE-MANIFEST-2026-09-13.csv` | — | **Every one of the 69 moves, from → to.** This is the undo log; there's no git here. |
+| `MOVE-MANIFEST-2026-09-13.csv` | — | **Every one of the 69 moves, from → to.** The record of where things came from — git history starts *after* the move. |
 
 ## Where does a new file go?
 
@@ -68,8 +68,28 @@ Nothing here is referenced by live work. Delete any pile you're confident about.
 - Your own rates, services, outreach → `matthew/`
 - A script used by two entities → `shared/tools/`
 
-## Two things to know
+## Version control
 
-**This is not a git repository.** There is no undo beyond the move manifest above. Worth running `git init` with `surge/brand/videos/` gitignored — 3.2 GB of `.MOV` does not belong in git, but the ~700 markdown and HTML files very much do.
+**Git repository since 2026-09-13**, branch `main`, no remote. First commit is the post-reorganisation restore point.
+
+**Tracked** (666 files, 62 MB): markdown, HTML, CSS, scripts, SVG, PDFs, the `.docx` training sources, small images, and the notes `.md` files that live inside `surge/brand/photos/`.
+
+**Not tracked** — see [.gitignore](.gitignore): raw video (3.2 GB), the `surge/brand/photos/` image tree (~500 MB), camera `.heic` originals, `node_modules/`, `**/deploy/dist/` bundles, `.zip`/`.wpress` archives, and the `_archive/` payload (its `README.md` and the move manifest *are* tracked).
+
+> **Git is not a backup for the excluded media.** Roughly 3.9 GB of video and photos sits outside version control and needs a real backup.
+
+Useful:
+```
+git log --oneline              # history
+git status --short             # what changed
+git diff                       # review before committing
+git checkout -- <file>         # undo edits to one file
+```
+
+`core.autocrlf` is `false` repo-local, deliberately — git must not rewrite line endings on files whose encoding was just repaired.
+
+## Two other things to know
+
+**There is a stale duplicate of this project in OneDrive.** `C:\Users\Surge Inc\OneDrive\Desktop\claude test 2` is ~3.7 GB, frozen around 2026-09-04, still on the old folder structure. Left over from when OneDrive Desktop backup was enabled. **This folder — the live one — is not synced to OneDrive.** Don't edit the OneDrive copy; decide whether to delete it or make it the backup.
 
 **Don't edit markdown with PowerShell.** `Get-Content -Raw` in PowerShell 5.1 reads UTF-8 as ANSI and silently double-encodes every em-dash on write. Use the editor, or Node. See the note at the end of [CLAUDE.md](CLAUDE.md).

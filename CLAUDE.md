@@ -121,4 +121,6 @@ Each draft contains the post, alternate hooks, lines cut with the reason, and th
 
 **PowerShell 5.1 `Get-Content -Raw` reads UTF-8 files as ANSI.** Round-tripping a `.md` file through it double-encodes every em-dash and `·`. **Edit markdown with the Edit/Write tools, or with Node, never with a PowerShell read-modify-write.** This has now bitten twice — the first time is recorded in [surge/drafts/5-steps-build-value-carousel-draft.md](surge/drafts/5-steps-build-value-carousel-draft.md).
 
-**This is not a git repository** — there is no undo. Before any bulk move or rewrite, log what changed. The 2026-09-13 reorganisation manifest is [_archive/MOVE-MANIFEST-2026-09-13.csv](_archive/MOVE-MANIFEST-2026-09-13.csv).
+**This is a git repository as of 2026-09-13** (branch `main`, no remote). Text is tracked; video, the photo tree, `node_modules`, site bundles and the `_archive/` payload are gitignored — so **git is not a backup for those**. Commit before any bulk move or rewrite. The 2026-09-13 reorganisation manifest is [_archive/MOVE-MANIFEST-2026-09-13.csv](_archive/MOVE-MANIFEST-2026-09-13.csv).
+
+`core.autocrlf` is `false` repo-local, deliberately — git must not rewrite line endings here.
