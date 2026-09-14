@@ -1,0 +1,142 @@
+<meta charset="utf-8">
+<title>Surge — Sixty-four cents in every charitable dollar comes from a person</title>
+<link rel="stylesheet" href="_fonts.css">
+<link rel="stylesheet" href="_logo.css">
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* The masthead is the photograph. Text sits on it under a scrim rather than
+     beside it, so the frame gets a usable size without costing the board a band
+     of its own. */
+  .board--photo{padding:0}
+  .band{height:430px;width:100%;flex:none;position:relative;overflow:hidden;background:var(--ink)}
+  /* 38% is the one pan position that keeps the subject's face clear of the
+     headline block. Lower and the type covers her; higher and she leaves frame. */
+  .band img{width:100%;height:100%;object-fit:cover;object-position:52% 38%;display:block}
+  .band::after{                        /* light at the top, heavy only where type lands */
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(to bottom,rgba(8,10,8,.42) 0%,rgba(8,10,8,.10) 24%,
+                                rgba(8,10,8,.48) 54%,rgba(8,10,8,.90) 100%);
+  }
+  .band .on{position:absolute;inset:auto 64px 40px;z-index:2;color:#fff}
+  .band .on .eyebrow{color:#cfd6cf}
+  .band .on h1{color:#fff}
+  .band .on h1 em{color:var(--green)}
+  .band .cap{position:absolute;right:64px;top:34px;z-index:2;font-family:var(--mono);
+             font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:#dfe5df;
+             text-align:right}
+  .body{flex:1;display:flex;flex-direction:column;padding:34px 64px 0}
+  .body > .standfirst{margin-top:0}
+  .body .rule{margin-top:26px}
+
+  /* ---- hero ---- */
+  .hero{display:flex;align-items:baseline;gap:22px;margin:0 0 20px}
+  .hero .fig{font-family:var(--sans);font-weight:800;font-size:68px;line-height:1;
+             letter-spacing:-.02em;color:var(--ink-l)}
+  .hero .of{font-size:18px;line-height:1.35;color:var(--soft-l);max-width:340px}
+
+  /* ---- part-to-whole -----------------------------------------------------
+     One emphasis hue for the segment the board is about; the other three share
+     a single de-emphasis grey and are separated by the 2px surface gap, not by
+     a ramp. Colouring four nominal sources darker-where-bigger would double-
+     encode the length the bar already shows. */
+  .stack{display:flex;gap:2px;height:52px;margin:0}
+  .stack > i{display:block;background:var(--mute-light);position:relative}
+  .stack > i:first-child{background:var(--green-deep)}
+  .stack > i:first-child::after{
+    content:"63.9% OF EVERY CHARITABLE DOLLAR";position:absolute;left:18px;top:50%;
+    transform:translateY(-50%);font-family:var(--mono);font-style:normal;font-size:13.5px;
+    letter-spacing:.14em;color:#fff;white-space:nowrap;
+  }
+
+  .legend{display:grid;grid-template-columns:repeat(4,1fr);gap:0 20px;margin-top:18px}
+  .legend .it{border-top:1px solid var(--paper-line);padding-top:11px}
+  .legend .sw{width:26px;height:6px;background:var(--mute-light);border-radius:1px;
+              display:block;margin-bottom:9px}
+  .legend .it:first-child .sw{background:var(--green-deep)}
+  .legend .nm{font-size:17px;font-weight:600;line-height:1.2}
+  .legend .amt{font-size:25px;font-weight:700;margin-top:5px;line-height:1;
+               font-variant-numeric:tabular-nums}
+  .legend .pct{font-family:var(--mono);font-size:13.5px;color:var(--faint-l);margin-top:5px}
+
+  /* ---- growth ---- */
+  .growth{margin-top:24px;background:var(--paper-lift);border:1px solid var(--paper-line);
+          padding:18px 24px}
+  .growth h3{font-family:var(--mono);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;
+             color:var(--faint-l);margin:0 0 10px;font-weight:400}
+  .growth table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .growth td{padding:5px 0;font-size:17.5px;border-bottom:1px solid var(--paper-line)}
+  .growth tr:last-child td{border-bottom:0}
+  .growth td:first-child{color:var(--soft-l)}
+  .growth td.num{text-align:right;width:132px;font-weight:600}
+  .growth td.real{text-align:right;width:150px;font-weight:700;color:var(--green-deep)}
+  .growth .hd td{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;
+                 text-transform:uppercase;color:var(--faint-l);border-bottom:1px solid var(--paper-line);
+                 font-weight:400;padding-bottom:9px}
+</style>
+
+<div class="board board--light board--photo">
+
+  <div class="band">
+    <img src="photo-booth.jpg" alt="A Surge fundraiser at a staffed booth outside a store.">
+    <div class="cap">Field fundraising<br>Nonprofit sector</div>
+    <div class="on">
+      <p class="eyebrow">U.S. charitable giving &middot; Calendar year 2025</p>
+      <h1>The biggest donor in America<br>is <em>a person</em>, one at a time.</h1>
+    </div>
+  </div>
+
+  <div class="body">
+    <p class="standfirst">Total U.S. charitable giving passed $600 billion for the first time.</p>
+    <div class="rule"></div>
+
+    <div class="plot">
+      <div class="hero">
+        <div class="fig">$617.2B</div>
+        <div class="of">given in 2025 &mdash; up 5.7% in current dollars, 3.0% after inflation</div>
+      </div>
+
+      <div class="stack" role="img"
+           aria-label="Individuals 63.9 percent, foundations 19.0, bequests 10.1, corporations 7.1">
+        <i style="flex:63.87"></i><i style="flex:18.98"></i><i style="flex:10.08"></i><i style="flex:7.08"></i>
+      </div>
+
+      <div class="legend">
+        <div class="it"><i class="sw"></i>
+          <div class="nm">Individuals</div><div class="amt">$394.20B</div><div class="pct">63.9%</div></div>
+        <div class="it"><i class="sw"></i>
+          <div class="nm">Foundations</div><div class="amt">$117.15B</div><div class="pct">19.0%</div></div>
+        <div class="it"><i class="sw"></i>
+          <div class="nm">Bequests</div><div class="amt">$62.19B</div><div class="pct">10.1%</div></div>
+        <div class="it"><i class="sw"></i>
+          <div class="nm">Corporations</div><div class="amt">$43.67B</div><div class="pct">7.1%</div></div>
+      </div>
+
+      <div class="growth">
+        <h3>Year-on-year change</h3>
+        <table>
+          <tr class="hd"><td>Source</td><td class="num">Current $</td><td class="real">After inflation</td></tr>
+          <tr><td>Bequests</td><td class="num">+19.7%</td><td class="real">+16.6%</td></tr>
+          <tr><td>Foundations</td><td class="num">+5.7%</td><td class="real">+3.0%</td></tr>
+          <tr><td>Individuals</td><td class="num">+4.1%</td><td class="real">+1.4%</td></tr>
+          <tr><td>Corporations</td><td class="num">+3.1%</td><td class="real">+0.5%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="read">
+      <h2>Our read</h2>
+      <p>Individual giving is the largest source and the slowest-growing one &mdash; 1.4% after
+        inflation, against 16.6% for money left in wills. A foundation has a grants officer and a
+        deadline. An individual has neither, and that column moves only when somebody asks.</p>
+    </div>
+
+    <div class="foot">
+      <p class="src"><b>Source:</b> Giving USA 2026: The Annual Report on Philanthropy for the Year
+        2025, researched and written by the Indiana University Lilly Family School of Philanthropy,
+        published 23 June 2026. Dollar figures verbatim; percentage shares are our arithmetic on
+        them. Read first-hand 14 September 2026.</p>
+      <i class="wordmark"></i>
+    </div>
+  </div>
+</div>

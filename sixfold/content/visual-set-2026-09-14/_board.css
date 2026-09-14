@@ -1,0 +1,120 @@
+/* Sixfold Colorado — shared board system for the 2026-09-14 visual set.
+   Four 1080x1350 boards, each printed to a single borderless PDF page.
+
+   Palette is the agreed five from sixfold/README.md and site/assets/site.css.
+   Nothing here invents a colour. Type is the site's own stack — a serif for
+   headlines, system sans for body, Consolas for labels. All system faces, no
+   webfont: the register is neighbourly and editorial, not a poster shout, and
+   it should not look like anything built for Surge.
+
+   The two de-emphasis greys were picked by running the dataviz validator, not
+   by eye. #7C8880 on the pine ground and #5F6A61 on paper each clear CVD
+   separation, the normal-vision floor and 3:1 against ember.
+
+   NOTE, and it is the reason there is no ember/moss chart in this set: as a
+   two-series pair the brand's ember and moss fail CVD separation (deutan dE 7.9
+   on dark, protan 6.6 on light) — orange against green is the classic
+   red-green confusion. Where a board needs two data series it uses one hue in
+   two steps plus direct row labels. Moss is used for ground and framing, never
+   to tell one series from another. */
+
+:root{
+  --pine:#0E1512; --timber:#1F2A25; --ember:#E4703A; --ember-ink:#B84C15;
+  --moss:#8AA07A; --bone:#EDE7DC;
+
+  /* dark ground */
+  --d-line:rgba(237,231,220,.16);
+  --d-soft:rgba(237,231,220,.70);
+  --d-faint:rgba(237,231,220,.48);
+  --d-mute:#7C8880;                 /* de-emphasis mark colour on pine */
+
+  /* light ground */
+  --paper:#F2EDE3; --paper-lift:#FBF8F1; --p-line:#D8D1C3;
+  --p-ink:#141A16; --p-soft:#4C554E; --p-faint:#6E7A72;
+  --l-mute:#5F6A61;                 /* de-emphasis mark colour on paper */
+
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+  --sans:"Segoe UI",ui-sans-serif,system-ui,Roboto,Helvetica,Arial,sans-serif;
+  --mono:Consolas,"Cascadia Mono","Segoe UI Mono",ui-monospace,monospace;
+}
+
+@page{ size:11.25in 14.0625in; margin:0; }
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  background:#3A423C;display:grid;place-items:start center;
+}
+
+.board{
+  position:relative;width:1080px;height:1350px;overflow:hidden;
+  display:flex;flex-direction:column;padding:60px 64px 0;
+}
+.board--dark{background:var(--pine);color:var(--bone)}
+.board--light{background:var(--paper);color:var(--p-ink)}
+
+@media print{ body{background:#fff;display:block} .board{margin:0} }
+@media screen{ body{padding:28px 0 44px} .board{box-shadow:0 26px 70px rgba(0,0,0,.45)} }
+
+/* ---------- masthead ---------- */
+.eyebrow{
+  font-family:var(--mono);font-size:15px;letter-spacing:.20em;text-transform:uppercase;
+  margin:0 0 18px;color:var(--moss);
+}
+.board--light .eyebrow{color:var(--ember-ink)}
+
+h1{
+  font-family:var(--serif);font-weight:400;font-size:74px;line-height:1.02;
+  letter-spacing:-.018em;margin:0;
+}
+h1 em{font-style:italic;color:var(--ember)}
+.board--light h1 em{color:var(--ember-ink)}
+
+.standfirst{margin:22px 0 0;max-width:860px;font-size:21.5px;line-height:1.46;color:var(--d-soft)}
+.board--light .standfirst{color:var(--p-soft)}
+
+.rule{height:3px;background:var(--ember);margin:28px 0 0;flex:none}
+.board--light .rule{background:var(--ember-ink)}
+
+.plot{flex:1;display:flex;flex-direction:column;justify-content:center;padding:4px 0}
+
+/* ---------- shared chart furniture ---------- */
+.tick{font-family:var(--mono);font-size:13.5px;color:var(--d-faint);font-variant-numeric:tabular-nums}
+.board--light .tick{color:var(--p-faint)}
+.axis-line{height:1px;background:var(--d-line)}
+.board--light .axis-line{background:var(--p-line)}
+
+.mark-label{font-size:20px;font-weight:600;line-height:1.2}
+.mark-sub{font-size:14.5px;line-height:1.3;margin-top:3px;color:var(--d-faint)}
+.board--light .mark-sub{color:var(--p-faint)}
+
+/* ---------- the read ---------- */
+.read{flex:none;border-top:1px solid var(--d-line);padding:22px 0 0;margin-top:20px}
+.board--light .read{border-top-color:var(--p-line)}
+.read h2{
+  font-family:var(--mono);font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ember);margin:0 0 10px;font-weight:400;
+}
+.board--light .read h2{color:var(--ember-ink)}
+.read p{margin:0;font-size:21px;line-height:1.46;max-width:900px}
+
+/* ---------- footer ---------- */
+.foot{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:34px;padding:20px 0 44px}
+.src{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--d-faint);max-width:770px;margin:0}
+.board--light .src{color:var(--p-faint)}
+.src b{font-weight:400;color:var(--d-soft)}
+.board--light .src b{color:var(--p-soft)}
+
+.sig{flex:none;display:flex;align-items:center;gap:12px}
+.sig svg{width:38px;height:auto;display:block;color:var(--ember)}
+.board--light .sig svg{color:var(--ember-ink)}
+.sig .w{font-family:var(--serif);font-size:27px;letter-spacing:-.018em;line-height:1}
+.sig .c{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+        color:var(--d-faint);margin-top:3px}
+.board--light .sig .c{color:var(--p-faint)}
+
+/* Not-advice line. Every board that touches tax or insurance carries one. */
+.disc{font-family:var(--mono);font-size:12.5px;line-height:1.5;margin:14px 0 0;
+      color:var(--d-faint);border-left:2px solid var(--d-line);padding-left:16px}
+.board--light .disc{color:var(--p-faint);border-left-color:var(--p-line)}

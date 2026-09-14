@@ -1,0 +1,143 @@
+<meta charset="utf-8">
+<title>Surge — Watch the swing, not the target</title>
+<link rel="stylesheet" href="_fonts.css">
+<link rel="stylesheet" href="_logo.css">
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* ---- dumbbell ----------------------------------------------------------
+     Before/after per item: one hue in two shades, a 2px connector, >=8px
+     markers each carrying a 2px ring in the surface colour so they stay legible
+     where they sit near a reference rule. */
+  .legend{display:flex;gap:30px;align-items:center;margin:0 0 34px}
+  .legend span{display:flex;align-items:center;gap:10px;font-size:17px;color:var(--soft)}
+  .legend i{width:14px;height:14px;border-radius:50%;display:block}
+  .key-won{background:var(--green)}
+  .key-lost{background:var(--mute-dark)}
+
+  /* One reference layer over BOTH rows, so the rules read as continuous and the
+     rule labels live in a band of their own instead of fighting the data labels. */
+  .rowswrap{position:relative;padding-top:46px}
+  .refs{position:absolute;left:260px;width:600px;top:0;bottom:0;pointer-events:none}
+  .ref{position:absolute;top:46px;bottom:0;width:1px;background:var(--line)}
+  .ref b{position:absolute;top:-40px;left:10px;font-family:var(--mono);font-size:13px;
+         line-height:1.3;letter-spacing:.08em;color:var(--faint);font-weight:400;
+         white-space:nowrap}
+
+  .rows{display:grid;grid-template-columns:236px 600px 92px;column-gap:24px;row-gap:0}
+  .rows .name{align-self:center}
+  .rows .swing{align-self:center}
+  .swing .n{font-family:var(--display);font-size:46px;line-height:.9;color:var(--text)}
+  .swing .u{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;
+            color:var(--faint);margin-top:6px}
+  .swing--wide .n{color:var(--green)}
+
+  .track{position:relative;height:118px}
+  .conn{position:absolute;top:50%;height:2px;background:var(--mute-dark);
+        transform:translateY(-50%);border-radius:1px}
+  .dot{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;
+       transform:translate(-50%,-50%);box-shadow:0 0 0 3px var(--ink)}
+  .dot--won{background:var(--green)}
+  .dot--lost{background:var(--mute-dark)}
+  .dl{position:absolute;top:50%;transform:translate(-50%,-50%);margin-top:-27px;
+      font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dl--won{color:var(--green)}
+  .dl--lost{color:var(--soft)}
+
+  .axis{display:grid;grid-template-columns:236px 600px 92px;column-gap:24px;margin-top:8px}
+  .axis .t{grid-column:2;position:relative;height:30px;border-top:1px solid var(--line);
+           padding-top:8px}
+  .axis .t span{position:absolute;top:8px;transform:translateX(-50%)}
+  .axis .u{grid-column:2;font-family:var(--mono);font-size:13.5px;color:var(--faint);
+           letter-spacing:.06em;margin-top:2px}
+
+  .note{font-family:var(--mono);font-size:13.5px;line-height:1.55;color:var(--faint);
+        margin:34px 0 0;border-left:2px solid var(--line);padding-left:18px}
+</style>
+
+<div class="board board--dark">
+
+  <p class="eyebrow">Talk-to-listen &middot; 326,000 recorded calls</p>
+  <h1>Watch the <em>swing</em>.<br>Not the target.</h1>
+  <p class="standfirst">The talk-time number that circulates in sales coaching is a 2016 figure.
+    Set it against what a third of a million calls actually show and it is not just stale &mdash;
+    it is measuring the wrong thing.</p>
+  <div class="rule"></div>
+
+  <div class="plot">
+
+    <div class="legend">
+      <span><i class="key-won"></i> Deals won</span>
+      <span><i class="key-lost"></i> Deals lost</span>
+    </div>
+
+    <div class="rowswrap">
+    <div class="refs">
+      <div class="ref" style="left:10%"><b>2016 TARGET &middot; 43%</b></div>
+      <div class="ref" style="left:66.67%"><b>SAMPLE AVERAGE &middot; 60%</b></div>
+    </div>
+    <div class="rows">
+      <div class="name">
+        <div class="mark-label">All calls</div>
+        <div class="mark-sub">Won against lost, whole sample</div>
+      </div>
+      <div class="track">
+        <div class="conn" style="left:56.67%;width:16.66%"></div>
+        <div class="dot dot--won" style="left:56.67%"></div>
+        <div class="dot dot--lost" style="left:73.33%"></div>
+        <div class="dl dl--won" style="left:56.67%">57%</div>
+        <div class="dl dl--lost" style="left:73.33%">62%</div>
+      </div>
+      <div class="swing">
+        <div class="n">5</div>
+        <div class="u">POINT GAP</div>
+      </div>
+
+      <div class="name">
+        <div class="mark-label">Low performers</div>
+        <div class="mark-sub">The same reps, won against lost</div>
+      </div>
+      <div class="track">
+        <div class="conn" style="left:46.67%;width:33.33%"></div>
+        <div class="dot dot--won" style="left:46.67%"></div>
+        <div class="dot dot--lost" style="left:80%"></div>
+        <div class="dl dl--won" style="left:46.67%">54%</div>
+        <div class="dl dl--lost" style="left:80%">64%</div>
+      </div>
+      <div class="swing swing--wide">
+        <div class="n">10</div>
+        <div class="u">POINT SWING</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="axis">
+      <div class="t">
+        <span class="tick" style="left:0">40</span>
+        <span class="tick" style="left:33.33%">50</span>
+        <span class="tick" style="left:66.67%">60</span>
+        <span class="tick" style="left:100%">70</span>
+      </div>
+      <div class="u">REP TALK TIME, % OF CALL</div>
+    </div>
+
+    <p class="note">High performers are reported to hold roughly the same ratio whether they win or
+      lose. No figure is published for them, so no third row is drawn here.</p>
+  </div>
+
+  <div class="read">
+    <h2>Our read</h2>
+    <p>The gap between a won call and a lost one is five points. The old rule asked reps to cut
+      seventeen. Meanwhile the same reps move ten points between their own good days and bad ones
+      &mdash; and a rep whose talk time climbs on a call going badly is not talking more on purpose.
+      They have lost the thread and are filling the silence. A target number hides that. The swing
+      is what shows it.</p>
+  </div>
+
+  <div class="foot">
+    <p class="src"><b>Source:</b> Gong, &ldquo;Mastering the talk-to-listen ratio in sales calls&rdquo;
+      &mdash; 326,000 sales calls of at least ten minutes. Originally authored 2016 by Chris Orlob,
+      current version by Dan Morgese; last modified 4 March 2026. Read first-hand 14 September 2026.<br>
+      &ldquo;5&rdquo; and &ldquo;10&rdquo; are our subtraction on the published figures, not claims made by the source.</p>
+    <i class="wordmark"></i>
+  </div>
+</div>

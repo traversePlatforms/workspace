@@ -1,0 +1,161 @@
+<meta charset="utf-8">
+<title>Surge — visual set, 14 September 2026</title>
+<link rel="stylesheet" href="_fonts.css">
+<link rel="stylesheet" href="_logo.css">
+<style>
+  :root{
+    --green:#4abe4a; --green-deep:#2e8b2e;
+    --ink:#0a0a0a; --lift:#161616; --line:#2c2c2c;
+    --text:#f4f4f4; --soft:#ababab; --faint:#8a8a8a;
+    --display:"Anton","Bahnschrift Condensed","Arial Narrow",Impact,sans-serif;
+    --sans:"Archivo","Segoe UI",system-ui,sans-serif;
+    --mono:"Consolas",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto;padding:52px 40px 90px}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:30px;margin-bottom:12px;
+         display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap}
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.2em;text-transform:uppercase;
+           color:var(--faint);margin:0 0 14px}
+  h1{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:60px;
+     line-height:.94;margin:0}
+  h1 em{font-style:normal;color:var(--green)}
+  header .wordmark{width:116px;color:var(--text);opacity:.9;flex:none}
+
+  .status{margin:26px 0 44px;border:1px solid var(--line);background:var(--lift);
+          padding:18px 22px;font-size:15.5px;line-height:1.55;color:var(--soft);max-width:900px}
+  .status b{color:var(--green);font-weight:600}
+
+  .item{display:grid;grid-template-columns:400px 1fr;gap:44px;align-items:start;
+        padding:44px 0;border-top:1px solid var(--line)}
+  .shot{display:block;border:1px solid var(--line);background:#111;line-height:0;
+        transition:border-color .15s}
+  .shot:hover{border-color:var(--green)}
+  .shot img{width:100%;height:auto;display:block}
+
+  .n{font-family:var(--mono);font-size:13px;letter-spacing:.2em;color:var(--green);margin:0 0 12px}
+  .item h2{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:38px;
+           line-height:.98;margin:0 0 16px}
+  .meta{font-family:var(--mono);font-size:13px;color:var(--faint);line-height:1.7;margin:0 0 18px}
+  .meta span{color:var(--soft)}
+  .item p.d{font-size:17.5px;line-height:1.55;color:var(--soft);margin:0 0 22px;max-width:620px}
+
+  .links{display:flex;gap:10px;flex-wrap:wrap}
+  .links a{font-family:var(--mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;
+           text-decoration:none;padding:10px 16px;border:1px solid var(--line);color:var(--soft)}
+  .links a:hover{border-color:var(--green);color:var(--text)}
+  .links a.pdf{background:var(--green);border-color:var(--green);color:#0a0a0a;font-weight:700}
+  .links a.pdf:hover{color:#0a0a0a}
+
+  footer{border-top:1px solid var(--line);margin-top:20px;padding-top:28px;
+         font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--faint)}
+  footer a{color:var(--soft)}
+
+  @media (max-width:880px){ .item{grid-template-columns:1fr;gap:26px} h1{font-size:44px} }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Social content &middot; 14 September 2026</p>
+      <h1>Four boards.<br>Four <em>forms</em>. Four sources.</h1>
+    </div>
+    <i class="wordmark"></i>
+  </header>
+
+  <p class="status"><b>Draft only.</b> Nothing here has been published, posted, scheduled or staged
+    to any platform, and no account state was touched. Each PDF is one borderless page at 1080&times;1350
+    (4:5) &mdash; the LinkedIn and Instagram portrait frame. Click a board to open the PDF.</p>
+
+  <div class="item">
+    <a class="shot" href="01-doors-contact-rate.pdf"><img src="01-doors-contact-rate.png" alt=""></a>
+    <div>
+      <p class="n">PIECE 01</p>
+      <h2>The conversation works.<br>The door has to open first.</h2>
+      <p class="meta">FORM &nbsp;<span>Emphasis bar chart + three-step gate</span><br>
+        SOURCE &nbsp;<span>Gerber &amp; Huber, Stanford Social Innovation Review, 2016</span><br>
+        GROUND &nbsp;<span>Dark</span></p>
+      <p class="d">Four outreach channels measured by randomised field experiment, then the
+        arithmetic that actually decides the campaign: 4.3 points per conversation, a quarter of
+        doors answered, a point or less across the list. The law of averages with a coefficient
+        attached.</p>
+      <div class="links">
+        <a class="pdf" href="01-doors-contact-rate.pdf">Open PDF</a>
+        <a href="01-doors-contact-rate.png">PNG</a>
+        <a href="01-doors-contact-rate-draft.md">Post copy &amp; fact-check</a>
+        <a href="01-doors-contact-rate.html">Source</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="item">
+    <a class="shot" href="02-where-giving-comes-from.pdf"><img src="02-where-giving-comes-from.png" alt=""></a>
+    <div>
+      <p class="n">PIECE 02</p>
+      <h2>The biggest donor in America is a person.</h2>
+      <p class="meta">FORM &nbsp;<span>Photographic masthead + part-to-whole stacked bar</span><br>
+        SOURCE &nbsp;<span>Giving USA 2026 / IU Lilly Family School of Philanthropy</span><br>
+        GROUND &nbsp;<span>Light, with cleared field photography</span></p>
+      <p class="d">US giving passed $600bn for the first time. Individuals are 63.9% of it and close
+        to the slowest-growing share; the fastest-growing is money left in wills. A foundation has a
+        grants officer. An individual has somebody who asked.</p>
+      <div class="links">
+        <a class="pdf" href="02-where-giving-comes-from.pdf">Open PDF</a>
+        <a href="02-where-giving-comes-from.png">PNG</a>
+        <a href="02-where-giving-comes-from-draft.md">Post copy &amp; fact-check</a>
+        <a href="02-where-giving-comes-from.html">Source</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="item">
+    <a class="shot" href="03-talk-time-swing.pdf"><img src="03-talk-time-swing.png" alt=""></a>
+    <div>
+      <p class="n">PIECE 03</p>
+      <h2>Watch the swing.<br>Not the target.</h2>
+      <p class="meta">FORM &nbsp;<span>Dumbbell chart on one axis</span><br>
+        SOURCE &nbsp;<span>Gong &mdash; 326,000 calls of ten minutes or longer</span><br>
+        GROUND &nbsp;<span>Dark</span></p>
+      <p class="d">Five points separate a won call from a lost one; the quoted target asks reps to
+        cut seventeen. Meanwhile low performers move ten points between their own good days and bad
+        ones &mdash; which is the number a target hides.</p>
+      <div class="links">
+        <a class="pdf" href="03-talk-time-swing.pdf">Open PDF</a>
+        <a href="03-talk-time-swing.png">PNG</a>
+        <a href="03-talk-time-swing-draft.md">Post copy &amp; fact-check</a>
+        <a href="03-talk-time-swing.html">Source</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="item">
+    <a class="shot" href="04-recall-not-review.pdf"><img src="04-recall-not-review.png" alt=""></a>
+    <div>
+      <p class="n">PIECE 04</p>
+      <h2>Training week is not the learning week.</h2>
+      <p class="meta">FORM &nbsp;<span>Four-step flow + two evidence cards &mdash; not a chart</span><br>
+        SOURCE &nbsp;<span>Murre &amp; Dros 2015; Roediger &amp; Karpicke 2006</span><br>
+        GROUND &nbsp;<span>Light</span></p>
+      <p class="d">The morning development block, described by its content and never its clock, set
+        against the two papers that explain why it is shaped that way. Recall out loud beats review
+        &mdash; and it beats it by more the longer you wait.</p>
+      <div class="links">
+        <a class="pdf" href="04-recall-not-review.pdf">Open PDF</a>
+        <a href="04-recall-not-review.png">PNG</a>
+        <a href="04-recall-not-review-draft.md">Post copy &amp; fact-check</a>
+        <a href="04-recall-not-review.html">Source</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Full set notes, the engine, and the four sourced numbers that were found and rejected:
+    <a href="README.md">README.md</a><br>
+    No Surge performance figure appears on any board &mdash; none exist yet with scope, date and a
+    pullable source.
+  </footer>
+</div>

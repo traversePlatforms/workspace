@@ -1,0 +1,158 @@
+<meta charset="utf-8">
+<title>Surge — Recall, not review</title>
+<link rel="stylesheet" href="_fonts.css">
+<link rel="stylesheet" href="_logo.css">
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* Not a chart. The data's job here is sequence and mechanism, so the form is a
+     stepper and two evidence cards. The one quantitative strip plots the study's
+     relearning intervals - its design, which is published - and nothing about its
+     outcome, which is not verified. */
+
+  .flow{display:grid;grid-template-columns:1fr 34px 1fr 34px 1fr 34px 1fr;
+        align-items:stretch;gap:0;margin:0}
+  .flow .step{background:var(--paper-lift);border:1px solid var(--paper-line);
+              padding:20px 18px 18px;display:flex;flex-direction:column}
+  .flow .k{font-family:var(--mono);font-size:12px;letter-spacing:.18em;
+           color:var(--green-deep);margin-bottom:11px}
+  .flow .h{font-size:20px;font-weight:700;line-height:1.16;margin-bottom:8px}
+  .flow .d{font-size:15px;line-height:1.36;color:var(--soft-l);margin-top:auto}
+  .flow .chev{display:grid;place-items:center;color:var(--green-deep)}
+  .flow .chev::before{                  /* drawn, not a glyph - a font can drop one */
+    content:"";width:13px;height:13px;border-top:3px solid currentColor;
+    border-right:3px solid currentColor;transform:rotate(45deg);margin-left:-5px;
+  }
+
+  .why{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:24px}
+  .card{border:1px solid var(--paper-line);background:var(--paper-lift);padding:22px 24px 24px;
+        display:flex;flex-direction:column}
+  .card .cite{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;
+              color:var(--faint-l);margin:0 0 10px}
+  .card .claim{font-size:19px;line-height:1.38;margin:0 0 18px;font-weight:600}
+  .card .fine{font-size:14.5px;line-height:1.42;color:var(--soft-l);margin:14px 0 0}
+
+  /* relearning intervals, log time */
+  /* Inset by 10px so the end dot and its label never sit past the card padding. */
+  .strip{position:relative;height:60px;margin:auto 10px 0}
+  .strip .ln{position:absolute;left:0;right:0;top:15px;height:1px;background:var(--paper-line)}
+  .strip .pt{position:absolute;top:15px;width:10px;height:10px;border-radius:50%;
+             background:var(--green-deep);transform:translate(-50%,-50%);
+             box-shadow:0 0 0 3px var(--paper-lift)}
+  .strip .lb{position:absolute;top:30px;transform:translateX(-50%);font-family:var(--mono);
+             font-size:12px;color:var(--faint-l);white-space:nowrap}
+  .strip .lb.alt{top:46px}
+  .strip .lb--first{transform:translateX(-6px)}
+  .strip .lb--last{transform:translateX(calc(-100% + 6px))}
+  .strip .cap{position:absolute;top:-4px;left:0;font-family:var(--mono);font-size:12px;
+              letter-spacing:.1em;color:var(--faint-l)}
+
+  /* the two-state result */
+  .states{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:2px}
+  .st{padding:14px 16px;background:var(--paper)}
+  .st .w{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;color:var(--faint-l)}
+  .st .r{font-size:17px;font-weight:700;margin-top:8px;line-height:1.2}
+  .st--win{background:var(--wash-light)}
+  .st--win .r{color:var(--green-deep)}
+
+  .note{font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--faint-l);
+        margin:14px 0 0;border-left:2px solid var(--paper-line);padding-left:18px}
+</style>
+
+<div class="board board--light">
+
+  <p class="eyebrow">Onboarding &middot; What the morning block is for</p>
+  <h1>Training week is not<br>the <em>learning</em> week.</h1>
+  <p class="standfirst">Forgetting is not a discipline problem. It is the documented default, and it
+    has been measured for a hundred and forty years. What you do the following week is the part
+    that is actually up for grabs.</p>
+  <div class="rule"></div>
+
+  <div class="plot">
+
+    <div class="flow">
+      <div class="step">
+        <div class="k">01</div>
+        <div class="h">Set the goal</div>
+        <div class="d">The number the room is working to, said before anything else.</div>
+      </div>
+      <div class="chev"></div>
+      <div class="step">
+        <div class="k">02</div>
+        <div class="h">Drill it on the board</div>
+        <div class="d">Written out in front of everyone, not read off a page.</div>
+      </div>
+      <div class="chev"></div>
+      <div class="step">
+        <div class="k">03</div>
+        <div class="h">One taught subject</div>
+        <div class="d">A single thing that day. Not a syllabus, not a refresher.</div>
+      </div>
+      <div class="chev"></div>
+      <div class="step">
+        <div class="k">04</div>
+        <div class="h">Paired practice</div>
+        <div class="d">Say it out loud to another rep. Trainers work the new ones.</div>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="card">
+        <p class="cite">Murre &amp; Dros &middot; PLOS ONE &middot; 2015</p>
+        <p class="claim">Ebbinghaus&rsquo; 1880 forgetting curve replicates. One subject, 70 hours of
+          learning, relearned at six intervals.</p>
+        <p class="fine">The authors add one wrinkle: the curve is &ldquo;not completely smooth but
+          most probably shows a jump upwards starting at the 24 hour data point&rdquo; &mdash; sleep
+          sits in the middle of it.</p>
+        <div class="strip">
+          <div class="cap">RELEARNING INTERVALS &middot; LOG SCALE</div>
+          <div class="ln"></div>
+          <i class="pt" style="left:0"></i><span class="lb lb--first" style="left:0">20 min</span>
+          <i class="pt" style="left:14.2%"></i><span class="lb alt" style="left:14.2%">1 hr</span>
+          <i class="pt" style="left:42.7%"></i><span class="lb" style="left:42.7%">9 hrs</span>
+          <i class="pt" style="left:55.4%"></i><span class="lb alt" style="left:55.4%">1 day</span>
+          <i class="pt" style="left:64.4%"></i><span class="lb" style="left:64.4%">2 days</span>
+          <i class="pt" style="left:100%"></i><span class="lb alt lb--last" style="left:100%">31 days</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="cite">Roediger &amp; Karpicke &middot; Psych. Science &middot; 2006</p>
+        <p class="claim">Same material, same number of exposures. One group re-read it. One group sat
+          a recall test with no feedback.</p>
+        <div class="states">
+          <div class="st">
+            <div class="w">AFTER 5 MINUTES</div>
+            <div class="r">Re-reading ahead</div>
+          </div>
+          <div class="st st--win">
+            <div class="w">ON DELAYED TESTS</div>
+            <div class="r">Recall ahead, substantially</div>
+          </div>
+        </div>
+        <p class="fine">The authors also report that repeated studying raised students&rsquo;
+          confidence in their ability to remember. The group that felt readiest retained less.</p>
+      </div>
+    </div>
+
+    <p class="note">No per-interval retention percentage appears on this board. The &ldquo;you forget
+      70% within 24 hours&rdquo; figure that circulates with this topic is in neither paper, and we
+      could not source it anywhere else.</p>
+  </div>
+
+  <div class="read">
+    <h2>Our read</h2>
+    <p>&ldquo;We covered that in training&rdquo; is a statement about the calendar, not about what a
+      rep can do at a door on Tuesday. Nothing in the block above is unusual and none of it is ours
+      &mdash; it is ordinary practice in field sales. What the research settles is the order of the
+      verbs: recall out loud beats review, and it beats it by more the longer you wait.</p>
+  </div>
+
+  <div class="foot">
+    <p class="src"><b>Sources:</b> Murre JMJ, Dros J. &ldquo;Replication and Analysis of Ebbinghaus&rsquo;
+      Forgetting Curve.&rdquo; <i>PLOS ONE</i> 10(7):e0120644, 6 July 2015 &mdash; abstract read
+      first-hand. Roediger HL, Karpicke JD. &ldquo;Test-enhanced learning.&rdquo; <i>Psychological
+      Science</i> 17(3):249&ndash;255, 2006 &mdash; record and abstract retrieved from PubMed
+      (PMID 16507066). Both checked 14 September 2026.</p>
+    <i class="wordmark"></i>
+  </div>
+</div>

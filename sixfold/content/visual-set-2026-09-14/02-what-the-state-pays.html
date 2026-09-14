@@ -1,0 +1,125 @@
+<meta charset="utf-8">
+<title>Sixfold — What the state pays back</title>
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* Emphasis column chart: the year that changes is in ember, every other year
+     in the de-emphasis grey. One hue plus grey, so no CVD pair exists.
+     Column width is ~45% of its slot — the mark-spec's 24px cap is written for a
+     dashboard; what transfers to a 1080px artboard is the principle behind it,
+     which is that the mark never fills the slot and the leftover is air. */
+  .chart{display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
+         height:190px;gap:0;padding:0 4px}
+  .col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .val{font-family:var(--sans);font-weight:700;font-size:24px;line-height:1;margin-bottom:8px;
+       font-variant-numeric:tabular-nums}
+  .pct{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--d-faint);margin-bottom:9px}
+  .bar{width:45%;background:var(--d-mute);border-radius:4px 4px 0 0}
+  .col--now .bar{background:var(--ember)}
+  .col--now .val{color:var(--ember)}
+
+  .years{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--d-line);
+         margin-top:0;padding-top:11px;text-align:center}
+  .years div{font-family:var(--mono);font-size:14.5px;letter-spacing:.04em}
+  .years small{display:block;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+               color:var(--d-faint);margin-top:5px}
+  .unit{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--d-faint);margin:9px 0 0}
+
+  /* the gap */
+  .gap{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:24px}
+  .gap div{background:var(--timber);padding:17px 20px;display:flex;flex-direction:column}
+  .gap .n{font-family:var(--sans);font-weight:700;font-size:35px;line-height:.95;color:var(--ember);
+          letter-spacing:-.02em}
+  .gap .t{font-size:15.5px;line-height:1.34;color:var(--d-soft);margin-top:9px}
+
+  .conds{display:grid;gap:6px;margin-top:20px}
+  .conds li{list-style:none;font-size:16px;line-height:1.34;display:flex;gap:11px;align-items:flex-start}
+  .conds i{flex:none;width:6px;height:6px;background:var(--moss);margin-top:8px;transform:rotate(45deg)}
+</style>
+
+<div class="board board--dark">
+
+  <p class="eyebrow">Colorado wildfire mitigation credit &middot; C.R.S. 39-22-543</p>
+  <h1>The state covers this work.<br><em>Almost nobody claims it.</em></h1>
+  <p class="standfirst">An income tax credit for paying a contractor to reduce fire risk on your own
+    land. It got considerably bigger, and it gets bigger again.</p>
+  <div class="rule"></div>
+
+  <div class="plot">
+
+    <div class="chart">
+      <div class="col"><div class="val">$625</div><div class="pct">25% OF COST</div>
+        <div class="bar" style="height:31.25%"></div></div>
+      <div class="col"><div class="val">$625</div><div class="pct">25% OF COST</div>
+        <div class="bar" style="height:31.25%"></div></div>
+      <div class="col"><div class="val">$1,000</div><div class="pct">100% OF COST</div>
+        <div class="bar" style="height:50%"></div></div>
+      <div class="col"><div class="val">$1,000</div><div class="pct">100% OF COST</div>
+        <div class="bar" style="height:50%"></div></div>
+      <div class="col col--now"><div class="val">$2,000</div><div class="pct">100% &middot; REFUNDABLE</div>
+        <div class="bar" style="height:100%"></div></div>
+    </div>
+    <div class="years">
+      <div>2023</div><div>2024</div><div>2025</div><div>2026</div>
+      <div>2027&ndash;30<small>AGI up to $300k</small></div>
+    </div>
+    <p class="unit">MAXIMUM CREDIT, BY TAX YEAR THE WORK IS DONE</p>
+
+    <div class="gap">
+      <div><div class="n">~450</div><div class="t">claims in the entire state in tax year 2023, the
+        most recent with data</div></div>
+      <div><div class="n">$200k</div><div class="t">the total it reimbursed &mdash; to 457 landowners
+        statewide</div></div>
+      <div><div class="n">&lt;50%</div><div class="t">of landowners surveyed by the state had heard
+        of it before being asked</div></div>
+    </div>
+
+    <ul class="conds">
+      <li><i></i><div>Since August 2024 it covers only what you pay a <b>third-party contractor</b>
+        &mdash; buying or renting kit and doing it yourself does not qualify.</div></li>
+      <li><i></i><div>For work done <b>before 2027</b> the credit cannot exceed what you owe. The
+        remainder is not refunded and cannot be carried forward.</div></li>
+      <li><i></i><div>Any cost <b>paid or reimbursed by a grant</b> does not qualify. Programmes
+        combine; they never double-dip.</div></li>
+    </ul>
+
+    <p class="disc">Not tax advice, and we do not file anyone&rsquo;s return. Your accountant is the
+      right person to confirm any of this.</p>
+  </div>
+
+  <div class="read">
+    <h2>Why we keep mentioning it</h2>
+    <p>The state&rsquo;s own evaluators went looking for why the number is 450 and found the answer
+      was simply that people have not been told. That is a strange thing to be true of money.</p>
+  </div>
+
+  <div class="foot">
+    <p class="src"><b>Sources:</b> C.R.S. 39-22-543 as amended by HB26-1289, enacted text read in
+      full &mdash; &sect;(4)(c) and &sect;(5). Claim counts, the reimbursed total and the awareness
+      survey: Colorado General Assembly tax expenditure evaluation 2026-TE4. 2023&ndash;25 caps:
+      Colorado Department of Revenue, <i>Income Tax Topics: Wildfire Mitigation Measures</i>.<br>
+      The DOR table is stale for 2027 and the bill&rsquo;s fiscal note contradicts the enacted act.
+      Both were set aside in favour of the statute.</p>
+    <div class="sig">
+      <svg viewBox="0 0 100 116" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <div class="w">Sixfold</div>
+        <div class="c">Monument, CO</div>
+      </div>
+    </div>
+  </div>
+</div>

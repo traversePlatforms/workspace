@@ -12,9 +12,34 @@
    document. */
 .sheet h2.sec     { margin: 6pt 0 3pt; }
 .sheet table.tbl  { margin-bottom: 2pt; font-size: 8.6pt; }
-.sheet table.tbl td { padding: 3.2pt 6pt 3.2pt 0; }
+
+/* Write-on lines, rebuilt 2026-09-14 — the sheet came back from the field with
+   "the lines aren't lined up with filling it out", and they were not.
+
+   Was: every answer cell held a `.rule fill` span, which drew its own underline
+   1.05em down from the TOP of the cell, while the row's own bottom border sat
+   lower down. Two parallel lines a few points apart on every single row — and on
+   any row whose label wrapped to two lines the rule stayed up beside line one
+   and floated in the middle of the cell, nowhere near the row it belonged to.
+   Six of the twenty-four rows wrapped.
+
+   Now the row's own bottom border IS the writing line. It sits at the row base
+   by construction, so it cannot drift out of alignment however the label wraps,
+   and it spans the answer column exactly (that cell has padding-right:0). It is
+   darkened to --ink-soft so it still reads as "write on me" against the lighter
+   row separators. No .rule spans left in either table. */
+/* The bottom padding IS the writing gap. Measured against page fit on
+   2026-09-14: 7.5pt is the ceiling and 8pt spills to a second page, so this sits
+   at 7 to leave room for a label getting a word longer. Raise it only with a
+   page count in front of you. */
+.sheet table.tbl td            { padding: 3pt 6pt 7pt 0; }
+.sheet table.tbl td:last-child { border-bottom-color: var(--ink-soft); }
+
 .bx   { display:inline-block; width:10pt; height:10pt; border:0.9pt solid #46534B; background:#FFF; }
-.unit { font-family: var(--f-data); font-size: 7.2pt; letter-spacing:.06em; color: var(--ember-text); }
+/* Hints ride the end of their label. Kept off a line of their own: a wrapped
+   label is what pushed the old rule out of position, and it costs a row's worth
+   of writing height every time it happens. */
+.unit { font-family: var(--f-data); font-size: 6.8pt; letter-spacing:.02em; color: var(--ember-text); white-space: nowrap; }
 /* Notes box — ruled lines, because the whole point is that somebody writes in it. */
 .notes { border:0.9pt solid var(--ink-mid); padding:7pt 10pt 10pt; margin-top:4pt; }
 .notes .ln { border-bottom:0.75pt solid var(--tint-edge); height:17pt; }
@@ -57,39 +82,39 @@
 
   <h2 class="sec">1 · The work — what gets counted and charged</h2>
   <table class="tbl">
-    <thead><tr><th style="width:0.25in"></th><th style="width:3.5in">What is there</th><th>How many / how much</th></tr></thead>
+    <thead><tr><th style="width:0.22in"></th><th style="width:4.45in">What is there</th><th>How many / how much</th></tr></thead>
     <tbody>
-      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — under 30 ft</strong></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — 30 to 60 ft</strong></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — 60 to 80 ft</strong></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — over 80 ft</strong> <span class="unit">CALL IN FIRST</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Of those, how many come down <strong>over a roof, fence, line or drive</strong></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Trees to limb or trim, not remove</td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Logs to be bucked</strong> — and the length they want <span class="unit">ROUNDS · INCHES</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Dead fall already on the ground <span class="unit">PILES</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Brush, branches, twigs</strong> <span class="unit">PILES, OR TRUCK LOADS</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Material to run through the chipper <span class="unit">HOURS OF FEEDING</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Slash piles to build, and where <span class="unit">COUNT</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Stumps to grind</strong> — measured at the ground <span class="unit">COUNT + DIAMETER INCHES</span></td><td><span class="rule fill"></span></td></tr>
-      <tr class="hi"><td><span class="bx"></span></td><td><strong>Loads to haul off</strong> — count the pile twice <span class="unit">LOADS · BOTH COUNTS</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>What stays on site instead <span class="unit">CHIPS · ROUNDS · SLASH</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — under 30 ft</strong></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — 30 to 60 ft</strong></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — 60 to 80 ft</strong></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trees to take down — over 80 ft</strong> <span class="unit">CALL IN FIRST</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Of those, how many come down <strong>over a roof, fence, line or drive</strong></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Trees to limb or trim, not remove</td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Logs to be bucked</strong> — and the length they want <span class="unit">ROUNDS · INCHES</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Dead fall already on the ground <span class="unit">PILES</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Brush, branches, twigs</strong> <span class="unit">PILES, OR TRUCK LOADS</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Material to run through the chipper <span class="unit">HOURS OF FEEDING</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Slash piles to build, and where <span class="unit">COUNT</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Stumps to grind</strong> — measured at the ground <span class="unit">COUNT + DIAMETER INCHES</span></td><td></td></tr>
+      <tr class="hi"><td><span class="bx"></span></td><td><strong>Loads to haul off</strong> — count the pile twice <span class="unit">LOADS · BOTH COUNTS</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>What stays on site instead <span class="unit">CHIPS · ROUNDS · SLASH</span></td><td></td></tr>
     </tbody>
   </table>
 
   <h2 class="sec">2 · What it takes — the cost of doing it</h2>
   <table class="tbl">
-    <thead><tr><th style="width:0.25in"></th><th style="width:3.5in">What the job burns or needs</th><th>How many / how much</th></tr></thead>
+    <thead><tr><th style="width:0.22in"></th><th style="width:4.45in">What the job burns or needs</th><th>How many / how much</th></tr></thead>
     <tbody>
-      <tr><td><span class="bx"></span></td><td><strong>Crew</strong> — people on site, and days <span class="unit">PEOPLE × DAYS</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Chains</strong> — how many on the job, and sharpenings</td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Gas, two-stroke mix and bar oil</strong> <span class="unit">GALLONS</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Chipper</strong> — ours, or rented? <span class="unit">DAYS · RENTAL COST</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td><strong>Trailer</strong> — ours, or rented? <span class="unit">DAYS · RENTAL COST</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Stump grinder <span class="unit">DAYS · RENTAL COST</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Anything else hired or bought for this job</td><td><span class="rule fill"></span></td></tr>
-      <tr class="hi"><td><span class="bx"></span></td><td><strong>Dump fees</strong> — call and confirm today's figure <span class="unit">PER LOAD × LOADS</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Truck fuel — round trips the job needs <span class="unit">TRIPS</span></td><td><span class="rule fill"></span></td></tr>
-      <tr><td><span class="bx"></span></td><td>Second trip needed? <span class="unit">STUMPS NEED THE 811 LOCATE FIRST — 3 DAYS</span></td><td><span class="rule fill"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Crew</strong> — people on site, and days <span class="unit">PEOPLE × DAYS</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Chains</strong> — how many on the job, and sharpenings</td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Gas, two-stroke mix and bar oil</strong> <span class="unit">GALLONS</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Chipper</strong> — ours, or rented? <span class="unit">DAYS · RENTAL COST</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Trailer</strong> — ours, or rented? <span class="unit">DAYS · RENTAL COST</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Stump grinder <span class="unit">DAYS · RENTAL COST</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Anything else hired or bought for this job</td><td></td></tr>
+      <tr class="hi"><td><span class="bx"></span></td><td><strong>Dump fees</strong> — call and confirm today's figure <span class="unit">PER LOAD × LOADS</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Truck fuel — round trips the job needs <span class="unit">TRIPS</span></td><td></td></tr>
+      <tr><td><span class="bx"></span></td><td>Second trip needed? <span class="unit">STUMPS NEED THE 811 LOCATE FIRST — 3 DAYS</span></td><td></td></tr>
     </tbody>
   </table>
 

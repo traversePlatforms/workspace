@@ -1,0 +1,147 @@
+<meta charset="utf-8">
+<title>Surge — The conversation works. The door has to open first.</title>
+<link rel="stylesheet" href="_fonts.css">
+<link rel="stylesheet" href="_logo.css">
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* ---- emphasis bar chart -------------------------------------------------
+     One hue plus a de-emphasis grey: the door-to-door row is the story, the
+     other three are context. Not a categorical palette and not a value ramp. */
+  .bars{display:grid;grid-template-columns:292px 1fr;
+        align-items:center;row-gap:26px;column-gap:24px}
+  .area{position:relative;width:536px;height:24px}   /* 536px == 0 to 5 points */
+  .bar{position:absolute;left:0;top:0;height:24px;background:var(--mute-dark);
+       border-radius:0 4px 4px 0}
+  .bar--lead{background:var(--green)}
+  .bar--bound::after{                   /* open end = "no more than this" */
+    content:"";position:absolute;right:0;top:0;width:8px;height:24px;
+    background:var(--ink);
+    -webkit-mask-image:repeating-linear-gradient(135deg,#000 0 2px,transparent 2px 5px);
+    mask-image:repeating-linear-gradient(135deg,#000 0 2px,transparent 2px 5px);
+  }
+  .area .value{                        /* value rides the bar tip, not a column */
+    position:absolute;top:50%;transform:translateY(-50%);margin-left:14px;white-space:nowrap;
+  }
+  .value--lead{color:var(--green)}
+
+  .scale{display:grid;grid-template-columns:292px 1fr;column-gap:24px;margin-top:20px}
+  .scale .ticks{grid-column:2;position:relative;width:536px;height:30px;
+                border-top:1px solid var(--line);padding-top:8px}
+  .scale .ticks span{position:absolute;top:8px;transform:translateX(-50%)}
+  .scale .unit{grid-column:2;font-family:var(--mono);font-size:13.5px;
+               color:var(--faint);letter-spacing:.06em;margin-top:2px}
+
+  /* ---- the gate ---------------------------------------------------------- */
+  .gate{margin-top:44px;border:1px solid var(--line);background:var(--lift);
+        display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;
+        padding:26px 30px;gap:18px}
+  .gate .step{min-width:0}
+  .gate .n{font-family:var(--display);font-size:52px;line-height:.9;color:var(--green)}
+  .gate .n small{font-size:24px;letter-spacing:.02em}
+  .gate .cap{font-size:16.5px;line-height:1.35;color:var(--soft);margin-top:8px}
+  .gate .arrow{font-family:var(--mono);font-size:26px;color:var(--faint);line-height:1}
+  .gate .step--out .n{color:var(--text)}
+
+  .note{font-family:var(--mono);font-size:13.5px;line-height:1.5;color:var(--faint);
+        margin:18px 0 0}
+</style>
+
+<div class="board board--dark">
+
+  <p class="eyebrow">Field evidence &middot; Turnout experiments</p>
+  <h1>The conversation works.<br>The <em>door</em> has to open first.</h1>
+  <p class="standfirst">Decades of randomised field experiments have measured what a stranger at
+    a door is worth. The finding is not that the pitch is powerful. It is that the pitch is the
+    part you are least able to change on any given morning.</p>
+  <div class="rule"></div>
+
+  <div class="plot">
+
+    <div class="bars">
+      <div>
+        <div class="mark-label">Door-to-door canvass</div>
+        <div class="mark-sub">One successful conversation</div>
+      </div>
+      <div class="area">
+        <div class="bar bar--lead" style="width:86%"></div>
+        <div class="value value--lead" style="left:86%">4.3</div>
+      </div>
+
+      <div>
+        <div class="mark-label">Volunteer phone call</div>
+        <div class="mark-sub">Source says &ldquo;nearly 3&rdquo;</div>
+      </div>
+      <div class="area">
+        <div class="bar" style="width:60%"></div>
+        <div class="value" style="left:60%">&asymp;3.0</div>
+      </div>
+
+      <div>
+        <div class="mark-label">Commercial phone bank</div>
+        <div class="mark-sub">Stated as an upper bound</div>
+      </div>
+      <div class="area">
+        <div class="bar bar--bound" style="width:20%"></div>
+        <div class="value" style="left:20%">&lt;1.0</div>
+      </div>
+
+      <div>
+        <div class="mark-label">Non-partisan mailer</div>
+        <div class="mark-sub">Stated as an upper bound</div>
+      </div>
+      <div class="area">
+        <div class="bar bar--bound" style="width:10%"></div>
+        <div class="value" style="left:10%">&lt;0.5</div>
+      </div>
+    </div>
+
+    <div class="scale">
+      <div class="ticks">
+        <span class="tick" style="left:0">0</span>
+        <span class="tick" style="left:20%">1</span>
+        <span class="tick" style="left:40%">2</span>
+        <span class="tick" style="left:60%">3</span>
+        <span class="tick" style="left:80%">4</span>
+        <span class="tick" style="left:100%">5</span>
+      </div>
+      <div class="unit">PERCENTAGE-POINT LIFT IN TURNOUT</div>
+    </div>
+
+    <div class="gate">
+      <div class="step">
+        <div class="n">4.3<small> pts</small></div>
+        <div class="cap">when the conversation actually happens</div>
+      </div>
+      <div class="arrow">&times;</div>
+      <div class="step">
+        <div class="n">~25<small>%</small></div>
+        <div class="cap">of the doors you knock are answered</div>
+      </div>
+      <div class="arrow">=</div>
+      <div class="step step--out">
+        <div class="n">&le;1<small> pt</small></div>
+        <div class="cap">across the whole list you set out to reach</div>
+      </div>
+    </div>
+
+    <p class="note">Hatched ends mark the two figures the source states as ceilings rather than
+      estimates. These measure voter turnout, not sales conversion &mdash; the transferable part is
+      the shape, not the coefficient.</p>
+  </div>
+
+  <div class="read">
+    <h2>Our read</h2>
+    <p>Every number in the top half is fixed before the day starts. The only one that moves is the
+      one in the bottom right, and it moves because of how many doors got knocked. That is the law
+      of averages with a measured coefficient attached to it, which is rarer than the phrase
+      suggests.</p>
+  </div>
+
+  <div class="foot">
+    <p class="src"><b>Source:</b> Alan S. Gerber and Gregory A. Huber, &ldquo;Getting Out the Vote
+      Is Tougher Than You Think,&rdquo; <i>Stanford Social Innovation Review</i>, 7 March 2016.<br>
+      Read first-hand 14 September 2026. Gerber is a co-author of the underlying Yale field-experiment
+      programme.</p>
+    <i class="wordmark"></i>
+  </div>
+</div>

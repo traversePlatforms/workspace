@@ -1,0 +1,135 @@
+/* Shared board system for the 2026-09-14 visual set.
+   Four 1080x1350 boards, each printed to a single borderless PDF page.
+
+   Palette is the sanctioned one from brand/guidelines/README.md. Nothing here
+   invents a colour: --green and --grey are the supplied brand values, the dark
+   ramp is the website's, and --green-deep is the guidelines' light-surface green.
+
+   The de-emphasis greys were picked by running the dataviz validator rather than
+   by eye. On the light surface #4b544d clears every check against --green-deep
+   (CVD dE 15.1, normal-vision dE 18.9, contrast >=3:1); on the dark ground
+   #7d867f clears CVD dE 14.2, normal dE 20.0 and 3:1 against --ink. */
+
+:root{
+  --green:#4abe4a;          /* brand green - fills, and any green on a dark ground */
+  --green-deep:#2e8b2e;     /* brand-adjacent - green on a LIGHT ground (4abe4a is 2.3:1 on white) */
+  --grey:#ababab;           /* brand grey */
+
+  /* dark ramp - the website's tokens */
+  --ink:#0a0a0a; --lift:#1c1c1c; --line:#333; --text:#f4f4f4;
+  --soft:#ababab; --faint:#8a8a8a;
+  --mute-dark:#7d867f;      /* de-emphasis mark colour on the dark ground */
+
+  /* light ramp */
+  --paper:#f6f7f5; --paper-lift:#ffffff; --paper-line:#dfe3df;
+  --ink-l:#141614; --soft-l:#555d55; --faint-l:#78807a;
+  --mute-light:#4b544d;     /* de-emphasis mark colour on the light ground */
+
+  --wash:rgba(74,190,74,.10);
+  --wash-light:rgba(46,139,46,.09);
+
+  --display:"Anton","Bahnschrift Condensed","Franklin Gothic Demi Cond","Arial Narrow",Impact,sans-serif;
+  --sans:"Archivo","Segoe UI",system-ui,sans-serif;
+  --mono:"Consolas",ui-monospace,monospace;
+}
+
+@page{ size:11.25in 14.0625in; margin:0; }
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  background:#4c524e;                 /* screen surround only; never printed */
+  display:grid;place-items:start center;
+}
+
+/* ---------- the board ---------- */
+.board{
+  position:relative;width:1080px;height:1350px;overflow:hidden;
+  display:flex;flex-direction:column;
+  padding:62px 64px 0;
+}
+.board--dark{background:var(--ink);color:var(--text)}
+.board--light{background:var(--paper);color:var(--ink-l)}
+
+@media print{
+  body{background:#fff;display:block}
+  .board{margin:0}
+}
+@media screen{
+  body{padding:28px 0 44px}
+  .board{box-shadow:0 26px 70px rgba(0,0,0,.45)}
+}
+
+/* ---------- masthead ---------- */
+.eyebrow{
+  font-family:var(--mono);font-size:16px;letter-spacing:.20em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 16px;
+}
+.board--light .eyebrow{color:var(--faint-l)}
+
+h1{
+  font-family:var(--display);font-weight:400;text-transform:uppercase;
+  font-size:78px;line-height:.92;letter-spacing:.005em;margin:0;
+}
+h1 em{font-style:normal;color:var(--green)}
+.board--light h1 em{color:var(--green-deep)}
+
+.standfirst{
+  margin:20px 0 0;max-width:840px;font-size:22px;line-height:1.42;color:var(--soft);
+}
+.board--light .standfirst{color:var(--soft-l)}
+
+.rule{height:4px;background:var(--green);margin:30px 0 0;flex:none}
+.board--light .rule{background:var(--green-deep)}
+
+/* ---------- generic plot chrome ---------- */
+.plot{flex:1;display:flex;flex-direction:column;justify-content:center;padding:6px 0}
+
+.axis-line{height:1px;background:var(--line)}
+.board--light .axis-line{background:var(--paper-line)}
+
+.tick{
+  font-family:var(--mono);font-size:14px;color:var(--faint);
+  font-variant-numeric:tabular-nums;
+}
+.board--light .tick{color:var(--faint-l)}
+
+.mark-label{font-size:21px;font-weight:600;line-height:1.2}
+.mark-sub{font-size:15px;color:var(--faint);line-height:1.3;margin-top:3px}
+.board--light .mark-sub{color:var(--faint-l)}
+
+.value{
+  font-size:26px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- our read ---------- */
+.read{
+  flex:none;border-top:1px solid var(--line);padding:24px 0 0;margin-top:22px;
+}
+.board--light .read{border-top-color:var(--paper-line)}
+.read h2{
+  font-family:var(--mono);font-size:14px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--green);margin:0 0 10px;font-weight:400;
+}
+.board--light .read h2{color:var(--green-deep)}
+.read p{margin:0;font-size:22px;line-height:1.45;max-width:900px}
+.read p + p{margin-top:10px}
+
+/* ---------- footer ---------- */
+.foot{
+  flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:36px;
+  padding:22px 0 46px;
+}
+.src{
+  font-family:var(--mono);font-size:13.5px;line-height:1.5;color:var(--faint);
+  max-width:800px;margin:0;
+}
+.board--light .src{color:var(--faint-l)}
+.src b{font-weight:400;color:var(--soft)}
+.board--light .src b{color:var(--soft-l)}
+
+.wordmark{width:132px;flex:none;color:var(--text);opacity:.92}
+.board--light .wordmark{color:var(--ink-l)}

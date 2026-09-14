@@ -1,0 +1,134 @@
+<meta charset="utf-8">
+<title>Sixfold — Your wildfire risk score</title>
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* Not a chart. The subject is a sequence with statutory clocks on it, so the
+     form is two steppers and a contents list. The only numbers are days, and
+     every one of them is a figure from the act. */
+  .must{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:0}
+  .must div{background:var(--paper-lift);border-top:2px solid var(--ember-ink);padding:15px 15px 17px}
+  .must .n{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;color:var(--ember-ink);
+           margin-bottom:9px}
+  .must .t{font-size:15px;line-height:1.32}
+  .must-cap{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+            color:var(--p-faint);margin:0 0 12px}
+
+  .paths{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:32px}
+  .path{border:1px solid var(--p-line);padding:22px 24px 24px;background:var(--paper-lift)}
+  .path h3{font-family:var(--serif);font-weight:400;font-size:27px;line-height:1.1;margin:0 0 6px}
+  .path .when{font-size:15.5px;line-height:1.36;color:var(--p-soft);margin:0 0 18px}
+
+  .steps{display:grid;gap:0}
+  .step{display:grid;grid-template-columns:74px 1fr;gap:16px;align-items:start;
+        padding:13px 0;border-top:1px solid var(--p-line)}
+  .step:first-child{border-top:0;padding-top:0}
+  .badge{text-align:center}
+  .badge .d{font-family:var(--sans);font-weight:700;font-size:31px;line-height:1;
+            color:var(--ember-ink);letter-spacing:-.02em}
+  .badge .u{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+            color:var(--p-faint);margin-top:4px}
+  .step .txt{font-size:16px;line-height:1.34}
+  .step .txt b{font-weight:600}
+</style>
+
+<div class="board board--light">
+
+  <p class="eyebrow">HB25-1182 &middot; C.R.S. 10-4-124 &middot; In effect 1 July 2026</p>
+  <h1>Your house has a score.<br>Now they have to <em>show you</em>.</h1>
+  <p class="standfirst">If your insurer uses a wildfire risk model to price, renew or decline your
+    policy, the law now makes them put it in writing once a year.</p>
+  <div class="rule"></div>
+
+  <div class="plot">
+
+    <p class="must-cap">What the notice has to contain &mdash; all five</p>
+    <div class="must">
+      <div><div class="n">01</div><div class="t">A plain-language explanation, including that
+        insurers use different models and different ranges</div></div>
+      <div><div class="n">02</div><div class="t">The full range of scores your property could have
+        been given</div></div>
+      <div><div class="n">03</div><div class="t">Where your score sits inside that range</div></div>
+      <div><div class="n">04</div><div class="t">Why &mdash; naming the primary features of the
+        property that drove it</div></div>
+      <div><div class="n">05</div><div class="t">What each mitigation action would do to it</div></div>
+    </div>
+
+    <div class="paths">
+      <div class="path">
+        <h3>You have done the work</h3>
+        <p class="when">Mitigation finished since you last renewed? You do not have to wait for
+          renewal to be re-scored.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="badge"><div class="d">30</div><div class="u">days</div></div>
+            <div class="txt">Ask for a revised score and the insurer has <b>30 days</b> to produce
+              one.</div>
+          </div>
+          <div class="step">
+            <div class="badge"><div class="d">15</div><div class="u">days</div></div>
+            <div class="txt">New application instead? The notice is due <b>within 15 days</b> of a
+              completed application. Existing policyholders get it <b>with the renewal offer</b>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path">
+        <h3>You think it is wrong</h3>
+        <p class="when">If the score or the discount looks wrong and you have evidence of work
+          done, you appeal to the insurer directly.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="badge"><div class="d">10</div><div class="u">days</div></div>
+            <div class="txt">They must acknowledge your appeal <b>in writing within 10 calendar
+              days</b>.</div>
+          </div>
+          <div class="step">
+            <div class="badge"><div class="d">30</div><div class="u">days</div></div>
+            <div class="txt">And give you a written decision <b>within 30 calendar days</b>. A
+              denied appeal goes to the Commissioner on request.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="disc">Not insurance advice &mdash; read your own notice and talk to your carrier. The
+      statute entitles you to a re-score, not to a better one, and what any discount is worth is the
+      insurer&rsquo;s to set. We do not contact insurers on anyone&rsquo;s behalf.</p>
+  </div>
+
+  <div class="read">
+    <h2>The part worth keeping</h2>
+    <p>Insurers also have to publish which mitigation actions earn a discount and <em>how much each
+      one is worth</em>. That list is the closest thing there is to a price on this work being
+      written down by somebody with no reason to flatter it.</p>
+  </div>
+
+  <div class="foot">
+    <p class="src"><b>Source:</b> HB25-1182, enacted act read in full, adding C.R.S. 10-4-124 &mdash;
+      notice duty &sect;(6)(a), the five contents &sect;(6)(b)(I)&ndash;(V), delivery and re-score
+      timing &sect;(7)(a)&ndash;(d), appeal clocks &sect;(8), published discount list &sect;(5).
+      Applies to policies issued or renewed on or after 1 July 2026.</p>
+    <div class="sig">
+      <svg viewBox="0 0 100 116" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <div class="w">Sixfold</div>
+        <div class="c">Monument, CO</div>
+      </div>
+    </div>
+  </div>
+</div>

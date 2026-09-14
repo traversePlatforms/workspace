@@ -1,0 +1,162 @@
+<meta charset="utf-8">
+<title>Sixfold — The beetles keep a calendar</title>
+<link rel="stylesheet" href="_board.css">
+<style>
+  /* Range chart on a true 12-month axis. Two flight windows, one hue in two
+     steps, each row directly labelled — so identity never rests on telling two
+     colours apart. The quiet window is ground, not a series, which is why it is
+     moss: it frames the chart rather than competing inside it.
+     It appears at BOTH ends because the year wraps, and that is the finding. */
+  .cal{display:grid;grid-template-columns:214px 1fr;column-gap:22px;row-gap:0}
+  .cal .lane{position:relative;height:88px}
+  .cal .lane--head{height:30px}
+
+  .quiet{position:absolute;top:0;bottom:0;background:rgba(138,160,122,.15);
+         border-left:1px solid rgba(138,160,122,.45);border-right:1px solid rgba(138,160,122,.45)}
+  .quiet-tag{position:absolute;top:4px;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+             text-transform:uppercase;color:var(--moss);white-space:nowrap}
+
+  .band{position:absolute;top:50%;transform:translateY(-50%);height:26px;border-radius:4px}
+  .band--mpb{background:var(--ember)}
+  .band--ips{background:rgba(228,112,58,.48)}
+  .band .lb{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+            font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--pine);
+            white-space:nowrap;font-weight:700}
+  .band--ips .lb{color:var(--bone);right:auto;left:12px}
+  /* The MPB band is short and carries two peak markers, so its label sits
+     OUTSIDE the band to its left rather than underneath the dots. */
+  .band--mpb .lb{right:auto;left:auto;margin-left:-12px;transform:translate(-100%,-50%);
+                 color:var(--d-soft);font-weight:400}
+
+  .peak{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;
+        border-radius:50%;background:var(--bone);box-shadow:0 0 0 3px var(--pine)}
+  /* Notes hang below the band and lean away from each other — the two peaks are
+     six weeks apart, which is ~46px here, and centred labels would overlap. */
+  .peak-note{position:absolute;top:calc(50% + 14px);
+             font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--d-soft);
+             white-space:nowrap;line-height:1.3}
+  .peak-note--l{transform:translateX(-100%);margin-left:-5px;text-align:right}
+  .peak-note--r{margin-left:5px}
+
+  .months{position:relative;height:100%;border-top:1px solid var(--d-line);padding-top:8px}
+  .months span{position:absolute;top:8px;transform:translateX(-50%);
+               font-family:var(--mono);font-size:12.5px;color:var(--d-faint)}
+
+  .opts{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:30px}
+  .opts div{background:var(--timber);padding:17px 18px}
+  .opts .h{font-family:var(--serif);font-size:22px;line-height:1.1;margin-bottom:7px}
+  .opts .d{font-size:14.5px;line-height:1.34;color:var(--d-soft)}
+
+  .rule-line{margin-top:22px;border-left:2px solid var(--ember);padding-left:18px;
+             font-size:18px;line-height:1.4}
+  .rule-line b{color:var(--ember)}
+</style>
+
+<div class="board board--dark">
+
+  <p class="eyebrow">When to cut &middot; and what happens to the pile</p>
+  <h1>The beetles keep<br>a <em>calendar</em> too.</h1>
+  <p class="standfirst">Fresh green pine slash is habitat. A pile of green rounds sitting ten feet
+    from healthy trees through the wrong months is doing something you did not intend.</p>
+  <div class="rule"></div>
+
+  <div class="plot">
+
+    <div class="cal">
+      <div></div>
+      <div class="lane lane--head" style="position:relative">
+        <div class="quiet" style="left:0;width:14.6%"></div>
+        <div class="quiet" style="left:91.67%;right:0"></div>
+        <div class="quiet-tag" style="left:6px">Quiet</div>
+        <div class="quiet-tag" style="left:91.67%;margin-left:6px">Quiet</div>
+      </div>
+
+      <div style="align-self:center">
+        <div class="mark-label">Ips beetles</div>
+        <div class="mark-sub">Two to four generations a year</div>
+      </div>
+      <div class="lane">
+        <div class="quiet" style="left:0;width:14.6%"></div>
+        <div class="quiet" style="left:91.67%;right:0"></div>
+        <div class="band band--ips" style="left:14.6%;width:77.07%">
+          <span class="lb">LATE FEBRUARY &rarr; NOVEMBER</span>
+        </div>
+      </div>
+
+      <div style="align-self:center">
+        <div class="mark-label">Mountain pine beetle</div>
+        <div class="mark-sub">New adults leaving the tree</div>
+      </div>
+      <div class="lane">
+        <div class="quiet" style="left:0;width:14.6%"></div>
+        <div class="quiet" style="left:91.67%;right:0"></div>
+        <div class="band band--mpb" style="left:45.8%;width:29.2%">
+          <span class="lb">MID-JUNE &rarr; SEPTEMBER</span>
+        </div>
+        <div class="peak" style="left:56.3%"></div>
+        <div class="peak" style="left:62.5%"></div>
+        <div class="peak-note peak-note--l" style="left:56.3%">late Jul<br>lodgepole</div>
+        <div class="peak-note peak-note--r" style="left:62.5%">mid-Aug<br>ponderosa</div>
+      </div>
+
+      <div></div>
+      <div class="lane lane--head">
+        <div class="months">
+          <span style="left:4.17%">JAN</span><span style="left:12.5%">FEB</span>
+          <span style="left:20.83%">MAR</span><span style="left:29.17%">APR</span>
+          <span style="left:37.5%">MAY</span><span style="left:45.83%">JUN</span>
+          <span style="left:54.17%">JUL</span><span style="left:62.5%">AUG</span>
+          <span style="left:70.83%">SEP</span><span style="left:79.17%">OCT</span>
+          <span style="left:87.5%">NOV</span><span style="left:95.83%">DEC</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="opts">
+      <div><div class="h">Chip it</div><div class="d">Destroys the inner bark the larvae live in.</div></div>
+      <div><div class="h">Scatter it</div><div class="d">Spread thin so it dries fast, rather than piled.</div></div>
+      <div><div class="h">Haul it off</div><div class="d">Off the property altogether.</div></div>
+      <div><div class="h">Round it</div><div class="d">Cut and season it well away from standing trees.</div></div>
+    </div>
+
+    <p class="rule-line"><b>Never stack green or infested conifer wood next to living conifers.</b>
+      Piling it and forgetting it is the only genuinely bad option of the five.</p>
+  </div>
+
+  <div class="read">
+    <h2>Which is why we would rather come in winter</h2>
+    <p>The beetles are not flying, the ground holds equipment better, and anyone doing this work has
+      an open calendar between November and February that they will not have in April.</p>
+  </div>
+
+  <div class="foot">
+    <p class="src"><b>Sources:</b> CSU Extension fact sheet 5.558, <i>Ips Beetles</i> (Cranshaw &amp;
+      Leatherman) &mdash; flight period, generations, and the stacking rule. CSFS / CSU fact sheet
+      5.528, <i>Mountain Pine Beetle</i> &mdash; emergence window and both peaks, read first-hand
+      14 September 2026.<br>
+      The &ldquo;only cut October to April&rdquo; rule that circulates with this topic is <b>not</b> in
+      either fact sheet and is not claimed here. The months above are flight periods, which are.</p>
+    <div class="sig">
+      <svg viewBox="0 0 100 116" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <div class="w">Sixfold</div>
+        <div class="c">Monument, CO</div>
+      </div>
+    </div>
+  </div>
+</div>
