@@ -135,6 +135,57 @@ phone call to a roofer.
 
 ---
 
+## 6b. Round two — 2026-09-14
+
+Stringline was reopened. A wider set was screened, deliberately pushing outside the
+evidence-and-measurement family. **Finding: the abstract "brandable" space is heavily occupied in
+Colorado, while the evidence space is not.** Kestrel 37 in good standing (including a **Kestrel Design
+Group**), Marker 33, Quarry 29, Lodestar 22, Ironwood 21, Platte 18, Tessera 15, Highline 14,
+Bellwether 9 — all rejected on volume alone.
+
+| Candidate | CO good standing | Domain | Read |
+|---|---|---|---|
+| **DEAD TRUE** | **0 records at all** | `.com` taken and live; `deadtrue.co`, `getdeadtrue.com` free | Cleanest record of any candidate screened |
+| **PLAIN SIGHT** | 0 | all three variants taken | Domain position kills it |
+| **LEVEL BEST** | 3 | — | All three are **construction** (concrete lifting, excavation) — the client's own sector |
+| **SHARPLINE** | 1 — SharpLine Finishing LLC | `.com` and `.co` taken | See Sharpeline below |
+| **SHARPELINE** | **0 records** | `sharpeline.com` resolves; `.co`, `sharpelineco.com`, `getsharpeline.com`, `.net`, `.studio` free | Clean in Colorado — **but see below** |
+| **SHARPE LINE** | **0 records** | — | Same homophone issue |
+| SHARPE (bare) | 18 | — | All sharpening / drilling / tinting. No conflict with a compound. |
+
+### The Sharpeline finding
+
+He chose **Sharpeline** — his surname plus the line. Colorado is pristine: zero records for either
+spelling. The problem is not the register, it is the spoken word.
+
+**"Sharpeline" is a homophone of a crowded US field:**
+
+| Company | What it does |
+|---|---|
+| Sharpline Converting Inc — Wichita KS, since 1976 | **Vinyl graphics**, dimensional emblems, automotive restyling. Holds `sharpline.com`. Design-adjacent. |
+| SharpLine Solutions — Azusa CA | Traffic marking materials |
+| Sharp-Line Industries — Spokane WA | Traffic signs and signals |
+| Sharpline Inc | Multi-unit renovation and maintenance |
+| SharpLine Finishing LLC | Colorado — construction finishing |
+| SHARPELINE LTD | UK, hair care. Holds `sharpeline.co.uk`. |
+
+`sharpeline.com` itself already resolves; its owner could not be identified — the fetch failed on a TLS
+certificate error, which usually indicates a parked or misconfigured host.
+
+**Why this matters here specifically.** This is not a trademark opinion — class 35 against vinyl
+graphics and traffic paint is defensible on the same class reasoning as §3. It is a **findability**
+problem, and acquisition for this offering is referral and local search. A name heard on a jobsite gets
+typed as `sharpline.com`, which is a Wichita graphics manufacturer; typed with the "e" it is whatever
+sits on `sharpeline.com`. **Both obvious spellings lead somewhere that is not him**, leaving
+`sharpeline.co` or `sharpelineco.com` as the actual address. For a studio selling websites, being hard
+to find by its own name is an unhelpful first impression.
+
+**Left open at his request, 2026-09-14.** Three routes: `Sharpe Layout` (unscreened, keeps his name and
+the layout idea, no homophone field); Stringline as the brand with proposals signed in his own name; or
+Sharpeline anyway with the tax accepted deliberately.
+
+---
+
 ## 7. Fact-check log
 
 | Claim | Source | Status |
