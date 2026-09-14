@@ -143,7 +143,7 @@ The five rules:
 
 Felling, stump grinding, slash piling, chipping and haul-off — in El Paso, Douglas and Teller counties and the Front Range foothills.
 
-**(720) 772-6146** · Contact@SixfoldColorado.com
+**(303) 915-1045** · Contact@SixfoldColorado.com
 Sixfold, LLC · Monument, CO
 
 QR code to `linktr.ee/SixFoldColorado` — the decode-verified print-black variant from [brand/qr/](../brand/qr/), inlined as SVG so it scales without resampling. Do not swap it for a generated one; that folder's build script decodes every code it writes and this one passes down to 160 px.

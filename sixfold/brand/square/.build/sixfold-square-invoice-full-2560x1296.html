@@ -1,0 +1,117 @@
+<!doctype html><meta charset="utf-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .art{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+
+  /* --- square logo tile --- */
+  .profile{width:100%;height:100%}
+  .profile .markwrap{display:flex;align-items:center;justify-content:center;transform:translateY(-3%)}
+  .profile .mark{width:100%;height:auto;display:block}
+
+  /* --- lockup / banner --- */
+  .banner .glow{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 150% at 50% 118%, rgba(228,112,58,0.20) 0%, rgba(228,112,58,0.055) 38%, rgba(228,112,58,0) 66%);
+  }
+  .stack{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:0 6%}
+  .lockup{display:flex;align-items:center;gap:calc(var(--u)*4.5)}
+  .lockup .markwrap{width:calc(var(--u)*23)}
+  .lockup .mark{width:100%;height:auto;display:block}
+  .wordmark{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:0.84;letter-spacing:-0.018em;
+  }
+  .descriptor{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*4.4);letter-spacing:0.34em;text-transform:uppercase;
+    margin-top:calc(var(--u)*2.6);text-indent:0.34em;
+  }
+  .rule{width:calc(var(--u)*20);height:calc(var(--u)*0.85);opacity:0.95;margin-top:calc(var(--u)*5.5)}
+  .line{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*8.8);line-height:1.16;text-align:center;text-wrap:balance;max-width:80%;
+    margin-top:calc(var(--u)*5);
+  }
+  .phone{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*3.6);letter-spacing:0.18em;text-transform:uppercase;text-align:center;
+    white-space:nowrap;margin-top:calc(var(--u)*4.6);text-indent:0.18em;
+  }
+
+  /* --- printed receipt --- */
+  .rc{background:#FFFFFF}
+  .rcwrap{display:flex;align-items:center;gap:calc(var(--u)*7)}
+  .rcwrap .markwrap{width:calc(var(--u)*44);display:flex}
+  .rcwrap .mark{width:100%;height:auto;display:block}
+  .rcword{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:1;letter-spacing:0.02em;
+  }
+  .rcsub{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*6.4);letter-spacing:0.16em;text-transform:uppercase;
+    margin-top:calc(var(--u)*3.4);
+  }
+
+  /* --- gift card --- */
+  .card .glow{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 150% at 50% 120%, rgba(228,112,58,0.22) 0%, rgba(228,112,58,0.06) 40%, rgba(228,112,58,0) 68%);
+  }
+  .cardwrap{position:relative;display:flex;align-items:center;gap:calc(var(--u)*6)}
+  .cardwrap .markwrap{width:calc(var(--u)*24);display:flex}
+  .cardwrap .mark{width:100%;height:auto;display:block}
+  .cardword{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:0.86;letter-spacing:-0.018em;
+  }
+  .carddesc{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*4.2);letter-spacing:0.32em;text-transform:uppercase;
+    margin-top:calc(var(--u)*2.4);text-indent:0.32em;
+  }
+  .cardfoot{
+    position:absolute;left:calc(var(--u)*7);bottom:calc(var(--u)*6);
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*3.4);letter-spacing:0.28em;text-transform:uppercase;
+  }
+
+    body{width:2560px;height:1296px}
+    .art{width:2560px;height:1296px}</style>
+<div class="art banner" style="background:#0E1512;width:2560px;height:1296px;--u:12.96px">
+  <div class="glow"></div>
+  <div class="stack">
+    <div class="lockup">
+      <div class="markwrap" style="color:#E4703A"><svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+     <g fill="currentColor">
+  <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+  <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+  <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+  <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+  <rect x="20.4" y="77" width="3.2" height="7"/>
+  <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+  <path d="M22 62 L12 74 L32 74 Z"/>
+  <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+  <rect x="4" y="86" width="92" height="5"/></g>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+    <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+    <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+    <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+    <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+    <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+    <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+    <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+    <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+    <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+  </g>
+   </svg></div>
+      <div class="wordmark" style="color:#EDE7DC">Sixfold</div>
+    </div>
+    <div class="descriptor" style="color:#8AA07A">Land &amp; Fire</div>
+    <div class="rule" style="background:#E4703A"></div>
+    <div class="line" style="color:#EDE7DC">We do the work and show you who pays for it.</div>
+    
+  </div>
+</div>

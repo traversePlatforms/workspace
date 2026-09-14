@@ -1,0 +1,101 @@
+<!doctype html><meta charset="utf-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .art{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+
+  /* --- square logo tile --- */
+  .profile{width:100%;height:100%}
+  .profile .markwrap{display:flex;align-items:center;justify-content:center;transform:translateY(-3%)}
+  .profile .mark{width:100%;height:auto;display:block}
+
+  /* --- lockup / banner --- */
+  .banner .glow{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 150% at 50% 118%, rgba(228,112,58,0.20) 0%, rgba(228,112,58,0.055) 38%, rgba(228,112,58,0) 66%);
+  }
+  .stack{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:0 6%}
+  .lockup{display:flex;align-items:center;gap:calc(var(--u)*4.5)}
+  .lockup .markwrap{width:calc(var(--u)*23)}
+  .lockup .mark{width:100%;height:auto;display:block}
+  .wordmark{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:0.84;letter-spacing:-0.018em;
+  }
+  .descriptor{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*4.4);letter-spacing:0.34em;text-transform:uppercase;
+    margin-top:calc(var(--u)*2.6);text-indent:0.34em;
+  }
+  .rule{width:calc(var(--u)*20);height:calc(var(--u)*0.85);opacity:0.95;margin-top:calc(var(--u)*5.5)}
+  .line{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*8.8);line-height:1.16;text-align:center;text-wrap:balance;max-width:80%;
+    margin-top:calc(var(--u)*5);
+  }
+  .phone{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*3.6);letter-spacing:0.18em;text-transform:uppercase;text-align:center;
+    white-space:nowrap;margin-top:calc(var(--u)*4.6);text-indent:0.18em;
+  }
+
+  /* --- printed receipt --- */
+  .rc{background:#FFFFFF}
+  .rcwrap{display:flex;align-items:center;gap:calc(var(--u)*7)}
+  .rcwrap .markwrap{width:calc(var(--u)*44);display:flex}
+  .rcwrap .mark{width:100%;height:auto;display:block}
+  .rcword{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:1;letter-spacing:0.02em;
+  }
+  .rcsub{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*6.4);letter-spacing:0.16em;text-transform:uppercase;
+    margin-top:calc(var(--u)*3.4);
+  }
+
+  /* --- gift card --- */
+  .card .glow{
+    position:absolute;inset:0;
+    background:radial-gradient(120% 150% at 50% 120%, rgba(228,112,58,0.22) 0%, rgba(228,112,58,0.06) 40%, rgba(228,112,58,0) 68%);
+  }
+  .cardwrap{position:relative;display:flex;align-items:center;gap:calc(var(--u)*6)}
+  .cardwrap .markwrap{width:calc(var(--u)*24);display:flex}
+  .cardwrap .mark{width:100%;height:auto;display:block}
+  .cardword{
+    font-family:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    font-size:calc(var(--u)*30);line-height:0.86;letter-spacing:-0.018em;
+  }
+  .carddesc{
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*4.2);letter-spacing:0.32em;text-transform:uppercase;
+    margin-top:calc(var(--u)*2.4);text-indent:0.32em;
+  }
+  .cardfoot{
+    position:absolute;left:calc(var(--u)*7);bottom:calc(var(--u)*6);
+    font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,monospace;
+    font-size:calc(var(--u)*3.4);letter-spacing:0.28em;text-transform:uppercase;
+  }
+
+    body{width:800px;height:400px}
+    .art{width:800px;height:400px}</style>
+<div class="art rc" style="width:800px;height:400px;--u:4px">
+  <div class="rcwrap">
+    <div class="markwrap" style="color:#0E1512"><svg class="mark" viewBox="4 14 94 77" role="img" aria-label="Sixfold">
+     <g fill="currentColor">
+  <path d="M18 84 L36 48 L54 84 Z"/>
+  <path d="M30 84 L50 38 L70 84 Z"/>
+  <path d="M44 84 L66 26 L88 84 Z"/>
+  <path d="M60 84 L79 14 L98 84 Z"/>
+  <rect x="20.4" y="77" width="3.2" height="7"/>
+  <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+  <path d="M22 62 L12 74 L32 74 Z"/>
+  <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+  <rect x="4" y="86" width="92" height="5"/></g>
+   </svg></div>
+    <div class="rctext">
+      <div class="rcword" style="color:#0E1512">SIXFOLD</div>
+      <div class="rcsub" style="color:#0E1512">Fire mitigation &middot; Front Range</div>
+    </div>
+  </div>
+</div>

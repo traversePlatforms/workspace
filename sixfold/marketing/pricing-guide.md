@@ -417,9 +417,10 @@ Recommendation is (1). A published number in a market of "call for a quote" is a
 durable advantage; 40% off is a one-season one, and it sets an anchor the business
 has to climb back from.
 
-**Also unresolved before release:** the phone number on this sheet is
-(720) 772-6146, which is a Surge line. If Sixfold is getting its own number, it
-should be on the card before the card is printed.
+~~**Also unresolved before release:** the phone number on this sheet is
+(720) 772-6146, which is a Surge line.~~ **Resolved 2026-09-14.** Sixfold has its
+own number, `(303) 915-1045`, and it is now on this card and everywhere else in
+the project. The Surge line is gone from all live copy.
 
 ---
 

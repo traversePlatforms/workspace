@@ -79,9 +79,13 @@ reused rather than reinvented.
 
 ## Open
 
-- **`(720) 772-6146` still lives in `../../marketing/`, `../square/`, and possibly
-  `../../site/`.** The new number `(303) 915-1045` needs sweeping through those in
-  a follow-up — this pass only did the social kit.
+- ~~**`(720) 772-6146` still lives in `../../marketing/`, `../square/`, and possibly
+  `../../site/`.**~~ **Swept 2026-09-14, on Matthew's instruction.** `(303) 915-1045`
+  now reaches every source, generated file, PDF and rendered asset in the project.
+  The only places the old number survives are deliberate: the archived
+  `_superseded-2026-09-08/` set, and dated fact-check entries that record what a
+  document said at the time. It turned out to be **57 files**, not the three
+  folders guessed here.
 - **Ridge vs Sweep** is still formally Brandon's call. Swap `RIDGE_*` and re-run
   if it changes.
 - **"Land & Fire"** is still a placeholder descriptor.

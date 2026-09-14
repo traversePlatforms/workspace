@@ -29,7 +29,7 @@ Use **Sixfold Colorado** as the public-facing name on Square.
 
 ## Standard description — for the profile / booking site
 
-> Fire mitigation across Colorado's Front Range — felling, stump grinding, slash and chipping, defensible space. Every job comes with the written scope and before/after photos your state tax credit and your insurer both want. Monument-based. (720) 772-6146
+> Fire mitigation across Colorado's Front Range — felling, stump grinding, slash and chipping, defensible space. Every job comes with the written scope and before/after photos your state tax credit and your insurer both want. Monument-based. (303) 915-1045
 
 **About 250 characters.** Drop the phone number if Square already shows it as a separate field on that surface.
 
@@ -49,7 +49,7 @@ Use **Sixfold Colorado** as the public-facing name on Square.
 >
 > So every job we do comes with the paperwork, whether or not you ask for it: a written scope of exactly what was cut and where, and photographs from fixed positions before and after. One document set, and it serves your tax return and your carrier both.
 >
-> Call (720) 772-6146 or email Contact@SixfoldColorado.com and we'll come and walk the property.
+> Call (303) 915-1045 or email Contact@SixfoldColorado.com and we'll come and walk the property.
 >
 > Not tax or insurance advice — confirm your own position with your accountant and your carrier.
 
@@ -61,7 +61,7 @@ Use **Sixfold Colorado** as the public-facing name on Square.
 
 **Contact fields**
 
-- Phone: **(720) 772-6146**
+- Phone: **(303) 915-1045**
 - Email: **Contact@SixfoldColorado.com**
 - Address: **do not publish a street address.** Sixfold does not serve customers at its premises, and the Monument street address is not on file yet. Set a **service area** instead. Square will still need a real address privately for account verification and payouts — that is a back-office field, not the public profile.
 

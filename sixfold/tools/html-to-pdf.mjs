@@ -31,7 +31,9 @@ const root = resolve(here, '..');
    'dark'  — the document has no light palette, or is a proof of assets that
              only make sense on the dark ground. */
 const JOBS = [
-  { src: 'brand/social/review.html',            out: 'brand/social/review.pdf',                   mode: 'dark'  },
+  /* Path corrected 2026-09-14 — the review page is generated into `out/`, and the
+     stale path here threw on job #1 and so blocked every other job in the list. */
+  { src: 'brand/social/out/review.html',        out: 'brand/social/review.pdf',                   mode: 'dark'  },
   { src: 'brand/ridge-lineage.html',            out: 'brand/ridge-lineage.pdf',                   mode: 'light' },
   { src: 'brand/ridge-mark.html',               out: 'brand/ridge-mark.pdf',                      mode: 'light' },
   /* scale: the one-pager carries its own @page rule and an 8.5in sheet. At the
@@ -97,6 +99,41 @@ const JOBS = [
      light print register like everything else in the binder. Four sheets, one
      printed page each — count them after any edit. */
   { src: 'operations/quote-walk-sheet.html',    out: 'operations/quote-walk-sheet.pdf',           mode: 'light' },
+
+  /* ---- added 2026-09-14 ----------------------------------------------------
+     These thirteen PDFs already existed but had no job here, so they could not be
+     rebuilt from their sources — which came to light during the phone-number
+     sweep, when every one of them was carrying a superseded number.
+
+     EXPECTED PAGE COUNTS, verified against the files as they stood before the
+     sweep. These are contracts, rate sheets and binder sheets where the count is
+     part of the document — if a rebuild changes one of these numbers, something
+     else changed too. Do not ship it; find out what.
+       service-agreement 5 · field-instructions 2 · service-agreement-tablet 3
+       sedalia-A-service-agreement 5 · pamphlet 2 · rate card 9
+       rate sheets A/B/C 1 each · services sheet D 1 · gear checklist 7
+       reference notebook 7 · client forms 4                                   */
+  { src: 'agreements/service-agreement.html',        out: 'agreements/service-agreement.pdf',              mode: 'light' },
+  { src: 'agreements/field-instructions.html',       out: 'agreements/field-instructions.pdf',             mode: 'light' },
+  { src: 'agreements/service-agreement-tablet.html', out: 'agreements/service-agreement-tablet.pdf',       mode: 'light' },
+  { src: 'agreements/sedalia-A-service-agreement.html', out: 'agreements/sedalia-A-service-agreement.pdf', mode: 'light' },
+  { src: 'marketing/home-wildfire-pamphlet.html', out: 'marketing/Sixfold-Home-Wildfire-Pamphlet.pdf', mode: 'light' },
+  /* scale 1.0, not the default 0.8: at 0.8 the card comes out 7 pages instead of
+     9 and the internal band stops starting its own page. Found by comparing
+     against the pre-sweep file rather than by reading it. */
+  { src: 'marketing/pricing-guide.html',         out: 'marketing/Sixfold-Rate-Card-INTERNAL.pdf',     mode: 'light', scale: 1.0 },
+  { src: 'marketing/pricing-onesheet.html',      out: 'marketing/Sixfold-Rate-Sheet-A.pdf',          mode: 'light' },
+  { src: 'marketing/pricing-onesheet-b.html',    out: 'marketing/Sixfold-Rate-Sheet-B.pdf',          mode: 'light' },
+  { src: 'marketing/pricing-onesheet-c.html',    out: 'marketing/Sixfold-Rate-Sheet-C.pdf',          mode: 'light' },
+  { src: 'marketing/services-onesheet-d.html',   out: 'marketing/Sixfold-Services-Sheet-D.pdf',      mode: 'light' },
+  { src: 'operations/gear-checklist.html',       out: 'operations/gear-checklist.pdf',               mode: 'light' },
+  { src: 'tax-credit-notebook/reference-notebook.html', out: 'tax-credit-notebook/reference-notebook.pdf', mode: 'light' },
+  { src: 'tax-credit-notebook/client-forms.html',      out: 'tax-credit-notebook/client-forms.pdf',       mode: 'light' },
+
+  /* NOT here, deliberately: `agreements/sedalia-A-service-agreement-fillable.pdf`
+     carries **30 AcroForm fields** and printing it from HTML would flatten every
+     one of them. It has no generator in this repo. See the sweep note in
+     agreements/README.md. */
 ];
 
 const CHROME = [

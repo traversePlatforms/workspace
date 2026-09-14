@@ -127,7 +127,7 @@ const lockup = ({ w, h, ref = 2, descriptor = true, tagline = true, phone = true
     ${descriptor ? `<div class="descriptor" style="color:${MOSS}">Land &amp; Fire</div>` : ''}
     ${tagline ? `<div class="rule" style="background:${EMBER}"></div>
     <div class="line" style="color:${BONE}">We do the work and show you who pays for it.</div>` : ''}
-    ${phone ? `<div class="phone" style="color:${MOSS}">Fire mitigation &middot; Front Range &middot; (720) 772-6146</div>` : ''}
+    ${phone ? `<div class="phone" style="color:${MOSS}">Fire mitigation &middot; Front Range &middot; (303) 915-1045</div>` : ''}
   </div>
 </div>`;
 };

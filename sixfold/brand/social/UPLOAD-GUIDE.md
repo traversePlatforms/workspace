@@ -147,10 +147,10 @@ who pays for it." · "Fire mitigation · Front Range · (303) 915-1045".
 
 ## Open / to sweep next
 
-- **`(720) 772-6146` still appears elsewhere.** The new number needs to reach:
-  `../../marketing/` (Facebook page copy, Square business description), the Square
-  asset set (`../square/`), `../../site/` if a number is shown, and any quote or
-  agreement template. Not done in this pass — flag for a follow-up.
+- ~~**`(720) 772-6146` still appears elsewhere.**~~ **Done 2026-09-14.** The sweep
+  reached marketing, the Square asset set, the site, the quote and agreement
+  templates, the tax-credit notebook, operations, and every PDF and rendered PNG
+  built from them. `(303) 915-1045` is now the only live number in the project.
 - **Ridge vs Sweep** is still formally Brandon's call. Every built asset uses
   Ridge; swap `RIDGE_*` in `build-social.mjs` and re-run if that changes.
 - **"Land & Fire"** is still a placeholder descriptor.

@@ -54,7 +54,7 @@ Regenerate: flat PDF via `scratchpad/agreement-to-pdf.ps1` (Letter, 0.35in top/b
 | Clause 12 — damage window | 14 days (unchanged from template) | Template decision 2026-08-21 |
 | Party name | **Sixfold, LLC** (with comma) | CO Secretary of State entity 20258292716 |
 | Contractor address | **17890 Sierra Way, Monument, CO 80132** | Matthew instruction 2026-08-29 — **not yet filed with the SoS**, which still shows Englewood |
-| Contact | (720) 772-6146 · Contact@SixfoldColorado.com | Sixfold README "Next up" §3 |
+| Contact | (303) 915-1045 · Contact@SixfoldColorado.com | Sixfold README "Next up" §3 |
 
 **The first payment can now fall inside the cancellation window.** Matthew's
 instruction is to take the first half on or before the first day of work; if work
@@ -117,7 +117,7 @@ exposure at all.
 | Three business days to cancel, in writing, no fee, not waivable; all payments refunded; **cancellation right is not cut off by payment or by work starting** | 16 CFR 429.1; C.R.S. 5-3-402 to 5-3-405 — read first-party 2026-08-21, logged in [README.md](README.md) and [../FACT-CHECK-2026-08-21.md](../FACT-CHECK-2026-08-21.md) | **Verified** (carried from that review). Request to state the right ends once work begins was declined — unenforceable and a violation to state |
 | Ten-point bold cancellation statement above the signature; Notice of Cancellation in duplicate, verbatim | 16 CFR 429.1(a)/(b); `.legal10` and `.noticeform` hold the type size | **Verified** — statutory wording reproduced unchanged, including the obsolete telegram line. **Must not be removed or shrunk** |
 | Party name "Sixfold, LLC"; seller address on the instrument **17890 Sierra Way, Monument, CO 80132** | Party name: CO Secretary of State, entity 20258292716 (verified 2026-08-21). Address: Matthew instruction 2026-08-29 | Party name **verified**. Address **not yet on the SoS record** (still Englewood) and **mail collection at Sierra Way unconfirmed** — see blocker 3 |
-| Contact@SixfoldColorado.com; (720) 772-6146 | [README.md](README.md), "Next up" §3 and funding one-pager contact | **Verified against project records**, not re-confirmed live |
+| Contact@SixfoldColorado.com; (303) 915-1045 | [README.md](README.md), "Next up" §3 and funding one-pager contact | **Verified against project records**, not re-confirmed live |
 | Colorado 811 locates before ground disturbance (clause 5) | C.R.S. 9-1.5-103 / 9-1.5-105 — read 2026-08-21 | **Verified**; the precise placement of the statutory duty is still an attorney item |
 | No claim of licensed / insured / bonded / certified anywhere | Checked line by line | **Clean** — matches the standing prohibition in the Sixfold README and the quotes |
 

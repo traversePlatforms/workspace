@@ -144,7 +144,7 @@ What the plan itself asks for next, in order:
 4. **Trademark attorney call** — classes 37 and 44, Sixfold AI as the conflict to raise
 5. **Establish what Sixfold holds** in licensing and certification — determines what copy may claim
 
-**The funding one-pager is built** — [marketing/funding-one-pager.html](marketing/funding-one-pager.html), print proof published. Two channels live (tax credit, insurance); the Douglas County block is written and held in the companion `.md` until Sixfold is listed. Contact filled in 2026-08-18: **(720) 772-6146** and **m.sharpe@surgeftw.com**. The sheet is printable as it stands; swap the Surge email for a `sixfoldland.com` forwarder before any volume run — see the brand-separation note in the companion `.md`.
+**The funding one-pager is built** — [marketing/funding-one-pager.html](marketing/funding-one-pager.html), print proof published. Two channels live (tax credit, insurance); the Douglas County block is written and held in the companion `.md` until Sixfold is listed. Contact filled in 2026-08-18: **(303) 915-1045** and **m.sharpe@surgeftw.com**. The sheet is printable as it stands; swap the Surge email for a `sixfoldland.com` forwarder before any volume run — see the brand-separation note in the companion `.md`.
 
 The natural follow-up is the same sheet aimed at **HOA and fire-district boards**, carrying FRWRM instead of the homeowner channels. The 8 Oct 2026 deadline makes it time-sensitive.
 
@@ -153,6 +153,25 @@ Still outstanding: **infographics** (originally requested, not started). The one
 ---
 
 ## Open items
+
+- **Phone number — swept 2026-09-14, two exceptions.** `(303) 915-1045` replaced
+  `(720) 772-6146` across **57 files**: every source, generated HTML, `.md` copy
+  source, generator script, rendered Square PNG and PDF. All 21 affected PDFs were
+  rebuilt and **verified at their original page counts**. Two Sedalia agreement PDFs
+  were deliberately left and still carry the old number — the fillable one would
+  lose 30 form fields, the DocuSign one has no generator; both are drafts, and the
+  reasons and fixes are in [agreements/README.md](agreements/README.md).
+  - **Thirteen PDFs had no job in [tools/html-to-pdf.mjs](tools/html-to-pdf.mjs)**
+    and so could not be rebuilt from source — which is why they had gone stale
+    silently. Jobs added for all thirteen, with their expected page counts written
+    into the file. The tool's first job also pointed at a path that no longer
+    exists, which made a no-argument run throw before it printed anything; fixed.
+  - **The published artifacts are now behind their local sources.** The rate card,
+    all three rate sheets, services sheet D, the pamphlet, the gear checklist, the
+    tax-credit notebook and forms, the marketing plan, platform sheet, content set,
+    minimum-viable-start sheet, funding one-pager and launch flyers all still show
+    the old number at their published URLs. **Republishing is a separate decision
+    and has not been done** — each needs its existing URL passed as `url`.
 
 - **Tax credit facts to fix in two files.** Verifying the content set against enacted statute (2026-08-19) turned up that both [research/fire-mitigation-market-research.md](research/fire-mitigation-market-research.md) and [marketing/marketing-plan.md](marketing/marketing-plan.md) record HB26-1289 as having "added thinning woody vegetation" to the credit. Thinning was **already** qualifying under C.R.S. 39-22-543(2)(d); the bill adds a narrower category — thinning of vegetation **at risk of or killed by mountain pine beetle or spruce beetle**. The plan's line calling this "precisely Sixfold's core service" overstates it. Also missing from both: **the credit is neither refundable nor carry-forward until tax year 2027** — excess over your tax liability is lost. Citations in [content/02-tax-credit-post.md](content/02-tax-credit-post.md). **The marketing plan is published as an artifact, so fixing the `.md` means republishing to the same URL** — not done, awaiting the call. **Add a third file, found 2026-08-26:** [marketing/funding-one-pager.html](marketing/funding-one-pager.html) prints the same overstated line — *"Thinning woody vegetation qualifies explicitly. That is the core of this work"* — and so does its companion `.md`. It predates the correction by a day. **The sheet is a customer handout**, which makes it the most important of the three to fix, and its PDF has to be rebuilt after.
 - **Which logo direction** — Brandon's call

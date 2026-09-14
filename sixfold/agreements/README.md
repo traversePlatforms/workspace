@@ -141,3 +141,33 @@ Three deliberate alignments with the rest of the project: clause 1 promises exac
 - **Local and municipal rules.** Some Front Range jurisdictions require a solicitor's permit for door-to-door work, and the platform sheet already flags confirming solicitation permits before canvassing. Nothing here covers that.
 - **C.R.S. Article 6-22 (residential roofing) does not apply** — it governs roofing contracts, and this is vegetation work. Mentioned only because it is the Colorado contractor statute most likely to be reached for by mistake.
 - **Nothing in this pack has been used, printed or reviewed.** No customer has seen it.
+
+---
+
+## Phone-number sweep — 2026-09-14
+
+Sixfold's number changed to **(303) 915-1045** on 2026-09-08. Swept project-wide on
+the 14th on Matthew's instruction. In this folder the sources, the generated HTML
+and these PDFs were all rebuilt and verified at their original page counts
+(service agreement 5, field instructions 2, tablet 3, Sedalia 5):
+
+- `service-agreement`, `field-instructions`, `service-agreement-tablet` and
+  `sedalia-A-service-agreement` — **done**, `.src.html` → `.html` → `.pdf`. PDF jobs
+  for all four were added to `../tools/html-to-pdf.mjs`, which previously had none,
+  which is why these had gone stale in the first place.
+
+**Two files were deliberately NOT rebuilt, and both still carry the old number:**
+
+| File | Why it was left | What it would take |
+|---|---|---|
+| `sedalia-A-service-agreement-fillable.pdf` | Carries **30 AcroForm fields**. Printing it from the HTML flattens every one of them, and there is no generator for it in this repo. Losing a working form filler to correct a phone number is a bad trade. | Rebuild it as a generated AcroForm, the way `../operations/build-walk-form-pdf.mjs` does — roughly an afternoon, and it would make the file reproducible for the first time. |
+| `sedalia-A-service-agreement-DocuSign.pdf` | Flat (no fields), but no generator either, and it is a **differently-rendered export** of the same agreement — the text is identical in substance but flows differently, so it did not come from this toolchain. Guessing at how to reproduce it risks shipping a contract that differs from the one it replaces. | Confirm how it was produced. If it is just an export of the same source, it is redundant with `sedalia-A-service-agreement.pdf` and should be deleted rather than maintained. |
+
+**Neither is urgent** — the whole Sedalia pack is a draft, not printed, not used, not
+signed and not attorney-reviewed. But do not send either file as it stands.
+
+**Unrelated, noticed in passing:** the agreement now prints a street address —
+*17890 Sierra Way, Monument, Colorado 80132*. The top-level README still says the
+street address is not on file and that the agreements are blocked until it exists.
+One of the two is out of date. Worth reconciling before the pack goes anywhere,
+because the cancellation notice depends on that address being right.

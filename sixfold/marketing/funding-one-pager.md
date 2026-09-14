@@ -85,7 +85,7 @@ The money is real. What stops people claiming it is documentation nobody told th
 
 ## Footer
 
-Sixfold LLC · Monument, Colorado · (720) 772-6146 · m.sharpe@surgeftw.com
+Sixfold LLC · Monument, Colorado · (303) 915-1045 · m.sharpe@surgeftw.com
 
 This sheet describes published Colorado programme terms as of August 2026. It is not tax or insurance advice — confirm your own position with your accountant and your carrier.
 
@@ -140,6 +140,7 @@ Kept here so the sheet can be lengthened later without re-researching.
 **Unresolved:**
 
 - **Phone number and email — resolved 2026-08-18.** (720) 772-6146 and m.sharpe@surgeftw.com, both supplied by Matthew. One open question on the email — see "Brand separation" at the end of this file.
+  - **Superseded 2026-09-14.** The phone number is now **(303) 915-1045** — Sixfold's own line, given by Matthew 2026-09-08 and swept through the project on the 14th. The line above is left as the record of what this sheet carried at the time, not as a number to use. The email question is still open.
 - **Domain.** `sixfoldland.com` is recommended and clear on DNS but not registered, so no URL appears on the sheet.
 - **Douglas County listing and window dates** — gates the held-back block.
 - **Whether a state form number should appear** for claiming the credit. Not verified, so the sheet points to the Department of Revenue page rather than naming a form.

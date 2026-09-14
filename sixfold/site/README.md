@@ -58,7 +58,7 @@ Per `sixfold/README.md` and `sixfold/marketing/facebook-page-copy.md`:
   framing: *"every job comes with the paperwork, whether or not you ask"*, and
   states where Sixfold stops (no returns filed, no carrier contact, no claims).
 - No mention of Surge.
-- Contact details are the standing ones: **(720) 772-6146**,
+- Contact details are the standing ones: **(303) 915-1045**,
   **Contact@SixfoldColorado.com**, Monument CO.
 
 ## Merch board — what's on it
@@ -87,7 +87,7 @@ Slogans used, and why each is safe to print:
 - **"It starts in the first five feet"** — true, and the CSFS Home Ignition Zone
   guidance the pamphlet is built on; also the disarming, honest line from the ad
   script kit (the homeowner can do that zone without a crew).
-- **"Fire mitigation · Front Range · (720) 772-6146"** — the standing contact line.
+- **"Fire mitigation · Front Range · (303) 915-1045"** — the standing contact line.
 
 ## Fact-check log
 

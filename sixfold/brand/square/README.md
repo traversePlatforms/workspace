@@ -119,7 +119,7 @@ Same standing rules as every other Sixfold surface — they apply to a Square pr
 - **No street address on the artwork.** Sixfold's Monument address is not on file yet, and Square carries the address in its own business-info fields regardless. Set a **service area**, not a location.
 - **No price, no offer, no discount, no track record.** The launch offer is still unpicked and the company is new.
 
-The only fixed copy on the banner-style assets is the wordmark, the descriptor **"Land & Fire"** (still a placeholder), the bio line **"We do the work and show you who pays for it."** and **"Fire mitigation · Front Range · (720) 772-6146"** — all three already written and fact-checked in [../../marketing/facebook-page-copy.md](../../marketing/facebook-page-copy.md), reused rather than reinvented.
+The only fixed copy on the banner-style assets is the wordmark, the descriptor **"Land & Fire"** (still a placeholder), the bio line **"We do the work and show you who pays for it."** and **"Fire mitigation · Front Range · (303) 915-1045"** — all three already written and fact-checked in [../../marketing/facebook-page-copy.md](../../marketing/facebook-page-copy.md), reused rather than reinvented.
 
 ---
 
