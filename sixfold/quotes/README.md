@@ -1,4 +1,80 @@
-# Sixfold quotes — S Sedalia, downed wood clearance
+# Sixfold quotes
+
+> ## Job 2 — yard clearance, trimming and planting (2026-09-14, revised 2026-09-15)
+>
+> **CURRENT: $1,500, three small tree removals.** Matthew's instruction 2026-09-15, replacing the
+> $1,900 / five-tree revision 5 that went to DocuSign on 09-14. Typical-rate comparison moves with
+> it, $3,700 → **$3,300**; the difference stays **$1,800** because both columns fell by $400.
+> Reasoning, the margin table and the clause-numbering defect found in the re-check are in
+> [walk-2026-09-14-job2.md](walk-2026-09-14-job2.md) **§8c**.
+>
+> **There are now TWO sendable files, not one:**
+>
+> | File | Pages | For |
+> |---|---|---|
+> | `Sixfold-Quote-Kara-Rosenstrauch.pdf` | 1 | The quote alone, to send on its own |
+> | `Sixfold-Quote-and-Agreement-Kara-Rosenstrauch.pdf` | 6 | Quote + agreement, for DocuSign |
+>
+> They share one source and differ in one sentence — the standalone must not say the agreement
+> "follows overleaf". Switched by the `css` field on each entry in `tools/html-to-pdf.mjs`.
+>
+> ```
+> node quotes/build.mjs && node agreements/build.mjs
+> node tools/html-to-pdf.mjs _part-                    # the two packet halves
+> node tools/html-to-pdf.mjs Sixfold-Quote-Kara        # the standalone
+> python tools/merge-pdf.py quotes/Sixfold-Quote-and-Agreement-Kara-Rosenstrauch.pdf \
+>   quotes/_part-quote-only.pdf agreements/_part-service-agreement.pdf
+> ```
+>
+> **The filter matches the OUT name, not the source** — `node tools/html-to-pdf.mjs job2-yard`
+> throws "No jobs matched".
+>
+> ---
+>
+> Walked by Brandon, originally quoted at **$1,700**. **Priced cost-up, not off the rate card** — see
+> [walk-2026-09-14-job2.md](walk-2026-09-14-job2.md), which carries the walk sheet, the cost model,
+> the sourced billable rate and the fact-check log.
+>
+> **It is the first job in this repo with its own cost inputs recorded** (dump fee, fuel, rentals,
+> crew days), and those numbers show the rate card **losing about $400 on this job** — the Sedalia
+> pattern repeating. The haul-off line is underwater on its own: $278 of card revenue against a
+> $260 tip fee and $50 of fuel. **Read §5 of that file before touching the rate card rebuild.**
+>
+> **There is exactly ONE file to send: `Sixfold-Quote-Kara-Rosenstrauch.pdf`** — 6 pages, the
+> one-sheet quote followed by the five-page service agreement, so it can be read and signed in one
+> go.
+>
+> **The two halves are build parts and are named `_part-*` on purpose.** Matthew opened the
+> quote-only PDF on 2026-09-14 and reported the agreement missing, because the parts were then
+> named like deliverables. Anything beginning `_part-` is an intermediate: never send one.
+>
+> Rebuild after any edit to either half:
+>
+> ```
+> node quotes/build.mjs && node agreements/build.mjs
+> node tools/html-to-pdf.mjs _part-
+> python tools/merge-pdf.py quotes/Sixfold-Quote-Kara-Rosenstrauch.pdf \
+>   quotes/_part-quote-only.pdf \
+>   agreements/_part-service-agreement.pdf
+> ```
+>
+> `tools/merge-pdf.py` is new (2026-09-14) and explains in its header why the PDFs are merged
+> rather than the HTML: each document has its own `.sheet:first-of-type` print fit-pass — the
+> agreement has sixteen such rules tuned to *its* page 1 — and combining the markup lands every one
+> of them on the wrong page. Merging the rendered PDFs also preserves each document's own `scale`
+> (quote 0.84, agreement 0.8).
+>
+> **The two halves keep their own page numbering on purpose** — the quote reads "Page 1 of 1" and
+> the agreement "Page 1 of 5" through "5 of 5". Do not renumber them 1–6: the agreement's term 14
+> and its cancellation section both cross-reference "pages 1, 2, 4 and 5", and renumbering would
+> break those references inside a legal instrument.
+>
+> **ISSUED 2026-09-14 — uploaded to DocuSign, awaiting signature.** Brandon completes the
+> cancellation dates, the signature and initial fields, and Kara's phone, email and ZIP at signing.
+
+---
+
+## The Sedalia pack — S Sedalia, downed wood clearance
 
 **Built:** 2026-08-27 · **Repriced and expanded 2026-08-28**
 **Status:** Drafts on disk. **Not sent, not signed, not scheduled.** Nothing here has been in front of the customer.

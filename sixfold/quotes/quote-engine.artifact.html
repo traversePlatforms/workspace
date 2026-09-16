@@ -1,0 +1,1017 @@
+<title>Sixfold Quote Build</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+
+<style>
+:root{
+  /* Sixfold palette — sixfold/README.md §Decisions made */
+  --pine:#0E1512; --timber:#1F2A25; --bone:#EDE7DC; --ember:#E4703A;
+  --moss:#6E8A5C;
+
+  --ground:#E7E1D5;
+  --surface:#FBF9F4;
+  --surface-2:#F2EEE4;
+  --edge:#D8D0BE;
+  --edge-soft:#E4DDCD;
+  --ink:#14201B;
+  --ink-mid:#46534B;
+  --ink-soft:#6E7A72;
+  --accent:#B84C15;
+  --accent-bg:#F6E3D7;
+  --good:#45583A;
+  --good-bg:#E3EADC;
+  --warn:#8A5A12;
+  --warn-bg:#F6EAD2;
+  --shadow:0 1px 2px rgba(20,32,27,.06), 0 8px 24px -16px rgba(20,32,27,.35);
+
+  --f-display:"Source Serif 4","Palatino Linotype",Georgia,serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0B110E; --surface:#161F1B; --surface-2:#1F2A25; --edge:#2E3B35;
+    --edge-soft:#25322C; --ink:#EDE7DC; --ink-mid:#B4BDB4; --ink-soft:#8A948C;
+    --accent:#EF8B50; --accent-bg:#3A2317;
+    --good:#A8C193; --good-bg:#22301F;
+    --warn:#E0B266; --warn-bg:#33290F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B110E; --surface:#161F1B; --surface-2:#1F2A25; --edge:#2E3B35;
+  --edge-soft:#25322C; --ink:#EDE7DC; --ink-mid:#B4BDB4; --ink-soft:#8A948C;
+  --accent:#EF8B50; --accent-bg:#3A2317;
+  --good:#A8C193; --good-bg:#22301F;
+  --warn:#E0B266; --warn-bg:#33290F;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--f-body); font-size:15px; line-height:1.5;
+  margin:0; padding:0 20px 80px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+
+/* ---------- masthead ---------- */
+.masthead{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between;
+  padding:26px 0 14px;border-bottom:2px solid var(--ink)}
+.mast-l{display:flex;gap:14px;align-items:center}
+.ridge{width:38px;height:38px;flex:none}
+h1{font-size:27px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.stamp{font-family:var(--f-data);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-mid);border:1px solid var(--edge);background:var(--surface);padding:6px 10px;white-space:nowrap}
+
+/* ---------- notices ---------- */
+.notice{display:flex;gap:11px;padding:12px 14px;margin:16px 0 0;border-left:3px solid var(--accent);
+  background:var(--surface);font-size:13.5px;color:var(--ink-mid);box-shadow:var(--shadow)}
+.notice b{color:var(--ink)}
+.notice.warn{border-left-color:var(--warn);background:var(--warn-bg);color:var(--ink)}
+.notice .mk{font-family:var(--f-data);font-size:11px;letter-spacing:.08em;color:var(--accent);flex:none;padding-top:2px}
+.notice.warn .mk{color:var(--warn)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start;margin-top:22px}
+@media (max-width:980px){.cols{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- ledger ---------- */
+.sec{margin-bottom:26px}
+.sec-head{display:flex;align-items:baseline;gap:10px;padding-bottom:6px;border-bottom:1px solid var(--ink)}
+.sec-n{font-family:var(--f-data);font-size:11px;color:var(--ink-soft);letter-spacing:.1em}
+.sec-head h2{font-size:17px;font-weight:600}
+.sec-note{font-size:12.5px;color:var(--ink-soft);margin:7px 0 4px}
+
+.row{display:grid;grid-template-columns:minmax(0,1fr) 78px 128px 96px 74px;gap:10px;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--edge-soft)}
+.row:hover{background:var(--surface-2)}
+.row.head{border-bottom:1px solid var(--edge);padding-bottom:4px}
+.row.head span{font-family:var(--f-data);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
+.row.head .r{text-align:right}
+.lbl{font-size:13.5px;line-height:1.3}
+.lbl small{display:block;color:var(--ink-soft);font-size:11.5px}
+input[type=number],input[type=text]{
+  font-family:var(--f-data);font-size:13px;font-variant-numeric:tabular-nums;
+  width:100%;padding:6px 8px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--edge);border-radius:2px;text-align:right}
+input[type=text]{text-align:left}
+input[type=number]:focus,input[type=text]:focus{border-color:var(--accent)}
+.qty.hot{border-color:var(--accent);background:var(--accent-bg)}
+.rate-cell{display:flex;align-items:center;gap:6px}
+.rate-cell .u{font-family:var(--f-data);font-size:10.5px;color:var(--ink-soft);white-space:nowrap}
+.out{font-family:var(--f-data);font-size:13px;font-variant-numeric:tabular-nums;text-align:right;color:var(--ink-mid)}
+.out.live{color:var(--ink);font-weight:500}
+.dim{color:var(--ink-soft)}
+
+/* provenance badge */
+.badge{font-family:var(--f-data);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
+  padding:4px 6px;border-radius:2px;border:1px solid;cursor:pointer;width:100%;text-align:center;
+  background:transparent;line-height:1.2}
+.badge.unbacked{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+.badge.comp{color:var(--ink-mid);border-color:var(--edge);background:var(--surface)}
+.badge.sixfold{color:var(--good);border-color:var(--good);background:var(--good-bg)}
+
+/* ---------- price rail ---------- */
+.rail{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:980px){.rail{position:static}}
+.panel{background:var(--surface);border:1px solid var(--edge);box-shadow:var(--shadow)}
+.panel-h{font-family:var(--f-data);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-soft);padding:10px 14px 0}
+.price-big{font-family:var(--f-display);font-size:46px;font-weight:700;letter-spacing:-.02em;
+  color:var(--accent);padding:2px 14px 0;font-variant-numeric:tabular-nums;line-height:1.05}
+.price-sub{padding:2px 14px 12px;font-size:12px;color:var(--ink-soft)}
+.build{padding:0 14px 12px}
+.bl{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--edge-soft)}
+.bl:last-child{border-bottom:0}
+.bl .v{font-family:var(--f-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bl.tot{border-top:1px solid var(--ink);margin-top:4px;padding-top:7px;font-weight:600}
+.bl .k small{display:block;color:var(--ink-soft);font-size:11px;font-family:var(--f-body)}
+.ovr{padding:12px 14px;border-top:1px solid var(--edge);background:var(--surface-2)}
+.ovr label{display:block;font-family:var(--f-data);font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+.ovr-in{display:flex;gap:8px;align-items:center}
+.ovr-in .dollar{font-family:var(--f-data);color:var(--ink-soft)}
+.delta{font-size:12px;margin-top:7px;color:var(--ink-mid)}
+
+.meters{padding:12px 14px}
+.meter{margin-bottom:12px}
+.meter:last-child{margin-bottom:0}
+.meter-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px}
+.meter-top .v{font-family:var(--f-data);font-weight:600;font-variant-numeric:tabular-nums}
+.track{height:7px;background:var(--surface-2);border:1px solid var(--edge-soft);position:relative;overflow:hidden}
+.fill{position:absolute;inset:0 auto 0 0;background:var(--good)}
+.fill.thin{background:var(--warn)}
+.fill.bad{background:var(--accent)}
+.mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.meter-foot{font-size:11.5px;color:var(--ink-soft);margin-top:5px}
+
+/* ---------- buttons ---------- */
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.act{font-family:var(--f-body);font-size:13px;padding:8px 13px;border:1px solid var(--ink);
+  background:var(--ink);color:var(--ground);border-radius:2px;cursor:pointer}
+button.act.ghost{background:transparent;color:var(--ink)}
+button.act:hover{opacity:.87}
+button.act:disabled{opacity:.4;cursor:not-allowed}
+button.link{background:none;border:0;color:var(--accent);font:inherit;font-size:12.5px;cursor:pointer;padding:0;text-decoration:underline}
+
+/* ---------- lower panels ---------- */
+.lower{margin-top:34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:22px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--edge);padding:16px 18px 18px;box-shadow:var(--shadow)}
+.card h3{font-size:15.5px;font-weight:600;margin-bottom:3px}
+.card p{font-size:12.5px;color:var(--ink-mid);margin:6px 0}
+table.cal{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+table.cal th{font-family:var(--f-data);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);text-align:left;padding:4px 0;border-bottom:1px solid var(--edge)}
+table.cal td{padding:4px 0;border-bottom:1px solid var(--edge-soft)}
+table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.verdict{margin-top:11px;padding:9px 11px;font-size:12.5px;border-left:3px solid var(--good);background:var(--good-bg)}
+.verdict.off{border-left-color:var(--warn);background:var(--warn-bg)}
+.joblist{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.joblist li{display:flex;justify-content:space-between;gap:10px;align-items:center;
+  padding:7px 9px;background:var(--surface-2);border:1px solid var(--edge-soft);font-size:12.5px}
+.joblist .jn{font-weight:500}
+.joblist .jm{font-family:var(--f-data);font-size:11px;color:var(--ink-soft)}
+.empty{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:10px}
+.flags{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+.flags li{font-size:12.5px;padding:8px 10px;border-left:3px solid var(--warn);background:var(--warn-bg);color:var(--ink)}
+.flags li.ok{border-left-color:var(--good);background:var(--good-bg)}
+.flags li b{font-family:var(--f-data);font-size:11px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:2px}
+.foot{margin-top:38px;padding-top:14px;border-top:1px solid var(--edge);font-size:11.5px;color:var(--ink-soft)}
+.foot code{font-family:var(--f-data);font-size:11px}
+.srcs{font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.55}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--ground);
+  font-size:13px;padding:10px 16px;border-radius:2px;box-shadow:var(--shadow);z-index:50}
+@media (prefers-reduced-motion:no-preference){.toast{animation:pop .18s ease-out}}
+@keyframes pop{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (max-width:600px){
+  .row{grid-template-columns:minmax(0,1fr) 66px;grid-auto-rows:min-content;row-gap:6px}
+  .row .rate-cell{grid-column:1/2}
+  .row .badge{grid-column:2/3}
+  .row .out{grid-column:1/3;text-align:left}
+  .row.head{display:none}
+  .price-big{font-size:38px}
+}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="mast-l">
+    <svg class="ridge" viewBox="0 0 48 48" aria-hidden="true">
+      <g fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="square">
+        <path d="M4 38 L13 24 L22 38"/><path d="M18 38 L27 18 L36 38"/><path d="M32 38 L40 27 L46 38"/>
+        <path d="M27 38 L27 45" stroke="var(--ink-soft)" stroke-width="2.4"/>
+      </g>
+    </svg>
+    <div>
+      <h1>Sixfold Quote Build</h1>
+      <div class="sub">Cost-up pricing from walk-sheet counts · Sixfold LLC, Monument CO</div>
+    </div>
+  </div>
+  <div class="stamp">Internal · draft only · no price on the property</div>
+</header>
+
+<div class="notice">
+  <span class="mk">RULE</span>
+  <div><b>This does not use the rate card.</b> <code>marketing/pricing-guide.md</code> would have quoted
+  job 2 at $1,038 against ~$1,450 of real cost, and its haul line was derived from a homeowner tip fee
+  Sixfold cannot use. Price here is built up from man-hours and Brandon's own recorded costs.</div>
+</div>
+
+<div class="notice" id="resumeBar" hidden></div>
+
+<div class="cols">
+
+  <!-- ===================== LEFT: the ledger ===================== -->
+  <div>
+
+    <section class="sec">
+      <div class="sec-head"><span class="sec-n">1</span><h2>The work — what gets counted</h2></div>
+      <p class="sec-note">Counts come off the walk sheet. Each one carries a time rate you can edit, and every rate
+      says <b>whose number it is</b> — <b>Sixfold</b> for Brandon's own figures and anything derived from Sixfold's
+      recorded hours, <b>Competitor</b> for outside trade research, <b>Unbacked</b> for the ones with nothing behind
+      them. Tap a badge when Brandon confirms it. Change a rate and the calibration below re-checks it.</p>
+      <div class="row head"><span>Line</span><span class="r">Count</span><span>Time rate</span><span>Source</span><span class="r">Man-hrs</span></div>
+      <div id="sec1"></div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-head"><span class="sec-n">2</span><h2>Ground work — mowing, edging, planting</h2></div>
+      <p class="sec-note">Job 2 was mostly this, and <b>no Sixfold document prices any of it.</b> These times come
+      off Sixfold's own recorded day — there is no competitor figure behind them, because the lawn-care rates
+      online are SEO content farms ($12–$90 a visit, no method) and were all rejected.</p>
+      <div class="row head"><span>Line</span><span class="r">Count</span><span>Time rate</span><span>Source</span><span class="r">Man-hrs</span></div>
+      <div id="sec2"></div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-head"><span class="sec-n">3</span><h2>What the job costs — cash out</h2></div>
+      <p class="sec-note">Brandon's own recorded numbers. Dump fees and hire pass through to the customer at cost
+      plus handling. <b>Fuel does not</b> — the man-hour rate already carries vehicle and fuel, so billing it again
+      double-counts.</p>
+      <div class="row head"><span>Line</span><span class="r">Cost $</span><span>Treatment</span><span>Source</span><span class="r">Billed $</span></div>
+      <div id="sec3"></div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-head"><span class="sec-n">4</span><h2>Crew, and what you give away</h2></div>
+      <div class="row head"><span>Line</span><span class="r">Value</span><span>Unit</span><span>Source</span><span class="r">Effect</span></div>
+      <div id="sec4"></div>
+    </section>
+
+    <div id="flagbox"></div>
+  </div>
+
+  <!-- ===================== RIGHT: the price ===================== -->
+  <aside class="rail">
+    <div class="panel">
+      <div class="panel-h">Quoted price</div>
+      <div class="price-big" id="pPrice">$0</div>
+      <div class="price-sub" id="pPriceSub">Enter counts to build a price</div>
+
+      <div class="build" id="pBuild"></div>
+
+      <div class="ovr">
+        <label for="ovrIn">Override — Brandon's price</label>
+        <div class="ovr-in">
+          <span class="dollar">$</span>
+          <input type="number" id="ovrIn" min="0" step="25" placeholder="cost-up price">
+          <button class="act ghost" id="ovrClear" style="padding:6px 9px;font-size:12px">Clear</button>
+        </div>
+        <div class="delta" id="pDelta">Brandon set job 2 himself at $1,900 over a $1,700 build. His number wins — this checks it.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">Does it survive the day</div>
+      <div class="meters" id="pMeters"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">Save &amp; export</div>
+      <div style="padding:12px 14px">
+        <input type="text" id="jobName" placeholder="Job name — customer or address" style="margin-bottom:9px">
+        <div class="btns">
+          <button class="act" id="bSave">Save job</button>
+          <button class="act ghost" id="bScope">Scope draft .md</button>
+          <button class="act ghost" id="bCsv">Internal .csv</button>
+          <button class="act ghost" id="bNew">Clear</button>
+        </div>
+        <p style="font-size:11.5px;color:var(--ink-soft);margin:10px 0 0">The scope draft feeds
+        <code>quotes/build.mjs</code>. It carries no terms and is not a sendable quote.</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ===================== LOWER ===================== -->
+<div class="lower">
+
+  <div class="card">
+    <h3>Market check — what the locals publish</h3>
+    <p>The same scope priced at <b>the low end of every published Colorado Springs rate</b>, so it understates
+    what another firm would charge rather than flattering Sixfold. Named operators only — no aggregators.</p>
+    <div id="mktBody"></div>
+  </div>
+
+  <div class="card">
+    <h3>Calibration — against the only real job</h3>
+    <p>Job 2 (walked 2026-09-14) is the one job on file with <b>recorded man-hours</b>: two people, one day,
+    16 man-hours. Your rate table has to reproduce it, or it is fiction.</p>
+    <table class="cal"><thead><tr><th>Job 2 scope, as recorded</th><th style="text-align:right">Man-hrs</th></tr></thead>
+      <tbody id="calRows"></tbody></table>
+    <div class="verdict" id="calVerdict"></div>
+    <div class="btns" style="margin-top:11px">
+      <button class="act ghost" id="bLoadJob2">Load job 2 into the ledger</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Saved jobs</h3>
+    <p>Quoted against actual, building the history this business has never had. Saved where the desk can read
+    them back.</p>
+    <ul class="joblist" id="jobList"></ul>
+    <div class="empty" id="jobEmpty">No saved jobs yet.</div>
+  </div>
+
+  <div class="card">
+    <h3>Where the numbers come from</h3>
+    <div class="srcs">
+      <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--good)">SIXFOLD</b><br>
+      Brandon's own numbers, and the time rates derived from them. Every recorded cost on a job — dump fees, hire,
+      purchases, fuel — plus the handling percentage, the rounding, and each time rate set so the table reproduces
+      <b>Sixfold's own recorded 16 man-hours on job 2</b>. That is one job, one crew, one property: a starting
+      point, not a measurement. A tick means Brandon confirmed the rate outright rather than it being derived
+      for him.</p>
+      <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em">COMPETITOR</b><br>
+      Taken from outside the company, never from Sixfold. <b>Every figure below was re-read at source on
+      2026-09-14.</b></p>
+      <p style="margin:0 0 7px"><i>Times per tree</i> — <b>Wexford Insurance / TreeGuard</b>, <i>How to Price Tree
+      Service Jobs</i>, Nate Jones, 6 May 2026: <b>2.0–3.5 man-hours</b> under 30 ft, <b>4.0–7.0</b> at 30–50 ft,
+      <b>7.0–12.0</b> at 50–70 ft, <b>12.0–24.0</b> above that. <b>Man-hours, not crew-hours</b> — the rate card
+      records these as crew-hours, which would double them.</p>
+      <p style="margin:0 0 7px"><i>Prices in Sixfold's own market</i> — <b>Hawk Tree Service</b>, Colorado Springs,
+      removal page 12 Oct 2025 and trimming page 9 Mar 2026: removal <b>$150–$500</b> under 30 ft, <b>$500–$1,000</b>
+      at 30–60, <b>$1,000–$2,000+</b> above 60; trimming <b>$75–$415</b> on a tree under 30 ft; labour
+      <b>$65–$140/hr</b>; a two-person crew <b>$115–$143/hr</b>; stump grinding <b>$2–$5</b> per diameter inch;
+      per acre <b>$733–$2,333</b> lightly wooded, <b>$3,395–$6,155</b> heavily forested.</p>
+      <p style="margin:0 0 7px"><i>Cost models</i> — <b>SynkedUP</b>, Weston Zimmerman, updated 11 Aug 2026: 2026
+      band <b>$65–$145/man-hour</b>, lean startup <b>$65–$75</b>, worked example $71.10 (labour $36 + overhead
+      $24.44, +15% margin). <b>ArboStar</b>, 26 May 2026: groundworker $28/hr loaded, ~$20/man-hour overhead.
+      <b>These are cost models, not a competitor's price list</b> — they say what it costs to run a crew, not what
+      another firm charges, so they are not evidence for a “market value” column.</p>
+      <p style="margin:0 0 7px"><b>Two findings worth knowing.</b> Sixfold's $70/man-hour is <b>$140 for a
+      two-person crew — the top of Hawk's published $115–$143</b>. On labour, Sixfold is at the local ceiling, not
+      undercutting it. And Hawk grinds stumps at <b>$2–$5 an inch in Colorado Springs</b> against $5–$9 in
+      Littleton and $9 in Boulder — the home market is the cheapest published in the state.</p>
+      <p style="margin:0"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--warn)">UNBACKED</b><br>
+      What survived the 2026-09-14 re-check with nothing behind it: <b>chipping</b> (no Colorado operator
+      publishes a rate — checked twice now, they all say “call”), <b>stump grinding time</b> (published prices
+      exist, published times do not), <b>rigging</b>, <b>bucking</b>, <b>slash piling</b>, <b>dead fall</b> and
+      <b>brush</b>. Confirm each with Brandon before it carries a quote; tap the badge when he has, and it
+      becomes Sixfold's.</p>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  Sixfold LLC · Monument, CO · <b>Not licensed, bonded or insured</b> — no general liability, no workers comp, no
+  certifications are in force, and none may be claimed. Stumps cannot be ground the same day: Colorado 811 locate,
+  three business days. Trees over 80 ft, on a structure, under tension, or near a line are a call-in, not a quote.
+  Estimates are written up and sent — <b>no number is given on the property.</b>
+  Built against <code>sixfold/quotes/walk-2026-09-14-job2.md</code>.
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ====================== the model ====================== */
+/* min = man-minutes per unit. src: 'sourced' | 'fitted' | 'guess' (confirmable) */
+/* mkt: the lowest figure a named local operator PUBLISHES for this unit, for the
+   market check. Low end of every band by construction, so the comparison
+   understates rather than overstates what another firm would charge. */
+const LINES = [
+  {s:1, id:"mob",     lbl:"Mobilisation, per job", sub:"Load out, drive, walk-through, before and after photos", unit:"man-min / job", min:90, step:1, src:"sixfold"},
+
+  {s:1, id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees. Below every published removal table — nobody quotes these separately", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
+  {s:1, id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Wexford/TreeGuard 6 May 2026: 2.0–3.5 man-hours for a tree under 30 ft at 12in DBH", unit:"man-min / tree", min:150, step:5, src:"comp", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
+  {s:1, id:"t3060",   lbl:"Trees to take down — 30 to 60 ft", sub:"Wexford: 4.0–7.0 man-hours at 30–50 ft. Above 50 ft this band runs short", unit:"man-min / tree", min:330, step:5, src:"comp", mkt:500, mktSrc:"Hawk, 30–60 ft, $500–$1,000"},
+  {s:1, id:"t6080",   lbl:"Trees to take down — 60 to 80 ft", sub:"Wexford: 7.0–12.0 man-hours at 50–70 ft", unit:"man-min / tree", min:570, step:5, src:"comp", mkt:1000, mktSrc:"Hawk, 60 ft+, $1,000–$2,000+"},
+  {s:1, id:"t80",     lbl:"Trees over 80 ft", sub:"Call-in, not a quote. Wexford puts these at 12–24 man-hours and Sixfold carries no insurance", unit:"—", min:0, step:1, src:"stop", noRate:true},
+  {s:1, id:"rig",     lbl:"Of those, over a roof, fence, line or drive", sub:"Added on top. Wexford names rigging and tight drop zones as a time driver but publishes no figure", unit:"man-min extra", min:60, step:5, src:"unbacked"},
+  {s:1, id:"limb",    lbl:"Trees to limb or trim, not remove", sub:"Lower limbs raised to about 4 ft — lighter than a full crown trim", unit:"man-min / tree", min:20, step:1, src:"sixfold", mkt:75, mktSrc:"Hawk, trim a tree under 30 ft, $75–$415"},
+  {s:1, id:"buck",    lbl:"Logs to be bucked", unit:"man-min / log", min:8, step:1, src:"unbacked"},
+  {s:1, id:"fall",    lbl:"Dead fall already on the ground", unit:"man-min / pile", min:25, step:1, src:"unbacked"},
+  {s:1, id:"brush",   lbl:"Brush, branches, twigs", unit:"man-min / pile", min:20, step:1, src:"unbacked"},
+  {s:1, id:"chip",    lbl:"Chipper feeding", sub:"Machine hours, two people feeding. No Colorado operator publishes a chipping rate — checked again 2026-09-14", unit:"man-min / hour", min:120, step:5, src:"unbacked"},
+  {s:1, id:"slash",   lbl:"Slash piles to build", unit:"man-min / pile", min:45, step:5, src:"unbacked"},
+  {s:1, id:"stump",   lbl:"Stumps to grind — set-up per stump", sub:"811 locate first: three business days, usually a second visit", unit:"man-min / stump", min:15, step:1, src:"unbacked"},
+  {s:1, id:"stumpin", lbl:"Stump diameter, total inches", sub:"Measured at the ground, root flare included", unit:"man-min / inch", min:2, step:0.5, src:"unbacked", mkt:2, mktSrc:"Hawk, Colorado Springs, $2–$5 per inch"},
+  {s:1, id:"loads",   lbl:"Loads to haul off", sub:"Gathering, loading, the drive and the tip. Brandon's own day — the old $142–$190/load band is withdrawn", unit:"man-min / load", min:110, step:5, src:"sixfold", qstep:0.5},
+
+  {s:2, id:"mow",     lbl:"Mow and trim", unit:"man-min / acre", min:150, step:5, src:"sixfold", qstep:0.25},
+  {s:2, id:"edge",    lbl:"Edge", unit:"man-min / acre", min:60, step:5, src:"sixfold", qstep:0.25},
+  {s:2, id:"pullout", lbl:"Existing plants to pull out", unit:"man-min / plant", min:12, step:1, src:"sixfold"},
+  {s:2, id:"plantin", lbl:"Plants to dig in and set", sub:"Labour only — Sixfold supplies no plants and warrants none it did not supply", unit:"man-min / plant", min:20, step:1, src:"sixfold"},
+  {s:2, id:"blow",    lbl:"Blow down drive and walks, per job", unit:"man-min / job", min:30, step:1, src:"sixfold"}
+];
+
+const COSTS = [
+  {id:"dump", lbl:"Dump and tip fees", sub:"Called and confirmed today, commercial rate — not the homeowner SLASH rate", billed:true},
+  {id:"hire", lbl:"Equipment hire", sub:"Mower, edger, chipper, grinder — whatever is rented for this job", billed:true},
+  {id:"buy",  lbl:"Anything else hired or bought", sub:"Materials Sixfold actually pays for", billed:true},
+  {id:"fuel", lbl:"Truck fuel", sub:"Cost only — never billed as a line", billed:false}
+];
+
+const DEFAULT_CFG = {
+  billable:70, handling:15, crewCost:28, overhead:20, rounding:50, freeHours:0, hoursOverride:""
+};
+
+/* Job 2, as recorded on Brandon's walk sheet — the calibration anchor */
+const JOB2 = {
+  qty:{mob:1, sap:5, limb:13, pullout:9, mow:0.75, edge:0.75, blow:1, loads:1.5},
+  cost:{dump:260, hire:269, buy:0, fuel:50},
+  cfg:{freeHours:2},
+  recordedHours:16,
+  name:"Job 2 — yard clearance (walked 2026-09-14)"
+};
+
+/* ====================== state ====================== */
+let qty = {}, cost = {}, cfg = {...DEFAULT_CFG}, rates = {}, confirmed = {};
+let db = null, downloads = null, jobs = [], ratesDocReady = false;
+
+LINES.forEach(l => { rates[l.id] = l.min; qty[l.id] = 0; });
+COSTS.forEach(c => { cost[c.id] = 0; });
+
+const $ = id => document.getElementById(id);
+const money = n => "$" + Math.round(n).toLocaleString("en-US");
+const money2 = n => "$" + n.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+const hrs = n => n.toFixed(2).replace(/\.00$/, "") + " h";
+
+/* ====================== maths ====================== */
+function manMinutes(q, r){
+  let t = 0;
+  LINES.forEach(l => { if (l.noRate) return; t += (q[l.id] || 0) * (r[l.id] || 0); });
+  return t;
+}
+function compute(){
+  const rawHours = manMinutes(qty, rates) / 60;
+  const ovrH = parseFloat(cfg.hoursOverride);
+  const hours = (cfg.hoursOverride !== "" && isFinite(ovrH) && ovrH >= 0) ? ovrH : rawHours;
+
+  const labourRev = hours * cfg.billable;
+  const passCost = COSTS.filter(c => c.billed).reduce((a,c) => a + (cost[c.id]||0), 0);
+  const passRev = passCost * (1 + cfg.handling/100);
+  const raw = labourRev + passRev;
+  const step = cfg.rounding || 0;
+  const costUp = step > 0 ? Math.floor(raw / step) * step : Math.round(raw);
+
+  const ovrP = parseFloat(cfg.override);
+  const price = (cfg.override !== "" && cfg.override != null && isFinite(ovrP)) ? ovrP : costUp;
+
+  const cashOut = COSTS.reduce((a,c) => a + (cost[c.id]||0), 0);
+  const perHour = cfg.crewCost + cfg.overhead;
+  const free = cfg.freeHours || 0;
+  const labourCost = hours * perHour;
+  const freeCost = free * perHour;
+  const totalCost = cashOut + labourCost + freeCost;
+  const net = price - totalCost;
+  const margin = price > 0 ? net / price : 0;
+  const fixed = cashOut + freeCost;
+  const breakEven = perHour > 0 ? (price - fixed) / perHour : 0;
+  const headroom = hours > 0 ? (breakEven - hours) / hours : 0;
+
+  return {rawHours, hours, hoursOverridden: hours !== rawHours, labourRev, passCost, passRev, raw,
+          costUp, price, overridden: price !== costUp, cashOut, labourCost, freeCost, freeHours:free,
+          totalCost, net, margin, breakEven, headroom, perHour};
+}
+
+/* ====================== render: ledger ====================== */
+/* Three sources, and the axis is WHOSE NUMBER IT IS.
+     Sixfold    — Brandon's own figures, and rates derived from Sixfold's own recorded hours
+     Competitor — taken from outside trade and market research, never from Sixfold
+     Unbacked   — nothing behind it at all
+   A tick means Brandon has confirmed it himself rather than it being derived for him. */
+function badgeFor(l){
+  if (l.src === "stop") return {cls:"unbacked", txt:"STOP RULE", title:"Not quotable here"};
+  if (confirmed[l.id]) return {cls:"sixfold", txt:"Sixfold ✓", title:"Confirmed by Brandon as Sixfold's own rate — tap to unset"};
+  if (l.src === "comp") return {cls:"comp", txt:"Competitor", title:"From outside trade research, not a Sixfold figure"};
+  if (l.src === "sixfold") return {cls:"sixfold", txt:"Sixfold", title:"Derived from Sixfold's own recorded 16 man-hours on job 2 — tap when Brandon confirms it outright"};
+  return {cls:"unbacked", txt:"Unbacked", title:"Nothing backs this rate — tap when Brandon confirms it as Sixfold's"};
+}
+
+function buildLedger(){
+  [1,2].forEach(sn => {
+    const host = $("sec" + sn);
+    host.innerHTML = "";
+    LINES.filter(l => l.s === sn).forEach(l => {
+      const row = document.createElement("div");
+      row.className = "row";
+      const b = badgeFor(l);
+      row.innerHTML =
+        '<div class="lbl">' + l.lbl + (l.sub ? '<small>' + l.sub + '</small>' : '') + '</div>' +
+        '<input class="qty" type="number" min="0" step="' + (l.qstep || 1) + '" id="q_' + l.id + '" value="0">' +
+        (l.noRate
+          ? '<div class="rate-cell"><span class="u">no rate — call it in</span></div>'
+          : '<div class="rate-cell"><input type="number" min="0" step="' + l.step + '" id="r_' + l.id + '" value="' + l.min + '"><span class="u">' + l.unit.replace("man-min / ", "/ ").replace("man-min", "min") + '</span></div>') +
+        '<button class="badge ' + b.cls + '" id="b_' + l.id + '" title="' + b.title + '">' + b.txt + '</button>' +
+        '<div class="out" id="o_' + l.id + '">—</div>';
+      host.appendChild(row);
+
+      $("q_" + l.id).addEventListener("input", e => {
+        qty[l.id] = Math.max(0, parseFloat(e.target.value) || 0);
+        e.target.classList.toggle("hot", qty[l.id] > 0);
+        render();
+      });
+      if (!l.noRate){
+        $("r_" + l.id).addEventListener("input", e => {
+          rates[l.id] = Math.max(0, parseFloat(e.target.value) || 0);
+          saveRates();          /* the rate table is the company's, not this job's — keep it */
+          render();
+        });
+      }
+      $("b_" + l.id).addEventListener("click", () => {
+        if (l.src === "stop") return;
+        confirmed[l.id] = !confirmed[l.id];
+        const nb = badgeFor(l);
+        const el = $("b_" + l.id);
+        el.className = "badge " + nb.cls; el.textContent = nb.txt; el.title = nb.title;
+        saveRates(); render();
+      });
+    });
+  });
+
+  /* section 3 — costs */
+  const h3 = $("sec3"); h3.innerHTML = "";
+  COSTS.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML =
+      '<div class="lbl">' + c.lbl + (c.sub ? '<small>' + c.sub + '</small>' : '') + '</div>' +
+      '<input class="qty" type="number" min="0" step="5" id="c_' + c.id + '" value="0">' +
+      '<div class="rate-cell"><span class="u">' + (c.billed ? 'cost + handling' : 'not billed on') + '</span></div>' +
+      '<button class="badge sixfold" disabled style="cursor:default" title="Brandon\'s own recorded figure for this job">Sixfold</button>' +
+      '<div class="out" id="co_' + c.id + '">—</div>';
+    h3.appendChild(row);
+    $("c_" + c.id).addEventListener("input", e => {
+      cost[c.id] = Math.max(0, parseFloat(e.target.value) || 0);
+      e.target.classList.toggle("hot", cost[c.id] > 0);
+      render();
+    });
+  });
+
+  /* section 4 — crew and config */
+  const h4 = $("sec4"); h4.innerHTML = "";
+  const CFG = [
+    {id:"billable", lbl:"Billable rate", sub:"SynkedUP startup band $65–$75 / man-hour, 11 Aug 2026 — a trade cost model, not Sixfold's", unit:"$ / man-hour", step:1, src:"comp"},
+    {id:"handling", lbl:"Handling on pass-through costs", sub:"Sixfold's own call. Applied to dump fees, hire and purchases", unit:"%", step:1, src:"sixfold"},
+    {id:"crewCost", lbl:"Loaded crew cost", sub:"ArboStar, standing in. Sixfold's real loaded pay is the biggest unknown here", unit:"$ / hour", step:1, src:"comp"},
+    {id:"overhead", lbl:"Own overhead", sub:"ArboStar, standing in. Nobody has Sixfold's real figure", unit:"$ / man-hour", step:1, src:"comp"},
+    {id:"freeHours", lbl:"Man-hours given away free", sub:"A return visit thrown in still costs money — job 2 gave 2 hours", unit:"man-hours", step:0.5, src:"sixfold"},
+    {id:"hoursOverride", lbl:"Override total man-hours", sub:"Crew × days, straight off the sheet. Beats every rate above", unit:"man-hours", step:0.5, src:"sixfold", blank:true},
+    {id:"rounding", lbl:"Round the price down to", sub:"Sixfold's own call — job 2 rounded $1,728 down to $1,700", unit:"$", step:5, src:"sixfold"}
+  ];
+  CFG.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "row";
+    const b = c.src === "comp" ? {cls:"comp", txt:"Competitor"} : {cls:"sixfold", txt:"Sixfold"};
+    row.innerHTML =
+      '<div class="lbl">' + c.lbl + (c.sub ? '<small>' + c.sub + '</small>' : '') + '</div>' +
+      '<input class="qty" type="number" min="0" step="' + c.step + '" id="g_' + c.id + '" value="' + (c.blank ? "" : cfg[c.id]) + '"' + (c.blank ? ' placeholder="auto"' : '') + '>' +
+      '<div class="rate-cell"><span class="u">' + c.unit + '</span></div>' +
+      '<button class="badge ' + b.cls + '" disabled style="cursor:default">' + b.txt + '</button>' +
+      '<div class="out" id="go_' + c.id + '">—</div>';
+    h4.appendChild(row);
+    $("g_" + c.id).addEventListener("input", e => {
+      cfg[c.id] = c.blank ? e.target.value : (parseFloat(e.target.value) || 0);
+      /* the standing rates persist; the two job-specific ones (free hours, hours
+         override) belong to the job in front of you and are not written back */
+      if (["billable","handling","crewCost","overhead","rounding"].includes(c.id)) saveRates();
+      render();
+    });
+  });
+}
+
+/* ====================== render: everything ====================== */
+function render(){
+  const m = compute();
+
+  LINES.forEach(l => {
+    const el = $("o_" + l.id);
+    if (!el) return;
+    if (l.noRate){ el.textContent = qty[l.id] > 0 ? "call in" : "—"; el.className = "out" + (qty[l.id] > 0 ? " live" : ""); return; }
+    const h = (qty[l.id] || 0) * (rates[l.id] || 0) / 60;
+    el.textContent = h > 0 ? hrs(h) : "—";
+    el.className = "out" + (h > 0 ? " live" : "");
+  });
+  COSTS.forEach(c => {
+    const el = $("co_" + c.id);
+    const v = cost[c.id] || 0;
+    el.textContent = v <= 0 ? "—" : (c.billed ? money2(v * (1 + cfg.handling/100)) : "not billed");
+    el.className = "out" + (v > 0 ? " live" : "");
+  });
+  $("go_billable").textContent = m.hours > 0 ? money(m.labourRev) : "—";
+  $("go_handling").textContent = m.passCost > 0 ? "+" + money(m.passRev - m.passCost) : "—";
+  $("go_crewCost").textContent = m.hours > 0 ? money(m.hours * cfg.crewCost) : "—";
+  $("go_overhead").textContent = m.hours > 0 ? money(m.hours * cfg.overhead) : "—";
+  $("go_freeHours").textContent = m.freeHours > 0 ? "−" + money(m.freeCost) : "—";
+  $("go_hoursOverride").textContent = m.hoursOverridden ? "was " + hrs(m.rawHours) : "—";
+  $("go_rounding").textContent = m.raw > 0 ? "−" + money2(m.raw - m.costUp) : "—";
+
+  /* price rail */
+  $("pPrice").textContent = m.price > 0 ? money(m.price) : "$0";
+  $("pPriceSub").textContent = m.price <= 0 ? "Enter counts to build a price"
+    : m.overridden ? "Brandon's price. Cost-up build says " + money(m.costUp) + "."
+    : "Cost-up build, rounded down to the nearest " + money(cfg.rounding) + ".";
+
+  const bl = [
+    ["Crew time", hrs(m.hours) + " × " + money(cfg.billable), money(m.labourRev)],
+    ["Dump, hire, purchases", m.passCost > 0 ? money(m.passCost) + " + " + cfg.handling + "% handling" : "nothing recorded", money(m.passRev)],
+    ["Truck fuel", "carried by the man-hour rate", "not billed"]
+  ];
+  $("pBuild").innerHTML = bl.map(r =>
+      '<div class="bl"><span class="k">' + r[0] + '<small>' + r[1] + '</small></span><span class="v">' + r[2] + '</span></div>'
+    ).join("") +
+    '<div class="bl tot"><span class="k">Cost-up price</span><span class="v">' + money(m.costUp) + '</span></div>';
+
+  const dEl = $("pDelta");
+  if (m.overridden && m.price > 0){
+    const d = m.price - m.costUp;
+    dEl.innerHTML = d >= 0
+      ? "<b>" + money(d) + " above the build.</b> Extra margin against a day that runs long."
+      : "<b>" + money(-d) + " below the build.</b> That comes straight out of the margin.";
+  } else {
+    dEl.textContent = "Brandon set job 2 himself at $1,900 over a $1,700 build. His number wins — this checks it.";
+  }
+
+  /* meters */
+  const marginPct = Math.round(m.margin * 1000) / 10;
+  const mPos = Math.max(0, Math.min(100, marginPct / 40 * 100));
+  const bePos = m.breakEven > 0 ? Math.max(0, Math.min(100, m.hours / m.breakEven * 100)) : 0;
+  const mCls = marginPct < 0 ? "fill bad" : marginPct < 15 ? "fill thin" : "fill";
+  const hCls = m.headroom < 0 ? "fill bad" : m.headroom < 0.25 ? "fill thin" : "fill";
+  $("pMeters").innerHTML =
+    '<div class="meter"><div class="meter-top"><span>Net after every cost</span><span class="v">' +
+      (m.price > 0 ? money(m.net) + " · " + marginPct.toFixed(1) + "%" : "—") + '</span></div>' +
+      '<div class="track"><div class="' + mCls + '" style="width:' + mPos + '%"></div></div>' +
+      '<div class="meter-foot">Cash out ' + money(m.cashOut) + ' · crew and overhead ' + money(m.labourCost + m.freeCost) +
+      ' at ' + money(m.perHour) + '/man-hour</div></div>' +
+    '<div class="meter"><div class="meter-top"><span>Break-even</span><span class="v">' +
+      (m.breakEven > 0 ? hrs(m.breakEven) : "—") + '</span></div>' +
+      '<div class="track" title="Budgeted man-hours against break-even"><div class="' + hCls + '" style="width:' + bePos + '%"></div></div>' +
+      '<div class="meter-foot">' + (m.hours > 0 && m.breakEven > 0
+        ? "Budgeted " + hrs(m.hours) + ". The day can run " + Math.round(m.headroom * 100) + "% long before this job earns nothing."
+        : "Enter counts to see how long the day can run.") + '</div></div>' +
+    (m.freeHours > 0 ? '<div class="meter"><div class="meter-top"><span>Given away free</span><span class="v">' +
+      hrs(m.freeHours) + " · " + money(m.freeCost) + '</span></div><div class="meter-foot">A known giveaway rather than a silent one. One line recovers it.</div></div>' : "");
+
+  renderFlags(m);
+  renderMarket(m);
+  renderCalibration();
+}
+
+/* ====================== flags ====================== */
+function renderFlags(m){
+  const f = [];
+  const usedUnbacked = LINES.filter(l => !l.noRate && (qty[l.id] || 0) > 0 && l.src === "unbacked" && !confirmed[l.id]);
+  if (usedUnbacked.length)
+    f.push(["Unbacked rates in this price", usedUnbacked.length + " line" + (usedUnbacked.length > 1 ? "s are" : " is") +
+      " priced off a rate nothing supports — " + usedUnbacked.map(l => l.lbl.toLowerCase().split(" — ")[0]).join(", ") +
+      ". Get Brandon to confirm each before this goes out."]);
+  if ((qty.t80 || 0) > 0)
+    f.push(["Stop rule", "A tree over 80 ft is a call-in, not a quote. Nothing on this sheet prices it."]);
+  if ((qty.stump || 0) > 0 || (qty.stumpin || 0) > 0)
+    f.push(["811 locate", "Stumps cannot be ground the same day. Colorado 811 is three business days in practice — plan a second visit and say so in the quote."]);
+  if ((qty.loads || 0) > 0 && (cost.dump || 0) === 0)
+    f.push(["No dump fee entered", "Haul-off is where this business has lost money. Call the site, get today's commercial rate, and put it in before quoting."]);
+  const groundUsed = LINES.filter(l => l.s === 2 && (qty[l.id] || 0) > 0);
+  if (groundUsed.length)
+    f.push(["Landscaping has no published rate", "Mowing, edging and planting are not among the six services Sixfold's README lists and no document prices them. These times are fitted off one job."]);
+  if (m.price > 0 && m.margin < 0.15)
+    f.push([m.margin < 0 ? "This job loses money" : "Thin margin",
+      m.margin < 0 ? "At " + money(m.price) + " the fully loaded cost is " + money(m.totalCost) + ". This is the Sedalia pattern."
+      : "Net is " + (m.margin * 100).toFixed(1) + "% before Sixfold's own overhead is properly known. Job 2 at $1,900 ran 20.7%."]);
+  if (m.overridden && m.price < m.costUp)
+    f.push(["Override below the build", "The price is under what the cost-up model says the work is worth."]);
+  if (cfg.billable > 71.5)
+    f.push(["Billable rate is above the local ceiling", "Hawk Tree Service publishes $115–$143/hr for a two-person crew in Colorado Springs — $57.50 to $71.50 a man-hour. At $" +
+      cfg.billable + " you are above the top of the only published rate in Sixfold's own market."]);
+  if ((qty.sap || 0) > 0 && (qty.t30 || 0) === 0 && (qty.sap || 0) >= 4)
+    f.push(["Check these are really saplings", "The sapling line is 30 man-minutes, fitted to five trees Brandon annotated “under 10 feet”. A genuine 20-footer belongs on the line below at 150 — five of those is a 10-hour difference."]);
+
+  $("flagbox").innerHTML = f.length
+    ? '<ul class="flags">' + f.map(x => '<li><b>' + x[0] + '</b>' + x[1] + '</li>').join("") + '</ul>'
+    : '<ul class="flags"><li class="ok"><b>Nothing tripped</b>No stop rules, no unbacked rate carrying a count, and the margin holds. The price still has to be written up and sent — never given on the property.</li></ul>';
+}
+
+/* ====================== market check ====================== */
+/* Compares LIKE WITH LIKE: only the lines that have a published local rate, with
+   Sixfold's own side of those same lines valued at its billable rate. Comparing a
+   whole job price against one line's market value is how a bogus saving is made. */
+function marketCheck(){
+  let mktTotal = 0, sixTotal = 0; const covered = [], missing = [];
+  LINES.forEach(l => {
+    const q = qty[l.id] || 0;
+    if (q <= 0 || l.noRate) return;
+    if (l.mkt){
+      const mv = q * l.mkt;
+      const sv = q * (rates[l.id] || 0) / 60 * cfg.billable;
+      mktTotal += mv; sixTotal += sv;
+      covered.push({l, q, mv, sv});
+    } else missing.push(l);
+  });
+  return {mktTotal, sixTotal, covered, missing};
+}
+function renderMarket(m){
+  const k = marketCheck();
+  const host = $("mktBody");
+  if (!k.covered.length){
+    host.innerHTML = '<div class="empty">Nothing on this job has a published local rate against it yet. ' +
+      'Enter trees, trimming or stump inches and the comparison builds.</div>';
+    return;
+  }
+  const rows = k.covered.map(c =>
+    '<tr><td>' + c.l.lbl.split(" — ")[0] + ' <span class="dim">× ' + c.q + '</span><br><span class="dim" style="font-size:11.5px">' +
+    c.l.mktSrc + '</span></td><td class="n">' + money(c.sv) + '</td><td class="n">' + money(c.mv) + '</td></tr>').join("");
+  const diff = k.mktTotal - k.sixTotal;
+  const pct = k.mktTotal > 0 ? Math.round(diff / k.mktTotal * 100) : 0;
+  host.innerHTML =
+    '<table class="cal"><thead><tr><th>Line</th><th style="text-align:right">Sixfold</th><th style="text-align:right">Local low</th></tr></thead><tbody>' +
+    rows +
+    '<tr><td><b>These lines only</b></td><td class="n"><b>' + money(k.sixTotal) + '</b></td><td class="n"><b>' + money(k.mktTotal) + '</b></td></tr>' +
+    '</tbody></table>' +
+    '<div class="verdict' + (diff < 0 ? " off" : "") + '">' +
+      (diff >= 0
+        ? "<b>" + money(diff) + " under the published local minimum</b> on these lines, about " + pct + "%. " +
+          "That is a saving you can point at, because the number on the other side has a name and a date behind it."
+        : "<b>" + money(-diff) + " above</b> the published local minimum on these lines. Sixfold has no track record, " +
+          "no insurance and no reviews — being above the cheapest published local figure needs a reason.") +
+    '</div>' +
+    (k.missing.length ? '<p style="margin-top:9px"><b>No published local rate exists for:</b> ' +
+      k.missing.map(l => l.lbl.split(" — ")[0].replace(/, per job$/,"").toLowerCase()).join(", ") +
+      '. Anything said about what those are “worth” on the open market is unsourced — including on a customer sheet.</p>' : "");
+}
+
+/* ====================== calibration ====================== */
+function renderCalibration(){
+  const rows = [];
+  let tot = 0;
+  Object.keys(JOB2.qty).forEach(id => {
+    const l = LINES.find(x => x.id === id);
+    const h = JOB2.qty[id] * (rates[id] || 0) / 60;
+    tot += h;
+    rows.push('<tr><td>' + l.lbl.replace(", per job", "") + ' <span class="dim">× ' + JOB2.qty[id] + '</span></td><td class="n">' + hrs(h) + '</td></tr>');
+  });
+  $("calRows").innerHTML = rows.join("") +
+    '<tr><td><b>Predicted</b></td><td class="n"><b>' + hrs(tot) + '</b></td></tr>' +
+    '<tr><td>Brandon recorded — 2 people, 1 day</td><td class="n">16 h</td></tr>';
+  const diff = tot - JOB2.recordedHours;
+  const off = Math.abs(diff) > 1;
+  const v = $("calVerdict");
+  v.className = "verdict" + (off ? " off" : "");
+  v.innerHTML = off
+    ? "<b>Out by " + hrs(Math.abs(diff)) + ".</b> The table now " + (diff > 0 ? "over" : "under") +
+      "states the only job anyone has real hours for. Either the rate is wrong or job 2 was not typical — decide which, don't leave it."
+    : "<b>Reconciles.</b> The table predicts " + hrs(tot) + " against 16 recorded. That is one job, not a measurement — time the next one and correct it.";
+}
+
+/* ====================== load / clear ====================== */
+function applyState(st){
+  LINES.forEach(l => {
+    qty[l.id] = (st.qty && st.qty[l.id]) || 0;
+    const q = $("q_" + l.id);
+    if (q){ q.value = qty[l.id] || 0; q.classList.toggle("hot", qty[l.id] > 0); }
+  });
+  COSTS.forEach(c => {
+    cost[c.id] = (st.cost && st.cost[c.id]) || 0;
+    const el = $("c_" + c.id);
+    if (el){ el.value = cost[c.id] || 0; el.classList.toggle("hot", cost[c.id] > 0); }
+  });
+  const merged = {...DEFAULT_CFG, ...(st.cfg || {})};
+  ["billable","handling","crewCost","overhead","freeHours","rounding"].forEach(k => {
+    cfg[k] = merged[k]; const el = $("g_" + k); if (el) el.value = cfg[k];
+  });
+  cfg.hoursOverride = merged.hoursOverride ?? "";
+  if ($("g_hoursOverride")) $("g_hoursOverride").value = cfg.hoursOverride;
+  cfg.override = st.override ?? "";
+  $("ovrIn").value = cfg.override;
+  $("jobName").value = st.name || "";
+  render();
+}
+
+$("bLoadJob2").addEventListener("click", () => {
+  applyState({qty:JOB2.qty, cost:JOB2.cost, cfg:{...DEFAULT_CFG, ...JOB2.cfg}, name:JOB2.name, override:1900});
+  toast("Job 2 loaded — Brandon's $1,900 sits in the override");
+});
+$("bNew").addEventListener("click", () => {
+  applyState({qty:{}, cost:{}, cfg:DEFAULT_CFG, name:"", override:""});
+  toast("Cleared");
+});
+$("ovrIn").addEventListener("input", e => { cfg.override = e.target.value; render(); });
+$("ovrClear").addEventListener("click", () => { cfg.override = ""; $("ovrIn").value = ""; render(); });
+
+/* ====================== local draft ====================== */
+/* v2: the v1 key holds drafts auto-saved while the page still opened pre-loaded
+   with job 2, so they are not anybody's unfinished work. Dropped, not migrated. */
+const LS = "sixfold-quote-build-draft-v2";
+try { localStorage.removeItem("sixfold-quote-build-draft"); } catch(e){}
+function snapshot(){
+  return {qty:{...qty}, cost:{...cost}, cfg:{...cfg}, override:cfg.override ?? "", name:$("jobName").value.trim(),
+          rates:{...rates}, confirmed:{...confirmed}, savedAt:new Date().toISOString()};
+}
+function saveDraft(){ try { localStorage.setItem(LS, JSON.stringify(snapshot())); } catch(e){} }
+function readDraft(){
+  try {
+    const raw = localStorage.getItem(LS);
+    if (!raw) return null;
+    const st = JSON.parse(raw);
+    /* an empty ledger is not a draft worth offering back */
+    const typed = Object.values(st.qty || {}).some(v => v > 0) ||
+                  Object.values(st.cost || {}).some(v => v > 0) || !!(st.name || "").trim();
+    return typed ? st : null;
+  } catch(e){ return null; }
+}
+/* Nothing is restored on its own — a job only comes back when it is asked for. */
+function offerDraft(){
+  const st = readDraft();
+  const bar = $("resumeBar");
+  if (!st){ bar.hidden = true; return; }
+  const when = st.savedAt ? new Date(st.savedAt) : null;
+  const stamp = when && !isNaN(when) ? when.toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) : "earlier";
+  bar.hidden = false;
+  bar.innerHTML = '<span class="mk">DRAFT</span><div style="flex:1"><b>' +
+    ((st.name || "").trim() || "An unnamed job") + '</b> was left unfinished on this device, ' + stamp +
+    '. <button class="link" id="dResume">Bring it back</button> · <button class="link" id="dDrop">Discard it</button></div>';
+  $("dResume").addEventListener("click", () => {
+    if (st.rates) Object.keys(st.rates).forEach(k => { if (rates[k] != null){ rates[k] = st.rates[k]; const el = $("r_" + k); if (el) el.value = st.rates[k]; } });
+    if (st.confirmed) confirmed = st.confirmed;
+    applyState(st); bar.hidden = true;
+    toast("Back on " + ((st.name || "").trim() || "the unfinished job"));
+  });
+  $("dDrop").addEventListener("click", () => {
+    try { localStorage.removeItem(LS); } catch(e){}
+    bar.hidden = true; toast("Draft discarded");
+  });
+}
+
+/* ====================== exports ====================== */
+function scopeMarkdown(){
+  const m = compute();
+  const name = $("jobName").value.trim() || "Untitled job";
+  const out = [];
+  out.push("# Quote scope draft — " + name, "");
+  out.push("**Built:** " + new Date().toISOString().slice(0,10) + " · Sixfold Quote Build (cost-up)");
+  out.push("**Status:** DRAFT. Not sent, not signed, not scheduled.", "");
+  out.push("## The work", "", "| Line | Count |", "|---|---|");
+  LINES.forEach(l => { if ((qty[l.id]||0) > 0 && l.id !== "mob") out.push("| " + l.lbl + " | " + qty[l.id] + " |"); });
+  out.push("", "## Price", "", "**" + money(m.price) + "**" + (m.overridden ? "  — set above the cost-up build of " + money(m.costUp) + "." : "  — cost-up build, rounded down."), "");
+  if (m.freeHours > 0) out.push("Includes " + hrs(m.freeHours) + " of work given at no charge (" + money(m.freeCost) + " at cost). Recorded so it is a known giveaway.", "");
+  out.push("## Before this goes anywhere near a customer", "");
+  out.push("- No price is given on the property — the estimate is written up and sent.");
+  out.push("- Sixfold is not licensed, bonded or insured, and none of those may be claimed.");
+  if ((qty.stump||0) > 0 || (qty.stumpin||0) > 0) out.push("- Stumps need an 811 locate, three business days. Say so, and plan the second visit.");
+  if ((qty.t80||0) > 0) out.push("- A tree over 80 ft is on this sheet. That is a call-in, not a quote.");
+  const unbacked = LINES.filter(l => !l.noRate && (qty[l.id]||0) > 0 && l.src === "unbacked" && !confirmed[l.id]);
+  if (unbacked.length) out.push("- **" + unbacked.length + " line(s) priced off an unconfirmed rate:** " + unbacked.map(l => l.lbl).join("; ") + ".");
+  out.push("", "## Fact-check log", "", "| Figure | Source |", "|---|---|");
+  out.push("| $" + cfg.billable + "/man-hour billable | **Competitor** — SynkedUP, Weston Zimmerman, 11 Aug 2026, 2026 startup band $65–$75. A trade cost model, not a competitor's price list |");
+  out.push("| Counts and recorded costs | **Sixfold** — off the walk sheet. Not independently verified |");
+  out.push("| Time per unit | **Sixfold**, derived from its own recorded 16 man-hours on job 2 — except any line listed above, which is unbacked |");
+  out.push("| Crew cost $" + cfg.crewCost + "/hr, overhead $" + cfg.overhead + "/man-hour | **Competitor** — ArboStar, standing in. Sixfold's real figures are still unknown |");
+  return out.join("\n");
+}
+function internalCsv(){
+  const m = compute();
+  const esc = s => '"' + String(s).replace(/"/g, '""') + '"';
+  const rows = [["INTERNAL — DO NOT SEND",""], ["Job", $("jobName").value.trim() || "Untitled"], ["Built", new Date().toISOString()], [], ["Line","Count","Man-min/unit","Source","Man-hours"]];
+  LINES.forEach(l => { if ((qty[l.id]||0) > 0) rows.push([l.lbl, qty[l.id], l.noRate ? "" : rates[l.id], badgeFor(l).txt, l.noRate ? "" : ((qty[l.id]*rates[l.id])/60).toFixed(2)]); });
+  rows.push([], ["Man-hours", m.hours.toFixed(2), m.hoursOverridden ? "overridden (raw " + m.rawHours.toFixed(2) + ")" : ""]);
+  COSTS.forEach(c => rows.push([c.lbl, cost[c.id] || 0, c.billed ? "billed at +" + cfg.handling + "%" : "cost only, not billed"]));
+  rows.push([], ["Cost-up price", m.costUp], ["Quoted price", m.price], ["Fully loaded cost", m.totalCost.toFixed(2)],
+    ["Net", m.net.toFixed(2)], ["Margin %", (m.margin*100).toFixed(1)], ["Break-even man-hours", m.breakEven.toFixed(2)],
+    [], ["Crew cost $/hr", cfg.crewCost, "COMPETITOR — ArboStar, standing in for Sixfold's own"],
+    ["Overhead $/man-hour", cfg.overhead, "COMPETITOR — ArboStar, standing in for Sixfold's own"],
+    ["Billable $/man-hour", cfg.billable, "COMPETITOR — SynkedUP trade cost model"]);
+  return rows.map(r => r.map(esc).join(",")).join("\r\n");
+}
+async function offer(filename, data){
+  if (!downloads){ toast("Downloads are not available in this view"); return; }
+  try { await downloads.save({filename, data}); toast("Saved " + filename); }
+  catch(err){
+    const c = err && err.code;
+    if (c === "declined") return;
+    toast(c === "rate_limited" ? "A save prompt is already open — try again in a moment" : "Could not save the file");
+  }
+}
+$("bScope").addEventListener("click", () => {
+  const n = ($("jobName").value.trim() || "job").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  offer("quote-scope-" + n + ".md", scopeMarkdown());
+});
+$("bCsv").addEventListener("click", () => {
+  const n = ($("jobName").value.trim() || "job").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  offer("INTERNAL-quote-build-" + n + ".csv", internalCsv());
+});
+
+/* ====================== toast ====================== */
+let toastEl = null, toastT = null;
+function toast(msg){
+  if (toastEl) toastEl.remove();
+  toastEl = document.createElement("div");
+  toastEl.className = "toast"; toastEl.textContent = msg; toastEl.setAttribute("role", "status");
+  document.body.appendChild(toastEl);
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { if (toastEl){ toastEl.remove(); toastEl = null; } }, 3200);
+}
+
+/* ====================== db ====================== */
+function ratesPayload(){
+  return {rates:{...rates}, confirmed:{...confirmed},
+    cfg:{billable:cfg.billable, handling:cfg.handling, crewCost:cfg.crewCost, overhead:cfg.overhead, rounding:cfg.rounding},
+    updatedAt:new Date().toISOString()};
+}
+let rateWriteT = null;
+function saveRates(){
+  if (!db || !ratesDocReady) return;
+  clearTimeout(rateWriteT);
+  rateWriteT = setTimeout(() => {
+    db.doc("config/rates-v2").set(ratesPayload()).catch(() => {});
+  }, 900);
+}
+function renderJobs(){
+  const ul = $("jobList");
+  ul.innerHTML = jobs.map(j =>
+    '<li><span class="jn">' + (j.name || "Untitled") + '<br><span class="jm">' + (j.savedAt || "").slice(0,10) + " · " + money(j.price || 0) + '</span></span>' +
+    '<span><button class="link" data-load="' + j.id + '">Open</button></span></li>').join("");
+  $("jobEmpty").hidden = jobs.length > 0;
+  ul.querySelectorAll("[data-load]").forEach(b => b.addEventListener("click", () => {
+    const j = jobs.find(x => x.id === b.dataset.load);
+    if (!j) return;
+    if (j.rates) Object.keys(j.rates).forEach(k => { if (rates[k] != null){ rates[k] = j.rates[k]; const el = $("r_" + k); if (el) el.value = j.rates[k]; } });
+    applyState(j);
+    toast("Opened " + (j.name || "job"));
+  }));
+}
+$("bSave").addEventListener("click", async () => {
+  const name = $("jobName").value.trim();
+  if (!name){ toast("Give the job a name first — customer or address"); $("jobName").focus(); return; }
+  if (!db){ toast("Not connected — the local draft is still kept in this browser"); return; }
+  const m = compute();
+  const st = snapshot();
+  try {
+    await db.collection("jobs").add({...st, price:m.price, costUp:m.costUp, hours:m.hours,
+      margin:m.margin, savedAt:new Date().toISOString()});
+    toast("Saved " + name);
+  } catch(err){
+    toast(err && err.code === "quota_exceeded" ? "The store is full — delete an old job first" : "Could not save — try again");
+  }
+});
+
+(async function init(){
+  buildLedger();
+  /* Always opens on a blank job — nobody should land on somebody else's property
+     with a price already on it. The rate table is what persists. An unfinished
+     draft is OFFERED, never restored on its own, and job 2 is one tap away. */
+  applyState({qty:{}, cost:{}, cfg:DEFAULT_CFG, name:"", override:""});
+  offerDraft();
+  ["input","change"].forEach(ev => document.addEventListener(ev, saveDraft));
+
+  try { downloads = await claude.use("downloads"); } catch(e){ downloads = null; }
+  if (!downloads){ $("bScope").disabled = true; $("bCsv").disabled = true; }
+
+  try { db = await claude.use("db"); } catch(e){ db = null; }
+  if (!db){ $("bSave").disabled = true; $("jobEmpty").textContent = "Not connected — jobs cannot be saved in this view."; return; }
+
+  let firstRates = true;
+  db.doc("config/rates-v2").onSnapshot(snap => {
+    ratesDocReady = true;
+    if (!snap.exists){ firstRates = false; return; }
+    const d = snap.data() || {};
+    if (d.rates) Object.keys(d.rates).forEach(k => { if (rates[k] != null){ rates[k] = d.rates[k]; const el = $("r_" + k); if (el) el.value = d.rates[k]; } });
+    /* The standing rates apply once, on open. After that a job you have loaded
+       keeps its own figures rather than being stomped by a later write. */
+    if (firstRates && d.cfg){
+      firstRates = false;
+      Object.keys(d.cfg).forEach(k => { if (cfg[k] != null){ cfg[k] = d.cfg[k]; const el = $("g_" + k); if (el) el.value = d.cfg[k]; } });
+    }
+    if (d.confirmed){
+      confirmed = d.confirmed;
+      LINES.forEach(l => { const b = badgeFor(l), el = $("b_" + l.id);
+        if (el && l.src !== "stop"){ el.className = "badge " + b.cls; el.textContent = b.txt; el.title = b.title; } });
+    }
+    render();
+  }, () => { ratesDocReady = false; });
+
+  db.collection("jobs").orderBy("savedAt", "desc").limit(40).onSnapshot(snap => {
+    jobs = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderJobs();
+  }, () => { $("jobEmpty").textContent = "Saved jobs could not be loaded."; });
+})();
+</script>
