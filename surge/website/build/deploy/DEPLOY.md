@@ -19,10 +19,13 @@ logo — both slot in after launch if late.
 
 **When the photos are in:**
 
-1. Drop photos in, re-run the image optimiser (see note under "What's already
-   done" — the scratchpad script is gone; rebuild it or hand-optimise with
-   `sharp`). Check every `<picture>` slot renders at 1280 and at 420 — the
-   09-14 batch was portrait against landscape slots.
+1. Drop the shoot in a dated folder under `brand/photos/`, then
+   `node deploy/optimise-images.mjs <that folder>` — HEIC or JPEG in,
+   1440×1080 JPEG (+ WebP where it wins) out in `assets/img/`, metadata
+   stripped. It warns on portrait or undersized frames; the shot list says
+   reshoot those. `--name` renames a single file, `--slot hero` for the hero
+   background. Then reference the files and check every `<picture>` slot at
+   1280 and at 420.
 2. `node deploy/make-bundle.mjs` → extract → `verify-bundle` + `audit-links`
    **on the extracted copy** (against the repo both false-positive on comments).
 3. Matthew's go. Then, in this order:
@@ -65,8 +68,9 @@ faster, put `noindex` back with `toggle-noindex.mjs on` and re-upload.
 ## What's already done
 
 - **Images optimised** — 18.3 MB → ~1.8 MB. Originals kept in
-  `drafts/_surge-site-img-originals/`. Re-run `scratchpad/imgproc/build.mjs` if
-  originals change (portable node v22 + `sharp`).
+  `source-material/img-originals/`. The pipeline is `deploy/optimise-images.mjs`
+  (rebuilt in-repo 2026-09-16; needs `npm install` at the repo root once —
+  `sharp` + `heic-convert` are declared in `package.json`).
 - **`<picture>` + WebP** for the two photos where WebP wins; `loading="lazy"` /
   `decoding="async"` on content images; `fetchpriority="high"` on the hero.
 - **Favicons** — `favicon.svg` (the S mark) + PNG sizes + `apple-touch-icon` +

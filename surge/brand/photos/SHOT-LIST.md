@@ -45,7 +45,10 @@ do not delete it, and do not use it.
 - **Avoid heavy backlight from the windows.** Several existing office frames are
   silhouettes because the subject is standing in front of the glass.
 - Drop everything in `brand/photos/` in a dated folder. Processing to web sizes is a
-  build step, not something to do by hand.
+  build step, not something to do by hand:
+  `node surge/website/build/deploy/optimise-images.mjs surge/brand/photos/<folder>`
+  takes HEIC or JPEG, crops to 4:3 at 1440×1080, strips the phone's metadata, and
+  warns on any frame that is portrait or too small.
 
 ---
 
