@@ -45,8 +45,17 @@ logo — both slot in after launch if late.
 8. Google Search Console: submit `https://surgeftw.com/sitemap.xml`. Google
    review link and the WordPress-era URLs are covered by the `.htaccess`
    redirect map (item 7 on the punch list).
-9. If analytics is wanted, add it **and** edit `/privacy/` the same day — it
-   currently promises no trackers.
+9. **Analytics — decided 2026-09-16: no tracking script at launch.** Measure
+   with SiteGround's built-in traffic stats (Site Tools → Statistics →
+   Traffic — server-side, no cookies, and the same kind of numbers as the
+   July-2026 baseline), Search Console (step 8), and the form log. `/privacy/`
+   stays as written. Revisit only with a specific question the three cannot
+   answer; then a cookieless tool (Plausible / Fathom) and a one-sentence
+   privacy edit. Not GA4.
+
+`info@surgeftw.com` is read by the recruitment team, who also handle client
+acquisition — confirmed 2026-09-16, so both form types land with the people
+who act on them.
 
 Roll back: re-upload the WordPress backup (`drafts/surge-wp-restore/`) — or,
 faster, put `noindex` back with `toggle-noindex.mjs on` and re-upload.
