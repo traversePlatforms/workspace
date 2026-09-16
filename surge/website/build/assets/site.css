@@ -926,16 +926,14 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
    onto the next line. ------------------------------------------------------- */
 .role-list{list-style:none;margin:1.9rem 0 0;padding:0;
   display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
-@media(min-width:720px){.role-list{grid-template-columns:1fr 1fr}
-  /* Odd count: the FIRST item spans both columns so the grid background
-     (which is what draws the borders) never shows as an empty grey cell.
-     Went 6→5 on 2026-09-16 when inside sales folded into sales; Matthew
-     chose the wide row for Sales, which carries the most text, over a wide
-     Operations row at the bottom that read as unfilled. */
-  .role-list>li:first-child:nth-last-child(odd){grid-column:1/-1}
-  /* The wide row gets a wider measure so its open text doesn't sit in the
-     left third; 72ch, not full width — full width ran ~130 chars a line. */
-  .role-list>li:first-child:nth-last-child(odd) .role p{max-width:72ch}}
+/* Single column at every width since 2026-09-16. It was a two-column grid;
+   Matthew's review: opening Marketing stretched the Customer relations cell
+   beside it to the same height and left it blank, "and it looks weird" — a
+   grid row shares one height. Five rows is shorter than the intro above it.
+   (This also retires the odd-count / wide-first-row rules from earlier that day.)
+   Text measure 72ch on the full-width row: wider than the old 46ch so the open
+   text is not stuck in the left third, short of full width which ran ~130 chars. */
+.role-list .role p{max-width:72ch}
 .role-list>li{background:var(--ink)}
 .band--green .role-list>li{background:var(--ink)}
 .role summary{
