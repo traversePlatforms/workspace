@@ -74,6 +74,15 @@
 
 ---
 
+> ## ⚠ Everything below this line is priced off the rate card — 2026-09-16
+>
+> The Sedalia pack and its fact-check log reconcile to **Sheet A of the pricing guide, which is superseded**:
+> the Sedalia job lost money on those rates, and job 2's recorded costs (above) show why. The "verified
+> against the card" rows in the log below are true as written — they say the sheets match the card, not that
+> the card was right. **Do not send either Sedalia option as it stands.** Re-price through the cost-up engine
+> ([quote-engine.md](quote-engine.md)) before anything goes to that customer. The section is kept as the
+> record of how the job was reasoned about on 2026-08-28.
+
 ## The Sedalia pack — S Sedalia, downed wood clearance
 
 **Built:** 2026-08-27 · **Repriced and expanded 2026-08-28**

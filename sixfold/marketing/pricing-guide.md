@@ -1,5 +1,26 @@
 # Pricing Guide — Sixfold
 
+> ## ⚠ Do not quote from this card — 2026-09-16
+>
+> **Superseded for pricing on 2026-09-13.** The Sedalia job, priced off these rates, lost money, and job 2's
+> recorded costs (walked 2026-09-14) show the card would have quoted **$1,038 against ~$1,450 of real cost**.
+> **Quote from the cost-up engine instead:** [../quotes/quote-engine.md](../quotes/quote-engine.md) and the
+> *Sixfold Quote Build* artifact — man-hours × billable rate + recorded costs, never a per-unit price list.
+>
+> Four faults found in the 2026-09-14 source re-check, **left uncorrected below** because this file is the
+> record of what was built and why:
+>
+> 1. §Sheet C treats Wexford's removal figures as crew-hours; the source table is headed *man-hours*. Every
+>    figure is doubled and the $120/hr crew rate was sanity-checked against the doubled version.
+> 2. §11 flags Hawk as "Colorado Springs rather than Denver metro — a real caveat". Sixfold moved to Monument
+>    the next day. Hawk is now the best-matched anchor on the sheet; the Denver-metro figures carry the caveat.
+> 3. §3 stump grinding ($4.75–$8.55/inch) sits above Hawk's published $2–$5 in Sixfold's own market.
+> 4. The $142–$190/load haul band came from a page that returned HTTP 403 and was never read, propped up
+>    by a homeowner-only tip fee. Job 2's receipt is $173/load commercial. **Withdrawn.**
+>
+> The source-by-source re-verification table is in `quotes/quote-engine.md` §Source re-check. The PDFs and
+> the artifact listed below are the card as it stood on 2026-08-24 and must not be sent.
+
 **Built:** 2026-08-24
 **Register:** Customer-facing. Written to be handed to a homeowner or read on a phone.
 **Status:** Built, **not released.** Two gates below must close first — see §9.
