@@ -1,0 +1,600 @@
+<title>Crew Safety & Compliance</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   Sixfold — Fire-Mitigation Funding Directory
+   Dark-first (house register); light print + light-OS register.
+   Palette: Pine Black / Timber / Bone / Ember / Moss.
+   ============================================================ */
+
+:root {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --ground:    var(--pine);
+  --surface:   var(--timber);
+  --surface-2: var(--timber-2);
+  --ink:       var(--bone);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+  --measure: 70ch;
+  --pad: clamp(1.1rem, 4vw, 2.6rem);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pine:      #F3EFE6;
+    --pine-2:    #EEE9DD;
+    --timber:    #FBF8F2;
+    --timber-2:  #F4EFE4;
+    --bone:      #1B211E;
+    --bark:      #5E6B60;
+    --ember:     #BE4E1C;
+    --ember-ink: #B6480F;
+    --moss:      #5C7350;
+    --moss-ink:  #4F6644;
+    --rule:      rgba(20, 30, 25, 0.14);
+    --rule-2:    rgba(20, 30, 25, 0.26);
+    --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+  }
+}
+
+:root[data-theme="light"] {
+  --pine:      #F3EFE6;
+  --pine-2:    #EEE9DD;
+  --timber:    #FBF8F2;
+  --timber-2:  #F4EFE4;
+  --bone:      #1B211E;
+  --bark:      #5E6B60;
+  --ember:     #BE4E1C;
+  --ember-ink: #B6480F;
+  --moss:      #5C7350;
+  --moss-ink:  #4F6644;
+  --rule:      rgba(20, 30, 25, 0.14);
+  --rule-2:    rgba(20, 30, 25, 0.26);
+  --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+}
+
+:root[data-theme="dark"] {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap { max-width: 62rem; margin: 0 auto; padding: clamp(1.5rem, 5vw, 4rem) var(--pad) 5rem; }
+
+h1, h2, h3, h4 {
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  line-height: 1.18;
+  text-wrap: balance;
+  color: var(--ink);
+}
+h1 { font-size: clamp(2rem, 6vw, 3.1rem); font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.5rem; }
+h2 { font-size: clamp(1.4rem, 3.4vw, 1.9rem); margin: 0; letter-spacing: -0.005em; }
+h3 { font-size: 1.16rem; font-weight: 700; margin: 2rem 0 0.4rem; color: var(--ink); }
+h4 { font-size: 1rem; font-weight: 700; margin: 1.4rem 0 0.3rem; }
+
+p { margin: 0 0 1rem; max-width: var(--measure); }
+strong { font-weight: 600; }
+em { font-style: italic; }
+ul, ol { max-width: var(--measure); }
+li { margin-bottom: 0.35rem; }
+
+a {
+  color: var(--ember-ink);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  word-break: break-word;
+}
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 2px solid var(--ember-ink); outline-offset: 2px; border-radius: 2px; }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  margin: 0 0 0.6rem;
+}
+
+/* masthead */
+.masthead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1rem, 4vw, 2rem);
+  align-items: start;
+  padding-bottom: 1.8rem;
+  border-bottom: 2px solid var(--rule-2);
+}
+.mark { width: clamp(52px, 12vw, 78px); height: auto; color: var(--ember); flex: none; }
+.masthead .lede { font-size: clamp(1rem, 2.4vw, 1.15rem); color: var(--bark); max-width: 48ch; margin: 0.4rem 0 0; }
+.meta {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--bark);
+}
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* callout */
+.callout {
+  margin: 2rem 0;
+  padding: 1.2rem 1.3rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ember);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout.moss { border-left-color: var(--moss); }
+.callout p { max-width: 64ch; }
+.callout .eyebrow { color: var(--ember-ink); }
+.callout.moss .eyebrow { color: var(--moss-ink); }
+
+/* sections */
+section { margin-top: 3.2rem; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.tag {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ember-ink);
+  flex: none;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scope { color: var(--bark); font-size: 0.95rem; margin: 0.5rem 0 1.1rem; max-width: var(--measure); }
+
+/* program card */
+.prog {
+  margin: 1.3rem 0;
+  padding: 1.15rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+}
+.prog h3 { margin-top: 0; }
+.prog .who {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bark);
+  margin: 0 0 0.7rem;
+}
+.prog p { max-width: none; }
+.prog dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0.7rem 0 0;
+  font-size: 0.92rem;
+}
+.prog dt {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  padding-top: 0.18rem;
+}
+.prog dd { margin: 0; }
+.prog .sixfold {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--rule-2);
+  font-size: 0.92rem;
+}
+.prog .sixfold b {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ember-ink);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+/* tables */
+.twrap {
+  overflow-x: auto;
+  margin: 1.1rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 46rem; }
+thead th {
+  text-align: left;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--bark);
+  background: var(--surface);
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--rule-2);
+  position: sticky;
+  top: 0;
+}
+tbody td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface) 45%, transparent); }
+td .prog-name { font-weight: 600; color: var(--ink); display: block; }
+td.amt {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+}
+
+/* badges + pills */
+.badge {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.42rem;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+.badge.t1 { color: var(--moss-ink); }
+.badge.t2 { color: var(--ember-ink); }
+.badge.t3 { color: #C9962F; }
+.badge.t4 { color: var(--bark); }
+:root[data-theme="light"] .badge.t3, :root:not([data-theme="dark"]) .badge.t3 { color: #9A6B12; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .badge.t3 { color: #9A6B12; } }
+
+.pill {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.14rem 0.44rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.owner { color: var(--moss-ink); border: 1px solid var(--moss); }
+.pill.contractor { color: var(--ember-ink); border: 1px solid var(--ember); }
+.pill.entity { color: #C9962F; border: 1px solid currentColor; }
+
+.bottom-line {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  max-width: none;
+}
+.bottom-line b {
+  color: var(--moss-ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.fc h3 { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ember-ink); }
+.fc ul { padding-left: 1.1rem; max-width: var(--measure); }
+.fc li { margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+.sources { font-size: 0.82rem; color: var(--bark); }
+.sources li { margin-bottom: 0.35rem; word-break: break-word; }
+
+hr.div { border: none; border-top: 1px solid var(--rule-2); margin: 3rem 0 0; }
+
+.foot {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid var(--rule-2);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--bark);
+  letter-spacing: 0.03em;
+}
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ============================================================
+   PRINT — force the light register, Letter sheet, tight type.
+   ============================================================ */
+@page { size: Letter; margin: 15mm 16mm 16mm; }
+
+@media print {
+  :root, :root[data-theme="dark"] {
+    --pine: #ffffff; --pine-2: #f6f3ec; --timber: #f6f3ec; --timber-2: #efe9dd;
+    --bone: #17201b; --bark: #4c574d;
+    --ember: #A8410F; --ember-ink: #9c3c0c;
+    --moss: #4a6140; --moss-ink: #3f5537;
+    --rule: rgba(20,30,25,0.22); --rule-2: rgba(20,30,25,0.4);
+    --shadow: none;
+  }
+  body { font-size: 9.6pt; line-height: 1.44; background: #fff; }
+  .wrap { max-width: none; margin: 0; padding: 0; }
+  a { color: inherit; text-decoration: none; }
+  .masthead { border-bottom-width: 1.5pt; }
+  .mark { color: #A8410F; width: 58px; }
+  thead th { position: static; font-size: 6pt; }
+  table { font-size: 8pt; min-width: 0; }
+  .twrap { overflow: visible; break-inside: auto; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  h2, h3, h4, .section-head { break-after: avoid; }
+  section { break-inside: auto; margin-top: 1.5rem; }
+  .prog, .callout, .bottom-line { break-inside: avoid; }
+  .badge, .pill { border-color: #7c7c7c !important; color: #333 !important; }
+  .foot { break-before: avoid; }
+  p, li { orphans: 3; widows: 3; }
+}
+</style>
+
+
+<div class="wrap">
+  <header class="masthead">
+    <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+      <g fill="currentColor">
+        <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        <rect x="4" y="86" width="92" height="5"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Sixfold LLC &nbsp;·&nbsp; Internal — Crew &amp; Office</p>
+      <h1>Safety &amp; Compliance Guide</h1>
+      <p class="lede">What the law requires of a chainsaw-and-chipper crew in Colorado — OSHA, workers' comp, licences, certifications — organised by what you are doing, not by which agency wrote the rule. Bold lines are for the crew. Citations are for the office.</p>
+      <div class="meta">
+        <span>Prepared <b>2026-09-16</b></span>
+        <span>Base <b>Monument, CO</b></span>
+        <span>Federal OSHA jurisdiction</span>
+        <span>Not legal advice</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="callout">
+    <p class="eyebrow">The finding that shapes everything else</p>
+    <p><strong>Sixfold's tree work is not covered by OSHA's logging standard.</strong> It falls under OSHA's General Industry rules (29 CFR 1910) plus the General Duty Clause. OSHA's own citation guidance for tree care draws the line by <em>scale</em>: <em>&ldquo;a simple tree removal using a chain saw to cut down a tree, and a chipper to dispose of the branches and trunk pieces would not likely fall under the Logging operations standard,&rdquo;</em> and <em>&ldquo;the removal of a tree, or even several trees, from a residential lot, does not constitute logging.&rdquo;</em> That is a Sixfold job. Trimming is excluded outright. So the rules that apply are the general ones — PPE, first aid, noise, tools, machine guarding, fuel, electrical, injury reporting — which is what this document is.</p>
+  </div>
+  <div class="callout moss">
+    <p class="eyebrow">Two things to know about the ground under this document</p>
+    <p>The guidance above (CPL 02-01-045, 2008) is marked <em>archived</em> on OSHA's site, but it says it stands until a tree care standard exists, none does, and OSHA's current tree care page still routes everything to general industry. <strong>A tree care standard is coming</strong> &mdash; RIN 1218-AD04 is on the federal agenda with a proposed rule projected for late 2026. When it is final, Part B here gets rewritten. And <strong>Colorado is federal-OSHA territory</strong>: no state plan, so federal OSHA enforces directly. Nearest office: <strong>Englewood Area Office, (303) 843-4500</strong>.</p>
+  </div>
+
+  <!-- ============ PART A ============ -->
+  <section id="before">
+    <div class="section-head"><h2>Part A &mdash; Before anyone works: what Sixfold has to have</h2></div>
+
+    <div class="prog">
+      <h3>A1 &nbsp;Workers' compensation insurance &mdash; required by state law, and not held</h3>
+      <p class="who">Colorado Division of Workers' Compensation &nbsp;·&nbsp; C.R.S. Title 8, Articles 40&ndash;47 &nbsp;·&nbsp; penalty at <strong>§ 8-43-409</strong></p>
+      <p>The single largest legal exposure the company carries, and it is Colorado law, not OSHA. The Division's own words: <em>&ldquo;If you have one or more employees working for you in Colorado, you must have workers' compensation insurance and maintain it at all times. This applies to all employers, regardless of whether the employees are part-time, full-time, or family members.&rdquo;</em></p>
+      <dl>
+        <dt>Who counts</dt><dd><em>&ldquo;Anyone who gets paid for their services is presumed to be an employee by law.&rdquo;</em> To be a contractor instead, the worker must be <em>both</em> &ldquo;free from direction and control in the performance of the work&rdquo; <em>and</em> &ldquo;have an independent business doing that specific kind of work.&rdquo; <strong>&ldquo;Paying someone with a 1099 does not make them a contractor.&rdquo;</strong> A crew member who works Sixfold's jobs, under Sixfold's direction, with Sixfold's saws, and has no tree business of their own, is an employee under this test however they are paid.</dd>
+        <dt>The LLC exception</dt><dd>Members of an LLC are considered employees too, but may file a rejection of coverage if they own at least 10% and are a member. <strong>Brandon can reject for himself. Nobody else on the crew can.</strong></dd>
+        <dt>The penalty</dt><dd>Per day without cover: up to <strong>$250 for an initial violation</strong>, <strong>$250&ndash;$500 per day</strong> for any subsequent one. If someone is hurt while uninsured, the state's Uninsured Employer Fund pays the worker and then <em>&ldquo;will seek reimbursement for expenses from the uninsured employer&rdquo;</em> &mdash; and any penalty the employer is issued, <em>&ldquo;the employer must pay that penalty itself.&rdquo;</em></dd>
+        <dt>How to get it</dt><dd>Any of 500+ licensed carriers, or <strong>Pinnacol Assurance, which is required to cover any Colorado employer</strong> &mdash; nobody can be refused. Premium cannot be deducted from wages.</dd>
+        <dt>Once covered</dt><dd>Display the <strong>WC 50</strong> injury poster · record every lost-time injury · <strong>report every injury to the carrier within 10 days</strong> · give injured workers the designated medical provider list · file the return-to-work form.</dd>
+      </dl>
+      <div class="sixfold"><b>Why this is first</b>It is required today, it fines by the day, and it is a precondition of the Colorado Springs licence in A3. It and A2 are one conversation with Brandon and an agent, not two.</div>
+    </div>
+
+    <div class="prog">
+      <h3>A2 &nbsp;General liability insurance &mdash; not a statute, but required everywhere that matters</h3>
+      <p class="who">Required by the Colorado Springs tree licence ($1,000,000) &nbsp;·&nbsp; by the CDA pesticide licence &nbsp;·&nbsp; by any customer who asks</p>
+      <p>No Colorado statute makes a tree or landscape business carry general liability. The Colorado Springs licence does, at $1M minimum, as a precondition of applying. The pesticide licence requires proof on file. And a homeowner asking <em>&ldquo;are you insured?&rdquo;</em> means this. <strong>The standing brand rule bars claiming to be insured until it is true.</strong></p>
+      <div class="sixfold"><b>Status</b>Not held. Same conversation as A1.</div>
+    </div>
+
+    <div class="prog">
+      <h3>A3 &nbsp;Licences</h3>
+      <p class="who">No Colorado state licence for tree work or landscaping &nbsp;·&nbsp; licensing is <strong>municipal</strong> and varies by town &nbsp;·&nbsp; pesticides are the exception</p>
+      <dl>
+        <dt>Colorado Springs</dt><dd><strong>The home market licenses the core work.</strong> Anyone <em>paid</em> to &ldquo;cut, train, prune, shape or remove trees which are 15 feet or higher&rdquo; needs a city Tree Service License. <strong>The trigger is the tree's height, not the method &mdash; trimming counts.</strong> To hold one: $110 licence · <strong>$1,000,000 general liability</strong> · <strong>$100,000 workers' comp</strong> · 40-question exam, 80% pass, $120, via City Forestry (719) 385-5942 · three photos of pruning work. The insurance is the wall, not the exam.</dd>
+        <dt>Every other town</dt><dd>Monument, Palmer Lake, unincorporated El Paso County, Douglas County, Woodland Park, Castle Rock &mdash; <strong>not checked.</strong> Each needs its own code read before Sixfold works trees there. Add them here as they are confirmed.</dd>
+        <dt>Pesticides</dt><dd>A state licence, and it bites the landscaping side. Colorado's Pesticide Applicators' Act: a <strong>Commercial Applicator</strong> is &ldquo;any person&hellip; who engages in the business of applying pesticides for hire.&rdquo; Business licence <strong>$350</strong>, plus a <strong>Qualified Supervisor</strong> licence for the individual &mdash; general exam, category exams, on-the-job experience &mdash; and liability insurance on file. <strong>Herbicide is a pesticide. Fertiliser alone is not; &ldquo;weed and feed&rdquo; is.</strong> If Sixfold sprays anything for a customer, this applies before the next application. If it does not, nobody on the crew sprays, and a customer asking gets a no.</dd>
+        <dt>811</dt><dd>Colorado One Call, already on the walk sheet. Stumps need the locate first; it takes three business days. Not a licence &mdash; a legal requirement before the grinder touches the ground.</dd>
+      </dl>
+      <div class="sixfold"><b>Crew rule until the Springs licence exists</b>If a tree in scope is 15 ft or taller inside Colorado Springs city limits, stop and call in. Do not trim it, do not fell it.</div>
+    </div>
+  </section>
+
+  <!-- ============ PART B ============ -->
+  <section id="onthejob">
+    <div class="section-head"><h2>Part B &mdash; On the job: what OSHA requires of the crew</h2></div>
+    <p class="scope">All of this is OSHA General Industry (29 CFR 1910) as applied to tree care by CPL 02-01-045 and OSHA's current tree care topic page. The bold box in each card is the rule the crew follows. The citation is for the office.</p>
+
+    <div class="prog">
+      <h3>B1 &nbsp;On every job, regardless of the work</h3>
+      <p class="who">1910.132(h) PPE paid by employer &nbsp;·&nbsp; 1910.151(b) first aid &nbsp;·&nbsp; 1910.95 noise &nbsp;·&nbsp; 1910.1030 bloodborne pathogens</p>
+      <dl>
+        <dt>PPE &mdash; the employer buys it</dt><dd>1910.132(h): protective equipment &ldquo;shall be provided by the employer at no cost to employees.&rdquo; The only exception that matters here is ordinary steel-toe boots the employee may also wear off the job. <strong>Helmets, eye protection, hearing protection, chaps, gloves &mdash; Sixfold pays.</strong> A written hazard assessment (1910.132(d)) is what says which item is worn for which task.</dd>
+        <dt>A trained first-aider and a kit</dt><dd>1910.151(b), verbatim: <em>&ldquo;In the absence of an infirmary, clinic, or hospital in near proximity to the workplace&hellip; a person or persons shall be adequately trained to render first aid. Adequate first aid supplies shall be readily available.&rdquo;</em> A rural property is not near a hospital. For a saw crew the kit needs trauma dressings and a tourniquet, because the injury that matters is a deep cut.</dd>
+        <dt>Hearing</dt><dd>Chain saws and chippers &ldquo;emit high noise levels&rdquo; (OSHA's words). Above 90 dBA averaged over 8 hours, protection is mandatory; above 85, the employer must run a <strong>hearing conservation program</strong> &mdash; a noise measurement, protection at no cost, an annual hearing test, training. A chainsaw is well above both.</dd>
+        <dt>Bloodborne pathogens</dt><dd>1910.1030 reaches whoever renders first aid to a bleeding colleague. Gloves in the kit; the first-aider knows to wear them.</dd>
+      </dl>
+      <div class="sixfold"><b>Crew rule</b>One trained first-aider on every crew, a stocked kit on the truck, ear protection whenever a saw or the chipper is running, and Sixfold pays for every piece of PPE except your own boots.</div>
+    </div>
+
+    <div class="prog">
+      <h3>B2 &nbsp;Running a chainsaw</h3>
+      <p class="who">1910.132(a) cut-resistant leg protection &nbsp;·&nbsp; 1910.242(a) kickback device &nbsp;·&nbsp; General Duty Clause via ANSI Z133 §6.3 &nbsp;·&nbsp; 1910.266(h) felling practice</p>
+      <dl>
+        <dt>Chaps</dt><dd>OSHA's directive tells inspectors to check that chainsaw operators wear cut-resistant leg protection under 1910.132(a). The only defence is proving chaps create a <em>greater</em> hazard in the specific case &mdash; and that burden is the employer's.</dd>
+        <dt>The saw itself</dt><dd>1910.242(a) requires a kickback-reduction device; a saw without one is citable. Chain brake working, low-kickback chain fitted.</dd>
+        <dt>No drop-starting</dt><dd>OSHA names this specifically as citable under the General Duty Clause because ANSI Z133 makes the hazard recognised: start the saw on the ground or firmly supported.</dd>
+        <dt>Felling</dt><dd>Sixfold's fells are small and residential &mdash; general industry, not the logging standard. But the logging standard's felling section is OSHA's own statement of safe practice and the General Duty Clause reaches recognised hazards: plan the fall, clear the retreat path, keep everyone else two tree-lengths back, watch for hung trees and spring poles.</dd>
+      </dl>
+      <div class="sixfold"><b>Crew rule</b>Chaps on before the saw starts, no exceptions. Chain brake on, saw started on the ground. Helmet, eyes, ears, gloves, boots. Anything over a roof, fence, line or drive gets called in &mdash; the walk sheet already counts those separately.</div>
+    </div>
+
+    <div class="prog">
+      <h3>B3 &nbsp;Running the chipper</h3>
+      <p class="who">1910 Subpart O machine guarding &nbsp;·&nbsp; 1910.269(r)(2) within 10 ft of a line</p>
+      <p>Subpart O applies to the chipper: infeed guards and the feed-control bar stay on and working. Chippers are the most lethal machine in this trade, which is much of why OSHA has a tree care page at all.</p>
+      <div class="sixfold"><b>Crew rule</b>Never reach into the infeed. Feed butt-end first, stand to the side, never climb onto or over the hopper. Guards and the feed bar stay on. And nothing within 10 ft of a power line &mdash; see B5.</div>
+    </div>
+
+    <div class="prog">
+      <h3>B4 &nbsp;Fuel, oil and fire</h3>
+      <p class="who">1910 Subpart H (1910.106) flammable liquids &nbsp;·&nbsp; 1910.106(d)(7) fire control where fuel is stored</p>
+      <p>Subpart H governs gas and mix in portable containers. OSHA's extinguisher standard does not reach extinguishers for outdoor use, but 1910.106(d)(7) requires &ldquo;suitable fire control devices, such as portable fire extinguishers&rdquo; wherever flammable liquids are stored &mdash; which includes the truck.</p>
+      <div class="sixfold"><b>Crew rule</b>Approved safety cans, closed, out of the sun, not in the cab. A charged extinguisher next to the fuel. Refuel with the engine off and cooled, on bare ground, not in the slash &mdash; this is a fire mitigation crew in fire season.</div>
+    </div>
+
+    <div class="prog">
+      <h3>B5 &nbsp;Near power lines</h3>
+      <p class="who">1910 Subpart S &mdash; non-qualified employees prohibited &nbsp;·&nbsp; 1910.269 line-clearance work</p>
+      <p>OSHA's directive: <em>&ldquo;If employees conducting removal operations are not qualified employees, this activity would be prohibited by 29 CFR 1910, Subpart S.&rdquo;</em> Sixfold has no line-clearance qualified employees.</p>
+      <div class="sixfold"><b>Crew rule</b>Any tree touching, leaning toward, or within 10 ft of a line is not a Sixfold job until the utility has de-energised or cleared it. Stop and call in. This is the rule behind the walk sheet's line warning.</div>
+    </div>
+
+    <div class="prog">
+      <h3>B6 &nbsp;Heights &mdash; ladders, climbing, lifts</h3>
+      <p class="who">1910.23 ladders &nbsp;·&nbsp; 1910.67 aerial lifts</p>
+      <p>Sixfold does neither today: everything is felled from the ground and limbed at four feet. That is the right place to stay until there is training, equipment and a written rule for it.</p>
+      <div class="sixfold"><b>Crew rule</b>No climbing, no ladder work on trees, no lift. The walk sheet's &ldquo;over 80 ft &mdash; call in first&rdquo; is this rule.</div>
+    </div>
+
+    <div class="prog">
+      <h3>B7 &nbsp;Landscaping &mdash; mowing, trimming, edging, beds</h3>
+      <p class="who">No dedicated standard &nbsp;·&nbsp; PPE, Subpart O guarding, 1910.242 powered hand tools, Subpart H fuel all apply</p>
+      <p>Eye protection for string trimmers and edgers, hearing for mowers, the mower's discharge guard stays on. If pesticides enter the picture, the CDA licence in A3 does too &mdash; and <strong>the label is the law</strong>: apply exactly as the product label says, wearing what it says.</p>
+      <div class="sixfold"><b>Crew rule</b>Same as saw work, minus chaps. Nobody sprays anything until the office says the licence exists.</div>
+    </div>
+  </section>
+
+  <!-- ============ PART C ============ -->
+  <section id="certs">
+    <div class="section-head"><h2>Part C &mdash; Certifications: required versus worth having</h2></div>
+    <div class="twrap"><table>
+      <thead><tr><th>Certification</th><th>Who</th><th>Status</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge t1">Required</span><br><span class="prog-name">First aid (and CPR)</span></td><td>one person on every crew</td><td>not held</td><td>1910.151(b) &mdash; a trained person is required where no hospital is in near proximity</td></tr>
+        <tr><td><span class="badge t1">Required</span><br><span class="prog-name">Colorado Springs tree service licence</span></td><td>the business</td><td>blocked on insurance</td><td>City Code &mdash; any paid work on trees 15 ft+ inside city limits</td></tr>
+        <tr><td><span class="badge t1">Required</span><br><span class="prog-name">CDA Commercial Applicator + Qualified Supervisor</span></td><td>business + the individual</td><td>only if spraying</td><td>Pesticide Applicators' Act &mdash; any pesticide applied for hire</td></tr>
+        <tr><td><span class="badge t2">Required once</span><br><span class="prog-name">Hearing conservation training</span></td><td>everyone exposed</td><td>program not set up</td><td>Part of the 1910.95 program, which is itself required</td></tr>
+        <tr><td><span class="badge t2">Required once</span><br><span class="prog-name">Bloodborne pathogens training</span></td><td>the first-aider</td><td>not held</td><td>1910.1030 for anyone with first-aid duties</td></tr>
+        <tr><td><span class="badge t3">Worth having</span><br><span class="prog-name">ISA Certified Arborist</span></td><td>whoever leads tree work</td><td>&mdash;</td><td>The credential customers and HOAs recognise. Not a legal requirement anywhere in Colorado.</td></tr>
+        <tr><td><span class="badge t3">Worth having</span><br><span class="prog-name">Chainsaw safety course</span></td><td>every saw operator</td><td>&mdash;</td><td>OSHA requires safe <em>practices</em>, not a card &mdash; but documented training is how an employer shows it met the General Duty Clause</td></tr>
+      </tbody>
+    </table></div>
+    <p class="scope"><strong>Deliberately not listed:</strong> &ldquo;Firewise&rdquo; &mdash; a community programme, not a contractor certification, and the brand rule bars claiming it. There is <strong>no Colorado state certification for fire mitigation contractors.</strong></p>
+  </section>
+
+  <!-- ============ PART D ============ -->
+  <section id="hurt">
+    <div class="section-head"><h2>Part D &mdash; If someone gets hurt</h2></div>
+    <div class="prog">
+      <h3>The clocks start immediately, and they are short</h3>
+      <p class="who">29 CFR 1904.39 federal reporting &nbsp;·&nbsp; 1904.1 small-employer exemption &nbsp;·&nbsp; Colorado DWC 10-day carrier report</p>
+      <dl>
+        <dt>First minutes</dt><dd>Stop the saw. The first-aider takes over. Deep cut: direct pressure, tourniquet if it does not stop, call 911. Do not move a fall casualty. Do not drive them yourself if 911 is faster.</dd>
+        <dt>OSHA &mdash; 8 hours / 24 hours</dt><dd>Verbatim: <em>&ldquo;Within eight (8) hours after the death of any employee as a result of a work-related incident, you must report the fatality to OSHA.&rdquo;</em> And <em>&ldquo;within twenty-four (24) hours after the in-patient hospitalization of one or more employees or an employee's amputation or an employee's loss of an eye&hellip; you must report.&rdquo;</em> Phone the Englewood Area Office (303) 843-4500, or <strong>1-800-321-OSHA</strong>, or osha.gov. <strong>This applies to every employer however small</strong> &mdash; 1904.1 exempts companies with 10 or fewer employees from keeping the injury log, and in the same sentence says all employers must still report these four events.</dd>
+        <dt>Workers' comp &mdash; 10 days</dt><dd>Once insured: report every injury to the carrier within 10 days, hand over the designated provider list, keep the lost-time record. Before Sixfold is insured, the claim goes to the Uninsured Employer Fund and the fund comes after Sixfold for the money.</dd>
+        <dt>Write it down</dt><dd>Even with the log exemption: what happened, when, who, what changed afterwards. It is the only defence if anything is questioned later, and it belongs in the close-out sheet's &ldquo;what was different&rdquo; box.</dd>
+      </dl>
+      <div class="sixfold"><b>Crew rule</b>Hospital, amputation or eye: the office is told the same hour so the 24-hour OSHA clock is met. A death: within eight hours. These are federal deadlines and they do not wait for the insurer.</div>
+    </div>
+  </section>
+
+  <!-- ============ PART E ============ -->
+  <section id="gaps">
+    <div class="section-head"><h2>Part E &mdash; What Sixfold does not have today, in order</h2></div>
+    <div class="prog">
+      <dl>
+        <dt>1 &nbsp;Workers' comp</dt><dd>Required by state law at one employee. Not held. Fines by the day. Blocks the Springs licence. <strong>First.</strong></dd>
+        <dt>2 &nbsp;General liability</dt><dd>Required by the Springs licence, the pesticide licence, and every customer who asks. Not held. <strong>Same conversation as 1.</strong></dd>
+        <dt>3 &nbsp;Springs tree licence</dt><dd>Blocked on 1 and 2. Until held: no work on trees 15 ft+ inside city limits.</dd>
+        <dt>4 &nbsp;A trained first-aider per crew, and a real kit</dt><dd>Cheap. Required now.</dd>
+        <dt>5 &nbsp;A hearing conservation program</dt><dd>A noise measurement and an annual hearing test. Required now.</dd>
+        <dt>6 &nbsp;A written PPE hazard assessment</dt><dd>One page: what is worn for what. Required now, and it is the document the crew rules above become.</dd>
+        <dt>7 &nbsp;A decision on pesticides</dt><dd>Either the CDA licence, or a standing &ldquo;we do not spray.&rdquo;</dd>
+        <dt>8 &nbsp;Municipal checks</dt><dd>Every town beyond Colorado Springs that Sixfold works in.</dd>
+      </dl>
+      <div class="sixfold"><b>The shape of it</b>Items 4&ndash;6 cost almost nothing and can be done this week. Items 1&ndash;3 are one conversation with Brandon and an insurance agent, and together they unblock the home market.</div>
+    </div>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section id="sources">
+    <div class="section-head"><h2>Sources</h2></div>
+    <p class="scope">Confirmed first-party unless marked. Full fact-check log with confidence tiers in <code>crew-safety-and-compliance.md</code>.</p>
+    <ul class="sources">
+      <li>OSHA CPL 02-01-045, <em>Citation Guidance Related to Tree Care and Tree Removal Operations</em>, eff. 2008-08-21 — §IX (scope of the logging standard), §X (applicable general industry standards), Appendix A. Marked archived on osha.gov.</li>
+      <li>OSHA Safety and Health Topics: Tree Care — osha.gov/tree-care and osha.gov/tree-care/standards, fetched 2026-09-16.</li>
+      <li>29 CFR 1904.1(a)(1), 1904.39(a), 1910.132(h), 1910.151(b) — eCFR, current, fetched 2026-09-16.</li>
+      <li>OSHA State Plans — osha.gov/stateplans (Colorado is not a State Plan). OSHA Colorado area offices — osha.gov/contactus/bystate/CO/areaoffice.</li>
+      <li>Colorado Division of Workers' Compensation — <em>Insurance Requirements</em> and <em>Independent Contractors and Coverage Exemptions</em>, cdle.colorado.gov/dwc; <em>Colorado Uninsured Employer Fund</em>.</li>
+      <li>C.R.S. § 8-43-409(1)(b) — statute text as reproduced on codes.findlaw.com. <em>Reported: not read on the state's own site.</em></li>
+      <li>Colorado Department of Agriculture — <em>Pesticide Applicator Certification and Licensing Program</em>, ag.colorado.gov.</li>
+      <li>City of Colorado Springs — <em>Tree Service License</em>, City Clerk; City Code Part 3, 1968 Code §5-64C as amended. Verified 2026-09-14.</li>
+      <li>Tree care rulemaking status — RIN 1218-AD04, federal regulatory agenda via reginfo.gov; timeline as reported by TCIA. <em>Reported; dates slip.</em></li>
+    </ul>
+  </section>
+
+  <p class="foot">Sixfold LLC &mdash; internal reference for the crew and the office &mdash; prepared 2026-09-16 &mdash; not legal advice &mdash; not for customer distribution &mdash; insurance and licensing decisions need Brandon, an agent and, where stated, an attorney &mdash; Part B is rewritten when OSHA's tree care standard is final.</p>
+</div>
