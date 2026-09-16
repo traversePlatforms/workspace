@@ -167,6 +167,17 @@ consistent: he would rather say nothing than say it imperfectly on this specific
 > but those two lines are the ones to look at, because an unexplained promise of advancement is the
 > shape the reader fills in themselves.
 
+> **Resolved 2026-09-16.** Matthew asked where to back the promise and how to say it without the
+> MLM texture, then said *"do what you think is best."* Backed in "Why work here" (eyebrow renamed
+> from "Why work with us" — same words a client pitch uses; the apply-form label went "with" → "at"
+> for the same reason), not the FAQ: a Q&A titled *"Is there a path to move up?"* is the sceptic's
+> question, so any answer reads as a defence, while a sentence in the body states the mechanism
+> unprompted. Added: *"That last one is how people move up here: a rep who can do the work, and
+> then show someone else how, becomes a trainer."* Mechanism only — the five tells (recruiting as
+> the route, a timeline, pay per rung, attitude criteria, vagueness) all absent. **Withheld as
+> unverified:** trainer → team lead (not recorded anywhere) and sideways moves into admin/ops/
+> marketing (one known example, Matthew). If he confirms either, they slot in after the trainer line.
+
 **The Tier 2 team-nights flag resolved itself by deletion.** The culture answer no longer mentions
 team nights, softball or potlucks, so nothing is pending on that clearance. What is left is two
 sentences, entirely fact-based: coaching moves sideways across the floor, and helping the person
