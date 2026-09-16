@@ -6,18 +6,17 @@
 
 ---
 
-> ## RESUME HERE — paused 2026-09-14, Matthew reviewing
+> ## RESUME HERE — nothing outstanding as of 2026-09-16
 >
 > Built, published and working. Four rounds of his review already; **don't rebuild any of it without
-> asking.** One question was put to him and **is not answered:**
+> asking.** The one open question was ruled on 2026-09-16:
 >
-> **Split the Sixfold badge into *recorded* vs *allocated*?** Nine time rates read "Sixfold", but only the
-> **total** — Brandon's 16 man-hours — is recorded. **The split across those nine lines is mine.** The cash
-> costs and the 16-hour total are genuinely his; the per-line share-out is not. One word per line would stop
-> the time rates reading as solidly as the dump fee does. It bites hardest on **haul loads at 110 man-min**,
-> the one line this business has demonstrably lost money on.
->
-> Nothing else is outstanding.
+> **The Sixfold badge is split into *Recorded* and *Allocated*.** Matthew chose that over leaving it alone
+> or demoting haul loads to Unbacked. *Recorded* = Brandon wrote the figure down for that line (cash costs,
+> the 16-hour total, handling, rounding, free hours). *Allocated* = the nine time rates, which are that
+> 16-hour total shared out across the lines by Matthew — the total is his, the split is not. Same green,
+> dashed border. A tick still upgrades a line to *Recorded ✓*. Haul loads at 110 man-min stays Allocated
+> because its cash side has a receipt; it is the time side that is soft, and "Allocated" says exactly that.
 >
 > ### Hosting — settled 2026-09-14: it stays an artifact, as a proof of concept
 >
@@ -68,7 +67,8 @@ scale (sourced / fitted / guess) to an origin one:
 
 | Badge | Means |
 |---|---|
-| **Sixfold** | Brandon's own figures, and every rate derived from them: all recorded job costs, the handling percentage, the rounding, and each time rate set so the table reproduces Sixfold's own recorded 16 man-hours on job 2. One job, one crew, one property — **a starting point, not a measurement.** A tick means Brandon confirmed it outright rather than it being derived for him |
+| **Recorded** | Brandon's own figure for that line: all recorded job costs, the handling percentage, the rounding, the free hours, the 16-hour total. A tick on any other line makes it **Recorded ✓** — Brandon confirmed it outright |
+| **Allocated** | *(split from Recorded 2026-09-16)* The nine time rates — mobilisation, saplings, limbing, haul loads, mow, edge, plant removal, planting, blow-down. Brandon's recorded 16 man-hours on job 2 shared out across the lines by Matthew so the table reproduces the total. **The total is a measurement; the per-line share is not.** One job, one crew, one property — a starting point, replaced line by line as real jobs are timed |
 | **Competitor** | Taken from outside the company, never from Sixfold: the $70/man-hour billable (SynkedUP), and the $28/hr crew + $20/man-hour overhead (ArboStar). All three stand in for figures Sixfold does not have |
 | **Unbacked** | Nothing behind it. Lines job 2 never exercised — big timber, stumps, chipping, slash, bucking, rigging |
 
@@ -77,7 +77,7 @@ competitor's price list. They are fine internally, but they are not evidence of 
 — which is the same objection `pricing-guide.md` already records against Brandon's unsourced
 "market value $3,700" column. The sources card says so in as many words.
 
-Tapping a badge marks it **Sixfold ✓** (confirmed by Brandon), and that is shared to every device through the
+Tapping a badge marks it **Recorded ✓** (confirmed by Brandon), and that is shared to every device through the
 artifact's `db`, so confirming a rate once confirms it for the crew. A quote that leans on an
 **Unbacked** rate says so in a flag, on screen and in the exported draft.
 
@@ -219,7 +219,7 @@ removal $200, planting $450, haul $750 — still has nothing behind it.
 |---|---|
 | **$70/man-hour billable** | **Competitor.** SynkedUP, *Landscaping Cost Per Hour*, Weston Zimmerman, 11 Aug 2026 — 2026 startup band $65–$75, worked example $71.10. A trade cost model; **not evidence of what a competitor charges** |
 | **15% handling, round down to $50** | **Sixfold**, carried from the job-2 build where both were used |
-| Time rates marked **Sixfold** | Allocated across job 2's recorded scope to total its recorded 16 man-hours. Defensible as a starting point, worthless as a measurement — **the allocation between lines is mine, not Brandon's**, and the tick is what distinguishes one he has confirmed himself |
+| Time rates marked **Allocated** | Allocated across job 2's recorded scope to total its recorded 16 man-hours. Defensible as a starting point, worthless as a measurement — **the allocation between lines is mine, not Brandon's**, and the tick is what distinguishes one he has confirmed himself |
 | Time rates marked **Unbacked** | **Nothing backs them.** Shown as such, flagged when used, and they must be confirmed before they carry a quote |
 | **$28/hr loaded crew, $20/man-hour overhead** | **Competitor.** ArboStar via the rate card, standing in. Sixfold's real loaded pay and own overhead remain the biggest unknown in the whole model — §10 of the job-2 sheet still lists them as outstanding |
 | Job 2 reproduces at **$1,700** | **Verified by recomputation** against walk-2026-09-14-job2.md §8 |

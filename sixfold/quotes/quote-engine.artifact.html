@@ -117,6 +117,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent)}
 .badge.unbacked{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
 .badge.comp{color:var(--ink-mid);border-color:var(--edge);background:var(--surface)}
 .badge.sixfold{color:var(--good);border-color:var(--good);background:var(--good-bg)}
+.badge.alloc{color:var(--good);border-color:var(--good);border-style:dashed;background:transparent}
 
 /* ---------- price rail ---------- */
 .rail{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
@@ -235,9 +236,10 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
     <section class="sec">
       <div class="sec-head"><span class="sec-n">1</span><h2>The work — what gets counted</h2></div>
       <p class="sec-note">Counts come off the walk sheet. Each one carries a time rate you can edit, and every rate
-      says <b>whose number it is</b> — <b>Sixfold</b> for Brandon's own figures and anything derived from Sixfold's
-      recorded hours, <b>Competitor</b> for outside trade research, <b>Unbacked</b> for the ones with nothing behind
-      them. Tap a badge when Brandon confirms it. Change a rate and the calibration below re-checks it.</p>
+      says <b>whose number it is</b> — <b>Recorded</b> for a figure Brandon wrote down for that line, <b>Allocated</b>
+      for a time rate that is Brandon's recorded 16 man-hours on job 2 shared out across the lines by Matthew (the
+      total is his, the split is not), <b>Competitor</b> for outside trade research, <b>Unbacked</b> for the ones with
+      nothing behind them. Tap a badge when Brandon confirms it. Change a rate and the calibration below re-checks it.</p>
       <div class="row head"><span>Line</span><span class="r">Count</span><span>Time rate</span><span>Source</span><span class="r">Man-hrs</span></div>
       <div id="sec1"></div>
     </section>
@@ -344,12 +346,13 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
   <div class="card">
     <h3>Where the numbers come from</h3>
     <div class="srcs">
-      <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--good)">SIXFOLD</b><br>
-      Brandon's own numbers, and the time rates derived from them. Every recorded cost on a job — dump fees, hire,
-      purchases, fuel — plus the handling percentage, the rounding, and each time rate set so the table reproduces
-      <b>Sixfold's own recorded 16 man-hours on job 2</b>. That is one job, one crew, one property: a starting
-      point, not a measurement. A tick means Brandon confirmed the rate outright rather than it being derived
-      for him.</p>
+      <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--good)">RECORDED · ALLOCATED</b><br>
+      <b>Recorded</b> is Brandon's own number for that line: every recorded cost on a job — dump fees, hire,
+      purchases, fuel — plus the handling percentage, the rounding, and the 16-hour total. <b>Allocated</b> is
+      that total shared out across the time lines by Matthew so the table reproduces
+      <b>Sixfold's own recorded 16 man-hours on job 2</b>. The total is a measurement; the share-out is one
+      job, one crew, one property, split by judgement — a starting point, not a measurement. A tick means
+      Brandon confirmed the rate outright, and it becomes Recorded.</p>
       <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em">COMPETITOR</b><br>
       Taken from outside the company, never from Sixfold. <b>Every figure below was re-read at source on
       2026-09-14.</b></p>
@@ -376,7 +379,7 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
       publishes a rate — checked twice now, they all say “call”), <b>stump grinding time</b> (published prices
       exist, published times do not), <b>rigging</b>, <b>bucking</b>, <b>slash piling</b>, <b>dead fall</b> and
       <b>brush</b>. Confirm each with Brandon before it carries a quote; tap the badge when he has, and it
-      becomes Sixfold's.</p>
+      becomes Recorded.</p>
     </div>
   </div>
 </div>
@@ -495,16 +498,18 @@ function compute(){
 }
 
 /* ====================== render: ledger ====================== */
-/* Three sources, and the axis is WHOSE NUMBER IT IS.
-     Sixfold    — Brandon's own figures, and rates derived from Sixfold's own recorded hours
+/* Four badges, and the axis is WHOSE NUMBER IT IS.
+     Recorded   — Brandon wrote this figure down for this line (cash costs, the 16-hour total, his own calls)
+     Allocated  — Brandon's recorded 16 man-hours on job 2, shared out across the time lines by Matthew.
+                  The total is recorded; this line's share is not. Split from Recorded 2026-09-16.
      Competitor — taken from outside trade and market research, never from Sixfold
      Unbacked   — nothing behind it at all
-   A tick means Brandon has confirmed it himself rather than it being derived for him. */
+   A tick turns Allocated (or Unbacked) into Recorded — Brandon has confirmed it himself. */
 function badgeFor(l){
   if (l.src === "stop") return {cls:"unbacked", txt:"STOP RULE", title:"Not quotable here"};
-  if (confirmed[l.id]) return {cls:"sixfold", txt:"Sixfold ✓", title:"Confirmed by Brandon as Sixfold's own rate — tap to unset"};
+  if (confirmed[l.id]) return {cls:"sixfold", txt:"Recorded ✓", title:"Confirmed by Brandon as Sixfold's own rate — tap to unset"};
   if (l.src === "comp") return {cls:"comp", txt:"Competitor", title:"From outside trade research, not a Sixfold figure"};
-  if (l.src === "sixfold") return {cls:"sixfold", txt:"Sixfold", title:"Derived from Sixfold's own recorded 16 man-hours on job 2 — tap when Brandon confirms it outright"};
+  if (l.src === "sixfold") return {cls:"alloc", txt:"Allocated", title:"Brandon's recorded 16 man-hours on job 2, shared out across the lines by Matthew — the total is recorded, this line's share is not. Tap when Brandon confirms it outright"};
   return {cls:"unbacked", txt:"Unbacked", title:"Nothing backs this rate — tap when Brandon confirms it as Sixfold's"};
 }
 
@@ -558,7 +563,7 @@ function buildLedger(){
       '<div class="lbl">' + c.lbl + (c.sub ? '<small>' + c.sub + '</small>' : '') + '</div>' +
       '<input class="qty" type="number" min="0" step="5" id="c_' + c.id + '" value="0">' +
       '<div class="rate-cell"><span class="u">' + (c.billed ? 'cost + handling' : 'not billed on') + '</span></div>' +
-      '<button class="badge sixfold" disabled style="cursor:default" title="Brandon\'s own recorded figure for this job">Sixfold</button>' +
+      '<button class="badge sixfold" disabled style="cursor:default" title="Brandon\'s own recorded figure for this job">Recorded</button>' +
       '<div class="out" id="co_' + c.id + '">—</div>';
     h3.appendChild(row);
     $("c_" + c.id).addEventListener("input", e => {
@@ -582,7 +587,7 @@ function buildLedger(){
   CFG.forEach(c => {
     const row = document.createElement("div");
     row.className = "row";
-    const b = c.src === "comp" ? {cls:"comp", txt:"Competitor"} : {cls:"sixfold", txt:"Sixfold"};
+    const b = c.src === "comp" ? {cls:"comp", txt:"Competitor"} : {cls:"sixfold", txt:"Recorded"};
     row.innerHTML =
       '<div class="lbl">' + c.lbl + (c.sub ? '<small>' + c.sub + '</small>' : '') + '</div>' +
       '<input class="qty" type="number" min="0" step="' + c.step + '" id="g_' + c.id + '" value="' + (c.blank ? "" : cfg[c.id]) + '"' + (c.blank ? ' placeholder="auto"' : '') + '>' +
@@ -883,8 +888,8 @@ function scopeMarkdown(){
   if (unbacked.length) out.push("- **" + unbacked.length + " line(s) priced off an unconfirmed rate:** " + unbacked.map(l => l.lbl).join("; ") + ".");
   out.push("", "## Fact-check log", "", "| Figure | Source |", "|---|---|");
   out.push("| $" + cfg.billable + "/man-hour billable | **Competitor** — SynkedUP, Weston Zimmerman, 11 Aug 2026, 2026 startup band $65–$75. A trade cost model, not a competitor's price list |");
-  out.push("| Counts and recorded costs | **Sixfold** — off the walk sheet. Not independently verified |");
-  out.push("| Time per unit | **Sixfold**, derived from its own recorded 16 man-hours on job 2 — except any line listed above, which is unbacked |");
+  out.push("| Counts and recorded costs | **Recorded** — off the walk sheet. Not independently verified |");
+  out.push("| Time per unit | **Allocated** — Sixfold's recorded 16 man-hours on job 2, shared out across the lines by hand; the total is recorded, the split is not. Except any line listed above, which is unbacked |");
   out.push("| Crew cost $" + cfg.crewCost + "/hr, overhead $" + cfg.overhead + "/man-hour | **Competitor** — ArboStar, standing in. Sixfold's real figures are still unknown |");
   return out.join("\n");
 }
