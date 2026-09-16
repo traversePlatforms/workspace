@@ -1,9 +1,55 @@
 # Surge site — deploying to SiteGround
 
-**Status: not deployed.** This is a static site plus a PHP form handler. It runs
-locally and builds into a drag-and-drop bundle. Actually putting it on a public
-domain is the one step still to do, and it needs your call (see "Before you flip
-it live").
+**Status 2026-09-16: build is launch-ready; waiting on photos + video.** Static
+site plus a PHP form handler. `surgeftw.com` currently serves the Aug-2025
+WordPress restore as a placeholder — uploading this bundle **replaces it**, so
+the upload is the publish step and needs Matthew's explicit go.
+
+## Launch day — the runbook (dry-run 2026-09-16, everything below passed)
+
+Dry-run state: `dist/surge-site-2026-09-16.zip`, 83 files, 6,069 KB. 28 pages,
+tags balanced, no comments shipped, no broken links / assets / anchors, no
+placeholders. `noindex` on 28/28, `robots.txt` `Disallow: /`, sitemap 26 URLs,
+www → non-www, JSON-LD carries phone + `info@surgeftw.com` + Englewood CO (no
+street address). **No analytics — and `/privacy/` states that in writing.**
+
+Content gates are closed: two review rounds (09-14), RESTRICTED.md check, form
+test on all four paths (09-16, local). Not gated on Lance's figures or Donny's
+logo — both slot in after launch if late.
+
+**When the photos are in:**
+
+1. Drop photos in, re-run the image optimiser (see note under "What's already
+   done" — the scratchpad script is gone; rebuild it or hand-optimise with
+   `sharp`). Check every `<picture>` slot renders at 1280 and at 420 — the
+   09-14 batch was portrait against landscape slots.
+2. `node deploy/make-bundle.mjs` → extract → `verify-bundle` + `audit-links`
+   **on the extracted copy** (against the repo both false-positive on comments).
+3. Matthew's go. Then, in this order:
+4. `node deploy/toggle-noindex.mjs off`; delete the `Disallow: /` line in
+   `robots.txt`; rebuild (step 2 again — the bundle must be the one without
+   noindex).
+5. **Rehearse on `staging.surgeftw.com` first.** It already exists on SiteGround
+   (the 09-08 form test ran there) and `website@surgeftw.com` was created then.
+   Upload the launch bundle to the staging subdomain's root and run every check
+   in step 7 there — `mail()`, the `.htaccess` redirects, HTTPS — while the
+   placeholder on the main domain is untouched. Confirm someone reads
+   `info@surgeftw.com` (the `to` in `api/config.php`).
+6. **Site Tools → File Manager → `public_html`**: delete the WordPress files,
+   upload the zip, Extract, delete the zip. `api/uploads/` must be writable.
+7. Live checks, in a private window (on staging first, then again on the real
+   domain): home, one bio page, `/careers/`, `/contact/#feedback`, a made-up URL
+   (404 page), `/how-it-works/` and `/sectors/` (301s), `http://` → `https://`,
+   `www.` → bare, phone width. **Submit the feedback form once** and confirm
+   the email lands in `info@` — the one hop the local test could not prove.
+8. Google Search Console: submit `https://surgeftw.com/sitemap.xml`. Google
+   review link and the WordPress-era URLs are covered by the `.htaccess`
+   redirect map (item 7 on the punch list).
+9. If analytics is wanted, add it **and** edit `/privacy/` the same day — it
+   currently promises no trackers.
+
+Roll back: re-upload the WordPress backup (`drafts/surge-wp-restore/`) — or,
+faster, put `noindex` back with `toggle-noindex.mjs on` and re-upload.
 
 ---
 
@@ -28,12 +74,15 @@ it live").
 
 ## What is NOT done
 
-- Not uploaded anywhere; no DNS touched.
-- `mail()` deliverability not proven (see Forms below).
-- Every page still carries `<meta name="robots" content="noindex">` and
-  `robots.txt` still has `Disallow: /` — deliberate for staging.
-- No analytics.
-- Content not re-checked against `brand/notes/RESTRICTED.md` for a public launch.
+- Not uploaded; no DNS touched. (The WordPress placeholder on the domain is a
+  separate, earlier upload.)
+- `mail()` deliverability not proven — only testable live (runbook step 7).
+- `noindex` on every page and `Disallow: /` in `robots.txt` — deliberate until
+  runbook step 4.
+- No analytics (and `/privacy/` says so).
+- Photos + hero video — the only open content item.
+- ~~Content not re-checked against RESTRICTED.md~~ — done, two review rounds
+  by 2026-09-14; record in `index-draft-notes.md`.
 
 ---
 
@@ -145,7 +194,7 @@ Safer options:
 
 ---
 
-## Before you flip it live (checklist)
+## Before you flip it live (original checklist — superseded by the runbook at the top, kept for the detail)
 
 1. **Content review** against `brand/notes/RESTRICTED.md` and the fact-check log
    in `index-draft-notes.md`. Confirm the Englewood address, phone, and the
