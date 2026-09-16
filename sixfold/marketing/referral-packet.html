@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold — Referral packet (template)</title>
+<style>
+  @page { size: letter; margin: 0.6in 0.65in; }
+  :root{
+    --pine:#0E1512; --ink-mid:#3A443C; --mute:#5F6A62; --ember:#E4703A; --ember-ink:#B84C15;
+    --moss:#8AA07A; --moss-ink:#5E7550; --paper:#F4F1EA; --card:#FBFAF6; --line:#D8D3C8; --fillbg:#FFF3E8;
+    --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    --sans:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"Cascadia Mono",Consolas,"SFMono-Regular",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--pine);font-family:var(--sans);font-size:10.5pt;line-height:1.55}
+  .page{break-after:page;padding-bottom:0}
+  .page:last-child{break-after:auto}
+
+  /* masthead used on every page */
+  .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2pt solid var(--ember-ink);padding-bottom:5pt;margin-bottom:10pt}
+  .brand{display:flex;align-items:center;gap:8pt}
+  .brand svg{width:26pt;height:28pt;color:var(--ember-ink)}
+  .wordmark{font-family:var(--serif);font-size:15pt;line-height:1;margin:0}
+  .descriptor{font-family:var(--mono);font-size:5.8pt;letter-spacing:2pt;color:var(--mute);margin:2pt 0 0}
+  .pagetag{text-align:right;font-family:var(--mono);font-size:6.4pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);line-height:1.6}
+  .pagetag b{display:block;color:var(--ember-ink)}
+
+  h1{font-family:var(--serif);font-weight:400;font-size:22pt;line-height:1.1;margin:0 0 6pt;letter-spacing:-.01em}
+  h2{font-family:var(--serif);font-weight:400;font-size:14pt;margin:14pt 0 4pt}
+  h3{font-size:10.5pt;margin:7pt 0 2pt;font-weight:700}
+  p{margin:0 0 7pt;max-width:70ch}
+  .lede{font-size:11.5pt;color:var(--ink-mid);max-width:64ch}
+  strong{font-weight:700}
+
+  /* the template fill field */
+  .fill{display:inline-block;min-width:1.6in;padding:0 4pt;border-bottom:0.9pt solid var(--ember-ink);background:var(--fillbg);color:var(--ember-ink);font-family:var(--mono);font-size:8.5pt;letter-spacing:.03em;vertical-align:baseline;line-height:1.7}
+  .fill.wide{min-width:3.4in}.fill.block{display:block;min-height:0.56in;margin:3pt 0 6pt;padding:4pt 7pt;line-height:1.6;border:0.9pt dashed var(--ember-ink);border-radius:2pt}
+  .fill.block::before{content:attr(data-label);display:block;font-size:6.4pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:2pt}
+
+  .card{background:var(--card);border:0.75pt solid var(--line);padding:8pt 12pt;margin:6pt 0}
+  .card h3{margin-top:0}
+  .eyebrow{font-family:var(--mono);font-size:6.6pt;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-ink);margin:0 0 3pt}
+  .eyebrow.moss{color:var(--moss-ink)}
+  dl{margin:4pt 0 0;display:grid;grid-template-columns:5.4em 1fr;gap:4pt 10pt}
+  dt{font-family:var(--mono);font-size:6.6pt;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding-top:2pt}
+  dd{margin:0;font-size:10pt}
+  .note{font-size:8.6pt;color:var(--mute);border-left:1.5pt solid var(--ember);padding-left:7pt;margin:6pt 0}
+  .checklist{list-style:none;padding:0;margin:4pt 0}
+  .checklist li{display:flex;gap:7pt;align-items:flex-start;margin-bottom:2.5pt;font-size:9.8pt}
+  .bx{display:inline-block;width:10pt;height:10pt;border:0.9pt solid var(--ink-mid);background:#fff;flex:none;margin-top:3pt}
+
+  .sig{margin-top:22pt;display:flex;gap:28pt;align-items:flex-end}
+  .sig div{flex:1}
+  .sig .ln{border-bottom:0.75pt solid var(--ink-mid);height:22pt}
+  .sig .lab{font-family:var(--mono);font-size:6.4pt;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:2pt}
+
+  .foot{margin-top:7pt;padding-top:3pt;border-top:0.6pt solid var(--line);font-family:var(--mono);font-size:6.6pt;color:var(--mute);line-height:1.6}
+
+  /* the referral card, at true size */
+  .refcard{width:5in;height:3in;background:var(--pine);color:#EDE7DC;padding:0.3in;display:flex;flex-direction:column;justify-content:space-between;margin:6pt 0}
+  .refcard .wordmark{color:#EDE7DC;font-size:19pt}
+  .refcard .band{font-family:var(--mono);font-size:5.8pt;letter-spacing:3pt;color:#8AA07A}
+  .refcard .ask{font-family:var(--serif);font-size:13pt;line-height:1.25;max-width:32ch}
+  .refcard .how{font-family:var(--mono);font-size:7pt;line-height:1.8;color:rgba(237,231,220,.75)}
+  .refcard .how b{color:#E4703A;font-weight:500}
+  .qr{width:0.85in;height:0.85in;border:0.9pt dashed rgba(237,231,220,.45);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:5.6pt;text-align:center;color:rgba(237,231,220,.6);line-height:1.4}
+  .refrow{display:flex;justify-content:space-between;align-items:flex-end;gap:10pt}
+
+  .office{background:#EEF1EC;border:0.75pt solid #C9D1C5;padding:7pt 11pt;margin:7pt 0;font-size:8.8pt}
+  .office .eyebrow{color:var(--moss-ink)}
+  .office p{margin:0 0 4pt}
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 — cover letter ================= -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="4 14 94 99"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></g><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/><path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/><path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/></g></svg>
+      <div><p class="wordmark">Sixfold</p><p class="descriptor">LAND &amp; FIRE &middot; COLORADO</p></div>
+    </div>
+    <div class="pagetag"><b>Your mitigation packet</b>1 of 6 &middot; Thank you</div>
+  </div>
+
+  <p class="eyebrow">Prepared for</p>
+  <p style="margin-bottom:12pt"><span class="fill wide">Owner name</span> &nbsp;&middot;&nbsp; <span class="fill wide">Property address or area</span> &nbsp;&middot;&nbsp; <span class="fill">Date completed</span></p>
+
+  <h1>Thank you for having us on your property.</h1>
+  <p class="lede">The work is done, walked with you, and put right where it needed to be. This folder is everything you need to get money back on it, to show your insurer what changed, and to find us again.</p>
+
+  <h2>What is in this folder</h2>
+  <ul class="checklist">
+    <li><span class="bx"></span><span><strong>What we did</strong> &mdash; a written record of the work, to the standard it was done to. This is the page your insurer wants.</span></li>
+    <li><span class="bx"></span><span><strong>Your itemised invoice</strong> &mdash; with the wildfire-mitigation work separated out, because that is what the state tax credit is claimed against.</span></li>
+    <li><span class="bx"></span><span><strong>Getting money back</strong> &mdash; the Colorado tax credit and the insurance discount, both of which you can claim now that the work is finished and paid for.</span></li>
+    <li><span class="bx"></span><span><strong>If you do more</strong> &mdash; the programs in your county that pay toward future mitigation, all of which need approval before the work starts.</span></li>
+    <li><span class="bx"></span><span><strong>Before-and-after photos</strong> &mdash; dated, from fixed positions. <span class="fill">count</span> photos, <span class="fill">on a card / by email / printed</span></span></li>
+    <li><span class="bx"></span><span><strong>A card, a magnet and a sticker</strong> &mdash; so the number is on the fridge when a neighbour asks who did the work.</span></li>
+  </ul>
+
+  <p style="margin-top:14pt">Two things worth saying plainly. Nothing in here is tax, legal or insurance advice &mdash; the credit is claimed by you or your accountant, the discount is your insurer's decision, and we have written down exactly what each one needs from you so neither is a mystery. And if anything about the work is not right, call. The crew that did it is the crew that will come back.</p>
+
+  <div class="sig">
+    <div><div class="ln"></div><div class="lab">Brandon Long &middot; Sixfold LLC</div></div>
+    <div><div class="ln"></div><div class="lab">Date</div></div>
+  </div>
+
+  <p class="foot">Sixfold LLC &middot; Contact@SixfoldColorado.com &middot; (303) 915-1045 &middot; SixfoldColorado.com</p>
+</section>
+
+<!-- ================= PAGE 2 — what we did ================= -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="4 14 94 99"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></g></svg>
+      <div><p class="wordmark">Sixfold</p><p class="descriptor">LAND &amp; FIRE &middot; COLORADO</p></div>
+    </div>
+    <div class="pagetag"><b>Work record</b>2 of 6 &middot; What we did</div>
+  </div>
+
+  <h1>What we did on your property</h1>
+  <p class="lede">A written record of the work, kept short enough to hand to an insurer or an accountant. Keep it with the invoice and the photos.</p>
+
+  <div class="card">
+    <dl>
+      <dt>Property</dt><dd><span class="fill wide">Address, or the area walked and agreed</span></dd>
+      <dt>Dates</dt><dd><span class="fill">Started</span> &nbsp;to&nbsp; <span class="fill">Finished</span></dd>
+      <dt>Crew</dt><dd><span class="fill">People on site</span></dd>
+      <dt>Agreed with</dt><dd><span class="fill wide">Owner, at the site walk on</span></dd>
+    </dl>
+  </div>
+
+  <h3>The work, as done</h3>
+  <div class="fill block" data-label="Scope — copy from section 2 of the agreement, then correct to what was actually done">Trees taken down, by height &middot; trees limbed and to what height &middot; brush and dead fall cleared &middot; stumps ground &middot; what was hauled and what stayed on site as chips, rounds or slash &middot; mowing, edging, beds, planting if any</div>
+
+  <h3>Standard the work was done to</h3>
+  <p>Defensible-space work was carried out to the spacing and clearance guidance published by the <strong>Colorado State Forest Service</strong> for the home ignition zone. Where a specific distance or spacing was agreed at the walk, it is recorded above. This line is what the state tax credit and most insurers ask for.</p>
+  <p>If a different standard or a fire-district requirement applied: <span class="fill">none / name it</span></p>
+
+  <h3>What stays with the owner</h3>
+  <p>Anything the owner asked to keep was pointed out at the walk and left on the property. Material set aside rather than hauled: <span class="fill">none / describe</span></p>
+
+  <h3>Photos</h3>
+  <p><span class="fill">count</span> dated photographs, before and after, taken from fixed positions so the same view can be compared. Delivered <span class="fill">how</span>. These are the second thing an insurer asks for, after this page.</p>
+
+  <div class="office">
+    <p class="eyebrow">Office &mdash; fill this page from</p>
+    <p>The signed agreement (section 2 for scope, section 4 for what happened to the material) and the <strong>job close-out sheet</strong> for what was actually done, which is not always what was quoted. Correct the scope to the truth; the credit is claimed against real work.</p>
+  </div>
+
+  <p class="foot">Sixfold LLC &middot; Contact@SixfoldColorado.com &middot; (303) 915-1045 &middot; Not tax, legal or insurance advice.</p>
+</section>
+
+<!-- ================= PAGE 3 — tax credit ================= -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="4 14 94 99"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></g></svg>
+      <div><p class="wordmark">Sixfold</p><p class="descriptor">LAND &amp; FIRE &middot; COLORADO</p></div>
+    </div>
+    <div class="pagetag"><b>Getting money back</b>3 of 6 &middot; The state tax credit</div>
+  </div>
+
+  <p class="eyebrow">Statewide &middot; claim it for this project &middot; C.R.S. 39-22-543</p>
+  <h1>The Colorado wildfire-mitigation tax credit</h1>
+  <p class="lede">A credit on your Colorado state income tax return for what you paid a contractor to reduce wildfire risk on your own land. No application and no waiting list &mdash; it is claimed with your return, using the invoice in this folder.</p>
+
+  <div class="card">
+    <dl>
+      <dt>How much</dt><dd><strong>100% of the qualifying cost, capped at $1,000</strong> for tax years 2025 and 2026. The cap rises to <strong>$2,000 for 2027&ndash;2030</strong>, and in those years the credit becomes <em>refundable</em> &mdash; paid to you even if you owe no state tax. Income limits apply; ask your accountant which one applies to your year.</dd>
+      <dt>Applies to</dt><dd>Any private land in Colorado. <strong>Only paid third-party contractor work counts</strong> &mdash; your Sixfold invoice does; your own labour or equipment does not.</dd>
+      <dt>Qualifying work</dt><dd>Creating defensible space, building fuel breaks, thinning woody vegetation to protect structures, and treating the resulting slash &mdash; chipping, hauling, lop-and-scatter, piling &mdash; done to Colorado State Forest Service or Division of Fire Prevention &amp; Control standards. Your invoice separates this work from anything that does not qualify.</dd>
+      <dt>How to claim</dt><dd>You or your accountant file <strong>Form DR 0104CR</strong> with your Colorado return for the year you paid. Keep the invoice and the &ldquo;standard the work was done to&rdquo; line from page 2. Sixfold does not prepare or file returns.</dd>
+    </dl>
+  </div>
+
+  <p class="note"><strong>One rule if you combine programs.</strong> The credit excludes any cost that was paid or reimbursed by a grant or cost-share. Grant money and the credit cannot both land on the same dollar. If you do receive a grant, ask your tax preparer how it is treated.</p>
+
+  <p class="note"><strong>Worth checking.</strong> The credit is for work whose main purpose is reducing wildfire risk to structures. If your project was mostly cleanup of downed wood, ask your accountant whether it meets that purpose test &mdash; and keep the invoice either way.</p>
+
+  <p class="foot">Sixfold LLC &middot; Contact@SixfoldColorado.com &middot; (303) 915-1045 &middot; Figures and dates change year to year &mdash; confirm the current terms with the Colorado Department of Revenue and your own eligibility with your accountant.</p>
+</section>
+
+<!-- ================= PAGE 4 — insurance ================= -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="4 14 94 99"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></g></svg>
+      <div><p class="wordmark">Sixfold</p><p class="descriptor">LAND &amp; FIRE &middot; COLORADO</p></div>
+    </div>
+    <div class="pagetag"><b>Getting money back</b>4 of 6 &middot; Your insurance</div>
+  </div>
+
+  <p class="eyebrow">Statewide &middot; claim it for this project &middot; Colorado HB25-1182</p>
+  <h1>The wildfire-mitigation discount on your homeowners insurance</h1>
+  <p class="lede">Since July 1, 2026, Colorado law requires an insurer that uses a wildfire risk score to factor the mitigation you have actually done into your score and your price &mdash; and to give you a discount for documented mitigation.</p>
+
+  <div class="card">
+    <dl>
+      <dt>What the law says</dt><dd>Your insurer must tell you your wildfire risk score in writing every year, tell you what mitigation discounts are available, factor completed defensible-space work into the score, give a discount for documented mitigation even if it has no formal model of its own, and let you appeal the score.</dd>
+      <dt>How much</dt><dd><strong>There is no set percentage</strong> &mdash; it varies by carrier. Expect it to count in your favour; do not expect a specific number, and we will not promise one.</dd>
+      <dt>What to send</dt><dd>Page 2 of this folder and the before-and-after photos. That is the package carriers ask for: what was cleared, where, to what spacing, with dated pictures from fixed positions.</dd>
+      <dt>What to ask</dt><dd>Ask your carrier or agent to <strong>re-evaluate your wildfire risk score</strong> or <strong>apply the mitigation discount</strong>. If the score looks wrong, use the appeal right the law gives you.</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3>A note you can send with it</h3>
+    <p style="font-family:var(--serif);font-size:10.5pt;line-height:1.55;max-width:none">&ldquo;I have completed wildfire mitigation work on my property at <span class="fill wide">address</span>, finished on <span class="fill">date</span>. Enclosed is the contractor's written record of the work and dated before-and-after photographs. Under Colorado HB25-1182, please re-evaluate my wildfire risk score and apply any mitigation discount available on my policy. Please also confirm my current score in writing.&rdquo;</p>
+  </div>
+
+  <p class="note"><strong>If you cannot get or keep coverage:</strong> the Colorado FAIR Plan offers residential cover as a last resort. A backstop, not a target.</p>
+
+  <p class="foot">Sixfold LLC &middot; Contact@SixfoldColorado.com &middot; (303) 915-1045 &middot; Sixfold does not contact your insurer and does not promise a discount amount. Not insurance advice.</p>
+</section>
+
+<!-- ================= PAGE 5 — county programs (per-customer) ================= -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="4 14 94 99"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></g></svg>
+      <div><p class="wordmark">Sixfold</p><p class="descriptor">LAND &amp; FIRE &middot; COLORADO</p></div>
+    </div>
+    <div class="pagetag"><b>If you do more</b>5 of 6 &middot; Programs in your county</div>
+  </div>
+
+  <p class="eyebrow moss">Approve-first &middot; future work only &middot; filled in for your property</p>
+  <h1>If you do more mitigation</h1>
+  <p class="lede">Counties and the state run cost-share programs that pay a share of mitigation work &mdash; but every one of them has to approve the project <strong>before the work starts</strong>, so none of them can be applied to the job just finished. Line them up before any additional phase.</p>
+
+  <div class="card">
+    <p class="eyebrow moss">Program 1 &mdash; for <span class="fill">county</span></p>
+    <h3><span class="fill wide">Program name</span></h3>
+    <dl>
+      <dt>What it is</dt><dd><span class="fill wide">Who runs it, what share it pays, any cap</span></dd>
+      <dt>The catch</dt><dd><span class="fill wide">Application window, pre-approval, inspection, approved-contractor list</span></dd>
+      <dt>Where</dt><dd><span class="fill wide">Department and how to reach it</span></dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <p class="eyebrow moss">Program 2 &mdash; state or federal, if the land qualifies</p>
+    <h3><span class="fill wide">Program name</span></h3>
+    <dl>
+      <dt>What it is</dt><dd><span class="fill wide">&nbsp;</span></dd>
+      <dt>The catch</dt><dd><span class="fill wide">&nbsp;</span></dd>
+      <dt>Where</dt><dd><span class="fill wide">&nbsp;</span></dd>
+    </dl>
+  </div>
+
+  <p class="note"><strong>These are the county's and the state's programs.</strong> They run them and keep any approved-contractor lists. Sixfold does not administer them, and being on an approved list is a question for the program, not for us.</p>
+
+  <div class="office">
+    <p class="eyebrow">Office &mdash; fill this page from</p>
+    <p>The internal funding directory (<code>research/mitigation-funding-directory.md</code>), filtered to the customer's county plus statewide. <strong>Do not name a county cost-share program the customer cannot actually use from their address.</strong> If nothing applies beyond the statewide programs, say so on this page rather than leaving it blank &mdash; &ldquo;no county cost-share currently operates for your address; the two statewide programs on pages 3 and 4 still apply.&rdquo;</p>
+  </div>
+
+  <p class="foot">Sixfold LLC &middot; Contact@SixfoldColorado.com &middot; (303) 915-1045 &middot; Program terms change each cycle &mdash; confirm with the program before relying on any of this.</p>
+</section>
+
+<!-- ================= PAGE 6 — referral + the physical items ================= -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="4 14 94 99"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></g></svg>
+      <div><p class="wordmark">Sixfold</p><p class="descriptor">LAND &amp; FIRE &middot; COLORADO</p></div>
+    </div>
+    <div class="pagetag"><b>Know someone?</b>6 of 6 &middot; The referral card</div>
+  </div>
+
+  <h1>The card that goes in the folder</h1>
+  <p class="lede">Printed at 5 &times; 3 in, shown here at true size. It does one job: when a neighbour asks who did the work, this is what gets handed over.</p>
+
+  <div class="refcard">
+    <div>
+      <p class="wordmark">Sixfold</p>
+      <p class="band" style="margin:3pt 0 0">LAND &amp; FIRE &nbsp;&middot;&nbsp; COLORADO</p>
+    </div>
+    <p class="ask">Know someone whose property needs this? Give them this card &mdash; and tell us you sent them.</p>
+    <div class="refrow">
+      <p class="how"><b>(303) 915-1045</b><br>Contact@SixfoldColorado.com<br>SixfoldColorado.com<br><br>Happy with the work? <b>A review helps more than you would think.</b></p>
+      <div class="qr">REVIEW<br>QR<br><br>needs a Google Business Profile</div>
+    </div>
+  </div>
+
+  <h2>What else goes in the folder</h2>
+  <ul class="checklist">
+    <li><span class="bx"></span><span><strong>Business card</strong> &mdash; the Pine option, Brandon's. From <code>operations/business-cards.pdf</code>.</span></li>
+    <li><span class="bx"></span><span><strong>Magnet</strong> &mdash; 3.5 &times; 2 in, same artwork as the card front. The fridge is where the number lives when the neighbour asks.</span></li>
+    <li><span class="bx"></span><span><strong>Sticker</strong> &mdash; the Ridge mark, 2 in, one-colour. <em>Waits on the one-colour garment mark; the full mark's opacity does not print as a sticker.</em></span></li>
+    <li><span class="bx"></span><span><strong>The itemised invoice</strong> &mdash; from the quote data, with mitigation work separated from anything non-qualifying. &ldquo;First payment,&rdquo; never &ldquo;deposit.&rdquo;</span></li>
+    <li><span class="bx"></span><span><strong>Photos</strong> &mdash; on a card, printed, or emailed the same day; say which on page 1.</span></li>
+  </ul>
+
+  <div class="office">
+    <p class="eyebrow">Office &mdash; before the first one goes out</p>
+    <p><strong>The review route does not exist yet.</strong> The card's QR square is a placeholder until Sixfold has a Google Business Profile &mdash; a free, ten-minute setup, and it is the whole point of the card. Once it exists, the review link goes on the QR and on page 1.</p>
+    <p><strong>The folder itself:</strong> a plain kraft or bone pocket folder with the mark on the front. No web address printed on anything until the site is hosted; the phone and email are enough until then.</p>
+  </div>
+
+  <p class="foot">Sixfold LLC &middot; Contact@SixfoldColorado.com &middot; (303) 915-1045 &middot; Template &mdash; every fill field is completed per customer from the agreement, the close-out sheet and the funding directory.</p>
+</section>
+
+</body>
+</html>

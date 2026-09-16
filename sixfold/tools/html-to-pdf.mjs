@@ -123,6 +123,7 @@ const JOBS = [
   { src: 'operations/crew-shirt-spec.html',     out: 'operations/crew-shirt-spec.pdf',            mode: 'light', scale: 0.78 },
   { src: 'operations/business-cards.html',      out: 'operations/business-cards.pdf',             mode: 'light', scale: 1 },
   { src: 'research/crew-safety-and-compliance.html', out: 'research/Sixfold-Crew-Safety-and-Compliance.pdf', mode: 'light' },
+  { src: 'marketing/referral-packet.html',       out: 'marketing/Sixfold-Referral-Packet-TEMPLATE.pdf', mode: 'light', scale: 1 },
 
   /* ---- added 2026-09-14 ----------------------------------------------------
      These thirteen PDFs already existed but had no job here, so they could not be
