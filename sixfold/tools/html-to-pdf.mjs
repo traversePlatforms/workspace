@@ -95,10 +95,33 @@ const JOBS = [
   { src: 'quotes/sedalia-haul-off.html',        out: 'quotes/Sixfold-Quote-Sedalia-A-Hauled-Away.pdf',    mode: 'light' },
   { src: 'quotes/sedalia-chip-on-site.html',    out: 'quotes/Sixfold-Quote-Sedalia-B-Chipped-On-Site.pdf', mode: 'light' },
 
+  /* Job 2 — yard clearance, trimming and planting. Walked by Brandon 2026-09-14.
+     Quote is ONE page and the agreement is FIVE; re-count after any edit. */
+  /* The two quote renders below share ONE source and differ only in their closing
+     sentence — see the comment on .ifpacket/.ifsolo in the quote source. This one
+     is bound behind the agreement, so "follows overleaf" is true here. */
+  { src: 'quotes/job2-yard-clearance.html',     out: 'quotes/_part-quote-only.pdf',           mode: 'light', scale: 0.84,
+    css: '.ifsolo { display: none; }' },  /* 0.86 spills to 2 pages once the walk-round note is in — 0.84 is the ceiling */
+  { src: 'agreements/job2-service-agreement.html', out: 'agreements/_part-service-agreement.pdf', mode: 'light' },
+  /* Same source again under a sendable name. Added 2026-09-15: Matthew asked for a
+     standalone quote he can send on its own, separate from the DocuSign packet. It
+     cannot be the _part- file — that prefix means "intermediate, never send", and
+     the one time a _part- file looked like a deliverable the quote went out without
+     its agreement. Nothing follows this one, so it hides the overleaf sentence.
+     Keep `scale` in step with the render above or the two will not match. */
+  { src: 'quotes/job2-yard-clearance.html',     out: 'quotes/Sixfold-Quote-Kara-Rosenstrauch.pdf', mode: 'light', scale: 0.84,
+    css: '.ifpacket { display: none; }' },
+
   /* Field sheets. Internal, printed and written on with a pen, so they want the
      light print register like everything else in the binder. Four sheets, one
      printed page each — count them after any edit. */
   { src: 'operations/quote-walk-sheet.html',    out: 'operations/quote-walk-sheet.pdf',           mode: 'light' },
+  { src: 'operations/job-closeout.html',        out: 'operations/job-closeout.pdf',               mode: 'light' },
+  { src: 'operations/work-rates.html',          out: 'operations/work-rates.pdf',                 mode: 'light' },
+  /* Two pages by content, not by overflow — 0.68 did not save it, so the scale is
+     back near the default for readable type. */
+  { src: 'operations/crew-shirt-spec.html',     out: 'operations/crew-shirt-spec.pdf',            mode: 'light', scale: 0.78 },
+  { src: 'operations/business-cards.html',      out: 'operations/business-cards.pdf',             mode: 'light', scale: 1 },
 
   /* ---- added 2026-09-14 ----------------------------------------------------
      These thirteen PDFs already existed but had no job here, so they could not be

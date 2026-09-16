@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold — Crew shirt spec</title>
+<style>
+  @page { size: letter; margin: 0.5in; }
+  :root{
+    --pine:#0E1512; --ember:#E4703A; --paper:#F2F0EA; --line:#D8D3C8; --mute:#5F6A62;
+    --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    --sans:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"Cascadia Mono",Consolas,"SFMono-Regular",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--pine);font-family:var(--sans);font-size:9.5pt;line-height:1.5}
+  .sheet{padding:0}
+  h1{font-family:var(--serif);font-weight:400;font-size:21pt;margin:4pt 0 2pt;letter-spacing:-.01em}
+  h2{font-family:var(--serif);font-weight:400;font-size:12.5pt;margin:10pt 0 3pt}
+  h2 .n{color:var(--ember);margin-right:5pt}
+  p{margin:0 0 4pt;max-width:78ch}
+  .kick{font-family:var(--mono);font-size:6.8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin:0}
+  .rule{height:2pt;background:#B84C15;margin:6pt 0 10pt}
+  .lede{font-size:10pt;color:#3A443C}
+  strong{font-weight:700}
+  .verdict{border:1.2pt solid var(--pine);padding:6pt 9pt;margin:6pt 0 3pt}
+  .verdict b{display:block;font-size:10.5pt;margin-bottom:2pt}
+  table{border-collapse:collapse;width:100%;font-size:8.5pt;margin:4pt 0 6pt}
+  th,td{text-align:left;padding:4.5pt 6pt;border-bottom:0.75pt solid var(--line)}
+  th{font-family:var(--mono);font-size:6.6pt;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .pass{color:#2F6B34;font-weight:700}
+  .warn{color:#9A6A1C;font-weight:700}
+  .fail{color:#A8392B;font-weight:700}
+  .swatches{display:flex;gap:8pt;margin:6pt 0 8pt;flex-wrap:wrap}
+  .sw{flex:1 1 0;min-width:96pt;border:0.75pt solid var(--line)}
+  .sw .chip{height:26pt;display:flex;align-items:center;justify-content:center}
+  .sw .cap{padding:3pt 5pt;font-family:var(--mono);font-size:6.4pt;line-height:1.4;color:var(--mute)}
+  .sw .cap b{display:block;color:var(--pine);font-size:7pt}
+  .tests{display:flex;gap:9pt;align-items:flex-end;margin:5pt 0 6pt;flex-wrap:wrap}
+  .test{text-align:center}
+  .test .box{background:#E4703A;padding:6pt;display:flex;align-items:center;justify-content:center;border:0.75pt solid var(--line)}
+  .test .lab{font-family:var(--mono);font-size:6.2pt;color:var(--mute);margin-top:2pt;line-height:1.3}
+  .note{font-size:8pt;color:var(--mute);border-left:1.5pt solid var(--ember);padding-left:6pt;margin:4pt 0 6pt}
+  ul{margin:2pt 0 6pt;padding-left:14pt}
+  li{margin-bottom:2.5pt}
+  .mocks{display:flex;gap:10pt;margin:5pt 0 6pt;align-items:flex-start}
+  .mock{flex:1 1 0;margin:0;text-align:center}
+  .mock .mock-svg{width:100%;max-width:118pt;height:auto;display:block;margin:0 auto}
+  .mock figcaption{font-family:var(--mono);font-size:6.2pt;line-height:1.45;color:var(--mute);margin-top:2pt;text-align:left}
+  .mock figcaption b{display:block;color:var(--pine);font-size:7pt}
+  .foot{margin-top:5pt;padding-top:3pt;border-top:0.75pt solid var(--line);font-family:var(--mono);font-size:6.6pt;color:var(--mute);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <p class="kick">Sixfold Colorado · internal · production spec</p>
+  <h1>Crew shirt — orange body, black mark</h1>
+  <div class="rule"></div>
+  <p class="lede">Brandon and Brad's direction: <em>safety-jacket orange, without obviously being a
+  hi-vis.</em> This checks whether the Ridge mark actually survives that, and says what to order.</p>
+
+  <div class="verdict">
+    <b>⚑ The mark cannot be screen printed as it is drawn.</b>
+    The four mountain shapes are set at <strong>42%, 55%, 70% and 85% opacity</strong>. Screen
+    printing is ink or no ink — there is no 55% of a colour. A printer handed this file will either
+    halftone it into dot screens, which turn to mud on a textured tee at chest size, or flatten
+    every shape to solid and destroy the depth the mark is built from. <strong>A one-colour
+    garment version has to be drawn before anything is ordered.</strong>
+  </div>
+
+  <h2><span class="n">1</span>Contrast — black is fine on every candidate</h2>
+  <p>Measured as WCAG contrast ratios. A logo is a graphic, so <strong>3.0:1</strong> is the floor;
+  everything here clears it comfortably in black.</p>
+  <table>
+    <thead><tr><th>Shirt colour</th><th class="num">Pure black</th><th class="num">Pine #0E1512</th><th class="num">Bone #EDE7DC</th></tr></thead>
+    <tbody>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#E4703A;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span><strong>Ember #E4703A</strong> — the brand orange</td><td class="num pass">6.68</td><td class="num pass">5.89</td><td class="num fail">2.56</td></tr>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#FF6700;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span>Safety orange #FF6700</td><td class="num pass">7.19</td><td class="num pass">6.34</td><td class="num fail">2.37</td></tr>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#F6871F;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span>Hi-vis #F6871F</td><td class="num pass">8.40</td><td class="num pass">7.41</td><td class="num fail">2.03</td></tr>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#BF5700;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span>Burnt orange #BF5700</td><td class="num warn">4.58</td><td class="num warn">4.04</td><td class="num warn">3.73</td></tr>
+    </tbody>
+  </table>
+  <p class="note"><strong>Bone fails on every orange.</strong> A light mark on an orange shirt is out
+  — it is the one combination that does not work, and it is the one people reach for first.</p>
+
+
+  <h2><span class="n">2</span>Size — where the mark gives out</h2>
+  <p>Same mark <strong>flattened to solid</strong> — which is what a printer would do — on Ember, at
+  the sizes it would really be printed. <strong>Note what flattening costs: the four mountains merge
+  into one silhouette and the layering the mark is built from is gone.</strong> Left chest is the
+  risk case; the back print is large enough that nothing is in doubt.</p>
+
+  <div class="tests">
+    <div class="test"><div class="box"><svg width="22" height="23" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">0.8 in<br>SLEEVE / CAP</div></div>
+    <div class="test"><div class="box"><svg width="50" height="52" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">1.75 in<br>SMALL CHEST</div></div>
+    <div class="test"><div class="box"><svg width="70" height="73" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">3 in<br>MARK ALONE</div></div>
+    <div class="test"><div class="box"><svg width="112" height="117" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">5.25 in<br>BACK MARK</div></div>
+  </div>
+
+  <p class="note"><strong>The small tree at the base is the thing to watch.</strong> Its trunk is a
+  3.2-unit bar in a 94-unit mark — at 3 in that is about <strong>0.10 in</strong> wide, and at 0.8 in
+  it is <strong>0.027 in</strong>, well under the ~0.03 in a screen holds reliably. The three wavy
+  root strokes are finer still, which is why the PDF builders in this repo already drop them.</p>
+
+  <h2><span class="n">3</span>On the shirt</h2>
+  <p>Ember body, black lockup, drawn at true proportion — the tee is the same renderer the merch
+  concept board uses. <strong>The mark never goes on a shirt alone.</strong> A homeowner watching a
+  crew work needs to know who is on their property, so the name goes with it, and the back carries
+  the phone so a neighbour can act on it. The left-chest print looks small because a 3.5 in lockup on
+  a 20 in chest is small; that is the real ratio, not a stylised one.</p>
+
+<!--MOCKUPS-->
+
+  <h2><span class="n">4</span>What to order</h2>
+  <ul>
+    <li><strong>Body colour: Ember.</strong> It is already the brand orange, it is warm rather than
+      fluorescent — which is exactly "safety vibe, not obviously hi-vis" — and it contrasts at
+      6.68:1 with black. <em>Match it to a real blank against a physical swatch, not a screen.</em></li>
+    <li><strong>Ink: one colour, pure black.</strong> Pine is the brand near-black and is
+      indistinguishable from black on fabric while costing an ink match. Not worth it.</li>
+    <li><strong>Placement: left-chest lockup at 3.5 in wide, back print at 9 in.</strong> Skip sleeve
+      and cap prints until a simplified mark exists.</li>
+    <li><strong>Smallest type on the garment: 0.09 in cap height.</strong> Below roughly that, a
+      screen fills in the counters and the letters close up on a textured knit &mdash; the same
+      failure as the trunk bar. At 3.5 in the word COLORADO is near that floor, so it is the first
+      thing to check on a press proof.</li>
+    <li><strong>Method: screen print.</strong> Embroidery cannot hold the root strokes or the
+      overlapping mountains at any wearable size.</li>
+  </ul>
+
+  <p class="note"><strong>&#9873; &ldquo;Land &amp; Fire&rdquo; is not on these mockups, deliberately.</strong>
+  The brand files record it as a <strong>placeholder descriptor</strong>, not a settled line &mdash; and a
+  placeholder is a bad thing to put on thirty shirts. The lockup uses <strong>Sixfold Colorado</strong>,
+  which is the settled public name. If Land &amp; Fire is now final, say so and it drops under the
+  wordmark in one line of the generator.</p>
+
+  <div class="verdict">
+    <b>Before a single shirt is ordered</b>
+    Draw a <strong>one-colour garment version of the Ridge mark</strong>: mountains flattened to
+    solid with separation held by outline or knockout gaps instead of opacity, root strokes dropped,
+    trunk bar thickened to at least 0.03 in at the smallest size it will be used. That file becomes
+    the merch master and gets reused on every future piece.
+  </div>
+
+  <p class="foot">
+Sixfold LLC · Contact@SixfoldColorado.com · (303) 915-1045 · contrast to WCAG 2.1<br>
+    <b>Hex values are screen references, not garment colours — match a physical swatch before ordering.</b><br>
+    No web address on this garment: the site is not hosted.
+  </p>
+
+</div>
+</body>
+</html>

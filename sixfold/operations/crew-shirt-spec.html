@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold — Crew shirt spec</title>
+<style>
+  @page { size: letter; margin: 0.5in; }
+  :root{
+    --pine:#0E1512; --ember:#E4703A; --paper:#F2F0EA; --line:#D8D3C8; --mute:#5F6A62;
+    --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    --sans:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"Cascadia Mono",Consolas,"SFMono-Regular",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--pine);font-family:var(--sans);font-size:9.5pt;line-height:1.5}
+  .sheet{padding:0}
+  h1{font-family:var(--serif);font-weight:400;font-size:21pt;margin:4pt 0 2pt;letter-spacing:-.01em}
+  h2{font-family:var(--serif);font-weight:400;font-size:12.5pt;margin:10pt 0 3pt}
+  h2 .n{color:var(--ember);margin-right:5pt}
+  p{margin:0 0 4pt;max-width:78ch}
+  .kick{font-family:var(--mono);font-size:6.8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin:0}
+  .rule{height:2pt;background:#B84C15;margin:6pt 0 10pt}
+  .lede{font-size:10pt;color:#3A443C}
+  strong{font-weight:700}
+  .verdict{border:1.2pt solid var(--pine);padding:6pt 9pt;margin:6pt 0 3pt}
+  .verdict b{display:block;font-size:10.5pt;margin-bottom:2pt}
+  table{border-collapse:collapse;width:100%;font-size:8.5pt;margin:4pt 0 6pt}
+  th,td{text-align:left;padding:4.5pt 6pt;border-bottom:0.75pt solid var(--line)}
+  th{font-family:var(--mono);font-size:6.6pt;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .pass{color:#2F6B34;font-weight:700}
+  .warn{color:#9A6A1C;font-weight:700}
+  .fail{color:#A8392B;font-weight:700}
+  .swatches{display:flex;gap:8pt;margin:6pt 0 8pt;flex-wrap:wrap}
+  .sw{flex:1 1 0;min-width:96pt;border:0.75pt solid var(--line)}
+  .sw .chip{height:26pt;display:flex;align-items:center;justify-content:center}
+  .sw .cap{padding:3pt 5pt;font-family:var(--mono);font-size:6.4pt;line-height:1.4;color:var(--mute)}
+  .sw .cap b{display:block;color:var(--pine);font-size:7pt}
+  .tests{display:flex;gap:9pt;align-items:flex-end;margin:5pt 0 6pt;flex-wrap:wrap}
+  .test{text-align:center}
+  .test .box{background:#E4703A;padding:6pt;display:flex;align-items:center;justify-content:center;border:0.75pt solid var(--line)}
+  .test .lab{font-family:var(--mono);font-size:6.2pt;color:var(--mute);margin-top:2pt;line-height:1.3}
+  .note{font-size:8pt;color:var(--mute);border-left:1.5pt solid var(--ember);padding-left:6pt;margin:4pt 0 6pt}
+  ul{margin:2pt 0 6pt;padding-left:14pt}
+  li{margin-bottom:2.5pt}
+  .mocks{display:flex;gap:10pt;margin:5pt 0 6pt;align-items:flex-start}
+  .mock{flex:1 1 0;margin:0;text-align:center}
+  .mock .mock-svg{width:100%;max-width:118pt;height:auto;display:block;margin:0 auto}
+  .mock figcaption{font-family:var(--mono);font-size:6.2pt;line-height:1.45;color:var(--mute);margin-top:2pt;text-align:left}
+  .mock figcaption b{display:block;color:var(--pine);font-size:7pt}
+  .foot{margin-top:5pt;padding-top:3pt;border-top:0.75pt solid var(--line);font-family:var(--mono);font-size:6.6pt;color:var(--mute);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <p class="kick">Sixfold Colorado · internal · production spec</p>
+  <h1>Crew shirt — orange body, black mark</h1>
+  <div class="rule"></div>
+  <p class="lede">Brandon and Brad's direction: <em>safety-jacket orange, without obviously being a
+  hi-vis.</em> This checks whether the Ridge mark actually survives that, and says what to order.</p>
+
+  <div class="verdict">
+    <b>⚑ The mark cannot be screen printed as it is drawn.</b>
+    The four mountain shapes are set at <strong>42%, 55%, 70% and 85% opacity</strong>. Screen
+    printing is ink or no ink — there is no 55% of a colour. A printer handed this file will either
+    halftone it into dot screens, which turn to mud on a textured tee at chest size, or flatten
+    every shape to solid and destroy the depth the mark is built from. <strong>A one-colour
+    garment version has to be drawn before anything is ordered.</strong>
+  </div>
+
+  <h2><span class="n">1</span>Contrast — black is fine on every candidate</h2>
+  <p>Measured as WCAG contrast ratios. A logo is a graphic, so <strong>3.0:1</strong> is the floor;
+  everything here clears it comfortably in black.</p>
+  <table>
+    <thead><tr><th>Shirt colour</th><th class="num">Pure black</th><th class="num">Pine #0E1512</th><th class="num">Bone #EDE7DC</th></tr></thead>
+    <tbody>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#E4703A;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span><strong>Ember #E4703A</strong> — the brand orange</td><td class="num pass">6.68</td><td class="num pass">5.89</td><td class="num fail">2.56</td></tr>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#FF6700;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span>Safety orange #FF6700</td><td class="num pass">7.19</td><td class="num pass">6.34</td><td class="num fail">2.37</td></tr>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#F6871F;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span>Hi-vis #F6871F</td><td class="num pass">8.40</td><td class="num pass">7.41</td><td class="num fail">2.03</td></tr>
+      <tr><td><span style="display:inline-block;width:30pt;height:19pt;background:#BF5700;border:0.5pt solid #C8C2B6;text-align:center;line-height:19pt;margin-right:5pt;vertical-align:middle"><svg width="17" height="18" viewBox="4 14 94 99" fill="#0E1512" style="vertical-align:-3pt"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="4" y="86" width="92" height="5"/></svg></span>Burnt orange #BF5700</td><td class="num warn">4.58</td><td class="num warn">4.04</td><td class="num warn">3.73</td></tr>
+    </tbody>
+  </table>
+  <p class="note"><strong>Bone fails on every orange.</strong> A light mark on an orange shirt is out
+  — it is the one combination that does not work, and it is the one people reach for first.</p>
+
+
+  <h2><span class="n">2</span>Size — where the mark gives out</h2>
+  <p>Same mark <strong>flattened to solid</strong> — which is what a printer would do — on Ember, at
+  the sizes it would really be printed. <strong>Note what flattening costs: the four mountains merge
+  into one silhouette and the layering the mark is built from is gone.</strong> Left chest is the
+  risk case; the back print is large enough that nothing is in doubt.</p>
+
+  <div class="tests">
+    <div class="test"><div class="box"><svg width="22" height="23" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">0.8 in<br>SLEEVE / CAP</div></div>
+    <div class="test"><div class="box"><svg width="50" height="52" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">1.75 in<br>SMALL CHEST</div></div>
+    <div class="test"><div class="box"><svg width="70" height="73" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">3 in<br>MARK ALONE</div></div>
+    <div class="test"><div class="box"><svg width="112" height="117" viewBox="4 14 94 99" fill="#0E1512"><path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/><path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/><rect x="4" y="86" width="92" height="5"/></svg></div><div class="lab">5.25 in<br>BACK MARK</div></div>
+  </div>
+
+  <p class="note"><strong>The small tree at the base is the thing to watch.</strong> Its trunk is a
+  3.2-unit bar in a 94-unit mark — at 3 in that is about <strong>0.10 in</strong> wide, and at 0.8 in
+  it is <strong>0.027 in</strong>, well under the ~0.03 in a screen holds reliably. The three wavy
+  root strokes are finer still, which is why the PDF builders in this repo already drop them.</p>
+
+  <h2><span class="n">3</span>On the shirt</h2>
+  <p>Ember body, black lockup, drawn at true proportion — the tee is the same renderer the merch
+  concept board uses. <strong>The mark never goes on a shirt alone.</strong> A homeowner watching a
+  crew work needs to know who is on their property, so the name goes with it, and the back carries
+  the phone so a neighbour can act on it. The left-chest print looks small because a 3.5 in lockup on
+  a 20 in chest is small; that is the real ratio, not a stylised one.</p>
+
+  <div class="mocks">
+    <figure class="mock"><svg viewBox="0 0 340 348" class="mock-svg" role="img" aria-label="Ember tee, front, Ridge mark with the Sixfold Colorado name on the left chest"><defs>
+    <linearGradient id="f23" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EC7E4C"/><stop offset="1" stop-color="#CF5F2C"/>
+    </linearGradient>
+    <radialGradient id="f23v" cx=".5" cy=".38" r=".75">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".7" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.42"/>
+    </radialGradient></defs>
+    <ellipse cx="170" cy="330" rx="94" ry="11" fill="#000" opacity=".26" filter="url(#blur9)"/>
+    <clipPath id="cl24"><path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z"/></clipPath>
+    <path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z" fill="url(#f23)"/>
+    <g clip-path="url(#cl24)">
+      <path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z" fill="url(#f23v)"/>
+      <!-- drape: side shadows, sleeve breaks, waist crease, hem pool -->
+      <path d="M92 120 C 108 190, 106 280, 88 318 L 70 300 C 72 220, 78 160, 92 120 Z" fill="#000" opacity="0.170" filter="url(#blur5)"/>
+      <path d="M248 122 C 234 190, 238 280, 256 318 L 274 296 C 270 216, 258 160, 248 122 Z" fill="#000" opacity="0.150" filter="url(#blur5)"/>
+      <path d="M70 138 C 60 150, 48 138, 44 128 C 56 140, 66 138, 74 132 Z" fill="#000" opacity="0.200" filter="url(#blur2)"/>
+      <path d="M270 138 C 280 150, 292 138, 296 128 C 284 140, 274 138, 266 132 Z" fill="#000" opacity="0.180" filter="url(#blur2)"/>
+      <path d="M96 236 C 150 250, 190 250, 244 236 C 246 250, 244 262, 240 270 C 190 282, 150 282, 100 270 C 96 262, 94 250, 96 236 Z" fill="#000" opacity="0.090" filter="url(#blur9)"/>
+      <path d="M100 300 C 150 314, 190 314, 240 300 C 240 312, 236 320, 232 322 L 108 322 C 104 320, 100 312, 100 300 Z" fill="#000" opacity="0.100" filter="url(#blur5)"/>
+      <ellipse cx="150" cy="112" rx="92" ry="58" fill="#fff" opacity=".08" filter="url(#blur9)"/>
+      <ellipse cx="160" cy="150" rx="150" ry="150" fill="#fff" opacity=".03" filter="url(#blur9)"/>
+      <rect x="0" y="0" width="340" height="350" filter="url(#grain)" opacity=".5" style="mix-blend-mode:overlay"/>
+    </g>
+    <!-- topstitching -->
+    <path d="M280 150 L268 140 M60 150 L72 140" stroke="rgba(255,255,255,.16)" stroke-width="1.3" fill="none"/>
+    <path d="M96 308 C 150 320, 190 320, 244 308" stroke="rgba(255,255,255,.16)" stroke-width="1.3" stroke-dasharray="2 3" fill="none"/>
+    <path d="M276 146 L266 137 M64 146 L74 137" stroke="rgba(255,255,255,.16)" stroke-width="1" stroke-dasharray="2 3" fill="none"/>
+    
+    <path d="M132 58 C 148 76, 192 76, 208 58 C 202 72, 179 84, 170 98 C 161 84, 138 72, 132 58 Z" fill="rgba(255,255,255,.05)"/>
+       <path d="M132 58 C 148 75, 192 75, 208 58" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2.4"/>
+       <path d="M138 66 C 151 82, 189 82, 202 66" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="3.2" filter="url(#blur2)"/>
+       <path d="M140 61 l3 7 M152 69 l2 8 M170 73 l0 8 M188 69 l-2 8 M200 61 l-3 7" stroke="rgba(0,0,0,.5)" stroke-width="1.1" opacity=".7"/>
+    <g clip-path="url(#cl24)" filter="url(#warp)"><g><svg x="188.8" y="104.0" width="10.3" height="10.8" viewBox="4 14 94 99" fill="#0E1512">
+  <path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/>
+  <path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/>
+  <rect x="20.4" y="77" width="3.2" height="7"/>
+  <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>
+  <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+  <rect x="4" y="86" width="92" height="5"/></svg><text x="201.5" y="112.0" font-family="Palatino Linotype, Book Antiqua, Georgia, serif" font-size="8.1" fill="#0E1512" letter-spacing="-.2">Sixfold</text><text x="202.5" y="115.3" font-family="ui-monospace, Consolas, monospace" font-size="3.1" fill="#0E1512" letter-spacing="1.17">COLORADO</text></g></g></svg><figcaption><b>Left chest, 3.5 in</b>Mark and name together. The mark on its own does not tell a homeowner who is on their property.</figcaption></figure>
+    <figure class="mock"><svg viewBox="0 0 340 348" class="mock-svg" role="img" aria-label="Ember tee, back, large Ridge mark over the Sixfold Colorado name and the phone number"><defs>
+    <linearGradient id="f25" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EC7E4C"/><stop offset="1" stop-color="#CF5F2C"/>
+    </linearGradient>
+    <radialGradient id="f25v" cx=".5" cy=".38" r=".75">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".7" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.42"/>
+    </radialGradient></defs>
+    <ellipse cx="170" cy="330" rx="94" ry="11" fill="#000" opacity=".26" filter="url(#blur9)"/>
+    <clipPath id="cl26"><path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z"/></clipPath>
+    <path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z" fill="url(#f25)"/>
+    <g clip-path="url(#cl26)">
+      <path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z" fill="url(#f25v)"/>
+      <!-- drape: side shadows, sleeve breaks, waist crease, hem pool -->
+      <path d="M92 120 C 108 190, 106 280, 88 318 L 70 300 C 72 220, 78 160, 92 120 Z" fill="#000" opacity="0.170" filter="url(#blur5)"/>
+      <path d="M248 122 C 234 190, 238 280, 256 318 L 274 296 C 270 216, 258 160, 248 122 Z" fill="#000" opacity="0.150" filter="url(#blur5)"/>
+      <path d="M70 138 C 60 150, 48 138, 44 128 C 56 140, 66 138, 74 132 Z" fill="#000" opacity="0.200" filter="url(#blur2)"/>
+      <path d="M270 138 C 280 150, 292 138, 296 128 C 284 140, 274 138, 266 132 Z" fill="#000" opacity="0.180" filter="url(#blur2)"/>
+      <path d="M96 236 C 150 250, 190 250, 244 236 C 246 250, 244 262, 240 270 C 190 282, 150 282, 100 270 C 96 262, 94 250, 96 236 Z" fill="#000" opacity="0.090" filter="url(#blur9)"/>
+      <path d="M100 300 C 150 314, 190 314, 240 300 C 240 312, 236 320, 232 322 L 108 322 C 104 320, 100 312, 100 300 Z" fill="#000" opacity="0.100" filter="url(#blur5)"/>
+      <ellipse cx="150" cy="112" rx="92" ry="58" fill="#fff" opacity=".08" filter="url(#blur9)"/>
+      <ellipse cx="160" cy="150" rx="150" ry="150" fill="#fff" opacity=".03" filter="url(#blur9)"/>
+      <rect x="0" y="0" width="340" height="350" filter="url(#grain)" opacity=".5" style="mix-blend-mode:overlay"/>
+    </g>
+    <!-- topstitching -->
+    <path d="M280 150 L268 140 M60 150 L72 140" stroke="rgba(255,255,255,.16)" stroke-width="1.3" fill="none"/>
+    <path d="M96 308 C 150 320, 190 320, 244 308" stroke="rgba(255,255,255,.16)" stroke-width="1.3" stroke-dasharray="2 3" fill="none"/>
+    <path d="M276 146 L266 137 M64 146 L74 137" stroke="rgba(255,255,255,.16)" stroke-width="1" stroke-dasharray="2 3" fill="none"/>
+    <path d="M170 70 C 172 180, 172 250, 170 314" stroke="#000" stroke-opacity=".1" stroke-width="2" fill="none"/>
+    <path d="M130 58 C 150 68, 190 68, 210 58 C 206 66, 150 70, 130 58 Z" fill="rgba(255,255,255,.05)"/>
+       <path d="M128 59 C 150 69, 190 69, 212 59" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2.4"/>
+       <path d="M124 64 C 150 76, 190 76, 216 64" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="4" filter="url(#blur2)"/>
+    <g clip-path="url(#cl26)" filter="url(#warp)"><g><svg x="151.5" y="96.0" width="37.0" height="39.0" viewBox="4 14 94 99" fill="#0E1512">
+  <path d="M18 84 L36 48 L54 84 Z"/><path d="M30 84 L50 38 L70 84 Z"/>
+  <path d="M44 84 L66 26 L88 84 Z"/><path d="M60 84 L79 14 L98 84 Z"/>
+  <rect x="20.4" y="77" width="3.2" height="7"/>
+  <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>
+  <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+  <rect x="4" y="86" width="92" height="5"/></svg><text x="170" y="144.9" text-anchor="middle" font-family="Palatino Linotype, Book Antiqua, Georgia, serif" font-size="17.6" fill="#0E1512" letter-spacing="-.3">Sixfold</text><text x="170" y="156.0" text-anchor="middle" font-family="ui-monospace, Consolas, monospace" font-size="6.0" fill="#0E1512" letter-spacing="2.65">COLORADO</text><text x="170" y="170.1" text-anchor="middle" font-family="ui-monospace, Consolas, monospace" font-size="5.3" fill="#0E1512" letter-spacing="0.88">(303) 915-1045</text></g></g></svg><figcaption><b>Back, 9 in</b>The billboard &mdash; read from behind, across a yard. Phone on it so a neighbour can act on it.</figcaption></figure>
+    <figure class="mock"><svg viewBox="0 0 340 348" class="mock-svg" role="img" aria-label="Ember tee, back, the mark with its opacity values left in, which cannot be screen printed"><defs>
+    <linearGradient id="f27" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EC7E4C"/><stop offset="1" stop-color="#CF5F2C"/>
+    </linearGradient>
+    <radialGradient id="f27v" cx=".5" cy=".38" r=".75">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".7" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.42"/>
+    </radialGradient></defs>
+    <ellipse cx="170" cy="330" rx="94" ry="11" fill="#000" opacity=".26" filter="url(#blur9)"/>
+    <clipPath id="cl28"><path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z"/></clipPath>
+    <path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z" fill="url(#f27)"/>
+    <g clip-path="url(#cl28)">
+      <path d="
+    M132 58 C 148 76, 192 76, 208 58
+    L 234 52 C 258 56, 274 66, 298 96
+    L 306 128 L 280 150 L 268 140
+    C 264 190, 264 262, 260 316 C 232 324, 108 324, 80 316
+    C 76 262, 76 190, 72 140 L 60 150 L 34 128
+    L 42 96 C 66 66, 82 56, 106 52 L 132 58 Z" fill="url(#f27v)"/>
+      <!-- drape: side shadows, sleeve breaks, waist crease, hem pool -->
+      <path d="M92 120 C 108 190, 106 280, 88 318 L 70 300 C 72 220, 78 160, 92 120 Z" fill="#000" opacity="0.170" filter="url(#blur5)"/>
+      <path d="M248 122 C 234 190, 238 280, 256 318 L 274 296 C 270 216, 258 160, 248 122 Z" fill="#000" opacity="0.150" filter="url(#blur5)"/>
+      <path d="M70 138 C 60 150, 48 138, 44 128 C 56 140, 66 138, 74 132 Z" fill="#000" opacity="0.200" filter="url(#blur2)"/>
+      <path d="M270 138 C 280 150, 292 138, 296 128 C 284 140, 274 138, 266 132 Z" fill="#000" opacity="0.180" filter="url(#blur2)"/>
+      <path d="M96 236 C 150 250, 190 250, 244 236 C 246 250, 244 262, 240 270 C 190 282, 150 282, 100 270 C 96 262, 94 250, 96 236 Z" fill="#000" opacity="0.090" filter="url(#blur9)"/>
+      <path d="M100 300 C 150 314, 190 314, 240 300 C 240 312, 236 320, 232 322 L 108 322 C 104 320, 100 312, 100 300 Z" fill="#000" opacity="0.100" filter="url(#blur5)"/>
+      <ellipse cx="150" cy="112" rx="92" ry="58" fill="#fff" opacity=".08" filter="url(#blur9)"/>
+      <ellipse cx="160" cy="150" rx="150" ry="150" fill="#fff" opacity=".03" filter="url(#blur9)"/>
+      <rect x="0" y="0" width="340" height="350" filter="url(#grain)" opacity=".5" style="mix-blend-mode:overlay"/>
+    </g>
+    <!-- topstitching -->
+    <path d="M280 150 L268 140 M60 150 L72 140" stroke="rgba(255,255,255,.16)" stroke-width="1.3" fill="none"/>
+    <path d="M96 308 C 150 320, 190 320, 244 308" stroke="rgba(255,255,255,.16)" stroke-width="1.3" stroke-dasharray="2 3" fill="none"/>
+    <path d="M276 146 L266 137 M64 146 L74 137" stroke="rgba(255,255,255,.16)" stroke-width="1" stroke-dasharray="2 3" fill="none"/>
+    <path d="M170 70 C 172 180, 172 250, 170 314" stroke="#000" stroke-opacity=".1" stroke-width="2" fill="none"/>
+    <path d="M130 58 C 150 68, 190 68, 210 58 C 206 66, 150 70, 130 58 Z" fill="rgba(255,255,255,.05)"/>
+       <path d="M128 59 C 150 69, 190 69, 212 59" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2.4"/>
+       <path d="M124 64 C 150 76, 190 76, 216 64" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="4" filter="url(#blur2)"/>
+    <g clip-path="url(#cl28)" filter="url(#warp)"><g><svg x="151.5" y="96.0" width="37.0" height="39.0" viewBox="4 14 94 99" fill="#0E1512">
+  <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+  <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+  <rect x="20.4" y="77" width="3.2" height="7"/>
+  <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>
+  <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+  <rect x="4" y="86" width="92" height="5"/></svg><text x="170" y="144.9" text-anchor="middle" font-family="Palatino Linotype, Book Antiqua, Georgia, serif" font-size="17.6" fill="#0E1512" letter-spacing="-.3">Sixfold</text><text x="170" y="156.0" text-anchor="middle" font-family="ui-monospace, Consolas, monospace" font-size="6.0" fill="#0E1512" letter-spacing="2.65">COLORADO</text><text x="170" y="170.1" text-anchor="middle" font-family="ui-monospace, Consolas, monospace" font-size="5.3" fill="#0E1512" letter-spacing="0.88">(303) 915-1045</text></g></g></svg><figcaption><b>&#9873; Back, as the file is drawn</b>Opacity intact. Compare with the panel to the left: that separation is what a screen cannot hold.</figcaption></figure>
+  </div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="warp" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="warpBig" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.01 0.016" numOctaves="2" seed="4" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="blur2" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="2.4"/></filter>
+  <filter id="blur5" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="5"/></filter>
+  <filter id="blur9" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="9"/></filter>
+  <filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" stitchTiles="stitch" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0"/>
+  </filter>
+  <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#efd6a2"/><stop offset=".5" stop-color="#b9995e"/><stop offset="1" stop-color="#6f5630"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".5"/>
+    <stop offset=".55" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <pattern id="ribDome" width="12" height="14" patternUnits="userSpaceOnUse">
+    <rect width="12" height="14" fill="#fff" opacity="0"/>
+    <rect x="1.5" width="4" height="14" rx="2" fill="#fff" opacity=".06"/>
+    <rect x="7.5" width="3" height="14" rx="1.5" fill="#000" opacity=".16"/>
+  </pattern>
+  <pattern id="ribCuff" width="8" height="14" patternUnits="userSpaceOnUse">
+    <rect width="8" height="14" fill="#fff" opacity="0"/>
+    <rect x="1" width="2.6" height="14" rx="1.3" fill="#fff" opacity=".08"/>
+    <rect x="5" width="2" height="14" rx="1" fill="#000" opacity=".2"/>
+  </pattern>
+  <pattern id="weave" width="6" height="6" patternUnits="userSpaceOnUse">
+    <path d="M0 3h6M3 0v6" stroke="#000" stroke-opacity=".08" stroke-width="1.4"/>
+    <path d="M0 0h6M0 0v6" stroke="#fff" stroke-opacity=".05" stroke-width="1"/>
+  </pattern>
+  <pattern id="flute" width="12" height="8" patternUnits="userSpaceOnUse">
+    <rect width="12" height="8" fill="#fff" opacity="0"/><rect x="11" width="1.4" height="8" fill="#000" opacity=".14"/>
+  </pattern>
+  <radialGradient id="speck" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#0E1512"/><stop offset="1" stop-color="#0E1512"/></radialGradient>
+</defs></svg>
+
+  <h2><span class="n">4</span>What to order</h2>
+  <ul>
+    <li><strong>Body colour: Ember.</strong> It is already the brand orange, it is warm rather than
+      fluorescent — which is exactly "safety vibe, not obviously hi-vis" — and it contrasts at
+      6.68:1 with black. <em>Match it to a real blank against a physical swatch, not a screen.</em></li>
+    <li><strong>Ink: one colour, pure black.</strong> Pine is the brand near-black and is
+      indistinguishable from black on fabric while costing an ink match. Not worth it.</li>
+    <li><strong>Placement: left-chest lockup at 3.5 in wide, back print at 9 in.</strong> Skip sleeve
+      and cap prints until a simplified mark exists.</li>
+    <li><strong>Smallest type on the garment: 0.09 in cap height.</strong> Below roughly that, a
+      screen fills in the counters and the letters close up on a textured knit &mdash; the same
+      failure as the trunk bar. At 3.5 in the word COLORADO is near that floor, so it is the first
+      thing to check on a press proof.</li>
+    <li><strong>Method: screen print.</strong> Embroidery cannot hold the root strokes or the
+      overlapping mountains at any wearable size.</li>
+  </ul>
+
+  <p class="note"><strong>&#9873; &ldquo;Land &amp; Fire&rdquo; is not on these mockups, deliberately.</strong>
+  The brand files record it as a <strong>placeholder descriptor</strong>, not a settled line &mdash; and a
+  placeholder is a bad thing to put on thirty shirts. The lockup uses <strong>Sixfold Colorado</strong>,
+  which is the settled public name. If Land &amp; Fire is now final, say so and it drops under the
+  wordmark in one line of the generator.</p>
+
+  <div class="verdict">
+    <b>Before a single shirt is ordered</b>
+    Draw a <strong>one-colour garment version of the Ridge mark</strong>: mountains flattened to
+    solid with separation held by outline or knockout gaps instead of opacity, root strokes dropped,
+    trunk bar thickened to at least 0.03 in at the smallest size it will be used. That file becomes
+    the merch master and gets reused on every future piece.
+  </div>
+
+  <p class="foot">
+Sixfold LLC · Contact@SixfoldColorado.com · (303) 915-1045 · contrast to WCAG 2.1<br>
+    <b>Hex values are screen references, not garment colours — match a physical swatch before ordering.</b><br>
+    No web address on this garment: the site is not hosted.
+  </p>
+
+</div>
+</body>
+</html>

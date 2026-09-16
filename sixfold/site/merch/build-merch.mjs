@@ -15,7 +15,7 @@
 */
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -722,5 +722,12 @@ ${SECTIONS.map(section).join('\n')}
 </html>
 `;
 
-writeFileSync(join(here, 'index.html'), html, 'utf8');
-console.log('wrote', join(here, 'index.html'), `(${(html.length / 1024).toFixed(1)} kB)`);
+/* Written only when this file is RUN, not when it is imported. The tee renderer
+   and the shared filter defs are reused by operations/build-crew-shirt-spec.mjs,
+   and importing must not silently rewrite the concept board. */
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  writeFileSync(join(here, 'index.html'), html, 'utf8');
+  console.log('wrote', join(here, 'index.html'), `(${(html.length / 1024).toFixed(1)} kB)`);
+}
+
+export { tee, DEFS, crest };

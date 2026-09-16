@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What The Work Takes</title>
+<!--STYLE-->
+<style>
+/* Third sheet in the family. quote-walk-sheet goes out before a job,
+   job-closeout comes back after one — this one is filled in ONCE, now, by the
+   people who do the work, so the quote generator has real starting numbers
+   instead of estimates. The close-outs then correct it job by job.
+
+   The confidence column is the point of the sheet as much as the numbers are:
+   it tells the generator which figures to badge as solid and which to flag as
+   a guess, which is the existing badging convention in the quote engine. A
+   number with no confidence attached is what got us into the pricing rebuild. */
+.sheet h2.sec     { margin: 6pt 0 3pt; }
+.sheet table.tbl  { margin-bottom: 2pt; font-size: 8.6pt; }
+
+/* Writing line = the row's own bottom border, per the walk sheet's 2026-09-14
+   rebuild. ⚑ The answer cell keeps a right pad so it does not fuse with the
+   confidence boxes beside it — that fusion is exactly the defect job-closeout
+   shipped on its first render. */
+.sheet table.tbl td { padding: 3pt 6pt 6.5pt 0; }
+.sheet table.tbl td.ans { border-bottom-color: var(--ink-soft); padding-right: 12pt; }
+.sheet table.tbl td.conf { border-bottom-color: transparent; text-align: left; white-space: nowrap; }
+.sheet table.tbl th.conf { text-align: left; }
+
+.bx   { display:inline-block; width:10pt; height:10pt; border:0.9pt solid #46534B; background:#FFF; }
+.cbx  { display:inline-block; width:8.5pt; height:8.5pt; border:0.9pt solid #46534B; background:#FFF; margin-right:1pt; }
+.unit { font-family: var(--f-data); font-size: 6.8pt; letter-spacing:.02em; color: var(--ember-text); white-space: nowrap; }
+
+.lede { font-size:8.4pt; line-height:1.5; margin:5pt 0 2pt; }
+.lede b { letter-spacing:.02em; }
+
+.key { font-family: var(--f-data); font-size:6.6pt; letter-spacing:.02em; color: var(--ink-mid); margin:2pt 0 0; }
+
+.notes { border:0.9pt solid var(--ink-mid); padding:6pt 10pt 8pt; margin-top:3pt; }
+.notes .ln { border-bottom:0.75pt solid var(--tint-edge); height:15pt; }
+.notes .ln:last-child { border-bottom-color: var(--ink-soft); }
+.notes .prompt { font-size:7.6pt; color: var(--ink-mid); margin:0 0 5pt; line-height:1.45; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Internal</b>What the work takes<br>Filled in by <span style="border-bottom:0.75pt solid #6E7A72;display:inline-block;min-width:0.9in">&nbsp;</span> Date <span style="border-bottom:0.75pt solid #6E7A72;display:inline-block;min-width:0.7in">&nbsp;</span></p>
+  </div>
+
+  <h1 class="headline" style="margin-top:7pt">How long does one of these take?</h1>
+
+  <p class="lede"><b>MAN-HOURS, not clock time</b> &mdash; two people for one hour is two man-hours.
+  This is what the quote gets built from, so a rough number you mark as a guess is far more use than
+  a blank. <b>Tick how sure you are</b> &mdash; that is how we know which numbers to trust.</p>
+  <p class="key">CONFIDENCE&nbsp;&nbsp;T = TIMED IT&nbsp;&nbsp;·&nbsp;&nbsp;D = DONE IT OFTEN&nbsp;&nbsp;·&nbsp;&nbsp;G = BEST GUESS</p>
+
+  <h2 class="sec">1 · Tree work — one tree, start to cleared</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:0.22in"></th><th style="width:4.25in">The work</th><th style="width:1.1in">Man-hours</th><th class="conf">T &nbsp;D &nbsp;G</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bx"></span></td><td><strong>Take one down — under 30 ft</strong></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Take one down — 30 to 60 ft</strong></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Take one down — 60 to 80 ft</strong></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Limb or trim one, not removing it</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Buck one tree's worth of logs <span class="unit">OR PER ROUND</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Grind one stump</strong> <span class="unit">SAY WHAT DIAMETER</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">2 · Clearing and hauling</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:0.22in"></th><th style="width:4.25in">The work</th><th style="width:1.1in">Man-hours</th><th class="conf">T &nbsp;D &nbsp;G</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bx"></span></td><td>Clear one pile of dead fall</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Clear one pile of brush, branches, twigs</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Build one slash pile</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>Load the truck or trailer to full</strong></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td><strong>One dump run</strong> — drive, unload, get back</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Setup and pack-down, per day</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">3 · Landscaping — we sell this and have never priced it</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:0.22in"></th><th style="width:4.25in">The work</th><th style="width:1.1in">Man-hours</th><th class="conf">T &nbsp;D &nbsp;G</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bx"></span></td><td>Mow a quarter acre</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Trim and edge 100 ft</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Clear one bed <span class="unit">SAY ROUGH SQ FT</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Plant one shrub</td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">4 · What makes a job slower, and what small stuff costs</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:0.22in"></th><th style="width:4.25in">The question</th><th style="width:1.1in">Answer</th><th class="conf">T &nbsp;D &nbsp;G</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bx"></span></td><td><strong>Coming down over a roof, fence, line or drive</strong> — how much longer than an open fell? <span class="unit">× HOW MANY TIMES</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>Bad access — long drag to the truck, steep slope <span class="unit">× HOW MANY TIMES</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>A chain, and a sharpening <span class="unit">DOLLARS EACH</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>A gallon of two-stroke mix, and of bar oil <span class="unit">DOLLARS</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+      <tr><td><span class="bx"></span></td><td>One round trip in the truck, in fuel <span class="unit">DOLLARS</span></td><td class="ans"></td><td class="conf"><span class="cbx"></span><span class="cbx"></span><span class="cbx"></span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec">5 · Anything we have not asked about</h2>
+  <div class="notes">
+    <p class="prompt">Work we do that is not on this sheet · anything that always takes longer than people expect · anything you would refuse to quote without seeing it first.</p>
+    <div class="ln"></div>
+    <div class="ln"></div>
+  </div>
+
+  <div class="contact">
+    <p class="co">Sixfold LLC</p>
+    <p>Contact@SixfoldColorado.com &nbsp;·&nbsp; (303) 915-1045</p>
+  </div>
+
+</div>
+
+</body>
+</html>
