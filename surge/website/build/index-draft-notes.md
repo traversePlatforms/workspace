@@ -6,6 +6,802 @@ staged, nothing posted. Static HTML on disk, served locally for preview only.
 Rebuilt from scratch after the `dev/surge-site/` build was lost with the broken machine. Draft 2
 replaces the reconstruction-from-memory in draft 1 with content recovered from saved artifacts.
 
+## `/team/` bios — all third person, length spread halved — 2026-09-15
+
+Matthew's call: *"I think we just keep it all 3rd person for now."* The page had been carrying two
+inconsistencies at once — seven bios switching person mid-block (third-person role line bolted onto
+first-person copy) and three that were third person throughout. Both gone.
+
+**⚑ The pronoun question resolved without inferring anything, and this is the reusable part.**
+Converting seven first-person bios needs a pronoun for each person, and a name does not supply one.
+**Every pronoun used here is the one the site's own pre-swap copy used for that person** — the
+2026-09-04 enrichment, still in git `HEAD` because the 09-14 swap is uncommitted. So the source is
+Surge's own prior published copy, not a guess from a first name. If anyone's pronouns are wrong,
+they were wrong on surgeftw.com first and the fix belongs in both places.
+
+**Length spread: 50–124 words (2.48×) → 49–80 (1.63×).** Only two bios were actually trimmed —
+Lance 124 → 78 and Cai 93 → 78. Nothing else was padded, because padding means inventing.
+
+What came out of Lance's, for the record: *"I bring foresight"* (redundant beside the 5,000-foot-view
+sentence that follows it) and the *"strong pillars — financially, with family, and in my
+community"* line. That second one had been a deliberate keep on 09-14 (finances as one of three life
+areas is ordinary, not hustle texture). **It came out for length, not for restriction** — but it is
+the money-adjacent line in the bio, so the trim is also a risk reduction. Say the word if it should
+go back.
+
+**The floor is Paige at 49 and it cannot be raised honestly.** Hers was never swapped, so the
+current text *is* the 09-04 version and there is no further source material. Matthew's is 56 and is
+his own to extend. Everything else lands 58–80.
+
+### ⚑ Regression I introduced and caught — read this before the next bulk page edit
+
+Rewriting the seven `.person-bio` blocks replaced everything from
+`<div class="wrap narrow person-bio">` to the next `
+  </div>` — and that block does not only
+contain the bio. It also ends with:
+
+```html
+<p class="small" style="margin-top:1.6rem"><a href="/team/">&larr; Back to the team</a></p>
+```
+
+**So the back-link was deleted from all seven pages.** Restored; all seven verified at exactly one.
+
+**Two lessons, and the second is the important one:**
+
+1. Same shape as the 09-11 footer/header Blog bug: **anchor on what you are replacing, not on the
+   container that happens to hold it.** The container held one more thing than expected.
+2. **`audit-links.mjs` cannot catch this and never will.** It verifies that links which exist
+   resolve; a link that has been *removed* is invisible to it — the page still passes with zero
+   broken links. It was clean on all 29 pages throughout, including while seven pages had no route
+   back to the roster. **A clean audit is not evidence that nothing was lost.** Worth a
+   before/after element count on any future bulk edit, since no tool here does it.
+
+Verified after the fix: zero first-person pronouns across the roster JSON and all ten pages, all ten
+roster bios identical to their page copies, back-links present, `audit-links` clean on the usual
+four false positives.
+
+## `/team/` pass — Dylan removed, photos measured, roster reordered — 2026-09-15
+
+**Dylan Conger was a co-owner and has left the company.** Ryan Conger, Sales Manager, is his
+brother and is correct as listed — photo and role both confirmed by Matthew.
+`Dylan-Conger-Updated-Headshot-3-25-2026.webp` moved to
+`_archive/people-departed-2026-09-15/` rather than deleted: `brand/photos/` is gitignored, so
+deletion there is unrecoverable. Nothing on the site ever referenced it.
+
+**Lance closed.** The LinkedIn URL came to Matthew directly from Lance, and "Lance Axon" is what the
+previous site listed. *"If he wants to call himself different things its not for me to decide."*
+Name and URL both stand. **Punch item 52 is closed properly now**, not just half-answered.
+
+### ⚑ The headshot set is far less consistent than this file assumed
+
+Measured, not eyeballed — mean RGB of the four corner patches, per image:
+
+| Group | People | bg luma |
+|---|---|---|
+| Neutral | Myles 220 · Ryan 217 · Lance 196 · Paige 193 · Maya 190 | 190–220 |
+| Warm | Cai 181 (R−B = 55, visibly orange) · Nneka 180 | ~180 |
+| Dark | Matthew 163 · Brandon 141 | 141–163 |
+| **Outdoor** | **Jon 75, green** | **75** |
+
+**Jon is the biggest mismatch on the page, not Brandon** — his is an outdoor portrait against
+foliage. It is a good photo (600×600, sharp, well exposed) and it is from a different world than the
+studio set. **Left alone deliberately**: Matthew is confirming with administration whether Jon
+belongs on the roster at all, and there is no point processing a photo that may come off.
+
+**Resolution is NOT a problem and should stop being raised.** Sources are 384×384, the largest
+render is `.team-detail .member__photo` at 176px, so there is 2.18× — ample for 2× displays. What
+varies is **compression**: 3KB (Ryan) to 17KB (Myles) at identical dimensions.
+
+### Matthew's headshot — corrected and shipped
+
+**The faults were in the source, not in processing.** His original is an existing cutout composite:
+a halo around the hair, speckle across the jacket shoulders, and an orange cast on the face
+specifically, relative to his own neck and shirt.
+
+**But the shipped 384 crop was also darker than its own source** — background (169,162,156) against
+the original's (217,214,206). Something in the original processing darkened it.
+
+Rebuilt from the 1000×781 kept original with Pillow 12.3.0: median filter for the speckle,
+per-channel white balance onto (203,201,198) with a soft knee above 0.85 so highlights roll off
+instead of clipping, HSV saturation pulled 30% in the red/orange hue band only (leaves neutrals
+alone), square crop at 46% height, Lanczos to 384, WebP q88. **Now `matthew-sharpe.webp`** — the
+superseded `.jpg` is deleted and all three references updated.
+
+### ⚑ Brandon cannot be fixed with the tooling here — two attempts, both worse
+
+He asked for the studio background if possible, levelling at minimum. **Both attempts shipped
+nothing:**
+
+1. **Feathered ellipse → background plate.** Left brick slivers down both sides and added pale
+   vertical banding at the edges that reads as a processing error.
+2. **Desaturate and brighten the brick.** Made it *lighter and more prominent*. Worse than current.
+
+**The bind is real and worth recording so it is not re-attempted:** matching his luma to the set
+(141 → ~195) necessarily makes the brick louder, and leaving it dark keeps him looking like a
+different photo. There is no setting that wins both. Proper background removal needs a segmentation
+model; Pillow has none and there is no sharp, ImageMagick or ffmpeg on this machine.
+
+**Left exactly as-is.** The reshoot is the fix and Matthew is getting one.
+
+> **Reshoot spec, so the replacement drops straight in:** plain wall reading **light neutral, luma
+> 190–210** (not white, not coloured) · **head and shoulders**, framed like Cai's or Myles's, head
+> about 60% of frame height — the current one is face-only and that mismatch is as visible as the
+> brick · **≥800px on the short side** · even frontal light, no hard side shadow · shot portrait or
+> square so a square crop does not lose the crown.
+
+### Roster reordered to match the page's own strap
+
+The strap says *"Leadership · Management · Training · Coordination — one room"* while the roster
+rendered in an order matching none of it. Now it does, which also resolves Myles's placement
+(3rd → 7th) that Matthew flagged as arbitrary:
+
+Brandon · Matthew — **Leadership** | Lance · Cai · Ryan · Paige · Myles — **Management** |
+Jon · Nneka — **Training** | Maya — **Coordination**
+
+**No section headings added.** The old site used Owners / Team Leader / Administration; "Owners"
+would be wrong for Matthew (CTO, not an owner) and reads badly on a direct-sales company page
+regardless. Order alone carries it, and the render order is DOM order — the roster JSON order is
+irrelevant to display.
+
+**CTA fixed by deletion.** *"The people above are the ones who would actually work your account"* —
+wrong verb, since this roster runs accounts and reps work them. The h2 above it already says "That
+is who would run yours", so the sentence went rather than getting a new verb.
+
+## `/careers/` FAQ — Matthew's two edit passes, settled at seven — 2026-09-15
+
+Ten drafted, then two rounds of his edits. **Final: seven questions.**
+
+**Cut across the two passes:** "Is every role door to door?" (his read: the site never implies doors
+are the primary job, so the question answers an objection the page does not raise) · "What does
+onboarding look like?" · **"Is there a path to move up?"** · the social line from the culture answer
+· the three-interviews line from the culture answer.
+
+**The advancement question is gone by his decision, twice considered.** *"I just dont like it, like
+i said difficult to not make it sound like an mlm."* Recorded because the reasoning is his and it is
+consistent: he would rather say nothing than say it imperfectly on this specific terrain.
+
+> **⚑ Consequence for whoever edits this page next.** The body copy still promises advancement in
+> two places — the hero (*"Whichever role you are hired into, there is a real path to move up"*) and
+> "Why work with us" (*"Whichever seat you start in, there is a way up"*). With the FAQ answer gone,
+> **both now stand unexplained.** Not raised as an argument to restore the FAQ — his call is made —
+> but those two lines are the ones to look at, because an unexplained promise of advancement is the
+> shape the reader fills in themselves.
+
+**The Tier 2 team-nights flag resolved itself by deletion.** The culture answer no longer mentions
+team nights, softball or potlucks, so nothing is pending on that clearance. What is left is two
+sentences, entirely fact-based: coaching moves sideways across the floor, and helping the person
+beside you is part of the job rather than a favour. §5 wanted culture carried by facts, and that is
+now all it carries.
+
+**The "day one is earned last" detail survived, reframed.** It was going to be lost entirely when
+the advancement question went. It is now in the differentiator answer as **"a first day is taught by
+the most experienced trainers here"** — the same insight as *allocation of teaching* rather than as
+*a rung a trainer earns*. **The rationale clause was cut on his final pass** ("because day one is
+the highest-stakes teaching in the building"), so the fact now stands on its own without the
+explanation. Same instinct as his cut of "rather than a favour" in the culture answer and of the
+closing restatement on `/what-we-do/`: **he consistently removes the sentence that explains why the
+previous sentence matters.** It reads to him as hedging, and he is right more often than not.
+That is precisely the framing `promotion-ladder.md` calls publishable (*"as training design… not
+as a career ladder"*) and it carries no ladder, so it survives his objection rather than dodging it.
+
+**The differentiator answer was rebuilt to carry the weight he asked for.** *"Add something in that
+really makes us sound like we excell at the teaching method… we need to place strong emphasis on our
+trainng methods."*
+
+- **What was NOT written: "the best training in the industry."** §4 bars that phrase by name, and
+  §1 bars any unique-method claim. **The permitted route is specificity, and it is also the stronger
+  one** — §1's own table: *don't* "our proprietary sales system", *do* "here's how we teach
+  objection handling to someone in week one."
+- So the emphasis is carried by concrete facts: training precedes work in every role, nobody is
+  handed a script and pointed at a customer, it continues every morning, the trainers came off the
+  floor, day one goes to the most experienced.
+- **"It does not taper off once you are competent, which is where most sales training stops"** is
+  the load-bearing line, and it is sanctioned rather than a swipe: §1 gives *"this is the part most
+  training skips, and it's why reps stall in month two"* as a model DO. No competitor is named (§3).
+- His framing that teaching is the only real differentiator was kept as the opener. It is the
+  *opposite* of a uniqueness claim — it concedes the method is commodity and puts the weight on
+  transfer, which is exactly the §1 position.
+
+**⚑ "Our reps are high performing" was requested and left out.** Unsourced performance claim: §2
+wants scope, date and a pullable source; Tier 3 records that no usable Surge metric exists yet; §4
+notes vague breadth is what reads as confirmation. **Lance's export (item 18) is what unlocks it** —
+with a real figure it becomes the strongest sentence on the page.
+
+**"Employees all over" was narrowed.** He wanted the page to say people are stationed beyond
+Englewood. §5 bars footprint and scale framing, so the published version states the fact without the
+claim: *"Our home base is Englewood, Colorado, and that is where most of the team is. Some roles are
+based elsewhere."* "From home" removed on his instruction — he does not want remote work implied,
+since most roles start in the office before that trust exists.
+
+**Also settled:** "we manage you" cut from the client/Surge answer as controlling (now *"your
+trainer and your team lead are Surge people"*) · the sales-experience answer softened from a flat
+"No." · "most conversations end in a no" cut from the success answer, and "the people who last" with
+it, which he read as implying churn.
+
+### Tooling note — do not re-chase
+
+`verify-bundle.mjs` run against **the repo** reports `UNBALANCED` on `careers/index.html
+<details> 14/13` and on `about/index.html <section>`/`<li>`. **All false.** It does not strip HTML
+comments before counting, and `careers/index.html` line 96 mentions `<details>` inside a build
+comment. Stripped: 13 open, 13 close — balanced. **Both `verify-bundle` and `audit-links` are
+documented to take an EXTRACTED bundle, not the repo**, precisely because the repo still has
+comments in it. Run them on the zip's extracted copy and both come back clean.
+
+## `/careers/` FAQ rebuilt from Matthew's eleven questions — 2026-09-15
+
+He sent eleven candidate questions, said to scrap the existing five, use "these or a mix of", drop
+any already answered clearly above, order them, and answer them all. Result: **ten questions**, of
+which two are kept from the old set and two of his were removed as already answered.
+
+### Two spec conflicts hit on the way, both resolved against the specs
+
+**1. ⚑ "What does a typical day look like?" is a barred format, not a judgement call.**
+`brand-voice-company.md` §6 withdrew it by name on 2026-08-06 — *"It's now a hard no… No clock
+times, no shift boundaries, no weekly-hours framing in any draft."* RESTRICTED Tier 2 is blunter:
+**"No 'day in the life' format in any variant."** The reason is on record: the real schedule
+documents roughly an hour of employer-directed activity before the paid day starts, and "long hours
+for low effective hourly rate" is a criticism §5 names specifically.
+
+**Reframed rather than dropped**, because the question underneath it is one every candidate has and
+the page should answer. Now **"What does the work actually involve?"** — the morning development
+block described without clock times (explicitly Clear to use), then the work itself by channel. It
+answers *what will I be doing*; it does not publish a timetable. The distinction is the one
+RESTRICTED already draws: *the morning routine is excellent material; the timetable is off-limits.*
+
+**2. ⚑ `promotion-ladder.md` contradicts RESTRICTED.md, and RESTRICTED.md wins.**
+That file's own "Not publishable" section bars *"the advancement structure as a career path"* and
+says *"the pedagogy survives; the ladder doesn't."* But the **2026-08-15 revision at the top of
+RESTRICTED.md moved "Advancement and promotion as a career path — quota gates, the rung structure,
+'how you move up'" to Clear to use**, and RESTRICTED.md states it is authoritative over the
+restriction headers on individual notes files.
+
+So the ladder is publishable and `promotion-ladder.md` is **stale on its own subject** — the same
+failure mode as the CLAUDE.md client line and the `brand-voice-company.md` air/HVAC line. Worth
+correcting at source; flagged to Matthew, not changed unasked.
+
+**The quota figure stayed out anyway, and that is a separate call from the restriction.** 12
+sign-ups a week, hit twice consecutively, is now cleared to publish — but it dates from Matthew's
+own tenure as a rep, has no current internal source, and §2 wants scope and date on any published
+number. A specific weekly quota on a careers page also reads as a target a candidate is measured
+against before they have applied. The answer describes the gate as **competence** instead: you move
+up by selling well, then by showing you can teach.
+
+**That framing is also the §5 move.** "Answer structurally instead — specificity about the actual
+job." A ladder gated on *can you teach a first day yet* is the counter-argument to the recruitment
+accusation, made by description rather than by denial. Nothing in the answer mentions the
+accusation, argues with it, or uses the word.
+
+### The pay answer is gone
+
+*"I dont want any talk of pay on my site."* So **"Is it commission only?" is removed** — it was
+item 42, closed 09-12 on his delegated call, and this reverses it. It carried no figure, only the
+structure: base plus commission, paid weekly, paid training, 401(k) matching.
+
+**Worth him knowing what the silence costs**, since the original reasoning ran the other way: that
+question is the single most common thing a candidate wants to know about a field-sales role, the
+company already answers it publicly in its own ad, and **silence on it is itself read as an
+answer** — usually as *yes, it is commission only.* His call and it is made; recorded so it is a
+decision rather than a drift. RESTRICTED Tier 2 is unchanged either way.
+
+**EPEWA drops out of his scope entirely** — it governs job *postings*, and he does not control the
+Indeed listing (see below) and publishes no pay on the site.
+
+### Removed as already answered above
+
+| His question | Why removed |
+|---|---|
+| What roles does Surge hire for? | "The roles" section sits directly above the FAQ with **six openable role descriptions**. |
+| What training does Surge provide? | "How you are trained / Trained first, coached after" is the page's second-largest section, directly above. |
+
+### Merged
+
+*"What does success look like in this role?"* and *"What kind of person thrives at Surge?"* are the
+same answer asked twice — same cluster problem as the three "whose people" questions on
+`/what-we-do/`. Now one: **"What does doing well here look like?"**
+
+### Kept from the old set, against "scrap the rest"
+
+- **"Is every role door to door?"** — kept on **his own argument from the same message**: the Indeed
+  ad omits doors, the ad drives traffic here, so the site carries the full scope. Deleting this
+  would remove the exact line that does that job.
+- **"Where would I be working?"** — a candidate has to know. Reworded: the old answer said *"Every
+  campaign Surge runs is run out of that office,"* which is the small-office framing he cut from
+  `/what-we-do/` answer 1 earlier today. Now names Englewood as the base and lets the role decide
+  where the work happens (field, phone, office, home).
+
+### The Indeed ad is not his — correction to the record
+
+*"I do not control the indeed ad. That is created by our development team, so the pay structure,
+and the term ambassador isnt my wording."* **Punch items 45, 46 and 48 are therefore not his tasks**
+and should stop being ranked as his. His position: the listings drive the most traffic to the site,
+so what the ad omits, the site supplies in full. That is a coherent strategy and it makes
+`/careers/` the counterweight — which raises the stakes on the door-to-door answer above rather
+than lowering them.
+
+## `/what-we-do/` FAQ reordered and extended to nine — 2026-09-15
+
+Matthew sent nine questions for this page and asked for an order plus answers. **Five of them were
+already on the page**, four of those near-verbatim, and one ("what does an engagement cost") was
+listed twice in his message. So the job was three new answers, a reorder, and a wording pass — not
+nine drafts. Worth recording *because* he arrived at the existing set independently: that is the
+strongest evidence so far that the FAQ is asking the right things.
+
+**The three genuinely new ones**, all sourced from copy already on the page rather than invented:
+
+| Question | Sourced from |
+|---|---|
+| How do you prepare reps before a campaign launches? | stage 02 scope + stage 03 "brought up to speed on your offer and its objections" + job 01 "continuously… already moving by the time you need one" + job 03 daily training |
+| How do you keep the brand accurate across different reps and channels? | stage 02 "what a good conversation about it sounds like" + job 03 drilling + the existing "present as your team" answer |
+| How do you track performance day to day? | stage 05 "every shift logged and reported the same day" + "logging every door" + the visibility band |
+
+**Order, and the reasoning.** Nine `<details>` need an arc or they read as a pile:
+
+1-2 **qualify** (geography, timing) — the two that decide whether a reader keeps reading.
+3 **how it gets built** (prep).
+4-6 **whose people, whose brand** — deliberately adjacent. Three questions orbit this and separating
+them is what would make them read as repetition; as a block they read as one subject examined from
+three angles. Same fix as the "jobs you stop doing" / "jobs we run" de-duplication.
+7 **while it runs** (reporting). 8 **after the sale** (accounts). 9 **cost**, last, after the value
+is on the page.
+
+**Question wording moved to second person** — his were "How does Surge…", the page's existing six
+are "Can you…", "Do reps…". Kept the page's register. "How fast can a campaign start?" took his
+plainer "How long does it take to get a campaign live?"
+
+**Spec checks.** §1: no proprietary-method claim anywhere — the brand-accuracy answer deliberately
+describes *one brief and daily drilling*, which is execution, not invention. §2: no figures, no
+client named. §4: no hedges — "we can usually", "if that fits" and similar stayed out; "a cohort is
+already moving" matches the page's own line rather than softening it. Tier 2: **no clock times, no
+shift boundaries, no KPI targets and no conversion figures** — the tracking answer names activity
+*categories* (doors worked, conversations had, sales confirmed), all three of which the page already
+states, and stops short of what any of them has to reach. Contractions off (item 22).
+
+**⚑ The one inferred line was cut the same day.** *"When one of them gets it wrong, the correction
+lands in the next morning's coaching."* I had flagged it as the only clause not traceable to
+existing page copy. Matthew cut it for a different and better reason: **it plants the idea that reps
+will get it wrong.** *"While its always possible its not worth mentioning."* Both readings point the
+same way, so it is gone.
+
+### Matthew's edit pass, same day — five of nine changed
+
+He answered in order. 4, 5, 7 and 9 were passed without change.
+
+**1 — the Englewood clause is out.** *"We are trying to avoid referencing us as a small office."*
+Was "…managed by the same Englewood team and reported on the same way." Now: **"Yes. We run
+campaigns for clients in multiple states. Which markets a campaign covers is part of the scope."**
+The settled service-area phrase survives intact; what goes is the sentence that answered a
+geography question by describing the size of the operation. **This is a standing instinct worth
+generalising: reassurance that routes through "the same small team handles it" is not reassurance.**
+
+**2 — the answer leaned on us instead of on them.** *"What it really comes down to is their
+information. What their goals are, what time frame they are looking to, or simply saying also that
+each client is different."* Now opens on the client — what you are selling, the goal, the timeframe —
+and demotes continuous hiring to the second half, where it answers "is recruiting the bottleneck"
+rather than standing as the whole answer.
+
+**3 — "cohort" was doing too much work.** He counted it: once in answer 2, twice in answer 3. Answer
+3 now says "the reps who will work your account", and the continuous-hiring sentence came out of it
+entirely — that point now lives only in answer 2, so the two answers stopped overlapping as a side
+effect of the word fix. **FAQ uses of "cohort": 3 → 0.**
+
+**8 — "the work transfers to your team" implied unfinished work.** *"The term work makes it seem
+like theres more to be done."* Now: "the customer is yours from there. You keep the product and the
+delivery." Says the same thing about who owns the relationship without handing the reader an
+impression of a backlog arriving with it.
+
+**Three uses of "cohort" remain outside the FAQ and were left alone** — not part of what he was
+reviewing. `/what-we-do/` job 01 ("a cohort is already moving by the time you need one") and the
+stage 03 heading ("Hire and onboard a cohort"), plus the homepage hero alt text ("A cohort standing
+through the morning development block"). The stage-03 heading is the one place the word is precisely
+right. **The alt text is the weakest of the three** — alt text is read aloud, and "a group of reps"
+is plainer than a term of art. Offered, not changed.
+
+Item 8 stays open — he is still taking the FAQ himself before launch.
+
+## Role sentence restored to all ten bios + bundle rebuilt — 2026-09-15
+
+**Punch item 49, final sub-item — closed on Matthew's go-ahead.** The 09-14 bio swap left the
+roster saying nothing about what anyone does: a prospective client got a job title and two
+paragraphs of personality. Ten people now open with one sentence of role, then their own words.
+
+**Nothing was written fresh.** Every sentence is lifted from that person's *pre-swap* bio, which is
+still in git `HEAD` — the working tree carries the 09-14 swap uncommitted, so
+`git show HEAD:surge/website/build/team/index.html` is the 2026-09-04 enrichment verbatim. That
+copy was built from surgeftw.com plus Matthew's input, so it is sourced, not inferred. Recovering it
+was the whole reason not to draft new role lines: the CLAUDE.md failure mode here is inventing a
+plausible detail, and seven role descriptions is exactly the shape that failure takes.
+
+| Person | Role sentence now leading the bio |
+|---|---|
+| Ryan Conger | Runs the sales floor — territory, targets, and the coaching that goes with them. |
+| Jon Wallace | Trains reps: the pitch, the objections, and the parts that only click with repetition. |
+| Nneka Smith | Trains and coaches, focused on how a rep reads a doorstep and adjusts in the moment. |
+| Lance Axon | Runs operations — scheduling, territory, what has to be in place before a team goes out. |
+| Maya Ogea | Coordinates events — books and staffs event and booth placements, handles the venue side. |
+| Myles Zoutte | Brand and admin — the back office, and how Surge presents itself across its materials. |
+| Cai Silva | Leads talent acquisition — writes the ads, screens applicants, first person a candidate speaks to. |
+
+Brandon, Matthew and Paige already led on the work (they were never swapped), so all ten are now
+consistent rather than seven personality bios sitting next to three descriptive ones.
+
+**⚑ One clause deliberately dropped, and it is worth a look.** Cai's pre-swap bio said she *"runs
+first interviews."* That predates item 43, where Matthew gave the real process: the phone call, then
+the **operations manager**, then a **trainer or team lead**, then the **CEO**. "First interviews"
+either contradicts that or means the phone screen, and I could not tell which — so the clause is out
+and the rest of the sentence, which is consistent either way, stands. **If Cai does run the phone
+screen, say so and it goes back in.**
+
+**Register note.** A third-person role line in front of a first-person bio is a deliberate mix, not
+an oversight — it is the standard "role line, then their own voice" pattern, and it is the only way
+to add the role without rewriting words people wrote about themselves. Contractions stayed off
+(item 22). Nothing added touches pay, hours, headcount, client names or growth language.
+
+Applied by a script keyed per slug, guarded so a bio edit cannot overrun into the next person's
+record; the roster JSON was patched surgically rather than reserialised, so entities and escaping
+are untouched. Verified: JSON parses, ten bios, all seven pages carry the line, `audit-links` clean.
+
+**Punch item 51 closed the same day — blog CTAs stay off.** Matthew's call. The three carried-over
+WordPress posts keep the site convention that posts carry no CTA, so all six are consistent.
+
+**Punch item 52 — the name is confirmed, the link is not.** Matthew: leave it as Lance Axon if that
+is what the previous site had. It is — `wp-restore/recovered-copy/company-team.md` reads "Lance
+Axon, Operations Manager". That capture carries **no LinkedIn URLs at all**, so it does not vouch
+for `linkedin.com/in/lance-jozefkowicz-52b16671`. Name closed, link left exactly as it is.
+
+**Bundle rebuilt twice — `deploy/dist/surge-site-2026-09-15.zip`.** Once before this change and
+once after. 83 files, ~6,070 KB, comments stripped from 9 files. `verify-bundle`: 28 pages, tags
+balanced, no comments. `audit-links`: no broken internal links, assets or anchors. Re-checked by
+hand: no retired folders, `blog/_template` absent, `api/uploads/` holds only its two dotfiles,
+`submissions.log` not in the zip, sitemap 26 URLs, no `.md` shipped, `noindex` still on all 28
+(correct — staging until launch day).
+
+**The four `audit-links` hits on the repo are false and should not be re-chased.** The auditor does
+not strip HTML comments, so it reports the inert hero-video `<source>` lines and the `NEXT.jpg`
+rotator placeholder as broken assets. Both are commented out; the bundler strips comments, so the
+extracted bundle audits clean. Confirmed both ways today.
+
+**Redirects can now be tested locally after all.** Item 7 says the local preview ignores the
+`.htaccess` 301s — that stopped being true when `serve-surge.mjs` moved into `deploy/` on 09-14
+and took the redirect table with it. All five verified: `/how-it-works/`, `/training/`,
+`/careers/apply/`, `/sectors/` and `/sectors/roofing/` each 301 to the right target. **This does
+not replace the post-upload test** — what it checks is that the redirect map is correct, not that
+Apache is reading `.htaccess`. A dotfile that silently fails to upload still 404s everything.
+
+---
+
+## Review pass round 2 — the rest of the site, 2026-09-14 (Matthew, one batch)
+
+Thirteen items across `/what-we-do/`, `/about/`, `/careers/`, `/team/` and `/blog/`. Eleven
+changed, two logged as pre-launch tasks. Ordered as he raised them.
+
+### `/what-we-do/`
+
+**1. The page-head photo — deferred, his call.** The `field-kiosk.jpg` frame is "not super
+flattering for Paige"; he will pick a replacement as more photos land. Not changed. **Punch-list
+item, same cluster as the homepage rotator's `morning-block-b.jpg` swap** — both wait on the larger
+photo batch, both are pre-launch.
+
+**2. "The jobs you stop doing" (home) vs "The jobs we run" (here).** He asked whether we want the
+near-repeat one click apart, and left it to judgement. **Changed the second one, not the first.**
+
+The two sections are not redundant in content — the homepage is one paragraph plus a four-icon row,
+this page is four detailed cards — but they were redundant in *framing*: same four jobs, same four
+icons, same order, and two headings that are the same sentence in two grammatical persons. He read
+it as repetition rather than as a deliberate mirror, which is the answer to whether it was working.
+
+The fix is not to cut either section. Both have to name the four jobs, because the four jobs *are*
+the offer. The fix is to let each heading do a different job: the homepage sells the outcome ("the
+jobs you stop doing"), this page describes the mechanism. This page's eyebrow ("What moves to us")
+and its intro ("each of these moves to us in full — here is what that covers") already framed it as
+the detail view; only the h2 was still restating the offer.
+
+| | Was | Now |
+|---|---|---|
+| `/what-we-do/` h2 | The jobs we run. | **What each job covers.** |
+| Nav dropdown label (×29 pages) | The jobs we run | **What each job covers** |
+| Anchor | `#the-jobs` | unchanged |
+
+Homepage untouched. Anchor deliberately left alone — it carries no count and no stale wording, and
+renaming it again would churn 29 files for nothing. Audited clean.
+
+**3. ⚑ "depending on what you hand us" implied clients supply the leads.** Matthew: *"we do lead
+generation and dont require any client to give us leads."* The Phone outreach cell read "new leads,
+warm follow-up, or both, depending on what you hand us" — which makes the client the source of the
+list and makes Surge's own lead generation invisible. Now: "cold prospecting, warm follow-up, or
+both. **We generate the list ourselves, or work from one you already have.**" States the capability
+and keeps the client's option open, without making it a precondition.
+
+**4. Stage 04 — "with a trainer alongside them" → reps and trainers work the territory.** His
+wording. Was "Reps work assigned territory with a trainer alongside them"; now "Reps and trainers
+work the assigned territory." Trainers are on the territory, not shadowing it.
+
+**5. "The rest runs without you in it." — removed.** His reasoning: it reads as a limit on how
+involved a client is allowed to be. It also sat two sections above the band claiming "you get the
+visibility an in-house manager would have," so the page was arguing with itself. Replaced with
+"Past that you are as involved as you want to be," which keeps the actual point (you do not have to
+*run* it) and drops the exclusion.
+
+**6. FAQ — deferred.** He will work it before launch. Punch-list item, not touched.
+
+**7. Team section — deferred.** Same. (Distinct from item 12 below, which is the bios.)
+
+### `/about/`
+
+**8. "These two let us show their mark." — cut.** He found it unneeded. It was also a public claim
+about consent resting on verbal permission, which the rebuild log had already flagged as worth
+cutting on its own. The remaining sentence — "Most of the organisations we work with are referred
+to by sector only" — still explains why only two marks appear, and asserts nothing about who gave
+what. The prose rule is unchanged: no sentence, heading, caption or alt text calls an organisation
+a client.
+
+### `/careers/`
+
+**9. "coach you, not just a manual" twice — he was right.** Two instances, one section apart:
+"Trained first, coached after" ended on *"the coaching is about the conversation you actually had,
+not the one in a manual"*, and "Why work with us" opened on *"trainers and team leads whose job is
+to coach you, not just a manual."* Kept the first (it is the more specific of the two — it names
+what the coaching is *about*), reworded the second to "whose job includes developing you."
+
+**10. "You leave better at the work than you arrived." — reworded.** His objection: "leave" implies
+people leave the company, which is not the message a careers page should carry. Now **"You get
+better at the work here."** The same word appeared in the body — "the skills you build carry
+between roles **and between jobs**" — and "and between jobs" was cut for the same reason. The
+transferable-skills point survives intact in "carry between roles."
+
+**11. ⚑ How applying works — the old step 03 was factually wrong.** The biggest correction in this
+batch. The page said a candidate spends a day with the room and **goes out in the field** before
+either side decides. Matthew: *"This is extremely incorrect. We would never put someone out with us
+before they are even hired."* Removed outright, not softened.
+
+The real process, his description: the phone call, then an interview with the **operations
+manager**, then an interview with a **trainer or team lead** (sometimes with a second person
+sitting in), then a final interview with the **CEO** — three interviews.
+
+Kept at four steps rather than expanding to six, by grouping the three interviews into one step
+titled **"Three interviews"**. That is also how a candidate experiences it, and it keeps the count
+in the lede honest — `/careers/` is the one place the count-in-a-label rule does not apply, because
+this list is genuinely numbered on the page. The lede's old promise, *"You see the job and we see
+you working before either side commits,"* went with the field day (it described exactly the thing
+that does not happen) and is now "You meet the people you would be working with before either side
+commits."
+
+No pay, hours or earnings language added — Tier 2 unchanged.
+
+**12. Candidate FAQ — deferred.** He will do it before launch. Punch-list item.
+
+### `/team/`
+
+**13. Bios replaced with the previous site's own-words versions.** Matthew: *"I want them to write
+their own bios but its taking to long for them to get it together so we will just make those
+changes as it comes."* So this is an interim, and each person's real bio replaces theirs as it
+arrives.
+
+Source: `website/wp-restore/recovered-copy/company-team.md` — the July-2026 audit capture of the
+old WordPress Company page. Seven bios swapped, in `#team-data` (the roster JSON) and in each
+`team/<slug>/index.html`.
+
+| Swapped | Left alone | Why left alone |
+|---|---|---|
+| Ryan Conger, Jon Wallace, Nneka Smith, Lance Axon, Maya Ogea, Myles Zoutte, Cai Silva | Matthew Sharpe, Paige Bennett | His instruction |
+| | Brandon Long | **The old site had no bio for him** — only an icebreaker answer ("The Off Grid Day"), which the current bio already contains in full. There was nothing to transfer. |
+
+**Three edits applied to the source text across the board, and they need his eye:**
+
+1. **Contractions expanded** ("I'm" → "I am"). The no-contractions rule is sitewide and settled;
+   leaving these in first person with contractions would make seven bios the only exception.
+2. **The closing epigraph quote dropped from every bio.** The old page gave each person a
+   motivational quote — Churchill, Marianne Williamson, Robertson Davies, Pharrell, Zig Ziglar. A
+   wall of motivational quotes on a direct-sales company's team page is the exact texture
+   `brand-voice-company.md` §5 names, and the Zig Ziglar one ("you can have anything you want if
+   you will just help enough other people get what they want") was already flagged in the recovered
+   copy itself.
+3. **Four money lines cut.** Each is listed so he can put any of them back:
+
+| Person | Cut |
+|---|---|
+| Nneka Smith | "On the financial side, I'm all about making my money work for me and not the other way around." |
+| Myles Zoutte | "…which is probably why my next goal is buying my first McLaren within three years." |
+| Ryan Conger | "…and I want to build enough that my wife gets to choose whether she works out of want, not necessity." |
+| Jon Wallace | "and income", from "helping them take control of their skills and income" |
+
+The first two were already marked as devilcorp tells in the recovered-copy file. The second two
+were not, and are my call, on the same reasoning: a personal-income aspiration in a sales
+employee's bio is what the standing test is for. Lance Axon's "building strong pillars —
+financially, with family, and in my community" was **kept** — finances as one of three life areas
+is ordinary, not hustle texture.
+
+**⚑ One thing worth his second look.** The old bios are pure personality; the ones they replaced
+opened with what the person actually does ("Ryan runs the sales floor…", "Lance runs operations…").
+A prospective client reading the roster now learns the job title and nothing else about the work.
+The job title is still displayed separately on every card, so nothing is broken — but if he wants,
+the fix is one sentence of role per person in front of their own words, and I can put those back
+without touching the personal half.
+
+### `/blog/`
+
+**14. "the occasional widely-repeated number that turns out not to say what everyone thinks it
+says" — reworded.** He did not find it clear. It had also stopped being accurate: with the three
+recovered posts added, half the hub is practice writing rather than source-checking. Lede and
+`og:description` now: "Research, technique, and what running a sales team actually teaches you."
+
+**15. The provenance disclaimer below the post list — removed.** *"A post goes up only once its
+source has been read first-hand rather than from a summary, and every figure carries the date it
+was published."* His call, and it would have become a false blanket claim the moment posts without
+a Source panel joined the list. The promise still lives where it belongs: each sourced post's own
+Source panel.
+
+**16. The three old WordPress posts carried over.** He wants real content on the rebuild so his
+boss and coworkers can see how the site functions. Recovered from the `wp_posts` rows of the
+2026-08-12 AI1WM export via `website/wp-restore/rebuild-copy/blog.md` — genuine published posts,
+already RESTRICTED-checked clean in that file (no client names, no earnings language).
+
+| New page | Old slug kept | Published |
+|---|---|---|
+| `/blog/leadership-skills/` | `leadership-skills` | 2026-04-17 |
+| `/blog/entering-new-markets/` | `entering-new-markets` | 2026-03-31 |
+| `/blog/scale-your-team/` | `scale-your-team` | 2024-05-29 |
+
+Built by a one-shot script that took the head/header/footer verbatim from `/blog/talk-ratio/` so
+the chrome could not drift, substituting only the `<head>` meta and `<main>`. Not kept —
+`/blog/_template/` is the route for the next post. Added to `sitemap.xml`, **now 26 URLs** (23 + 3).
+**Slugs kept identical to the WordPress originals** so anything pointing at them still resolves
+after launch.
+
+**Three decisions inside this, all reversible:**
+
+- **Headlines rewritten into site voice.** "How to Build a Scalable Team for Long-Term Business
+  Growth" → "Building a team that can scale with you."; "How to Conduct Market Research Before
+  Expanding Into a New Market" → "What to check before you expand into a new market."; title case
+  dropped from the leadership one. The originals are SEO-listicle shaped and sat badly next to "The
+  talk-time rule is nine years out of date." **Original titles preserved in `blog.md`** — say the
+  word and they go back.
+- **No Source panel on these three.** They make no factual claims, cite no figures and reference no
+  study. Nothing to source, so adding an empty panel would be worse than omitting it.
+- **The closing CTA paragraphs dropped.** Posts 1 and 2 ended with a link to
+  `surgeftw.com/contact/`. Site convention is that posts carry no CTA, deliberately, and the hub
+  lede still says "written for people doing the work, not about us." Flagging it because it is a
+  conversion path removed, not just copy: if he wants it back, the `.band--cta` component is
+  already on every other page and would drop straight in.
+
+**Bug found and fixed while generating these.** All three existing blog posts carried
+`aria-current="page"` on the **About** nav link as well as the Blog one — so a screen reader
+announced two current pages and the nav highlighted About on every post. The `_template` was
+correct, so it predates the template. Fixed in all six posts.
+
+**Audit:** `node deploy/audit-links.mjs surge/website/build` — **29 pages, zero broken links, zero
+unresolved anchors.** The four reported "BROKEN SRC" are the known commented-out `hero.mp4/webm`
+and `NEXT.jpg` placeholders; the auditor does not strip HTML comments.
+
+---
+
+## Homepage review pass — 2026-09-14 (Matthew, page-by-page round 2)
+
+First page of a new page-by-page review. Six items raised; five changed, one logged as a
+pre-launch task.
+
+**1. "What we take over" — the four/several contradiction.** The intro said "several jobs at once"
+and then "we take **all four** off your plate," and the four cards below are unnumbered, so the
+count was doing no work and contradicting the sentence before it. Matthew's reasoning: each of the
+four cards can contain several jobs within itself, so the number is wrong as well as jarring. Count
+dropped — "We take them off your plate." The inline list (hiring, onboarding, training,
+day-to-day management) also came out of that sentence, because the hero states it one screen above
+and the four cards state it immediately below; it was the third time in ~80 words.
+
+> **RESOLVED same day — Matthew: "Make it say that jobs we run."** The count is out of the nav
+> label, the `/what-we-do/` h2, and the anchor itself. Done sitewide across 26 files:
+>
+> | Was | Now | Count |
+> |---|---|---|
+> | `href="/what-we-do/#the-four-jobs"` | `#the-jobs` | 26 |
+> | `id="the-four-jobs"` | `id="the-jobs"` | 1 |
+> | "The four jobs we run" (nav label ×24 + the h2 ×1) | "The jobs we run" | 27 |
+> | "Where the four jobs above start on your account" | "Where the jobs above…" | 1 |
+> | "that is what the four have in common" | "that is what they have in common" | 1 |
+>
+> **The anchor was renamed, not just the label** — leaving `#the-four-jobs` would have kept the
+> count visible in the address bar every time someone used the nav dropdown. Safe to rename here
+> because the site is staging-only and `noindex`; no public inbound link can break. Verified with
+> `node deploy/audit-links.mjs surge/website/build`: **26 pages, zero broken links and zero
+> unresolved anchors.** The two stale `site.css` component comments were updated to match.
+>
+> **The last row is a different four** — that sentence is about the four *channels*, not the four
+> jobs, so it was outside Matthew's instruction. Changed anyway on the same reasoning: the count
+> was doing no work, and "they" reads better directly after the list that names them.
+>
+> **Left alone deliberately:** `/careers/` "Four steps. You see the job and we see you working…" —
+> that list *is* numbered on the page, so the count is load-bearing there rather than decorative.
+
+**2. Duplicate link + duplicate wording.** "See how each one runs." (channels paragraph) and the
+"How we run it" button (teaching section) both pointed at `/what-we-do/` and read almost the same.
+Split by destination and by subject: the channels line now goes to `/what-we-do/#channels` as
+"See how each **channel** runs" (matching the nav label exactly), and the teaching button goes to
+`/about/#teaching` as "How we **teach** it" — which is where the teaching material actually lives,
+and whose H2 ("The method is not the differentiator. The teaching is.") is the same argument the
+homepage section makes.
+
+**3. CTA buttons swapped appearances on hover.** Matthew: "Book a consultation is highlighted black
+and when you hover over it it goes to transparent and looks exactly like Start a conversation."
+Confirmed in `site.css` — `.btn--onGreen:hover` went `background:transparent;color:black`, which is
+the *resting* state of `.btn--onGreenGhost`, and the ghost's hover was the primary's resting state.
+The two roles traded places under the cursor. Fixed: the filled primary stays filled and lifts to
+`--lift` on hover, the ghost stays outlined and tints to `rgba(0,0,0,.12)`. Neither ever wears the
+other's resting look. **Sitewide** — the `band--cta` component is on 15 pages.
+
+**4. "Coverage" row — the Colorado-only problem, again.** Matthew: *"it just seems so limiting and I
+feel like it scares off out of state companies… companies in like virginia might not want to, even
+though we are still very capable of running it."* The row read "Every campaign runs out of
+Englewood, Colorado, including for clients in other states" — leading with the limitation and
+burying the capability in a subordinate clause.
+
+The fix is already written on this page: the hero comment at `index.html:113` records **Matthew's own
+rule from 2026-09-11** — *Englewood/Colorado appears only where we are talking about where we are
+located, the office itself, or hiring.* The Coverage row broke it, since its subject is the account
+team, not the office. Rewritten as **"Your location — We run campaigns for clients in other states,
+with the same team and the same daily reporting."** Capability first, single team reads as
+consistency rather than confinement, no location in a non-location context.
+
+**The balance applied across the board**, per his instruction that it has to be consistent:
+
+| Page | Was | Now |
+|---|---|---|
+| `/` | "Coverage — Every campaign runs out of Englewood, Colorado…" | "Your location — We run campaigns for clients in other states…" |
+| `/about/#how-we-work` | H2 "**Run from one place**, reported on daily." + "Every account runs out of our Englewood office…" | H2 "One team on your account, reporting every day." + "We run accounts for clients in other states and in Colorado alike." |
+| `/team/<10 bios>` | "…all work out of the same **Englewood** office." | "…all work out of the same office." |
+| `/what-we-do/#common-questions` | "Can you work outside Colorado?" → "Yes. Every campaign runs out of Englewood, including…" | "Yes. We run campaigns for clients based in other states, managed by the same Englewood team and reported on the same way." |
+| `/careers/` | "Where would I be working? Englewood, Colorado. Every campaign…" | **Unchanged on purpose** — a candidate asking where they will work is a location question, and the rule permits it in hiring context. |
+
+The `/what-we-do/` FAQ keeps the location word because the question itself is about location — but it
+had the worst version of the pattern: it answered "Yes" and then immediately re-raised the doubt the
+reader had just been reassured about. Answer first, capability in the main clause.
+
+### Second pass, same day — "other states" → "multiple states"
+
+Matthew, on reading the above: *"instead of saying clients in other states, say clients in multiple
+states… when you say in other states it sounds like it excludes colorado."* Correct — "other" takes
+Colorado as the reference point and reads as *everywhere but here*, which is the same
+Colorado-shaped framing the first pass was trying to remove, just inverted.
+
+**Settled phrase, sitewide: "clients in multiple states."** All five occurrences updated (`/`,
+`/about/`, `/what-we-do/` ×2, `/careers/`). No instance of "other states" remains in page copy.
+
+**His second option, "across the US", was not used — and should not be.** RESTRICTED Tier 2 names
+*nationwide framing* specifically, alongside footprint, scale and growth claims. "Multiple states"
+is a **service-area** statement, and the 2026-08-15 correction to that same entry explicitly carves
+service area out of the restriction ("this entry restricts *structure*, not *service area*"). The
+distinction is the whole reason one is usable and the other is not. Flagged to Matthew.
+
+**Fact-check on the claim itself.** "Multiple states" is supported: `brand/notes/clients.md` lists
+active nonprofit clients in two different states. **The states must never be named together** —
+clients.md:148 records that the sector-plus-the-two-states combination identifies both organizations
+in one line, which is exactly what the Tier 4 prose rule exists to prevent. "Multiple states"
+carries the reassurance without the identification, which is why it is the right phrase on the
+merits and not only on Matthew's ear for it.
+
+**One extra instance found in this pass** that the first sweep missed, `/what-we-do/` §How we work:
+"We staff from one office in Englewood, Colorado, and **that is a fact about how we build a team,
+not a limit on where we sell** — campaigns run for clients in other states out of that same office."
+The defensive middle clause argued against a doubt the reader had not raised, which `brand-voice-
+company.md` §4 treats as planting it. Cut to: "We staff from one office in Englewood, Colorado, and
+run campaigns for clients in multiple states out of it."
+
+Location is still in the footer, the JSON-LD, `/about/` §Based, `/contact/` §Office and the page
+titles/meta — i.e. everywhere the subject genuinely *is* the location. Nothing here claims a
+footprint, an office elsewhere, or nationwide reach; RESTRICTED Tier 2 (structure and scale) is
+untouched. This is the "silence about a limitation is fine, asserting the opposite is not" move from
+`brand-voice-company.md` §4.
+
+**5. Teaching-section rotator, frame 2 — PRE-LAUNCH TASK, not yet actioned.** Matthew: *"the second
+photo on the reel has a lady bent over, I think we can put something better there."* That is
+`/assets/img/morning-block-b.jpg` (IMG_8374 from the 2026-09-11 batch, cropped 4:3 from a portrait
+original — see the comment at `index.html:210`). He is uploading a larger photo batch on 2026-09-14,
+so the replacement waits on that. **Swap the frame before launch.** Note the existing crop
+constraints when picking the replacement: it must keep the `$39,000` GOALS whiteboard and the
+"F✱CK AVERAGE" wall out of shot.
+
+**6. Hero video — known, in progress.** Matthew is working on the file. The `<video>` slot is live
+and commented at `index.html:~95`; the still is the guaranteed floor until `hero.mp4` lands in
+`assets/video/`. No change needed.
+
 ## Additive colour rolled out to the inner pages — 2026-09-08
 
 The homepage "lighten within dark" starter set (green funnel viz, `.mini-icons` row, one

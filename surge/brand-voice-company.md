@@ -12,7 +12,9 @@
 
 **Channels:** direct/field sales — door-to-door, cold calling, events, booths.
 
-**Current clients** (sector only, never named — see §2): nonprofit organizations, a roofing company, an air/HVAC company.
+**Current clients** (sector only, never named — see §2): nonprofit organizations (the majority of the roster) and a roofing company. Six active plus one prospect — see [brand/notes/clients.md](brand/notes/clients.md), restricted, context only.
+
+> **Corrected 2026-09-14.** This previously read "an air/HVAC company." **Surge has never worked in air/HVAC** — it was a mis-transcription of *aeration* that survived months as a confirmed fact. An **aeration** client is expected but the details are not settled, so it is a prospect, not a current client: do not write sector specifics for it, and do not count it in the roster, until Matthew says it has landed.
 
 **Why customers choose Surge:** track record against metrics — money raised, products sold, customers acquired — plus company culture and work ethic.
 
@@ -38,7 +40,8 @@ Nobody has to believe the idea is new. They have to believe you can teach it. Sh
 
 **Cannot claim:**
 
-- **Customer names** — no clients or logos, named or identifiable, without explicit written permission. This now has teeth: with three clients, "our roofing client in Indiana" is identifiable. Refer to sector alone, and get permission in writing before anything more specific.
+- **Customer names in prose** — no sentence, heading, caption or alt text calls an organisation a client. Sector alone. The reason is consent, not roster size: no client hired Surge in order to become marketing material. "Our roofing client in Indiana" is out for the same reason a name is.
+  > **Client logos and branding are cleared** — updated 2026-09-14. A client mark may be used *as a logo* (client wall, deck, social graphic), and client merch in photos and video is fine. Matthew confirmed 2026-09-14 that the clients have notified him and it is cleared currently. The earlier "explicit written permission" bar is lifted; the permission is verbal and relayed through him, which is a recorded risk, not a blocker. The prose rule above is unchanged and is the standing mitigation. See the 2026-09-11 revision in [brand/notes/RESTRICTED.md](brand/notes/RESTRICTED.md), which governs.
 - **Security or compliance claims** — no certifications, audit status, or security posture claims about Surge.
 - **A unique or proprietary sales method** — see §1.
 
@@ -145,7 +148,19 @@ Working from [brand/notes/hiring.md](brand/notes/hiring.md) — all of it restri
 - **Answer structurally instead** — specificity about the actual job wherever it comes up (personal spec §9). Specificity is the counter-argument; making it beats claiming it.
 - **No culture content that runs on vibes.** Team photos captioned with energy, hustle, and family are the exact texture cited as evidence. Culture posts carry a fact: what someone was taught, what they now do.
 - **Never imply an entry-level rep is an owner, partner, or executive.**
-- **No scale, footprint, or growth claims.** The Denver, Houston, Asheville and Indianapolis locations are affiliate, not Surge-operated — the Houston one is a single room in a shared office building. No "offices in five cities," no maps, no nationwide framing. See [brand/notes/company-facts.md](brand/notes/company-facts.md).
+- **No scale, footprint, or growth claims.** The Denver, Asheville and Indianapolis locations are affiliate, not Surge-operated; the Houston room is **closed**. No "offices in five cities," no maps, no nationwide framing. See [brand/notes/company-facts.md](brand/notes/company-facts.md).
+
+  > **Service area is the exception, and it is not optional — settled 2026-09-14.** That bullet restricts *structure*, never *where Surge sells*. Copy may not imply Surge only sells in Colorado; it did, and it was false. **The settled phrase is "clients in multiple states."** Three wordings were tried and rejected:
+  >
+  > | Wording | Why not |
+  > |---|---|
+  > | "Every campaign runs out of Englewood, Colorado…" | Leads with the limitation. Matthew: *"it seems so limiting… it scares off out of state companies."* |
+  > | "clients in **other** states" | Takes Colorado as the reference point, so it reads as *everywhere but here* — the same Colorado-shaped frame, inverted. |
+  > | "clients **across the US**" | Nationwide framing, barred by name in the bullet above. |
+  >
+  > **Never name the states.** [brand/notes/clients.md](brand/notes/clients.md) records that the sector plus those two particular states identifies both organizations in one line — the Tier 4 prose rule. "Multiple states" carries the reassurance without the identification.
+  >
+  > **Where the location may still be named**, per Matthew's 2026-09-11 rule: only where the subject genuinely *is* the location, the office, or hiring. Pairing the location with the service line is positioning, and that is what made the site read as Colorado-only.
 - **No earnings claims, explicit or atmospheric,** on recruiting-facing content. The clawback, the override, and high turnover mean a post can mislead without stating a number. Flag list in [brand/notes/hiring.md](brand/notes/hiring.md).
 - **Never publish the influence-technique material.** GIFTS, the closing circle, and the scripted objection rebuttals are the strongest confirmation a critic could be handed, authored by Surge. See [training-publishability-review.md](training-publishability-review.md).
 

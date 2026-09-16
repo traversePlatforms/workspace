@@ -328,10 +328,15 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
    the lede's 1.1rem and 46ch cap instead of its own smaller treatment. */
 .band--cta .note,.band--cta>.wrap>p:not(.cta-tel){color:var(--black);max-width:46ch;margin-top:.9rem;font-size:1.1rem}
 .band--cta .btn{border-color:var(--black)}
+/* The two hovers used to swap the buttons into each other: the filled primary
+   went transparent (= the ghost at rest) and the ghost filled black (= the
+   primary at rest), so hovering the primary read as "this is now the secondary".
+   Fixed 2026-09-14 — the primary stays filled and lifts, the ghost stays
+   outlined and only tints. Neither role ever wears the other's resting look. */
 .band--cta .btn--onGreen{background:var(--black);color:var(--white)}
-.band--cta .btn--onGreen:hover{background:transparent;color:var(--black)}
+.band--cta .btn--onGreen:hover{background:var(--lift);color:var(--white)}
 .band--cta .btn--onGreenGhost{background:transparent;color:var(--black)}
-.band--cta .btn--onGreenGhost:hover{background:var(--black);color:var(--white)}
+.band--cta .btn--onGreenGhost:hover{background:rgba(0,0,0,.12);color:var(--black)}
 .band--cta .cta-tel{font-size:.9rem;margin-top:1.1rem;color:var(--black);max-width:none}
 .band--cta .cta-tel a{color:var(--black);font-weight:700}
 
@@ -834,7 +839,7 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
    paired with a heading or label — the Cydcor / Smart Circle register, no
    decorative fills. */
 
-/* line icon above the number on a numbered .card (what-we-do "four jobs") */
+/* line icon above the number on a numbered .card (what-we-do "jobs we run") */
 .card__ico{display:block;width:1.9rem;height:1.9rem;margin-bottom:.95rem;
   stroke:var(--brand-green);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
@@ -864,7 +869,7 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
    dark grids down the site felt like one component pasted repeatedly. Each
    four/five-item group now gets its own form. */
 
-/* what-we-do "four jobs": 2x2 cards, not 4-across, with a big faint Anton
+/* what-we-do "jobs we run": 2x2 cards, not 4-across, with a big faint Anton
    number sitting behind the copy */
 @media(min-width:640px){.card-grid--jobs{grid-template-columns:repeat(2,1fr)}}
 .card-grid--jobs .card{position:relative;overflow:hidden;padding-top:1.7rem}

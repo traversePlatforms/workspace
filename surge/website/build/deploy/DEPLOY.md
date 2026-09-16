@@ -165,9 +165,14 @@ Safer options:
 ## Local preview
 
 ```
-node scratchpad/serve-surge.mjs      # -> http://localhost:8080
+node surge/website/build/deploy/serve-surge.mjs             # -> http://localhost:8080
+node surge/website/build/deploy/serve-surge.mjs --port 8081  # if 8080 is taken
 ```
 
-Static serve + clean URLs + a mock `/api/submit.php` that logs to
-`scratchpad/surge-submissions.log`. If the scratchpad copy is gone, it's a small
-plain-node file — recreate from `surge-site-rebuild` memory or ask.
+Static serve + clean URLs + the retired-URL 301s + a mock `/api/submit.php` that
+logs to `surge-submissions.log` in the OS temp dir. It finds the site root
+relative to itself, so it runs from any working directory.
+
+Lived in the session scratchpad until 2026-09-14 and had to be recreated most
+sessions; it's tracked here now. Ctrl+C to stop — and check nothing is already
+listening on 8080, since a stale copy answers every URL with a 404.
