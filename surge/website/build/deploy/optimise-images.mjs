@@ -22,6 +22,9 @@
      --name <base>       output basename (single input only); default = slugified input name
      --out <dir>         output folder; default assets/img/ next to the site
      --gravity <g>       crop focus: attention (default) | entropy | centre | north | south | ...
+     --focus <0..1>      centre the crop band on this fraction of the source height (portrait)
+                         or width (landscape) — e.g. --focus 0.55 for a rep-behind-a-kiosk shot
+                         where the faces sit just below the middle. Overrides --gravity.
      --force             overwrite an existing output
      --dry               report what would happen, write nothing
 
@@ -49,7 +52,7 @@ const INPUT_EXT = new Set(['.jpg', '.jpeg', '.png', '.heic', '.heif']);
 
 // ---- args -------------------------------------------------------------------
 const argv = process.argv.slice(2);
-const opt = { slot: 'content', name: null, out: join(SITE, 'assets', 'img'), gravity: 'attention', force: false, dry: false };
+const opt = { slot: 'content', name: null, out: join(SITE, 'assets', 'img'), gravity: 'attention', focus: null, force: false, dry: false };
 const inputs = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -57,6 +60,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--name') opt.name = argv[++i];
   else if (a === '--out') opt.out = resolve(argv[++i]);
   else if (a === '--gravity') opt.gravity = argv[++i];
+  else if (a === '--focus') opt.focus = Number(argv[++i]);
   else if (a === '--force') opt.force = true;
   else if (a === '--dry') opt.dry = true;
   else if (a.startsWith('--')) die(`unknown option ${a}`);
@@ -64,6 +68,7 @@ for (let i = 0; i < argv.length; i++) {
 }
 if (!inputs.length) die('give at least one file or folder — see the header of this script');
 if (!SLOTS[opt.slot]) die(`--slot must be one of: ${Object.keys(SLOTS).join(', ')}`);
+if (opt.focus !== null && !(opt.focus >= 0 && opt.focus <= 1)) die('--focus must be a number between 0 and 1');
 const slot = SLOTS[opt.slot];
 
 function die(msg) { console.error(`optimise-images: ${msg}`); process.exit(1); }
@@ -121,7 +126,20 @@ for (const file of files) {
 
   if (opt.dry) { report(file, `${W}×${H}`, `${slot.w}×${slot.h}`, null, null, notes); continue; }
 
-  const base = src.clone().resize(slot.w, slot.h, { fit: 'cover', position: gravity, withoutEnlargement: false });
+  let base;
+  if (opt.focus !== null) {
+    // Manual band: same aspect as the slot, as large as the source allows, centred on --focus.
+    const ar = slot.w / slot.h;
+    let bw = W, bh = Math.round(W / ar);
+    if (bh > H) { bh = H; bw = Math.round(H * ar); }
+    const portraitish = H / W > 1 / ar;   // band is height-limited -> focus moves vertically
+    const left = portraitish ? Math.round((W - bw) / 2) : Math.min(Math.max(Math.round(opt.focus * W - bw / 2), 0), W - bw);
+    const top  = portraitish ? Math.min(Math.max(Math.round(opt.focus * H - bh / 2), 0), H - bh) : Math.round((H - bh) / 2);
+    base = src.clone().extract({ left, top, width: bw, height: bh }).resize(slot.w, slot.h);
+    notes.push(`band ${bw}×${bh} at ${portraitish ? 'y' : 'x'}=${portraitish ? top : left} (focus ${opt.focus})`);
+  } else {
+    base = src.clone().resize(slot.w, slot.h, { fit: 'cover', position: gravity, withoutEnlargement: false });
+  }
   const jpg = await base.clone().jpeg({ quality: JPEG_Q, progressive: true, mozjpeg: true }).toBuffer();
   const webp = await base.clone().webp({ quality: WEBP_Q, effort: 5 }).toBuffer();
 

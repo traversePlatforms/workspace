@@ -398,9 +398,6 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 @media(min-width:880px){.split{grid-template-columns:1fr 1fr}.split--media-left .split__media{order:-1}}
 .split__media{margin:0;border:1px solid var(--line)}
 .split__media img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
-/* trainer-presenting.jpg is a tall portrait source; a centered 3:2 crop lands on
-   floor and knees. Bias the crop up so the trainer and the whiteboard show. */
-.split__media img[src*="trainer-presenting"]{object-position:50% 8%}
 .split__media figcaption,.ph-media figcaption{
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;
   letter-spacing:.04em;text-transform:uppercase;color:var(--faint);
