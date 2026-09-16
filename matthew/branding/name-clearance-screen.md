@@ -123,14 +123,13 @@ phone call to a roofer.
 
 ## 6. What still needs doing
 
-1. **USPTO search** on "Stringline" in **class 35** (advertising, marketing, business services) —
-   could not be reached from here. This is the real gap.
+1. **USPTO search** on "Stringline" in **class 35** — **partial screen run 2026-09-16, see §6c.** Nothing
+   found in class 35; one dead class-37 record. Still not a full USPTO search — that needs a browser
+   session on tmsearch.uspto.gov or an attorney.
 2. **Attorney review**, twenty minutes, before anything is printed or wrapped. Cheap now.
 3. **Register the domain** before any printed material.
-4. **Settle the entity question first** — [../services-pricing.md](../services-pricing.md) §8: this
-   offering overlaps Surge's line of business. Whether Stringline is a separate entity, a DBA, or a
-   Surge sub-offering decides who contracts with the client, and it should be in writing before the
-   first one asks. **A name cannot be registered sensibly until that is decided.**
+4. ~~Settle the entity question first~~ — **answered 2026-09-16: a separate entity, Matthew's own.**
+   The legal form (LLC vs sole proprietor + trade name) is still to choose, with an accountant.
 5. **Colorado trade name registration** if it will operate under a name other than a registered entity's.
 
 ---
@@ -183,6 +182,35 @@ to find by its own name is an unhelpful first impression.
 **Left open at his request, 2026-09-14.** Three routes: `Sharpe Layout` (unscreened, keeps his name and
 the layout idea, no homophone field); Stringline as the brand with proposals signed in his own name; or
 Sharpeline anyway with the tax accepted deliberately.
+
+---
+
+## 6c. USPTO — partial screen, 2026-09-16
+
+**Name settled as Stringline the same day**, so only that name was screened.
+
+**What could and could not be reached.** `tmsearch.uspto.gov` sits behind an AWS WAF browser challenge
+(`challenge.js` in the page shell; the API path returns 405 from S3) — no scripted search gets through.
+**TSDR** (`tsdr.uspto.gov/statusview/sn<serial>`) answers plain GETs and is the USPTO's own record, but
+only per serial number. Justia and uspto.report return 403 to direct fetches, but their record pages are
+indexed, so a search engine restricted to those domains works as a coarse index of USPTO records.
+
+**Found.**
+
+| Mark | Serial / Reg. | Class | Status | Bearing |
+|---|---|---|---|---|
+| STRINGLINE ELECTRONICS | 73602158 / 1425964 | 037 — repair of electronic devices used in construction | **DEAD** — registered 20 Jan 1987, cancelled 26 Jul 1993, Section 8 not filed. Owner Stringline Electronics Inc., Atlanta GA. Confirmed on TSDR | None — wrong class, dead 33 years |
+
+No STRINGLINE or STRING LINE mark in class 035 surfaced. The other "stringline" hits are construction
+goods (Power Curbers stringline guidance components 2020; Anvil American clamps 1996; a "Rapid Reel"
+winding tool 2024) — goods classes, unrelated. Nearest live class-035 *-LINE* marks: BRANDLINE (reg.
+5031357), THRULINE MARKETING (reg. 5597320), THROUGHLINE STRATEGY & BRAND (ser. 97343061) — none
+confusingly similar.
+
+**Standing.** Preliminary, same as the Colorado screen. It would have caught a direct conflict and found
+none. It is **not** a full USPTO search: the mirrors do not guarantee completeness, and a proper search also
+covers phonetic equivalents and design-plus-word marks. **Before filing:** ten minutes on
+tmsearch.uspto.gov in a browser — "stringline" and "string line", live only, look at 035 — or an attorney.
 
 ---
 
