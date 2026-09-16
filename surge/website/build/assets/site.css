@@ -234,13 +234,25 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 .hero{position:relative;padding-block:clamp(3rem,7vw,5.5rem);overflow:hidden}
 .hero__bg{position:absolute;inset:0;z-index:0}
 .hero__bg picture{display:block;width:100%;height:100%}
-.hero__bg img{width:100%;height:100%;object-fit:cover;filter:brightness(.26) saturate(.55) blur(3px);transform:scale(1.05)}
+.hero__bg img{width:100%;height:100%;object-fit:cover;filter:brightness(.32) saturate(.55) blur(3px);transform:scale(1.05)}
+/* Placeholder motion until the hero video exists (2026-09-16, Matthew: "some sort
+   of placeholder so it's not just empty for staging"). A slow drift on the still —
+   scale 1.05 -> 1.12 and back over 36s — reads as the same atmosphere the video
+   would give, for zero bytes. Stops itself under reduced-motion, as the video
+   does, and is hidden once the video reports it is playing. Brightness lifted
+   .26 -> .32 in the same pass so the room is faintly legible; the ::after
+   gradient still carries the headline contrast. */
+@media (prefers-reduced-motion:no-preference){
+  .hero__bg img{animation:hero-drift 36s ease-in-out infinite alternate}
+  .hero:has(.hero__video.is-playing) .hero__bg img{animation:none}
+  @keyframes hero-drift{from{transform:scale(1.05) translate(0,0)}to{transform:scale(1.12) translate(-1.2%,-.8%)}}
+}
 /* Hero video sits over the still and shares its exact treatment, so the swap
    from image to video is invisible. Opacity 0 until site.js confirms it is
    playing — see the slot comment in index.html. It is under ::after, so the
    darkening gradient lands on the video too. */
 .hero__video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  filter:brightness(.26) saturate(.55) blur(3px);transform:scale(1.05);
+  filter:brightness(.32) saturate(.55) blur(3px);transform:scale(1.05);
   opacity:0;transition:opacity .9s var(--ease);pointer-events:none}
 .hero__video.is-playing{opacity:1}
 @media (prefers-reduced-motion:reduce){.hero__video{display:none}}
