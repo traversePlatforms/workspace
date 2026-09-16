@@ -1,13 +1,22 @@
 # Branding — Matthew's own offering
 
-**Status: PAUSED 2026-09-14 at Matthew's request. The name is not settled.**
+**Status: name settled 2026-09-16 — Stringline, signed Matthew Sharpe.**
 Nothing registered, nothing purchased, nothing printed, no domain bought.
 
 ---
 
 ## RESUME HERE
 
-**The decision waiting on him is the name.** Three routes were left open:
+**The name is Stringline** — Matthew's decision 2026-09-16, option 2 below, after Sharpeline's
+findability problem was put to him. The brand is Stringline; proposals, contact and signatures are
+Matthew Sharpe. Everything already built under that name stands. Nothing is cleared legally by this —
+see the two blockers at the bottom of this section.
+
+**Next when work resumes:** (1) the entity question — separate entity, trade name, or Surge
+sub-offering — which decides who contracts with the client and has to be settled before anything is
+registered; (2) the USPTO class 35 search that never ran; (3) then domain + Colorado trade-name filing.
+
+The three routes as they were left, for the record:
 
 1. **`Sharpe Layout`** — his surname, and *layout* is what a stringline does. **Not yet screened.**
    No homophone field appears to exist. The mark as drawn still fits.
