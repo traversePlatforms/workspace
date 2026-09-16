@@ -316,6 +316,9 @@ writing, in any tier, at any price.
 
 ## 8 — One flag worth raising before this goes out
 
+> **Answered 2026-09-16: a separate entity, Matthew's own, branded Stringline.** Neither a Surge
+> sub-offering nor a trade name of Surge. The flag below is kept as the record of why it mattered.
+
 This offering overlaps Surge's own line of business. Surge sells outsourced sales
 and marketing; this sells marketing services to other companies. Whether that is
 a conflict, a subsidiary offering, or a separate entity is a call to make

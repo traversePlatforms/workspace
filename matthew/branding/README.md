@@ -12,9 +12,13 @@ findability problem was put to him. The brand is Stringline; proposals, contact 
 Matthew Sharpe. Everything already built under that name stands. Nothing is cleared legally by this —
 see the two blockers at the bottom of this section.
 
-**Next when work resumes:** (1) the entity question — separate entity, trade name, or Surge
-sub-offering — which decides who contracts with the client and has to be settled before anything is
-registered; (2) the USPTO class 35 search that never ran; (3) then domain + Colorado trade-name filing.
+**Entity: separate, Matthew's own — decided 2026-09-16.** Not a Surge sub-offering and not a trade
+name of Surge. Stringline contracts with its own clients in its own name, linked to Matthew personally.
+That closes blocker 1 below.
+
+**Next when work resumes:** (1) the USPTO class 35 search that never ran; (2) then domain + the
+Colorado filing — which form that takes (LLC vs sole proprietor with a trade name) is a question for
+an accountant, not for this repo, but it has to be answered before the filing.
 
 The three routes as they were left, for the record:
 

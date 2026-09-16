@@ -111,8 +111,8 @@ Each draft contains the post, alternate hooks, lines cut with the reason, and th
 
 [matthew/](matthew/) holds his independent websites-and-marketing offering — rate card, services page, outreach emails, hosting notes. Signed in his own name, not Surge's and not Horizon's.
 
-- **The brand name and identity are not chosen yet.** Don't invent one or reuse "Horizon"; ask.
-- **This offering overlaps Surge's line of business** — see the note in [matthew/services-pricing.md](matthew/services-pricing.md). Anything put under the Surge name becomes Surge public copy and inherits the full company register.
+- **The brand is Stringline** (settled 2026-09-16), signed Matthew Sharpe. Identity is built in [matthew/branding/](matthew/branding/). Don't reuse "Horizon". Not yet registered — no domain, no filing, no USPTO search.
+- **Stringline is a separate entity, Matthew's own** — decided 2026-09-16. Not a Surge sub-offering and not a trade name of Surge. It overlaps Surge's line of business (see [matthew/services-pricing.md](matthew/services-pricing.md) §8) and the answer is separation, so Surge's voice specs and RESTRICTED.md never apply to it. Anything that *would* go under the Surge name becomes Surge public copy — keep the two apart.
 - Same rules apply: nothing sent, published or registered without a per-request go-ahead.
 
 ---
