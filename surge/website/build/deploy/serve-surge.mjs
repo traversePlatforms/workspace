@@ -25,6 +25,7 @@ const MIME = {
   '.webmanifest': 'application/manifest+json', '.xml': 'application/xml; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
+  '.mp4': 'video/mp4', '.webm': 'video/webm',   // hero video, added 2026-09-17 — octet-stream makes <video> refuse it
 };
 const BLOCKED = /\.(md|log|sh|mjs|map|php|phps|inc)$|(^|\/)\./;  // php is executed on the host, never served
 

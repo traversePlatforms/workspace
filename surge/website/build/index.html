@@ -88,21 +88,24 @@
 <section class="hero">
   <div class="hero__bg">
     <!-- ============================================================================
-         HERO VIDEO SLOT — ready, currently inactive. See assets/video/README.md.
-         The <picture> below is always present and is what shows right now. The
-         <video> sits on top of it and only reveals itself once it is actually
-         playing, so the image is the guaranteed floor: no video file, reduced
+         HERO VIDEO SLOT — ACTIVE since 2026-09-17. See assets/video/README.md.
+         The <picture> below is always present and is the guaranteed floor: reduced
          motion, a narrow screen, a slow connection or a codec the browser cannot
-         handle all end up showing the still, never a black box.
+         handle all end up showing the still (with its slow CSS drift), never a
+         black box. The <video> reveals itself only once it is actually playing.
 
-         TO ACTIVATE: drop hero.mp4 (and ideally hero.webm) into assets/video/,
-         then uncomment the two <source> lines. Nothing else changes — site.js
-         does nothing with this element until it finds a <source> inside it.
+         The file: cut from Matthew's edited office walkthrough (brand/undefined.mp4,
+         50 s, 1080p) — seconds 0–9.5 and 40–45 joined with a 0.6 s dissolve, the
+         tail blended into the head so it loops without a cut, 13 s, 1280×720,
+         silent, MP4 1.9 MB / WebM 2.1 MB. The whole clip is cropped 12% off the
+         left because the dartboard shot had the edge of the "AVERAGE / LEGENDARY"
+         wall poster in frame; the stretches at 12–27 s and 45–50 s were left out
+         for the same wall. MP4 is listed first: universal, and here it is smaller.
          ============================================================================ -->
     <video class="hero__video" data-hero-video muted loop playsinline preload="none"
            poster="/assets/img/hero-bg.jpg" aria-hidden="true" tabindex="-1">
-      <!-- <source src="/assets/video/hero.webm" type="video/webm"> -->
-      <!-- <source src="/assets/video/hero.mp4" type="video/mp4"> -->
+      <source src="/assets/video/hero.mp4" type="video/mp4">
+      <source src="/assets/video/hero.webm" type="video/webm">
     </video>
     <picture>
       <source type="image/webp" srcset="/assets/img/hero-bg.webp">
