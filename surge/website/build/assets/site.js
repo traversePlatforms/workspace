@@ -173,13 +173,28 @@
   var conn = navigator.connection;
   if (conn && (conn.saveData || /2g/.test(conn.effectiveType || ''))) return;
 
-  v.addEventListener('playing', function () { v.classList.add('is-playing'); }, { once: true });
+  function reveal() { v.classList.add('is-playing'); }
+  v.addEventListener('playing', reveal, { once: true });
   v.addEventListener('error', function () { v.classList.remove('is-playing'); });
 
+  /* 2026-09-17: the first version called v.load() and then v.play() in the same
+     tick. On Matthew's Chrome the play() promise never resolved and the still
+     stayed, while a play() typed into the console worked — the load() was racing
+     the play(). Now: no explicit load() (preload=auto starts it), try to play as
+     soon as the element says it can, and once more when the tab becomes visible.
+     A rejection is logged at debug level instead of vanishing. */
+  function attempt() {
+    var p = v.play();
+    if (p && p.then) {
+      p.then(function () { if (!v.paused) reveal(); },
+             function (e) { if (window.console && console.debug) console.debug('hero video: ' + e.name + ' — ' + e.message); });
+    }
+  }
   v.preload = 'auto';
-  v.load();
-  var p = v.play();
-  if (p && p.catch) p.catch(function () { /* autoplay blocked: keep the still */ });
+  if (v.readyState >= 3) attempt();
+  else v.addEventListener('canplay', attempt, { once: true });
+  attempt();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && v.paused) attempt(); });
 })();
 
 /* Header dropdown. The parent link still navigates — the chevron is a separate

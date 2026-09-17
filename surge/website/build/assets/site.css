@@ -250,8 +250,13 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 /* Hero video sits over the still and shares its exact treatment, so the swap
    from image to video is invisible. Opacity 0 until site.js confirms it is
    playing — see the slot comment in index.html. It is under ::after, so the
-   darkening gradient lands on the video too. */
-.hero__video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+   darkening gradient lands on the video too.
+   z-index:1 is load-bearing (2026-09-17): the still's <img> has a transform,
+   which paints it in the same layer as this positioned video, and it comes
+   later in the DOM — so without an explicit z-index the still painted OVER
+   the playing video and nobody could see it. ::after is also z-index:1 and
+   later in tree order, so the gradient still lands on top. */
+.hero__video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;
   filter:brightness(.32) saturate(.55) blur(3px);transform:scale(1.05);
   opacity:0;transition:opacity .9s var(--ease);pointer-events:none}
 .hero__video.is-playing{opacity:1}
