@@ -122,6 +122,12 @@ const JOBS = [
      back near the default for readable type. */
   { src: 'operations/crew-shirt-spec.html',     out: 'operations/crew-shirt-spec.pdf',            mode: 'light', scale: 0.78 },
   { src: 'operations/business-cards.html',      out: 'operations/business-cards.pdf',             mode: 'light', scale: 1 },
+  /* Vehicle magnets, 2026-09-16 — each page carries its own @page size (24.25 x
+     12.25 / 18.25 in with bleed), which preferCSSPageSize honours; scale must be
+     1 so an inch is an inch. Print-ready: the vendor gets the PDF as is. */
+  { src: 'brand/vehicle/magnet-24x12.html',       out: 'brand/vehicle/magnet-24x12.pdf',           mode: 'dark',  scale: 1 },
+  { src: 'brand/vehicle/magnet-24x18.html',       out: 'brand/vehicle/magnet-24x18.pdf',           mode: 'dark',  scale: 1 },
+  { src: 'brand/vehicle/magnet-24x12-light.html', out: 'brand/vehicle/magnet-24x12-light.pdf',     mode: 'light', scale: 1 },
   { src: 'research/crew-safety-and-compliance.html', out: 'research/Sixfold-Crew-Safety-and-Compliance.pdf', mode: 'light' },
   { src: 'marketing/referral-packet.html',       out: 'marketing/Sixfold-Referral-Packet-TEMPLATE.pdf', mode: 'light', scale: 1 },
 
