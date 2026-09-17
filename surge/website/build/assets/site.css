@@ -234,7 +234,7 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 .hero{position:relative;padding-block:clamp(3rem,7vw,5.5rem);overflow:hidden}
 .hero__bg{position:absolute;inset:0;z-index:0}
 .hero__bg picture{display:block;width:100%;height:100%}
-.hero__bg img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;filter:brightness(.55) saturate(.7) blur(1.5px);transform:scale(1.05)}
+.hero__bg img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;filter:brightness(.72) saturate(.8) blur(1px);transform:scale(1.05)}
 /* Placeholder motion until the hero video exists (2026-09-16, Matthew: "some sort
    of placeholder so it's not just empty for staging"). A slow drift on the still —
    scale 1.05 -> 1.12 and back over 36s — reads as the same atmosphere the video
@@ -257,14 +257,14 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
    the playing video and nobody could see it. ::after is also z-index:1 and
    later in tree order, so the gradient still lands on top. */
 .hero__video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;object-position:50% 12%;
-  filter:brightness(.55) saturate(.7) blur(1.5px);transform:scale(1.05);
+  filter:brightness(.72) saturate(.8) blur(1px);transform:scale(1.05);
   opacity:0;transition:opacity .9s var(--ease);pointer-events:none}
 .hero__video.is-playing{opacity:1}
 @media (prefers-reduced-motion:reduce){.hero__video{display:none}}
-.hero__bg::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(10,10,10,.45),rgba(10,10,10,.72))}
+.hero__bg::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(10,10,10,.34),rgba(10,10,10,.62))}
 .hero .wrap{position:relative;z-index:1}
-.hero h1{color:var(--text);margin-bottom:1.2rem;font-size:clamp(2.1rem,1.3rem + 3.4vw,3.6rem)}
-.hero .lede{color:var(--text);font-size:1.24rem}
+.hero h1{color:var(--text);margin-bottom:1.2rem;text-shadow:0 2px 28px rgba(10,10,10,.75);font-size:clamp(2.1rem,1.3rem + 3.4vw,3.6rem)}
+.hero .lede{color:var(--text);font-size:1.24rem;text-shadow:0 1px 18px rgba(10,10,10,.8)}
 
 /* ---- page head (every page below the homepage opens on a headline,
    flat ground, per "Thirteen Pages, One Shape") -------------------------- */
