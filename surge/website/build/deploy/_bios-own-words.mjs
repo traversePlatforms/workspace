@@ -6,8 +6,11 @@
    So: the third-person role line (added 09-15) comes out, the rewrite comes out,
    contractions stay (their voice), the separate favourite-quote field stays off, and
    the two money lines the 09-14 swap cut are back because they wrote them — flagged
-   for his rounds. Brandon gets his holiday answer, the only thing the old site had
-   from him. Matthew's own bio is untouched (no old-site bio existed).
+   for his rounds. Matthew's follow-up the same day: Brandon and Matthew keep their
+   existing bios (neither had one on the old site) but in FIRST person to match; Paige
+   keeps the one she wrote for Matthew, untouched — she was the only person who sent
+   one. Those three were set by hand after this ran; this script's Brandon entry is
+   superseded and only records the old-site Q&A.
    Writes both the roster JSON in team/index.html and each person page. Run once. */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
