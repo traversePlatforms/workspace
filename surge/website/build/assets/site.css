@@ -412,6 +412,10 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 
 /* ---- split rows --------------------------------------------------------- */
 .split{display:grid;gap:clamp(1.4rem,4vw,2.8rem);align-items:center}
+/* media-left: the figure is first in the DOM for desktop; on a phone the single column
+   would show the photo above its own heading, so it is pushed after the text there
+   (found in the 2026-09-17 phone audit on /careers/). */
+.split--media-left .split__media{order:1}
 @media(min-width:880px){.split{grid-template-columns:1fr 1fr}.split--media-left .split__media{order:-1}}
 .split__media{margin:0;border:1px solid var(--line)}
 .split__media img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
