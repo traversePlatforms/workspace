@@ -234,7 +234,7 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 .hero{position:relative;padding-block:clamp(3rem,7vw,5.5rem);overflow:hidden}
 .hero__bg{position:absolute;inset:0;z-index:0}
 .hero__bg picture{display:block;width:100%;height:100%}
-.hero__bg img{width:100%;height:100%;object-fit:cover;filter:brightness(.55) saturate(.7) blur(1.5px);transform:scale(1.05)}
+.hero__bg img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;filter:brightness(.55) saturate(.7) blur(1.5px);transform:scale(1.05)}
 /* Placeholder motion until the hero video exists (2026-09-16, Matthew: "some sort
    of placeholder so it's not just empty for staging"). A slow drift on the still —
    scale 1.05 -> 1.12 and back over 36s — reads as the same atmosphere the video
@@ -256,7 +256,7 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
    later in the DOM — so without an explicit z-index the still painted OVER
    the playing video and nobody could see it. ::after is also z-index:1 and
    later in tree order, so the gradient still lands on top. */
-.hero__video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;
+.hero__video{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;object-position:50% 12%;
   filter:brightness(.55) saturate(.7) blur(1.5px);transform:scale(1.05);
   opacity:0;transition:opacity .9s var(--ease);pointer-events:none}
 .hero__video.is-playing{opacity:1}
