@@ -96,7 +96,7 @@ body.paper {
   --accent-hover: var(--ink);
   --line:         var(--paper-rule);
   --edge:         var(--paper-edge);
-  --head-bg:      rgba(237, 231, 220, 0.9);
+  --head-bg:      rgba(14, 21, 18, 0.9);      /* the bar is a dark accent, see below */
   --hero-wash:    var(--paper-warm);
 
   /* band inverts the other way here: Pine on a Bone page */
@@ -109,6 +109,57 @@ body.paper {
 
   color-scheme: light;
 }
+
+/* --- Bone register: the dark accents ------------------------------------
+   Pine is not only at the bottom of this page. Four inversions carry it through
+   the scroll — the header bar, the ~450 card, the secondary button and the step
+   numerals — so the eye meets dark at the top, in the hero, mid-page and at the
+   foot rather than only once.
+
+   Each inverted region RE-DECLARES the dark tokens locally instead of hard-coding
+   colours, so every component inside it keeps working off the same names and
+   nothing has to be special-cased. Same trick the .band and .site-foot use. */
+body.paper .site-head,
+body.paper .stat {
+  --text:        var(--bone);
+  --text-strong: var(--bone);
+  --text-soft:   rgba(237, 231, 220, 0.66);
+  --label:       var(--moss);
+  --accent:      var(--ember);
+  --accent-text: var(--ember);
+  --accent-hover: #f0855a;
+  --line:        rgba(237, 231, 220, 0.16);
+  --edge:        rgba(237, 231, 220, 0.16);
+  color: var(--text);
+}
+body.paper .stat { background: var(--pine); }
+
+/* the secondary CTA becomes the dark half of the pair — Ember and Pine together,
+   which is the card and magnet lockup rather than a button and a ghost of one */
+body.paper .btn-ghost {
+  background: var(--pine);
+  border-color: var(--pine);
+  color: var(--bone);
+}
+body.paper .btn-ghost:hover { background: var(--ink); border-color: var(--ink); color: var(--ember); }
+
+/* 01 / 02 / 03 as Pine tiles: three dark beats down the left of the section */
+body.paper .steps .no {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 2px;
+  background: var(--pine);
+  color: var(--bone);
+  font-size: 22px;
+}
+
+/* Pine, not a hairline: the peaks then read as the boards band rising into the
+   page instead of as a rule balanced on top of it */
+body.paper .ridge-rule { color: var(--pine); height: 34px; }
+body.paper .ridge-rule svg { height: 34px; }
 
 * { box-sizing: border-box; }
 
@@ -186,7 +237,6 @@ small, .fine { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
 }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-strong); }
 .brand svg { width: 26px; height: auto; display: block; color: var(--accent); }
-body.paper .brand svg { color: var(--ember-ink); }
 .brand b {
   font-family: var(--serif);
   font-weight: 400;
@@ -308,6 +358,7 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   border-radius: 3px;
   max-width: 60ch;
 }
+.stat + p { margin-top: 22px; }
 .stat .n { font-family: var(--serif); font-size: 32px; color: var(--accent-text); display: block; line-height: 1; margin-bottom: 8px; }
 .stat p { margin: 0; font-size: 15px; color: var(--text-soft); }
 .stat .src { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--label); margin-top: 12px; line-height: 1.5; }

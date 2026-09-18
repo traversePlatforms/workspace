@@ -59,9 +59,27 @@ the 1 September build, so the merch board's colours did not move. `body.paper`
 reassigns the same tokens to the Bone set. **To flip a page, add `class="paper"` to its
 `<body>` — nothing else.**
 
-Two regions invert against whatever register the page is in, so the page has rhythm
-rather than one flat field: the **HOA/boards band** (Pine on the Bone page, Bone on the
-dark one) and the **footer**, which is a dark anchor in both.
+### Dark accents — Pine is not only at the bottom
+
+Added 2026-09-17 on Matthew's note that the page needed some. Six inversions, spaced so
+the eye meets dark roughly every screen rather than once at the foot:
+
+| | |
+|---|---|
+| **The header bar** | Pine, blurred — bookends with the footer and reads as chrome, not page |
+| **The `~450` card** | Pine, in the hero |
+| **The `78%` card** | Pine, in `#zone1` — **figures live on dark** is now a rule, not a one-off. It was the long light stretch in the middle third |
+| **The secondary CTA** | Pine solid, so the pair is Ember + Pine — the card and magnet lockup, rather than a button and a ghost of one |
+| **`01 / 02 / 03`** | Pine tiles, three beats down the left of `#how` |
+| **The ridge divider** | Pine and 34px, so the peaks read as the boards band rising into the page instead of a rule balanced on top of it |
+
+Plus the two regions that invert against whichever register the page is in: the
+**HOA/boards band** (Pine on the Bone page, Bone on the dark one) and the **footer**,
+a dark anchor in both.
+
+**Every inverted region re-declares the dark tokens locally** rather than hard-coding
+colours, so the components inside keep working off the same names and nothing is
+special-cased. Copy that pattern for any new one.
 
 ### Contrast — measured, not eyeballed
 
