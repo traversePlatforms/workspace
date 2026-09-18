@@ -1,9 +1,19 @@
 # Crew Safety & Compliance Guide — Sixfold Colorado
 
-**Status:** Draft 1, 2026-09-16. Internal reference for the office and the crew. Not sent, not
-published. **Not legal advice** — the sources are cited so anything here can be checked; the
-insurance and licensing decisions still need Brandon, an insurance agent and, where it says so,
-an attorney.
+**Status:** Draft 2, **audited 2026-09-18 and cleared to share with the team.** It is in the Drive
+team folder under *02 Safety and compliance*. Still not published anywhere public.
+**Not legal advice** — the sources are cited so anything here can be checked; the insurance and
+licensing decisions still need Brandon, an insurance agent and, where it says so, an attorney.
+
+**What the audit changed:** two reportability windows added to Part D that draft 1 was missing
+(30 days for a fatality, 24 hours for a hospitalisation), and the El Paso County / Area Office
+question closed. Everything else was re-checked and stood. Details at the foot of this file.
+
+> **⚑ Read this before handing it to anyone.** The guide describes obligations Sixfold **does not
+> currently meet** — there is no workers' compensation, no general liability, and no Colorado
+> Springs tree licence. Part E lists them in order. That is deliberate and it is the document's
+> job, but it means anyone reading it learns the company is uninsured. **Share it with the crew,
+> not with customers, and not with anyone outside the business.**
 
 **Deliverables:** this file (record + fact-check log) · `crew-safety-and-compliance.html` (designed) ·
 `crew-safety-and-compliance.artifact.html` (review copy) · `Sixfold-Crew-Safety-and-Compliance.pdf`
@@ -49,9 +59,13 @@ hazards "are addressed in specific OSHA standards for recordkeeping and general 
 projected for late 2026. When it lands, this document gets revised.
 
 **Colorado is federal-OSHA territory.** Colorado has no state OSHA plan for private employers, so
-federal OSHA enforces directly. Nearest office: **OSHA Englewood Area Office, 7935 East Prentice
-Avenue, Suite 209, Englewood CO 80111, (303) 843-4500.** Confirm whether Englewood or Denver
-covers El Paso County before it is ever needed.
+federal OSHA enforces directly. The office to call: **OSHA Englewood Area Office, 7935 East Prentice
+Avenue, Suite 209, Englewood CO 80111, (303) 843-4500.**
+
+**El Paso County is Englewood's, confirmed 2026-09-18** — the open question in draft 1 is closed.
+Englewood covers southern and central Colorado including El Paso, Douglas, Elbert, Fremont and
+Teller; Denver covers the northern counties. **That is the whole Sixfold service area under one
+office**, and it is the Englewood number a crew or the office dials — not Denver.
 
 ---
 
@@ -326,10 +340,24 @@ faster.
 hours** after the death of any employee as a result of a work-related incident, you must report the
 fatality to OSHA." And: "Within **twenty-four (24) hours** after the in-patient hospitalization of
 one or more employees or an employee's amputation or an employee's loss of an eye… you must
-report." By phone to the nearest Area Office (Englewood, (303) 843-4500), to **1-800-321-OSHA**, or
-online at osha.gov. **This applies to every employer, however small** — 1904.1 exempts companies
-with 10 or fewer employees from keeping the OSHA injury log, but says in the same paragraph that
-"all employers covered by the OSH Act must report" these four events.
+report." By phone to the nearest Area Office (Englewood, (303) 843-4500), to **1-800-321-OSHA
+(1-800-321-6742)**, or by electronic submission at osha.gov — those three, and only those three,
+are what the rule permits. **This applies to every employer, however small** — 1904.1 exempts
+companies with 10 or fewer employees from keeping the OSHA injury log, but says in the same
+paragraph that "all employers covered by the OSH Act must report" these four events.
+
+**Two windows the rule puts on what counts as reportable** — added 2026-09-18, they were missing
+from draft 1. The clock above says how fast to report; these say *whether* you have to:
+
+- A fatality is reportable **only if the death occurs within thirty (30) days of the incident.**
+  29 CFR 1904.39(b)(6).
+- A hospitalisation, amputation or eye loss is reportable **only if it occurs within twenty-four
+  (24) hours of the incident.** 29 CFR 1904.39(b)(7). Someone admitted three days later is not a
+  reportable event under this rule.
+
+**If you are not sure, report it.** These limits exist so the office can answer "do we have to?"
+correctly — they are not an instruction to look for a reason not to call. Over-reporting costs a
+phone call; under-reporting is a citation.
 
 **Colorado workers' comp — once insured.** Report every injury to the carrier within **10 days**;
 give the injured worker the designated provider list; keep the lost-time record. Before Sixfold is
@@ -405,9 +433,29 @@ relying on it in anything customer-facing:
 | "Weed and feed" is a pesticide; fertiliser alone is not | Standard reading of the federal definition (FIFRA) that the Colorado Act adopts. Not fetched. |
 | Pesticide licence requires liability insurance on file | From the CDA search summary quoting the Act. Not read on the CDA page fetched. |
 
+**Verified 2026-09-18, after draft 1:**
+
+| Claim | Source |
+|---|---|
+| Fatality reportable only if death occurs **within 30 days** of the incident; hospitalisation/amputation/eye loss only if it occurs **within 24 hours** of the incident | 29 CFR 1904.39(b)(6)–(7), full text via codes.findlaw.com. **Missing from draft 1** — the deadlines were right, the reportability windows were absent |
+| The three permitted reporting methods, and the toll-free number as **1-800-321-OSHA (1-800-321-6742)** | 29 CFR 1904.39(a)(1)–(3) |
+| 8-hour and 24-hour deadlines re-confirmed | Same |
+| **El Paso County is in the Englewood Area Office's jurisdiction**, not Denver's — closes the open item below | OSHA area-office listings for Colorado. Englewood covers southern/central Colorado incl. El Paso, Douglas, Elbert, Fremont, Teller |
+| Colorado WC: **one or more employees**, part-time, full-time and family all count; anyone paid is presumed an employee | cdle.colorado.gov/dwc/employers/insurance-coverage, re-checked |
+
+*Note on the fine:* CDLE's own page words the penalty as "up to $500 for every day you are
+uninsured." A1 below gives the two-tier statutory version ($250/day initial, $250–$500/day
+subsequent, C.R.S. § 8-43-409(1)(b)), which is more precise. Both are right; if anyone looks it up
+and sees the round number, that is why.
+
+**Could not be re-fetched:** osha.gov returns 403 to automated requests and eCFR redirects, so the
+OSHA-hosted texts above were confirmed through FindLaw's verbatim reproduction and OSHA's own
+search listings rather than by re-reading osha.gov directly. The 2026-09-16 first-party fetches
+stand as recorded.
+
 **Not obtained — needs a phone call or a visit:**
 
-- Which OSHA Area Office (Englewood or Denver) covers El Paso County.
+- ~~Which OSHA Area Office (Englewood or Denver) covers El Paso County.~~ **CLOSED 2026-09-18 — Englewood.**
 - Municipal tree/landscape licensing in Monument, Palmer Lake, El Paso County, Douglas County,
   Woodland Park, Castle Rock.
 - Whether Sixfold LLC's Secretary of State filing is in good standing.
