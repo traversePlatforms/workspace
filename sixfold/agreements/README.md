@@ -261,3 +261,27 @@ Everything in *What to put in front of an attorney* above applies to **both** do
 The insurance gap is still item 1 and still unsolved: clause 12 promises Sixfold is
 responsible for negligent damage by its crew, and there is no policy behind that promise on
 either agreement.
+
+### The remote-signing crib sheet — 2026-09-18
+
+`remote-signing.src.html` → `.html` → `.pdf`. **One page.** Companion to
+`field-instructions`, which assumes you are standing there. Built when Matthew said
+"send it out" — the pack was designed for door signing and emailing it breaks two rules
+quietly:
+
+1. **The oral notice cannot be emailed.** 16 CFR 429.1(e) makes it an unfair and
+   deceptive practice to fail to inform the buyer **orally, at the time they sign**, of
+   the right to cancel. A box on a form is not it and an email is not it. The sheet says:
+   be on the phone as they sign, say the line, write in the notes that you did.
+2. **The deadline date belongs to the day *they* sign, which you do not control.** Fill
+   in a deadline counted from the day you *sent* it and they sign three days later, and
+   you have given a **shorter** window than the law requires — which is the defect.
+   The sheet gives the safety rule: **a window that is too long is compliant, one that is
+   too short is not, so when in doubt put a later date.**
+
+It also states plainly that there is **no e-signature system** — a PDF emailed back has
+no audit trail and no proof of when it was signed, which for a three-year-unwindable
+contract is the record worth buying. That is a Brandon conversation, alongside insurance.
+
+Both crib sheets are in the team-share folder under **07 Agreements**, beside the
+agreements they govern, because they are not the same rules.

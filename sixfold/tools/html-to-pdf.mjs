@@ -161,6 +161,9 @@ const JOBS = [
      above: the ten point floor applies to this document identically. */
   { src: 'agreements/landscaping-agreement.html',    out: 'agreements/landscaping-agreement.pdf',          mode: 'light', scale: 1 },
   { src: 'agreements/field-instructions.html',       out: 'agreements/field-instructions.pdf',             mode: 'light' },
+  /* Companion to the door crib sheet, for when the agreement is emailed instead.
+     ONE page is the spec. */
+  { src: 'agreements/remote-signing.html',           out: 'agreements/remote-signing.pdf',                 mode: 'light' },
   { src: 'agreements/service-agreement-tablet.html', out: 'agreements/service-agreement-tablet.pdf',       mode: 'light' },
   { src: 'agreements/sedalia-A-service-agreement.html', out: 'agreements/sedalia-A-service-agreement.pdf', mode: 'light' },
   { src: 'marketing/home-wildfire-pamphlet.html', out: 'marketing/Sixfold-Home-Wildfire-Pamphlet.pdf', mode: 'light' },

@@ -32,8 +32,9 @@ const OUT = join(HERE, 'files');
 /* [ source relative to sixfold/ , destination folder ('' = top level) , destination name ] */
 const FILES = [
   /* Sorts above the numbered folders in Drive, which is the whole reason for the
-     leading "00". Page 2 of it is the one that matters — the Englewood
-     cancellation-notice warning and the no-launch-offer rule. Rebuild it with
+     leading "00". Page 2 of it is the one that matters — what is deliberately NOT
+     in the folder, the blank-cancellation-date warning, and the no-launch-offer rule.
+     Rebuild it with
      `node tools/html-to-pdf.mjs index-sheet` after editing index-sheet.html. */
   ['team-share/index-sheet.pdf',
    '',
@@ -71,9 +72,6 @@ const FILES = [
   ['operations/Sixfold-What-Things-Cost-FILLABLE.pdf',
    '03 Forms for a job',
    'What things cost us - fill in on screen (internal).pdf'],
-  ['agreements/field-instructions.pdf',
-   '03 Forms for a job',
-   'Signing at the door - crib sheet (INTERNAL, do not hand over).pdf'],
 
   // ---- 04 Hand to the customer -------------------------------------------
   ['marketing/Sixfold-Home-Wildfire-Pamphlet.pdf',
@@ -100,6 +98,25 @@ const FILES = [
    '05 Talking about money',
    'Script kit - what to say and what never to say.pdf'],
 
+  // ---- 07 Agreements ------------------------------------------------------
+  // Added 2026-09-18. These were excluded while their Notice of Cancellation still
+  // carried the Englewood address; that was corrected the same day, so the reason is
+  // gone and the crew needs them. Both crib sheets ship beside them on purpose.
+  ['agreements/service-agreement.pdf',
+   '07 Agreements',
+   'Service agreement - FIRE MITIGATION (5 pages, print all of them).pdf'],
+  ['agreements/landscaping-agreement.pdf',
+   '07 Agreements',
+   'Service agreement - LANDSCAPING (5 pages, print all of them).pdf'],
+  ['agreements/service-agreement-tablet.pdf',
+   '07 Agreements',
+   'Service agreement - tablet version, pages 1-3 only.pdf'],
+  ['agreements/field-instructions.pdf',
+   '07 Agreements',
+   'Crib sheet - signing at the DOOR (INTERNAL).pdf'],
+  ['agreements/remote-signing.pdf',
+   '07 Agreements',
+   'Crib sheet - EMAILING an agreement to sign (INTERNAL).pdf'],
   // ---- 06 Look it up ------------------------------------------------------
   ['research/Sixfold-Debris-Disposal-Directory.pdf',
    '06 Look it up',
@@ -122,13 +139,13 @@ const EXCLUDED = [
    'Matthew, 2026-09-18. Real names, real addresses, real prices. Nobody needs them to ' +
    'do the job, and _part-* files are never-send by construction.'],
 
-  ['service-agreement.pdf and service-agreement-tablet.pdf (the blank templates)',
-   'BLOCKED, not an oversight. Both print the Englewood address as the seller\'s place ' +
-   'of business, including on the Notice of Cancellation. Under 16 CFR 429 and ' +
-   'C.R.S. 5-3-401 a defective notice leaves the job voidable for THREE YEARS. They ' +
-   'cannot be corrected until the Monument street address exists, and they must not be ' +
-   'part-changed. Putting them where someone could print one is the risk. The crib ' +
-   'sheet in folder 03 explains the rules without being a signable form.'],
+  ['The blank service agreements — NO LONGER EXCLUDED, they are in folder 07',
+   'They were blocked while their Notice of Cancellation still printed the Englewood ' +
+   'address, which under 16 CFR 429 and C.R.S. 5-3-401 would have left a job voidable ' +
+   'for THREE YEARS. Corrected 2026-09-18 to 17890 Sierra Way, Monument, CO 80132, so ' +
+   'the reason is gone. Both crib sheets ship in the same folder on purpose: the ' +
+   'three-year exposure comes from a blank date on a cancellation form, not from the ' +
+   'contract wording, and no amount of correct drafting protects against that.'],
 
   ['launch-flyers.pdf',
    'The two flyers carry different, incompatible launch offers and Brandon has not ' +
