@@ -117,6 +117,10 @@ const FILES = [
   ['agreements/remote-signing.pdf',
    '07 Agreements',
    'Crib sheet - EMAILING an agreement to sign (INTERNAL).pdf'],
+  // ---- 08 Events ----------------------------------------------------------
+  ['operations/Sixfold-Event-Signup-Sheet.pdf',
+   '08 Events',
+   'Event sign-up sheet - print one per 13 people.pdf'],
   // ---- 06 Look it up ------------------------------------------------------
   ['research/Sixfold-Debris-Disposal-Directory.pdf',
    '06 Look it up',

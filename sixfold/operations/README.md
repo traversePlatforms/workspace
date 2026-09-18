@@ -108,3 +108,68 @@ It is **hand-written, not generated from the `.src.html`**: the paper sheet and 
 - **Owning rated gear is not a certification.** Nothing in this folder licenses any claim in copy. "Licensed", "insured", "bonded", "certified" and "Firewise" stay out of every asset until each is separately true.
 - **ANSI Z133-2026 is free.** ISA gives the digital PDF away through its web store. It took effect 27 May 2026 and supersedes the 2017 edition several equipment retailers still cite.
 - **The three open questions** the checklist raises and does not answer: the truck-and-chipper GVWR question, which Front Range municipalities require a tree-service licence, and whether the owned chipper meets the Z133 infeed geometry. All three want a phone call or a tape measure, not more desk research.
+
+---
+
+## Event sign-up sheet — 2026-09-18
+
+`event-signup-sheet.src.html` → `.html` → `Sixfold-Event-Signup-Sheet.pdf`.
+**One page, thirteen people, print only.** For the free fire-mitigation event (prize
+drawing) and for the educational events, where it doubles as an information sign-up.
+
+Captures: **name · phone · email · county**, plus two tick boxes — **Enter draw** and
+**OK to contact**. They are separate on purpose: someone at an educational event may want
+information without entering the drawing, and someone may enter the drawing without
+agreeing to be called.
+
+### Geometry — measured, and the estimate was wrong
+
+Row height is **0.54 in = 13.7 mm**. College-rule paper is 7.1 mm and wide-rule is 8.7 mm;
+this is deliberately bigger than both because people fill it in standing up on a
+clipboard. **Do not add rows to fit more people on a page** — Matthew's instruction was
+"I'd rather print more than have poorly designed sheets."
+
+Column widths sum to exactly **7.50 in** under `table-layout: fixed`:
+`0.32 + 1.66 + 1.10 + 2.40 + 0.88 + 0.57 + 0.57`. **Email is the widest column** because
+handwritten addresses are long and an unreadable email is a lost lead. Cell padding insets
+the *label* only — the rule runs the full column width, so the whole width is writable.
+
+The first layout estimated 9.85 in of content in a 10 in box and **rendered at 10.54 in**,
+two pages. Measured in print media with CDP, dropped from 14 rows to 13, tightened the
+footer, and re-measured at **exactly 10.000 in**. The numbers in the source comment are
+the measured ones, not the estimate.
+
+### ⚑ Two traps, one of them shared-stylesheet
+
+**`.tick` is taken.** `_style.css` defines `.tick { display: flex }` for the agreements'
+checkbox rows. A `<td class="tick">` inherits it, **stops being a table cell**, and the
+row rendered at 1.168 in instead of 0.54 in. The class here is **`.chk`**. Before reusing
+any short class name in this folder, grep `_style.css` for it — `.mark`, `.ln`, `.no` and
+`.co` also exist there, though all four are scoped tightly enough not to collide.
+
+**`scale: 1` is pinned** in the JOBS entry. The tool's default is 0.8 and this sheet's
+whole point is the size of the writing space.
+
+### ⚑ Do not print the word "raffle" on this
+
+Checked 2026-09-18: **in Colorado only qualified nonprofits that have existed for five or
+more years may be licensed to conduct a raffle.** Individuals and for-profit businesses
+are not eligible, and Sixfold LLC is a for-profit formed 25 Nov 2025. The sheet therefore
+says **"prize drawing"** and states **"free to enter, no purchase, no payment and no
+obligation of any kind"**, which is the structure that makes a promotion a giveaway rather
+than a lottery — a lottery needs prize, chance *and* consideration, and this removes the
+consideration.
+
+**That is the reasoning, not a clearance.** Whether the event as actually run is a lawful
+giveaway is a question for the attorney who is already on the list for the agreements, and
+it is cheap to add to that call. Sources: Colorado Secretary of State Bingo &amp; Raffles
+licensing pages; general sweepstakes structure. **Nobody should call it a raffle in
+speech, on a flyer, or on social either** — the word is the problem, not the prize.
+
+### The consent boxes
+
+**"OK to contact"** exists because the point of the sheet is leads, and calling or texting
+someone who has not agreed is the kind of thing that generates complaints. The footer
+states what ticking it means, that message rates may apply, that STOP works, and — in
+bold — **that they can leave it blank and still enter the draw.** Keep that last line;
+tying the prize to marketing consent is what turns a giveaway into something worse.

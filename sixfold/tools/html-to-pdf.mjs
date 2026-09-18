@@ -123,6 +123,11 @@ const JOBS = [
   { src: 'operations/quote-walk-sheet.html',    out: 'operations/quote-walk-sheet.pdf',           mode: 'light' },
   { src: 'operations/job-closeout.html',        out: 'operations/job-closeout.pdf',               mode: 'light' },
   { src: 'operations/work-rates.html',          out: 'operations/work-rates.pdf',                 mode: 'light' },
+  /* Event sign-up sheet. scale: 1 and ONE page are both the spec — the row height is
+     0.54in on purpose (13.7mm, larger than wide-rule paper) because it is filled in
+     standing up. If it ever renders at 2 pages, something grew; do not fix it by
+     shrinking the rows. */
+  { src: 'operations/event-signup-sheet.html',  out: 'operations/Sixfold-Event-Signup-Sheet.pdf',  mode: 'light', scale: 1 },
   /* Two pages by content, not by overflow — 0.68 did not save it, so the scale is
      back near the default for readable type. */
   { src: 'operations/crew-shirt-spec.html',     out: 'operations/crew-shirt-spec.pdf',            mode: 'light', scale: 0.78 },

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold — Event sign-up sheet</title>
+<!--STYLE-->
+<style>
+  /* ==================================================================
+     EVENT SIGN-UP SHEET — print only. Built 2026-09-18.
+
+     GEOMETRY, measured rather than eyeballed. Letter, 0.5in margins all
+     round, so the content box is 7.5 x 10.0 in.
+
+     Measured in print media, not estimated — the first estimate was out by
+     half an inch and the sheet ran to two pages.
+
+       masthead .................. 0.66 in
+       event line ................ 0.25 in
+       column header ............. 0.29 in
+       13 rows x 0.54 in ......... 7.02 in   <- the writing
+       footer .................... 1.36 in
+       gaps between blocks ....... 0.33 in
+       ------------------------------------
+       total ..................... 9.91 in   in a 10.00 in box
+
+     ROW HEIGHT IS 0.54 IN = 13.7 mm. College-rule paper is 7.1mm and
+     wide-rule is 8.7mm; this is deliberately larger than both because
+     people fill this in standing up, often on a clipboard, in a hurry.
+     Matthew: "I'd rather print more than have poorly designed sheets."
+     DO NOT add rows to fit more people on a page — print a second sheet.
+
+     COLUMN WIDTHS sum to exactly 7.50 in with table-layout: fixed:
+       0.32 + 1.66 + 1.10 + 2.40 + 0.88 + 0.57 + 0.57 = 7.50
+     Email is the widest because handwritten addresses are long and an
+     unreadable email is a lost lead. Cell padding insets the LABEL only —
+     the rule runs the full column width, so the whole width is writable.
+     ================================================================== */
+
+  @page { size: letter; margin: 0.5in; }
+
+  html, body { background: #fff; }
+  body { margin: 0; font-family: var(--f-body); color: var(--ink); }
+
+  .sheet {
+    width: 7.5in; min-height: 10in;
+    margin: 0 auto; padding: 0;
+    background: #fff; box-shadow: none;
+    display: flex; flex-direction: column;
+  }
+  @media screen {
+    body { background: #4A5550; padding: 24px 12px 48px; }
+    .sheet { box-shadow: 0 8px 34px rgba(0,0,0,.34); padding: 0.5in; width: 8.5in; min-height: 11in; }
+  }
+
+  /* --- masthead ---------------------------------------------------- */
+  .su-top { display: flex; align-items: flex-end; justify-content: space-between;
+            gap: 0.3in; border-bottom: 2.5pt solid var(--ember); padding-bottom: 7pt; }
+  .su-brand { display: flex; align-items: flex-end; gap: 8pt; }
+  .su-brand .mark { width: 38pt; height: 38pt; flex: none; display: block; }
+  .su-wordmark { font-family: var(--f-display); font-size: 23pt; line-height: .88;
+                 letter-spacing: -.015em; margin: 0; }
+  .su-desc { font-family: var(--f-data); font-size: 6pt; letter-spacing: .24em;
+             text-transform: uppercase; color: var(--moss-text); margin: 3pt 0 0; }
+  .su-what { text-align: right; margin: 0; }
+  .su-what b { display: block; font-family: var(--f-display); font-weight: 400;
+               font-size: 15pt; line-height: 1.05; }
+  .su-what span { font-family: var(--f-data); font-size: 6.4pt; letter-spacing: .13em;
+                  text-transform: uppercase; color: var(--ink-soft); }
+
+  /* --- the event line ---------------------------------------------- */
+  .su-event { display: flex; gap: 14pt; margin-top: 9pt; }
+  .su-event .f { flex: 1 1 auto; }
+  .su-event .f.sm { flex: 0 0 1.05in; }
+  .su-event label { display: block; font-family: var(--f-data); font-size: 6.2pt;
+                    letter-spacing: .14em; text-transform: uppercase;
+                    color: var(--ink-soft); margin-bottom: 9pt; }
+  .su-event .ln { border-bottom: .8pt solid var(--ink-mid); height: 0; }
+
+  /* --- the table --------------------------------------------------- */
+  table.su { width: 7.5in; table-layout: fixed; border-collapse: collapse;
+             margin-top: 13pt; }
+  table.su col.c-no   { width: 0.32in; }
+  table.su col.c-name { width: 1.66in; }
+  table.su col.c-tel  { width: 1.10in; }
+  table.su col.c-mail { width: 2.40in; }
+  table.su col.c-cty  { width: 0.88in; }
+  table.su col.c-chk { width: 0.57in; }
+
+  table.su thead th {
+    font-family: var(--f-data); font-size: 6.4pt; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--ink-soft); font-weight: 400;
+    text-align: left; vertical-align: bottom;
+    padding: 0 5pt 4pt 0; border-bottom: 1.4pt solid var(--ink);
+    line-height: 1.25;
+  }
+  table.su thead th.ctr { text-align: center; padding-right: 0; }
+
+  /* The row IS the writing space: 0.54in tall, rule on the bottom. */
+  table.su tbody td {
+    height: 0.54in; padding: 0 5pt 0 0;
+    border-bottom: .8pt solid var(--ink-mid);
+    border-right: .5pt solid var(--tint-edge);
+    vertical-align: bottom;
+  }
+  table.su tbody td:last-child { border-right: 0; }
+  table.su tbody tr:nth-child(even) td { background: #FBF9F5; }
+
+  table.su td.no {
+    font-family: var(--f-data); font-size: 8.5pt; color: var(--ink-soft);
+    text-align: center; padding: 0 0 3pt 0; border-right: .5pt solid var(--tint-edge);
+  }
+  /* .chk, NOT .tick — the shared _style.css defines .tick { display: flex } for the
+     agreements, and a table cell inheriting display:flex stops being a table cell.
+     Symptom was a 0.54in row rendering at 1.168in and the sheet running to two pages. */
+  table.su td.chk { text-align: center; padding: 0; }
+  table.su td.chk i {
+    display: inline-block; width: 11pt; height: 11pt;
+    border: .9pt solid var(--ink-mid); margin-bottom: 7pt; font-style: normal;
+  }
+
+  /* --- footer ------------------------------------------------------ */
+  .su-foot { margin-top: auto; padding-top: 8pt; border-top: .8pt solid var(--tint-edge); }
+  .su-consent { display: flex; gap: 14pt; }
+  .su-consent div { flex: 1 1 0; }
+  .su-consent p { margin: 0; font-size: 7.4pt; line-height: 1.36; color: var(--ink-mid); }
+  .su-consent b { color: var(--ink); }
+  .su-contact { display: flex; flex-wrap: wrap; gap: 3pt 11pt; margin-top: 8pt;
+                font-family: var(--f-data); font-size: 7.2pt; letter-spacing: .04em;
+                color: var(--ink-mid); }
+  .su-contact .co { color: var(--ink); letter-spacing: .12em; text-transform: uppercase; }
+  .su-fine { font-size: 6.8pt; line-height: 1.4; color: var(--ink-soft); margin: 5pt 0 0; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="su-top">
+    <div class="su-brand">
+      <svg class="mark" viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+        <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+        <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+      </svg>
+      <div>
+        <p class="su-wordmark">Sixfold</p>
+        <p class="su-desc">Land &amp; Fire · Colorado</p>
+      </div>
+    </div>
+    <p class="su-what"><b>Sign-up sheet</b><span>Sheet ____ of ____</span></p>
+  </div>
+
+  <div class="su-event">
+    <div class="f"><label>Event</label><div class="ln"></div></div>
+    <div class="f sm"><label>Date</label><div class="ln"></div></div>
+    <div class="f"><label>Location</label><div class="ln"></div></div>
+    <div class="f sm"><label>Sixfold staff</label><div class="ln"></div></div>
+  </div>
+
+  <table class="su">
+    <colgroup>
+      <col class="c-no"><col class="c-name"><col class="c-tel">
+      <col class="c-mail"><col class="c-cty"><col class="c-chk"><col class="c-chk">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="ctr">#</th>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>County</th>
+        <th class="ctr">Enter<br>draw</th>
+        <th class="ctr">OK to<br>contact</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="no">1</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">2</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">3</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">4</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">5</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">6</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">7</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">8</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">9</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">10</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">11</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">12</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+      <tr><td class="no">13</td><td></td><td></td><td></td><td></td><td class="chk"><i></i></td><td class="chk"><i></i></td></tr>
+    </tbody>
+  </table>
+
+  <div class="su-foot">
+    <div class="su-consent">
+      <div>
+        <p><b>The prize drawing.</b> Free to enter. <b>No purchase, no payment and no
+        obligation of any kind</b> — you do not have to buy anything or book anything.
+        One entry per person. Tick <b>Enter draw</b> to be entered; we draw after the
+        event and contact the winner directly.</p>
+      </div>
+      <div>
+        <p><b>Ticking "OK to contact"</b> means Sixfold may call, text or email you about
+        fire mitigation, including about a quote. Message and data rates may apply; reply
+        STOP to any text to stop. <b>You can leave it blank and still enter the draw.</b></p>
+      </div>
+      <div>
+        <p><b>What we do with this.</b> We use what you write here to contact you and to
+        run the drawing. <b>We do not sell it or pass it to anyone else.</b> Ask us to
+        delete your details any time — Contact@SixfoldColorado.com.</p>
+      </div>
+    </div>
+    <div class="su-contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>Monument, Colorado</span>
+      <span>(303) 915-1045</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span>SixfoldColorado.com</span>
+    </div>
+    <p class="su-fine">Please write clearly — an email we cannot read is a prize we cannot award.
+    Sixfold does not give tax or insurance advice.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
