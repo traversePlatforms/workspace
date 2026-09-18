@@ -2,34 +2,123 @@
    Sixfold Colorado — site stylesheet
    Shared by the landing page (/index.html) and the merch board (/merch/).
    Draft build on disk. Nothing here is deployed. Palette is the agreed five.
+
+   TWO REGISTERS FROM ONE FILE (2026-09-17)
+   ----------------------------------------
+   Every component below reads semantic tokens (--ground, --ink, --label …)
+   rather than brand constants. `:root` holds the DARK values — unchanged from
+   the 2026-09-01 build, so the merch board renders exactly as it did.
+   `body.paper` reassigns the same tokens to the Bone register; the landing page
+   carries that class. Add `class="paper"` to flip a page, nothing else.
+
+   Contrast, measured against Bone #EDE7DC (not eyeballed):
+     Pine #16201C ink .............. 14.6:1
+     body ink #2C3A33 .............. 11.0:1
+     soft ink #4C5A53 ..............  5.9:1
+     ember TEXT #A64211 ............  5.0:1   <- links and small ember type
+     moss LABEL #4E6142 ............  5.5:1   <- kickers
+     Pine on solid Ember #E4703A ...  5.9:1   <- the CTA keeps full-strength ember
+   Ember #E4703A (2.6:1) and Moss #8AA07A (2.3:1) are DECORATIVE ONLY on Bone —
+   rules, fills, marks, borders. Never type. The old --ember-ink #B84C15 was
+   4.18:1 and failed as body-size link colour; --ember-text replaces it for type
+   and #B84C15 is kept only where it is a large-text/graphic value.
    ========================================================================== */
 
 :root {
-  --pine:      #0E1512;   /* ground */
-  --timber:    #1F2A25;   /* lifted panels */
+  /* --- brand constants: the agreed five, plus the two ink derivations ----- */
+  --pine:      #0E1512;
+  --timber:    #1F2A25;
   --ember:     #E4703A;
-  --ember-ink: #B84C15;   /* ember on a light ground */
+  --ember-ink: #B84C15;   /* ember, large text / graphic, on a light ground */
   --moss:      #8AA07A;
-  --bone:      #EDE7DC;    /* body text on dark */
-  --bone-soft: rgba(237, 231, 220, 0.66);
-  --line:      rgba(237, 231, 220, 0.14);
+  --bone:      #EDE7DC;
+
+  /* --- Bone-register derivations, contrast-checked above ------------------ */
+  --paper:       #EDE7DC;
+  --paper-lift:  #F7F3EC;
+  --paper-rule:  #D6CDBB;   /* section dividers — deliberately quiet */
+  --paper-edge:  #C6BBA3;   /* panel and card borders — 1.55:1, does the defining */
+  --paper-warm:  #F8F5EF;
+  --ink:         #16201C;
+  --ink-body:    #2C3A33;
+  --ink-soft:    #4C5A53;
+  --ember-text:  #A64211;
+  --moss-text:   #4E6142;
+
   --maxw:      1080px;
 
   --serif: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
   --sans:  ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono:  ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "SFMono-Regular", monospace;
 
+  /* --- semantic tokens: DARK register (the merch board) ------------------- */
+  --ground:       var(--pine);
+  --ground-lift:  var(--timber);
+  --text:         var(--bone);
+  --text-strong:  var(--bone);
+  --text-soft:    rgba(237, 231, 220, 0.66);
+  --label:        var(--moss);
+  --accent:       var(--ember);          /* fills, rules, marks */
+  --accent-text:  var(--ember);          /* type and links */
+  --accent-hover: #f0855a;
+  --line:         rgba(237, 231, 220, 0.14);   /* dividers */
+  --edge:         rgba(237, 231, 220, 0.14);   /* panel + card borders */
+  --head-bg:      rgba(14, 21, 18, 0.86);
+  --hero-wash:    transparent;
+
+  --btn-solid-bg: var(--ember);
+  --btn-solid-fg: var(--pine);
+
+  /* the inverted band — flips against whatever the page register is */
+  --band-ground:  var(--bone);
+  --band-ink:     var(--pine);
+  --band-text:    #3a4640;
+  --band-accent:  var(--ember-ink);
+
+  /* the footer is a dark anchor in both registers */
+  --foot-bg:      #0a0f0d;
+  --foot-ink:     var(--bone);
+  --foot-soft:    rgba(237, 231, 220, 0.66);
+
   color-scheme: dark;
+}
+
+/* --- Bone register: the landing page ------------------------------------ */
+body.paper {
+  --ground:       var(--paper);
+  --ground-lift:  var(--paper-lift);
+  --text:         var(--ink-body);
+  --text-strong:  var(--ink);
+  --text-soft:    var(--ink-soft);
+  --label:        var(--moss-text);
+  --accent:       var(--ember);
+  --accent-text:  var(--ember-text);
+  --accent-hover: var(--ink);
+  --line:         var(--paper-rule);
+  --edge:         var(--paper-edge);
+  --head-bg:      rgba(237, 231, 220, 0.9);
+  --hero-wash:    var(--paper-warm);
+
+  /* band inverts the other way here: Pine on a Bone page */
+  --band-ground:  var(--pine);
+  --band-ink:     var(--bone);
+  --band-text:    rgba(237, 231, 220, 0.74);
+  --band-accent:  var(--ember);
+
+  --foot-bg:      var(--pine);
+
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: var(--pine); }
+body.paper { background: var(--paper); }
 
 body {
   margin: 0;
-  background: var(--pine);
-  color: var(--bone);
+  background: var(--ground);
+  color: var(--text);
   font-family: var(--sans);
   font-size: 17px;
   line-height: 1.65;
@@ -41,32 +130,42 @@ body {
 }
 
 img, svg { max-width: 100%; }
-a { color: var(--ember); text-decoration-thickness: 1px; text-underline-offset: 2px; }
-a:hover { color: #f0855a; }
+a { color: var(--accent-text); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--accent-hover); }
 
 /* --- shared rhythm ------------------------------------------------------- */
 
-.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+/* padding-inline / padding-block on purpose, NOT the `padding` shorthand.
+   BUG FIXED 2026-09-17: every content section is `<section class="wrap">`, and
+   `.wrap { padding: 0 24px }` (a class) outspecifies `section { padding: 84px 0 }`
+   (a type), so every section on both pages was rendering with ZERO vertical
+   padding — its 84px was being thrown away. The dark register hid it, because the
+   0.14-alpha divider was nearly invisible; on Bone the rules land hard against the
+   kickers. Separate longhand groups can't collide, so both now apply. */
+.wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: 24px; }
 
-section { padding: 84px 0; border-top: 1px solid var(--line); }
+section { padding-block: 84px; border-top: 1px solid var(--line); }
 section:first-of-type { border-top: 0; }
+/* The hero sits inside .hero-shell, so #work becomes main's first section child and
+   :first-of-type strips the rule that belongs between the hero and it. Put it back. */
+#work { border-top: 1px solid var(--line); }
 
 .kicker {
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--moss);
+  color: var(--label);
   margin: 0 0 18px;
 }
 
-h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.12; letter-spacing: -0.018em; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.12; letter-spacing: -0.018em; color: var(--text-strong); }
 h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 20px; }
 h3 { font-size: 22px; margin: 0 0 8px; }
 
 p { margin: 0 0 18px; max-width: 62ch; }
-.lede { font-size: 20px; color: var(--bone); }
-small, .fine { font-size: 13px; color: var(--bone-soft); line-height: 1.5; }
+.lede { font-size: 20px; color: var(--text-strong); }
+small, .fine { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
 
 /* --- header ------------------------------------------------------------- */
 
@@ -74,7 +173,7 @@ small, .fine { font-size: 13px; color: var(--bone-soft); line-height: 1.5; }
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(14, 21, 18, 0.86);
+  background: var(--head-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
 }
@@ -85,8 +184,9 @@ small, .fine { font-size: 13px; color: var(--bone-soft); line-height: 1.5; }
   min-height: 64px;
   gap: 18px;
 }
-.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--bone); }
-.brand svg { width: 26px; height: auto; display: block; color: var(--ember); }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-strong); }
+.brand svg { width: 26px; height: auto; display: block; color: var(--accent); }
+body.paper .brand svg { color: var(--ember-ink); }
 .brand b {
   font-family: var(--serif);
   font-weight: 400;
@@ -94,39 +194,95 @@ small, .fine { font-size: 13px; color: var(--bone-soft); line-height: 1.5; }
   letter-spacing: -0.018em;
 }
 .brand span {
+  white-space: nowrap;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--moss);
+  color: var(--label);
   align-self: flex-end;
   padding-bottom: 4px;
 }
 .nav { display: flex; gap: 22px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
-.nav a { color: var(--bone-soft); text-decoration: none; }
-.nav a:hover { color: var(--ember); }
-@media (max-width: 640px) { .nav a:not(.nav-cta) { display: none; } }
+.nav a { color: var(--text-soft); text-decoration: none; white-space: nowrap; }
+.nav a:hover { color: var(--accent-text); }
+.nav .nav-cta { color: var(--accent-text); }
+/* Breakpoints set by looking at renders, not guessed: the descriptor wraps to two
+   lines below ~780px, and the nav links below ~700px. */
+@media (max-width: 780px) { .brand span { display: none; } }
+@media (max-width: 700px) { .nav a:not(.nav-cta) { display: none; } }
 
 /* --- hero ------------------------------------------------------------- */
 
-.hero { padding: 96px 0 72px; border-top: 0; }
+/* padding-block, not the shorthand — `.hero` and `.wrap` are both classes, so the
+   shorthand here would win and zero out .wrap's 24px side gutter on phones. */
+.hero { padding-block: 96px 72px; border-top: 0; }
+.hero-shell {
+  background:
+    radial-gradient(90% 120% at 12% 0%, var(--hero-wash) 0%, transparent 62%);
+}
 .hero .lockup { display: flex; align-items: center; gap: 20px; margin-bottom: 34px; }
-.hero .lockup svg { width: 62px; height: auto; color: var(--ember); }
-.hero .lockup .word { font-family: var(--serif); font-size: 44px; letter-spacing: -0.018em; line-height: 0.9; }
+.hero .lockup svg { width: 78px; height: auto; color: var(--accent); }
+body.paper .hero .lockup svg { color: var(--ember-ink); }
+/* The layered master's opacity ramp was drawn for a Pine ground: at .42 the
+   furthest ridge all but disappears on Bone. Raise the floor, keep the ramp —
+   the receding peaks are the mark's whole idea, so flattening it is not the fix.
+   78px, not 62px, because the roots are 0.75–1.6-unit strokes in a 94-unit box. */
+body.paper .lockup .l1 { fill-opacity: .50; }
+body.paper .lockup .l2 { fill-opacity: .66; }
+body.paper .lockup .l3 { fill-opacity: .82; }
+
+/* Copy left, the ~450 stat pulled up beside it — on Bone the old single column
+   left half the fold empty, which reads as unfinished rather than as air. */
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: 56px;
+  align-items: start;
+}
+.hero-grid .stat { margin-top: 10px; max-width: none; }
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 34px; }
+  .hero-grid .stat { margin-top: 0; max-width: 60ch; }
+}
+.hero-grid .cta { margin-bottom: 0; }
+
+/* On a phone both "Land & Fire" descriptors wrap to two lines and fight the
+   baseline they are aligned to. The header drops its (the hero carries the
+   brand statement); the hero's moves to its own line under the wordmark. */
+@media (max-width: 560px) {
+  .hero .lockup { flex-wrap: wrap; gap: 12px 16px; }
+  .hero .lockup .desc { flex-basis: 100%; align-self: auto; padding-bottom: 0; }
+}
+.hero .lockup .word { font-family: var(--serif); font-size: 44px; letter-spacing: -0.018em; line-height: 0.9; color: var(--text-strong); }
 .hero .lockup .desc {
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.3em;
-  text-transform: uppercase; color: var(--moss); align-self: flex-end; padding-bottom: 8px;
+  text-transform: uppercase; color: var(--label); align-self: flex-end; padding-bottom: 8px;
 }
 .hero h1 { font-size: clamp(34px, 6vw, 60px); margin: 0 0 18px; max-width: 18ch; }
 .hero .say {
   font-family: var(--serif);
   font-size: clamp(19px, 2.4vw, 24px);
-  color: var(--bone);
-  border-left: 3px solid var(--ember);
+  color: var(--text-strong);
+  border-left: 3px solid var(--accent);
   padding-left: 18px;
-  margin: 0 0 30px;
+  margin: 0 0 26px;
   max-width: 40ch;
 }
+
+/* the settled service line — same three items as the card and the magnets */
+.serviceline {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin: 0 0 30px;
+  max-width: none;
+}
+.serviceline b { color: var(--text-strong); font-weight: 400; }
+.serviceline i { color: var(--accent); font-style: normal; padding: 0 4px; }
+
 .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 40px; }
 
 .btn {
@@ -139,21 +295,22 @@ small, .fine { font-size: 13px; color: var(--bone-soft); line-height: 1.5; }
   padding: 13px 22px;
   border-radius: 2px;
 }
-.btn-solid { background: var(--ember); color: var(--pine); font-weight: 600; }
-.btn-solid:hover { background: #f0855a; color: var(--pine); }
-.btn-ghost { border: 1px solid var(--line); color: var(--bone); }
-.btn-ghost:hover { border-color: var(--ember); color: var(--ember); }
+.btn-solid { background: var(--btn-solid-bg); color: var(--btn-solid-fg); font-weight: 600; }
+.btn-solid:hover { background: #f0855a; color: var(--btn-solid-fg); }
+.btn-ghost { border: 1px solid var(--edge); color: var(--text-strong); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent-text); }
 
 .stat {
-  background: var(--timber);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--moss);
+  background: var(--ground-lift);
+  border: 1px solid var(--edge);
+  border-left: 3px solid var(--label);
   padding: 22px 24px;
   border-radius: 3px;
   max-width: 60ch;
 }
-.stat .n { font-family: var(--serif); font-size: 32px; color: var(--ember); display: block; line-height: 1; margin-bottom: 8px; }
-.stat p { margin: 0; font-size: 15px; color: var(--bone-soft); }
+.stat .n { font-family: var(--serif); font-size: 32px; color: var(--accent-text); display: block; line-height: 1; margin-bottom: 8px; }
+.stat p { margin: 0; font-size: 15px; color: var(--text-soft); }
+.stat .src { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--label); margin-top: 12px; line-height: 1.5; }
 
 /* --- content columns / cards ---------------------------------------- */
 
@@ -161,43 +318,108 @@ small, .fine { font-size: 13px; color: var(--bone-soft); line-height: 1.5; }
 @media (max-width: 780px) { .cols { grid-template-columns: 1fr; gap: 28px; } }
 
 .panel {
-  background: var(--timber);
-  border: 1px solid var(--line);
+  background: var(--ground-lift);
+  border: 1px solid var(--edge);
   border-radius: 4px;
   padding: 28px;
 }
-.panel h3 { color: var(--bone); }
-.panel .src { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--moss); margin-top: 14px; line-height: 1.5; }
+.panel h3 { color: var(--text-strong); }
+.panel .src { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--label); margin-top: 14px; line-height: 1.5; }
 
-ul.work { list-style: none; margin: 0; padding: 0; }
-ul.work li { padding: 12px 0; border-top: 1px solid var(--line); font-size: 16px; }
-ul.work li:first-child { border-top: 0; }
-ul.work li b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--moss); display: block; margin-bottom: 2px; }
+/* --- the three service lines ---------------------------------------- */
 
-.band {
-  background: var(--bone);
-  color: var(--pine);
+.lines3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 8px; }
+@media (max-width: 860px) { .lines3 { grid-template-columns: 1fr; gap: 18px; } }
+.lines3 > div {
+  background: var(--ground-lift);
+  border: 1px solid var(--edge);
+  border-top: 3px solid var(--accent);
+  border-radius: 3px;
+  padding: 24px 24px 26px;
 }
-.band h2 { color: var(--pine); }
-.band p { color: #3a4640; }
-.band a { color: var(--ember-ink); }
-.band .kicker { color: var(--ember-ink); }
+.lines3 h3 { font-size: 20px; margin-bottom: 10px; }
+.lines3 p { font-size: 15px; margin: 0 0 12px; max-width: none; }
+.lines3 p:last-child { margin-bottom: 0; }
+.lines3 .tags { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--label); line-height: 1.8; }
+
+.scope {
+  margin-top: 28px;
+  border-left: 3px solid var(--label);
+  padding: 4px 0 4px 18px;
+}
+.scope p { margin: 0; font-size: 15px; color: var(--text-soft); }
+
+/* --- how it works: walk, work, packet ------------------------------- */
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; max-width: 840px; }
+.steps li {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 24px;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  align-items: start;
+}
+.steps li:first-child { border-top: 0; padding-top: 0; }
+.steps .no {
+  font-family: var(--serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--accent-text);
+}
+.steps h3 { font-size: 21px; margin: 0 0 6px; }
+.steps p { margin: 0; font-size: 16px; }
+@media (max-width: 560px) {
+  .steps li { grid-template-columns: 1fr; gap: 8px; }
+  .steps .no { font-size: 26px; }
+}
+
+/* --- the packet list ------------------------------------------------ */
+
+.packet { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.packet li { font-size: 16px; padding-left: 22px; position: relative; }
+.packet li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.62em;
+  width: 9px; height: 9px;
+  background: var(--accent);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.packet li b { font-weight: 600; color: var(--text-strong); }
+
+/* --- the ridge divider: the mark's motif as a rule ------------------ */
+
+.ridge-rule { display: block; width: 100%; height: 26px; color: var(--line); }
+.ridge-rule svg { display: block; width: 100%; height: 26px; }
+
+/* --- inverted band -------------------------------------------------- */
+
+.band { background: var(--band-ground); color: var(--band-text); }
+.band h2, .band h3 { color: var(--band-ink); }
+.band p { color: var(--band-text); }
+.band a { color: var(--band-accent); }
+.band .kicker { color: var(--band-accent); }
+.band .fine { color: var(--band-text); }
 
 /* --- contact ------------------------------------------------------- */
 
-.contact .lines { font-family: var(--mono); font-size: 15px; letter-spacing: 0.04em; line-height: 2.1; }
+.contact .lines { font-family: var(--mono); font-size: 15px; letter-spacing: 0.04em; line-height: 2.1; color: var(--text-strong); }
 .contact .lines a { text-decoration: none; }
 
 /* --- footer ------------------------------------------------------- */
 
-.site-foot { border-top: 3px solid var(--ember); background: #0a0f0d; padding: 44px 0; }
+.site-foot { border-top: 3px solid var(--ember); background: var(--foot-bg); color: var(--foot-ink); padding: 44px 0; }
 .site-foot .wrap { display: flex; flex-wrap: wrap; gap: 24px 60px; justify-content: space-between; align-items: flex-start; }
-.site-foot .word { font-family: var(--serif); font-size: 26px; letter-spacing: -0.018em; }
-.site-foot .fine { max-width: 46ch; }
+.site-foot .word { font-family: var(--serif); font-size: 26px; letter-spacing: -0.018em; color: var(--foot-ink); }
+.site-foot svg { color: var(--ember); }
+.site-foot .fine { color: var(--foot-soft); max-width: 46ch; }
 .site-foot .fine a { color: var(--moss); }
+.site-foot .foot-mark { display: flex; align-items: center; gap: 12px; }
+.site-foot .foot-mark svg { width: 30px; height: auto; }
 
 /* ==========================================================================
-   Merch board
+   Merch board  — dark register only; never carries .paper
    ========================================================================== */
 
 .board-intro { padding-top: 88px; }
@@ -206,10 +428,10 @@ ul.work li b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em
   display: grid; gap: 10px;
 }
 .notes li {
-  font-size: 14px; color: var(--bone-soft);
+  font-size: 14px; color: var(--text-soft);
   padding-left: 20px; position: relative; max-width: 74ch;
 }
-.notes li::before { content: "—"; position: absolute; left: 0; color: var(--moss); }
+.notes li::before { content: "—"; position: absolute; left: 0; color: var(--label); }
 
 .grid {
   display: grid;
@@ -217,7 +439,7 @@ ul.work li b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em
   gap: 26px;
 }
 .card {
-  background: var(--timber);
+  background: var(--ground-lift);
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
@@ -235,21 +457,21 @@ ul.work li b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em
 .card.light .mock { background: radial-gradient(130% 120% at 50% 12%, #f5f1e8 0%, #d8d0be 78%); }
 .card .mock svg { width: 100%; height: auto; max-height: 300px; display: block; }
 .card .body { padding: 20px 22px 24px; border-top: 1px solid var(--line); }
-.card .body h3 { font-size: 19px; color: var(--bone); margin-bottom: 6px; }
-.card .body p { font-size: 14px; color: var(--bone-soft); margin: 0 0 14px; }
+.card .body h3 { font-size: 19px; color: var(--text-strong); margin-bottom: 6px; }
+.card .body p { font-size: 14px; color: var(--text-soft); margin: 0 0 14px; }
 .spec { display: grid; gap: 4px; }
-.spec div { font-family: var(--mono); font-size: 11px; letter-spacing: 0.03em; color: var(--moss); }
-.spec div b { color: var(--bone-soft); font-weight: 400; display: inline-block; min-width: 74px; }
+.spec div { font-family: var(--mono); font-size: 11px; letter-spacing: 0.03em; color: var(--label); }
+.spec div b { color: var(--text-soft); font-weight: 400; display: inline-block; min-width: 74px; }
 
 .beyond { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-top: 8px; }
 .beyond div {
-  background: var(--timber);
+  background: var(--ground-lift);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--moss);
+  border-left: 3px solid var(--label);
   border-radius: 3px;
   padding: 16px 18px;
 }
-.beyond h3 { font-size: 16px; margin-bottom: 4px; color: var(--bone); }
-.beyond p { font-size: 13px; color: var(--bone-soft); margin: 0; }
+.beyond h3 { font-size: 16px; margin-bottom: 4px; color: var(--text-strong); }
+.beyond p { font-size: 13px; color: var(--text-soft); margin: 0; }
 
 .backlink { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }

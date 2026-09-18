@@ -1,6 +1,8 @@
 # Sixfold Colorado — website (draft build on disk)
 
 **Started:** 2026-09-01
+**Landing page re-cut 2026-09-17** — Bone register, and the copy brought up to date with
+everything settled since 1 September. See §What changed 2026-09-17.
 **Status:** Draft. **Not deployed, no host, no domain resolves.** Same standing as
 every other Sixfold asset — nothing published, posted, scheduled or uploaded.
 
@@ -13,12 +15,17 @@ stays inside the workspace so it can be audited.
 
 ```
 sixfold/site/
-  index.html            landing page (funding-led: the work, who pays, the paperwork, boards, contact)
+  index.html            landing page — Bone register, carries class="paper"
   merch/
     index.html          merch & branding concept board — GENERATED, do not hand-edit
     build-merch.mjs      generator: one SVG renderer per product + the item copy + the page shell
-  assets/site.css        shared stylesheet — palette is the agreed five
+  assets/site.css        shared stylesheet — one file, two registers (see §Design)
+  serve.mjs              local preview on :8090
 ```
+
+Landing page sections, in order: hero (the ~450 stat) · **the work, as three service
+lines** · who pays · **Zone 1, the part you do yourself** · **how it goes** ·
+**what you keep** · HOA & fire-district boards · contact.
 
 Clean-ish URLs: `/` and `/merch/`. Links between pages are relative so the site
 opens by double-click from `file://` with no server.
@@ -34,12 +41,71 @@ landing page stays hand-authored HTML.
 
 ## Design
 
-Dark-first, Pine Black ground. Wordmark and display lines in the Palatino / Book
-Antiqua serif at `-0.018em`, same as every built Sixfold asset; labels and
-descriptors in mono, tracked; body in a system sans. Mark is **Ridge** (Sweep is
-still formally Brandon's call — swap the `<symbol>`/inline SVG if it changes).
-"Land & Fire" is used as the descriptor and is an **accepted placeholder**, not a
-locked tagline.
+Wordmark and display lines in the Palatino / Book Antiqua serif at `-0.018em`, same as
+every built Sixfold asset; labels and descriptors in mono, tracked; body in a system
+sans. Mark is **Ridge** (Sweep is still formally Brandon's call — swap the `<symbol>`
+if it changes). **"Land & Fire" is the settled descriptor** as of 2026-09-16 — it is
+printed on the business cards and the vehicle magnets, so the site no longer hedges it.
+
+### Two registers from one stylesheet
+
+**The landing page is Bone. The merch board stays Pine.** Matthew's call 2026-09-17:
+the Surge site is dark, so Sixfold reads lighter and the two are not mistaken for each
+other.
+
+Every component in `site.css` now reads a semantic token (`--ground`, `--text`,
+`--label`, `--accent`, `--edge` …). `:root` holds the **dark** values, unchanged from
+the 1 September build, so the merch board's colours did not move. `body.paper`
+reassigns the same tokens to the Bone set. **To flip a page, add `class="paper"` to its
+`<body>` — nothing else.**
+
+Two regions invert against whatever register the page is in, so the page has rhythm
+rather than one flat field: the **HOA/boards band** (Pine on the Bone page, Bone on the
+dark one) and the **footer**, which is a dark anchor in both.
+
+### Contrast — measured, not eyeballed
+
+Against Bone `#EDE7DC`:
+
+| Value | Ratio | Used for |
+|---|---|---|
+| `--ink #16201C` | 14.6:1 | headings |
+| `--ink-body #2C3A33` | 11.0:1 | body |
+| `--ink-soft #4C5A53` | 5.9:1 | secondary, `.fine` |
+| `--ember-text #A64211` | 5.0:1 | **links and small ember type** |
+| `--moss-text #4E6142` | 5.5:1 | kickers, labels |
+| Pine on solid Ember `#E4703A` | 5.9:1 | the primary CTA |
+
+**Ember `#E4703A` (2.6:1) and Moss `#8AA07A` (2.3:1) are decorative only on Bone** —
+rules, fills, marks, borders, never type. The pre-existing `--ember-ink #B84C15` is
+**4.18:1 and fails** as a body-size link colour, which is why `--ember-text` was added;
+`#B84C15` is kept only where it is a large-text or graphic value (the small marks).
+
+### Mark usage on the page
+
+- **Flat Ridge** (`brand/sixfold-mark-ridge-flat-mono.svg`, the print/merch master) in
+  the header at 26px and the footer at 30px. Solid fills with real knockout gaps, so it
+  holds at small sizes where the master's layered opacity turns to mud.
+- **Layered master** in the hero at 78px, where the receding opacity ramp is the point.
+  Its floor was drawn for a Pine ground — at `.42` the furthest ridge all but vanishes
+  on Bone — so `body.paper` raises the ramp to `.50 / .66 / .82` and keeps the
+  progression. 78px rather than 62px because the roots are 0.75–1.6-unit strokes in a
+  94-unit box and they went spidery at the smaller size.
+- Both are `<symbol>`s defined once at the top of the document and `<use>`d.
+
+### ⚑ A layout bug this surfaced, and the fix
+
+Every content section is `<section class="wrap">`. `.wrap { padding: 0 24px }` is a
+**class** and `section { padding: 84px 0 }` is a **type**, so the class won the whole
+`padding` shorthand and **every section on both pages was rendering with zero vertical
+padding** — the 84px had been thrown away since 1 September. The dark register hid it,
+because the divider sits at 0.14 alpha; on Bone the rules land hard against the kickers
+and it is obvious.
+
+Fixed by splitting the groups — `.wrap` sets `padding-inline`, `section` sets
+`padding-block` — which cannot collide. Same trap caught on `.hero`. **This also
+changed the merch board**, which gained the spacing it was always meant to have;
+re-rendered and checked.
 
 ## Standing constraints honoured on every page
 
@@ -54,6 +120,11 @@ Per `sixfold/README.md` and `sixfold/marketing/facebook-page-copy.md`:
   no pricing and no order flow by design** — the launch offer and rate card are
   still open.
 - No track record — no years in business, job counts, "trusted by", review counts.
+- **Service region is the post-Monument set**: "El Paso, Teller and southern Douglas
+  counties and the Front Range foothills", with "further out is a phone call, not a
+  refusal". The 1 September page said "working across the Front Range", which overclaims
+  from a Monument base — 35 miles does not reach Arapahoe or Jefferson. Wording matches
+  the pamphlet and Sheet D, not sheets A/B/C, which are still stale.
 - "We handle the paperwork for you" is banned. The landing page uses the approved
   framing: *"every job comes with the paperwork, whether or not you ask"*, and
   states where Sixfold stops (no returns filed, no carrier contact, no claims).
@@ -89,6 +160,49 @@ Slogans used, and why each is safe to print:
   script kit (the homeowner can do that zone without a crew).
 - **"Fire mitigation · Front Range · (303) 915-1045"** — the standing contact line.
 
+## What changed 2026-09-17
+
+Everything settled since 1 September, brought onto the page.
+
+| Change | Where it comes from |
+|---|---|
+| **Bone register** | Matthew, 2026-09-17 — the Surge site is dark, Sixfold reads lighter |
+| **The service line is three things, not one**: fire mitigation · land clearing · landscaping. Title, meta description, hero, `#work` and the footer all carry it | Settled 2026-09-16 (`operations/business-cards.html`), printed on the cards and the vehicle magnets (`brand/vehicle/README.md`) |
+| **"Land & Fire · Colorado"** as the header/footer descriptor, no longer hedged | Same — settled, on durable print |
+| **`#work` rebuilt as three service lines** with the Sheet D working-list framing underneath | `marketing/services-onesheet-d.md` |
+| **New `#how`: walk → work → handover**, and the quote comes off a counted sheet | `operations/quote-walk-sheet.md`, `operations/job-closeout.md` |
+| **`#paperwork` → `#packet`**, now the real handover folder, item by item | `marketing/referral-packet.html` (six pages, built 2026-09-15) |
+| **New `#zone1`** — the highest-value work is the part the homeowner does alone | `content/03-first-five-feet-post.md` |
+| **Service region corrected** to the post-Monument counties | `sixfold/README.md` §The move to Monument |
+| **Flat Ridge at small sizes** | `brand/build-mark-flat.mjs`, built 2026-09-16 |
+| **The `~450` stat now shows its source** on the page | Already in this log; it was uncited in the markup |
+| **Merch board nav re-pointed** to `#how` / `#packet` and its descriptor updated | The landing page's anchors were renamed, which broke `../#paperwork`. Generator edited and re-run — the board is generated, never hand-edited |
+
+### ⚑ Three things for Matthew to decide — not decided here
+
+1. **Stump grinding.** It is on the page (`Stumps` in the fire-mitigation tags), as it
+   was on 1 September, and it is in the **facebook/Square bio** and priced as a line in
+   the **quote engine** (badged *Unbacked*). But Brandon instructed on 2026-08-25 that it
+   come **off Sheet D entirely** — "do not re-add it". That instruction was recorded as
+   scoped to that document, so it was **not** applied here. **The two surfaces now
+   disagree.** Either it is a service or it is not; the site should follow whichever.
+2. **The Colorado Springs 15 ft licence is not mentioned on the page.** Standing crew
+   rule is to stop and call in on any tree 15 ft or taller inside city limits, and the
+   licence is blocked on GL and workers comp Sixfold does not hold. Disclosing that on a
+   public page is honest and also advertises a gap in the home market — **Matthew's
+   call, deliberately left off** rather than decided quietly. El Paso County is named as
+   a service region, which is what every other file does.
+3. **The referral packet prints `SixfoldColorado.com`** on its footer, against the
+   standing "no web address anywhere until it resolves" rule. Not touched — it is a
+   different document and out of scope for this pass — but it is a live exception.
+
+Also still open, unchanged: the **landscaping and land-clearing detail** is written from
+Brandon's 2026-08-25 list, which he called provisional (*"once I know for sure what we
+are limited to I'll update you"*). The page's wording is deliberately capability-shaped
+rather than a boundary, but the detail should be re-read when he confirms.
+
+---
+
 ## Fact-check log
 
 Claims on the landing page, all carried from already-verified Sixfold files:
@@ -102,6 +216,13 @@ Claims on the landing page, all carried from already-verified Sixfold files:
 | Work to Colorado State Forest Service standards | DOR guidance requires work to meet or exceed CSFS / DFPC standards | |
 | Services list (fell, grind stumps, pile/chip slash, cut rounds, haul or stack; defensible space, fuel breaks, thinning) | `facebook-page-copy.md` long bio | No mastication claimed — Sixfold has no masticator/mulching head (equipment gap noted in `sixfold/README.md`) |
 | "Not tax or insurance advice — confirm your own position with your accountant and your carrier." | Standing disclaimer on every Sixfold funding surface | |
+| **Zone 1 is the ground from the wall out to five feet**, and nothing in it should burn — needles off the foundation and deck, wood mulch swapped for gravel, firewood out to 30 ft, combustible fencing removed within 5 ft | Colorado State Forest Service Home Ignition Zone checklists (csfs.colostate.edu), via `content/03-first-five-feet-post.md` | **Colorado numbers this strip Zone 1; California's scheme calls it Zone 0.** The page says so explicitly — using the wrong set in local copy is an immediate tell |
+| **71,000+ properties, 2016–2019; buildings with a lot of vegetation within 5 ft were destroyed 78% of the time, close to twice the rate** of those with little | IBHS news release 8 April 2021, *"Nearly Doubling a Property's Wildfire Survival Rate"* — Zesty.ai study with IBHS | Deliberately **not** phrased as IBHS's own headline "cuts your risk in half": that reads as a promise about one specific house, and the underlying finding is a comparison of destruction rates between two groups |
+| **Service line: fire mitigation · land clearing · landscaping** | Settled by Matthew 2026-09-16; printed on `operations/business-cards.pdf` and all three vehicle magnets | "Defensible space" was dropped rather than added as a fourth — it restates fire mitigation |
+| **Landscaping = mowing, edging, beds, planting** | Brandon's 2026-08-25 list (Sheet D); the mowing/edging/beds/planting row on `operations/job-closeout.md`, added because **job 2 was mostly landscaping** and nothing on the walk sheet captured it | Brandon called the list provisional — see the open item above |
+| **The handover folder's six contents** | `marketing/referral-packet.html`, the six-page template built 2026-09-15 | "Programs in your county" names **no** county and no program, and states that all of them need approval *before* work starts — which is the opposite of implying Sixfold is on an approved list. The Douglas County hard rule is intact |
+| **The quote comes off a counted sheet, not an impression** | `operations/quote-walk-sheet.md` (site-walk capture sheet) and `quotes/quote-engine.md` | No price, rate or mechanism is stated — only that the count exists |
+| **Photographs from fixed positions before anything comes down** | Referral packet p.2 and the standing paperwork posture | |
 
 **Unresolved / to revisit before this goes anywhere near a host:**
 
