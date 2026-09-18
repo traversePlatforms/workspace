@@ -1,5 +1,13 @@
 # Name Clearance — Preliminary Screen: "Sixfold"
 
+> **⚑ SUPERSEDED ON THE DOMAIN, 2026-09-18.** This screen recommends `sixfoldland.com`.
+> The domain question closed on 2026-08-21 and the answer is **`SixfoldColorado.com`**,
+> which is owned, with `Contact@SixfoldColorado.com` on it. `sixfoldland.com` was never
+> registered. **Do not act on the recommendation below.** The rest of the screen — the
+> entity and trademark findings, and the transcription of the Secretary of State record —
+> still stands, and that transcription is deliberately *not* updated: it records what the
+> register says, and the register still says Englewood until a change of address is filed.
+
 **Prepared:** 2026-08-18
 **Scope:** Colorado Secretary of State entity records, open-web trademark and company search, domain DNS check.
 

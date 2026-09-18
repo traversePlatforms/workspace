@@ -140,7 +140,7 @@ Roughly ten weeks. There is a hard sequencing reality here: almost nothing in th
 
 1. **Get real insurance quotes.** Indicative Colorado figures from broker sites: GL $900–$2,600/yr, workers comp $7–$13 per $100 of payroll, $1M/$2M typical minimum, full package $3,000–$10,000. **These are indicative only — get actual quotes.** Colorado has a strict one-employee workers comp threshold, so the moment anyone is engaged as an employee this stops being optional.
 2. **Phone the Douglas County Building Division** about the approved contractor list. The county site returns HTTP 403 to automated fetch, so requirements are unknown and cannot be desk-researched. Ask: what the list requires, when the next cost-share window opens, and how long listing takes. This is the highest-leverage twenty minutes available.
-3. **Register `sixfoldland.com`.** Clear on DNS, carries both businesses, doesn't pin the brand to fire. Confirm at the registrar. Do this before anything is printed.
+3. ~~**Register `sixfoldland.com`.**~~ **DONE, and it is `SixfoldColorado.com`** — owned since 2026-08-21, with `Contact@SixfoldColorado.com` on it. `sixfoldland.com` was never registered. Hosting is the remaining step, and **print now depends on it**: the URL went onto the customer-facing sheets on 2026-09-18.
 4. **Book the trademark attorney call** — USPTO classes 37 and 44, with Sixfold AI, Inc. as the known conflict to raise. Cheap now, expensive after a truck is wrapped.
 5. **Establish what Sixfold actually holds** in licensing and certification, and what the market treats as table stakes. This determines what the copy is allowed to say.
 
@@ -187,7 +187,7 @@ Insurance quoted and bought. Douglas County list requirements known and applicat
 
 ### Build the site
 
-At `sixfoldland.com`. Small and useful beats broad:
+At **`SixfoldColorado.com`** (not `sixfoldland.com` — superseded 2026-08-21). Small and useful beats broad:
 
 - The funding explainer as the centrepiece page — the thing that earns links, gets shared in HOA email threads, and answers a search nobody else is answering.
 - Before/after galleries from phase 1, organised by job type.

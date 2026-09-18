@@ -37,6 +37,12 @@ const BLEED = 0.125, SAFE = 0.75;
 
 const SERVICES = 'FIRE MITIGATION &middot; LAND CLEARING &middot; LANDSCAPING';
 const PHONE = '(303) 915-1045';
+/* Added 2026-09-18 on Matthew's instruction that the site will be live before
+   anything goes out. Set at the services size, NOT the phone size: a door is read
+   at 30 ft and the phone has to stay the second-largest thing on it, which is the
+   decision recorded in README.md. The URL is for whoever is stopped behind you at
+   a light, and it does not get to compete with the number. */
+const SITE = 'SixfoldColorado.com';
 
 function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
   const W = w + 2 * BLEED, H = h + 2 * BLEED;
@@ -68,6 +74,7 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
   .band{font-size:${t.band}pt;letter-spacing:.32em;color:${band};line-height:1}
   .svc{font-size:${t.svc}pt;letter-spacing:${t.svcTrack};color:${muted};line-height:1.15;white-space:nowrap}
   .phone{font-size:${t.phone}pt;letter-spacing:.02em;color:${accent};line-height:1;margin-top:.1in;white-space:nowrap}
+  .url{font-size:${t.svc}pt;letter-spacing:${t.svcTrack};color:${muted};line-height:1.15;white-space:nowrap;margin-top:.06in}
   /* Screen-only guides so the proof shows trim + safe; they do not print. */
   @media screen{.trim{outline:1px dashed rgba(127,127,127,.6)}.safe{outline:1px dashed rgba(127,127,127,.35)}}
   @media print{.trim,.safe{outline:none}}
@@ -81,6 +88,7 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
       <div class="mono band">Land &amp; Fire &middot; Colorado</div>
       <div class="mono svc">${SERVICES}</div>
       <div class="mono phone">${PHONE}</div>
+      <div class="mono url">${SITE}</div>
     </div>
   </div>
 </body></html>

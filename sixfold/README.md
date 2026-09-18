@@ -1,6 +1,6 @@
 # Sixfold LLC — project state
 
-**Last updated:** 2026-08-25 — **the operating base moved from Englewood to Monument.** Street address not yet on file; the Secretary of State record and the signed-agreement templates still carry the Englewood address and are the two things that must not be changed on a guess. See the move note at the foot of this file.
+**Last updated:** 2026-09-18 — **the street address is on file and is now on every agreement.** It is **17890 Sierra Way, Monument, CO 80132** (Matthew's instruction 2026-08-29). The remaining gap is **the Secretary of State record**, which still shows Englewood until a change of principal address is filed. See the move note at the foot of this file.
 **Read this first.** Everything below is decided or established. Start here before picking up work.
 
 **Nothing has been published, posted, scheduled or deployed.** The website in [site/](site/) (landing page + merch concept board, rebuilt in-repo 2026-09-01) is a build on disk with no domain and no host — the same standing as the drafts and sheets.
@@ -15,7 +15,7 @@ A new company started by Brandon (Surge CEO). An LLC with a bank account — not
 
 **Right now it does fire mitigation**, because that is what the current tools can do: fell trees, grind stumps, build slash piles, chip, cut rounds, haul off or leave on site. **No masticator / mulching head** — that is the main equipment gap against a full-service competitor.
 
-Based in **Monument, CO** — moved from Englewood 2026-08-25. **Street address not yet on file**, and it is no longer the Surge office, so Sixfold now has its own premises rather than sharing one. The Secretary of State record still shows the Englewood address.
+Based at **17890 Sierra Way, Monument, CO 80132** — moved from Englewood 2026-08-25, street address given by Matthew 2026-08-29. It is no longer the Surge office, so Sixfold has its own premises rather than sharing one. **The Secretary of State record still shows the Englewood address** and needs a change-of-principal-address filing.
 
 **Sixfold is not Surge.** The Surge voice specs and `brand/notes/RESTRICTED.md` govern Surge output, not this. What carries over: the research standard (every claim traced to a primary source, fact-check log in the file) and the standing no-publishing rule.
 
@@ -192,7 +192,8 @@ Sixfold now operates out of **Monument, CO** (El Paso County). Englewood was swe
 
 **Left alone on purpose:**
 
-- **[agreements/](agreements/)** — the service agreement and both Notice of Cancellation copies name the seller's place of business. Under 16 CFR 429 and C.R.S. 5-3-401 et seq. a defective cancellation notice leaves the job voidable for **three years**, so these need the real Monument street address, not a city swap. **Blocked until the address exists.** Do not part-change them: a notice reading "Monument, CO 80110" with the old Englewood ZIP is worse than the old address.
+- ~~**[agreements/](agreements/)** — blocked until the address exists.~~ **DONE 2026-09-18, and this entry was badly stale.** All four agreements — `service-agreement`, `service-agreement-tablet`, `sedalia-A` and `job2` — now carry **17890 Sierra Way, Monument, CO 80132** on the contractor line, in both Notice of Cancellation copies and in every page footer. The Sedalia and job2 packs had carried it since 2026-08-29; the two blank templates were swept on 2026-09-18. The reasoning that produced the block still stands and is worth keeping: under 16 CFR 429 and C.R.S. 5-3-401 et seq. a defective cancellation notice leaves the job voidable for **three years**, so this address must never be part-changed — a notice reading "Monument, CO 80110" with the old Englewood ZIP would be worse than the old address.
+  - **⚑ Two things still open, and neither is drafting.** **(a)** The Secretary of State record still shows Englewood, so the register and the notice disagree — that mismatch is an argument the notice is defective, and it closes by filing a change of principal address. **(b)** Confirm mail is actually collected at 17890 Sierra Way. The cancellation address is where a mailed cancellation physically lands; an address nobody checks is the same three-year problem as a blank one. Both are recorded in [agreements/sedalia-A-service-agreement.notes.md](agreements/sedalia-A-service-agreement.notes.md) §3.
 - **[research/name-clearance-screen.md](research/name-clearance-screen.md)** — a transcription of the Secretary of State record, which still says `333 W Hampden Ave Ste 300, Englewood, CO 80110`. That is what the register says. **File a change of principal address with the SoS**, then update the transcription to match; never the other way round.
 - **[FACT-CHECK-2026-08-21.md](FACT-CHECK-2026-08-21.md)** — a dated audit of what was true that day.
 - **[brand/qr/README.md](brand/qr/README.md)** — names the live Nextdoor URL `nextdoor.com/page/six-fold-colorado-englewood-co`. Editing the file does not move the page. **Renaming the Nextdoor page will break the QR code**, which is decode-verified against that exact string — see that folder's README.

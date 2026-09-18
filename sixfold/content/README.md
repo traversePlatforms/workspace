@@ -36,7 +36,7 @@ From [../marketing/marketing-plan.md](../marketing/marketing-plan.md) §1 and §
 - **No implied track record.** Sixfold has no completed jobs, no portfolio and no reviews yet, and none of these posts pretend otherwise.
 - **Nextdoor punishes selling.** Four of the five close on an offer to explain something rather than an offer to quote.
 
-**Contact:** deliberately left out. Printing `m.sharpe@surgeftw.com` on Sixfold content re-creates the brand-separation problem the platform sheet flags. These wait for a `sixfoldland.com` address.
+**Contact: still deliberately left out, but the reason changed (2026-09-18).** Sixfold now has `Contact@SixfoldColorado.com`, so the brand-separation problem is gone — social posts still carry no contact line because a post is not a handout, not because the only address was a Surge one. The original note: printing `m.sharpe@surgeftw.com` on Sixfold content re-creates the brand-separation problem the platform sheet flags. These wait for a `sixfoldland.com` address.
 
 ---
 

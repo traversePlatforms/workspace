@@ -85,7 +85,7 @@ The money is real. What stops people claiming it is documentation nobody told th
 
 ## Footer
 
-Sixfold LLC · Monument, Colorado · (303) 915-1045 · m.sharpe@surgeftw.com
+Sixfold LLC · Monument, Colorado · (303) 915-1045 · Contact@SixfoldColorado.com · SixfoldColorado.com
 
 This sheet describes published Colorado programme terms as of August 2026. It is not tax or insurance advice — confirm your own position with your accountant and your carrier.
 
@@ -141,13 +141,20 @@ Kept here so the sheet can be lengthened later without re-researching.
 
 - **Phone number and email — resolved 2026-08-18.** (720) 772-6146 and m.sharpe@surgeftw.com, both supplied by Matthew. One open question on the email — see "Brand separation" at the end of this file.
   - **Superseded 2026-09-14.** The phone number is now **(303) 915-1045** — Sixfold's own line, given by Matthew 2026-09-08 and swept through the project on the 14th. The line above is left as the record of what this sheet carried at the time, not as a number to use. The email question is still open.
-- **Domain.** `sixfoldland.com` is recommended and clear on DNS but not registered, so no URL appears on the sheet.
+- ~~**Domain.** `sixfoldland.com` is recommended and clear on DNS but not registered, so no URL appears on the sheet.~~ **CLOSED.** The domain is **`SixfoldColorado.com`**, owned since 2026-08-21 — `sixfoldland.com` was never registered and is superseded. **The URL is now on the sheet** (2026-09-18, Matthew's instruction: the site will be live before anything goes out). That makes print dependent on hosting rather than the other way round — if the site is not up, the sheet points at nothing.
 - **Douglas County listing and window dates** — gates the held-back block.
 - **Whether a state form number should appear** for claiming the credit. Not verified, so the sheet points to the Department of Revenue page rather than naming a form.
 
 ---
 
 ## Brand separation — the email address
+
+**RESOLVED 2026-09-18.** The sheet now carries **`Contact@SixfoldColorado.com`** and
+**`SixfoldColorado.com`**. Everything below is the record of why the Surge address was a
+problem, kept because the reasoning applies to any future Sixfold surface — not because
+it still describes this sheet.
+
+<details><summary>The original note</summary>
 
 The sheet now carries `m.sharpe@surgeftw.com`, as supplied. It works and the sheet can print with it. Two things about it are worth deciding rather than inheriting.
 
@@ -158,3 +165,8 @@ The sheet now carries `m.sharpe@surgeftw.com`, as supplied. It works and the she
 **Cheap fix, already on the phase 1 list:** registering `sixfoldland.com` (item 3) makes a forwarding address — `matthew@sixfoldland.com` or `hello@sixfoldland.com` — a few minutes of work that lands in the same inbox. Nothing changes operationally; the sheet just stops pointing at another company.
 
 Not a blocker. The sheet is printable as it stands, and this is a swap to make before a volume print run rather than a reason to hold the proof.
+
+</details>
+
+*(The fix landed differently: the domain is `SixfoldColorado.com`, not `sixfoldland.com`,
+and the address on it is `Contact@SixfoldColorado.com`.)*

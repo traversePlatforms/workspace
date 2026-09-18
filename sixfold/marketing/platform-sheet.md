@@ -8,11 +8,15 @@
 
 ## The gate that comes before every platform
 
-**Register `sixfoldland.com` and stand up an email on it before creating a single account.**
+~~**Register `sixfoldland.com` and stand up an email on it before creating a single account.**~~
 
-Every platform binds ownership to the email address used at signup. The only address available right now is `m.sharpe@surgeftw.com`, which is Surge's domain. Signing up with it does three things, all bad:
+> **Superseded 2026-09-18.** The domain is **SixfoldColorado.com**, owned since 2026-08-21, with **Contact@SixfoldColorado.com** on it. `sixfoldland.com` was never registered and must not be acted on. The gate below is CLOSED.
 
-1. It makes Sixfold's platform accounts traceable to Surge, on top of the shared address at 333 W Hampden. §2 of the plan already flags the related-party structure as a live exposure; this makes it publicly visible rather than just visible to the books.
+*The reasoning below is kept because it still explains why the signup address matters — read it as the record of a solved problem, not an instruction.*
+
+Every platform binds ownership to the email address used at signup. At the time this was written the only address available was `m.sharpe@surgeftw.com`, which is Surge's domain. **Use `Contact@SixfoldColorado.com` for every signup.** Signing up with it does three things, all bad:
+
+1. It makes Sixfold's platform accounts traceable to Surge, on top of the address the two companies shared at the time. (Sixfold has had its own premises at 17890 Sierra Way, Monument since 2026-08-25.) §2 of the plan already flags the related-party structure as a live exposure; this makes it publicly visible rather than just visible to the books.
 2. Ownership transfer on a verified Google Business Profile is a recovery process, not a settings change. Doing it later is a week of support tickets against a listing that is by then carrying reviews.
 3. Any platform that emails a verification postcard or code to a business address inherits the Surge address problem permanently.
 
