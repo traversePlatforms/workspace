@@ -1,0 +1,651 @@
+<!doctype html>
+<!--
+  Sixfold Colorado — /wildfire-guide/ (draft build on disk). NOT deployed.
+
+  The printed home wildfire pamphlet, as a page. Copy and every figure are lifted from
+  sixfold/marketing/home-wildfire-pamphlet.html, which was rebuilt drawing-led on
+  2026-08-25 and then ACCURACY-AUDITED the same day — eleven corrections, each logged
+  in home-wildfire-pamphlet.md. This is fire-safety copy: do not reword a number, a
+  distance or a mechanism here without going back to that audit first. Several of the
+  current phrasings exist precisely because a looser one was wrong.
+
+  The four drawings are the pamphlet's own SVG, unmodified. They were drawn against
+  print grounds, so each sits on a plate that matches what it was drawn for: the ember
+  figure on Pine (it was the pamphlet's dark cover), the other three on near-white.
+
+  Panel order on the printed piece is 4-1-2-3 because of the fold. Here it is reading
+  order: embers, the house, the zones, the distances.
+
+  Attribution is required and is at the foot: adapted from CSFS, who endorse nobody.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preparing your home for wildfire — Sixfold Colorado</title>
+  <meta name="description" content="A Colorado homeowner's guide: where embers get in, the seven places a house catches, the three defensible-space zones measured from your wall, and the two distances that do most of the work.">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="paper">
+
+<!-- CHROME:MARKS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ridge-flat" viewBox="0 0 100 96">
+    <path fill="currentColor" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84ZM9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5ZM4 86L96 86L96 91L4 91Z"/>
+  </symbol>
+</svg>
+<!-- /CHROME:MARKS -->
+
+<!-- CHROME:HEAD -->
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
+      <b>Sixfold</b><span>Land &amp; Fire · Colorado</span>
+    </a>
+    <nav class="nav">
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays</a>
+      <a href="/wildfire-guide/" aria-current="page">Wildfire guide</a>
+      <a href="/merch/">Merch</a>
+      <a class="nav-cta" href="/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+<!-- /CHROME:HEAD -->
+
+<main>
+
+  <div class="hero-shell">
+  <section class="page-head wrap">
+    <p class="kicker">Colorado wildfire · a homeowner's guide</p>
+    <h1>Embers start most of the homes that burn.</h1>
+    <p class="lede">Wind carries burning debris <b>more than a mile ahead of a fire</b>.
+    It lands in your gutter, under your deck, in the mulch against your wall. That is the
+    part you can do something about.</p>
+    <p class="fine">Nothing on this page needs a contractor. Most of it is a weekend.</p>
+  </section>
+  </div>
+
+  <section id="embers" class="wrap">
+    <p class="kicker">How a house catches</p>
+    <h2>Three mechanisms, and one of them does most of it.</h2>
+
+    <figure class="plate dark">
+      <svg  viewBox="0 0 430 208" role="img"
+           aria-label="Embers carried by wind from a distant fire front land on a house more than a mile away">
+        <!-- ground -->
+        <rect x="0" y="168" width="430" height="2.4" fill="#3E5136"/>
+      
+        <!-- the fire front, right -->
+        <g>
+          <path d="M290 168 L320 94 L350 168 Z" fill="#E4703A" fill-opacity="0.4"/>
+          <path d="M324 168 L358 66 L392 168 Z" fill="#E4703A" fill-opacity="0.66"/>
+          <path d="M358 168 L394 42 L428 168 Z" fill="#E4703A"/>
+        </g>
+      
+        <!-- the house, left -->
+        <g>
+          <path d="M12 132 L52 98 L92 132 Z" fill="#EDE7DC"/>
+          <rect x="24" y="130" width="56" height="38" fill="#EDE7DC"/>
+          <rect x="44" y="146" width="14" height="22" fill="#14201B"/>
+          <!-- deck -->
+          <rect x="92" y="150" width="30" height="3.4" fill="#9DB08F"/>
+          <rect x="100" y="153" width="2.4" height="15" fill="#9DB08F"/>
+          <rect x="117" y="153" width="2.4" height="15" fill="#9DB08F"/>
+        </g>
+      
+        <!-- ember trajectories: they land ON the house, not near it -->
+        <g stroke="#E4703A" stroke-width="1.1" fill="none" stroke-dasharray="2.5 4.5" opacity="0.8">
+          <path d="M296 96 C236 34, 130 40, 52 100"/>
+          <path d="M308 126 C246 74, 140 86, 84 148"/>
+          <path d="M288 74 C226 22, 138 22, 96 62"/>
+        </g>
+        <g fill="#E4703A">
+          <circle cx="250" cy="50" r="2.8"/><circle cx="190" cy="48" r="2.1"/>
+          <circle cx="142" cy="54" r="3"/><circle cx="98" cy="70" r="2.2"/>
+          <circle cx="238" cy="88" r="2.4"/><circle cx="172" cy="88" r="2.9"/>
+          <circle cx="124" cy="104" r="2.1"/><circle cx="70" cy="122" r="2.6"/>
+          <circle cx="212" cy="34" r="2.2"/><circle cx="140" cy="30" r="2.5"/>
+          <circle cx="204" cy="112" r="2"/><circle cx="112" cy="134" r="2.3"/>
+        </g>
+      
+        <!-- distance -->
+        <g stroke="#7E8B7C" stroke-width="0.9">
+          <line x1="60" y1="184" x2="300" y2="184"/>
+          <path d="M60 184 l6 -3.4 v6.8 z" fill="#7E8B7C" stroke="none"/>
+          <path d="M300 184 l-6 -3.4 v6.8 z" fill="#7E8B7C" stroke="none"/>
+        </g>
+        <text x="180" y="199" font-family="ui-monospace, Consolas, monospace" font-size="8"
+              fill="#9AA697" text-anchor="middle" letter-spacing="1">MORE THAN A MILE</text>
+      </svg>
+    </figure>
+
+    <div class="ways3">
+      <div>
+        <h3>Embers</h3>
+        <p>Land on anything that will take a spark. The usual cause.</p>
+      </div>
+      <div>
+        <h3>Flame</h3>
+        <p>Reaches the wall when fuel sits within five feet of it.</p>
+      </div>
+      <div>
+        <h3>Heat</h3>
+        <p>Lights a wall with nothing touching it at all.</p>
+      </div>
+    </div>
+
+    <div class="scope">
+      <p>All three are real, which is why "clear the trees back" on its own is not a plan.
+      The order below is the order that matters: the house first, then the ground around
+      it, then the distances.</p>
+    </div>
+  </section>
+
+  <section id="house" class="wrap">
+    <p class="kicker">Start here, before anything outdoors</p>
+    <h2>Seven places a house catches.</h2>
+    <p class="lede">Work outward from the wall, not inward from the property line. Every
+    number on the drawing is a job you can do in a weekend.</p>
+
+    <figure class="plate">
+      <svg  viewBox="0 0 430 258" role="img"
+         aria-label="Cut-away of a house showing seven ignition points: roof, gutters, vents, under-deck, windows, the gap below the siding, and the fence">
+      <!-- ground -->
+      <rect x="0" y="222" width="430" height="3" fill="#6E8560"/>
+      <rect x="0" y="225" width="430" height="12" fill="#EAE3D4"/>
+      
+      <!-- fence, left -->
+      <g fill="#C7B79C">
+        <rect x="18" y="150" width="7" height="72"/>
+        <rect x="33" y="150" width="7" height="72"/>
+        <rect x="48" y="150" width="7" height="72"/>
+        <rect x="12" y="164" width="48" height="6"/>
+        <rect x="12" y="196" width="48" height="6"/>
+      </g>
+      
+      <!-- house body -->
+      <rect x="112" y="118" width="196" height="98" fill="#F6F2E9" stroke="#14201B" stroke-width="1.4"/>
+      <!-- siding lines -->
+      <g stroke="#DED5C4" stroke-width="1">
+        <line x1="112" y1="140" x2="308" y2="140"/>
+        <line x1="112" y1="162" x2="308" y2="162"/>
+        <line x1="112" y1="184" x2="308" y2="184"/>
+        <line x1="112" y1="202" x2="308" y2="202"/>
+      </g>
+      <!-- roof with overhanging eaves -->
+      <path d="M92 122 L210 46 L328 122 Z" fill="#2C3A32" stroke="#14201B" stroke-width="1.4"/>
+      <!-- gutter -->
+      <rect x="92" y="118" width="236" height="7" rx="2" fill="#8C9A88" stroke="#14201B" stroke-width="1"/>
+      <!-- chimney -->
+      <rect x="252" y="58" width="20" height="34" fill="#2C3A32" stroke="#14201B" stroke-width="1.2"/>
+      <!-- gable vent -->
+      <circle cx="210" cy="96" r="11" fill="#EDE7DC" stroke="#14201B" stroke-width="1.2"/>
+      <g stroke="#46534B" stroke-width="0.8">
+        <line x1="201" y1="92" x2="219" y2="92"/><line x1="201" y1="96" x2="219" y2="96"/>
+        <line x1="201" y1="100" x2="219" y2="100"/>
+      </g>
+      <!-- window -->
+      <rect x="140" y="146" width="44" height="42" fill="#CBD7DB" stroke="#14201B" stroke-width="1.2"/>
+      <line x1="162" y1="146" x2="162" y2="188" stroke="#14201B" stroke-width="1"/>
+      <line x1="140" y1="167" x2="184" y2="167" stroke="#14201B" stroke-width="1"/>
+      <!-- foundation vent -->
+      <rect x="228" y="204" width="26" height="11" fill="#EDE7DC" stroke="#14201B" stroke-width="1.1"/>
+      <g stroke="#46534B" stroke-width="0.7">
+        <line x1="232" y1="207" x2="250" y2="207"/><line x1="232" y1="211" x2="250" y2="211"/>
+      </g>
+      <!-- deck, right -->
+      <rect x="308" y="168" width="96" height="7" fill="#C7B79C" stroke="#14201B" stroke-width="1.1"/>
+      <g fill="#C7B79C" stroke="#14201B" stroke-width="1">
+        <rect x="330" y="175" width="7" height="47"/>
+        <rect x="392" y="175" width="7" height="47"/>
+      </g>
+      <!-- rail -->
+      <g fill="#C7B79C">
+        <rect x="396" y="132" width="6" height="37"/>
+        <rect x="330" y="132" width="6" height="37"/>
+        <rect x="330" y="132" width="72" height="5"/>
+      </g>
+      <!-- junk under the deck -->
+      <g stroke="#B0783F" stroke-width="2" stroke-linecap="round" fill="none">
+        <path d="M346 218 L368 206"/><path d="M350 218 L374 212"/><path d="M358 218 L364 202"/>
+      </g>
+      
+      <!-- 6 inch clearance measure -->
+      <g stroke="#B84C15" stroke-width="1">
+        <line x1="126" y1="216" x2="126" y2="222"/>
+        <line x1="118" y1="216" x2="134" y2="216"/>
+        <line x1="118" y1="222" x2="134" y2="222"/>
+      </g>
+      
+      <!-- callout discs -->
+      <g font-family="ui-monospace, Consolas, monospace" font-size="10.5" font-weight="700" text-anchor="middle">
+        <g fill="#E4703A"><circle cx="176" cy="80" r="11.5"/></g>
+        <text x="176" y="84" fill="#FFFFFF">1</text>
+        <g fill="#E4703A"><circle cx="104" cy="122" r="11.5"/></g>
+        <text x="104" y="126" fill="#FFFFFF">2</text>
+        <g fill="#E4703A"><circle cx="240" cy="96" r="11.5"/></g>
+        <text x="240" y="100" fill="#FFFFFF">3</text>
+        <g fill="#E4703A"><circle cx="368" cy="190" r="11.5"/></g>
+        <text x="368" y="194" fill="#FFFFFF">4</text>
+        <g fill="#E4703A"><circle cx="162" cy="167" r="11.5"/></g>
+        <text x="162" y="171" fill="#FFFFFF">5</text>
+        <g fill="#E4703A"><circle cx="150" cy="219" r="11.5"/></g>
+        <text x="150" y="223" fill="#FFFFFF">6</text>
+        <g fill="#E4703A"><circle cx="36" cy="182" r="11.5"/></g>
+        <text x="36" y="186" fill="#FFFFFF">7</text>
+      </g>
+      </svg>
+    </figure>
+
+    <ol class="numkey">
+      <li><b>Class A roof.</b> No wood or shake shingle.</li>
+      <li><b>Clear gutters, roof and deck</b> of needles more than once a year.</li>
+      <li><b>1/8-inch metal mesh</b> on every vent. Standard rodent screen is 1/4 and lets
+      embers through.</li>
+      <li><b>Screen under decks</b> and stilt foundations. Store nothing there.</li>
+      <li><b>Tempered glass</b>, two panes or more. Windows fail before the building does.</li>
+      <li><b>Six inches</b> of clearance between the ground and the bottom of the siding.</li>
+      <li><b>Non-combustible fence</b> within five feet. A fence on the house is part of
+      the house.</li>
+    </ol>
+    <p>Fibre cement, brick and stucco beat wood siding under radiant heat.</p>
+
+    <div class="inset">
+      <div>
+        <p class="kicker">Why the mesh size is the whole point</p>
+        <p>An ember passes straight through a 1/4-inch grid and is stopped by a 1/8-inch
+        one. Attic, eave, foundation, under-deck — every vent. This is the item people most
+        often think they have already done.</p>
+        <p class="fine">Labelled <b>stops most</b>, not "stops": the source is explicit that
+        1/8-inch screening only minimises ember entry. Overstating a barrier is how someone
+        stops checking it.</p>
+      </div>
+      <figure class="plate">
+        <svg  viewBox="0 0 430 104" role="img"
+         aria-label="A quarter-inch rodent screen lets an ember through; an eighth-inch metal mesh stops it">
+      <text x="0" y="9" font-family="ui-monospace, Consolas, monospace" font-size="6.6"
+            fill="#45583A" letter-spacing="1.4">WHY THE MESH SIZE IS THE WHOLE POINT</text>
+      
+      <!-- 1/4 inch: ember passes -->
+      <g transform="translate(6 20)">
+        <rect x="0" y="0" width="76" height="60" rx="3" fill="#EDE7DC" stroke="#14201B" stroke-width="1.2"/>
+        <g stroke="#8C9A88" stroke-width="1.1">
+          <line x1="19" y1="0" x2="19" y2="60"/><line x1="38" y1="0" x2="38" y2="60"/><line x1="57" y1="0" x2="57" y2="60"/>
+          <line x1="0" y1="15" x2="76" y2="15"/><line x1="0" y1="30" x2="76" y2="30"/><line x1="0" y1="45" x2="76" y2="45"/>
+        </g>
+        <circle cx="47.5" cy="37.5" r="5.6" fill="#E4703A"/>
+        <path d="M96 30 L120 30" stroke="#E4703A" stroke-width="1.6"/>
+        <path d="M120 30 l-7 -4 v8 z" fill="#E4703A"/>
+        <circle cx="90" cy="30" r="4.4" fill="#E4703A"/>
+      </g>
+      <text x="58" y="95" font-family="ui-monospace, Consolas, monospace" font-size="7.2"
+            fill="#46534B" text-anchor="middle" letter-spacing="0.5">1/4 IN &#183; GOES THROUGH</text>
+      
+      <!-- 1/8 inch: ember stopped -->
+      <g transform="translate(232 20)">
+        <rect x="0" y="0" width="76" height="60" rx="3" fill="#EDE7DC" stroke="#14201B" stroke-width="1.2"/>
+        <g stroke="#8C9A88" stroke-width="1">
+          <line x1="9.5" y1="0" x2="9.5" y2="60"/><line x1="19" y1="0" x2="19" y2="60"/><line x1="28.5" y1="0" x2="28.5" y2="60"/>
+          <line x1="38" y1="0" x2="38" y2="60"/><line x1="47.5" y1="0" x2="47.5" y2="60"/><line x1="57" y1="0" x2="57" y2="60"/>
+          <line x1="66.5" y1="0" x2="66.5" y2="60"/>
+          <line x1="0" y1="7.5" x2="76" y2="7.5"/><line x1="0" y1="15" x2="76" y2="15"/><line x1="0" y1="22.5" x2="76" y2="22.5"/>
+          <line x1="0" y1="30" x2="76" y2="30"/><line x1="0" y1="37.5" x2="76" y2="37.5"/><line x1="0" y1="45" x2="76" y2="45"/>
+          <line x1="0" y1="52.5" x2="76" y2="52.5"/>
+        </g>
+        <circle cx="-26" cy="30" r="5.6" fill="#E4703A"/>
+        <path d="M-42 30 L-34 30" stroke="#E4703A" stroke-width="1.6"/>
+        <g stroke="#45583A" stroke-width="2" stroke-linecap="round">
+          <path d="M-16 23 L-4 37"/><path d="M-4 23 L-16 37"/>
+        </g>
+      </g>
+      <text x="270" y="95" font-family="ui-monospace, Consolas, monospace" font-size="7.2"
+            fill="#45583A" text-anchor="middle" letter-spacing="0.5">1/8 IN &#183; STOPS MOST</text>
+      
+      <!-- the same mesh belongs on every opening -->
+      <text x="392" y="44" font-family="ui-monospace, Consolas, monospace" font-size="7"
+            fill="#46534B" text-anchor="middle" letter-spacing="0.5">ATTIC &#183; EAVE</text>
+      <text x="392" y="56" font-family="ui-monospace, Consolas, monospace" font-size="7"
+            fill="#46534B" text-anchor="middle" letter-spacing="0.5">FOUNDATION</text>
+      <text x="392" y="68" font-family="ui-monospace, Consolas, monospace" font-size="7"
+            fill="#46534B" text-anchor="middle" letter-spacing="0.5">UNDER-DECK</text>
+      </svg>
+      </figure>
+    </div>
+
+    <div class="note">
+      <p><b>Firefighters may not be there.</b> They engage only when it is safe for them
+      to. Prepare the house to stand on its own.</p>
+    </div>
+  </section>
+
+  <section id="zones" class="wrap">
+    <p class="kicker">Then work outward</p>
+    <h2>Three zones, measured from the wall.</h2>
+    <p class="lede">Build them around <b>every</b> structure — house, garage, shed, barn.</p>
+
+    <figure class="plate">
+      <svg  viewBox="0 0 430 232" role="img"
+         aria-label="Plan view of the three defensible space zones with trees spaced ten feet apart in zone two">
+      <!-- zone 3 -->
+      <rect x="4" y="4" width="422" height="224" rx="34" fill="#F6F2E9" stroke="#C9B79B" stroke-width="1" stroke-dasharray="4 3"/>
+      <!-- zone 2 -->
+      <rect x="86" y="42" width="258" height="148" rx="26" fill="#EDE4D2" stroke="#C9B79B" stroke-width="1" stroke-dasharray="4 3"/>
+      <!-- zone 1 -->
+      <rect x="160" y="78" width="110" height="76" rx="12" fill="#E8CDB6" stroke="#B84C15" stroke-width="1.3"/>
+      <!-- gravel texture in zone 1 -->
+      <g fill="#C79A72">
+        <circle cx="172" cy="90" r="1.5"/><circle cx="186" cy="86" r="1.2"/><circle cx="200" cy="92" r="1.4"/>
+        <circle cx="240" cy="88" r="1.3"/><circle cx="254" cy="92" r="1.5"/><circle cx="176" cy="120" r="1.3"/>
+        <circle cx="168" cy="140" r="1.4"/><circle cx="192" cy="146" r="1.2"/><circle cx="240" cy="145" r="1.4"/>
+        <circle cx="258" cy="130" r="1.3"/><circle cx="256" cy="110" r="1.2"/><circle cx="170" cy="105" r="1.2"/>
+      </g>
+      <!-- house -->
+      <rect x="192" y="102" width="46" height="30" fill="#14201B"/>
+      <text x="215" y="121" font-family="ui-monospace, Consolas, monospace" font-size="7"
+            fill="#F3EFE6" text-anchor="middle" letter-spacing="0.5">HOME</text>
+      
+      <!-- zone 2 trees: well spaced -->
+      <g>
+        <g fill="#6E8560"><path d="M112 74 l9 16 h-18 z"/><rect x="110.5" y="88" width="3" height="5"/></g>
+        <g fill="#6E8560"><path d="M112 160 l9 16 h-18 z"/><rect x="110.5" y="174" width="3" height="5"/></g>
+        <g fill="#6E8560"><path d="M318 74 l9 16 h-18 z"/><rect x="316.5" y="88" width="3" height="5"/></g>
+        <g fill="#6E8560"><path d="M318 160 l9 16 h-18 z"/><rect x="316.5" y="174" width="3" height="5"/></g>
+        <g fill="#6E8560"><path d="M215 58 l9 16 h-18 z"/><rect x="213.5" y="72" width="3" height="5"/></g>
+        <g fill="#6E8560"><path d="M215 168 l9 16 h-18 z"/><rect x="213.5" y="182" width="3" height="5"/></g>
+      </g>
+      <!-- the 10 ft crown gap, called out between two zone-2 trees -->
+      <g stroke="#B84C15" stroke-width="1">
+        <line x1="124" y1="82" x2="197" y2="68"/>
+      </g>
+      <rect x="140" y="62" width="40" height="13" rx="2" fill="#FFFFFF" stroke="#B84C15" stroke-width="0.8"/>
+      <text x="160" y="71.5" font-family="ui-monospace, Consolas, monospace" font-size="7.4"
+            fill="#B84C15" text-anchor="middle" letter-spacing="0.4">10 FT</text>
+      
+      <!-- zone 3 trees: closer, in clumps, with openings -->
+      <g fill="#5C7350">
+        <g><path d="M34 40 l8 14 h-16 z"/><rect x="32.5" y="52" width="3" height="5"/></g>
+        <g><path d="M56 32 l8 14 h-16 z"/><rect x="54.5" y="44" width="3" height="5"/></g>
+        <g><path d="M34 196 l8 14 h-16 z"/><rect x="32.5" y="208" width="3" height="5"/></g>
+        <g><path d="M60 206 l8 14 h-16 z"/><rect x="58.5" y="218" width="3" height="5"/></g>
+        <g><path d="M382 36 l8 14 h-16 z"/><rect x="380.5" y="48" width="3" height="5"/></g>
+        <g><path d="M404 46 l8 14 h-16 z"/><rect x="402.5" y="58" width="3" height="5"/></g>
+        <g><path d="M386 198 l8 14 h-16 z"/><rect x="384.5" y="210" width="3" height="5"/></g>
+        <g><path d="M150 24 l8 14 h-16 z"/><rect x="148.5" y="36" width="3" height="5"/></g>
+        <g><path d="M286 210 l8 14 h-16 z"/><rect x="284.5" y="222" width="3" height="5"/></g>
+      </g>
+      
+      <!-- zone labels -->
+      <g font-family="ui-monospace, Consolas, monospace" font-size="7.6" letter-spacing="0.8">
+        <text x="215" y="18" fill="#7A6242" text-anchor="middle">ZONE 3 &#183; 30&#8211;100 FT</text>
+        <text x="215" y="140" fill="#B84C15" text-anchor="middle" font-size="7">ZONE 1 &#183; 0&#8211;5 FT</text>
+        <text x="215" y="204" fill="#7A6242" text-anchor="middle">ZONE 2 &#183; 5&#8211;30 FT</text>
+      </g>
+      </svg>
+    </figure>
+
+    <table class="zonetable">
+      <thead>
+        <tr><th>Zone</th><th>Distance</th><th>The instruction</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Zone 1</th>
+          <td><b>0–5 ft</b><br><span class="verb">strip it</span></td>
+          <td>Rock, gravel or bare earth. <b>No</b> shrubs, mulch, firewood or deck
+          storage. Rake needles within 5 ft of every deck and structure. Clear 10 ft
+          around the chimney.</td>
+        </tr>
+        <tr>
+          <th scope="row">Zone 2</th>
+          <td><b>5–30 ft</b><br><span class="verb">thin it</span></td>
+          <td>Grass to <b>4 inches</b>. <b>10 ft between crowns</b> — and if you leave
+          small groups of two or three, <b>30 ft</b> between those groups. Prune up
+          <b>6–10 ft</b>, or a third of the tree, whichever is less. Pull ladder fuels and
+          ground juniper. Shrub clumps <b>2½× their mature height</b> apart.</td>
+        </tr>
+        <tr>
+          <th scope="row">Zone 3</th>
+          <td><b>30–100 ft</b><br><span class="verb">open it</span></td>
+          <td><b>6–10 ft</b> of crown spacing, with real gaps between clumps so fire has
+          to drop to the ground. Take the woody debris away rather than scattering it.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="inset">
+      <div>
+        <p class="kicker">Zone 2, from the side</p>
+        <p>Crown spacing and pruning height are the two rules a number alone does not
+        convey. The gap is measured between crowns, not trunks — and a shrub sitting under
+        a pruned tree undoes the pruning, because it is a ladder back up into the canopy.</p>
+      </div>
+      <figure class="plate">
+        <svg  viewBox="0 0 430 116" role="img"
+         aria-label="Side view of zone two: ten feet between tree crowns, branches pruned six to ten feet up, and ladder fuels removed from beneath">
+      <rect x="0" y="98" width="430" height="2.4" fill="#6E8560"/>
+      
+      <!-- left tree, pruned -->
+      <g>
+        <path d="M62 66 L88 20 L114 66 Z" fill="#6E8560"/>
+        <path d="M68 78 L88 44 L108 78 Z" fill="#6E8560"/>
+        <rect x="85" y="66" width="6" height="32" fill="#5A4632"/>
+      </g>
+      <!-- right tree, pruned -->
+      <g>
+        <path d="M212 66 L238 20 L264 66 Z" fill="#6E8560"/>
+        <path d="M218 78 L238 44 L258 78 Z" fill="#6E8560"/>
+        <rect x="235" y="66" width="6" height="32" fill="#5A4632"/>
+      </g>
+      
+      <!-- crown gap -->
+      <g stroke="#B84C15" stroke-width="1.1">
+        <line x1="112" y1="34" x2="214" y2="34"/>
+        <path d="M112 34 l6 -3.4 v6.8 z" fill="#B84C15" stroke="none"/>
+        <path d="M214 34 l-6 -3.4 v6.8 z" fill="#B84C15" stroke="none"/>
+      </g>
+      <rect x="137" y="26" width="52" height="15" rx="2" fill="#FFFFFF"/>
+      <text x="163" y="37" font-family="ui-monospace, Consolas, monospace" font-size="8"
+            fill="#B84C15" text-anchor="middle" letter-spacing="0.5">10 FT</text>
+      
+      <!-- pruning height -->
+      <g stroke="#B84C15" stroke-width="1">
+        <line x1="272" y1="78" x2="272" y2="98"/>
+        <path d="M272 78 l-3.4 6 h6.8 z" fill="#B84C15" stroke="none"/>
+        <path d="M272 98 l-3.4 -6 h6.8 z" fill="#B84C15" stroke="none"/>
+      </g>
+      <text x="280" y="92" font-family="ui-monospace, Consolas, monospace" font-size="7.6"
+            fill="#B84C15" letter-spacing="0.5">PRUNE 6&#8211;10 FT UP</text>
+      
+      <!-- ladder fuel, removed -->
+      <g transform="translate(372 56)">
+        <g fill="#A8B79E">
+          <path d="M14 36 C4 30, 4 16, 16 14 C20 4, 34 6, 34 16 C44 18, 44 32, 32 36 Z"/>
+        </g>
+        <g stroke="#B84C15" stroke-width="2.6" stroke-linecap="round">
+          <path d="M6 8 L44 40"/><path d="M44 8 L6 40"/>
+        </g>
+        <text x="24" y="-6" font-family="ui-monospace, Consolas, monospace" font-size="7"
+              fill="#B84C15" text-anchor="middle" letter-spacing="0.5">LADDER FUELS</text>
+      </g>
+      
+      <text x="0" y="12" font-family="ui-monospace, Consolas, monospace" font-size="6.6"
+            fill="#45583A" letter-spacing="1.4">ZONE 2, FROM THE SIDE</text>
+      </svg>
+      </figure>
+    </div>
+
+    <div class="note">
+      <p><b>These figures are for ponderosa, Douglas-fir and mixed conifer below 9,500 ft.</b>
+      Piñon-juniper, lodgepole, spruce-fir, Gambel oak and aspen all differ — aspen should
+      generally not be thinned at all. On slopes, increase every spacing.</p>
+    </div>
+  </section>
+
+  <section id="distances" class="wrap">
+    <p class="kicker">Off the wall and out to the road</p>
+    <h2>Two numbers do most of the work.</h2>
+
+    <figure class="plate">
+      <svg  viewBox="0 8 430 118" role="img"
+         aria-label="Firewood, propane and slash all sit at least 30 feet from the house, each with 10 feet of cleared vegetation around it">
+      <!-- ground -->
+      <rect x="0" y="106" width="430" height="2.4" fill="#6E8560"/>
+      
+      <!-- the house, at zero -->
+      <g fill="#14201B">
+        <path d="M8 62 L44 34 L80 62 Z"/>
+        <rect x="19" y="60" width="50" height="46"/>
+      </g>
+      <rect x="37" y="80" width="14" height="26" fill="#F3EFE6"/>
+      <text x="44" y="123" font-family="ui-monospace, Consolas, monospace" font-size="7.2"
+            fill="#46534B" text-anchor="middle" letter-spacing="0.6">THE HOUSE</text>
+      
+      <!-- the 30 ft line, and the span from the wall to it -->
+      <line x1="176" y1="20" x2="176" y2="112" stroke="#B84C15" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <g stroke="#B84C15" stroke-width="1.1">
+        <line x1="70" y1="20" x2="176" y2="20"/>
+        <path d="M70 20 l6 -3.4 v6.8 z" fill="#B84C15" stroke="none"/>
+        <path d="M176 20 l-6 -3.4 v6.8 z" fill="#B84C15" stroke="none"/>
+      </g>
+      <rect x="98" y="12" width="52" height="15" rx="2" fill="#FFFFFF"/>
+      <text x="124" y="23" font-family="ui-monospace, Consolas, monospace" font-size="8.2"
+            fill="#B84C15" text-anchor="middle" letter-spacing="0.6">30 FT</text>
+      
+      <!-- everything that burns lives beyond the line, each in its own
+           10 ft of cleared ground -->
+      <g stroke="#45583A" stroke-width="0.9" stroke-dasharray="2.5 2.5" fill="none">
+        <ellipse cx="228" cy="92" rx="41" ry="19"/>
+        <ellipse cx="316" cy="92" rx="41" ry="19"/>
+      </g>
+      
+      <g transform="translate(210 62)">
+        <g fill="#8A6A48" stroke="#14201B" stroke-width="0.8">
+          <circle cx="6" cy="34" r="5.6"/><circle cx="17.5" cy="34" r="5.6"/><circle cx="29" cy="34" r="5.6"/>
+          <circle cx="11.8" cy="24" r="5.6"/><circle cx="23.2" cy="24" r="5.6"/>
+          <circle cx="17.5" cy="14" r="5.6"/>
+        </g>
+        <text x="17.5" y="61" font-family="ui-monospace, Consolas, monospace" font-size="7.2"
+              fill="#46534B" text-anchor="middle" letter-spacing="0.6">FIREWOOD</text>
+      </g>
+      
+      <g transform="translate(295 70)">
+        <rect x="0" y="10" width="42" height="24" rx="12" fill="#EAE3D4" stroke="#14201B" stroke-width="1.1"/>
+        <rect x="16" y="4" width="10" height="7" fill="#14201B"/>
+        <text x="21" y="53" font-family="ui-monospace, Consolas, monospace" font-size="7.2"
+              fill="#46534B" text-anchor="middle" letter-spacing="0.6">PROPANE</text>
+      </g>
+      
+      <g transform="translate(380 68)">
+        <g stroke="#6E8560" stroke-width="2" stroke-linecap="round" fill="none">
+          <path d="M0 36 L24 22"/><path d="M4 36 L28 28"/><path d="M10 36 L18 16"/>
+          <path d="M24 36 L6 24"/><path d="M18 36 L32 20"/>
+        </g>
+        <text x="16" y="55" font-family="ui-monospace, Consolas, monospace" font-size="7.2"
+              fill="#46534B" text-anchor="middle" letter-spacing="0.6">SLASH</text>
+      </g>
+      
+      <text x="312" y="40" font-family="ui-monospace, Consolas, monospace" font-size="7"
+            fill="#45583A" text-anchor="middle" letter-spacing="0.5">DASHED RING = 10 FT CLEARED</text>
+      </svg>
+    </figure>
+
+    <ul class="rules">
+      <li><b class="r">30 ft</b><span><b>Firewood, propane and slash</b> — all of it at
+      least that far from the house.</span></li>
+      <li><b class="r">Uphill</b><span>Stack <b>firewood</b> uphill of the house or level
+      with it, never below — and never between trees or under the deck. Propane: level
+      with the house where you can.</span></li>
+      <li><b class="r">10 ft</b><span>Clear flammable vegetation that far around
+      <b>woodpiles, propane tanks and gas meters</b>.</span></li>
+      <li><b class="r">Burning?</b><span><b>Call the sheriff or your fire department
+      first.</b> Restrictions change constantly.</span></li>
+      <li><b class="r">Driveway</b><span>Thin <b>30 ft back from each side</b>, house to
+      main road. A house number at the road, noncombustible and reflective — a crew that
+      cannot find you cannot defend you.</span></li>
+    </ul>
+  </section>
+
+  <div class="ridge-rule" aria-hidden="true">
+    <svg viewBox="0 0 1200 26" preserveAspectRatio="none">
+      <path fill="currentColor" d="M0 26 L60 8 L120 26 L190 4 L260 26 L320 12 L380 26 L450 2 L520 26 L580 10 L640 26 L710 5 L780 26 L840 14 L900 26 L970 3 L1040 26 L1100 11 L1160 26 L1200 18 L1200 26 Z"/>
+    </svg>
+  </div>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="kicker">And for the part that wants a saw</p>
+      <h2>Someone else will help pay for it.</h2>
+      <p>Colorado's tax credit covers 100% of a contractor's invoice for qualifying
+      vegetation work, up to a cap, and since July 2026 your insurer has to show you your
+      wildfire risk score and what mitigation would do to it. Almost nobody knows either
+      exists.</p>
+      <p><a class="btn btn-solid" href="/who-pays/">The figures and the deadlines</a></p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <p class="kicker">Sources</p>
+    <h2>Where all of this comes from.</h2>
+    <div class="cols">
+      <div>
+        <p>Adapted from the Colorado State Forest Service <i>Home Ignition Zone</i> guide
+        (2021) and its checklists, the IBHS <i>Wildfire Prepared Home</i> materials, and
+        Colorado statute. <b>CSFS does not endorse Sixfold or any contractor</b>, and
+        nothing on this page should be read as their recommendation of us.</p>
+      </div>
+      <div>
+        <p>Every figure here was read back against a primary source before it was printed,
+        and eleven things were corrected in the process. The wordings that look fussy —
+        "stops most" rather than "stops", "within five feet" rather than "touching",
+        "mature height" rather than "height" — are the corrections.</p>
+        <p class="fine">If you find something on this page that disagrees with your fire
+        district or your forester, go with them. They are looking at your actual property.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap contact">
+    <p class="kicker">Contact</p>
+    <h2>We'll come and walk the property.</h2>
+    <p>Call or email and we'll set a time to look at what you've got and talk through
+    what it qualifies for.</p>
+    <div class="lines">
+      <a href="tel:+13039151045">(303) 915-1045</a><br>
+      <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a><br>
+      Monument, Colorado — El Paso, Teller and southern Douglas counties
+    </div>
+  </section>
+
+</main>
+
+<!-- CHROME:FOOT -->
+<footer class="site-foot">
+  <div class="wrap">
+    <div>
+      <div class="foot-mark">
+        <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
+        <div class="word">Sixfold</div>
+      </div>
+      <p class="fine">Fire mitigation · Land clearing · Landscaping<br>
+      Front Range · (303) 915-1045</p>
+    </div>
+    <nav class="foot-nav">
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays for it</a>
+      <a href="/wildfire-guide/">Wildfire guide</a>
+      <a href="/merch/">Merch</a>
+    </nav>
+    <p class="fine">
+      Sixfold Colorado, Monument CO.
+      <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a><br>
+      Not tax or insurance advice — confirm your own position with your accountant and
+      your carrier.
+    </p>
+  </div>
+</footer>
+<!-- /CHROME:FOOT -->
+
+</body>
+</html>

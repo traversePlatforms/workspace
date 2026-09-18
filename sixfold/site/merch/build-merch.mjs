@@ -648,21 +648,22 @@ const html = `<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sixfold Colorado — Merch board</title>
   <meta name="description" content="Design directions for Sixfold Colorado merch and branding — shirts, caps, patches, stickers, and job-site pieces. Concept board, not a store.">
-  <link rel="stylesheet" href="../assets/site.css">
+  <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
 ${DEFS}
 <header class="site-head">
   <div class="wrap">
-    <a class="brand" href="../">
+    <a class="brand" href="/">
       ${HEAD_MARK}
       <b>Sixfold</b><span>Land &amp; Fire · Colorado</span>
     </a>
     <nav class="nav">
-      <a href="../#work">The work</a>
-      <a href="../#money">Who pays</a>
-      <a href="./">Merch</a>
-      <a class="nav-cta" href="../#contact">Contact</a>
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays</a>
+      <a href="/wildfire-guide/">Wildfire guide</a>
+      <a href="/merch/" aria-current="page">Merch</a>
+      <a class="nav-cta" href="/#contact">Contact</a>
     </nav>
   </div>
 </header>
@@ -680,6 +681,7 @@ ${DEFS}
       <li>Mark shown is <b>Ridge</b>, which every Sixfold asset uses. Sweep is still
         formally an open call.</li>
       <li>"Land &amp; Fire" is the settled descriptor — it is printed on the business cards and the vehicle magnets.</li>
+      <!-- AUDIT-ALLOW: credentials — this line STATES the rule ("nothing claims..."), it does not make the claim. Reviewed 2026-09-18. -->
       <li>Nothing claims "licensed and insured", "certified", "bonded" or "Firewise" —
         none of that is true yet. The hi-vis shirt is a graphic direction only; a real
         crew garment has to meet the visibility spec the work calls for.</li>
@@ -699,7 +701,7 @@ ${SECTIONS.map(section).join('\n')}
   </section>
 
   <section class="wrap">
-    <p class="backlink"><a href="../">&larr; Back to the landing page</a></p>
+    <p class="backlink"><a href="/">&larr; Back to the home page</a></p>
   </section>
 
 </main>

@@ -236,7 +236,14 @@ small, .fine { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
   gap: 18px;
 }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-strong); }
-.brand svg { width: 26px; height: auto; display: block; color: var(--accent); }
+/* flex: none is load-bearing. The mark is a flex item inside a flex bar, so with
+   the default flex-shrink:1 and no intrinsic min-width it is the first thing the
+   browser squeezes — and because `img, svg { max-width: 100% }` lets it go all the
+   way, it collapses to nothing rather than to something small. Caught at exactly
+   790px on a five-item nav: the mark vanished, the wordmark did not, and 800px and
+   770px both looked fine. Do not remove it. */
+.brand svg { width: 26px; height: auto; display: block; color: var(--accent); flex: none; }
+.foot-mark svg { flex: none; }
 .brand b {
   font-family: var(--serif);
   font-weight: 400;
@@ -257,10 +264,19 @@ small, .fine { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
 .nav a { color: var(--text-soft); text-decoration: none; white-space: nowrap; }
 .nav a:hover { color: var(--accent-text); }
 .nav .nav-cta { color: var(--accent-text); }
-/* Breakpoints set by looking at renders, not guessed: the descriptor wraps to two
-   lines below ~780px, and the nav links below ~700px. */
-@media (max-width: 780px) { .brand span { display: none; } }
-@media (max-width: 700px) { .nav a:not(.nav-cta) { display: none; } }
+/* One breakpoint, measured rather than guessed. The full bar — mark, wordmark,
+   descriptor and five nav items — needs about 793px: it is clean at 800 and overflows
+   by 3px at 790. Set at 840 to leave headroom, because every face here is a SYSTEM
+   font and the metrics differ from machine to machine; a breakpoint set to the exact
+   measured minimum is one font substitution away from wrapping.
+
+   Below it, the bar is the wordmark and Contact. Dropping only the descriptor does
+   not buy enough back — the five items then crowd the whole way down to ~700 — so
+   both go at once. */
+@media (max-width: 840px) {
+  .brand span { display: none; }
+  .nav a:not(.nav-cta) { display: none; }
+}
 
 /* --- hero ------------------------------------------------------------- */
 
@@ -526,3 +542,185 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 .beyond p { font-size: 13px; color: var(--text-soft); margin: 0; }
 
 .backlink { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+
+/* ==========================================================================
+   Multipage — added 2026-09-18
+   Components that only the sub-pages use. The merch board carries none of
+   these, so everything here is safe to change without re-rendering it.
+   ========================================================================== */
+
+/* --- sub-page masthead ---------------------------------------------- */
+
+.page-head { padding-block: 84px 64px; border-top: 0; }
+.page-head h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 20px; max-width: 22ch; }
+.page-head .lede { max-width: 56ch; }
+.page-head .hero-grid { margin-top: 30px; }
+.page-head .hero-grid .stat { margin-top: 0; }
+
+/* "→" links that carry the reader to another page */
+.more { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; margin-top: 28px; }
+.more a { text-decoration: none; border-bottom: 1px solid var(--edge); padding-bottom: 2px; }
+.more a:hover { border-bottom-color: var(--accent); }
+
+/* nav item for the page you are on */
+.nav a[aria-current="page"] { color: var(--text-strong); }
+body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
+
+/* --- footer nav column ---------------------------------------------- */
+
+.foot-nav { display: grid; gap: 8px; align-content: start; }
+.foot-nav a {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--foot-soft);
+}
+.foot-nav a:hover { color: var(--ember); }
+
+/* --- key/value facts ------------------------------------------------- */
+
+.facts { margin: 0; }
+.facts dt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--label);
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.facts dt:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.facts dd { margin: 8px 0 0; font-size: 16px; }
+.facts dd b { color: var(--text-strong); }
+.keynum { font-family: var(--serif); font-size: 22px; color: var(--accent-text); letter-spacing: 0; }
+
+/* --- drawing plates --------------------------------------------------
+   The pamphlet's figures are lifted unmodified, and they were drawn against
+   print grounds — near-white for three of them, the dark cover for the ember
+   one. Each plate reproduces the ground it was drawn for rather than the
+   artwork being re-coloured, which would mean re-auditing it. */
+
+.plate {
+  margin: 0 0 8px;
+  padding: 26px 28px;
+  background: #FBF8F2;
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+}
+.plate.dark { background: var(--pine); border-color: var(--pine); }
+.plate svg { display: block; width: 100%; height: auto; }
+@media (max-width: 560px) { .plate { padding: 16px 14px; } }
+
+/* --- the three ignition mechanisms ----------------------------------- */
+
+.ways3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
+@media (max-width: 700px) { .ways3 { grid-template-columns: 1fr; gap: 16px; } }
+.ways3 > div { border-top: 3px solid var(--accent); padding-top: 14px; }
+.ways3 h3 { font-size: 19px; margin-bottom: 4px; }
+.ways3 p { font-size: 15px; margin: 0; max-width: none; }
+
+/* --- the numbered key under the house drawing ------------------------ */
+
+.numkey { list-style: none; counter-reset: k; margin: 30px 0 18px; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px 40px; }
+@media (max-width: 780px) { .numkey { grid-template-columns: 1fr; } }
+.numkey li { counter-increment: k; position: relative; padding-left: 38px; font-size: 16px; }
+.numkey li::before {
+  content: counter(k);
+  position: absolute; left: 0; top: 1px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--pine);
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.numkey li b { color: var(--text-strong); }
+
+/* --- an inset: a detail figure beside its explanation ---------------- */
+
+/* The figure column is the wider one: both insets hold a wide, short drawing
+   (430x104 and 430x116) whose labels set at 8px in the source. At an even split
+   they render too small to read the very thing the inset exists to show. */
+.inset {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 40px;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 36px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 780px) { .inset { grid-template-columns: 1fr; gap: 22px; } }
+.inset .kicker { margin-bottom: 12px; }
+.inset p { max-width: none; }
+
+/* --- a standing caveat, set apart ------------------------------------ */
+
+.note {
+  margin-top: 36px;
+  background: var(--ground-lift);
+  border: 1px solid var(--edge);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  padding: 20px 24px;
+}
+.note p { margin: 0; font-size: 16px; }
+.note p b { color: var(--text-strong); }
+
+/* --- the zone table -------------------------------------------------- */
+
+.zonetable { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 15px; }
+.zonetable th, .zonetable td { text-align: left; vertical-align: top; padding: 16px 18px 16px 0; border-top: 1px solid var(--line); }
+.zonetable thead th {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--label); border-top: 0; padding-top: 0;
+}
+.zonetable tbody th {
+  font-family: var(--serif); font-weight: 400; font-size: 21px;
+  color: var(--text-strong); white-space: nowrap; width: 1%;
+}
+.zonetable td:nth-of-type(1) { white-space: nowrap; width: 1%; padding-right: 28px; }
+.zonetable td b { color: var(--text-strong); }
+.zonetable .verb {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--accent-text);
+}
+@media (max-width: 700px) {
+  .zonetable, .zonetable tbody, .zonetable tr, .zonetable td, .zonetable th { display: block; width: auto; }
+  .zonetable thead { display: none; }
+  .zonetable tr { border-top: 1px solid var(--line); padding: 18px 0; }
+  .zonetable th, .zonetable td { border-top: 0; padding: 0 0 8px; white-space: normal; }
+  /* width:auto must be repeated here. The desktop rules are `td:nth-of-type(1)` and
+     `tbody th` — both outspecify the blanket `.zonetable td` above, so `width: 1%`
+     survived into the stacked layout and squeezed the distance cell to its narrowest
+     word. "5–30 ft" came out as three lines and "thin it" as two. */
+  .zonetable td:nth-of-type(1) { width: auto; white-space: normal; padding-right: 0; }
+  .zonetable tbody th { width: auto; }
+  .zonetable td:nth-of-type(1) b { display: inline; }
+  .zonetable .verb { display: block; margin-top: 2px; }
+}
+
+/* --- the five distance rules ----------------------------------------- */
+
+.rules { list-style: none; margin: 30px 0 0; padding: 0; }
+.rules li {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  font-size: 16px;
+}
+.rules li:first-child { border-top: 0; }
+.rules .r { font-family: var(--serif); font-size: 22px; color: var(--accent-text); font-weight: 400; }
+.rules span b { color: var(--text-strong); }
+@media (max-width: 560px) { .rules li { grid-template-columns: 1fr; gap: 4px; } }
+
+/* --- a solid button inside an inverted band ---------------------------
+   `.band a` is two classes deep and was repainting the button's label to the
+   band's link colour — ember on ember. Put the button's own label back. */
+.band .btn-solid { color: var(--btn-solid-fg); text-decoration: none; }
+.band .btn-solid:hover { color: var(--btn-solid-fg); }
+.band .btn { margin-top: 6px; }

@@ -1,21 +1,18 @@
 <!doctype html>
 <!--
-  Sixfold Colorado — landing page (draft build on disk).
+  Sixfold Colorado — HOME (draft build on disk).
   NOT deployed. SixfoldColorado.com is owned but not hosted; no URL is printed anywhere.
 
-  Register: BONE. `body class="paper"` flips the shared stylesheet's semantic tokens
-  to the light set (see assets/site.css). The merch board carries no class and stays
-  dark. Contrast on this page is measured, not eyeballed — figures in the CSS header.
+  Multipage as of 2026-09-18. This page is a hub: it states the position, shows the
+  three service lines, and hands off to /what-we-do/, /who-pays/ and /wildfire-guide/.
+  The detail that used to live here in #how, #packet and #zone1 moved to those pages.
 
-  Copy leans on the fact-checked bio in sixfold/marketing/facebook-page-copy.md, the
-  settled card/magnet lockup (sixfold/operations/business-cards.html,
-  sixfold/brand/vehicle/README.md), the service list on Sheet D, the referral packet
-  (sixfold/marketing/referral-packet.html) and content post 3.
-  Every factual claim is logged in sixfold/site/README.md.
+  Links are ROOT-ABSOLUTE, same as the Surge site. That means the site needs the
+  server — `node sixfold/site/serve.mjs` — and will not work by double-click.
 
-  Marks: the flat Ridge (brand/sixfold-mark-ridge-flat-mono.svg) at small sizes in the
-  header and footer, where the master's layered opacity muddies; the layered master at
-  hero size, where the layering is the point.
+  Register: BONE, with Pine accents. `body class="paper"` flips the shared
+  stylesheet's tokens; see assets/site.css. Every factual claim is logged in
+  sixfold/site/README.md.
 -->
 <html lang="en">
 <head>
@@ -23,64 +20,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sixfold Colorado — Fire mitigation, land clearing, landscaping</title>
   <meta name="description" content="Fire mitigation, land clearing and landscaping on Colorado's Front Range. We do the work and show you who pays for it — the state tax credit and your insurer both.">
-  <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body class="paper">
 
-<!-- Both marks, defined once. ridge-flat = print/merch master, solid with knockout
-     gaps, good down to 20px. ridge-layered = the screen master with opacity ramp. -->
+<!-- CHROME:MARKS -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="ridge-flat" viewBox="0 0 100 96">
     <path fill="currentColor" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84ZM9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5ZM4 86L96 86L96 91L4 91Z"/>
   </symbol>
-  <symbol id="ridge-layered" viewBox="4 14 94 99">
-    <g fill="currentColor">
-      <path class="l1" d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/>
-      <path class="l2" d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/>
-      <path class="l3" d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/>
-      <path d="M60 84 L79 14 L98 84 Z"/>
-      <rect x="20.4" y="77" width="3.2" height="7"/>
-      <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
-      <path d="M22 62 L12 74 L32 74 Z"/>
-      <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
-      <rect x="4" y="86" width="92" height="5"/>
-    </g>
-    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
-      <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
-      <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
-      <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
-      <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
-      <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
-      <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
-      <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
-      <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
-      <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
-    </g>
-  </symbol>
 </svg>
+<!-- /CHROME:MARKS -->
 
+<!-- CHROME:HEAD -->
 <header class="site-head">
   <div class="wrap">
-    <a class="brand" href="./">
+    <a class="brand" href="/">
       <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
       <b>Sixfold</b><span>Land &amp; Fire · Colorado</span>
     </a>
     <nav class="nav">
-      <a href="#work">The work</a>
-      <a href="#money">Who pays</a>
-      <a href="merch/">Merch</a>
-      <a class="nav-cta" href="#contact">Contact</a>
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays</a>
+      <a href="/wildfire-guide/">Wildfire guide</a>
+      <a href="/merch/">Merch</a>
+      <a class="nav-cta" href="/#contact">Contact</a>
     </nav>
   </div>
 </header>
+<!-- /CHROME:HEAD -->
 
 <main>
 
   <div class="hero-shell">
   <section class="hero wrap">
     <div class="lockup">
-      <svg viewBox="4 14 94 99" role="img" aria-label="Sixfold Ridge mark"><use href="#ridge-layered"/></svg>
+      <svg viewBox="4 14 94 99" role="img" aria-label="Sixfold Ridge mark">
+        <g fill="currentColor">
+          <path class="l1" d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/>
+          <path class="l2" d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/>
+          <path class="l3" d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/>
+          <path d="M60 84 L79 14 L98 84 Z"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+          <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+          <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+          <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+          <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+          <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+          <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+          <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+        </g>
+      </svg>
       <span class="word">Sixfold</span>
       <span class="desc">Land &amp; Fire</span>
     </div>
@@ -119,36 +118,25 @@
       <div>
         <h3>Fire mitigation</h3>
         <p>Felling, full tree removal and trimming, brush and dead fall out, slash piled
-        and chipped, rounds cut to length. Defensible space around the structures, fuel
-        breaks and thinning by the acre, worked to Colorado State Forest Service
-        standards.</p>
-        <p class="tags">Felling · Trimming · Slash &amp; chip · Stumps · Defensible space · Thinning</p>
+        and chipped, rounds cut to length. Defensible space, fuel breaks and thinning by
+        the acre, worked to Colorado State Forest Service standards.</p>
+        <p class="tags">Felling · Trimming · Slash &amp; chip · Stumps · Defensible space</p>
       </div>
       <div>
         <h3>Land clearing</h3>
         <p>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement —
         by the acre where that is the sensible unit rather than tree by tree.</p>
-        <p>What happens to the wood is your call: chipped on site, hauled away, or left
-        stacked where you want it. That is one of the questions at the walk.</p>
         <p class="tags">By the acre · Brush removal · Chip, haul, or leave</p>
       </div>
       <div>
         <h3>Landscaping</h3>
         <p>Mowing, edging, beds and planting — the ground put back in order once the fuel
-        is out of it.</p>
-        <p>Usually the same job rather than a second one. A property that has just had a
-        crew and a chipper on it does not look finished until this part is done.</p>
+        is out of it. Usually the same job rather than a second one.</p>
         <p class="tags">Mowing · Edging · Beds · Planting</p>
       </div>
     </div>
 
-    <div class="scope">
-      <p>This is what the current crew and kit can take on. A working list, not a fixed
-      scope — written from what is in the truck, not from what we are willing to quote.
-      If what you need is not on it, ask. Based in Monument, working El Paso, Teller and
-      southern Douglas counties and the Front Range foothills; further out is a phone
-      call, not a refusal.</p>
-    </div>
+    <p class="more"><a href="/what-we-do/">All of it, and how a job actually goes →</a></p>
   </section>
 
   <section id="money" class="wrap">
@@ -160,121 +148,20 @@
         <p>Colorado's wildfire mitigation tax credit covers 100% of what you pay a
         contractor for qualifying vegetation work, up to a cap. No application and no
         waiting list — you claim it on your state return.</p>
-        <p>Income limits apply. Through tax year 2026, any amount above your state tax
-        bill is lost rather than refunded; from tax year 2027 the cap rises, the credit
-        becomes refundable, the income limit goes up, and it runs through 2030.</p>
+        <p>Income limits apply, and the cap rises in 2027.</p>
         <p class="src">C.R.S. 39-22-543 · Colorado Dept. of Revenue, <i>Income Tax Topics:
-        Wildfire Mitigation Measures</i> · HB26-1289 for the 2027 changes</p>
+        Wildfire Mitigation Measures</i></p>
       </div>
       <div class="panel">
         <h3>Your insurer</h3>
         <p>Since 1 July 2026, if your carrier uses a wildfire risk score to price your
         policy, they have to give you that score in writing every year — and a discount
         for mitigation you can document.</p>
-        <p>What your own policy qualifies for is a question for your carrier, and the
-        credit's income test is a question for your accountant. But almost nobody asks,
-        because almost nobody knows to.</p>
+        <p>You can ask for a re-score once the work is done.</p>
         <p class="src">Colorado HB25-1182, effective 1 July 2026</p>
       </div>
     </div>
-  </section>
-
-  <section id="zone1" class="wrap">
-    <p class="kicker">Before you call anyone</p>
-    <h2>The highest-value work on your property is the part you can do yourself.</h2>
-    <div class="cols">
-      <div>
-        <p class="lede">Colorado's forest service calls the ground from your wall out to
-        five feet Zone 1, and the guidance for it is unsentimental: nothing in there
-        should burn.</p>
-        <p>Pine needles cleared off the foundation and the deck. Wood mulch swapped for
-        gravel or rock. Firewood moved out to thirty feet. The first five feet of any
-        wooden fence that touches the house replaced with something that doesn't.</p>
-      </div>
-      <div>
-        <div class="stat">
-          <span class="n">78%</span>
-          <p>of buildings with a lot of vegetation within five feet of the walls were
-          destroyed — close to twice the rate of buildings with little vegetation in that
-          strip. From a study of more than 71,000 properties inside wildfire perimeters
-          between 2016 and 2019. Embers do that, not a wall of flame.</p>
-          <p class="src">Zesty.ai with IBHS, released 8 April 2021</p>
-        </div>
-        <p>None of it needs a crew, and we would rather you knew. Call us for what is
-        past it — the trees, the acreage, and the part that wants a saw.</p>
-        <p class="fine">Colorado State Forest Service Home Ignition Zone guidance.
-        Colorado numbers the 0–5 ft strip Zone 1; the California scheme numbers it Zone 0.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="how" class="wrap">
-    <p class="kicker">How it goes</p>
-    <h2>Walk it, work it, hand it over.</h2>
-    <ol class="steps">
-      <li>
-        <span class="no">01</span>
-        <div>
-          <h3>The walk</h3>
-          <p>We come out and walk the property with you, counting what is actually there —
-          trees by height, brush by area, what the access will take, and what you want
-          kept. It goes on a sheet, and the quote comes off that sheet rather than off an
-          impression formed in the driveway.</p>
-        </div>
-      </li>
-      <li>
-        <span class="no">02</span>
-        <div>
-          <h3>The work</h3>
-          <p>Photographs from fixed positions before anything comes down, then the felling,
-          the clearing and the disposal option you picked. Anything you asked to keep gets
-          pointed out at the walk and left on the property.</p>
-        </div>
-      </li>
-      <li>
-        <span class="no">03</span>
-        <div>
-          <h3>The handover</h3>
-          <p>We walk the finished job with you, and you get a folder. It is the same folder
-          every time, and it is handed over whether or not you asked for it.</p>
-        </div>
-      </li>
-    </ol>
-  </section>
-
-  <section id="packet" class="wrap">
-    <p class="kicker">What you keep</p>
-    <h2>Every job comes with the paperwork, whether or not you ask.</h2>
-    <div class="cols">
-      <div>
-        <ul class="packet">
-          <li><b>What we did on your property</b> — a written record of the work and the
-          standard it was done to. This is the page your insurer wants.</li>
-          <li><b>Your itemised invoice</b> — with the wildfire-mitigation work separated
-          out, because that is what the state credit is claimed against.</li>
-          <li><b>Before-and-after photos</b> — dated, from fixed positions.</li>
-          <li><b>Getting money back</b> — the state credit and the insurance re-score,
-          with what each one needs from you. What a discount is worth is the insurer's
-          decision, not ours.</li>
-          <li><b>Programs in your county</b> — the ones that pay toward future mitigation.
-          All of them need approval <em>before</em> work starts, which is why they are in
-          here for next time rather than this time.</li>
-          <li><b>A card, a magnet and a sticker</b> — so the number is on the fridge when
-          a neighbour asks who did the work.</li>
-        </ul>
-      </div>
-      <div>
-        <p>One document set, and it serves your tax return and your carrier both. You get
-        it at the end of the job as a matter of course.</p>
-        <p>Sixfold produces the record. It does not file your return, contact your carrier,
-        or handle a claim — those stay with you and your advisers, and the folder is built
-        so they have what they need without a phone call to us.</p>
-        <p>And if anything about the work is not right, call. The crew that did it is the
-        crew that comes back.</p>
-        <p class="fine">Not tax or insurance advice — confirm your own position with your
-        accountant and your carrier.</p>
-      </div>
-    </div>
+    <p class="more"><a href="/who-pays/">The figures, the income limits and the deadlines →</a></p>
   </section>
 
   <div class="ridge-rule" aria-hidden="true">
@@ -285,15 +172,24 @@
 
   <section class="band">
     <div class="wrap">
-      <p class="kicker">HOA &amp; fire-district boards</p>
-      <h2>Scoping a shared fuel break or a grant-funded project?</h2>
-      <p>Sixfold works as the contractor on community defensible-space and fuel-break
-      work. If your board is putting a project together, we'll walk it and bid it — and
-      the same written record comes back with it, which is usually what a board has to
-      show its funder.</p>
-      <p><a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a>
-      &nbsp;·&nbsp; (303) 915-1045</p>
+      <p class="kicker">Free to read, nothing asked for</p>
+      <h2>Preparing your home for wildfire.</h2>
+      <p>The guide we hand to homeowners, on the site in full: where embers actually get
+      in, the seven places a house catches, and the three zones measured out from your
+      wall. Most of it is a weekend's work and none of it needs us.</p>
+      <p><a class="btn btn-solid" href="/wildfire-guide/">Read the guide</a></p>
     </div>
+  </section>
+
+  <section class="wrap">
+    <p class="kicker">HOA &amp; fire-district boards</p>
+    <h2>Scoping a shared fuel break or a grant-funded project?</h2>
+    <p>Sixfold works as the contractor on community defensible-space and fuel-break work.
+    If your board is putting a project together, we'll walk it and bid it — and the same
+    written record comes back with it, which is usually what a board has to show its
+    funder.</p>
+    <p><a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a>
+    &nbsp;·&nbsp; (303) 915-1045</p>
   </section>
 
   <section id="contact" class="wrap contact">
@@ -310,6 +206,7 @@
 
 </main>
 
+<!-- CHROME:FOOT -->
 <footer class="site-foot">
   <div class="wrap">
     <div>
@@ -320,6 +217,12 @@
       <p class="fine">Fire mitigation · Land clearing · Landscaping<br>
       Front Range · (303) 915-1045</p>
     </div>
+    <nav class="foot-nav">
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays for it</a>
+      <a href="/wildfire-guide/">Wildfire guide</a>
+      <a href="/merch/">Merch</a>
+    </nav>
     <p class="fine">
       Sixfold Colorado, Monument CO.
       <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a><br>
@@ -328,6 +231,7 @@
     </p>
   </div>
 </footer>
+<!-- /CHROME:FOOT -->
 
 </body>
 </html>

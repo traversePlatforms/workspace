@@ -13,22 +13,88 @@ stays inside the workspace so it can be audited.
 
 ## Structure
 
+**Multipage as of 2026-09-18.**
+
 ```
 sixfold/site/
-  index.html            landing page — Bone register, carries class="paper"
+  index.html                  /                  home — a hub
+  what-we-do/index.html       /what-we-do/       the three service lines, how a job
+                                                 goes, the handover packet
+  who-pays/index.html         /who-pays/         the credit and the insurer, in full
+  wildfire-guide/index.html   /wildfire-guide/   the printed pamphlet, as a page
   merch/
-    index.html          merch & branding concept board — GENERATED, do not hand-edit
-    build-merch.mjs      generator: one SVG renderer per product + the item copy + the page shell
-  assets/site.css        shared stylesheet — one file, two registers (see §Design)
-  serve.mjs              local preview on :8090
+    index.html                /merch/            concept board — GENERATED
+    build-merch.mjs                              its generator
+  assets/site.css                                one file, two registers (see §Design)
+  serve.mjs                                      local preview on :8090
+  audit-links.mjs                                links, chrome drift, copy rules
 ```
 
-Landing page sections, in order: hero (the ~450 stat) · **the work, as three service
-lines** · who pays · **Zone 1, the part you do yourself** · **how it goes** ·
-**what you keep** · HOA & fire-district boards · contact.
+**Home is a hub, not the whole site.** It states the position, shows the three service
+lines and the ~450 stat, points at the guide, and hands off. What used to be `#how`,
+`#packet` and `#zone1` on the one-pager moved to `/what-we-do/` and `/wildfire-guide/`.
 
-Clean-ish URLs: `/` and `/merch/`. Links between pages are relative so the site
-opens by double-click from `file://` with no server.
+### /wildfire-guide/ — the pamphlet, as a page
+
+The printed home wildfire pamphlet, in reading order rather than fold order (the print
+piece runs 4-1-2-3 because of how it folds; here it is embers → the house → the zones →
+the distances). **Copy and all six drawings are lifted from
+`marketing/home-wildfire-pamphlet.html` unmodified.**
+
+That file was rebuilt drawing-led on 2026-08-25 and then **accuracy-audited the same
+day — eleven corrections**, four of which would have misdirected a homeowner's effort
+and one of which printed a promise the state does not make. **This is fire-safety copy.
+Do not reword a number, a distance or a mechanism on that page without reading the audit
+in `home-wildfire-pamphlet.md` first.** Several phrasings that look fussy are the
+corrections: *"stops most"* not "stops", *"within five feet"* not "touching", *"mature
+height"* not "height", *"embers start most of the homes that burn"* not "embers burn
+houses down, not flames".
+
+The drawings were drawn against print grounds, so each sits on a plate that reproduces
+what it was drawn for — the ember figure on Pine (it was the pamphlet's dark cover), the
+other five on near-white — **rather than the artwork being re-coloured, which would mean
+re-auditing it.**
+
+Not carried over from the print piece: the QR code (it points at a linktree, and the
+page it would sit on is the website), and the back-cover contact block (the site has a
+footer).
+
+**Links are root-absolute** (`/assets/site.css`, `/who-pays/`), the same as the Surge
+site. That is what a multipage site wants, and it means **this site needs the server**:
+
+```
+node sixfold/site/serve.mjs      →  http://localhost:8090/
+```
+
+`file://` will not work any more — not the page links, not the stylesheet. That is a
+deliberate trade, not a regression: the earlier "opens by double-click" claim was
+already only half true, because a bare directory link cannot resolve to `index.html`
+without a server.
+
+### Keeping the pages in step
+
+Pages are hand-authored, one directory each, **no generator** — again following Surge.
+The cost of that is a duplicated header and footer, so there is an auditor:
+
+```
+node sixfold/site/audit-links.mjs
+```
+
+It checks three things and exits 1 on any failure, so it can gate a commit:
+
+1. **Links** — every internal href resolves to a file on disk, and every `#anchor`
+   exists on the page it points at, including cross-page ones.
+2. **Chrome drift** — the `<!-- CHROME:MARKS -->`, `CHROME:HEAD` and `CHROME:FOOT`
+   blocks must be byte-identical across pages. `aria-current="page"` is normalised
+   away before comparing, since it is per-page by definition.
+3. **Standing copy rules** — as greps: a web address before the domain is hosted,
+   "licensed and insured", a named county cost-share, a price or free-estimate offer,
+   the old phone number, a mention of Surge, the banned paperwork phrasing.
+
+A page waives a rule for itself with `<!-- AUDIT-ALLOW: <rule-id> — why -->`, which
+keeps every exception visible in the file it applies to. An unknown rule id is itself
+a failure, so a typo cannot quietly switch a check off. **Two live waivers**, both
+listed in the auditor's own header comment.
 
 **The merch board is generated.** Edit `merch/build-merch.mjs`, then
 `"C:\Users\Surge Inc\AppData\Local\nodejs\node.exe" build-merch.mjs` (node is
@@ -244,8 +310,17 @@ Claims on the landing page, all carried from already-verified Sixfold files:
 
 **Unresolved / to revisit before this goes anywhere near a host:**
 
-- Exact TY2027 credit cap and AGI limit — left as prose, needs the enrolled
-  HB26-1289 text before any figure is printed.
+- ~~Exact TY2027 credit cap and AGI limit~~ — **CLOSED 2026-09-18, and this entry was
+  stale.** The pamphlet's accuracy audit of 2026-08-25 already resolved it: the figures
+  are **$2,000, refundable, $300,000 AGI**, confirmed against the Office of the State
+  Auditor's Exhibit 4, and the audit also confirmed the limit is **federal AGI**, not
+  federal taxable income. It flags a trap worth keeping: the General Assembly's own
+  bill summary for HB26-1289 mentions only refundability and the beetle definition,
+  and separately raises an *unrelated* credit from $1,000 to $2,000 — close enough to
+  look like a transcription error. Reading the bill summary alone would suggest the
+  figures are wrong. They are not. `/who-pays/` prints them.
+  <br>*(The superseded entry read: "left as prose, needs the enrolled HB26-1289 text
+  before any figure is printed." It had been overtaken by the audit for three weeks.)*
 - Forms/endpoint: there is **no contact form** — phone and email only, same as the
   reason the Surge site's forms are inert. Add a real endpoint before launch if a
   form is wanted.
