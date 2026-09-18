@@ -46,3 +46,10 @@ desktop.ini
 .DS_Store
 *.tmp
 *~
+
+# --- The Google Drive team-share folder: 5.4 MB of COPIES, rebuilt in a second
+# by `node sixfold/team-share/build-team-share.mjs`. Tracking them would commit
+# another copy of every PDF each time a source is corrected, for no benefit —
+# the originals are already versioned and the generator is the real artefact.
+# The folder itself still gets backed up by the OneDrive mirror.
+sixfold/team-share/files/

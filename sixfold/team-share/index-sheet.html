@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold shared folder — what is in it</title>
+<style>
+  /* Print register, same token set as the funding one-pager and the rate sheets,
+     so the index reads as part of the same family as the things it indexes.
+     Ink on paper: no dark theme, every colour painted explicitly. */
+  :root {
+    --paper: #FFFFFF;
+    --tint: #F3EFE6;
+    --tint-edge: #DED5C4;
+    --ink: #14201B;
+    --ink-mid: #46534B;
+    --ink-soft: #6E7A72;
+    --ember: #E4703A;
+    --ember-text: #B84C15;
+    --moss-text: #45583A;
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: #4A5550; }
+  body { margin: 0; background: #4A5550; color: var(--ink); font-family: var(--f-body); padding: 24px 12px 48px; }
+
+  .sheet {
+    width: 8.5in; min-height: 11in; margin: 0 auto 18px;
+    background: var(--paper); color: var(--ink);
+    padding: 0.5in 0.55in 0.45in;
+    font-size: 10.2pt; line-height: 1.46;
+    box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+    display: flex; flex-direction: column;
+  }
+
+  .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.3in;
+         border-bottom: 2.5pt solid var(--ember); padding-bottom: 9pt; }
+  .brand { display: flex; align-items: flex-end; gap: 9pt; }
+  .mark { width: 42pt; height: 42pt; flex: none; display: block; }
+  .wordmark { font-family: var(--f-display); font-size: 25pt; line-height: 0.9;
+              letter-spacing: -0.015em; margin: 0; }
+  .descriptor { font-family: var(--f-data); font-size: 6.2pt; letter-spacing: 0.24em;
+                text-transform: uppercase; color: var(--moss-text); margin: 4pt 0 0; }
+  .whatitis { font-family: var(--f-data); font-size: 6.6pt; letter-spacing: 0.13em;
+              text-transform: uppercase; color: var(--ink-soft); text-align: right;
+              margin: 0; padding-top: 4pt; max-width: 2.1in; line-height: 1.7; }
+
+  h1 { font-family: var(--f-display); font-weight: 400; font-size: 21pt; line-height: 1.1;
+       margin: 15pt 0 0; text-wrap: balance; }
+  .standfirst { font-size: 10.6pt; line-height: 1.45; color: var(--ink-mid);
+                margin: 7pt 0 0; max-width: 6.3in; }
+
+  .folders { margin-top: 14pt; }
+  .fold { display: grid; grid-template-columns: 1.55in 1fr; gap: 12pt;
+          border-top: 0.75pt solid var(--tint-edge); padding: 9pt 0;
+          break-inside: avoid; page-break-inside: avoid; }
+  .fold:first-child { border-top: 1.5pt solid var(--ink); }
+  .fold .no { font-family: var(--f-display); font-size: 14pt; color: var(--ember-text);
+              line-height: 1.1; }
+  .fold .no span { display: block; font-family: var(--f-data); font-size: 6.2pt;
+                   letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft);
+                   margin-top: 3pt; }
+  .fold .when { font-family: var(--f-data); font-size: 6.6pt; letter-spacing: 0.13em;
+                text-transform: uppercase; color: var(--moss-text); margin: 0 0 4pt; }
+  .fold ul { margin: 0; padding-left: 11pt; list-style: none; }
+  .fold li { position: relative; margin-bottom: 2.5pt; font-size: 9.6pt; line-height: 1.38; }
+  .fold li::before { content: ""; position: absolute; left: -9pt; top: 0.44em;
+                     width: 3.4pt; height: 3.4pt; background: var(--moss-text); }
+  .fold li b { font-weight: 600; }
+  .fold li i { font-style: normal; color: var(--ink-soft); }
+
+  .callout { background: var(--tint); border: 0.75pt solid var(--tint-edge);
+             border-left: 3pt solid var(--ember); padding: 10pt 12pt; margin-top: 13pt;
+             break-inside: avoid; page-break-inside: avoid; }
+  .callout h2 { font-family: var(--f-display); font-weight: 400; font-size: 13.5pt;
+                margin: 0 0 5pt; color: var(--ember-text); }
+  .callout p { margin: 0 0 5pt; font-size: 9.8pt; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .notlist { margin: 7pt 0 0; padding: 0; list-style: none; }
+  .notlist li { position: relative; padding-left: 13pt; margin-bottom: 4.5pt;
+                font-size: 9.4pt; line-height: 1.38; }
+  .notlist li::before { content: "\00d7"; position: absolute; left: 0; top: -0.5pt;
+                        color: var(--ember-text); font-size: 10pt; }
+  .notlist li b { font-weight: 600; }
+
+  footer { margin-top: auto; padding-top: 12pt; border-top: 0.75pt solid var(--tint-edge); }
+  .contact { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4pt 12pt;
+             font-family: var(--f-data); font-size: 7.8pt; letter-spacing: 0.05em;
+             color: var(--ink-mid); }
+  .contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+  .fine { font-size: 7.4pt; line-height: 1.45; color: var(--ink-soft); margin: 6pt 0 0; }
+
+  @page { size: letter; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<section class="sheet">
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+        <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+        <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Colorado</p>
+      </div>
+    </div>
+    <p class="whatitis">Shared folder<br>What is in it<br>and what is not</p>
+  </div>
+
+  <h1>Everything here is yours to open without asking.</h1>
+  <p class="standfirst">Six folders, numbered in the order you are likely to need them. If you
+  are looking for something and it is not here, the last page says why — most of the gaps are
+  deliberate, and a few of them matter.</p>
+
+  <div class="folders">
+
+    <div class="fold">
+      <div class="no">01<span>What we do</span></div>
+      <div>
+        <p class="when">Reading in · before a first conversation</p>
+        <ul>
+          <li><b>What Sixfold does — services, no prices.</b> The one-page answer to
+          "what do you actually do". <i>No figures on it by design — safe to show anyone.</i></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fold">
+      <div class="no">02<span>Safety</span></div>
+      <div>
+        <p class="when">Read once properly · then when something changes</p>
+        <ul>
+          <li><b>Crew safety and compliance.</b> What OSHA requires of us, which licences and
+          certifications apply, and what is not held yet. <i>The longest document here and the
+          one worth your time.</i></li>
+          <li><b>Gear checklist.</b> What goes on the truck.</li>
+          <li><b>Crew shirt spec.</b> What the shirt is and why.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fold">
+      <div class="no">03<span>Forms</span></div>
+      <div>
+        <p class="when">On the job · print or fill in on a screen</p>
+        <ul>
+          <li><b>Quote walk sheet</b>, two versions — one to fill in on screen, one to print
+          and write on. Filled in at the walk, before a price exists.</li>
+          <li><b>Job close-out sheet.</b> Fill in the day the job ends, while you still
+          remember. Same rows as the walk sheet on purpose — the value is the comparison.</li>
+          <li><b>What the work takes</b> and <b>what things cost us.</b> Internal. A marked
+          guess beats a blank.</li>
+          <li><b>Signing at the door — crib sheet.</b> <i>Internal, never hand it over.</i>
+          Six things to get right, and the reason each one matters.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fold">
+      <div class="no">04<span>For the customer</span></div>
+      <div>
+        <p class="when">Print and hand over · or email</p>
+        <ul>
+          <li><b>Preparing your home for wildfire.</b> The pamphlet. Most of what is in it the
+          homeowner can do themselves, which is the point.</li>
+          <li><b>Who pays for wildfire mitigation.</b> The funding sheet — the tax credit and
+          the insurance law, on one page.</li>
+          <li><b>Referral packet — blank template.</b> What goes in the folder at the end of a
+          job.</li>
+          <li><b>What Sixfold does.</b> Same sheet as folder 01, here because it is also a
+          handout.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fold">
+      <div class="no">05<span>Money</span></div>
+      <div>
+        <p class="when">Before you answer a question about cost or credits</p>
+        <ul>
+          <li><b>Tax credit reference notebook.</b> What to say, and a "never say this" list.
+          Read the never-say list even if you read nothing else.</li>
+          <li><b>Tax credit — forms the customer needs.</b></li>
+          <li><b>Script kit.</b> What to say at a door and what never to say.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fold">
+      <div class="no">06<span>Look it up</span></div>
+      <div>
+        <p class="when">Mid-job · when you need a number or an address</p>
+        <ul>
+          <li><b>Debris disposal directory.</b> Every confirmed site, cheapest first.
+          <i>Phone ahead — rates move, and several sites bar commercial haulers.</i></li>
+          <li><b>Mitigation funding directory.</b> The programmes, by county.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold LLC</span>
+      <span>Monument, Colorado</span>
+      <span>(303) 915-1045</span>
+      <span>Contact@SixfoldColorado.com</span>
+    </div>
+    <p class="fine">Page 1 of 2 — the second page is what is deliberately not in this folder.</p>
+  </footer>
+</section>
+
+<section class="sheet">
+  <div class="top">
+    <div class="brand">
+      <div>
+        <p class="wordmark" style="font-size:19pt">What is not here</p>
+        <p class="descriptor">And why — so nobody re-adds it by accident</p>
+      </div>
+    </div>
+    <p class="whatitis">Shared folder<br>Page 2 of 2</p>
+  </div>
+
+  <div class="callout">
+    <h2>Two of these are not housekeeping. Read them.</h2>
+    <p><b>The blank service agreement is not in this folder, and must not be printed from
+    anywhere else either.</b> Both copies still carry the old Englewood address as the
+    seller's place of business, including on the Notice of Cancellation. A cancellation
+    notice with the wrong address does not start the three-day clock — it leaves the job
+    cancellable for <b>three years</b>, with no payment for work already done. They cannot
+    be fixed until Sixfold's Monument street address is on file, and part-fixing them is
+    worse than leaving them. <b>If you need an agreement signed, call the office.</b></p>
+    <p><b>There is no launch offer yet.</b> Two versions were drawn up and neither has been
+    picked. Do not quote a discount, a percentage, or a "first ten properties" deal to a
+    customer, because there is no minimum job size behind either of them.</p>
+  </div>
+
+  <ul class="notlist">
+    <li><b>Rate cards, rate sheets and hourly rates.</b> Pricing is not in a shared folder.
+    Two of the pricing files are marked do-not-quote because the numbers in them are known to
+    be wrong. Prices come from the office, in writing, per job.</li>
+
+    <li><b>Anything naming a real customer.</b> Past quotes and signed agreements name people,
+    addresses and prices. They are not here, and they should not be forwarded.</li>
+
+    <li><b>Flyers.</b> They carry the launch offer that has not been chosen — see above.</li>
+
+    <li><b>The marketing plan, the platform sheet and the start-up plan.</b> Business planning
+    rather than crew material. Ask if you want to read one; nothing in them is secret, they
+    are just not what this folder is for.</li>
+
+    <li><b>Brand files</b> — logo artwork, vehicle magnets, business card proofs. Ordering
+    artefacts. Ask if you need one and a folder can be added.</li>
+  </ul>
+
+  <div class="callout">
+    <h2>If something here looks wrong</h2>
+    <p>Say so rather than working around it. Several documents in this folder were corrected
+    the day it was built, and the reason they had gone stale is that they sat in a folder
+    nobody re-read. <b>A document that disagrees with what you were told in person is worth a
+    text message.</b></p>
+    <p>These are copies. The originals live in the project files, and this folder gets rebuilt
+    from them — so a correction made properly reaches everyone, and a correction scribbled on
+    a copy reaches nobody.</p>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold LLC</span>
+      <span>Monument, Colorado</span>
+      <span>(303) 915-1045</span>
+      <span>Contact@SixfoldColorado.com</span>
+    </div>
+    <p class="fine">Nothing in this folder is legal, tax or insurance advice. The tax credit
+    and insurance material describes published Colorado programme terms — a customer's own
+    position is between them, their accountant and their carrier.</p>
+  </footer>
+</section>
+
+</body>
+</html>

@@ -53,6 +53,11 @@ const JOBS = [
   { src: 'marketing/launch-flyers.html',        out: 'marketing/launch-flyers.pdf',               mode: 'light',
     css: '.flyer, .board-col { break-inside: avoid-page; }' },
   { src: 'marketing/marketing-plan.html',       out: 'marketing/marketing-plan.pdf',              mode: 'light' },
+  /* The index that sits at the top of the Google Drive team folder. TWO pages by
+     content, not by overflow: page 1 is what is in the folder, page 2 is what is
+     deliberately not and why. Page 2 is the one that matters — it carries the
+     Englewood cancellation-notice warning and the no-launch-offer rule. */
+  { src: 'team-share/index-sheet.html',         out: 'team-share/index-sheet.pdf',                mode: 'light' },
   /* Named for sending, like the rate sheets — this one goes to a person
      rather than sitting beside its source for reference. */
   { src: 'marketing/ad-script-kit.html',        out: 'marketing/Sixfold-Ad-Script-Kit.pdf',       mode: 'light' },
