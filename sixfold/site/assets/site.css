@@ -156,11 +156,6 @@ body.paper .steps .no {
   font-size: 22px;
 }
 
-/* Pine, not a hairline: the peaks then read as the boards band rising into the
-   page instead of as a rule balanced on top of it */
-body.paper .ridge-rule { color: var(--pine); height: 34px; }
-body.paper .ridge-rule svg { height: 34px; }
-
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; background: var(--pine); }
@@ -457,8 +452,20 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 
 /* --- the ridge divider: the mark's motif as a rule ------------------ */
 
-.ridge-rule { display: block; width: 100%; height: 26px; color: var(--line); }
-.ridge-rule svg { display: block; width: 100%; height: 26px; }
+/* Two ridges, 60px tall (was one, 26px). The far ridge is Timber and the near one
+   Pine — receding peaks, which is the Ridge mark's own idea. Both sit flush on the
+   Pine band below, and the band's top hairline is removed for exactly that join
+   (Matthew, 2026-09-18: "does the white line across need to be there?" — no; it was
+   the section's border-top slicing the mountains off from their ground). On the
+   dark register the near ridge is Bone and the far one a lifted Timber, so it still
+   reads as distance rather than vanishing. */
+.ridge-rule { display: block; width: 100%; height: 60px; }
+.ridge-rule svg { display: block; width: 100%; height: 60px; }
+.ridge-rule .far  { fill: var(--timber); }
+.ridge-rule .near { fill: var(--pine); }
+body:not(.paper) .ridge-rule .far  { fill: #2B3A33; }
+body:not(.paper) .ridge-rule .near { fill: var(--bone); }
+.ridge-rule + .band { border-top: 0; }
 
 /* --- inverted band -------------------------------------------------- */
 
@@ -724,3 +731,83 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 .band .btn-solid { color: var(--btn-solid-fg); text-decoration: none; }
 .band .btn-solid:hover { color: var(--btn-solid-fg); }
 .band .btn { margin-top: 6px; }
+
+/* ==========================================================================
+   Home hub + contact page — added 2026-09-18 pm
+   ========================================================================== */
+
+/* --- hero aside: replaced the fire-only ~450 stat in the hero -------- */
+
+.hero-aside { padding-top: 10px; }
+.hero-aside .kicker { margin-bottom: 10px; }
+.hero-aside p { font-size: 16px; color: var(--text-soft); }
+.hero-aside .more { margin-top: 14px; }
+@media (max-width: 900px) { .hero-aside { padding-top: 0; } }
+
+/* --- the two doors: one hook per audience ---------------------------- */
+
+.doors { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+@media (max-width: 860px) { .doors { grid-template-columns: 1fr; gap: 48px; } }
+.door { border-top: 3px solid var(--accent); padding-top: 22px; }
+.door:nth-child(2) { border-top-color: var(--label); }
+.door h2 { font-size: clamp(24px, 3vw, 30px); }
+.door .stat { margin: 22px 0 6px; max-width: none; }
+.door .more { margin-top: 18px; }
+
+/* --- contact page ---------------------------------------------------- */
+
+.contact-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr); gap: 56px; align-items: start; }
+@media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; gap: 40px; } }
+.contact-aside .lines { font-family: var(--mono); font-size: 15px; letter-spacing: 0.04em; line-height: 2.1; color: var(--text-strong); margin-bottom: 8px; }
+.contact-aside .lines a { text-decoration: none; }
+.contact-aside p { font-size: 15px; }
+
+/* the chooser: four radios styled as cards, one column on phones */
+.need { border: 0; padding: 0; margin: 0 0 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 560px) { .need { grid-template-columns: 1fr; } }
+.need legend { grid-column: 1 / -1; padding: 0; margin-bottom: 4px; }
+/* These are <label>s inside .form, so the field-label rule below (mono, uppercase,
+   11px) reaches them. Reset to reading type here — a card that says "TREES DOWN,
+   BRUSH OUT, DEFENSIBLE SPACE, THINNING" in tracked capitals is hard work. The
+   .form input rule (width:100%) reaches the radios too and stretched them across
+   the card; width:auto puts them back. Both seen on the first render.
+   .form .need, not .need: .form label sits LATER in this file at the same
+   specificity and was winning — the second render looked identical to the first. */
+.form .need label {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--ground-lift); border: 1px solid var(--edge); border-radius: 3px;
+  padding: 14px 16px; cursor: pointer;
+  font-family: var(--sans); font-size: 16px; letter-spacing: 0; text-transform: none;
+  color: var(--text); margin: 0;
+}
+.form .need label:has(input:checked) { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.form .need input { width: auto; margin: 4px 0 0; accent-color: var(--ember); flex: none; }
+.need span b { display: block; font-weight: 600; color: var(--text-strong); font-size: 16px; }
+.need span small { display: block; font-size: 13px; color: var(--text-soft); line-height: 1.4; margin-top: 2px; }
+
+/* fields */
+.form .row { display: grid; gap: 18px; margin-bottom: 18px; }
+.form .row.two { grid-template-columns: 1fr 1fr; }
+@media (max-width: 560px) { .form .row.two { grid-template-columns: 1fr; } }
+.form label {
+  display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--label); margin-bottom: 7px;
+}
+.form input, .form textarea {
+  width: 100%; font: inherit; font-size: 16px; color: var(--text-strong);
+  background: var(--ground-lift); border: 1px solid var(--edge); border-radius: 3px;
+  padding: 12px 13px;
+}
+.form textarea { resize: vertical; min-height: 130px; }
+.form input:focus, .form textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.form input::placeholder { color: var(--text-soft); opacity: .7; }
+.form button { margin-top: 4px; cursor: pointer; border: 0; }
+.form-help { margin-top: 14px; max-width: 52ch; }
+
+/* honeypot: off-screen, not display:none — some bots skip hidden fields */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.form-msg { margin-top: 18px; padding: 14px 16px; border-radius: 3px; font-size: 15px; max-width: none; }
+.form-msg--ok  { background: var(--ground-lift); border-left: 3px solid var(--label); }
+.form-msg--err { background: var(--ground-lift); border-left: 3px solid var(--accent); }
+.form-msg[hidden] { display: none; }

@@ -1,0 +1,170 @@
+<!doctype html>
+<!--
+  Sixfold Colorado — /contact/ (draft build on disk). NOT deployed.
+
+  One form, not three. The chooser at the top sets a hidden `need` field and swaps the
+  prompt above the message box; the fields themselves are the same for everyone,
+  because what we need to come out and look is the same for everyone: who, where,
+  how to reach you. Phone and email sit beside the form the whole time — the form is
+  the option, not the gate.
+
+  Submits to /api/submit.php — the same mechanism the Surge site uses on its host: a
+  PHP mail() handler with a honeypot, a JSON-line log and a no-JS redirect. The dev
+  server (serve.mjs) answers the same path by logging to a temp file, so the form can
+  be exercised locally. Nothing is hosted yet; when it is, api/config.php gets the
+  real mailbox.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact — Sixfold Colorado</title>
+  <meta name="description" content="Tell Sixfold Colorado whether it's fire mitigation or landscaping and we'll set a time to walk the property. Or just call (303) 915-1045.">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="paper">
+
+<!-- CHROME:MARKS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ridge-flat" viewBox="0 0 100 96">
+    <path fill="currentColor" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84ZM9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5ZM4 86L96 86L96 91L4 91Z"/>
+  </symbol>
+</svg>
+<!-- /CHROME:MARKS -->
+
+<!-- CHROME:HEAD -->
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
+      <b>Sixfold Colorado</b><span>Land &amp; Fire</span>
+    </a>
+    <nav class="nav">
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays</a>
+      <a href="/wildfire-guide/">Wildfire guide</a>
+      <a class="nav-cta" href="/contact/" aria-current="page">Contact</a>
+    </nav>
+  </div>
+</header>
+<!-- /CHROME:HEAD -->
+
+<main>
+
+  <div class="hero-shell">
+  <section class="page-head wrap">
+    <p class="kicker">Contact</p>
+    <h1>Tell us what you've got, and we'll come and look.</h1>
+    <p class="lede">Every job starts with a walk. Say whether it's fire mitigation or
+    landscaping, leave a way to reach you, and we'll set a time — or skip the form and
+    call.</p>
+  </section>
+  </div>
+
+  <section class="wrap">
+    <div class="contact-grid">
+
+      <form class="form" id="contact-form" method="post" action="/api/submit.php" novalidate>
+        <input type="text" name="_hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="_form" value="contact">
+
+        <fieldset class="need">
+          <legend class="kicker">What do you need?</legend>
+          <label>
+            <input type="radio" name="need" value="fire" checked>
+            <span><b>Fire mitigation</b><small>Trees down, brush out, defensible space, thinning</small></span>
+          </label>
+          <label>
+            <input type="radio" name="need" value="landscaping">
+            <span><b>Landscaping</b><small>Mowing, edging, beds, planting, clean-up</small></span>
+          </label>
+          <label>
+            <input type="radio" name="need" value="both">
+            <span><b>Both</b><small>The clearing and the tidy-up after — usually one visit</small></span>
+          </label>
+          <label>
+            <input type="radio" name="need" value="question">
+            <span><b>Just a question</b><small>About the credit, the guide, or anything else</small></span>
+          </label>
+        </fieldset>
+
+        <div class="row two">
+          <div><label for="c-name">Your name</label><input id="c-name" name="name" autocomplete="name" required></div>
+          <div><label for="c-phone">Phone</label><input id="c-phone" type="tel" name="phone" autocomplete="tel" required></div>
+        </div>
+        <div class="row two">
+          <div><label for="c-email">Email</label><input id="c-email" type="email" name="email" autocomplete="email" required></div>
+          <div><label for="c-town">Town or area</label><input id="c-town" name="town" autocomplete="address-level2" placeholder="Monument, Black Forest, Woodland Park…"></div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="c-message" data-prompt-fire="What's on the property, roughly — how many trees, how much ground, and what you'd like gone"
+                                  data-prompt-landscaping="What needs doing, and roughly how big an area"
+                                  data-prompt-both="What's there now, and what you'd like it to look like when we leave"
+                                  data-prompt-question="What would you like to know?">What's on the property, roughly — how many trees, how much ground, and what you'd like gone</label>
+            <textarea id="c-message" name="message" rows="5" required></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-solid" type="submit">Send</button>
+        <p class="fine form-help">We use this to get back to you about the work. We don't pass it
+        on. No price is set until someone has walked the property.</p>
+
+        <p class="form-msg form-msg--ok" hidden>Thanks — that's with us, and a person reads it.
+        If it's urgent, call <a href="tel:+13039151045">(303) 915-1045</a>.</p>
+        <p class="form-msg form-msg--err" hidden>That didn't send. Call
+        <a href="tel:+13039151045">(303) 915-1045</a> or email
+        <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a> — both
+        reach a person.</p>
+      </form>
+
+      <aside class="contact-aside">
+        <p class="kicker">Or just reach us</p>
+        <div class="lines">
+          <a href="tel:+13039151045">(303) 915-1045</a><br>
+          <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a>
+        </div>
+        <p>Call or text. If nobody picks up we're on a saw — leave a message and we'll ring
+        back the same day.</p>
+        <p class="kicker" style="margin-top:28px">Where we work</p>
+        <p>Based in Monument. El Paso, Teller and southern Douglas counties and the Front
+        Range foothills. Further out is a phone call, not a refusal.</p>
+        <p class="kicker" style="margin-top:28px">HOA or fire-district board?</p>
+        <p>Email is best for a board — send what you have and we'll walk it and bid it.</p>
+      </aside>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- CHROME:FOOT -->
+<footer class="site-foot">
+  <div class="wrap">
+    <div>
+      <div class="foot-mark">
+        <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
+        <div class="word">Sixfold Colorado</div>
+      </div>
+      <p class="fine">Fire mitigation · Land clearing · Landscaping<br>
+      Front Range · (303) 915-1045</p>
+    </div>
+    <nav class="foot-nav">
+      <a href="/what-we-do/">The work</a>
+      <a href="/who-pays/">Who pays for it</a>
+      <a href="/wildfire-guide/">Wildfire guide</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+    <p class="fine">
+      Sixfold Colorado, Monument CO.
+      <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a><br>
+      Not tax or insurance advice — confirm your own position with your accountant and
+      your carrier.
+    </p>
+  </div>
+</footer>
+<!-- /CHROME:FOOT -->
+
+<script src="/assets/site.js" defer></script>
+</body>
+</html>

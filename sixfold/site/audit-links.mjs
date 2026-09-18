@@ -39,7 +39,7 @@ const fail = (file, msg) => problems.push(`${relative(ROOT, file) || '.'}: ${msg
 async function htmlFiles(dir) {
   const out = [];
   for (const e of await readdir(dir, { withFileTypes: true })) {
-    if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+    if (e.name === 'node_modules' || e.name.startsWith('.') || e.name === '_tabled') continue;   // _tabled: off the site, kept buildable
     const p = join(dir, e.name);
     if (e.isDirectory()) out.push(...await htmlFiles(p));
     else if (e.name.endsWith('.html')) out.push(p);

@@ -1,0 +1,7 @@
+# Never serve the log or the config. submit.php is the only thing here that answers.
+<FilesMatch "\.(log|md)$">
+  Require all denied
+</FilesMatch>
+<Files "config.php">
+  Require all denied
+</Files>

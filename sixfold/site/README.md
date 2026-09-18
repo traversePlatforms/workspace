@@ -327,3 +327,113 @@ Claims on the landing page, all carried from already-verified Sixfold files:
 - FRWRM / grant deadlines are deliberately not printed (they date fast); the
   boards band stays generic.
 - `SixfoldColorado.com` on the footer + merch contact pieces the day hosting is live.
+
+---
+
+## Matthew's first review — 2026-09-18 evening
+
+Five things, all done except the colour change on the tabled merch board, which was
+his call to leave.
+
+### 1. Merch — tabled
+
+**Off the site.** Moved to `_tabled/merch/` (generator and output together, so it still
+builds). Removed from the header and footer nav on every page. `serve.mjs` refuses to
+serve anything under `_tabled/`, and `audit-links.mjs` skips it, so it can neither be
+reached nor break the link audit while parked.
+
+Matthew: *"I 100% plan on putting it back on but we don't currently have vendors or
+suppliers for that part of the business yet."*
+
+**When it comes back — the colour is the work.** The board is still the dark register.
+Flipping it is *not* just adding `class="paper"` to the generator's body tag: every
+garment mockup sits on a dark radial gradient (`.card .mock`) and the dark-shirt renders
+were tuned against it. On Bone the mocks will need a lighter plate (there is already a
+`.card.light .mock` gradient to start from) and the dark garments will need their
+shadow/highlight passes re-checked. Budget a proper render-and-look session, not a
+one-line edit. To preview it in the meantime: `git mv` it back out of `_tabled/`, or
+temporarily drop `_tabled` from the `BLOCKED` regex in `serve.mjs`.
+
+### 2. Contact is a page: `/contact/`
+
+Was a `#contact` anchor at the foot of the home page. Now its own page, built the way
+the Surge site's contact page is built, minus the parts Sixfold does not need:
+
+- **One form, not three.** A chooser at the top — *Fire mitigation · Landscaping · Both ·
+  Just a question* — sets a hidden `need` field and swaps the prompt above the message
+  box (a landscaping customer is not asked how many trees they have). The fields are
+  the same for everyone because what we need in order to come and look is the same
+  for everyone: who, where, how to reach you.
+- **Phone and email sit beside the form the whole time.** The form is the option, not
+  the gate. Matthew: *"unless they would rather just contact us via email or phone."*
+- **Submits to `/api/submit.php`** — the same mechanism Surge uses on its host: a PHP
+  `mail()` handler with a honeypot, a JSON-line backup log, JSON back to a fetch submit
+  and a 303 to `/thank-you/` for a no-JS submit. `api/config.php` holds the mailbox
+  (`Contact@SixfoldColorado.com`) and needs a real `website@SixfoldColorado.com` sender
+  created on the host, or the mail is treated as forged. **`.htaccess` denies the log
+  and the config.**
+- **The dev server answers the same path** by logging to `%TEMP%\sixfold-submissions.log`,
+  so the form works end to end locally. Exercised with curl: valid submit → `{"ok":true}`;
+  missing phone → 422 with the message; honeypot filled → silent ok; no-JS submit →
+  303 to `/thank-you/`.
+- **`assets/site.js`** is the only script on the site and only `/contact/` loads it.
+  Progressive: without it the chooser still works (default radio) and the form still
+  posts natively.
+
+The home page keeps a short `#contact` section — CTA to the page, plus phone and
+email — so old links still land somewhere sensible.
+
+### 3. "Sixfold" → "Sixfold Colorado"
+
+Matthew asked whether the site should say *Sixfold Colorado* rather than *Sixfold*,
+since Nextdoor, Facebook and the domain all do. **Yes — on the site.** Header wordmark,
+hero lockup and footer now read *Sixfold Colorado*, with the descriptor shortened to
+*Land & Fire* so "Colorado" does not appear twice. Body copy that named the company
+("Sixfold works as the contractor…") now says *Sixfold Colorado*.
+
+**What did not change, on purpose:** the printed lockup on the business cards, the
+vehicle magnets and the agreements still reads *Sixfold* / *Land & Fire · Colorado*.
+That is the logo, it is on durable print, and the legal party on the agreements is
+*Sixfold, LLC* regardless. The site is the customer-facing name; print is the mark.
+If Matthew wants print to follow, that is a separate pass through `business-cards.html`,
+`brand/vehicle/build-magnets.mjs` and the agreement mastheads.
+
+### 4. The home page addresses both audiences
+
+It was fire-only from the first line: *"Fire mitigation on Colorado's Front Range"*,
+the ~450 stat in the hero, *"Two parties will help cover this"* as the second section.
+Matthew: *"I want the home page to read as if it's being addressed to both parties.
+And the individual characteristic should be page dependent."*
+
+- **Hero** is now *Fire mitigation and landscaping on Colorado's Front Range*, with
+  *One crew for the clearing, and for putting the ground back afterwards* under it.
+  The stat came out of the hero; the right column is now the service area.
+- **Two doors** replace the fire-only money section: *If it's fire mitigation* (the
+  two-parties hook and the ~450 card, pointing at `/who-pays/`) beside *If it's
+  landscaping* (same-crew, own agreement, and — stated plainly — not eligible for the
+  credit, pointing at `/what-we-do/#landscaping`).
+- The fire specifics live in full on `/who-pays/` and `/wildfire-guide/`, which is
+  where they belonged.
+
+### 5. The ridge divider
+
+Matthew liked the mountains, asked about the white line, and floated larger peaks,
+a dirt-coloured line, or snow caps.
+
+**The white line was a bug** — the `.band` section's own `border-top` hairline, which
+on the Bone register renders light and sliced the peaks off from the band below.
+`.ridge-rule + .band { border-top: 0 }` removes it; the mountains now sit flush on
+their ground.
+
+**Rebuilt as two ridges, 60px (was 26px):** a far ridge in Timber behind a near ridge
+in Pine — receding peaks, which is the Ridge mark's own idea, so the divider and the
+logo share a language. Snow caps were considered and not done: on a Bone sky a Bone
+cap is invisible and a grey one reads as a truncated peak, not snow. If a snow-capped
+version is wanted it needs a different sky. Same SVG on all four pages that use it.
+
+### Checked
+
+`audit-links.mjs` clear across six pages (contact and thank-you added). No horizontal
+overflow at 320 / 390 / 768 / 1280 on `/contact/`. The chooser cards needed two fixes
+found by rendering, both recorded in the stylesheet: `.form label` and `.form input`
+were reaching into them.
