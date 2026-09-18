@@ -232,6 +232,17 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 
 /* ---- hero (homepage only) ------------------------------------------------ */
 .hero{position:relative;padding-block:clamp(3rem,7vw,5.5rem);overflow:hidden}
+/* Ultrawide (2026-09-18, Matthew on a 3440x1440): the hero's height comes from its
+   text, so at 3440 wide it was a ~560px band cropping a 16:9 video — showing 29% of
+   the frame from the top down, i.e. ceiling tiles. At 1920 the same rule shows 50%
+   of the frame and looks right. 28vw pins the hero to that 50% crop at any width
+   (28vw / (vw*9/16) = 0.498), so the framing on a big monitor matches a laptop.
+   Below 1600px the floor never bites — the text is already taller than it. The
+   flex centring keeps the headline mid-band rather than stranded at the top of a
+   tall hero. object-position untouched: 12% is right once the band is deep enough. */
+@media (min-width:1600px){
+  .hero{min-height:28vw;display:flex;flex-direction:column;justify-content:center}
+}
 .hero__bg{position:absolute;inset:0;z-index:0}
 .hero__bg picture{display:block;width:100%;height:100%}
 .hero__bg img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;filter:brightness(.72) saturate(.8) blur(1px);transform:scale(1.05)}
