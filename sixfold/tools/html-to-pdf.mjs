@@ -132,6 +132,10 @@ const JOBS = [
      back near the default for readable type. */
   { src: 'operations/crew-shirt-spec.html',     out: 'operations/crew-shirt-spec.pdf',            mode: 'light', scale: 0.78 },
   { src: 'operations/business-cards.html',      out: 'operations/business-cards.pdf',             mode: 'light', scale: 1 },
+  /* The FedEx print file: two pages at exactly 3.75 x 2.25 in (trim + bleed), Pine
+     bleeding to the edge. scale: 1 is the whole point — 0.8 would print the card at
+     80% inside a full page. The @page rule in the source sets the size. */
+  { src: 'operations/business-card-print/card-a-pine-brandon.html', out: 'operations/business-card-print/Sixfold-Business-Card-Brandon-Long-FedEx.pdf', mode: 'dark', scale: 1 },
   /* Vehicle magnets, 2026-09-16 — each page carries its own @page size (24.25 x
      12.25 / 18.25 in with bleed), which preferCSSPageSize honours; scale must be
      1 so an inch is an inch. Print-ready: the vendor gets the PDF as is. */

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold business card — A · Pine — Brandon Long — PRINT FILE</title>
+<style>
+  /* ==================================================================
+     PRINT FILE for FedEx Office. Built 2026-09-18 from the A · Pine option
+     in ../business-cards.html, front arrangement 2 ("both below").
+
+     FedEx spec (office.fedex.com, checked 2026-09-18): file at 3.75 x 2.25 in
+     — that is the 3.5 x 2 trim plus 0.125 in bleed on every side — PDF
+     preferred, 300 dpi or better, two pages for a double-sided card.
+
+     GEOMETRY. Every page is exactly 3.75 x 2.25 in with zero margin, and the
+     Pine ground fills the whole page, so it bleeds. The trim line sits 0.125 in
+     inside each edge. Content is inset 0.345 in from the page edge =
+     0.125 (bleed) + 0.22 (the proof's own pad), so the layout is the proof's
+     layout to the point. Nothing important is closer than 0.22 in to the trim,
+     which is well inside FedEx's 0.125 in safe zone.
+
+     Type sizes are the proof's sizes, in points, unchanged. Fonts: the proof
+     uses system faces (Palatino Linotype, Cascadia Mono). Chrome embeds the
+     glyphs it uses into the PDF, so the file is self-contained — FedEx does
+     not need the fonts installed.
+
+     scale: 1 in the JOBS table, and it must stay. 0.8 would print the card at
+     80% inside a full-size page.
+     ================================================================== */
+  @page { size: 3.75in 2.25in; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Cascadia Mono", Consolas, "SFMono-Regular", monospace; }
+
+  .page {
+    position: relative;
+    width: 3.75in; height: 2.25in;
+    background: #0E1512;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .pad { position: absolute; inset: 0.345in; }
+
+  /* on screen only: show the trim so the proof can be checked by eye */
+  @media screen {
+    body { background: #4A5550; padding: 24px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .page { box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+    .page::after { content: ""; position: absolute; inset: 0.125in; border: 0.4pt dashed rgba(255,255,255,.35); pointer-events: none; }
+  }
+
+  .wordmark { font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif; font-size: 19pt; letter-spacing: -.3pt; line-height: 1; color: #EDE7DC; }
+  .nm  { font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif; font-size: 12pt; line-height: 1.1; color: #EDE7DC; }
+  .ti  { font-size: 5.8pt; letter-spacing: 1.4pt; text-transform: uppercase; color: #8AA07A; margin-top: 2pt; }
+  .dt  { font-size: 6.6pt; line-height: 1.85; color: #EDE7DC; }
+  .dt .web { color: #E4703A; }
+  .svc { font-size: 5.6pt; letter-spacing: 1.2pt; color: rgba(237,231,220,.5); }
+  .band { font-size: 5.4pt; letter-spacing: 3.2pt; color: #8AA07A; margin-top: 4pt; }
+  .co   { font-size: 5.2pt; letter-spacing: 3.6pt; color: rgba(237,231,220,.55); margin-top: 2.5pt; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 — FRONT -->
+<div class="page">
+  <div class="pad" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+    <svg width="76" height="80" viewBox="4 14 94 99" fill="#E4703A" aria-label="Sixfold Ridge mark">
+      <path d="M18 84 L36 48 L54 84 Z" fill-opacity=".42"/>
+      <path d="M30 84 L50 38 L70 84 Z" fill-opacity=".55"/>
+      <path d="M44 84 L66 26 L88 84 Z" fill-opacity=".7"/>
+      <path d="M60 84 L79 14 L98 84 Z" fill-opacity=".85"/>
+      <rect x="20.4" y="77" width="3.2" height="7"/>
+      <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+      <path d="M22 62 L12 74 L32 74 Z"/>
+      <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+      <rect x="4" y="86" width="92" height="5"/>
+      <g fill="none" stroke="#E4703A" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+      </g>
+    </svg>
+    <div class="wordmark" style="margin-top:3pt">Sixfold</div>
+    <div class="band">LAND &amp; FIRE</div>
+    <div class="co">COLORADO</div>
+  </div>
+</div>
+
+<!-- PAGE 2 — BACK -->
+<div class="page">
+  <div class="pad" style="display:flex;flex-direction:column;justify-content:space-between">
+    <div>
+      <div class="nm">Brandon Long</div>
+      <div class="ti">Owner</div>
+    </div>
+    <div class="dt">
+      (303) 915-1045<br>
+      Contact@SixfoldColorado.com<br>
+      <span class="web">SixfoldColorado.com</span>
+    </div>
+    <div class="svc">FIRE MITIGATION &middot; LAND CLEARING &middot; LANDSCAPING</div>
+  </div>
+</div>
+
+</body>
+</html>
