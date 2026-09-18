@@ -13,6 +13,7 @@
 *.avi
 # --- except the finished site hero (2 MB each, part of the deployable site)
 !surge/website/build/assets/video/hero.mp4
+!surge/website/build/assets/video/hero-mobile.mp4
 !surge/website/build/assets/video/hero.webm
 
 # --- Camera originals

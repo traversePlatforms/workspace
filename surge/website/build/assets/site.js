@@ -159,19 +159,36 @@
    image simply stays. Only swaps in once the video is genuinely playing, so a
    failed load, a slow connection or an unsupported codec leaves the still in
    place rather than a black rectangle.
-   Skipped entirely on reduced-motion and on narrow screens, where a background
-   video costs the visitor data for decoration they largely cannot see. */
+   Skipped entirely on reduced-motion and on save-data/2g. Narrow screens are NOT
+   skipped since 2026-09-17 — they get a smaller encode instead; see below. */
 (function () {
   var v = document.querySelector('video[data-hero-video]');
   if (!v || !v.querySelector('source')) return;
 
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var narrow = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
-  if (reduced || narrow) return;
+  if (reduced) return;
 
   // save-data / metered connections: leave the still
   var conn = navigator.connection;
   if (conn && (conn.saveData || /2g/.test(conn.effectiveType || ''))) return;
+
+  /* Phones used to be skipped outright (a background video is decoration, and the
+     desktop file is ~1.9 MB of it). Matthew asked for motion on mobile 2026-09-17,
+     so narrow screens get a much smaller encode instead of nothing: 854x480, ~560 KB,
+     the same 10.6 s loop. Indistinguishable behind the blur at phone width. If the
+     small file is ever missing, the <source> children stay as they are and the
+     desktop file plays — no blank box either way. */
+  var mobileSrc = v.getAttribute('data-mobile-src');
+  var swapped = false;
+  if (narrow && mobileSrc) {
+    while (v.firstChild) v.removeChild(v.firstChild);
+    var s = document.createElement('source');
+    s.src = mobileSrc;
+    s.type = 'video/mp4';
+    v.appendChild(s);
+    swapped = true;
+  }
 
   function reveal() { v.classList.add('is-playing'); }
   v.addEventListener('playing', reveal, { once: true });
@@ -191,9 +208,15 @@
     }
   }
   v.preload = 'auto';
+  /* Swapping <source> children after parse does nothing on its own — the element has
+     already run its resource selection and keeps the old currentSrc. load() is what
+     re-runs it. It is only called when we actually swapped, and play() is then left to
+     the canplay listener rather than fired in the same tick, which is what raced the
+     load() in the first version. */
+  if (swapped) v.load();
   if (v.readyState >= 3) attempt();
   else v.addEventListener('canplay', attempt, { once: true });
-  attempt();
+  if (!swapped) attempt();
   document.addEventListener('visibilitychange', function () { if (!document.hidden && v.paused) attempt(); });
 })();
 
