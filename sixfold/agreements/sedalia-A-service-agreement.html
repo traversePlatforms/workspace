@@ -282,6 +282,11 @@ table.tbl tr.dim td { color: var(--ink-soft); }
 .tick .lbl { flex: 1; line-height: 1.38; }
 .tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
 .ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+/* three-up. Added 2026-09-18 when the service list grew past six items and a fourth
+   row of ticks pushed page 1 onto a sixth page. Scoped to a new class so sedalia-A and
+   job2, which are signed-shape documents, keep the two-up grid they were proofed at. */
+.ticks.three { display: flex; flex-wrap: wrap; gap: 0 14pt; }
+.ticks.three .tick { flex: 1 1 2.1in; }
 .ticks.two .tick { flex: 1 1 2.7in; }
 
 .yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }

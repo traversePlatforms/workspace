@@ -149,7 +149,17 @@ const JOBS = [
        sedalia-A-service-agreement 5 · pamphlet 2 · rate card 9
        rate sheets A/B/C 1 each · services sheet D 1 · gear checklist 7
        reference notebook 7 · client forms 4                                   */
-  { src: 'agreements/service-agreement.html',        out: 'agreements/service-agreement.pdf',              mode: 'light' },
+  /* scale: 1 explicitly, and it must stay. 16 CFR 429.1 sets a TEN POINT floor on the
+     bold statutory statement and on the Notice of Cancellation. The stylesheet sets both
+     at 10.5pt, which leaves only half a point of headroom. Measured 2026-09-18: the
+     widest ruled box renders 7.400in on paper, exactly the CSS content width, so nothing
+     is being scaled today and 10.5pt is what prints. But the default in this tool is 0.8,
+     and 10.5 x 0.8 = 8.4pt would be a defective notice. Pin it. */
+  { src: 'agreements/service-agreement.html',        out: 'agreements/service-agreement.pdf',              mode: 'light', scale: 1 },
+  /* The landscaping twin. Same five pages, same statutory pages 3-5 verbatim — only
+     sections 2 and 3 and clauses 1, 2, 3, 5 differ. scale: 1 for the same reason as
+     above: the ten point floor applies to this document identically. */
+  { src: 'agreements/landscaping-agreement.html',    out: 'agreements/landscaping-agreement.pdf',          mode: 'light', scale: 1 },
   { src: 'agreements/field-instructions.html',       out: 'agreements/field-instructions.pdf',             mode: 'light' },
   { src: 'agreements/service-agreement-tablet.html', out: 'agreements/service-agreement-tablet.pdf',       mode: 'light' },
   { src: 'agreements/sedalia-A-service-agreement.html', out: 'agreements/sedalia-A-service-agreement.pdf', mode: 'light' },

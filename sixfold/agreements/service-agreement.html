@@ -282,6 +282,11 @@ table.tbl tr.dim td { color: var(--ink-soft); }
 .tick .lbl { flex: 1; line-height: 1.38; }
 .tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
 .ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+/* three-up. Added 2026-09-18 when the service list grew past six items and a fourth
+   row of ticks pushed page 1 onto a sixth page. Scoped to a new class so sedalia-A and
+   job2, which are signed-shape documents, keep the two-up grid they were proofed at. */
+.ticks.three { display: flex; flex-wrap: wrap; gap: 0 14pt; }
+.ticks.three .tick { flex: 1 1 2.1in; }
 .ticks.two .tick { flex: 1 1 2.7in; }
 
 .yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
@@ -562,13 +567,18 @@ p, li { orphans: 3; widows: 3; }
   </div>
 
   <h2 class="sec">2 · The work</h2>
-  <div class="ticks two">
+  <div class="ticks three">
     <div class="tick"><span class="sq"></span><span class="lbl"><strong>Felling</strong> — trees taken down</span></div>
     <div class="tick"><span class="sq"></span><span class="lbl"><strong>Stump grinding</strong> — ground out below grade</span></div>
     <div class="tick"><span class="sq"></span><span class="lbl"><strong>Slash and chipping</strong></span></div>
     <div class="tick"><span class="sq"></span><span class="lbl"><strong>Rounds</strong> — cut to firewood length</span></div>
     <div class="tick"><span class="sq"></span><span class="lbl"><strong>Defensible space</strong> around structures</span></div>
     <div class="tick"><span class="sq"></span><span class="lbl"><strong>Fuel break</strong> / <strong>thinning</strong></span></div>
+    <!-- Added 2026-09-18. Landscaping became a settled Sixfold service on 2026-09-16 and it
+         is usually the SAME visit as the clearing, not a second one. Without this box the
+         exclusion in section 3 contradicted the work being done, and the form had to be
+         hand-edited on a combined job — which is exactly what it must not need. -->
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Landscaping</strong> / restoration</span></div>
   </div>
   <div class="grid-form" style="margin-top:6pt">
     <div class="field wide"><label>Exactly what is being done, and where on the property</label><div class="line"></div></div>
@@ -576,7 +586,7 @@ p, li { orphans: 3; widows: 3; }
   </div>
 
   <h2 class="sec">3 · What is not included</h2>
-  <p>Unless written below, this does <strong>not</strong> cover structural work of any kind (roofing, vents, siding, decking); landscaping, replanting or reseeding; repair of irrigation, fencing or lawn; hauling non-woody debris; work on land not identified as the owner's; or permit fees.</p>
+  <p>Unless ticked in section 2 or written below, this does <strong>not</strong> cover structural work of any kind (roofing, vents, siding, decking); landscaping, replanting or reseeding; repair of irrigation, fencing or lawn; hauling non-woody debris; work on land not identified as the owner's; or permit fees.</p>
   <div class="grid-form">
     <div class="field wide"><label>Added to the scope by agreement</label><div class="line"></div></div>
   </div>

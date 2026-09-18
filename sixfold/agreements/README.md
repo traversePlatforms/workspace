@@ -171,3 +171,93 @@ signed and not attorney-reviewed. But do not send either file as it stands.
 street address is not on file and that the agreements are blocked until it exists.
 One of the two is out of date. Worth reconciling before the pack goes anywhere,
 because the cancellation notice depends on that address being right.
+
+---
+
+## Review, and the landscaping twin — 2026-09-18
+
+Matthew asked for three things: check the service agreement is standard and meets the
+requirements, make it work for any job without being re-read each time, and produce a
+landscaping version with the fire and tax-credit content stripped out.
+
+**Still not attorney-reviewed.** Everything at the top of this file about that still
+stands, and the attorney list is unchanged. What follows is a check against the statutory
+requirements this pack was built from — not legal advice, and not a substitute for item 1
+on that list.
+
+### What was checked and held
+
+| Requirement | Where | Result |
+|---|---|---|
+| Statutory statement in bold, **min 10 point**, in immediate proximity to the signature | page 3, `.legal10` | **10.5pt bold.** Passes with 0.5pt to spare |
+| Notice of Cancellation **in duplicate**, ten point bold, statutory wording | pages 4 and 5, `.noticeform p` | **10.5pt bold**, both copies, wording verbatim |
+| No waiver of the cancellation right, no confession of judgment | whole document | **Zero occurrences.** Neither concept appears |
+| "Business day" defined as the statute defines it | section 7 | *"any day except Sunday and federal holidays"* — correct, Saturday counts |
+| Refund of everything, deposit included, on cancellation | section 5 and clause 11 | Present in both, and in the statutory text |
+| Seller's name and address on the instrument and on both notices | page 1, pages 4–5, footers | **17890 Sierra Way, Monument, CO 80132** throughout since 2026-09-18 |
+| Date-of-transaction designated as the signing date | page 1 standfirst | Present, with the reason in a source comment |
+
+### ⚑ The one thing that was actually wrong
+
+**Section 3 excluded landscaping** — *"this does not cover … landscaping, replanting or
+reseeding"* — while landscaping has been a settled Sixfold service line since 2026-09-16,
+and the company's own copy says it is **usually the same visit** as the clearing, not a
+second one. On a combined job the agreement contradicted the work, which meant editing the
+form at the door. That is the opposite of sign-and-go.
+
+Fixed two ways: section 2 gained a **Landscaping / restoration** tick box, and section 3
+now reads *"Unless **ticked in section 2** or written below"*. A fire job with a tidy-up at
+the end is now one document with two boxes ticked.
+
+### A trap that is not live but is one edit away
+
+`.legal10` and `.noticeform p` are set at **10.5pt** against a **10pt** legal floor.
+`html-to-pdf.mjs` defaults every job to **scale 0.8**, and 10.5 × 0.8 = **8.4pt**, which
+would be a defective notice — the three-day clock never starts and the job stays cancellable
+for three years.
+
+Measured 2026-09-18: the widest ruled box renders **7.400 in on paper**, exactly the CSS
+content width, so `preferCSSPageSize` with the explicit `@page` is winning and **nothing is
+being scaled today**. Both agreements are nonetheless pinned to `scale: 1` in the JOBS table
+with that reasoning written beside them. **Do not remove the pin, and do not drop these two
+documents to a smaller type size to win space.**
+
+### The landscaping agreement
+
+`landscaping-agreement.src.html` → `.html` → `.pdf`. **Five pages, same as the fire
+version.** Built from the same source so the parts that must not drift cannot: **pages 4
+and 5 are byte-identical** between the two documents, and page 3 differs only in its header
+label.
+
+What differs, and only this:
+
+| | Fire mitigation agreement | Landscaping agreement |
+|---|---|---|
+| **§2 the work** | Felling · stump grinding · slash and chipping · rounds · defensible space · fuel break · landscaping | Mowing · edging · beds · planting · sod or seed · shrub and hedge · brush · clean-up |
+| **§3 excluded** | structural, irrigation repair, non-woody debris… | …plus **felling, stump grinding and fire-mitigation work**, pointed at the other agreement |
+| **§4 material** | chipped / piled / rounds / hauled | **green waste** — hauled / piled / owner's bin / mulched on site |
+| **Clause 1** | invoice separates *qualifying wildfire mitigation work* | plain itemised invoice |
+| **Clause 2** | no tax or insurance advice, credit is the accountant's call | **"This is not wildfire mitigation work"** — states plainly that it does not qualify for the credit and is not defensible space |
+| **Clause 3** | does not make a property fireproof | **plants, sod and seed** — no survival warranty, watering is the owner's, dead-on-arrival put right |
+| **Clause 5** | 811 before stump grinding or ground disturbance | 811 before **digging, planting** or ground disturbance |
+| **Clause 7** | HOA rules on removing trees | HOA rules on planting lists, turf, xeriscape, water restrictions |
+| **Clause 9** | hidden rot, hazard lean, stump on a boulder | buried rubble, unmarked irrigation, ground too hard to plant |
+| **§6 dates** | fire restrictions move them | watering restrictions move them |
+
+**Clause 2 is the one worth reading before you send it.** A landscaping customer who has
+heard about the tax credit will assume it applies. It does not, and the agreement says so
+in the customer's own copy rather than leaving it to a conversation at the door.
+
+**Clause 3 is new ground, not a rewrite.** The fire version's "does not make a property
+fireproof" has no landscaping equivalent; what a landscaping customer actually wants to know
+is whether the plants are guaranteed. The answer given is no — survival depends on watering
+— with the honest carve-out that anything dead on arrival or plainly planted wrong gets put
+right. **This is the clause most likely to need an attorney's eye**, because it is the only
+one written from scratch rather than adapted.
+
+### Still open, unchanged
+
+Everything in *What to put in front of an attorney* above applies to **both** documents.
+The insurance gap is still item 1 and still unsolved: clause 12 promises Sixfold is
+responsible for negligent damage by its crew, and there is no policy behind that promise on
+either agreement.
