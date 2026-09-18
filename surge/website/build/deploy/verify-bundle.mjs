@@ -33,6 +33,13 @@ for (const rel of pages) {
   }
 }
 
+/* A wrong or empty path used to print "0 shipped pages … OK" — a clean bill of health for
+   nothing at all. It bit on 2026-09-17 when an Expand-Archive silently failed. */
+if (pages.length === 0) {
+  console.error(`NO PAGES FOUND under ${root} — wrong path, or the extract failed.`);
+  process.exit(1);
+}
+
 console.log(
   problems === 0
     ? `${pages.length} shipped pages: all tags balanced, no comments — OK`

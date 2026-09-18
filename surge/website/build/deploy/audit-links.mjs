@@ -17,6 +17,11 @@ function walk(dir, base = '', acc = []) {
 
 const pages = walk(root).sort();
 
+if (pages.length === 0) {
+  console.error(`NO PAGES FOUND under ${root} — wrong path, or the extract failed.`);
+  process.exit(1);
+}
+
 // url path -> set of ids/names available on that page
 const idsByPage = new Map();
 for (const rel of pages) {
