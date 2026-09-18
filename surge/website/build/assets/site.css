@@ -438,7 +438,11 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
   color:var(--soft);margin-top:.5rem}
 
 /* ---- record plate (about opens "as a record") ------------------------- */
-.record{margin-top:1.6rem;border-top:1px solid var(--line);padding-top:1.4rem;display:grid;gap:1px;background:var(--line)}
+/* The container's background paints the 1px row gaps — so any padding on it paints
+   grey too. It had padding-top:1.4rem, which rendered as an empty grey bar between the
+   rule and the first row on /about/ and the homepage (found 2026-09-17). The space now
+   lives in margin-top, outside the painted box. */
+.record{margin-top:3rem;border-top:1px solid var(--line);display:grid;gap:1px;background:var(--line)}
 .record div{background:var(--ink);display:grid;gap:.15rem .9rem;padding:.9rem 0}
 @media(min-width:620px){.record div{grid-template-columns:11rem 1fr;padding:.9rem}}
 .record dt{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin:0}
@@ -925,8 +929,16 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
 .flow__step:not(:last-child)::after{content:"";position:absolute;z-index:1;
   background:var(--brand-green);width:11px;height:11px;
   clip-path:polygon(0 0,100% 50%,0 100%,28% 50%)}
-@media(max-width:779px){.flow__step:not(:last-child)::after{left:1.4rem;bottom:-8px;transform:rotate(90deg)}}
-@media(min-width:780px){.flow__step:not(:last-child)::after{right:-7px;top:1.9rem}}
+/* The arrows used to hang OUTSIDE the step (bottom:-8px / right:-7px) so they sat on the
+   divider. They were clipped to a sliver at every width — reported from a real phone
+   2026-09-17 and reproduced on desktop. Cause: .flow__step is animated (surge-rise sets
+   opacity + translate), which makes every step its own stacking context, so the ::after's
+   z-index:1 is trapped inside its own step and the next step's background paints over the
+   part that overhangs. Fix: keep the arrow wholly inside its own step. It also uses the
+   independent `rotate` property, not `transform`, because the reduced-motion block below
+   forces transform:none on this pseudo-element and would otherwise unrotate it. */
+@media(max-width:779px){.flow__step:not(:last-child)::after{left:1.4rem;bottom:.55rem;rotate:90deg}}
+@media(min-width:780px){.flow__step:not(:last-child)::after{right:.7rem;top:1.9rem}}
 
 /* careers "the roles": wrapping outlined chips, not a rigid grid */
 .role-chips{list-style:none;margin:1.7rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.7rem}
