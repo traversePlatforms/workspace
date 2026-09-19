@@ -811,3 +811,47 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 .form-msg--ok  { background: var(--ground-lift); border-left: 3px solid var(--label); }
 .form-msg--err { background: var(--ground-lift); border-left: 3px solid var(--accent); }
 .form-msg[hidden] { display: none; }
+
+/* ==========================================================================
+   Photographs — added 2026-09-19
+   Real work, from the Sedalia clearing and the job 2 trimming. Selection and
+   crops are in assets/img/build-photos.mjs; what is NOT in the set, and why,
+   is in PHOTOS.md.
+   ========================================================================== */
+
+/* A photo inside a card or a section. Ember hairline on top only — the same
+   3pt accent the cards already use, so a photo reads as part of the card
+   rather than pasted onto it. */
+.ph { display: block; margin: 0 0 16px; }
+.ph img {
+  display: block; width: 100%; height: auto;
+  border-radius: 2px;
+  /* The set was shot on phones across two jobs and two days; a small
+     desaturation pulls the greens together so nine frames read as one
+     company rather than nine phones. Light touch — at 0.92 nobody notices
+     it, at 0.8 the foliage goes grey. */
+  filter: saturate(.92);
+}
+.lines3 .ph { margin-bottom: 14px; }
+.lines3 .ph img { aspect-ratio: 3 / 2; object-fit: cover; }
+
+/* Section-width photo on the sub-pages, between the heading and the columns. */
+.ph-wide { margin: 4px 0 26px; }
+.ph-wide img { aspect-ratio: 21 / 9; object-fit: cover; }
+@media (max-width: 700px) { .ph-wide img { aspect-ratio: 3 / 2; } }
+
+/* Full-bleed banner. Sits directly on the ridge divider below it, so the
+   photo runs into the mountains into the Pine band — one dark mass rather
+   than three stacked strips. */
+.banner { width: 100%; line-height: 0; }
+.banner img {
+  display: block; width: 100%; height: clamp(180px, 26vw, 340px);
+  object-fit: cover; filter: saturate(.92) brightness(.96);
+}
+
+/* The ridge sits ON the banner, not below it. The divider's SVG is transparent
+   above the peaks, so with the photo above it the Bone page showed through as a
+   pale strip — photo, gap, mountains, Pine: four bands where the point was one.
+   Pulling it up by its own height puts the transparent part over the photo, and
+   the mountains rise out of the picture into the band. */
+.banner + .ridge-rule { margin-top: -60px; position: relative; }
