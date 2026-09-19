@@ -221,6 +221,11 @@ Safer options:
 6. Add an analytics snippet to the page `<head>` if wanted (one line in
    `scratchpad/site-tasks.mjs`'s `HEAD_LINKS` re-runs it across all pages).
 7. Test: every nav link, both forms, a 404, HTTPS redirect, mobile.
+   For mobile, run the phone auditor against the LIVE URL before calling it done,
+   not just the local one: `node deploy/mobile-audit.mjs --base=https://surgeftw.com`.
+   It checks the things a desktop browser cannot show you — iOS input zoom, tap
+   targets, text under 12px, what a phone actually downloads — and exits 1 on any
+   failure. Then open a form on a real iPhone and tap a field: the page must NOT zoom.
 
 ---
 

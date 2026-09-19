@@ -105,9 +105,13 @@
          wall poster in frame; the stretches at 12–27 s and 45–50 s were left out
          for the same wall. MP4 is listed first: universal, and here it is smaller.
          ============================================================================ -->
+    <!-- No poster attribute (removed 2026-09-19). It fetched hero-bg.jpg on every
+         device — 115 KB — for a frame nobody can see: the video is opacity:0 until
+         it plays, and the <picture> behind it already serves the webp of the same
+         still. Two copies of one image, one of them always invisible. -->
     <video class="hero__video" data-hero-video muted loop playsinline preload="none"
            data-mobile-src="/assets/video/hero-mobile.mp4"
-           poster="/assets/img/hero-bg.jpg" aria-hidden="true" tabindex="-1">
+           aria-hidden="true" tabindex="-1">
       <source src="/assets/video/hero.mp4" type="video/mp4">
       <source src="/assets/video/hero.webm" type="video/webm">
     </video>

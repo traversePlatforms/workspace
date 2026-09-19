@@ -207,13 +207,19 @@
              function (e) { if (window.console && console.debug) console.debug('hero video: ' + e.name + ' — ' + e.message); });
     }
   }
-  v.preload = 'auto';
   /* Swapping <source> children after parse does nothing on its own — the element has
      already run its resource selection and keeps the old currentSrc. load() is what
      re-runs it. It is only called when we actually swapped, and play() is then left to
      the canplay listener rather than fired in the same tick, which is what raced the
-     load() in the first version. */
+     load() in the first version.
+
+     ORDER MATTERS, found 2026-09-19: preload used to be set to 'auto' BEFORE the
+     load(). 'auto' is an instruction to fetch the CURRENTLY selected resource — which
+     at that moment was still the 1.4 MB desktop file — and load() then selected the
+     mobile one and fetched that too. Every phone downloaded both: 2.0 MB of video for
+     a 560 KB loop. preload now changes only after the selection is the right one. */
   if (swapped) v.load();
+  v.preload = 'auto';
   if (v.readyState >= 3) attempt();
   else v.addEventListener('canplay', attempt, { once: true });
   if (!swapped) attempt();

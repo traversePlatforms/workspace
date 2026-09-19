@@ -201,13 +201,13 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
   nav.primary.is-open{max-height:80vh;overflow:auto}
   nav.primary a:not(.nav-cta){
     padding:.95rem .25rem;border-top:1px solid var(--line);
-    font-size:.8rem;color:var(--text)
+    font-size:.9rem;color:var(--text)   /* .8rem = 12.8px was the smallest text on the phone's main nav */
   }
   /* the dropdown wrapper is now the first child, so the old
      `a:first-child` border reset no longer matches anything */
   nav.primary > a:not(.nav-cta):first-child,
   nav.primary > .nav-item:first-child > a{border-top:0}
-  nav.primary .nav-cta{margin:1rem 0 .35rem;justify-content:center}
+  nav.primary .nav-cta{margin:1rem 0 .35rem;justify-content:center;font-size:.9rem;padding-block:.8rem}
 
   /* In the drop panel the subnav is a static, indented block revealed by the
      chevron — no absolute positioning, no hover (there is no hover here). */
@@ -223,7 +223,7 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
   .subnav[data-open]{display:block}
   .has-sub:hover .subnav,.has-sub:focus-within .subnav{display:none}
   .has-sub:hover .subnav[data-open],.has-sub:focus-within .subnav[data-open]{display:block}
-  .subnav a{padding:.75rem .25rem .75rem 1.3rem;font-size:.75rem;border-top:0}
+  .subnav a{padding:.75rem .25rem .75rem 1.3rem;font-size:.85rem;border-top:0}
   nav.primary .subnav a:not(.nav-cta){border-top:0}
   .has-sub:hover .sub-toggle{rotate:none}
   .sub-toggle[aria-expanded="true"]{rotate:180deg}
@@ -320,11 +320,27 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
   padding:.35rem .45rem;background:color-mix(in srgb,var(--black) 55%,transparent)
 }
 .rot.is-live .rot__dots{display:flex}
+/* The dot is 9px. The BUTTON is 28px, and the dot is drawn inside it — so the
+   thing a thumb lands on is 28px and the thing the eye sees is unchanged. The
+   first version put an invisible pseudo-element around a 9px button; the hit
+   area was real but the button's own box was still 9px, which is what an
+   assistive-tech hit test and the auditor both measure. */
+/* The dots box is absolute to .rot, whose bottom edge is the CAPTION, not the
+   photo — so the box has always sat over the caption's right end. At 9px that
+   was a decoration; at tap size it covered the last word. 24px buttons (the
+   2.5.8 floor) keep the box inside the caption row, and the caption keeps clear. */
+.rot__dots{gap:.1rem;padding:.1rem .2rem}
+/* the caption's padding-right lives in the end-of-file block: .split__media figcaption
+   is written later than this and wins an equal-specificity tie */
 .rot__dots button{
-  width:.55rem;height:.55rem;padding:0;border:1px solid var(--white);
-  background:transparent;cursor:pointer;transition:background .18s var(--ease)
+  width:1.5rem;height:1.5rem;padding:0;border:0;background:transparent;cursor:pointer;
+  display:grid;place-items:center
 }
-.rot__dots button[aria-current="true"]{background:var(--brand-green);border-color:var(--brand-green)}
+.rot__dots button::before{
+  content:"";width:.55rem;height:.55rem;border:1px solid var(--white);
+  background:transparent;transition:background .18s var(--ease)
+}
+.rot__dots button[aria-current="true"]::before{background:var(--brand-green);border-color:var(--brand-green)}
 .rot__dots button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 /* a single frame must not animate or show chrome, whatever JS thinks */
 .rot__frames > picture:only-child{opacity:1}
@@ -537,7 +553,11 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 .form label{display:block;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin-bottom:.4rem}
 .form input,.form textarea,.form select{
   width:100%;background:var(--field);color:var(--text);
-  border:1px solid #3d3d3d;padding:.7rem .8rem;font:inherit;font-size:.95rem
+  border:1px solid #3d3d3d;padding:.7rem .8rem;font:inherit;font-size:1rem
+  /* 1rem = 16px, and not a hair under. iOS Safari zooms the whole page when a
+     field under 16px takes focus and does not zoom back out — the single most
+     common "this site is not built for phones" feeling, and it was .95rem
+     (15.2px) on every field on /contact/ and /book/ until 2026-09-19. */
 }
 .form textarea{min-height:7rem;resize:vertical}
 .form input:focus,.form textarea:focus,.form select:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
@@ -645,6 +665,7 @@ nav.primary .nav-item{position:relative;display:inline-flex;align-items:center;g
 .team-strip__item.is-active .team-strip__photo{border-color:var(--green);box-shadow:0 0 0 3px rgba(74,190,74,.22)}
 .team-strip__social{display:flex;gap:.45rem}
 .team-strip__social a{display:inline-flex;padding:.15rem;color:var(--faint);transition:color .15s var(--ease),filter .15s var(--ease)}
+@media (pointer:coarse){.team-strip__social a{padding:.45rem}.team-strip__social{gap:.2rem}}   /* 21px -> 30px hit area on touch */
 .team-strip__social a:hover{color:var(--green);filter:drop-shadow(0 0 5px rgba(74,190,74,.6))}
 .team-strip__social svg{width:1rem;height:1rem;fill:currentColor}
 
@@ -740,6 +761,7 @@ footer .brand svg{width:96px}
 footer .tag{max-width:38ch;margin-top:.9rem;color:var(--faint)}
 footer .fcol h4{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-green);margin:0 0 .8rem;font-weight:700}
 footer .fcol a{color:var(--soft);text-decoration:none;display:block;margin:.35rem 0}
+@media (pointer:coarse){footer .fcol a{padding:.3rem 0;margin:0}}   /* eight stacked 22px links -> 31px each */
 footer .fcol a:hover{color:var(--white)}
 footer .fcol p{color:var(--faint);margin:.35rem 0;max-width:none}
 /* Book a consultation reads as a CTA in the footer, not one more link in the
@@ -852,6 +874,7 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
 
 /* green-line icon row (visual index, not a content section) */
 .mini-icons{list-style:none;margin:2.1rem 0 0;padding:0;display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.mini-icons{grid-template-columns:repeat(2,1fr)}   /* a phone gets 2x2, not four stacked boxes with one icon each */
 @media(min-width:560px){.mini-icons{grid-template-columns:repeat(4,1fr)}}
 .mini-icons li{background:var(--ink);display:flex;flex-direction:column;align-items:center;gap:.7rem;padding:1.55rem 1rem;text-align:center}
 .mini-icons .mi{width:2rem;height:2rem;stroke:var(--brand-green);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -1023,3 +1046,22 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
 @media (prefers-reduced-motion:reduce){
   .anim .chan-strip .cs-item::before,.anim .flow .flow__step::after{opacity:1!important;transform:none!important}
 }
+
+/* ---- phone type floor (2026-09-19) --------------------------------------
+   The label register — eyebrows, dt, captions, the calendar's day letters — sits
+   at 10.9–11.8px, a considered choice on a desktop and hard to read at arm's
+   length on a phone. Nothing under 12px on a phone; body-adjacent copy at 14px.
+   The rems are the same rems, one step up. Desktop is untouched.
+   LAST IN THE FILE ON PURPOSE: these are equal-specificity overrides, and the
+   first placement (mid-file) silently lost to every base rule written after it. */
+@media(max-width:720px){
+  .eyebrow{font-size:.8rem}
+  .split__media figcaption,.ph-media figcaption{font-size:.75rem}
+  .record dt,.contact-rail dt,.source-panel dt,.flow__step .who,.role .r-name,.ins-card .src,footer .fcol h4{font-size:.78rem}
+  .cal__dow{font-size:.76rem}
+  .team-strip__role,.taxo,.fn-link,.mini-icons span{font-size:.8rem}
+  .small,.kpi-scope,footer .tag,footer .fcol p{font-size:.875rem}
+}
+
+/* the rotator caption keeps clear of the (now tap-sized) dots box — all widths */
+.rot figcaption{padding-right:5.5rem}
