@@ -384,12 +384,14 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; }
 @media (max-width: 780px) { .cols { grid-template-columns: 1fr; gap: 28px; } }
 
-/* A short left column against a long right one. The left one rides down with
-   the reader instead of leaving a hole under itself; align-items has to be
-   start or the grid stretches the item and sticky has nothing to travel in. */
-.cols-hold { align-items: start; }
-.cols-hold > :first-child { position: sticky; top: 92px; }
-@media (max-width: 780px) { .cols-hold > :first-child { position: static; } }
+/* A short left column against a long right one — two paragraphs against a
+   four-item list. This was sticky for about an hour and it was wrong: nothing
+   else on the site moves under the reader, so one column that does reads as a
+   fault, not a feature. The fix is narrower measure instead. The left column
+   loses about 12% of its width, which buys it two more lines of wrap, and the
+   citation and the link already moved down into it. */
+.cols-hold { grid-template-columns: 0.86fr 1.14fr; align-items: start; }
+@media (max-width: 780px) { .cols-hold { grid-template-columns: 1fr; } }
 
 .panel {
   background: var(--ground-lift);
