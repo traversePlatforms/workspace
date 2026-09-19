@@ -301,6 +301,10 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   gap: 56px;
   align-items: start;
 }
+/* The home hero's right column is a short note and the left one is four
+   stacked blocks, so `align-items: start` left a void under the note.
+   .hero-aside bottom-aligns itself instead; /who-pays/ keeps the default
+   because its .stat panel is tall enough to hold its own. */
 .hero-grid .stat { margin-top: 10px; max-width: none; }
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; gap: 34px; }
@@ -372,12 +376,20 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 .stat + p { margin-top: 22px; }
 .stat .n { font-family: var(--serif); font-size: 32px; color: var(--accent-text); display: block; line-height: 1; margin-bottom: 8px; }
 .stat p { margin: 0; font-size: 15px; color: var(--text-soft); }
+.src { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--label); margin-top: 14px; line-height: 1.5; max-width: 52ch; }
 .stat .src { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--label); margin-top: 12px; line-height: 1.5; }
 
 /* --- content columns / cards ---------------------------------------- */
 
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; }
 @media (max-width: 780px) { .cols { grid-template-columns: 1fr; gap: 28px; } }
+
+/* A short left column against a long right one. The left one rides down with
+   the reader instead of leaving a hole under itself; align-items has to be
+   start or the grid stretches the item and sticky has nothing to travel in. */
+.cols-hold { align-items: start; }
+.cols-hold > :first-child { position: sticky; top: 92px; }
+@media (max-width: 780px) { .cols-hold > :first-child { position: static; } }
 
 .panel {
   background: var(--ground-lift);
@@ -558,9 +570,29 @@ body:not(.paper) .ridge-rule .near { fill: var(--bone); }
 
 /* --- sub-page masthead ---------------------------------------------- */
 
-.page-head { padding-block: 84px 64px; border-top: 0; }
+.page-head { padding-block: 76px 22px; border-top: 0; }
 .page-head h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 20px; max-width: 22ch; }
 .page-head .lede { max-width: 56ch; }
+
+/* Headline left, standfirst right, sitting on the same baseline. Without it
+   the head is one narrow column and the right half of the page is empty —
+   which is what "a little bit of emptiness at the beginning" was. /who-pays/
+   does not use it: it already fills that half with the ~450 panel. */
+.head-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 56px;
+  align-items: end;
+}
+.head-split h1 { max-width: 15ch; margin-bottom: 0; }
+.head-split .lede { max-width: 44ch; }
+.head-split .lede:last-child { margin-bottom: 0; }
+.head-split .fine { margin-bottom: 0; }
+@media (max-width: 900px) {
+  .head-split { grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  .head-split h1 { max-width: 22ch; }
+  .head-split .lede { max-width: 56ch; }
+}
 .page-head .hero-grid { margin-top: 30px; }
 .page-head .hero-grid .stat { margin-top: 0; }
 
@@ -738,11 +770,19 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 
 /* --- hero aside: replaced the fire-only ~450 stat in the hero -------- */
 
-.hero-aside { padding-top: 10px; }
+.hero-aside {
+  align-self: end;            /* see the note above .hero-grid */
+  padding-left: 22px;
+  border-left: 1px solid var(--line);
+  padding-bottom: 4px;
+}
 .hero-aside .kicker { margin-bottom: 10px; }
 .hero-aside p { font-size: 16px; color: var(--text-soft); }
 .hero-aside .more { margin-top: 14px; }
-@media (max-width: 900px) { .hero-aside { padding-top: 0; } }
+@media (max-width: 900px) {
+  /* one column: the rule and the indent would be a stub hanging off nothing */
+  .hero-aside { align-self: start; padding-left: 0; border-left: 0; }
+}
 
 /* --- the two doors: one hook per audience ---------------------------- */
 
