@@ -20,6 +20,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact — Sixfold Colorado</title>
   <meta name="description" content="Tell Sixfold Colorado whether it's fire mitigation or landscaping and we'll set a time to walk the property. Or just call (303) 915-1045.">
+<!-- CHROME:META -->
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <meta name="theme-color" content="#0E1512">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Sixfold Colorado">
+  <meta property="og:locale" content="en_US">
+  <!-- og:title and og:description are deliberately absent: every scraper falls
+       back to <title> and <meta name=description>, and duplicating them is two
+       places to get out of step. og:url, og:image and <link rel=canonical> need
+       the live domain and cannot go in yet — see LAUNCH.md, which has the exact
+       block to paste and the share image is already built at /assets/og-image.jpg. -->
+<!-- /CHROME:META -->
   <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body class="paper">
@@ -112,9 +125,9 @@
         <p class="fine form-help">We use this to get back to you about the work. We don't pass it
         on. No price is set until someone has walked the property.</p>
 
-        <p class="form-msg form-msg--ok" hidden>Thanks — that's with us, and a person reads it.
+        <p class="form-msg form-msg--ok" role="status" aria-live="polite" hidden>Thanks — that's with us, and a person reads it.
         If it's urgent, call <a href="tel:+13039151045">(303) 915-1045</a>.</p>
-        <p class="form-msg form-msg--err" hidden>That didn't send. Call
+        <p class="form-msg form-msg--err" role="alert" hidden>That didn't send. Call
         <a href="tel:+13039151045">(303) 915-1045</a> or email
         <a href="mailto:Contact@SixfoldColorado.com">Contact@SixfoldColorado.com</a> — both
         reach a person.</p>

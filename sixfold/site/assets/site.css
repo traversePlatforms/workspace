@@ -171,6 +171,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ---- print ------------------------------------------------------------
+   /wildfire-guide/ is the one page here people print — it says so on itself
+   ("most of it is a weekend"). Two things were wrong with printing it.
+
+   1. THE EMBER DRAWING DISAPPEARED. It is drawn in Bone (#EDE7DC) and sage on
+      a Pine plate, and browsers drop background colours when printing. The
+      artwork came out near-white on white, and the near-black shape that had
+      been the BACKGROUND printed as a black slab. print-color-adjust keeps the
+      plate — the only fix that does not re-colour artwork the README says must
+      not be re-coloured without re-running its accuracy audit.
+   2. Header, footer and call-to-actions ate a column of every sheet.
+
+   Deliberately NOT done: forcing a light theme. Every plate's contents were
+   drawn against a specific ground, and flipping them is the same mistake. */
+@media print {
+  .site-head, .site-foot, .cta, .more, .nav, .banner, .ridge-rule { display: none; }
+  .plate.dark, .band, .stat, .panel {
+    -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+  }
+  .plate, figure, .stat, .panel { break-inside: avoid; page-break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+  section { padding-block: 18px; border-top: 0; }
+  .page-head { padding-block: 0 12px; }
+  .head-split, .cols, .hero-grid { grid-template-columns: 1fr; gap: 12px; }
+  body { background: #fff; }
+  @page { margin: 14mm; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
@@ -301,6 +330,19 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   gap: 56px;
   align-items: start;
 }
+/* Phone tap targets. The footer list and the header CTA render 20px tall
+   with 8px gaps, which passes WCAG 2.2 2.5.8 on the spacing exception but is
+   still fiddly with a thumb. Padding only, below 900px: nothing moves on
+   desktop, and neither element's box is doing layout work for anything else. */
+@media (max-width: 900px) {
+  .site-head .nav-cta { padding-block: 8px; }
+  .site-foot nav a { padding-block: 5px; }
+  /* The phone and the email are stacked with a <br> at 18px each. On a thumb
+     that is close enough to dial when you meant to write. inline-block so the
+     padding actually makes a box — inline padding does not grow the hit area. */
+  .contact .lines a, .contact-aside .lines a { display: inline-block; padding-block: 4px; }
+}
+
 /* The home hero's right column is a short note and the left one is four
    stacked blocks, so `align-items: start` left a void under the note.
    .hero-aside bottom-aligns itself instead; /who-pays/ keeps the default

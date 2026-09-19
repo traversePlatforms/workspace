@@ -5,6 +5,9 @@
 everything settled since 1 September. See §What changed 2026-09-17.
 **Status:** Draft. **Not deployed, no host, no domain resolves.** Same standing as
 every other Sixfold asset — nothing published, posted, scheduled or uploaded.
+**Full-site audit 2026-09-19** — see §Audit 2026-09-19. Everything it found that
+cannot be done on disk is in **[LAUNCH.md](LAUNCH.md)**, which is the file to open
+the day this goes on a host.
 
 This is the start of the Sixfold Colorado site, rebuilt in-repo as plain static
 HTML. The earlier Astro build lived at `C:\Users\Surge Inc\dev\sixfold-site`
@@ -321,9 +324,12 @@ Claims on the landing page, all carried from already-verified Sixfold files:
   figures are wrong. They are not. `/who-pays/` prints them.
   <br>*(The superseded entry read: "left as prose, needs the enrolled HB26-1289 text
   before any figure is printed." It had been overtaken by the audit for three weeks.)*
-- Forms/endpoint: there is **no contact form** — phone and email only, same as the
-  reason the Surge site's forms are inert. Add a real endpoint before launch if a
-  form is wanted.
+- ~~Forms/endpoint: there is no contact form~~ — **STALE, closed 2026-09-18.**
+  /contact/ exists, with a real form posting to `api/submit.php` on the Surge
+  pattern. What is still open is that **the PHP has never run** — the dev server
+  answers that path by logging — so the mailbox, SPF/DKIM and spam-filing all
+  have to be proved on the host. That moved to [LAUNCH.md](LAUNCH.md) §3, with
+  the rate-limit and log-retention questions the audit raised alongside it.
 - FRWRM / grant deadlines are deliberately not printed (they date fast); the
   boards band stays generic.
 - `SixfoldColorado.com` on the footer + merch contact pieces the day hosting is live.
@@ -437,3 +443,87 @@ version is wanted it needs a different sky. Same SVG on all four pages that use 
 overflow at 320 / 390 / 768 / 1280 on `/contact/`. The chooser cards needed two fixes
 found by rendering, both recorded in the stylesheet: `.form label` and `.form input`
 were reaching into them.
+
+
+---
+
+## Audit 2026-09-19
+
+A full pass: the file-level auditor, plus a new runtime one that drives a real
+browser over **six pages at 390/768/1280/1600** and checks what only exists once
+the page is laid out — contrast composited against the actual painted
+background, broken images, console errors, tap targets, heading order, form
+semantics. Findings and fixes:
+
+**Security — a real one.** `api/submit.php` built the mail Subject from the
+town field, which was never stripped of carriage returns, while the comment
+directly above claimed "nothing user-supplied goes into a mail header
+unescaped". `$name` was stripped; `$town` was not. A town of
+`Monument\r\nBcc: …` added a header to the outgoing mail. All three
+header-bound values now go through one `$hdr()` helper. Never exploitable on
+disk — the dev server does not run PHP — but it would have shipped.
+
+**Printing the wildfire guide.** That page tells the reader it is a weekend's
+work, so it gets printed. Browsers drop background colours when printing, and
+the ember drawing is Bone and sage **on** a Pine plate: it printed washed out,
+the house body a barely-there tint on white. There is now a print stylesheet
+that forces the plates with `print-color-adjust: exact` and drops the site
+chrome. **It does not re-colour any artwork** — each drawing was made for a
+specific ground, and re-colouring means re-running the pamphlet's accuracy
+audit.
+
+**The `<head>` was unguarded.** `CHROME:HEAD` is the `<header>` *element*;
+the actual head was hand-maintained on six pages with nothing watching it. There
+is now a `CHROME:META` block and `audit-links.mjs` compares it like the
+others — one line, because `BLOCKS` was already a list.
+
+**Added:** a favicon (a reduction of the Ridge mark — two peaks and the ground
+bar, since the pine and the four peak slivers turn to mush at 16px; proofed at
+16/32/64), an apple-touch icon, a 1200×630 share image, `role="status"` and
+`role="alert"` on the form messages (the form is `novalidate` and submits by
+fetch, so a screen reader user was told nothing at all), and phone padding on
+the footer links and header CTA — 20px tall with 8px gaps passes WCAG 2.2 2.5.8
+on the spacing exception, but it is fiddly with a thumb.
+
+**Corrected:** two meta descriptions ran 187 and 190 characters and truncate in
+a result page; `/thank-you/` had none. And the `/who-pays/` link added two
+commits earlier said "a quote that itemises it" — a quote cannot itemise a tax
+credit, and the site's own promise, stated twice elsewhere, is an *invoice* that
+separates the mitigation work. It now says that.
+
+**Clean, and worth recording as checked:** contact details across all six pages
+(28 × the Contact@ address, 17 × the 303 number, 9 × `tel:+13039151045`, zero
+hits for the old 720 number), HTML structure, heading order, duplicate ids, alt
+text, the landscaping-standalone copy rule, `body.paper` everywhere, and —
+once the auditor composited translucent backgrounds properly — **every text
+colour on the site passes its WCAG ratio**.
+
+### ⚑ Two false alarms, recorded so they are not re-reported
+
+The first run of the runtime auditor claimed four header contrast failures and a
+missing form label. Both were bugs in the auditor. `--head-bg` is
+`rgba(14,21,18,0.9)` and the background walker skipped anything under alpha
+0.95, so it compared light header text against the Bone page behind it; it now
+composites the whole stack. The honeypot already carries `aria-hidden` and
+`tabindex="-1"`, which is correct, and the probe now skips controls that are
+deliberately out of the accessibility tree. It also reported three photographs
+as broken — they were `loading="lazy"` and below the fold when it looked.
+
+### Running it again
+
+```
+node sixfold/site/serve.mjs            # must be up first
+node sixfold/site/audit-runtime.mjs    # needs Chrome at the path at the top of the file
+```
+
+It is **kept in the repo** rather than left in a scratchpad because it found the
+Subject-header bug, and a session folder is not somewhere a finding like that
+should live. It is the slow one — 24 full renders, a couple of minutes — so
+`audit-links.mjs` stays the one that runs before every commit and this one runs
+before a launch or after a change to the chrome, the stylesheet or the form.
+
+It exits non-zero on a failure, so it can gate something later. Two traps are
+already handled in it and should stay handled: every CDP call is raced against a
+timeout (two runs deadlocked on a reply that never came), and each page is
+scrolled top to bottom before probing, or `loading="lazy"` photographs below the
+fold get reported as broken.

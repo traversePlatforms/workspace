@@ -101,7 +101,10 @@ for (const [page, s] of src) {
 
 /* ---- 2. chrome drift -------------------------------------------------- */
 
-const BLOCKS = ['MARKS', 'HEAD', 'FOOT'];
+/* META added 2026-09-19. The <head> had been hand-maintained on six pages with
+   nothing watching it — CHROME:HEAD is the <header> ELEMENT, not the head — so a
+   favicon or an og: tag could go missing on one page and never be noticed. */
+const BLOCKS = ['MARKS', 'META', 'HEAD', 'FOOT'];
 const normalise = (s) => s.replace(/\s*aria-current="page"/g, '');
 const chromeOf = (s, name) => {
   const m = s.match(new RegExp(`<!-- CHROME:${name} -->([\\s\\S]*?)<!-- /CHROME:${name} -->`));

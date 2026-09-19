@@ -77,10 +77,19 @@ if ($missing) {
     respond_bad('Please include ' . implode(' and ', $missing) . '.', $wantsJson);
 }
 
-// Header-injection guard: nothing user-supplied goes into a mail header unescaped.
-$safeName = str_replace(["\r", "\n"], ' ', $name);
+// Header-injection guard. EVERYTHING that reaches a mail header goes through
+// this, which is what the previous version claimed and did not do: $name was
+// stripped, $town was not, and $town lands in $title -> the Subject header.
+// A town of "Monument\r\nBcc: someone@example.com" added a header to the
+// outgoing mail. $email is safe by FILTER_VALIDATE_EMAIL, which rejects
+// newlines, but it is stripped here too rather than resting on that.
+$hdr = static fn(string $s): string => trim(preg_replace('/[\r\n\t]+/', ' ', $s));
 
-$title = $needLabel . ' — ' . $safeName . ($town !== '' ? ' (' . $town . ')' : '');
+$safeName  = $hdr($name);
+$safeTown  = $hdr($town);
+$safeEmail = $hdr($email);
+
+$title = $needLabel . ' — ' . $safeName . ($safeTown !== '' ? ' (' . $safeTown . ')' : '');
 
 $lines = [
     'New enquiry: ' . $title,
@@ -113,7 +122,7 @@ $body = implode("\n", $lines);
 
 $headers = implode("\r\n", [
     'From: Sixfold Colorado website <' . $cfg['from'] . '>',
-    'Reply-To: ' . $safeName . ' <' . $email . '>',
+    'Reply-To: ' . $safeName . ' <' . $safeEmail . '>',
     'Content-Type: text/plain; charset=UTF-8',
     'X-Mailer: sixfold-site',
 ]);
