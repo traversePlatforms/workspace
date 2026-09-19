@@ -166,7 +166,10 @@
   if (!v || !v.querySelector('source')) return;
 
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var narrow = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+  /* A phone on its side is 844+ wide and was getting the 1.4 MB desktop file on
+     cellular (device matrix, 2026-09-19). Height catches it: no tablet is under
+     480px tall in either orientation, every phone is in landscape. */
+  var narrow = window.matchMedia && window.matchMedia('(max-width: 720px), (max-height: 480px)').matches;
   if (reduced) return;
 
   // save-data / metered connections: leave the still

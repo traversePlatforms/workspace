@@ -27,7 +27,31 @@
      node deploy/mobile-audit.mjs --width=360           # a narrower phone
      node deploy/mobile-audit.mjs --shots=/,/careers/   # plus full-page PNGs to deploy/dist/mobile/
      node deploy/mobile-audit.mjs --shots=all
-   Exits 1 on any failure so it can gate a bundle. */
+     node deploy/mobile-audit.mjs --devices             # the whole matrix below, one session
+     node deploy/mobile-audit.mjs --devices=ipad,ipad-land
+   Exits 1 on any failure so it can gate a bundle.
+
+   THE MATRIX (2026-09-19). Phones and tablets are not one width. The hamburger
+   hands over to the desktop nav at 940px, which lands INSIDE the iPad band —
+   an iPad Mini portrait (768) gets the drop panel, an iPad landscape (1180) gets
+   the hover nav on a screen with no hover. Both have to work, and so does a
+   phone on its side. Every entry is a real device's CSS viewport. */
+const DEVICES = {
+  'android-small': { w: 360, h: 800,  dpr: 3, ua: 'android' },
+  'iphone':        { w: 390, h: 844,  dpr: 3, ua: 'iphone' },
+  'iphone-max':    { w: 430, h: 932,  dpr: 3, ua: 'iphone' },
+  'iphone-land':   { w: 844, h: 390,  dpr: 3, ua: 'iphone' },   // a phone on its side: fixed chrome vs a short screen
+  'ipad-mini':     { w: 768, h: 1024, dpr: 2, ua: 'ipad' },     // drop-panel nav (<=940)
+  'ipad':          { w: 820, h: 1180, dpr: 2, ua: 'ipad' },
+  'android-tab':   { w: 800, h: 1280, dpr: 2, ua: 'android' },
+  'ipad-land':     { w: 1180, h: 820, dpr: 2, ua: 'ipad' },     // desktop nav, touch, no hover
+  'ipad-pro-land': { w: 1366, h: 1024, dpr: 2, ua: 'ipad' },
+};
+const UA = {
+  iphone:  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  ipad:    'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  android: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36',
+};
 import { spawn } from 'node:child_process';
 import { existsSync, writeFileSync, mkdirSync, readdirSync, statSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -37,7 +61,11 @@ import { fileURLToPath } from 'node:url';
 const SITE = dirname(dirname(fileURLToPath(import.meta.url)));
 const args = process.argv.slice(2);
 const opt = (k, d) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
-const WIDTH = Number(opt('width', 390)), HEIGHT = 844, BASE = opt('base', 'http://localhost:8080');
+const BASE = opt('base', 'http://localhost:8080');
+const devArg = args.find((x) => x === '--devices' || x.startsWith('--devices='));
+const RUN = devArg
+  ? (devArg.includes('=') ? devArg.split('=')[1].split(',') : Object.keys(DEVICES)).map((k) => { if (!DEVICES[k]) throw new Error('unknown device ' + k); return { name: k, ...DEVICES[k] }; })
+  : [{ name: Number(opt('width', 390)) + 'px', w: Number(opt('width', 390)), h: 844, dpr: 2, ua: 'iphone' }];
 const shots = opt('shots', '');
 const OUT = join(SITE, 'deploy', 'dist', 'mobile'); mkdirSync(OUT, { recursive: true });
 
@@ -224,6 +252,27 @@ const NAV_PROBE = String.raw`(async () => {
   if (!btn) return { fail: ['nav: no .nav-toggle'] };
   const r0 = btn.getBoundingClientRect();
   const out = { fail: [], warn: [], info: {} };
+  if (r0.width === 0) {
+    /* >940px: the desktop nav. On a tablet there is no hover, so every top-level
+       link must be visible and tappable and every submenu must open from its
+       chevron BUTTON, not from a hover the device cannot produce. */
+    const links = [...document.querySelectorAll('nav.primary > a, nav.primary .nav-item > a')].filter(a => a.getBoundingClientRect().height > 0);
+    const small = links.filter(a => { const r = a.getBoundingClientRect(); return r.height < 24 || r.width < 24; });
+    if (small.length) out.warn.push('nav (desktop, touch): ' + small.length + ' top-level link(s) under 24px — ' + small.map(a => a.textContent.trim()).join(', '));
+    const chevrons = [...document.querySelectorAll('.sub-toggle')];
+    for (const c of chevrons) {
+      const r = c.getBoundingClientRect();
+      if (r.width < 24 || r.height < 24) out.fail.push('nav (desktop, touch): submenu chevron is ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' — the only way to open a submenu without hover');
+      c.click(); await new Promise(r => setTimeout(r, 300));
+      const panel = document.getElementById(c.getAttribute('aria-controls'));
+      const pr = panel ? panel.getBoundingClientRect() : null;
+      if (!pr || pr.height === 0 || getComputedStyle(panel).visibility === 'hidden') out.fail.push('nav (desktop, touch): chevron did not open "' + (c.getAttribute('aria-label') || c.textContent.trim()) + '"');
+      else if (pr.right > innerWidth + 1) out.fail.push('nav (desktop, touch): open submenu runs off the right edge (' + Math.round(pr.right) + ' > ' + innerWidth + ')');
+      c.click(); await new Promise(r => setTimeout(r, 150));
+    }
+    out.info.panel = 'desktop nav, ' + links.length + ' top-level links, ' + chevrons.length + ' submenus opened by button';
+    return out;
+  }
   if (r0.width < 44 || r0.height < 44) out.warn.push('nav: toggle is ' + Math.round(r0.width) + 'x' + Math.round(r0.height) + ' (44 is the comfortable floor for the one control every phone user hits)');
   btn.click();
   await new Promise(r => setTimeout(r, 450));
@@ -255,16 +304,20 @@ try {
   const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
   const S = sessionId;
   await cdp.send('Page.enable', {}, S); await cdp.send('Runtime.enable', {}, S); await cdp.send('Log.enable', {}, S); await cdp.send('Network.enable', {}, S);
-  await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: 2, mobile: true }, S);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true }, S);
-  await cdp.send('Emulation.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' }, S);
   const wanted = shots === 'all' ? null : new Set(shots.split(',').filter(Boolean));
   const all = pages();
-  console.log(`Surge phone audit — ${all.length} pages at ${WIDTH}×${HEIGHT} (2x, touch) against ${BASE}\n`);
+  console.log(`Surge device audit — ${all.length} pages × ${RUN.map(d => d.name + ' ' + d.w + '×' + d.h).join(', ')} (touch) against ${BASE}\n`);
 
-  for (const path of all) {
+  for (const D of RUN) {
+  const WIDTH = D.w, HEIGHT = D.h;
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: D.dpr, mobile: true }, S);
+  await cdp.send('Emulation.setUserAgentOverride', { userAgent: UA[D.ua] }, S);
+  process.stdout.write(D.name.padEnd(15));
+  for (const path0 of all) {
+    const path = RUN.length > 1 ? path0 + ' @' + D.name : path0;
     cdp.events.length = 0;
-    await cdp.send('Page.navigate', { url: BASE + path }, S);
+    await cdp.send('Page.navigate', { url: BASE + path0 }, S);
     await sleep(1100);
     /* scroll the page so lazy images and the video have a chance */
     for (let k = 0; k < 12; k++) { await cdp.send('Runtime.evaluate', { expression: `scrollTo(0, innerHeight * 0.8 * ${k})` }, S); await sleep(80); }
@@ -288,13 +341,13 @@ try {
     if (r.info.h1count !== 1) add('FAIL', 'h1 count is ' + r.info.h1count, path);
 
     /* hamburger, once per distinct chrome — home is enough, plus one sub-page */
-    if (path === '/' || path === '/what-we-do/') {
+    if (path0 === '/' || path0 === '/what-we-do/') {
       const nv = await cdp.send('Runtime.evaluate', { expression: NAV_PROBE, returnByValue: true, awaitPromise: true }, S);
       if (nv.result) { for (const m of nv.result.value.fail || []) add('FAIL', m, path); for (const m of nv.result.value.warn || []) add('warn', m, path); for (const [k, v] of Object.entries(nv.result.value.info || {})) add('info', k + ': ' + v, path); }
     }
 
     /* contact chooser: reveal each form and re-probe the controls */
-    if (path === '/contact/') {
+    if (path0 === '/contact/') {
       const { result: ch } = await cdp.send('Runtime.evaluate', { returnByValue: true, awaitPromise: true, expression: String.raw`(async () => {
         const out = [];
         for (const rb of document.querySelectorAll('input[type=radio]')) {
@@ -316,17 +369,19 @@ try {
       }
     }
 
-    if (wanted === null || (wanted && wanted.has(path))) {
+    if (wanted === null || (wanted && wanted.has(path0))) {
       await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: Math.min(r.info.height, 12000), deviceScaleFactor: 1, mobile: true }, S);
       await sleep(300);
       const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }, S);
-      const name = (path === '/' ? 'home' : path.replace(/^\/|\/$/g, '').replace(/\//g, '-').replace('.html', '')) + `-${WIDTH}.png`;
+      const name = (path0 === '/' ? 'home' : path0.replace(/^\/|\/$/g, '').replace(/\//g, '-').replace('.html', '')) + `-${D.name}.png`;
       writeFileSync(join(OUT, name), Buffer.from(data, 'base64'));
-      await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: 2, mobile: true }, S);
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: D.dpr, mobile: true }, S);
     }
     process.stdout.write('.');
   }
-  process.stdout.write('\n\n');
+  process.stdout.write('\n');
+  }
+  process.stdout.write('\n');
   cdp.close();
 } finally { chrome.kill(); try { rmSync(profile, { recursive: true, force: true }); } catch {} }
 
@@ -334,15 +389,22 @@ try {
 const order = { FAIL: 0, js: 0, console: 0, http: 0, probe: 0, warn: 1, info: 2 };
 const rows = [...findings.values()].sort((a, b) => (order[a.kind] - order[b.kind]) || a.msg.localeCompare(b.msg));
 const N = Object.keys(weight).length;
-const where = s => { const a = [...s]; return a.length === N ? 'every page' : a.length > 6 ? a.length + ' pages incl. ' + a.slice(0, 3).join(' ') : a.join(' '); };
+const where = s => {
+  const a = [...s];
+  if (a.length === N) return 'every page, every device';
+  const devs = new Set(a.map(x => x.split(' @')[1] || '')), pgs = new Set(a.map(x => x.split(' @')[0]));
+  if (RUN.length > 1 && pgs.size === N / RUN.length) return 'every page on ' + [...devs].join(', ');
+  if (RUN.length > 1 && devs.size === RUN.length && pgs.size <= 3) return [...pgs].join(' ') + ' on every device';
+  return a.length > 6 ? a.length + ' renders incl. ' + a.slice(0, 3).join(', ') : a.join(', ');
+};
 let last = null;
 for (const r of rows) {
   const band = order[r.kind] === 0 ? 'FAIL' : r.kind === 'warn' ? 'WARN' : 'INFO';
   if (band !== last) { console.log('---- ' + band + ' ----'); last = band; }
   console.log('  [' + r.kind + '] ' + r.msg + '\n        ' + where(r.where));
 }
-console.log('---- page weight (transferred, after a full scroll) ----');
+console.log('---- page weight (transferred, after a full scroll) — heaviest ----');
 for (const [p, b] of Object.entries(weight).sort((a, b) => b[1] - a[1]).slice(0, 8)) console.log('  ' + (b / 1024).toFixed(0).padStart(6) + ' KB  ' + p);
 const nf = rows.filter(r => order[r.kind] === 0).length, nw = rows.filter(r => r.kind === 'warn').length;
-console.log(`\n${nf} failures, ${nw} warnings across ${N} pages at ${WIDTH}px.${shots ? '  Screenshots in deploy/dist/mobile/' : ''}`);
+console.log(`\n${nf} failures, ${nw} warnings across ${N} renders (${N / RUN.length} pages × ${RUN.length} device${RUN.length > 1 ? 's' : ''}).${shots ? '  Screenshots in deploy/dist/mobile/' : ''}`);
 process.exit(nf ? 1 : 0);

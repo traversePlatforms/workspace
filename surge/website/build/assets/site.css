@@ -1053,8 +1053,11 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
    length on a phone. Nothing under 12px on a phone; body-adjacent copy at 14px.
    The rems are the same rems, one step up. Desktop is untouched.
    LAST IN THE FILE ON PURPOSE: these are equal-specificity overrides, and the
-   first placement (mid-file) silently lost to every base rule written after it. */
-@media(max-width:720px){
+   first placement (mid-file) silently lost to every base rule written after it.
+   BY TOUCH AS WELL AS WIDTH (2026-09-19, the device matrix): an iPad landscape is
+   1180px — desktop layout — and is still held at arm's length. pointer:coarse is
+   the primary pointer being a finger: phones and tablets, never a mouse. */
+@media(max-width:720px),(pointer:coarse){
   .eyebrow{font-size:.8rem}
   .split__media figcaption,.ph-media figcaption{font-size:.75rem}
   .record dt,.contact-rail dt,.source-panel dt,.flow__step .who,.role .r-name,.ins-card .src,footer .fcol h4{font-size:.78rem}
@@ -1065,3 +1068,12 @@ footer .foot-legal .links{display:flex;gap:1.2rem}
 
 /* the rotator caption keeps clear of the (now tap-sized) dots box — all widths */
 .rot figcaption{padding-right:5.5rem}
+
+/* The desktop nav (>940px) on a TOUCH tablet — iPad landscape, iPad Pro. There is
+   no hover, so the chevron is the only way into a submenu, and it was 21x21. The
+   nav text at .72rem is a mouse-and-monitor size. Neither changes for a mouse. */
+@media(min-width:941px) and (pointer:coarse){
+  .sub-toggle{width:2.5rem;height:2.5rem;margin:-.6rem -.4rem -.6rem -.2rem}   /* 40px hit, same visual footprint via negative margin */
+  .sub-toggle svg{width:1rem;height:1rem}
+  nav.primary a{font-size:.8rem;padding-block:.55rem}   /* 21px text-only anchors -> ~39px; the header is taller than that, so it does not grow */
+}

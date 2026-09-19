@@ -222,7 +222,11 @@ Safer options:
    `scratchpad/site-tasks.mjs`'s `HEAD_LINKS` re-runs it across all pages).
 7. Test: every nav link, both forms, a 404, HTTPS redirect, mobile.
    For mobile, run the phone auditor against the LIVE URL before calling it done,
-   not just the local one: `node deploy/mobile-audit.mjs --base=https://surgeftw.com`.
+   not just the local one: `node deploy/mobile-audit.mjs --devices --base=https://surgeftw.com`
+   (`--devices` is nine real viewports — three phones, a phone on its side, iPad Mini,
+   iPad, an Android tablet, iPad landscape, iPad Pro landscape — in one run; the
+   hamburger hands over to the desktop nav at 940px, INSIDE the iPad band, so both
+   navs get exercised on touch).
    It checks the things a desktop browser cannot show you — iOS input zoom, tap
    targets, text under 12px, what a phone actually downloads — and exits 1 on any
    failure. Then open a form on a real iPhone and tap a field: the page must NOT zoom.
