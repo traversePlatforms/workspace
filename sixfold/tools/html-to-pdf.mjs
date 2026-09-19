@@ -50,6 +50,13 @@ const JOBS = [
   /* css: document-specific print rules, injected on top of the shared block
      below. A flyer proof cut across a page break is worse than a short page —
      the whole point of the page is what the flyer looks like whole. */
+  /* Three Letter flyers, one message each, NO offer on any of them — which is why
+     they are not blocked the way launch-flyers.html is. scale 1: each page is a full
+     8.5x11 sheet with its own @page, and 0.8 would float a shrunken flyer on a page. */
+  { src: 'marketing/flyers.html',               out: 'marketing/Sixfold-Flyers.pdf',              mode: 'light', scale: 1 },
+  /* Door hanger, 4.25x11, front and back. Its own @page size, so scale MUST be 1.
+     The top 2.6in is a keep-out for the vendor's die-cut hole. */
+  { src: 'marketing/door-hanger.html',          out: 'marketing/Sixfold-Door-Hanger.pdf',         mode: 'light', scale: 1 },
   { src: 'marketing/launch-flyers.html',        out: 'marketing/launch-flyers.pdf',               mode: 'light',
     css: '.flyer, .board-col { break-inside: avoid-page; }' },
   { src: 'marketing/marketing-plan.html',       out: 'marketing/marketing-plan.pdf',              mode: 'light' },

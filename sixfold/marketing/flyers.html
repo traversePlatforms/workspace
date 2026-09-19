@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Colorado — flyers</title>
+<style>
+  /* ==================================================================
+     FLYERS — three Letter pages, one message each. Built 2026-09-18.
+
+     WHY NO OFFER ON ANY OF THEM. The two launch flyers (launch-flyers.html)
+     each carry a different discount and Brandon has picked neither; the
+     minimum job size is not set for either. That has blocked flyers since
+     September. These do not need one — the differentiator is the money the
+     customer does not know about, not a percentage off. Same position the
+     ad script kit takes: "the scripts above leave the offer out entirely."
+     If an offer is ever chosen it drops into the contact strip; nothing
+     else has to move.
+
+     PRINT REGISTER, the same token set as the pamphlet, the funding sheet
+     and the rate sheets, so the whole print family reads as one company.
+     Ink on paper — a Pine-dark full-bleed flyer eats toner on an office
+     printer and looks wrong without bleed, and these have to survive being
+     run off 50 at a time on whatever is in the office.
+
+     BLEED. Designed to print with NO bleed: nothing that matters is within
+     0.5in of the edge, and no colour runs off the page. If a shop wants
+     bleed, add 0.125in and let the ember rules run out — they are the only
+     elements near an edge.
+
+     PAGE 3 has tear-off tabs. Ten tabs across the foot, dashed cut lines,
+     phone and URL rotated in each. That is the one that goes on a pole or
+     a board.
+     ================================================================== */
+  :root {
+    --paper: #FFFFFF;
+    --tint: #F3EFE6;
+    --tint-deep: #EAE3D4;
+    --tint-edge: #DED5C4;
+    --ink: #14201B;
+    --ink-mid: #46534B;
+    --ink-soft: #6E7A72;
+    --ember: #E4703A;
+    --ember-text: #B84C15;
+    --moss: #6E8560;
+    --moss-text: #45583A;
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  @page { size: letter; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: var(--f-body); color: var(--ink); }
+
+  .sheet {
+    position: relative;
+    width: 8.5in; height: 11in;
+    padding: 0.62in 0.7in 0.55in;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    page-break-after: always; break-after: page;
+    overflow: hidden;
+  }
+  .sheet:last-child { page-break-after: auto; break-after: auto; }
+  @media screen {
+    body { background: #4A5550; padding: 26px 12px 48px; }
+    .sheet { margin: 0 auto 22px; box-shadow: 0 8px 34px rgba(0,0,0,.34); }
+  }
+
+  /* --- masthead ---------------------------------------------------- */
+  .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.3in;
+         border-bottom: 3pt solid var(--ember); padding-bottom: 9pt; }
+  .brand { display: flex; align-items: flex-end; gap: 10pt; }
+  .mark { width: 46pt; height: 48pt; flex: none; display: block; }
+  .wordmark { font-family: var(--f-display); font-size: 27pt; line-height: .88; letter-spacing: -.015em; margin: 0; }
+  .desc { font-family: var(--f-data); font-size: 6.4pt; letter-spacing: .24em; text-transform: uppercase; color: var(--moss-text); margin: 4pt 0 0; }
+  .whatitis { font-family: var(--f-data); font-size: 6.8pt; letter-spacing: .14em; text-transform: uppercase;
+              color: var(--ink-soft); text-align: right; margin: 0; line-height: 1.7; }
+
+  /* --- headline block ---------------------------------------------- */
+  .kick { font-family: var(--f-data); font-size: 7.4pt; letter-spacing: .2em; text-transform: uppercase;
+          color: var(--ember-text); margin: 20pt 0 6pt; }
+  h1 { font-family: var(--f-display); font-weight: 400; font-size: 34pt; line-height: 1.06;
+       letter-spacing: -.012em; margin: 0; text-wrap: balance; }
+  h1.sm { font-size: 30pt; }
+  .stand { font-size: 12.4pt; line-height: 1.44; color: var(--ink-mid); margin: 11pt 0 0; max-width: 6.1in; }
+  .stand b { color: var(--ink); }
+
+  /* --- two money blocks -------------------------------------------- */
+  .pair { display: flex; gap: 12pt; margin-top: 17pt; }
+  .blk { flex: 1 1 0; background: var(--tint); border: .75pt solid var(--tint-edge);
+         border-left: 3pt solid var(--ember); padding: 11pt 13pt 12pt; }
+  .blk h2 { font-family: var(--f-display); font-weight: 400; font-size: 14pt; line-height: 1.12;
+            margin: 0 0 5pt; color: var(--ember-text); }
+  .blk p { margin: 0; font-size: 9.6pt; line-height: 1.44; color: var(--ink-mid); }
+  .blk p b { color: var(--ink); }
+  .blk .src { font-family: var(--f-data); font-size: 6.6pt; line-height: 1.45; color: var(--ink-soft);
+              margin-top: 7pt; }
+
+  /* --- the stat ----------------------------------------------------- */
+  .stat { display: flex; align-items: flex-start; gap: 14pt; margin-top: 16pt;
+          border-top: .75pt solid var(--tint-edge); border-bottom: .75pt solid var(--tint-edge);
+          padding: 12pt 0; }
+  .stat .n { font-family: var(--f-display); font-size: 40pt; line-height: .9; color: var(--ember); flex: none; }
+  .stat p { margin: 0; font-size: 10pt; line-height: 1.44; color: var(--ink-mid); }
+  .stat p b { color: var(--ink); }
+
+  /* --- service list -------------------------------------------------- */
+  .does { margin-top: 16pt; }
+  .does .lab { font-family: var(--f-data); font-size: 6.8pt; letter-spacing: .16em; text-transform: uppercase;
+               color: var(--moss-text); margin: 0 0 7pt; }
+  .does ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5pt 20pt; }
+  .does li { font-size: 10.4pt; position: relative; padding-left: 12pt; }
+  .does li::before { content: ""; position: absolute; left: 0; top: .42em;
+                     border-left: 4pt solid transparent; border-right: 4pt solid transparent;
+                     border-bottom: 6.5pt solid var(--ember); }
+
+  .note { margin-top: 14pt; background: var(--tint); border-left: 3pt solid var(--moss);
+          padding: 10pt 12pt; font-size: 9.8pt; line-height: 1.45; color: var(--ink-mid); }
+  .note b { color: var(--ink); }
+
+  /* --- contact strip -------------------------------------------------- */
+  footer { margin-top: auto; padding-top: 12pt; border-top: 3pt solid var(--ember); }
+  .call { display: flex; align-items: baseline; justify-content: space-between; gap: 16pt; flex-wrap: wrap; }
+  .tel { font-family: var(--f-display); font-size: 27pt; line-height: 1; letter-spacing: -.01em; white-space: nowrap; }
+  .reach { font-family: var(--f-data); font-size: 9pt; line-height: 1.75; text-align: right; color: var(--ink-mid); }
+  .reach .web { color: var(--ember-text); }
+  .svc { font-family: var(--f-data); font-size: 7.4pt; letter-spacing: .15em; text-transform: uppercase;
+         color: var(--ink-soft); margin: 9pt 0 0; }
+  .fine { font-size: 7.4pt; line-height: 1.45; color: var(--ink-soft); margin: 6pt 0 0; }
+
+  /* --- page 3: tear-off tabs ------------------------------------------ */
+  /* Pulls out of the sheet's 0.55in bottom padding so the tabs finish about 0.2in
+     from the paper edge. A tab that stops half an inch short is hard to get a
+     fingernail under, which is the only job it has. */
+  .tearoff { margin-top: auto; padding-top: 10pt; margin-bottom: -0.35in; }
+  .tearlab { font-family: var(--f-data); font-size: 7pt; letter-spacing: .16em; text-transform: uppercase;
+             color: var(--ink-soft); text-align: center; margin: 0 0 4pt; }
+  .tabs { display: flex; border-top: 1pt dashed var(--ink-soft); }
+  .tab { flex: 1 1 0; height: 1.95in; border-left: 1pt dashed var(--ink-soft);
+         display: flex; align-items: center; justify-content: center; }
+  .tab:first-child { border-left: 0; }
+  .tab span {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-family: var(--f-data); font-size: 8.2pt; letter-spacing: .04em; line-height: 1.5;
+    text-align: center; white-space: nowrap; color: var(--ink);
+  }
+  .tab span b { color: var(--ember-text); font-weight: 400; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE 1 — FIRE MITIGATION / WHO PAYS
+     The differentiator, and the only one of the three that needs the
+     stat. Every competitor sells the work; this sells the money.
+     ============================================================ -->
+<section class="sheet">
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+        <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+        <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="desc">Land &amp; Fire · Colorado</p>
+      </div>
+    </div>
+    <p class="whatitis">Fire mitigation<br>El Paso · Teller<br>southern Douglas</p>
+  </div>
+
+  <p class="kick">Before you pay for fire mitigation</p>
+  <h1>We do the work and show you who pays for it.</h1>
+  <p class="stand">Two separate parties will help cover mitigation on your property, and
+  <b>most homeowners are told about neither</b>. Neither is a grant you wait in line for.</p>
+
+  <div class="pair">
+    <div class="blk">
+      <h2>Colorado pays the contractor's invoice</h2>
+      <p>The state's wildfire mitigation tax credit covers <b>100% of what a contractor
+      charges you</b> for qualifying vegetation work, up to a cap. No application, no
+      waiting list — you claim it on your state return. Income limits apply, and the cap
+      rises in 2027.</p>
+      <p class="src">C.R.S. 39-22-543 · Colorado Dept. of Revenue</p>
+    </div>
+    <div class="blk">
+      <h2>Your insurer has to show you its working</h2>
+      <p>Since <b>1 July 2026</b>, a carrier that uses a wildfire risk score to price your
+      policy must give you that score in writing every year, say what drove it, and give a
+      discount for mitigation you can document. You can ask for a re-score once work is done.</p>
+      <p class="src">Colorado HB25-1182, effective 1 July 2026</p>
+    </div>
+  </div>
+
+  <div class="stat">
+    <span class="n">~450</span>
+    <p>property owners <b>in the entire state</b> claimed the wildfire mitigation tax credit
+    in tax year 2023. The legislature's own evaluation of the programme says the binding
+    constraint is awareness — almost nobody knows it exists.</p>
+  </div>
+
+  <div class="does">
+    <p class="lab">What we do</p>
+    <ul>
+      <li>Felling and full tree removal</li>
+      <li>Tree trimming</li>
+      <li>Brush and dead fall</li>
+      <li>Slash piled and chipped</li>
+      <li>Stump grinding</li>
+      <li>Defensible space</li>
+      <li>Fuel breaks and thinning</li>
+      <li>Haul off, or leave it stacked</li>
+    </ul>
+  </div>
+
+  <div class="note">
+    <b>Every job comes with the paperwork, whether or not you ask.</b> A written scope of
+    exactly what was cut and where, and photographs from fixed positions before and after.
+    One document set — it serves your tax return and your carrier both.
+  </div>
+
+  <footer>
+    <div class="call">
+      <span class="tel">(303) 915-1045</span>
+      <span class="reach">Contact@SixfoldColorado.com<br><span class="web">SixfoldColorado.com</span></span>
+    </div>
+    <p class="svc">Fire mitigation &middot; Land clearing &middot; Landscaping &nbsp;·&nbsp; Sixfold, LLC &middot; Monument, CO</p>
+    <p class="fine">Not tax or insurance advice — confirm your own position with your accountant
+    and your carrier. Work to Colorado State Forest Service standards.</p>
+  </footer>
+</section>
+
+<!-- ============================================================
+     PAGE 2 — LANDSCAPING, STANDALONE
+     Deliberately makes no reference to fire work until the service
+     line at the foot. Landscaping is booked on its own and the copy
+     has to be able to stand in front of someone who will never need
+     a saw. See the landscaping-standalone copy rule.
+     ============================================================ -->
+<section class="sheet">
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+        <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+        <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="desc">Land &amp; Fire · Colorado</p>
+      </div>
+    </div>
+    <p class="whatitis">Landscaping<br>El Paso · Teller<br>southern Douglas</p>
+  </div>
+
+  <p class="kick">Landscaping · Monument and the Front Range</p>
+  <h1>Mowing, beds, planting — and the place left tidy.</h1>
+  <p class="stand">Booked on its own, one visit or standing. <b>Nothing has to be cleared
+  or felled first</b> — this is a service in its own right, not the clean-up after someone
+  else's work.</p>
+
+  <div class="does">
+    <p class="lab">What we do</p>
+    <ul>
+      <li>Mowing and string trimming</li>
+      <li>Edging — beds, walks, drives</li>
+      <li>Beds — weeding and mulch</li>
+      <li>Planting — shrubs, perennials, trees</li>
+      <li>Sod and seed</li>
+      <li>Shrub and hedge trimming</li>
+      <li>Brush and undergrowth</li>
+      <li>Clean-up and haul-away</li>
+    </ul>
+  </div>
+
+  <div class="pair" style="margin-top:20pt">
+    <div class="blk" style="border-left-color:var(--moss)">
+      <h2 style="color:var(--moss-text)">We walk it before we price it</h2>
+      <p>Somebody comes out, looks at the ground, and counts what is actually there. The
+      price comes off that walk — <b>not off a phone call and a guess</b>. Nothing is
+      owed for the visit.</p>
+    </div>
+    <div class="blk" style="border-left-color:var(--moss)">
+      <h2 style="color:var(--moss-text)">The same crew every time</h2>
+      <p>Small outfit out of Monument. The people who quote the job are the people who do
+      it, and <b>if something is not right, the crew that did it comes back</b>.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Green waste is your call.</b> Hauled off site, piled where you want it, left in your
+    own bin, or mulched on site and spread. Settled at the walk, not discovered halfway
+    through the job.
+  </div>
+
+  <footer>
+    <div class="call">
+      <span class="tel">(303) 915-1045</span>
+      <span class="reach">Contact@SixfoldColorado.com<br><span class="web">SixfoldColorado.com</span></span>
+    </div>
+    <p class="svc">Fire mitigation &middot; Land clearing &middot; Landscaping &nbsp;·&nbsp; Sixfold, LLC &middot; Monument, CO</p>
+    <p class="fine">Plants, sod and seed are planted in season where we can and to the depth the
+    material needs; what happens after that depends on watering. Anything dead on arrival, tell us.</p>
+  </footer>
+</section>
+
+<!-- ============================================================
+     PAGE 3 — THE GUIDE, WITH TEAR-OFF TABS
+     For a pole, a board, a hardware-store noticeboard. The hook is
+     something free and genuinely useful, not a service pitch — that
+     is what earns a torn tab. Ten tabs, dashed cut lines.
+     ============================================================ -->
+<section class="sheet">
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+        <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+        <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="desc">Land &amp; Fire · Colorado</p>
+      </div>
+    </div>
+    <p class="whatitis">Free homeowner guide<br>Nothing asked for</p>
+  </div>
+
+  <p class="kick">Colorado wildfire · a homeowner's guide</p>
+  <h1 class="sm">Embers start most of the homes that burn.</h1>
+  <p class="stand">Wind carries burning debris <b>more than a mile ahead of a fire</b>. It
+  lands in your gutter, under your deck, in the mulch against your wall. That is the part
+  you can do something about — and most of it is a weekend, not a contractor.</p>
+
+  <div class="does" style="margin-top:18pt">
+    <p class="lab">What is in the guide</p>
+    <ul style="flex-direction:column;gap:6pt">
+      <li><b>The seven places a house catches</b> — roof, gutters, vents, under the deck,
+      windows, the gap below the siding, the fence</li>
+      <li><b>Why the vent mesh size is the whole point</b> — an ember goes straight through
+      the 1/4-inch screen most houses have</li>
+      <li><b>The three zones, measured from your wall</b> — what to strip, what to thin,
+      what to open, with the actual distances</li>
+      <li><b>The two numbers that do most of the work</b> — where the firewood, the propane
+      and the slash have to sit</li>
+    </ul>
+  </div>
+
+  <div class="note" style="margin-top:18pt">
+    <b>None of it needs us, and we would rather you knew.</b> Read it at
+    <b>SixfoldColorado.com</b>, or take a tab and call and we will put a printed copy in
+    the post. Call us for what is past it — the trees, the acreage, and the part that
+    wants a saw.
+  </div>
+
+  <p class="fine" style="margin-top:12pt">Adapted from the Colorado State Forest Service
+  <i>Home Ignition Zone</i> guide and checklists, and IBHS research. CSFS does not endorse
+  Sixfold or any contractor. Sixfold, LLC · Monument, CO ·
+  Fire mitigation &middot; Land clearing &middot; Landscaping</p>
+
+  <div class="tearoff">
+    <p class="tearlab">Take one — free guide, no obligation</p>
+    <div class="tabs">
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+      <div class="tab"><span>SixfoldColorado.com<br><b>(303) 915-1045</b></span></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

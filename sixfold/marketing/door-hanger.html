@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Colorado — door hanger</title>
+<style>
+  /* ==================================================================
+     DOOR HANGER — 4.25 x 11 in, two pages (front, back). 2026-09-18.
+
+     SIZE. 4.25 x 11 is the common stock size at every online printer and
+     it is exactly a quarter of a Letter sheet lengthways, so a proof can
+     be run four-up on the office printer if needed.
+
+     THE HOLE IS THE CONSTRAINT. Every vendor die-cuts a hanger hole near
+     the top — typically a 1.5-1.75in circle with a slot up to the edge.
+     Dies differ, so the top 2.6in here carries NO content at all: the
+     masthead starts below it. The dashed circle and slot are SCREEN ONLY
+     and do not print; the vendor supplies the real die line. If their
+     template differs, the only thing to move is the start of the content,
+     because nothing is tucked up beside the hole.
+
+     A door hanger is read in about two seconds on the way past. The front
+     is therefore the mark, what we do, and the number at a size that can
+     be read from arm's length. The argument is all on the back, for the
+     ones who turn it over.
+
+     No offer, same as the flyers — see flyers.html for why.
+     ================================================================== */
+  :root {
+    --paper: #FFFFFF;
+    --tint: #F3EFE6;
+    --tint-edge: #DED5C4;
+    --ink: #14201B;
+    --ink-mid: #46534B;
+    --ink-soft: #6E7A72;
+    --ember: #E4703A;
+    --ember-text: #B84C15;
+    --moss: #6E8560;
+    --moss-text: #45583A;
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  @page { size: 4.25in 11in; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: var(--f-body); color: var(--ink); }
+
+  .hang {
+    position: relative;
+    width: 4.25in; height: 11in;
+    padding: 2.6in 0.42in 0.45in;     /* 2.6in top = the die-cut keep-out */
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    page-break-after: always; break-after: page;
+    overflow: hidden;
+  }
+  .hang:last-child { page-break-after: auto; break-after: auto; }
+
+  /* screen-only: show where the hole lands and the keep-out line */
+  @media screen {
+    body { background: #4A5550; padding: 26px 12px 48px; display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+    .hang { box-shadow: 0 8px 34px rgba(0,0,0,.34); }
+    .hang::before {
+      content: ""; position: absolute; top: 0.62in; left: 50%; transform: translateX(-50%);
+      width: 1.65in; height: 1.65in; border: 1pt dashed rgba(180,76,21,.55); border-radius: 50%;
+    }
+    .hang::after {
+      content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 0.62in; height: 0.68in; border-left: 1pt dashed rgba(180,76,21,.55);
+      border-right: 1pt dashed rgba(180,76,21,.55);
+    }
+  }
+
+  .mark { width: 62pt; height: 65pt; display: block; margin: 0 auto; }
+  .wordmark { font-family: var(--f-display); font-size: 31pt; line-height: .9; letter-spacing: -.015em;
+              margin: 7pt 0 0; text-align: center; }
+  .desc { font-family: var(--f-data); font-size: 6.6pt; letter-spacing: .26em; text-transform: uppercase;
+          color: var(--moss-text); margin: 6pt 0 0; text-align: center; }
+  .rule { height: 3pt; background: var(--ember); margin: 14pt 0; }
+
+  .lead { font-family: var(--f-display); font-size: 19pt; line-height: 1.14; text-align: center;
+          margin: 0; text-wrap: balance; }
+  .where { font-family: var(--f-data); font-size: 7.6pt; letter-spacing: .13em; text-transform: uppercase;
+           color: var(--ink-soft); text-align: center; line-height: 1.8; margin: 12pt 0 0; }
+
+  .tel { font-family: var(--f-display); font-size: 27pt; line-height: 1; text-align: center;
+         margin: 0; letter-spacing: -.01em; white-space: nowrap; }
+  .web { font-family: var(--f-data); font-size: 9.4pt; letter-spacing: .04em; text-align: center;
+         color: var(--ember-text); margin: 7pt 0 0; }
+  .mail { font-family: var(--f-data); font-size: 8pt; text-align: center; color: var(--ink-mid); margin: 4pt 0 0; }
+
+  .foot { margin-top: auto; }
+  .svc { font-family: var(--f-data); font-size: 6.6pt; letter-spacing: .13em; text-transform: uppercase;
+         color: var(--ink-soft); text-align: center; line-height: 1.75; margin: 12pt 0 0; }
+
+  /* --- back --------------------------------------------------------- */
+  .kick { font-family: var(--f-data); font-size: 7pt; letter-spacing: .2em; text-transform: uppercase;
+          color: var(--ember-text); margin: 0 0 6pt; }
+  h2 { font-family: var(--f-display); font-weight: 400; font-size: 17pt; line-height: 1.12; margin: 0 0 8pt; }
+  .p { font-size: 9.8pt; line-height: 1.46; color: var(--ink-mid); margin: 0 0 10pt; }
+  .p b { color: var(--ink); }
+  .blk { background: var(--tint); border-left: 3pt solid var(--ember); padding: 10pt 11pt; margin: 0 0 12pt; }
+  .blk.moss { border-left-color: var(--moss); }
+  .blk p { margin: 0; font-size: 9.4pt; line-height: 1.44; color: var(--ink-mid); }
+  .blk p b { color: var(--ink); }
+  .list { margin: 0 0 12pt; padding: 0; list-style: none; }
+  .list li { font-size: 9.6pt; line-height: 1.5; position: relative; padding-left: 12pt; }
+  .list li::before { content: ""; position: absolute; left: 0; top: .45em;
+                     border-left: 3.5pt solid transparent; border-right: 3.5pt solid transparent;
+                     border-bottom: 6pt solid var(--ember); }
+  .fine { font-size: 7pt; line-height: 1.42; color: var(--ink-soft); margin: 8pt 0 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ FRONT ============ -->
+<div class="hang">
+  <svg class="mark" viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+    <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+    <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+    <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+  </svg>
+  <p class="wordmark">Sixfold</p>
+  <p class="desc">Land &amp; Fire · Colorado</p>
+
+  <div class="rule"></div>
+
+  <p class="lead">Fire mitigation,<br>land clearing<br>and landscaping.</p>
+  <p class="where">Monument<br>El Paso · Teller<br>southern Douglas</p>
+
+  <div class="foot">
+    <div class="rule"></div>
+    <p class="tel">(303) 915-1045</p>
+    <p class="web">SixfoldColorado.com</p>
+    <p class="mail">Contact@SixfoldColorado.com</p>
+    <p class="svc">Call or text &middot; we walk it before we price it</p>
+  </div>
+</div>
+
+<!-- ============ BACK ============ -->
+<div class="hang">
+  <p class="kick">Before you pay for fire mitigation</p>
+  <h2>Two parties will help pay for it.</h2>
+  <p class="p">Most homeowners are told about neither, and <b>neither is a grant you wait
+  in line for</b>.</p>
+
+  <div class="blk">
+    <p><b>Colorado's tax credit</b> covers 100% of what a contractor charges you for
+    qualifying vegetation work, up to a cap. No application, no waiting list — you claim it
+    on your state return.</p>
+  </div>
+  <div class="blk">
+    <p><b>Your insurer</b> has had to show you your wildfire risk score in writing every
+    year since 1 July 2026, and give a discount for mitigation you can document.</p>
+  </div>
+
+  <p class="kick" style="margin-top:4pt">What we do</p>
+  <ul class="list">
+    <li>Felling, removal and trimming</li>
+    <li>Brush, dead fall, slash and chipping</li>
+    <li>Stump grinding</li>
+    <li>Defensible space and thinning</li>
+    <li>Mowing, edging, beds and planting</li>
+    <li>Clean-up and haul-away</li>
+  </ul>
+
+  <div class="blk moss">
+    <p><b>Free guide, nothing asked for.</b> Where embers actually get in, the seven places
+    a house catches, and the three zones measured from your wall. Most of it is a weekend
+    and none of it needs us. <b>SixfoldColorado.com</b></p>
+  </div>
+
+  <div class="foot">
+    <div class="rule"></div>
+    <p class="tel" style="font-size:22pt">(303) 915-1045</p>
+    <p class="mail">Contact@SixfoldColorado.com &middot; SixfoldColorado.com</p>
+    <p class="fine">Sixfold, LLC · Monument, CO · Fire mitigation · Land clearing ·
+    Landscaping. Not tax or insurance advice — confirm your own position with your
+    accountant and your carrier.</p>
+  </div>
+</div>
+
+</body>
+</html>
