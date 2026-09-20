@@ -204,6 +204,50 @@ body {
   html { scroll-behavior: auto; }
 }
 
+/* ---- the hero mark grows in, once, on load -----------------------------
+   Lifted from brand/ridge-mark.html, which is where the mark was drawn and
+   where this timing was worked out: the ridges rise furthest-first, the pine
+   last of the five, then the roots delve after the range has settled.
+
+   ONLY THE HERO. The header renders the flat mark at 26px, where a 1.6-unit
+   root stroke is 0.44 CSS px — proofed 2026-09-20 at 26/34/44px and at ×1.9
+   and ×2.8 stroke weights, and the roots read as a smudge at every one of
+   them. The flat mark is the legible one at that size; see the README.
+
+   transform-box: fill-box is load-bearing. Without it the transform-origin
+   resolves against the SVG viewport, not the shape, and the peaks scale from
+   somewhere off-mark instead of up out of the ground.
+
+   fill mode is 'both', so the end state is the static mark — if the animation
+   never runs, nothing is missing. */
+.lockup .grow { transform-box: fill-box; transform-origin: 50% 100%; }
+.lockup .rootline { stroke-dasharray: 100; stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lockup .grow { animation: ridge-grow .62s cubic-bezier(.22,.9,.3,1) both; }
+  .lockup .g1 { animation-delay: .05s; }
+  .lockup .g2 { animation-delay: .14s; }
+  .lockup .g3 { animation-delay: .23s; }
+  .lockup .g4 { animation-delay: .32s; }
+  .lockup .g5 { animation-delay: .41s; }
+
+  .lockup .rootline { animation: ridge-delve .72s cubic-bezier(.3,.7,.4,1) both; }
+  /* the four thick strands lead; the finer ones follow, branches last */
+  .lockup .r1 { animation-delay: .58s; }
+  .lockup .r2 { animation-delay: .66s; }
+  .lockup .r3 { animation-delay: .74s; }
+  .lockup .r4 { animation-delay: .62s; }
+  .lockup .r5 { animation-delay: .70s; }
+  .lockup .r6 { animation-delay: .80s; }
+  .lockup .r7 { animation-delay: .84s; }
+  .lockup .r8 { animation-delay: .78s; }
+  .lockup .r9 { animation-delay: .86s; }
+  .lockup .r10 { animation-delay: .74s; }
+}
+
+@keyframes ridge-grow  { from { transform: scaleY(.04); } to { transform: scaleY(1); } }
+@keyframes ridge-delve { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+
 img, svg { max-width: 100%; }
 a { color: var(--accent-text); text-decoration-thickness: 1px; text-underline-offset: 2px; }
 a:hover { color: var(--accent-hover); }

@@ -180,6 +180,33 @@ rules, fills, marks, borders, never type. The pre-existing `--ember-ink #B84C15`
   94-unit box and they went spidery at the smaller size.
 - Both are `<symbol>`s defined once at the top of the document and `<use>`d.
 
+**⚑ Why the header has no roots, asked and re-tested 2026-09-20.** The header renders at
+26px across a 94-unit viewBox, so the root strokes — 0.9 to 1.6 units as drawn — land at
+**0.25 to 0.44 CSS pixels**. They were proofed at 26 / 34 / 44px and at ×1.9 and ×2.8
+stroke weights, in isolation and in a simulated header bar: at 26px they read as a smudge
+below and right of the mark at every weight, and thickening them far enough to register
+stops them looking like roots. The layered opacity ramp merges into one orange mass at
+that size as well. **The flat mark is the legible one in the header**, and that is the
+whole reason the flat master exists. Roots belong where they are already: the hero, at 78px.
+
+### The hero mark animates in
+
+Lifted from `brand/ridge-mark.html`, where the mark was drawn and where this timing was
+worked out: the ridges rise furthest-first over ~0.6s, the pine last of the five, then the
+ten roots delve by `stroke-dashoffset` once the range has settled. Once, on load.
+
+- **Hero only.** The header is the flat mark and has nothing to animate.
+- `transform-box: fill-box` is load-bearing — without it `transform-origin` resolves
+  against the SVG viewport rather than each shape, and the peaks scale from off-mark
+  instead of up out of the ground.
+- Fill mode is `both`, so **the end state is the static mark**. If the animation never
+  runs, nothing is missing.
+- Wrapped in `prefers-reduced-motion: no-preference`. Verified under emulated `reduce`:
+  the mark is complete and still at every frame.
+- Class names are `grow` / `rootline` / `g1–g5` / `r1–r10`, all scoped under `.lockup`
+  and checked against the stylesheet first — see the `.money` collision recorded in
+  `operations/README.md` for why that check now happens before the markup is written.
+
 ### ⚑ A layout bug this surfaced, and the fix
 
 Every content section is `<section class="wrap">`. `.wrap { padding: 0 24px }` is a
