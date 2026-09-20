@@ -1,0 +1,125 @@
+/* Print register for the two rebuild-brief documents.
+
+   Light ink-on-white, not the site's dark theme: these are read on paper and in
+   a PDF viewer, and a dark document either burns a cartridge or gets printed
+   with its backgrounds dropped and turns illegible. Surge green stays as the
+   one accent so the documents are recognisably Surge.
+
+   Anton + Archivo are loaded from Google Fonts, with real fallbacks — if the
+   render has no network the documents still set correctly, just in Arial
+   Narrow and the system sans. */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --green: #2E8B2E;          /* darkened from the site's #4abe4a: 4.2:1 on white
+                                is fine for a heading but not for 9pt body text */
+  --green-bright: #4abe4a;   /* rules and fills only, never text */
+  --ink: #111312;
+  --ink-mid: #3C4440;
+  --ink-soft: #6A7470;
+  --line: #D8DCD8;
+  --tint: #F4F7F3;
+  --warn-bg: #FDF2EC;
+  --warn-ink: #8A3B12;
+  --f-display: Anton, 'Arial Narrow', Impact, sans-serif;
+  --f-body: Archivo, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { background: #5A625C; }
+
+body {
+  margin: 0; padding: 26px 0;
+  background: #5A625C;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 9.4pt; line-height: 1.41;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One .sheet is one printed page. Matches @page exactly, so the on-screen
+   sheet is a true proof — the same arrangement the Sixfold sheets use. */
+.sheet {
+  width: 8.5in; min-height: 11in;
+  margin: 0 auto 22px; padding: 0.5in 0.7in 0.45in;   /* must stay equal to @page below */
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,.35);
+  page-break-after: always; break-after: page;
+  position: relative;
+}
+.sheet:last-of-type { page-break-after: auto; break-after: auto; }
+
+/* ---- masthead ---- */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 22pt; border-bottom: 2.5pt solid var(--ink); padding-bottom: 7pt; }
+.wordmark { font-family: var(--f-display); font-size: 20pt; letter-spacing: .02em; text-transform: uppercase; margin: 0; line-height: 1; }
+.wordmark span { color: var(--green); }
+.docmeta { text-align: right; font-family: var(--f-data); font-size: 7.2pt; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); line-height: 1.7; }
+.docmeta b { display: block; color: var(--ink); font-weight: 700; }
+
+h1 { font-family: var(--f-display); font-size: 23pt; line-height: 1.03; letter-spacing: .005em; text-transform: uppercase; margin: 15pt 0 8pt; }
+h1.small { font-size: 18.5pt; }
+h2 { font-family: var(--f-display); font-size: 13pt; line-height: 1.12; text-transform: uppercase; margin: 12pt 0 4pt; letter-spacing: .01em; }
+h3 { font-size: 9.8pt; margin: 9pt 0 2pt; font-weight: 700; }
+p { margin: 0 0 5pt; }
+.lede { font-size: 10.8pt; line-height: 1.4; color: var(--ink-mid); margin-bottom: 8pt; }
+.kicker { font-family: var(--f-data); font-size: 7.4pt; letter-spacing: .15em; text-transform: uppercase; color: var(--green); margin: 0 0 3pt; display: flex; align-items: center; gap: 6pt; }
+.kicker::before { content: ""; width: 16pt; height: 2pt; background: var(--green-bright); }
+
+strong, b { font-weight: 700; }
+em { font-style: italic; }
+a { color: var(--green); }
+
+/* ---- the before/after pair ---- */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; margin: 6pt 0 3pt; }
+.shot { border: 0.8pt solid var(--line); }
+.shot img { display: block; width: 100%; height: auto; }
+.shot .cap { font-family: var(--f-data); font-size: 6.8pt; letter-spacing: .1em; text-transform: uppercase; padding: 3.5pt 5pt; border-top: 0.8pt solid var(--line); color: var(--ink-soft); }
+.shot.before .cap { background: #F3F0EC; }
+.shot.after  .cap { background: var(--tint); color: var(--green); }
+
+/* ---- tables ---- */
+table { width: 100%; border-collapse: collapse; font-size: 8.3pt; margin: 5pt 0 3pt; }
+th { text-align: left; font-family: var(--f-data); font-size: 6.9pt; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 400; padding: 0 7pt 3.5pt 0; border-bottom: 1.1pt solid var(--ink); }
+td { padding: 3.4pt 7pt 3.4pt 0; border-bottom: 0.5pt solid var(--line); vertical-align: top; }
+td:last-child, th:last-child { padding-right: 0; }
+.old { color: var(--ink-soft); }
+.new { color: var(--ink); font-weight: 600; }
+
+/* ---- callouts ---- */
+.box { border-left: 2.5pt solid var(--green-bright); background: var(--tint); padding: 6pt 9pt; margin: 7pt 0; font-size: 8.7pt; }
+.box p:last-child { margin-bottom: 0; }
+.box h3 { margin-top: 0; }
+.warn { border-left-color: #C2571F; background: var(--warn-bg); }
+.warn h3 { color: var(--warn-ink); }
+
+.quote { font-size: 8.9pt; font-style: italic; color: var(--ink-mid); border-left: 1.5pt solid var(--line); padding-left: 9pt; margin: 6pt 0 8pt; }
+
+ul, ol { margin: 4pt 0 8pt; padding-left: 14pt; }
+li { margin: 1.8pt 0; }
+li::marker { color: var(--green); }
+
+.two { columns: 2; column-gap: 20pt; }
+.two h3 { margin-top: 0; break-after: avoid; }
+.two p, .two ul { break-inside: avoid; }
+
+.fine { font-size: 8pt; color: var(--ink-soft); line-height: 1.45; }
+.foot-note { position: absolute; left: 0.7in; right: 0.7in; bottom: 0.26in; border-top: 0.5pt solid var(--line); padding-top: 4pt; font-family: var(--f-data); font-size: 6.6pt; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); display: flex; justify-content: space-between; }
+
+/* keep blocks whole across a page break */
+h1, h2, h3, .kicker { break-after: avoid; page-break-after: avoid; }
+.box, .pair, .quote, table { break-inside: avoid; page-break-inside: avoid; }
+tr { break-inside: avoid; }
+
+@media print {
+  html, body { background: #fff; padding: 0; margin: 0; }
+  .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+  @page { size: letter; margin: 0.5in 0.7in 0.45in; }
+  /* static in print, so unlike the screen proof it ADDS height to every sheet —
+     which is why the on-screen measurement read ~30px light per page */
+  .foot-note { position: static; margin-top: 7pt; }
+  /* the shot captions and callout tints carry meaning, so force them */
+  .shot .cap, .box, .warn { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
