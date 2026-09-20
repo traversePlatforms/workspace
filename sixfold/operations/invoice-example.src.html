@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice specimens — Sixfold</title>
+<!--STYLE-->
+<style>
+/* Invoice specimens. These model a CUSTOMER-FACING document, which nothing else
+   in operations/ does, so the masthead flag reads "Specimen" rather than
+   "Internal" — an internal stamp on a mock invoice is its own confusion. The
+   red bar at the head of each sheet is the thing that stops one of these being
+   mistaken for a real invoice if it is ever printed and left on a desk.
+
+   Layout only. Every rule here is furniture the shared register does not carry
+   because no other sheet in this folder is a money document.
+
+   EVERY CLASS HERE IS PREFIXED inv- ON PURPOSE. The first version called the
+   line table .money — which _style.css already defines as a flex component, so
+   the table computed display:flex, thead and tbody became blocks, and the
+   header row rendered BESIDE the rows instead of above them. Same collision as
+   .tick, and it is only visible by rendering. Do not introduce an unprefixed
+   class name into this file. */
+
+/* DARK INK ON A LIGHT TINT, not white on red — and print-color-adjust as a
+   belt. A printer drops background colours by default, and a white-on-red
+   SPECIMEN bar prints as white on white: the one marker that must never
+   disappear, disappearing. Readable here even if the tint is dropped. */
+.inv-spec {
+  background: #F7DED5; color: #7A2412; border: 0.8pt solid #8C2A16;
+  border-left-width: 4pt;
+  font-family: var(--mono, ui-monospace, Menlo, monospace);
+  font-size: 7.4pt; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.5;
+  padding: 3.5pt 7pt; margin: 0 0 9pt;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.inv-spec b { font-weight: 700; }
+
+/* the two-column head: who it is from / who it is to */
+.inv-head { display: flex; gap: 22pt; margin: 8pt 0 10pt; }
+.inv-head > div { flex: 1; }
+.inv-meta { flex: 0 0 1.9in; }
+.inv-head p { margin: 0 0 1.5pt; font-size: 9pt; line-height: 1.45; }
+.inv-lbl {
+  font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 7pt;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #6E7A72;
+  margin: 0 0 2pt;
+}
+.inv-meta table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.inv-meta td { padding: 1.2pt 0; vertical-align: top; }
+.inv-meta td:first-child { color: #6E7A72; padding-right: 8pt; white-space: nowrap; }
+
+/* the money table */
+table.inv-lines { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 4pt 0 0; }
+table.inv-lines th {
+  font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 7pt;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #6E7A72;
+  text-align: left; padding: 0 0 3pt; border-bottom: 0.9pt solid #2B3A33; font-weight: 400;
+}
+table.inv-lines td { padding: 4.2pt 0; border-bottom: 0.4pt solid #C9CFC9; vertical-align: top; }
+table.inv-lines .ia { text-align: right; white-space: nowrap; padding-left: 10pt; }
+table.inv-lines .iz { color: #6E7A72; }
+table.inv-lines tr.inv-grp td {
+  border-bottom: 0; padding: 7pt 0 2pt;
+  font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 7pt;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #2B3A33;
+}
+table.inv-lines tr.inv-sub td { border-bottom: 0.9pt solid #2B3A33; font-weight: 700; }
+table.inv-lines tr.inv-tot td { border-bottom: 0; padding-top: 6pt; font-weight: 700; font-size: 10.4pt; }
+table.inv-lines tr.inv-due td { border-bottom: 0; padding-top: 2pt; }
+table.inv-lines tr.inv-due td.ia { font-weight: 700; }
+
+.inv-note {
+  font-size: 8.2pt; line-height: 1.5; color: #2B3A33;
+  border-left: 2pt solid #8AA07A; padding: 4pt 0 4pt 8pt; margin: 9pt 0 0;
+}
+.inv-note b { color: #0E1512; }
+.inv-std {
+  font-size: 8.4pt; border: 0.6pt solid #8AA07A; background: #F2F5EF;
+  padding: 5pt 8pt; margin: 9pt 0 0;
+}
+.inv-terms { font-size: 8pt; line-height: 1.5; color: #4A564F; margin: 10pt 0 0; }
+.inv-terms .inv-lbl { margin-top: 7pt; }
+.inv-why {
+  font-size: 8pt; line-height: 1.5; margin: 11pt 0 0; padding: 6pt 8pt;
+  background: #F4F1EA; border: 0.5pt dashed #9AA39A; color: #2B3A33;
+}
+.inv-why b { color: #0E1512; }
+.inv-why ul { margin: 3pt 0 0; padding-left: 13pt; }
+.inv-why li { margin: 1.5pt 0; }
+</style>
+</head>
+<body>
+
+<!-- ================================================= SHEET 1 — first payment -->
+<div class="sheet">
+
+  <p class="inv-spec"><b>Specimen — not an invoice.</b> Layout reference for the Square template. The amounts are job 2's real, signed figures; the customer is not named — a reusable template does not need someone's home address on it.</p>
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Specimen</b>Invoice specimen 1 of 2<br>First payment · landscaping</p>
+  </div>
+
+  <h1 class="headline" style="margin-top:6pt">Invoice</h1>
+
+  <div class="inv-head">
+    <div>
+      <p class="inv-lbl">From</p>
+      <p><b>Sixfold, LLC</b></p>
+      <p>17890 Sierra Way, Monument, CO 80132</p>
+      <p>(303) 915-1045 · Contact@SixfoldColorado.com</p>
+    </div>
+    <div>
+      <p class="inv-lbl">Billed to</p>
+      <p><b>&lt;Customer name&gt;</b></p>
+      <p class="inv-lbl" style="margin-top:5pt">Property</p>
+      <p>&lt;Service address&gt;</p>
+    </div>
+    <div class="inv-meta">
+      <table>
+        <tr><td>Invoice</td><td><b>SF-2026-001</b></td></tr>
+        <tr><td>Issued</td><td>20 Sep 2026</td></tr>
+        <tr><td>Due</td><td><b>On or before the<br>first day of work</b></td></tr>
+        <tr><td>Agreement</td><td>Service agreement,<br>section 5</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <table class="inv-lines">
+    <thead><tr><th>Item</th><th class="ia" style="width:1.05in">Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Mow three-quarter-acre property — full-property mowing</td><td class="ia">$100.00</td></tr>
+      <tr><td>Edge and trim the entire yard — drive and walkways blown down</td><td class="ia iz">Included</td></tr>
+      <tr><td>Limb 13 trees — lower limbs raised, up to 4 ft</td><td class="ia">$600.00</td></tr>
+      <tr><td>Remove 9 existing plants — pulled out, roots included</td><td class="ia">$150.00</td></tr>
+      <tr><td>Install 6 Russian sage — labour only, on a return visit</td><td class="ia iz">No charge</td></tr>
+      <tr><td>Remove 3 small trees — under 10 ft, felled and cut up on the ground</td><td class="ia">$250.00</td></tr>
+      <tr><td>Haul and dispose of debris — tipping fees included</td><td class="ia">$400.00</td></tr>
+      <tr class="inv-tot"><td>Total, fixed price</td><td class="ia">$1,500.00</td></tr>
+      <tr class="inv-due"><td><b>First payment — 50% of the fixed price, due on or before the first day of work</b></td><td class="ia">$750.00</td></tr>
+      <tr class="inv-due"><td>Balance, due on completion of the work in section 2</td><td class="ia">$750.00</td></tr>
+    </tbody>
+  </table>
+
+  <p class="inv-note">This invoice is the first of two payments on a fixed price of $1,500.00. It is not a
+  charge for work already done. <b>Every payment is refundable in full, within ten business days, if you
+  cancel under section 7 of the service agreement</b> — including a payment made before the cancellation
+  period has run.</p>
+
+  <div class="inv-terms">
+    <p class="inv-lbl">Payment</p>
+    Electronic transfer, cash, or check payable to <b>Sixfold, LLC</b>.
+    <p class="inv-lbl">Please note</p>
+    Sixfold does not prepare or file tax returns. Not tax or insurance advice — confirm your own position
+    with your accountant and your carrier.
+  </div>
+
+  <div class="inv-why">
+    <b>Why this sheet looks the way it does</b> — see <a href="invoice-spec.md">invoice-spec.md</a>
+    <ul>
+      <li><b>Full scope, split payment.</b> All seven quote lines appear, and the $750 comes from the 50% split — not from allocating two tasks to the first payment. Limbing + plant removal is exactly $750, which is the trap.</li>
+      <li><b>No qualifying split.</b> Job 2 is landscaping only. A "non-qualifying" subtotal here would frame a standalone service as the leftover half of a fire job.</li>
+      <li><b>The zero lines stay.</b> They are what makes the sheet read as good value; dropping them makes the invoice look dearer than the quote.</li>
+      <li><b>"First payment," never "deposit"</b> — §5 of the signed agreement already uses "deposit" to mean $0.00.</li>
+      <li><b>Due date is not the issue date.</b> Work does not start until the three-business-day cancellation period has run.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ============================================ SHEET 2 — fire, with the split -->
+<div class="sheet">
+
+  <p class="inv-spec"><b>Specimen — not an invoice. Figures on this sheet are invented for layout.</b> No fire-mitigation job has been invoiced yet; these are not Sixfold rates and must not be quoted.</p>
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Specimen</b>Invoice specimen 2 of 2<br>Final · fire mitigation + landscaping</p>
+  </div>
+
+  <h1 class="headline" style="margin-top:6pt">Invoice</h1>
+
+  <div class="inv-head">
+    <div>
+      <p class="inv-lbl">From</p>
+      <p><b>Sixfold, LLC</b></p>
+      <p>17890 Sierra Way, Monument, CO 80132</p>
+      <p>(303) 915-1045 · Contact@SixfoldColorado.com</p>
+    </div>
+    <div>
+      <p class="inv-lbl">Billed to</p>
+      <p><b>&lt;Customer name&gt;</b></p>
+      <p class="inv-lbl" style="margin-top:5pt">Property</p>
+      <p>&lt;Service address — the parcel the work was done on&gt;</p>
+    </div>
+    <div class="inv-meta">
+      <table>
+        <tr><td>Invoice</td><td><b>SF-2026-002</b></td></tr>
+        <tr><td>Issued</td><td>&lt;completion date&gt;</td></tr>
+        <tr><td>Due</td><td><b>On completion</b></td></tr>
+        <tr><td>Agreement</td><td>Service agreement,<br>section 5</td></tr>
+        <tr><td>First payment</td><td>Invoiced on<br>SF-2026-00<i>x</i></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <table class="inv-lines">
+    <thead><tr><th>Item</th><th class="ia" style="width:1.05in">Amount</th></tr></thead>
+    <tbody>
+      <tr class="inv-grp"><td colspan="2">Wildfire mitigation — qualifying work</td></tr>
+      <tr><td>Defensible space, zone 1 — vegetation cleared within 5 ft of the structure</td><td class="ia">$000.00</td></tr>
+      <tr><td>Thinning to protect structures — <i>n</i> trees removed, <i>n</i> limbed</td><td class="ia">$000.00</td></tr>
+      <tr><td>Slash treatment — chipped on site and hauled, tipping fees included</td><td class="ia">$000.00</td></tr>
+      <tr class="inv-sub"><td>Qualifying subtotal</td><td class="ia">$0,000.00</td></tr>
+
+      <tr class="inv-grp"><td colspan="2">Other work — does not qualify</td></tr>
+      <tr><td>Mowing and edging</td><td class="ia">$000.00</td></tr>
+      <tr><td>Firewood bucked and stacked for your own use</td><td class="ia">$000.00</td></tr>
+      <tr class="inv-sub"><td>Non-qualifying subtotal</td><td class="ia">$000.00</td></tr>
+
+      <tr class="inv-tot"><td>Total, fixed price</td><td class="ia">$0,000.00</td></tr>
+      <tr class="inv-due"><td>Less first payment, received &lt;date&gt;</td><td class="ia">&minus;$000.00</td></tr>
+      <tr class="inv-due"><td><b>Balance now due</b></td><td class="ia">$000.00</td></tr>
+    </tbody>
+  </table>
+
+  <p class="inv-std"><b>Standard:</b> work in the qualifying section was performed to Colorado State Forest
+  Service defensible-space standards.</p>
+
+  <p class="inv-note">Keep this invoice with your written work record and the before-and-after photographs.
+  The three together are what an insurer or an accountant will ask for.</p>
+
+  <div class="inv-terms">
+    <p class="inv-lbl">Payment</p>
+    Electronic transfer, cash, or check payable to <b>Sixfold, LLC</b>.
+    <p class="inv-lbl">Please note</p>
+    Sixfold does not prepare or file tax returns. Not tax or insurance advice — confirm your own position
+    with your accountant and your carrier.
+  </div>
+
+  <div class="inv-why">
+    <b>Why this sheet looks the way it does</b> — see <a href="invoice-spec.md">invoice-spec.md</a> §3
+    <ul>
+      <li><b>The split is the whole point.</b> The service agreement promises "an itemised invoice that separates qualifying wildfire mitigation work from anything else on the bill," and this invoice is what the customer claims the credit with.</li>
+      <li><b>Haul-off sits in the qualifying column</b> when it is treating slash from qualifying work. It is usually the largest line, so putting it in the wrong column is the most expensive mistake available here.</li>
+      <li><b>The standards line is on the invoice</b> because the packet tells the customer to keep it — and only goes on if it is true of that job.</li>
+      <li><b>No credit amount, no cap, no income limit.</b> Separating the work is Sixfold's job; deciding whether the customer qualifies is their accountant's.</li>
+      <li><b>⚑ Nothing upstream tags a line as qualifying.</b> Until the walk sheet and the quote engine carry that flag, these columns are decided by hand at quoting time and written into the job file.</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>

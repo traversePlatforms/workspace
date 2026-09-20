@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice specimens — Sixfold</title>
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — tax credit notebook, shared print register.
+
+   Extended from marketing/funding-one-pager.html. Same tokens, same
+   type stack, same ink-on-paper commitment: these sheets exist to be
+   printed and put in a binder, so there is no dark theme and every
+   colour is painted explicitly.
+
+   What is NEW here, over the one-pager:
+     - multi-sheet pagination (.sheet + page-break-after)
+     - fill-in furniture: .rule, .box, .grid-form, .tbl
+     - .internal / .clientfacing masthead flags
+   Do not restyle. Extend.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #FFFFFF;
+  --tint: #F3EFE6;
+  --tint-edge: #DED5C4;
+  --ink: #14201B;
+  --ink-mid: #46534B;
+  --ink-soft: #6E7A72;
+  --ember: #E4703A;
+  --ember-text: #B84C15;
+  --moss-text: #45583A;
+
+  --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+  --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: #4A5550; }
+body {
+  margin: 0;
+  background: #4A5550;
+  color: var(--ink);
+  font-family: var(--f-body);
+  padding: 24px 12px 48px;
+}
+
+/* The sheet -------------------------------------------------------- */
+.sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 22px;
+  background: var(--paper);
+  color: var(--ink);
+  /* Matches @page below exactly, so the on-screen sheet is a true proof:
+     11in tall minus 0.5in top and bottom leaves the 10in the printer gives
+     you. If content clears the white here, it clears one printed page. */
+  padding: 0.5in 0.55in;
+  font-size: 9.5pt;
+  line-height: 1.34;
+  box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Masthead --------------------------------------------------------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3in;
+  border-bottom: 2.5pt solid var(--ember);
+  padding-bottom: 6pt;
+}
+.brand { display: flex; align-items: flex-end; gap: 8pt; }
+.mark { width: 33pt; height: 38pt; flex: none; display: block; color: var(--ink); }
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 19pt;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.descriptor {
+  font-family: var(--f-data);
+  font-size: 6pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 4pt 0 0;
+}
+.whatitis {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0;
+  padding-top: 3pt;
+  max-width: 2.3in;
+  line-height: 1.7;
+}
+.whatitis b { color: var(--ember-text); font-weight: 400; display: block; }
+
+/* Sheet headline --------------------------------------------------- */
+.sheetnum {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+}
+h1.headline {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.09;
+  text-wrap: balance;
+  margin: 4pt 0 0;
+  color: var(--ink);
+}
+.standfirst {
+  font-size: 9.6pt;
+  line-height: 1.4;
+  color: var(--ink-mid);
+  margin: 5pt 0 0;
+  max-width: 6.5in;
+}
+
+h2.sec {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 12.5pt;
+  line-height: 1.12;
+  margin: 9pt 0 4pt;
+  color: var(--ember-text);
+}
+h3.sub {
+  font-family: var(--f-data);
+  font-size: 6.6pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 8pt 0 4pt;
+  font-weight: 400;
+}
+p { margin: 0 0 5pt; }
+
+/* Blocks ----------------------------------------------------------- */
+.block {
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 10pt 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin: 8pt 0 0;
+}
+.block.moss { border-left-color: var(--moss-text); background: var(--paper); }
+.block > :last-child { margin-bottom: 0; }
+.block-eyebrow {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 0 0 5pt;
+}
+
+/* Lists ------------------------------------------------------------ */
+ul.terms { margin: 0 0 5pt; padding-left: 12pt; list-style: none; }
+ul.terms li { position: relative; margin-bottom: 3pt; padding-left: 1pt; }
+ul.terms li::before {
+  content: "";
+  position: absolute;
+  left: -10pt;
+  top: 0.42em;
+  width: 4pt;
+  height: 4pt;
+  background: var(--moss-text);
+}
+ul.terms li:last-child { margin-bottom: 0; }
+ul.terms.no li::before { background: var(--ember-text); }
+
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 24pt;
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1pt;
+  width: 18pt;
+  height: 18pt;
+  background: var(--ember);
+  color: #FFF;
+  font-family: var(--f-data);
+  font-size: 9pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ol.steps > li:last-child { margin-bottom: 0; }
+ol.steps b { display: block; color: var(--ink); }
+ol.steps p { margin: 1pt 0 0; color: var(--ink-mid); font-size: 8.9pt; }
+
+/* Tables ----------------------------------------------------------- */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  margin: 0 0 5pt;
+}
+table.tbl th {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  font-weight: 400;
+  padding: 0 6pt 4pt 0;
+  border-bottom: 1.25pt solid var(--ink);
+  vertical-align: bottom;
+}
+table.tbl td {
+  padding: 3.5pt 6pt 3.5pt 0;
+  border-bottom: 0.75pt solid var(--tint-edge);
+  vertical-align: top;
+  line-height: 1.35;
+}
+table.tbl td:last-child, table.tbl th:last-child { padding-right: 0; }
+table.tbl .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.tbl tr.hi td { background: #FBE6DC; font-weight: 600; }
+table.tbl tr.dim td { color: var(--ink-soft); }
+
+/* Fill-in furniture ------------------------------------------------ */
+.rule {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-soft);
+  min-width: 1in;
+  height: 1.05em;
+  vertical-align: baseline;
+}
+.rule.w2 { min-width: 2in; }
+.rule.w3 { min-width: 3in; }
+.rule.fill { display: block; width: 100%; }
+
+.grid-form { display: flex; flex-wrap: wrap; gap: 7pt 12pt; margin: 0 0 6pt; }
+.field { flex: 1 1 2.2in; min-width: 1.6in; }
+.field.wide { flex: 1 1 100%; }
+.field.half { flex: 1 1 3.1in; }
+.field label {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8pt;
+}
+.field .line { border-bottom: 0.75pt solid var(--ink-mid); height: 2pt; }
+.field .hint { font-size: 7.4pt; color: var(--ink-soft); margin: 3pt 0 0; line-height: 1.35; }
+
+.tick { display: flex; align-items: flex-start; gap: 6pt; margin-bottom: 3pt; break-inside: avoid; }
+.tick .sq {
+  flex: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin-top: 1.5pt;
+  background: var(--paper);
+}
+.tick .lbl { flex: 1; line-height: 1.38; }
+.tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
+.ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+.ticks.two .tick { flex: 1 1 2.7in; }
+
+.yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
+.yn span {
+  display: inline-block;
+  width: 9pt; height: 9pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin: 0 3pt 0 8pt;
+  vertical-align: -1pt;
+}
+
+.sign { display: flex; gap: 16pt; margin-top: 10pt; }
+.sign .field { flex: 1 1 auto; }
+.sign .field.date { flex: 0 0 1.5in; }
+
+/* Callouts --------------------------------------------------------- */
+.warn {
+  border: 0.9pt solid var(--ember-text);
+  background: #FBE6DC;
+  padding: 7pt 10pt;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+.warn .block-eyebrow { color: var(--ember-text); }
+.warn > :last-child { margin-bottom: 0; }
+
+.note {
+  font-family: var(--f-data);
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-top: 0.75pt solid var(--tint-edge);
+  padding-top: 5pt;
+  margin: 7pt 0 0;
+}
+.note b { color: var(--ink-mid); font-weight: 400; }
+
+/* Footer ----------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding-top: 6pt;
+  border-top: 0.75pt solid var(--tint-edge);
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4pt 12pt;
+  font-family: var(--f-data);
+  font-size: 7.4pt;
+  letter-spacing: 0.05em;
+  color: var(--ink-mid);
+}
+.contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+.contact .pg { margin-left: auto; color: var(--ink-soft); }
+.disclaimer {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+  max-width: 6.6in;
+}
+
+/* Print ------------------------------------------------------------ */
+@media print {
+  html, body { background: #FFF; padding: 0; margin: 0; }
+  .sheet {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+  @page { size: letter; margin: 0.5in 0.55in; }
+  .screenonly { display: none !important; }
+}
+
+@media screen and (max-width: 8.9in) {
+  .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+  .top { flex-direction: column; gap: 10pt; }
+  .whatitis { text-align: left; max-width: none; }
+}
+
+/* ==================================================================
+   CONTRACT FURNITURE — added for the service agreement.
+   Extends the notebook print register; nothing above is overridden.
+   ================================================================== */
+
+/* Numbered clauses. The numbers are real references — a change order or a
+   dispute needs to be able to cite one — so they are not decoration. */
+ol.clauses { margin: 0; padding: 0; list-style: none; counter-reset: cl; }
+ol.clauses > li {
+  counter-increment: cl;
+  position: relative;
+  padding-left: 20pt;
+  margin-bottom: 5pt;
+  break-inside: avoid;
+}
+ol.clauses > li::before {
+  content: counter(cl) ".";
+  position: absolute; left: 0; top: 0;
+  font-family: var(--f-data);
+  font-size: 8pt;
+  color: var(--ember-text);
+}
+ol.clauses > li:last-child { margin-bottom: 0; }
+ol.clauses b.h { display: block; color: var(--ink); }
+
+/* Inline fill-in rule that sits in running text. */
+.fi {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-mid);
+  min-width: 0.9in;
+  height: 1.02em;
+  vertical-align: -0.2em;
+}
+.fi.w2 { min-width: 1.8in; }
+.fi.w3 { min-width: 2.7in; }
+
+/* Money line. Tabular figures and a box, so a filled-in price is unambiguous
+   and hard to alter after signing. */
+.money { display: flex; flex-wrap: wrap; gap: 10pt; margin: 6pt 0 0; }
+.money .m { flex: 1 1 2in; border: 0.9pt solid var(--ink-mid); padding: 5pt 8pt 6pt; }
+.money .m span {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 8pt;
+}
+.money .m .amt {
+  font-family: var(--f-data); font-size: 12pt; color: var(--ink);
+  border-bottom: 0.9pt solid var(--ink-mid); padding-bottom: 2pt;
+}
+
+/* THE CANCELLATION STATEMENT.
+   16 CFR 429.1(a) requires this in bold face type of a minimum size of TEN
+   POINTS, in immediate proximity to the buyer's signature space. The register's
+   body copy is 9.5pt, so this is set explicitly and must not be reduced to make
+   a page fit. Same for the notice forms — 429.1(b) sets the same floor. */
+.legal10 { font-size: 10.5pt; font-weight: 700; line-height: 1.34; }
+.cancelbox {
+  border: 1.4pt solid var(--ink);
+  padding: 9pt 11pt;
+  margin: 10pt 0 0;
+  break-inside: avoid;
+}
+
+/* Signature blocks. */
+.sigs { display: flex; flex-wrap: wrap; gap: 14pt 20pt; margin-top: 12pt; }
+.sigs .s { flex: 1 1 2.9in; }
+.sigs .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigs .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+/* The statutory notice form — plain, boxed, unmistakably a separate document. */
+.noticeform { border: 1.4pt solid var(--ink); padding: 14pt 16pt 16pt; margin-top: 10pt; }
+.noticeform h2 {
+  font-family: var(--f-data); font-size: 12pt; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  margin: 0 0 10pt; color: var(--ink);
+}
+.noticeform p { font-size: 10.5pt; font-weight: 700; line-height: 1.34; margin: 0 0 8pt; }
+.noticeform .datefield { margin: 0 0 10pt; }
+
+/* Internal sheet flag — never appears on a customer-facing page. */
+.internalflag {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--f-data); font-size: 7pt;
+  letter-spacing: .2em; text-transform: uppercase;
+  padding: 3pt 7pt; display: inline-block;
+}
+
+/* ==================================================================
+   PAGINATION HARDENING — added 2026-08-21.
+
+   Each .sheet is designed to be exactly one printed page and is
+   measured to fit. This block is the safety net for when it is not:
+   if a page shrinks (a printer with a larger unprintable margin, or
+   browser headers/footers left switched on), content must break at a
+   clean boundary rather than mid-topic. Better an extra page than a
+   heading stranded at the bottom or a table cut in half.
+   ================================================================== */
+h1.headline, h2.sec, h3.sub, .sheetnum, .block-eyebrow {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+.block, .warn, .noticeform, .money, .totals, .grid-form, .ticks,
+.sigs, .catkey, .figures, .paperwork, footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+ol.clauses > li, ol.steps > li, ul.terms li, .tick, .field, .money .m {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.tbl { break-inside: auto; page-break-inside: auto; }
+table.tbl tr, table.tbl thead { break-inside: avoid; page-break-inside: avoid; }
+table.tbl thead { break-after: avoid-page; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+
+/* Signature rows — one party per row, three columns.
+   The previous flat .sigs flex wrapped six equal items two-per-row, which
+   put the Sixfold representative's signature beside the owner's date. It
+   read as one muddled grid instead of two signature blocks. */
+.sigrow { display: flex; gap: 10pt 18pt; margin-top: 11pt; break-inside: avoid; page-break-inside: avoid; }
+.sigrow .s { flex: 1 1 0; min-width: 0; }
+.sigrow .s.wide { flex: 1.5 1 0; }
+.sigrow .s.narrow { flex: 0.75 1 0; }
+.sigrow .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigrow .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+</style>
+<style>
+/* Invoice specimens. These model a CUSTOMER-FACING document, which nothing else
+   in operations/ does, so the masthead flag reads "Specimen" rather than
+   "Internal" — an internal stamp on a mock invoice is its own confusion. The
+   red bar at the head of each sheet is the thing that stops one of these being
+   mistaken for a real invoice if it is ever printed and left on a desk.
+
+   Layout only. Every rule here is furniture the shared register does not carry
+   because no other sheet in this folder is a money document.
+
+   EVERY CLASS HERE IS PREFIXED inv- ON PURPOSE. The first version called the
+   line table .money — which _style.css already defines as a flex component, so
+   the table computed display:flex, thead and tbody became blocks, and the
+   header row rendered BESIDE the rows instead of above them. Same collision as
+   .tick, and it is only visible by rendering. Do not introduce an unprefixed
+   class name into this file. */
+
+/* DARK INK ON A LIGHT TINT, not white on red — and print-color-adjust as a
+   belt. A printer drops background colours by default, and a white-on-red
+   SPECIMEN bar prints as white on white: the one marker that must never
+   disappear, disappearing. Readable here even if the tint is dropped. */
+.inv-spec {
+  background: #F7DED5; color: #7A2412; border: 0.8pt solid #8C2A16;
+  border-left-width: 4pt;
+  font-family: var(--mono, ui-monospace, Menlo, monospace);
+  font-size: 7.4pt; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.5;
+  padding: 3.5pt 7pt; margin: 0 0 9pt;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.inv-spec b { font-weight: 700; }
+
+/* the two-column head: who it is from / who it is to */
+.inv-head { display: flex; gap: 22pt; margin: 8pt 0 10pt; }
+.inv-head > div { flex: 1; }
+.inv-meta { flex: 0 0 1.9in; }
+.inv-head p { margin: 0 0 1.5pt; font-size: 9pt; line-height: 1.45; }
+.inv-lbl {
+  font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 7pt;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #6E7A72;
+  margin: 0 0 2pt;
+}
+.inv-meta table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.inv-meta td { padding: 1.2pt 0; vertical-align: top; }
+.inv-meta td:first-child { color: #6E7A72; padding-right: 8pt; white-space: nowrap; }
+
+/* the money table */
+table.inv-lines { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 4pt 0 0; }
+table.inv-lines th {
+  font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 7pt;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #6E7A72;
+  text-align: left; padding: 0 0 3pt; border-bottom: 0.9pt solid #2B3A33; font-weight: 400;
+}
+table.inv-lines td { padding: 4.2pt 0; border-bottom: 0.4pt solid #C9CFC9; vertical-align: top; }
+table.inv-lines .ia { text-align: right; white-space: nowrap; padding-left: 10pt; }
+table.inv-lines .iz { color: #6E7A72; }
+table.inv-lines tr.inv-grp td {
+  border-bottom: 0; padding: 7pt 0 2pt;
+  font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 7pt;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #2B3A33;
+}
+table.inv-lines tr.inv-sub td { border-bottom: 0.9pt solid #2B3A33; font-weight: 700; }
+table.inv-lines tr.inv-tot td { border-bottom: 0; padding-top: 6pt; font-weight: 700; font-size: 10.4pt; }
+table.inv-lines tr.inv-due td { border-bottom: 0; padding-top: 2pt; }
+table.inv-lines tr.inv-due td.ia { font-weight: 700; }
+
+.inv-note {
+  font-size: 8.2pt; line-height: 1.5; color: #2B3A33;
+  border-left: 2pt solid #8AA07A; padding: 4pt 0 4pt 8pt; margin: 9pt 0 0;
+}
+.inv-note b { color: #0E1512; }
+.inv-std {
+  font-size: 8.4pt; border: 0.6pt solid #8AA07A; background: #F2F5EF;
+  padding: 5pt 8pt; margin: 9pt 0 0;
+}
+.inv-terms { font-size: 8pt; line-height: 1.5; color: #4A564F; margin: 10pt 0 0; }
+.inv-terms .inv-lbl { margin-top: 7pt; }
+.inv-why {
+  font-size: 8pt; line-height: 1.5; margin: 11pt 0 0; padding: 6pt 8pt;
+  background: #F4F1EA; border: 0.5pt dashed #9AA39A; color: #2B3A33;
+}
+.inv-why b { color: #0E1512; }
+.inv-why ul { margin: 3pt 0 0; padding-left: 13pt; }
+.inv-why li { margin: 1.5pt 0; }
+</style>
+</head>
+<body>
+
+<!-- ================================================= SHEET 1 — first payment -->
+<div class="sheet">
+
+  <p class="inv-spec"><b>Specimen — not an invoice.</b> Layout reference for the Square template. The amounts are job 2's real, signed figures; the customer is not named — a reusable template does not need someone's home address on it.</p>
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Specimen</b>Invoice specimen 1 of 2<br>First payment · landscaping</p>
+  </div>
+
+  <h1 class="headline" style="margin-top:6pt">Invoice</h1>
+
+  <div class="inv-head">
+    <div>
+      <p class="inv-lbl">From</p>
+      <p><b>Sixfold, LLC</b></p>
+      <p>17890 Sierra Way, Monument, CO 80132</p>
+      <p>(303) 915-1045 · Contact@SixfoldColorado.com</p>
+    </div>
+    <div>
+      <p class="inv-lbl">Billed to</p>
+      <p><b>&lt;Customer name&gt;</b></p>
+      <p class="inv-lbl" style="margin-top:5pt">Property</p>
+      <p>&lt;Service address&gt;</p>
+    </div>
+    <div class="inv-meta">
+      <table>
+        <tr><td>Invoice</td><td><b>SF-2026-001</b></td></tr>
+        <tr><td>Issued</td><td>20 Sep 2026</td></tr>
+        <tr><td>Due</td><td><b>On or before the<br>first day of work</b></td></tr>
+        <tr><td>Agreement</td><td>Service agreement,<br>section 5</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <table class="inv-lines">
+    <thead><tr><th>Item</th><th class="ia" style="width:1.05in">Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Mow three-quarter-acre property — full-property mowing</td><td class="ia">$100.00</td></tr>
+      <tr><td>Edge and trim the entire yard — drive and walkways blown down</td><td class="ia iz">Included</td></tr>
+      <tr><td>Limb 13 trees — lower limbs raised, up to 4 ft</td><td class="ia">$600.00</td></tr>
+      <tr><td>Remove 9 existing plants — pulled out, roots included</td><td class="ia">$150.00</td></tr>
+      <tr><td>Install 6 Russian sage — labour only, on a return visit</td><td class="ia iz">No charge</td></tr>
+      <tr><td>Remove 3 small trees — under 10 ft, felled and cut up on the ground</td><td class="ia">$250.00</td></tr>
+      <tr><td>Haul and dispose of debris — tipping fees included</td><td class="ia">$400.00</td></tr>
+      <tr class="inv-tot"><td>Total, fixed price</td><td class="ia">$1,500.00</td></tr>
+      <tr class="inv-due"><td><b>First payment — 50% of the fixed price, due on or before the first day of work</b></td><td class="ia">$750.00</td></tr>
+      <tr class="inv-due"><td>Balance, due on completion of the work in section 2</td><td class="ia">$750.00</td></tr>
+    </tbody>
+  </table>
+
+  <p class="inv-note">This invoice is the first of two payments on a fixed price of $1,500.00. It is not a
+  charge for work already done. <b>Every payment is refundable in full, within ten business days, if you
+  cancel under section 7 of the service agreement</b> — including a payment made before the cancellation
+  period has run.</p>
+
+  <div class="inv-terms">
+    <p class="inv-lbl">Payment</p>
+    Electronic transfer, cash, or check payable to <b>Sixfold, LLC</b>.
+    <p class="inv-lbl">Please note</p>
+    Sixfold does not prepare or file tax returns. Not tax or insurance advice — confirm your own position
+    with your accountant and your carrier.
+  </div>
+
+  <div class="inv-why">
+    <b>Why this sheet looks the way it does</b> — see <a href="invoice-spec.md">invoice-spec.md</a>
+    <ul>
+      <li><b>Full scope, split payment.</b> All seven quote lines appear, and the $750 comes from the 50% split — not from allocating two tasks to the first payment. Limbing + plant removal is exactly $750, which is the trap.</li>
+      <li><b>No qualifying split.</b> Job 2 is landscaping only. A "non-qualifying" subtotal here would frame a standalone service as the leftover half of a fire job.</li>
+      <li><b>The zero lines stay.</b> They are what makes the sheet read as good value; dropping them makes the invoice look dearer than the quote.</li>
+      <li><b>"First payment," never "deposit"</b> — §5 of the signed agreement already uses "deposit" to mean $0.00.</li>
+      <li><b>Due date is not the issue date.</b> Work does not start until the three-business-day cancellation period has run.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ============================================ SHEET 2 — fire, with the split -->
+<div class="sheet">
+
+  <p class="inv-spec"><b>Specimen — not an invoice. Figures on this sheet are invented for layout.</b> No fire-mitigation job has been invoiced yet; these are not Sixfold rates and must not be quoted.</p>
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Specimen</b>Invoice specimen 2 of 2<br>Final · fire mitigation + landscaping</p>
+  </div>
+
+  <h1 class="headline" style="margin-top:6pt">Invoice</h1>
+
+  <div class="inv-head">
+    <div>
+      <p class="inv-lbl">From</p>
+      <p><b>Sixfold, LLC</b></p>
+      <p>17890 Sierra Way, Monument, CO 80132</p>
+      <p>(303) 915-1045 · Contact@SixfoldColorado.com</p>
+    </div>
+    <div>
+      <p class="inv-lbl">Billed to</p>
+      <p><b>&lt;Customer name&gt;</b></p>
+      <p class="inv-lbl" style="margin-top:5pt">Property</p>
+      <p>&lt;Service address — the parcel the work was done on&gt;</p>
+    </div>
+    <div class="inv-meta">
+      <table>
+        <tr><td>Invoice</td><td><b>SF-2026-002</b></td></tr>
+        <tr><td>Issued</td><td>&lt;completion date&gt;</td></tr>
+        <tr><td>Due</td><td><b>On completion</b></td></tr>
+        <tr><td>Agreement</td><td>Service agreement,<br>section 5</td></tr>
+        <tr><td>First payment</td><td>Invoiced on<br>SF-2026-00<i>x</i></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <table class="inv-lines">
+    <thead><tr><th>Item</th><th class="ia" style="width:1.05in">Amount</th></tr></thead>
+    <tbody>
+      <tr class="inv-grp"><td colspan="2">Wildfire mitigation — qualifying work</td></tr>
+      <tr><td>Defensible space, zone 1 — vegetation cleared within 5 ft of the structure</td><td class="ia">$000.00</td></tr>
+      <tr><td>Thinning to protect structures — <i>n</i> trees removed, <i>n</i> limbed</td><td class="ia">$000.00</td></tr>
+      <tr><td>Slash treatment — chipped on site and hauled, tipping fees included</td><td class="ia">$000.00</td></tr>
+      <tr class="inv-sub"><td>Qualifying subtotal</td><td class="ia">$0,000.00</td></tr>
+
+      <tr class="inv-grp"><td colspan="2">Other work — does not qualify</td></tr>
+      <tr><td>Mowing and edging</td><td class="ia">$000.00</td></tr>
+      <tr><td>Firewood bucked and stacked for your own use</td><td class="ia">$000.00</td></tr>
+      <tr class="inv-sub"><td>Non-qualifying subtotal</td><td class="ia">$000.00</td></tr>
+
+      <tr class="inv-tot"><td>Total, fixed price</td><td class="ia">$0,000.00</td></tr>
+      <tr class="inv-due"><td>Less first payment, received &lt;date&gt;</td><td class="ia">&minus;$000.00</td></tr>
+      <tr class="inv-due"><td><b>Balance now due</b></td><td class="ia">$000.00</td></tr>
+    </tbody>
+  </table>
+
+  <p class="inv-std"><b>Standard:</b> work in the qualifying section was performed to Colorado State Forest
+  Service defensible-space standards.</p>
+
+  <p class="inv-note">Keep this invoice with your written work record and the before-and-after photographs.
+  The three together are what an insurer or an accountant will ask for.</p>
+
+  <div class="inv-terms">
+    <p class="inv-lbl">Payment</p>
+    Electronic transfer, cash, or check payable to <b>Sixfold, LLC</b>.
+    <p class="inv-lbl">Please note</p>
+    Sixfold does not prepare or file tax returns. Not tax or insurance advice — confirm your own position
+    with your accountant and your carrier.
+  </div>
+
+  <div class="inv-why">
+    <b>Why this sheet looks the way it does</b> — see <a href="invoice-spec.md">invoice-spec.md</a> §3
+    <ul>
+      <li><b>The split is the whole point.</b> The service agreement promises "an itemised invoice that separates qualifying wildfire mitigation work from anything else on the bill," and this invoice is what the customer claims the credit with.</li>
+      <li><b>Haul-off sits in the qualifying column</b> when it is treating slash from qualifying work. It is usually the largest line, so putting it in the wrong column is the most expensive mistake available here.</li>
+      <li><b>The standards line is on the invoice</b> because the packet tells the customer to keep it — and only goes on if it is true of that job.</li>
+      <li><b>No credit amount, no cap, no income limit.</b> Separating the work is Sixfold's job; deciding whether the customer qualifies is their accountant's.</li>
+      <li><b>⚑ Nothing upstream tags a line as qualifying.</b> Until the walk sheet and the quote engine carry that flag, these columns are decided by hand at quoting time and written into the job file.</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>

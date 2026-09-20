@@ -129,6 +129,7 @@ const JOBS = [
      printed page each — count them after any edit. */
   { src: 'operations/quote-walk-sheet.html',    out: 'operations/quote-walk-sheet.pdf',           mode: 'light' },
   { src: 'operations/job-closeout.html',        out: 'operations/job-closeout.pdf',               mode: 'light' },
+  { src: 'operations/invoice-example.html',    out: 'operations/invoice-example.pdf',            mode: 'light' },
   { src: 'operations/work-rates.html',          out: 'operations/work-rates.pdf',                 mode: 'light' },
   /* Event sign-up sheet. scale: 1 and ONE page are both the spec — the row height is
      0.54in on purpose (13.7mm, larger than wide-rule paper) because it is filled in

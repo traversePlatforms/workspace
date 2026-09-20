@@ -23,6 +23,32 @@ Seven sheets, built 2026-08-21. The equipment needed to deliver the six service 
 
 **Rebuild after any edit:** `node build.mjs && node artifact-copy.mjs`, then re-print the PDF and **count the pages** — screen height does not predict page fit, and this document took six passes to land on seven.
 
+### Invoice template spec
+
+**Built 2026-09-20.** The third output of the quote pipeline — quote → job plan → **invoice**.
+
+| File | What it is |
+|---|---|
+| [invoice-spec.md](invoice-spec.md) | **The source of truth.** What a Sixfold invoice must say, the qualifying split, the vocabulary rules, numbering, and the pre-send checklist. |
+| [invoice-example.src.html](invoice-example.src.html) | Two specimen sheets. **Edit this, never the generated `.html`.** |
+| [invoice-example.html](invoice-example.html) / [.pdf](invoice-example.pdf) | Generated. 2 sheets, 2 pages. Hold beside the Square preview and compare line for line. |
+
+**Invoices are produced in Square, not from these files.** The specimens are a layout reference;
+nothing has been entered into Square and no account has been opened.
+
+**⚑ Not for the team-share Drive folder.** It is an internal money document, and the share folder
+carries no pricing. The specimens no longer name a customer, but the spec still quotes job figures.
+
+Two things the build caught, both only visible by rendering:
+
+- **`.money` already exists in `_style.css`** as a flex component. Naming the line table
+  `table.money` made it compute `display:flex`, so `thead` and `tbody` became blocks and the
+  header row rendered *beside* the rows instead of above them. Every class in this sheet is now
+  prefixed `inv-`. Same collision as `.tick`, and invisible until it is rendered.
+- **The SPECIMEN bar was white on red**, which a printer turns into white on white by dropping
+  the background — the one marker that must never disappear, disappearing. It is now dark ink on
+  a light tint with a heavy left rule, plus `print-color-adjust: exact`.
+
 ### Quote walk sheet
 
 **One page**, built 2026-09-13. A clipboard sheet for the site visit: **section 1 is what can be counted and charged for, section 2 is what the job burns or needs, section 3 is a notes box.** Started from Brandon's three-circle diagram and was reorganised around money instead — all fifteen of his items survive, grouped differently. See the `.md` for that, and for what four rewrites in one day took off it.
