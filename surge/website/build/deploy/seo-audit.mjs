@@ -131,7 +131,10 @@ for (const p of P) {
   let prev = 0;
   for (const m of src.matchAll(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi)) {
     const lvl = +m[1], txt = m[2].replace(/<[^>]+>/g, '').trim();
-    if (!txt) warn(url, `empty <h${lvl}>`);
+    /* An empty heading carrying a data-* slot is a JS template, not a defect —
+       /team/'s detail panel starts `.team-detail.is-empty { display:none }` and
+       is filled on click. The first run flagged it; it is working code. */
+    if (!txt && !/\sdata-[a-z-]+/.test(m[0])) warn(url, `empty <h${lvl}>`);
     if (prev && lvl > prev + 1) {
       /* the footer's three column headings are h4 under an h2 on all 28 pages —
          that is one site-wide finding, not 28 identical ones */

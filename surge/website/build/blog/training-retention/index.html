@@ -28,6 +28,67 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0a0a0a">
 <script defer src="/assets/site.js"></script>
+
+<!-- SEO:SCHEMA -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://surgeftw.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://surgeftw.com/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "What survives training week",
+      "item": "https://surgeftw.com/blog/training-retention/"
+    }
+  ]
+}
+</script>
+<!-- AT LAUNCH: add "datePublished": "YYYY-MM-DD" to the block below, with
+     the date the post actually went live. It is deliberately absent because
+     nothing here has been published yet, and a date that is not true is
+     worse than a missing one. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "What survives training week.",
+  "description": "Most of what is taught in a training week is forgotten, and the curve describing it was drawn in the 1880s. What the replication and the testing effect show.",
+  "image": "https://surgeftw.com/assets/img/og.png",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://surgeftw.com/blog/training-retention/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Surge",
+    "url": "https://surgeftw.com/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Surge",
+    "url": "https://surgeftw.com/"
+  },
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Surge blog",
+    "@id": "https://surgeftw.com/blog/"
+  }
+}
+</script>
+<!-- /SEO:SCHEMA -->
 </head>
 <body>
 <a class="skip-link" href="#content">Skip to content</a>
@@ -124,6 +185,22 @@
         NCBI E-utilities.</dd>
       </dl>
     </div>
+    
+<!-- SEO:READNEXT -->
+    <nav class="read-next" aria-label="More from the blog">
+      <p class="eyebrow">Read next</p>
+      <ul>
+        <li>
+          <a href="/blog/discovery-questions/">Eleven to fourteen questions, and the part nobody quotes</a>
+          <span>Every sales team has heard the number. It is the least useful part of the finding.</span>
+        </li>
+        <li>
+          <a href="/blog/entering-new-markets/">What to check before you expand into a new market</a>
+          <span>A practical guide for companies scaling into new markets to reduce risk and improve execution.</span>
+        </li>
+      </ul>
+    </nav>
+<!-- /SEO:READNEXT -->
     <p class="small" style="margin-top:1.4rem"><a href="/blog/">&larr; All posts</a></p>
   </div>
 </section>

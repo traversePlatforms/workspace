@@ -48,6 +48,13 @@ logo — both slot in after launch if late.
 8. Google Search Console: submit `https://surgeftw.com/sitemap.xml`. Google
    review link and the WordPress-era URLs are covered by the `.htaccess`
    redirect map (item 7 on the punch list).
+   **SEO, at this point and not before** (`node deploy/seo-audit.mjs`, 0 failures
+   expected — re-run it after step 4, since it reports the noindex count):
+   - **Add `datePublished` to the six `BlogPosting` blocks.** Each carries a
+     comment saying so. Left out deliberately — nothing has been published, and a
+     publication date that is not true is worse than a missing one.
+   - **Add `<lastmod>` to `sitemap.xml`**: launch day on every URL, the real date
+     on each edit after. It is how a crawler decides what to re-crawl.
 9. **Analytics — decided 2026-09-16: no tracking script at launch.** Measure
    with SiteGround's built-in traffic stats (Site Tools → Statistics →
    Traffic — server-side, no cookies, and the same kind of numbers as the
@@ -218,9 +225,28 @@ Safer options:
    Flip both `RewriteCond`/`RewriteRule` lines if you want the opposite.
 4. Rebuild the bundle and re-upload, or edit in place via File Manager.
 5. Submit `https://surgeftw.com/sitemap.xml` in Google Search Console.
-6. Add an analytics snippet to the page `<head>` if wanted (one line in
-   `scratchpad/site-tasks.mjs`'s `HEAD_LINKS` re-runs it across all pages).
-7. Test: every nav link, both forms, a 404, HTTPS redirect, mobile.
+6. **Do NOT add an analytics snippet without deciding this first.** `/privacy/`
+   says, in published copy: *"We do not run analytics or advertising trackers on
+   this site."* Adding one contradicts a promise the site makes. Either change the
+   policy first, or stay with Search Console — it is first-party, needs no tracker
+   on the page, and does not touch that sentence.
+   *(The old wording here offered the snippet with no mention of the policy.)*
+
+### SEO steps that belong at launch, not before
+
+7. `node deploy/seo-audit.mjs` — should be 0 failures. Run it again after the
+   noindex flip, because the audit reports the noindex count and that is the
+   number to check.
+8. **Add `datePublished` to the six `BlogPosting` blocks.** Each one carries a
+   comment saying so. It was left out deliberately: nothing has been published,
+   and a publication date that is not true is worse than a missing one.
+9. **Add `<lastmod>` to `sitemap.xml`** — launch day for every URL, then the real
+   date on each later edit. It is how a crawler decides what to re-crawl.
+10. Re-check the two pages where the location rule bites: `/about/` and
+    `/contact/` must not pair the service line with Englewood in the title or
+    description. `/careers/` may name it — hiring is the subject. See
+    `brand-voice-company.md` §5.
+11. Test: every nav link, both forms, a 404, HTTPS redirect, mobile.
    For mobile, run the phone auditor against the LIVE URL before calling it done,
    not just the local one: `node deploy/mobile-audit.mjs --devices --base=https://surgeftw.com`
    (`--devices` is nine real viewports — three phones, a phone on its side, iPad Mini,
