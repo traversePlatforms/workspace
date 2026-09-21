@@ -949,3 +949,66 @@ description, the service cards, the chooser.
 three in nine or so places and each one is an opportunity to name two.
 
 Auditors: links all clear, runtime 0 failures.
+
+## Redundancy scan, and the four cuts it produced — 2026-09-21
+
+Asked for a scan for repetition. Done by extracting the visible copy from all six
+pages with chrome stripped (it repeats by design), then looking for sentences
+repeated across pages, sentences repeated within a page, shared 7-word phrases,
+and every place the three services are named.
+
+**Result: 8 cross-page repeated sentences before, 3 after** — and all three that
+remain are legitimate (the contact block, the C.R.S. citation, and the form's
+"if it's urgent" message, which also appears on `/thank-you/` in a different
+context). Nothing was ever repeated within a single section.
+
+### 1. Each service card printed its own list twice
+
+The card prose enumerated the service, and the `.tags` line underneath enumerated
+it again — **three times over on the home page for landscaping**, once in the card
+prose, once in the tags, once in the landscaping door. The prose now says what the
+service *is* and **the tags carry the enumeration**, which is what they are for.
+
+### 2. ⚑ The two doors were not parallel, and one of them said nothing
+
+The fire door earns its place: it adds the tax credit, the insurer duty and the
+~450 stat. The landscaping door **restated the card a few hundred pixels above it**
+and included a sentence copied **word for word** from `/what-we-do/` ("Tell us how
+you want the ground kept and we'll walk it with you").
+
+Replaced with the **handover packet** — real, specific, on no other part of the
+home page, and true of **all three** services. The pair now reads as one
+fire-specific fact and one universal one, instead of singling landscaping out for
+a summary of itself. **This changes a structure Matthew approved on 2026-09-18
+("two doors, one per audience")** — the three cards still carry both audiences, each
+with its own photograph and booking link, so the home page has not stopped speaking
+to anyone. Flagged because it was his call, not mine.
+
+### 3. `/who-pays/` opened by repeating the home page
+
+The home door's `<h2>` and that page's `<h1>` were near-identical ("Two parties
+will help pay for it / cover this. Most people are never told about either."), and
+**the ~450 stat block was duplicated verbatim, commentary and source line
+included**. Clicking through showed you the headline and the number a second time.
+The home door now has its own headline and keeps the number **without** the
+interpretation, which belongs on the page that discusses the source.
+
+### 4. ⚑ The page-end contact block was one block on four pages — and wrong on one
+
+Same `<h2>` on home, `/what-we-do/`, `/who-pays/` and `/wildfire-guide/`, and three
+shared the paragraph verbatim. **`/what-we-do/` ended with "talk through what it
+qualifies for"** — tax-credit language copy-pasted from `/who-pays/`, at the foot
+of the page that covers **landscaping, which qualifies for nothing.** A content
+error, not a style one. Each block now fits its page:
+
+| Page | Heading |
+|---|---|
+| home | We'll come and walk the property. |
+| `/what-we-do/` | It starts with the walk. |
+| `/who-pays/` | Find out what your property qualifies for. |
+| `/wildfire-guide/` | Have us walk your zones. |
+
+**Visible word count, chrome excluded:** guide 975 · who-pays 826 · what-we-do 737
+· home 566 · contact 290 · thank-you 39.
+
+Auditors: links all clear, runtime 0 failures.
