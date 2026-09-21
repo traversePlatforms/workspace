@@ -1870,3 +1870,47 @@ the picture; the text is the reference.
 readable), the house and its seven callouts, the zones plan (no collision), the
 crown-spacing side view, and the firewood/propane/slash drawing. **Auditors: links
 all clear, runtime 0 failures, no overflow at any width.**
+
+## Per-service pages — 2026-09-21
+
+`/services/fire-mitigation/`, `/services/land-clearing/`, `/services/landscaping/`.
+The site is **nine pages** now.
+
+**Why:** the searches that matter for a local trade are per service and per town —
+"fire mitigation Colorado Springs", "land clearing Monument". One `/services/` page
+competes for all three and wins none cleanly. **Three new URLs cost nothing today
+and cost permanent redirects after launch**, which is the same reason the directory
+was renamed this morning.
+
+`/services/` is untouched as a hub — **Matthew signed it off, so it was not
+rewritten.** Each of its three sections gained one link down to its page; the hub
+summarises, the page expands.
+
+Titles are search-shaped rather than brand-shaped ("Fire mitigation in Colorado
+Springs & Monument"), 52–56 characters, descriptions 133–150.
+
+### ⚑ Two of the three are thin, and that is not a drafting problem
+
+**Fire mitigation is a real page.** The CSFS standards, the disposal choice, the
+wildfire guide and the tax credit all attach to that service and to no other, so it
+has something to say and a reason to link out three ways.
+
+**Land clearing and landscaping are thin, because everything on record about them
+is already on them.** Landscaping is the thinnest and has a known gap: **there is
+still no source for what cadence Sixfold offers** — weekly, seasonal, annual. That
+sentence has now been drafted and pulled twice. **It needs a fact from Brandon, not
+another attempt at writing around it.**
+
+What would actually fill them: real job detail, before-and-afters per service, and
+the towns the work was done in. That is material from the field, not from here.
+
+### ⚑ And the runtime auditor was passing while testing nothing new
+
+`audit-runtime.mjs` had its page list **hand-written as an array**. Adding three
+pages left them untested, and the run still printed "6 pages" and "0 failures" —
+**a green result that had not looked at a third of the site.** The worst kind of
+pass.
+
+It now **walks the directory**, the same way `audit-links.mjs` always has. First
+run after the change: **9 pages × 4 widths = 36 renders, 0 failures.** The sitemap
+check caught the new pages immediately, which is what it was built for.

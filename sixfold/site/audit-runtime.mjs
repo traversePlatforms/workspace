@@ -8,13 +8,27 @@
      node audit-runtime.mjs            (needs serve.mjs on :8090)
 */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE = 'http://127.0.0.1:8090';
-const PAGES = ['/', '/services/', '/who-pays/', '/wildfire-guide/', '/contact/', '/thank-you/'];
+/* Derived from disk, not listed by hand. It WAS a hand-written array, and adding
+   the three per-service pages on 2026-09-21 silently left them untested: the run
+   still said "6 pages" and still said 0 failures, which is the worst kind of pass.
+   audit-links.mjs already walks the directory for exactly this reason. */
+const SITE_ROOT = dirname(fileURLToPath(import.meta.url));
+const PAGES = (function walk(dir, base = '') {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name.startsWith('.') || e.name === '_tabled' || e.name === 'assets' || e.name === 'api') continue;
+    if (e.isDirectory()) out.push(...walk(join(dir, e.name), base + '/' + e.name));
+    else if (e.name === 'index.html') out.push(base + '/');
+  }
+  return out;
+})(SITE_ROOT).sort();
 const WIDTHS = [390, 768, 1280, 1600];
 
 const prof = mkdtempSync(join(tmpdir(), 'audit-'));
