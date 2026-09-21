@@ -1197,3 +1197,44 @@ Matthew, because it is the only one that also touches the no-headcount rule.
 **Lesson for the next sweep:** a grep finds the phrase, not the reference. Cutting
 a section can orphan a back-reference on a different page, and nothing fails when
 it does.
+
+## Who chooses the time — 2026-09-21
+
+Matthew: *"it says tell us whats on the property and we'll set a time to walk the
+property. I feel like the use of we'll indicated that we are in charge of the time
+we come out and we will choose it."* **Agreed, and it was in nine places.**
+
+**The fault is the grammar, not the tone.** In "we'll set a time", Sixfold is the
+subject and the customer is absent from the sentence — the schedule reads as handed
+down rather than agreed. Same family as the imperative fixed an hour earlier ("have
+us walk it"): the sentence quietly moves the decision away from the reader.
+
+Nine instances, reworded so the customer keeps it, and **varied deliberately** so
+nine contact blocks do not collapse into one line:
+
+| Page | Now |
+|---|---|
+| home | "…we'll come out **at a time that suits you**." |
+| `/contact/` lede | "…we'll **find a time that works for you**." |
+| `/contact/` aside | "…we'll come and look at it **at a time that suits you**." |
+| `/contact/` meta | "…we'll arrange a walk **at a time that suits you**." |
+| `/thank-you/` lede | "We'll be in touch to **find a time that works for you**." |
+| `/thank-you/` meta | "…in touch to arrange a walk **at a time that suits you**." |
+| `/what-we-do/` | "…we'll come out **when it suits you** and count what is actually there." |
+| `/who-pays/` | "…we'll come **at a time that works for you**, look at what you've got…" |
+| `/wildfire-guide/` | "…we'll come **when it suits you** and measure what is there…" |
+
+### And the crew-continuity line is cut
+
+*"The crew that did it is the crew that comes back."* Matthew: *"that might
+actually not be the case either, and yeah it kinda goes back on what weve been
+talking about in terms of how we are phrasing things."*
+
+**Two faults, and his first one is the stronger.** It is a **staffing promise the
+company may not be able to keep** — and it also trips the no-headcount rule, since
+it implies one small consistent crew while the company is hiring. It was the last
+survivor of the gloss scan flagged as needing his call. `/what-we-do/` now ends
+that paragraph at "And if anything about the work is not right, call."
+
+Meta descriptions re-checked after the rewrites: 125–163 characters, all inside
+the limit. Auditors: links all clear, runtime 0 failures.
