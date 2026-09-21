@@ -1318,3 +1318,42 @@ Rendered after: the three cards read as peers. Landscaping's copy is shorter, th
 cards stay level, and the booking links still align at the same `y`.
 
 Auditors: links all clear, runtime 0 failures.
+
+## "and more" on the landscaping list — 2026-09-21
+
+Matthew: *"instead of saying shrub and hedge trimming, just say shrub, hedge
+trimming and more. This will let them know we have more services then listed and as
+we expand our service list we wont need constant update of the site."*
+
+**The reason is the useful part, and it is a maintenance argument as much as a copy
+one.** A closed list has to be revised every time the crew takes on something new,
+and a list that is quietly out of date is worse than a shorter one. "And more"
+makes the list illustrative instead of exhaustive. It also fits the no-limits rule —
+the list stops reading as a boundary.
+
+Applied to **both** landscaping mentions on the home page, so the page does not
+contradict itself on the one thing he just asked for:
+
+- the `#work` card — "…sod and seed, shrub and hedge trimming, **and more**."
+- the landscaping door — "…clean-up and haul-away, **and more**."
+
+**⚑ One deviation from his literal wording, flagged rather than silent.** He wrote
+"shrub, hedge trimming and more"; that reads "shrub" as a standalone noun, because
+the original "shrub and hedge trimming" is a contraction of *shrub trimming and
+hedge trimming*. Written as "shrub and hedge trimming, and more" to keep the sense.
+**If he wants his exact phrasing it is a one-word edit.**
+
+### Still closed lists, deliberately not touched
+
+- **`/what-we-do/`'s landscaping lede** still ends "clean-up and haul-away" with no
+  "and more" — he scoped this to the home page. That page does already carry the
+  broader version of the same idea in its `.scope` block: *"The lists above are
+  where we start, not where we stop."*
+- **The card's `.tags` line** ("MOWING · EDGING · BEDS · PLANTING · SOD & SEED") is
+  still a closed set. A trailing "& MORE" in tracked mono caps reads as a label
+  rather than a phrase, so it was left for him to call.
+
+**Matthew's note: "I think the homepage will be set for now."** Treat the home page
+as signed off unless he reopens it.
+
+Auditors: links all clear, runtime 0 failures.
