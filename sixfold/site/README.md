@@ -9,6 +9,25 @@ every other Sixfold asset — nothing published, posted, scheduled or uploaded.
 cannot be done on disk is in **[LAUNCH.md](LAUNCH.md)**, which is the file to open
 the day this goes on a host.
 
+## ⚑ Review state — 2026-09-21
+
+| Page | |
+|---|---|
+| `/` | **Signed off** — *"I think the homepage will be set for now."* |
+| `/services/` | **Signed off** — *"I think that page looks fine."* (was `/what-we-do/`) |
+| `/who-pays/` | Not reviewed this round |
+| `/wildfire-guide/` | Not reviewed this round |
+| `/contact/`, `/thank-you/` | Not reviewed this round |
+
+**Do not reopen a signed-off page without him.** Several things on those two look
+like defects and are not — landscaping enumerating where the other cards
+characterise, the landscaping door restating its card, one sentence shared verbatim
+between the home door and `/services/`. Each is recorded below as accepted.
+
+**The day's copy rules are not page-specific** and the four unreviewed pages have
+not been swept against all of them. The governing one is §The rule the whole day's
+edits were reaching for; the rest are in the `matthew-copy-edit-patterns` memory.
+
 This is the start of the Sixfold Colorado site, rebuilt in-repo as plain static
 HTML. The earlier Astro build lived at `C:\Users\Surge Inc\dev\sixfold-site`
 (outside OneDrive) and is gone with the machine that held it; this replaces it and
