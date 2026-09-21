@@ -60,10 +60,16 @@ $phone   = $field('phone', 60);
 $town    = $field('town', 200);
 $message = $field('message', 6000);
 
+// Keys must match the radio values in contact/index.html AND the ?need= values the
+// home page's three service cards link with. 'clearing' was added 2026-09-21: the
+// site sells three services and this map only had two, so a land-clearing enquiry
+// had nowhere to land. 'both' became 'multiple' at the same time — with three
+// services "both" no longer says anything.
 $needs = [
     'fire'        => 'Fire mitigation',
+    'clearing'    => 'Land clearing',
     'landscaping' => 'Landscaping',
-    'both'        => 'Fire mitigation + landscaping',
+    'multiple'    => 'More than one service',
     'question'    => 'Question',
 ];
 $needLabel = $needs[$need] ?? 'Enquiry';

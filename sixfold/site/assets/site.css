@@ -520,6 +520,15 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 .lines3 p:last-child { margin-bottom: 0; }
 .lines3 .tags { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--label); line-height: 1.8; }
 
+/* Per-card booking link, straight to /contact/ with the service preselected.
+   The three cards hold different amounts of text, so the link is pushed to the
+   bottom of its own card with margin-top:auto and the three line up across the
+   row — which needs the card to be a flex column, since a grid item stretches
+   but its children do not. `auto` beats .more's 28px, so the breathing room is
+   padding-top instead, or a short card would close right up on its link. */
+.lines3 > div { display: flex; flex-direction: column; }
+.lines3 .card-cta { margin-top: auto; padding-top: 18px; font-size: 12px; }
+
 .scope {
   margin-top: 28px;
   border-left: 3px solid var(--label);

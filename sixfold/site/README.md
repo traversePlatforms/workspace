@@ -807,3 +807,61 @@ was restored afterwards.
    it had not worked. Worth remembering: a 200 from :8090 does not prove the
    server is running the code you just edited. Byte-compare against disk, or
    restart it.
+
+## Per-service booking links — 2026-09-21
+
+Matthew: under each of the three cards on the home page, a link to where they can
+book or fill out the form.
+
+Each card now ends with one, pushed to the bottom of its own card so the three
+line up across the row regardless of how much text sits above them — `margin-top:
+auto`, which needs `.lines3 > div` to be a **flex column**, because a grid item
+stretches but its children do not. Measured after: all three at the same `y`.
+`auto` beats `.more`'s 28px, so the breathing room is `padding-top` instead, or a
+short card would close up on its link.
+
+### ⚑ The ask exposed a real gap
+
+**The site sells three services. The contact chooser offered two.** Fire,
+landscaping, both — **no land clearing**. Anyone wanting it had to file themselves
+under fire mitigation or "both", which flatly contradicts the 2026-09-20 pass that
+made the three stand on their own. A "Book a land clearing walk" link would have
+pointed at an option that did not exist, so this had to be fixed for the ask to
+work at all:
+
+- `/contact/` gains a **Land clearing** radio and its own message prompt.
+- **"Both" became "More than one"** (`both` → `multiple`). With three services
+  "both" no longer says which two.
+- `api/submit.php`'s `$needs` map gains `clearing` and the renamed `multiple`.
+  **The keys in that map, the radio values and the home page's `?need=` values are
+  one set** — a comment in the PHP now says so.
+
+### The links preselect
+
+They point at `/contact/?need=fire|clearing|landscaping`, and `site.js` selects the
+matching radio on load, so someone who clicked "Book a landscaping walk" is not
+asked to pick landscaping again. It **only ever selects a radio already on the
+page** — nothing from the query string is written into the DOM.
+
+Verified in a real browser, not by reading the code: each value selects its radio
+**and** swaps the message prompt; `?need=bogus` and `?need=<img src=x onerror=…>`
+both fall back to the default radio, and the injected markup does not reach the
+DOM. Without JS the link still works, it just lands on the default.
+
+### Two auditor changes
+
+1. **`audit-links.mjs` was resolving the query string as part of the path**, so it
+   called all three new links dead. It now splits the hash off first, then the
+   query — `"?a=b#c"` puts the hash last, so that order leaves a clean query.
+2. **New check: a `?need=` value that the target page has no radio for.** The link
+   would work and the chooser would silently ignore it — the same class of drift as
+   the missing land-clearing option. Tested by pointing one at
+   `?need=stumpgrinding`, which failed as it should.
+
+### What is NOT proved
+
+The `$needs` change is **unexecuted**. `serve.mjs` answers `/api/submit.php` with
+its own logger, so posting all five values returned `{"ok":true}` from the **dev
+stand-in**, not from PHP. Real behaviour is still gated on a host — LAUNCH.md §3.
+
+`audit-links.mjs` all clear (108 links). `audit-runtime.mjs` 0 failures.

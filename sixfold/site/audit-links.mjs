@@ -87,9 +87,26 @@ for (const [page, s] of src) {
     }
     if (!raw.startsWith('/')) { fail(page, `relative link "${raw}" — this site uses root-absolute links`); continue; }
 
-    const [path, hash] = raw.split('#');
+    /* Split the hash off first, then the query — a ?need= is for the page's own
+       script, not part of the path, and resolving it as one reported the home
+       page's three "Book a … walk" links as dead. Order matters: "?a=b#c" puts
+       the hash after the query, so splitting on '#' first leaves a clean query. */
+    const [beforeHash, hash] = raw.split('#');
+    const [path, query] = beforeHash.split('?');
     const target = fileForPath(path);
     if (!target) { fail(page, `dead link "${raw}" — nothing serves ${path}`); continue; }
+
+    /* A ?need= that no radio on the target page offers is a silent dud: the link
+       works, the chooser just ignores it. That is exactly the kind of drift the
+       land-clearing gap was, so it is checked rather than trusted. */
+    if (query) {
+      for (const [k, v] of new URLSearchParams(query)) {
+        if (k !== 'need') continue;
+        const targetSrc = src.get(target) || '';
+        if (!targetSrc.includes(`name="need" value="${v}"`))
+          fail(page, `"${raw}" — ${relative(ROOT, target)} has no need="${v}" option`);
+      }
+    }
     if (hash) {
       const ids = idsOf.get(target);
       if (!ids) fail(page, `"${raw}" points into a non-HTML file`);

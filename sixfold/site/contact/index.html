@@ -90,12 +90,16 @@
             <span><b>Fire mitigation</b><small>Trees down, brush out, defensible space, thinning</small></span>
           </label>
           <label>
+            <input type="radio" name="need" value="clearing">
+            <span><b>Land clearing</b><small>Brush, undergrowth and dead fall off a lot, pasture or easement</small></span>
+          </label>
+          <label>
             <input type="radio" name="need" value="landscaping">
             <span><b>Landscaping</b><small>Mowing, edging, beds, planting, clean-up</small></span>
           </label>
           <label>
-            <input type="radio" name="need" value="both">
-            <span><b>Both</b><small>Clearing and landscaping on the same property</small></span>
+            <input type="radio" name="need" value="multiple">
+            <span><b>More than one</b><small>Any combination of the three</small></span>
           </label>
           <label>
             <input type="radio" name="need" value="question">
@@ -114,8 +118,9 @@
         <div class="row">
           <div>
             <label for="c-message" data-prompt-fire="What's on the property, roughly — how many trees, how much ground, and what you'd like gone"
+                                  data-prompt-clearing="Roughly how much ground, what's on it now, and what you want it clear for"
                                   data-prompt-landscaping="What needs doing, and roughly how big an area"
-                                  data-prompt-both="What's there now, and what you'd like it to look like when we leave"
+                                  data-prompt-multiple="What's there now, and what you'd like it to look like when we leave"
                                   data-prompt-question="What would you like to know?">What's on the property, roughly — how many trees, how much ground, and what you'd like gone</label>
             <textarea id="c-message" name="message" rows="5" required></textarea>
           </div>

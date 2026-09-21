@@ -17,6 +17,21 @@
   /* ---- chooser -> prompt ------------------------------------------------ */
   var radios = document.querySelectorAll('input[name="need"]');
   var label = document.querySelector('label[for="c-message"]');
+
+  /* The home page's three service cards link here as /contact/?need=fire|clearing
+     |landscaping, so the person who clicked "Book a landscaping walk" is not then
+     asked to pick landscaping again. Only ever SELECTS one of the radios that is
+     already on the page — an unknown or hostile ?need= matches nothing and the
+     default stands, and nothing from the query string is written into the DOM.
+     Without JS the link still works; it just lands on the default radio. */
+  try {
+    var want = new URLSearchParams(window.location.search).get('need');
+    if (want) {
+      for (var r = 0; r < radios.length; r++) {
+        if (radios[r].value === want) { radios[r].checked = true; break; }
+      }
+    }
+  } catch (e) { /* no URLSearchParams: the default radio is a fine outcome */ }
   function applyPrompt() {
     if (!label) return;
     var picked = document.querySelector('input[name="need"]:checked');
