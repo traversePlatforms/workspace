@@ -1675,3 +1675,29 @@ rule hanging beside a stacked column. Adding it needs a matching breakpoint, not
 just the class. **Left alone; the form's own input boxes already bound it.**
 
 Auditors: links all clear, runtime 0 failures.
+
+### And `/contact/` got it after all
+
+Matthew: *"Do what you think is best for it."* **Added.** Two reasons it was worth
+the extra CSS: the inconsistency across pages is more noticeable to a reader moving
+between them than a slightly redundant rule is on one page; and it reinforces what
+that page's copy now says — **the form and the phone are two routes to the same
+place**, not a form with a footnote.
+
+**It could not simply take the `.cols-split` class**, which is why it was flagged
+rather than done in the first pass. `.contact-grid` collapses at **860** and
+`.cols-split` flips to horizontal at **780**, so a borrowed class would hang a
+vertical rule beside an already-stacked column for eighty pixels. A media query
+cannot read a custom property, so the breakpoint is repeated alongside the
+declaration — duplication, deliberately, in preference to a rule that is wrong at
+one width.
+
+**⚑ And a second thing only the render showed.** `.contact-grid` is
+`align-items: start`, which shrinks the aside's box to its own content — so the
+first attempt drew a rule that **stopped in mid-air** partway down the form.
+`align-self: stretch` on the divided child fixes it: the box fills the row, the
+content still sits at the top because it is a block. Checked at 1280 (full-height
+rule) and at **800**, inside the old danger zone (stacked, horizontal rule, no
+dangling vertical).
+
+Every two-column block on the site now carries the rule. Nothing else needs it.

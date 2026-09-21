@@ -941,8 +941,26 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 
 /* --- contact page ---------------------------------------------------- */
 
-.contact-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr); gap: 56px; align-items: start; }
+.contact-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr); column-gap: 40px; row-gap: 56px; align-items: start; }
 @media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+/* The same divider as .cols-split, written out again rather than borrowed, because
+   it cannot just take that class: .contact-grid collapses at 860 and .cols-split
+   flips to its horizontal rule at 780, so between the two a vertical rule would
+   hang beside a column that had already stacked. A media query cannot read a custom
+   property, so the breakpoint has to be repeated with the declaration.
+
+   Worth it for consistency: every other two-column block on the site carries this,
+   and it reinforces what the copy says — the form and the phone are two routes to
+   the same place, not a form with a footnote. */
+/* align-self:stretch is load-bearing here. The grid is `align-items: start`, which
+   shrinks the aside's box to its own content — so the border ran out partway down
+   the form and stopped in mid-air. Stretching the box runs the rule the full height
+   of the row; the content inside still sits at the top, because it is a block. */
+.contact-grid > * + * { border-left: 1px solid var(--edge); padding-left: 40px; align-self: stretch; }
+@media (max-width: 860px) {
+  .contact-grid > * + * { border-left: 0; padding-left: 0; padding-top: 30px; border-top: 1px solid var(--edge); }
+}
 .contact-aside .lines { font-family: var(--mono); font-size: 15px; letter-spacing: 0.04em; line-height: 2.1; color: var(--text-strong); margin-bottom: 8px; }
 .contact-aside .lines a { text-decoration: none; }
 .contact-aside p { font-size: 15px; }
