@@ -332,16 +332,24 @@ small, .fine { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
 .nav a { color: var(--text-soft); text-decoration: none; white-space: nowrap; }
 .nav a:hover { color: var(--accent-text); }
 .nav .nav-cta { color: var(--accent-text); }
-/* One breakpoint, measured rather than guessed. The full bar — mark, wordmark,
-   descriptor and five nav items — needs about 793px: it is clean at 800 and overflows
-   by 3px at 790. Set at 840 to leave headroom, because every face here is a SYSTEM
-   font and the metrics differ from machine to machine; a breakpoint set to the exact
-   measured minimum is one font substitution away from wrapping.
+/* One breakpoint, measured rather than guessed, and RE-measured 2026-09-21 when
+   "Who pays" became "Mitigation funding" — ten characters of tracked mono that the
+   old number did not account for.
+
+   Swept 1280 → 390 watching the header's own height, which is the honest signal: a
+   width test lies once things start wrapping, because a wrapped element reports a
+   narrower box. The bar is 65px and clean at 845 and above; at 841–844 it is 74px,
+   the brand having broken onto a second line. The old 840 therefore left a four-
+   pixel-wide band showing a degraded desktop bar.
+
+   Now 860, keeping roughly the headroom the old number had over its own measurement
+   — every face here is a SYSTEM font, so metrics move between machines and a
+   breakpoint at the exact measured minimum is one substitution away from wrapping.
 
    Below it, the bar is the wordmark and Contact. Dropping only the descriptor does
-   not buy enough back — the five items then crowd the whole way down to ~700 — so
-   both go at once. */
-@media (max-width: 840px) {
+   not buy enough back — the items then crowd the whole way down to ~700 — so both
+   go at once. */
+@media (max-width: 860px) {
   .brand span { display: none; }
   .nav a:not(.nav-cta) { display: none; }
 }

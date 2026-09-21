@@ -1436,3 +1436,50 @@ the same reason the URL was: three new URLs cost nothing today and cost redirect
 later. Nothing else in `LAUNCH.md` depends on it.
 
 The other thing worth more than any of this is still the **Google Business Profile**.
+
+## "Who pays" becomes "Mitigation funding" — 2026-09-21
+
+Matthew: *"right now it reads as just who pays which just references fire
+mitigation but people dont know that just from the text who pays."*
+
+Correct — it was a riddle in a nav bar. **"Mitigation funding"** on the header and
+the footer of all six pages. It names the subject, signals which of the three
+services it belongs to, and still covers **both** channels the page carries; "Tax
+credit" would have been the stronger search term but it describes only half the
+page, which also runs the insurer's disclosure duty.
+
+The page's own kicker stays **"Who pays for it"** — on the page the context is
+already obvious, and it is the better line.
+
+**The `<title>` went with it.** It was "Who pays for it — Sixfold Colorado", which
+targeted **no query at all**. Now "Wildfire mitigation tax credit — Sixfold
+Colorado" (49 characters), which is close to the actual search. The meta description
+already carried the right terms.
+
+### ⚑ It broke the header, four pixels wide, and only a measurement found it
+
+The header breakpoint was **measured** at 840 (see the note above the rule), and
+"Who pays" → "Mitigation funding" adds ten characters of tracked mono that the old
+number never accounted for.
+
+Re-swept 1280 → 390 **watching the header's own height**, which is the honest
+signal — a width test lies once things wrap, because a wrapped element reports a
+*narrower* box, so the naive "does it overflow" check said fine at every width.
+
+| width | header height |
+|---|---|
+| 1280 – 845 | **65px**, clean |
+| 844 – 841 | **74px** — the brand broken onto a second line |
+| 840 and below | 65px, mobile bar |
+
+So the old 840 left a **four-pixel-wide band showing a degraded desktop bar**.
+Breakpoint moved to **860**, keeping roughly the headroom the old number had over
+its own measurement — every face here is a system font, so metrics move between
+machines. Re-measured after: **65px at every width**.
+
+**The rule this is the second instance of:** a measured breakpoint is measured
+against *specific content*. Changing the content silently invalidates it, and
+nothing fails — [[sixfold-site]] already records the brand mark vanishing at exactly
+790px for a related reason. **Re-measure whenever a nav label changes.**
+
+Auditors: links all clear, runtime 0 failures.
