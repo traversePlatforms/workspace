@@ -1116,3 +1116,22 @@ attitude:
    but on regulated ground where the reasoning is the point.
 
 Auditors: links all clear, runtime 0 failures.
+
+### ⚑ The gloss sweep went one sentence too far — corrected same day
+
+*"The legislature's own evaluation says the binding constraint is awareness"* was
+cut from under the home page's ~450 stat during the redundancy pass. **Restored on
+Matthew's call, and his reasoning sharpens the rule:**
+
+> *"Its trailing gloss but its not a trailing gloss we created its a statement from
+> the legislature"*
+
+**A gloss is our commentary on our own statement. A sourced finding is content,
+whatever shape it takes.** The sentence carries an attribution to the evaluation
+named on the `.src` line directly beneath it, so the sweep should never have
+reached it. The test is now two steps: *delete it — is a fact lost?* and then
+*whose sentence is it?*
+
+Kept **shorter than the `/who-pays/` version**, which adds "— almost nobody knows
+it exists", so the hub still teases and the detail page still says more. A comment
+in `index.html` marks it as not-a-gloss at the line itself.
