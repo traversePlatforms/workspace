@@ -24,19 +24,91 @@ Both auditors are clean: `audit-links.mjs` all clear, `audit-runtime.mjs`
 
 ---
 
-## ⚑ Step 0 — the one that can break the Surge site
+## ⚑ Step 0 — the order, corrected 2026-09-21
 
-**Check where SixfoldColorado.com's document root points, before you upload
-anything.**
+This file first assumed the domain already pointed at SiteGround. **It does not.**
+`sixfoldcolorado.com` is registered at Squarespace, its nameservers are Squarespace,
+and it currently serves a Squarespace **"Coming Soon" parking page**. `surgeftw.com`
+is the same registrar with its nameservers already at SiteGround — so this move has
+been done once on this account.
 
-Site Tools → Domain → check whether Sixfold is a **separate site** with its own
-document root, or an **addon/parked domain** pointing at the Surge `public_html`.
+**Add the domain to SiteGround BEFORE changing any DNS.** Point DNS at a server
+that does not know the domain and visitors get an error, or whatever that account
+serves by default.
 
-**If it points at Surge's `public_html`, stop.** Uploading there overwrites the
-live Surge site. Sixfold needs its own root — typically
-`~/www/sixfoldcolorado.com/public_html`.
+### 0a — check the plan first
 
-This is the only step on this page that can damage something that already works.
+**SiteGround StartUp allows ONE website, and Surge is using it.** GrowBig and GoGeek
+allow more. If the plan is StartUp, adding Sixfold needs an upgrade — a billing
+decision, better found now than halfway through.
+
+### 0b — add the domain to SiteGround
+
+Client Area → **Websites** → **New Website** → **Existing Domain** →
+`sixfoldcolorado.com`. **Decline WordPress and the site builder** — an empty site is
+what is wanted.
+
+**⚑ Confirm it gets its OWN document root, not Surge's `public_html`.** This is the
+one step that can damage something that already works: uploading into Surge's root
+overwrites the live Surge site.
+
+Note the **server IP** shown in Site Tools — needed in 0d. Do not assume it matches
+`surgeftw.com` (`35.209.216.247`). Read it.
+
+### 0c — upload before repointing DNS
+
+Do steps 2 to 4 below **now**, while the domain still resolves to Squarespace.
+Nothing is public yet, so there is no audience and no rush. The point is that when
+DNS moves, the real site is already sitting there instead of an empty folder.
+
+SSL waits until after DNS — Let's Encrypt validates over HTTP against the live
+domain, so it cannot be issued until the domain actually reaches SiteGround.
+
+### ⚑ 0d — DNS, without touching email
+
+**Do NOT change the nameservers.** That drags every record to SiteGround, including
+the five Google Workspace MX records, and mail breaks until they are rebuilt on the
+other side. **Leave DNS at Squarespace and change only where the website points.**
+Registrar and DNS at Squarespace, hosting at SiteGround, is a normal split.
+
+In Squarespace DNS for the domain:
+
+**Leave alone** — the entire **Google Workspace** block (five MX records) and the
+**Google Workspace Verification** TXT. That is the email.
+
+**First disconnect the domain from the Squarespace site**, or the parking page keeps
+winning and custom A records may be ignored.
+
+**Then add:**
+
+| Type | Name | Data |
+|---|---|---|
+| A | `@` | the SiteGround IP from 0b |
+| CNAME | `www` | `sixfoldcolorado.com` |
+| TXT | `@` | `v=spf1 include:_spf.google.com ~all` |
+
+**That SPF record does not exist today** — checked 2026-09-21. Surge has one,
+Sixfold does not. It is part of why mail from this domain can land in spam.
+
+**⚑ If the form sends via SiteGround's PHP `mail()`, the Google SPF line is not
+enough** — SiteGround's own mail servers need including, or the form's mail fails
+SPF. **Get that `include:` string from SiteGround's documentation rather than
+guessing it.** The cleaner alternative: make `website@SixfoldColorado.com` a real
+Google Workspace user and send via authenticated SMTP, which the Google line already
+covers.
+
+**Also:** DNS returns **two** `google-site-verification` TXT records while the
+Squarespace panel showed one. Scroll the whole page and preserve both.
+
+### Rollback
+
+If the site does not appear, or anything about mail looks wrong: **delete the A and
+CNAME records you added.** Squarespace resumes serving the parking page within the
+TTL, and email was never touched, so nothing is lost but time.
+
+**Screenshot the DNS page before you start** — that is the restore point. Lower the
+TTLs a day ahead if you can; it shortens the window where resolvers still hold the
+old answers.
 
 ## Step 1 — a staging pass first, if you want one
 
