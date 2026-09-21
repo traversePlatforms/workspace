@@ -12,10 +12,23 @@ return [
     // Where submissions are emailed.
     'to'             => 'Contact@SixfoldColorado.com',
 
-    // Envelope/From. For deliverability this MUST be a real mailbox or alias on
-    // SixfoldColorado.com — create website@SixfoldColorado.com on the host, or
-    // mail from a Sixfold address will be treated as forged and land in spam.
-    'from'           => 'website@SixfoldColorado.com',
+    // Envelope/From. Changed 2026-09-21 from website@SixfoldColorado.com, which
+    // was an instruction rather than a fact — nothing had ever created it, and
+    // mail from an address that does not exist is a spam signal in its own right.
+    //
+    // Contact@ already exists, so the form now sends from the same address it
+    // sends TO. That is normal for a contact form and costs nothing: Reply-To is
+    // still the customer, so hitting reply goes to them, not to ourselves.
+    //
+    // A website@ alias in Google Workspace would also have worked — aliases are
+    // free — but it is one more thing to create and keep straight for no gain.
+    //
+    // ⚑ THIS DOES NOT FIX SPF. The domain's SPF authorises Google only, and this
+    // mail leaves from SiteGround's PHP mail(), so it fails SPF whichever address
+    // it claims. Add SiteGround's own include: string — from their docs, not from
+    // a guess — or move the form to authenticated SMTP through Google, which the
+    // existing SPF already covers. Until then expect spam-foldering.
+    'from'           => 'Contact@SixfoldColorado.com',
 
     'subject_prefix' => '[SixfoldColorado.com] ',
 
