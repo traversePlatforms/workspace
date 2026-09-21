@@ -250,6 +250,33 @@ $headers = implode("\r\n", [
 
 $sent = @mail($cfg['to'], $cfg['subject_prefix'] . $title, $body, $headers);
 
-// Logged either way; report success so the customer is not told to try again
-// for a delivery problem that is ours to fix from the log.
+/**
+ * ⚑ Record whether mail() actually accepted it. Added 2026-09-21, because without
+ * this the log proved a submission arrived and said NOTHING about why no email
+ * followed — and the two possible causes need opposite fixes:
+ *
+ *   "mail_accepted": false  — PHP could not hand it off at all. mail() is disabled
+ *                            or misconfigured on the host. No amount of SPF fixes
+ *                            this; the form has to send by authenticated SMTP.
+ *   "mail_accepted": true   — the server took it and it died downstream. That is
+ *                            SPF, DKIM or the receiving side rejecting it, and SPF
+ *                            is where to keep digging.
+ *
+ * A second line rather than folding it into the first, because the lead is written
+ * BEFORE any of this runs and that ordering is what stops a mail failure losing an
+ * enquiry. Nothing here is allowed to jeopardise that.
+ */
+@file_put_contents(
+    $cfg['log_file'],
+    json_encode([
+        'at' => date('c'),
+        'mail_accepted' => (bool) $sent,
+        'to' => $cfg['to'],
+        'from' => $cfg['from'],
+    ], JSON_UNESCAPED_UNICODE) . "\n",
+    FILE_APPEND | LOCK_EX
+);
+
+// Report success either way: the customer should not be told to try again for a
+// delivery problem that is ours to fix from the log.
 respond_ok($cfg, $wantsJson);
