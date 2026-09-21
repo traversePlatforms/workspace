@@ -1616,3 +1616,24 @@ Also moved: the "What the record is actually worth →" link now sits **below bo
 columns**, since it is about the whole section.
 
 Auditors: links all clear, runtime 0 failures.
+
+## Mitigation funding — Matthew's pass, 2026-09-21
+
+| Note | Change |
+|---|---|
+| h1 stacked | `.page-head.wide` — full width, two lines instead of a narrow stack. Same treatment as home and `/services/`. |
+| *"get rid of the one and the two texts above each section like we did with the previous page"* | `One · the state` and `Two · your insurer` gone. |
+| *"What do you also mean they have to show your their working?"* | **A fair hit — "show you their working" is British idiom** (showing your maths). Now: "Since 1 July 2026, your insurer has to show you your wildfire risk score." The audit-locked wording underneath is untouched: the disclosure is an effect **on the score**, not a dollar figure. |
+| the discount's worth | "…a discount for mitigation you can document — **and we provide that documentation**." His line. "but the size of it is theirs to set" removed; "The insurer's decision, not ours" already carries that. |
+| *"lets get rid of this statement… What Sixfold does not do"* | Gone. *"We dont need to get into what licenses we have or dont, what we cant do etc thats a discussion we can have with them and if there is a way we can assist we will."* **The disclaimer takes its place**, promoted from fine print to body text since it is now the column's content. |
+| *"I dont like the wording theres a third pot. comes off greedy?"* | "Community projects have their own funding, and the board applies for it." |
+| *"Sixfold is the contractor you hire once you have it. i dont like this wording either"* | Cut. Presumptuous, and the next line already makes the offer: "If you are putting a project together, we'll walk it and bid it." |
+
+**⚑ The licensing paragraph is worth a note.** It was accurate and it was the kind
+of thing that reads as scrupulous — which is exactly why it survived earlier passes.
+But it argued a boundary at the reader instead of letting them ask, and it is the
+same instinct as the DIY framing and the advertised limits: **explaining what we
+will not do, in public, unprompted.** The disclaimer states what they need; the
+reasoning behind it belongs in the conversation.
+
+Auditors: links all clear, runtime 0 failures.
