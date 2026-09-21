@@ -1057,3 +1057,62 @@ it. Rendered and checked at 1280 and 768: two lines against the three-line
 headline, and the split header still balances.
 
 Auditors: links all clear, runtime 0 failures.
+
+## The trailing gloss — a sweep, not a fix — 2026-09-21
+
+Matthew, on *"Left where it falls is the third option and it is what happens by
+default"*: he disliked it, connected it to *"the same either way"* cut an hour
+earlier, and then said the thing that mattered:
+
+> *"idk what that term of phrasing is but i noticed its present a lot in this site
+> but was also present a lot in the surge site, and I had to get you to remove a
+> lot of then and I am having to do it again on this site"*
+
+**So this was treated as a sweep, not a sentence.** It is a writing habit of mine,
+not a local defect, and it is now named in the `matthew-copy-edit-patterns` memory
+so the next draft does not start with it.
+
+**The shape:** a clause appended to a statement that **comments on the statement
+instead of adding anything.** Delete it and no fact is lost — it was there to make
+the previous sentence feel safer, fairer or cleverer. Five forms: back-reference
+("that is what…"), meta-label ("is the third option", "the same either way"),
+pre-emptive reassurance ("whether or not you ask"), definition by contrast
+("rather than a handshake"), and the editorialising "which is…".
+
+Scanned all six pages for those constructions: **21 candidates, 7 cut.**
+
+| Page | Cut |
+|---|---|
+| `/what-we-do/` | "Left where it falls is the third option and it is what happens by default." |
+| `/what-we-do/` | "It is the same folder every time, and it is handed over whether or not you asked for it." |
+| `/what-we-do/` | h2 "Every job comes with the paperwork**, whether or not you ask**." |
+| `/what-we-do/` | "…**which is why** they are in here for next time **rather than this time**." → "…so they are in here for next time." |
+| `/who-pays/` | "That is why every Sixfold job ends with a folder **rather than a handshake**, and why it is handed over **whether or not anyone asked for it**." |
+| `/who-pays/` | "…and **that is the part a contractor can actually do for you**." |
+| home + `/who-pays/` | "**which is usually what a board has to show its funder**" — and it was near-duplicated across the two pages, which the redundancy scan had missed |
+
+### ⚑ The 14 that survived, and why — do not re-cut these
+
+The grep catches the construction, not the intent. These add a fact, not an
+attitude:
+
+- **Fire-safety instructions** — "Take the woody debris away rather than
+  scattering it." **Do not touch; accuracy-audited.**
+- **A measurement rule** — "Prune up 6–10 ft, or a third of the tree, whichever is
+  less." Same.
+- **Offers** — "whichever suits you", "whichever of the three you need". These were
+  written *on his instruction* to make the contact routes parallel.
+- **Substantive safety points** — "All three are real, which is why 'clear the
+  trees back' on its own is not a plan"; "This is the item people most often think
+  they have already done."
+
+### Two left deliberately, for him to call
+
+1. **"the quote comes off that sheet rather than off an impression formed in the
+   driveway"** (`/what-we-do/`) — textbook definition-by-contrast, and it is also
+   the best line on the page. Kept pending his view.
+2. **"Filing a return is a licensed activity… which is a conflict of interest as
+   well as a competence question"** (`/who-pays/`) — an editorialising "which is",
+   but on regulated ground where the reasoning is the point.
+
+Auditors: links all clear, runtime 0 failures.
