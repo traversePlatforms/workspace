@@ -1279,3 +1279,42 @@ we can guarantee."*
 cutting "controlling" language should check this section before reaching for a
 hedge — the fix for control is to move the decision to the reader, not to weaken
 the claim about us.
+
+## Only landscaping was defending itself — 2026-09-21
+
+Matthew on the `#work` cards: *"when it says booked on its own, quoted on its own,
+and priced on its own. Isnt it bad that its the only of the 3 jobs that states
+that? none of the other two do it so why do we include it in the landscaping
+area."*
+
+**Right, and the asymmetry actively reverses what the line was for.** That wording
+is a descendant of the [[sixfold-landscaping-standalone]] rule — it exists because
+landscaping used to be framed as the tidy-up after fire work. But saying it **only**
+under landscaping, while fire mitigation and land clearing say nothing of the kind,
+tells the reader that **landscaping is the one that needs defending** — which is the
+assumption the rule was written to kill.
+
+**And it was already said for all three, twice**, in the right places: "Each service
+stands on its own" (home hero) and "Each one is quoted on its own agreement and
+priced on its own" (`/what-we-do/` lede). So the three landscaping-only repeats were
+redundant as well as lopsided. All cut:
+
+| Where | Cut |
+|---|---|
+| home, landscaping card | "Booked on its own, quoted on its own, and priced on its own." |
+| home, landscaping door | "Landscaping is booked on its own agreement and priced on its own." |
+| `/what-we-do/`, landscaping | "**A service in its own right, on its own agreement and its own price.**" |
+
+The third carried "a service in its own right" too — the same defensive note, and
+neither of the other two sections has it.
+
+**⚑ Note for the landscaping-standalone rule:** the rule says never frame
+landscaping as the after-job of fire mitigation. **Asserting its independence where
+the others say nothing is a second way of breaking it** — the defence implies the
+charge. The rule is satisfied by treating the three identically, not by arguing for
+one of them.
+
+Rendered after: the three cards read as peers. Landscaping's copy is shorter, the
+cards stay level, and the booking links still align at the same `y`.
+
+Auditors: links all clear, runtime 0 failures.
