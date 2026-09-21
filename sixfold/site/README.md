@@ -1528,3 +1528,31 @@ it goes on a sheet and the quote is built from it."* The rewrite kept the fact a
 dropped the contrast; he did not want the fact either. **The sheet is internal
 process** — the customer does not need to know what the count is written on. Step 01
 now ends at "…and what you want kept."
+
+### ⚑ And it repeated §The walk, on the same page
+
+Matthew: *"it also repeats because its said on the landscaping section, but also
+the walk."* Correct, and **both halves were mine, written the same afternoon.**
+
+Filling the thin right-hand column under Landscaping I had written "the area, the
+access, and anything you want left alone" and "the quote comes off what is actually
+there, counted at the walk" — which is §The walk, further down the same page,
+almost word for word: *"counting what is actually there — trees by height, brush by
+area, what the access will take, and what you want kept."*
+
+**The fault is not the sentence, it is the reason for writing it.** The column
+looked thin, so I filled it, and the nearest material to hand was the page's own
+next section. **There is no sourced landscaping-specific detail to put there** —
+that is the same gap that produced the invented cadence line and the invented
+clippings line earlier today. Both cut; a comment in the file says why, and says
+that filling it needs a fact from Brandon rather than another way of saying the
+walk.
+
+Landscaping's right column is now one sentence, and short is the correct answer
+until there is something true to add.
+
+**⚑ Still outstanding, his call:** that one sentence — *"Tell us how you want the
+ground kept and we'll walk it with you"* — is **word for word the home page's
+landscaping door.** It was accepted as a known duplicate when the door was restored,
+but it is more exposed now that it is the only line in the column. **Not changed:
+the home page is signed off.**
