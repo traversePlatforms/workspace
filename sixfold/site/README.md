@@ -1522,3 +1522,9 @@ its own corrections, and one inside an `AUDIT-ALLOW` comment.
 **Nothing of this family remains in visible copy that is not carrying a fact.**
 
 Auditors: links all clear, runtime 0 failures.
+
+**Removed entirely a few minutes later, on Matthew's call:** *"go ahead and remove
+it goes on a sheet and the quote is built from it."* The rewrite kept the fact and
+dropped the contrast; he did not want the fact either. **The sheet is internal
+process** — the customer does not need to know what the count is written on. Step 01
+now ends at "…and what you want kept."
