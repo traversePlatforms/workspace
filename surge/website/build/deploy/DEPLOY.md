@@ -28,37 +28,49 @@ logo — both slot in after launch if late.
    1280 and at 420.
 2. `node deploy/make-bundle.mjs` → extract → `verify-bundle` + `audit-links`
    **on the extracted copy** (against the repo both false-positive on comments).
-3. Matthew's go. Then, in this order:
-4. `node deploy/toggle-noindex.mjs off`; delete the `Disallow: /` line in
+3. **⚑ CONFIRM THE PHONE NUMBER BEFORE THE GO.** Matthew said 2026-09-20 he
+   would verify it and asked to be reminded here. The build is internally
+   consistent — **92 `tel:` links, every one `+17207195495`, and 96 displayed
+   as 720-719-5495, with no trace of any other number.** So this is not a
+   find-the-bug check; it is one question: **is 720-719-5495 the number that
+   should ring in 96 places, and does it reach someone?** Dial it.
+
+   Why it is a step at all: the WordPress site this replaces has the hero
+   **"Call Us" button dialling `tel:7193157742`** while displaying the 720
+   number beside it — found 2026-09-20. That is the current live state, so the
+   number on the domain today cannot be used to confirm anything.
+
+4. Matthew's go. Then, in this order:
+5. `node deploy/toggle-noindex.mjs off`; delete the `Disallow: /` line in
    `robots.txt`; rebuild (step 2 again — the bundle must be the one without
    noindex).
-5. **Rehearse on `staging.surgeftw.com` first.** It already exists on SiteGround
+6. **Rehearse on `staging.surgeftw.com` first.** It already exists on SiteGround
    (the 09-08 form test ran there) and `website@surgeftw.com` was created then.
    Upload the launch bundle to the staging subdomain's root and run every check
-   in step 7 there — `mail()`, the `.htaccess` redirects, HTTPS — while the
+   in step 8 there — `mail()`, the `.htaccess` redirects, HTTPS — while the
    placeholder on the main domain is untouched. Confirm someone reads
    `info@surgeftw.com` (the `to` in `api/config.php`).
-6. **Site Tools → File Manager → `public_html`**: delete the WordPress files,
+7. **Site Tools → File Manager → `public_html`**: delete the WordPress files,
    upload the zip, Extract, delete the zip. `api/uploads/` must be writable.
-7. Live checks, in a private window (on staging first, then again on the real
+8. Live checks, in a private window (on staging first, then again on the real
    domain): home, one bio page, `/careers/`, `/contact/#feedback`, a made-up URL
    (404 page), `/how-it-works/` and `/sectors/` (301s), `http://` → `https://`,
    `www.` → bare, phone width. **Submit the feedback form once** and confirm
    the email lands in `info@` — the one hop the local test could not prove.
-8. Google Search Console: submit `https://surgeftw.com/sitemap.xml`. Google
+9. Google Search Console: submit `https://surgeftw.com/sitemap.xml`. Google
    review link and the WordPress-era URLs are covered by the `.htaccess`
    redirect map (item 7 on the punch list).
    **SEO, at this point and not before** (`node deploy/seo-audit.mjs`, 0 failures
-   expected — re-run it after step 4, since it reports the noindex count):
+   expected — re-run it after step 5, since it reports the noindex count):
    - **Add `datePublished` to the six `BlogPosting` blocks.** Each carries a
      comment saying so. Left out deliberately — nothing has been published, and a
      publication date that is not true is worse than a missing one.
    - **Add `<lastmod>` to `sitemap.xml`**: launch day on every URL, the real date
      on each edit after. It is how a crawler decides what to re-crawl.
-9. **Analytics — decided 2026-09-16: no tracking script at launch.** Measure
+10. **Analytics — decided 2026-09-16: no tracking script at launch.** Measure
    with SiteGround's built-in traffic stats (Site Tools → Statistics →
    Traffic — server-side, no cookies, and the same kind of numbers as the
-   July-2026 baseline), Search Console (step 8), and the form log. `/privacy/`
+   July-2026 baseline), Search Console (step 9), and the form log. `/privacy/`
    stays as written. Revisit only with a specific question the three cannot
    answer; then a cookieless tool (Plausible / Fathom) and a one-sentence
    privacy edit. Not GA4.
@@ -96,9 +108,9 @@ faster, put `noindex` back with `toggle-noindex.mjs on` and re-upload.
 
 - Not uploaded; no DNS touched. (The WordPress placeholder on the domain is a
   separate, earlier upload.)
-- `mail()` deliverability not proven — only testable live (runbook step 7).
+- `mail()` deliverability not proven — only testable live (runbook step 8).
 - `noindex` on every page and `Disallow: /` in `robots.txt` — deliberate until
-  runbook step 4.
+  runbook step 5.
 - No analytics (and `/privacy/` says so).
 - Photos + hero video — the only open content item.
 - ~~Content not re-checked against RESTRICTED.md~~ — done, two review rounds
