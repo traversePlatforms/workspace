@@ -1753,3 +1753,81 @@ insurance against implying a state agency backs us. Reduced from two clauses to
 **"No endorsement of any contractor is implied."** Say the word and it goes.
 
 Auditors: links all clear, runtime 0 failures.
+
+## Full audit — 2026-09-21
+
+Everything below was run after the day's changes, on all six pages.
+
+### 1. Files — `audit-links.mjs`: **all clear**
+108 internal links, chrome byte-identical across six pages, `CHROME:META` in step,
+sitemap agrees with the pages on disk, all seven standing copy rules pass (one
+documented waiver, the statutory dollar figures on `/who-pays/`).
+
+### 2. Runtime — `audit-runtime.mjs`: **0 failures**, 24 renders
+6 pages × 390/768/1280/1600. Contrast composited against real painted backgrounds,
+broken images, console errors, tap targets, heading order, form semantics, head
+tags, **and horizontal overflow — which is an error-level check and did not fire at
+any width.** Titles 25–62 chars, descriptions 125–163: all inside truncation.
+
+**The one warning is the standing one:** no `<link rel="canonical">`, which needs
+the live domain. `LAUNCH.md` §1.
+
+### 3. Copy — swept against every rule set this week
+Headcount language, advertised limits, DIY encouragement, imperative CTAs,
+"we'll set a time", pricing units, transparency self-congratulation, the trailing
+gloss, definition-by-contrast, internal voice, defer-away. **Plus a check that the
+three services are never named as a pair** — clean.
+
+**Five sentences flagged, all reviewed and all content-bearing, not the tic:**
+
+| Sentence | Why it stays |
+|---|---|
+| "You can ask for a re-score rather than waiting a year for one." | a factual option |
+| "All three are real, which is why 'clear the trees back' on its own is not a plan." | substantive safety point |
+| "This is the item people most often think they have already done." | substantive — vent mesh |
+| "Take the woody debris away rather than scattering it." | instruction, from the audited source |
+| "a crew that cannot find you cannot defend you" | **false positive on the headcount rule — it is the *fire* crew, not ours.** Fire-safety copy, and pro-firefighter |
+
+### 4. Mobile at 390 — no overflow, no clipping
+
+| Page | Height | |
+|---|---|---|
+| `/` | 6444 | clean |
+| `/services/` | 6062 | **clean** |
+| `/who-pays/` | 6026 | clean |
+| `/wildfire-guide/` | 8784 | clean |
+| `/contact/` | 2989 | clean |
+| `/thank-you/` | 937 | **clean** |
+
+**The one "overflow" reported is a false positive**: `input.hp` at x = −9999 is the
+honeypot, deliberately parked off-screen, `aria-hidden` and `tabindex="-1"`. The
+page itself does not scroll sideways at any width — checked separately.
+
+Looked at, not just measured: the contact form stacking with its new horizontal
+rule, the two-group handover list, the home cards, the guide's drawings and note
+boxes. All correct.
+
+### ⚑ 5. One real mobile finding, not fixed
+
+**The mesh-comparison drawing's labels are too small to read on a phone.** Its SVG
+text is 8–10.5px inside a 430-unit viewBox, so at 390px wide it renders around
+7–9px: "1/4 IN · GOES THROUGH", "1/8 IN · STOPS MOST" and the vent list are
+effectively illegible. The house drawing is fine — its callouts are big orange
+numerals — and the ember drawing's "MORE THAN A MILE" is small but decorative.
+
+**No information is lost**, because the copy directly above the drawing states it:
+"An ember passes straight through a 1/4-inch grid and is stopped by a 1/8-inch one."
+
+**Left alone deliberately.** The drawings are lifted from the print pamphlet
+**unmodified**, and that guarantee is what lets the site inherit the pamphlet's
+accuracy audit. Changing a label size is not changing a fact, but it does break
+"unmodified" and makes the two diverge. **Matthew's call**, and the options are:
+scale the labels up on phones only with a media query, or leave it and rely on the
+copy.
+
+### Known and accepted
+- `net::ERR_ABORTED` on `/ @390` appears on some runs and not others — the first
+  navigation racing Chrome's startup, not a page fault.
+- 11px mono labels (tags, citations, form labels, `dl` terms) are the site's
+  designed label register, tracked uppercase, used consistently. Legible, but it is
+  the smallest type on the site if he ever wants it larger.
