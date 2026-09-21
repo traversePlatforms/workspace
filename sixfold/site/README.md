@@ -975,8 +975,8 @@ hedge trimming. Booked on its own, quoted on its own, and priced on its own."*
 So **fire mitigation and land clearing characterise, landscaping enumerates**, and
 that card's prose and tags do overlap by choice. Do not "fix" it back.
 
-The duplication that actually mattered — the same list appearing a third time in
-the landscaping door — is gone regardless, because that door was replaced (§2).
+The landscaping door was restored too (§2), so the list does still appear three
+times on the home page. **That is the settled state, not an outstanding finding.**
 
 ### 2. ⚑ The two doors were not parallel, and one of them said nothing
 
@@ -985,13 +985,23 @@ The fire door earns its place: it adds the tax credit, the insurer duty and the
 and included a sentence copied **word for word** from `/what-we-do/` ("Tell us how
 you want the ground kept and we'll walk it with you").
 
-Replaced with the **handover packet** — real, specific, on no other part of the
-home page, and true of **all three** services. The pair now reads as one
-fire-specific fact and one universal one, instead of singling landscaping out for
-a summary of itself. **This changes a structure Matthew approved on 2026-09-18
-("two doors, one per audience")** — the three cards still carry both audiences, each
-with its own photograph and booking link, so the home page has not stopped speaking
-to anyone. Flagged because it was his call, not mine.
+I replaced it with the **handover packet**, and **that was wrong — reverted the
+same day.**
+
+**⚑ The packet must not go on the home page.** It was on the one-pager and came
+off in `df5fb7a`; I re-added it without checking why it had left. Matthew:
+*"you replaced the landscaping with the folder thing we already removed before
+because its agressive."* The register is the problem — *"whether or not you ask
+for it"*, *"the same folder every time"* — and it sits on the same sensitive ground
+as the banned "we handle the paperwork for you" phrasing. **The packet belongs on
+`/what-we-do/#packet`, where someone has gone looking for it.** There is now a
+comment in `index.html` saying so, at the exact spot where it is tempting.
+
+**So the landscaping door is back as it was**, restating the card above it and
+sharing one sentence with `/what-we-do/` verbatim. **That redundancy is accepted,
+not outstanding** — the same call as the card's own wording in §1. The lesson that
+survives this section is not about the door: it is **check why something was
+removed before reinstating it**, which a scan for repetition will not tell you.
 
 ### 3. `/who-pays/` opened by repeating the home page
 
