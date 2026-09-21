@@ -9,6 +9,32 @@ every other Sixfold asset — nothing published, posted, scheduled or uploaded.
 cannot be done on disk is in **[LAUNCH.md](LAUNCH.md)**, which is the file to open
 the day this goes on a host.
 
+## ⚑ WHERE THIS STANDS — end of 2026-09-21
+
+**The site is finished as a build. Nothing buildable is outstanding.** Nine pages,
+both auditors clean (`audit-links.mjs` all clear; `audit-runtime.mjs` 9 × 4 = 36
+renders, 0 failures, the one warning being the pre-launch canonical link).
+
+**Matthew: *"I am just looking to get it up."*** Treat further copy or layout work
+as out of scope unless he reopens it.
+
+**The only blocker is a host.** `SixfoldColorado.com` is owned and resolves
+nowhere. Hosting is recorded as **Brandon's** to arrange, and **everything left in
+`LAUNCH.md` is downstream of it** — including the one thing still genuinely
+unproven, that a form submission *arrives*.
+
+**Settled 2026-09-21 and not to be re-raised:** stump grinding stays on the site ·
+the Colorado Springs licence is **Brandon's business and permanently out of scope**
+· the referral packet's printed URL resolves itself at launch · `log_keep_days`
+stays 180 · **there is already a Google Business Profile.**
+
+**Needs Brandon, not drafting:** the landscaping cadence (drafted and pulled twice
+— it needs a fact), and field material to fill `/services/land-clearing/` and
+`/services/landscaping/`, which are thin because everything on record about them is
+already on them.
+
+---
+
 ## ⚑ Review state — 2026-09-21
 
 | Page | |
@@ -311,25 +337,49 @@ Everything settled since 1 September, brought onto the page.
 | **The `~450` stat now shows its source** on the page | Already in this log; it was uncited in the markup |
 | **Merch board nav re-pointed** to `#how` / `#packet` and its descriptor updated | The landing page's anchors were renamed, which broke `../#paperwork`. Generator edited and re-run — the board is generated, never hand-edited |
 
-### ⚑ Three things for Matthew to decide — not decided here
+### ✔ The three open decisions — all settled 2026-09-21
 
-1. **Stump grinding.** It is on the page (`Stumps` in the fire-mitigation tags), as it
-   was on 1 September, and it is in the **facebook/Square bio** and priced as a line in
-   the **quote engine** (badged *Unbacked*). But Brandon instructed on 2026-08-25 that it
-   come **off Sheet D entirely** — "do not re-add it". That instruction was recorded as
-   scoped to that document, so it was **not** applied here. **The two surfaces now
-   disagree.** Either it is a service or it is not; the site should follow whichever.
-2. **The Colorado Springs 15 ft licence is not mentioned on the page.** Standing crew
-   rule is to stop and call in on any tree 15 ft or taller inside city limits, and the
-   licence is blocked on GL and workers comp Sixfold does not hold. Disclosing that on a
-   public page is honest and also advertises a gap in the home market — **Matthew's
-   call, deliberately left off** rather than decided quietly. El Paso County is named as
-   a service region, which is what every other file does.
-3. **The referral packet prints `SixfoldColorado.com`** on its footer, against the
-   standing "no web address anywhere until it resolves" rule. Not touched — it is a
-   different document and out of scope for this pass — but it is a live exception.
+1. **Stump grinding stays on the site.** Matthew: *"grinding can stay on the site."*
+   It is on the page (`Stumps` in the fire-mitigation tags), in the Facebook/Square
+   bio and in the quote engine. **Brandon's 2026-08-25 "off Sheet D entirely, do not
+   re-add it" still stands for Sheet D** — that instruction was always scoped to that
+   document, and this decision does not touch it. The two surfaces disagree on
+   purpose now, rather than by neglect. **Do not remove Stumps from the site, and do
+   not put it back on Sheet D.**
 
-Also still open, unchanged: the **landscaping and land-clearing detail** is written from
+2. **⚑ The Colorado Springs 15 ft licence — CLOSED, and out of scope permanently.**
+   Matthew: *"Colorado springs licenses is brandons business dont mess with anything
+   related to it."* **It is not a site decision and it is not ours.** Nothing about
+   the licence, the 15 ft rule or the GL/workers-comp position goes on the site, and
+   **this is not to be re-raised as an open item.** El Paso County stays named as a
+   service region, the same as every other file. See
+   [[colorado-springs-tree-licence]] for the facts, which remain true and remain
+   Brandon's to act on.
+
+3. **The referral packet's printed URL resolves itself.** It prints
+   `SixfoldColorado.com` against the "no web address until it resolves" rule — and
+   the whole point of the current work is that the domain is about to resolve.
+   **Not an exception to fix, a deadline to meet.** If hosting slips a long way, it
+   becomes live again.
+
+**Also settled:** `log_keep_days` stays at **180**. It is a judgement about what a
+stale lead is worth, not a legal figure, and it is one number in `api/config.php`.
+
+### ⚑ There is already a Google Business Profile
+
+Matthew, 2026-09-21: *"We hae a GBP its made already."* That closes the biggest
+outstanding local-SEO item, and it changes two things here:
+
+- **`streetAddress` stays OUT of the LocalBusiness schema, and now for a better
+  reason than privacy.** Google matches the markup against the profile. If the GBP
+  is set up as a **service-area business** — which is the normal shape for a company
+  that works at customers' properties from a home base — it shows no street address,
+  and schema that carries one is a mismatch. **Check which way the GBP is configured
+  before adding it; a mismatch is worse than an omission.**
+- **The schema should gain a `sameAs` pointing at the profile** once someone pastes
+  the URL. One line, and it is the strongest signal tying the two records together.
+
+Still open, unchanged: the **landscaping and land-clearing detail** is written from
 Brandon's 2026-08-25 list, which he called provisional (*"once I know for sure what we
 are limited to I'll update you"*). The page's wording is deliberately capability-shaped
 rather than a boundary, but the detail should be re-read when he confirms.

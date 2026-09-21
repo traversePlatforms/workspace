@@ -30,8 +30,16 @@
 
      `streetAddress` is absent too, and that is a DECISION, not an oversight: 17890
      Sierra Way is on the agreements because a cancellation notice needs a real address,
-     which is not the same as publishing it. Google wants a full address for the local
-     pack, so this costs something — Matthew's call, flagged in README.md.
+     which is not the same as publishing it.
+
+     ⚑ There IS a Google Business Profile (confirmed 2026-09-21), which settles this a
+     second way: Google matches the markup against the profile. A service-area business
+     — the normal shape for a company that works at customers' properties from a home
+     base — shows no street address, and schema carrying one would be a MISMATCH, which
+     is worse than an omission. Check how the GBP is configured before adding it.
+
+     Also missing and worth one line once someone pastes the URL: "sameAs" pointing at
+     the Business Profile. It is the strongest signal tying the two records together.
 
      areaServed says Douglas County where the copy says SOUTHERN Douglas. Schema has no
      way to say "southern", and an AdministrativeArea is the coarser instrument; the
