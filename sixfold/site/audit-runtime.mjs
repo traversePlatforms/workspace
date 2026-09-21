@@ -23,7 +23,7 @@ const SITE_ROOT = dirname(fileURLToPath(import.meta.url));
 const PAGES = (function walk(dir, base = '') {
   const out = [];
   for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (e.name.startsWith('.') || e.name === '_tabled' || e.name === 'assets' || e.name === 'api') continue;
+    if (e.name.startsWith('.') || e.name === '_tabled' || e.name === 'assets' || e.name === 'api' || e.name === 'dist') continue;
     if (e.isDirectory()) out.push(...walk(join(dir, e.name), base + '/' + e.name));
     else if (e.name === 'index.html') out.push(base + '/');
   }

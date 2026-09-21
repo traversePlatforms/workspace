@@ -53,3 +53,6 @@ desktop.ini
 # the originals are already versioned and the generator is the real artefact.
 # The folder itself still gets backed up by the OneDrive mirror.
 sixfold/team-share/files/
+
+# Sixfold site upload bundles — rebuildable with make-bundle.mjs, and 3 MB a go
+sixfold/site/dist/
