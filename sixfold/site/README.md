@@ -757,3 +757,53 @@ byte across all six pages, and this one is per-page.
 **And the thing that matters more than any of this:** a Google Business Profile
 outranks anything in the markup for a local trade. The schema supports a
 profile; it does not substitute for one.
+
+## robots.txt and sitemap.xml — 2026-09-20
+
+The last two buildable items from `LAUNCH.md` §4. Both are **uploaded** files,
+unlike everything in §2's do-not-upload list.
+
+**Five URLs in the sitemap, not six.** `/thank-you/` is `noindex`, and listing a
+noindex URL is a contradiction Search Console reports as an error. LAUNCH.md's
+own note said six — it was counting pages rather than indexable ones, and is
+corrected.
+
+**`lastmod` is each page's last commit date from git**, not today's date stamped
+across all five. A sitemap whose `lastmod` moves every time anything is rebuilt
+teaches crawlers to ignore the field. **No `<priority>`, no `<changefreq>`** —
+Google has ignored both for years and they are two more things to fall out of
+step.
+
+**These two carry the absolute domain, and nothing else on the site does.** A
+sitemap `<loc>` has no relative form, so this is the one place the rule gives
+way. Settled while writing it: the domain is **`SixfoldColorado.com`**, owned
+since 2026-08-21 — `sixfoldland.com` was **never registered**, and the
+references to it in `marketing/funding-one-pager.md` are a struck-through
+historical note, not a second domain.
+
+### The auditor now checks the sitemap
+
+Fourth check in `audit-links.mjs`, against the same `pages` list the other three
+use: every page is listed **except** the ones declaring `noindex`, every noindex
+page is **absent**, every `<loc>` is absolute https, none points at
+`index.html` instead of its directory, and all of them share one host.
+
+**It was tested by breaking it, not by watching it pass.** A check that has
+never failed proves nothing. Dropping `/contact/`, adding `/thank-you/`, adding
+a `/gallery/` that does not exist, pointing a `<loc>` at `index.html` and
+mixing in a second host produced **six findings, one per fault**, and the file
+was restored afterwards.
+
+### ⚑ Two things found while wiring it up
+
+1. **`serve.mjs` had no `.xml` MIME type.** `sitemap.xml` fell through to
+   `application/octet-stream`, which a browser offers as a download — so the one
+   thing you would open it to check, that it is well-formed XML, was the one
+   thing you could not see. Added. Confirmed over HTTP afterwards:
+   `robots.txt` → `text/plain`, `sitemap.xml` → `application/xml`, while
+   `README.md`, `audit-links.mjs` and `api/submit.php` still return **403**.
+2. **The port was held by a stale `serve.mjs` from an earlier session**, which
+   answered the first check with the *old* MIME map and made the fix look like
+   it had not worked. Worth remembering: a 200 from :8090 does not prove the
+   server is running the code you just edited. Byte-compare against disk, or
+   restart it.

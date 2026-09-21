@@ -1,0 +1,25 @@
+# Sixfold Colorado — https://sixfoldcolorado.com/
+#
+# NOT UPLOADED YET. Written 2026-09-20 against LAUNCH.md §4.
+#
+# READ LAUNCH.md §4 BEFORE THIS GOES ANYWHERE. If the site is put on a staging
+# URL first, this file is NOT what keeps it out of the index — a Disallow is a
+# request not to crawl, and a disallowed URL can still be indexed from a link
+# elsewhere with no snippet. Staging needs <meta name="robots" content="noindex">
+# on every page, which is a per-page edit and has to come back off at launch.
+
+User-agent: *
+Allow: /
+
+# The form handler and its log. submissions.log holds names, emails, phone
+# numbers and IPs in plain text, so it must ALSO be unreachable over HTTP at
+# the server — see LAUNCH.md §3. This line is a courtesy to well-behaved
+# crawlers and nothing more; it is not access control, and naming the path
+# here tells a bad actor where to look. The server config is the real fix.
+Disallow: /api/
+
+# The confirmation page. Nobody should arrive here from a search result, and it
+# already carries <meta name="robots" content="noindex">.
+Disallow: /thank-you/
+
+Sitemap: https://sixfoldcolorado.com/sitemap.xml

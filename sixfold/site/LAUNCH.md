@@ -98,10 +98,31 @@ but it means **staging is indexable too**. If it goes on a staging URL first,
 add `<meta name="robots" content="noindex">` and remember to take it off —
 the Surge rebuild has this exact step in its own punch list.
 
-Also still to write, neither of which exists yet:
+**Both files now exist** — written 2026-09-20, and they are **meant to be
+uploaded**, unlike everything in §2.
 
-- `robots.txt`
-- `sitemap.xml` (six URLs, `/thank-you/` excluded)
+- **`robots.txt`** — `Allow: /`, with `/api/` and `/thank-you/` disallowed, and
+  the sitemap declared. **It does not keep staging out of the index**: a
+  `Disallow` asks a crawler not to *fetch* a URL, and a disallowed URL can still
+  be indexed from a link elsewhere with no snippet under it. Staging needs the
+  `noindex` meta above, per page.
+- **`sitemap.xml`** — **five** URLs, not six. `/thank-you/` is excluded because
+  it is `noindex`, and listing a noindex URL is a contradiction Search Console
+  reports as an error. (The old note here said six; it was counting the pages,
+  not the indexable ones.)
+
+Both carry the **absolute** `https://sixfoldcolorado.com/` — a sitemap `<loc>`
+has no relative form, so this is the one pair of files that cannot be written
+domain-agnostic. If the domain ever changes, they change with it.
+
+On the day: submit the sitemap in Search Console, and fetch `/robots.txt` over
+HTTP once to confirm the host serves it as `text/plain` from the site root and
+not from a subfolder — SiteGround nests a folder on extract, which is the same
+trap the Surge deploy has.
+
+`audit-links.mjs` now checks the sitemap against the pages on disk, so a page
+added without a sitemap entry is a build failure rather than something found in
+Search Console six weeks later.
 
 ## 5. Small things
 

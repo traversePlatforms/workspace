@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sixfold Colorado — sitemap. NOT UPLOADED YET. Written 2026-09-20, LAUNCH.md §4.
+
+  Five URLs. /thank-you/ is deliberately absent: it is noindex, and listing a
+  noindex URL in a sitemap is a contradiction Search Console reports as an error.
+
+  <loc> MUST be absolute — the sitemap protocol has no notion of a relative URL,
+  so unlike every other file here this one cannot be written domain-agnostic.
+  sixfoldcolorado.com is owned (since 2026-08-21) and is the settled domain;
+  sixfoldland.com was never registered.
+
+  lastmod is each page's last commit date from git, not a guess and not today's
+  date stamped across the board. Keep it that way: a sitemap whose lastmod moves
+  every time anything is rebuilt teaches crawlers to ignore the field.
+
+  NO <priority> AND NO <changefreq>. Google has ignored both for years, and they
+  are two more things to fall out of step with reality.
+
+  audit-links.mjs checks this file against the pages on disk, so adding a page
+  without adding it here is a build failure rather than something discovered in
+  Search Console six weeks later.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://sixfoldcolorado.com/</loc>
+    <lastmod>2026-09-20</lastmod>
+  </url>
+
+  <url>
+    <loc>https://sixfoldcolorado.com/what-we-do/</loc>
+    <lastmod>2026-09-20</lastmod>
+  </url>
+
+  <url>
+    <loc>https://sixfoldcolorado.com/who-pays/</loc>
+    <lastmod>2026-09-20</lastmod>
+  </url>
+
+  <url>
+    <loc>https://sixfoldcolorado.com/wildfire-guide/</loc>
+    <lastmod>2026-09-20</lastmod>
+  </url>
+
+  <url>
+    <loc>https://sixfoldcolorado.com/contact/</loc>
+    <lastmod>2026-09-20</lastmod>
+  </url>
+
+</urlset>

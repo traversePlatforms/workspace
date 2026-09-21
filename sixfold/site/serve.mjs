@@ -29,6 +29,10 @@ const MIME = {
   '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json',
   '.pdf': 'application/pdf', '.mp4': 'video/mp4',
+  // sitemap.xml. Without this it fell through to application/octet-stream, which a
+  // browser offers as a download — so the one thing you would open it to check
+  // (that it is well-formed XML) is the one thing you could not see.
+  '.xml': 'application/xml; charset=utf-8',
 };
 
 // Source and notes never get served, the same rule the Surge bundler enforces.

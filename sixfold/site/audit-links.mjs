@@ -192,9 +192,53 @@ for (const [page, s] of src) {
   }
 }
 
+/* ---- 4. sitemap agrees with the pages on disk -------------------------- */
+/* A sitemap goes stale silently. Nothing on the rendered site shows that a page
+   is missing from it, and Search Console only says so weeks after launch. So it
+   is checked here, against the same `pages` list everything else uses.
+
+   The rule: every page is in the sitemap EXCEPT the ones that say noindex, and
+   every noindex page must be absent — listing a noindex URL is a contradiction
+   Search Console reports as an error. */
+
+let sitemapNote = '';
+const sitemapPath = join(ROOT, 'sitemap.xml');
+if (!existsSync(sitemapPath)) {
+  sitemapNote = 'sitemap.xml: not present (LAUNCH.md §4)';
+} else {
+  const xml = await readFile(sitemapPath, 'utf8');
+  const body = xml.replace(/<!--[\s\S]*?-->/g, ' ');           // the file's own notes name URLs
+  const locs = [...body.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map(m => m[1]);
+
+  for (const l of locs) {
+    if (!/^https:\/\//.test(l)) fail(sitemapPath, `<loc> must be an absolute https URL — got "${l}"`);
+    if (/\/index\.html$/.test(l)) fail(sitemapPath, `<loc> points at index.html, not the directory — "${l}"`);
+  }
+  const listed = new Set(locs.map(l => l.replace(/^https:\/\/[^/]+/, '') || '/'));
+
+  for (const p of pages) {
+    /* the path serve.mjs would answer on: /what-we-do/index.html -> /what-we-do/ */
+    const rel = relative(ROOT, p).replace(/\\/g, '/');
+    const url = '/' + rel.replace(/(^|\/)index\.html$/, '$1');
+    const noindex = /<meta\s+name="robots"\s+content="[^"]*noindex/i.test(src.get(p));
+
+    if (noindex && listed.has(url)) fail(sitemapPath, `lists ${url}, which is noindex`);
+    if (!noindex && !listed.has(url)) fail(sitemapPath, `missing ${url}`);
+    listed.delete(url);
+  }
+  for (const stray of listed) fail(sitemapPath, `lists ${stray}, which is not a page on disk`);
+
+  /* One domain, spelled one way. Two spellings means one of them is wrong. */
+  const hosts = new Set(locs.map(l => (l.match(/^https:\/\/([^/]+)/) || [])[1]).filter(Boolean));
+  if (hosts.size > 1) fail(sitemapPath, `more than one host: ${[...hosts].join(', ')}`);
+
+  sitemapNote = `sitemap.xml: ${locs.length} URLs, host ${[...hosts][0] || '(none)'}`;
+}
+
 /* ---- report ----------------------------------------------------------- */
 
 console.log(`Sixfold site audit — ${pages.length} pages, ${linkCount} internal links checked`);
+if (sitemapNote) console.log('  ' + sitemapNote);
 console.log(`  chrome compared across: ${chromePages.map(p => relative(ROOT, p)).join(', ')}`);
 if (noChrome.length) console.log(`  links only (no CHROME markers): ${noChrome.map(p => relative(ROOT, p)).join(', ')}`);
 
