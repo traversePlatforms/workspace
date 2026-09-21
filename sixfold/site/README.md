@@ -1165,3 +1165,35 @@ than local (after the DIY framing and the trailing gloss), and the pattern is no
 in the `matthew-copy-edit-patterns` memory rather than only here.
 
 Auditors: links all clear, runtime 0 failures.
+
+### ⚑ The sweep missed two — and one had lost its antecedent
+
+Matthew, reading the HOA/boards block: *"it says, and the same written records
+comes… is that not in group with something we just scanned for?"* Yes. Two faults,
+not one:
+
+1. **"the same written record"** is the back-reference form of the gloss — the
+   sweep caught the `which is…` half of that sentence and left the `the same…`
+   half standing.
+2. **Worse: it pointed at nothing.** After the handover packet came off the home
+   page this morning, that line became the **only** mention of a written record on
+   the whole page. "The same" as what? It had an antecedent when the packet was
+   there, and lost it silently.
+
+Cut on both pages. The boards block now ends "we'll walk it and bid it."
+
+**And I had written a fresh one into the fix.** My `/who-pays/` rewrite during the
+sweep read "…a written record of the work; **that is the document set above**" —
+textbook back-reference, written *while removing back-references*. Also cut; on
+that page the document set is described directly above and needs no pointer.
+
+**Re-scanned after: 6 constructions left, all content.** "This is the page your
+insurer wants"; "because that is what the state credit is claimed against"; "That
+is the part you can do something about"; "which is why 'clear the trees back' on
+its own is not a plan"; "This is the item people most often think they have already
+done"; and **"The crew that did it is the crew that comes back"** — flagged for
+Matthew, because it is the only one that also touches the no-headcount rule.
+
+**Lesson for the next sweep:** a grep finds the phrase, not the reference. Cutting
+a section can orphan a back-reference on a different page, and nothing fails when
+it does.
