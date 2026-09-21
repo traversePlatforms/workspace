@@ -1831,3 +1831,42 @@ copy.
 - 11px mono labels (tags, citations, form labels, `dl` terms) are the site's
   designed label register, tracked uppercase, used consistently. Legible, but it is
   the smallest type on the site if he ever wants it larger.
+
+### ⚑ 5b. Fixed — and the SVG source is still byte-identical to the pamphlet
+
+*"Do what you think is best."* Fixed, and the way matters: **entirely in
+`site.css`, with no edit to any drawing.** "The drawings are lifted unmodified" is
+what lets this page inherit the pamphlet's accuracy audit, and that sentence is
+still literally true.
+
+**Measured first.** A plate at 390px gave its SVG **312px against a 430-unit
+viewBox — 0.73 scale** — so a 7-unit label painted at about **5px**. Worse than the
+first estimate.
+
+**Two moves, in order:**
+
+1. **Full-bleed plates on a phone.** Cancelling `.wrap`'s gutter and most of the
+   plate padding takes the SVG from 312px to ~374px — **0.87 scale**. This lifts
+   every label proportionally and **cannot cause a collision**, because nothing
+   moves relative to anything else.
+2. **Then raise the smallest labels by attribute selector** — `text[font-size="7"]`
+   and friends. A CSS `font-size` beats an SVG presentation attribute, so this needs
+   no change to the markup. The house drawing's 10.5 callouts were already legible
+   and were left alone.
+
+### ⚑ And the first attempt broke a drawing, which is why this got rendered
+
+Bumping text inside fixed SVG coordinates collides, and it did: **"ZONE 1 · 0–5 FT"
+pushed straight through the side of the Zone 1 box it names.** Only a render showed
+it — no auditor catches text overflowing a shape inside an SVG.
+
+**The zones plan is now an exception, restored to its drawn sizes.** It loses
+nothing: unlike the mesh drawing, whose labels were the only thing distinguishing
+the two grids in the figure, these three are repeated immediately below in large
+type — *Zone 1 / 0–5 ft*, *Zone 2 / 5–30 ft*, *Zone 3 / 30–100 ft*. The diagram is
+the picture; the text is the reference.
+
+**Checked after, at 390, by looking:** the mesh comparison (all four labels now
+readable), the house and its seven callouts, the zones plan (no collision), the
+crown-spacing side view, and the firewood/propane/slash drawing. **Auditors: links
+all clear, runtime 0 failures, no overflow at any width.**

@@ -792,7 +792,54 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 }
 .plate.dark { background: var(--pine); border-color: var(--pine); }
 .plate svg { display: block; width: 100%; height: auto; }
-@media (max-width: 560px) { .plate { padding: 16px 14px; } }
+
+/* ⚑ The drawings are lifted from the print pamphlet UNMODIFIED, and that guarantee
+   is what lets this page inherit the pamphlet's accuracy audit. So the phone fix is
+   entirely in CSS: the SVG markup stays byte-identical to the print piece, and only
+   its presentation changes here.
+
+   The problem, measured: a plate at 390px gives its SVG 312px against a 430-unit
+   viewBox — 0.73 scale — so a 7-unit label paints at about 5px. Illegible.
+
+   Two moves, in this order:
+   1. Full-bleed on a phone. Cancelling the .wrap gutter and most of the padding
+      takes the SVG from 312px to ~374px, 0.87 scale, which lifts every label
+      proportionally and cannot cause a collision because nothing moves relative to
+      anything else.
+   2. Then raise the smallest labels by attribute selector — a CSS font-size beats
+      an SVG presentation attribute, so this needs no edit to the markup. The house
+      drawing's 10.5 callouts are already legible and are left alone.
+
+   Bumping text inside fixed SVG coordinates CAN collide, so every drawing on the
+   page was rendered at 390 and looked at afterwards. */
+@media (max-width: 560px) {
+  .plate {
+    padding: 14px 8px;
+    margin-inline: -24px;          /* cancel .wrap's gutter — full-bleed */
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .plate svg text[font-size="6.6"],
+  .plate svg text[font-size="7"],
+  .plate svg text[font-size="7.2"],
+  .plate svg text[font-size="7.4"],
+  .plate svg text[font-size="7.6"],
+  .plate svg g[font-size="7.6"] text { font-size: 9.6px; }
+  .plate svg text[font-size="8"],
+  .plate svg text[font-size="8.2"] { font-size: 10px; }
+
+  /* ⚑ The zones plan is the exception, and the first attempt proved it: its labels
+     sit INSIDE the boxes they name, so enlarging them pushed "ZONE 1 · 0–5 FT"
+     straight through the side of the Zone 1 box. Restored to the drawn sizes.
+
+     It loses nothing. Unlike the mesh drawing, whose labels were the only place the
+     two grids were told apart in the figure, these three are repeated immediately
+     below in large type — "Zone 1 / 0–5 ft", "Zone 2 / 5–30 ft", "Zone 3 / 30–100 ft"
+     — so the diagram is the picture and the text is the reference. */
+  #zones .plate svg text[font-size="7"] { font-size: 7px; }
+  #zones .plate svg text[font-size="7.4"] { font-size: 7.4px; }
+  #zones .plate svg g[font-size="7.6"] text { font-size: 7.6px; }
+}
 
 /* --- the three ignition mechanisms ----------------------------------- */
 
