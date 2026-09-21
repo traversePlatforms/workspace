@@ -53,6 +53,70 @@ if ($field('_hp') !== '') {
     respond_ok($cfg, $wantsJson);
 }
 
+/**
+ * Per-IP rate limit.
+ *
+ * Runs AFTER the honeypot and BEFORE validation, deliberately: a bot that fills
+ * the honeypot costs nothing, and anything that gets past it should be counted
+ * before we do any work on its input.
+ *
+ * One file per IP, holding submission timestamps. No database, because this site
+ * has none and a throttle that needs one would not survive contact with a shared
+ * host. The hash is there so the directory does not become a list of visitors'
+ * IP addresses in plain text.
+ *
+ * Fails OPEN. If the directory cannot be created or written — read-only mount,
+ * odd permissions — a real enquiry still gets through. A throttle that silently
+ * eats leads is worse than one that occasionally misses a bot.
+ */
+function rate_limited(array $cfg): bool {
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    if ($ip === '') return false;
+
+    $dir = $cfg['rate_dir'];
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) return false;
+
+    $file = $dir . '/' . hash('sha256', $ip) . '.json';
+    $now  = time();
+    $long = (int) $cfg['rate_window_day'];
+
+    $fh = @fopen($file, 'c+');
+    if ($fh === false) return false;
+    @flock($fh, LOCK_EX);
+
+    $raw  = stream_get_contents($fh);
+    $hits = json_decode($raw ?: '[]', true);
+    if (!is_array($hits)) $hits = [];
+
+    // drop anything outside the longest window, so the file cannot grow forever
+    $hits = array_values(array_filter($hits, static fn($t) => is_int($t) && $t > $now - $long));
+
+    $burst = count(array_filter($hits, static fn($t) => $t > $now - (int) $cfg['rate_window_burst']));
+    $over  = $burst >= (int) $cfg['rate_max_burst'] || count($hits) >= (int) $cfg['rate_max_day'];
+
+    // Count the attempt either way: hammering the endpoint extends the block
+    // rather than being free.
+    $hits[] = $now;
+    @ftruncate($fh, 0);
+    @rewind($fh);
+    @fwrite($fh, json_encode($hits));
+    @flock($fh, LOCK_UN);
+    @fclose($fh);
+
+    return $over;
+}
+
+if (rate_limited($cfg)) {
+    // 429 with a human sentence — a real person hitting this is more likely to
+    // have double-clicked than to be attacking anything, and the phone still works.
+    respond_bad(
+        'That is a few too many messages from this connection. Give it ten minutes, '
+        . 'or call (303) 915-1045 and we will pick it up from there.',
+        $wantsJson,
+        429
+    );
+}
+
 $need    = $field('need', 40);
 $name    = $field('name', 200);
 $email   = $field('email', 320);
@@ -125,6 +189,34 @@ $body = implode("\n", $lines);
     ], JSON_UNESCAPED_UNICODE) . "\n",
     FILE_APPEND | LOCK_EX
 );
+
+/**
+ * Retention. The log holds names, emails, phone numbers and IP addresses, and
+ * without this it keeps them forever — which is a growing liability for a file
+ * whose only job is to survive a mail() failure.
+ *
+ * Pruned here rather than on a cron, because this site has no scheduler. It only
+ * rewrites when something is actually old enough to drop, so the common case is
+ * a read and nothing else. Anything unparseable is KEPT, not discarded: a line
+ * this cannot read is exactly the line worth looking at by hand.
+ */
+$keepDays = (int) ($cfg['log_keep_days'] ?? 0);
+if ($keepDays > 0 && is_readable($cfg['log_file'])) {
+    $cut   = time() - $keepDays * 86400;
+    $lines = @file($cfg['log_file'], FILE_IGNORE_NEW_LINES);
+    if (is_array($lines)) {
+        $keep = array_filter($lines, static function ($l) use ($cut) {
+            if (trim($l) === '') return false;
+            $row = json_decode($l, true);
+            if (!is_array($row) || !isset($row['at'])) return true;   // unreadable: keep
+            $t = strtotime((string) $row['at']);
+            return $t === false || $t >= $cut;                        // undated: keep
+        });
+        if (count($keep) !== count($lines)) {
+            @file_put_contents($cfg['log_file'], implode("\n", $keep) . "\n", LOCK_EX);
+        }
+    }
+}
 
 $headers = implode("\r\n", [
     'From: Sixfold Colorado website <' . $cfg['from'] . '>',

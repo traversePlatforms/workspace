@@ -71,10 +71,22 @@ The `api/` folder already has its own `.htaccess` covering `config.php` and the
 submissions log. **Verify both** by requesting `/README.md` and
 `/api/config.php` on the live host — a rule that is not honoured fails silently.
 
-## 3. The form, which has never run against real PHP
+## 3. The form — now executed, but not yet delivered
 
-`serve.mjs` answers `/api/submit.php` by logging. Nothing on disk has executed
-the PHP. On the host:
+**Updated 2026-09-21. The PHP has run.** `php -S` against a copy of `api/`, and
+every path was exercised: a valid submission returns `{"ok":true}`, a filled
+honeypot returns ok and logs nothing, a missing field returns 422, the throttle
+returns 429 on the fourth attempt, and the retention prune drops an old line while
+keeping an unparseable one. **`serve.mjs` still only fakes this endpoint** — the
+dev server does not run PHP, so the local site is unchanged.
+
+**⚑ What that does NOT prove: delivery.** `mail()` fails on this machine (no MTA),
+and the handler is designed to report success anyway so a customer is never told to
+try again for a delivery fault that is ours to fix from the log. **So the one thing
+still unproven is the only thing that matters — that a message arrives.** That
+needs the host.
+
+On the host:
 
 - **`from` in `api/config.php` must be a mailbox that really exists on the
   domain** (`website@SixfoldColorado.com`). Mail claiming to be from
@@ -84,11 +96,25 @@ the PHP. On the host:
   and is not in spam** — that is the whole point of the page.
 - Confirm `api/submissions.log` is being written, and that it is **not
   fetchable** over HTTP.
-- **There is no rate limit.** Nothing stops a bot posting the form a thousand
-  times; the honeypot only catches the lazy ones. Worth a per-IP throttle
-  before the URL is anywhere public.
-- **`submissions.log` is personal data** — names, emails, phone numbers and IPs
-  in plain text, indefinitely. Fine as a backup; decide how long it is kept.
+- ~~There is no rate limit.~~ **Done 2026-09-21.** Per-IP throttle: **3 per 10
+  minutes, 12 per day**, tuned in `config.php`. It runs after the honeypot and
+  before validation, so a lazy bot costs nothing and anything past the honeypot is
+  counted before its input is touched. Counters live in `api/.ratelimit/`, one file
+  per IP named by **sha256 of the address** — the directory is not a list of
+  visitors' IPs. **It fails open**: if that directory cannot be written, a real
+  enquiry still gets through, because a throttle that silently eats leads is worse
+  than one that misses a bot.
+  - **On the host, confirm `api/.ratelimit/` is writable and not fetchable**, the
+    same as the log. If the account is read-only there, the throttle is off and
+    nothing says so.
+- ~~`submissions.log` is kept indefinitely.~~ **Done 2026-09-21.** Lines older than
+  `log_keep_days` (**180**) are dropped the next time the log is written. Pruned
+  inline because the site has no scheduler; it only rewrites when something is
+  actually old enough to drop. **Unparseable and undated lines are kept**, not
+  discarded — a line the pruner cannot read is the one worth looking at by hand.
+  - Set `log_keep_days` to `0` to keep everything. **180 days is a guess at what a
+    lead is worth, not a legal figure** — worth a decision rather than inheriting
+    mine.
 
 ## 4. Indexing
 

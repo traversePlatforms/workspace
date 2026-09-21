@@ -1,7 +1,14 @@
-# Never serve the log or the config. submit.php is the only thing here that answers.
-<FilesMatch "\.(log|md)$">
+# Never serve the log, the config, or the throttle's counters.
+# submit.php is the only thing in this folder that should ever answer.
+<FilesMatch "\.(log|md|json)$">
   Require all denied
 </FilesMatch>
 <Files "config.php">
   Require all denied
 </Files>
+
+# The rate limiter's store, added 2026-09-21. The files inside hold only
+# timestamps, but each FILENAME is a sha256 of a visitor's IP address, so the
+# directory listing is the sensitive part. Blocked as a directory as well as by
+# extension, because a host that ignores one may honour the other.
+RedirectMatch 404 ^/api/\.ratelimit(/|$)
