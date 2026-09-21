@@ -1637,3 +1637,41 @@ will not do, in public, unprompted.** The disclaimer states what they need; the
 reasoning behind it belongs in the conversation.
 
 Auditors: links all clear, runtime 0 failures.
+
+## The column rule, applied across the site — 2026-09-21
+
+Matthew: *"maybe we should add those verticle and horizontal lines the other page
+has just to keep up with symmetry across the board. check the other pages and see
+if they need it as well."*
+
+Inventoried every multi-column block on all six pages. `.cols-split` is now on
+**all eight** two-column text blocks: four on `/services/`, three on `/who-pays/`
+(including the `.cols-hold` one — the two classes compose), one on
+`/wildfire-guide/` (Sources).
+
+Checked at 1280 and at 760: vertical rule on desktop, horizontal rule above the
+second block once they stack. On `/who-pays/` it sits alongside `.facts`, which
+carries its own rules between entries, and the two read as different things — the
+group rule is above the whole list, the entry rules are inside it.
+
+### ⚑ What was deliberately NOT given one, and why
+
+**The rule earns its place where two adjacent text blocks have nothing but
+whitespace between them.** These already have a boundary, and adding a second one
+would be noise:
+
+| | Already separated by |
+|---|---|
+| `.lines3` — home service cards | a full border and a 3px accent top on each card |
+| `.doors` — home | a 3px accent top on each door |
+| `.ways3` — guide, three mechanisms | a 3px accent top on each |
+| `.hero-grid` — home, `/who-pays/` | the home aside has its own `border-left`; `/who-pays/` sits beside a dark `.stat` panel |
+| `.head-split` — page heads | a headline and its lede are not two parallel blocks; a rule between them would read as a divide where there is a relationship |
+
+**`.contact-grid` is the one genuine near-miss.** A form beside an aside is the
+right shape for it, but that grid collapses at **860px** and `.cols-split` switches
+to its horizontal rule at **780px** — so between the two there would be a vertical
+rule hanging beside a stacked column. Adding it needs a matching breakpoint, not
+just the class. **Left alone; the form's own input boxes already bound it.**
+
+Auditors: links all clear, runtime 0 failures.
