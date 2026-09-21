@@ -1701,3 +1701,55 @@ rule) and at **800**, inside the old danger zone (stacked, horizontal rule, no
 dangling vertical).
 
 Every two-column block on the site now carries the rule. Nothing else needs it.
+
+## Wildfire guide — Matthew's pass, 2026-09-21
+
+### ⚑ The firefighter line: verified, accurate, and pointed the wrong way
+
+*"Firefighters may not be there. They engage only when it is safe for them to."*
+Matthew asked whether it is true, and said he does not want to downplay firefighters
+in a trade that has to work alongside them. **Both halves of that are right.**
+
+**The facts check out.** Structure triage is real doctrine; CSFS's own community
+plans state that defensible space assumes enough personnel to protect each
+structure, and that when many are threatened at once there are not enough resources
+to protect them all; and defensible space is a **determining factor in the triage
+decision precisely because it lets crews work safely.** The repo's 2026-08-25 audit
+had already marked this line "checked and correct" — it checked the fact, not the
+framing.
+
+**The framing was the problem.** "They engage only when it is safe for them to"
+puts the agency on the firefighters and reads as declining to act. The same facts
+the other way round say the opposite, and say something better for Sixfold too:
+
+> **Defensible space is what lets a crew work.** When a fire threatens many homes at
+> once there are not enough engines for all of them, and crews have to judge which
+> can be defended safely. Space around the house is what puts yours on that list —
+> and what gives it a chance if nobody can reach it.
+
+Sources: [CSFS Home Ignition Zone Guide](https://csfs.colostate.edu/wp-content/uploads/2021/04/2021_CSFS_HIZGuide_Web.pdf) ·
+[CSFS community wildfire protection plans](https://csfs.colostate.edu/wp-content/uploads/2022/07/GO_CWPP_FPP_FINAL_signed_2019.pdf) ·
+[USFS, modeling firefighters' assessments of structure defensibility](https://research.fs.usda.gov/treesearch/68431)
+
+### The other four
+
+| Note | Change |
+|---|---|
+| *"Dont list this is the part you can do something about… we dont want to give them any extra work especially if its work we can do"* | The lede ended by handing the reader the job, and the offer to walk the property sat under it in fine print. Merged: *"Those are the places we look for when we walk a property — and we can walk yours."* The offer is in the lede now, not a footnote. |
+| *"remove CSFS does not endorse Sixfold… doesnt need to be said"* | The long form is gone. **A six-word version stays — see below.** |
+| *"this reads like a conversation meant for you and I not for the customers. Am I correct in that?"* | **You are.** "Eleven things were corrected in the process… the wordings that look fussy are the corrections" is a note about *our* process, on a page a homeowner reads to find out what to do about embers. Gone. |
+| *"we should either be confident about what we are posting or not post at all"* | The defer-to-your-forester line is gone. |
+
+With three of four removed, the Sources section is one paragraph and no longer
+needs two columns.
+
+### ⚑ Why a non-endorsement line survives
+
+**The CSFS guide itself carries "No endorsement of products or services is
+intended"**, and the pamphlet audit's own reasoning is on file: state guidance
+reproduced beside a contractor's phone number **can read as endorsement whether or
+not it says so.** Attribution is required outright; the non-endorsement is the cheap
+insurance against implying a state agency backs us. Reduced from two clauses to
+**"No endorsement of any contractor is implied."** Say the word and it goes.
+
+Auditors: links all clear, runtime 0 failures.
