@@ -593,6 +593,12 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 .packet li b { font-weight: 600; color: var(--text-strong); }
+/* The handover list runs in two groups — everything, then the fire-mitigation-only
+   items. A kicker following a list needs its own air, or the second group reads as a
+   stray line hanging off the first. */
+.packet + .kicker { margin-top: 30px; }
+/* and the note under a group needs the same, or it sits on the last bullet */
+.packet + .fine { margin-top: 18px; }
 
 /* --- the ridge divider: the mark's motif as a rule ------------------ */
 

@@ -1556,3 +1556,44 @@ ground kept and we'll walk it with you"* — is **word for word the home page's
 landscaping door.** It was accepted as a known duplicate when the door was restored,
 but it is more exposed now that it is the only line in the column. **Not changed:
 the home page is signed off.**
+
+## The handover list, split by who it applies to — 2026-09-21
+
+Matthew: *"I dont understand the sentence about wildfire mitigation seperated out?
+Can you explain it better… Maybe what we should do is put the stuff on top that
+applies to all… then have a section thats for fire mitigation."*
+
+**What that line was trying to say**, since it clearly failed: the state credit is
+claimed against **qualifying vegetation work only**, not the whole bill. If a job
+mixes mitigation with anything else and the invoice is one lump sum, the homeowner
+cannot show which part qualifies. So the invoice splits it. **That is the substance,
+and it was compressed into a subordinate clause on a line about invoices** — where
+it read as jargon and, worse, sat in the part of the list that applies to everyone.
+
+Restructured exactly as he described, and the two groups became **the two columns**,
+which is what the column rule was already there for:
+
+| Every job | If the job included fire mitigation |
+|---|---|
+| What we did on your property | The state tax credit — **with the invoice-split reason spelled out here**, where it belongs |
+| Your itemised invoice | Your insurer's wildfire risk score |
+| Before-and-after photos | Programs in your county |
+
+**Cut on his call:**
+
+- **The card, magnet and sticker** — *"let that be a surprise for the people who get
+  the folder."* Still in the packet; just not advertised.
+- **"And if anything about the work is not right, call."** — *"Thats implied because
+  anyone would call if something wasnt right, and we also dont want to implicate
+  that something could go wrong."* It plants a negative the reader did not arrive
+  with, which is a rule already on file from the Surge site.
+- **The right-hand commentary**, two paragraphs, reduced to **one line of fine print
+  inside the fire group**: "Sixfold produces the record; it does not file your return
+  or contact your carrier. Not tax or insurance advice…" The boundary is about tax
+  and insurance, so it belongs with the tax and insurance items rather than floating
+  beside the whole list.
+
+Also moved: the "What the record is actually worth →" link now sits **below both
+columns**, since it is about the whole section.
+
+Auditors: links all clear, runtime 0 failures.
