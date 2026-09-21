@@ -912,3 +912,40 @@ add back either the DIY line or the blanket promise.
 still stands. Every edit here is a framing sentence.
 
 Auditors: links all clear, runtime 0 failures.
+
+## Contact routes are parallel, not either/or — 2026-09-21
+
+Matthew on "Or skip the form and just call": *"I think it should be offered as
+another option not as a do one or the other."*
+
+"Skip the form" framed the phone as an **escape** from the form — it disparages the
+thing it sits under and makes the reader choose a side. The routes are now listed
+flat, in the same breath, with no preferred one.
+
+| Where | Was | Is |
+|---|---|---|
+| home `#contact` | "…Or skip the form and just call." | "Form, phone or email — all three reach us." |
+| `/contact/` lede | "…and we'll set a time — or skip the form and call." | "Fill in the form, call, or email — whichever suits you — tell us what's on the property, and we'll set a time." |
+| `/contact/` aside kicker | "Or just reach us" | "Phone or email" |
+| `/contact/` meta description | "…Or just call (303) 915-1045." | "…Form, phone or email." (149 chars) |
+
+The aside kicker mattered as much as the sentences: **"Or just reach us" makes the
+whole panel an afterthought** to the form beside it.
+
+### ⚑ Caught while rewriting these: two services, not three
+
+Both sentences said **"whether it's fire mitigation or landscaping"** — **land
+clearing was missing from both**, on the home page and on `/contact/`. Same defect
+as the contact chooser fixed earlier today, in the prose rather than the form, and
+it survived the whole 2026-09-20 three-services pass.
+
+Rather than extend the list to three, the sentences now ask **"what's on the
+property"** — which needs no list, cannot fall out of step with the services again,
+and does not make the reader sort themselves into a category before they have
+spoken to anyone. The three are named where naming them is the point: the meta
+description, the service cards, the chooser.
+
+**Worth a sweep next time anything changes the service list**: the site names the
+three in nine or so places and each one is an opportunity to name two.
+
+Auditors: links all clear, runtime 0 failures.
