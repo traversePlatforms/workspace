@@ -234,7 +234,7 @@ if (!existsSync(sitemapPath)) {
   const listed = new Set(locs.map(l => l.replace(/^https:\/\/[^/]+/, '') || '/'));
 
   for (const p of pages) {
-    /* the path serve.mjs would answer on: /what-we-do/index.html -> /what-we-do/ */
+    /* the path serve.mjs would answer on: /services/index.html -> /services/ */
     const rel = relative(ROOT, p).replace(/\\/g, '/');
     const url = '/' + rel.replace(/(^|\/)index\.html$/, '$1');
     const noindex = /<meta\s+name="robots"\s+content="[^"]*noindex/i.test(src.get(p));

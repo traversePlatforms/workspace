@@ -14,7 +14,7 @@ import { join } from 'node:path';
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE = 'http://127.0.0.1:8090';
-const PAGES = ['/', '/what-we-do/', '/who-pays/', '/wildfire-guide/', '/contact/', '/thank-you/'];
+const PAGES = ['/', '/services/', '/who-pays/', '/wildfire-guide/', '/contact/', '/thank-you/'];
 const WIDTHS = [390, 768, 1280, 1600];
 
 const prof = mkdtempSync(join(tmpdir(), 'audit-'));

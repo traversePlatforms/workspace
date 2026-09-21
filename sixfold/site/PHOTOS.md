@@ -35,9 +35,9 @@ out to be **screenshots of DNS records**, not photographs.
 | `haul-truck` | home, clearing card | Truck bed loaded with slash. This is what "hauled off site" actually looks like |
 | `beds` | home, landscaping card | Gravel bed with grasses and plantings. Landscaping as its own service, not a clean-up |
 | `slash-line` | home, banner above the guide | The only frame wide enough to span the page |
-| `chipper` | /what-we-do/ fire | The machine that defines the trade |
-| `rounds` | /what-we-do/ clearing | Cut rounds — texture, reads well small |
-| `trimming` | /what-we-do/ landscaping | Crew member in a hard hat cutting at a pine base. No property in frame |
+| `chipper` | /services/ fire | The machine that defines the trade |
+| `rounds` | /services/ clearing | Cut rounds — texture, reads well small |
+| `trimming` | /services/ landscaping | Crew member in a hard hat cutting at a pine base. No property in frame |
 | `limbing`, `stand` | not placed yet | Held in reserve — good frames, no slot that needed them |
 
 ## Treatment

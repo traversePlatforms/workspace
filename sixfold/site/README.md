@@ -21,7 +21,7 @@ stays inside the workspace so it can be audited.
 ```
 sixfold/site/
   index.html                  /                  home — a hub
-  what-we-do/index.html       /what-we-do/       the three service lines, how a job
+  services/index.html         /services/       the three service lines, how a job
                                                  goes, the handover packet
   who-pays/index.html         /who-pays/         the credit and the insurer, in full
   wildfire-guide/index.html   /wildfire-guide/   the printed pamphlet, as a page
@@ -35,7 +35,7 @@ sixfold/site/
 
 **Home is a hub, not the whole site.** It states the position, shows the three service
 lines and the ~450 stat, points at the guide, and hands off. What used to be `#how`,
-`#packet` and `#zone1` on the one-pager moved to `/what-we-do/` and `/wildfire-guide/`.
+`#packet` and `#zone1` on the one-pager moved to `/services/` and `/wildfire-guide/`.
 
 ### /wildfire-guide/ — the pamphlet, as a page
 
@@ -444,7 +444,7 @@ And the individual characteristic should be page dependent."*
 - **Two doors** replace the fire-only money section: *If it's fire mitigation* (the
   two-parties hook and the ~450 card, pointing at `/who-pays/`) beside *If it's
   landscaping* (same-crew, own agreement, and — stated plainly — not eligible for the
-  credit, pointing at `/what-we-do/#landscaping`).
+  credit, pointing at `/services/#landscaping`).
 - The fire specifics live in full on `/who-pays/` and `/wildfire-guide/`, which is
   where they belonged.
 
@@ -610,15 +610,15 @@ the lockup working as intended, not drift.
   headcount, and the company is hiring. Now "Each service stands on its own.
   Book one, two, or all three."
 - **Every "by the acre"** — the home cards, the `By the acre` tag, and both
-  `/what-we-do/` sections. **Pricing and unit are still being worked out and the
+  `/services/` sections. **Pricing and unit are still being worked out and the
   site should not state one.** Removed, not softened.
 - **"the same crew does both" / "one crew does both"** (home landscaping card,
-  home landscaping door, `/what-we-do/` landscaping). Same headcount problem,
+  home landscaping door, `/services/` landscaping). Same headcount problem,
   and it framed landscaping through the other two. Each service now describes
   itself and only itself.
-- **"Same crew, same walk, same paperwork"** (`/what-we-do/` lede) → each is
+- **"Same crew, same walk, same paperwork"** (`/services/` lede) → each is
   quoted on its own agreement and priced on its own.
-- **"Same disposal question as above"** (`/what-we-do/` land clearing) — a
+- **"Same disposal question as above"** (`/services/` land clearing) — a
   cross-reference that made the section depend on the one before it. Rewritten
   to stand alone.
 - **"What we take on, and what we don't"** → "Everything landscaping covers".
@@ -636,7 +636,7 @@ the lockup working as intended, not drift.
 - **"Free to read, nothing asked for"** → "A homeowner's guide".
 - **"Most of it is a weekend's work and none of it needs us"**, and the two
   `/wildfire-guide/` variants, and "the parts you can do yourself in a weekend"
-  on `/what-we-do/`. These turned work away. The guide still hands the homeowner
+  on `/services/`. These turned work away. The guide still hands the homeowner
   everything; it now says "Work through it yourself, or hand any of it to us"
   rather than "none of it needs us".
 
@@ -670,7 +670,7 @@ because changing one and leaving five is how a site starts contradicting itself:
 |---|---|---|
 | home hero aside | "El Paso, Teller and southern Douglas counties, and the Front Range foothills. Further out is a phone call, not a refusal." | "Working across Colorado — the Front Range, the foothills, and out from there. Tell us where the property is." |
 | `/contact/` "Where we work" | same, prefixed "Based in Monument." | "Based in Monument, working across Colorado. Tell us where the property is and we'll set a time to come and look at it." |
-| `/what-we-do/` `.scope` | "…working El Paso, Teller and southern Douglas counties and the Front Range foothills; further out is a phone call, not a refusal." | "…Based in Monument, working across Colorado." |
+| `/services/` `.scope` | "…working El Paso, Teller and southern Douglas counties and the Front Range foothills; further out is a phone call, not a refusal." | "…Based in Monument, working across Colorado." |
 | 3 × contact blocks (home, `/who-pays/`, `/wildfire-guide/`) | "Monument, Colorado — El Paso, Teller and southern Douglas counties" | "Monument, Colorado — working across the state" |
 
 The reach is now carried by an **invitation** ("tell us where the property is")
@@ -681,7 +681,7 @@ Two more that had to move with it, or the site would disagree with itself:
 - **The shared footer** said `Front Range · (303) 915-1045` on all six pages.
   Now `Colorado · …`. It is inside `CHROME:FOOT`, so all six had to change
   identically anyway — the drift auditor enforces it.
-- **`/what-we-do/`'s meta description** still read "what the crew and kit can
+- **`/services/`'s meta description** still read "what the crew and kit can
   take on" — the exact phrase removed from that page's body an hour earlier. A
   body edit that leaves the `<meta>` behind is easy to miss because nothing on
   the rendered page shows it.
@@ -724,11 +724,11 @@ having. So: same three counties, towns back in the copy, schema added.
 |---|---|
 | home hero aside | counties, then Colorado Springs, Black Forest, Palmer Lake, Woodland Park, Larkspur, Castle Rock |
 | `/contact/` "Where we work" | the fullest list — adds Gleneagle, Divide, Florissant, Sedalia |
-| `/what-we-do/` `.scope` | counties only; the section is about scope of work, not geography |
+| `/services/` `.scope` | counties only; the section is about scope of work, not geography |
 | 3 × contact blocks | back to "Monument, Colorado — El Paso, Teller and southern Douglas counties" |
 | shared footer (6 pages) | `El Paso · Teller · Douglas · (303) 915-1045` — was `Front Range` |
 
-`/what-we-do/`'s meta description came back to the counties too, and was then
+`/services/`'s meta description came back to the counties too, and was then
 **cut again at 164 characters** — inside the auditor's 165 limit but close
 enough to the truncation line to lose the tail in a result page.
 
@@ -906,7 +906,7 @@ add back either the DIY line or the blanket promise.
 | guide, page lede | "Everything on this page is yours to do, or to hand to us." | "Have us walk it and tell you where your property actually stands." |
 | guide, `#house` | "…a job you can take on yourself, or have us take on." | "Ask us about any of it." |
 | guide, `#zones` | — | *(added)* "Felling, thinning, spacing and clearing to these distances is what we do." |
-| `/what-we-do/` | "…including the parts you can do yourself, and the parts you can hand to us." | *(clause cut)* |
+| `/services/` | "…including the parts you can do yourself, and the parts you can hand to us." | *(clause cut)* |
 
 **No number, distance or mechanism was touched** — the 2026-08-25 accuracy audit
 still stands. Every edit here is a framing sentence.
@@ -982,7 +982,7 @@ times on the home page. **That is the settled state, not an outstanding finding.
 
 The fire door earns its place: it adds the tax credit, the insurer duty and the
 ~450 stat. The landscaping door **restated the card a few hundred pixels above it**
-and included a sentence copied **word for word** from `/what-we-do/` ("Tell us how
+and included a sentence copied **word for word** from `/services/` ("Tell us how
 you want the ground kept and we'll walk it with you").
 
 I replaced it with the **handover packet**, and **that was wrong — reverted the
@@ -994,11 +994,11 @@ off in `df5fb7a`; I re-added it without checking why it had left. Matthew:
 because its agressive."* The register is the problem — *"whether or not you ask
 for it"*, *"the same folder every time"* — and it sits on the same sensitive ground
 as the banned "we handle the paperwork for you" phrasing. **The packet belongs on
-`/what-we-do/#packet`, where someone has gone looking for it.** There is now a
+`/services/#packet`, where someone has gone looking for it.** There is now a
 comment in `index.html` saying so, at the exact spot where it is tempting.
 
 **So the landscaping door is back as it was**, restating the card above it and
-sharing one sentence with `/what-we-do/` verbatim. **That redundancy is accepted,
+sharing one sentence with `/services/` verbatim. **That redundancy is accepted,
 not outstanding** — the same call as the card's own wording in §1. The lesson that
 survives this section is not about the door: it is **check why something was
 removed before reinstating it**, which a scan for repetition will not tell you.
@@ -1014,8 +1014,8 @@ interpretation, which belongs on the page that discusses the source.
 
 ### 4. ⚑ The page-end contact block was one block on four pages — and wrong on one
 
-Same `<h2>` on home, `/what-we-do/`, `/who-pays/` and `/wildfire-guide/`, and three
-shared the paragraph verbatim. **`/what-we-do/` ended with "talk through what it
+Same `<h2>` on home, `/services/`, `/who-pays/` and `/wildfire-guide/`, and three
+shared the paragraph verbatim. **`/services/` ended with "talk through what it
 qualifies for"** — tax-credit language copy-pasted from `/who-pays/`, at the foot
 of the page that covers **landscaping, which qualifies for nothing.** A content
 error, not a style one. Each block now fits its page:
@@ -1023,16 +1023,16 @@ error, not a style one. Each block now fits its page:
 | Page | Heading |
 |---|---|
 | home | We'll come and walk the property. |
-| `/what-we-do/` | It starts with the walk. |
+| `/services/` | It starts with the walk. |
 | `/who-pays/` | Find out what your property qualifies for. |
 | `/wildfire-guide/` | Have us walk your zones. |
 
-**Visible word count, chrome excluded:** guide 975 · who-pays 826 · what-we-do 737
+**Visible word count, chrome excluded:** guide 975 · who-pays 826 · services 737
 · home 566 · contact 290 · thank-you 39.
 
 Auditors: links all clear, runtime 0 failures.
 
-## `/what-we-do/` lede trimmed — 2026-09-21
+## `/services/` lede trimmed — 2026-09-21
 
 Matthew on *"the walk and the written record at the end are the same either way"*:
 *"i just dont like the phrasing of it. theres gotta be a better way to say it or
@@ -1083,10 +1083,10 @@ Scanned all six pages for those constructions: **21 candidates, 7 cut.**
 
 | Page | Cut |
 |---|---|
-| `/what-we-do/` | "Left where it falls is the third option and it is what happens by default." |
-| `/what-we-do/` | "It is the same folder every time, and it is handed over whether or not you asked for it." |
-| `/what-we-do/` | h2 "Every job comes with the paperwork**, whether or not you ask**." |
-| `/what-we-do/` | "…**which is why** they are in here for next time **rather than this time**." → "…so they are in here for next time." |
+| `/services/` | "Left where it falls is the third option and it is what happens by default." |
+| `/services/` | "It is the same folder every time, and it is handed over whether or not you asked for it." |
+| `/services/` | h2 "Every job comes with the paperwork**, whether or not you ask**." |
+| `/services/` | "…**which is why** they are in here for next time **rather than this time**." → "…so they are in here for next time." |
 | `/who-pays/` | "That is why every Sixfold job ends with a folder **rather than a handshake**, and why it is handed over **whether or not anyone asked for it**." |
 | `/who-pays/` | "…and **that is the part a contractor can actually do for you**." |
 | home + `/who-pays/` | "**which is usually what a board has to show its funder**" — and it was near-duplicated across the two pages, which the redundancy scan had missed |
@@ -1109,7 +1109,7 @@ attitude:
 ### Two left deliberately, for him to call
 
 1. **"the quote comes off that sheet rather than off an impression formed in the
-   driveway"** (`/what-we-do/`) — textbook definition-by-contrast, and it is also
+   driveway"** (`/services/`) — textbook definition-by-contrast, and it is also
    the best line on the page. Kept pending his view.
 2. **"Filing a return is a licensed activity… which is a conflict of interest as
    well as a competence question"** (`/who-pays/`) — an editorialising "which is",
@@ -1220,7 +1220,7 @@ nine contact blocks do not collapse into one line:
 | `/contact/` meta | "…we'll arrange a walk **at a time that suits you**." |
 | `/thank-you/` lede | "We'll be in touch to **find a time that works for you**." |
 | `/thank-you/` meta | "…in touch to arrange a walk **at a time that suits you**." |
-| `/what-we-do/` | "…we'll come out **when it suits you** and count what is actually there." |
+| `/services/` | "…we'll come out **when it suits you** and count what is actually there." |
 | `/who-pays/` | "…we'll come **at a time that works for you**, look at what you've got…" |
 | `/wildfire-guide/` | "…we'll come **when it suits you** and measure what is there…" |
 
@@ -1233,7 +1233,7 @@ talking about in terms of how we are phrasing things."*
 **Two faults, and his first one is the stronger.** It is a **staffing promise the
 company may not be able to keep** — and it also trips the no-headcount rule, since
 it implies one small consistent crew while the company is hiring. It was the last
-survivor of the gloss scan flagged as needing his call. `/what-we-do/` now ends
+survivor of the gloss scan flagged as needing his call. `/services/` now ends
 that paragraph at "And if anything about the work is not right, call."
 
 Meta descriptions re-checked after the rewrites: 125–163 characters, all inside
@@ -1296,14 +1296,14 @@ assumption the rule was written to kill.
 
 **And it was already said for all three, twice**, in the right places: "Each service
 stands on its own" (home hero) and "Each one is quoted on its own agreement and
-priced on its own" (`/what-we-do/` lede). So the three landscaping-only repeats were
+priced on its own" (`/services/` lede). So the three landscaping-only repeats were
 redundant as well as lopsided. All cut:
 
 | Where | Cut |
 |---|---|
 | home, landscaping card | "Booked on its own, quoted on its own, and priced on its own." |
 | home, landscaping door | "Landscaping is booked on its own agreement and priced on its own." |
-| `/what-we-do/`, landscaping | "**A service in its own right, on its own agreement and its own price.**" |
+| `/services/`, landscaping | "**A service in its own right, on its own agreement and its own price.**" |
 
 The third carried "a service in its own right" too — the same defensive note, and
 neither of the other two sections has it.
@@ -1345,7 +1345,7 @@ hedge trimming*. Written as "shrub and hedge trimming, and more" to keep the sen
 
 ### Still closed lists, deliberately not touched
 
-- **`/what-we-do/`'s landscaping lede** still ends "clean-up and haul-away" with no
+- **`/services/`'s landscaping lede** still ends "clean-up and haul-away" with no
   "and more" — he scoped this to the home page. That page does already carry the
   broader version of the same idea in its `.scope` block: *"The lists above are
   where we start, not where we stop."*
@@ -1374,7 +1374,7 @@ Changed: nav and footer label on all six pages (anchored on the `href`, so the h
 page's own `The work` section kicker was left alone — that page is signed off), the
 `<title>`, and the page kicker.
 
-### ⚑ The URL is still `/what-we-do/`, and this is the only free moment to change it
+### ⚑ The URL is still `/services/`, and this is the only free moment to change it
 
 `/services/` matches the query better and reads better. **Renaming it costs nothing
 today and needs permanent redirects after launch** — the site is not hosted, so no
@@ -1403,3 +1403,36 @@ clippings was an assumption. Replaced with the walk-and-quote fact, which is
 sourced.
 
 Auditors: links all clear, runtime 0 failures.
+
+## The URL is now `/services/` — 2026-09-21
+
+Matthew: *"Pick whatever url ranks better for us SEO wise."* **`/services/`**, and
+done — directory renamed with `git mv`, **57 references rewritten** across the six
+pages, `sitemap.xml`, both auditors, `PHOTOS.md` and this file. `audit-links.mjs`
+all clear; `/services/` returns 200 and `/what-we-do/` now 404s, which is correct
+and costs nothing because nothing is hosted.
+
+**Why this one, honestly:** URL keywords are a *weak* modern ranking factor. The
+real gain is that `/services/` is the conventional path, so it reads right in a
+result, in a breadcrumb and in anchor text — and "what we do" is a phrase nobody
+types into a search box.
+
+### ⚑ The bigger SEO answer, which is not a URL at all
+
+**One `/services/` page competes for three different queries and wins none of them
+cleanly.** The money searches for a local trade are per-service and per-town —
+"fire mitigation Colorado Springs", "land clearing Monument", "landscaping Black
+Forest". A single page carrying all three splits its own relevance.
+
+**The structure to grow into is one page per service:** `/services/fire-mitigation/`,
+`/services/land-clearing/`, `/services/landscaping/`, with `/services/` as the hub.
+The site is already most of the way there — each service is its own `<section>` with
+an id, its own photograph and its own booking link, so the split is mostly moving
+markup rather than writing copy.
+
+**Not done, deliberately.** It is a real build, not a rename, and Matthew is closing
+pages out rather than opening new ones. Worth doing **before launch** though, for
+the same reason the URL was: three new URLs cost nothing today and cost redirects
+later. Nothing else in `LAUNCH.md` depends on it.
+
+The other thing worth more than any of this is still the **Google Business Profile**.
