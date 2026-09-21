@@ -57,8 +57,19 @@ sixfold/site/assets/img/build-photos.mjs   absolute Desktop paths
 sixfold/site/_tabled/               the whole folder
 ```
 
-Either exclude them from the upload, or put this at the site root as
-`.htaccess` (SiteGround and most shared hosts honour it):
+**Both, not either.** `.htaccess` is written and committed at
+**`sixfold/site/.htaccess`** as of 2026-09-21 — it no longer has to be retyped
+here on the day. Upload it, AND leave the files above out of the upload: either
+line of defence can fail on its own.
+
+⚑ **It has never been parsed** — there is no Apache on the build machine. A syntax
+error in it returns **500 for the whole site**, not just the file it names, so if
+the site is blank after upload, rename `.htaccess` first and everything comes
+back. It also carries a commented-out HTTPS and canonical-host block to enable
+once the certificate is issued; those are left off because a wrong redirect loop
+is worse than no redirect.
+
+For reference, what it denies:
 
 ```apache
 <FilesMatch "\.(md|mjs|log|sh|map)$">
@@ -132,10 +143,13 @@ uploaded**, unlike everything in §2.
   `Disallow` asks a crawler not to *fetch* a URL, and a disallowed URL can still
   be indexed from a link elsewhere with no snippet under it. Staging needs the
   `noindex` meta above, per page.
-- **`sitemap.xml`** — **five** URLs, not six. `/thank-you/` is excluded because
-  it is `noindex`, and listing a noindex URL is a contradiction Search Console
-  reports as an error. (The old note here said six; it was counting the pages,
-  not the indexable ones.)
+- **`sitemap.xml`** — **eight** URLs as of 2026-09-21 (five, plus the three
+  per-service pages). `/thank-you/` is the one page excluded, because it is
+  `noindex`, and listing a noindex URL is a contradiction Search Console reports as
+  an error. **The count in this file has now been wrong twice** — do not maintain it
+  by hand: `audit-links.mjs` compares the sitemap against the pages on disk and
+  fails on any gap, which is how the three new pages were caught the moment they
+  existed.
 
 Both carry the **absolute** `https://sixfoldcolorado.com/` — a sitemap `<loc>`
 has no relative form, so this is the one pair of files that cannot be written

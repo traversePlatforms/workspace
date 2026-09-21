@@ -1,0 +1,61 @@
+# Sixfold Colorado — site root.
+#
+# Written 2026-09-21 so it is not hand-typed on launch day. LAUNCH.md §2 used to
+# carry this as a snippet to retype under pressure, which is how a rule gets a
+# character wrong and fails silently.
+#
+# ⚑ UNTESTED. There is no Apache on the build machine, so this has never been
+# parsed. Two consequences, both in LAUNCH.md:
+#   - A syntax error here returns 500 for the WHOLE SITE, not just the file it
+#     names. If the site is blank after upload, rename this first.
+#   - A directive the host ignores fails SILENTLY. Verify by actually requesting
+#     /README.md and /api/config.php on the live host and expecting 403/404.
+#
+# This is the second line of defence. The first is not uploading these files at
+# all — see LAUNCH.md §2. Either alone can fail; both together is the point.
+
+# ---------------------------------------------------------------- source files
+# .md  build notes and internal reasoning (README, LAUNCH, PHOTOS)
+# .mjs both auditors, the dev server, the photo builder — the copy rules live in
+#      audit-links.mjs, i.e. a list of everything we have decided not to say
+# .log .sh .map  never anything a visitor should see
+<FilesMatch "\.(md|mjs|log|sh|map)$">
+  Require all denied
+</FilesMatch>
+
+# ------------------------------------------------------------- tabled and dot
+# The merch board: off the site, kept buildable, still in the dark register.
+RedirectMatch 404 ^/_tabled(/|$)
+
+# Anything dotted. Belt and braces over api/.htaccess, which blocks the rate
+# limiter's own store by name.
+RedirectMatch 404 /\.(?!well-known)
+
+# ------------------------------------------------------------------ behaviour
+# A missing page should land somewhere useful rather than on the host's default.
+ErrorDocument 404 /
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# --------------------------------------------------------- ENABLE AT LAUNCH ⚑
+# Left commented because both need the live host to be right, and a wrong
+# redirect loop is worse than no redirect. Turn on once the domain resolves and
+# the certificate is issued — then re-check every page, because a redirect that
+# fires on the wrong condition takes the whole site with it.
+#
+# <IfModule mod_rewrite.c>
+#   RewriteEngine On
+#
+#   # force HTTPS
+#   RewriteCond %{HTTPS} !=on
+#   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#
+#   # one canonical host — pick www or bare, not both, and match what the
+#   # canonical tags and sitemap.xml say (they currently say BARE).
+#   RewriteCond %{HTTP_HOST} ^www\.sixfoldcolorado\.com$ [NC]
+#   RewriteRule ^ https://sixfoldcolorado.com%{REQUEST_URI} [L,R=301]
+# </IfModule>
