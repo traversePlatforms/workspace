@@ -1357,3 +1357,49 @@ hedge trimming*. Written as "shrub and hedge trimming, and more" to keep the sen
 as signed off unless he reopens it.
 
 Auditors: links all clear, runtime 0 failures.
+
+## "The work" becomes Services, and seven notes on that page — 2026-09-21
+
+Matthew: *"I think the work makes the page seem like we are showcasing rather than
+offering. Just my thought and I assume services might SEO better then the work? but
+im not sure."*
+
+**Right on both counts.** "The work" is a gallery label; "Services" is what someone
+is looking for. And on SEO it is not close — **nobody searches "the work"**, while
+"services" is in the query for most local-trade searches ("tree service",
+"landscaping services near me"). A nav label is a weak ranking signal on its own,
+but it feeds the `<title>`, the `<h1>` and the internal anchor text, which are not.
+
+Changed: nav and footer label on all six pages (anchored on the `href`, so the home
+page's own `The work` section kicker was left alone — that page is signed off), the
+`<title>`, and the page kicker.
+
+### ⚑ The URL is still `/what-we-do/`, and this is the only free moment to change it
+
+`/services/` matches the query better and reads better. **Renaming it costs nothing
+today and needs permanent redirects after launch** — the site is not hosted, so no
+link anywhere can break. Left for Matthew because it is a one-way door once the
+domain resolves. If it changes, it touches: the directory, the nav and footer on
+six pages, three home-page links, `sitemap.xml`, `LAUNCH.md` and this file —
+`audit-links.mjs` catches every miss.
+
+### The other six notes
+
+| Note | Change |
+|---|---|
+| *"get rid of the statement of each one is quoted on their own… expand the h1 across the screen"* | `.head-split` and the lede gone; `.page-head.wide` gives the same full-bleed headline the home page has. It lands on **one line** at 1280. |
+| *"I dont know if i like the one two and three listed above each service… makes it feel like a priority system"* | The `One` / `Two` / `Three` kickers are gone. They numbered three things that are meant to be peers — the same fault as landscaping defending itself, in a different costume. |
+| *"the description could potentially run the risk of being read from left to right against both topics"* | New `.cols-split`: a hairline between the two columns. On a phone, where they stack, it becomes a horizontal rule above the second instead. Applied to all three service sections and the packet section. |
+| *"how do we feel about… before anyone quotes you"* | Cut. It insinuated that quotes are something to be guarded against — and the guide link stands on its own: "Those standards are set out in full in the wildfire guide." |
+| *"It is part of the quote, not something added to it later"* | Cut. Defining by contrast with a worse alternative — the trailing gloss again. |
+| *"why do we have the disclaimer in the landscaping section anyways, no other job of the 3 have a disclaimer like that"* | The `.scope` block is gone. **Same asymmetry as the "on its own" line**, and he is right that "if what you need is not on one of them, ask" hands the reader work and plants doubt. **"and more" in the list does the job without either.** The service area it carried moved to the page's contact band, so the county names stay on the page. |
+| *"Explain what is in the folder, but make it applicable to all 3"* | The handover step now names the three universal items — written record, itemised invoice, dated before-and-after photographs. The credit and county-programme items stay off it, because those are fire-only. |
+
+**⚑ And one sentence I wrote, caught, and replaced before it shipped.** Filling the
+thin right-hand column under Landscaping, I wrote "Clippings and green waste go the
+way you choose, the same as anything else that comes off the property." The
+chip/haul/leave options are documented for **woody debris**; extending them to grass
+clippings was an assumption. Replaced with the walk-and-quote fact, which is
+sourced.
+
+Auditors: links all clear, runtime 0 failures.

@@ -486,6 +486,17 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; }
 @media (max-width: 780px) { .cols { grid-template-columns: 1fr; gap: 28px; } }
 
+/* A rule between the two columns. Matthew on the fire-mitigation section: the two
+   sides are independent statements, and with only whitespace between them the eye
+   runs across the gap and reads them as one sentence. The rule is the cheapest way
+   to say "these are two things", and it costs nothing on a phone — where the
+   columns stack, it becomes a horizontal rule above the second instead. */
+.cols-split { column-gap: 40px; }
+.cols-split > * + * { border-left: 1px solid var(--edge); padding-left: 40px; }
+@media (max-width: 780px) {
+  .cols-split > * + * { border-left: 0; padding-left: 0; padding-top: 26px; border-top: 1px solid var(--edge); }
+}
+
 /* A short left column against a long right one — two paragraphs against a
    four-item list. This was sticky for about an hour and it was wrong: nothing
    else on the site moves under the reader, so one column that does reads as a
@@ -685,6 +696,9 @@ body:not(.paper) .ridge-rule .near { fill: var(--bone); }
 
 .page-head { padding-block: 76px 22px; border-top: 0; }
 .page-head h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 20px; max-width: 22ch; }
+/* Full-bleed headline, no lede beside it — the same treatment the home page got, for
+   a page head that is a headline and nothing else. */
+.page-head.wide h1 { max-width: none; font-size: clamp(32px, 4.6vw, 52px); margin-bottom: 0; }
 .page-head .lede { max-width: 56ch; }
 
 /* Headline left, standfirst right, sitting on the same baseline. Without it
