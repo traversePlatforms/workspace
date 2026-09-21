@@ -865,3 +865,50 @@ its own logger, so posting all five values returned `{"ok":true}` from the **dev
 stand-in**, not from PHP. Real behaviour is still gated on a host — LAUNCH.md §3.
 
 `audit-links.mjs` all clear (108 links). `audit-runtime.mjs` 0 failures.
+
+## DIY framing out of the guide — 2026-09-21
+
+Matthew, reversing part of yesterday's fix: *"Dont say that, we want the work we
+dont need to be encouraning people to do it themselves."* Yesterday's edit replaced
+"none of it needs us" with "work through it yourself, or hand any of it to us" —
+he wants the first half of that gone too. Four places, all removed.
+
+### ⚑ Neither "you can do this" nor "we do all of this"
+
+The obvious swap is "**we** do all of this", and the `#house` seven are a **Class A
+roof, clearing gutters, 1/8-inch vent mesh, screening under decks, tempered glass,
+six inches of siding clearance and a non-combustible fence** — roofing, glazing,
+carpentry, fencing. A blanket "every number on the drawing is a job we take on"
+promises trades the company has not said it has.
+
+**Matthew's ruling when that was put to him settles the pattern**, and it is not
+the one I first wrote: *"We wont know if 'we do all of this' until we actually have
+a conversation with them. But the last thing we need to do is encourage others to
+do it themselves."* So the page must do **three** things at once — no DIY
+encouragement, no promise it cannot keep, **and no boundary**, because whether
+Sixfold takes a given job is settled in the conversation, not on the page.
+
+**My first attempt failed the third.** It cut the `#house` sentence to silence and
+put *"This is the work we do"* on `#zones` — which reads as a contrast against the
+section above it, i.e. an advertised limit. Corrected:
+
+- `#house` ends **"Ask us about any of it."** — an invitation, which claims
+  nothing and rules out nothing.
+- `#zones` states the trade **plainly rather than contrastively**: "Felling,
+  thinning, spacing and clearing to these distances is what we do."
+
+Both carry comments explaining the constraint, so the next pass does not helpfully
+add back either the DIY line or the blanket promise.
+
+| Where | Was | Is |
+|---|---|---|
+| home band | "Work through it yourself, or hand any of it to us." | "Read it, then have us walk the property." |
+| guide, page lede | "Everything on this page is yours to do, or to hand to us." | "Have us walk it and tell you where your property actually stands." |
+| guide, `#house` | "…a job you can take on yourself, or have us take on." | "Ask us about any of it." |
+| guide, `#zones` | — | *(added)* "Felling, thinning, spacing and clearing to these distances is what we do." |
+| `/what-we-do/` | "…including the parts you can do yourself, and the parts you can hand to us." | *(clause cut)* |
+
+**No number, distance or mechanism was touched** — the 2026-08-25 accuracy audit
+still stands. Every edit here is a framing sentence.
+
+Auditors: links all clear, runtime 0 failures.
