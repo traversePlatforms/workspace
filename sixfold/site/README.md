@@ -1238,3 +1238,44 @@ that paragraph at "And if anything about the work is not right, call."
 
 Meta descriptions re-checked after the rewrites: 125–163 characters, all inside
 the limit. Auditors: links all clear, runtime 0 failures.
+
+## The rule the whole day's edits were reaching for — 2026-09-21
+
+Matthew, after a run of corrections that each looked local and all turned out to be
+the same thing:
+
+> *"Its good to have confidence, in what we can do and use words that reassure that
+> we can do the job or any job but yeah what we dont need to do is be too
+> controlling in a sense where we are controling the consumer"*
+
+**Two axes, and they are easy to collapse into one:**
+
+| | Wanted | Examples on this site |
+|---|---|---|
+| **Confidence** — about **our** capability | **More of it** | "where we start, not where we stop" · "Felling, thinning, spacing and clearing to these distances is what we do" · "that part we can guarantee" |
+| **Control** — over **their** decisions | **None** | imperatives ("Read it, then…") · "we'll set a time" · "whether or not you ask" · telling the reader what to conclude |
+
+**The diagnostic: who is the subject, and whose decision is it?** *We can do X* is
+confidence. *You should do X*, or *we will do X to you*, is control.
+
+### ⚑ Cutting control is not a licence to hedge
+
+The opposite failure would fail his first column, so the site was scanned for it
+after the day's cuts: `we try` · `we aim` · `may be able` · `where possible` ·
+`typically` · `should be able` · `some of`.
+
+**One hit, and it stays** — "aspen should **generally** not be thinned at all"
+(`/wildfire-guide/`), which is a species caveat from the accuracy audit, not a
+hedge about Sixfold.
+
+Everything confident survived the day intact: "We fell trees, remove and trim them
+whole, take out brush and dead fall, pile and chip slash, and cut rounds to
+length"; "worked to Colorado State Forest Service standards"; "We come out and walk
+the property with you, counting what is actually there"; and the strongest line on
+the site, on `/who-pays/` — *"Both of them will want the paperwork, and that part
+we can guarantee."*
+
+**So the copy is not timid, and it should not be made timider.** A future pass
+cutting "controlling" language should check this section before reaching for a
+hedge — the fix for control is to move the decision to the reader, not to weaken
+the claim about us.
