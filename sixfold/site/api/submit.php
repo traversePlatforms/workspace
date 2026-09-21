@@ -48,8 +48,31 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 $field = static fn(string $k, int $max = 2000): string =>
     mb_substr(trim((string) ($_POST[$k] ?? '')), 0, $max);
 
-// Honeypot: a filled field means a bot. Say yes and do nothing.
-if ($field('_hp') !== '') {
+/**
+ * Honeypot. A filled field means a bot, so say yes and do nothing — telling it it
+ * failed only teaches it to try again.
+ *
+ * ⚑ BUT IT MUST LEAVE A TRACE. On 2026-09-21 this silently discarded a real
+ * submission on the live site: a password manager autofilled the hidden field, the
+ * customer saw the success message, and nothing was written anywhere. There was no
+ * way to tell "no enquiries this week" from "enquiries are being eaten".
+ *
+ * So rejections are logged now. Never to the customer — they still get success —
+ * but to the same file, tagged, so the difference is visible. If real names start
+ * appearing in these lines, the honeypot is misfiring again.
+ */
+$hp = $field('_confirm_url') . $field('_hp');   // _hp: the old name, still caught
+if ($hp !== '') {
+    @file_put_contents(
+        $cfg['log_file'],
+        json_encode([
+            'at' => date('c'), 'rejected' => 'honeypot',
+            'value' => mb_substr($hp, 0, 120),
+            'name' => $field('name', 120), 'email' => $field('email', 160),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+        ], JSON_UNESCAPED_UNICODE) . "\n",
+        FILE_APPEND | LOCK_EX
+    );
     respond_ok($cfg, $wantsJson);
 }
 

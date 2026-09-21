@@ -46,7 +46,7 @@
   if (!f || !window.fetch) return;              // no fetch: native submit, server redirects
 
   f.addEventListener('submit', function (e) {
-    var hp = f.querySelector('input[name="_hp"]');
+    var hp = f.querySelector('input[name="_confirm_url"]');
     if (hp && hp.value.trim() !== '') { e.preventDefault(); return; }   // honeypot: drop silently
     e.preventDefault();
 

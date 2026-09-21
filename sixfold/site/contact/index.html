@@ -87,7 +87,20 @@
     <div class="contact-grid">
 
       <form class="form" id="contact-form" method="post" action="/api/submit.php" novalidate>
-        <input type="text" name="_hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <!-- Honeypot. Hardened 2026-09-21 after it ate a real submission on the live
+             site: Matthew filled the form, got the success message, and NOTHING was
+             logged — a password manager had autofilled this field.
+
+             readonly is the fix that matters. Browsers and password managers will not
+             autofill a readonly input, while a bot setting .value from script is
+             unaffected — so it still catches what it is for, and stops catching
+             customers. autocomplete="off" alone is widely ignored, which is exactly
+             what went wrong.
+
+             The name is no longer "_hp": managers pattern-match field names, and an
+             unusual one is less likely to be targeted than a short generic token. -->
+        <input type="text" name="_confirm_url" class="hp" tabindex="-1"
+               autocomplete="off" aria-hidden="true" readonly>
         <input type="hidden" name="_form" value="contact">
 
         <fieldset class="need">
