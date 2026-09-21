@@ -1483,3 +1483,42 @@ nothing fails — [[sixfold-site]] already records the brand mark vanishing at e
 790px for a related reason. **Re-measure whenever a nav label changes.**
 
 Auditors: links all clear, runtime 0 failures.
+
+## The last two of the contrast family — 2026-09-21
+
+Matthew found both, and both were ones I had seen and not acted on.
+
+**1. The walk.** *"It goes on a sheet, and the quote comes off that sheet **rather
+than off an impression formed in the driveway**."* This is the sentence flagged in
+the gloss sweep and explicitly **left for him** as "textbook
+definition-by-contrast, and also the best line on the page". He called it. Being a
+good line does not make it a different kind of sentence — it defines the work
+against an imagined worse contractor, which is exactly the register being removed.
+Now: *"It goes on a sheet, and the quote is built from it."*
+
+**2. The work.** *"then the work you agreed — **felling and clearing, or beds and
+planting** — and the disposal option you picked."* Two faults, and **his second one
+is the one I had missed**: the aside is not only the phrasing, it is **limiting**.
+It names two kinds of work as though they were the set, and it folds land clearing
+into "felling and clearing" instead of letting it be one of three. Aside cut
+entirely: *"then the work you agreed and whatever you chose for what comes off."*
+
+**⚑ One change he did not ask for, in the same sentence.** "Photographs from fixed
+positions **before anything comes down**" assumes felling — nothing "comes down" on
+a landscaping job. Now "before we start". Same limiting logic he identified, one
+clause earlier.
+
+### Both families re-scanned after
+
+**Gloss: 5 left, all content** — "This is the page your insurer wants"; "because
+that is what the state credit is claimed against"; and three fire-safety lines on
+the guide.
+
+**Definition-by-contrast: 5 left, none of them the tic** — a factual option ("ask
+for a re-score rather than waiting a year for one"), a safety instruction ("take
+the woody debris away rather than scattering it"), the accuracy-audit note listing
+its own corrections, and one inside an `AUDIT-ALLOW` comment.
+
+**Nothing of this family remains in visible copy that is not carrying a fact.**
+
+Auditors: links all clear, runtime 0 failures.
