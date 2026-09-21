@@ -111,3 +111,32 @@ Also still to write, neither of which exists yet:
 - Home loads roughly 1.1 MB of photographs. All lazy except what is in the first
   screen, so it is fine on a phone, but it is the number to watch if more get
   added.
+
+## 6. Finish the LocalBusiness schema
+
+Added 2026-09-20. The block is in `index.html` between `<!-- SEO:SCHEMA -->` and
+`<!-- /SEO:SCHEMA -->`, **home page only** — two `LocalBusiness` blocks on two
+pages with no shared `@id` can be read as two separate businesses.
+
+Three keys are missing because all three need the live domain. Add them here,
+then the block can also go on `/contact/` **carrying the same `@id`**, which is
+what makes the two one entity rather than two:
+
+```json
+  "@id": "https://sixfoldcolorado.com/#business",
+  "url": "https://sixfoldcolorado.com/",
+  "image": "https://sixfoldcolorado.com/assets/og-image.jpg",
+```
+
+Then validate at `search.google.com/test/rich-results` — it reads the live URL,
+so it cannot be run before the host exists.
+
+**Two decisions to make at the same time, neither of them a drafting job:**
+
+- **`streetAddress` is deliberately absent.** 17890 Sierra Way is on the
+  agreements because a cancellation notice needs a real address that someone
+  collects post at — that is not the same as publishing it on a website.
+  Google wants a full address for the local pack, so leaving it out has a cost.
+- **A Google Business Profile does more for local search than anything on this
+  site.** The schema supports a profile; it does not replace one. If only one
+  thing gets done, it is the profile.

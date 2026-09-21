@@ -398,19 +398,32 @@ body.paper .lockup .l3 { fill-opacity: .82; }
 }
 .hero-grid .cta { margin-bottom: 0; }
 
-/* On a phone both "Land & Fire" descriptors wrap to two lines and fight the
-   baseline they are aligned to. The header drops its (the hero carries the
-   brand statement); the hero's moves to its own line under the wordmark. */
+/* The wordmark and the descriptor are one unit: baseline-aligned to each other,
+   then centred against the 78px mark as a pair. They used to be two siblings in
+   the lockup row — the wordmark centred, the descriptor align-self:flex-end with
+   8px of padding — which put "Land & Fire" roughly 13px below the wordmark's
+   baseline. Nesting them is what makes `align-items: baseline` usable at all:
+   applied to .lockup it would have baseline-aligned the SVG too, and an SVG's
+   baseline is its bottom edge, which drops the mark relative to the text. */
+.hero .lockup .names { display: flex; align-items: baseline; gap: 16px; min-width: 0; }
+/* On a phone the descriptor wraps and fights the baseline it is aligned to, so
+   it drops to its own line under the wordmark. The header drops its descriptor
+   entirely at 560px — the hero is what carries the brand statement. */
 @media (max-width: 560px) {
   .hero .lockup { flex-wrap: wrap; gap: 12px 16px; }
-  .hero .lockup .desc { flex-basis: 100%; align-self: auto; padding-bottom: 0; }
+  .hero .lockup .names { flex-wrap: wrap; gap: 4px 16px; }
+  .hero .lockup .desc { flex-basis: 100%; }
 }
 .hero .lockup .word { font-family: var(--serif); font-size: 44px; letter-spacing: -0.018em; line-height: 0.9; color: var(--text-strong); }
 .hero .lockup .desc {
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.3em;
-  text-transform: uppercase; color: var(--label); align-self: flex-end; padding-bottom: 8px;
+  text-transform: uppercase; color: var(--label); white-space: nowrap;
 }
-.hero h1 { font-size: clamp(34px, 6vw, 60px); margin: 0 0 18px; max-width: 18ch; }
+/* Full column width, above .hero-grid rather than inside its 1.12fr cell — at
+   18ch it broke over four short lines and left the right of the fold empty.
+   The clamp tops out lower than the old 60px so the longer three-service
+   headline still lands on two lines at 1280 and above. */
+.hero h1 { font-size: clamp(32px, 4.6vw, 52px); margin: 0 0 30px; max-width: none; }
 .hero .say {
   font-family: var(--serif);
   font-size: clamp(19px, 2.4vw, 24px);
@@ -419,6 +432,9 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   padding-left: 18px;
   margin: 0 0 26px;
   max-width: 40ch;
+  /* Two sentences: unbalanced it broke mid-clause ("Book one," / "two, or all
+     three"). Balanced it breaks at the full stop, which is where the eye wants it. */
+  text-wrap: balance;
 }
 
 /* the settled service line — same three items as the card and the magnets */
@@ -858,11 +874,15 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 
 /* --- hero aside: replaced the fire-only ~450 stat in the hero -------- */
 
+/* Top-aligned since the h1 moved out of the grid. It used to be `align-self: end`,
+   because back then the left cell was four stacked blocks (h1, say, serviceline,
+   cta) and a short note left a void underneath it. With the h1 above the grid the
+   left cell is three blocks, and bottom-aligning put the void ABOVE instead —
+   the rule and the kicker started ~60px below the pull quote they sit beside. */
 .hero-aside {
-  align-self: end;            /* see the note above .hero-grid */
+  align-self: start;
   padding-left: 22px;
   border-left: 1px solid var(--line);
-  padding-bottom: 4px;
 }
 .hero-aside .kicker { margin-bottom: 10px; }
 .hero-aside p { font-size: 16px; color: var(--text-soft); }

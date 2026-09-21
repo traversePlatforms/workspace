@@ -554,3 +554,206 @@ already handled in it and should stay handled: every CDP call is raced against a
 timeout (two runs deadlocked on a reply that never came), and each page is
 scrolled top to bottom before probing, or `loading="lazy"` photographs below the
 fold get reported as broken.
+
+---
+
+## Matthew's review — 2026-09-20
+
+Two layout fixes on the home page, then a copy pass driven by one theme: **the
+three services are three services.** Nothing here changed a fact, a number or a
+distance.
+
+### Layout
+
+**The lockup was out of alignment, and it was real.** "Land & Fire" sat about
+**13px below** the wordmark's baseline. The two spans were siblings in the 78px
+lockup row — the wordmark centred, the descriptor `align-self: flex-end` with
+`padding-bottom: 8px` — so the descriptor was pinned to the row's bottom rather
+than to the wordmark. They are now nested in `.names`, baseline-aligned to each
+other, and that pair is centred against the mark. **Measured after the fix: 0px
+drop at 768, 1280 and 1600.** At 390 it is 20.6px, which is correct — the phone
+rule drops the descriptor onto its own line.
+
+Nesting is what makes this work. `align-items: baseline` on `.lockup` itself
+would have baseline-aligned the SVG too, and an SVG's baseline is its bottom
+edge, so the mark would have dropped relative to the text.
+
+**The h1 moved above `.hero-grid`.** Inside the grid's 1.12fr left cell at
+`max-width: 18ch` it broke over four short lines against an empty right half.
+Full column width now, `max-width: none`, and the clamp tops out at 52px rather
+than 60px so the longer three-service headline lands on **two lines at 1280 and
+1600** (1032px wide) instead of three. It also now names **all three** services;
+it said "Fire mitigation and landscaping" and dropped land clearing, while the
+`<title>` and the service line both carried all three.
+
+**⚑ Moving the h1 broke something else, which is why this got rendered rather
+than just measured.** `.hero-aside` was `align-self: end`, added when the left
+cell was four stacked blocks and a short note left a void beneath it. With the
+h1 gone the left cell is three blocks, so bottom-aligning put the void **above**
+instead — the rule and "Based in Monument" started ~60px below the pull quote
+they sit beside. Now `align-self: start`.
+
+`.say` also got `text-wrap: balance`; unbalanced it broke mid-clause
+("Book one," / "two, or all three").
+
+### The alignment scan
+
+Every block in `main .wrap` on five pages at 390/768/1280/1600. Result: exactly
+**two left edges per page per width** — the section containers, and the 24px
+gutter every one of their children shares. No stragglers, nothing half-indented.
+The hero wordmark sits inboard of that gutter by the width of the mark, which is
+the lockup working as intended, not drift.
+
+### Copy — what came out, and why
+
+- **"One crew for all three"** (hero and the meta description). It reads as a
+  headcount, and the company is hiring. Now "Each service stands on its own.
+  Book one, two, or all three."
+- **Every "by the acre"** — the home cards, the `By the acre` tag, and both
+  `/what-we-do/` sections. **Pricing and unit are still being worked out and the
+  site should not state one.** Removed, not softened.
+- **"the same crew does both" / "one crew does both"** (home landscaping card,
+  home landscaping door, `/what-we-do/` landscaping). Same headcount problem,
+  and it framed landscaping through the other two. Each service now describes
+  itself and only itself.
+- **"Same crew, same walk, same paperwork"** (`/what-we-do/` lede) → each is
+  quoted on its own agreement and priced on its own.
+- **"Same disposal question as above"** (`/what-we-do/` land clearing) — a
+  cross-reference that made the section depend on the one before it. Rewritten
+  to stand alone.
+- **"What we take on, and what we don't"** → "Everything landscaping covers".
+  The old wording advertised a boundary.
+- **The `.scope` block** said "what the current crew and kit can take on … not
+  from what we are willing to quote" — headcount *and* a limit. Now "The lists
+  above are where we start, not where we stop. If what you need is not on one of
+  them, ask."
+- **"It is not wildfire mitigation and it does not qualify for the credit — we
+  say so up front rather than let anyone assume."** Cut. The
+  telling-you-we're-being-transparent register reads as condescension. **The
+  fact itself is not lost** — what qualifies is defined on `/who-pays/`, which
+  is the page that carries the credit. A site-wide grep for the same register
+  found only one other hit, and it went with the disposal rewrite above.
+- **"Free to read, nothing asked for"** → "A homeowner's guide".
+- **"Most of it is a weekend's work and none of it needs us"**, and the two
+  `/wildfire-guide/` variants, and "the parts you can do yourself in a weekend"
+  on `/what-we-do/`. These turned work away. The guide still hands the homeowner
+  everything; it now says "Work through it yourself, or hand any of it to us"
+  rather than "none of it needs us".
+
+**On the guide edits:** all three touched framing sentences only. **No number,
+distance or mechanism on that page was altered** — the 2026-08-25 accuracy audit
+still stands unmodified.
+
+### ⚑ One thing deliberately not written
+
+The landscaping door needed a second sentence and the obvious one would have
+described a service cadence — weekly, seasonal, annual. **There is no source for
+what Sixfold actually offers there**, so it says "Tell us how you want the ground
+kept and we'll walk it with you" instead. Worth settling with Brandon.
+
+### Checked after
+
+`audit-links.mjs` all clear. `audit-runtime.mjs` **0 failures**, the one standing
+warning being the pre-launch canonical link. A first run also printed
+`net::ERR_ABORTED` on `/ @390`; it did not reproduce on a clean run and no
+resource was added in this pass — it is the first navigation of the run racing
+Chrome's startup, not a page fault.
+
+### Service area — the county list came out, same day
+
+Matthew: don't list counties, say it's all around Colorado, and convey "further
+out is fine" **without** a sentence saying so. The list and its disclaimer were
+in **six places across five pages**, in three shapes — all changed together,
+because changing one and leaving five is how a site starts contradicting itself:
+
+| Where | Was | Is |
+|---|---|---|
+| home hero aside | "El Paso, Teller and southern Douglas counties, and the Front Range foothills. Further out is a phone call, not a refusal." | "Working across Colorado — the Front Range, the foothills, and out from there. Tell us where the property is." |
+| `/contact/` "Where we work" | same, prefixed "Based in Monument." | "Based in Monument, working across Colorado. Tell us where the property is and we'll set a time to come and look at it." |
+| `/what-we-do/` `.scope` | "…working El Paso, Teller and southern Douglas counties and the Front Range foothills; further out is a phone call, not a refusal." | "…Based in Monument, working across Colorado." |
+| 3 × contact blocks (home, `/who-pays/`, `/wildfire-guide/`) | "Monument, Colorado — El Paso, Teller and southern Douglas counties" | "Monument, Colorado — working across the state" |
+
+The reach is now carried by an **invitation** ("tell us where the property is")
+instead of a **negation** ("not a refusal"), which was the actual ask.
+
+Two more that had to move with it, or the site would disagree with itself:
+
+- **The shared footer** said `Front Range · (303) 915-1045` on all six pages.
+  Now `Colorado · …`. It is inside `CHROME:FOOT`, so all six had to change
+  identically anyway — the drift auditor enforces it.
+- **`/what-we-do/`'s meta description** still read "what the crew and kit can
+  take on" — the exact phrase removed from that page's body an hour earlier. A
+  body edit that leaves the `<meta>` behind is easy to miss because nothing on
+  the rendered page shows it.
+
+### ⚑ Two things this leaves open
+
+1. **The home `<h1>` and the home meta description still say "on Colorado's
+   Front Range."** That is now the most place-limiting sentence left on the
+   site, and it is the headline — **not changed without Matthew, because it is
+   positioning, not a list.**
+2. **Local SEO.** Place names are most of how a local trade business is found,
+   and "El Paso", "Teller", "Douglas", "Monument" (×3) and "Woodland Park" were
+   doing that work. "Monument" survives in the hero kicker, the contact blocks
+   and the town-field placeholder; the county names are gone. Worth deciding
+   deliberately rather than discovering after launch — a "where we work" page,
+   or the counties in schema rather than in copy, gets both.
+
+### And back again — place names restored, 2026-09-20
+
+Matthew, on being told the SEO cost: go with place names, he can explain it to
+the team that way — and asked whether to list **more** counties.
+
+**The answer to that was no, and the reason was in this repo.** The three
+counties are not a cautious guess: [`sixfold/README.md`](../README.md) records
+*"35 miles from Monument does not reach Arapahoe or Jefferson"* — the area was
+deliberately **narrowed** from Arapahoe · Douglas · Jefferson when the company
+left Englewood, and that narrower list was then applied across the rate card,
+marketing plan, platform sheet, minimum-viable-start sheet and the pamphlet.
+Widening it on the website alone would have put the site out of step with five
+documents and quietly reversed a decision that the same file says still **needs
+Brandon's review**. Sheets A/B/C are already stale in the other direction.
+
+**And more counties is not where the SEO is.** A stacked county list reads as
+keyword stuffing. What ranks a local trade business is town names in ordinary
+sentences, a Google Business Profile, and `areaServed` schema — and the schema
+can carry a wider, more precise area than the prose, which is the split worth
+having. So: same three counties, towns back in the copy, schema added.
+
+| Where | Now |
+|---|---|
+| home hero aside | counties, then Colorado Springs, Black Forest, Palmer Lake, Woodland Park, Larkspur, Castle Rock |
+| `/contact/` "Where we work" | the fullest list — adds Gleneagle, Divide, Florissant, Sedalia |
+| `/what-we-do/` `.scope` | counties only; the section is about scope of work, not geography |
+| 3 × contact blocks | back to "Monument, Colorado — El Paso, Teller and southern Douglas counties" |
+| shared footer (6 pages) | `El Paso · Teller · Douglas · (303) 915-1045` — was `Front Range` |
+
+`/what-we-do/`'s meta description came back to the counties too, and was then
+**cut again at 164 characters** — inside the auditor's 165 limit but close
+enough to the truncation line to lose the tail in a result page.
+
+### The schema
+
+`LocalBusiness` in `index.html`, between `<!-- SEO:SCHEMA -->` markers, **home
+page only**. Three counties as `AdministrativeArea`, eleven towns as `City`.
+
+It sits **outside** `CHROME:META` on purpose — that block is compared byte for
+byte across all six pages, and this one is per-page.
+
+**⚑ Written down because each was a judgement, not an oversight:**
+
+1. **It went on `/contact/` too, then came off.** Two `LocalBusiness` blocks
+   with no shared `@id` can be read as two businesses. At launch, `@id` goes in
+   and then it can live on both — `LAUNCH.md` §6.
+2. **`url`, `@id` and `image` are absent** — all three need the domain, and the
+   `web-address` copy rule blocks it until it resolves. §6 has the exact keys.
+3. **`streetAddress` is absent, and it costs something.** Sierra Way is on the
+   agreements because a cancellation notice needs an address post is collected
+   at; publishing it is a different act. Google wants a full address for the
+   local pack. **Matthew's call — not made here.**
+4. **`areaServed` says Douglas County where the copy says *southern* Douglas.**
+   Schema cannot say "southern". The town entries are what pin it down.
+
+**And the thing that matters more than any of this:** a Google Business Profile
+outranks anything in the markup for a local trade. The schema supports a
+profile; it does not substitute for one.

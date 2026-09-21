@@ -19,7 +19,58 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sixfold Colorado — Fire mitigation, land clearing, landscaping</title>
-  <meta name="description" content="Fire mitigation, land clearing and landscaping on Colorado's Front Range, from Monument. One crew — book one service, or all three.">
+  <meta name="description" content="Fire mitigation, land clearing and landscaping on Colorado's Front Range, from Monument. Three services — book any one of them, or all three.">
+
+<!-- SEO:SCHEMA — outside CHROME:META on purpose: this block differs per page, and the
+     drift auditor compares CHROME:META byte for byte across all six.
+
+     `url`, `@id` and `image` are deliberately absent — all three need the live domain,
+     and audit-links.mjs blocks a bare sixfoldcolorado.com in copy until it resolves.
+     They go in at launch; LAUNCH.md carries the block.
+
+     `streetAddress` is absent too, and that is a DECISION, not an oversight: 17890
+     Sierra Way is on the agreements because a cancellation notice needs a real address,
+     which is not the same as publishing it. Google wants a full address for the local
+     pack, so this costs something — Matthew's call, flagged in README.md.
+
+     areaServed says Douglas County where the copy says SOUTHERN Douglas. Schema has no
+     way to say "southern", and an AdministrativeArea is the coarser instrument; the
+     towns below it are what actually pin the area down. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Sixfold Colorado",
+  "description": "Fire mitigation, land clearing and landscaping on Colorado's Front Range.",
+  "telephone": "+1-303-915-1045",
+  "email": "Contact@SixfoldColorado.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Monument",
+    "addressRegion": "CO",
+    "postalCode": "80132",
+    "addressCountry": "US"
+  },
+  "areaServed": [
+    { "@type": "AdministrativeArea", "name": "El Paso County, Colorado" },
+    { "@type": "AdministrativeArea", "name": "Teller County, Colorado" },
+    { "@type": "AdministrativeArea", "name": "Douglas County, Colorado" },
+    { "@type": "City", "name": "Monument, Colorado" },
+    { "@type": "City", "name": "Colorado Springs, Colorado" },
+    { "@type": "City", "name": "Black Forest, Colorado" },
+    { "@type": "City", "name": "Palmer Lake, Colorado" },
+    { "@type": "City", "name": "Gleneagle, Colorado" },
+    { "@type": "City", "name": "Woodland Park, Colorado" },
+    { "@type": "City", "name": "Divide, Colorado" },
+    { "@type": "City", "name": "Florissant, Colorado" },
+    { "@type": "City", "name": "Larkspur, Colorado" },
+    { "@type": "City", "name": "Sedalia, Colorado" },
+    { "@type": "City", "name": "Castle Rock, Colorado" }
+  ],
+  "knowsAbout": ["Wildfire mitigation", "Defensible space", "Land clearing", "Landscaping"]
+}
+</script>
+<!-- /SEO:SCHEMA -->
 <!-- CHROME:META -->
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -94,14 +145,24 @@
           <path class="rootline r10" d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
         </g>
       </svg>
-      <span class="word">Sixfold Colorado</span>
-      <span class="desc">Land &amp; Fire</span>
+      <!-- The wordmark and the descriptor are baseline-aligned to each other inside
+           .names, then that pair is centred against the mark. Before this they were two
+           separate items in the 78px-tall flex row — the wordmark centred, the descriptor
+           flex-end — which sat "Land & Fire" about 13px below the wordmark's baseline. -->
+      <span class="names">
+        <span class="word">Sixfold Colorado</span>
+        <span class="desc">Land &amp; Fire</span>
+      </span>
     </div>
+
+    <!-- The h1 sits ABOVE .hero-grid so it runs the full column width. Inside the
+         grid's 1.12fr left cell it broke over four short lines and left the right
+         of the fold empty. -->
+    <h1>Fire mitigation, land clearing and landscaping on Colorado's Front Range.</h1>
 
     <div class="hero-grid">
       <div>
-        <h1>Fire mitigation and landscaping on Colorado's Front Range.</h1>
-        <p class="say">One crew for all three. Book one, or book them together.</p>
+        <p class="say">Each service stands on its own. Book one, two, or all three.</p>
 
         <p class="serviceline">
           <b>Fire mitigation</b><i>·</i><b>Land clearing</b><i>·</i><b>Landscaping</b>
@@ -118,8 +179,9 @@
            door below, and lives in full on /who-pays/. -->
       <aside class="hero-aside">
         <p class="kicker">Based in Monument</p>
-        <p>El Paso, Teller and southern Douglas counties, and the Front Range foothills.
-        Further out is a phone call, not a refusal.</p>
+        <p>El Paso, Teller and southern Douglas counties — Colorado Springs, Black Forest,
+        Palmer Lake, Woodland Park, Larkspur and Castle Rock. Tell us where the property
+        is.</p>
         <p class="more"><a href="/what-we-do/">What we do, and how a job goes →</a></p>
       </aside>
     </div>
@@ -128,7 +190,7 @@
 
   <section id="work" class="wrap">
     <p class="kicker">The work</p>
-    <h2>Three services. Any one of them, or all three.</h2>
+    <h2>Each one is a job in its own right.</h2>
 
     <div class="lines3">
       <div>
@@ -138,8 +200,8 @@
       </picture>
         <h3>Fire mitigation</h3>
         <p>Felling, full tree removal and trimming, brush and dead fall out, slash piled
-        and chipped, rounds cut to length. Defensible space, fuel breaks and thinning by
-        the acre, worked to Colorado State Forest Service standards.</p>
+        and chipped, rounds cut to length. Defensible space, fuel breaks and thinning,
+        worked to Colorado State Forest Service standards.</p>
         <p class="tags">Felling · Trimming · Slash &amp; chip · Stumps · Defensible space</p>
       </div>
       <div>
@@ -148,9 +210,9 @@
         <img src="/assets/img/haul-truck.jpg" alt="A truck bed loaded with slash and cut limbs, ready to haul off site" loading="lazy" decoding="async" width="1000" height="667">
       </picture>
         <h3>Land clearing</h3>
-        <p>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement —
-        by the acre where that is the sensible unit rather than tree by tree.</p>
-        <p class="tags">By the acre · Brush removal · Chip, haul, or leave</p>
+        <p>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement,
+        and the ground left ready for whatever comes next.</p>
+        <p class="tags">Brush removal · Undergrowth · Dead fall · Chip, haul, or leave</p>
       </div>
       <div>
         <picture class="ph">
@@ -158,9 +220,9 @@
         <img src="/assets/img/beds.jpg" alt="A gravel bed with ornamental grasses and plantings alongside a concrete path" loading="lazy" decoding="async" width="1000" height="667">
       </picture>
         <h3>Landscaping</h3>
-        <p>Mowing, edging, beds and planting, sod and seed. A service in its own right —
-        and if you are also having ground cleared, the same crew does both.</p>
-        <p class="tags">Mowing · Edging · Beds · Planting</p>
+        <p>Mowing, edging, beds and planting, sod and seed, shrub and hedge trimming.
+        Booked on its own, quoted on its own, and priced on its own.</p>
+        <p class="tags">Mowing · Edging · Beds · Planting · Sod &amp; seed</p>
       </div>
     </div>
 
@@ -188,15 +250,12 @@
       </div>
       <div class="door">
         <p class="kicker">If it's landscaping</p>
-        <h2>Landscaping on its own, or alongside the clearing.</h2>
-        <p>Mowing, edging, beds, planting, sod and seed, shrub and hedge trimming. A service
-        in its own right — no felling or clearing has to come first. And if a property does
-        need both, one crew does both, which beats booking two outfits for one piece of
-        ground.</p>
-        <p>Landscaping is quoted on its own agreement and priced on its own. It is not
-        wildfire mitigation and it does not qualify for the credit — we say so up front
-        rather than let anyone assume.</p>
-        <p class="more"><a href="/what-we-do/#landscaping">What we take on, and what we don't →</a></p>
+        <h2>A yard worth walking out into.</h2>
+        <p>Mowing, edging, beds, planting, sod and seed, shrub and hedge trimming,
+        clean-up and haul-away. Tell us how you want the ground kept and we'll walk it
+        with you.</p>
+        <p>Landscaping is booked on its own agreement and priced on its own.</p>
+        <p class="more"><a href="/what-we-do/#landscaping">Everything landscaping covers →</a></p>
       </div>
     </div>
   </section>
@@ -220,11 +279,11 @@
 
   <section class="band">
     <div class="wrap">
-      <p class="kicker">Free to read, nothing asked for</p>
+      <p class="kicker">A homeowner's guide</p>
       <h2>Preparing your home for wildfire.</h2>
       <p>The guide we hand to homeowners, on the site in full: where embers actually get
       in, the seven places a house catches, and the three zones measured out from your
-      wall. Most of it is a weekend's work and none of it needs us.</p>
+      wall. Work through it yourself, or hand any of it to us.</p>
       <p><a class="btn btn-solid" href="/wildfire-guide/">Read the guide</a></p>
     </div>
   </section>
@@ -266,7 +325,7 @@
         <div class="word">Sixfold Colorado</div>
       </div>
       <p class="fine">Fire mitigation · Land clearing · Landscaping<br>
-      Front Range · (303) 915-1045</p>
+      El Paso · Teller · Douglas · (303) 915-1045</p>
     </div>
     <nav class="foot-nav">
       <a href="/what-we-do/">The work</a>
