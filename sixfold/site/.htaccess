@@ -15,7 +15,7 @@
 # all — see LAUNCH.md §2. Either alone can fail; both together is the point.
 
 # ---------------------------------------------------------------- source files
-# .md  build notes and internal reasoning (README, LAUNCH, PHOTOS)
+# .md  build notes and internal reasoning (README, LAUNCH, DEPLOY, PHOTOS)
 # .mjs both auditors, the dev server, the photo builder — the copy rules live in
 #      audit-links.mjs, i.e. a list of everything we have decided not to say
 # .log .sh .map  never anything a visitor should see

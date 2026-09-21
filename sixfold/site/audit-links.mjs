@@ -149,7 +149,7 @@ for (const name of BLOCKS) {
 const RULES = [
   ['web-address',
    /https?:\/\/(?:www\.)?sixfoldcolorado\.com|(?<![@/\w.])sixfoldcolorado\.com(?!["'])/i,
-   'prints a web address — the domain is owned but NOT hosted'],
+   'prints a bare web address in body copy — use the mailto or the phone'],
   ['credentials',
    /licen[sc]ed and insured|\bbonded\b|\bfirewise\b/i,
    'claims a credential Sixfold does not hold'],
@@ -199,12 +199,21 @@ const waiversIn = (s, file) => {
    otherwise every file's own header comment trips its own rules. */
 const visible = (s) => s.replace(/<!--[\s\S]*?-->/g, ' ');
 
+/* Tags carry the domain legitimately (canonical, og:url, JSON-LD). The
+   web-address rule is about PRINTED COPY, so it is tested against text with the
+   markup stripped; every other rule still sees the whole file. */
+const textOnly = (s) => visible(s)
+  .replace(/<script[\s\S]*?<\/script>/gi, ' ')   /* JSON-LD is markup, not prose */
+  .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+  .replace(/<[^>]+>/g, ' ');
+
 for (const [page, s] of src) {
   const body = visible(s);
+  const copy = textOnly(s);
   const waived = waiversIn(s, page);
   for (const [id, re, why] of RULES) {
     if (waived.has(id)) { waivedCount++; continue; }
-    const hit = body.match(re);
+    const hit = (id === 'web-address' ? copy : body).match(re);
     if (hit) fail(page, `[${id}] ${why} — found "${hit[0].trim()}"`);
   }
 }
