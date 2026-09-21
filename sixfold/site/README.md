@@ -1135,3 +1135,33 @@ reached it. The test is now two steps: *delete it — is a fact lost?* and then
 Kept **shorter than the `/who-pays/` version**, which adds "— almost nobody knows
 it exists", so the hub still teases and the detail page still says more. A comment
 in `index.html` marks it as not-a-gloss at the line itself.
+
+## Offer, never instruct — 2026-09-21
+
+Matthew on *"Read it, then have us walk the property"*: **too aggressive.** His own
+replacement set the register — *"we can walk the property and show you areas that
+might be at risk."*
+
+**The fault is the imperative.** "Read it, then…", "Have us…" tell the reader what
+to do. **"We can…" offers and leaves the decision with them.** Three instances, all
+written the same afternoon, all swept together:
+
+| Where | Was | Is |
+|---|---|---|
+| home, guide band | "Read it, then have us walk the property." | "We can walk the property and show you the areas that might be at risk." |
+| guide, page lede | "Have us walk it and tell you where your property actually stands." | "We can also come and walk your property." |
+| guide, contact `h2` | "Have us walk your zones." | "We can walk your zones with you." |
+
+**Keep his hedge — "areas that *might* be at risk."** He does not want copy telling
+a homeowner their house is in danger. It pairs with the DIY rule: no encouragement
+to do it themselves, no instruction to hire us, just the offer.
+
+**⚑ Caught in my own replacement:** the guide's version first read "We can also come
+and walk **it** with you", and the preceding sentence is about embers — so "it"
+pointed at the wrong noun. Named the property instead.
+
+This is the third register correction today that turned out to be systemic rather
+than local (after the DIY framing and the trailing gloss), and the pattern is now
+in the `matthew-copy-edit-patterns` memory rather than only here.
+
+Auditors: links all clear, runtime 0 failures.
