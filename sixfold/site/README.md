@@ -966,8 +966,17 @@ context). Nothing was ever repeated within a single section.
 
 The card prose enumerated the service, and the `.tags` line underneath enumerated
 it again — **three times over on the home page for landscaping**, once in the card
-prose, once in the tags, once in the landscaping door. The prose now says what the
-service *is* and **the tags carry the enumeration**, which is what they are for.
+prose, once in the tags, once in the landscaping door. The prose was rewritten to
+say what the service *is*, letting **the tags carry the enumeration**.
+
+**⚑ Landscaping was reverted the same day, on Matthew's call** — he prefers the
+enumerating version: *"Mowing, edging, beds and planting, sod and seed, shrub and
+hedge trimming. Booked on its own, quoted on its own, and priced on its own."*
+So **fire mitigation and land clearing characterise, landscaping enumerates**, and
+that card's prose and tags do overlap by choice. Do not "fix" it back.
+
+The duplication that actually mattered — the same list appearing a third time in
+the landscaping door — is gone regardless, because that door was replaced (§2).
 
 ### 2. ⚑ The two doors were not parallel, and one of them said nothing
 
