@@ -1031,3 +1031,29 @@ error, not a style one. Each block now fits its page:
 · home 566 · contact 290 · thank-you 39.
 
 Auditors: links all clear, runtime 0 failures.
+
+## `/what-we-do/` lede trimmed — 2026-09-21
+
+Matthew on *"the walk and the written record at the end are the same either way"*:
+*"i just dont like the phrasing of it. theres gotta be a better way to say it or
+remove it."* Removed.
+
+It was also doing the thing he cuts every single time — **explaining why the
+sentence before it mattered** ([[matthew-copy-edit-patterns]] is full of these).
+"Book one or all three" is the point; "and here is why that is fine" is the
+justification, and he takes the justification off every draft.
+
+**A second clause went with it.** "Book a single service, or book all three" is
+what the `<h1>` directly above it already says — *"Three services. Any one of them,
+or all three."* The lede was restating its own heading.
+
+| | |
+|---|---|
+| Was | "Each one is quoted on its own agreement and priced on its own. Book a single service, or book all three — the walk and the written record at the end are the same either way." |
+| Is | "Each one is quoted on its own agreement and priced on its own." |
+
+The lede now **supports** the heading instead of repeating it and then defending
+it. Rendered and checked at 1280 and 768: two lines against the three-line
+headline, and the split header still balances.
+
+Auditors: links all clear, runtime 0 failures.
