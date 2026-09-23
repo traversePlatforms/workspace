@@ -1,168 +1,127 @@
-# Logo rebrand — concepts, September 2026
+# Logo rebrand — September 2026
 
-**Status: concepts only.** No masters drawn, no decision taken, nothing published or uploaded.
-The current Ridge mark and its four SVGs in `../` are untouched.
+**Status: one candidate, four core treatments, nothing decided.** No masters drawn, nothing published
+or uploaded. The current Ridge mark and its four SVGs in `../` are untouched.
 
 ## Why this exists
 
-Matthew, 23 Sep 2026: fire mitigation stops being what Sixfold leads with. **Aeration leads,
-general landscaping sits beside it, and fire mitigation is still offered but is no longer the
-headline.** Limbing, land clearing, brush removal and felling continue — they sit under
-landscaping now rather than under fire.
+Matthew, 23 Sep 2026: fire mitigation stops being what Sixfold leads with. **Aeration leads, general
+landscaping sits beside it, and fire mitigation is still offered but is no longer the headline.**
+Limbing, land clearing, brush removal and felling continue — they sit under landscaping now rather
+than under fire.
 
 He asked for logo concepts to review and take to the team.
+
+## Where it got to
+
+The board opened with six competing concepts. **It now carries one.** Matthew, 23 Sep 2026: *"I think
+this is the ideal candidate, just about fine tuning what needs to be done."*
+
+**"Ridge, aerated" is the candidate.** The remaining question is how the cores are drawn, so the board
+is now four core treatments against identical geometry.
+
+**The other five concepts are retired, not deleted** — Ridge retinted, Three strata, Ridge of cores,
+Sixfold rosette and The tine. They are in git; the last commit that has them on the board is
+`c617c99`. If one is wanted back, recover it from there rather than redrawing it.
 
 ## What is here
 
 | File | What it is |
 |---|---|
-| `concepts.html` | The board. Six concepts, three palette directions, the small-size and one-colour tests, open decisions, rollout cost, fact-check log. Double-click to read. |
-| `Sixfold-Rebrand-Concepts.pdf` | The same board printed light, **9 pages**, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs` — job added to the list, so it re-renders with everything else. |
-| `Sixfold-Rebrand-Concepts.sheet.png` | Contact sheet of the PDF, so the print result can be looked at without opening it. |
+| `build-board.mjs` | **Generates the board.** Geometry lives at the top; each treatment only gets to draw a core. Run `node build-board.mjs`. |
+| `concepts.html` | The generated board. Double-click to read. **Do not hand-edit — it is overwritten.** |
+| `Sixfold-Rebrand-Concepts.pdf` | The board printed light, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs`. |
+| `Sixfold-Rebrand-Concepts.sheet.png` | Contact sheet of the PDF, so the print result can be looked at. |
+| `concepts.artifact.html` | Unwrapped copy for the artifact at https://claude.ai/artifact/9USctbb7PFwhuFAQ9eorz5 |
 
-## Two things that were settled to make this
+**Why it is generated.** We are now iterating on one drawing, so what matters is that the spacing, the
+depths and everything above the ground line stay *identical* between treatments — otherwise the
+comparison is not a comparison. Putting the geometry in one place and letting each treatment draw only
+a core makes that structural rather than a matter of care. Swapping a treatment in or out is a few
+lines.
 
-1. **Aeration means lawn / core aeration** — hollow tines, plugs pulled out of turf. Confirmed by
-   Matthew, 23 Sep 2026. `sixfold/README.md` had this recorded as unestablished with a standing
-   instruction not to write sector specifics; that entry has been corrected.
-2. **The concepts span the full range** — 01 is palette-only, 06 is a clean sheet. That was
-   deliberate, so the meeting is a choice rather than a yes/no on one drawing.
+## Settled, and not up for grabs in this round
 
-## The six
+- **Five forms, five cores.** The Ridge mark has four peaks and one conifer above the ground line.
+  One core per form, directly beneath it.
+- **Each core is as deep as its form is tall.** Apex heights measured off the path data:
+  **30.5 / 38 / 48 / 60 / 72**. The bottom edge is the skyline inverted.
+- **The turf band and its five holes**, which is what a hollow tine leaves.
+- **The ember is the conifer's core** — the one form that is not a peak, and the smallest of the five.
+- **Every treatment keeps a lid of turf in the band's own colour.** A plug comes out with the lawn
+  still attached, and it is the one feature that says "aeration core" rather than "shape". It takes
+  the band colour because it *is* the same turf.
 
-| # | Name | Move |
-|---|---|---|
-| 01 | Ridge, retinted | Palette only, no geometry change. **The control** — it shows how much of the fire read was just the orange. |
-| 02 | Ridge, aerated | Perforated turf band; one core per form, under it, as deep as it is tall. Bottom edge is the skyline inverted. **Five, not six** — see below. |
-| 03 | Three strata | Cross-section: canopy, aerated turf, root zone. Peaks flattened to a ridgeline. |
-| 04 | Ridge of cores | Six banded soil cores in a ridge profile. Keeps the old silhouette, loses the tree. |
-| 05 | Sixfold rosette | Six tines radiating on 60°. The only one that fits a circle. |
-| 06 | The tine | One hollow tine, the hole, the core, air going in. No fire at all. |
+## The four treatments
 
-## Design decisions worth keeping
+| | Name | What it is | What it costs |
+|---|---|---|---|
+| 01 | Mirror wedge | Each core is the form above it turned upside down. | Cleanest and strongest at small size. Nothing about a wedge says *soil*. |
+| 02 | Broken plug | The core in pieces, because a real plug crumbles. | Most honest to the material. Gaps close up in embroidery. |
+| 03 | Section outline | Outline rather than fill, like a sample in a section drawing. | Keeps the weight in the peaks. Thin strokes die on a magnet or a receipt. |
+| 04 | Soft taper | A slight taper to a rounded tip, one thatch seam. | Closest to a real core. Least distinctive — a row of pegs. |
 
-- **Every mark separates its parts by lightness, not hue.** Ember against Moss is `1.11:1`;
-  green against green is `1.20:1`. Both are invisible to a red-green colourblind viewer and both
-  collapse in one colour. The tonal ramp is what makes the mono tiles work.
-- **The tiles recolour one SVG rather than holding three copies.** Each concept's artwork uses
-  `var(--mk-1..4)`, `--mk-em`, `--mk-ln` and `--mk-bg`; `.t-dark` / `.t-bone` / `.t-mono` set them.
-  Change the drawing once and all three tiles follow.
-- **All contrast ratios in the document were computed**, not estimated. The new colours (Turf,
-  Sage, Wheat) are proposals invented for this board and have no standing until someone picks one.
-
-## What core aeration actually is — verified, because the first drawing got it wrong
+## What core aeration actually is — verified
 
 Checked first-party against UMass Amherst Extension on 23 Sep 2026, after Matthew asked whether the
 drawing matched the real equipment. It did not.
 
 - **It is a punch, not a drill.** A core aerator carries **hollow tines** — short open-ended steel
-  tubes — on a rotating drum or a cam-driven head that pushes straight down. No auger, no rotation
-  into the soil.
-- **Tine inside diameter is 1/4″ to 3/4″**, set in grids from 2″×2″ to 4″×6″. A working head carries
-  dozens of tines, close together — not six.
-- **Each tine pulls a plug 2–3″ long and drops it ON the surface.** For a lawn the plugs stay there
-  and get broken up with a drag mat or a mower, acting as topdressing. Only on golf greens are they
-  swept off.
-- Spike/solid-tine aerators and drill attachments exist but are not the standard commercial job.
-  "Aeration" in this trade means core/hollow-tine.
+  tubes — on a rotating drum or a cam-driven head that pushes straight down.
+- **Tine inside diameter is 1/4″ to 3/4″**, in grids from 2″×2″ to 4″×6″. A working head carries
+  dozens of tines, not five.
+- **Each tine pulls a plug 2–3″ long and drops it ON the surface**, where it stays and is broken up as
+  topdressing. Only on golf greens are they swept off.
+- Spike aerators and drill attachments exist but are not the standard commercial job.
 
-**Where this landed.** Concept 02's cores stay *below* the band, which is not where a real plug
-ends up — and that is a deliberate call, not an oversight. **Matthew's direction: keep the cores and
-let them mimic the ledge of the ridge across the bottom.** So each core is now as deep as the peak
-silhouette above it is tall: shallow under the tree end, deepest under the tallest peak, shallower
-again at the right. The bottom edge becomes the ridgeline repeated, and the mark rhymes with itself.
-
-That makes it a **cross-section** — soil columns under the holes they came from — the same device
-Concept 03 already uses. The caption says so outright rather than leaving someone in the trade to
-find it. A surface-accurate version, with the cores lying on the grass, was drawn and set aside: it
-was correct and it gave up the ledge.
-
-**There are five cores, not six, and that is the interesting part.** Matthew: *"I notice that there's
-6 cores but only 5 trees, can you double check that's correct? and I notice that 6th doesn't mirror
-much of anything given that it's shorter."* Both correct. Counted off the path data: **the Ridge mark
-has five forms above the ground line — four peaks and one conifer — and has never encoded the name.**
-The six came from "Sixfold", not from the drawing, and the sixth core sat at x=88 on peak four's
-descending flank, so it sampled a downslope and read as a droop.
-
-It is now one core per form, directly under it, as deep as it is tall. Apex heights measured rather
-than estimated: **30.5 / 38 / 48 / 60 / 72**. The deepest core plus its longest root thread puts the canvas at
-**120**, against the current Ridge's 116.
-
-**Whether the mark should encode six at all is now an open decision on the board** — it would mean
-adding a sixth form above, which changes the Ridge silhouette for every concept that inherits it.
-Concepts 04 and 05 do carry six.
-
-*Measurement note:* the leftmost height was hand-estimated at 7 and is actually 12. Sample the
-geometry; do not eyeball it. The script that does it is in the fact-check log's method.
-
-**Four drawings were needed to get here, and the two dead ends are worth not repeating:**
-cores deleted outright (an over-correction — *"I liked the cores, I just wasn't sure if they looked
-the right way"*; a question about accuracy is a question, not an instruction to cut); then cores at
-13 wide with 2.2 gaps, which fused into a brick wall and stopped being countable. **Slim cores,
-aligned to the holes, with depth doing the work.**
-
-**Concept 04 still stands its cores on end**, which is also not how plugs lie; that one is kept as a
-deliberate abstraction and the caption now says so rather than leaving it to be found.
+**So this mark is a cross-section, not a photograph** — a real plug does not hang under the turf.
+That is deliberate, the same device the retired "Three strata" concept used, and it is what buys the
+mirrored ledge. The board says so outright rather than leaving someone in the trade to find it.
 
 Sources: <https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/management-of-compaction-coring>
 and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of_compaction.pdf>
 
-## Things that went wrong on the way, so they don't get re-introduced
+## Dead ends, so they are not repeated
 
-- **Concept 4 read as a bar chart.** Three separate causes, all fixed: equal core widths, strata
-  bands running the full width like gridlines, and a bright ground bar acting as an axis. The bands
-  are now clipped to each core, widths and heights are irregular, and the ground line is deep turf
-  rather than the brightest thing in the mark. **It can still read as a chart** and the board says
-  so — do not quietly drop that caveat.
-- **Concept 3's roots came out as hanging noodles** when the original corner fan was spread evenly
-  across the width. They are now short and branching.
-- **Concept 5's petals came out forked.** A single SVG arc sweep flag cannot be correct for all six
-  rotations. The tips are flat lines now.
-- **Concept 2's cores went through six drawings.** They must stay slim (8.5 units), one per form,
-  and countable — widening them to 13 fused them into a wall. Their depths are not decorative: each
-  matches the apex height of the form directly above it. **Do not add a sixth without adding a sixth
-  form above it.**
 - **The turf cap has to be the band colour.** The first capped version used Sage over a Moss body —
-  `1.20:1`, the hue-only pairing this very document warns about — and the cap simply did not read.
-  Using the band's own colour is also the honest answer: it is the same turf.
+  `1.20:1`, the hue-only pairing this very document warns about — and the cap did not read at all.
+- **Cores must stay slim (8.5 units) and one per form.** Widening them to 13 fused them into a brick
+  wall and they stopped being countable.
+- **Do not put plugs below a turf line and call it accurate.** They were first hung below the band
+  with nothing to say for it, and read as tines pointing down. The cross-section framing is what
+  makes the position defensible.
+- **Do not add a sixth core without adding a sixth form above it.** A sixth was tried; it sat on a
+  downslope, mirrored nothing, and looked like a mistake because it was one.
+- **An earlier pass deleted the cores outright** when Matthew had only asked whether they were
+  accurate. *"I liked the cores, I just wasn't sure if they looked the right way."* A question about
+  accuracy is a question, not an instruction to cut.
+- **Sample the geometry, do not eyeball it.** A hand-estimated height of 7 was really 12.
+- Treatments already drawn and rejected: plain banded column with a rounded end; cap with grass blades
+  standing proud (blades vanish into the band); mottled soil (reads as noise, mush below 30px); cap
+  plus root threads (drawn, shown, not liked).
 
-## The core treatment, and the three that lost
+## Open decisions
 
-Matthew, on the five-core version: *"I'm just not sold on the core design yet."* Four treatments were
-drawn against identical spacing and depths, on dark, bone and one-colour grounds plus a 34px row:
-
-| | Treatment | Outcome |
-|---|---|---|
-| A | Plain column, rounded end, even seams | The version that prompted the question. Reads as banded pills. |
-| E | Turf cap + snapped end | Clean, and the safest at small size and in one colour. **The fallback if the threads prove fragile.** |
-| **F** | **Cap + snapped end + root threads** | **Chosen.** Unmistakably a *pulled* core, and it quietly restores the roots this concept had dropped. |
-| G | Cap + mottled soil | Flecks read as noise and turn to mush below ~30px. |
-
-The tell is the cap: a plug comes out with the lawn still on it. Everything else is detail.
-- **Concept 1 exposed a real constraint:** retinting alone loses the conifer, because it was moss on
-  ember and is now green on green. The tree and ground line have to move to bone or black.
-
-## Open, and deliberately not decided here
-
-- Which concept, or which two to develop.
+- **Which core treatment**, and separately **which palette** (A demote the ember, B turf primary,
+  C turf and wheat — all still on the board).
+- **Should the mark encode six at all?** The Ridge mark has five forms and has never encoded the
+  name. Making it genuinely six means adding a sixth form *above* the ground line — a change to the
+  silhouette, not the cores. It is the one change that would make the drawing say "Sixfold" out loud.
 - **The descriptor "Land & Fire."** Settled 15 Sep 2026 and already on the crew shirt and every
-  business card option. It now names the demoted service and misses both promoted ones. Needs
-  re-opening whether or not the mark changes.
-- Ridge vs Sweep — never formally closed, and overtaken if the answer is a clean sheet.
-- Whether the ember survives at all as a one-in-six accent.
+  business card option. It names the demoted service and misses both promoted ones.
 
 ## Before anything is committed to
 
-- **Check the vehicle magnets have not been ordered.** The repo holds artwork for 24×12, 24×12
-  light and 24×18 plus an order sheet, and shows no order placed — but absence of a record is not
+- **Check the vehicle magnets have not been ordered.** The repo holds artwork for 24×12, 24×12 light
+  and 24×18 plus an order sheet, and shows no order placed — but absence of a record is not
   confirmation. It is the one item on the rollout list that cannot be re-run.
 - **The live site.** sixfoldcolorado.com has been live since 21 Sep 2026 and carries the mark in the
-  favicon, the stylesheet and the wildfire guide. Re-bundle, re-upload, and cache-bust when
-  verifying — the host serves a stale proxy cache after an upload.
+  favicon, the stylesheet and the wildfire guide. Re-bundle, re-upload, and cache-bust when verifying
+  — the host serves a stale proxy cache after an upload.
 - **Re-run the prior-use screen on the new drawing.** `../../research/logo-prior-use-screen.md`
   covered the Ridge mark only, and two of its checks were never run — reverse image search and the
   USPTO design-code search.
 
-Rollout scale, counted in the repo 23 Sep 2026: **180** files carrying the ember hex or the Ridge
-path data, **40** rendered brand PNGs, **84** PDFs, **3** vehicle magnet files. The September
-phone-number sweep (57 files, 21 PDFs) is the precedent that this is doable.
+Rollout scale, counted in the repo 23 Sep 2026: **180** files carrying the ember hex or the Ridge path
+data, **40** rendered brand PNGs, **84** PDFs, **3** vehicle magnet files. The September phone-number
+sweep (57 files, 21 PDFs) is the precedent that this is doable.

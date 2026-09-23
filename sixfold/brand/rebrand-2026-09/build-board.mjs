@@ -1,0 +1,482 @@
+/*
+  Builds concepts.html — the Concept 02 refinement board.
+
+  The board used to carry six competing concepts. From 2026-09-23 it carries one:
+  "Ridge, aerated" is the candidate, and the open question is the core treatment.
+  The other five concepts are retired, not deleted — they are in git, last on the
+  board at commit c617c99.
+
+  Everything about the mark except the core is fixed and lives in one place here:
+  FORMS (which form sits where, and how tall it is), depth() (how deep its core
+  runs) and PEAKS (the geometry above the ground line). A treatment only gets to
+  draw the core. That is what keeps the spacing and the mirroring identical
+  across all four, which is the whole point of the comparison.
+
+  Run:  node build-board.mjs
+  Then: node ../../tools/html-to-pdf.mjs Sixfold-Rebrand-Concepts
+*/
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = dirname(fileURLToPath(import.meta.url));
+
+/* ---- fixed geometry: do not vary this per treatment ---- */
+// [x centre, height of the form above the ground line] — measured off the path data
+const FORMS = [[22, 30.5], [36, 38.0], [50, 48.0], [66, 60.0], [79, 72.0]];
+const W = 8.5, TOP = 91, CAP = 3.0;
+const depth = h => 4 + h * 0.26;
+const geo = i => { const [cx, h] = FORMS[i]; return { cx, h, d: depth(h), x: cx - W / 2, bot: TOP + depth(h) }; };
+
+const HOLES = FORMS.map(([cx]) => `M${cx - 2} 87.2 H${cx + 2} V89.8 H${cx - 2} Z`).join(' ');
+const PEAKS = `<path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>`
+  + `<path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>`
+  + `<path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>`
+  + `<path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>`
+  + `<g fill="var(--mk-ln)"><rect x="20.4" y="77" width="3.2" height="7"/>`
+  + `<path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/>`
+  + `<path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g>`
+  + `<path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z ${HOLES}"/>`;
+
+const BODY = 'var(--mk-2)', EMBER = 'var(--mk-em)', LN = 'var(--mk-ln)', BG = 'var(--mk-bg)';
+const ink = i => (i === 0 ? EMBER : BODY);          // the conifer's core is the ember one
+const cap = (x) => `<path d="M${x} ${TOP} h${W} v${CAP} h-${W} Z" fill="${LN}"/>`;
+
+/* ---- the four treatments. Each draws one core and nothing else. ---- */
+
+/* 1 — the peak above, turned upside down. The mirror made literal. */
+const wedge = i => {
+  const { x, d, bot } = geo(i);
+  return `<path d="M${x} ${(TOP + CAP).toFixed(2)} h${W} L${(x + W / 2).toFixed(2)} ${bot.toFixed(2)} Z" fill="${ink(i)}"/>` + cap(x);
+};
+
+/* 2 — a plug that came out in pieces, which is what they do. */
+const segmented = i => {
+  const { x, d } = geo(i);
+  const run = d - CAP, GAP = 0.9;
+  const n = run > 16 ? 4 : run > 11 ? 3 : 2;
+  const seg = (run - GAP * (n - 1)) / n;
+  const nudge = [0, 0.55, -0.5, 0.35];
+  let g = '';
+  for (let k = 0; k < n; k++) {
+    const y = TOP + CAP + k * (seg + GAP);
+    const w = k === n - 1 ? W - 1.2 : W;
+    const dx = nudge[k % 4] + (k === n - 1 ? 0.6 : 0);
+    g += `<rect x="${(x + dx).toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${seg.toFixed(2)}" rx="0.7" fill="${ink(i)}"/>`;
+  }
+  return g + cap(x);
+};
+
+/* 3 — drawn as a section, in outline, so the peaks keep all the weight. */
+const outlined = i => {
+  const { x, d, bot } = geo(i);
+  const sw = 1.1, h = d - CAP - sw / 2;
+  let g = `<rect x="${(x + sw / 2).toFixed(2)}" y="${(TOP + CAP + sw / 2).toFixed(2)}" width="${(W - sw).toFixed(2)}" height="${h.toFixed(2)}" fill="none" stroke="${ink(i)}" stroke-width="${sw}"/>`;
+  const seam = TOP + CAP + h * 0.42;
+  g += `<rect x="${(x + sw).toFixed(2)}" y="${seam.toFixed(2)}" width="${(W - sw * 2).toFixed(2)}" height="${sw * 0.8}" fill="${ink(i)}"/>`;
+  return g + cap(x);
+};
+
+/* 4 — the quiet one: a slight taper, a soft tip, one thatch seam. */
+const taper = i => {
+  const { x, d, bot } = geo(i);
+  const t = 1.3, r = (W - t * 2) / 2;
+  const g = `<path d="M${x} ${(TOP + CAP).toFixed(2)} h${W} L${(x + W - t).toFixed(2)} ${(bot - r).toFixed(2)}`
+    + ` a${r} ${r} 0 0 1 -${(W - t * 2).toFixed(2)} 0 Z" fill="${ink(i)}"/>`;
+  return g + cap(x) + `<rect x="${x}" y="${(TOP + CAP).toFixed(2)}" width="${W}" height="0.85" fill="${BG}"/>`;
+};
+
+const TREATMENTS = [
+  ['1', 'Mirror wedge', wedge,
+   'Each core is the form above it turned upside down. The mirror stops being a measurement and becomes the shape.',
+   'Purely geometric. It is the cleanest of the four and the strongest at small size, but nothing about a wedge says <em>soil</em> — it reads as reflection, not as a plug.'],
+  ['2', 'Broken plug', segmented,
+   'The core in pieces, two to four depending on its length, because a real plug comes up and crumbles.',
+   'The most honest to the material and the most characterful. The gaps are the risk: they close up in embroidery and at small size the core can read as a dotted line.'],
+  ['3', 'Section outline', outlined,
+   'Drawn in outline rather than filled, like a sample in a section drawing, with one seam across it.',
+   'Keeps all the visual weight in the peaks and makes the drawing feel measured. Thin strokes are the first thing lost on a vehicle magnet or a thermal receipt.'],
+  ['4', 'Soft taper', taper,
+   'A slight taper to a rounded tip, one thatch seam under the turf. The quietest of the four.',
+   'Closest to the core you would actually pull. It is also the least distinctive — at a glance it is a row of pegs.'],
+];
+
+const svg = (fn, cls = '') =>
+  `<svg viewBox="0 0 100 120" role="img" aria-label="Concept 02 core treatment"${cls ? ` class="${cls}"` : ''}>${PEAKS}${FORMS.map((_, i) => fn(i)).join('')}</svg>`;
+
+/* ---- the page ---- */
+const tile = (fn, kind, label) => `<div><div class="tile ${kind}">${svg(fn)}</div><p class="tag">${label}</p></div>`;
+
+const block = ([n, name, fn, signals, cost]) => `
+  <article class="concept">
+    <header>
+      <span class="cnum">0${n}</span>
+      <h3>${name}</h3>
+      <span class="cmove">Core treatment ${n} of 4</span>
+    </header>
+    <div class="marks">
+      ${tile(fn, 't-dark', 'Pine ground')}
+      ${tile(fn, 't-bone', 'Bone ground')}
+      ${tile(fn, 't-mono', 'One colour')}
+    </div>
+    <div class="readout">
+      <div><h4>What it is</h4><p>${signals}</p></div>
+      <div class="w"><h4>What it costs</h4><p>${cost}</p></div>
+    </div>
+  </article>`;
+
+const smallRow = size => `<div class="small-test">${TREATMENTS.map(([n, name, fn]) =>
+  `<figure class="s${size}">${svg(fn)}<figcaption>0${n} &mdash; ${size}px</figcaption></figure>`).join('')}</div>`;
+
+const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Logo Rebrand Concepts</title>
+<style>
+  :root {
+    --ground:#0E1512; --surface:#18211D; --lift:#1F2A25; --seam:#2E3D35;
+    --ink:#EDE7DC; --ink-dim:#B4BEB3; --ink-faint:#869184;
+    --ember:#E4703A; --moss:#8AA07A; --turf:#4E9A68; --sage:#A7BE93;
+    --f-display:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    --f-body:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --f-data:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+    --pad:clamp(1.1rem,4vw,2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground:#EDE7DC; --surface:#E5DED1; --lift:#DCD4C4; --seam:#C6BCA9;
+      --ink:#0E1512; --ink-dim:#3E4A43; --ink-faint:#6A766E;
+      --ember:#B84C15; --moss:#4F6640; --turf:#2F7A4F; --sage:#5E8A4A;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground:#EDE7DC; --surface:#E5DED1; --lift:#DCD4C4; --seam:#C6BCA9;
+    --ink:#0E1512; --ink-dim:#3E4A43; --ink-faint:#6A766E;
+    --ember:#B84C15; --moss:#4F6640; --turf:#2F7A4F; --sage:#5E8A4A;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:16px;
+       line-height:1.62;margin:0;-webkit-font-smoothing:antialiased}
+  main{max-width:1120px;margin:0 auto;padding:0 var(--pad) 5rem}
+
+  .masthead{padding:3.2rem 0 1.8rem;border-bottom:3px solid var(--turf)}
+  .brandline{display:flex;align-items:flex-end;gap:1.4rem;flex-wrap:wrap}
+  .brandline svg{width:92px;flex:none;display:block}
+  .wordmark{font-family:var(--f-display);font-size:clamp(2.4rem,7vw,3.7rem);
+            letter-spacing:-0.02em;line-height:0.94;margin:0}
+  .kicker{font-family:var(--f-data);font-size:0.66rem;letter-spacing:0.24em;
+          text-transform:uppercase;color:var(--turf);margin:0.55rem 0 0}
+  .standfirst{max-width:62ch;color:var(--ink-dim);font-size:1.04rem;margin:1.5rem 0 0}
+
+  section{padding-top:3.2rem}
+  h2{font-family:var(--f-data);font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;
+     color:var(--turf);margin:0 0 1.1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--seam);
+     font-weight:700}
+  h3{font-family:var(--f-display);font-size:1.34rem;margin:0 0 0.35rem;font-weight:600}
+  p{margin:0 0 0.9rem;max-width:64ch}
+  .faint{color:var(--ink-faint);font-size:0.9rem}
+  code,.mono{font-family:var(--f-data);font-size:0.86em}
+  strong{color:var(--ink)}
+
+  .tile{display:grid;place-items:center;border-radius:3px;padding:1.1rem;border:1px solid var(--seam)}
+  .tile svg{width:100%;height:auto;display:block}
+  .t-dark{--mk-1:#A7BE93;--mk-2:#8AA07A;--mk-3:#4E9A68;--mk-4:#2F7A4F;--mk-em:#E4703A;
+          --mk-ln:#EDE7DC;--mk-bg:#0E1512;background:#0E1512;border-color:#2E3D35}
+  .t-bone{--mk-1:#7FA468;--mk-2:#5E8A4A;--mk-3:#3D8B5A;--mk-4:#245F3D;--mk-em:#B84C15;
+          --mk-ln:#0E1512;--mk-bg:#EDE7DC;background:#EDE7DC;border-color:#C6BCA9}
+  .t-mono{--mk-1:#7A7A7A;--mk-2:#5E5E5E;--mk-3:#3C3C3C;--mk-4:#141414;--mk-em:#9A9A9A;
+          --mk-ln:#141414;--mk-bg:#EDE7DC;background:#EDE7DC;border-color:#C6BCA9}
+
+  .concept{border:1px solid var(--seam);border-radius:4px;background:var(--surface);
+           padding:1.4rem;margin:0 0 1.6rem}
+  .concept > header{display:flex;align-items:baseline;gap:0.75rem;flex-wrap:wrap;
+                    margin:0 0 1rem;padding-bottom:0.7rem;border-bottom:1px solid var(--seam)}
+  .cnum{font-family:var(--f-data);font-size:0.7rem;letter-spacing:0.16em;color:#0E1512;
+        background:var(--turf);padding:0.2rem 0.5rem;border-radius:2px;font-weight:700}
+  .cmove{font-family:var(--f-data);font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;
+         color:var(--ink-faint);margin-left:auto}
+  .marks{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:0.8rem;align-items:stretch}
+  .marks > div:first-child svg{max-height:210px}
+  .marks svg{max-height:150px}
+  .tag{font-family:var(--f-data);font-size:0.56rem;letter-spacing:0.14em;text-transform:uppercase;
+       color:var(--ink-faint);margin:0.45rem 0 0;text-align:center}
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:1.1rem}
+  .readout h4{font-family:var(--f-data);font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;
+              margin:0 0 0.3rem;color:var(--turf);font-weight:700}
+  .readout .w h4{color:var(--ember)}
+  .readout p{margin:0;font-size:0.92rem;color:var(--ink-dim);max-width:none}
+
+  table{width:100%;border-collapse:collapse;margin:0 0 1rem;font-size:0.93rem}
+  th,td{text-align:left;padding:0.5rem 0.7rem;border-bottom:1px solid var(--seam);vertical-align:top}
+  th{font-family:var(--f-data);font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;
+     color:var(--ink-faint);font-weight:700}
+  td.num{font-family:var(--f-data);text-align:right;white-space:nowrap}
+
+  .sw{display:inline-block;width:1.05em;height:1.05em;border-radius:2px;vertical-align:-0.18em;
+      margin-right:0.45em;border:1px solid rgba(128,128,128,0.35)}
+  .pal{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+  .palcard{border:1px solid var(--seam);border-radius:4px;background:var(--surface);padding:1rem}
+  .palcard h3{font-size:1.12rem}
+  .ramp{display:flex;height:34px;border-radius:2px;overflow:hidden;margin:0.6rem 0 0.7rem;
+        border:1px solid var(--seam)}
+  .ramp span{flex:1}
+
+  .small-test{display:flex;gap:1.6rem;flex-wrap:wrap;align-items:flex-end;
+              background:#0E1512;border:1px solid #2E3D35;border-radius:4px;padding:1.3rem;
+              --mk-1:#A7BE93;--mk-2:#8AA07A;--mk-3:#4E9A68;--mk-4:#2F7A4F;--mk-em:#E4703A;
+              --mk-ln:#EDE7DC;--mk-bg:#0E1512;margin-bottom:0.9rem}
+  .small-test figure{margin:0;text-align:center}
+  .small-test svg{display:block;margin:0 auto;height:auto}
+  .s34 svg{width:34px} .s20 svg{width:20px}
+  .small-test figcaption{font-family:var(--f-data);font-size:0.54rem;letter-spacing:0.12em;
+                         color:#869184;margin-top:0.5rem;text-transform:uppercase}
+
+  .lockups{display:grid;gap:0.9rem}
+  .lock{display:flex;align-items:center;gap:1.2rem;padding:1.2rem 1.4rem;border-radius:3px;
+        border:1px solid var(--seam)}
+  .lock svg{width:58px;flex:none;height:auto}
+  .lock .lw{font-family:var(--f-display);font-size:2rem;letter-spacing:-0.018em;line-height:1}
+  .lock .ld{font-family:var(--f-data);font-size:0.55rem;letter-spacing:0.24em;text-transform:uppercase;
+            margin-top:0.35rem}
+
+  .callout{border-left:3px solid var(--ember);background:var(--lift);padding:0.9rem 1.1rem;
+           border-radius:0 3px 3px 0;margin:0 0 1.1rem}
+  .callout p:last-child{margin:0}
+  .ask{border-left-color:var(--turf)}
+  ol,ul{max-width:64ch;padding-left:1.2rem}
+  li{margin-bottom:0.4rem}
+  footer{margin-top:3.5rem;padding-top:1.2rem;border-top:1px solid var(--seam);
+         color:var(--ink-faint);font-size:0.85rem}
+
+  @media (max-width:820px){
+    .marks{grid-template-columns:1fr}
+    .readout{grid-template-columns:1fr}
+    table{display:block;overflow-x:auto}
+    .lock{flex-wrap:wrap}
+  }
+  @media print{
+    :root{--ground:#fff;--surface:#fff;--lift:#F2EEE6;--seam:#C6BCA9;
+          --ink:#111;--ink-dim:#3E4A43;--ink-faint:#6A766E;
+          --ember:#B84C15;--moss:#4F6640;--turf:#2F7A4F;--sage:#5E8A4A}
+    body{font-size:11.2px}
+    main{max-width:none;padding:0}
+    section{padding-top:1.5rem}
+    .concept,.palcard,.small-test,.callout,.lock{break-inside:avoid;page-break-inside:avoid}
+    h2{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header class="masthead">
+  <div class="brandline">
+    ${svg(taper)}
+    <div>
+      <h1 class="wordmark">Sixfold</h1>
+      <p class="kicker">Ridge, aerated &mdash; core treatments</p>
+    </div>
+  </div>
+  <p class="standfirst">One mark, four ways of drawing the core. The spacing, the depths and everything
+  above the ground line are identical in all four &mdash; the only variable is the core itself, so the
+  comparison is fair. Nothing here is a master file yet.</p>
+</header>
+
+<section id="where">
+  <h2>Where this got to</h2>
+  <p>The board carried six competing concepts. It now carries one. <strong>&ldquo;Ridge, aerated&rdquo;
+  is the candidate</strong> and the remaining question is how the cores are drawn. The other five are
+  retired rather than binned &mdash; they are in the repository history if anyone wants them back.</p>
+  <p>What is settled and not up for grabs in this round:</p>
+  <ul>
+    <li><strong>Five forms, five cores.</strong> The Ridge mark has four peaks and one conifer above the
+    ground line. One core per form, directly beneath it.</li>
+    <li><strong>Each core is as deep as its form is tall.</strong> Apex heights measured off the path
+    data: <span class="mono">30.5 / 38 / 48 / 60 / 72</span>. The bottom edge is the skyline inverted.</li>
+    <li><strong>The turf band and its five holes.</strong> The holes are what a hollow tine leaves.</li>
+    <li><strong>The ember is the conifer&rsquo;s core</strong> &mdash; the one form that is not a peak,
+    and the smallest of the five.</li>
+  </ul>
+  <div class="callout ask">
+    <p><strong>Every treatment below keeps a lid of turf in the band&rsquo;s own colour.</strong> That
+    is not decoration: a plug comes out of the ground with the lawn still attached, and it is the one
+    feature that says &ldquo;aeration core&rdquo; rather than &ldquo;shape&rdquo;. It takes the band
+    colour because it is the same turf. An earlier attempt put a Sage cap on a Moss body &mdash;
+    <span class="mono">1.20:1</span>, separated by hue alone &mdash; and it did not read at all.</p>
+  </div>
+</section>
+
+<section id="treatments">
+  <h2>The four</h2>
+  ${TREATMENTS.map(block).join('')}
+</section>
+
+<section id="smalltest">
+  <h2>The small-size test</h2>
+  <p>A favicon is 32px and an embroidered left-chest logo is about the same in thread. This row usually
+  decides it &mdash; a treatment that dissolves here costs a second, simplified mark to maintain
+  forever.</p>
+  ${smallRow(34)}
+  ${smallRow(20)}
+  <p class="faint">Treatment 1 holds best, which is what geometry buys. Treatment 2&rsquo;s gaps close
+  and it starts to read as a dashed line. Treatment 3&rsquo;s strokes thin out and go grey. Treatment 4
+  survives but flattens into pegs.</p>
+</section>
+
+<section id="lockups">
+  <h2>Locked up with the wordmark</h2>
+  <p>The wordmark does not change: Palatino, tight tracking, as now. Only the core beside it moves.</p>
+  <div class="lockups">
+    ${TREATMENTS.map(([n, name, fn]) => `
+    <div class="lock t-dark" style="background:#0E1512;border-color:#2E3D35">
+      ${svg(fn)}
+      <div><div class="lw" style="color:#EDE7DC">Sixfold</div>
+      <div class="ld" style="color:#8AA07A">Treatment 0${n} &middot; ${name}</div></div>
+    </div>`).join('')}
+  </div>
+</section>
+
+<section id="palette">
+  <h2>Palette &mdash; still open, and independent of this</h2>
+  <p>Any treatment can wear any of these. Ordered by what they cost to roll out.</p>
+  <div class="pal">
+    <div class="palcard">
+      <h3>A &mdash; Demote the ember</h3>
+      <div class="ramp"><span style="background:#0E1512"></span><span style="background:#2F7A4F"></span><span style="background:#8AA07A"></span><span style="background:#A7BE93"></span><span style="background:#EDE7DC"></span><span style="background:#E4703A;flex:0.3"></span></div>
+      <p class="faint">No new colours beyond one deeper green. Moss becomes primary and Ember drops to
+      an accent. <strong>Costs least</strong> &mdash; existing tokens keep their names.</p>
+    </div>
+    <div class="palcard">
+      <h3>B &mdash; Turf primary</h3>
+      <div class="ramp"><span style="background:#0E1512"></span><span style="background:#245F3D"></span><span style="background:#2F7A4F"></span><span style="background:#4E9A68"></span><span style="background:#A7BE93"></span><span style="background:#EDE7DC"></span></div>
+      <p class="faint">A four-step green ramp, no warm colour at all. The most decisive break from fire.
+      <strong>The risk is blandness</strong> &mdash; green-only is what most lawn companies look like.</p>
+    </div>
+    <div class="palcard">
+      <h3>C &mdash; Turf and wheat</h3>
+      <div class="ramp"><span style="background:#0E1512"></span><span style="background:#2F7A4F"></span><span style="background:#4E9A68"></span><span style="background:#A7BE93"></span><span style="background:#C9A44C"></span><span style="background:#EDE7DC"></span></div>
+      <p class="faint">Greens plus a dry-grass gold doing ember's old job. Keeps a warm note without
+      pointing at fire. <strong>Watch the gold</strong> &mdash; <span class="mono">#C9A44C</span> is
+      <span class="mono">1.92:1</span> on Bone, so large shapes only.</p>
+    </div>
+  </div>
+  <table style="margin-top:1.4rem">
+    <tr><th>Colour</th><th>Hex</th><th class="num">on Pine</th><th class="num">on Bone</th><th>Standing</th></tr>
+    <tr><td><span class="sw" style="background:#0E1512"></span>Pine Black</td><td class="mono">#0E1512</td><td class="num">&mdash;</td><td class="num">15.60</td><td>Unchanged</td></tr>
+    <tr><td><span class="sw" style="background:#EDE7DC"></span>Bone</td><td class="mono">#EDE7DC</td><td class="num">15.60</td><td class="num">&mdash;</td><td>Unchanged</td></tr>
+    <tr><td><span class="sw" style="background:#A7BE93"></span>Sage</td><td class="mono">#A7BE93</td><td class="num">9.19</td><td class="num">1.64</td><td>New &mdash; dark grounds only</td></tr>
+    <tr><td><span class="sw" style="background:#8AA07A"></span>Moss</td><td class="mono">#8AA07A</td><td class="num">6.51</td><td class="num">2.31</td><td>Unchanged, promoted</td></tr>
+    <tr><td><span class="sw" style="background:#4E9A68"></span>Turf, dark ground</td><td class="mono">#4E9A68</td><td class="num">5.42</td><td class="num">2.78</td><td>New</td></tr>
+    <tr><td><span class="sw" style="background:#2F7A4F"></span>Turf, light ground</td><td class="mono">#2F7A4F</td><td class="num">3.54</td><td class="num">4.25</td><td>New &mdash; the anchor</td></tr>
+    <tr><td><span class="sw" style="background:#C9A44C"></span>Wheat <span class="faint">(C only)</span></td><td class="mono">#C9A44C</td><td class="num">7.84</td><td class="num">1.92</td><td>New</td></tr>
+    <tr><td><span class="sw" style="background:#E4703A"></span>Ember</td><td class="mono">#E4703A</td><td class="num">5.89</td><td class="num">2.56</td><td>Kept, demoted to accent</td></tr>
+  </table>
+  <p class="faint">Ratios are WCAG contrast, computed rather than estimated. Ember against Moss is
+  <span class="mono">1.11:1</span> and green on green is <span class="mono">1.20:1</span> &mdash; both
+  separated by hue alone, invisible to a red-green colourblind viewer and gone entirely in one colour.
+  Everything here separates by lightness instead.</p>
+</section>
+
+<section id="decisions">
+  <h2>Open decisions</h2>
+  <table>
+    <tr><th>Question</th><th>Why it is open</th><th>Whose call</th></tr>
+    <tr>
+      <td><strong>Which core treatment</strong></td>
+      <td>What this board is for. Worth doing on paper and at arm's length, not on a screen.</td>
+      <td>Team, then Brandon</td>
+    </tr>
+    <tr>
+      <td><strong>Should the mark encode six at all?</strong></td>
+      <td><strong>The Ridge mark has five forms and has never encoded the name.</strong> Making it
+      genuinely six means adding a sixth form above the ground line, which changes the silhouette
+      rather than the cores. Bigger than this board, and it is the one change that would make the
+      drawing say &ldquo;Sixfold&rdquo; out loud.</td>
+      <td>Team, then Brandon</td>
+    </tr>
+    <tr>
+      <td><strong>The descriptor &mdash; &ldquo;Land &amp; Fire&rdquo;</strong></td>
+      <td>Settled 15 Sep 2026 and already on the crew shirt and every business card option. It names
+      the service being demoted and misses both being promoted. Needs re-opening whether or not the
+      mark changes.</td>
+      <td>Matthew</td>
+    </tr>
+    <tr>
+      <td><strong>Which palette</strong></td>
+      <td>Independent of the drawing. A costs least; B is the cleanest break; C keeps a warm note.</td>
+      <td>Team</td>
+    </tr>
+  </table>
+</section>
+
+<section id="cost">
+  <h2>What a change costs to roll out</h2>
+  <p>Not an argument against doing it &mdash; an argument for deciding once. Counted in the repository
+  on 23 Sep 2026:</p>
+  <table>
+    <tr><th>What</th><th class="num">Count</th><th>Note</th></tr>
+    <tr><td>Files carrying the ember hex or the Ridge geometry</td><td class="num">180</td><td>Sources, generators, copy and stylesheets</td></tr>
+    <tr><td>Rendered brand PNGs</td><td class="num">40</td><td>Social and Square sets; both regenerate from one script each</td></tr>
+    <tr><td>PDFs across the project</td><td class="num">84</td><td>Includes the 25-PDF team share, which has to be rebuilt as a set</td></tr>
+    <tr><td>Vehicle magnet artwork</td><td class="num">3</td><td>24&times;12, 24&times;12 light, 24&times;18 &mdash; the repo shows no order placed</td></tr>
+  </table>
+  <div class="callout">
+    <p><strong>The live site is the one that matters.</strong> sixfoldcolorado.com went live on
+    21 Sep 2026 and carries the mark in the favicon, the stylesheet and the wildfire guide page. A mark
+    change means a re-bundle and re-upload, and the host serves a stale cache after an upload &mdash; so
+    it has to be cache-busted and verified, not assumed.</p>
+    <p>There is a precedent for the sweep: the phone-number change in September touched 57 files and
+    21 PDFs and came out clean. <strong>Check the vehicle magnets have not been ordered before anyone
+    commits</strong> &mdash; it is the one item on this list that cannot be re-run.</p>
+  </div>
+</section>
+
+<section id="next">
+  <h2>What happens after the meeting</h2>
+  <ol>
+    <li>Team picks a core treatment, and separately a palette.</li>
+    <li>The winner gets drawn as a real master: full colour, one colour, and a flat print version with
+    the overlaps resolved &mdash; the same three files Ridge already has.</li>
+    <li>Prior-use screen re-run against the new drawing. The existing screen covered the Ridge mark
+    only, and two of its checks were never run &mdash; reverse image search and the USPTO design-code
+    search.</li>
+    <li>Palette tokens updated in one place, then the generators re-run and the PDFs re-counted.</li>
+    <li>Site re-bundled and cache-busted last, once everything else matches.</li>
+  </ol>
+  <p class="faint">Nothing in this document has been published, posted or uploaded, and no master files
+  have been overwritten. The current Ridge mark and its four SVGs are untouched.</p>
+</section>
+
+<section id="log">
+  <h2>Fact-check and provenance log</h2>
+  <table>
+    <tr><th>Claim</th><th>Standing</th></tr>
+    <tr><td>Aeration means lawn / core aeration</td><td><strong>Confirmed by Matthew, 23 Sep 2026.</strong> Supersedes the README entry recording it as unestablished; that file has been corrected.</td></tr>
+    <tr><td>Positioning: aeration and landscaping lead, fire mitigation still offered</td><td><strong>Stated by Matthew, 23 Sep 2026.</strong> Not yet reflected anywhere else in the project.</td></tr>
+    <tr><td>What core aeration equipment actually is</td><td><strong>Verified first-party, 23 Sep 2026</strong>, against UMass Amherst Extension. Hollow tines are open-ended steel tubes of 1/4&ndash;3/4&Prime; inside diameter on a drum or cam-driven head &mdash; a punch, not a drill and not an auger. Set in grids from 2&Prime;&times;2&Prime; to 4&Prime;&times;6&Prime;, so a real head carries dozens, not five.</td></tr>
+    <tr><td>Where the extracted plugs end up</td><td><strong>Verified first-party, 23 Sep 2026.</strong> Plugs are 2&ndash;3&Prime; long and are deposited <em>on the surface</em>, then broken up as topdressing. <strong>So this mark is a cross-section, not a photograph</strong> &mdash; a real plug does not hang under the turf. Deliberate, and it is what buys the mirrored ledge.</td></tr>
+    <tr><td>The turf cap on each core</td><td><strong>From the same source.</strong> A plug comes out with the sward attached, which is the one feature that reads as &ldquo;aeration core&rdquo;. It takes the band&rsquo;s colour because it is the same turf. A Sage cap on a Moss body tested at <span class="mono">1.20:1</span> and did not read.</td></tr>
+    <tr><td>How many forms the Ridge mark has</td><td><strong>Counted off the path data, 23 Sep 2026</strong>, after Matthew spotted six cores under five forms: <strong>five</strong> &mdash; four peaks and one conifer. Apex heights 30.5 / 38 / 48 / 60 / 72 units, measured. An earlier hand-estimate of one height was 7 against a real 12; sample the geometry rather than eyeballing it.</td></tr>
+    <tr><td>All contrast ratios in this document</td><td><strong>Computed</strong>, not estimated &mdash; WCAG 2.x relative luminance against the stated hex pairs.</td></tr>
+    <tr><td>Colourblind separation figures</td><td><strong>Simulated</strong> with a standard deuteranopia matrix. Enough to reject a pairing, not a substitute for showing it to someone.</td></tr>
+    <tr><td>The new colours: Turf, Sage, Wheat</td><td><strong>Invented for this document.</strong> My proposals, not anything previously agreed, with no standing until the team picks one.</td></tr>
+    <tr><td>Asset counts &mdash; 180 / 40 / 84 / 3</td><td><strong>Counted in the repo, 23 Sep 2026.</strong> The 180 is a text match on the ember hex or the Ridge path data, so it will include false positives in dated fact-check entries.</td></tr>
+    <tr><td>The 57-file phone sweep precedent</td><td><strong>Project record</strong>, committed September 2026.</td></tr>
+    <tr><td>Vehicle magnets not yet ordered</td><td><strong>Unresolved.</strong> The repo holds the artwork and an order sheet and shows no order. Absence of evidence &mdash; somebody has to confirm it.</td></tr>
+  </table>
+</section>
+
+<footer>
+  Sixfold LLC &mdash; internal concept board, 23 September 2026. One mark, four core treatments, no
+  masters, no decisions. Draft only: nothing here has been published, posted, scheduled or uploaded.
+</footer>
+
+</main>
+</body>
+</html>
+`;
+
+writeFileSync(join(here, 'concepts.html'), page);
+console.log(`concepts.html rebuilt — ${TREATMENTS.length} core treatments, ${FORMS.length} forms`);
+console.log('depths:', FORMS.map(([, h]) => depth(h).toFixed(1)).join(' '));
