@@ -30,7 +30,7 @@ Sixfold rosette and The tine. They are in git; the last commit that has them on 
 |---|---|
 | `build-board.mjs` | **Generates the board.** Geometry lives at the top; each treatment only gets to draw a core. Run `node build-board.mjs`. |
 | `concepts.html` | The generated board. Double-click to read. **Do not hand-edit — it is overwritten.** |
-| `Sixfold-Rebrand-Concepts.pdf` | The board printed light, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs`. |
+| `Sixfold-Rebrand-Concepts.pdf` | The board printed light, **8 pages**, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs`. |
 | `Sixfold-Rebrand-Concepts.sheet.png` | Contact sheet of the PDF, so the print result can be looked at. |
 | `concepts.artifact.html` | Unwrapped copy for the artifact at https://claude.ai/artifact/9USctbb7PFwhuFAQ9eorz5 |
 
@@ -60,6 +60,50 @@ lines.
 | 02 | Broken plug | The core in pieces, because a real plug crumbles. | Most honest to the material. Gaps close up in embroidery. |
 | 03 | Section outline | Outline rather than fill, like a sample in a section drawing. | Keeps the weight in the peaks. Thin strokes die on a magnet or a receipt. |
 | 04 | Soft taper | A slight taper to a rounded tip, one thatch seam. | Closest to a real core. Least distinctive — a row of pegs. |
+
+## Two things added 2026-09-23 pm
+
+### A true one-ink column
+
+Every treatment is now shown four ways, and the fourth is **one ink — every token the same black**,
+which is what an embroiderer, a vinyl cutter and a thermal receipt printer actually receive.
+
+**The tile previously labelled "One colour" was not one colour** — it is five greys, i.e. five thread
+colours and five vinyl layers. It is now labelled "tonal grey", which is what it is.
+
+**The one-ink column reverses the ranking.** Treatment 03 survives best, because an outline generates
+its own separation instead of borrowing it from tone — the opposite of the "thin strokes die on a
+magnet" note against it. 02 holds too, because its gaps are knockouts. 01 becomes teeth, 04 becomes
+pegs.
+
+**A problem that belongs to the mark, not the cores:** in one ink the four peaks merge into a single
+jagged mass and the first form vanishes into it, in all four treatments. **The tonal ramp is
+load-bearing** — it is what makes five shapes read as five. A real one-colour master needs hairline
+gaps cut between the peaks. That is a separate drawing and is not on this board.
+
+Why it matters beyond the shirt: **a USPTO filing in black-and-white with no colour claim protects the
+mark in any colour**, where filing in colour narrows protection to that colour. So the one-ink drawing
+is the one that would get registered, not an afterthought.
+
+### The house
+
+The team asked for the first form to be a house instead of the conifer. **It is drawn on the board**,
+at the same apex (`y=55.5`, height 30.5) so the core depth and everything else are unchanged and the
+comparison is honest. Four objections, recorded in full on the board:
+
+1. It re-centres the wildfire story — a house on a ridge with trees is the defensible-space picture,
+   and it is literally the pamphlet cover. Works against the brief.
+2. A house is the most crowded symbol in home services. The prior-use screen found nothing resembling
+   the Ridge mark; a house lands in a very populated field, and distinctiveness is what a registration
+   rests on.
+3. **It breaks the logic the mark runs on.** Every form has a core below it as deep as it is tall,
+   which reads because the forms grow out of ground you can core. *You do not core a house.*
+4. The conifer is what makes the four shapes behind it read as a treeline rather than mountains.
+   Take it out and the peaks go back to being mountains, which is where the fire read came from.
+
+**The version that does not fight the mark:** put the house *on* the turf band as context and leave
+the conifer as one of the five counted forms. Five forms, five cores, logic intact, house in the scene
+rather than in the system. Not drawn yet.
 
 ## What core aeration actually is — verified
 
