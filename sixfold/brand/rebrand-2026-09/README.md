@@ -33,7 +33,7 @@ He asked for logo concepts to review and take to the team.
 | # | Name | Move |
 |---|---|---|
 | 01 | Ridge, retinted | Palette only, no geometry change. **The control** — it shows how much of the fire read was just the orange. |
-| 02 | Ridge, aerated | Perforated turf band — the holes a hollow tine leaves. Six of them; no ember. |
+| 02 | Ridge, aerated | Perforated turf band, six cores lying on the grass above it. One core ember. |
 | 03 | Three strata | Cross-section: canopy, aerated turf, root zone. Peaks flattened to a ridgeline. |
 | 04 | Ridge of cores | Six banded soil cores in a ridge profile. Keeps the old silhouette, loses the tree. |
 | 05 | Sixfold rosette | Six tines radiating on 60°. The only one that fits a circle. |
@@ -68,10 +68,19 @@ drawing matched the real equipment. It did not.
 
 **What this cost:** Concept 02 originally hung six soil cores *below* the turf band. Wrong twice —
 they read as tines pointing down (wrong shape, wrong count), and plugs do not sit under the turf.
-The cores were cut and the perforated band kept, which is the accurate half and the half that
-survives 20px. **Concept 04 still stands its cores on end**, which is also not how plugs lie; that
-one is kept as a deliberate abstraction and the caption now says so rather than leaving it to be
-found.
+**The cores now lie on top of the band, which is where a core aerator drops them.** Holes below,
+cores above, which is the whole operation in one line.
+
+They were briefly deleted outright, which was an over-correction — Matthew had asked whether they
+were accurate, not for them to go. Worth remembering: *"I liked the cores, I just wasn't sure if
+they looked the right way."* A question about accuracy is a question, not an instruction to cut.
+
+Two drawings of the restored cores were needed. The first put six 14-wide capsules a hair apart with
+two strata ticks each; the halos merged them into one segmented strip and the ticks read as a zipper.
+The second uses uneven widths, real gaps and no internal ticks — six things you can count.
+
+**Concept 04 still stands its cores on end**, which is also not how plugs lie; that one is kept as a
+deliberate abstraction and the caption now says so rather than leaving it to be found.
 
 Sources: <https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/management-of-compaction-coring>
 and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of_compaction.pdf>
@@ -87,8 +96,8 @@ and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of
   across the width. They are now short and branching.
 - **Concept 5's petals came out forked.** A single SVG arc sweep flag cannot be correct for all six
   rotations. The tips are flat lines now.
-- **Concept 2's six cores were factually wrong** and were cut — see the section above. Do not put
-  plugs back below the turf line.
+- **Concept 2's six cores were in the wrong place** — below the band rather than on it. Fixed, not
+  cut. **Do not put plugs below a turf line**, and do not crowd them: they have to stay countable.
 - **Concept 1 exposed a real constraint:** retinting alone loses the conifer, because it was moss on
   ember and is now green on green. The tree and ground line have to move to bone or black.
 
