@@ -39,7 +39,7 @@ const JOBS = [
   /* The rebrand concept board. Printed light so it can go on a table in front of
      the team; the mark tiles carry their own grounds, so the Pine tiles stay dark
      on the page and the backgrounds must print. */
-  { src: 'brand/rebrand-2026-09/concepts.html', out: 'brand/rebrand-2026-09/Sixfold-Rebrand-Concepts.pdf', mode: 'light', scale: 0.82,
+  { src: 'brand/rebrand-2026-09/concepts.html', out: 'brand/rebrand-2026-09/Sixfold-Rebrand-Concepts.pdf', mode: 'light', scale: 0.76,
     css: '.concept, .palcard, .small-test, .lock { break-inside: avoid-page; }' },
   /* scale: the one-pager carries its own @page rule and an 8.5in sheet. At the
      default 0.8 it spills its footer disclaimer onto a second page, which

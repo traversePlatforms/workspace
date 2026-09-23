@@ -17,7 +17,7 @@ He asked for logo concepts to review and take to the team.
 | File | What it is |
 |---|---|
 | `concepts.html` | The board. Six concepts, three palette directions, the small-size and one-colour tests, open decisions, rollout cost, fact-check log. Double-click to read. |
-| `Sixfold-Rebrand-Concepts.pdf` | The same board printed light, **9 pages**, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs` — job added to the list, so it re-renders with everything else. |
+| `Sixfold-Rebrand-Concepts.pdf` | The same board printed light, **8 pages**, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs` — job added to the list, so it re-renders with everything else. |
 | `Sixfold-Rebrand-Concepts.sheet.png` | Contact sheet of the PDF, so the print result can be looked at without opening it. |
 
 ## Two things that were settled to make this
@@ -33,7 +33,7 @@ He asked for logo concepts to review and take to the team.
 | # | Name | Move |
 |---|---|---|
 | 01 | Ridge, retinted | Palette only, no geometry change. **The control** — it shows how much of the fire read was just the orange. |
-| 02 | Ridge, aerated | Perforated turf band, six cores lying on the grass above it. One core ember. |
+| 02 | Ridge, aerated | Perforated turf band; under each hole, a core as deep as the ridge above it is tall. Bottom edge repeats the ridgeline. One core ember. |
 | 03 | Three strata | Cross-section: canopy, aerated turf, root zone. Peaks flattened to a ridgeline. |
 | 04 | Ridge of cores | Six banded soil cores in a ridge profile. Keeps the old silhouette, loses the tree. |
 | 05 | Sixfold rosette | Six tines radiating on 60°. The only one that fits a circle. |
@@ -66,18 +66,24 @@ drawing matched the real equipment. It did not.
 - Spike/solid-tine aerators and drill attachments exist but are not the standard commercial job.
   "Aeration" in this trade means core/hollow-tine.
 
-**What this cost:** Concept 02 originally hung six soil cores *below* the turf band. Wrong twice —
-they read as tines pointing down (wrong shape, wrong count), and plugs do not sit under the turf.
-**The cores now lie on top of the band, which is where a core aerator drops them.** Holes below,
-cores above, which is the whole operation in one line.
+**Where this landed.** Concept 02's cores stay *below* the band, which is not where a real plug
+ends up — and that is a deliberate call, not an oversight. **Matthew's direction: keep the cores and
+let them mimic the ledge of the ridge across the bottom.** So each core is now as deep as the peak
+silhouette above it is tall: shallow under the tree end, deepest under the tallest peak, shallower
+again at the right. The bottom edge becomes the ridgeline repeated, and the mark rhymes with itself.
 
-They were briefly deleted outright, which was an over-correction — Matthew had asked whether they
-were accurate, not for them to go. Worth remembering: *"I liked the cores, I just wasn't sure if
-they looked the right way."* A question about accuracy is a question, not an instruction to cut.
+That makes it a **cross-section** — soil columns under the holes they came from — the same device
+Concept 03 already uses. The caption says so outright rather than leaving someone in the trade to
+find it. A surface-accurate version, with the cores lying on the grass, was drawn and set aside: it
+was correct and it gave up the ledge.
 
-Two drawings of the restored cores were needed. The first put six 14-wide capsules a hair apart with
-two strata ticks each; the halos merged them into one segmented strip and the ticks read as a zipper.
-The second uses uneven widths, real gaps and no internal ticks — six things you can count.
+The deepest core puts the canvas at 118 units, within a nose of the 116 the current Ridge uses.
+
+**Four drawings were needed to get here, and the two dead ends are worth not repeating:**
+cores deleted outright (an over-correction — *"I liked the cores, I just wasn't sure if they looked
+the right way"*; a question about accuracy is a question, not an instruction to cut); then cores at
+13 wide with 2.2 gaps, which fused into a brick wall and stopped being countable. **Slim cores,
+aligned to the holes, with depth doing the work.**
 
 **Concept 04 still stands its cores on end**, which is also not how plugs lie; that one is kept as a
 deliberate abstraction and the caption now says so rather than leaving it to be found.
@@ -96,8 +102,9 @@ and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of
   across the width. They are now short and branching.
 - **Concept 5's petals came out forked.** A single SVG arc sweep flag cannot be correct for all six
   rotations. The tips are flat lines now.
-- **Concept 2's six cores were in the wrong place** — below the band rather than on it. Fixed, not
-  cut. **Do not put plugs below a turf line**, and do not crowd them: they have to stay countable.
+- **Concept 2's cores went through four drawings.** They must stay slim (8.5 units), aligned one
+  per hole, and countable — widening them to 13 fused them into a wall. Their depths are not
+  decorative: each one matches the peak silhouette above it.
 - **Concept 1 exposed a real constraint:** retinting alone loses the conifer, because it was moss on
   ember and is now green on green. The tree and ground line have to move to bone or black.
 
