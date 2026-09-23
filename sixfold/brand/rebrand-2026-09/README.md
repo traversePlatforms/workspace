@@ -33,7 +33,7 @@ He asked for logo concepts to review and take to the team.
 | # | Name | Move |
 |---|---|---|
 | 01 | Ridge, retinted | Palette only, no geometry change. **The control** — it shows how much of the fire read was just the orange. |
-| 02 | Ridge, aerated | Perforated turf band; under each hole, a core as deep as the ridge above it is tall. Bottom edge repeats the ridgeline. One core ember. |
+| 02 | Ridge, aerated | Perforated turf band; one core per form, under it, as deep as it is tall. Bottom edge is the skyline inverted. **Five, not six** — see below. |
 | 03 | Three strata | Cross-section: canopy, aerated turf, root zone. Peaks flattened to a ridgeline. |
 | 04 | Ridge of cores | Six banded soil cores in a ridge profile. Keeps the old silhouette, loses the tree. |
 | 05 | Sixfold rosette | Six tines radiating on 60°. The only one that fits a circle. |
@@ -77,7 +77,23 @@ Concept 03 already uses. The caption says so outright rather than leaving someon
 find it. A surface-accurate version, with the cores lying on the grass, was drawn and set aside: it
 was correct and it gave up the ledge.
 
-The deepest core puts the canvas at 118 units, within a nose of the 116 the current Ridge uses.
+**There are five cores, not six, and that is the interesting part.** Matthew: *"I notice that there's
+6 cores but only 5 trees, can you double check that's correct? and I notice that 6th doesn't mirror
+much of anything given that it's shorter."* Both correct. Counted off the path data: **the Ridge mark
+has five forms above the ground line — four peaks and one conifer — and has never encoded the name.**
+The six came from "Sixfold", not from the drawing, and the sixth core sat at x=88 on peak four's
+descending flank, so it sampled a downslope and read as a droop.
+
+It is now one core per form, directly under it, as deep as it is tall. Apex heights measured rather
+than estimated: **30.5 / 38 / 48 / 60 / 72**. The deepest core puts the canvas at exactly **116**, the
+same height the current Ridge uses.
+
+**Whether the mark should encode six at all is now an open decision on the board** — it would mean
+adding a sixth form above, which changes the Ridge silhouette for every concept that inherits it.
+Concepts 04 and 05 do carry six.
+
+*Measurement note:* the leftmost height was hand-estimated at 7 and is actually 12. Sample the
+geometry; do not eyeball it. The script that does it is in the fact-check log's method.
 
 **Four drawings were needed to get here, and the two dead ends are worth not repeating:**
 cores deleted outright (an over-correction — *"I liked the cores, I just wasn't sure if they looked
@@ -102,9 +118,10 @@ and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of
   across the width. They are now short and branching.
 - **Concept 5's petals came out forked.** A single SVG arc sweep flag cannot be correct for all six
   rotations. The tips are flat lines now.
-- **Concept 2's cores went through four drawings.** They must stay slim (8.5 units), aligned one
-  per hole, and countable — widening them to 13 fused them into a wall. Their depths are not
-  decorative: each one matches the peak silhouette above it.
+- **Concept 2's cores went through five drawings.** They must stay slim (8.5 units), one per form,
+  and countable — widening them to 13 fused them into a wall. Their depths are not decorative: each
+  matches the apex height of the form directly above it. **Do not add a sixth without adding a sixth
+  form above it.**
 - **Concept 1 exposed a real constraint:** retinting alone loses the conifer, because it was moss on
   ember and is now green on green. The tree and ground line have to move to bone or black.
 
