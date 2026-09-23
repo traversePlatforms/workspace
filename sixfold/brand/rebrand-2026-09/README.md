@@ -33,7 +33,7 @@ He asked for logo concepts to review and take to the team.
 | # | Name | Move |
 |---|---|---|
 | 01 | Ridge, retinted | Palette only, no geometry change. **The control** — it shows how much of the fire read was just the orange. |
-| 02 | Ridge, aerated | Perforated turf band, six soil cores below it where the roots were. One core ember. |
+| 02 | Ridge, aerated | Perforated turf band — the holes a hollow tine leaves. Six of them; no ember. |
 | 03 | Three strata | Cross-section: canopy, aerated turf, root zone. Peaks flattened to a ridgeline. |
 | 04 | Ridge of cores | Six banded soil cores in a ridge profile. Keeps the old silhouette, loses the tree. |
 | 05 | Sixfold rosette | Six tines radiating on 60°. The only one that fits a circle. |
@@ -50,6 +50,32 @@ He asked for logo concepts to review and take to the team.
 - **All contrast ratios in the document were computed**, not estimated. The new colours (Turf,
   Sage, Wheat) are proposals invented for this board and have no standing until someone picks one.
 
+## What core aeration actually is — verified, because the first drawing got it wrong
+
+Checked first-party against UMass Amherst Extension on 23 Sep 2026, after Matthew asked whether the
+drawing matched the real equipment. It did not.
+
+- **It is a punch, not a drill.** A core aerator carries **hollow tines** — short open-ended steel
+  tubes — on a rotating drum or a cam-driven head that pushes straight down. No auger, no rotation
+  into the soil.
+- **Tine inside diameter is 1/4″ to 3/4″**, set in grids from 2″×2″ to 4″×6″. A working head carries
+  dozens of tines, close together — not six.
+- **Each tine pulls a plug 2–3″ long and drops it ON the surface.** For a lawn the plugs stay there
+  and get broken up with a drag mat or a mower, acting as topdressing. Only on golf greens are they
+  swept off.
+- Spike/solid-tine aerators and drill attachments exist but are not the standard commercial job.
+  "Aeration" in this trade means core/hollow-tine.
+
+**What this cost:** Concept 02 originally hung six soil cores *below* the turf band. Wrong twice —
+they read as tines pointing down (wrong shape, wrong count), and plugs do not sit under the turf.
+The cores were cut and the perforated band kept, which is the accurate half and the half that
+survives 20px. **Concept 04 still stands its cores on end**, which is also not how plugs lie; that
+one is kept as a deliberate abstraction and the caption now says so rather than leaving it to be
+found.
+
+Sources: <https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/management-of-compaction-coring>
+and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of_compaction.pdf>
+
 ## Things that went wrong on the way, so they don't get re-introduced
 
 - **Concept 4 read as a bar chart.** Three separate causes, all fixed: equal core widths, strata
@@ -61,6 +87,8 @@ He asked for logo concepts to review and take to the team.
   across the width. They are now short and branching.
 - **Concept 5's petals came out forked.** A single SVG arc sweep flag cannot be correct for all six
   rotations. The tips are flat lines now.
+- **Concept 2's six cores were factually wrong** and were cut — see the section above. Do not put
+  plugs back below the turf line.
 - **Concept 1 exposed a real constraint:** retinting alone loses the conifer, because it was moss on
   ember and is now green on green. The tree and ground line have to move to bone or black.
 
