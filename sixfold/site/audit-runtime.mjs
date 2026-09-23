@@ -14,7 +14,11 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:8090';
+/* Defaults to the dev server; point it at the live site with an argument or env
+   var, e.g.  node audit-runtime.mjs https://sixfoldcolorado.com
+   Added 2026-09-23 so production can be audited with the same checks the build is,
+   rather than a separate script that would drift from this one. */
+const BASE = (process.argv[2] || process.env.AUDIT_BASE || 'http://127.0.0.1:8090').replace(/\/$/, '');
 /* Derived from disk, not listed by hand. It WAS a hand-written array, and adding
    the three per-service pages on 2026-09-21 silently left them untested: the run
    still said "6 pages" and still said 0 failures, which is the worst kind of pass.
