@@ -36,6 +36,11 @@ const JOBS = [
   { src: 'brand/social/out/review.html',        out: 'brand/social/review.pdf',                   mode: 'dark'  },
   { src: 'brand/ridge-lineage.html',            out: 'brand/ridge-lineage.pdf',                   mode: 'light' },
   { src: 'brand/ridge-mark.html',               out: 'brand/ridge-mark.pdf',                      mode: 'light' },
+  /* The rebrand concept board. Printed light so it can go on a table in front of
+     the team; the mark tiles carry their own grounds, so the Pine tiles stay dark
+     on the page and the backgrounds must print. */
+  { src: 'brand/rebrand-2026-09/concepts.html', out: 'brand/rebrand-2026-09/Sixfold-Rebrand-Concepts.pdf', mode: 'light', scale: 0.82,
+    css: '.concept, .palcard, .small-test, .lock { break-inside: avoid-page; }' },
   /* scale: the one-pager carries its own @page rule and an 8.5in sheet. At the
      default 0.8 it spills its footer disclaimer onto a second page, which
      defeats the point of a one-pager. 0.76 lands it on one, checked by

@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Logo Rebrand Concepts</title>
+<style>
+  :root {
+    --ground:#0E1512; --surface:#18211D; --lift:#1F2A25; --seam:#2E3D35;
+    --ink:#EDE7DC; --ink-dim:#B4BEB3; --ink-faint:#869184;
+    --ember:#E4703A; --moss:#8AA07A; --turf:#4E9A68; --sage:#A7BE93;
+    --f-display:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+    --f-body:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --f-data:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+    --pad:clamp(1.1rem,4vw,2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground:#EDE7DC; --surface:#E5DED1; --lift:#DCD4C4; --seam:#C6BCA9;
+      --ink:#0E1512; --ink-dim:#3E4A43; --ink-faint:#6A766E;
+      --ember:#B84C15; --moss:#4F6640; --turf:#2F7A4F; --sage:#5E8A4A;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground:#EDE7DC; --surface:#E5DED1; --lift:#DCD4C4; --seam:#C6BCA9;
+    --ink:#0E1512; --ink-dim:#3E4A43; --ink-faint:#6A766E;
+    --ember:#B84C15; --moss:#4F6640; --turf:#2F7A4F; --sage:#5E8A4A;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:16px;
+       line-height:1.62;margin:0;-webkit-font-smoothing:antialiased}
+  main{max-width:1120px;margin:0 auto;padding:0 var(--pad) 5rem}
+
+  .masthead{padding:3.2rem 0 1.8rem;border-bottom:3px solid var(--turf)}
+  .brandline{display:flex;align-items:flex-end;gap:1.4rem;flex-wrap:wrap}
+  .brandline svg{width:92px;flex:none;display:block}
+  .wordmark{font-family:var(--f-display);font-size:clamp(2.4rem,7vw,3.7rem);
+            letter-spacing:-0.02em;line-height:0.94;margin:0}
+  .kicker{font-family:var(--f-data);font-size:0.66rem;letter-spacing:0.24em;
+          text-transform:uppercase;color:var(--turf);margin:0.55rem 0 0}
+  .standfirst{max-width:62ch;color:var(--ink-dim);font-size:1.04rem;margin:1.5rem 0 0}
+
+  section{padding-top:3.2rem}
+  h2{font-family:var(--f-data);font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;
+     color:var(--turf);margin:0 0 1.1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--seam);
+     font-weight:700}
+  h3{font-family:var(--f-display);font-size:1.34rem;margin:0 0 0.35rem;font-weight:600}
+  p{margin:0 0 0.9rem;max-width:64ch}
+  .faint{color:var(--ink-faint);font-size:0.9rem}
+  code,.mono{font-family:var(--f-data);font-size:0.86em}
+  strong{color:var(--ink)}
+
+  /* One SVG per concept, recoloured by whichever tile it sits in. */
+  .tile{display:grid;place-items:center;border-radius:3px;padding:1.1rem;border:1px solid var(--seam)}
+  .tile svg{width:100%;height:auto;display:block}
+  .t-dark{--mk-1:#A7BE93;--mk-2:#8AA07A;--mk-3:#4E9A68;--mk-4:#2F7A4F;--mk-em:#E4703A;
+          --mk-ln:#EDE7DC;--mk-bg:#0E1512;background:#0E1512;border-color:#2E3D35}
+  .t-bone{--mk-1:#7FA468;--mk-2:#5E8A4A;--mk-3:#3D8B5A;--mk-4:#245F3D;--mk-em:#B84C15;
+          --mk-ln:#0E1512;--mk-bg:#EDE7DC;background:#EDE7DC;border-color:#C6BCA9}
+  .t-mono{--mk-1:#7A7A7A;--mk-2:#5E5E5E;--mk-3:#3C3C3C;--mk-4:#141414;--mk-em:#9A9A9A;
+          --mk-ln:#141414;--mk-bg:#EDE7DC;background:#EDE7DC;border-color:#C6BCA9}
+
+  .concept{border:1px solid var(--seam);border-radius:4px;background:var(--surface);
+           padding:1.4rem;margin:0 0 1.6rem}
+  .concept > header{display:flex;align-items:baseline;gap:0.75rem;flex-wrap:wrap;
+                    margin:0 0 1rem;padding-bottom:0.7rem;border-bottom:1px solid var(--seam)}
+  .cnum{font-family:var(--f-data);font-size:0.7rem;letter-spacing:0.16em;color:#0E1512;
+        background:var(--turf);padding:0.2rem 0.5rem;border-radius:2px;font-weight:700}
+  .cmove{font-family:var(--f-data);font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;
+         color:var(--ink-faint);margin-left:auto}
+  .marks{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:0.8rem;align-items:stretch}
+  .marks > div:first-child svg{max-height:200px}
+  .marks svg{max-height:140px}
+  .tag{font-family:var(--f-data);font-size:0.56rem;letter-spacing:0.14em;text-transform:uppercase;
+       color:var(--ink-faint);margin:0.45rem 0 0;text-align:center}
+  .readout{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:1.1rem}
+  .readout h4{font-family:var(--f-data);font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;
+              margin:0 0 0.3rem;color:var(--turf);font-weight:700}
+  .readout .w h4{color:var(--ember)}
+  .readout p{margin:0;font-size:0.92rem;color:var(--ink-dim);max-width:none}
+
+  table{width:100%;border-collapse:collapse;margin:0 0 1rem;font-size:0.93rem}
+  th,td{text-align:left;padding:0.5rem 0.7rem;border-bottom:1px solid var(--seam);vertical-align:top}
+  th{font-family:var(--f-data);font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;
+     color:var(--ink-faint);font-weight:700}
+  td.num{font-family:var(--f-data);text-align:right;white-space:nowrap}
+
+  .sw{display:inline-block;width:1.05em;height:1.05em;border-radius:2px;vertical-align:-0.18em;
+      margin-right:0.45em;border:1px solid rgba(128,128,128,0.35)}
+  .pal{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+  .palcard{border:1px solid var(--seam);border-radius:4px;background:var(--surface);padding:1rem}
+  .palcard h3{font-size:1.12rem}
+  .ramp{display:flex;height:34px;border-radius:2px;overflow:hidden;margin:0.6rem 0 0.7rem;
+        border:1px solid var(--seam)}
+  .ramp span{flex:1}
+
+  .small-test{display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-end;
+              background:#0E1512;border:1px solid #2E3D35;border-radius:4px;padding:1.3rem;
+              --mk-1:#A7BE93;--mk-2:#8AA07A;--mk-3:#4E9A68;--mk-4:#2F7A4F;--mk-em:#E4703A;
+              --mk-ln:#EDE7DC;--mk-bg:#0E1512}
+  .small-test figure{margin:0;text-align:center}
+  .small-test svg{display:block;margin:0 auto;height:auto}
+  .s32 svg{width:32px} .s20 svg{width:20px}
+  .small-test figcaption{font-family:var(--f-data);font-size:0.54rem;letter-spacing:0.12em;
+                         color:#869184;margin-top:0.5rem;text-transform:uppercase}
+
+  .lockups{display:grid;gap:0.9rem}
+  .lock{display:flex;align-items:center;gap:1.2rem;padding:1.2rem 1.4rem;border-radius:3px;
+        border:1px solid var(--seam)}
+  .lock svg{width:60px;flex:none;height:auto}
+  .lock .lw{font-family:var(--f-display);font-size:2rem;letter-spacing:-0.018em;line-height:1}
+  .lock .ld{font-family:var(--f-data);font-size:0.55rem;letter-spacing:0.24em;text-transform:uppercase;
+            margin-top:0.35rem}
+
+  .callout{border-left:3px solid var(--ember);background:var(--lift);padding:0.9rem 1.1rem;
+           border-radius:0 3px 3px 0;margin:0 0 1.1rem}
+  .callout p:last-child{margin:0}
+  .ask{border-left-color:var(--turf)}
+  ol,ul{max-width:64ch;padding-left:1.2rem}
+  li{margin-bottom:0.4rem}
+  footer{margin-top:3.5rem;padding-top:1.2rem;border-top:1px solid var(--seam);
+         color:var(--ink-faint);font-size:0.85rem}
+
+  @media (max-width:820px){
+    .marks{grid-template-columns:1fr}
+    .readout{grid-template-columns:1fr}
+    table{display:block;overflow-x:auto}
+    .lock{flex-wrap:wrap}
+  }
+  @media print{
+    :root{--ground:#fff;--surface:#fff;--lift:#F2EEE6;--seam:#C6BCA9;
+          --ink:#111;--ink-dim:#3E4A43;--ink-faint:#6A766E;
+          --ember:#B84C15;--moss:#4F6640;--turf:#2F7A4F;--sage:#5E8A4A}
+    body{font-size:11.2px}
+    main{max-width:none;padding:0}
+    section{padding-top:1.5rem}
+    .concept,.palcard,.small-test,.callout,.lock{break-inside:avoid;page-break-inside:avoid}
+    h2{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header class="masthead">
+  <div class="brandline">
+    <svg viewBox="0 0 100 108" role="img" aria-label="Sixfold rebrand concept mark">
+      <path d="M18 84 L36 48 L54 84 Z" fill="#A7BE93"/>
+      <path d="M30 84 L50 38 L70 84 Z" fill="#8AA07A"/>
+      <path d="M44 84 L66 26 L88 84 Z" fill="#4E9A68"/>
+      <path d="M60 84 L79 14 L98 84 Z" fill="#2F7A4F"/>
+      <g fill="#EDE7DC">
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+      </g>
+      <path fill="#EDE7DC" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/>
+      <g fill="#8AA07A">
+        <path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+        <path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+        <path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+        <path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="#E4703A"/>
+        <path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+        <path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/>
+      </g>
+    </svg>
+    <div>
+      <h1 class="wordmark">Sixfold</h1>
+      <p class="kicker">Logo rebrand &mdash; concepts for review</p>
+    </div>
+  </div>
+  <p class="standfirst">Six directions for the mark, ordered from a palette change to a clean sheet.
+  Nothing here is a decision and none of it is a master file &mdash; these are drawings to argue about
+  in a room. The team picks a direction; then one gets drawn properly.</p>
+</header>
+
+<section id="brief">
+  <h2>What changed, and what that asks of the mark</h2>
+  <p>The positioning moved. <strong>Aeration leads, general landscaping sits beside it, and fire
+  mitigation is still offered but stops being the headline.</strong> Limbing, land clearing, brush
+  removal and felling all carry on &mdash; they sit under landscaping now rather than under fire.</p>
+  <p>Three services, any one of them on its own. That matters for the mark as much as for the copy:
+  someone booking an aeration should not be looking at a logo that tells them this is a wildfire
+  company.</p>
+  <div class="callout ask">
+    <p><strong>Aeration here means lawn / core aeration</strong> &mdash; hollow tines, plugs pulled
+    out of turf. Confirmed 23 Sep 2026. The project README still has this recorded as unestablished,
+    so that entry needs correcting. Every plug, tine and perforation below rests on it &mdash; if it
+    is wrong, say so before the team spends time on the drawings.</p>
+  </div>
+</section>
+
+<section id="diagnosis">
+  <h2>Why the current mark reads as fire</h2>
+  <p>Worth being precise, because it decides how far you actually have to move. Two things carry the
+  fire read, and they are not equally strong.</p>
+  <table>
+    <tr><th>Signal</th><th>Where it lives</th><th>How much work it does</th></tr>
+    <tr><td><strong>Ember orange</strong></td><td>All four peaks &mdash; most of the mark's area</td>
+        <td>Most of it. Orange triangles are flames by default.</td></tr>
+    <tr><td><strong>The ascending stack</strong></td><td>Four triangles climbing left to right</td>
+        <td>Some. The gesture is flame-like, but in green it reads as a ridgeline.</td></tr>
+    <tr><td>The conifer</td><td>Front left, moss</td><td>None. It is a tree.</td></tr>
+    <tr><td>The roots</td><td>Ten strands off the right corner</td><td>None. It is the ground.</td></tr>
+  </table>
+  <p>So <strong>Concept 1 is the control.</strong> Same geometry, no orange. If the room agrees that
+  one is already enough, this rebrand is a token swap and the rollout is cheap. If it is not,
+  2&ndash;6 show what buying more looks like.</p>
+  <div class="callout">
+    <p><strong>One measured constraint runs through all of this.</strong> Ember and Moss sit at a
+    contrast ratio of <span class="mono">1.11:1</span> &mdash; they are separated by hue alone.
+    Anyone with red-green colourblindness sees one flat shape where we see two. Green on green is the
+    same trap: <span class="mono">#4E9A68</span> against <span class="mono">#8AA07A</span> is
+    <span class="mono">1.20:1</span>. <strong>Every concept below separates its parts by lightness
+    rather than hue</strong>, which is also what makes them survive the one-colour and small-size
+    tests at the end.</p>
+  </div>
+</section>
+
+<section id="palette">
+  <h2>Three palette directions</h2>
+  <p>Independent of which drawing wins &mdash; any concept can wear any of these. Ordered by what
+  they cost to roll out.</p>
+  <div class="pal">
+
+    <div class="palcard">
+      <h3>A &mdash; Demote the ember</h3>
+      <div class="ramp"><span style="background:#0E1512"></span><span style="background:#2F7A4F"></span><span style="background:#8AA07A"></span><span style="background:#A7BE93"></span><span style="background:#EDE7DC"></span><span style="background:#E4703A;flex:0.3"></span></div>
+      <p class="faint">No new colours beyond one deeper green. The agreed five stay, Moss becomes
+      primary, and Ember drops to an accent held to roughly a tenth of any surface.</p>
+      <p class="faint"><strong>Costs least.</strong> The existing CSS tokens keep their names, so the
+      site, the invoice and the Square set change by editing values, not structure.</p>
+    </div>
+
+    <div class="palcard">
+      <h3>B &mdash; Turf primary</h3>
+      <div class="ramp"><span style="background:#0E1512"></span><span style="background:#245F3D"></span><span style="background:#2F7A4F"></span><span style="background:#4E9A68"></span><span style="background:#A7BE93"></span><span style="background:#EDE7DC"></span></div>
+      <p class="faint">A four-step green ramp and no warm colour at all. The most decisive break from
+      fire, and the easiest to keep accessible &mdash; the steps are tonal, so they hold in one colour
+      and for colourblind viewers.</p>
+      <p class="faint"><strong>The risk is blandness.</strong> Green-only is what most lawn companies
+      already look like; the distinctiveness then has to come entirely from the drawing.</p>
+    </div>
+
+    <div class="palcard">
+      <h3>C &mdash; Turf and wheat</h3>
+      <div class="ramp"><span style="background:#0E1512"></span><span style="background:#2F7A4F"></span><span style="background:#4E9A68"></span><span style="background:#A7BE93"></span><span style="background:#C9A44C"></span><span style="background:#EDE7DC"></span></div>
+      <p class="faint">Greens plus a dry-grass gold doing ember's old job. Keeps a warm note &mdash;
+      useful, because dormant and drought-stressed turf is literally what a customer is looking at
+      when they call &mdash; without pointing at fire.</p>
+      <p class="faint"><strong>Watch the gold.</strong> <span class="mono">#C9A44C</span> is only
+      <span class="mono">1.92:1</span> on Bone, so it cannot carry text or thin lines on a light
+      ground. Large shapes only.</p>
+    </div>
+  </div>
+
+  <table style="margin-top:1.4rem">
+    <tr><th>Colour</th><th>Hex</th><th class="num">on Pine</th><th class="num">on Bone</th><th>Standing</th></tr>
+    <tr><td><span class="sw" style="background:#0E1512"></span>Pine Black</td><td class="mono">#0E1512</td><td class="num">&mdash;</td><td class="num">15.60</td><td>Unchanged</td></tr>
+    <tr><td><span class="sw" style="background:#EDE7DC"></span>Bone</td><td class="mono">#EDE7DC</td><td class="num">15.60</td><td class="num">&mdash;</td><td>Unchanged</td></tr>
+    <tr><td><span class="sw" style="background:#A7BE93"></span>Sage</td><td class="mono">#A7BE93</td><td class="num">9.19</td><td class="num">1.64</td><td>New &mdash; dark grounds only</td></tr>
+    <tr><td><span class="sw" style="background:#8AA07A"></span>Moss</td><td class="mono">#8AA07A</td><td class="num">6.51</td><td class="num">2.31</td><td>Unchanged, promoted</td></tr>
+    <tr><td><span class="sw" style="background:#4E9A68"></span>Turf, dark ground</td><td class="mono">#4E9A68</td><td class="num">5.42</td><td class="num">2.78</td><td>New</td></tr>
+    <tr><td><span class="sw" style="background:#2F7A4F"></span>Turf, light ground</td><td class="mono">#2F7A4F</td><td class="num">3.54</td><td class="num">4.25</td><td>New &mdash; the anchor</td></tr>
+    <tr><td><span class="sw" style="background:#C9A44C"></span>Wheat <span class="faint">(C only)</span></td><td class="mono">#C9A44C</td><td class="num">7.84</td><td class="num">1.92</td><td>New</td></tr>
+    <tr><td><span class="sw" style="background:#E4703A"></span>Ember</td><td class="mono">#E4703A</td><td class="num">5.89</td><td class="num">2.56</td><td>Kept, demoted to accent</td></tr>
+  </table>
+  <p class="faint">Ratios are WCAG contrast, computed rather than estimated. The two Turf values are a
+  dark-ground / light-ground pair &mdash; the same arrangement Ember already uses
+  (<span class="mono">#E4703A</span> on dark, <span class="mono">#B84C15</span> on light).</p>
+</section>
+
+<section id="concepts">
+  <h2>The six concepts</h2>
+  <p>Each one is shown three ways: full colour on Pine, full colour on Bone, and one colour. The
+  one-colour tile is not decoration &mdash; it is where a vehicle magnet, an embroidered shirt and a
+  thermal receipt live, and it is where weak marks fall apart.</p>
+
+  <!-- ============ 1 ============ -->
+  <article class="concept">
+    <header>
+      <span class="cnum">01</span>
+      <h3>Ridge, retinted</h3>
+      <span class="cmove">Palette only &mdash; no geometry change</span>
+    </header>
+    <div class="marks">
+      <div><div class="tile t-dark">
+        <svg viewBox="0 0 100 116" role="img" aria-label="Concept 1 on dark">
+          <path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <rect x="4" y="86" width="92" height="5" fill="var(--mk-ln)"/>
+          <g fill="none" stroke="var(--mk-ln)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+            <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+            <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+            <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+            <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+            <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+            <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+            <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+            <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+            <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+          </g>
+        </svg></div><p class="tag">Pine ground</p></div>
+
+      <div><div class="tile t-bone">
+        <svg viewBox="0 0 100 116" role="img" aria-label="Concept 1 on bone">
+          <path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <rect x="4" y="86" width="92" height="5" fill="var(--mk-ln)"/>
+          <g fill="none" stroke="var(--mk-ln)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+            <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+            <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+            <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+            <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+            <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+            <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+            <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+            <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+            <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+          </g>
+        </svg></div><p class="tag">Bone ground</p></div>
+
+      <div><div class="tile t-mono">
+        <svg viewBox="0 0 100 116" role="img" aria-label="Concept 1 in one colour">
+          <path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <rect x="4" y="86" width="92" height="5" fill="var(--mk-ln)"/>
+          <g fill="none" stroke="var(--mk-ln)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+            <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+            <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+            <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+            <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+            <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+            <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+            <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+            <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+            <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+          </g>
+        </svg></div><p class="tag">One colour</p></div>
+    </div>
+    <div class="readout">
+      <div><h4>What it signals</h4><p>A ridgeline and a treeline. Nothing else changed, and the fire
+      read is already most of the way gone &mdash; which is the finding, not a disappointment.</p></div>
+      <div><h4>What it keeps</h4><p>Everything. Same silhouette, same four peaks, same tree, same ten
+      roots. Anyone who has seen the truck still recognises it.</p></div>
+      <div class="w"><h4>Where it is weak</h4><p>No aeration in it at all. And the tree had to move to
+      bone or black &mdash; green on green loses it, which is the <span class="mono">1.20:1</span>
+      problem showing up in practice.</p></div>
+    </div>
+  </article>
+
+  <!-- ============ 2 ============ -->
+  <article class="concept">
+    <header>
+      <span class="cnum">02</span>
+      <h3>Ridge, aerated</h3>
+      <span class="cmove">Palette + one element swapped</span>
+    </header>
+    <div class="marks">
+      <div><div class="tile t-dark">
+        <svg viewBox="0 0 100 108" role="img" aria-label="Concept 2 on dark">
+          <path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/>
+          <g fill="var(--mk-2)">
+            <path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="var(--mk-em)"/>
+            <path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/>
+          </g>
+        </svg></div><p class="tag">Pine ground</p></div>
+
+      <div><div class="tile t-bone">
+        <svg viewBox="0 0 100 108" role="img" aria-label="Concept 2 on bone">
+          <path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/>
+          <g fill="var(--mk-2)">
+            <path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="var(--mk-em)"/>
+            <path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/>
+          </g>
+        </svg></div><p class="tag">Bone ground</p></div>
+
+      <div><div class="tile t-mono">
+        <svg viewBox="0 0 100 108" role="img" aria-label="Concept 2 in one colour">
+          <path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="20.4" y="77" width="3.2" height="7"/>
+            <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+            <path d="M22 62 L12 74 L32 74 Z"/>
+            <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          </g>
+          <path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/>
+          <g fill="var(--mk-2)">
+            <path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="var(--mk-em)"/>
+            <path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/>
+            <path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/>
+          </g>
+        </svg></div><p class="tag">One colour</p></div>
+    </div>
+    <div class="readout">
+      <div><h4>What it signals</h4><p>The ground line is now a perforated turf band and six cores hang
+      below it where the roots used to be. Aeration, said plainly, without giving up the ridge.</p></div>
+      <div><h4>What it keeps</h4><p>Peaks, tree, silhouette. <strong>Six cores, one of them ember</strong>
+      &mdash; the name is in the count, and fire is one service out of six rather than the whole mark.</p></div>
+      <div class="w"><h4>Where it is weak</h4><p>The roots go, and three drawings went into them. The
+      cores also need clear air below the band, so the mark gets taller and crops badly into a circular
+      profile picture.</p></div>
+    </div>
+  </article>
+
+  <!-- ============ 3 ============ -->
+  <article class="concept">
+    <header>
+      <span class="cnum">03</span>
+      <h3>Three strata</h3>
+      <span class="cmove">Ridge restructured</span>
+    </header>
+    <div class="marks">
+      <div><div class="tile t-dark">
+        <svg viewBox="0 0 120 88" role="img" aria-label="Concept 3 on dark">
+          <path d="M0 56 L20 30 L38 46 L58 24 L78 44 L98 28 L120 50 L120 56 Z" fill="var(--mk-1)"/>
+          <path d="M0 56 L16 42 L32 52 L50 38 L70 50 L90 40 L108 52 L120 46 L120 56 Z" fill="var(--mk-3)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="24.6" y="50" width="2.8" height="6"/>
+            <path d="M26 42 L18 52 L34 52 Z"/>
+            <path d="M26 36 L20 46 L32 46 Z"/>
+            <path d="M26 31 L21.5 40 L30.5 40 Z"/>
+          </g>
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M0 56 H120 V67 H0 Z M11.5 58.5 H16.5 V64.5 H11.5 Z M31.5 58.5 H36.5 V64.5 H31.5 Z M51.5 58.5 H56.5 V64.5 H51.5 Z M71.5 58.5 H76.5 V64.5 H71.5 Z M91.5 58.5 H96.5 V64.5 H91.5 Z M107.5 58.5 H112.5 V64.5 H107.5 Z"/>
+          <g fill="none" stroke="var(--mk-2)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 67 L19 73 L22 78.5" stroke-width="1.5"/>
+            <path d="M19 73 L14.5 77.5" stroke-width="1"/>
+            <path d="M36 67 L37 73 L34 79" stroke-width="1.4"/>
+            <path d="M37 73 L41.5 76.5" stroke-width="0.95"/>
+            <path d="M52 67 L51 74 L54 80 L52 84.5" stroke-width="1.5"/>
+            <path d="M51 74 L46 78" stroke-width="1"/>
+            <path d="M68 67 L69 73 L66 78.5" stroke-width="1.35"/>
+            <path d="M69 73 L73.5 77" stroke-width="0.95"/>
+            <path d="M84 67 L83 74 L86 79.5" stroke-width="1.4"/>
+            <path d="M83 74 L78.5 78.5" stroke-width="1"/>
+            <path d="M100 67 L101 73 L98 78" stroke-width="1.25"/>
+            <path d="M101 73 L105 76.5" stroke-width="0.9"/>
+          </g>
+        </svg></div><p class="tag">Pine ground</p></div>
+
+      <div><div class="tile t-bone">
+        <svg viewBox="0 0 120 88" role="img" aria-label="Concept 3 on bone">
+          <path d="M0 56 L20 30 L38 46 L58 24 L78 44 L98 28 L120 50 L120 56 Z" fill="var(--mk-1)"/>
+          <path d="M0 56 L16 42 L32 52 L50 38 L70 50 L90 40 L108 52 L120 46 L120 56 Z" fill="var(--mk-3)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="24.6" y="50" width="2.8" height="6"/>
+            <path d="M26 42 L18 52 L34 52 Z"/>
+            <path d="M26 36 L20 46 L32 46 Z"/>
+            <path d="M26 31 L21.5 40 L30.5 40 Z"/>
+          </g>
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M0 56 H120 V67 H0 Z M11.5 58.5 H16.5 V64.5 H11.5 Z M31.5 58.5 H36.5 V64.5 H31.5 Z M51.5 58.5 H56.5 V64.5 H51.5 Z M71.5 58.5 H76.5 V64.5 H71.5 Z M91.5 58.5 H96.5 V64.5 H91.5 Z M107.5 58.5 H112.5 V64.5 H107.5 Z"/>
+          <g fill="none" stroke="var(--mk-2)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 67 L19 73 L22 78.5" stroke-width="1.5"/>
+            <path d="M19 73 L14.5 77.5" stroke-width="1"/>
+            <path d="M36 67 L37 73 L34 79" stroke-width="1.4"/>
+            <path d="M37 73 L41.5 76.5" stroke-width="0.95"/>
+            <path d="M52 67 L51 74 L54 80 L52 84.5" stroke-width="1.5"/>
+            <path d="M51 74 L46 78" stroke-width="1"/>
+            <path d="M68 67 L69 73 L66 78.5" stroke-width="1.35"/>
+            <path d="M69 73 L73.5 77" stroke-width="0.95"/>
+            <path d="M84 67 L83 74 L86 79.5" stroke-width="1.4"/>
+            <path d="M83 74 L78.5 78.5" stroke-width="1"/>
+            <path d="M100 67 L101 73 L98 78" stroke-width="1.25"/>
+            <path d="M101 73 L105 76.5" stroke-width="0.9"/>
+          </g>
+        </svg></div><p class="tag">Bone ground</p></div>
+
+      <div><div class="tile t-mono">
+        <svg viewBox="0 0 120 88" role="img" aria-label="Concept 3 in one colour">
+          <path d="M0 56 L20 30 L38 46 L58 24 L78 44 L98 28 L120 50 L120 56 Z" fill="var(--mk-1)"/>
+          <path d="M0 56 L16 42 L32 52 L50 38 L70 50 L90 40 L108 52 L120 46 L120 56 Z" fill="var(--mk-3)"/>
+          <g fill="var(--mk-ln)">
+            <rect x="24.6" y="50" width="2.8" height="6"/>
+            <path d="M26 42 L18 52 L34 52 Z"/>
+            <path d="M26 36 L20 46 L32 46 Z"/>
+            <path d="M26 31 L21.5 40 L30.5 40 Z"/>
+          </g>
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M0 56 H120 V67 H0 Z M11.5 58.5 H16.5 V64.5 H11.5 Z M31.5 58.5 H36.5 V64.5 H31.5 Z M51.5 58.5 H56.5 V64.5 H51.5 Z M71.5 58.5 H76.5 V64.5 H71.5 Z M91.5 58.5 H96.5 V64.5 H91.5 Z M107.5 58.5 H112.5 V64.5 H107.5 Z"/>
+          <g fill="none" stroke="var(--mk-2)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 67 L19 73 L22 78.5" stroke-width="1.5"/>
+            <path d="M19 73 L14.5 77.5" stroke-width="1"/>
+            <path d="M36 67 L37 73 L34 79" stroke-width="1.4"/>
+            <path d="M37 73 L41.5 76.5" stroke-width="0.95"/>
+            <path d="M52 67 L51 74 L54 80 L52 84.5" stroke-width="1.5"/>
+            <path d="M51 74 L46 78" stroke-width="1"/>
+            <path d="M68 67 L69 73 L66 78.5" stroke-width="1.35"/>
+            <path d="M69 73 L73.5 77" stroke-width="0.95"/>
+            <path d="M84 67 L83 74 L86 79.5" stroke-width="1.4"/>
+            <path d="M83 74 L78.5 78.5" stroke-width="1"/>
+            <path d="M100 67 L101 73 L98 78" stroke-width="1.25"/>
+            <path d="M101 73 L105 76.5" stroke-width="0.9"/>
+          </g>
+        </svg></div><p class="tag">One colour</p></div>
+    </div>
+    <div class="readout">
+      <div><h4>What it signals</h4><p>A cross-section: canopy on top, aerated turf through the middle,
+      root zone below. The three service lines stacked as three layers of the same ground.</p></div>
+      <div><h4>What it keeps</h4><p>The conifer and all ten root strands, redrawn across the width.
+      The peaks flatten into a ridgeline, which is what finally kills the flame gesture.</p></div>
+      <div class="w"><h4>Where it is weak</h4><p>It is wide and detailed &mdash; a diagram more than a
+      mark. The root strands are the first thing to disappear when this is embroidered or printed on a
+      receipt. See the small-size test below before falling for it.</p></div>
+    </div>
+  </article>
+
+  <!-- ============ 4 ============ -->
+  <article class="concept">
+    <header>
+      <span class="cnum">04</span>
+      <h3>Ridge of cores</h3>
+      <span class="cmove">Clean sheet, keeps the silhouette</span>
+    </header>
+    <div class="marks">
+      <div><div class="tile t-dark">
+        <svg viewBox="0 0 100 100" role="img" aria-label="Concept 4 on dark">
+          <path d="M4 92 V72.6 A6.6 6.6 0 0 1 17.2 72.6 V92 Z" fill="var(--mk-em)"/>
+          <path d="M19.6 92 V56.1 A5.5 5.5 0 0 1 30.6 56.1 V92 Z" fill="var(--mk-1)"/>
+          <path d="M33.4 92 V65 A7 7 0 0 1 47.4 65 V92 Z" fill="var(--mk-2)"/>
+          <path d="M50 92 V37 A6 6 0 0 1 62 37 V92 Z" fill="var(--mk-2)"/>
+          <path d="M64.6 92 V48.6 A6.6 6.6 0 0 1 77.8 48.6 V92 Z" fill="var(--mk-3)"/>
+          <path d="M80.4 92 V21.4 A7.4 7.4 0 0 1 95.2 21.4 V92 Z" fill="var(--mk-4)"/>
+          <rect x="4" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="4" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="19.6" y="60.5" width="11.0" height="1.8" fill="var(--mk-bg)"/><rect x="19.6" y="71.2" width="11.0" height="1.9" fill="var(--mk-bg)"/><rect x="19.6" y="79.4" width="11.0" height="1.4" fill="var(--mk-bg)"/><rect x="19.6" y="86.2" width="11.0" height="1.7" fill="var(--mk-bg)"/><rect x="33.4" y="71.2" width="14.0" height="1.9" fill="var(--mk-bg)"/><rect x="33.4" y="79.4" width="14.0" height="1.4" fill="var(--mk-bg)"/><rect x="33.4" y="86.2" width="14.0" height="1.7" fill="var(--mk-bg)"/><rect x="50" y="44" width="12.0" height="1.5" fill="var(--mk-bg)"/><rect x="50" y="60.5" width="12.0" height="1.8" fill="var(--mk-bg)"/><rect x="50" y="71.2" width="12.0" height="1.9" fill="var(--mk-bg)"/><rect x="50" y="79.4" width="12.0" height="1.4" fill="var(--mk-bg)"/><rect x="50" y="86.2" width="12.0" height="1.7" fill="var(--mk-bg)"/><rect x="64.6" y="60.5" width="13.2" height="1.8" fill="var(--mk-bg)"/><rect x="64.6" y="71.2" width="13.2" height="1.9" fill="var(--mk-bg)"/><rect x="64.6" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="64.6" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="80.4" y="44" width="14.8" height="1.5" fill="var(--mk-bg)"/><rect x="80.4" y="60.5" width="14.8" height="1.8" fill="var(--mk-bg)"/><rect x="80.4" y="71.2" width="14.8" height="1.9" fill="var(--mk-bg)"/><rect x="80.4" y="79.4" width="14.8" height="1.4" fill="var(--mk-bg)"/><rect x="80.4" y="86.2" width="14.8" height="1.7" fill="var(--mk-bg)"/>
+          
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M2 92 H98 V97.5 H2 Z M7.85 93.4 H13.35 V96.1 H7.85 Z M22.35 93.4 H27.85 V96.1 H22.35 Z M37.65 93.4 H43.15 V96.1 H37.65 Z M53.25 93.4 H58.75 V96.1 H53.25 Z M68.45 93.4 H73.95 V96.1 H68.45 Z M85.05 93.4 H90.55 V96.1 H85.05 Z"/>
+        </svg></div><p class="tag">Pine ground</p></div>
+
+      <div><div class="tile t-bone">
+        <svg viewBox="0 0 100 100" role="img" aria-label="Concept 4 on bone">
+          <path d="M4 92 V72.6 A6.6 6.6 0 0 1 17.2 72.6 V92 Z" fill="var(--mk-em)"/>
+          <path d="M19.6 92 V56.1 A5.5 5.5 0 0 1 30.6 56.1 V92 Z" fill="var(--mk-1)"/>
+          <path d="M33.4 92 V65 A7 7 0 0 1 47.4 65 V92 Z" fill="var(--mk-2)"/>
+          <path d="M50 92 V37 A6 6 0 0 1 62 37 V92 Z" fill="var(--mk-2)"/>
+          <path d="M64.6 92 V48.6 A6.6 6.6 0 0 1 77.8 48.6 V92 Z" fill="var(--mk-3)"/>
+          <path d="M80.4 92 V21.4 A7.4 7.4 0 0 1 95.2 21.4 V92 Z" fill="var(--mk-4)"/>
+          <rect x="4" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="4" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="19.6" y="60.5" width="11.0" height="1.8" fill="var(--mk-bg)"/><rect x="19.6" y="71.2" width="11.0" height="1.9" fill="var(--mk-bg)"/><rect x="19.6" y="79.4" width="11.0" height="1.4" fill="var(--mk-bg)"/><rect x="19.6" y="86.2" width="11.0" height="1.7" fill="var(--mk-bg)"/><rect x="33.4" y="71.2" width="14.0" height="1.9" fill="var(--mk-bg)"/><rect x="33.4" y="79.4" width="14.0" height="1.4" fill="var(--mk-bg)"/><rect x="33.4" y="86.2" width="14.0" height="1.7" fill="var(--mk-bg)"/><rect x="50" y="44" width="12.0" height="1.5" fill="var(--mk-bg)"/><rect x="50" y="60.5" width="12.0" height="1.8" fill="var(--mk-bg)"/><rect x="50" y="71.2" width="12.0" height="1.9" fill="var(--mk-bg)"/><rect x="50" y="79.4" width="12.0" height="1.4" fill="var(--mk-bg)"/><rect x="50" y="86.2" width="12.0" height="1.7" fill="var(--mk-bg)"/><rect x="64.6" y="60.5" width="13.2" height="1.8" fill="var(--mk-bg)"/><rect x="64.6" y="71.2" width="13.2" height="1.9" fill="var(--mk-bg)"/><rect x="64.6" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="64.6" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="80.4" y="44" width="14.8" height="1.5" fill="var(--mk-bg)"/><rect x="80.4" y="60.5" width="14.8" height="1.8" fill="var(--mk-bg)"/><rect x="80.4" y="71.2" width="14.8" height="1.9" fill="var(--mk-bg)"/><rect x="80.4" y="79.4" width="14.8" height="1.4" fill="var(--mk-bg)"/><rect x="80.4" y="86.2" width="14.8" height="1.7" fill="var(--mk-bg)"/>
+          
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M2 92 H98 V97.5 H2 Z M7.85 93.4 H13.35 V96.1 H7.85 Z M22.35 93.4 H27.85 V96.1 H22.35 Z M37.65 93.4 H43.15 V96.1 H37.65 Z M53.25 93.4 H58.75 V96.1 H53.25 Z M68.45 93.4 H73.95 V96.1 H68.45 Z M85.05 93.4 H90.55 V96.1 H85.05 Z"/>
+        </svg></div><p class="tag">Bone ground</p></div>
+
+      <div><div class="tile t-mono">
+        <svg viewBox="0 0 100 100" role="img" aria-label="Concept 4 in one colour">
+          <path d="M4 92 V72.6 A6.6 6.6 0 0 1 17.2 72.6 V92 Z" fill="var(--mk-em)"/>
+          <path d="M19.6 92 V56.1 A5.5 5.5 0 0 1 30.6 56.1 V92 Z" fill="var(--mk-1)"/>
+          <path d="M33.4 92 V65 A7 7 0 0 1 47.4 65 V92 Z" fill="var(--mk-2)"/>
+          <path d="M50 92 V37 A6 6 0 0 1 62 37 V92 Z" fill="var(--mk-2)"/>
+          <path d="M64.6 92 V48.6 A6.6 6.6 0 0 1 77.8 48.6 V92 Z" fill="var(--mk-3)"/>
+          <path d="M80.4 92 V21.4 A7.4 7.4 0 0 1 95.2 21.4 V92 Z" fill="var(--mk-4)"/>
+          <rect x="4" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="4" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="19.6" y="60.5" width="11.0" height="1.8" fill="var(--mk-bg)"/><rect x="19.6" y="71.2" width="11.0" height="1.9" fill="var(--mk-bg)"/><rect x="19.6" y="79.4" width="11.0" height="1.4" fill="var(--mk-bg)"/><rect x="19.6" y="86.2" width="11.0" height="1.7" fill="var(--mk-bg)"/><rect x="33.4" y="71.2" width="14.0" height="1.9" fill="var(--mk-bg)"/><rect x="33.4" y="79.4" width="14.0" height="1.4" fill="var(--mk-bg)"/><rect x="33.4" y="86.2" width="14.0" height="1.7" fill="var(--mk-bg)"/><rect x="50" y="44" width="12.0" height="1.5" fill="var(--mk-bg)"/><rect x="50" y="60.5" width="12.0" height="1.8" fill="var(--mk-bg)"/><rect x="50" y="71.2" width="12.0" height="1.9" fill="var(--mk-bg)"/><rect x="50" y="79.4" width="12.0" height="1.4" fill="var(--mk-bg)"/><rect x="50" y="86.2" width="12.0" height="1.7" fill="var(--mk-bg)"/><rect x="64.6" y="60.5" width="13.2" height="1.8" fill="var(--mk-bg)"/><rect x="64.6" y="71.2" width="13.2" height="1.9" fill="var(--mk-bg)"/><rect x="64.6" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="64.6" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="80.4" y="44" width="14.8" height="1.5" fill="var(--mk-bg)"/><rect x="80.4" y="60.5" width="14.8" height="1.8" fill="var(--mk-bg)"/><rect x="80.4" y="71.2" width="14.8" height="1.9" fill="var(--mk-bg)"/><rect x="80.4" y="79.4" width="14.8" height="1.4" fill="var(--mk-bg)"/><rect x="80.4" y="86.2" width="14.8" height="1.7" fill="var(--mk-bg)"/>
+          
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M2 92 H98 V97.5 H2 Z M7.85 93.4 H13.35 V96.1 H7.85 Z M22.35 93.4 H27.85 V96.1 H22.35 Z M37.65 93.4 H43.15 V96.1 H37.65 Z M53.25 93.4 H58.75 V96.1 H53.25 Z M68.45 93.4 H73.95 V96.1 H68.45 Z M85.05 93.4 H90.55 V96.1 H85.05 Z"/>
+        </svg></div><p class="tag">One colour</p></div>
+    </div>
+    <div class="readout">
+      <div><h4>What it signals</h4><p>Six soil cores standing in a row, pulled from the six holes in
+      the band beneath them. The three pale bands across them are soil strata, and the heights
+      rise and fall rather than climbing evenly &mdash; both are there to stop the shapes reading as
+      a bar chart, which the first drawing of this did.</p></div>
+      <div><h4>What it keeps</h4><p>A ridge profile, tallest at the right, so it still scans like the old
+      mark from across a car park &mdash; but built out of aeration cores instead of flames. The
+      shortest core is ember: fire is still here, and it is the smallest of the six.</p></div>
+      <div class="w"><h4>Where it is weak</h4><p><strong>It can still read as a bar chart.</strong>
+      Uneven widths, uneven band spacing and a recessive ground line all fight that, and it is better
+      than the first drawing, but somebody should say what they see before anyone falls in love with
+      it. No tree, either &mdash; and the strata bands are knocked out in the background colour, so it
+      needs its own one-colour drawing and cannot sit on a photo without a plate behind it.</p></div>
+    </div>
+  </article>
+
+  <!-- ============ 5 ============ -->
+  <article class="concept">
+    <header>
+      <span class="cnum">05</span>
+      <h3>Sixfold rosette</h3>
+      <span class="cmove">Clean sheet, most abstract</span>
+    </header>
+    <div class="marks">
+      <div><div class="tile t-dark">
+        <svg viewBox="0 0 100 100" role="img" aria-label="Concept 5 on dark">
+          <path d="M55.60 35.00 L52.20 5.00 L47.80 5.00 L44.40 35.00 Z" fill="var(--mk-1)"/>
+          <path d="M65.79 47.35 L90.07 29.41 L87.87 25.59 L60.19 37.65 Z" fill="var(--mk-2)"/>
+          <path d="M60.19 62.35 L87.87 74.41 L90.07 70.59 L65.79 52.65 Z" fill="var(--mk-3)"/>
+          <path d="M44.40 65.00 L47.80 95.00 L52.20 95.00 L55.60 65.00 Z" fill="var(--mk-em)"/>
+          <path d="M34.21 52.65 L9.93 70.59 L12.13 74.41 L39.81 62.35 Z" fill="var(--mk-3)"/>
+          <path d="M39.81 37.65 L12.13 25.59 L9.93 29.41 L34.21 47.35 Z" fill="var(--mk-2)"/>
+          <circle cx="50" cy="50" r="9" fill="var(--mk-4)"/>
+          <circle cx="50" cy="50" r="3.4" fill="var(--mk-bg)"/>
+        </svg></div><p class="tag">Pine ground</p></div>
+
+      <div><div class="tile t-bone">
+        <svg viewBox="0 0 100 100" role="img" aria-label="Concept 5 on bone">
+          <path d="M55.60 35.00 L52.20 5.00 L47.80 5.00 L44.40 35.00 Z" fill="var(--mk-1)"/>
+          <path d="M65.79 47.35 L90.07 29.41 L87.87 25.59 L60.19 37.65 Z" fill="var(--mk-2)"/>
+          <path d="M60.19 62.35 L87.87 74.41 L90.07 70.59 L65.79 52.65 Z" fill="var(--mk-3)"/>
+          <path d="M44.40 65.00 L47.80 95.00 L52.20 95.00 L55.60 65.00 Z" fill="var(--mk-em)"/>
+          <path d="M34.21 52.65 L9.93 70.59 L12.13 74.41 L39.81 62.35 Z" fill="var(--mk-3)"/>
+          <path d="M39.81 37.65 L12.13 25.59 L9.93 29.41 L34.21 47.35 Z" fill="var(--mk-2)"/>
+          <circle cx="50" cy="50" r="9" fill="var(--mk-4)"/>
+          <circle cx="50" cy="50" r="3.4" fill="var(--mk-bg)"/>
+        </svg></div><p class="tag">Bone ground</p></div>
+
+      <div><div class="tile t-mono">
+        <svg viewBox="0 0 100 100" role="img" aria-label="Concept 5 in one colour">
+          <path d="M55.60 35.00 L52.20 5.00 L47.80 5.00 L44.40 35.00 Z" fill="var(--mk-1)"/>
+          <path d="M65.79 47.35 L90.07 29.41 L87.87 25.59 L60.19 37.65 Z" fill="var(--mk-2)"/>
+          <path d="M60.19 62.35 L87.87 74.41 L90.07 70.59 L65.79 52.65 Z" fill="var(--mk-3)"/>
+          <path d="M44.40 65.00 L47.80 95.00 L52.20 95.00 L55.60 65.00 Z" fill="var(--mk-em)"/>
+          <path d="M34.21 52.65 L9.93 70.59 L12.13 74.41 L39.81 62.35 Z" fill="var(--mk-3)"/>
+          <path d="M39.81 37.65 L12.13 25.59 L9.93 29.41 L34.21 47.35 Z" fill="var(--mk-2)"/>
+          <circle cx="50" cy="50" r="9" fill="var(--mk-4)"/>
+          <circle cx="50" cy="50" r="3.4" fill="var(--mk-bg)"/>
+        </svg></div><p class="tag">One colour</p></div>
+    </div>
+    <div class="readout">
+      <div><h4>What it signals</h4><p>Six tines around a hollow centre. &ldquo;Sixfold&rdquo; is a real
+      term for six-way radial symmetry, so the name and the drawing say the same thing for the first
+      time.</p></div>
+      <div><h4>What it keeps</h4><p>Nothing visual &mdash; but it keeps the count, and it is the only
+      concept that fits a circle. Profile pictures, app icons and a bottle cap all work without a
+      redraw.</p></div>
+      <div class="w"><h4>Where it is weak</h4><p>Abstract enough that nobody reads &ldquo;lawn&rdquo;
+      from it cold. It also drifts close to generic tech-logo territory, and it throws away every bit
+      of recognition built so far.</p></div>
+    </div>
+  </article>
+
+  <!-- ============ 6 ============ -->
+  <article class="concept">
+    <header>
+      <span class="cnum">06</span>
+      <h3>The tine</h3>
+      <span class="cmove">Clean sheet, minimal</span>
+    </header>
+    <div class="marks">
+      <div><div class="tile t-dark">
+        <svg viewBox="0 0 100 92" role="img" aria-label="Concept 6 on dark">
+          <g fill="none" stroke="var(--mk-3)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 28 L29 34 L20 40"/>
+            <path d="M20 46 L29 52 L20 58"/>
+          </g>
+          <path fill="var(--mk-2)" fill-rule="evenodd" d="M38 10 H60 L55 70 H43 Z M45 20 H53 L51.4 62 H46.6 Z"/>
+          <path fill="var(--mk-1)" d="M70 64 V46.5 A5.5 5.5 0 0 1 81 46.5 V64 Z"/>
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M6 64 H94 V70 H6 Z M44.5 65 H53.5 V69 H44.5 Z"/>
+        </svg></div><p class="tag">Pine ground</p></div>
+
+      <div><div class="tile t-bone">
+        <svg viewBox="0 0 100 92" role="img" aria-label="Concept 6 on bone">
+          <g fill="none" stroke="var(--mk-3)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 28 L29 34 L20 40"/>
+            <path d="M20 46 L29 52 L20 58"/>
+          </g>
+          <path fill="var(--mk-2)" fill-rule="evenodd" d="M38 10 H60 L55 70 H43 Z M45 20 H53 L51.4 62 H46.6 Z"/>
+          <path fill="var(--mk-1)" d="M70 64 V46.5 A5.5 5.5 0 0 1 81 46.5 V64 Z"/>
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M6 64 H94 V70 H6 Z M44.5 65 H53.5 V69 H44.5 Z"/>
+        </svg></div><p class="tag">Bone ground</p></div>
+
+      <div><div class="tile t-mono">
+        <svg viewBox="0 0 100 92" role="img" aria-label="Concept 6 in one colour">
+          <g fill="none" stroke="var(--mk-3)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 28 L29 34 L20 40"/>
+            <path d="M20 46 L29 52 L20 58"/>
+          </g>
+          <path fill="var(--mk-2)" fill-rule="evenodd" d="M38 10 H60 L55 70 H43 Z M45 20 H53 L51.4 62 H46.6 Z"/>
+          <path fill="var(--mk-1)" d="M70 64 V46.5 A5.5 5.5 0 0 1 81 46.5 V64 Z"/>
+          <path fill="var(--mk-4)" fill-rule="evenodd" d="M6 64 H94 V70 H6 Z M44.5 65 H53.5 V69 H44.5 Z"/>
+        </svg></div><p class="tag">One colour</p></div>
+    </div>
+    <div class="readout">
+      <div><h4>What it signals</h4><p>One hollow tine going into the turf, the hole it left, the core
+      standing beside it, and air going in from the left. The most literal statement of the new lead
+      service in the set.</p></div>
+      <div><h4>What it keeps</h4><p>Nothing, deliberately. No fire, no ember, no ridge. This is the
+      answer if the room decides the old mark has to stop being a reference point.</p></div>
+      <div class="w"><h4>Where it is weak</h4><p><strong>It can read as a syringe.</strong> The tine is
+      drawn wide and stubby to fight that, but say it out loud in the meeting and see whether anyone
+      else saw it first. It also says nothing at all about trees or landscaping.</p></div>
+    </div>
+  </article>
+</section>
+
+<section id="smalltest">
+  <h2>The small-size test</h2>
+  <p>A favicon is 32px. An embroidered left-chest logo is about the same in thread. This is the row
+  that usually decides it &mdash; a concept that dissolves here costs you a second, simplified mark to
+  maintain forever.</p>
+  <div class="small-test">
+    <figure class="s32"><svg viewBox="0 0 100 116"><path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/><path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/><path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/><path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/><g fill="var(--mk-ln)"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g><rect x="4" y="86" width="92" height="5" fill="var(--mk-ln)"/><g fill="none" stroke="var(--mk-ln)" stroke-linecap="round"><path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/><path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/><path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/></g></svg><figcaption>01 &mdash; 32px</figcaption></figure>
+    <figure class="s32"><svg viewBox="0 0 100 108"><path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/><path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/><path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/><path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/><g fill="var(--mk-ln)"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g><path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/><g fill="var(--mk-2)"><path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="var(--mk-em)"/><path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/></g></svg><figcaption>02 &mdash; 32px</figcaption></figure>
+    <figure class="s32"><svg viewBox="0 0 120 88"><path d="M0 56 L20 30 L38 46 L58 24 L78 44 L98 28 L120 50 L120 56 Z" fill="var(--mk-1)"/><path d="M0 56 L16 42 L32 52 L50 38 L70 50 L90 40 L108 52 L120 46 L120 56 Z" fill="var(--mk-3)"/><g fill="var(--mk-ln)"><rect x="24.6" y="50" width="2.8" height="6"/><path d="M26 42 L18 52 L34 52 Z"/><path d="M26 36 L20 46 L32 46 Z"/><path d="M26 31 L21.5 40 L30.5 40 Z"/></g><path fill="var(--mk-4)" fill-rule="evenodd" d="M0 56 H120 V67 H0 Z M11.5 58.5 H16.5 V64.5 H11.5 Z M31.5 58.5 H36.5 V64.5 H31.5 Z M51.5 58.5 H56.5 V64.5 H51.5 Z M71.5 58.5 H76.5 V64.5 H71.5 Z M91.5 58.5 H96.5 V64.5 H91.5 Z M107.5 58.5 H112.5 V64.5 H107.5 Z"/><g fill="none" stroke="var(--mk-2)" stroke-linecap="round"><path d="M20 67 L19 73 L22 78.5" stroke-width="1.5"/><path d="M52 67 L51 74 L54 80 L52 84.5" stroke-width="1.5"/><path d="M84 67 L83 74 L86 79.5" stroke-width="1.4"/></g></svg><figcaption>03 &mdash; 32px</figcaption></figure>
+    <figure class="s32"><svg viewBox="0 0 100 100"><path d="M4 92 V72.6 A6.6 6.6 0 0 1 17.2 72.6 V92 Z" fill="var(--mk-em)"/><path d="M19.6 92 V56.1 A5.5 5.5 0 0 1 30.6 56.1 V92 Z" fill="var(--mk-1)"/><path d="M33.4 92 V65 A7 7 0 0 1 47.4 65 V92 Z" fill="var(--mk-2)"/><path d="M50 92 V37 A6 6 0 0 1 62 37 V92 Z" fill="var(--mk-2)"/><path d="M64.6 92 V48.6 A6.6 6.6 0 0 1 77.8 48.6 V92 Z" fill="var(--mk-3)"/><path d="M80.4 92 V21.4 A7.4 7.4 0 0 1 95.2 21.4 V92 Z" fill="var(--mk-4)"/><rect x="4" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="4" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="19.6" y="60.5" width="11.0" height="1.8" fill="var(--mk-bg)"/><rect x="19.6" y="71.2" width="11.0" height="1.9" fill="var(--mk-bg)"/><rect x="19.6" y="79.4" width="11.0" height="1.4" fill="var(--mk-bg)"/><rect x="19.6" y="86.2" width="11.0" height="1.7" fill="var(--mk-bg)"/><rect x="33.4" y="71.2" width="14.0" height="1.9" fill="var(--mk-bg)"/><rect x="33.4" y="79.4" width="14.0" height="1.4" fill="var(--mk-bg)"/><rect x="33.4" y="86.2" width="14.0" height="1.7" fill="var(--mk-bg)"/><rect x="50" y="44" width="12.0" height="1.5" fill="var(--mk-bg)"/><rect x="50" y="60.5" width="12.0" height="1.8" fill="var(--mk-bg)"/><rect x="50" y="71.2" width="12.0" height="1.9" fill="var(--mk-bg)"/><rect x="50" y="79.4" width="12.0" height="1.4" fill="var(--mk-bg)"/><rect x="50" y="86.2" width="12.0" height="1.7" fill="var(--mk-bg)"/><rect x="64.6" y="60.5" width="13.2" height="1.8" fill="var(--mk-bg)"/><rect x="64.6" y="71.2" width="13.2" height="1.9" fill="var(--mk-bg)"/><rect x="64.6" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="64.6" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="80.4" y="44" width="14.8" height="1.5" fill="var(--mk-bg)"/><rect x="80.4" y="60.5" width="14.8" height="1.8" fill="var(--mk-bg)"/><rect x="80.4" y="71.2" width="14.8" height="1.9" fill="var(--mk-bg)"/><rect x="80.4" y="79.4" width="14.8" height="1.4" fill="var(--mk-bg)"/><rect x="80.4" y="86.2" width="14.8" height="1.7" fill="var(--mk-bg)"/><path fill="var(--mk-4)" fill-rule="evenodd" d="M2 92 H98 V97.5 H2 Z M7.85 93.4 H13.35 V96.1 H7.85 Z M22.35 93.4 H27.85 V96.1 H22.35 Z M37.65 93.4 H43.15 V96.1 H37.65 Z M53.25 93.4 H58.75 V96.1 H53.25 Z M68.45 93.4 H73.95 V96.1 H68.45 Z M85.05 93.4 H90.55 V96.1 H85.05 Z"/></svg><figcaption>04 &mdash; 32px</figcaption></figure>
+    <figure class="s32"><svg viewBox="0 0 100 100"><path d="M55.60 35.00 L52.20 5.00 L47.80 5.00 L44.40 35.00 Z" fill="var(--mk-1)"/><path d="M65.79 47.35 L90.07 29.41 L87.87 25.59 L60.19 37.65 Z" fill="var(--mk-2)"/><path d="M60.19 62.35 L87.87 74.41 L90.07 70.59 L65.79 52.65 Z" fill="var(--mk-3)"/><path d="M44.40 65.00 L47.80 95.00 L52.20 95.00 L55.60 65.00 Z" fill="var(--mk-em)"/><path d="M34.21 52.65 L9.93 70.59 L12.13 74.41 L39.81 62.35 Z" fill="var(--mk-3)"/><path d="M39.81 37.65 L12.13 25.59 L9.93 29.41 L34.21 47.35 Z" fill="var(--mk-2)"/><circle cx="50" cy="50" r="9" fill="var(--mk-4)"/><circle cx="50" cy="50" r="3.4" fill="var(--mk-bg)"/></svg><figcaption>05 &mdash; 32px</figcaption></figure>
+    <figure class="s32"><svg viewBox="0 0 100 92"><g fill="none" stroke="var(--mk-3)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 28 L29 34 L20 40"/><path d="M20 46 L29 52 L20 58"/></g><path fill="var(--mk-2)" fill-rule="evenodd" d="M38 10 H60 L55 70 H43 Z M45 20 H53 L51.4 62 H46.6 Z"/><path fill="var(--mk-1)" d="M70 64 V46.5 A5.5 5.5 0 0 1 81 46.5 V64 Z"/><path fill="var(--mk-4)" fill-rule="evenodd" d="M6 64 H94 V70 H6 Z M44.5 65 H53.5 V69 H44.5 Z"/></svg><figcaption>06 &mdash; 32px</figcaption></figure>
+  </div>
+  <div class="small-test" style="margin-top:0.9rem">
+    <figure class="s20"><svg viewBox="0 0 100 116"><path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/><path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/><path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/><path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/><g fill="var(--mk-ln)"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g><rect x="4" y="86" width="92" height="5" fill="var(--mk-ln)"/></svg><figcaption>01 &mdash; 20px</figcaption></figure>
+    <figure class="s20"><svg viewBox="0 0 100 108"><path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/><path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/><path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/><path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/><g fill="var(--mk-ln)"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g><path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/><g fill="var(--mk-2)"><path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="var(--mk-em)"/><path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/></g></svg><figcaption>02 &mdash; 20px</figcaption></figure>
+    <figure class="s20"><svg viewBox="0 0 120 88"><path d="M0 56 L20 30 L38 46 L58 24 L78 44 L98 28 L120 50 L120 56 Z" fill="var(--mk-1)"/><path d="M0 56 L16 42 L32 52 L50 38 L70 50 L90 40 L108 52 L120 46 L120 56 Z" fill="var(--mk-3)"/><g fill="var(--mk-ln)"><rect x="24.6" y="50" width="2.8" height="6"/><path d="M26 42 L18 52 L34 52 Z"/><path d="M26 36 L20 46 L32 46 Z"/><path d="M26 31 L21.5 40 L30.5 40 Z"/></g><path fill="var(--mk-4)" fill-rule="evenodd" d="M0 56 H120 V67 H0 Z M11.5 58.5 H16.5 V64.5 H11.5 Z M31.5 58.5 H36.5 V64.5 H31.5 Z M51.5 58.5 H56.5 V64.5 H51.5 Z M71.5 58.5 H76.5 V64.5 H71.5 Z M91.5 58.5 H96.5 V64.5 H91.5 Z M107.5 58.5 H112.5 V64.5 H107.5 Z"/><g fill="none" stroke="var(--mk-2)" stroke-linecap="round"><path d="M20 67 L19 73 L22 78.5" stroke-width="1.5"/><path d="M52 67 L51 74 L54 80 L52 84.5" stroke-width="1.5"/><path d="M84 67 L83 74 L86 79.5" stroke-width="1.4"/></g></svg><figcaption>03 &mdash; 20px</figcaption></figure>
+    <figure class="s20"><svg viewBox="0 0 100 100"><path d="M4 92 V72.6 A6.6 6.6 0 0 1 17.2 72.6 V92 Z" fill="var(--mk-em)"/><path d="M19.6 92 V56.1 A5.5 5.5 0 0 1 30.6 56.1 V92 Z" fill="var(--mk-1)"/><path d="M33.4 92 V65 A7 7 0 0 1 47.4 65 V92 Z" fill="var(--mk-2)"/><path d="M50 92 V37 A6 6 0 0 1 62 37 V92 Z" fill="var(--mk-2)"/><path d="M64.6 92 V48.6 A6.6 6.6 0 0 1 77.8 48.6 V92 Z" fill="var(--mk-3)"/><path d="M80.4 92 V21.4 A7.4 7.4 0 0 1 95.2 21.4 V92 Z" fill="var(--mk-4)"/><rect x="4" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="4" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="19.6" y="60.5" width="11.0" height="1.8" fill="var(--mk-bg)"/><rect x="19.6" y="71.2" width="11.0" height="1.9" fill="var(--mk-bg)"/><rect x="19.6" y="79.4" width="11.0" height="1.4" fill="var(--mk-bg)"/><rect x="19.6" y="86.2" width="11.0" height="1.7" fill="var(--mk-bg)"/><rect x="33.4" y="71.2" width="14.0" height="1.9" fill="var(--mk-bg)"/><rect x="33.4" y="79.4" width="14.0" height="1.4" fill="var(--mk-bg)"/><rect x="33.4" y="86.2" width="14.0" height="1.7" fill="var(--mk-bg)"/><rect x="50" y="44" width="12.0" height="1.5" fill="var(--mk-bg)"/><rect x="50" y="60.5" width="12.0" height="1.8" fill="var(--mk-bg)"/><rect x="50" y="71.2" width="12.0" height="1.9" fill="var(--mk-bg)"/><rect x="50" y="79.4" width="12.0" height="1.4" fill="var(--mk-bg)"/><rect x="50" y="86.2" width="12.0" height="1.7" fill="var(--mk-bg)"/><rect x="64.6" y="60.5" width="13.2" height="1.8" fill="var(--mk-bg)"/><rect x="64.6" y="71.2" width="13.2" height="1.9" fill="var(--mk-bg)"/><rect x="64.6" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="64.6" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="80.4" y="44" width="14.8" height="1.5" fill="var(--mk-bg)"/><rect x="80.4" y="60.5" width="14.8" height="1.8" fill="var(--mk-bg)"/><rect x="80.4" y="71.2" width="14.8" height="1.9" fill="var(--mk-bg)"/><rect x="80.4" y="79.4" width="14.8" height="1.4" fill="var(--mk-bg)"/><rect x="80.4" y="86.2" width="14.8" height="1.7" fill="var(--mk-bg)"/><path fill="var(--mk-4)" fill-rule="evenodd" d="M2 92 H98 V97.5 H2 Z M7.85 93.4 H13.35 V96.1 H7.85 Z M22.35 93.4 H27.85 V96.1 H22.35 Z M37.65 93.4 H43.15 V96.1 H37.65 Z M53.25 93.4 H58.75 V96.1 H53.25 Z M68.45 93.4 H73.95 V96.1 H68.45 Z M85.05 93.4 H90.55 V96.1 H85.05 Z"/></svg><figcaption>04 &mdash; 20px</figcaption></figure>
+    <figure class="s20"><svg viewBox="0 0 100 100"><path d="M55.60 35.00 L52.20 5.00 L47.80 5.00 L44.40 35.00 Z" fill="var(--mk-1)"/><path d="M65.79 47.35 L90.07 29.41 L87.87 25.59 L60.19 37.65 Z" fill="var(--mk-2)"/><path d="M60.19 62.35 L87.87 74.41 L90.07 70.59 L65.79 52.65 Z" fill="var(--mk-3)"/><path d="M44.40 65.00 L47.80 95.00 L52.20 95.00 L55.60 65.00 Z" fill="var(--mk-em)"/><path d="M34.21 52.65 L9.93 70.59 L12.13 74.41 L39.81 62.35 Z" fill="var(--mk-3)"/><path d="M39.81 37.65 L12.13 25.59 L9.93 29.41 L34.21 47.35 Z" fill="var(--mk-2)"/><circle cx="50" cy="50" r="9" fill="var(--mk-4)"/><circle cx="50" cy="50" r="3.4" fill="var(--mk-bg)"/></svg><figcaption>05 &mdash; 20px</figcaption></figure>
+    <figure class="s20"><svg viewBox="0 0 100 92"><g fill="none" stroke="var(--mk-3)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 28 L29 34 L20 40"/><path d="M20 46 L29 52 L20 58"/></g><path fill="var(--mk-2)" fill-rule="evenodd" d="M38 10 H60 L55 70 H43 Z M45 20 H53 L51.4 62 H46.6 Z"/><path fill="var(--mk-1)" d="M70 64 V46.5 A5.5 5.5 0 0 1 81 46.5 V64 Z"/><path fill="var(--mk-4)" fill-rule="evenodd" d="M6 64 H94 V70 H6 Z M44.5 65 H53.5 V69 H44.5 Z"/></svg><figcaption>06 &mdash; 20px</figcaption></figure>
+  </div>
+  <p class="faint" style="margin-top:0.9rem">Concept 3 is the one to watch here &mdash; the root strands
+  and the perforations both go to mush by 20px. Concepts 4 and 5 hold. Concept 1 holds because it
+  already does, which is a point in its favour.</p>
+</section>
+
+<section id="lockups">
+  <h2>Locked up with the wordmark</h2>
+  <p>The wordmark and its setting do not change in any of this &mdash; Palatino, tight tracking, as
+  now. Only the mark and the colour beside it move. Three shown; the descriptor is an open question
+  below.</p>
+  <div class="lockups">
+    <div class="lock" style="background:#0E1512;--mk-1:#A7BE93;--mk-2:#8AA07A;--mk-3:#4E9A68;--mk-4:#2F7A4F;--mk-em:#E4703A;--mk-ln:#EDE7DC;--mk-bg:#0E1512;border-color:#2E3D35">
+      <svg viewBox="0 0 100 108"><path d="M18 84 L36 48 L54 84 Z" fill="var(--mk-1)"/><path d="M30 84 L50 38 L70 84 Z" fill="var(--mk-2)"/><path d="M44 84 L66 26 L88 84 Z" fill="var(--mk-3)"/><path d="M60 84 L79 14 L98 84 Z" fill="var(--mk-4)"/><g fill="var(--mk-ln)"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g><path fill="var(--mk-ln)" fill-rule="evenodd" d="M4 86 H96 V91 H4 Z M10 87.2 H14 V89.8 H10 Z M26 87.2 H30 V89.8 H26 Z M42 87.2 H46 V89.8 H42 Z M58 87.2 H62 V89.8 H58 Z M74 87.2 H78 V89.8 H74 Z M86 87.2 H90 V89.8 H86 Z"/><g fill="var(--mk-2)"><path d="M8.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M24.75 92 h6.5 v9.25 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M40.75 92 h6.5 v7.25 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M56.75 92 h6.5 v9.75 a3.25 3.25 0 0 1 -6.5 0 Z" fill="var(--mk-em)"/><path d="M72.75 92 h6.5 v7.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><path d="M84.75 92 h6.5 v8.75 a3.25 3.25 0 0 1 -6.5 0 Z"/><rect x="8.75" y="96.4" width="82.5" height="1.3" fill="var(--mk-bg)"/><rect x="8.75" y="99.9" width="82.5" height="1.1" fill="var(--mk-bg)"/></g></svg>
+      <div><div class="lw" style="color:#EDE7DC">Sixfold</div><div class="ld" style="color:#8AA07A">Concept 02 &middot; Ridge, aerated</div></div>
+    </div>
+    <div class="lock" style="background:#EDE7DC;--mk-1:#7FA468;--mk-2:#5E8A4A;--mk-3:#3D8B5A;--mk-4:#245F3D;--mk-em:#B84C15;--mk-ln:#0E1512;--mk-bg:#EDE7DC;border-color:#C6BCA9">
+      <svg viewBox="0 0 100 100"><path d="M4 92 V72.6 A6.6 6.6 0 0 1 17.2 72.6 V92 Z" fill="var(--mk-em)"/><path d="M19.6 92 V56.1 A5.5 5.5 0 0 1 30.6 56.1 V92 Z" fill="var(--mk-1)"/><path d="M33.4 92 V65 A7 7 0 0 1 47.4 65 V92 Z" fill="var(--mk-2)"/><path d="M50 92 V37 A6 6 0 0 1 62 37 V92 Z" fill="var(--mk-2)"/><path d="M64.6 92 V48.6 A6.6 6.6 0 0 1 77.8 48.6 V92 Z" fill="var(--mk-3)"/><path d="M80.4 92 V21.4 A7.4 7.4 0 0 1 95.2 21.4 V92 Z" fill="var(--mk-4)"/><rect x="4" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="4" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="19.6" y="60.5" width="11.0" height="1.8" fill="var(--mk-bg)"/><rect x="19.6" y="71.2" width="11.0" height="1.9" fill="var(--mk-bg)"/><rect x="19.6" y="79.4" width="11.0" height="1.4" fill="var(--mk-bg)"/><rect x="19.6" y="86.2" width="11.0" height="1.7" fill="var(--mk-bg)"/><rect x="33.4" y="71.2" width="14.0" height="1.9" fill="var(--mk-bg)"/><rect x="33.4" y="79.4" width="14.0" height="1.4" fill="var(--mk-bg)"/><rect x="33.4" y="86.2" width="14.0" height="1.7" fill="var(--mk-bg)"/><rect x="50" y="44" width="12.0" height="1.5" fill="var(--mk-bg)"/><rect x="50" y="60.5" width="12.0" height="1.8" fill="var(--mk-bg)"/><rect x="50" y="71.2" width="12.0" height="1.9" fill="var(--mk-bg)"/><rect x="50" y="79.4" width="12.0" height="1.4" fill="var(--mk-bg)"/><rect x="50" y="86.2" width="12.0" height="1.7" fill="var(--mk-bg)"/><rect x="64.6" y="60.5" width="13.2" height="1.8" fill="var(--mk-bg)"/><rect x="64.6" y="71.2" width="13.2" height="1.9" fill="var(--mk-bg)"/><rect x="64.6" y="79.4" width="13.2" height="1.4" fill="var(--mk-bg)"/><rect x="64.6" y="86.2" width="13.2" height="1.7" fill="var(--mk-bg)"/><rect x="80.4" y="44" width="14.8" height="1.5" fill="var(--mk-bg)"/><rect x="80.4" y="60.5" width="14.8" height="1.8" fill="var(--mk-bg)"/><rect x="80.4" y="71.2" width="14.8" height="1.9" fill="var(--mk-bg)"/><rect x="80.4" y="79.4" width="14.8" height="1.4" fill="var(--mk-bg)"/><rect x="80.4" y="86.2" width="14.8" height="1.7" fill="var(--mk-bg)"/><path fill="var(--mk-4)" fill-rule="evenodd" d="M2 92 H98 V97.5 H2 Z M7.85 93.4 H13.35 V96.1 H7.85 Z M22.35 93.4 H27.85 V96.1 H22.35 Z M37.65 93.4 H43.15 V96.1 H37.65 Z M53.25 93.4 H58.75 V96.1 H53.25 Z M68.45 93.4 H73.95 V96.1 H68.45 Z M85.05 93.4 H90.55 V96.1 H85.05 Z"/></svg>
+      <div><div class="lw" style="color:#0E1512">Sixfold</div><div class="ld" style="color:#245F3D">Concept 04 &middot; Ridge of cores</div></div>
+    </div>
+    <div class="lock" style="background:#0E1512;--mk-1:#A7BE93;--mk-2:#8AA07A;--mk-3:#4E9A68;--mk-4:#2F7A4F;--mk-em:#E4703A;--mk-ln:#EDE7DC;--mk-bg:#0E1512;border-color:#2E3D35">
+      <svg viewBox="0 0 100 100"><path d="M55.60 35.00 L52.20 5.00 L47.80 5.00 L44.40 35.00 Z" fill="var(--mk-1)"/><path d="M65.79 47.35 L90.07 29.41 L87.87 25.59 L60.19 37.65 Z" fill="var(--mk-2)"/><path d="M60.19 62.35 L87.87 74.41 L90.07 70.59 L65.79 52.65 Z" fill="var(--mk-3)"/><path d="M44.40 65.00 L47.80 95.00 L52.20 95.00 L55.60 65.00 Z" fill="var(--mk-em)"/><path d="M34.21 52.65 L9.93 70.59 L12.13 74.41 L39.81 62.35 Z" fill="var(--mk-3)"/><path d="M39.81 37.65 L12.13 25.59 L9.93 29.41 L34.21 47.35 Z" fill="var(--mk-2)"/><circle cx="50" cy="50" r="9" fill="var(--mk-4)"/><circle cx="50" cy="50" r="3.4" fill="var(--mk-bg)"/></svg>
+      <div><div class="lw" style="color:#EDE7DC">Sixfold</div><div class="ld" style="color:#8AA07A">Concept 05 &middot; Sixfold rosette</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="decisions">
+  <h2>Open decisions for the team</h2>
+  <p>Kept deliberately short. These are the questions where the meeting is the right place to settle
+  it, not a document.</p>
+  <table>
+    <tr><th>Question</th><th>Why it is open</th><th>Whose call</th></tr>
+    <tr>
+      <td><strong>Which concept, or which pair to develop further</strong></td>
+      <td>That is what this board is for. A reasonable outcome is two: one conservative, one clean
+      sheet, drawn properly and compared again.</td>
+      <td>Team, then Brandon</td>
+    </tr>
+    <tr>
+      <td><strong>The descriptor &mdash; &ldquo;Land &amp; Fire&rdquo;</strong></td>
+      <td>It was settled on 15 Sep 2026 and it is already on the crew shirt and every business card
+      option. It now names the service being demoted and says nothing about the two being promoted.
+      This needs re-opening whether or not the mark changes.</td>
+      <td>Matthew</td>
+    </tr>
+    <tr>
+      <td><strong>Ridge vs Sweep</strong></td>
+      <td>Never formally closed. Every built asset uses Ridge, so in practice it is decided &mdash;
+      but if the answer here is a clean sheet, that old question closes by being overtaken.</td>
+      <td>Brandon</td>
+    </tr>
+    <tr>
+      <td><strong>Whether the ember stays at all</strong></td>
+      <td>Concepts 2, 4 and 5 keep one ember element out of six, which says fire is still on the
+      list. Concepts 1 and 6 drop it entirely. Both are defensible; they are different statements.</td>
+      <td>Team</td>
+    </tr>
+  </table>
+</section>
+
+<section id="cost">
+  <h2>What a change costs to roll out</h2>
+  <p>Not an argument against doing it &mdash; an argument for deciding once. Counted in the repo on
+  23 Sep 2026:</p>
+  <table>
+    <tr><th>What</th><th class="num">Count</th><th>Note</th></tr>
+    <tr><td>Files carrying the ember hex or the Ridge geometry</td><td class="num">180</td><td>Sources, generators, copy and stylesheets</td></tr>
+    <tr><td>Rendered brand PNGs</td><td class="num">40</td><td>Social and Square sets; both regenerate from one script each</td></tr>
+    <tr><td>PDFs across the project</td><td class="num">84</td><td>Includes the 25-PDF team share, which has to be rebuilt as a set</td></tr>
+    <tr><td>Vehicle magnet artwork</td><td class="num">3</td><td>24&times;12, 24&times;12 light, 24&times;18 &mdash; the repo shows no order placed</td></tr>
+  </table>
+  <div class="callout">
+    <p><strong>The live site is the one that matters.</strong> sixfoldcolorado.com went live on
+    21 Sep 2026 and carries the mark in the favicon, the stylesheet and the wildfire guide page. A
+    mark change means a re-bundle and re-upload, and the host serves a stale cache after an upload
+    &mdash; so the change has to be cache-busted and verified, not assumed.</p>
+    <p>There is a precedent for the sweep itself: the phone-number change in September touched 57
+    files and 21 PDFs and came out clean. The machinery exists. <strong>Check the vehicle magnets
+    have not been ordered before anyone commits</strong> &mdash; that is the one item on this list
+    that cannot be re-run.</p>
+  </div>
+</section>
+
+<section id="next">
+  <h2>What happens after the meeting</h2>
+  <ol>
+    <li>Team picks a direction &mdash; one concept, or two to develop.</li>
+    <li>The winner gets drawn as a real master: full colour, one colour, and a flat print version with
+    the overlaps resolved, the same three files Ridge already has.</li>
+    <li>Prior-use screen re-run against the new drawing. The existing screen covered the Ridge mark
+    only, and two of its checks were never run &mdash; reverse image search and the USPTO design-code
+    search. A new mark needs both before it goes anywhere.</li>
+    <li>Palette tokens updated in one place, then the generators re-run and the PDFs re-counted.</li>
+    <li>Site re-bundled and cache-busted last, once everything else matches.</li>
+  </ol>
+  <p class="faint">Nothing in this document has been published, posted or uploaded, and no master
+  files have been overwritten. The current Ridge mark and its four SVGs are untouched.</p>
+</section>
+
+<section id="log">
+  <h2>Fact-check and provenance log</h2>
+  <table>
+    <tr><th>Claim</th><th>Standing</th></tr>
+    <tr><td>Aeration means lawn / core aeration</td><td><strong>Confirmed by Matthew, 23 Sep 2026.</strong> Supersedes the README entry recording it as unestablished; that file still needs correcting.</td></tr>
+    <tr><td>Positioning: aeration and landscaping lead, fire mitigation still offered</td><td><strong>Stated by Matthew, 23 Sep 2026.</strong> Not yet reflected anywhere else in the project.</td></tr>
+    <tr><td>All contrast ratios in this document</td><td><strong>Computed</strong>, not estimated &mdash; WCAG 2.x relative luminance, run against the stated hex pairs.</td></tr>
+    <tr><td>Colourblind separation figures</td><td><strong>Simulated</strong> with a standard deuteranopia matrix. Indicative &mdash; enough to reject a pairing, not a substitute for showing it to someone.</td></tr>
+    <tr><td>The new colours: Turf, Sage, Wheat</td><td><strong>Invented for this document.</strong> They are my proposals, not anything previously agreed, and they have no standing until the team picks one.</td></tr>
+    <tr><td>Asset counts &mdash; 180 / 40 / 84 / 3</td><td><strong>Counted in the repo, 23 Sep 2026.</strong> The 180 is a text match on the ember hex or the Ridge path data, so it will include some false positives in dated fact-check entries.</td></tr>
+    <tr><td>The 57-file phone sweep precedent</td><td><strong>Project record</strong>, committed September 2026.</td></tr>
+    <tr><td>Vehicle magnets not yet ordered</td><td><strong>Unresolved.</strong> The repo holds the artwork and an order sheet and shows no order. That is absence of evidence &mdash; somebody has to actually confirm it.</td></tr>
+    <tr><td>Whether &ldquo;the tine&rdquo; reads as a syringe</td><td><strong>My concern, unverified.</strong> Worth asking the room cold rather than leading them to it.</td></tr>
+  </table>
+</section>
+
+<footer>
+  Sixfold LLC &mdash; internal concept board, 23 September 2026. Six drawings, no masters, no decisions.
+  Draft only: nothing here has been published, posted, scheduled or uploaded.
+</footer>
+
+</main>
+</body>
+</html>
