@@ -17,7 +17,7 @@ He asked for logo concepts to review and take to the team.
 | File | What it is |
 |---|---|
 | `concepts.html` | The board. Six concepts, three palette directions, the small-size and one-colour tests, open decisions, rollout cost, fact-check log. Double-click to read. |
-| `Sixfold-Rebrand-Concepts.pdf` | The same board printed light, **8 pages**, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs` — job added to the list, so it re-renders with everything else. |
+| `Sixfold-Rebrand-Concepts.pdf` | The same board printed light, **9 pages**, for the table at the meeting. Built by `../../tools/html-to-pdf.mjs` — job added to the list, so it re-renders with everything else. |
 | `Sixfold-Rebrand-Concepts.sheet.png` | Contact sheet of the PDF, so the print result can be looked at without opening it. |
 
 ## Two things that were settled to make this
@@ -85,8 +85,8 @@ The six came from "Sixfold", not from the drawing, and the sixth core sat at x=8
 descending flank, so it sampled a downslope and read as a droop.
 
 It is now one core per form, directly under it, as deep as it is tall. Apex heights measured rather
-than estimated: **30.5 / 38 / 48 / 60 / 72**. The deepest core puts the canvas at exactly **116**, the
-same height the current Ridge uses.
+than estimated: **30.5 / 38 / 48 / 60 / 72**. The deepest core plus its longest root thread puts the canvas at
+**120**, against the current Ridge's 116.
 
 **Whether the mark should encode six at all is now an open decision on the board** — it would mean
 adding a sixth form above, which changes the Ridge silhouette for every concept that inherits it.
@@ -118,10 +118,27 @@ and <https://ag.umass.edu/sites/ag.umass.edu/files/fact-sheets/pdf/management_of
   across the width. They are now short and branching.
 - **Concept 5's petals came out forked.** A single SVG arc sweep flag cannot be correct for all six
   rotations. The tips are flat lines now.
-- **Concept 2's cores went through five drawings.** They must stay slim (8.5 units), one per form,
+- **Concept 2's cores went through six drawings.** They must stay slim (8.5 units), one per form,
   and countable — widening them to 13 fused them into a wall. Their depths are not decorative: each
   matches the apex height of the form directly above it. **Do not add a sixth without adding a sixth
   form above it.**
+- **The turf cap has to be the band colour.** The first capped version used Sage over a Moss body —
+  `1.20:1`, the hue-only pairing this very document warns about — and the cap simply did not read.
+  Using the band's own colour is also the honest answer: it is the same turf.
+
+## The core treatment, and the three that lost
+
+Matthew, on the five-core version: *"I'm just not sold on the core design yet."* Four treatments were
+drawn against identical spacing and depths, on dark, bone and one-colour grounds plus a 34px row:
+
+| | Treatment | Outcome |
+|---|---|---|
+| A | Plain column, rounded end, even seams | The version that prompted the question. Reads as banded pills. |
+| E | Turf cap + snapped end | Clean, and the safest at small size and in one colour. **The fallback if the threads prove fragile.** |
+| **F** | **Cap + snapped end + root threads** | **Chosen.** Unmistakably a *pulled* core, and it quietly restores the roots this concept had dropped. |
+| G | Cap + mottled soil | Flecks read as noise and turn to mush below ~30px. |
+
+The tell is the cap: a plug comes out with the lawn still on it. Everything else is detail.
 - **Concept 1 exposed a real constraint:** retinting alone loses the conifer, because it was moss on
   ember and is now green on green. The tree and ground line have to move to bone or black.
 
