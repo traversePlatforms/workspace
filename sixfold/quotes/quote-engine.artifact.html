@@ -73,6 +73,7 @@ h1{font-size:27px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
 /* ---------- notices ---------- */
 .notice{display:flex;gap:11px;padding:12px 14px;margin:16px 0 0;border-left:3px solid var(--accent);
   background:var(--surface);font-size:13.5px;color:var(--ink-mid);box-shadow:var(--shadow)}
+[hidden]{display:none !important}
 .notice b{color:var(--ink)}
 .notice.warn{border-left-color:var(--warn);background:var(--warn-bg);color:var(--ink)}
 .notice .mk{font-family:var(--f-data);font-size:11px;letter-spacing:.08em;color:var(--accent);flex:none;padding-top:2px}
@@ -110,6 +111,27 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent)}
 .out.live{color:var(--ink);font-weight:500}
 .dim{color:var(--ink-soft)}
 
+.ht-in{font:inherit;font-size:13px;font-family:var(--f-data);padding:6px 8px;border:1px solid var(--edge);
+  border-radius:5px;background:var(--paper);color:var(--ink);width:100%}
+.ht-in.hot{border-color:var(--good);background:var(--good-bg)}
+.ht-rates{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.ht-rates input{width:56px;font-family:var(--f-data);font-size:12px;padding:4px 5px;
+  border:1px solid var(--edge);border-radius:4px;background:var(--paper);color:var(--ink)}
+.ht-rates .u{font-family:var(--f-data);font-size:10px;color:var(--ink-mid)}
+.ht-card{margin:10px 0 0;padding:11px 13px;border:1px solid var(--edge);border-radius:7px;background:var(--surface)}
+.ht-card h4{margin:0 0 7px;font-size:12px;font-family:var(--f-data);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-mid);font-weight:600}
+.ht-trees{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.ht-tree{font-family:var(--f-data);font-size:11px;padding:2px 8px;border-radius:99px;
+  border:1px solid var(--good);color:var(--good);background:var(--good-bg)}
+.ht-tree.bad{border-color:var(--warn);color:var(--warn);background:var(--warn-bg)}
+.presets{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.preset{font-family:var(--f-data);font-size:10px;letter-spacing:.04em;cursor:pointer;
+  padding:2px 7px;border-radius:99px;border:1px solid var(--edge);background:var(--surface);color:var(--ink-mid)}
+.preset:hover{border-color:var(--good);color:var(--good)}
+.trailer-sel{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.trailer-sel select{font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--edge);
+  border-radius:5px;background:var(--surface);color:var(--ink)}
 /* provenance badge */
 .badge{font-family:var(--f-data);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
   padding:4px 6px;border-radius:2px;border:1px solid;cursor:pointer;width:100%;text-align:center;
@@ -118,6 +140,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent)}
 .badge.comp{color:var(--ink-mid);border-color:var(--edge);background:var(--surface)}
 .badge.sixfold{color:var(--good);border-color:var(--good);background:var(--good-bg)}
 .badge.alloc{color:var(--good);border-color:var(--good);border-style:dashed;background:transparent}
+.badge.quoted{color:var(--good);border-color:var(--good);border-style:dotted;background:var(--good-bg)}
 
 /* ---------- price rail ---------- */
 .rail{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
@@ -213,7 +236,7 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
     </svg>
     <div>
       <h1>Sixfold Quote Build</h1>
-      <div class="sub">Cost-up pricing from walk-sheet counts · Sixfold LLC, Monument CO</div>
+      <div class="sub">Cost-up pricing from walk-sheet counts · Sixfold LLC, Monument CO<br><b>Rates v3 · 2026-09-23</b> — Brandon and Brad, $100/man-hour</div>
     </div>
   </div>
   <div class="stamp">Internal · draft only · no price on the property</div>
@@ -236,28 +259,34 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
     <section class="sec">
       <div class="sec-head"><span class="sec-n">1</span><h2>The work — what gets counted</h2></div>
       <p class="sec-note">Counts come off the walk sheet. Each one carries a time rate you can edit, and every rate
-      says <b>whose number it is</b> — <b>Recorded</b> for a figure Brandon wrote down for that line, <b>Allocated</b>
-      for a time rate that is Brandon's recorded 16 man-hours on job 2 shared out across the lines by Matthew (the
-      total is his, the split is not), <b>Competitor</b> for outside trade research, <b>Unbacked</b> for the ones with
-      nothing behind them. Tap a badge when Brandon confirms it. Change a rate and the calibration below re-checks it.</p>
+      says <b>whose number it is</b> — <b>Recorded</b> for a figure Brandon wrote down for that line, <b>Priced</b> for a
+      rate converted from Brandon and Brad's own price for that line at their $100/man-hour (2026-09-23),
+      <b>Allocated</b> for a time rate that is Brandon's recorded 16 man-hours on job 2 shared out across the lines
+      by Matthew (the total is his, the split is not), <b>Competitor</b> for outside trade research,
+      <b>Unbacked</b> for the ones with nothing behind them. Tap a badge when Brandon confirms it. Change a rate and the calibration below re-checks it.</p>
       <div class="row head"><span>Line</span><span class="r">Count</span><span>Time rate</span><span>Source</span><span class="r">Man-hrs</span></div>
       <div id="sec1"></div>
+      <div id="htCard"></div>
     </section>
 
     <section class="sec">
-      <div class="sec-head"><span class="sec-n">2</span><h2>Ground work — mowing, edging, planting</h2></div>
-      <p class="sec-note">Job 2 was mostly this, and <b>no Sixfold document prices any of it.</b> These times come
-      off Sixfold's own recorded day — there is no competitor figure behind them, because the lawn-care rates
-      online are SEO content farms ($12–$90 a visit, no method) and were all rejected.</p>
+      <div class="sec-head"><span class="sec-n">2</span><h2>Ground work — mowing, edging, aeration</h2></div>
+      <p class="sec-note"><b>Repriced 2026-09-23 on Brandon and Brad's own figures</b> — $150 to mow ¾ acre, $50
+      to edge it, $16.66 a plant pulled, all converted at their $100/man-hour. Planting is retired: they do not
+      offer it. <b>Aeration now leads Sixfold's positioning and has no Sixfold rate at all</b> — the only figure
+      is a competitor's. All three priced lines were quoted on the same ¾ acre, so none has been tested on a
+      different shape of ground.</p>
       <div class="row head"><span>Line</span><span class="r">Count</span><span>Time rate</span><span>Source</span><span class="r">Man-hrs</span></div>
       <div id="sec2"></div>
     </section>
 
     <section class="sec">
       <div class="sec-head"><span class="sec-n">3</span><h2>What the job costs — cash out</h2></div>
-      <p class="sec-note">Brandon's own recorded numbers. Dump fees and hire pass through to the customer at cost
+      <p class="sec-note">Brandon's own recorded numbers. Dump fees, hire and consumables pass through at cost
       plus handling. <b>Fuel does not</b> — the man-hour rate already carries vehicle and fuel, so billing it again
-      double-counts.</p>
+      double-counts. <b>Brandon and Brad put $20 of trailer gas inside their tree price on 2026-09-23; that is not
+      applied here</b> and the conflict is unresolved. Tipping is charged by weight, so the presets are by what is
+      in the trailer, not how full it is. Chips add — two chains is two taps.</p>
       <div class="row head"><span>Line</span><span class="r">Cost $</span><span>Treatment</span><span>Source</span><span class="r">Billed $</span></div>
       <div id="sec3"></div>
     </section>
@@ -346,7 +375,12 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
   <div class="card">
     <h3>Where the numbers come from</h3>
     <div class="srcs">
-      <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--good)">RECORDED · ALLOCATED</b><br>
+      <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--good)">RECORDED · PRICED · ALLOCATED</b><br>
+      <b>Priced</b> arrived 2026-09-23: Brandon and Brad gave a price for one named line — $150 to mow ¾ acre, $50
+      to edge it, $16.66 a plant, $600 for 13 trees limbed, and a complete fell under 30 ft — and the table carries
+      that price divided by their own $100/man-hour. The figure is theirs and it is per-line, which is what
+      separates it from Allocated below; the division is arithmetic, not judgement. Nobody has yet timed any of
+      these with a stopwatch.<br><br>
       <b>Recorded</b> is Brandon's own number for that line: every recorded cost on a job — dump fees, hire,
       purchases, fuel — plus the handling percentage, the rounding, and the 16-hour total. <b>Allocated</b> is
       that total shared out across the time lines by Matthew so the table reproduces
@@ -370,24 +404,29 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
       $24.44, +15% margin). <b>ArboStar</b>, 26 May 2026: groundworker $28/hr loaded, ~$20/man-hour overhead.
       <b>These are cost models, not a competitor's price list</b> — they say what it costs to run a crew, not what
       another firm charges, so they are not evidence for a “market value” column.</p>
-      <p style="margin:0 0 7px"><b>Two findings worth knowing.</b> Sixfold's $70/man-hour is <b>$140 for a
-      two-person crew — the top of Hawk's published $115–$143</b>. On labour, Sixfold is at the local ceiling, not
-      undercutting it. And Hawk grinds stumps at <b>$2–$5 an inch in Colorado Springs</b> against $5–$9 in
-      Littleton and $9 in Boulder — the home market is the cheapest published in the state.</p>
+      <p style="margin:0 0 7px"><b>Where the billable rate now sits.</b> Brandon and Brad set it at <b>$100 a
+      man-hour</b> on 2026-09-23, replacing the $70 taken from SynkedUP. That is <b>$200 for a two-person crew,
+      against Hawk's published $115–$143</b> — Sixfold is now some 40% above the top of the only published rate in
+      its own market, deliberately. The stump-grinding comparison that used to sit here is retired with the service.</p>
       <p style="margin:0"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--warn)">UNBACKED</b><br>
-      What survived the 2026-09-14 re-check with nothing behind it: <b>chipping</b> (no Colorado operator
-      publishes a rate — checked twice now, they all say “call”), <b>stump grinding time</b> (published prices
-      exist, published times do not), <b>rigging</b>, <b>bucking</b>, <b>slash piling</b>, <b>dead fall</b> and
-      <b>brush</b>. Confirm each with Brandon before it carries a quote; tap the badge when he has, and it
-      becomes Recorded.</p>
+      Still nothing behind them after the 2026-09-23 round: <b>chipping</b> (no Colorado operator publishes a rate
+      — checked twice, they all say “call”; the $320/24h chipper hire prices the machine, not the work),
+      <b>rigging</b>, <b>bucking</b>, <b>slash piling</b>, <b>dead fall</b> and <b>brush</b>. Stump grinding left
+      this list by being retired, not by being answered. Confirm each with Brandon before it carries a quote.</p>
+      <p style="margin:7px 0 0"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--warn)">UNRESOLVED AS OF 2026-09-23</b><br>
+      <b>Limbing contradicts itself.</b> Brandon and Brad now say $600 for 13 trees; Brandon previously said $975
+      for the same 13, and Hawk's published $75 floor × 13 corroborated that exactly. The table carries the newer
+      figure and this note. <b>The tree bands do not line up</b> — under 30 ft is their 30 man-minutes, 30–60 ft is
+      still Wexford's 330. <b>An 8×14 trailer of rounds is deliberately unpriced</b>: “a lot more than that” is
+      not a figure. <b>Nobody has timed an aeration.</b></p>
     </div>
   </div>
 </div>
 
 <div class="foot">
   Sixfold LLC · Monument, CO · <b>Not licensed, bonded or insured</b> — no general liability, no workers comp, no
-  certifications are in force, and none may be claimed. Stumps cannot be ground the same day: Colorado 811 locate,
-  three business days. Trees over 80 ft, on a structure, under tension, or near a line are a call-in, not a quote.
+  certifications are in force, and none may be claimed. Stump grinding and planting are not offered.
+  Trees over 80 ft, on a structure, under tension, or near a line are a call-in, not a quote.
   Estimates are written up and sent — <b>no number is given on the property.</b>
   Built against <code>sixfold/quotes/walk-2026-09-14-job2.md</code>.
 </div>
@@ -404,39 +443,90 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
 const LINES = [
   {s:1, id:"mob",     lbl:"Mobilisation, per job", sub:"Load out, drive, walk-through, before and after photos", unit:"man-min / job", min:90, step:1, src:"sixfold"},
 
-  {s:1, id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees. Below every published removal table — nobody quotes these separately", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
-  {s:1, id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Wexford/TreeGuard 6 May 2026: 2.0–3.5 man-hours for a tree under 30 ft at 12in DBH", unit:"man-min / tree", min:150, step:5, src:"comp", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
-  {s:1, id:"t3060",   lbl:"Trees to take down — 30 to 60 ft", sub:"Wexford: 4.0–7.0 man-hours at 30–50 ft. Above 50 ft this band runs short", unit:"man-min / tree", min:330, step:5, src:"comp", mkt:500, mktSrc:"Hawk, 30–60 ft, $500–$1,000"},
+  {s:1, id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees, allocated. NOTE: now identical to the 10–30 ft line below, which came from Brandon and Brad directly — this line is probably too high and wants a real timing", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
+  {s:1, id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Brandon and Brad 2026-09-23: “complete fell, 15 minutes”, two people. Was 150 (Wexford). Five times under the published trade figure — see the flag", unit:"man-min / tree", min:30, step:5, src:"quoted", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
+  {s:1, id:"tht",     lbl:"…or enter the heights instead — under 30 ft", sub:"Type the actual heights: “7, 12, 25”. Same height several times is “4x7”. Each tree is priced from Brandon and Brad's 30 ft anchor. Use this OR the two lines above, not both", unit:"—", min:0, step:1, src:"quoted", custom:"heights", noRate:true},
+  {s:1, id:"t3060",   lbl:"Trees to take down — 30 to 60 ft", sub:"Wexford: 4.0–7.0 man-hours at 30–50 ft. Brandon and Brad did not give a figure for this band — it still carries the trade number", unit:"man-min / tree", min:330, step:5, src:"comp", mkt:500, mktSrc:"Hawk, 30–60 ft, $500–$1,000"},
   {s:1, id:"t6080",   lbl:"Trees to take down — 60 to 80 ft", sub:"Wexford: 7.0–12.0 man-hours at 50–70 ft", unit:"man-min / tree", min:570, step:5, src:"comp", mkt:1000, mktSrc:"Hawk, 60 ft+, $1,000–$2,000+"},
   {s:1, id:"t80",     lbl:"Trees over 80 ft", sub:"Call-in, not a quote. Wexford puts these at 12–24 man-hours and Sixfold carries no insurance", unit:"—", min:0, step:1, src:"stop", noRate:true},
   {s:1, id:"rig",     lbl:"Of those, over a roof, fence, line or drive", sub:"Added on top. Wexford names rigging and tight drop zones as a time driver but publishes no figure", unit:"man-min extra", min:60, step:5, src:"unbacked"},
-  {s:1, id:"limb",    lbl:"Trees to limb or trim, not remove", sub:"Lower limbs raised to about 4 ft — lighter than a full crown trim", unit:"man-min / tree", min:20, step:1, src:"sixfold", mkt:75, mktSrc:"Hawk, trim a tree under 30 ft, $75–$415"},
+  {s:1, id:"limb",    lbl:"Trees to limb or trim, not remove", sub:"Brandon and Brad 2026-09-23: $600 for 13 trees, converted at $100/man-hour. CONTRADICTS his earlier $975 for the same 13 trees, which Hawk's $75 floor corroborated exactly — unresolved", unit:"man-min / tree", min:28, step:1, src:"quoted", mkt:75, mktSrc:"Hawk, trim a tree under 30 ft, $75–$415"},
   {s:1, id:"buck",    lbl:"Logs to be bucked", unit:"man-min / log", min:8, step:1, src:"unbacked"},
   {s:1, id:"fall",    lbl:"Dead fall already on the ground", unit:"man-min / pile", min:25, step:1, src:"unbacked"},
   {s:1, id:"brush",   lbl:"Brush, branches, twigs", unit:"man-min / pile", min:20, step:1, src:"unbacked"},
   {s:1, id:"chip",    lbl:"Chipper feeding", sub:"Machine hours, two people feeding. No Colorado operator publishes a chipping rate — checked again 2026-09-14", unit:"man-min / hour", min:120, step:5, src:"unbacked"},
   {s:1, id:"slash",   lbl:"Slash piles to build", unit:"man-min / pile", min:45, step:5, src:"unbacked"},
-  {s:1, id:"stump",   lbl:"Stumps to grind — set-up per stump", sub:"811 locate first: three business days, usually a second visit", unit:"man-min / stump", min:15, step:1, src:"unbacked"},
-  {s:1, id:"stumpin", lbl:"Stump diameter, total inches", sub:"Measured at the ground, root flare included", unit:"man-min / inch", min:2, step:0.5, src:"unbacked", mkt:2, mktSrc:"Hawk, Colorado Springs, $2–$5 per inch"},
-  {s:1, id:"loads",   lbl:"Loads to haul off", sub:"Gathering, loading, the drive and the tip. Brandon's own day — the old $142–$190/load band is withdrawn", unit:"man-min / load", min:110, step:5, src:"sixfold", qstep:0.5},
+  {s:1, id:"stump",   lbl:"Stumps to grind — set-up per stump", sub:"“No stump grinding” — Brandon and Brad, 2026-09-23. Sixfold does not offer this", unit:"—", min:0, step:1, src:"off", noRate:true, rateNote:"not offered"},
+  {s:1, id:"stumpin", lbl:"Stump diameter, total inches", sub:"Retired with the line above, 2026-09-23", unit:"—", min:0, step:0.5, src:"off", noRate:true, rateNote:"not offered"},
+  {s:1, id:"loads",   lbl:"Loads to haul off", sub:"Gathering, loading, the drive and the tip. Brandon's own day. Brandon and Brad set a floor per load — small trailer $150, large $300 — applied below the ledger", unit:"man-min / load", min:110, step:5, src:"sixfold", qstep:0.5},
 
-  {s:2, id:"mow",     lbl:"Mow and trim", unit:"man-min / acre", min:150, step:5, src:"sixfold", qstep:0.25},
-  {s:2, id:"edge",    lbl:"Edge", unit:"man-min / acre", min:60, step:5, src:"sixfold", qstep:0.25},
-  {s:2, id:"pullout", lbl:"Existing plants to pull out", unit:"man-min / plant", min:12, step:1, src:"sixfold"},
-  {s:2, id:"plantin", lbl:"Plants to dig in and set", sub:"Labour only — Sixfold supplies no plants and warrants none it did not supply", unit:"man-min / plant", min:20, step:1, src:"sixfold"},
+  {s:2, id:"aer",     lbl:"Aeration", sub:"Sixfold still has NO cost-up rate for this — nobody has timed a pass. Two anchors, and they are not the same kind of number: a competitor's (Bryce, $1,100–$1,400 for ¾ acre, via Brandon 2026-09-23) and, since 2026-09-25, Sixfold's OWN first charged price — Kara, $1,100 for ¾ acre, but that includes 200 lb of seed and 150 lb of fertilizer. Both land on $1,467/acre and only one of them is for aeration alone. Put the seed and fertilizer through the materials line below and what is left is the labour this job actually pays for", unit:"—", min:0, step:1, src:"noprice", noRate:true, rateNote:"no Sixfold rate", qstep:0.25, mkt:1467, mktSrc:"Two anchors at $1,467/acre. Bryce (competitor), $1,100–$1,400 for ¾ acre, aeration only. Sixfold (charged), $1,100 for ¾ acre WITH 200 lb seed and 150 lb fertilizer inside it — Kara, 2026-09-25"},
+  {s:2, id:"mow",     lbl:"Mow and trim", sub:"Brandon and Brad 2026-09-23: $150 for ¾ acre, converted at $100/man-hour. Was 150 — the closest agreement in the whole set", unit:"man-min / acre", min:120, step:5, src:"quoted", qstep:0.25},
+  {s:2, id:"edge",    lbl:"Edge", sub:"Brandon and Brad 2026-09-23: $50 for the same ¾ acre, converted at $100/man-hour. Was 60", unit:"man-min / acre", min:40, step:5, src:"quoted", qstep:0.25},
+  {s:2, id:"pullout", lbl:"Existing plants to pull out", sub:"Brandon and Brad 2026-09-23: $16.66 a plant — exactly $100 ÷ 6, a ten-minute task. Was 12", unit:"man-min / plant", min:10, step:1, src:"quoted"},
+  {s:2, id:"plantin", lbl:"Plants to dig in and set", sub:"“Not planting” — Brandon and Brad, 2026-09-23. Sixfold does not offer this", unit:"—", min:0, step:1, src:"off", noRate:true, rateNote:"not offered"},
   {s:2, id:"blow",    lbl:"Blow down drive and walks, per job", unit:"man-min / job", min:30, step:1, src:"sixfold"}
 ];
 
 const COSTS = [
-  {id:"dump", lbl:"Dump and tip fees", sub:"Called and confirmed today, commercial rate — not the homeowner SLASH rate", billed:true},
-  {id:"hire", lbl:"Equipment hire", sub:"Mower, edger, chipper, grinder — whatever is rented for this job", billed:true},
+  {id:"dump", lbl:"Dump and tip fees", sub:"Called and confirmed today, commercial rate — not the homeowner SLASH rate. Tipping is charged by WEIGHT, so what is in the trailer matters more than how full it is", billed:true,
+   presets:[["7×14 wood-heavy", 269], ["7×14 mostly brush", 110], ["One tree's share", 125]]},
+  {id:"hire", lbl:"Equipment hire", sub:"Mower, edger, chipper, grinder — whatever is rented for this job", billed:true,
+   presets:[["Chipper, 24 h", 320], ["Mower + edger (job 2)", 269]]},
+  {id:"cons", lbl:"Consumables", sub:"Chains, blades, fuel mix, ties. Brandon and Brad 2026-09-23: one chain is $20, and a removal eats one", billed:true,
+   presets:[["One chain", 20]]},
+  {id:"turf", lbl:"Seed and fertilizer", sub:"What Sixfold pays for the bags, not what it charges. Added 2026-09-25 with the Kara aeration job, which carries 200 lb of seed and 150 lb of fertilizer inside a $1,100 price. NO PRESET, because nobody has put a receipt against it yet — enter the real figure and the aeration line above stops being guesswork", billed:true},
   {id:"buy",  lbl:"Anything else hired or bought", sub:"Materials Sixfold actually pays for", billed:true},
-  {id:"fuel", lbl:"Truck fuel", sub:"Cost only — never billed as a line", billed:false}
+  {id:"fuel", lbl:"Truck fuel", sub:"Cost only — never billed as a line. Brandon and Brad put $20 of trailer gas INSIDE their tree price; that is not applied here, because the man-hour rate's overhead already carries fuel and billing it twice is the error. Unresolved — see the source note", billed:false}
 ];
 
+/* Haul floors — Brandon and Brad 2026-09-23, "at the lowest level". The price
+   Sixfold CHARGES per load, not the tip fee it pays. Applied as a minimum under
+   the cost-up haul contribution, never as a replacement for it. */
+const HAUL_FLOOR = {small:150, large:300};
+
 const DEFAULT_CFG = {
-  billable:70, handling:15, crewCost:28, overhead:20, rounding:50, freeHours:0, hoursOverride:""
+  billable:100, handling:15, crewCost:28, overhead:20, rounding:50, freeHours:0, hoursOverride:"",
+  trailer:"small"
 };
+
+/* Height-driven pricing, added 2026-09-23 on Matthew's ask.
+   time per tree = htBase + htPerFt × height, floored at htMin.
+
+   htPerFt defaults to 1.0 man-min/ft, which is Brandon and Brad's 30 man-minutes
+   divided straight across their 30 ft anchor — the pure per-foot model asked for.
+   htBase defaults to 0 so that model is what you get out of the box; raise it and
+   you get "a fixed handling time plus a slope" instead, which is the shape the
+   sapling evidence actually argues for.
+
+   HARD CAP AT 30 FT and it is not a preference. Extrapolating 1 min/ft upward
+   gives a 60 ft tree 60 man-minutes against the 570 on the books — a nine-fold
+   underquote on the most dangerous work Sixfold touches. Anything over 30 ft is
+   refused here and sent to the banded lines. */
+const HT_CAP = 30;
+const HT_DEFAULTS = {htPerFt:1.0, htBase:0, htMin:0};
+
+/* "7, 12, 25" or "4x7, 30" -> a list of heights in feet */
+function parseHeights(str){
+  const out = [];
+  String(str || "").split(/[,;\n]+|\s+/).forEach(tok => {
+    tok = tok.trim().replace(/(ft|')$/i, "");
+    if (!tok) return;
+    let m = tok.match(/^(\d+)\s*[x×]\s*([\d.]+)$/i);
+    if (m){ const c = Math.min(200, parseInt(m[1], 10)); const h = parseFloat(m[2]);
+      if (isFinite(h) && h > 0) for (let i = 0; i < c; i++) out.push(h);
+      return; }
+    m = tok.match(/^([\d.]+)$/);
+    if (m){ const h = parseFloat(m[1]); if (isFinite(h) && h > 0) out.push(h); }
+  });
+  return out;
+}
+function heightMinutes(){
+  const list = parseHeights(heightsRaw);
+  const per = list.map(ft => ({ft, over: ft > HT_CAP,
+    min: ft > HT_CAP ? 0 : Math.max(rates.htMin || 0, (rates.htBase || 0) + (rates.htPerFt || 0) * ft)}));
+  return {per, total: per.reduce((a, t) => a + t.min, 0), over: per.filter(t => t.over)};
+}
 
 /* Job 2, as recorded on Brandon's walk sheet — the calibration anchor */
 const JOB2 = {
@@ -449,9 +539,11 @@ const JOB2 = {
 
 /* ====================== state ====================== */
 let qty = {}, cost = {}, cfg = {...DEFAULT_CFG}, rates = {}, confirmed = {};
+let heightsRaw = "";
 let db = null, downloads = null, jobs = [], ratesDocReady = false;
 
 LINES.forEach(l => { rates[l.id] = l.min; qty[l.id] = 0; });
+Object.assign(rates, HT_DEFAULTS);
 COSTS.forEach(c => { cost[c.id] = 0; });
 
 const $ = id => document.getElementById(id);
@@ -463,7 +555,7 @@ const hrs = n => n.toFixed(2).replace(/\.00$/, "") + " h";
 function manMinutes(q, r){
   let t = 0;
   LINES.forEach(l => { if (l.noRate) return; t += (q[l.id] || 0) * (r[l.id] || 0); });
-  return t;
+  return t + heightMinutes().total;
 }
 function compute(){
   const rawHours = manMinutes(qty, rates) / 60;
@@ -473,7 +565,15 @@ function compute(){
   const labourRev = hours * cfg.billable;
   const passCost = COSTS.filter(c => c.billed).reduce((a,c) => a + (cost[c.id]||0), 0);
   const passRev = passCost * (1 + cfg.handling/100);
-  const raw = labourRev + passRev;
+  /* Haul floor. Brandon and Brad charge a minimum per load by trailer size. The
+     cost-up build still runs; if it comes out under the floor, the shortfall is
+     added and named, so the floor can never silently BECOME the price. */
+  const loadsQ = qty.loads || 0;
+  const haulRev = loadsQ * (rates.loads || 0) / 60 * cfg.billable;
+  const haulFloor = loadsQ * (HAUL_FLOOR[cfg.trailer] || 0);
+  const haulTopUp = loadsQ > 0 ? Math.max(0, haulFloor - haulRev) : 0;
+
+  const raw = labourRev + passRev + haulTopUp;
   const step = cfg.rounding || 0;
   const costUp = step > 0 ? Math.floor(raw / step) * step : Math.round(raw);
 
@@ -493,6 +593,7 @@ function compute(){
   const headroom = hours > 0 ? (breakEven - hours) / hours : 0;
 
   return {rawHours, hours, hoursOverridden: hours !== rawHours, labourRev, passCost, passRev, raw,
+          haulRev, haulFloor, haulTopUp, loadsQ,
           costUp, price, overridden: price !== costUp, cashOut, labourCost, freeCost, freeHours:free,
           totalCost, net, margin, breakEven, headroom, perHour};
 }
@@ -507,7 +608,10 @@ function compute(){
    A tick turns Allocated (or Unbacked) into Recorded — Brandon has confirmed it himself. */
 function badgeFor(l){
   if (l.src === "stop") return {cls:"unbacked", txt:"STOP RULE", title:"Not quotable here"};
+  if (l.src === "off") return {cls:"comp", txt:"Not offered", title:"Sixfold does not offer this — Brandon and Brad, 2026-09-23"};
+  if (l.src === "noprice") return {cls:"unbacked", txt:"No rate yet", title:"Sixfold has no rate of its own for this. The only figure on file is a competitor's, and it is used for the market check only — it cannot price a job"};
   if (confirmed[l.id]) return {cls:"sixfold", txt:"Recorded ✓", title:"Confirmed by Brandon as Sixfold's own rate — tap to unset"};
+  if (l.src === "quoted") return {cls:"quoted", txt:"Priced", title:"Brandon and Brad's own price for this exact line, 2026-09-23, divided by their own $100/man-hour. The figure is theirs and it is per-line — only the conversion to minutes is Matthew's. Tap when one of them confirms the TIME as well as the price"};
   if (l.src === "comp") return {cls:"comp", txt:"Competitor", title:"From outside trade research, not a Sixfold figure"};
   if (l.src === "sixfold") return {cls:"alloc", txt:"Allocated", title:"Brandon's recorded 16 man-hours on job 2, shared out across the lines by Matthew — the total is recorded, this line's share is not. Tap when Brandon confirms it outright"};
   return {cls:"unbacked", txt:"Unbacked", title:"Nothing backs this rate — tap when Brandon confirms it as Sixfold's"};
@@ -523,19 +627,38 @@ function buildLedger(){
       const b = badgeFor(l);
       row.innerHTML =
         '<div class="lbl">' + l.lbl + (l.sub ? '<small>' + l.sub + '</small>' : '') + '</div>' +
-        '<input class="qty" type="number" min="0" step="' + (l.qstep || 1) + '" id="q_' + l.id + '" value="0">' +
-        (l.noRate
-          ? '<div class="rate-cell"><span class="u">no rate — call it in</span></div>'
+        (l.custom !== "heights" && !l.noRate ? '<input class="qty" type="number" min="0" step="' + (l.qstep || 1) + '" id="q_' + l.id + '" value="0">' : '') +
+        (l.custom === "heights"
+          ? '<input class="ht-in" type="text" id="q_' + l.id + '" placeholder="7, 12, 25  ·  or  4x7">' +
+            '<div class="rate-cell ht-rates">' +
+              '<input type="number" min="0" step="0.05" id="r_htPerFt" value="' + rates.htPerFt + '"><span class="u">min / ft</span>' +
+              '<input type="number" min="0" step="1" id="r_htBase" value="' + rates.htBase + '"><span class="u">+ base</span>' +
+            '</div>'
+        : l.noRate
+          ? '<input class="qty" type="number" min="0" step="' + (l.qstep || 1) + '" id="q_' + l.id + '" value="0">' +
+            '<div class="rate-cell"><span class="u">' + (l.rateNote || "no rate — call it in") + '</span></div>'
           : '<div class="rate-cell"><input type="number" min="0" step="' + l.step + '" id="r_' + l.id + '" value="' + l.min + '"><span class="u">' + l.unit.replace("man-min / ", "/ ").replace("man-min", "min") + '</span></div>') +
         '<button class="badge ' + b.cls + '" id="b_' + l.id + '" title="' + b.title + '">' + b.txt + '</button>' +
         '<div class="out" id="o_' + l.id + '">—</div>';
       host.appendChild(row);
 
+      if (l.custom === "heights"){
+        $("q_" + l.id).addEventListener("input", e => {
+          heightsRaw = e.target.value;
+          e.target.classList.toggle("hot", parseHeights(heightsRaw).length > 0);
+          render();
+        });
+        ["htPerFt","htBase"].forEach(k => $("r_" + k).addEventListener("input", e => {
+          rates[k] = Math.max(0, parseFloat(e.target.value) || 0);
+          saveRates(); render();
+        }));
+      } else {
       $("q_" + l.id).addEventListener("input", e => {
         qty[l.id] = Math.max(0, parseFloat(e.target.value) || 0);
         e.target.classList.toggle("hot", qty[l.id] > 0);
         render();
       });
+      }
       if (!l.noRate){
         $("r_" + l.id).addEventListener("input", e => {
           rates[l.id] = Math.max(0, parseFloat(e.target.value) || 0);
@@ -544,7 +667,7 @@ function buildLedger(){
         });
       }
       $("b_" + l.id).addEventListener("click", () => {
-        if (l.src === "stop") return;
+        if (l.src === "stop" || l.src === "off" || l.src === "noprice") return;
         confirmed[l.id] = !confirmed[l.id];
         const nb = badgeFor(l);
         const el = $("b_" + l.id);
@@ -560,7 +683,9 @@ function buildLedger(){
     const row = document.createElement("div");
     row.className = "row";
     row.innerHTML =
-      '<div class="lbl">' + c.lbl + (c.sub ? '<small>' + c.sub + '</small>' : '') + '</div>' +
+      '<div class="lbl">' + c.lbl + (c.sub ? '<small>' + c.sub + '</small>' : '') +
+        (c.presets ? '<div class="presets">' + c.presets.map(pr =>
+          '<button class="preset" data-c="' + c.id + '" data-v="' + pr[1] + '">' + pr[0] + ' · $' + pr[1] + '</button>').join("") + '</div>' : '') + '</div>' +
       '<input class="qty" type="number" min="0" step="5" id="c_' + c.id + '" value="0">' +
       '<div class="rate-cell"><span class="u">' + (c.billed ? 'cost + handling' : 'not billed on') + '</span></div>' +
       '<button class="badge sixfold" disabled style="cursor:default" title="Brandon\'s own recorded figure for this job">Recorded</button>' +
@@ -571,12 +696,36 @@ function buildLedger(){
       e.target.classList.toggle("hot", cost[c.id] > 0);
       render();
     });
+    /* A preset ADDS to what is there — two chains is two taps, and a mixed load
+       is the wood chip plus the brush chip. It never silently replaces a figure
+       somebody typed. */
+    row.querySelectorAll(".preset").forEach(btn => btn.addEventListener("click", () => {
+      const el = $("c_" + btn.dataset.c);
+      cost[btn.dataset.c] = (cost[btn.dataset.c] || 0) + parseFloat(btn.dataset.v);
+      el.value = cost[btn.dataset.c]; el.classList.add("hot");
+      render();
+    }));
   });
+
+  /* Trailer size drives the haul floor, so it sits with the costs. */
+  const tr = document.createElement("div");
+  tr.className = "row";
+  tr.innerHTML =
+    '<div class="lbl">Trailer on this job<small>Sets the floor under the haul lines — small $' + HAUL_FLOOR.small +
+      ' a load, large $' + HAUL_FLOOR.large + ' a load. Brandon and Brad, 2026-09-23, “at the lowest level”</small></div>' +
+    '<div class="trailer-sel" style="grid-column:2/4"><select id="g_trailer">' +
+      '<option value="small">Small trailer — $' + HAUL_FLOOR.small + ' / load</option>' +
+      '<option value="large">Large trailer — $' + HAUL_FLOOR.large + ' / load</option>' +
+    '</select></div>' +
+    '<button class="badge sixfold" disabled style="cursor:default" title="Brandon and Brad, 2026-09-23">Recorded</button>' +
+    '<div class="out" id="co_trailer">—</div>';
+  h3.appendChild(tr);
+  $("g_trailer").addEventListener("change", e => { cfg.trailer = e.target.value; render(); });
 
   /* section 4 — crew and config */
   const h4 = $("sec4"); h4.innerHTML = "";
   const CFG = [
-    {id:"billable", lbl:"Billable rate", sub:"SynkedUP startup band $65–$75 / man-hour, 11 Aug 2026 — a trade cost model, not Sixfold's", unit:"$ / man-hour", step:1, src:"comp"},
+    {id:"billable", lbl:"Billable rate", sub:"Brandon and Brad 2026-09-23: “labor $100 dollars an hour minimum”, confirmed as a MAN-hour. Replaces the SynkedUP $65–$75 trade band — this is now Sixfold's own figure", unit:"$ / man-hour", step:1, src:"sixfold"},
     {id:"handling", lbl:"Handling on pass-through costs", sub:"Sixfold's own call. Applied to dump fees, hire and purchases", unit:"%", step:1, src:"sixfold"},
     {id:"crewCost", lbl:"Loaded crew cost", sub:"ArboStar, standing in. Sixfold's real loaded pay is the biggest unknown here", unit:"$ / hour", step:1, src:"comp"},
     {id:"overhead", lbl:"Own overhead", sub:"ArboStar, standing in. Nobody has Sixfold's real figure", unit:"$ / man-hour", step:1, src:"comp"},
@@ -609,9 +758,15 @@ function buildLedger(){
 function render(){
   const m = compute();
 
+  const ht = heightMinutes();
   LINES.forEach(l => {
     const el = $("o_" + l.id);
     if (!el) return;
+    if (l.custom === "heights"){
+      el.textContent = ht.total > 0 ? hrs(ht.total / 60) : "—";
+      el.className = "out" + (ht.total > 0 ? " live" : "");
+      return;
+    }
     if (l.noRate){ el.textContent = qty[l.id] > 0 ? "call in" : "—"; el.className = "out" + (qty[l.id] > 0 ? " live" : ""); return; }
     const h = (qty[l.id] || 0) * (rates[l.id] || 0) / 60;
     el.textContent = h > 0 ? hrs(h) : "—";
@@ -623,6 +778,11 @@ function render(){
     el.textContent = v <= 0 ? "—" : (c.billed ? money2(v * (1 + cfg.handling/100)) : "not billed");
     el.className = "out" + (v > 0 ? " live" : "");
   });
+  if ($("co_trailer")){
+    const te = $("co_trailer");
+    te.textContent = m.loadsQ > 0 ? money(m.haulFloor) + " floor" : "—";
+    te.className = "out" + (m.loadsQ > 0 ? " live" : "");
+  }
   $("go_billable").textContent = m.hours > 0 ? money(m.labourRev) : "—";
   $("go_handling").textContent = m.passCost > 0 ? "+" + money(m.passRev - m.passCost) : "—";
   $("go_crewCost").textContent = m.hours > 0 ? money(m.hours * cfg.crewCost) : "—";
@@ -642,6 +802,8 @@ function render(){
     ["Dump, hire, purchases", m.passCost > 0 ? money(m.passCost) + " + " + cfg.handling + "% handling" : "nothing recorded", money(m.passRev)],
     ["Truck fuel", "carried by the man-hour rate", "not billed"]
   ];
+  if (m.haulTopUp > 0)
+    bl.splice(2, 0, ["Haul floor top-up", m.loadsQ + " × " + money(HAUL_FLOOR[cfg.trailer]) + " " + cfg.trailer + " trailer, less " + money(m.haulRev) + " built", money(m.haulTopUp)]);
   $("pBuild").innerHTML = bl.map(r =>
       '<div class="bl"><span class="k">' + r[0] + '<small>' + r[1] + '</small></span><span class="v">' + r[2] + '</span></div>'
     ).join("") +
@@ -678,9 +840,43 @@ function render(){
     (m.freeHours > 0 ? '<div class="meter"><div class="meter-top"><span>Given away free</span><span class="v">' +
       hrs(m.freeHours) + " · " + money(m.freeCost) + '</span></div><div class="meter-foot">A known giveaway rather than a silent one. One line recovers it.</div></div>' : "");
 
+  renderHeights(ht);
   renderFlags(m);
   renderMarket(m);
   renderCalibration();
+}
+
+/* ====================== height card ====================== */
+function renderHeights(ht){
+  const host = $("htCard");
+  if (!ht.per.length){ host.innerHTML = ""; return; }
+  const perFt = rates.htPerFt || 0, base = rates.htBase || 0;
+  const priced = ht.per.filter(t => !t.over);
+  const chips = ht.per.map(t => '<span class="ht-tree' + (t.over ? " bad" : "") + '">' +
+    t.ft + ' ft · ' + (t.over ? "over 30 — not priced" : Math.round(t.min) + " min · " + money(t.min / 60 * cfg.billable)) + '</span>').join("");
+
+  /* What the model says at every height, against the figures already on file.
+     Printed rather than hidden, because the anchor is a single measurement. */
+  const ladder = [5, 10, 15, 20, 25, 30].map(ft => {
+    const mm = Math.max(rates.htMin || 0, base + perFt * ft);
+    return '<tr><td>' + ft + ' ft</td><td class="n">' + Math.round(mm) + ' min</td><td class="n">' +
+      money(mm / 60 * cfg.billable) + '</td></tr>';
+  }).join("");
+
+  host.innerHTML =
+    '<div class="ht-card"><h4>' + priced.length + ' tree' + (priced.length === 1 ? "" : "s") +
+      ' by height · ' + hrs(ht.total / 60) + ' · ' + money(ht.total / 60 * cfg.billable) + '</h4>' +
+    '<div class="ht-trees">' + chips + '</div>' +
+    '<table class="cal"><thead><tr><th>Height</th><th style="text-align:right">Time</th><th style="text-align:right">Labour</th></tr></thead><tbody>' +
+      ladder +
+    '</tbody></table>' +
+    '<div class="meter-foot" style="margin-top:7px">' +
+      base + ' min base + ' + perFt.toFixed(2) + ' min/ft. At 30 ft that is <b>' +
+      Math.round(base + perFt * 30) + ' min</b> against Brandon and Brad\'s <b>' + rates.t30 + '</b>. ' +
+      'Under 10 ft it is <b>' + Math.round(Math.max(rates.htMin || 0, base + perFt * 7)) +
+      ' min</b> for a 7 ft tree against the sapling line\'s <b>' + rates.sap + '</b> — ' +
+      'both are Sixfold figures and they do not agree. Raising the base is what closes that gap.' +
+    '</div></div>';
 }
 
 /* ====================== flags ====================== */
@@ -693,13 +889,33 @@ function renderFlags(m){
       ". Get Brandon to confirm each before this goes out."]);
   if ((qty.t80 || 0) > 0)
     f.push(["Stop rule", "A tree over 80 ft is a call-in, not a quote. Nothing on this sheet prices it."]);
-  if ((qty.stump || 0) > 0 || (qty.stumpin || 0) > 0)
-    f.push(["811 locate", "Stumps cannot be ground the same day. Colorado 811 is three business days in practice — plan a second visit and say so in the quote."]);
+  const offUsed = LINES.filter(l => l.src === "off" && (qty[l.id] || 0) > 0);
+  if (offUsed.length)
+    f.push(["Counted work Sixfold does not offer", offUsed.map(l => l.lbl.split(" — ")[0].toLowerCase()).join(", ") +
+      " — retired 2026-09-23 on Brandon and Brad's word. Nothing is priced for it. Sub it out or take it off the scope."]);
+  if ((qty.aer || 0) > 0)
+    f.push(["Aeration has no Sixfold rate", "Two anchors, both $1,467/acre, and only one is comparable: Bryce's competitor price is aeration ALONE, while Sixfold's own $1,100 to Kara has 200 lb of seed and 150 lb of fertilizer inside it. Neither is a cost-up rate. To close this: time the pass, and put the bag receipts through the Seed and fertilizer cost line."]);
+  if (m.haulTopUp > 0)
+    f.push(["Haul floor applied", "The cost-up build put " + m.loadsQ + " load" + (m.loadsQ === 1 ? "" : "s") + " at " + money(m.haulRev) +
+      ", under the " + money(m.haulFloor) + " floor for a " + cfg.trailer + " trailer. " + money(m.haulTopUp) + " was added to reach it. Haul-off is the one line this business has demonstrably lost money on."]);
+  const htF = heightMinutes();
+  if (htF.over.length)
+    f.push(["Over the 30 ft cap", htF.over.map(t => t.ft + " ft").join(", ") + " — the per-foot model stops at 30 ft and these are NOT in the price. " +
+      "Extrapolating it upward would put a 60 ft tree at about 60 man-minutes against the 570 on the books. Count them on the banded lines instead."]);
+  if (htF.per.length && ((qty.sap || 0) > 0 || (qty.t30 || 0) > 0))
+    f.push(["Trees counted twice", "Heights are entered AND the sapling or 10–30 ft line has a count on it. Both are in this price. Use one or the other."]);
+  if (htF.per.length && (rates.htBase || 0) === 0 && htF.per.some(t => !t.over && t.ft < 10))
+    f.push(["Small trees on a straight per-foot line", "A " + Math.min(...htF.per.filter(t => !t.over).map(t => t.ft)) +
+      " ft tree prices at " + Math.round(Math.max(rates.htMin || 0, rates.htPerFt * Math.min(...htF.per.filter(t => !t.over).map(t => t.ft)))) +
+      " man-minutes, against the sapling line's " + rates.sap + " for the same tree. With no base time, the model says a small tree costs almost nothing to take down — " +
+      "but setup, drag-out and cleanup happen whatever the height. Job 2's own saplings took nearer " + rates.sap + "."]);
+  if ((qty.t3060 || 0) > 0 || (qty.t6080 || 0) > 0)
+    f.push(["Tree bands do not line up", "A tree under 30 ft is 30 man-minutes on Brandon and Brad's own figure, but 30–60 ft is still 330 from Wexford — an eleven-fold jump across the band line. They gave no figure above 30 ft. One of the two is wrong; do not quote a big tree off this until it is settled."]);
   if ((qty.loads || 0) > 0 && (cost.dump || 0) === 0)
     f.push(["No dump fee entered", "Haul-off is where this business has lost money. Call the site, get today's commercial rate, and put it in before quoting."]);
   const groundUsed = LINES.filter(l => l.s === 2 && (qty[l.id] || 0) > 0);
   if (groundUsed.length)
-    f.push(["Landscaping has no published rate", "Mowing, edging and planting are not among the six services Sixfold's README lists and no document prices them. These times are fitted off one job."]);
+    f.push(["Landscaping rates come from one property", "Mow, edge and plant removal are Brandon and Brad's own figures as of 2026-09-23 — but all three were quoted on the same ¾ acre, which is job 2's property. They have never been tested on a different shape of ground."]);
   if (m.price > 0 && m.margin < 0.15)
     f.push([m.margin < 0 ? "This job loses money" : "Thin margin",
       m.margin < 0 ? "At " + money(m.price) + " the fully loaded cost is " + money(m.totalCost) + ". This is the Sedalia pattern."
@@ -707,10 +923,10 @@ function renderFlags(m){
   if (m.overridden && m.price < m.costUp)
     f.push(["Override below the build", "The price is under what the cost-up model says the work is worth."]);
   if (cfg.billable > 71.5)
-    f.push(["Billable rate is above the local ceiling", "Hawk Tree Service publishes $115–$143/hr for a two-person crew in Colorado Springs — $57.50 to $71.50 a man-hour. At $" +
-      cfg.billable + " you are above the top of the only published rate in Sixfold's own market."]);
+    f.push(["Above the local ceiling — by choice", "Hawk publishes $115–$143/hr for a two-person crew in Colorado Springs, which is $57.50–$71.50 a man-hour. At $" +
+      cfg.billable + " a man-hour a two-person crew bills $" + (cfg.billable * 2) + "/hr — above the top of the only published rate in Sixfold's own market. That is Brandon and Brad's stated rate, so this is a standing position, not an error. It will fire on every quote."]);
   if ((qty.sap || 0) > 0 && (qty.t30 || 0) === 0 && (qty.sap || 0) >= 4)
-    f.push(["Check these are really saplings", "The sapling line is 30 man-minutes, fitted to five trees Brandon annotated “under 10 feet”. A genuine 20-footer belongs on the line below at 150 — five of those is a 10-hour difference."]);
+    f.push(["Sapling and small-tree lines now match", "Both sit at 30 man-minutes — the sapling figure was allocated off job 2, the 10–30 ft figure came from Brandon and Brad directly. A 10 ft sapling and a full 30 ft tree cannot really cost the same. Time one of each and split them again."]);
 
   $("flagbox").innerHTML = f.length
     ? '<ul class="flags">' + f.map(x => '<li><b>' + x[0] + '</b>' + x[1] + '</li>').join("") + '</ul>'
@@ -725,7 +941,8 @@ function marketCheck(){
   let mktTotal = 0, sixTotal = 0; const covered = [], missing = [];
   LINES.forEach(l => {
     const q = qty[l.id] || 0;
-    if (q <= 0 || l.noRate) return;
+    if (q <= 0) return;
+    if (l.noRate){ if (l.mkt) missing.push(l); return; }
     if (l.mkt){
       const mv = q * l.mkt;
       const sv = q * (rates[l.id] || 0) / 60 * cfg.billable;
@@ -740,7 +957,7 @@ function renderMarket(m){
   const host = $("mktBody");
   if (!k.covered.length){
     host.innerHTML = '<div class="empty">Nothing on this job has a published local rate against it yet. ' +
-      'Enter trees, trimming or stump inches and the comparison builds.</div>';
+      'Enter trees or trimming and the comparison builds.</div>';
     return;
   }
   const rows = k.covered.map(c =>
@@ -791,6 +1008,12 @@ function renderCalibration(){
 /* ====================== load / clear ====================== */
 function applyState(st){
   LINES.forEach(l => {
+    if (l.custom === "heights"){
+      heightsRaw = st.heights || "";
+      const h = $("q_" + l.id);
+      if (h){ h.value = heightsRaw; h.classList.toggle("hot", parseHeights(heightsRaw).length > 0); }
+      return;
+    }
     qty[l.id] = (st.qty && st.qty[l.id]) || 0;
     const q = $("q_" + l.id);
     if (q){ q.value = qty[l.id] || 0; q.classList.toggle("hot", qty[l.id] > 0); }
@@ -804,6 +1027,8 @@ function applyState(st){
   ["billable","handling","crewCost","overhead","freeHours","rounding"].forEach(k => {
     cfg[k] = merged[k]; const el = $("g_" + k); if (el) el.value = cfg[k];
   });
+  cfg.trailer = merged.trailer || "small";
+  if ($("g_trailer")) $("g_trailer").value = cfg.trailer;
   cfg.hoursOverride = merged.hoursOverride ?? "";
   if ($("g_hoursOverride")) $("g_hoursOverride").value = cfg.hoursOverride;
   cfg.override = st.override ?? "";
@@ -824,13 +1049,18 @@ $("ovrIn").addEventListener("input", e => { cfg.override = e.target.value; rende
 $("ovrClear").addEventListener("click", () => { cfg.override = ""; $("ovrIn").value = ""; render(); });
 
 /* ====================== local draft ====================== */
-/* v2: the v1 key holds drafts auto-saved while the page still opened pre-loaded
-   with job 2, so they are not anybody's unfinished work. Dropped, not migrated. */
-const LS = "sixfold-quote-build-draft-v2";
-try { localStorage.removeItem("sixfold-quote-build-draft"); } catch(e){}
+/* v2: the v1 key held drafts auto-saved while the page still opened pre-loaded
+   with job 2, so they were not anybody's unfinished work.
+   v3 (2026-09-23): a v2 draft carries the old $70 billable and the superseded
+   rate table inside it, so restoring one would put withdrawn prices back on
+   screen without saying so. Dropped, not migrated. */
+const LS = "sixfold-quote-build-draft-v3";
+["sixfold-quote-build-draft", "sixfold-quote-build-draft-v2"].forEach(k => {
+  try { localStorage.removeItem(k); } catch(e){}
+});
 function snapshot(){
   return {qty:{...qty}, cost:{...cost}, cfg:{...cfg}, override:cfg.override ?? "", name:$("jobName").value.trim(),
-          rates:{...rates}, confirmed:{...confirmed}, savedAt:new Date().toISOString()};
+          heights:heightsRaw, rates:{...rates}, confirmed:{...confirmed}, savedAt:new Date().toISOString()};
 }
 function saveDraft(){ try { localStorage.setItem(LS, JSON.stringify(snapshot())); } catch(e){} }
 function readDraft(){
@@ -840,7 +1070,8 @@ function readDraft(){
     const st = JSON.parse(raw);
     /* an empty ledger is not a draft worth offering back */
     const typed = Object.values(st.qty || {}).some(v => v > 0) ||
-                  Object.values(st.cost || {}).some(v => v > 0) || !!(st.name || "").trim();
+                  Object.values(st.cost || {}).some(v => v > 0) || !!(st.name || "").trim() ||
+                  !!(st.heights || "").trim();
     return typed ? st : null;
   } catch(e){ return null; }
 }
@@ -876,20 +1107,29 @@ function scopeMarkdown(){
   out.push("**Built:** " + new Date().toISOString().slice(0,10) + " · Sixfold Quote Build (cost-up)");
   out.push("**Status:** DRAFT. Not sent, not signed, not scheduled.", "");
   out.push("## The work", "", "| Line | Count |", "|---|---|");
-  LINES.forEach(l => { if ((qty[l.id]||0) > 0 && l.id !== "mob") out.push("| " + l.lbl + " | " + qty[l.id] + " |"); });
+  LINES.forEach(l => { if (l.custom === "heights") return;
+    if ((qty[l.id]||0) > 0 && l.id !== "mob") out.push("| " + l.lbl + " | " + qty[l.id] + " |"); });
+  const htE = heightMinutes();
+  htE.per.filter(t => !t.over).forEach(t => out.push("| Tree taken down — " + t.ft + " ft | 1 |"));
+  if (htE.over.length) out.push("| **NOT PRICED — over the 30 ft cap** | " + htE.over.map(t => t.ft + " ft").join(", ") + " |");
   out.push("", "## Price", "", "**" + money(m.price) + "**" + (m.overridden ? "  — set above the cost-up build of " + money(m.costUp) + "." : "  — cost-up build, rounded down."), "");
   if (m.freeHours > 0) out.push("Includes " + hrs(m.freeHours) + " of work given at no charge (" + money(m.freeCost) + " at cost). Recorded so it is a known giveaway.", "");
   out.push("## Before this goes anywhere near a customer", "");
   out.push("- No price is given on the property — the estimate is written up and sent.");
   out.push("- Sixfold is not licensed, bonded or insured, and none of those may be claimed.");
-  if ((qty.stump||0) > 0 || (qty.stumpin||0) > 0) out.push("- Stumps need an 811 locate, three business days. Say so, and plan the second visit.");
+  const offCounted = LINES.filter(l => l.src === "off" && (qty[l.id]||0) > 0);
+  if (offCounted.length) out.push("- **Scope includes work Sixfold does not offer** (" + offCounted.map(l => l.lbl.split(" — ")[0]).join("; ") + ") — retired 2026-09-23. Nothing here prices it.");
+  if ((qty.aer||0) > 0) out.push("- **Aeration is on this scope and Sixfold has no rate for it.** The price below does not include it.");
   if ((qty.t80||0) > 0) out.push("- A tree over 80 ft is on this sheet. That is a call-in, not a quote.");
   const unbacked = LINES.filter(l => !l.noRate && (qty[l.id]||0) > 0 && l.src === "unbacked" && !confirmed[l.id]);
   if (unbacked.length) out.push("- **" + unbacked.length + " line(s) priced off an unconfirmed rate:** " + unbacked.map(l => l.lbl).join("; ") + ".");
   out.push("", "## Fact-check log", "", "| Figure | Source |", "|---|---|");
-  out.push("| $" + cfg.billable + "/man-hour billable | **Competitor** — SynkedUP, Weston Zimmerman, 11 Aug 2026, 2026 startup band $65–$75. A trade cost model, not a competitor's price list |");
+  out.push("| $" + cfg.billable + "/man-hour billable | **Recorded** — Brandon and Brad, 2026-09-23, \"labor $100 dollars an hour minimum\", confirmed as a man-hour. Replaced the SynkedUP $65–$75 trade band. At $" + (cfg.billable*2) + "/hr for a two-person crew this is above Hawk's published $115–$143 in Colorado Springs |");
   out.push("| Counts and recorded costs | **Recorded** — off the walk sheet. Not independently verified |");
-  out.push("| Time per unit | **Allocated** — Sixfold's recorded 16 man-hours on job 2, shared out across the lines by hand; the total is recorded, the split is not. Except any line listed above, which is unbacked |");
+  out.push("| Time per unit | **Mixed** — mow, edge, plant removal, limbing and tree removal under 30 ft come from Brandon and Brad's own prices of 2026-09-23, converted at $" + cfg.billable + "/man-hour. The rest is Sixfold's recorded 16 man-hours on job 2 shared out by hand, or unbacked where listed above |");
+  out.push("| Limbing | **Unresolved** — $600 for 13 trees (2026-09-23) contradicts Brandon's earlier $975 for the same 13, which Hawk's published $75 floor corroborated exactly. The newer figure is in use |");
+  if ((qty.t3060||0) > 0 || (qty.t6080||0) > 0)
+    out.push("| Trees over 30 ft | **Competitor** — Wexford/TreeGuard. Brandon and Brad gave no figure above 30 ft, and their under-30 figure is eleven times lower per tree. Do not rely on this band |");
   out.push("| Crew cost $" + cfg.crewCost + "/hr, overhead $" + cfg.overhead + "/man-hour | **Competitor** — ArboStar, standing in. Sixfold's real figures are still unknown |");
   return out.join("\n");
 }
@@ -897,14 +1137,23 @@ function internalCsv(){
   const m = compute();
   const esc = s => '"' + String(s).replace(/"/g, '""') + '"';
   const rows = [["INTERNAL — DO NOT SEND",""], ["Job", $("jobName").value.trim() || "Untitled"], ["Built", new Date().toISOString()], [], ["Line","Count","Man-min/unit","Source","Man-hours"]];
-  LINES.forEach(l => { if ((qty[l.id]||0) > 0) rows.push([l.lbl, qty[l.id], l.noRate ? "" : rates[l.id], badgeFor(l).txt, l.noRate ? "" : ((qty[l.id]*rates[l.id])/60).toFixed(2)]); });
+  LINES.forEach(l => { if (l.custom === "heights") return;
+    if ((qty[l.id]||0) > 0) rows.push([l.lbl, qty[l.id], l.noRate ? "" : rates[l.id], badgeFor(l).txt, l.noRate ? "" : ((qty[l.id]*rates[l.id])/60).toFixed(2)]); });
+  const htC = heightMinutes();
+  htC.per.forEach(t => rows.push(["Tree by height — " + t.ft + " ft", 1, t.over ? "OVER 30 FT CAP" : Math.round(t.min),
+    t.over ? "NOT PRICED" : "PRICED", t.over ? "0.00" : (t.min/60).toFixed(2)]));
+  if (htC.per.length) rows.push(["Height model", (rates.htBase||0) + " min base + " + (rates.htPerFt||0) + " min/ft",
+    "Derived from Brandon and Brad's 30 man-min at 30 ft. Capped at 30 ft"]);
   rows.push([], ["Man-hours", m.hours.toFixed(2), m.hoursOverridden ? "overridden (raw " + m.rawHours.toFixed(2) + ")" : ""]);
   COSTS.forEach(c => rows.push([c.lbl, cost[c.id] || 0, c.billed ? "billed at +" + cfg.handling + "%" : "cost only, not billed"]));
   rows.push([], ["Cost-up price", m.costUp], ["Quoted price", m.price], ["Fully loaded cost", m.totalCost.toFixed(2)],
     ["Net", m.net.toFixed(2)], ["Margin %", (m.margin*100).toFixed(1)], ["Break-even man-hours", m.breakEven.toFixed(2)],
     [], ["Crew cost $/hr", cfg.crewCost, "COMPETITOR — ArboStar, standing in for Sixfold's own"],
     ["Overhead $/man-hour", cfg.overhead, "COMPETITOR — ArboStar, standing in for Sixfold's own"],
-    ["Billable $/man-hour", cfg.billable, "COMPETITOR — SynkedUP trade cost model"]);
+    ["Billable $/man-hour", cfg.billable, "RECORDED — Brandon and Brad 2026-09-23, confirmed as a man-hour"],
+    ["Trailer", cfg.trailer, "Haul floor $" + (cfg.trailer === "large" ? 300 : 150) + "/load — Brandon and Brad 2026-09-23"],
+    ["Haul floor top-up", m.haulTopUp.toFixed(2), m.haulTopUp > 0 ? "cost-up build came in under the floor" : "not applied"],
+    ["Rates version", "v3 (2026-09-23)", "Brandon and Brad"]);
   return rows.map(r => r.map(esc).join(",")).join("\r\n");
 }
 async function offer(filename, data){
@@ -947,7 +1196,7 @@ function saveRates(){
   if (!db || !ratesDocReady) return;
   clearTimeout(rateWriteT);
   rateWriteT = setTimeout(() => {
-    db.doc("config/rates-v2").set(ratesPayload()).catch(() => {});
+    db.doc("config/rates-v3").set(ratesPayload()).catch(() => {});
   }, 900);
 }
 function renderJobs(){
@@ -995,7 +1244,7 @@ $("bSave").addEventListener("click", async () => {
   if (!db){ $("bSave").disabled = true; $("jobEmpty").textContent = "Not connected — jobs cannot be saved in this view."; return; }
 
   let firstRates = true;
-  db.doc("config/rates-v2").onSnapshot(snap => {
+  db.doc("config/rates-v3").onSnapshot(snap => {
     ratesDocReady = true;
     if (!snap.exists){ firstRates = false; return; }
     const d = snap.data() || {};

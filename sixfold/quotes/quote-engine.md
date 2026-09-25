@@ -6,7 +6,92 @@
 
 ---
 
-> ## RESUME HERE — nothing outstanding as of 2026-09-16
+> ## RESUME HERE — repriced 2026-09-23, four things still open
+>
+> **Brandon and Brad's prices are in.** Source and full reconciliation:
+> [rates-brandon-brad-2026-09-23.md](rates-brandon-brad-2026-09-23.md). **Rates v3.** The artifact has
+> NOT been republished — the file is ahead of the published version.
+>
+> **The headline: the billable rate is now $100/man-hour, up from $70.** Matthew confirmed it is a
+> man-hour, not a crew-hour. That is $200/hr for a two-person crew against Hawk's published $115–$143 in
+> Colorado Springs, so Sixfold is now ~40% above the top of the only published rate in its own market,
+> deliberately. A flag says so on every quote.
+>
+> | | |
+> |---|---|
+> | Job 2 calibration | **16.82 h predicted vs 16 recorded** — drift 0.82 h, still inside the 1 h threshold |
+> | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
+> | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
+>
+> **Still open, and all four are Brandon's or Brad's call, not mine:**
+>
+> 1. **Limbing contradicts itself.** $600 for 13 trees now; $975 for the same 13 before, and Hawk's $75
+>    floor × 13 corroborated that exactly. The newer figure is in, with the contradiction on the page.
+> 2. **The tree bands do not line up.** Under 30 ft is their 30 man-min; 30–60 ft is still Wexford's 330
+>    — an elevenfold jump across the band line. They gave nothing above 30 ft.
+> 3. **Sapling and small-tree rates are now identical** at 30 man-min. A 10 ft sapling and a full 30 ft
+>    tree cannot really cost the same; one of the two wants a real timing. **This is also what the
+>    per-foot height model collides with** — it prices a 7 ft tree at 7 man-min against the sapling
+>    line's 30. Timing one small tree settles both at once, and it is the single most useful
+>    measurement anyone could take right now.
+> 4. **Aeration has no Sixfold rate at all** — and it now leads Sixfold's positioning. The only figure is
+>    Bryce's competitor price ($1,100–$1,400 for ¾ acre), which sits in the market check, never the price.
+>    **Updated 2026-09-25: there is now a second anchor, and it is still not a rate.** Sixfold's own first
+>    charged aeration price is **$1,100 for ¾ acre** — Kara, `agreements/kara-aeration-agreement`. Both
+>    anchors land on **$1,467/acre**, which looks like agreement and is not: **Bryce's covers aeration
+>    alone, Sixfold's has 200 lb of seed and 150 lb of fertilizer inside it.** Against the market check the
+>    materials are being given away. A **Seed and fertilizer** cost line was added the same day so the two
+>    can be separated; it deliberately ships with **no preset**, because no receipt has been put against it.
+>    At $100/man-hour with two crew, every $200 of materials is an hour off the site time that $1,100 buys.
+>
+> **Also unresolved: fuel.** They put $20 of trailer gas inside their tree price. The engine still refuses
+> to bill fuel, because the man-hour rate's overhead already carries it and billing it twice is the error.
+> Reversing that is a decision, not a rate change, so it was left alone and flagged.
+>
+> ### What changed in the file, 2026-09-23
+>
+> - **Rates:** billable $70 → **$100**; tree under 30 ft 150 → **30**; limbing 20 → **28**; mow 150 →
+>   **120**/acre; edge 60 → **40**/acre; plant removal 12 → **10**.
+> - **Retired:** stump grinding (both lines) and planting, on "no stump grinding" and "not planting".
+>   Marked *Not offered* rather than deleted, so the decision is visible and reversible. The 811 locate
+>   warning went with them.
+> - **New:** a **consumables** cost line (one chain $20); **dump presets** by what is in the trailer
+>   (7×14 wood-heavy $269, mostly brush $110, one tree's share $125) because tipping is charged by weight;
+>   **hire presets** (chipper $320/24h); a **trailer selector** driving a **haul floor** of $150 small /
+>   $300 large per load; an **aeration** line carrying no Sixfold rate.
+>
+> ### Added 2026-09-25 — off the Kara aeration job
+>
+> - A **Seed and fertilizer** cost line (`turf`), billed, **no preset by design**. The engine had no
+>   turf-materials slot at all, so the bags had nowhere to go but "anything else bought".
+> - The **aeration line now carries both anchors** and says plainly that only one of them is aeration
+>   alone. Its flag tells you what to capture to close the gap: time the pass, and put the bag receipts
+>   through the new cost line.
+> - **No rates-version bump, and that is deliberate.** The rule is to bump `config/rates-vN` on a
+>   *reprice*, so stale saved figures cannot win. **No existing rate changed here.** The snapshot handler
+>   only applies saved keys where `rates[k] != null`, so a team member holding saved v3 state simply gains
+>   the new line at its default rather than having their own figures reset. Bumping would have cost them
+>   their customisations for nothing.
+> - **⚑ Still not republished.** The artifact has been behind this file since the v3 reprice on
+>   2026-09-23 and these changes widen that gap. Republishing must pass the existing URL as `url`.
+> - **Trees by height** — a line that takes `7, 12, 25` (or `4x7`) and prices each tree from the 30 ft
+>   anchor. Model is `base + per-foot`, both editable, defaulting to **0 base + 1.00 man-min/ft** (their
+>   30 min ÷ 30 ft). **Hard-stops at 30 ft** — 1 min/ft extrapolated gives a 70 ft tree 70 man-minutes
+>   against the 570 on the books, an eight-fold underquote on the most dangerous work. Over-cap trees are
+>   listed in amber, kept out of the price and flagged to the banded lines. Sits *beside* `sap`/`t30`, not
+>   instead of them, because job 2's calibration and every saved job use those ids.
+> - **A fifth badge, *Priced*** — Brandon and Brad's own price for one named line, divided by their own
+>   $100/man-hour. It exists because *Allocated* means Matthew's share-out of job 2's 16 hours, and these
+>   are not that. Five lines carry it.
+> - **Two persistence keys bumped** — `config/rates-v2` → **`-v3`** and the local draft to **`-v3`**.
+>   Without this the stored table wins over the file and the whole team keeps quoting the old prices.
+> - An **8×14 trailer of rounds is deliberately unpriced.** "A lot more than that" is not a figure.
+> - Fixed a pre-existing bug: `.notice{display:flex}` beat the `hidden` attribute, so the empty resume
+>   bar rendered as a stray box on every load.
+>
+> ---
+>
+> ## The 2026-09-16 ruling — still stands
 >
 > Built, published and working. Four rounds of his review already; **don't rebuild any of it without
 > asking.** The one open question was ruled on 2026-09-16:
