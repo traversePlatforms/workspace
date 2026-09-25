@@ -9,6 +9,122 @@ every other Sixfold asset — nothing published, posted, scheduled or uploaded.
 cannot be done on disk is in **[LAUNCH.md](LAUNCH.md)**, which is the file to open
 the day this goes on a host.
 
+## ⚑ REPOSITIONED 2026-09-24 — aeration-led, on disk, NOT uploaded
+
+**The site now leads with lawn and turf care and ends with fire mitigation.** Matthew,
+2026-09-24: *"I am just tasked with adjusting the way the site looks and to have it
+reflect the change in direction."* That reopens `/` and `/services/`, both of which were
+signed off on 2026-09-21 — this was his instruction, not a page reopened on a whim.
+
+**Nothing has been re-bundled or uploaded. The live site is still the 2026-09-21 build.**
+
+Both auditors clean after the change: `audit-links.mjs` all clear, `audit-runtime.mjs`
+36 renders, **0 failures, 0 warnings**.
+
+### What changed
+
+| | |
+|---|---|
+| **Services** | Three became **four**. `Lawn & turf care` is new and leads; landscaping, land clearing, fire mitigation follow. Order is the only demotion — the four stay visually equal, because "any one of them, or all four" is still the rule and making fire look lesser would just invert the banned after-job framing |
+| **Nav** | `Mitigation funding` moved out of the top nav to the footer. Two of four items were fire; one is. Nothing is orphaned — /who-pays/ is still linked from the footer, the fire door and /services/ |
+| **Descriptor** | **"Land & Fire" is off the header and the hero lockup.** It names the demoted service and neither promoted one. **Not replaced with another descriptor** — the service line carries the register and costs nothing to change. ⚑ **This is the one brand-level call in the pass and it is Brandon's to confirm**; the crew shirt and every business card option still carry it. `.brand span` and `.hero .lockup .desc` are left in the stylesheet, so putting the span back restores it |
+| **Head** | `<title>`, `<meta description>`, the `LocalBusiness` description and `knowsAbout` all rewritten. Aeration terms are in `knowsAbout` |
+| **Colour** | **Palette A adopted 2026-09-24** — see §Palette A below. Green leads; ember keeps two jobs and nothing else |
+| **Contact** | A `lawn` option added to the chooser and made the default, order matched to the site, `data-prompt-lawn` written. `?need=lawn` is checked by the auditor, so the link and the radio cannot drift apart |
+| **/services/landscaping/** | Widened to **"Lawn care and landscaping"**. It held the mowing-and-edging copy that moved into the lawn section, so leaving it would have had parent and child describing landscaping differently. It is also where the lead service gets a page **without one being created** |
+
+### Palette A — adopted 2026-09-24
+
+**Matthew's call**, off the four-way comparison at
+<https://claude.ai/artifact/RkzSComttAwGGKobVEd326>. The logo board lists the palette as
+Brandon's, so **he should still confirm it** — but nothing here is public and nothing has
+been ordered, so adopting it on the site commits nothing.
+
+**The rule, and it is the whole of it: ember keeps two jobs and loses the rest.**
+
+1. **The call to action** — the solid button, the one element asking to be clicked.
+2. **Fire mitigation** — its service card (`.s-fire`), its door (`.d-fire`), the ~450
+   tax-credit numeral, and the wildfire guide's `.ways3` and `.numkey`.
+
+Everything ember used to do by default is green: the logo mark in the header, the hero
+and the footer, every link, the kickers, the footer rule, the form's focus ring and radio.
+
+**Two new brand constants**, because Moss alone could not cover both grounds:
+
+| Token | Hex | on Bone | on Pine | Job |
+|---|---|---|---|---|
+| `--turf` | `#2F7A4F` | 4.25 | 3.54 | Rules and marks on Bone. **Never type** — 4.25 is under the 4.5 body text needs |
+| `--sage` | `#A7BE93` | 1.64 | 9.19 | Dark grounds only — links and marks on Pine |
+| `--moss-text` | `#4E6142` | 5.48 | — | The link colour on Bone. Existing token, promoted from kickers |
+
+**`--warm` is the handle.** Everything still ember points at `--warm`, not at `--ember`,
+so the two surviving jobs are one grep and can be moved together. `--ember` stays the raw
+constant. As of this change the only literal ember left in the stylesheet is the constant
+itself and `--warm-hover`.
+
+**Contrast went up, not down.** Links were `#A64211` at 5.01:1 and are now `#4E6142` at
+5.48:1. The solid button is unchanged at 5.89:1 because ember kept full strength where it
+survives.
+
+**⚑ The dark register changed too**, which the stylesheet's own header note used to deny.
+`:root`'s accent moved off ember, so **the tabled merch board in `_tabled/merch/` now
+renders green**. Correct, but it has not been looked at.
+
+**What this did NOT touch:** the other ~133 files in `sixfold/` carrying an ember value —
+vehicle magnets, business cards, crew shirt spec, the 25 team-share PDFs, the Square and
+social image sets. Per `sixfold/REBRAND-PATH-2026-09.md` that sweep waits until the mark
+is settled, and the logo board is still on four core treatments. **The site and the print
+collateral are deliberately out of step until then.**
+
+### What was deliberately NOT done
+
+- **No `/services/aeration/` page.** The service has no equipment and no rate — see
+  `sixfold/REBRAND-PATH-2026-09.md` §Phase 0. A page for it would advertise something
+  Sixfold cannot currently quote.
+- **No price anywhere**, same standing rule as before.
+- **No palette change**, no re-typesetting, no new register.
+- **`/who-pays/` and `/wildfire-guide/` untouched and still linked.** They are the most
+  substantial content on the site; they are demoted, not deleted.
+
+### Two defects the auditors could not catch, found by rendering
+
+1. **`.door:nth-child(2)` was positional.** Putting the lawn door first silently handed
+   it the fire colour and gave fire the moss one. Both auditors passed it. It is keyed
+   to a `.d-fire` class now, so the doors can be reordered again safely.
+2. **The photos were the wrong way round.** The lawn card had the gravel-bed shot and
+   landscaping had the one frame with real turf in it. Swapped.
+
+**Known, pre-existing, not introduced here:** `audit-runtime.mjs` reports
+`/ @390 — net::ERR_ABORTED`. The previous build in `dist/sixfold-site-2026-09-21/`
+produces the identical line when served locally, every asset returns 200, and the
+auditor does not count it as a failure. It is a `<picture>`/lazy-load artifact at the
+narrowest width.
+
+**Open, and needs him or Brandon:** the descriptor call above · a real turf photograph
+(**the lead service is the one with no picture of itself** — shot list in
+[PHOTOS.md](PHOTOS.md) §The turf gap) · confirmation that **Sixfold can actually do
+aeration and overseeding**, which is the one claim on the new copy with nothing behind
+it but the positioning change.
+
+### Fact check — Lawn & turf care
+
+Everything the new copy asserts about aeration, and where it comes from.
+
+| Claim, as it appears on the site | Source |
+|---|---|
+| "hollow tines pull plugs out of the turf" | **Verified.** UMass Amherst Extension, *Management of Compaction and Coring* — a core aerator carries hollow tines, short open-ended steel tubes, pushed straight down. It is a punch, not a drill |
+| "so water, air and fertilizer reach the root zone instead of running off compacted ground" | **Verified.** CSU PlantTalk 1505 — aeration "reduces soil compaction" and "helps water and fertilizer move into the root zone" |
+| "The plugs stay on the surface and break down into the lawn" | **Verified.** UMass — each tine pulls a 2–3″ plug and drops it on the surface, where it is broken up as topdressing. Only golf greens are swept |
+| "Spring and fall are the best times for it, and it can be done any time the ground is not frozen and not baked dry" | **Verified.** CSU PlantTalk 1505 — "Spring and fall are considered the best times for aeration", and a lawn "can be aerated at any time the ground is not frozen, but should not be done when it is extremely hot and dry" |
+| **No months are named on the site** | **Deliberate.** No CSU source gives a month range for the Front Range window, so it was left out rather than guessed |
+| **That Sixfold performs aeration and overseeding** | ⚑ **UNVERIFIED — the one open claim.** There is no aerator in `sixfold/operations/gear-checklist.md` and no aeration line in the quote engine. It rests only on the 2026-09-23 positioning change. **Brandon to confirm before this goes up** |
+| No price, rate or minimum for any of it | Standing rule, and `audit-links.mjs` enforces it |
+
+Sources: <https://planttalk.colostate.edu/topics/lawns/1505-lawn-aeration/> ·
+<https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/management-of-compaction-coring>
+
+---
+
 ## ⚑ WHERE THIS STANDS — end of 2026-09-21
 
 **The site is finished as a build. Nothing buildable is outstanding.** Nine pages,

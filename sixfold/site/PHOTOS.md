@@ -29,16 +29,48 @@ out to be **screenshots of DNS records**, not photographs.
 
 ## Where each one is used
 
+Reassigned 2026-09-24 for the aeration-led site. See §The turf gap below.
+
 | Asset | Page | Why this frame |
 |---|---|---|
 | `crew-felling` | home, fire card | Two of the crew working a tree with a rope. The best crew-at-work frame in any folder — people, tools and product in one shot |
 | `haul-truck` | home, clearing card | Truck bed loaded with slash. This is what "hauled off site" actually looks like |
-| `beds` | home, landscaping card | Gravel bed with grasses and plantings. Landscaping as its own service, not a clean-up |
+| `beds` | home, landscaping card · /services/ landscaping | Gravel bed with grasses and plantings. **Moved off the lawn card 2026-09-24** — it is beds and planting, which is what the landscaping card now sells |
+| `trimming` | home, **lawn card (PLACEHOLDER)** | Crew member in a hard hat cutting at a pine base. Picked for the lawn card only because it is the one frame with a real expanse of turf in it. **The work in it is not lawn care.** Replace |
 | `slash-line` | home, banner above the guide | The only frame wide enough to span the page |
 | `chipper` | /services/ fire | The machine that defines the trade |
 | `rounds` | /services/ clearing | Cut rounds — texture, reads well small |
-| `trimming` | /services/ landscaping | Crew member in a hard hat cutting at a pine base. No property in frame |
-| `limbing`, `stand` | not placed yet | Held in reserve — good frames, no slot that needed them |
+| `limbing`, `stand` | not placed yet | Held in reserve — good frames, no slot that needed them. **Both are in `DENY_UNUSED` in make-bundle.mjs** — placing one means taking it off that list too, or it will not ship |
+
+## ⚑ The turf gap — 2026-09-24
+
+**There is no lawn, turf or aeration photograph in the library.** Every frame is trees,
+slash, cut rounds or cleared ground; the one landscaping shot is a gravel bed. The site
+now leads with lawn and turf care, so the lead service is the one with no picture of
+itself.
+
+Two places are waiting on this, and both are commented in the HTML:
+
+- **home, lawn card** — carries `trimming.jpg` as a marked placeholder, because a card
+  in a row of four needs an image to hold its shape.
+- **`/services/#lawn`** — deliberately has **no photo at all**. That section describes
+  the service rather than teasing it, so a wrong picture costs more there than a gap.
+
+### Shot list
+
+Phone frames are fine — the whole set was shot that way. What is wanted, best first:
+
+1. **Plugs on the lawn after a pass.** Close, low, plugs in focus with the turf behind.
+   This is the one image that says "core aeration" and nothing else does.
+2. **The aerator working**, crew member behind it, plugs visible on the ground already
+   covered. Machine and product in one frame, the way `crew-felling` works for fire.
+3. **Before and after on the same strip**, shot from the same position. Needs a marker
+   in frame so the two line up.
+4. **A wide of a finished lawn** — for the landscaping/lawn banner slot.
+
+Same rules as the rest of the set: **show the work, not a recognisable frontage**, and
+no customer's house from the kerb without their say-so. Add each one to `PHOTOS` in
+`assets/img/build-photos.mjs` and re-run it rather than hand-cropping.
 
 ## Treatment
 

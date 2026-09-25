@@ -6,10 +6,15 @@
    TWO REGISTERS FROM ONE FILE (2026-09-17)
    ----------------------------------------
    Every component below reads semantic tokens (--ground, --ink, --label …)
-   rather than brand constants. `:root` holds the DARK values — unchanged from
-   the 2026-09-01 build, so the merch board renders exactly as it did.
-   `body.paper` reassigns the same tokens to the Bone register; the landing page
-   carries that class. Add `class="paper"` to flip a page, nothing else.
+   rather than brand constants. `:root` holds the DARK values; `body.paper`
+   reassigns the same tokens to the Bone register, which every page carries.
+   Add `class="paper"` to flip a page, nothing else.
+
+   ⚑ The dark register is NO LONGER "unchanged from the 2026-09-01 build", which
+   is what this note used to say. Palette A moved its accent off ember too, so
+   the tabled merch board in _tabled/merch/ now renders green. That is correct
+   — it is the same brand — but it is a change, and the board has not been
+   looked at since.
 
    Contrast, measured against Bone #EDE7DC (not eyeballed):
      Pine #16201C ink .............. 14.6:1
@@ -22,6 +27,28 @@
    rules, fills, marks, borders. Never type. The old --ember-ink #B84C15 was
    4.18:1 and failed as body-size link colour; --ember-text replaces it for type
    and #B84C15 is kept only where it is a large-text/graphic value.
+
+   ---- PALETTE A, adopted 2026-09-24 --------------------------------------
+   Aeration leads, so green leads. Ember is not deleted; it is given two jobs
+   and kept out of everything else:
+
+       1. the call to action — the one element asking to be clicked
+       2. fire mitigation — its card, its door, and the wildfire guide's key
+
+   Everything ember used to do by default — the logo mark, links, kickers, the
+   footer rule — is green now. Where ember survives it keeps full strength, so
+   Pine on Ember is still 5.89:1.
+
+   New ratios, computed against Bone #EDE7DC and Pine #0E1512:
+     Turf #2F7A4F .......... 4.25 on Bone   <- rules and marks. NOT type: 4.25
+                             3.54 on Pine      is under the 4.5 body text needs
+     Sage #A7BE93 .......... 1.64 on Bone   <- dark grounds ONLY
+                             9.19 on Pine      links and marks on Pine
+     Moss-text #4E6142 ..... 5.48 on Bone   <- the link colour on Bone, and the
+                                               same weight ember-text carried
+   The logo board's palette A names Turf as its deeper green. Its swatch ratios
+   were measured for the MARK; these are measured for type, which is why Turf
+   appears here as a rule colour and never as a link.
    ========================================================================== */
 
 :root {
@@ -32,6 +59,16 @@
   --ember-ink: #B84C15;   /* ember, large text / graphic, on a light ground */
   --moss:      #8AA07A;
   --bone:      #EDE7DC;
+
+  /* --- added 2026-09-24 with palette A ------------------------------------
+     Two greens the aeration-led palette needs and Moss alone could not give:
+       --turf  the deeper green that carries rules and marks on Bone, where
+               Moss (2.31) is too faint to define anything. 4.25 on Bone, so
+               it is STILL not type — see the ratio block above.
+       --sage  the light green for dark grounds, where Moss starts to muddy.
+               9.19 on Pine. Never used on Bone: 1.64. */
+  --turf:      #2F7A4F;
+  --sage:      #A7BE93;
 
   /* --- Bone-register derivations, contrast-checked above ------------------ */
   --paper:       #EDE7DC;
@@ -58,22 +95,29 @@
   --text-strong:  var(--bone);
   --text-soft:    rgba(237, 231, 220, 0.66);
   --label:        var(--moss);
-  --accent:       var(--ember);          /* fills, rules, marks */
-  --accent-text:  var(--ember);          /* type and links */
-  --accent-hover: #f0855a;
+  --accent:       var(--moss);           /* fills, rules, marks */
+  --accent-text:  var(--sage);           /* type and links — 9.19 on Pine */
+  --accent-hover: #C2D6AE;
   --line:         rgba(237, 231, 220, 0.14);   /* dividers */
   --edge:         rgba(237, 231, 220, 0.14);   /* panel + card borders */
   --head-bg:      rgba(14, 21, 18, 0.86);
   --hero-wash:    transparent;
 
-  --btn-solid-bg: var(--ember);
+  /* The surviving warm. Everything that is still ember under palette A points
+     at THIS, not at --ember, so the two jobs it kept are greppable and can be
+     changed together. --ember stays the raw constant. */
+  --warm:         var(--ember);
+  --warm-hover:   #f0855a;
+
+  --btn-solid-bg: var(--warm);
   --btn-solid-fg: var(--pine);
 
   /* the inverted band — flips against whatever the page register is */
   --band-ground:  var(--bone);
   --band-ink:     var(--pine);
   --band-text:    #3a4640;
-  --band-accent:  var(--ember-ink);
+  /* the band is BONE here, so its accent has to be text-grade on Bone */
+  --band-accent:  var(--moss-text);
 
   /* the footer is a dark anchor in both registers */
   --foot-bg:      #0a0f0d;
@@ -91,8 +135,8 @@ body.paper {
   --text-strong:  var(--ink);
   --text-soft:    var(--ink-soft);
   --label:        var(--moss-text);
-  --accent:       var(--ember);
-  --accent-text:  var(--ember-text);
+  --accent:       var(--turf);           /* rules and marks — 4.25, decorative */
+  --accent-text:  var(--moss-text);      /* links — 5.48, was ember-text's 5.01 */
   --accent-hover: var(--ink);
   --line:         var(--paper-rule);
   --edge:         var(--paper-edge);
@@ -103,7 +147,8 @@ body.paper {
   --band-ground:  var(--pine);
   --band-ink:     var(--bone);
   --band-text:    rgba(237, 231, 220, 0.74);
-  --band-accent:  var(--ember);
+  /* the band is PINE here, so Sage rather than the Bone-grade green */
+  --band-accent:  var(--sage);
 
   --foot-bg:      var(--pine);
 
@@ -125,14 +170,20 @@ body.paper .stat {
   --text-strong: var(--bone);
   --text-soft:   rgba(237, 231, 220, 0.66);
   --label:       var(--moss);
-  --accent:      var(--ember);
-  --accent-text: var(--ember);
-  --accent-hover: #f0855a;
+  --accent:      var(--moss);
+  --accent-text: var(--sage);
+  --accent-hover: #C2D6AE;
   --line:        rgba(237, 231, 220, 0.16);
   --edge:        rgba(237, 231, 220, 0.16);
   color: var(--text);
 }
-body.paper .stat { background: var(--pine); }
+/* The ~450 card is the tax-credit figure, which is fire content, so its numeral
+   is one of the places ember keeps — see the palette A note at the top. The
+   header above it is not, and goes green with everything else. */
+body.paper .stat {
+  background: var(--pine);
+  --accent-text: var(--warm);
+}
 
 /* the secondary CTA becomes the dark half of the pair — Ember and Pine together,
    which is the card and magnet lockup rather than a button and a ghost of one */
@@ -141,7 +192,7 @@ body.paper .btn-ghost {
   border-color: var(--pine);
   color: var(--bone);
 }
-body.paper .btn-ghost:hover { background: var(--ink); border-color: var(--ink); color: var(--ember); }
+body.paper .btn-ghost:hover { background: var(--ink); border-color: var(--ink); color: var(--warm); }
 
 /* 01 / 02 / 03 as Pine tiles: three dark beats down the left of the section */
 body.paper .steps .no {
@@ -365,7 +416,9 @@ small, .fine { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
 }
 .hero .lockup { display: flex; align-items: center; gap: 20px; margin-bottom: 34px; }
 .hero .lockup svg { width: 78px; height: auto; color: var(--accent); }
-body.paper .hero .lockup svg { color: var(--ember-ink); }
+/* The big hero mark. Ember-ink until 2026-09-24 — it is the single strongest
+   fire signal on the page, and under palette A it reads as a treeline instead. */
+body.paper .hero .lockup svg { color: var(--turf); }
 /* The layered master's opacity ramp was drawn for a Pine ground: at .42 the
    furthest ridge all but disappears on Bone. Raise the floor, keep the ramp —
    the receding peaks are the mark's whole idea, so flattening it is not the fix.
@@ -436,7 +489,10 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   font-family: var(--serif);
   font-size: clamp(19px, 2.4vw, 24px);
   color: var(--text-strong);
-  border-left: 3px solid var(--accent);
+  /* Moss from 2026-09-24, same reasoning as the card rules: the first accent
+     the eye meets on the page should not be the fire colour now that fire is
+     the fourth service. Decorative use, agreed constant, one word to revert. */
+  border-left: 3px solid var(--moss);
   padding-left: 18px;
   margin: 0 0 26px;
   max-width: 40ch;
@@ -456,7 +512,9 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   max-width: none;
 }
 .serviceline b { color: var(--text-strong); font-weight: 400; }
-.serviceline i { color: var(--accent); font-style: normal; padding: 0 4px; }
+/* --accent-text, not --accent: the separator is a glyph, and Turf at 4.25 is
+   under the bar for type however small the job looks. */
+.serviceline i { color: var(--accent-text); font-style: normal; padding: 0 4px; }
 
 .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 40px; }
 
@@ -471,7 +529,7 @@ body.paper .lockup .l3 { fill-opacity: .82; }
   border-radius: 2px;
 }
 .btn-solid { background: var(--btn-solid-bg); color: var(--btn-solid-fg); font-weight: 600; }
-.btn-solid:hover { background: #f0855a; color: var(--btn-solid-fg); }
+.btn-solid:hover { background: var(--warm-hover); color: var(--btn-solid-fg); }
 .btn-ghost { border: 1px solid var(--edge); color: var(--text-strong); }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent-text); }
 
@@ -547,6 +605,30 @@ body.paper .lockup .l3 { fill-opacity: .82; }
    padding-top instead, or a short card would close right up on its link. */
 .lines3 > div { display: flex; flex-direction: column; }
 .lines3 .card-cta { margin-top: auto; padding-top: 18px; font-size: 12px; }
+
+/* --- four services, 2026-09-24 ------------------------------------------
+   The home row carries four cards since lawn and turf care came in, so the
+   grid gets a 4-up variant rather than a second card component — everything
+   else about .lines3 (photo ratio, tags, bottom-aligned CTA) still applies.
+
+   Specificity: .lines3.lines4 is 0,2,0 and beats the plain .lines3 rules at
+   every width, so the phone breakpoint has to be restated here or a four-card
+   row would stay four cards wide on a phone.
+
+   1100px is where 4 × (1080-72)/4 = 252px cards start crowding their own
+   headings — "Lawn & turf care" wraps below it, which is fine, but the photo
+   stops carrying anything at that size. 2 × 2 from there. */
+.lines3.lines4 { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+@media (max-width: 1100px) { .lines3.lines4 { grid-template-columns: repeat(2, 1fr); gap: 22px; } }
+@media (max-width: 660px)  { .lines3.lines4 { grid-template-columns: 1fr; gap: 18px; } }
+
+/* The rule across the top of a card names which side of the business it is.
+
+   INVERTED 2026-09-24 with palette A. It used to be "moss on the growing
+   services, ember by default", because ember WAS the default. Now green is the
+   default and fire is the exception, which is the same idea the right way up
+   and one class instead of three. */
+.lines3 > div.s-fire { border-top-color: var(--warm); }
 
 .scope {
   margin-top: 28px;
@@ -633,10 +715,10 @@ body:not(.paper) .ridge-rule .near { fill: var(--bone); }
 
 /* --- footer ------------------------------------------------------- */
 
-.site-foot { border-top: 3px solid var(--ember); background: var(--foot-bg); color: var(--foot-ink); padding: 44px 0; }
+.site-foot { border-top: 3px solid var(--moss); background: var(--foot-bg); color: var(--foot-ink); padding: 44px 0; }
 .site-foot .wrap { display: flex; flex-wrap: wrap; gap: 24px 60px; justify-content: space-between; align-items: flex-start; }
 .site-foot .word { font-family: var(--serif); font-size: 26px; letter-spacing: -0.018em; color: var(--foot-ink); }
-.site-foot svg { color: var(--ember); }
+.site-foot svg { color: var(--sage); }
 .site-foot .fine { color: var(--foot-soft); max-width: 46ch; }
 .site-foot .fine a { color: var(--moss); }
 .site-foot .foot-mark { display: flex; align-items: center; gap: 12px; }
@@ -757,7 +839,7 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
   text-decoration: none;
   color: var(--foot-soft);
 }
-.foot-nav a:hover { color: var(--ember); }
+.foot-nav a:hover { color: var(--sage); }
 
 /* --- key/value facts ------------------------------------------------- */
 
@@ -845,7 +927,10 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 
 .ways3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
 @media (max-width: 700px) { .ways3 { grid-template-columns: 1fr; gap: 16px; } }
-.ways3 > div { border-top: 3px solid var(--accent); padding-top: 14px; }
+/* Warm, like the numbered key below it: .ways3 only appears on the wildfire
+   guide. Keeping that one page's accents ember is what makes the guide read as
+   the fire page of a green site, rather than an inconsistency. */
+.ways3 > div { border-top: 3px solid var(--warm); padding-top: 14px; }
 .ways3 h3 { font-size: 19px; margin-bottom: 4px; }
 .ways3 p { font-size: 15px; margin: 0; max-width: none; }
 
@@ -859,7 +944,10 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
   content: counter(k);
   position: absolute; left: 0; top: 1px;
   width: 26px; height: 26px; border-radius: 50%;
-  background: var(--accent); color: var(--pine);
+  /* Ember, not --accent: this key sits on the wildfire guide's house drawing,
+     which is fire content. It also keeps the contrast — Pine on Ember is 5.89,
+     where Pine on Turf would be 3.54 and this numeral is 12px. */
+  background: var(--warm); color: var(--pine);
   font-family: var(--mono); font-size: 12px; font-weight: 600;
   display: flex; align-items: center; justify-content: center;
 }
@@ -980,8 +1068,13 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
 
 .doors { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 @media (max-width: 860px) { .doors { grid-template-columns: 1fr; gap: 48px; } }
+/* The rule names which side of the business the door is, the same way the
+   service cards do. It was `.door:nth-child(2)` until 2026-09-24 — POSITIONAL,
+   so putting the lawn door first silently handed it the fire colour and gave
+   fire the moss one. Both auditors passed that; only the render showed it.
+   Keyed to the content now, so the doors can be reordered again safely. */
 .door { border-top: 3px solid var(--accent); padding-top: 22px; }
-.door:nth-child(2) { border-top-color: var(--label); }
+.door.d-fire { border-top-color: var(--warm); }
 .door h2 { font-size: clamp(24px, 3vw, 30px); }
 .door .stat { margin: 22px 0 6px; max-width: none; }
 .door .more { margin-top: 18px; }
@@ -1031,7 +1124,7 @@ body.paper .site-head .nav a[aria-current="page"] { color: var(--bone); }
   color: var(--text); margin: 0;
 }
 .form .need label:has(input:checked) { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
-.form .need input { width: auto; margin: 4px 0 0; accent-color: var(--ember); flex: none; }
+.form .need input { width: auto; margin: 4px 0 0; accent-color: var(--turf); flex: none; }
 .need span b { display: block; font-weight: 600; color: var(--text-strong); font-size: 16px; }
 .need span small { display: block; font-size: 13px; color: var(--text-soft); line-height: 1.4; margin-top: 2px; }
 

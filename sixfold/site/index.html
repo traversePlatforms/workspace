@@ -20,8 +20,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sixfold Colorado — Fire mitigation, land clearing, landscaping</title>
-  <meta name="description" content="Fire mitigation, land clearing and landscaping on Colorado's Front Range, from Monument. Three services — book any one of them, or all three.">
+  <title>Sixfold Colorado — Lawn aeration, landscaping, land clearing</title>
+  <meta name="description" content="Lawn aeration, landscaping, land clearing and fire mitigation on Colorado's Front Range, from Monument. Four services — book any one, or all four.">
 
 <!-- SEO:SCHEMA — outside CHROME:META on purpose: this block differs per page, and the
      drift auditor compares CHROME:META byte for byte across all six.
@@ -54,7 +54,7 @@
   "url": "https://sixfoldcolorado.com/",
   "image": "https://sixfoldcolorado.com/assets/og-image.jpg",
   "name": "Sixfold Colorado",
-  "description": "Fire mitigation, land clearing and landscaping on Colorado's Front Range.",
+  "description": "Lawn aeration and turf care, landscaping, land clearing and fire mitigation on Colorado's Front Range.",
   "telephone": "+1-303-915-1045",
   "email": "Contact@SixfoldColorado.com",
   "address": {
@@ -80,7 +80,7 @@
     { "@type": "City", "name": "Sedalia, Colorado" },
     { "@type": "City", "name": "Castle Rock, Colorado" }
   ],
-  "knowsAbout": ["Wildfire mitigation", "Defensible space", "Land clearing", "Landscaping"]
+  "knowsAbout": ["Lawn aeration", "Core aeration", "Lawn care", "Overseeding", "Landscaping", "Land clearing", "Wildfire mitigation", "Defensible space"]
 }
 </script>
 <!-- /SEO:SCHEMA -->
@@ -122,11 +122,10 @@
   <div class="wrap">
     <a class="brand" href="/">
       <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
-      <b>Sixfold Colorado</b><span>Land &amp; Fire</span>
+      <b>Sixfold Colorado</b>
     </a>
     <nav class="nav">
       <a href="/services/">Services</a>
-      <a href="/who-pays/">Mitigation funding</a>
       <a href="/wildfire-guide/">Wildfire guide</a>
       <a class="nav-cta" href="/contact/">Contact</a>
     </nav>
@@ -166,27 +165,35 @@
           <path class="rootline r10" d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
         </g>
       </svg>
-      <!-- The wordmark and the descriptor are baseline-aligned to each other inside
-           .names, then that pair is centred against the mark. Before this they were two
-           separate items in the 78px-tall flex row — the wordmark centred, the descriptor
-           flex-end — which sat "Land & Fire" about 13px below the wordmark's baseline. -->
+      <!-- The wordmark and the descriptor were baseline-aligned to each other inside
+           .names, then that pair centred against the mark.
+
+           ⚑ The descriptor is GONE as of 2026-09-24, here and in the header. "Land &
+           Fire" names the service that has just been demoted and neither of the two
+           promoted ones. It is not replaced with another fixed descriptor: the service
+           line directly below carries the register and costs nothing to change, where a
+           descriptor locked into the lockup has now been printed once already.
+
+           This is the one brand-level call in the 2026-09-24 pass and it is Brandon's
+           to confirm — the crew shirt and every business card option still carry it.
+           .brand span and .hero .lockup .desc are left in the stylesheet for that
+           reason; put the span back and they work. -->
       <span class="names">
         <span class="word">Sixfold Colorado</span>
-        <span class="desc">Land &amp; Fire</span>
       </span>
     </div>
 
     <!-- The h1 sits ABOVE .hero-grid so it runs the full column width. Inside the
          grid's 1.12fr left cell it broke over four short lines and left the right
          of the fold empty. -->
-    <h1>Fire mitigation, land clearing and landscaping on Colorado's Front Range.</h1>
+    <h1>Lawn aeration, landscaping and land clearing on Colorado's Front Range.</h1>
 
     <div class="hero-grid">
       <div>
-        <p class="say">Each service stands on its own. Book one, two, or all three.</p>
+        <p class="say">Each service stands on its own. Book any one of them, or all four.</p>
 
         <p class="serviceline">
-          <b>Fire mitigation</b><i>·</i><b>Land clearing</b><i>·</i><b>Landscaping</b>
+          <b>Lawn &amp; turf care</b><i>·</i><b>Landscaping</b><i>·</i><b>Land clearing</b><i>·</i><b>Fire mitigation</b>
         </p>
 
         <div class="cta">
@@ -213,17 +220,44 @@
     <p class="kicker">The work</p>
     <h2>Each one is a job in its own right.</h2>
 
-    <div class="lines3">
+    <!-- Four cards as of 2026-09-24, ORDER doing the work: lawn and turf first, fire
+         last. Order is the honest lever here — the four stay visually equal, because
+         "any one of them, or all four" is still the rule and demoting fire into a
+         lesser-looking block would just invert the banned after-job framing.
+
+         The card rules follow palette A, adopted 2026-09-24: green is the default and
+         `.s-fire` is the exception. Ember kept exactly two jobs on this site — the call
+         to action, and fire mitigation — so the fire card is one of the few places it
+         still appears. See the palette A note at the top of assets/site.css. -->
+    <div class="lines3 lines4">
       <div>
+        <!-- ⚑ PLACEHOLDER PHOTO. There is no lawn, turf or aeration frame anywhere in
+             the library. This is the job-2 trimming shot, picked because it is the only
+             frame in the set with a real expanse of turf in it — but the work in it is
+             a crew member cutting at a pine, which is not the service this card sells.
+             Replace it. Shot list: PHOTOS.md §The turf gap. -->
         <picture class="ph">
-        <source type="image/webp" srcset="/assets/img/crew-felling.webp">
-        <img src="/assets/img/crew-felling.jpg" alt="Two of the Sixfold crew taking down a pine with a rope, cut rounds stacked beside them" loading="lazy" decoding="async" width="1000" height="667">
+        <source type="image/webp" srcset="/assets/img/trimming.webp">
+        <img src="/assets/img/trimming.jpg" alt="A Sixfold crew member in a hard hat working at the base of a pine on a grassed property" loading="lazy" decoding="async" width="1000" height="667">
       </picture>
-        <h3>Fire mitigation</h3>
-        <p>Defensible space and fuel breaks around what you want protected, worked to
-        Colorado State Forest Service standards for spacing and clearance.</p>
-        <p class="tags">Felling · Trimming · Slash &amp; chip · Stumps · Defensible space</p>
-        <p class="more card-cta"><a href="/contact/?need=fire">Book a fire mitigation walk →</a></p>
+        <h3>Lawn &amp; turf care</h3>
+        <p>Core aeration to open up compacted ground, and the regular keeping that goes
+        with it.</p>
+        <p class="tags">Core aeration · Overseeding · Mowing · Edging · Sod &amp; seed</p>
+        <p class="more card-cta"><a href="/contact/?need=lawn">Book a lawn walk →</a></p>
+      </div>
+      <div>
+        <!-- The gravel bed moved here from the lawn card on 2026-09-24: beds and
+             planting is what this card now sells, and it is what the photo shows. -->
+        <picture class="ph">
+        <source type="image/webp" srcset="/assets/img/beds.webp">
+        <img src="/assets/img/beds.jpg" alt="A gravel bed with ornamental grasses and plantings alongside a concrete path" loading="lazy" decoding="async" width="1000" height="667">
+      </picture>
+        <h3>Landscaping</h3>
+        <p>Beds and planting, shrub and hedge trimming, clean-up and haul-away, and
+        more.</p>
+        <p class="tags">Beds · Planting · Shrubs &amp; hedges · Clean-up · Haul-away</p>
+        <p class="more card-cta"><a href="/contact/?need=landscaping">Book a landscaping walk →</a></p>
       </div>
       <div>
         <picture class="ph">
@@ -236,16 +270,16 @@
         <p class="tags">Brush removal · Undergrowth · Dead fall · Chip, haul, or leave</p>
         <p class="more card-cta"><a href="/contact/?need=clearing">Book a land clearing walk →</a></p>
       </div>
-      <div>
+      <div class="s-fire">
         <picture class="ph">
-        <source type="image/webp" srcset="/assets/img/beds.webp">
-        <img src="/assets/img/beds.jpg" alt="A gravel bed with ornamental grasses and plantings alongside a concrete path" loading="lazy" decoding="async" width="1000" height="667">
+        <source type="image/webp" srcset="/assets/img/crew-felling.webp">
+        <img src="/assets/img/crew-felling.jpg" alt="Two of the Sixfold crew taking down a pine with a rope, cut rounds stacked beside them" loading="lazy" decoding="async" width="1000" height="667">
       </picture>
-        <h3>Landscaping</h3>
-        <p>Mowing, edging, beds and planting, sod and seed, shrub and hedge trimming,
-        and more.</p>
-        <p class="tags">Mowing · Edging · Beds · Planting · Sod &amp; seed</p>
-        <p class="more card-cta"><a href="/contact/?need=landscaping">Book a landscaping walk →</a></p>
+        <h3>Fire mitigation</h3>
+        <p>Defensible space and fuel breaks around what you want protected, worked to
+        Colorado State Forest Service standards for spacing and clearance.</p>
+        <p class="tags">Felling · Trimming · Slash &amp; chip · Stumps · Defensible space</p>
+        <p class="more card-cta"><a href="/contact/?need=fire">Book a fire mitigation walk →</a></p>
       </div>
     </div>
 
@@ -256,7 +290,25 @@
        detail — the home page stays neutral and hands off. -->
   <section id="doors" class="wrap">
     <div class="doors">
+      <!-- ⚑ DO NOT put the handover packet here. It was on the home one-pager, came
+           off in df5fb7a, and Matthew's reason on 2026-09-21 is that it reads as
+           AGGRESSIVE — "whether or not you ask for it", "the same folder every
+           time". It was re-added during the redundancy pass without checking why it
+           had left, and removed again the same day. The packet lives on
+           /services/#packet, which is where someone has gone looking for it.
+
+           This door restating the cards above it is a known, accepted cost — his
+           call, same as the card's own wording. Widened 2026-09-24 from landscaping
+           alone to the lawn-and-landscaping pair, and moved above the fire door. -->
       <div class="door">
+        <p class="kicker">If it's the lawn and the yard</p>
+        <h2>A yard worth walking out into.</h2>
+        <p>Core aeration and overseeding, mowing and edging, beds and planting, sod and
+        seed, shrub and hedge trimming, clean-up and haul-away. Tell us how you want the
+        ground kept and we'll walk it with you.</p>
+        <p class="more"><a href="/services/#lawn">Everything lawn and landscaping covers →</a></p>
+      </div>
+      <div class="door d-fire">
         <p class="kicker">If it's fire mitigation</p>
         <!-- This is the teaser; /who-pays/ is the treatment. It used to open with the
              same sentence as that page's <h1> and carry the same stat with the same
@@ -280,23 +332,6 @@
           <p class="src">2026 legislative evaluation of C.R.S. 39-22-543</p>
         </div>
         <p class="more"><a href="/who-pays/">The figures, the income limits and the deadlines →</a></p>
-      </div>
-      <div class="door">
-        <!-- ⚑ DO NOT put the handover packet here. It was on the home one-pager, came
-             off in df5fb7a, and Matthew's reason on 2026-09-21 is that it reads as
-             AGGRESSIVE — "whether or not you ask for it", "the same folder every
-             time". It was re-added during the redundancy pass without checking why it
-             had left, and removed again the same day. The packet lives on
-             /services/#packet, which is where someone has gone looking for it.
-
-             This door restating the landscaping card above it is a known, accepted
-             cost — his call, same as the card's own wording. -->
-        <p class="kicker">If it's landscaping</p>
-        <h2>A yard worth walking out into.</h2>
-        <p>Mowing, edging, beds, planting, sod and seed, shrub and hedge trimming,
-        clean-up and haul-away, and more. Tell us how you want the ground kept and we'll
-        walk it with you.</p>
-        <p class="more"><a href="/services/#landscaping">Everything landscaping covers →</a></p>
       </div>
     </div>
   </section>
@@ -364,7 +399,7 @@
         <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
         <div class="word">Sixfold Colorado</div>
       </div>
-      <p class="fine">Fire mitigation · Land clearing · Landscaping<br>
+      <p class="fine">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation<br>
       El Paso · Teller · Douglas · (303) 915-1045</p>
     </div>
     <nav class="foot-nav">

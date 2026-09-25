@@ -19,7 +19,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact — Sixfold Colorado</title>
-  <meta name="description" content="Tell Sixfold Colorado what's on the property — fire mitigation, land clearing or landscaping — and we'll arrange a walk at a time that suits you.">
+  <meta name="description" content="Tell Sixfold Colorado what's on the property — lawn and turf care, landscaping, land clearing or fire mitigation — and we'll arrange a walk at a time that suits you.">
   <link rel="canonical" href="https://sixfoldcolorado.com/contact/">
   <meta property="og:url" content="https://sixfoldcolorado.com/contact/">
 <!-- CHROME:META -->
@@ -58,11 +58,10 @@
   <div class="wrap">
     <a class="brand" href="/">
       <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
-      <b>Sixfold Colorado</b><span>Land &amp; Fire</span>
+      <b>Sixfold Colorado</b>
     </a>
     <nav class="nav">
       <a href="/services/">Services</a>
-      <a href="/who-pays/">Mitigation funding</a>
       <a href="/wildfire-guide/">Wildfire guide</a>
       <a class="nav-cta" href="/contact/" aria-current="page">Contact</a>
     </nav>
@@ -105,21 +104,28 @@
 
         <fieldset class="need">
           <legend class="kicker">What do you need?</legend>
+          <!-- Order follows the site: lawn and turf first, fire last. The CHECKED
+               one is the default prompt under the message box, so it has to stay in
+               step with the data-prompt-* the label carries by default. -->
           <label>
-            <input type="radio" name="need" value="fire" checked>
-            <span><b>Fire mitigation</b><small>Trees down, brush out, defensible space, thinning</small></span>
+            <input type="radio" name="need" value="lawn" checked>
+            <span><b>Lawn &amp; turf care</b><small>Aeration, overseeding, mowing, edging, sod and seed</small></span>
+          </label>
+          <label>
+            <input type="radio" name="need" value="landscaping">
+            <span><b>Landscaping</b><small>Beds, planting, shrubs and hedges, clean-up</small></span>
           </label>
           <label>
             <input type="radio" name="need" value="clearing">
             <span><b>Land clearing</b><small>Brush, undergrowth and dead fall off a lot, pasture or easement</small></span>
           </label>
           <label>
-            <input type="radio" name="need" value="landscaping">
-            <span><b>Landscaping</b><small>Mowing, edging, beds, planting, clean-up</small></span>
+            <input type="radio" name="need" value="fire">
+            <span><b>Fire mitigation</b><small>Trees down, brush out, defensible space, thinning</small></span>
           </label>
           <label>
             <input type="radio" name="need" value="multiple">
-            <span><b>More than one</b><small>Any combination of the three</small></span>
+            <span><b>More than one</b><small>Any combination of the four</small></span>
           </label>
           <label>
             <input type="radio" name="need" value="question">
@@ -137,11 +143,12 @@
         </div>
         <div class="row">
           <div>
-            <label for="c-message" data-prompt-fire="What's on the property, roughly — how many trees, how much ground, and what you'd like gone"
+            <label for="c-message" data-prompt-lawn="Roughly how big the lawn is, and how it's been kept so far"
+                                  data-prompt-fire="What's on the property, roughly — how many trees, how much ground, and what you'd like gone"
                                   data-prompt-clearing="Roughly how much ground, what's on it now, and what you want it clear for"
                                   data-prompt-landscaping="What needs doing, and roughly how big an area"
                                   data-prompt-multiple="What's there now, and what you'd like it to look like when we leave"
-                                  data-prompt-question="What would you like to know?">What's on the property, roughly — how many trees, how much ground, and what you'd like gone</label>
+                                  data-prompt-question="What would you like to know?">Roughly how big the lawn is, and how it's been kept so far</label>
             <textarea id="c-message" name="message" rows="5" required></textarea>
           </div>
         </div>
@@ -188,7 +195,7 @@
         <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold"><use href="#ridge-flat"/></svg>
         <div class="word">Sixfold Colorado</div>
       </div>
-      <p class="fine">Fire mitigation · Land clearing · Landscaping<br>
+      <p class="fine">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation<br>
       El Paso · Teller · Douglas · (303) 915-1045</p>
     </div>
     <nav class="foot-nav">
