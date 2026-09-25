@@ -16,10 +16,17 @@
 | 3 | [The first five feet](03-first-five-feet-post.md) | 78% of buildings with heavy vegetation in that strip were destroyed | Any time. The evergreen one |
 | 4 | [What happens to the pile](04-when-you-cut-post.md) | Green slash is beetle habitat, and the month you cut matters | **Sept–Nov.** Sets up the dormant-season sell |
 | 5 | [Grass, not forest](05-grass-not-forest-post.md) | 6,000 acres. 1,084 homes. December | Any time; strongest for plains-edge subdivisions |
+| 6 | [Core aeration](06-aeration-post.md) | Water it two days before, and the plugs are meant to stay | **Now**, and again in spring. The first non-fire post |
 
 Each file carries the post, alternate hooks, the lines cut with the reason, and a fact-check log.
 
-**To read the whole set:** [content-set.html](content-set.html) — all five, designed, standalone. Double-click to open in a browser.
+**To read the whole set:** [content-set.html](content-set.html) — all **six**, designed, standalone. Double-click to open in a browser.
+**Printed:** [Sixfold-Content-Set.pdf](Sixfold-Content-Set.pdf) — 14 pages, built 2026-09-25 via `../tools/html-to-pdf.mjs Content-Set`. The set had no PDF job before.
+
+> ⚑ **The published artifact is now behind this file.** Post 6 was added to `content-set.html`
+> on 2026-09-25 and the corrections section renumbered from 06 to 07. The artifact below still
+> shows five posts. **Republishing is a separate decision and has not been done** — it needs the
+> existing URL passed as `url`, not a new artifact.
 **Published artifact:** https://claude.ai/code/artifact/fd575b38-87b4-40a1-b6be-f0bbab80aae8 (2026-08-19). Private until shared. To update it, edit `content-set.html`, rebuild the unwrapped copy, and republish **passing that URL as `url`** — do not create a new one. Presentation layer only: the `.md` files are the source, edit those and re-sync. Built on the shared style block from [../marketing/marketing-plan.html](../marketing/marketing-plan.html), extended for the post blocks, never restyled.
 
 ---
@@ -31,7 +38,9 @@ From [../marketing/marketing-plan.md](../marketing/marketing-plan.md) §1 and §
 - **Information first.** The change in the law, what it means, here is the thing you can read yourself. No urgency theatre, no fear selling, no premium promises.
 - **No "licensed and insured"**, no certification or NFPA/Firewise claim, anywhere — bios and posts included.
 - **No county cost-share named** until Sixfold is on an approved list.
-- **No aeration.** Fire is the only line described.
+- ~~**No aeration.** Fire is the only line described.~~ **Superseded 2026-09-23**, when aeration
+  became the line Sixfold leads with. Applies to posts 1–5 as written; **post 6 is aeration and
+  carries no fire content at all.** Every other rule in this list still applies to all six.
 - **Tax and insurance language is descriptive, never advisory**, and every post points the reader to their own accountant or carrier.
 - **No implied track record.** Sixfold has no completed jobs, no portfolio and no reviews yet, and none of these posts pretend otherwise.
 - **Nextdoor punishes selling.** Four of the five close on an offer to explain something rather than an offer to quote.

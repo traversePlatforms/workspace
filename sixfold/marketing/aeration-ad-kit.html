@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Aeration Ad Kit</title>
+<!-- Style block lifted verbatim from ad-script-kit.html on 2026-09-25 so the two
+     marketing sheets start identical. Folder convention is one standalone file per
+     document; edit this copy directly from here on.
+
+     ⚑ It is the EMBER palette, not palette A. Palette A was adopted on 2026-09-24
+     for the WEBSITE only — the ~133 other files carrying an ember value move in one
+     coordinated pass once the mark is settled. Repainting this sheet alone would
+     make it the odd one out of the marketing set. -->
+<style>
+  /* ---- Tokens: dark-first, shared with the marketing plan sheet ---- */
+  :root {
+    --ground: #0E1512;
+    --surface: #18211D;
+    --lift: #1F2A25;
+    --seam: #2E3D35;
+    --ink: #EDE7DC;
+    --ink-dim: #B4BEB3;
+    --ink-faint: #869184;
+    --ember: #E4703A;
+    --ember-quiet: rgba(228,112,58,0.14);
+    --moss: #8AA07A;
+    --moss-quiet: rgba(138,160,122,0.13);
+
+    --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 66ch;
+    --pad: clamp(1.1rem, 4vw, 2.6rem);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #EDE7DC;
+      --surface: #E5DED1;
+      --lift: #DCD4C4;
+      --seam: #C6BCA9;
+      --ink: #0E1512;
+      --ink-dim: #3E4A43;
+      --ink-faint: #6A766E;
+      --ember: #B84C15;
+      --ember-quiet: rgba(184,76,21,0.10);
+      --moss: #4F6640;
+      --moss-quiet: rgba(79,102,64,0.10);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #EDE7DC;
+    --surface: #E5DED1;
+    --lift: #DCD4C4;
+    --seam: #C6BCA9;
+    --ink: #0E1512;
+    --ink-dim: #3E4A43;
+    --ink-faint: #6A766E;
+    --ember: #B84C15;
+    --ember-quiet: rgba(184,76,21,0.10);
+    --moss: #4F6640;
+    --moss-quiet: rgba(79,102,64,0.10);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--pad) 5rem; }
+
+  /* ---- Masthead ---- */
+  .masthead { padding: 3rem 0 1.6rem; border-bottom: 1px solid var(--seam); }
+  .eyebrow {
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin: 0 0 0.9rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: clamp(2rem, 5.2vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-size: 1.06rem;
+    color: var(--ink-dim);
+    max-width: var(--measure);
+    margin: 0 0 1.4rem;
+  }
+  .stamp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    padding-bottom: 1.4rem;
+  }
+  .stamp b { color: var(--ink-dim); font-weight: 500; }
+
+  /* ---- Sections ---- */
+  section { padding-top: 2.9rem; }
+  .sec-head { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.4rem; }
+  .sec-num {
+    font-family: var(--f-data);
+    font-size: 0.7rem;
+    color: var(--ember);
+    letter-spacing: 0.1em;
+    padding-top: 0.15rem;
+  }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede { color: var(--ink-dim); max-width: var(--measure); margin: 0.5rem 0 1.3rem; }
+  p { max-width: var(--measure); }
+
+  /* ---- The thesis block ---- */
+  .thesis {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    border-left: 3px solid var(--ember);
+    padding: 1.5rem 1.6rem;
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 0.4rem;
+  }
+  .thesis dl { margin: 0; display: grid; gap: 0.75rem; }
+  @media (min-width: 720px) { .thesis dl { grid-template-columns: 9.5rem 1fr; gap: 0.75rem 1.4rem; } }
+  .thesis dt {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-top: 0.28rem;
+  }
+  .thesis dd { margin: 0; font-size: 1.02rem; }
+  .thesis dd small { display: block; color: var(--ink-faint); font-size: 0.82rem; margin-top: 0.15rem; }
+
+  /* ---- Checklist ---- */
+  ul.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  ul.check li {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.7rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 0.8rem 0.95rem;
+  }
+  ul.check li::before {
+    content: "";
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-top: 0.28rem;
+    border: 1.5px solid var(--ink-faint);
+    display: block;
+  }
+  ul.check li.gate::before { border-color: var(--ember); box-shadow: inset 0 0 0 2px var(--ember-quiet); }
+  ul.check .t { font-weight: 600; }
+  ul.check .d { display: block; color: var(--ink-dim); font-size: 0.9rem; margin-top: 0.18rem; }
+  ul.check .d em { color: var(--ember); font-style: normal; }
+
+  /* ---- Card grid ---- */
+  .grid { display: grid; gap: 0.9rem; }
+  @media (min-width: 760px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 760px) { .grid.three { grid-template-columns: repeat(3, 1fr); } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 1.1rem 1.15rem;
+  }
+  .card h3 {
+    font-family: var(--f-data);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--seam);
+  }
+  .card.have h3 { color: var(--moss); }
+  .card.gap h3 { color: var(--ember); }
+  .card ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+  .card li { font-size: 0.93rem; }
+  .card p { font-size: 0.93rem; margin: 0.6rem 0 0; color: var(--ink-dim); }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--seam); }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 0.68rem 0.9rem; border-bottom: 1px solid var(--seam); vertical-align: top; }
+  thead th {
+    background: var(--lift);
+    font-family: var(--f-data);
+    font-size: 0.64rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- Cut list ---- */
+  ul.cut { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+  ul.cut li {
+    display: grid;
+    grid-template-columns: 1.4rem 1fr;
+    gap: 0.6rem;
+    padding: 0.62rem 0;
+    border-bottom: 1px solid var(--seam);
+  }
+  ul.cut li::before {
+    content: "\00d7";
+    color: var(--ink-faint);
+    font-family: var(--f-data);
+    line-height: 1.5;
+  }
+  ul.cut b { font-weight: 600; color: var(--ink); }
+  ul.cut span { color: var(--ink-dim); }
+
+  /* ---- Sequence ---- */
+  ol.seq { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0; }
+  ol.seq li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.9rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--seam);
+  }
+  ol.seq li::before {
+    content: counter(s, decimal-leading-zero);
+    font-family: var(--f-data);
+    font-size: 0.78rem;
+    color: var(--ember);
+    padding-top: 0.16rem;
+  }
+  ol.seq .txt { min-width: 0; }
+  ol.seq b { display: block; }
+  ol.seq .txt span { display: block; color: var(--ink-dim); font-size: 0.93rem; margin-top: 0.12rem; }
+
+  /* ---- Forbidden lines ---- */
+  .forbid { display: grid; gap: 0.7rem; }
+  .forbid div {
+    border-left: 3px solid var(--ember);
+    background: var(--ember-quiet);
+    padding: 0.75rem 1rem;
+  }
+  .forbid q { display: block; font-family: var(--f-display); font-size: 1.05rem; }
+  .forbid small { display: block; color: var(--ink-dim); margin-top: 0.3rem; font-size: 0.87rem; }
+
+  /* ---- Callout ---- */
+  .note {
+    border: 1px dashed var(--seam);
+    background: var(--moss-quiet);
+    padding: 1rem 1.15rem;
+    margin-top: 1.2rem;
+  }
+  .note p { margin: 0; font-size: 0.93rem; max-width: none; }
+  .note b { color: var(--moss); }
+
+  footer {
+    margin-top: 3.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--seam);
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+  }
+  footer p { max-width: var(--measure); }
+  footer b { color: var(--ink-dim); font-weight: 500; }
+
+  a { color: var(--ember); }
+  a:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    section { break-inside: avoid; }
+    .card, ul.check li, .thesis { border-color: #999; background: #fff; }
+  }
+
+  /* ============================================================
+     Extensions for the ad script kit. The block above is the
+     shared Sixfold sheet system, lifted verbatim from
+     minimum-viable-start.html — do not restyle it, only add.
+     ============================================================ */
+
+  /* ---- Sub-heading inside a section ---- */
+  h3.sub {
+    font-family: var(--f-data);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moss);
+    font-weight: 700;
+    margin: 2rem 0 0.7rem;
+  }
+
+  /* ---- Worked script. Set wider and looser than body copy: it is
+     meant to be read aloud off the page, not scanned. ---- */
+  .script {
+    border-left: 3px solid var(--ember);
+    background: var(--surface);
+    padding: 1.1rem 1.3rem;
+  }
+  .script p {
+    font-family: var(--f-display);
+    font-size: 1.06rem;
+    line-height: 1.55;
+    margin: 0 0 0.85rem;
+    max-width: 54ch;
+  }
+  .script p:last-child { margin-bottom: 0; }
+  .script em { color: var(--ink-faint); font-style: normal; font-family: var(--f-data); font-size: 0.85rem; }
+  .script .meta {
+    font-family: var(--f-data);
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--seam);
+    padding-top: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  /* ---- One impulse lever ---- */
+  .lever {
+    border-top: 1px solid var(--seam);
+    padding-top: 1.2rem;
+    margin-top: 1.5rem;
+  }
+  .lever h3 {
+    font-family: var(--f-display);
+    font-size: 1.14rem;
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+    color: var(--ink);
+  }
+  .lever p { margin: 0 0 0.7rem; font-size: 0.95rem; }
+
+  /* ---- Quotable lines. The display face marks them as speech
+     rather than instruction — the difference matters on a sheet
+     where most of the text is telling someone what not to do. ---- */
+  ul.bank { list-style: none; margin: 0.7rem 0 0.9rem; padding: 0; display: grid; gap: 0.4rem; }
+  ul.bank li {
+    font-family: var(--f-display);
+    font-size: 1.02rem;
+    line-height: 1.45;
+    color: var(--ink);
+    border-left: 2px solid var(--moss);
+    padding: 0.3rem 0 0.3rem 0.8rem;
+  }
+  ul.bank li em { color: var(--ink-faint); font-style: normal; font-family: var(--f-data); font-size: 0.82rem; }
+
+  ul.plain { margin: 0.6rem 0 0.9rem; padding-left: 1.1rem; display: grid; gap: 0.45rem; }
+  ul.plain li { font-size: 0.95rem; }
+
+  .never {
+    background: var(--ember-quiet);
+    border-left: 3px solid var(--ember);
+    padding: 0.6rem 0.9rem;
+    font-size: 0.9rem;
+    margin: 0.4rem 0 0;
+    max-width: none;
+  }
+  .never q { font-style: italic; }
+
+  /* ---- A group in the line bank ---- */
+  .bankgroup {
+    background: var(--surface);
+    border: 1px solid var(--seam);
+    padding: 0.95rem 1.1rem 1.1rem;
+  }
+  .bankgroup h3 {
+    font-family: var(--f-data);
+    font-size: 0.63rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ember);
+    font-weight: 700;
+    margin: 0 0 0.2rem;
+  }
+  .bankgroup ul.bank { margin-top: 0.5rem; margin-bottom: 0; }
+
+  @media print {
+    /* This sheet is far longer than a page, so sections cannot be held
+       whole the way the shorter sheets hold them. Hold the parts instead. */
+    section { break-inside: auto; }
+    .script, .lever, .bankgroup, .card, .note, .forbid div { break-inside: avoid; }
+    /* A section heading must never be the last thing on a page. */
+    .sec-head, .lede, h3.sub, .bankgroup h3, .lever h3 { break-after: avoid-page; }
+    .sec-head, .lede { break-inside: avoid-page; }
+    /* Grid list items collapse to one word per line if they are ever
+       fragmented across a page break — block them out for print. The
+       markers are put back inline so the numbers and boxes still print. */
+    ul.check li, ol.seq li, ul.cut li { display: block; }
+    ul.check li::before, ol.seq li::before, ul.cut li::before {
+      display: inline-block;
+      margin-right: 0.55rem;
+      vertical-align: baseline;
+      margin-top: 0;
+    }
+    ul.check .t, ol.seq b { font-weight: 700; display: inline; }
+    .script, .bankgroup, .card, .thesis { background: #fff; border-color: #999; }
+    ul.bank li { border-left-color: #666; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Sixfold LLC &middot; Land &amp; Fire &middot; internal</p>
+    <h1>Aeration ad kit &mdash; search, social and a filmed ad</h1>
+    <p class="standfirst">The assets for a fall aeration push: a responsive search ad written to Google's limits, the negative keywords that stop it paying for septic tanks, and a thirty-second film built around the one shot nobody else uses. Every line traces to a source in &sect;08.</p>
+    <div class="stamp">
+      <span><b>Prepared</b> 25 Sep 2026</span>
+      <span><b>Companion</b> content post 06 &middot; aeration</span>
+      <span><b>Status</b> draft &mdash; nothing placed, filmed or scheduled</span>
+    </div>
+  </header>
+
+  <div class="note" style="margin-top:1.6rem">
+    <p><b>No budget is committed and no account exists.</b> Two gates in &sect;02 come before this spends anything.</p>
+  </div>
+
+  <section id="carryover">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Why the existing ad kit does not carry over</h2></div>
+    <p class="lede">There is no money story for a lawn.</p>
+    <p>The Ad Script Kit runs on one idea: every competitor sells the work, nobody sells the money. Four parties will pay for fire mitigation and almost no homeowner knows it, so the ad is about the money rather than the chainsaw.</p>
+    <p>Aeration has none of that. No tax credit, no insurer discount, no county cost-share, no grant. Reskinning that kit would produce the same ad with its engine taken out.</p>
+    <div class="note">
+      <p><b>What transfers is the shape of the idea, not its content.</b> Be the one that turns up knowing how the work actually goes. For aeration that is a smaller and truer gap: everyone sells a pass over the lawn, and nobody explains what it does, when it works, or why the plugs are left lying there.</p>
+    </div>
+    <div class="grid two" style="margin-top:1.2rem">
+      <div class="card">
+        <h3>Water it two days before</h3>
+        <p>Dry ground will not give up a deep plug, and a shallow pass does very little. Useful to the reader whether or not they ever call.</p>
+      </div>
+      <div class="card">
+        <h3>The plugs are meant to stay</h3>
+        <p>They look untidy for a fortnight and then break down back into the turf. That is where the benefit is. Sweeping them off is a golf-green practice.</p>
+      </div>
+    </div>
+    <div class="never" style="margin-top:1.1rem"><b>Do not claim to be the honest one.</b> Carry the information instead. &ldquo;Unlike other companies, we tell you the truth&rdquo; is a claim, and it is the kind a reader goes and tests.</div>
+  </section>
+
+  <section id="gates">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Two gates before any of this spends money</h2></div>
+
+    <div class="lever">
+      <h3>1 &middot; The search ads need the repositioned site live</h3>
+      <p>The local build leads with lawn aeration. <b>sixfoldcolorado.com still leads with fire mitigation</b> &mdash; the 21 September build. Point search ads at it as it stands and someone clicking &ldquo;lawn aeration&rdquo; lands on a page headlined fire mitigation, and Google scores landing-page relevance against the query, so the mismatch costs money on every click before anything else goes wrong.</p>
+      <p><b>Re-bundle and upload before the first click, not after.</b> The form problem compounds it: a submission is logged but no email arrives, so paid clicks would produce leads sitting in <code>submissions.log</code> until someone remembers to open it.</p>
+    </div>
+
+    <div class="lever">
+      <h3>2 &middot; There is still no aerator and no aeration rate</h3>
+      <p>Ads generate calls. A call asks what it costs and when you can come. There is no machine in the gear record and no aeration line in the quote engine, so both answers get improvised at the moment a stranger is deciding whether to trust a new company.</p>
+      <p>Pushing this fall is a fair call for a small test. <b>Worth having a price you are willing to be wrong about before the first ad runs</b>, rather than during it.</p>
+    </div>
+  </section>
+
+  <section id="rsa">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Google Search &mdash; the responsive search ad</h2></div>
+    <p class="lede">Fifteen headlines of thirty characters, four descriptions of ninety. Google assembles them itself.</p>
+    <p>Every asset below is inside the limit, counted rather than estimated, and none carries a price, a credential, a guarantee or a capacity claim.</p>
+
+    <h3 class="sub">Headlines</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Headline</th><th>Chars</th></tr></thead>
+        <tbody>
+          <tr><td>01</td><td>Core Aeration, Front Range</td><td>26</td></tr>
+          <tr><td>02</td><td>Lawn Aeration in Monument</td><td>25</td></tr>
+          <tr><td>03</td><td>Aeration and Overseeding</td><td>24</td></tr>
+          <tr><td>04</td><td>Colorado Springs Aeration</td><td>25</td></tr>
+          <tr><td>05</td><td>Aerate Before It Freezes</td><td>24</td></tr>
+          <tr><td>06</td><td>Hollow Tine Core Aeration</td><td>25</td></tr>
+          <tr><td>07</td><td>Real Plugs, Not Spike Holes</td><td>27</td></tr>
+          <tr><td>08</td><td>Compacted Lawn? Core It.</td><td>24</td></tr>
+          <tr><td>09</td><td>Aeration Plus Seed, One Visit</td><td>29</td></tr>
+          <tr><td>10</td><td>Black Forest, Palmer Lake</td><td>25</td></tr>
+          <tr><td>11</td><td>Based in Monument, CO</td><td>21</td></tr>
+          <tr><td>12</td><td>We Walk It Before We Quote</td><td>26</td></tr>
+          <tr><td>13</td><td>Book a Lawn Walk</td><td>16</td></tr>
+          <tr><td>14</td><td>Overseed After Aerating</td><td>23</td></tr>
+          <tr><td>15</td><td>Fall Aeration Window</td><td>20</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">Descriptions</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Description</th><th>Chars</th></tr></thead>
+        <tbody>
+          <tr><td>01</td><td>Core aeration and overseeding in El Paso, Teller and southern Douglas counties.</td><td>79</td></tr>
+          <tr><td>02</td><td>Hollow tines pull plugs two to three inches deep. The cores stay and feed the lawn.</td><td>83</td></tr>
+          <tr><td>03</td><td>Spring and fall are the windows. We walk the property and tell you what it needs.</td><td>81</td></tr>
+          <tr><td>04</td><td>Monument, Colorado Springs, Black Forest, Palmer Lake, Larkspur, Castle Rock.</td><td>77</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="keywords">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Keywords, and the negatives that matter more</h2></div>
+    <p class="lede">Exact and phrase only to start. Broad match on a small budget in a new account spends it on tyre-kickers.</p>
+
+    <div class="bankgroup">
+      <h3>Start with these</h3>
+      <p class="plain"><code>[lawn aeration]</code> &nbsp; <code>[core aeration]</code> &nbsp; <code>"lawn aeration near me"</code> &nbsp; <code>"aeration and overseeding"</code> &nbsp; <code>"lawn aeration colorado springs"</code> &nbsp; <code>"aerate lawn monument co"</code> &nbsp; <code>"core aeration black forest"</code> &nbsp; <code>"overseeding colorado springs"</code></p>
+    </div>
+
+    <div class="forbid" style="margin-top:1.2rem">
+      <div>
+        <p><b>Aeration is not only a lawn word.</b> Left alone this campaign pays for septic, wastewater, pond and brewing clicks &mdash; the same collision that once put Surge in the HVAC business by mis-transcription.</p>
+        <p class="plain" style="margin-top:0.55rem"><code>-septic &nbsp; -wastewater &nbsp; -sewage &nbsp; -pond &nbsp; -lagoon &nbsp; -aquarium &nbsp; -fish &nbsp; -diffuser &nbsp; -blower &nbsp; -tank &nbsp; -brewing &nbsp; -wine &nbsp; -compost</code></p>
+      </div>
+      <div>
+        <p><b>And the ones that click but never buy.</b></p>
+        <p class="plain" style="margin-top:0.55rem"><code>-rental &nbsp; -rent &nbsp; -"for sale" &nbsp; -diy &nbsp; -"how to" &nbsp; -machine &nbsp; -jobs &nbsp; -hiring &nbsp; -salary &nbsp; -course</code></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Settings</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Setting</th><th>What, and why</th></tr></thead>
+        <tbody>
+          <tr><td><b>Location</b></td><td>A radius around Monument, not the whole state. The service area on record is 35 miles, and widening it needs Brandon.</td></tr>
+          <tr><td><b>Location option</b></td><td><b>Presence</b> &mdash; people in the area, not people interested in it. The default includes the second and wastes a small budget.</td></tr>
+          <tr><td><b>Schedule</b></td><td>Daylight hours. A lawn-care click at 2am is rarely a lawn-care click.</td></tr>
+          <tr><td><b>Landing page</b></td><td><code>/services/#lawn</code>, once the repositioned site is live. Not the home page, and not before.</td></tr>
+          <tr><td><b>Conversion</b></td><td>The form is the conversion. <b>It logs but does not email</b>, so decide how a lead gets noticed before spending.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="film">
+    <div class="sec-head"><span class="sec-num">06</span><h2>The filmed ad, for Brad</h2></div>
+    <p class="lede">Every aeration ad on the internet opens on the machine. Open on a plug in a hand.</p>
+    <p>A soil core is a genuinely odd-looking object &mdash; a two-to-three-inch cylinder of earth with grass still attached to the top. Most people have never seen one close up and have no idea it is what the service produces. Hold it to camera before anything else happens and the viewer has already learned something, which is the whole strategy in one frame.</p>
+    <div class="note"><p><b>The machine is in the ad. It is not the first thing in the ad</b> &mdash; the same rule the fire kit set about the chainsaw.</p></div>
+
+    <h3 class="sub">Thirty seconds</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Beat</th><th>On screen</th><th>Words</th></tr></thead>
+        <tbody>
+          <tr><td><b>0&ndash;4s</b></td><td>Close on a hand holding one plug, turf side up</td><td>&ldquo;This came out of a lawn about ten seconds ago.&rdquo;</td></tr>
+          <tr><td><b>4&ndash;10s</b></td><td>Wide: the machine working, plugs dropping behind it</td><td>&ldquo;It&rsquo;s called core aeration. Hollow tines, straight down, two to three inches.&rdquo;</td></tr>
+          <tr><td><b>10&ndash;18s</b></td><td>Ground level: water pooling on hard ground, then soaking into an aerated patch</td><td>&ldquo;Compacted soil sheds water instead of taking it. That&rsquo;s why the same patch goes brown first every year.&rdquo;</td></tr>
+          <tr><td><b>18&ndash;24s</b></td><td>The lawn covered in plugs, then the same lawn later, clear</td><td>&ldquo;The plugs stay. They look untidy for a fortnight and then they&rsquo;re gone back into the turf.&rdquo;</td></tr>
+          <tr><td><b>24&ndash;30s</b></td><td>Crew walking the property with the owner. Mark and number</td><td>&ldquo;We&rsquo;ll walk it with you and tell you what it needs. Sixfold Colorado.&rdquo;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">Sixty seconds &mdash; add these two beats</h3>
+    <div class="script">
+      <p><b>Before the machine, about 8s.</b> &ldquo;One thing worth doing before anyone turns up &mdash; water it a couple of days beforehand. Dry ground won&rsquo;t give up a deep plug.&rdquo; This is the line that earns a share, because it is useful whether or not they ever call.</p>
+      <p><b>After the plugs beat, about 40s.</b> &ldquo;Seed goes down straight after, while the holes are open. That&rsquo;s the part that thickens it.&rdquo;</p>
+    </div>
+  </section>
+
+  <section id="lines">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Safe to say, and never to say</h2></div>
+
+    <div class="bankgroup">
+      <h3>Safe as written &mdash; every one traces to &sect;08</h3>
+      <p>&ldquo;Hollow tines, straight down, two to three inches.&rdquo;</p>
+      <p>&ldquo;Holes two to three inches deep and no more than two to four inches apart.&rdquo;</p>
+      <p>&ldquo;It only does much if actual cores come out, rather than a spike pressing the hole shut.&rdquo;</p>
+      <p>&ldquo;Water it a couple of days beforehand &mdash; dry ground won&rsquo;t give up a deep plug.&rdquo;</p>
+      <p>&ldquo;The plugs stay on the lawn and break down back into it.&rdquo;</p>
+      <p>&ldquo;Spring and fall are the best windows, and it can be done any time the ground isn&rsquo;t frozen or baked hard.&rdquo;</p>
+      <p class="plain" style="margin-top:0.7rem"><b>Changing the numbers is where this goes wrong.</b></p>
+    </div>
+
+    <div class="forbid" style="margin-top:1.2rem">
+      <div><p><b>Any price, discount or &ldquo;free estimate.&rdquo;</b> Standing rule, and the site auditor greps for it.</p></div>
+      <div><p><b>&ldquo;Licensed and insured&rdquo;, &ldquo;certified&rdquo;, &ldquo;bonded.&rdquo;</b> None of it is true yet.</p></div>
+      <div><p><b>Any guarantee that the lawn thickens, greens up, or that seed takes.</b> It depends on water and weather, and the customer agreement says so in writing.</p></div>
+      <div><p><b>Anything implying a crew size, a booking limit or a job count.</b> There is no aeration track record and the ad should not imply one.</p></div>
+      <div><p><b>&ldquo;We&rsquo;re the honest ones.&rdquo;</b> Carry the facts; do not editorialise about carrying them.</p></div>
+    </div>
+  </section>
+
+  <section id="factcheck">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Fact check</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Claim used in an ad</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Hollow tines; plugs two to three inches, dropped on the surface and broken down as topdressing</td><td><b>Verified</b> &mdash; UMass Amherst Extension, <i>Management of Compaction and Coring</i></td></tr>
+          <tr><td>Holes 2&ndash;3 in deep, 2&ndash;4 in apart; most effective when actual cores are pulled; water a couple of days prior for deep plugs</td><td><b>Verified</b> &mdash; CSU PlantTalk 1505, <i>Lawn Aeration</i></td></tr>
+          <tr><td>Compaction sheds water; aeration helps water and fertilizer reach the root zone and controls thatch</td><td><b>Verified</b> &mdash; CSU PlantTalk 1505</td></tr>
+          <tr><td>Spring and fall best; any time the ground is not frozen; not when hot and dry</td><td><b>Verified</b> &mdash; CSU PlantTalk 1505</td></tr>
+          <tr><td>Overseeding after aeration at 3&ndash;4 lb per 1,000 sq ft</td><td><b>Verified</b> &mdash; CSU Extension 7.241, <i>Renovating the Home Lawn</i>. Not in the ad copy; it informs the seeding decision only</td></tr>
+          <tr><td>Google RSA limits: 15 headlines at 30 characters, 4 descriptions at 90</td><td><b>Verified</b> &mdash; Google Ads Help, <i>About responsive search ads</i>. Every asset counted by script, not by eye</td></tr>
+          <tr><td>A month range for the Front Range fall window</td><td><b>Not used.</b> No CSU source names months</td></tr>
+          <tr><td>Cost per click, expected volume, any budget figure</td><td><b>Not estimated and not invented.</b> No account exists and no benchmark was checked</td></tr>
+          <tr><td>That Sixfold can perform aeration</td><td><b>Still unverified</b> &mdash; no aerator in the gear checklist, no rate in the quote engine</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:1.2rem">Sources: planttalk.colostate.edu/topics/lawns/1505-lawn-aeration &middot; umass.edu &mdash; management of compaction and coring &middot; extension.colostate.edu &mdash; renovating the home lawn 7.241 &middot; support.google.com/google-ads/answer/7684791</p>
+  </section>
+
+</div>
+</body>
+</html>
+
