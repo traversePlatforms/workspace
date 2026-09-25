@@ -73,6 +73,12 @@ const JOBS = [
   /* Named for sending, like the rate sheets — this one goes to a person
      rather than sitting beside its source for reference. */
   { src: 'marketing/ad-script-kit.html',        out: 'marketing/Sixfold-Ad-Script-Kit.pdf',       mode: 'light' },
+  /* The aeration companion to the kit above. Same style sheet, same light print
+     register, and it goes to Brad the same way. */
+  { src: 'marketing/aeration-ad-kit.html',      out: 'marketing/Sixfold-Aeration-Ad-Kit.pdf',     mode: 'light' },
+  /* The homeowner content set, six posts. Added 2026-09-25 — it had no PDF job
+     before, only the designed HTML and its artifact. */
+  { src: 'content/content-set.html',            out: 'content/Sixfold-Content-Set.pdf',           mode: 'light' },
   { src: 'marketing/minimum-viable-start.html', out: 'marketing/minimum-viable-start.pdf',        mode: 'light' },
   { src: 'marketing/platform-sheet.html',       out: 'marketing/platform-sheet.pdf',              mode: 'light' },
   /* css: `ol.next li` is a two-column grid (number, text). A grid item that
@@ -188,6 +194,18 @@ const JOBS = [
   { src: 'agreements/remote-signing.html',           out: 'agreements/remote-signing.pdf',                 mode: 'light' },
   { src: 'agreements/service-agreement-tablet.html', out: 'agreements/service-agreement-tablet.pdf',       mode: 'light' },
   { src: 'agreements/sedalia-A-service-agreement.html', out: 'agreements/sedalia-A-service-agreement.pdf', mode: 'light' },
+  /* Kara, 2026-09-25. Two documents: the aeration job and the twelve-month
+     maintenance agreement. FIVE pages each — re-count after any edit, and note the
+     maintenance one carries four more clauses than the template, which is the thing
+     most likely to push sheet 3 onto a sixth page.
+
+     scale: 1 for the same reason as service-agreement above, and it is not optional:
+     .legal10 and .noticeform p are 10.5pt, the statutory floor is 10pt, and this
+     tool's default 0.8 would print them at 8.4pt — a defective notice, which under
+     C.R.S. 5-3-403(3) leaves the sale cancellable for three years rather than three
+     days. */
+  { src: 'agreements/kara-aeration-agreement.html',   out: 'agreements/kara-aeration-agreement.pdf',   mode: 'light', scale: 1 },
+  { src: 'agreements/kara-maintenance-agreement.html', out: 'agreements/kara-maintenance-agreement.pdf', mode: 'light', scale: 1 },
   { src: 'marketing/home-wildfire-pamphlet.html', out: 'marketing/Sixfold-Home-Wildfire-Pamphlet.pdf', mode: 'light' },
   /* scale 1.0, not the default 0.8: at 0.8 the card comes out 7 pages instead of
      9 and the internal band stops starting its own page. Found by comparing

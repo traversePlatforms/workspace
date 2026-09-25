@@ -3,6 +3,16 @@
 **Built:** 2026-08-21
 **Status:** Draft. **Not printed, not used, and not reviewed by an attorney.**
 
+> **Two documents added 2026-09-25 for Kara** — `kara-aeration-agreement` (one-off, $1,100)
+> and `kara-maintenance-agreement` (twelve months, $250/month). Both 5 pages, both built from
+> the job-2 fill, both drafts. **Read [kara-2026-09-25.notes.md](kara-2026-09-25.notes.md)
+> before either is sent** — it carries the margin flag on $1,100, the seed-rate arithmetic,
+> the pesticide-licence line, and a defect it turned up in the *job-2* packet's PDF scale.
+>
+> The maintenance one is the first **recurring** agreement here: 17 clauses rather than 13,
+> a fixed twelve-month term that **deliberately does not auto-renew**, and snow clearing,
+> which is the part most worth an attorney's eye.
+
 Two documents:
 
 | File | Pages | Who sees it |
