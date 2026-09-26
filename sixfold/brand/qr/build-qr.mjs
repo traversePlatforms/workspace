@@ -1,5 +1,6 @@
 /*
   Sixfold — QR code for https://linktr.ee/SixFoldColorado
+  Centre mark rebranded Ember -> Turf on palette A, 2026-09-25.
 
   Generates the QR locally (no third-party QR service is contacted, so nothing
   about this link is handed to an external generator, and nothing can expire or
@@ -45,8 +46,15 @@ mkdirSync(tmp, { recursive: true });
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
 const PINE = '#0E1512';
-const EMBER = '#E4703A';
+const EMBER = '#E4703A';   // retired from the centre mark 2026-09-25 — kept for reference
 const BONE = '#EDE7DC';
+/* Palette A, 2026-09-25. The centre mark was Ember; green leads now. It sits on
+   BONE, so it is TURF and not Sage — Sage is 1.64 on Bone and would disappear,
+   the same rule the social kit follows for its light-ground avatar. Turf is 4.25
+   on Bone, which is a mark-and-rule value and exactly what this is.
+   The mark carries NO DATA — it sits in the cleared reserve — so this change
+   cannot affect decoding. The build re-verifies anyway. */
+const TURF = '#2F7A4F';
 
 /* The Ridge crest, tight viewBox, for the centre knockout. Roots are omitted —
    they are sub-pixel at this size and would only muddy the reserve area. */
@@ -115,7 +123,7 @@ function buildSvg({ dark, light, finder, logo, quiet = 4, radius = 0.5 }) {
     return `
       <rect x="${bx}" y="${bx}" width="${bw}" height="${bw}" rx="${bw * 0.16}" fill="${light}"/>
       <svg x="${mx}" y="${my}" width="${markW}" height="${markH}" viewBox="4 14 94 77">
-        <g fill="${EMBER}">${RIDGE}</g>
+        <g fill="${TURF}">${RIDGE}</g>
       </svg>`;
   })();
 
@@ -193,6 +201,15 @@ const VARIANTS = [
     opts: { dark: PINE, light: BONE, finder: PINE, logo: false, radius: 0.5 } },
   { out: 'sixfold-qr-on-dark-tile.png', px: 1200, tile: true,
     opts: { dark: PINE, light: BONE, finder: PINE, logo: true, radius: 0.5 } },
+  /* Added 2026-09-25 for the door-to-door flyer, which is printed on Sixfold's own
+     office printer. The branded code above sits on BONE, and Bone is a tint — the
+     README's own printing note names printing a code on a tint as one of the two
+     things that break it, and across a stack of flyers a full-bleed tint is also
+     the single most expensive thing on the page in ink. This is the same branded
+     geometry and the same green centre mark on PAPER WHITE: nothing to print
+     behind the code, and the quiet zone is genuinely blank. */
+  { out: 'sixfold-qr-brand-on-white.png', px: 1200,
+    opts: { dark: PINE, light: '#FFFFFF', finder: PINE, logo: true, radius: 0.5 } },
 ];
 
 let allOk = true;
