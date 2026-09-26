@@ -1,0 +1,94 @@
+/* Sixfold Colorado — aeration video frames, 2026-09-25.
+
+   A frame is NOT a board. The 2026-09-14 board kit in content/visual-set-2026-09-14/
+   is editorial: 4:5, a standfirst, a chart, read at leisure. These are read in under
+   three seconds, on a phone, with the sound off, while a thumb is already moving.
+   So: one idea per frame, type at poster size, nothing that needs a second look.
+
+   Tokens are the board kit's, unchanged, plus PALETTE A's two greens from
+   site/assets/site.css. Palette A leads green and keeps ember for the call to
+   action only — which is exactly what a lawn ad wants, and why these frames are
+   NOT in the marketing set's ember register. Recorded in README.md.
+
+   ONE invented colour, and it is deliberate: --soil. You cannot draw a soil core
+   in five greens. It is illustration-only, never brand, never type, never a
+   surface. It appears in exactly two drawings.
+
+   Safe areas. Reels and Stories paint their own UI over the frame — profile row
+   and caption at the bottom, sound and menu at the top. Nothing that must be read
+   goes in the bottom 420px or the top 250px of a 9:16 frame. The 4:5 feed cut is
+   less hostile, so it uses a smaller inset and the same content reflows into it. */
+
+:root{
+  --pine:#0E1512; --timber:#1F2A25; --ember:#E4703A; --bone:#EDE7DC;
+  --moss:#8AA07A; --turf:#2F7A4F; --sage:#A7BE93;
+  --soil:#6B5340;                    /* ILLUSTRATION ONLY — see header */
+  --d-soft:rgba(237,231,220,.74); --d-faint:rgba(237,231,220,.46);
+  --d-line:rgba(237,231,220,.16);
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+  --sans:"Segoe UI",ui-sans-serif,system-ui,Roboto,Helvetica,Arial,sans-serif;
+  --mono:Consolas,"Cascadia Mono","Segoe UI Mono",ui-monospace,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:#2A302C;-webkit-font-smoothing:antialiased}
+
+.frame{
+  position:relative;width:1080px;background:var(--pine);color:var(--bone);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.frame--916{height:1920px;padding:250px 84px 420px}
+.frame--45 {height:1350px;padding:120px 84px 150px}
+
+/* the whole frame is one centred block: a phone at arm's length has no margin
+   for a layout that needs scanning */
+.stage{flex:1;display:flex;flex-direction:column;justify-content:center;gap:44px}
+
+.eyebrow{
+  font-family:var(--mono);font-size:26px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--sage);margin:0;
+}
+h1{
+  font-family:var(--serif);font-weight:400;margin:0;
+  font-size:104px;line-height:1.03;letter-spacing:-.02em;
+}
+.frame--45 h1{font-size:92px}
+h1 em{font-style:normal;color:var(--sage)}
+.sub{margin:0;font-size:46px;line-height:1.34;color:var(--d-soft);max-width:900px}
+.frame--45 .sub{font-size:42px}
+
+/* art sits with the type, never behind it — text over a drawing is the first
+   thing that dies at thumbnail size */
+.art{display:flex;justify-content:center;align-items:center}
+.art svg{display:block}
+
+/* ---------- the call to action frame ---------- */
+.cta{align-items:flex-start;gap:30px}
+.cta h1{font-size:76px;line-height:1.08}
+.frame--45 .cta h1{font-size:68px}
+.cta .mark{width:150px;color:var(--sage)}
+.cta .mark svg{width:150px;height:144px;display:block}
+.wordmark{font-family:var(--serif);font-size:76px;letter-spacing:-.01em;margin:0}
+.chip{
+  display:inline-block;background:var(--ember);color:#160B05;
+  font-family:var(--mono);font-size:34px;letter-spacing:.14em;text-transform:uppercase;
+  padding:22px 34px;border-radius:4px;font-weight:700;
+}
+.phone{font-family:var(--serif);font-size:72px;margin:0;letter-spacing:-.01em}
+.towns{font-family:var(--mono);font-size:28px;letter-spacing:.10em;color:var(--d-faint);margin:0;
+       text-transform:uppercase;line-height:1.5}
+
+/* ---------- review page only, never rendered into a frame ---------- */
+.sheet{padding:60px;display:flex;flex-wrap:wrap;gap:60px;justify-content:center}
+.slot{position:relative}
+.slot figcaption{
+  font-family:var(--mono);font-size:22px;color:#C9D2CB;padding:16px 4px 0;max-width:1080px;
+  line-height:1.5;
+}
+.slot .n{color:var(--ember);font-weight:700}
+.safe{position:absolute;inset:0;pointer-events:none}
+.safe i{position:absolute;left:0;right:0;background:rgba(228,112,58,.14);
+        border-block:1px dashed rgba(228,112,58,.55)}
+.safe .t{top:0;height:250px}
+.safe .b{bottom:0;height:420px}

@@ -9,6 +9,39 @@ every other Sixfold asset — nothing published, posted, scheduled or uploaded.
 cannot be done on disk is in **[LAUNCH.md](LAUNCH.md)**, which is the file to open
 the day this goes on a host.
 
+## ⚑ 2026-09-25 — aeration page added, planting removed
+
+**Still on disk. Still not uploaded. The live site is still the 2026-09-21 build**, which is now
+**three** changes behind: the ultrawide hero, the repositioning, and this.
+
+Two answers from Matthew, 2026-09-25, both of which the site was waiting on:
+
+1. **Sixfold owns an aerator and a riding mower.** That retires the one unverified claim in the
+   fact-check table at the bottom of this file — the site could describe aeration but nothing in the
+   repo said Sixfold could do it. It can.
+2. **"Landscaping to us is basically lawn care" — and they do not want planting.**
+
+### What changed
+
+| | |
+|---|---|
+| **New page** | **`/services/aeration/`.** The lead service finally has one. No price, no rate, no minimum — the only aeration figure in the building is Kara's $1,100 for ¾ acre, and that is an internal gauge, not a published price. In the sitemap, linked from the hub's lawn section and from `/services/landscaping/` |
+| **`/services/landscaping/`** | Handed the core-aeration paragraph to the new page and points at it. Two pages explaining hollow tines is two pages competing for one search |
+| **Planting** | **Off the site.** It was sold in six places — home card, home door, hub lede, landscaping page lede, tags, and the contact chooser. The quote engine had already retired the planting line on 2026-09-23 on "not planting", so the copy was the last thing still offering it |
+| **Sod** | **Off with it, pending his answer.** He listed seeding and not sod, and laying turf is arguably the same objection. One line to put back |
+| **Fertilizing** | **Added**, in the tags and the copy. He listed it and Kara's job carries 150 lb of it |
+| **Snow** | ⚑ **NOT added anywhere.** He says they are doing some. It is in no agreement, no quote line and no gear list, and it carries an insurance question — it is flagged in `REBRAND-PATH-2026-09.md`, not sold on the website |
+| **Meta descriptions** | Both new/edited ones trimmed under the runtime auditor's length warning |
+
+**Auditors after the change:** `audit-links.mjs` all clear, 10 pages, 180 links, chrome identical
+across all ten. `audit-runtime.mjs` **40 renders, 0 failures, 0 warnings.**
+
+**The turf gap is unchanged and now worse:** `/services/aeration/` is the lead service's own page
+and it has **no photograph**, because every frame in the library is trees, slash or cleared ground.
+See [PHOTOS.md](PHOTOS.md) §The turf gap.
+
+---
+
 ## ⚑ REPOSITIONED 2026-09-24 — aeration-led, on disk, NOT uploaded
 
 **The site now leads with lawn and turf care and ends with fire mitigation.** Matthew,
@@ -117,7 +150,7 @@ Everything the new copy asserts about aeration, and where it comes from.
 | "The plugs stay on the surface and break down into the lawn" | **Verified.** UMass — each tine pulls a 2–3″ plug and drops it on the surface, where it is broken up as topdressing. Only golf greens are swept |
 | "Spring and fall are the best times for it, and it can be done any time the ground is not frozen and not baked dry" | **Verified.** CSU PlantTalk 1505 — "Spring and fall are considered the best times for aeration", and a lawn "can be aerated at any time the ground is not frozen, but should not be done when it is extremely hot and dry" |
 | **No months are named on the site** | **Deliberate.** No CSU source gives a month range for the Front Range window, so it was left out rather than guessed |
-| **That Sixfold performs aeration and overseeding** | ⚑ **UNVERIFIED — the one open claim.** There is no aerator in `sixfold/operations/gear-checklist.md` and no aeration line in the quote engine. It rests only on the 2026-09-23 positioning change. **Brandon to confirm before this goes up** |
+| **That Sixfold performs aeration and overseeding** | ✅ **RESOLVED 2026-09-25 — Sixfold owns an aerator and a riding mower.** Matthew, direct. Recorded in `sixfold/operations/gear-checklist.md` §Turf equipment. **Overseeding** is not separately evidenced by a machine, but seed is going down — Kara's job carries 200 lb of it |
 | No price, rate or minimum for any of it | Standing rule, and `audit-links.mjs` enforces it |
 
 Sources: <https://planttalk.colostate.edu/topics/lawns/1505-lawn-aeration/> ·

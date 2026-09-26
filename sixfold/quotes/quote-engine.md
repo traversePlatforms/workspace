@@ -67,13 +67,24 @@
 > - The **aeration line now carries both anchors** and says plainly that only one of them is aeration
 >   alone. Its flag tells you what to capture to close the gap: time the pass, and put the bag receipts
 >   through the new cost line.
+> - **Matthew, 2026-09-25: Kara's number is the gauge.** *"Right now the aeration rate is just what we
+>   have for Kara, that will be our value to gauge against for now. After this job is done we will have
+>   a better idea about the actual cost of everything so we can have a better guess."* So the engine
+>   quotes aeration against $1,100/¾ acre until that job closes out, and the close-out is what replaces
+>   it. **Two measurements make the swap possible and only exist on the day: how long the pass takes,
+>   and what the seed and fertilizer actually cost.** Without them the next guess is the same guess.
 > - **No rates-version bump, and that is deliberate.** The rule is to bump `config/rates-vN` on a
 >   *reprice*, so stale saved figures cannot win. **No existing rate changed here.** The snapshot handler
 >   only applies saved keys where `rates[k] != null`, so a team member holding saved v3 state simply gains
 >   the new line at its default rather than having their own figures reset. Bumping would have cost them
 >   their customisations for nothing.
-> - **⚑ Still not republished.** The artifact has been behind this file since the v3 reprice on
->   2026-09-23 and these changes widen that gap. Republishing must pass the existing URL as `url`.
+> - **REPUBLISHED 2026-09-25 — version 7**, to the same URL. The artifact had been behind this file
+>   since the v3 reprice on 2026-09-23.
+>   **⚑ What that release actually does to the team:** the live tool was still on `config/rates-v2`
+>   at **$70/man-hour**, so every quote built in it since the 23rd used the old rate. Version 7 moves
+>   the shared key to `rates-v3` and **$100/man-hour**. Any rate edits a teammate had saved under v2
+>   are left behind — which is the point of a reprice, but it means **a price quoted from the tool
+>   before today is 43% low on labour** and worth re-checking if one went out.
 > - **Trees by height** — a line that takes `7, 12, 25` (or `4x7`) and prices each tree from the 30 ft
 >   anchor. Model is `base + per-foot`, both editable, defaulting to **0 base + 1.00 man-min/ft** (their
 >   30 min ÷ 30 ft). **Hard-stops at 30 ft** — 1 min/ft extrapolated gives a 70 ft tree 70 man-minutes

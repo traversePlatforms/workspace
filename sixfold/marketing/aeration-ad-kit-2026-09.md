@@ -5,6 +5,7 @@
 **Status:** Draft. **Nothing placed, nothing filmed, nothing scheduled, no budget committed.**
 **Deliverable:** [Sixfold-Aeration-Ad-Kit.pdf](Sixfold-Aeration-Ad-Kit.pdf) — 7 pages, the sendable version
 **Design source:** [aeration-ad-kit.html](aeration-ad-kit.html) — style block lifted from `ad-script-kit.html`, so the two sheets match
+**Video companion, 2026-09-25:** [aeration-video-2026-09/](aeration-video-2026-09/) — a frame-built Facebook video ad for this weekend, because no footage exists and none is being shot. The filmed script below is better and should replace it as soon as there is real footage.
 **Companion:** the Nextdoor and Facebook post is [../content/06-aeration-post.md](../content/06-aeration-post.md), and it is post 6 in [../content/Sixfold-Content-Set.pdf](../content/Sixfold-Content-Set.pdf).
 
 > **The designed sheet is still the ember palette, not palette A.** Palette A was adopted
@@ -53,11 +54,11 @@ mitigation** — the 2026-09-21 build. Point search ads at it as it stands and:
 here too: a form submission is logged but no email arrives, so paid clicks would produce leads
 that sit in `submissions.log` until someone remembers to open it.
 
-### 2. There is still no aerator and no aeration rate
+### 2. ~~There is still no aerator and no aeration rate~~ — half closed 2026-09-25
 
-Ads generate calls. A call asks what it costs and when you can come. Right now there is no
-machine in the gear record and no aeration line in the quote engine, so both answers have to
-be improvised at the point a stranger is deciding whether to trust a new company.
+**Sixfold owns an aerator and a riding mower** (Matthew, 2026-09-25), so the "when can you come" half is answerable and the site claim is no longer unbacked.
+
+**The price half stands.** Ads generate calls, and a call asks what it costs. The only figure is Kara's $1,100 for ¾ acre with seed and fertilizer inside it, which Matthew has set as an internal gauge — not a rate and not a published price. So the answer to a stranger still has to be agreed in advance rather than improvised at the moment someone is deciding whether to trust a new company.
 
 You chose to push this fall knowing that, which is a fair call for a small test. **Worth having
 a price you are willing to be wrong about before the first ad runs**, rather than during it.
@@ -202,7 +203,7 @@ Every one traces to the fact check below. **Changing the numbers is where this g
 | Google RSA limits: 15 headlines at 30 characters, 4 descriptions at 90 | **Verified** — Google Ads Help, *About responsive search ads*. Every asset above counted, not estimated |
 | A specific month range for the Front Range fall window | **Not used.** No CSU source names months |
 | Cost per click, expected volume, or any budget figure | **Not estimated, and not invented.** No account exists and no benchmark was checked |
-| That Sixfold can perform aeration | **Still unverified** — no aerator in `operations/gear-checklist.md`, no rate in the quote engine |
+| That Sixfold can perform aeration | **Verified 2026-09-25** — aerator and riding mower owned, recorded in `operations/gear-checklist.md` §Turf equipment. The *rate* is still a gauge, not a rate |
 
 Sources: <https://planttalk.colostate.edu/topics/lawns/1505-lawn-aeration/> ·
 <https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/management-of-compaction-coring> ·

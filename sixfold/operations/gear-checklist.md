@@ -1,6 +1,7 @@
-# Sixfold LLC — Fire mitigation gear checklist
+# Sixfold LLC — Gear checklist
 
-**Written:** 2026-08-21
+**Written:** 2026-08-21 as the *fire mitigation* gear checklist
+**Turf equipment added:** 2026-09-25
 **Status:** Internal. Nothing here is published, and nothing in it is a claim Sixfold may make in copy.
 **Printable version:** [gear-checklist.html](gear-checklist.html) → [gear-checklist.pdf](gear-checklist.pdf) — seven sheets, one printed page each.
 
@@ -17,6 +18,40 @@ Organised as **buy before job one** and **buy when the job requires it**, becaus
 From [../marketing/minimum-viable-start.html](../marketing/minimum-viable-start.html) and [../README.md](../README.md): saws for felling and limbing, a stump grinder, a chipper, and haul capacity. Every machine on the sellable list is owned. **What is missing is not machines — it is the safety, fire, medical and documentation kit that has to ride with them**, and that is most of what follows.
 
 The one machine gap is unchanged: no masticator or mulching head. That is a pricing and quoting decision, already recorded in the marketing plan §1, and this list does not reopen it.
+
+### Turf equipment — added 2026-09-25
+
+**Sixfold owns an aerator and a riding mower.** Matthew, 2026-09-25. That closes the
+capability gate in [../REBRAND-PATH-2026-09.md](../REBRAND-PATH-2026-09.md) §Phase 0.1 and it
+retires the one unverified claim on the repositioned website — that Sixfold can actually
+aerate. Both machines were bought after this file was written, which is why the count run on
+2026-09-24 found no aerator anywhere in the gear record.
+
+| Machine | Status |
+|---|---|
+| Core aerator | **Owned.** Make, model, tine size and whether it is walk-behind, tow-behind or ride-on are not recorded here — ask, because the tine spec is what the copy describes and the pass rate is what the price is built on |
+| Riding lawn mower | **Owned.** Deck width not recorded, and deck width is the number that sets mowing time per acre |
+| Overseeder | Not recorded. Seed is currently being spread — Kara's job carries 200 lb of it — so how it goes down is worth knowing |
+| Topdresser | Not recorded, and nothing sold so far needs one |
+
+**What the turf side still needs on this list, and does not have:** the consumables and
+maintenance shelf for both machines — spare tines, mower blades, an air filter and plug for
+each, grease — written the way §2.5 is written for the saws and the chipper. Turf gear has
+its own wear parts and none of them are on this page yet.
+
+**Snow services are being taken and are not on this list at all.** No blade, no blower, no
+spreader, no salt or ice melt is recorded, and snow work carries a slip-and-fall exposure
+that is a different conversation with the broker than falling trees. It is flagged here
+rather than guessed at.
+
+**The PPE, fire, first-aid, documentation and vehicle sections below all still apply.** A
+mower and an aerator do not need chaps, but they are on the same trailer behind the same
+truck, and the extinguisher-on-every-machine rule at 1910.266(d)(4) does not ask what the
+machine cuts.
+
+**⚑ The printed version is behind.** [gear-checklist.html](gear-checklist.html) and its
+seven-sheet PDF were built 2026-09-14 and do not carry anything in this section. Rebuild
+before the checklist is handed to anyone.
 
 ### Gear is not the gate
 
