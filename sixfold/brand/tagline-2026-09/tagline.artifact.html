@@ -1,0 +1,397 @@
+<title>Sixfold Tagline Decision</title>
+<!--
+  Artifact copy of tagline.html. Same content; the print register is replaced by a
+  theme-aware one so it reads on a phone at the meeting as well as on paper.
+
+  The two themes are Sixfold's own two registers, not an invention:
+    light = BONE   paper #EDE7DC, ink #16201C, rules --turf #2F7A4F, links --moss-text #4E6142
+    dark  = PINE   ground #0E1512, ink --bone, links --sage #A7BE93 (9.19 on Pine)
+  Ratios are the measured ones from site/assets/site.css. Turf is 4.25 on Bone, so it
+  carries rules and never type — the same rule the site holds itself to.
+
+  Do not hand-edit this to fix the print sheet. tagline.html is the source; this is
+  the copy that gets published.
+-->
+<style>
+  :root {
+    color-scheme: light;
+    --paper:      #EDE7DC;
+    --lift:       #F7F3EC;
+    --warm-bg:    #F8F5EF;
+    --rule:       #D6CDBB;
+    --edge:       #C6BBA3;
+    --ink:        #16201C;
+    --body:       #2C3A33;
+    --soft:       #4C5A53;
+    --accent:     #2F7A4F;   /* rules and marks only — 4.25 on Bone */
+    --accent-txt: #4E6142;   /* type and links — 5.48 on Bone */
+    --alert:      #A64211;   /* 5.0 on Bone */
+    --pick-wash:  rgba(47,122,79,0.08);
+    --serif: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --sans:  ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono:  ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "SFMono-Regular", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper:      #0E1512;
+      --lift:       #1F2A25;
+      --warm-bg:    #1C1713;
+      --rule:       rgba(237,231,220,0.16);
+      --edge:       rgba(237,231,220,0.20);
+      --ink:        #EDE7DC;
+      --body:       rgba(237,231,220,0.86);
+      --soft:       rgba(237,231,220,0.62);
+      --accent:     #8AA07A;
+      --accent-txt: #A7BE93;
+      --alert:      #E4703A;
+      --pick-wash:  rgba(167,190,147,0.09);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper:      #0E1512;
+    --lift:       #1F2A25;
+    --warm-bg:    #1C1713;
+    --rule:       rgba(237,231,220,0.16);
+    --edge:       rgba(237,231,220,0.20);
+    --ink:        #EDE7DC;
+    --body:       rgba(237,231,220,0.86);
+    --soft:       rgba(237,231,220,0.62);
+    --accent:     #8AA07A;
+    --accent-txt: #A7BE93;
+    --alert:      #E4703A;
+    --pick-wash:  rgba(167,190,147,0.09);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--body); font-family: var(--sans);
+    font-size: 16px; line-height: 1.6; margin: 0;
+    padding-block: 0 4rem; padding-left: 16px; padding-right: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; }
+  strong, b { color: var(--ink); font-weight: 650; }
+  a { color: var(--accent-txt); }
+  em { color: var(--body); }
+
+  .masthead {
+    padding-block: 2.4rem 1.2rem; border-bottom: 3px solid var(--accent);
+    display: flex; gap: 1.2rem; align-items: flex-start; flex-wrap: wrap;
+  }
+  .masthead svg { width: 58px; flex: none; display: block; margin-top: 0.25rem; }
+  .mh-text { flex: 1 1 18rem; min-width: 0; }
+  .kicker {
+    font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--accent-txt); margin: 0 0 0.5rem;
+  }
+  h1 {
+    font-family: var(--serif); font-size: clamp(1.75rem, 6vw, 2.6rem); letter-spacing: -0.02em;
+    line-height: 1.08; margin: 0; color: var(--ink); text-wrap: balance;
+  }
+  .standfirst { max-width: 60ch; color: var(--soft); font-size: 1rem; margin: 0.9rem 0 0; }
+
+  section { padding-top: 2.4rem; }
+  h2 {
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent-txt); margin: 0 0 1rem; padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--rule); font-weight: 700;
+  }
+  p { margin: 0 0 0.85rem; max-width: 66ch; }
+
+  .verdict {
+    background: var(--lift); border-left: 4px solid var(--accent);
+    border-radius: 0 5px 5px 0; padding: 1.3rem 1.5rem;
+  }
+  .verdict p { margin: 0 0 0.6rem; }
+  .verdict p:last-child { margin: 0; }
+  .line {
+    font-family: var(--serif); font-size: clamp(1.25rem, 4.4vw, 1.65rem); color: var(--ink);
+    line-height: 1.22; display: block; margin: 0.5rem 0 0.9rem;
+  }
+  .strike {
+    text-decoration: line-through; text-decoration-thickness: 2px;
+    text-decoration-color: var(--alert); color: var(--soft);
+  }
+
+  .warn {
+    background: var(--warm-bg); border: 1px solid var(--alert); border-radius: 5px;
+    padding: 1.1rem 1.3rem; margin-top: 1.2rem;
+  }
+  .warn .lab {
+    font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--alert); font-weight: 700; display: block; margin-bottom: 0.5rem;
+  }
+  .warn p { font-size: 0.94rem; margin: 0 0 0.6rem; }
+  .warn p:last-child { margin: 0; }
+
+  .tbl { width: 100%; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 30rem; font-size: 0.9rem; }
+  th, td {
+    text-align: left; padding: 0.7rem 0.85rem 0.7rem 0;
+    border-bottom: 1px solid var(--rule); vertical-align: top;
+  }
+  thead th {
+    font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--soft); font-weight: 700;
+  }
+  td.n {
+    font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--accent-txt);
+    font-weight: 700; white-space: nowrap; width: 2.4rem;
+  }
+  tr.pick td { background: var(--pick-wash); }
+  .cand {
+    font-family: var(--serif); font-size: 1.05rem; color: var(--ink); display: block;
+    line-height: 1.25; margin-bottom: 0.25rem;
+  }
+  .flag {
+    font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent-txt); font-weight: 700; display: block;
+  }
+  .flag.quiet { color: var(--soft); }
+  code { font-family: var(--mono); font-size: 0.85em; color: var(--ink); overflow-wrap: anywhere; }
+
+  .obj { display: grid; gap: 1rem; grid-template-columns: 1fr; margin-top: 1.1rem; }
+  @media (min-width: 720px) { .obj { grid-template-columns: 1fr 1fr; } }
+  .obj .card {
+    background: var(--lift); border: 1px solid var(--edge); border-left: 3px solid var(--accent);
+    border-radius: 5px; padding: 1.05rem 1.25rem;
+  }
+  .obj h3 { font-family: var(--sans); font-size: 0.96rem; margin: 0 0 0.4rem; font-weight: 650; color: var(--ink); }
+  .obj p { font-size: 0.91rem; margin: 0; }
+
+  .foot {
+    margin-top: 3rem; padding-top: 1.1rem; border-top: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.05em;
+    color: var(--soft); line-height: 1.8; max-width: none;
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 96" role="img" aria-label="Sixfold mark, Ridge">
+      <path fill="#E4703A" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+      <path fill="#8AA07A" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+      <path fill="#8AA07A" d="M4 86L96 86L96 91L4 91Z"/>
+    </svg>
+    <div class="mh-text">
+      <p class="kicker">Sixfold Colorado · Brand decision · 2026-09-25</p>
+      <h1>The tagline, after the reposition</h1>
+      <p class="standfirst">Aeration leads now. The line on the banners, the flyer and the Square
+      invoice was written for fire mitigation, and it does not survive the change — not because it
+      is off-message, but because it is no longer true. Six candidates, a recommendation, and what
+      it costs to swap.</p>
+    </div>
+  </div>
+
+  <section>
+    <h2>The verdict</h2>
+    <div class="verdict">
+      <p><strong>Retire it.</strong></p>
+      <span class="line strike">We do the work and show you who pays for it.</span>
+      <p><strong>Recommended replacement:</strong></p>
+      <span class="line">From the lawn to the treeline.</span>
+      <p><strong>Brandon's call</strong>, and it belongs in the same sitting as the descriptor —
+      the two live in mostly the same files, and sweeping them separately means sweeping twice.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why the current line has to go</h2>
+    <p>It is a <strong>funding promise</strong>, and it works because of two things that are both
+    fire-specific: the Colorado state tax credit, which covers what a homeowner pays a contractor
+    for <strong>qualifying vegetation work</strong>, and the HB25-1182 insurer re-score, which
+    applies to <strong>wildfire risk</strong>.</p>
+    <p><strong>Nobody else pays for an aeration.</strong> Nobody else pays for mowing, edging or a
+    bed clean-up. On the service that now leads, and on two of the three beside it, the line is not
+    merely off-message — it promises something that does not exist.</p>
+
+    <div class="warn">
+      <span class="lab">⚑ The deadline nobody set</span>
+      <p>The line is hardcoded at <code>brand/square/build-square.mjs:129</code>, which puts it on
+      the <strong>Square invoice template</strong> and the customer display. <strong>Kara's aeration
+      invoice would go out carrying a promise about who pays for it.</strong></p>
+      <p>The rebrand path already names the invoice as the one surface with a real deadline behind
+      it, because an invoice goes to a paying customer with whatever is on it that day. This is that
+      deadline arriving on the copy instead of the mark.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Clear / Protect / Restore — heard, and why not</h2>
+    <p><strong>Whose it is, stated plainly:</strong> these are <strong>Brandon's three
+    circles</strong>. They organised the first three builds of the site-walk sheet, and they are the
+    spine of the 2026 Land &amp; Fire flyer — <em>"I like the wording and the messaging."</em> The
+    frame has real buy-in and it is not being dismissed. Both objections are about the
+    repositioning, not the writing.</p>
+
+    <div class="obj">
+      <div class="card">
+        <h3>1. All three are fire verbs here</h3>
+        <p>CLEAR is fuel reduction. PROTECT is defensible space — the CSFS term verbatim. RESTORE is
+        putting the property back after the clearing. <b>Aeration is none of the three.</b> It would
+        tagline an aeration-led brand with a phrase describing every service except the one
+        leading.</p>
+      </div>
+      <div class="card">
+        <h3>2. The sequence is the banned framing</h3>
+        <p>Clear → protect → restore makes restore <b>the after-job of the clearing</b>. That is the
+        "landscaping is the after-job of fire mitigation" framing removed from every document in
+        September. It would come back in as the tagline.</p>
+      </div>
+    </div>
+    <p style="margin-top:1.1rem">It is the same objection as the house on the logo board:
+    <strong>it re-centres the thing being demoted.</strong> What survives is the three-verb spine,
+    which is the part that reads well — candidate 2 keeps it.</p>
+  </section>
+
+  <section>
+    <h2>The candidates — best first</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th></th><th style="width:24%">Candidate</th><th>For</th><th>Against</th></tr></thead>
+        <tbody>
+          <tr class="pick">
+            <td class="n">1</td>
+            <td><span class="cand">From the lawn to the treeline.</span><span class="flag">Recommended</span></td>
+            <td>Spans all four services <b>without naming one</b>, so the next change of mix does not
+            date it — and the mix has moved twice in ten days. <b>"Lawn" is the first word.</b> It
+            answers the question the logo board already identified as the customer's real one:
+            <em>will you do my quarter acre, will you do my twenty.</em> And <b>"treeline" is the
+            mark's own word</b> — the conifer is what makes the four peaks read as a treeline rather
+            than mountains, so the copy and the logo would finally say the same thing.</td>
+            <td>Names no service, so someone who has never heard of Sixfold learns the range but not
+            the work. Needs the service line under it — which every surface already carries.</td>
+          </tr>
+          <tr>
+            <td class="n">2</td>
+            <td><span class="cand">Feed it, clear it, defend it.</span><span class="flag">The three-verb keeper</span></td>
+            <td>Keeps <b>Brandon's three-verb spine</b>, so his frame survives the reposition instead
+            of being dropped. Lawn first, fire last — the new order, stated. Drops into the same
+            lockups the old line sits in, at the same length.</td>
+            <td>Names services by implication, so a change of mix still touches it. "Defend" leans
+            fire, just less than "protect" does.</td>
+          </tr>
+          <tr>
+            <td class="n">3</td>
+            <td><span class="cand">Your ground, all four seasons.</span></td>
+            <td>The only candidate that covers <b>snow</b> if Brandon takes it, and the only one that
+            says <b>recurring</b> — which is what actually changed when lawn care became the
+            business. Pairs directly with the seasonal-palette direction: the words say all year, the
+            palette shows all year.</td>
+            <td>Says nothing about what is done to the ground. Closest of the six to a slogan rather
+            than a description.</td>
+          </tr>
+          <tr>
+            <td class="n">4</td>
+            <td><span class="cand">Lawn to treeline, all year.</span></td>
+            <td>1 and 3 together — the range and the recurrence in one line.</td>
+            <td>Two ideas is one more than a magnet carries at 40 mph.</td>
+          </tr>
+          <tr>
+            <td class="n">5</td>
+            <td><span class="cand">Aerate · Mow · Clear · Thin</span></td>
+            <td>Uses the dot device already in the family — "Slash · Chip · Haul" is on the merch
+            board. Literal, nothing to interpret.</td>
+            <td>Four service verbs is four things to reprint. It is the "Land &amp; Fire" problem
+            with more words in it.</td>
+          </tr>
+          <tr>
+            <td class="n">6</td>
+            <td><span class="cand">Clear / Protect / Restore</span><span class="flag quiet">Keep it</span></td>
+            <td>Brandon's, already liked, already printed once.</td>
+            <td>Describes every service except the one now leading, and the sequence re-creates the
+            framing swept out in September. See above.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:1.1rem"><strong>If a three-verb line is wanted, it is 2.</strong>
+    <strong>If the priority is never doing this again, it is 1 or 3.</strong></p>
+  </section>
+
+  <section>
+    <h2>What changing it costs</h2>
+    <p><strong>Nine files, and the website is not one of them.</strong> The site never carried the
+    tagline. <code>/who-pays/</code> uses "Who pays for it" as a <strong>page kicker</strong>, which
+    is correct in its own context and should stay.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:38%">File</th><th>What is there</th></tr></thead>
+        <tbody>
+          <tr><td><code>brand/social/build-social.mjs:40</code></td><td>the <code>BIO</code> const — <b>one line</b>, and it regenerates every banner</td></tr>
+          <tr><td><code>brand/square/build-square.mjs:129</code></td><td>hardcoded in the template — invoice, customer display, online banner</td></tr>
+          <tr><td><code>marketing/facebook-page-copy.md:18</code></td><td>the page bio</td></tr>
+          <tr><td><code>marketing/square-business-description.md:24</code></td><td>the business description</td></tr>
+          <tr><td><code>marketing/flyers.html:178</code></td><td>it is the <code>&lt;h1&gt;</code></td></tr>
+          <tr><td><code>brand/social/README.md</code> · <code>UPLOAD-GUIDE.md</code> · <code>brand/square/README.md</code></td><td>documented as fixed copy</td></tr>
+          <tr><td><code>site/README.md:462</code></td><td>listed under "slogans used, and why each is safe to print"</td></tr>
+          <tr><td><code>site/_tabled/merch/</code></td><td>the "Who pays for it" back tee — off the site, still buildable</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:1.1rem">The <code>.build/</code> HTML files regenerate; they are outputs,
+    not sources. <strong>Do this in the same sweep as the descriptor</strong> — Phase 4 of the
+    rebrand path names sweeping twice for a line that changes again as "the one genuinely wasted
+    week available here."</p>
+  </section>
+
+  <section>
+    <h2>What this does not decide</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:28%">Open</th><th style="width:16%">Owner</th><th>Why it touches the tagline</th></tr></thead>
+        <tbody>
+          <tr><td><b>The descriptor</b> — retire "Land &amp; Fire", or pick from the six</td><td>Brandon</td>
+              <td>Six candidates written up in <code>REBRAND-PATH-2026-09.md</code> §Phase 1. Same sweep, same sitting.</td></tr>
+          <tr><td><b>Snow</b> — a service or a favour?</td><td>Brandon</td>
+              <td>If snow is in, candidate 3 gets stronger and candidate 5 becomes wrong on the day it is answered.</td></tr>
+          <tr><td><b>Sod</b> — still sold?</td><td>Matthew</td>
+              <td>One line. Does not change the tagline, but it changes the service line printed under it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Fact-check log</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:42%">Claim</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>The current line is the bio line from <code>marketing/facebook-page-copy.md</code></td>
+              <td><b>Read</b> 2026-09-25; <code>site/README.md:462</code> names it as the fact-checked bio line</td></tr>
+          <tr><td>It is on the Square <b>invoice</b> template and customer display</td>
+              <td><b>Read</b> 2026-09-25 — <code>build-square.mjs:129</code>, plus three generated <code>.build/</code> invoice and display files</td></tr>
+          <tr><td>The tax credit covers contractor payment for qualifying vegetation work; HB25-1182 gives an insurer 30 days on a re-score</td>
+              <td><b>Carried over, not re-verified today.</b> Both verified first-party when <code>tax-credit-notebook/</code> was built and audited. The argument here turns only on the scope being vegetation and wildfire</td></tr>
+          <tr><td>CLEAR / PROTECT / RESTORE are Brandon's three circles</td>
+              <td><b>Read</b> — <code>operations/quote-walk-sheet.md</code>, §"One thing worth raising with Brandon"</td></tr>
+          <tr><td>They are the spine of the Land &amp; Fire flyer Matthew sent, and he liked the wording</td>
+              <td><b>Read</b> — <code>marketing/lawn-infographic-2026-09/README.md</code>, quoted directly</td></tr>
+          <tr><td>"Landscaping as the after-job of fire mitigation" is a standing banned framing</td>
+              <td><b>Standing rule</b>, swept across the repo 2026-09-18</td></tr>
+          <tr><td>"Treeline" is the mark's own word for the four peaks plus conifer</td>
+              <td><b>Read</b> — <code>brand/rebrand-2026-09/README.md</code>, the fourth objection to the house</td></tr>
+          <tr><td>The website does not carry the tagline</td>
+              <td><b>Grepped</b> 2026-09-25 — zero hits across the ten page HTMLs; the only match is the <code>/who-pays/</code> kicker</td></tr>
+          <tr><td>Nine files carry it</td>
+              <td><b>Counted</b> 2026-09-25, excluding generated <code>.build/</code> outputs</td></tr>
+          <tr><td>The mix has moved twice in ten days</td>
+              <td><b>Counted</b> — descriptor settled 09-16, positioning changed 09-23, landscaping defined as lawn care 09-25</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">
+    Sixfold LLC — internal decision sheet, 25 September 2026. Draft only: nothing swept, printed,
+    posted, uploaded or ordered. Source of record is <code>brand/tagline-2026-09/README.md</code>
+    in the repo.<br>
+    Set in the two Sixfold registers — Bone in light, Pine in dark. Green carries every rule and
+    link; ember appears twice and both are warnings.
+  </p>
+
+</div>

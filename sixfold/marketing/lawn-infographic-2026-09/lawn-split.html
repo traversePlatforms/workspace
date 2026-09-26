@@ -1,0 +1,258 @@
+<!doctype html>
+<!--
+  Sixfold Colorado — lawn aeration infographic, LOUD CUT. 2026-09-25.
+  1080x1350 for Facebook ads. Draft. Nothing placed, nothing spending.
+
+  This exists because lawn-cutaway.html is elegant and elegance loses in a feed.
+  Matthew, 2026-09-25: "needs to be more visually striking." Both are kept — see
+  README.md §Two versions.
+
+  What changed, and why each one:
+
+    DARK GROUND. Facebook's feed is near-white. A pine board is a hole in it.
+    THE SPLIT IS THE IDEA. Same lawn, drawn twice: packed on the left, cored on
+      the right, divided down the middle by the tine that takes you from one to
+      the other. The left half is the right half with the saturation drained out
+      of it — the same drawing, not a different one, which is the honest version
+      of a before-and-after when you have no photographs of a real job.
+    THE ROOTS ARE THE ARGUMENT. Left they hit the pan and turn sideways; right
+      they run off the bottom of the drawing. It is the only element that
+      differs, and it reads before any word does.
+    TYPE GOT BIGGER, WORDS GOT FEWER. At feed thumbnail size the first board's
+      19px notes were unreadable. Everything here survives at 350px wide.
+    EMBER FOOTER. Palette A spends ember on the call to action, and this is the
+      call to action. It is the loudest thing on the board and it is the phone
+      number.
+
+  Rules unchanged: no price, no minimum, no "free estimate", no "licensed and
+  insured", no guarantee, no crew size, no before-and-after photography, no
+  months named for the window.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold — packed vs cored</title>
+<style>
+:root{
+  --pine:#0E1512; --pine-lift:#16201B; --bone:#EDE7DC;
+  --turf:#2F7A4F; --turf-hi:#3E9B64; --moss:#8AA07A; --sage:#A7BE93;
+  --ember:#E4703A; --ember-deep:#C4551F;
+  --soil:#6B5340; --soil-dark:#42342A; --thatch:#A8875C; --water:#6E9BB5; /* illustration only */
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+  --sans:"Segoe UI",ui-sans-serif,system-ui,Roboto,Helvetica,Arial,sans-serif;
+  --mono:Consolas,"Cascadia Mono","Segoe UI Mono",ui-monospace,monospace;
+}
+@page{ size:11.25in 14.0625in; margin:0; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#202622;display:grid;place-items:start center;font-family:var(--sans)}
+/* No screen padding: a 1080x1350 screenshot must be the board and nothing else. */
+
+.board{
+  width:1080px;height:1350px;overflow:hidden;position:relative;
+  background:var(--pine);color:var(--bone);display:flex;flex-direction:column;
+}
+
+/* ---------- masthead ---------- */
+.head{padding:46px 60px 0}
+.eyebrow{
+  font-family:var(--mono);font-size:17px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--sage);margin:0 0 18px;
+}
+h1{
+  font-family:var(--serif);font-weight:400;font-size:86px;line-height:.98;
+  letter-spacing:-.028em;margin:0;
+}
+h1 em{font-style:normal;color:var(--turf-hi)}
+.kick{margin:18px 0 0;font-size:24px;line-height:1.36;color:rgba(237,231,220,.76);max-width:900px}
+
+/* ---------- the split drawing ---------- */
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:16px}
+.toprow .eyebrow{margin:0}
+.chip{
+  margin:0;font-family:var(--mono);font-size:17px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:700;color:#1A0C04;background:var(--ember);padding:12px 20px;border-radius:999px;
+}
+.cut{margin-top:18px;flex:none}
+.cut svg{display:block;width:100%}
+
+/* ---------- the one fact worth keeping ---------- */
+.proof{
+  margin:0;padding:22px 60px;list-style:none;background:var(--pine-lift);
+  border-top:2px solid rgba(237,231,220,.10);
+  display:grid;grid-template-columns:repeat(3,1fr);gap:26px;
+}
+.proof li{display:grid;gap:4px;padding-left:34px;position:relative}
+.proof li::before{
+  content:"";position:absolute;left:0;top:6px;width:20px;height:11px;
+  border-left:4px solid var(--turf-hi);border-bottom:4px solid var(--turf-hi);transform:rotate(-45deg);
+}
+.proof b{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.1}
+.proof span{font-size:17.5px;line-height:1.35;color:rgba(237,231,220,.66)}
+
+/* ---------- contact, and it shouts ---------- */
+.foot{
+  margin-top:auto;background:var(--ember);color:#1A0C04;
+  padding:26px 60px 30px;display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;
+}
+.foot .mark{width:86px;color:#1A0C04}
+.foot .mark svg{width:86px;height:83px;display:block}
+.wordmark{font-family:var(--serif);font-size:32px;margin:0;letter-spacing:-.01em}
+.cta-label{margin:4px 0 0;font-family:var(--mono);font-size:18px;letter-spacing:.14em;
+           text-transform:uppercase;font-weight:700;color:#2A1408}
+.tel{font-family:var(--serif);font-size:74px;line-height:1;letter-spacing:-.02em;margin:6px 0 0}
+.web{font-family:var(--mono);font-size:23px;letter-spacing:.06em;margin:10px 0 0;color:#2A1408}
+.towns{margin:10px 0 0;font-family:var(--mono);font-size:14.5px;letter-spacing:.08em;
+       text-transform:uppercase;color:rgba(26,12,4,.66)}
+</style>
+</head>
+<body>
+
+<div class="board">
+
+  <div class="head">
+    <div class="toprow">
+      <p class="eyebrow">Core lawn aeration &middot; Monument, CO</p>
+      <!-- ⚑ THE DEAL SLOT. This chip is the only place on the board where an offer
+           can live, and what is in it now is a BUNDLE, not a discount: aeration and
+           overseeding really are done in one visit, so it costs nothing to say and
+           breaks no rule. A real deal - a number, a percentage, a free anything -
+           is a PRICE, and Sixfold has no aeration rate of its own yet. Swap this
+           line only after that is settled and Matthew has authorised the offer. -->
+      <p class="chip">Booking fall aeration</p>
+    </div>
+    <h1>Same lawn.<br><em>Three inches down.</em></h1>
+    <p class="kick">Left, the water runs off and the roots stop. Right, it has been cored.</p>
+  </div>
+
+  <div class="cut">
+  <svg viewBox="0 0 1080 604" role="img"
+       aria-label="One lawn drawn twice in cross-section. On the left the ground is packed: rain runs off and roots turn sideways at a compacted layer. A hollow tine down the middle pulls a core. On the right the ground has been cored: water and seed drop into open holes and the roots run deep.">
+    <defs>
+      <!-- The left half is the right half with the life drained out of it. Same
+           drawing, same colours, one filter — which is the honest way to show a
+           before and after when no photograph of a real job exists. -->
+      <filter id="drain"><feColorMatrix type="saturate" values="0.22"/></filter>
+      <clipPath id="leftHalf"><rect x="0" y="0" width="492" height="604"/></clipPath>
+      <clipPath id="rightHalf"><rect x="492" y="0" width="588" height="604"/></clipPath>
+    </defs>
+
+    <!-- ================= LEFT: packed ================= -->
+    <g clip-path="url(#leftHalf)" filter="url(#drain)">
+      <rect x="0" y="0" width="492" height="604" fill="var(--pine)"/>
+      <!-- rain, arriving and leaving sideways -->
+      <g stroke="var(--water)" stroke-width="9" stroke-linecap="round" fill="none">
+        <path d="M74 44 L74 104"/><path d="M140 28 L140 96"/><path d="M206 50 L206 110"/>
+        <path d="M54 140 C130 196 250 200 366 164"/>
+        <path d="M338 148 L374 162 L340 182"/>
+      </g>
+      <rect x="0" y="196" width="492" height="30" fill="var(--turf)"/>
+      <g stroke="var(--moss)" stroke-width="6" stroke-linecap="round" fill="none">
+        <path d="M30 196 L24 168"/><path d="M112 196 L118 172"/><path d="M196 196 L190 166"/>
+        <path d="M284 196 L290 172"/><path d="M372 196 L366 168"/><path d="M452 196 L458 172"/>
+      </g>
+      <rect x="0" y="226" width="492" height="16" fill="var(--thatch)"/>
+      <rect x="0" y="242" width="492" height="96" fill="var(--soil-dark)"/>
+      <g fill="rgba(0,0,0,.42)">
+        <circle cx="54" cy="270" r="8"/><circle cx="126" cy="308" r="7"/><circle cx="198" cy="266" r="9"/>
+        <circle cx="272" cy="310" r="7"/><circle cx="346" cy="272" r="8"/><circle cx="420" cy="306" r="7"/>
+        <circle cx="90" cy="292" r="6"/><circle cx="240" cy="288" r="6"/><circle cx="390" cy="290" r="6"/>
+      </g>
+      <rect x="0" y="338" width="492" height="266" fill="var(--soil)"/>
+      <!-- roots reach the pan and turn -->
+      <g stroke="var(--sage)" stroke-width="9" fill="none" stroke-linecap="round">
+        <path d="M118 226 L118 268 C118 306 74 302 56 324"/>
+        <path d="M118 268 C118 308 164 304 182 326"/>
+        <path d="M290 226 L290 274 C290 312 246 308 228 330"/>
+        <path d="M290 274 C290 314 336 310 354 332"/>
+        <path d="M430 226 L430 264 C430 302 386 298 368 320"/>
+      </g>
+    </g>
+
+    <!-- ================= RIGHT: cored ================= -->
+    <g clip-path="url(#rightHalf)">
+      <rect x="492" y="0" width="588" height="604" fill="var(--pine)"/>
+      <!-- water going in, seed going in -->
+      <g stroke="var(--water)" stroke-width="9" stroke-linecap="round" fill="none">
+        <path d="M700 40 L700 188"/><path d="M846 24 L846 188"/><path d="M992 44 L992 188"/>
+        <path d="M686 168 L700 194 L714 168"/><path d="M832 168 L846 194 L860 168"/><path d="M978 168 L992 194 L1006 168"/>
+      </g>
+      <rect x="492" y="196" width="588" height="30" fill="var(--turf-hi)"/>
+      <g stroke="var(--sage)" stroke-width="6" stroke-linecap="round" fill="none">
+        <path d="M556 196 L550 162"/><path d="M640 196 L646 158"/><path d="M742 196 L736 160"/>
+        <path d="M898 196 L904 158"/><path d="M1044 196 L1038 162"/>
+      </g>
+      <rect x="492" y="226" width="588" height="16" fill="var(--thatch)"/>
+      <rect x="492" y="242" width="588" height="96" fill="var(--soil-dark)"/>
+      <rect x="492" y="338" width="588" height="266" fill="var(--soil)"/>
+      <!-- open holes -->
+      <g fill="#0B0806">
+        <rect x="680" y="226" width="40" height="150" rx="5"/>
+        <rect x="826" y="226" width="40" height="150" rx="5"/>
+        <rect x="972" y="226" width="40" height="150" rx="5"/>
+      </g>
+      <!-- seed dropping in -->
+      <g fill="var(--ember)">
+        <ellipse cx="700" cy="118" rx="8" ry="11"/><ellipse cx="700" cy="246" rx="8" ry="11"/>
+        <ellipse cx="846" cy="96" rx="8" ry="11"/><ellipse cx="846" cy="252" rx="8" ry="11"/>
+        <ellipse cx="992" cy="124" rx="8" ry="11"/><ellipse cx="992" cy="240" rx="8" ry="11"/>
+      </g>
+      <!-- roots run past the bottom of the frame -->
+      <g stroke="var(--sage)" stroke-width="9" fill="none" stroke-linecap="round">
+        <path d="M604 226 L604 560"/><path d="M604 320 L552 372"/><path d="M604 430 L656 482"/><path d="M604 500 L566 556"/>
+        <path d="M760 226 L760 604"/><path d="M760 356 L706 410"/><path d="M760 470 L812 522"/>
+        <path d="M906 226 L906 578"/><path d="M906 330 L860 380"/><path d="M906 452 L954 500"/>
+        <path d="M1050 226 L1050 540"/><path d="M1050 372 L1006 420"/>
+      </g>
+    </g>
+
+    <!-- ================= the tine, straddling the two ================= -->
+    <rect x="404" y="0" width="184" height="30" rx="7" fill="#39433C"/>
+    <g stroke="#39433C" stroke-width="10" fill="none">
+      <path d="M436 30 L436 86 M556 30 L556 86"/>
+    </g>
+    <g stroke="var(--bone)" stroke-width="6" fill="#2E3833">
+      <path d="M474 86 L474 396 L512 396 L512 86"/>
+    </g>
+    <rect x="480" y="244" width="26" height="152" fill="var(--soil)"/>
+    <path d="M481 92 L481 240" stroke="rgba(237,231,220,.45)" stroke-width="4" fill="none"/>
+    <!-- the core it has already set down, grass still on top -->
+    <g transform="rotate(-8 610 150)">
+      <rect x="546" y="128" width="136" height="42" rx="20" fill="var(--soil)" stroke="#2A2119" stroke-width="3"/>
+      <rect x="546" y="128" width="34" height="42" rx="17" fill="var(--turf-hi)"/>
+    </g>
+
+    <path d="M492 0 L492 604" stroke="rgba(237,231,220,.22)" stroke-width="3" fill="none"/>
+
+    <!-- ================= labels ================= -->
+    <g font-family="Consolas,monospace" font-size="25" letter-spacing="4" font-weight="700">
+      <text x="40" y="580" fill="rgba(237,231,220,.62)">PACKED</text>
+      <text x="1040" y="580" text-anchor="end" fill="var(--sage)">CORED</text>
+    </g>
+  </svg>
+  </div>
+
+  <ul class="proof">
+    <li><b>Aeration and overseed</b><span>One visit, seed into open holes</span></li>
+    <li><b>We walk it first</b><span>Counted on site, then quoted</span></li>
+    <li><b>You get the folder</b><span>Written scope, photos, itemised invoice</span></li>
+  </ul>
+
+  <div class="foot">
+    <div class="mark">
+      <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="currentColor" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84ZM9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5ZM4 86L96 86L96 91L4 91Z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="wordmark">Sixfold Colorado</p>
+      <p class="cta-label">Call and we will walk your lawn</p>
+      <p class="tel">(303) 915-1045</p>
+      <p class="web">SixfoldColorado.com</p>
+      <p class="towns">Monument &middot; Colorado Springs &middot; Black Forest &middot; Palmer Lake &middot; Larkspur</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

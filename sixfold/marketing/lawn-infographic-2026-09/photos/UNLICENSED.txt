@@ -1,0 +1,13 @@
+# Slots whose file is NOT a licensed download.
+#
+# One stem per line. Any slot listed here renders under a red ribbon, so a comp
+# cannot reach an ad by accident. Delete a line when the licensed file replaces
+# the stand-in, and re-run build-photo.mjs.
+#
+# CLEARED 2026-09-25 — Matthew: "we have rights to those images." The four frames
+# were flagged on arrival because they came in as screenshots and one other
+# screenshot in the same folder carried Adobe Stock watermarks. That was a guess
+# about provenance and he has overruled it, which is his call to make.
+#
+# The list is empty on purpose. Add a stem back the moment a slot takes a file
+# whose licence is not confirmed.

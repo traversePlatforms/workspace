@@ -1,0 +1,267 @@
+<!doctype html>
+<!--
+  Sixfold Colorado — lawn care infographic, 2026-09-25.
+  One 1080x1350 board for Facebook ads. Draft. Nothing placed, nothing spending.
+
+  Register: the 2026-09-14 board kit's tokens and type stack, but this is not one
+  of those boards. Those are editorial — a standfirst and a chart, read at leisure.
+  This one has to be entertaining enough to stop a thumb, so the drawing IS the
+  board and the words hang off it.
+
+  Palette A (site, 2026-09-24): green leads, ember is the call to action only.
+  On this board ember appears twice — the contact bar and the markers — and
+  nowhere else. --soil is illustration-only, same rule as the video frames.
+
+  The domain is ON this board, unlike every earlier Sixfold graphic. Those left it
+  off because sixfoldcolorado.com did not resolve. It has been live since
+  2026-09-21, so it goes on.
+
+  Rules this board is built inside: no price, no minimum, no "free estimate", no
+  "licensed and insured", no guarantee about the lawn, no crew size or capacity,
+  no before-and-after photography (there is none that is a real Sixfold job), and
+  no months named for the aeration window (no CSU source gives them).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold — what your lawn is doing under there</title>
+<style>
+:root{
+  --paper:#F2EDE3; --paper-lift:#FBF8F1; --p-line:#DCD4C5;
+  --ink:#141A16; --ink-soft:#4C554E; --ink-faint:#6E7A72;
+  --pine:#0E1512; --bone:#EDE7DC;
+  --turf:#2F7A4F; --turf-deep:#245F3E; --moss:#8AA07A; --sage:#A7BE93;
+  --ember:#E4703A; --ember-ink:#B84C15;
+  --soil:#6B5340; --soil-dark:#4E3C2D; --thatch:#A8875C;   /* illustration only */
+  --serif:"Palatino Linotype","Book Antiqua",Palatino,"Iowan Old Style",Georgia,serif;
+  --sans:"Segoe UI",ui-sans-serif,system-ui,Roboto,Helvetica,Arial,sans-serif;
+  --mono:Consolas,"Cascadia Mono","Segoe UI Mono",ui-monospace,monospace;
+}
+@page{ size:11.25in 14.0625in; margin:0; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#3A423C;display:grid;place-items:start center;font-family:var(--sans)}
+/* No screen padding: this file is a render source, and a 1080x1350 screenshot of
+   the page must be the board and nothing else. */
+@media screen{ .board{box-shadow:none} }
+
+.board{
+  width:1080px;height:1350px;overflow:hidden;position:relative;
+  background:var(--paper);color:var(--ink);display:flex;flex-direction:column;
+}
+
+/* ---------- masthead ---------- */
+.head{padding:46px 64px 0}
+.eyebrow{
+  font-family:var(--mono);font-size:16px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--turf);margin:0 0 16px;
+}
+h1{
+  font-family:var(--serif);font-weight:400;font-size:64px;line-height:1.02;
+  letter-spacing:-.02em;margin:0;text-wrap:balance;
+}
+h1 em{font-style:normal;color:var(--turf-deep)}
+.standfirst{margin:16px 0 0;font-size:21px;line-height:1.45;color:var(--ink-soft);max-width:830px}
+
+/* ---------- the drawing ---------- */
+.cut{margin-top:20px;position:relative;flex:none}
+.cut svg{display:block;width:100%}
+
+/* ---------- the four notes ---------- */
+.notes{
+  padding:26px 64px 0;display:grid;grid-template-columns:1fr 1fr;
+  gap:20px 40px;flex:1;align-content:start;
+}
+.note{display:grid;grid-template-columns:44px 1fr;gap:16px;align-items:start}
+.pip{
+  width:44px;height:44px;border-radius:50%;background:var(--ember);color:#160B05;
+  font-family:var(--mono);font-size:22px;font-weight:700;display:grid;place-items:center;
+}
+.note b{display:block;font-family:var(--serif);font-weight:400;font-size:27px;line-height:1.15;margin-bottom:5px}
+.note p{margin:0;font-size:19px;line-height:1.42;color:var(--ink-soft)}
+
+.when{
+  margin:18px 64px 0;padding:14px 22px;border-left:4px solid var(--turf);
+  background:var(--paper-lift);font-size:19px;line-height:1.45;color:var(--ink-soft);
+}
+.when b{color:var(--ink);font-weight:600}
+
+/* ---------- contact ---------- */
+.foot{
+  margin-top:auto;background:var(--pine);color:var(--bone);
+  padding:26px 64px 30px;display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;
+}
+.foot .mark{width:92px;color:var(--sage)}
+.foot .mark svg{width:92px;height:88px;display:block}
+.wordmark{font-family:var(--serif);font-size:38px;margin:0 0 4px;letter-spacing:-.01em}
+.services{font-family:var(--mono);font-size:15.5px;letter-spacing:.09em;text-transform:uppercase;
+          color:var(--sage);margin:0 0 14px}
+.lines{display:flex;flex-wrap:wrap;gap:8px 30px;align-items:baseline}
+.lines .tel{font-family:var(--serif);font-size:44px;line-height:1;letter-spacing:-.01em}
+.lines .web{font-size:24px;color:var(--bone)}
+.lines .mail{font-size:22px;color:rgba(237,231,220,.72)}
+.towns{margin:12px 0 0;font-family:var(--mono);font-size:14px;letter-spacing:.08em;
+       text-transform:uppercase;color:rgba(237,231,220,.5)}
+</style>
+</head>
+<body>
+
+<div class="board">
+
+  <div class="head">
+    <p class="eyebrow">Sixfold Colorado &middot; Core lawn aeration</p>
+    <h1>Your lawn's problem is<br><em>three inches down.</em></h1>
+    <p class="standfirst">Front Range ground packs hard. Here is what that does, and what
+    pulling a few thousand plugs out of it fixes.</p>
+  </div>
+
+  <!-- The cutaway. Drawn to the numbers in the fact check: plugs 2-3 in deep,
+       2-4 in apart, hollow tines, cores left on the surface. Left half is
+       compacted ground, right half has been cored — the roots are the payoff and
+       they are the only thing in the drawing that changes between the two. -->
+  <div class="cut">
+  <svg viewBox="0 -60 1080 440" role="img"
+       aria-label="Cross-section of a lawn: water running off compacted ground on the left, a hollow tine pulling a core in the middle, and seed dropping into open holes on the right where the roots run deep">
+
+    <!-- air -->
+    <rect x="0" y="-60" width="1080" height="156" fill="var(--paper)"/>
+
+    <!-- LEFT: rain arriving, and leaving sideways -->
+    <g stroke="#6E9BB5" stroke-width="8" stroke-linecap="round" fill="none">
+      <path d="M74 -30 L74 22"/><path d="M132 -44 L132 16"/><path d="M190 -22 L190 28"/>
+      <path d="M60 46 C120 92 230 96 330 66"/>
+      <path d="M306 52 L336 64 L308 82"/>
+    </g>
+
+    <!-- turf -->
+    <rect x="0" y="96" width="1080" height="26" fill="var(--turf)"/>
+    <g stroke="var(--moss)" stroke-width="5" stroke-linecap="round" fill="none">
+      <path d="M24 96 L18 72"/><path d="M96 96 L102 74"/><path d="M168 96 L162 70"/>
+      <path d="M240 96 L246 76"/><path d="M330 96 L324 72"/><path d="M400 96 L406 76"/>
+      <path d="M660 96 L654 68"/><path d="M736 96 L742 66"/><path d="M812 96 L806 64"/>
+      <path d="M884 96 L890 66"/><path d="M958 96 L952 64"/><path d="M1040 96 L1046 68"/>
+    </g>
+
+    <!-- thatch, then the pan, then the root zone -->
+    <rect x="0" y="122" width="1080" height="14" fill="var(--thatch)"/>
+    <rect x="0" y="136" width="1080" height="76" fill="var(--soil-dark)"/>
+    <g fill="rgba(0,0,0,.34)">
+      <circle cx="54" cy="158" r="7"/><circle cx="116" cy="190" r="6"/><circle cx="178" cy="156" r="8"/>
+      <circle cx="244" cy="192" r="7"/><circle cx="310" cy="160" r="6"/><circle cx="378" cy="190" r="8"/>
+      <circle cx="444" cy="158" r="7"/><circle cx="620" cy="190" r="6"/><circle cx="668" cy="160" r="7"/>
+      <circle cx="788" cy="188" r="7"/><circle cx="920" cy="158" r="6"/><circle cx="1050" cy="190" r="7"/>
+    </g>
+    <rect x="0" y="212" width="1080" height="168" fill="var(--soil)"/>
+
+    <!-- LEFT: roots hit the pan and turn sideways -->
+    <g stroke="var(--sage)" stroke-width="7" fill="none" stroke-linecap="round">
+      <path d="M100 122 L100 150 C100 178 70 176 56 192"/>
+      <path d="M100 150 C100 180 134 178 148 194"/>
+      <path d="M250 122 L250 154 C250 182 220 180 206 196"/>
+      <path d="M250 154 C250 184 284 182 298 198"/>
+      <path d="M400 122 L400 148 C400 176 370 174 356 190"/>
+      <path d="M400 148 C400 178 434 176 448 192"/>
+    </g>
+
+    <!-- MIDDLE: the tine, mid-pull, and the core it just set down -->
+    <rect x="466" y="-60" width="178" height="26" rx="6" fill="#2B332E"/>
+    <g stroke="#2B332E" stroke-width="8" fill="none">
+      <path d="M496 -34 L496 8 M534 -34 L534 8"/>
+    </g>
+    <g stroke="var(--ink)" stroke-width="7" fill="var(--paper-lift)">
+      <path d="M494 8 L494 258 L536 258 L536 8"/>
+    </g>
+    <rect x="501" y="140" width="28" height="118" fill="var(--soil)"/>
+    <rect x="578" y="122" width="36" height="128" rx="4" fill="#1B1510"/>
+
+    <!-- the core lying on the turf, grass still on top of it -->
+    <g transform="rotate(-7 700 74)">
+      <rect x="636" y="56" width="128" height="36" rx="17" fill="var(--soil)" stroke="var(--soil-dark)" stroke-width="3"/>
+      <rect x="636" y="56" width="30" height="36" rx="15" fill="var(--turf)"/>
+    </g>
+
+    <!-- RIGHT: open holes, seed going in, roots following -->
+    <g fill="#1B1510">
+      <rect x="712" y="122" width="36" height="128" rx="4"/>
+      <rect x="854" y="122" width="36" height="128" rx="4"/>
+      <rect x="996" y="122" width="36" height="128" rx="4"/>
+    </g>
+    <g fill="var(--ember)">
+      <ellipse cx="730" cy="18" rx="7" ry="10"/><ellipse cx="730" cy="62" rx="7" ry="10"/><ellipse cx="730" cy="132" rx="7" ry="10"/>
+      <ellipse cx="872" cy="2" rx="7" ry="10"/><ellipse cx="872" cy="48" rx="7" ry="10"/><ellipse cx="872" cy="140" rx="7" ry="10"/>
+      <ellipse cx="1014" cy="26" rx="7" ry="10"/><ellipse cx="1014" cy="74" rx="7" ry="10"/><ellipse cx="1014" cy="128" rx="7" ry="10"/>
+    </g>
+    <g stroke="var(--sage)" stroke-width="7" fill="none" stroke-linecap="round">
+      <path d="M790 122 L790 344"/><path d="M790 196 L748 240"/><path d="M790 262 L830 302"/><path d="M790 306 L762 344"/>
+      <path d="M932 122 L932 360"/><path d="M932 214 L892 254"/><path d="M932 286 L972 322"/>
+      <path d="M1064 122 L1064 330"/><path d="M1064 224 L1030 262"/>
+    </g>
+
+    <!-- markers, each one beside the thing it names -->
+    <g font-family="Consolas,monospace" font-size="25" font-weight="700">
+      <circle cx="386" cy="52" r="27" fill="var(--ember)"/><text x="386" y="61" text-anchor="middle" fill="#160B05">1</text>
+      <circle cx="604" cy="26" r="27" fill="var(--ember)"/><text x="604" y="35" text-anchor="middle" fill="#160B05">2</text>
+      <circle cx="808" cy="42" r="27" fill="var(--ember)"/><text x="808" y="51" text-anchor="middle" fill="#160B05">3</text>
+      <circle cx="872" cy="330" r="27" fill="var(--ember)"/><text x="872" y="339" text-anchor="middle" fill="#160B05">4</text>
+    </g>
+  </svg>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <div class="pip">1</div>
+      <div>
+        <b>It sheds water</b>
+        <p>Packed ground turns a sprinkler into runoff. It is the patch that goes brown
+        first every year.</p>
+      </div>
+    </div>
+    <div class="note">
+      <div class="pip">2</div>
+      <div>
+        <b>A punch, not a drill</b>
+        <p>Hollow tines take a core two to three inches down, two to four inches apart.</p>
+      </div>
+    </div>
+    <div class="note">
+      <div class="pip">3</div>
+      <div>
+        <b>The plugs stay put</b>
+        <p>They look untidy for a couple of weeks, then break down back into the lawn.</p>
+      </div>
+    </div>
+    <div class="note">
+      <div class="pip">4</div>
+      <div>
+        <b>Seed falls in, not on</b>
+        <p>Overseed straight after and it lands in an open hole. Water, air and roots
+        follow it down.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="when"><b>Spring and fall are the windows.</b> It can be done any time the ground
+  is not frozen, and not when it is baked dry. Water it a couple of days before — dry ground
+  will not give up a deep plug.</p>
+
+  <div class="foot">
+    <div class="mark">
+      <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+        <path fill="currentColor" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84ZM9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5ZM4 86L96 86L96 91L4 91Z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="wordmark">Sixfold Colorado</p>
+      <p class="services">Aerate &middot; Overseed &middot; Fertilize &middot; Mow &amp; edge &middot; Clear &amp; haul</p>
+      <div class="lines">
+        <span class="tel">(303) 915-1045</span>
+        <span class="web">SixfoldColorado.com</span>
+        <span class="mail">Contact@SixfoldColorado.com</span>
+      </div>
+      <p class="towns">Monument &middot; Colorado Springs &middot; Black Forest &middot; Palmer Lake &middot; Larkspur</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
