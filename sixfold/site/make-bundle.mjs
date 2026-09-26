@@ -13,7 +13,7 @@
  * Dotfiles ARE included: .htaccess and api/.htaccess are load-bearing, and most
  * file managers hide them, which is exactly how they get left behind.
  */
-import { readdirSync, statSync, mkdirSync, rmSync, cpSync, existsSync, writeFileSync } from 'node:fs';
+import { readdirSync, statSync, mkdirSync, rmSync, cpSync, existsSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -88,8 +88,50 @@ if (missing.length) {
 
 const zip = join(DIST, NAME + '.zip');
 rmSync(zip, { force: true });
-execFileSync('powershell', ['-NoProfile', '-Command',
-  `Compress-Archive -Path '${STAGE}\\*' -DestinationPath '${zip}' -Force`], { stdio: 'inherit' });
+
+/* ⚑ NOT PowerShell's Compress-Archive. Windows PowerShell 5.1 writes path
+   separators as BACKSLASHES into the zip, which the ZIP spec forbids — it
+   requires forward slashes. Checked on the 2026-09-26 bundle: 31 of 35 entries
+   came out as `api\config.php`, `assets\site.css` and so on.
+
+   Whether that matters depends entirely on the extractor at the other end. A
+   normalising one (SiteGround's evidently is — the 2026-09-21 upload worked)
+   silently does the right thing. Info-ZIP's `unzip` on Linux does NOT: it treats
+   the whole thing as a FILENAME containing a backslash, so you get flat files
+   called `api\config.php` at the document root, no `api/` directory, and a site
+   whose stylesheet and form both 404. That failure is silent at upload time and
+   public immediately.
+
+   bsdtar ships in System32 on Windows 10+ and writes conformant forward slashes.
+   Called by full path deliberately: in Git Bash a bare `tar` resolves to GNU tar,
+   which cannot create zips at all. Verified after writing, below.
+
+   The top-level entries are passed by NAME rather than as `.` — bsdtar given `.`
+   stores every path with a `./` prefix, which the check below also rejects. */
+const BSDTAR = 'C:\\Windows\\System32\\tar.exe';
+const TOP = readdirSync(STAGE);          // dotfiles included: .htaccess is load-bearing
+execFileSync(BSDTAR, ['-a', '-c', '-f', zip, '-C', STAGE, ...TOP], { stdio: 'inherit' });
+
+/* Verify what was actually stored, rather than trusting the tool. Reads the
+   central directory and fails the build on any backslash or any `./` prefix. */
+{
+  const buf = readFileSync(zip);
+  const names = [];
+  for (let i = 0; i < buf.length - 4; i++) {
+    if (buf.readUInt32LE(i) === 0x02014b50) {
+      const n = buf.readUInt16LE(i + 28);
+      names.push(buf.subarray(i + 46, i + 46 + n).toString('utf8'));
+    }
+  }
+  const bad = names.filter((n) => n.includes('\\') || n.startsWith('./'));
+  if (!names.length || bad.length) {
+    console.error(`\n  ✗ BAD ZIP — ${bad.length} of ${names.length} entries are malformed:`);
+    for (const n of bad.slice(0, 10)) console.error('      ' + n);
+    console.error('    Not shipping this. Fix the zipper before uploading.');
+    process.exit(1);
+  }
+  console.log(`\n  zip entries verified: ${names.length}, all forward-slash, no ./ prefix`);
+}
 
 const total = kept.reduce((n, f) => n + f.bytes, 0);
 console.log(`\n  ${kept.length} files, ${(total / 1024).toFixed(0)} KB uncompressed`);
