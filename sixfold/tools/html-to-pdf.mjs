@@ -41,6 +41,12 @@ const JOBS = [
      on the page and the backgrounds must print. */
   { src: 'brand/rebrand-2026-09/concepts.html', out: 'brand/rebrand-2026-09/Sixfold-Rebrand-Concepts.pdf', mode: 'light', scale: 0.76,
     css: '.concept, .palcard, .small-test, .lock { break-inside: avoid-page; }' },
+  /* The tagline decision sheet for the same meeting. Light, because it goes on the
+     table beside the concept board; it carries its own @page rule and print sizing,
+     so it does not want the default 0.8 shrink on top. FIVE pages — four tables and
+     the fact-check log. Sections are deliberately NOT held whole: the first render
+     did that and lost 40% of page 1 keeping one section together. */
+  { src: 'brand/tagline-2026-09/tagline.html', out: 'brand/tagline-2026-09/Sixfold-Tagline-Decision.pdf', mode: 'light', scale: 1 },
   /* scale: the one-pager carries its own @page rule and an 8.5in sheet. At the
      default 0.8 it spills its footer disclaimer onto a second page, which
      defeats the point of a one-pager. 0.76 lands it on one, checked by
@@ -62,6 +68,23 @@ const JOBS = [
   /* Door hanger, 4.25x11, front and back. Its own @page size, so scale MUST be 1.
      The top 2.6in is a keep-out for the vendor's die-cut hole. */
   { src: 'marketing/door-hanger.html',          out: 'marketing/Sixfold-Door-Hanger.pdf',         mode: 'light', scale: 1 },
+  /* The door-to-door leave-behind. TWO per Letter sheet, cut across the middle —
+     ONE page, two identical 8.5x5.5 flyers. Own @page, so scale MUST be 1.
+
+     Printed on Sixfold's own printer in volume, so it is built to be cheap: no
+     background fills, no photographs, one accent in hairlines and the mark.
+
+     MONO IS THE ONE TO PRINT. The accent lives in a single CSS custom property
+     precisely so the mono build can flatten it to black in one override, rather
+     than the file being maintained twice and drifting. */
+  /* The mono build also swaps the QR. CSS cannot recolour a raster, so the branded
+     code's green centre mark would survive into a mono print as a grey halftone —
+     the one thing on the page that would not have gone black. `content:url()` swaps
+     it for sixfold-qr-print-black.png, which is pure black on white and the
+     maximum-reliability variant. So mono is now cheaper AND scans better. */
+  { src: 'marketing/door-flyer.html', out: 'marketing/Sixfold-Door-Flyer-Mono.pdf', mode: 'light', scale: 1,
+    css: ':root{ --accent:#000000 !important } .qr{ content:url("../brand/qr/sixfold-qr-print-black.png") }' },
+  { src: 'marketing/door-flyer.html', out: 'marketing/Sixfold-Door-Flyer-Green.pdf', mode: 'light', scale: 1 },
   { src: 'marketing/launch-flyers.html',        out: 'marketing/launch-flyers.pdf',               mode: 'light',
     css: '.flyer, .board-col { break-inside: avoid-page; }' },
   { src: 'marketing/marketing-plan.html',       out: 'marketing/marketing-plan.pdf',              mode: 'light' },

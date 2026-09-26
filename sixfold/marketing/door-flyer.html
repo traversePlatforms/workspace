@@ -1,0 +1,194 @@
+<!doctype html>
+<!--
+  Sixfold Colorado — door-to-door leave-behind. 2026-09-25.
+
+  Brandon hands this over, or leaves it when nobody answers.
+
+  ---- THE CONSTRAINT IS INK, AND IT DROVE EVERY DECISION -------------------
+  Printed on Sixfold's own office printer, in volume. So:
+
+  1. TWO PER LETTER SHEET, cut across the middle. Each piece is 8.5 x 5.5.
+     This is the single biggest saving available and it costs nothing — half
+     the paper and half the ink per door, before any other choice is made.
+  2. NO BACKGROUND FILLS ANYWHERE. The paper is the background. A full-bleed
+     tint is the most expensive thing that can go on a page and it buys
+     nothing on a leave-behind.
+  3. NO PHOTOGRAPHS. A photo block is orders of magnitude more ink than type,
+     and there is still no photograph of a real Sixfold aeration job anyway
+     (PHOTOS.md, The turf gap).
+  4. ONE accent colour, in hairlines and the mark only — and it is a single
+     CSS token, so the mono build overrides it to black in one line. The mono
+     PDF is the one to print in volume; the green one is for when a nicer
+     piece is wanted.
+  5. The QR is sixfold-qr-brand-on-white.png — branded geometry, green centre
+     mark, PAPER WHITE ground. The Bone-ground code would have put a tint
+     behind every code, which is both an ink cost and, per brand/qr/README.md,
+     one of the two things that actually break a printed code.
+     THE MONO BUILD SWAPS IT for sixfold-qr-print-black.png. CSS cannot recolour
+     a raster, so the green centre mark would otherwise have been the one thing
+     on a mono page that did not go black. Both codes decode to the same URL and
+     both are verified at 1200/400/240/160px.
+
+  Two jobs in tools/html-to-pdf.mjs, both scale 1 (this carries its own @page):
+    Sixfold-Door-Flyer-Mono.pdf   <- print this one
+    Sixfold-Door-Flyer-Green.pdf
+  Expect ONE page holding two identical flyers.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold Colorado — door flyer</title>
+<style>
+  :root{
+    --accent:#2F7A4F;        /* the ONLY colour. Mono build overrides this to #000 */
+    --ink:#000000;
+    --soft:#3d3d3d;
+    --rule:#b8b8b8;
+    --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    --sans:"Segoe UI",Calibri,Helvetica,Arial,sans-serif;
+    --mono:Consolas,"Cascadia Mono",ui-monospace,monospace;
+  }
+  @page{ size:8.5in 11in; margin:0 }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  .sheet{width:8.5in;height:11in;display:flex;flex-direction:column}
+
+  /* The cut line. A hairline dash, mid grey — visible to cut against, almost
+     nothing on the ink bill. */
+  .cut{height:0;border-top:1px dashed var(--rule);position:relative}
+  .cut::after{content:"cut";position:absolute;right:.18in;top:-.075in;background:#fff;
+              padding:0 4px;font-family:var(--mono);font-size:6.5pt;color:var(--rule);
+              letter-spacing:.14em;text-transform:uppercase}
+
+  .flyer{height:5.5in;padding:.46in .48in;display:grid;
+         grid-template-columns:1fr 1.78in;gap:.36in}
+
+  /* ---- left column ---- */
+  .lockup{display:flex;align-items:flex-start;gap:.11in}
+  .lockup svg{width:.5in;flex:none;color:var(--accent);margin-top:.02in}
+  .name{margin:0;font-family:var(--serif);font-size:23pt;line-height:1;letter-spacing:-.01em}
+  .desc{margin:.04in 0 0;font-family:var(--mono);font-size:7.4pt;letter-spacing:.2em;
+        text-transform:uppercase;color:var(--accent)}
+
+  .knock{margin:.21in 0 0;font-family:var(--serif);font-size:17pt;line-height:1.15}
+  .tag{margin:.07in 0 0;font-family:var(--serif);font-style:italic;font-size:12.5pt;
+       color:var(--soft)}
+
+  .hr{border:0;border-top:1.4px solid var(--accent);margin:.2in 0 .18in;width:2.4in}
+
+  .svc{margin:0;padding:0;list-style:none;display:grid;gap:.125in}
+  .svc dt{font-family:var(--mono);font-size:7.2pt;letter-spacing:.15em;text-transform:uppercase;
+          color:var(--accent);margin:0}
+  .svc dd{margin:.022in 0 0;font-size:10pt;line-height:1.32;color:var(--ink)}
+  .any{margin:.19in 0 0;font-size:10.5pt;font-weight:600}
+
+  .walk{margin:.11in 0 0;font-size:9.6pt;line-height:1.38;color:var(--soft);max-width:3.9in}
+
+  /* ---- right column ---- */
+  .right{display:flex;flex-direction:column;align-items:center;text-align:center;
+         justify-content:flex-start;padding-top:.02in}
+  .qr{width:1.72in;height:1.72in;display:block}
+  .scan{margin:.09in 0 0;font-family:var(--mono);font-size:7.2pt;letter-spacing:.11em;
+        text-transform:uppercase;color:var(--soft);line-height:1.5}
+  .phone{margin:.17in 0 0;font-family:var(--serif);font-size:18.5pt;line-height:1;white-space:nowrap}
+  .contact{margin:.1in 0 0;font-size:8.4pt;line-height:1.5;color:var(--soft);word-break:break-word}
+  .area{margin:.14in 0 0;font-family:var(--mono);font-size:6.6pt;letter-spacing:.09em;
+        text-transform:uppercase;color:var(--soft);line-height:1.55}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- ONE flyer, repeated. Identical by construction: change it once here and the
+       second copy is generated from the same markup below. -->
+  <div class="flyer">
+    <div>
+      <div class="lockup">
+        <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+          <g fill="currentColor">
+            <path fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+            <path fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+            <path d="M4 86L96 86L96 91L4 91Z"/>
+          </g>
+        </svg>
+        <div>
+          <p class="name">Sixfold Colorado</p>
+          <p class="desc">Land &amp; Fire</p>
+        </div>
+      </div>
+
+      <p class="knock">We stopped by today.</p>
+      <p class="tag">From the lawn to the treeline, all year long.</p>
+
+      <hr class="hr">
+
+      <dl class="svc">
+        <div><dt>Lawn &amp; turf</dt><dd>Core aeration, overseeding, fertilizing, mowing and edging</dd></div>
+        <div><dt>Landscaping</dt><dd>Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away</dd></div>
+        <div><dt>Land clearing</dt><dd>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement</dd></div>
+        <div><dt>Fire mitigation</dt><dd>Defensible space, fuel breaks and thinning, to Colorado State Forest Service standards</dd></div>
+      </dl>
+
+      <p class="any">Any one of them, or all four.</p>
+      <p class="walk">We walk the property with you, count what is actually there,
+      and price it from that.</p>
+    </div>
+
+    <div class="right">
+      <img class="qr" src="../brand/qr/sixfold-qr-brand-on-white.png" alt="Scan for Sixfold Colorado">
+      <p class="scan">Scan for the<br>full list</p>
+      <p class="phone">(303)<br>915-1045</p>
+      <p class="contact">Contact@SixfoldColorado.com<br>sixfoldcolorado.com</p>
+      <p class="area">Monument · El Paso,<br>Teller &amp; S. Douglas<br>counties</p>
+    </div>
+  </div>
+
+  <div class="cut"></div>
+
+  <div class="flyer">
+    <div>
+      <div class="lockup">
+        <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold">
+          <g fill="currentColor">
+            <path fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+            <path fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+            <path d="M4 86L96 86L96 91L4 91Z"/>
+          </g>
+        </svg>
+        <div>
+          <p class="name">Sixfold Colorado</p>
+          <p class="desc">Land &amp; Fire</p>
+        </div>
+      </div>
+
+      <p class="knock">We stopped by today.</p>
+      <p class="tag">From the lawn to the treeline, all year long.</p>
+
+      <hr class="hr">
+
+      <dl class="svc">
+        <div><dt>Lawn &amp; turf</dt><dd>Core aeration, overseeding, fertilizing, mowing and edging</dd></div>
+        <div><dt>Landscaping</dt><dd>Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away</dd></div>
+        <div><dt>Land clearing</dt><dd>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement</dd></div>
+        <div><dt>Fire mitigation</dt><dd>Defensible space, fuel breaks and thinning, to Colorado State Forest Service standards</dd></div>
+      </dl>
+
+      <p class="any">Any one of them, or all four.</p>
+      <p class="walk">We walk the property with you, count what is actually there,
+      and price it from that.</p>
+    </div>
+
+    <div class="right">
+      <img class="qr" src="../brand/qr/sixfold-qr-brand-on-white.png" alt="Scan for Sixfold Colorado">
+      <p class="scan">Scan for the<br>full list</p>
+      <p class="phone">(303)<br>915-1045</p>
+      <p class="contact">Contact@SixfoldColorado.com<br>sixfoldcolorado.com</p>
+      <p class="area">Monument · El Paso,<br>Teller &amp; S. Douglas<br>counties</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
