@@ -30,8 +30,8 @@ Three banner layouts off one lockup so every ratio stays consistent:
 
 | Variant | Content | Used for |
 |---|---|---|
-| **full** | mark · Sixfold / LAND & FIRE / ember rule / "We do the work and show you who pays for it." / contact | Facebook, Google cover, 16:9 |
-| **compact** | mark · Sixfold / LAND & FIRE / ember rule / contact | X, Nextdoor, LinkedIn personal, YouTube |
+| **full** | mark · Sixfold / LAND & FIRE / moss rule / "From the lawn to the treeline, all year long." / contact | Facebook, Google cover, 16:9 |
+| **compact** | mark · Sixfold / LAND & FIRE / moss rule / contact | X, Nextdoor, LinkedIn personal, YouTube |
 | **slim** | mark · Sixfold │ (303) 915-1045 | LinkedIn company (1128×191) |
 
 Profile marks: **crest** (no roots) for small circle crops — LinkedIn, Facebook,

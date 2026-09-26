@@ -1,9 +1,10 @@
 # Facebook business page — profile copy
 
-**Prepared:** 2026-08-21
+**Prepared:** 2026-08-21 · **Rewritten lawn-led:** 2026-09-25
 **Audience:** Front Range homeowners who clicked through from a local or HOA group
 **Register:** Friendly neighbourhood, information-first — same as the content set
-**Status:** Draft. **Not posted, not scheduled, and no page has been created from it.**
+**Status:** Draft. **Nothing posted or scheduled.** The page itself exists — see
+§Three things that changed underneath this file.
 
 Companion to [platform-sheet.md](platform-sheet.md). The sheet's read on this
 platform still stands and shapes the copy below: **a Facebook business page is a
@@ -13,41 +14,76 @@ post offers.
 
 ---
 
+## ⚑ Three things that changed underneath this file
+
+Caught on the 2026-09-25 rewrite. Each one made the old copy wrong, not just off-message.
+
+1. **The page exists.** This file said *"no page has been created from it"* through
+   several revisions. Matthew is replacing live assets on it, so that line was stale and
+   is gone. Treat everything below as **replacement copy for a live page**, not a setup
+   script.
+2. **The website field should now be filled.** The old instruction was to leave it empty
+   because `SixfoldColorado.com` was owned but not hosted. **It has been live since
+   2026-09-21.** A page whose job is to be a credential should point at the site.
+3. **Stump grinding was in the short bio and is retired** — the quote engine dropped it
+   2026-09-23. It is out of every version below.
+
+---
+
 ## Short bio — one line
 
-> Fire mitigation on Colorado's Front Range. We do the work and show you who pays for it.
+> Lawn aeration, landscaping and land clearing on Colorado's Front Range. From the lawn to the treeline, all year long.
 
-**86 characters.** Deliberately short — see the note on field limits below.
+**116 characters.** Fire is not in the one-liner — four services do not fit in one line,
+and the line has to say what Sixfold leads with. It is in both longer versions below.
 
 ### If there is room for more
 
-> Fire mitigation across Colorado's Front Range — felling, stump grinding, slash and chipping, defensible space. Every job comes with the written scope and before/after photos your tax credit and your insurer both want. Monument-based. (303) 915-1045
+> Lawn aeration, overseeding, mowing and clean-up, plus landscaping, land clearing and fire mitigation — across El Paso, Teller and southern Douglas counties. We walk the property with you before we price it. Monument-based. (303) 915-1045
 
-**246 characters.**
+**235 characters.**
 
 ---
 
 ## The bio — long form, for the About section
 
-> Sixfold is a fire mitigation company based in Monument, Colorado, working across the Front Range.
+> Sixfold is a lawn and land care company based in Monument, Colorado, working across El Paso, Teller and southern Douglas counties.
 >
-> We fell trees, grind stumps, pile and chip slash, cut rounds, and either haul it away or leave it stacked where you want it. Defensible space around the structures, fuel breaks, and thinning — to Colorado State Forest Service standards.
+> **Lawn and turf.** Core aeration to open up compacted ground, overseeding straight after the pass while the holes are still open, fertilizing, mowing and edging. Aeration pulls plugs two to three inches deep and leaves them on the surface to break back down.
 >
-> Most people are never told that two separate parties will help pay for that work.
+> **Landscaping.** Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away.
 >
-> Colorado's wildfire mitigation tax credit covers 100% of what you pay a contractor for qualifying vegetation work, up to a cap. There is no application and no waiting list — you claim it on your state return. And since 1 July 2026, if your insurer uses a wildfire risk score to price your policy, they have to tell you that score in writing every year and give you a discount for mitigation you can document.
+> **Land clearing.** Brush, undergrowth and dead fall taken off a lot, a pasture or an easement, and the ground left ready for whatever comes next.
 >
-> Income limits apply to the credit, and what your own policy qualifies for is a question for your carrier. But almost nobody asks, because almost nobody knows to.
+> **Fire mitigation.** Defensible space, fuel breaks and thinning, worked to Colorado State Forest Service standards. Colorado's wildfire mitigation tax credit covers what you pay a contractor for qualifying vegetation work, and since 1 July 2026 an insurer that prices your policy off a wildfire risk score has to show you that score in writing each year and credit mitigation you can document. On mitigation jobs we put together the written scope and the before-and-after photographs both of those want.
 >
-> So every job we do comes with the paperwork, whether or not you ask for it: a written scope of exactly what was cut and where, and photographs from fixed positions before and after. One document set, and it serves your tax return and your carrier both.
+> Any one of these on its own, or all four. We walk the property with you, count what is actually there, and price it from that.
 >
-> Call (303) 915-1045 or email Contact@SixfoldColorado.com and we will come and walk the property.
+> (303) 915-1045 · Contact@SixfoldColorado.com · sixfoldcolorado.com
 >
 > Not tax or insurance advice — confirm your own position with your accountant and your carrier.
 
-**About 1,300 characters.** Trim from the top: the second paragraph is the most
-cuttable, then the "income limits apply" paragraph — though cutting that one
-costs the honesty that makes the rest credible.
+**About 1,150 characters.** Trim from the bottom of the fire paragraph first — the
+insurer sentence is the most cuttable thing on the page now that fire is fourth.
+
+### What moved, and why
+
+**The funding story is no longer the thesis.** It was the right hook for a fire company:
+checkable, distinctive, and something almost nobody knows. It does not carry a lawn —
+there is no money story for an aeration. So it survives **inside the fire paragraph**,
+where it is still true and still useful, instead of being the reason the page exists.
+
+**What the page stands on instead is the range.** One company that will aerate a quarter
+acre and fell timber on twenty. Most lawn companies do not take trees down; most tree
+companies do not mow. That is checkable, it is not a claim about quality, and it is the
+same idea the tagline carries.
+
+**⚑ The paperwork promise is now scoped to mitigation jobs, and that matters.** The old
+bio promised *"every job we do comes with the paperwork, whether or not you ask."* That
+was written when every job was a $2,000 mitigation job. **A $150 aeration cannot carry a
+written scope and a fixed-position photo set**, and promising it on a lawn page writes a
+cheque the crew cannot cash on the first call — the same problem `REBRAND-PATH-2026-09.md`
+§0.3 names about the ops paperwork.
 
 ---
 
@@ -57,93 +93,90 @@ costs the honesty that makes the rest credible.
 
 - Phone: **(303) 915-1045**
 - Email: **Contact@SixfoldColorado.com**
-- Address: **do not publish a street address.** Sixfold does not serve customers
-  at its premises, and as of 2026-08-25 the Monument street address is not on file
-  anyway. Set a service area instead — same reasoning as the Google Business
-  Profile note in the platform sheet. (The old reason, that the address was shared
-  with Surge, no longer applies: Monument is Sixfold's own base.)
+- Website: **`https://sixfoldcolorado.com`** — fill it in. Live since 2026-09-21.
+- Address: **do not publish a street address.** Sixfold does not serve customers at its
+  premises. Set a service area instead — and note the Google Business Profile carries the
+  same shape, so the two records agree.
 
-**Website field — leave it empty for now.** `SixfoldColorado.com` is owned but
-not hosted, so the landing page has nothing to resolve to. A dead link on a page
-whose whole job is to be a credential is worse than no link. Fill it the day
-hosting is live.
-
-**Category.** Pick against what a homeowner would actually type, not how the
-trade describes itself — the same rule as the Google categories. Whatever
-Facebook's current list offers along the lines of tree service, land clearing or
-fire and defensible-space work. I have not seen Facebook's category list, so
-that is a criterion to choose by, not a name to copy.
+**Category. ⚑ This is the field worth more than the copy.** The primary category is the
+single highest-leverage field in local search, and if it still says tree service or fire
+mitigation it is working against everything else on this page. Pick against what a
+homeowner would actually type — *lawn care service* or *landscaper* — not how the trade
+describes itself. I have not seen Facebook's current category list, so that is a criterion
+to choose by, not a name to copy. Same change is queued on GBP, where Matthew owns it.
 
 ---
 
 ## Three things that must not go on the page
 
-1. **"Licensed and insured", "certified", "bonded", "Firewise".** None of it is
-   true yet. The platform sheet makes this explicit for profiles and bios, not
-   just print, and a profile claim is exactly the kind that gets screenshotted.
-2. **The Douglas County cost-share, or any county cost-share by name.** Hard rule
-   until Sixfold is on the approved contractor list.
-3. **Anything implying a track record** — years in business, number of jobs,
-   "trusted by", review counts. The company is new and the page should not
-   pretend otherwise. What it has instead is the funding knowledge, which is
-   checkable, and that is what the bio leads with.
+1. **"Licensed and insured", "certified", "bonded", "Firewise".** None of it is true yet.
+   A profile claim is exactly the kind that gets screenshotted.
+2. **The Douglas County cost-share, or any county cost-share by name.** Hard rule until
+   Sixfold is on the approved contractor list.
+3. **Anything implying a track record** — years in business, number of jobs, "trusted by",
+   review counts. The company is new and the page should not pretend otherwise.
+
+Still standing from the wider copy rules: **no prices or rates**, no "free estimates",
+**no planting** (it is off every surface as of 2026-09-25, and sod came off with it
+pending Matthew), and **no snow** until Brandon answers whether it is a service.
 
 ---
 
 ## Lines cut, with reasons
 
-- **"Locally owned and operated."** True, and every competitor says it, which
-  makes it worth nothing on a page whose job is to be distinctive. "Based in
-  Monument, working across the Front Range" says the same thing and is checkable.
-- **"Free estimates."** Probably true and not yet decided — the launch offer is
-  still open between version A and version B. Committing to it in a profile
-  pre-empts that decision on the most permanent surface available.
-- **"Over a million buildings sit in Colorado's wildland-urban interface."**
-  Sourced and true, but it argues the problem, and a reader who clicked through
-  from a wildfire thread already believes they have one.
+- **"Fire mitigation on Colorado's Front Range."** The old opener. Cut because it is the
+  demoted service in the first four words of the most permanent surface Sixfold has.
+- **"We do the work and show you who pays for it."** The retired tagline — a funding
+  promise that is untrue on three of the four services. Full reasoning in
+  [../brand/tagline-2026-09/](../brand/tagline-2026-09/).
+- **"Stump grinding."** Retired in the quote engine 2026-09-23.
+- **"Most people are never told that two separate parties will help pay for that work."**
+  A good line and still true, but it only works when funding is the thesis. It belongs on
+  [/who-pays/](../site/who-pays/), which is where it lives.
+- **"Locally owned and operated."** Every competitor says it. "Based in Monument, working
+  across El Paso, Teller and southern Douglas" says the same thing and is checkable.
 - **"About 450 people in the whole state claimed this last year."** The best fact
-  available, and it stays in the landing page hero. Cut here because a profile
-  bio is read once, cold, and the statistic lands better where there is room to
-  explain it.
-- **Any mention of Surge.** The related-party structure is real and unsettled;
-  a profile bio is not where it gets disclosed for the first time.
-- **The 2027 credit increase ($2,000 and refundable).** Correct and compelling,
-  but it dates the bio — it would need rewriting in January and nobody will
-  remember to. The landing page carries it instead, where it is maintained.
+  available. Cut because a profile bio is read once, cold, and it lands better on the site
+  where there is room to explain it.
+- **Any mention of Surge.** The related-party structure is real and unsettled; a profile
+  bio is not where it gets disclosed for the first time.
+- **The 2027 credit increase.** Correct and compelling, but it dates the bio — it would
+  need rewriting in January and nobody will remember to.
 
 ---
 
 ## Fact-check log
 
-**Verified — see [funding-one-pager.md](funding-one-pager.md) and
-[../content/02-tax-credit-post.md](../content/02-tax-credit-post.md) for the full
-citations:**
+**Verified — full citations in [funding-one-pager.md](funding-one-pager.md) and
+[../content/02-tax-credit-post.md](../content/02-tax-credit-post.md):**
 
-- Tax credit at 100% of costs paid to a third-party contractor, up to a cap, with
-  income limits, claimed on the state return with no application — C.R.S.
-  39-22-543; Colorado Department of Revenue, *Income Tax Topics: Wildfire
-  Mitigation Measures*.
-- Annual written wildfire risk score notice, and a discount for documented
-  mitigation, where the insurer uses a score to price — Colorado HB25-1182,
-  effective 1 July 2026.
-- Qualifying work must meet or exceed Colorado State Forest Service or Division
-  of Fire Prevention and Control standards — DOR, as above.
+- Tax credit at 100% of costs paid to a third-party contractor, up to a cap, with income
+  limits, claimed on the state return with no application — C.R.S. 39-22-543; Colorado
+  Department of Revenue, *Income Tax Topics: Wildfire Mitigation Measures*.
+- Annual written wildfire risk score notice, and credit for documented mitigation, where
+  the insurer uses a score to price — Colorado HB25-1182, effective 1 July 2026.
+- Qualifying work must meet or exceed Colorado State Forest Service or Division of Fire
+  Prevention and Control standards — DOR, as above.
+- **Core aeration pulls plugs two to three inches deep and leaves them on the surface** —
+  verified first-party against UMass Amherst Extension 2026-09-23; recorded in full on
+  the logo board.
+- **Service area: El Paso, Teller and southern Douglas** — a *derived* figure (35 miles
+  from Monument), applied consistently across five documents. Widening it is Brandon's.
+- **Site live since 2026-09-21** — `sixfoldcolorado.com`, audited in production
+  2026-09-23 at 0 failures.
 
 **Deliberately imprecise:**
 
-- **The bio says "up to a cap" rather than "$1,000".** The cap changes for tax
-  year 2027 and a profile bio does not get maintained. Naming the figure would
-  make the page wrong in January.
+- **"Up to a cap" rather than "$1,000".** The cap changes for tax year 2027 and a profile
+  bio does not get maintained. Naming the figure would make the page wrong in January.
 
 **Unresolved:**
 
-- **Facebook's actual character limits for the bio and description fields.**
-  Could not be confirmed against Meta's own documentation — the help centre URL
-  tried returned an error page, and every source that surfaced in search was an
-  SEO character-counter site. They contradicted each other: 101, 155 and 255 all
-  appear, attached to different fields by different sites. Per the research
-  standard the figure is left out. **The copy above is written short enough not
-  to depend on it** — paste it in and let the field tell you.
+- **Facebook's actual character limits for the bio and description fields.** Could not be
+  confirmed against Meta's own documentation — the help centre URL returned an error, and
+  every source in search was an SEO character-counter site, contradicting each other at
+  101, 155 and 255 for different fields. Per the research standard the figure is left out.
+  **The copy above is written short enough not to depend on it** — paste it in and let the
+  field tell you.
 
-**Standing:** nothing here has been published, posted or scheduled, and no
-Facebook page has been created.
+**Standing:** nothing here has been published, posted or scheduled.

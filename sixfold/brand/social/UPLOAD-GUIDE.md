@@ -1,9 +1,49 @@
 # Sixfold Colorado — social media kit: upload guide
 
-**Rebuilt 2026-09-08** from the 2026-08-21 set. One visual system across every
-platform: Pine Black `#0E1512` ground, the Ridge mark in Ember `#E4703A`, the
-"Sixfold" serif wordmark, Moss `#8AA07A` descriptor and contact line, an ember
-rule.
+## ⚑ REPLACING WHAT IS LIVE — Facebook, Nextdoor, GBP (2026-09-25)
+
+The kit was **re-rendered onto palette A**. These are the files that replace what is
+currently on each page. Everything is already built and sitting in [out/](out/).
+
+| Platform | Replace the profile / logo with | Replace the cover with |
+|---|---|---|
+| **Facebook** | `out/sixfold-avatar-facebook-500.png` | `out/sixfold-banner-facebook-1640x624.png` |
+| **Nextdoor** | `out/sixfold-avatar-nextdoor-1200.png` | `out/sixfold-banner-nextdoor-1440x400.png` |
+| **Google Business Profile** | `out/sixfold-logo-google-720.png` | `out/sixfold-banner-google-1024x576.png` |
+
+Click paths for each are in the platform sections below. **Do the profile and the cover
+in the same sitting** — a green mark against the old orange cover looks like a mistake
+rather than a rebrand.
+
+**What changed, so it can be checked at a glance:**
+
+- **The mark is green, not orange.** Sage `#A7BE93` on Pine. This is the whole rebrand at
+  profile size — the old mark read as a fire company because it was orange.
+- **The bottom glow is green.** It was a 20% ember wash. Nobody reads a glow as orange;
+  it just made every banner *feel* like fire. Same geometry, Moss.
+- **The rule under the descriptor is Moss**, was ember.
+- **The bio line is the new tagline** — *"From the lawn to the treeline, all year long."*
+  The old line, *"We do the work and show you who pays for it,"* was a funding promise
+  that only holds for fire mitigation; see [../tagline-2026-09/](../tagline-2026-09/).
+- **The contact line is `Monument · Front Range · (303) 915-1045`**, was
+  *"Fire mitigation · Front Range · …"* — it led with the demoted service.
+- **"Land & Fire" is unchanged**, on Matthew's call 2026-09-25.
+
+**⚑ The Nextdoor cover does not carry the tagline, and that is deliberate.** At 1440×400
+the frame is 3.6:1 and the type scale derives from width, so the five-line `full` stack
+needs about 377px of the 400 — and Nextdoor's crop box is an unverified assumption to
+begin with. **Put the tagline in the Nextdoor page description text instead**, where it
+costs nothing and cannot be cropped.
+
+**Nothing here has been uploaded.** Standing rule: draft and stage only. Replacing a live
+profile or cover is a publish — it is Matthew's to do, from the click paths below.
+
+---
+
+**Rebuilt 2026-09-08** from the 2026-08-21 set, **re-rendered onto palette A 2026-09-25.**
+One visual system across every platform: Pine Black `#0E1512` ground, the Ridge mark in
+**Sage `#A7BE93`** (was Ember `#E4703A`), the "Sixfold" serif wordmark, Moss `#8AA07A`
+descriptor, contact line and rule.
 
 **New contact number `(303) 915-1045` is baked into every banner.** The old
 number `(720) 772-6146` and the assets that carried it are in

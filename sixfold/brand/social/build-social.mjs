@@ -6,11 +6,13 @@
   scale factor 1. Change the composition here and the whole set re-exports so
   every platform stays consistent.
 
-  Mark:     RIDGE, single colour, Ember (#E4703A) — from ../sixfold-mark-ridge-mono.svg
+  Mark:     RIDGE, single colour, SAGE (#A7BE93) on Pine / TURF (#2F7A4F) on Bone.
+            Was Ember until the palette A rebrand, 2026-09-25 — see the palette block.
+            From ../sixfold-mark-ridge-mono.svg
             (currentColor, so colour is set on the wrapper, never in the path).
             If Sweep wins the open A/C call, swap RIDGE_* below and re-run.
   Wordmark: "Sixfold" — Palatino / Book Antiqua serif, -0.018em.
-  Contact:  Fire mitigation · Front Range · (303) 915-1045   ← new SixfoldColorado number.
+  Contact:  Monument · Front Range · (303) 915-1045
 
   Run:  node build-social.mjs
   Needs Chrome. Outputs .png into ./out, provenance into ./out/MANIFEST.json.
@@ -28,17 +30,50 @@ mkdirSync(out, { recursive: true });
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
-/* Palette — the agreed Sixfold five. */
+/* Palette — the agreed Sixfold five, plus the two greens palette A added.
+   ---- REBRANDED TO PALETTE A, 2026-09-25 -------------------------------------
+   Aeration leads, so green leads. Ember is now ABSENT from this kit entirely.
+   Under palette A ember keeps exactly two jobs — the call to action, and fire
+   mitigation — and a profile mark and a banner rule are neither. Removing it is
+   the whole visible point of the rebrand at profile size: the old kit read as a
+   fire company because the mark was orange.
+
+   Ratios measured against Pine #0E1512 and Bone #EDE7DC in site/assets/site.css:
+     SAGE #A7BE93 ... 9.19 on Pine  <- the mark on dark, and the one that carries
+     MOSS #8AA07A ... 6.51 on Pine  <- the rule, descriptor and contact line
+     TURF #2F7A4F ... 4.25 on Bone  <- the mark on the LIGHT alternate; Sage is
+                                       1.64 on Bone and would vanish
+   Two greens at different values, so the mark still separates from the rule
+   without borrowing a second hue to do it. */
 const PINE = '#0E1512';
-const EMBER = '#E4703A';
+const EMBER = '#E4703A';   // kept as a constant; deliberately UNUSED in this kit
 const BONE = '#EDE7DC';
 const MOSS = '#8AA07A';
+const SAGE = '#A7BE93';
+const TURF = '#2F7A4F';
 
 /* Standing lines — reused, not reinvented. Fact-checked in
-   ../../marketing/facebook-page-copy.md. */
-const DESCRIPTOR = 'Land & Fire';                 // accepted placeholder
-const BIO = 'We do the work and show you who pays for it.';
-const CONTACT = 'Fire mitigation · Front Range · (303) 915-1045';
+   ../../marketing/facebook-page-copy.md.
+
+   DESCRIPTOR: Matthew's call 2026-09-25 — "Land & Fire" stays for now, alongside
+   the new tagline. brand/tagline-2026-09/ recommends retiring it and Phase 1 of
+   REBRAND-PATH-2026-09.md makes that Brandon's call; nothing here is uploaded, so
+   it is free to change.
+
+   BIO: replaced 2026-09-25. The old line — "We do the work and show you who pays
+   for it." — was a FUNDING promise resting on the state tax credit and the
+   HB25-1182 re-score, both of which apply to qualifying vegetation work. Nobody
+   else pays for an aeration, so on the lead service it was not off-message, it
+   was untrue. Reasoning and the candidates: brand/tagline-2026-09/.
+
+   CONTACT: was "Fire mitigation · Front Range · (303) 915-1045", which led with
+   the demoted service in the line under the bio. Now lawn-first and matching the
+   descriptor already states the services directly above it, so repeating them read
+   as a stutter on the render — this line carries the BASE TOWN and the phone, which
+   is what a local-search profile actually wants under a lockup. */
+const DESCRIPTOR = 'Land & Fire';
+const BIO = 'From the lawn to the treeline, all year long.';
+const CONTACT = 'Monument · Front Range · (303) 915-1045';
 const PHONE_ONLY = '(303) 915-1045';
 
 /* ---------------------------------------------------------------------------
@@ -95,7 +130,7 @@ const HL = {
 };
 const highlight = (icon) => `
 <div class="art hl" style="background:${PINE}">
-  <svg class="hlicon" viewBox="0 0 48 48" fill="none" stroke="${EMBER}" stroke-width="2.3"
+  <svg class="hlicon" viewBox="0 0 48 48" fill="none" stroke="${SAGE}" stroke-width="2.3"
        stroke-linecap="round" stroke-linejoin="round">${HL[icon]}</svg>
 </div>`;
 
@@ -117,7 +152,7 @@ const banner = ({ w, h, variant = 'full' }) => {
 <div class="art banner" style="background:${PINE};width:${w}px;height:${h}px">
   <div class="glow"></div>
   <div class="row" style="gap:${Math.round(f * 0.5)}px">
-    <div class="markwrap" style="width:${markW}px;color:${EMBER}">${mark(true)}</div>
+    <div class="markwrap" style="width:${markW}px;color:${SAGE}">${mark(true)}</div>
     <div class="wordmark" style="font-size:${f}px;color:${BONE}">Sixfold</div>
     <div class="div" style="height:${Math.round(f * 1.1)}px;background:${MOSS}"></div>
     <div class="phone" style="font-size:${Math.round(f * 0.34)}px;color:${MOSS}">${PHONE_ONLY}</div>
@@ -130,11 +165,11 @@ const banner = ({ w, h, variant = 'full' }) => {
   <div class="glow"></div>
   <div class="stack">
     <div class="lockup" style="gap:${Math.round(f * 0.42)}px">
-      <div class="markwrap" style="width:${markW}px;color:${EMBER}">${mark(true)}</div>
+      <div class="markwrap" style="width:${markW}px;color:${SAGE}">${mark(true)}</div>
       <div class="wordmark" style="font-size:${f}px;color:${BONE}">Sixfold</div>
     </div>
     <div class="descriptor" style="font-size:${Math.round(f * 0.17)}px;margin-top:${Math.round(f * 0.3)}px;color:${MOSS}">${DESCRIPTOR}</div>
-    <div class="rule" style="width:${Math.round(f * 2.3)}px;height:${Math.max(2, Math.round(f * 0.032))}px;background:${EMBER};margin-top:${Math.round(f * (variant === 'compact' ? 0.4 : 0.5))}px"></div>
+    <div class="rule" style="width:${Math.round(f * 2.3)}px;height:${Math.max(2, Math.round(f * 0.032))}px;background:${MOSS};margin-top:${Math.round(f * (variant === 'compact' ? 0.4 : 0.5))}px"></div>
     ${variant === 'full' ? `<div class="line" style="font-size:${Math.round(f * 0.32)}px;margin-top:${Math.round(f * 0.42)}px;color:${BONE}">${BIO}</div>` : ''}
     <div class="phone" style="font-size:${Math.round(f * 0.17)}px;margin-top:${Math.round(f * 0.4)}px;color:${MOSS}">${CONTACT}</div>
   </div>
@@ -155,8 +190,12 @@ const CSS = `
   .hl{width:100%;height:100%}
   .hl .hlicon{width:34%;height:34%}
 
+  /* The glow was an EMBER wash (rgba(228,112,58,...)) until 2026-09-25. It was the
+     last orange in the kit and the one nobody sees as orange — it just made every
+     banner feel like a fire company. Moss, same geometry, so it now reads as light
+     coming off grass rather than off a burn. */
   .banner .glow{position:absolute;inset:0;
-    background:radial-gradient(120% 150% at 50% 118%, rgba(228,112,58,0.20) 0%, rgba(228,112,58,0.055) 38%, rgba(228,112,58,0) 66%)}
+    background:radial-gradient(120% 150% at 50% 118%, rgba(138,160,122,0.20) 0%, rgba(138,160,122,0.055) 38%, rgba(138,160,122,0) 66%)}
   .stack{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:0 6%}
   .row{position:relative;display:flex;align-items:center;justify-content:center;width:100%;padding:0 6%}
   .lockup{display:flex;align-items:center}
@@ -181,9 +220,9 @@ const A = [];
 const push = (file, w, h, html, platform, field, note = '') =>
   A.push({ file, w, h, html, platform, field, note });
 
-const P_FULL = profile({ ground: PINE, ink: EMBER, roots: true });   // large / roomy crops
-const P_CREST = profile({ ground: PINE, ink: EMBER, roots: false }); // small circular crops
-const P_BONE = profile({ ground: BONE, ink: EMBER, roots: true });   // light-ground alternate
+const P_FULL = profile({ ground: PINE, ink: SAGE, roots: true });   // large / roomy crops
+const P_CREST = profile({ ground: PINE, ink: SAGE, roots: false }); // small circular crops
+const P_BONE = profile({ ground: BONE, ink: TURF, roots: true });   // light-ground alternate  (Sage is 1.64 on Bone)
 
 /* -- Profile / logo: one artwork, one file named per destination ---------- */
 push('sixfold-avatar-linkedin-400.png', 400, 400, P_CREST, 'LinkedIn (Sixfold Colorado page)',
