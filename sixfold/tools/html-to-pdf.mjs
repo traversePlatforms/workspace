@@ -229,6 +229,14 @@ const JOBS = [
      days. */
   { src: 'agreements/kara-aeration-agreement.html',   out: 'agreements/kara-aeration-agreement.pdf',   mode: 'light', scale: 1 },
   { src: 'agreements/kara-maintenance-agreement.html', out: 'agreements/kara-maintenance-agreement.pdf', mode: 'light', scale: 1 },
+  /* The short lawn forms, 2026-09-28. Same statutory reason for scale 1 as the two
+     Kara documents above — both carry .legal10 and the duplicate .noticeform.
+     THREE pages each and that is the floor: one side of agreement, then the Notice
+     of Cancellation twice, which 16 CFR 429.1(b) requires in duplicate at ten point
+     and which will not fit two-to-a-side at a conformant size. If either comes out
+     at four, sheet 1 has spilled — cut scope text, do not reduce the scale. */
+  { src: 'agreements/lawn-job-sheet.html',        out: 'agreements/lawn-job-sheet.pdf',        mode: 'light', scale: 1, margin: 0.32 },
+  { src: 'agreements/lawn-monthly-agreement.html', out: 'agreements/lawn-monthly-agreement.pdf', mode: 'light', scale: 1, margin: 0.32 },
   { src: 'marketing/home-wildfire-pamphlet.html', out: 'marketing/Sixfold-Home-Wildfire-Pamphlet.pdf', mode: 'light' },
   /* scale 1.0, not the default 0.8: at 0.8 the card comes out 7 pages instead of
      9 and the internal band stops starting its own page. Found by comparing
@@ -383,7 +391,13 @@ for (const job of jobs) {
     preferCSSPageSize: true,
     paperWidth: 8.5,
     paperHeight: 11,
-    marginTop: 0.4, marginBottom: 0.4, marginLeft: 0.4, marginRight: 0.4,
+    /* Per-job margins, defaulting to the 0.4in every document here was built
+       against — omit `margin` and nothing changes. Needed because a document's
+       own @page margin rule is NOT honoured: preferCSSPageSize takes the page
+       SIZE from CSS and leaves these margins in charge, so an @page override in
+       the source is silently a no-op and the only real control is here. */
+    marginTop: job.margin ?? 0.4, marginBottom: job.margin ?? 0.4,
+    marginLeft: job.marginX ?? job.margin ?? 0.4, marginRight: job.marginX ?? job.margin ?? 0.4,
     scale: job.scale ?? 0.8,
   });
 

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold lawn job sheet — single job</title>
+<!--STYLE-->
+<style>
+/* ------------------------------------------------------------------
+   ONE-PAGE FIT PASS.
+
+   The whole point of this document is that the agreement is ONE side of
+   ONE sheet. A $150 aeration job cannot carry the five-page packet that
+   a $2,250 mitigation job carries, and that mismatch is what this file
+   exists to fix.
+
+   So sheet 1 runs tighter than the packet templates: 8.4pt body, reduced
+   vertical rhythm. ⚑ RE-COUNT THE PAGES AFTER ANY EDIT. If sheet 1 spills
+   onto a second physical page the document has failed at its only job —
+   cut scope text, do not shrink the type further, and never touch the
+   type on sheets 2 and 3 (see below).
+   ------------------------------------------------------------------ */
+.sheet:first-of-type { font-size: 8.2pt; line-height: 1.15; }
+.sheet:first-of-type .top { padding-bottom: 3pt; }
+.sheet:first-of-type .sheetnum { margin-top: 3pt; }
+.sheet:first-of-type h1.headline { font-size: 13pt; margin-top: 2pt; }
+.sheet:first-of-type .standfirst { font-size: 8.3pt; margin-top: 3pt; }
+.sheet:first-of-type h2.sec { font-size: 10.5pt; margin: 2.5pt 0 1pt; }
+.sheet:first-of-type p { margin: 0 0 2pt; }
+.sheet:first-of-type .grid-form { gap: 2pt 12pt; margin-bottom: 2pt; }
+.sheet:first-of-type .field label { margin-bottom: 1.5pt; }
+.sheet:first-of-type .tick { margin-bottom: 1.5pt; }
+/* Do not let the short last row stretch: with 8 ticks over 3 columns the final
+   row holds two, and flex-grow would spread them and break the column grid. */
+.sheet:first-of-type .ticks.three .tick { flex: 0 0 2.35in; }
+.sheet:first-of-type .money { margin-top: 3pt; }
+.sheet:first-of-type .money .m { padding: 4pt 8pt 4pt; }
+.sheet:first-of-type ol.clauses { margin-top: 2pt; }
+.sheet:first-of-type ol.clauses li { margin-bottom: 2pt; }
+.sheet:first-of-type .sigs { margin-top: 5pt; }
+.sheet:first-of-type .sigs .s .ln { height: 17pt; }
+.sheet:first-of-type footer { padding-top: 3pt; }
+.sheet:first-of-type .disclaimer { font-size: 7pt; margin-top: 2pt; }
+/* 0.36in, tighter than the 0.5in the other agreements use. Every consumer
+   printer here clears 0.25in, so this is inside the hardware margin with room
+   to spare — and it is what buys the signature block its place on sheet 1. */
+@media print { @page { margin: 0.32in 0.4in; } }
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     SIXFOLD LAWN JOB SHEET — one lawn job, one side of one sheet.
+
+     Built 2026-09-28 against REBRAND-PATH-2026-09.md §Phase 0.3, which
+     names this as the largest piece of work the aeration-led reposition
+     pulls in behind it and the next unblocked thing to do.
+
+     ⚑ THREE PAGES, AND THAT IS THE FLOOR — not five, not one.
+        Sheet 1  the agreement. One side. This is "the one-pager".
+        Sheets 2-3  Notice of Cancellation, IN DUPLICATE. 16 CFR 429.1(b)
+                    requires the buyer receive two completed copies in ten
+                    point bold face type. Two copies will not fit on one
+                    side at a conformant size, so they take a side each.
+                    VERBATIM from the reviewed packet template. Do not
+                    paraphrase, shorten, reset smaller, or drop to two pages.
+
+     ⚑ scale: 1 in tools/html-to-pdf.mjs is NOT optional. .legal10 and
+        .noticeform are sized to clear the ten-point statutory floor and the
+        default scale 0.8 prints them at ~8.4pt, which is a defective notice.
+
+     ⚑ NO PRICE IS PRINTED ON THIS FORM. Sixfold still has no aeration rate
+        of its own — Kara's $1,100 for 3/4 acre is an interim gauge with seed
+        and fertilizer inside it, not a rate. The price box is filled in by
+        hand per job until that lands. See REBRAND-PATH §Phase 0.2.
+
+     ⚑ NO PLANTING and NO SOD appear anywhere in the scope. Planting is off
+        the offer by Matthew's call 2026-09-25; sod came off with it pending
+        his answer and has not come back. Putting sod back is one tick box.
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Lawn job sheet</b>Page 1 of 3<br>Job no. <span class="fi"></span></p>
+  </div>
+
+  <p class="sheetnum">One lawn job &mdash; what gets done, what it costs, and when</p>
+  <h1 class="headline">Lawn Job Sheet</h1>
+  <p class="standfirst"><strong>Date of this transaction:</strong> <span class="fi w2"></span> &nbsp; The date you sign. Your three business days to cancel run from it &mdash; see term&nbsp;7.</p>
+
+  <h2 class="sec">1 · Who</h2>
+  <p><strong>Contractor:</strong> Sixfold, LLC · 17890 Sierra Way, Monument, Colorado 80132 · (303) 915-1045 · Contact@SixfoldColorado.com</p>
+  <div class="grid-form">
+    <div class="field half"><label>Property owner &mdash; full name(s)</label><div class="line"></div></div>
+    <div class="field half"><label>Phone</label><div class="line"></div></div>
+    <div class="field wide"><label>Address of the property where the work will be done</label><div class="line"></div></div>
+    <div class="field half"><label>City, state, ZIP</label><div class="line"></div></div>
+    <div class="field half"><label>Email</label><div class="line"></div></div>
+  </div>
+
+  <h2 class="sec">2 · What gets done</h2>
+  <p>Tick every line that is part of this job. Anything not ticked is not included.</p>
+  <div class="ticks three" style="margin-top:3pt">
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Core aeration</strong><small>Area: <span class="fi"></span> &nbsp; Passes: <span class="fi"></span></small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Overseeding</strong><small>Seed type and weight: <span class="fi"></span></small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Mowing, trimming and edging</strong><small>Hard surfaces blown clear before leaving</small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Fertilizing</strong><small>Product and weight: <span class="fi"></span></small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Brush removal / land clearing</strong><small>Area: <span class="fi"></span></small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Tree or plant removal</strong><small>What and how many: <span class="fi"></span></small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Snow clearing</strong><small>Surfaces: <span class="fi"></span></small></span></div>
+    <div class="tick"><span class="sq"></span><span class="lbl"><strong>Haul-off</strong><small>What is taken away: <span class="fi"></span></small></span></div>
+  </div>
+  <div class="grid-form" style="margin-top:3pt">
+    <div class="field wide"><label>Anything else agreed at the walk &mdash; write it here or it is not included</label><div class="line"></div></div>
+  </div>
+
+  <h2 class="sec">3 · What is not included</h2>
+  <p>Unless ticked or written above, this job does <strong>not</strong> cover weed control, herbicide, pesticide or weed-and-feed; ice melt, salt or sand; dethatching or topdressing; planting or sod; irrigation work; gutter, roof or structural work; or permit fees. <strong>Fertilizer is not weed killer.</strong> Any of it is a separate price.</p>
+
+  <h2 class="sec">4 · When</h2>
+  <div class="grid-form">
+    <div class="field"><label>Cancellation period ends (midnight)</label><div class="line"></div><p class="hint">Third business day after signing. Saturday counts; Sunday and federal holidays do not.</p></div>
+    <div class="field"><label>Work is scheduled for</label><div class="line"></div><p class="hint">On or after that deadline. An estimate — see term&nbsp;5.</p></div>
+  </div>
+
+  <h2 class="sec">5 · Price</h2>
+  <div class="money">
+    <div class="m"><span>Price for this job</span><div class="amt">$&nbsp;<span class="fi"></span></div></div>
+    <div class="m"><span>Due on</span><div class="amt"><span class="fi"></span></div></div>
+  </div>
+  <p style="margin-top:4pt"><strong>A fixed price for the work ticked at section&nbsp;2.</strong> Travel is not billed, and nothing further is owed unless the owner signs a written change order first. The work is complete when everything ticked at section&nbsp;2 has been done. Payment by electronic transfer, cash, or check payable to <strong>Sixfold,&nbsp;LLC</strong>. <strong>If this job is cancelled under term&nbsp;7, every payment made is returned in full within ten business days.</strong></p>
+
+  <h2 class="sec">6 · Terms</h2>
+  <ol class="clauses">
+    <li><strong>Changes cost extra, and are agreed before they happen.</strong> If the owner wants something not ticked at section&nbsp;2, Sixfold prices it and the owner signs the change in writing before that work starts.</li>
+    <li><strong>Mark what is buried, and tell us what we cannot see.</strong> Before any ground work the owner marks <strong>sprinkler heads, shallow irrigation lines, invisible pet fence, low-voltage lighting cable and septic components</strong>. <strong>Sixfold is not responsible for damage to anything buried that was not marked</strong>; anything marked that is damaged anyway is repaired at Sixfold's cost.</li>
+    <li><strong>Getting to the work.</strong> The owner leaves gates unlocked, the working area clear of vehicles, toys, furniture and pet waste, and pets inside while the crew is on site. Work the crew cannot get to is rescheduled.</li>
+    <li><strong>Seed is not guaranteed to come up.</strong> Germination depends on watering, weather and soil. Sixfold will say what watering the seed needs. <strong>No guarantee of germination, coverage or colour is given or implied</strong>; reseeding later is a new job.</li>
+    <li><strong>Weather moves dates.</strong> Frozen, saturated or extremely dry ground, snow, and fire restrictions all stop this work. A visit stopped by weather is rescheduled to the next workable day and the price does not change.</li>
+    <li><strong>The lawn as it is found.</strong> Aeration leaves plugs on the surface to break down. Ruts, thin patches, surface roots and existing damage are not created by this work and are not repaired under it.</li>
+    <li><strong>Cancelling.</strong> <span class="legal10">You, the buyer, may cancel this transaction at any time prior to midnight of the third business day after the date of this transaction. See the attached notice of cancellation form for an explanation of this right.</span></li>
+  </ol>
+
+  <div class="sigs">
+    <div class="s"><div class="ln"></div><label>Property owner &mdash; signature and date</label></div>
+    <div class="s"><div class="ln"></div><label>Sixfold representative &mdash; signature and date</label></div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(303) 915-1045</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Page 1 of 3</span>
+    </div>
+    <p class="disclaimer">The two pages behind this one are the owner's copies of the Notice of Cancellation, filled in and handed over at signing.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     PAGES 2 AND 3 — NOTICE OF CANCELLATION, IN DUPLICATE
+     16 CFR 429.1(b) requires the buyer receive this form IN DUPLICATE,
+     in ten point bold face type. The wording below is the statutory form
+     and must not be paraphrased, shortened, or reset smaller.
+     Carried verbatim from kara-maintenance-agreement.src.html.
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Copy 1 — keep this</b>Notice of<br>cancellation</p>
+  </div>
+
+  <p class="sheetnum">Page 2 of 3 · Your copy to keep</p>
+
+  <div class="noticeform">
+    <h2>Notice of Cancellation</h2>
+    <p class="datefield"><span class="fi w2"></span> &nbsp;(Date of transaction)</p>
+
+    <p>You may CANCEL this transaction, without any Penalty or Obligation, within THREE BUSINESS DAYS from the above date.</p>
+
+    <p>If you cancel, any property traded in, any payments made by you under the contract or sale, and any negotiable instrument executed by you will be returned within TEN BUSINESS DAYS following receipt by the seller of your cancellation notice, and any security interest arising out of the transaction will be cancelled.</p>
+
+    <p>If you cancel, you must make available to the seller at your residence, in substantially as good condition as when received, any goods delivered to you under this contract or sale, or you may, if you wish, comply with the instructions of the seller regarding the return shipment of the goods at the seller's expense and risk.</p>
+
+    <p>If you do make the goods available to the seller and the seller does not pick them up within 20 days of the date of your Notice of Cancellation, you may retain or dispose of the goods without any further obligation. If you fail to make the goods available to the seller, or if you agree to return the goods to the seller and fail to do so, then you remain liable for performance of all obligations under the contract.</p>
+
+    <p>To cancel this transaction, mail or deliver a signed and dated copy of this Cancellation Notice or any other written notice, or send a telegram, to <strong>Sixfold, LLC</strong>, at <strong>17890 Sierra Way, Monument, Colorado 80132</strong> NOT LATER THAN MIDNIGHT OF <span class="fi w2"></span>.</p>
+
+    <p style="margin-bottom:14pt">I HEREBY CANCEL THIS TRANSACTION.</p>
+
+    <div class="sigs" style="margin-top:0">
+      <div class="s"><div class="ln"></div><label>Date</label></div>
+      <div class="s"><div class="ln"></div><label>Buyer's signature</label></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>17890 Sierra Way, Monument, CO 80132</span>
+      <span>(303) 915-1045</span>
+      <span class="pg">Page 2 of 3</span>
+    </div>
+    <p class="disclaimer">This form is completed by the Sixfold representative &mdash; seller name, seller address, date of transaction and the cancellation deadline &mdash; <strong>before</strong> it is handed over.</p>
+  </footer>
+
+</div>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Copy 2 — to cancel</b>Notice of<br>cancellation</p>
+  </div>
+
+  <p class="sheetnum">Page 3 of 3 · Sign and return this copy only if you are cancelling</p>
+
+  <div class="noticeform">
+    <h2>Notice of Cancellation</h2>
+    <p class="datefield"><span class="fi w2"></span> &nbsp;(Date of transaction)</p>
+
+    <p>You may CANCEL this transaction, without any Penalty or Obligation, within THREE BUSINESS DAYS from the above date.</p>
+
+    <p>If you cancel, any property traded in, any payments made by you under the contract or sale, and any negotiable instrument executed by you will be returned within TEN BUSINESS DAYS following receipt by the seller of your cancellation notice, and any security interest arising out of the transaction will be cancelled.</p>
+
+    <p>If you cancel, you must make available to the seller at your residence, in substantially as good condition as when received, any goods delivered to you under this contract or sale, or you may, if you wish, comply with the instructions of the seller regarding the return shipment of the goods at the seller's expense and risk.</p>
+
+    <p>If you do make the goods available to the seller and the seller does not pick them up within 20 days of the date of your Notice of Cancellation, you may retain or dispose of the goods without any further obligation. If you fail to make the goods available to the seller, or if you agree to return the goods to the seller and fail to do so, then you remain liable for performance of all obligations under the contract.</p>
+
+    <p>To cancel this transaction, mail or deliver a signed and dated copy of this Cancellation Notice or any other written notice, or send a telegram, to <strong>Sixfold, LLC</strong>, at <strong>17890 Sierra Way, Monument, Colorado 80132</strong> NOT LATER THAN MIDNIGHT OF <span class="fi w2"></span>.</p>
+
+    <p style="margin-bottom:14pt">I HEREBY CANCEL THIS TRANSACTION.</p>
+
+    <div class="sigs" style="margin-top:0">
+      <div class="s"><div class="ln"></div><label>Date</label></div>
+      <div class="s"><div class="ln"></div><label>Buyer's signature</label></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>17890 Sierra Way, Monument, CO 80132</span>
+      <span>(303) 915-1045</span>
+      <span class="pg">Page 3 of 3</span>
+    </div>
+    <p class="disclaimer">This form is completed by the Sixfold representative &mdash; seller name, seller address, date of transaction and the cancellation deadline &mdash; <strong>before</strong> it is handed over.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
