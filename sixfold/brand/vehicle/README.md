@@ -23,7 +23,7 @@ send the PDFs to the vendor.
 - **Material:** **30 mil** magnetic sheet, vehicle grade. Not 20 mil — that is the fridge weight
   and it lifts at highway speed.
 - **Corners:** rounded.
-- **Colour:** files are RGB hex brand values; the vendor converts to CMYK. Ember will come back a
+- **Colour:** files are RGB hex brand values; the vendor converts to CMYK. Sage and Turf will come back a
   touch duller and browner than the screen. That is normal and not a file fault.
 
 ## Before they go on a truck
@@ -36,7 +36,7 @@ send the PDFs to the vendor.
 
 ## What is on them, and why
 
-Mark / **Sixfold** / LAND & FIRE · COLORADO / FIRE MITIGATION · LAND CLEARING · LANDSCAPING /
+Mark / **Sixfold** / LAWN, LAND & FIRE / AERATION · LAWN CARE · LANDSCAPING · FIRE /
 (303) 915-1045. That is the settled card lockup with the phone made the second-biggest thing,
 because a vehicle is read at 30 ft. No web address (site not hosted), no street address, no
 "licensed / insured / certified", no prices — the standing Sixfold copy rules.

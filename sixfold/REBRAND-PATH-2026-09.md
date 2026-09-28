@@ -158,6 +158,20 @@ He asked for candidates. Ranked, with what each costs and what each gives up.
 **If a descriptor is going to exist, the shortlist is 2 or 3**: Lawn & Land if the priority is
 changing as little as possible, Grounds Care if the priority is never doing this again.
 
+### ✅ DECIDED 2026-09-28 — candidate 5, `Lawn, Land & Fire`
+
+Matthew's call, against the shortlist above. It leads with the promoted service, keeps the one he
+has twice declined to drop, and reads as three equal services rather than fire-with-add-ons.
+
+**The argument against it does not survive measurement.** "Three nouns is one too many for a
+lockup" — but `LAWN, LAND & FIRE` is **17 characters against `LAND & FIRE · COLORADO` at 22**.
+Dropping the state more than pays for the extra noun, and "Sixfold Colorado" carries the geography.
+It fits every lockup with room, and nothing had to be redrawn.
+
+**Already applied to the cards and magnets** — see
+[brand/rebrand-2026-09/printed-items-rebuild-2026-09-28.md](brand/rebrand-2026-09/printed-items-rebuild-2026-09-28.md).
+**⚑ Brandon owns this call and has not seen it.** Nothing is ordered.
+
 **None of these is the trademark.** A descriptor of this kind is descriptive and would not be
 registered on its own — the mark and "Sixfold Colorado" are what get filed. It costs nothing at
 the USPTO to change a descriptor later; it costs a reprint.

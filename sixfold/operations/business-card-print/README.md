@@ -27,7 +27,7 @@ Checked against office.fedex.com on 2026-09-18:
 
 ## When ordering
 
-- **Colour:** the files are RGB hex brand values. FedEx converts to CMYK; Ember will come
+- **Colour:** the files are RGB hex brand values. FedEx converts to CMYK; Sage will come
   back a touch duller and browner than on screen. That is normal and not a file fault.
   Same note as the vehicle magnets.
 - **Stock:** the design is a solid dark ground with fine light type. **Choose a smooth or
@@ -37,20 +37,20 @@ Checked against office.fedex.com on 2026-09-18:
   line. The proof in `../business-cards.html` says the same.
 - **Check the proof they show you** for two things: the Ridge mark's roots are visible
   (they are 1–1.6 pt strokes and are the first thing a low-res preview drops), and the
-  ember URL on the back is legible. If either looks wrong in their preview, it is their
+  sage URL on the back is legible. If either looks wrong in their preview, it is their
   preview, not the file — but ask before approving.
 
 ## What is on it
 
-**Front:** Ridge mark · *Sixfold* · LAND & FIRE · COLORADO.
+**Front:** Ridge mark (flat print master, single-ink Sage) · *Sixfold* · LAWN, LAND & FIRE · COLORADO.
 **Back:** Brandon Long · Owner · (303) 915-1045 · Contact@SixfoldColorado.com ·
-SixfoldColorado.com (ember) · FIRE MITIGATION · LAND CLEARING · LANDSCAPING.
+SixfoldColorado.com (sage) · AERATION · LAWN CARE · LANDSCAPING · FIRE.
 
 Matthew's instruction: Brandon's name, the shared Contact@ email (not a personal one),
 website and phone unchanged. **"Owner" is the title from the proof** — it was marked as a
 placeholder there, so confirm it is what Brandon wants printed before ordering.
 
-**The lockup reads *Sixfold / Land & Fire · Colorado*, not *Sixfold Colorado*.** That is
+**The lockup reads *Sixfold / Lawn, Land & Fire · Colorado*, not *Sixfold Colorado*.** That is
 deliberate: the site says "Sixfold Colorado" as the customer-facing name; print carries
 the mark. Recorded in `sixfold/site/README.md` under the 2026-09-18 review.
 
