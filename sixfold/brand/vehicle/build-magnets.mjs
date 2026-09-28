@@ -77,7 +77,7 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
   // shape so the phone is the second-largest thing after the name, and the lockup
   // sits inside the safe area with room to spare.
   const t = wide
-    ? { name: 250, band: 38, svc: 30, svcTrack: '.07em', phone: 112, markH: 7.2, gap: 0.55 }
+    ? { name: 250, band: 38, svc: 30, svcTrack: '.07em', phone: 112, markH: 9.4, gap: 0.55 }
     : { name: 300, band: 46, svc: 50, svcTrack: '.12em', phone: 150, markH: 7.6, gap: 0.5 };
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -92,7 +92,7 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
   .trim{position:absolute;inset:${BLEED}in;}
   .safe{position:absolute;inset:${BLEED + SAFE}in;display:flex;
     ${wide ? 'flex-direction:row;align-items:center;gap:0.9in' : 'flex-direction:column;align-items:center;justify-content:center;gap:0.35in;text-align:center'}}
-  .mark{flex:none;height:${t.markH}in;width:${(t.markH * 100 / 96).toFixed(3)}in}
+  .mark{flex:none;height:${t.markH}in;width:${(t.markH * 100 / VIEW_H).toFixed(3)}in}
   .mark svg{display:block;width:100%;height:100%}
   .lock{display:flex;flex-direction:column;${wide ? 'align-items:flex-start' : 'align-items:center'};gap:${t.gap}in;min-width:0}
   .name{font-size:${t.name}pt;line-height:.86;letter-spacing:-.018em;color:${ink};margin:0}
@@ -123,33 +123,58 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
 
 /* Single-colour mark, both grounds. Palette A made the Ridge one ink — the
    two-tone ember/moss split is gone, so BOTH source paths recolour together. */
-/* Mirrored 2026-09-28 on Matthew's call: the ridge now DESCENDS left to right, so
-   the ridgeline slopes into the wordmark instead of away from it, and on the 24x12
-   it leads the eye from the tallest peak across to the phone number.
+/* ROOTS — added 2026-09-28 on Matthew's call, after the mirror was reverted.
 
-   Done as a transform on a wrapper <g>, not by rewriting the path data, so the
-   shared mark file stays the single source of the geometry. The whole mark flips
-   together — the conifer moves to the right-hand end with it. Mirroring only the
-   peaks would sit the tallest peak on top of the tree.
+   Why they belong on a magnet specifically: the mark is a ridgeline sitting on a
+   ground bar, and aeration is the service that happens BELOW that bar. Hanging
+   roots off it is the one change that makes the mark say what the company now
+   leads with, without touching the peaks.
 
-   viewBox is "0 0 100 96", so the flip about x=50 is translate(100,0) scale(-1,1).
+   Drawn in the same language as the lawn cross-section in
+   marketing/lawn-infographic-2026-09/art.mjs — a filled taper with branches off
+   the same curve — but SOLID, not gradient-filled. That drawing is read at arm's
+   length on a printed sheet; this one is read at 30 ft off a moving vehicle, and
+   30 mil magnet stock gets no benefit from a gradient it cannot resolve.
 
-   ⚑ This applies to the MAGNETS ONLY. The business card still uses the mark as
-   drawn, ascending. If the card should match, the same wrapper goes round the svg
-   in operations/business-card-print/card-a-pine-brandon.html. */
-function mirror(svg) {
-  const open = svg.indexOf('>', svg.indexOf('<svg')) + 1;
-  const close = svg.lastIndexOf('</svg>');
-  if (open <= 0 || close < 0) throw new Error('mirror(): cannot find the svg body');
-  return svg.slice(0, open)
-    + '<g transform="translate(100,0) scale(-1,1)">' + svg.slice(open, close) + '</g>'
-    + svg.slice(close);
+   Coordinates are the mark's own: the ground bar is rect y=86 h=5, so the roots
+   start at y=91 and the viewBox grows to fit them. The shared mark file is NOT
+   modified — this is a magnet lockup, not a change to the logo.
+
+   ⚑ MAGNETS ONLY. The card, the site, the social kit and the QR assets all still
+   use the bare Ridge. */
+const GROUND_Y = 91;                 // underside of the mark's ground bar
+const VIEW_H = 126;                  // was 96; the extra 35 is root depth
+
+/* one root: a taper from the ground bar to a tip, plus optional side branches */
+function root(x, depth, { w = 3.2, lean = 0, branches = [] } = {}) {
+  const y0 = GROUND_Y, tipX = x + lean, tipY = y0 + depth;
+  const main = `M${x - w} ${y0} C${x - w * 0.55} ${y0 + depth * 0.45} ${tipX - 1.2} ${y0 + depth * 0.8} ${tipX} ${tipY} `
+             + `C${x + w * 0.55} ${y0 + depth * 0.8} ${x + w * 0.8} ${y0 + depth * 0.45} ${x + w} ${y0} Z`;
+  const kids = branches.map(([at, len, dir]) => {
+    const by = y0 + at, bw = w * 0.46;
+    return `M${x - bw} ${by} Q${x + dir * len * 0.22} ${by + len * 0.42} ${x + dir * len * 0.60} ${by + len * 0.95} `
+         + `Q${x + dir * len * 0.12} ${by + len * 0.68} ${x + bw} ${by + bw * 1.6} Z`;
+  });
+  return [main, ...kids];
 }
 
-const RIDGE = mirror(MARK);
+/* Four roots, set under the mass of the mark rather than spread evenly: the big
+   peak sits right of centre, so the deepest root does too. Depths are staggered
+   so the silhouette does not read as a comb. */
+const ROOT_PATHS = [
+  ...root(23, 20, { w: 4.0, lean: -3, branches: [[7, 9, -1]] }),
+  ...root(43, 28, { w: 4.6, lean: 3, branches: [[9, 11, 1], [17, 9, -1]] }),
+  ...root(63, 23, { w: 4.2, lean: -3, branches: [[8, 10, -1]] }),
+  ...root(80, 33, { w: 5.0, lean: 4, branches: [[10, 12, 1], [20, 10, -1]] }),
+];
 
-const markDark  = RIDGE.replace(/#E4703A/g, SAGE).replace(/#8AA07A/g, SAGE);
-const markLight = RIDGE.replace(/#E4703A/g, TURF).replace(/#8AA07A/g, TURF);
+/* Injected with the mark's own fill so the recolour below catches it too. */
+const ROOTED = MARK
+  .replace('viewBox="0 0 100 96"', `viewBox="0 0 100 ${VIEW_H}"`)
+  .replace('</svg>', ROOT_PATHS.map((d) => `<path fill="#8AA07A" d="${d}"/>`).join('') + '</svg>');
+
+const markDark  = ROOTED.replace(/#E4703A/g, SAGE).replace(/#8AA07A/g, SAGE);
+const markLight = ROOTED.replace(/#E4703A/g, TURF).replace(/#8AA07A/g, TURF);
 
 const variants = [
   { file: 'magnet-24x12',       w: 24, h: 12, ground: PINE, ink: BONE, accent: BONE,    band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markDark,  name: '24×12 in, Pine' },

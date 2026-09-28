@@ -55,36 +55,59 @@ card artwork, and at 1 in `business-cards.html` — the unused var, which is the
 
 Neither was visible in the source. Both were obvious in the PNG.
 
-## The magnets' ridge is mirrored — and only the magnets'
+## The magnets get roots
 
-Matthew's call, later the same day: **the ridge descends left to right** on the vehicle
-magnets. Tallest peak on the left, stepping down into the wordmark, so on the 24×12 the
-ridgeline leads the eye across to the phone number rather than away from it.
+Matthew's call later the same day. **A mirror was tried first and reverted** — he had
+meant roots all along, and the mirrored ridge is gone from the files entirely.
 
-Done as a `transform` on a wrapper `<g>` in `build-magnets.mjs`, **not** by rewriting path
-data, so `sixfold-mark-ridge-flat.svg` stays the single source of the geometry. viewBox is
-`0 0 100 96`, so the flip about x=50 is `translate(100,0) scale(-1,1)`.
+Why roots belong here specifically: the mark is a ridgeline sitting on a ground bar, and
+**aeration is the service that happens below that bar**. Hanging roots off it is the one
+change that makes the mark say what the company now leads with, without touching the
+peaks.
 
-**The whole mark flips together** and the conifer moves to the right-hand end with it.
-Mirroring only the peaks would sit the tallest peak on top of the tree.
+Drawn in the same language as the lawn cross-section in
+`marketing/lawn-infographic-2026-09/art.mjs` — a filled taper with branches off the same
+curve — but **solid, not gradient-filled**. That drawing is read at arm's length on a
+printed sheet; this one is read at 30 ft off a moving vehicle, and 30 mil magnet stock
+gets no benefit from a gradient it cannot resolve.
 
-**Not a print problem.** 30 mil magnet stock prints solid vector flat and large; the
-constraints here are the 0.75in safe area (vendors round the corners about an inch),
-contrast at 30ft, and not letting artwork compete with the phone number. A mirror costs
-nothing against any of the three.
+Four roots, set under the mass of the mark rather than spread evenly: the big peak sits
+right of centre, so the deepest root does too. Depths are staggered so the silhouette
+does not read as a comb.
 
-### ⚑ This makes the magnets the only surface with a descending ridge
+**The shared mark file is NOT modified.** Roots are injected in `build-magnets.mjs`, so
+this is a magnet lockup rather than a change to the logo. ⚑ The card, the site, the social
+kit and the QR assets all still use the bare Ridge.
 
-The business card, the site, the social kit and the QR assets all still use the mark as
-drawn, ascending. **Two defensible answers and they are different decisions:**
+### It took two passes, and the first one was wrong in an instructive way
 
-- **Keep it magnet-only**, treating the mirror as vehicle livery rather than a logo
-  change — the way a boat name reads differently port and starboard.
-- **Mirror everywhere**, which makes it a change to the mark itself and pulls in the
-  whole collateral count, and properly belongs to Phase 2 rather than to this rebuild.
+The first attempt used thin tapers with branches swept **outward**. Rendered, they read as
+**spikes or barbs under the ground bar**, not as roots — the branch angle was doing the
+damage more than the depth. Thicker mains and branches swept **downward** fixed it.
+Nothing about that was visible in the path data.
 
-For the card alone it is one line: the same `<g transform>` wrapper round the svg in
-`operations/business-card-print/card-a-pine-brandon.html`.
+### ⚑ The 24×18 silently paginated, and that is the trap worth remembering
+
+Growing the viewBox to 126 without shrinking the mark pushed the 24×18 column layout past
+its safe area. **`body` is `overflow:hidden`, so on screen it just clipped** — the artwork
+looked fine and the bottom of the lockup was simply gone. The PDF is what caught it, by
+coming out as **2 pages**.
+
+**A magnet that renders as more than one page is a magnet whose lockup does not fit.**
+Check the page count on every render, not just the picture.
+
+`markH` was walked back until it held: **7.6in is the ceiling on the 24×18**, against 9.4in
+on the 24×12, which has the room.
+
+### The cost, stated plainly
+
+On the 24×18 the mark box now holds ridge **and** roots in the height the ridge alone used
+to have, so **the ridge itself is about a quarter smaller there** and the composition is
+more text-heavy than before. The 24×12 does not have this problem.
+
+If that reads as undersized on a truck door, the lever is the `svc` line — it is 50pt on
+that variant, the largest thing after the phone, and dropping it would buy the mark back
+most of what it lost. Not changed on my own initiative.
 
 ## Service line has a hard width ceiling
 
