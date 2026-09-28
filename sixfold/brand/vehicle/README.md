@@ -85,3 +85,25 @@ node tools/html-to-pdf.mjs magnet
 
 and re-render `proof.png` (the snippet is in the session notes; it rasterises the PDFs with
 pypdfium2 at 72 dpi).
+
+## Season colour — an open study, nothing applied
+
+`season-study.png` (from `build-season-study.mjs`) shows the mark four ways, against the
+want recorded in `REBRAND-PATH-2026-09.md`: *the colour should carry the seasons, so the
+year-round offer shows in the brand.*
+
+**A** single ink, as built · **B** four seasons full strength · **C** four seasons pulled
+back toward the greens · **D** one smooth gradient.
+
+**⚑ The geometry decides what is possible.** The flat mark holds all four peaks in ONE
+path with `fill-rule="evenodd"`, so it **cannot be coloured per peak**. Any season
+treatment has to use the layered geometry — one triangle each — at **full opacity**, one
+hue per peak. That is not the layered master's translucency, which is the thing that went
+muddy on the business card in single ink.
+
+Contrast against Pine, computed not eyeballed: spring 11.37 · winter 9.73 · sage 9.19 ·
+moss 6.51 · autumn 6.50 · summer 5.93. All clear the ground at magnet scale.
+
+**Nothing is applied to any magnet.** Choosing a season treatment is a change to the mark,
+which is Phase 2, and it would make the magnets diverge from the site, the social kit and
+the cards in the same way the mirror would have.
