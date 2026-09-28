@@ -23,7 +23,8 @@ artefacts here.
 
 ## What is in it
 
-20 files, six numbered folders, plus a two-page index that sorts to the top.
+**31 files, eight numbered folders**, plus a two-page index that sorts to the top.
+(Was 25 in eight; **2026-09-28 added the two short lawn forms to 07 and a new 09.**)
 
 | | |
 |---|---|
@@ -34,6 +35,22 @@ artefacts here.
 | `04 Hand to the customer` | Pamphlet, funding sheet, referral packet template, Sheet D |
 | `05 Talking about money` | Tax credit notebook + client forms, the script kit |
 | `06 Look it up` | Debris disposal directory, mitigation funding directory |
+| `07 Agreements` | The two five-page agreements + tablet version + two crib sheets, **and the two short lawn forms (job sheet, monthly)** |
+| `08 Events` | Event sign-up sheet |
+| `09 Pick the look` | **New.** Card and magnet proofs, and the season-colour study — the things the crew is being asked to choose between |
+
+**⚑ 09 carries PROOFS, never print files.** The print-ready card and magnet PDFs stay
+out, so nobody can order straight from the share. Nothing in it is ordered and the
+descriptor on it still needs Brandon.
+
+**⚑ Two things in here are now out of step with the aeration-led direction**, and both
+ship as they are because fixing them is a copy job and not a share job:
+
+- **Services Sheet D leads with fire mitigation** and it is the front-of-house sheet, in
+  folders 01 and 04.
+- **The index sheet's own lockup is the ember mark reading `LAND & FIRE · COLORADO`** —
+  deliberately left alone, because folder 09 is asking the crew to choose between exactly
+  that and the green one. Changing it would pre-empt the question.
 
 Names are rewritten for a person browsing Drive — `Sixfold-Services-Sheet-D.pdf`
 becomes `What Sixfold does - services, no prices.pdf`. The mapping is the `FILES`

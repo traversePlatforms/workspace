@@ -117,6 +117,15 @@ const FILES = [
   ['agreements/remote-signing.pdf',
    '07 Agreements',
    'Crib sheet - EMAILING an agreement to sign (INTERNAL).pdf'],
+  // Added 2026-09-28. The short forms, for the small recurring lawn work the
+  // five-page packet is the wrong shape for. Blank templates, no price printed
+  // and no customer named, so they clear both standing exclusions.
+  ['agreements/lawn-job-sheet.pdf',
+   '07 Agreements',
+   'Lawn job sheet - ONE JOB (3 pages, print all of them).pdf'],
+  ['agreements/lawn-monthly-agreement.pdf',
+   '07 Agreements',
+   'Lawn care agreement - MONTHLY rolling (4 pages, print all of them).pdf'],
   // ---- 08 Events ----------------------------------------------------------
   ['operations/Sixfold-Event-Signup-Sheet.pdf',
    '08 Events',
@@ -128,6 +137,23 @@ const FILES = [
   ['research/Sixfold-Mitigation-Funding-Directory.pdf',
    '06 Look it up',
    'Mitigation funding directory - the programmes, by county.pdf'],
+  // ---- 09 Pick the look ---------------------------------------------------
+  // Added 2026-09-28. The brand exclusion below said a separate brand folder was
+  // worth doing "later if anyone asks" — this is that. These are PROOFS, not
+  // print files: the crew is being asked to choose, and the print PDFs stay out
+  // so nobody can order straight from the share.
+  ['operations/business-card-print/card-proof.png',
+   '09 Pick the look',
+   'Business cards - all four options, front and back.png'],
+  ['brand/vehicle/proof.png',
+   '09 Pick the look',
+   'Vehicle magnets - GREEN set (aeration-led).png'],
+  ['brand/vehicle/proof-fire.png',
+   '09 Pick the look',
+   'Vehicle magnets - EMBER set (the original).png'],
+  ['brand/vehicle/season-study.png',
+   '09 Pick the look',
+   'Mark colour - season study, NOTHING APPLIED.png'],
 ];
 
 /* Kept here rather than in a note, so that anyone reading the build list also
@@ -167,9 +193,15 @@ const EXCLUDED = [
    'stay stale on purpose — rebuilding the fillable one loses 30 form fields and the ' +
    'DocuSign one has no generator. See agreements/README.md.'],
 
-  ['brand/ files — marks, magnets, business cards, social review sheets',
-   'Ordering and proofing artefacts, not things a crew member needs on a job. Worth a ' +
-   'separate brand folder later if anyone asks.'],
+  ['brand/ PRINT files — the magnet and business-card PDFs themselves',
+   'Still out, and deliberately. Folder 09 carries the PROOFS so the crew can choose; ' +
+   'the print-ready PDFs stay with Matthew so nobody orders straight from the share. ' +
+   'Nothing in 09 is ordered, and the descriptor on it still needs Brandon.'],
+
+  ['⚑ STALE, and not fixed here: Services Sheet D leads with fire mitigation',
+   'It is in folders 01 and 03 and it is the front-of-house sheet, but the company now ' +
+   'leads with aeration. Replacing it is a copy job, not a share job, so it ships as it ' +
+   'is and this line is the flag. Do not let the share be the reason nobody notices.'],
 ];
 
 /* ------------------------------------------------------------------------- */
