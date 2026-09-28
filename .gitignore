@@ -56,3 +56,7 @@ sixfold/team-share/files/
 
 # Sixfold site upload bundles — rebuildable with make-bundle.mjs, and 3 MB a go
 sixfold/site/dist/
+
+# --- Live credential: the Gmail app password the contact form sends with.
+#     The shape is tracked as sixfold/site/api/secrets.example.php.
+sixfold/site/api/secrets.php

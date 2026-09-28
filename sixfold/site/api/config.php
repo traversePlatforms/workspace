@@ -8,6 +8,10 @@
  * NOT HOSTED YET. Until SixfoldColorado.com resolves, this file is a draft on
  * disk and the dev server (serve.mjs) answers /api/submit.php by logging instead.
  */
+// The one live credential, kept out of git. Missing file is not fatal: the form
+// still logs every lead and simply records that it could not send.
+$secrets = is_readable(__DIR__ . '/secrets.php') ? (array) (require __DIR__ . '/secrets.php') : [];
+
 return [
     // Where submissions are emailed.
     'to'             => 'Contact@SixfoldColorado.com',
@@ -23,14 +27,35 @@ return [
     // A website@ alias in Google Workspace would also have worked — aliases are
     // free — but it is one more thing to create and keep straight for no gain.
     //
-    // ⚑ THIS DOES NOT FIX SPF. The domain's SPF authorises Google only, and this
-    // mail leaves from SiteGround's PHP mail(), so it fails SPF whichever address
-    // it claims. Add SiteGround's own include: string — from their docs, not from
-    // a guess — or move the form to authenticated SMTP through Google, which the
-    // existing SPF already covers. Until then expect spam-foldering.
+    // ⚑ RESOLVED 2026-09-28. The note that stood here said this did not fix SPF
+    // and that the form had to move to authenticated SMTP through Google. It has.
+    // See the 'smtp' block below — the message no longer leaves SiteGround's mail
+    // server at all, so the SPF/spoofing problem this address once had is gone.
     'from'           => 'Contact@SixfoldColorado.com',
 
     'subject_prefix' => '[SixfoldColorado.com] ',
+
+    // --- sending ---------------------------------------------------------
+    // Authenticated SMTP to Gmail, as the mailbox itself. Replaces PHP mail(),
+    // which handed the message to SiteGround and had it refused by Google with
+    // `550 High probability of spam` every time between 2026-09-21 and 09-28.
+    //
+    // Nothing here is secret except the password, which lives in secrets.php.
+    // 'user' is both the login and the envelope sender; Gmail will not let the
+    // From differ from the authenticated account except for a registered alias,
+    // so m.sharpe@ (an alias on this same account) is deliberately NOT used.
+    'smtp' => [
+        'host'      => 'smtp.gmail.com',
+        'port'      => 587,
+        'user'      => 'Contact@SixfoldColorado.com',
+        // Whitespace stripped: Google displays app passwords in groups of four.
+        'pass'      => preg_replace('/\s+/', '', (string) ($secrets['smtp_pass'] ?? '')),
+        'from_name' => 'Sixfold Colorado website',
+        'timeout'   => 15,
+        // What the server announces itself as. Cosmetic to Gmail, which trusts
+        // the login and not this, but a real name is better than "localhost".
+        'ehlo'      => 'sixfoldcolorado.com',
+    ],
 
     // Plain-text backup of every submission, one JSON line each. Lives next to
     // this file; .htaccess blocks it from being served.

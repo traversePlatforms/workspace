@@ -144,6 +144,23 @@ _tabled/           the whole folder — the merch board
 `api/.htaccess` are both load-bearing, and file managers hide dotfiles by default.
 Check they arrived.
 
+**⚑⚑ NEVER EMPTY `public_html` BEFORE EXTRACTING. This has already destroyed
+data once.** `api/submissions.log` lives on the server and nowhere else — not in
+git, not in the OneDrive mirror, and `make-bundle.mjs` deliberately excludes it so
+an upload cannot overwrite it. Extracting *over the top* preserves it. Clearing the
+folder first deletes it, and **that is what happened on 2026-09-25** — the log was
+confirmed gone on 09-28.
+
+So, every upload, in this order:
+
+1. **Download `public_html/api/submissions.log` first** and keep the copy in
+   `sixfold/site/api/` locally, where the mirror covers it.
+2. Extract the new bundle **over** the existing files. Do not clear the folder.
+3. Confirm the log is still there afterwards and has not lost lines.
+
+This stops mattering the day the form emails successfully, because every lead will
+then exist in a mailbox too. Until then the log is the inbox and it has one copy.
+
 **⚑ SiteGround nests a subfolder when it extracts a zip.** If you upload
 `site.zip` and extract in place you can end up with `public_html/site/index.html`
 instead of `public_html/index.html`. Check the root after extracting, and move the
@@ -154,12 +171,21 @@ reserve and referenced by no page.
 
 ## Step 3 — the mailbox, before you test the form
 
-**Create `website@SixfoldColorado.com` on the host.** `api/config.php` sends from
-it, and **mail claiming to be from the domain but sent from elsewhere gets filed as
-forged.** Set **SPF and DKIM** at the same time — SiteGround does both from Site
-Tools → Email → Authentication.
+**⚑ SUPERSEDED 2026-09-21 — do not create `website@`.** `api/config.php` no longer
+sends from it; `from` and `to` are both `Contact@SixfoldColorado.com`, which already
+exists. Nothing had ever created `website@`, and mail from an address that does not
+exist is a spam signal in its own right.
 
-The destination, `Contact@SixfoldColorado.com`, already exists.
+**SPF is done and correct** as of 2026-09-21:
+`v=spf1 include:_spf.google.com ip4:35.206.97.198 ~all`, verified authoritative
+2026-09-28. That `ip4` is SiteGround's **outbound relay**, not the web server IP —
+the first attempt used the web IP and was wrong.
+
+**⚑ The form still does not deliver.** Submissions log, `mail_accepted` is `true`,
+and Google rejects with `550 High probability of spam`. Do not set DKIM from Site
+Tools expecting it to help — that signs mail leaving *Google*, and this mail leaves
+SiteGround. The fix is to stop using `mail()` and send through an email API. See
+the email memory and §Step 3 of the fix plan.
 
 ## Step 4 — permissions
 

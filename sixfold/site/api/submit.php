@@ -241,38 +241,62 @@ if ($keepDays > 0 && is_readable($cfg['log_file'])) {
     }
 }
 
-$headers = implode("\r\n", [
-    'From: Sixfold Colorado website <' . $cfg['from'] . '>',
-    'Reply-To: ' . $safeName . ' <' . $safeEmail . '>',
-    'Content-Type: text/plain; charset=UTF-8',
-    'X-Mailer: sixfold-site',
-]);
+/**
+ * Send, as of 2026-09-28, by authenticated SMTP to Gmail — not by mail().
+ *
+ * mail() worked in the sense that it always returned true and always failed to
+ * deliver: SiteGround accepted the message and Google refused it downstream with
+ * `550 High probability of spam`. See api/smtp.php for why that could not be
+ * fixed with DNS, and DEPLOY.md for the record of what was tried.
+ *
+ * Reply-To is still the customer, so hitting reply in the inbox goes to them and
+ * not to ourselves. That is the one header that has to survive this change.
+ */
+require_once __DIR__ . '/smtp.php';
 
-$sent = @mail($cfg['to'], $cfg['subject_prefix'] . $title, $body, $headers);
+$result = smtp_send(
+    (array) ($cfg['smtp'] ?? []),
+    $cfg['to'],
+    $cfg['subject_prefix'] . $title,
+    $body,
+    [
+        'Reply-To: ' . $safeName . ' <' . $safeEmail . '>',
+        'X-Mailer: sixfold-site',
+    ]
+);
 
 /**
- * ⚑ Record whether mail() actually accepted it. Added 2026-09-21, because without
- * this the log proved a submission arrived and said NOTHING about why no email
- * followed — and the two possible causes need opposite fixes:
+ * ⚑ Record what actually happened to the send. This replaces the 2026-09-21
+ * "mail_accepted" line, which could only ever say true or false and said true
+ * for a week while nothing was being delivered.
  *
- *   "mail_accepted": false  — PHP could not hand it off at all. mail() is disabled
- *                            or misconfigured on the host. No amount of SPF fixes
- *                            this; the form has to send by authenticated SMTP.
- *   "mail_accepted": true   — the server took it and it died downstream. That is
- *                            SPF, DKIM or the receiving side rejecting it, and SPF
- *                            is where to keep digging.
+ * `stage` is the improvement. mail() returning true meant "SiteGround took it"
+ * and nothing more — the real failure was two hops further on and invisible from
+ * here. Now the log carries the point it reached and Google's own words for why
+ * it stopped, so a future failure is read rather than guessed at:
  *
- * A second line rather than folding it into the first, because the lead is written
- * BEFORE any of this runs and that ordering is what stops a mail failure losing an
- * enquiry. Nothing here is allowed to jeopardise that.
+ *   "stage":"config"   — secrets.php has no app password in it yet
+ *   "stage":"connect"  — outbound 587 blocked by the host. SiteGround ticket
+ *   "stage":"auth"     — app password wrong, revoked, or 2SV turned back off
+ *   "stage":"data"     — Google took the envelope and refused the message
+ *   "stage":"sent"     — accepted. Google owns delivery from here
+ *
+ * Still a second line rather than folding it into the first, for the same reason
+ * as before: the lead is written BEFORE any sending is attempted, and nothing in
+ * the send path is allowed to put that at risk.
  */
 @file_put_contents(
     $cfg['log_file'],
     json_encode([
-        'at' => date('c'),
-        'mail_accepted' => (bool) $sent,
-        'to' => $cfg['to'],
-        'from' => $cfg['from'],
+        'at'    => date('c'),
+        'sent'  => (bool) $result['ok'],
+        'stage' => $result['stage'],
+        // Truncated: an SMTP rejection can be verbose and this is a log line,
+        // not a transcript. The first 400 characters carry the reply code and
+        // the reason every time.
+        'error' => mb_substr((string) $result['error'], 0, 400),
+        'to'    => $cfg['to'],
+        'from'  => $cfg['smtp']['user'] ?? null,
     ], JSON_UNESCAPED_UNICODE) . "\n",
     FILE_APPEND | LOCK_EX
 );
