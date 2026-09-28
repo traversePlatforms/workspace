@@ -177,7 +177,12 @@ const JOBS = [
   /* The FedEx print file: two pages at exactly 3.75 x 2.25 in (trim + bleed), Pine
      bleeding to the edge. scale: 1 is the whole point — 0.8 would print the card at
      80% inside a full page. The @page rule in the source sets the size. */
-  { src: 'operations/business-card-print/card-a-pine-brandon.html', out: 'operations/business-card-print/Sixfold-Business-Card-Brandon-Long-FedEx.pdf', mode: 'dark', scale: 1 },
+  /* Four options as of 2026-09-28 pm — two palettes across two grounds — so the
+     crew can pick. All from build-cards.mjs; the hand-written single card is gone. */
+  { src: 'operations/business-card-print/card-green-pine.html', out: 'operations/business-card-print/Sixfold-Card-Green-Pine.pdf', mode: 'dark',  scale: 1 },
+  { src: 'operations/business-card-print/card-green-bone.html', out: 'operations/business-card-print/Sixfold-Card-Green-Bone.pdf', mode: 'light', scale: 1 },
+  { src: 'operations/business-card-print/card-fire-pine.html',  out: 'operations/business-card-print/Sixfold-Card-Ember-Pine.pdf', mode: 'dark',  scale: 1 },
+  { src: 'operations/business-card-print/card-fire-bone.html',  out: 'operations/business-card-print/Sixfold-Card-Ember-Bone.pdf', mode: 'light', scale: 1 },
   /* Vehicle magnets, 2026-09-16 — each page carries its own @page size (24.25 x
      12.25 / 18.25 in with bleed), which preferCSSPageSize honours; scale must be
      1 so an inch is an inch. Print-ready: the vendor gets the PDF as is. */
