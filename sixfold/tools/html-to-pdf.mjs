@@ -184,6 +184,12 @@ const JOBS = [
   { src: 'brand/vehicle/magnet-24x12.html',       out: 'brand/vehicle/magnet-24x12.pdf',           mode: 'dark',  scale: 1 },
   { src: 'brand/vehicle/magnet-24x18.html',       out: 'brand/vehicle/magnet-24x18.pdf',           mode: 'dark',  scale: 1 },
   { src: 'brand/vehicle/magnet-24x12-light.html', out: 'brand/vehicle/magnet-24x12-light.pdf',     mode: 'light', scale: 1 },
+  /* The ember family, 2026-09-28: the pre-rebuild fire-mitigation artwork kept as
+     parallel files so the crew can choose between the two layouts. Same sizes, same
+     print spec; only the palette and the copy differ. */
+  { src: 'brand/vehicle/magnet-24x12-fire.html',       out: 'brand/vehicle/magnet-24x12-fire.pdf',       mode: 'dark',  scale: 1 },
+  { src: 'brand/vehicle/magnet-24x18-fire.html',       out: 'brand/vehicle/magnet-24x18-fire.pdf',       mode: 'dark',  scale: 1 },
+  { src: 'brand/vehicle/magnet-24x12-fire-light.html', out: 'brand/vehicle/magnet-24x12-fire-light.pdf', mode: 'light', scale: 1 },
   { src: 'research/crew-safety-and-compliance.html', out: 'research/Sixfold-Crew-Safety-and-Compliance.pdf', mode: 'light' },
   { src: 'marketing/referral-packet.html',       out: 'marketing/Sixfold-Referral-Packet-TEMPLATE.pdf', mode: 'light', scale: 1 },
 

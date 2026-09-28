@@ -40,7 +40,11 @@ const MARK = readFileSync(join(HERE, '..', 'sixfold-mark-ridge-flat.svg'), 'utf8
 const PINE = '#0E1512', MOSS = '#8AA07A', BONE = '#EDE7DC';
 const SAGE = '#A7BE93';          // the mark on Pine — 9.19 contrast
 const TURF = '#2F7A4F';          // the mark on Bone
-const EMBER = '#E4703A', EMBER_INK = '#B84C15', TIMBER = '#1F2A25';   // unused, see above
+/* ⚑ IN USE AGAIN as of 2026-09-28 pm. These were deliberately unused when the
+   magnets moved to palette A. Matthew then asked for the previous fire-mitigation
+   artwork back alongside the new set, so the crew can pick between the two, and
+   the ember family below uses them. Palette A still governs the GREEN family. */
+const EMBER = '#E4703A', EMBER_INK = '#B84C15', TIMBER = '#1F2A25';
 const BLEED = 0.125, SAFE = 0.75;
 
 /* Rebuilt 2026-09-28 for the aeration-led positioning. Aeration leads because it
@@ -70,14 +74,14 @@ const PHONE = '(303) 915-1045';
    a light, and it does not get to compete with the number. */
 const SITE = 'SixfoldColorado.com';
 
-function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
+function page({ w, h, ground, ink, accent, band, muted, markSvg, name, descriptor, services }) {
   const W = w + 2 * BLEED, H = h + 2 * BLEED;
   const wide = w / h >= 1.8;           // 2:1 -> side-by-side; 4:3 -> mark above
   // Type sizes are in inches of cap-height-ish, converted to pt (72/in). Tuned per
   // shape so the phone is the second-largest thing after the name, and the lockup
   // sits inside the safe area with room to spare.
   const t = wide
-    ? { name: 250, band: 38, svc: 30, svcTrack: '.07em', phone: 112, markH: 9.4, gap: 0.55 }
+    ? { name: 250, band: 38, svc: 30, svcTrack: '.07em', phone: 112, markH: 7.2, gap: 0.55 }
     : { name: 300, band: 46, svc: 50, svcTrack: '.12em', phone: 150, markH: 7.6, gap: 0.5 };
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -92,7 +96,7 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
   .trim{position:absolute;inset:${BLEED}in;}
   .safe{position:absolute;inset:${BLEED + SAFE}in;display:flex;
     ${wide ? 'flex-direction:row;align-items:center;gap:0.9in' : 'flex-direction:column;align-items:center;justify-content:center;gap:0.35in;text-align:center'}}
-  .mark{flex:none;height:${t.markH}in;width:${(t.markH * 100 / VIEW_H).toFixed(3)}in}
+  .mark{flex:none;height:${t.markH}in;width:${(t.markH * 100 / 96).toFixed(3)}in}
   .mark svg{display:block;width:100%;height:100%}
   .lock{display:flex;flex-direction:column;${wide ? 'align-items:flex-start' : 'align-items:center'};gap:${t.gap}in;min-width:0}
   .name{font-size:${t.name}pt;line-height:.86;letter-spacing:-.018em;color:${ink};margin:0}
@@ -111,8 +115,8 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
     <div class="mark">${markSvg}</div>
     <div class="lock">
       <div class="name">Sixfold</div>
-      <div class="mono band">${DESCRIPTOR}</div>
-      <div class="mono svc">${SERVICES}</div>
+      <div class="mono band">${descriptor}</div>
+      <div class="mono svc">${services}</div>
       <div class="mono phone">${PHONE}</div>
       <div class="mono url">${SITE}</div>
     </div>
@@ -123,63 +127,35 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
 
 /* Single-colour mark, both grounds. Palette A made the Ridge one ink — the
    two-tone ember/moss split is gone, so BOTH source paths recolour together. */
-/* ROOTS — added 2026-09-28 on Matthew's call, after the mirror was reverted.
+/* The FIRE family — the artwork as it stood before the 2026-09-28 rebuild, kept
+   as parallel files so the crew can choose. Copy and colour are both the old ones:
+   fire leads the service line and the descriptor is the pre-2026-09-28 "Land &
+   Fire · Colorado". Do NOT quietly update these to the new descriptor — the whole
+   point of keeping them is that they are the other option, not a half-migrated one. */
+const SERVICES_FIRE = 'FIRE MITIGATION &middot; LAND CLEARING &middot; LANDSCAPING';
+const DESCRIPTOR_FIRE = 'Land &amp; Fire &middot; Colorado';
 
-   Why they belong on a magnet specifically: the mark is a ridgeline sitting on a
-   ground bar, and aeration is the service that happens BELOW that bar. Hanging
-   roots off it is the one change that makes the mark say what the company now
-   leads with, without touching the peaks.
+/* Ember ridge over a moss tree and ground bar — the two-tone mark, which is what
+   the layered original was drawn for. The green family flattens to one ink; this
+   one does not. */
+const markFireDark  = MARK;
+const markFireLight = MARK.replace(/#E4703A/g, EMBER_INK).replace(/#8AA07A/g, TIMBER);
 
-   Drawn in the same language as the lawn cross-section in
-   marketing/lawn-infographic-2026-09/art.mjs — a filled taper with branches off
-   the same curve — but SOLID, not gradient-filled. That drawing is read at arm's
-   length on a printed sheet; this one is read at 30 ft off a moving vehicle, and
-   30 mil magnet stock gets no benefit from a gradient it cannot resolve.
+const markDark  = MARK.replace(/#E4703A/g, SAGE).replace(/#8AA07A/g, SAGE);
+const markLight = MARK.replace(/#E4703A/g, TURF).replace(/#8AA07A/g, TURF);
 
-   Coordinates are the mark's own: the ground bar is rect y=86 h=5, so the roots
-   start at y=91 and the viewBox grows to fit them. The shared mark file is NOT
-   modified — this is a magnet lockup, not a change to the logo.
-
-   ⚑ MAGNETS ONLY. The card, the site, the social kit and the QR assets all still
-   use the bare Ridge. */
-const GROUND_Y = 91;                 // underside of the mark's ground bar
-const VIEW_H = 126;                  // was 96; the extra 35 is root depth
-
-/* one root: a taper from the ground bar to a tip, plus optional side branches */
-function root(x, depth, { w = 3.2, lean = 0, branches = [] } = {}) {
-  const y0 = GROUND_Y, tipX = x + lean, tipY = y0 + depth;
-  const main = `M${x - w} ${y0} C${x - w * 0.55} ${y0 + depth * 0.45} ${tipX - 1.2} ${y0 + depth * 0.8} ${tipX} ${tipY} `
-             + `C${x + w * 0.55} ${y0 + depth * 0.8} ${x + w * 0.8} ${y0 + depth * 0.45} ${x + w} ${y0} Z`;
-  const kids = branches.map(([at, len, dir]) => {
-    const by = y0 + at, bw = w * 0.46;
-    return `M${x - bw} ${by} Q${x + dir * len * 0.22} ${by + len * 0.42} ${x + dir * len * 0.60} ${by + len * 0.95} `
-         + `Q${x + dir * len * 0.12} ${by + len * 0.68} ${x + bw} ${by + bw * 1.6} Z`;
-  });
-  return [main, ...kids];
-}
-
-/* Four roots, set under the mass of the mark rather than spread evenly: the big
-   peak sits right of centre, so the deepest root does too. Depths are staggered
-   so the silhouette does not read as a comb. */
-const ROOT_PATHS = [
-  ...root(23, 20, { w: 4.0, lean: -3, branches: [[7, 9, -1]] }),
-  ...root(43, 28, { w: 4.6, lean: 3, branches: [[9, 11, 1], [17, 9, -1]] }),
-  ...root(63, 23, { w: 4.2, lean: -3, branches: [[8, 10, -1]] }),
-  ...root(80, 33, { w: 5.0, lean: 4, branches: [[10, 12, 1], [20, 10, -1]] }),
-];
-
-/* Injected with the mark's own fill so the recolour below catches it too. */
-const ROOTED = MARK
-  .replace('viewBox="0 0 100 96"', `viewBox="0 0 100 ${VIEW_H}"`)
-  .replace('</svg>', ROOT_PATHS.map((d) => `<path fill="#8AA07A" d="${d}"/>`).join('') + '</svg>');
-
-const markDark  = ROOTED.replace(/#E4703A/g, SAGE).replace(/#8AA07A/g, SAGE);
-const markLight = ROOTED.replace(/#E4703A/g, TURF).replace(/#8AA07A/g, TURF);
+const GREEN = { descriptor: DESCRIPTOR, services: SERVICES };
+const FIRE  = { descriptor: DESCRIPTOR_FIRE, services: SERVICES_FIRE };
 
 const variants = [
-  { file: 'magnet-24x12',       w: 24, h: 12, ground: PINE, ink: BONE, accent: BONE,    band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markDark,  name: '24×12 in, Pine' },
-  { file: 'magnet-24x18',       w: 24, h: 18, ground: PINE, ink: BONE, accent: BONE,    band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markDark,  name: '24×18 in, Pine' },
-  { file: 'magnet-24x12-light', w: 24, h: 12, ground: BONE, ink: PINE, accent: PINE,     band: '#5F7A55', muted: '#5F6A62',              markSvg: markLight, name: '24×12 in, Bone (alternate)' },
+  /* GREEN — palette A, aeration-led. The current direction. */
+  { ...GREEN, file: 'magnet-24x12',       w: 24, h: 12, ground: PINE, ink: BONE, accent: BONE,    band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markDark,  name: '24×12 in, Pine' },
+  { ...GREEN, file: 'magnet-24x18',       w: 24, h: 18, ground: PINE, ink: BONE, accent: BONE,    band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markDark,  name: '24×18 in, Pine' },
+  { ...GREEN, file: 'magnet-24x12-light', w: 24, h: 12, ground: BONE, ink: PINE, accent: PINE,     band: '#5F7A55', muted: '#5F6A62',              markSvg: markLight, name: '24×12 in, Bone (alternate)' },
+  /* EMBER — the pre-rebuild fire-mitigation artwork, kept for the choice. */
+  { ...FIRE,  file: 'magnet-24x12-fire',       w: 24, h: 12, ground: PINE, ink: BONE, accent: EMBER,     band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markFireDark,  name: '24×12 in, Pine (fire)' },
+  { ...FIRE,  file: 'magnet-24x18-fire',       w: 24, h: 18, ground: PINE, ink: BONE, accent: EMBER,     band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markFireDark,  name: '24×18 in, Pine (fire)' },
+  { ...FIRE,  file: 'magnet-24x12-fire-light', w: 24, h: 12, ground: BONE, ink: PINE, accent: EMBER_INK, band: '#5F7A55', muted: '#5F6A62',              markSvg: markFireLight, name: '24×12 in, Bone (fire, alternate)' },
 ];
 for (const v of variants) writeFileSync(join(HERE, `${v.file}.html`), page(v));
 

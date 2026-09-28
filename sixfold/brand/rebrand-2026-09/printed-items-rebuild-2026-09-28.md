@@ -55,59 +55,35 @@ card artwork, and at 1 in `business-cards.html` — the unused var, which is the
 
 Neither was visible in the source. Both were obvious in the PNG.
 
-## The magnets get roots
+## The magnets ship as TWO families, and the roots were reverted
 
-Matthew's call later the same day. **A mirror was tried first and reverted** — he had
-meant roots all along, and the mirrored ridge is gone from the files entirely.
+Two design passes were tried on the magnets and **both were reverted at Matthew's
+request**: a mirrored ridge (a misreading of what he asked for) and then roots hanging
+below the ground bar. Neither survives in the files. The magnet mark is the plain flat
+Ridge, `viewBox="0 0 100 96"`, exactly as the shared mark file draws it.
 
-Why roots belong here specifically: the mark is a ridgeline sitting on a ground bar, and
-**aeration is the service that happens below that bar**. Hanging roots off it is the one
-change that makes the mark say what the company now leads with, without touching the
-peaks.
+**What he asked for instead: keep the previous fire-mitigation artwork as parallel files,
+so the crew can pick between the green layout and the orange one.** That is now what the
+generator produces — six magnets, two complete families, same sizes and same print spec.
 
-Drawn in the same language as the lawn cross-section in
-`marketing/lawn-infographic-2026-09/art.mjs` — a filled taper with branches off the same
-curve — but **solid, not gradient-filled**. That drawing is read at arm's length on a
-printed sheet; this one is read at 30 ft off a moving vehicle, and 30 mil magnet stock
-gets no benefit from a gradient it cannot resolve.
+| | GREEN | EMBER |
+|---|---|---|
+| Descriptor | `LAWN, LAND & FIRE` | `LAND & FIRE · COLORADO` |
+| Services | `AERATION · LAWN CARE · LANDSCAPING · FIRE` | `FIRE MITIGATION · LAND CLEARING · LANDSCAPING` |
+| Mark | Single ink, Sage / Turf | Two-tone, ember ridge on moss |
+| Phone | Bone / Pine | Ember |
 
-Four roots, set under the mass of the mark rather than spread evenly: the big peak sits
-right of centre, so the deepest root does too. Depths are staggered so the silhouette
-does not read as a comb.
+**`EMBER`, `EMBER_INK` and `TIMBER` are in use again** in `build-magnets.mjs`. They had
+been left defined-and-deliberately-unused when the magnets moved to palette A, and that
+comment is now corrected rather than left standing as a lie. **Palette A still governs
+the green family** and the card, the site and the social kit are unchanged.
 
-**The shared mark file is NOT modified.** Roots are injected in `build-magnets.mjs`, so
-this is a magnet lockup rather than a change to the logo. ⚑ The card, the site, the social
-kit and the QR assets all still use the bare Ridge.
+**⚑ Do not quietly migrate the ember files to the new descriptor.** They are the other
+option, not a half-migrated one. If the green set wins, the ember files get deleted, not
+updated.
 
-### It took two passes, and the first one was wrong in an instructive way
-
-The first attempt used thin tapers with branches swept **outward**. Rendered, they read as
-**spikes or barbs under the ground bar**, not as roots — the branch angle was doing the
-damage more than the depth. Thicker mains and branches swept **downward** fixed it.
-Nothing about that was visible in the path data.
-
-### ⚑ The 24×18 silently paginated, and that is the trap worth remembering
-
-Growing the viewBox to 126 without shrinking the mark pushed the 24×18 column layout past
-its safe area. **`body` is `overflow:hidden`, so on screen it just clipped** — the artwork
-looked fine and the bottom of the lockup was simply gone. The PDF is what caught it, by
-coming out as **2 pages**.
-
-**A magnet that renders as more than one page is a magnet whose lockup does not fit.**
-Check the page count on every render, not just the picture.
-
-`markH` was walked back until it held: **7.6in is the ceiling on the 24×18**, against 9.4in
-on the 24×12, which has the room.
-
-### The cost, stated plainly
-
-On the 24×18 the mark box now holds ridge **and** roots in the height the ridge alone used
-to have, so **the ridge itself is about a quarter smaller there** and the composition is
-more text-heavy than before. The 24×12 does not have this problem.
-
-If that reads as undersized on a truck door, the lever is the `svc` line — it is 50pt on
-that variant, the largest thing after the phone, and dropping it would buy the mark back
-most of what it lost. Not changed on my own initiative.
+Proofs are now two sheets — `proof.png` and `proof-fire.png` — because the point is to
+choose *between* the families, which is easier side by side than down one long strip.
 
 ## Service line has a hard width ceiling
 

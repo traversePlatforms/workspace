@@ -19,16 +19,24 @@ import { fileURLToPath } from 'node:url';
 import { pathToFileURL } from 'node:url';
 import sharp from 'sharp';
 
+const PORT = process.argv[2] === 'fire' ? 9379 : 9378;   // separate ports so both can run
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PINE = { r: 14, g: 21, b: 18, alpha: 1 };
-const PAGES = ['magnet-24x12', 'magnet-24x18', 'magnet-24x12-light'];
+/* Two sheets, one per colourway, rather than six on one strip: the point of the
+   proof is to choose BETWEEN the families, and that is easier side by side than
+   scrolling one long column. Pass 'fire' to build the ember sheet. */
+const FAMILY = process.argv[2] === 'fire' ? 'fire' : 'green';
+const PAGES = FAMILY === 'fire'
+  ? ['magnet-24x12-fire', 'magnet-24x18-fire', 'magnet-24x12-fire-light']
+  : ['magnet-24x12', 'magnet-24x18', 'magnet-24x12-light'];
+const OUT_NAME = FAMILY === 'fire' ? 'proof-fire.png' : 'proof.png';
 const WIDTH = 1500;          // px per magnet in the sheet
 const PAD = 40;
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const prof = mkdtempSync(join(tmpdir(), 'proof-'));
-const ch = spawn(CHROME, ['--headless=new', '--remote-debugging-port=9378',
+const ch = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`,
   `--user-data-dir=${prof}`, '--no-first-run', '--disable-gpu', '--hide-scrollbars',
   '--force-color-profile=srgb'], { stdio: 'ignore' });
 
@@ -36,7 +44,7 @@ let ws, id = 0;
 const pending = new Map();
 for (let i = 0; i < 60; i++) {
   try {
-    const t = await (await fetch('http://127.0.0.1:9378/json/list')).json();
+    const t = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
     const pg = t.find((x) => x.type === 'page');
     if (pg) { ws = new WebSocket(pg.webSocketDebuggerUrl); break; }
   } catch { /* chrome not up yet */ }
@@ -91,9 +99,9 @@ try { rmSync(prof, { recursive: true, force: true }); } catch { /* windows lock 
 // the sheet should still fit it rather than leave a band of empty Pine.
 const sheetW = Math.max(...shots.map((s) => s.w)) + PAD * 2;
 const sheetH = shots.reduce((a, s) => a + s.h + PAD, PAD);
-const out = join(HERE, 'proof.png');
+const out = join(HERE, OUT_NAME);
 let y = PAD;
 const composite = shots.map((s) => { const c = { input: s.buf, left: PAD, top: y }; y += s.h + PAD; return c; });
 await sharp({ create: { width: sheetW, height: sheetH, channels: 4, background: PINE } })
   .composite(composite).png().toFile(out);
-console.log(`\nproof.png  ${sheetW}x${sheetH}  (${shots.length} magnets, top to bottom: ${PAGES.join(', ')})`);
+console.log(`\n${OUT_NAME}  ${sheetW}x${sheetH}  (${shots.length} magnets, top to bottom: ${PAGES.join(', ')})`);
