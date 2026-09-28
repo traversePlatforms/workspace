@@ -123,8 +123,33 @@ function page({ w, h, ground, ink, accent, band, muted, markSvg, name }) {
 
 /* Single-colour mark, both grounds. Palette A made the Ridge one ink — the
    two-tone ember/moss split is gone, so BOTH source paths recolour together. */
-const markDark  = MARK.replace(/#E4703A/g, SAGE).replace(/#8AA07A/g, SAGE);
-const markLight = MARK.replace(/#E4703A/g, TURF).replace(/#8AA07A/g, TURF);
+/* Mirrored 2026-09-28 on Matthew's call: the ridge now DESCENDS left to right, so
+   the ridgeline slopes into the wordmark instead of away from it, and on the 24x12
+   it leads the eye from the tallest peak across to the phone number.
+
+   Done as a transform on a wrapper <g>, not by rewriting the path data, so the
+   shared mark file stays the single source of the geometry. The whole mark flips
+   together — the conifer moves to the right-hand end with it. Mirroring only the
+   peaks would sit the tallest peak on top of the tree.
+
+   viewBox is "0 0 100 96", so the flip about x=50 is translate(100,0) scale(-1,1).
+
+   ⚑ This applies to the MAGNETS ONLY. The business card still uses the mark as
+   drawn, ascending. If the card should match, the same wrapper goes round the svg
+   in operations/business-card-print/card-a-pine-brandon.html. */
+function mirror(svg) {
+  const open = svg.indexOf('>', svg.indexOf('<svg')) + 1;
+  const close = svg.lastIndexOf('</svg>');
+  if (open <= 0 || close < 0) throw new Error('mirror(): cannot find the svg body');
+  return svg.slice(0, open)
+    + '<g transform="translate(100,0) scale(-1,1)">' + svg.slice(open, close) + '</g>'
+    + svg.slice(close);
+}
+
+const RIDGE = mirror(MARK);
+
+const markDark  = RIDGE.replace(/#E4703A/g, SAGE).replace(/#8AA07A/g, SAGE);
+const markLight = RIDGE.replace(/#E4703A/g, TURF).replace(/#8AA07A/g, TURF);
 
 const variants = [
   { file: 'magnet-24x12',       w: 24, h: 12, ground: PINE, ink: BONE, accent: BONE,    band: MOSS,      muted: 'rgba(237,231,220,.62)', markSvg: markDark,  name: '24×12 in, Pine' },

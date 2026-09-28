@@ -55,6 +55,37 @@ card artwork, and at 1 in `business-cards.html` — the unused var, which is the
 
 Neither was visible in the source. Both were obvious in the PNG.
 
+## The magnets' ridge is mirrored — and only the magnets'
+
+Matthew's call, later the same day: **the ridge descends left to right** on the vehicle
+magnets. Tallest peak on the left, stepping down into the wordmark, so on the 24×12 the
+ridgeline leads the eye across to the phone number rather than away from it.
+
+Done as a `transform` on a wrapper `<g>` in `build-magnets.mjs`, **not** by rewriting path
+data, so `sixfold-mark-ridge-flat.svg` stays the single source of the geometry. viewBox is
+`0 0 100 96`, so the flip about x=50 is `translate(100,0) scale(-1,1)`.
+
+**The whole mark flips together** and the conifer moves to the right-hand end with it.
+Mirroring only the peaks would sit the tallest peak on top of the tree.
+
+**Not a print problem.** 30 mil magnet stock prints solid vector flat and large; the
+constraints here are the 0.75in safe area (vendors round the corners about an inch),
+contrast at 30ft, and not letting artwork compete with the phone number. A mirror costs
+nothing against any of the three.
+
+### ⚑ This makes the magnets the only surface with a descending ridge
+
+The business card, the site, the social kit and the QR assets all still use the mark as
+drawn, ascending. **Two defensible answers and they are different decisions:**
+
+- **Keep it magnet-only**, treating the mirror as vehicle livery rather than a logo
+  change — the way a boat name reads differently port and starboard.
+- **Mirror everywhere**, which makes it a change to the mark itself and pulls in the
+  whole collateral count, and properly belongs to Phase 2 rather than to this rebuild.
+
+For the card alone it is one line: the same `<g transform>` wrapper round the svg in
+`operations/business-card-print/card-a-pine-brandon.html`.
+
 ## Service line has a hard width ceiling
 
 `.svc` is `white-space:nowrap` and sits beside a 7.5in mark. About **47 characters**
