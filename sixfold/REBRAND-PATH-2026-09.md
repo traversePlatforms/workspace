@@ -110,9 +110,18 @@ look at the logo.
 
 **0.3's answer makes this the top of the list.** Recurring lawn care is many small jobs, and
 Kara's packet is the shape of the problem: an aeration job and a $250/month maintenance
-agreement, both drafted at five pages. **Next unblocked piece of work: a one-page lawn job
-sheet — price, date, what gets done, signature — and a decision on whether the monthly one is
-a season agreement or a rolling one.** Neither needs Brandon.
+agreement, both drafted at five pages.
+
+✅ **DONE 2026-09-28 — both forms are built.** `agreements/lawn-job-sheet` (3 pages) and
+`agreements/lawn-monthly-agreement` (4 pages), with the reasoning, the fact-check log and the
+open decisions in [agreements/lawn-forms-2026-09-28.notes.md](agreements/lawn-forms-2026-09-28.notes.md).
+
+**Matthew's answer on the monthly: rolling, month to month, regardless of season.** That put
+it inside **C.R.S. 6-1-732**, which Kara's non-renewing fixed term sat outside — so the
+renewal terms are now boxed in 10.5pt and the agreement promises a written reminder once a
+year. **⚑ Nobody runs that reminder yet.** Attorney review of that box is Brandon's, and if
+these get signed in DocuSign rather than on paper there is probably a one-step online
+cancellation duty with no route built for it.
 
 ---
 
