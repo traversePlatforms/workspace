@@ -12,7 +12,12 @@
 > card, and the earlier four-card set, whose palette question is still open for the magnets.
 
 
-**Built 2026-09-18, rebuilt 2026-09-28.** Under **Brandon Long**. **Nothing ordered.**
+**Built 2026-09-18, rebuilt 2026-09-28. PRINTED 2026-09-29** — the cascading mark, “Lawn, Land
+& Fire”, “Owner”. Under **Brandon Long**. *(This line read “nothing ordered” until 2026-09-30; the
+cards had in fact gone to print the day before.)*
+
+**⚑ The printed back is Brandon’s only.** Cards for Matthew and Brad need new backs — see SX-4b
+in the root `TASKS.md` for the three things to decide first.
 
 ## ⚑ FOUR OPTIONS — pick one before ordering
 

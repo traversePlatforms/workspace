@@ -46,19 +46,20 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       selected, surface the tax credit / grant / insurer re-score material. **This one is
       genuinely good** — the funding research already exists and currently only lives in a
       pamphlet nobody reads at quote time. Build after SX-2.
-- [ ] **SX-3a — Kara: mark the aeration tick box, then sign.** Both agreements are drafted and
-      rendered (`sixfold/agreements/kara-aeration-agreement.pdf`, 5 pages;
-      `kara-maintenance-agreement.pdf`, 6 pages). **Blocked on one decision only:** section 2 of
-      the maintenance agreement carries an unmarked tick box — the two yearly aerations are
-      either inside the $250/month or invoiced separately at a per-visit price. Two aerations
-      against a $3,000 annual total, when the same work sells as a one-off the same week for
-      $1,100, is the whole question.
-      **⚑ Hard date: the aeration job is Monday 12 October 2026, which is Columbus Day — not a
-      business day, so the cooling-off count skips it. The last safe signing date is Wednesday
-      7 October 2026.** Sign later than that and the job falls inside the cancellation window,
-      where C.R.S. 5-3-405(3) means the work earns nothing if she cancels.
-      Still blank besides: mowing months, snow months, snow trigger inches, snow clear-by hours.
-      Invoice shapes are worked out in `sixfold/agreements/kara-invoices-2026-09-30.md`.
+- [ ] **SX-3a — Kara: get both agreements signed.** **Drafting is done.** Aeration $1,100
+      (5pp) and maintenance $250/mo (6pp), both signed-shape, both with a quote and a DocuSign
+      packet. Field map and sending rules in `agreements/kara-docusign-setup.md`.
+      **⚑ Three things left, in order:**
+      **(1)** The live envelope has optional signature tags on the two Notice of Cancellation
+      pages. **Correct the envelope — do not void it.** Deleting a tag sends her no email, and
+      it needs no approval from anyone because a misplaced field is not a change to the terms.
+      **Only possible while she has not signed.**
+      **(2)** Say the three-day cancellation right **out loud** on the phone at the moment she
+      signs — 16 CFR 429.1(e); an envelope does not discharge it. Note in the job file that you
+      did and when.
+      **(3)** **Signing by Wednesday 7 October** keeps the 12 October start. Later is not fatal,
+      the job just moves. Download the certificate of completion, not just the signed PDF.
+      Maintenance has no deadline pressure — first payment 1 Nov, first visit Thu 19 Nov.
 - [ ] **SX-4 — Kara end-of-work email**, carrying the relevant packet material. **The only item
       on the list with a real customer waiting.** No template exists — what exists is the
       referral packet (customer-facing) and the job close-out sheet (crew-facing, internal).
@@ -66,6 +67,22 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       + PDF), so Kara's email is the first use of it rather than a one-off. Covers what every
       close-out email carries: what was done, what was left, what the customer does next, the
       referral ask, the review ask.
+- [ ] **SX-4b — Business cards for Matthew and Brad.** The printed card’s back is
+      **Brandon Long · Owner · (303) 915-1045 · Contact@SixfoldColorado.com**, so two new backs
+      are needed. **The front does not change** — same cascading mark, same "Lawn, Land & Fire".
+      Regenerate with `build-card-final.mjs`, which already holds the printed layout.
+      **Three things to decide before anything is generated:**
+      **Titles** — Brandon is "Owner". What are you and Brad? Nothing on file says.
+      **Phone** — Brandon’s carries the company number. Same on all three, or individual ones?
+      **Email** — Brandon’s carries the shared `Contact@`, and that was your explicit
+      instruction at the time ("not a personal one"). Same rule for these, or do they get
+      individual Workspace addresses? Sixfold’s tenant exists but **Brandon still is not on it**.
+      **⚑ Regenerating touches the roots.** The Ridge mark has ten root strokes and the flat
+      mark is cropped above them, so the wrong mark silently deletes them — it has happened
+      once. Check the roots are present in the proof before ordering.
+      FedEx wants a two-page PDF, front then back; the spec is in
+      `operations/business-card-print/README.md`.
+
 - [ ] **SX-5 — Yard signs.** Reuses the brand kit and the cascading mark. Own constraint set:
       read at 20–30 ft from a road, so the QR has to be much bigger than the card's and the
       type is a different scale problem entirely.
