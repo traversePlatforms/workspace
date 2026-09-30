@@ -60,8 +60,45 @@
 > direction, forever. The 30→65 fix is a bias fix. The scatter underneath it needs no fixing.
 >
 > **⚑ What the reprice does to the team**, the same way the v3 bump did: anyone holding rates saved
-> under v3 loses those customisations, which is the point of a reprice. **And a tree quoted from the
-> tool before today was priced at half its labour** — worth checking whether one went out.
+> under v3 loses those customisations, which is the point of a reprice.
+>
+> **No quote is exposed.** Matthew, 2026-09-30: *"we have no other tree quotes other than the
+> example they gave me."* Nothing has gone out at the 30 man-min rate, so there is nothing to
+> re-check and nobody to go back to.
+>
+> ### ⚑ What 65 still is, and is not
+>
+> **Sixfold has never recorded a 30 ft tree removal.** The 65 comes from one spoken example, the
+> same way the 30 did — it is a better figure because the scope is now stated (down, bucked, loaded
+> or chipped, two people) and the crew size is no longer being dropped. It is still not a timing.
+>
+> **The one tree job on file was small trees.** Matthew, 2026-09-30: Kara was priced for dismantling
+> her trees, *"which were small in size"* — job 2's line reads *under 10 ft, felled and cut up on the
+> ground*. That is the `sap` line, which is why the calibration was undisturbed by this reprice, and
+> it means the 10–30 ft band has never been tested against a job either.
+>
+> ### ⚑ A signal on the sapling line, and why it is NOT being acted on
+>
+> Brandon's own customer price for those small trees, before the job-2 revision squeezed it:
+>
+> | | per tree | implied at $100/man-hour |
+> |---|---|---|
+> | Original, 5 trees for $650 | $130 | **78 man-min** |
+> | Revised, 3 for $250 — cut below pro-rata to absorb the $400 reduction | $83 | 50 man-min |
+> | `sap` as the engine holds it | — | **30 man-min** |
+>
+> Both of his own figures imply more than double the allocation. **It is left alone, because a price
+> is not a time.** $130 is what a customer was asked to pay; it carries margin, overhead and the
+> whole-job negotiation, so dividing it by the billable rate only yields a duration if the price were
+> pure labour at cost. The 30 came the other way round — from job 2's **recorded** 16 man-hours,
+> shared out. Raising `sap` to 78 would put job 2 at about 20.8 predicted hours against 16 recorded
+> and break the only calibration there is.
+>
+> **The general warning this raises:** every *Priced* badge in the tool is a customer price divided
+> by $100/man-hour. Where that price carried margin, the resulting "time" is inflated — and the
+> engine then multiplies it back out and reproduces his price. Harmless as pricing, circular as
+> evidence, and **misleading if anyone reads a Priced rate as how long the work actually takes.**
+> The badge already says the figure is his and the division is arithmetic; this is why that matters.
 >
 > **Still open above 30 ft.** The 30–60 ft band is Wexford's 330 and the 60–80 is Wexford's 570.
 > Brandon and Brad have given nothing above 30 ft, and that is the most dangerous work Sixfold sells.
