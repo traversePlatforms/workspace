@@ -23,6 +23,37 @@
 > | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
 > | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
 >
+> ### ⚑ 2026-09-30 — the t30 source figure is contradicted, and the tool may be half
+>
+> **Matthew, 2026-09-30:** *"the metric was a 30 ft tree in about 30-35 minutes with 2 people."*
+>
+> The engine records the same line as **"complete fell, 15 minutes", two people → 30 man-min**.
+> **The units conversion was right** (15 elapsed × 2 crew = 30 man-min); it is the underlying
+> figure that disagrees. 30–35 elapsed × 2 crew is **60–70 man-minutes** — double what `t30` holds.
+>
+> | | man-min | at $100/man-hour |
+> |---|---|---|
+> | `t30` as the tool has it | 30 | **$50** a tree |
+> | 30–35 min with two crew | **60–70** | **$100–$117** a tree |
+>
+> **⚑ Do not just double it — the scope question comes first, and it is the whole thing:**
+> **does 30–35 minutes mean the tree is on the ground, or the tree is dealt with?** The engine
+> bills **limbing separately at 28 man-min a tree**. If that figure already covers limbing and
+> dragging to the pile, doubling `t30` *and* keeping the limb line bills the same work twice. If
+> it is felling only, then "complete fell, 15 minutes" was optimistic and 60–70 is the number.
+>
+> **What it fixes, if 60–70 is right and the scope matches:**
+> - **Open item 3 dissolves.** `sap` stays 30 and `t30` becomes about 65, so the sapling and the
+>   small tree stop costing the same. No timing needed after all.
+> - **Open item 2 gets much smaller.** The band jump goes from 30→330 (elevenfold) to about
+>   65→330 (fivefold) — a plausible step for a genuinely bigger tree rather than a cliff.
+> - **`htPerFt` moves 1.0 → about 2.0–2.33 man-min/ft**, taking the 4× contradiction against the
+>   sapling line at 7 ft with it.
+>
+> **Nothing was changed in the engine.** It is a reprice, it needs the `config/rates-vN` bump,
+> and the scope question is unresolved. **Meanwhile every tree under 30 ft quoted from the live
+> tool may be priced at half its labour** — worth checking whether any went out.
+>
 > **Still open, and all four are Brandon's or Brad's call, not mine:**
 >
 > 1. **Limbing contradicts itself.** $600 for 13 trees now; $975 for the same 13 before, and Hawk's $75
