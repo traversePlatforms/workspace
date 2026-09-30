@@ -1,0 +1,7 @@
+# Door lists and the marks log. Read by api/rounds.php ONLY — never served.
+# Each file holds names and home addresses; a directory listing would be worse
+# than any single file.
+Require all denied
+<FilesMatch ".*">
+  Require all denied
+</FilesMatch>

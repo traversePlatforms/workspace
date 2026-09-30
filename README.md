@@ -7,6 +7,7 @@ Rules for working here are in [CLAUDE.md](CLAUDE.md).
 claude test 2/
 ├─ README.md               ← this file
 ├─ CLAUDE.md               ← the rules (read every session)
+├─ TASKS.md                ← the working register — every open job, all four lanes
 │
 ├─ surge/        780 files   3.8 GB   the sales company
 ├─ sixfold/      223 files    18 MB   the fire-mitigation company

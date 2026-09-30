@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold — Monthly Grounds Maintenance Quote, Rosenstrauch</title>
+<!--
+   Kara Rosenstrauch, 3846 Deboodt Ct, Colorado Springs.
+   TWELVE MONTHS, November 2026 to October 2027. $250.00 a month, $3,000.00 over
+   the term. First visit Thursday 19 November 2026, first payment 1 November 2026.
+
+   Companion to ../agreements/kara-maintenance-agreement — every figure and every
+   line of scope is taken from that agreement's sections 2 to 6.
+   IF THE AGREEMENT CHANGES, THIS CHANGES. They go to the customer together.
+
+   Same two deliberate omissions as the aeration quote, for the same reasons:
+     - NO "typical local rate" column. No sourced market rate exists for any of
+       this, and Matthew confirmed 2026-09-30 that none is wanted.
+     - NO per-line prices. The agreement prices this as ONE monthly sum, so the
+       scope lines read "Included" and only the monthly figure carries a number.
+       invoice-spec.md §2 — the invoice reprints these lines unchanged.
+
+   ⚑ THE SNOW CAP IS ON THE SHEET. Five clearing visits in a calendar month are
+   included and beyond five is not covered. It is a real limit on what she is
+   buying and the quote says so rather than leaving her to find it in clause 14.
+
+   ⚑ NO ICE TREATMENT IS MENTIONED ANYWHERE, deliberately — Matthew's call
+   2026-09-30. Not confirmed, not denied, handled verbally if it ever comes up.
+   Do not add it back to this sheet.
+
+   TWO ENDINGS in the footer, same mechanism as the other two quotes.
+-->
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — tax credit notebook, shared print register.
+
+   Extended from marketing/funding-one-pager.html. Same tokens, same
+   type stack, same ink-on-paper commitment: these sheets exist to be
+   printed and put in a binder, so there is no dark theme and every
+   colour is painted explicitly.
+
+   What is NEW here, over the one-pager:
+     - multi-sheet pagination (.sheet + page-break-after)
+     - fill-in furniture: .rule, .box, .grid-form, .tbl
+     - .internal / .clientfacing masthead flags
+   Do not restyle. Extend.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #FFFFFF;
+  --tint: #F3EFE6;
+  --tint-edge: #DED5C4;
+  --ink: #14201B;
+  --ink-mid: #46534B;
+  --ink-soft: #6E7A72;
+  --ember: #E4703A;
+  --ember-text: #B84C15;
+  --moss-text: #45583A;
+
+  --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+  --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: #4A5550; }
+body {
+  margin: 0;
+  background: #4A5550;
+  color: var(--ink);
+  font-family: var(--f-body);
+  padding: 24px 12px 48px;
+}
+
+/* The sheet -------------------------------------------------------- */
+.sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 22px;
+  background: var(--paper);
+  color: var(--ink);
+  /* Matches @page below exactly, so the on-screen sheet is a true proof:
+     11in tall minus 0.5in top and bottom leaves the 10in the printer gives
+     you. If content clears the white here, it clears one printed page. */
+  padding: 0.5in 0.55in;
+  font-size: 9.5pt;
+  line-height: 1.34;
+  box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Masthead --------------------------------------------------------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3in;
+  border-bottom: 2.5pt solid var(--ember);
+  padding-bottom: 6pt;
+}
+.brand { display: flex; align-items: flex-end; gap: 8pt; }
+.mark { width: 33pt; height: 38pt; flex: none; display: block; color: var(--ink); }
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 19pt;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.descriptor {
+  font-family: var(--f-data);
+  font-size: 6pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 4pt 0 0;
+}
+.whatitis {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0;
+  padding-top: 3pt;
+  max-width: 2.3in;
+  line-height: 1.7;
+}
+.whatitis b { color: var(--ember-text); font-weight: 400; display: block; }
+
+/* Sheet headline --------------------------------------------------- */
+.sheetnum {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+}
+h1.headline {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.09;
+  text-wrap: balance;
+  margin: 4pt 0 0;
+  color: var(--ink);
+}
+.standfirst {
+  font-size: 9.6pt;
+  line-height: 1.4;
+  color: var(--ink-mid);
+  margin: 5pt 0 0;
+  max-width: 6.5in;
+}
+
+h2.sec {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 12.5pt;
+  line-height: 1.12;
+  margin: 9pt 0 4pt;
+  color: var(--ember-text);
+}
+h3.sub {
+  font-family: var(--f-data);
+  font-size: 6.6pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 8pt 0 4pt;
+  font-weight: 400;
+}
+p { margin: 0 0 5pt; }
+
+/* Blocks ----------------------------------------------------------- */
+.block {
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 10pt 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin: 8pt 0 0;
+}
+.block.moss { border-left-color: var(--moss-text); background: var(--paper); }
+.block > :last-child { margin-bottom: 0; }
+.block-eyebrow {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 0 0 5pt;
+}
+
+/* Lists ------------------------------------------------------------ */
+ul.terms { margin: 0 0 5pt; padding-left: 12pt; list-style: none; }
+ul.terms li { position: relative; margin-bottom: 3pt; padding-left: 1pt; }
+ul.terms li::before {
+  content: "";
+  position: absolute;
+  left: -10pt;
+  top: 0.42em;
+  width: 4pt;
+  height: 4pt;
+  background: var(--moss-text);
+}
+ul.terms li:last-child { margin-bottom: 0; }
+ul.terms.no li::before { background: var(--ember-text); }
+
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 24pt;
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1pt;
+  width: 18pt;
+  height: 18pt;
+  background: var(--ember);
+  color: #FFF;
+  font-family: var(--f-data);
+  font-size: 9pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ol.steps > li:last-child { margin-bottom: 0; }
+ol.steps b { display: block; color: var(--ink); }
+ol.steps p { margin: 1pt 0 0; color: var(--ink-mid); font-size: 8.9pt; }
+
+/* Tables ----------------------------------------------------------- */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  margin: 0 0 5pt;
+}
+table.tbl th {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  font-weight: 400;
+  padding: 0 6pt 4pt 0;
+  border-bottom: 1.25pt solid var(--ink);
+  vertical-align: bottom;
+}
+table.tbl td {
+  padding: 3.5pt 6pt 3.5pt 0;
+  border-bottom: 0.75pt solid var(--tint-edge);
+  vertical-align: top;
+  line-height: 1.35;
+}
+table.tbl td:last-child, table.tbl th:last-child { padding-right: 0; }
+table.tbl .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.tbl tr.hi td { background: #FBE6DC; font-weight: 600; }
+table.tbl tr.dim td { color: var(--ink-soft); }
+
+/* Fill-in furniture ------------------------------------------------ */
+.rule {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-soft);
+  min-width: 1in;
+  height: 1.05em;
+  vertical-align: baseline;
+}
+.rule.w2 { min-width: 2in; }
+.rule.w3 { min-width: 3in; }
+.rule.fill { display: block; width: 100%; }
+
+.grid-form { display: flex; flex-wrap: wrap; gap: 7pt 12pt; margin: 0 0 6pt; }
+.field { flex: 1 1 2.2in; min-width: 1.6in; }
+.field.wide { flex: 1 1 100%; }
+.field.half { flex: 1 1 3.1in; }
+.field label {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8pt;
+}
+.field .line { border-bottom: 0.75pt solid var(--ink-mid); height: 2pt; }
+.field .hint { font-size: 7.4pt; color: var(--ink-soft); margin: 3pt 0 0; line-height: 1.35; }
+
+.tick { display: flex; align-items: flex-start; gap: 6pt; margin-bottom: 3pt; break-inside: avoid; }
+.tick .sq {
+  flex: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin-top: 1.5pt;
+  background: var(--paper);
+}
+.tick .lbl { flex: 1; line-height: 1.38; }
+.tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
+.ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+.ticks.two .tick { flex: 1 1 2.7in; }
+
+.yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
+.yn span {
+  display: inline-block;
+  width: 9pt; height: 9pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin: 0 3pt 0 8pt;
+  vertical-align: -1pt;
+}
+
+.sign { display: flex; gap: 16pt; margin-top: 10pt; }
+.sign .field { flex: 1 1 auto; }
+.sign .field.date { flex: 0 0 1.5in; }
+
+/* Callouts --------------------------------------------------------- */
+.warn {
+  border: 0.9pt solid var(--ember-text);
+  background: #FBE6DC;
+  padding: 7pt 10pt;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+.warn .block-eyebrow { color: var(--ember-text); }
+.warn > :last-child { margin-bottom: 0; }
+
+.note {
+  font-family: var(--f-data);
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-top: 0.75pt solid var(--tint-edge);
+  padding-top: 5pt;
+  margin: 7pt 0 0;
+}
+.note b { color: var(--ink-mid); font-weight: 400; }
+
+/* Footer ----------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding-top: 6pt;
+  border-top: 0.75pt solid var(--tint-edge);
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4pt 12pt;
+  font-family: var(--f-data);
+  font-size: 7.4pt;
+  letter-spacing: 0.05em;
+  color: var(--ink-mid);
+}
+.contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+.contact .pg { margin-left: auto; color: var(--ink-soft); }
+.disclaimer {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+  max-width: 6.6in;
+}
+
+/* Print ------------------------------------------------------------ */
+@media print {
+  html, body { background: #FFF; padding: 0; margin: 0; }
+  .sheet {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+  @page { size: letter; margin: 0.5in 0.55in; }
+  .screenonly { display: none !important; }
+}
+
+@media screen and (max-width: 8.9in) {
+  .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+  .top { flex-direction: column; gap: 10pt; }
+  .whatitis { text-align: left; max-width: none; }
+}
+
+/* ==================================================================
+   CONTRACT FURNITURE — added for the service agreement.
+   Extends the notebook print register; nothing above is overridden.
+   ================================================================== */
+
+/* Numbered clauses. The numbers are real references — a change order or a
+   dispute needs to be able to cite one — so they are not decoration. */
+ol.clauses { margin: 0; padding: 0; list-style: none; counter-reset: cl; }
+ol.clauses > li {
+  counter-increment: cl;
+  position: relative;
+  padding-left: 20pt;
+  margin-bottom: 5pt;
+  break-inside: avoid;
+}
+ol.clauses > li::before {
+  content: counter(cl) ".";
+  position: absolute; left: 0; top: 0;
+  font-family: var(--f-data);
+  font-size: 8pt;
+  color: var(--ember-text);
+}
+ol.clauses > li:last-child { margin-bottom: 0; }
+ol.clauses b.h { display: block; color: var(--ink); }
+
+/* Inline fill-in rule that sits in running text. */
+.fi {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-mid);
+  min-width: 0.9in;
+  height: 1.02em;
+  vertical-align: -0.2em;
+}
+.fi.w2 { min-width: 1.8in; }
+.fi.w3 { min-width: 2.7in; }
+
+/* Money line. Tabular figures and a box, so a filled-in price is unambiguous
+   and hard to alter after signing. */
+.money { display: flex; flex-wrap: wrap; gap: 10pt; margin: 6pt 0 0; }
+.money .m { flex: 1 1 2in; border: 0.9pt solid var(--ink-mid); padding: 5pt 8pt 6pt; }
+.money .m span {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 8pt;
+}
+.money .m .amt {
+  font-family: var(--f-data); font-size: 12pt; color: var(--ink);
+  border-bottom: 0.9pt solid var(--ink-mid); padding-bottom: 2pt;
+}
+
+/* THE CANCELLATION STATEMENT.
+   16 CFR 429.1(a) requires this in bold face type of a minimum size of TEN
+   POINTS, in immediate proximity to the buyer's signature space. The register's
+   body copy is 9.5pt, so this is set explicitly and must not be reduced to make
+   a page fit. Same for the notice forms — 429.1(b) sets the same floor. */
+.legal10 { font-size: 10.5pt; font-weight: 700; line-height: 1.34; }
+.cancelbox {
+  border: 1.4pt solid var(--ink);
+  padding: 9pt 11pt;
+  margin: 10pt 0 0;
+  break-inside: avoid;
+}
+
+/* Signature blocks. */
+.sigs { display: flex; flex-wrap: wrap; gap: 14pt 20pt; margin-top: 12pt; }
+.sigs .s { flex: 1 1 2.9in; }
+.sigs .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigs .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+/* The statutory notice form — plain, boxed, unmistakably a separate document. */
+.noticeform { border: 1.4pt solid var(--ink); padding: 14pt 16pt 16pt; margin-top: 10pt; }
+.noticeform h2 {
+  font-family: var(--f-data); font-size: 12pt; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  margin: 0 0 10pt; color: var(--ink);
+}
+.noticeform p { font-size: 10.5pt; font-weight: 700; line-height: 1.34; margin: 0 0 8pt; }
+.noticeform .datefield { margin: 0 0 10pt; }
+
+/* Internal sheet flag — never appears on a customer-facing page. */
+.internalflag {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--f-data); font-size: 7pt;
+  letter-spacing: .2em; text-transform: uppercase;
+  padding: 3pt 7pt; display: inline-block;
+}
+
+/* ==================================================================
+   PAGINATION HARDENING — added 2026-08-21.
+
+   Each .sheet is designed to be exactly one printed page and is
+   measured to fit. This block is the safety net for when it is not:
+   if a page shrinks (a printer with a larger unprintable margin, or
+   browser headers/footers left switched on), content must break at a
+   clean boundary rather than mid-topic. Better an extra page than a
+   heading stranded at the bottom or a table cut in half.
+   ================================================================== */
+h1.headline, h2.sec, h3.sub, .sheetnum, .block-eyebrow {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+.block, .warn, .noticeform, .money, .totals, .grid-form, .ticks,
+.sigs, .catkey, .figures, .paperwork, footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+ol.clauses > li, ol.steps > li, ul.terms li, .tick, .field, .money .m {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.tbl { break-inside: auto; page-break-inside: auto; }
+table.tbl tr, table.tbl thead { break-inside: avoid; page-break-inside: avoid; }
+table.tbl thead { break-after: avoid-page; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+
+/* Signature rows — one party per row, three columns.
+   The previous flat .sigs flex wrapped six equal items two-per-row, which
+   put the Sixfold representative's signature beside the owner's date. It
+   read as one muddled grid instead of two signature blocks. */
+.sigrow { display: flex; gap: 10pt 18pt; margin-top: 11pt; break-inside: avoid; page-break-inside: avoid; }
+.sigrow .s { flex: 1 1 0; min-width: 0; }
+.sigrow .s.wide { flex: 1.5 1 0; }
+.sigrow .s.narrow { flex: 0.75 1 0; }
+.sigrow .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigrow .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+/* ==================================================================
+   QUOTE FURNITURE — added for quotes/, on top of the agreement register.
+
+   Two additions only. Everything else on a quote sheet reuses the
+   contract's own classes on purpose: the customer sees the quote first
+   and the agreement second, and they should read as one document set.
+   ================================================================== */
+
+/* The headline price. Bigger than .money because on a quote it is the
+   thing being communicated, not a box to be filled in later. */
+.pricebar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12pt;
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 12pt 9pt;
+  margin: 7pt 0 0;
+  break-inside: avoid;
+}
+.pricebar .lab {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.pricebar .lab b { display: block; color: var(--ink); font-weight: 400; font-size: 8.6pt; letter-spacing: 0.04em; text-transform: none; margin-top: 3pt; }
+.pricebar .fig {
+  font-family: var(--f-display);
+  font-size: 25pt;
+  line-height: 1;
+  color: var(--ember-text);
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* The other option. Every quote names the alternative and its price —
+   §4 of the pricing guide makes disposal a line the customer may
+   decline, and a sheet that hides the cheaper choice is not doing that. */
+.altopt {
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--moss-text);
+  padding: 7pt 10pt 8pt;
+  margin: 7pt 0 0;
+  break-inside: avoid;
+}
+.altopt > :last-child { margin-bottom: 0; }
+
+/* .standfirst carries no bottom margin — in the agreement it is always
+   followed by an h2.sec, which brings its own 9pt. On a quote the next
+   thing is the customer's details, and without this the standfirst's last
+   line sits directly on top of the PREPARED FOR label. */
+.standfirst + .grid-form { margin-top: 9pt; }
+
+/* Quote-scoped tightening. A quote is one page or it is not a quote — the
+   price and the terms it is conditional on have to be in front of the
+   customer at the same moment. These four values buy the last half inch.
+   Verified by printing to PDF and counting pages, not by screen height. */
+h2.sec { margin-top: 7pt; }
+ul.terms li { margin-bottom: 2.5pt; }
+.pricebar { padding: 7pt 12pt 8pt; }
+footer .disclaimer { margin-top: 4pt; }
+
+/* .sheet is a flex column so that `footer { margin-top: auto }` pins the
+   contact bar to the bottom of the on-screen proof. In print that layout
+   earns nothing and costs a page: Chrome fragments an overflowing flex
+   column by pushing the last child whole onto the next sheet, which is how
+   a quote whose body fits ends up with a lone footer on page 2. Block flow
+   in print, and the footer sits under the terms where it belongs. */
+@media print {
+  .sheet { display: block; }
+  footer { margin-top: 9pt; }
+}
+</style>
+<style>
+/* Same furniture as kara-aeration. Keep the two sheets identical in register —
+   they go to one customer and a quote that does not match its sibling is a
+   quote she reads twice. */
+table.tbl th.r, table.tbl td.r { text-align: right; }
+table.tbl td.inc { color: var(--ink-mid); }
+.item b { display: block; }
+.item span { color: var(--ink-mid); }
+.pricebar { display: flex; justify-content: space-between; gap: 10pt; margin-top: 8pt; }
+.pricebar div { flex: 1; border: 0.75pt solid var(--tint-edge); padding: 5pt 9pt; }
+.pricebar p { margin: 0; }
+.pricebar .k { font-family: var(--f-data); font-size: 6.2pt; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
+.pricebar .v { font-size: 12pt; font-weight: 700; margin-top: 2pt; }
+.pricebar .hi { background: var(--tint); border-color: var(--tint-edge); }
+.pricebar .hi .v { color: var(--ember-text); }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 99" role="img" aria-label="Sixfold">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+        <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+          <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+          <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+          <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+          <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
+    </div>
+    <p class="whatitis"><b>Grounds maintenance quote</b>Date <span class="fi"></span></p>
+  </div>
+
+  <p class="sheetnum">Mowing · Edging · Spot treatment · Aeration · Snow clearing · Colorado Springs, CO</p>
+
+  <div class="grid-form">
+    <div class="field half"><label>Property owner</label><div class="line" style="height:auto;padding-bottom:1.5pt">Kara Rosenstrauch</div></div>
+    <div class="field half"><label>Phone</label><div class="line" style="height:auto;padding-bottom:1.5pt">(719) 306-1031</div></div>
+    <div class="field wide"><label>Property</label><div class="line" style="height:auto;padding-bottom:1.5pt">3846 Deboodt Ct, Colorado Springs, CO</div></div>
+    <div class="field half"><label>Email</label><div class="line" style="height:auto;padding-bottom:1.5pt">drkara@msn.com</div></div>
+    <div class="field half"><label>Term</label><div class="line" style="height:auto;padding-bottom:1.5pt">November 2026 – October 2027</div></div>
+  </div>
+
+  <h2 class="sec">The work</h2>
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th style="width:22%">Service and when</th>
+        <th style="width:58%">What it covers</th>
+        <th class="r" style="width:20%">Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="item"><b>Mowing and edging</b><span>Third Thursday of each month</span></td>
+        <td>Mowing the open turf, edging in against beds, walls, drive and walks, and blowing the hard surfaces clear before leaving. Clippings mulched back into the turf where the cut allows, and bagged and left on the property where it does not.</td>
+        <td class="r inc">Included</td>
+      </tr>
+      <tr>
+        <td class="item"><b>Spot treatment</b><span>Every other month</span></td>
+        <td>Repairing the dead and worn spots — the areas that need more than the lawn as a whole. Aeration, seed and fertilizer worked into the patch, on the same visit. Fertilizer and seed only; no pesticide, herbicide or weed-and-feed of any kind.</td>
+        <td class="r inc">Included</td>
+      </tr>
+      <tr>
+        <td class="item"><b>Core aeration</b><span>Twice a year — April and October</span></td>
+        <td>Hollow tines pull plugs of soil and thatch from the open turf, and the plugs stay on the surface to break down back into the lawn. <strong>Both visits are inside the monthly price</strong> and nothing further is invoiced for them.</td>
+        <td class="r inc">Included</td>
+      </tr>
+      <tr>
+        <td class="item"><b>Snow clearing</b><span>As needed, in season</span></td>
+        <td>The driveway, the front walk and the path to the front door. Visits are as needed and additional to the monthly visit. <strong>Up to five clearing visits in any one calendar month are included</strong>; clearing beyond five in a month is a separate written agreement and price.</td>
+        <td class="r inc">Included</td>
+      </tr>
+      <tr class="hi">
+        <td colspan="2"><strong>Each month, fixed</strong></td>
+        <td class="r"><strong>$250</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pricebar">
+    <div class="hi"><p class="k">Each month</p><p class="v">$250.00</p></div>
+    <div><p class="k">Number of months</p><p class="v">12</p></div>
+    <div><p class="k">Total over the term</p><p class="v">$3,000.00</p></div>
+  </div>
+
+  <p class="note" style="margin-top:7pt"><b>First visit Thursday 19 November 2026. First payment 1 November 2026.</b> The work and the dates are subject to change with the weather and the seasons. The areas worked are fixed at the walk.</p>
+
+  <h2 class="sec">Terms</h2>
+  <ul class="terms">
+    <li><strong>The estimate is free and the price is fixed.</strong> $250 a month for twelve months, $3,000 over the term. Travel is not billed, and nothing further is owed unless additional work is agreed in writing.</li>
+    <li><strong>Payment.</strong> Due on the <strong>1st of each month</strong>, first on 1 November 2026 and last on 1 October 2027, by electronic transfer, cash, or check made payable to Sixfold, LLC.</li>
+    <li><strong>It does not renew itself.</strong> Twelve months and then it stops — nothing rolls over and no payment is taken after the twelfth month. Sixfold will contact you about <strong>45 days before the end of the term</strong> to go over how the year has gone and agree what the next one should cover.</li>
+    <li><strong>Either of us can end it early on 30 days&rsquo; written notice</strong>, for any reason and with no fee. Any month paid for in advance and not begun is refunded within ten business days.</li>
+    <li><strong>Clearing snow does not make a surface safe.</strong> Snow can compact, melt and refreeze, and a cleared surface can still be icy. Sixfold does not undertake to keep any surface free of ice.</li>
+    <li><strong>Right to cancel.</strong> An agreement signed at the property carries a three-business-day right of cancellation, in writing, for any reason and without fee. This is Colorado law and cannot be waived; all payments are refunded in full. Work does not begin until that period has run, unless an earlier start is requested in writing.</li>
+    <li><strong>This price does not expire.</strong> No time-limited discount is attached to it.</li>
+    <li><strong>Please water the lawn a day or two before an aeration visit.</strong> Aeration pulls a proper plug from moist ground and very little from ground that is dry and hard.</li>
+  </ul>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>17890 Sierra Way, Monument, CO 80132</span>
+      <span>(303) 915-1045</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Page 1 of 1</span>
+    </div>
+    <!-- TWO ENDINGS, switched by the `css` field on each JOBS entry.
+           _part-quote-maintenance.pdf (-> the packet)      hides .ifsolo
+           Sixfold-Quote-Maintenance-Kara-Rosenstrauch.pdf  hides .ifpacket -->
+    <p class="disclaimer">An itemised project estimate. <span class="ifpacket">Sixfold&rsquo;s maintenance agreement follows overleaf.</span><span class="ifsolo">Sixfold&rsquo;s maintenance agreement sets out the full terms of the work.</span></p>
+  </footer>
+
+</div>
+
+</body>
+</html>

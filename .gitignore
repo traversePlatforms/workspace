@@ -60,3 +60,17 @@ sixfold/site/dist/
 # --- Live credential: the Gmail app password the contact form sends with.
 #     The shape is tracked as sixfold/site/api/secrets.example.php.
 sixfold/site/api/secrets.php
+
+# Door-territory outputs — generated from public county records, but each file is
+# a list of named private individuals at their home addresses. Regenerable in
+# minutes; nothing is lost by keeping them out of git and the OneDrive mirror.
+sixfold/operations/door-territory/*.csv
+sixfold/operations/door-territory/.address-cache.json
+# and the printed versions of the same thing
+sixfold/operations/door-territory/*.pdf
+sixfold/operations/door-territory/walklist-print.html
+
+# Live sign-in codes for /rounds/ — every code opens 2,656 home addresses.
+sixfold/site/api/rounds-codes.php
+# The marks log written beside the door lists.
+sixfold/site/data/rounds/*.log

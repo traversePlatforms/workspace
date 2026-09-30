@@ -9,9 +9,12 @@ on social. Draft on disk; nothing printed, nothing posted.
 | `Sixfold-Flyers.pdf` p2 | Letter | **Landscaping, standalone** — hand out, counter stack |
 | `Sixfold-Flyers.pdf` p3 | Letter | **The free guide, with tear-off tabs** — poles, boards, hardware shops |
 | `Sixfold-Door-Hanger.pdf` | 4.25 × 11 | **Doors.** Front and back |
+| `Sixfold-Door-Flyer-Mono.pdf` | 8.5 × 5.5, two up | **The door-to-door leave-behind.** Print this one |
+| `Sixfold-Door-Flyer-Green.pdf` | 8.5 × 5.5, two up | Same piece, one green accent, for when a nicer copy is wanted |
 
-Sources: `flyers.html`, `door-hanger.html`. Rebuild with
-`node tools/html-to-pdf.mjs Sixfold-Flyers` / `Door-Hanger`, both pinned `scale: 1`.
+Sources: `flyers.html`, `door-hanger.html`, `door-flyer.html`. Rebuild with
+`node tools/html-to-pdf.mjs Sixfold-Flyers` / `Door-Hanger` / `Door-Flyer`, all pinned
+`scale: 1`.
 
 ---
 
@@ -52,6 +55,87 @@ under, which is the only job it has.
 door hanger is read in about two seconds on the way past. The argument is all on the back
 for the ones who turn it over.
 
+---
+
+## Door flyer — rewritten 2026-09-28 around the lawn
+
+**Brandon's ask, in his words:** *"Can we add something like lawn rehab. Or a short
+explainer of what we'd do. Like, your lawn sucks, we will make it not."*
+
+So the piece stopped being four service nouns with nothing under them and became **one
+argument with a service list beneath it**:
+
+> **LAWN REHAB**
+> ### Does your lawn suck?
+> Thin, patchy, hard as a driveway? Hard ground sheds water instead of sucking it up, and
+> the grass on top thins out no matter what you feed it!
+> **1 Aerate. 2 Seed. 3 Feed.** — then the other three services.
+
+**The headline is Matthew's, 2026-09-28, and it is deliberate.** The first pass opened on
+*"Thin, patchy, hard as a driveway?"* and he moved that down into the body, putting
+Brandon's own phrasing in the largest type on the page. The symptom line still does the
+work of letting someone check their own yard — it just no longer has to be the hook. A
+noun list ("Lawn & turf — core aeration, overseeding, fertilizing") asks the reader to
+already know they need aeration; almost nobody does.
+
+**Brandon's line is the tone, not the claim.** *"We will make it not suck"* is a result,
+and the flyer never promises one — it says what we do and in what order, and stops. Same
+reason there is **still no price on it**: there is no aeration rate, only Kara's ¾-acre
+gauge.
+
+**⚑ The watering tip and the mowing line came off, 2026-09-28** — *"water it a couple of
+days ahead, dry ground will not give up a deep plug"* and *"mowing and edging as well,
+one-off or month to month."* **Matthew's call: both are a one-to-one conversation, not
+print.** Worth knowing they are still the two best things to say on the doorstep, and the
+watering tip in particular is the thing no competitor's ad on the Front Range carries
+(see `aeration-ad-kit-2026-09.md`). Losing them freed 0.44 in, which went back into the
+type rather than into more copy.
+
+**What else moved:**
+
+- **Descriptor is now `Lawn, Land & Fire`** — it still said `Land & Fire`, which the cards
+  and magnets no longer do. Brandon's call, and **Matthew showed him the cards, the magnets
+  and this flyer on 2026-09-28** — ⚑ his verdict is not written down anywhere, so ask before
+  treating it as approved. Nothing is ordered either way.
+- **"We stopped by today" moved to the top of the QR column**, which freed the left column
+  for the argument and gave the right column a top anchor. The service area is pinned to
+  the foot under a matching rule, so the column reads top-and-bottom rather than pooling
+  an inch of white.
+- **The other three services are unranked and unsequenced** — landscaping is not written
+  as the after-job of fire mitigation, per the copy rule.
+- **"fuel breaks" came out of the fire line** to hold it to one line. The Colorado State
+  Forest Service reference stayed, because that is the part that is checkable.
+
+### ⚑ Vertical room: 4.655 in of 4.700 in used
+
+Under 0.05 in spare — less than one line of body copy. **The overflow is silent**
+— the flyer is a fixed 5.5 in box inside an 11 in sheet, so nothing looks wrong on screen
+and the only symptom is a **PDF that comes out 2 pages instead of 1**. Check the page count
+on every rebuild; the first build of this rewrite failed exactly that way.
+
+The hairline cut rule carries `margin-top:-1px` for the same reason — a zero-height rule
+still occupies its own border, and without that the sheet is 11.01 in and spills.
+
+**The type sizes are set to fill the column, not chosen for their own sake.** Cutting the
+two lines above freed 0.44 in and it went into the headline, the sub, the gaps between
+blocks, and then the `LAWN REHAB` kicker (7.2pt regular → **9.6pt bold**, tracking eased
+to .14em, on Matthew's ask that it be visible from further away). If copy goes back on,
+those come down again — in that order.
+
+### Fact-check log — the new lawn copy
+
+| Claim on the flyer | Status |
+|---|---|
+| Hollow tines, cores two to three inches deep, two to four apart | **Verified** — UMass Amherst Extension, 2026-09-23; same wording already shipped in `aeration-video-2026-09/frames.html` |
+| The cores stay on the lawn and break back down into it | **Verified** — same source; deliberately kept, it is the thing customers ring up about |
+| Hard ground sheds water instead of sucking it up | **Verified** — as above. The frames say *"instead of taking it"*; "sucking it up" is Matthew's wording, to chime with the headline. Same fact |
+| Seed goes down while the holes are open; that is what thickens it | **Verified** — as above |
+| Spring and fall are the windows | **Verified** — as above |
+| Aerate, seed and feed in **one visit** | **Verified against our own job** — Kara's ¾ acre carried 200 lb seed and 150 lb fertilizer; Sixfold owns the aerator |
+| *"the grass on top thins out no matter what you feed it"* | **⚑ Unresolved.** A reasonable consequence of the compaction fact above, but not traced to a source of its own. It is the one sentence on here I would cut if you want everything sourced |
+| Fire mitigation to Colorado State Forest Service standards | Carried unchanged from the previous version |
+| Service area — El Paso, Teller, S. Douglas | Unchanged, and still **derived** (35 mi from Monument), not Brandon's stated area |
+
 ## Printing
 
 - **No bleed needed.** Nothing that matters is within 0.5 in of the edge and no colour runs
@@ -68,11 +152,12 @@ for the ones who turn it over.
 - **Ember shifts in CMYK** — it comes back a touch duller and browner than on screen. Normal,
   same note as the cards and the magnets.
 
-## ⚑ The URL is on all four
+## ~~⚑ The URL is on all four~~ — cleared 2026-09-28
 
-Standing rule since 2026-09-15 is *design with the URL, print after hosting*. These are
-designed. **`SixfoldColorado.com` does not resolve yet** — if these go to a printer before
-the site is live, the URL on them is dead, and a flyer on a pole outlives the mistake.
+Standing rule since 2026-09-15 is *design with the URL, print after hosting*. **That gate
+is now open: `sixfoldcolorado.com` has been live since 21 Sep 2026**, and the aeration-led
+build went up 2026-09-25, so the URL and the QR both land on a real page that leads with
+the lawn. The block on printing these for a dead URL no longer applies.
 
 ## Social — use the existing kit, do not rebuild
 

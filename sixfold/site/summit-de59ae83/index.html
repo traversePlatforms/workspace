@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Door rounds — Sixfold Colorado</title>
+<!--
+  Sixfold Colorado — door rounds, crew page. 2026-09-29.
+
+  Read on a phone, in a driveway, often in sun, sometimes with gloves on. So:
+  big addresses, big tap targets, light ground by default, and nothing that
+  needs two hands.
+
+  ⚑ NOTHING IS EMBEDDED IN THIS FILE. Every door comes from api/rounds.php after
+  sign-in, one neighbourhood at a time. The page is public; the data is not.
+
+  ⚑ QUEUED MARKS. Signal dies past Woodland Park. A mark that cannot be sent is
+  kept in localStorage and retried, and the door shows as pending rather than
+  done. The page never says a mark is saved when it is not — that is the failure
+  that would make the crew stop trusting it.
+-->
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#F4F2EC; --card:#FFFFFF; --ink:#16201B; --soft:#5A665E;
+    --line:#DCD7CB; --faint:#E9E4DA;
+    --accent:#2F7A4F; --on-accent:#FFFFFF;
+    --booked:#2F7A4F; --later:#B5761F; --miss:#6E7A72; --bad:#A33A2A;
+    --shadow:0 1px 2px rgba(20,32,27,.06), 0 6px 18px rgba(20,32,27,.05);
+    --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    --mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme: dark;
+      --paper:#0E1512; --card:#18221D; --ink:#E9E4DA; --soft:#9AA79E;
+      --line:#2A352E; --faint:#222C26;
+      --accent:#8AA07A; --on-accent:#0E1512;
+      --booked:#8AA07A; --later:#D9A05B; --miss:#8B968E; --bad:#E0715C;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  .wrap{max-width:680px;margin:0 auto;padding-inline:16px;padding-block:0 80px}
+
+  header{position:sticky;top:0;z-index:5;background:var(--paper);
+    border-bottom:1px solid var(--line);margin-inline:-16px;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px}
+  .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  h1{font-family:var(--serif);font-size:19px;margin:0;font-weight:600}
+  .who{font-family:var(--mono);font-size:11px;color:var(--soft)}
+  .who button{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:0 0 0 8px}
+  .regions{margin-top:10px}
+  .regions select{width:100%;font:600 15px var(--sans);padding:11px 12px;border-radius:9px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 19px) 50%,calc(100% - 13px) 50%;
+    background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:38px}
+  .regions select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  h2{font-family:var(--serif);font-size:15px;margin:22px 0 8px;font-weight:600}
+  .msg{margin:14px 0 0;padding:11px 13px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card);font-size:13.5px;line-height:1.5;color:var(--soft)}
+  .msg.bad{border-color:var(--bad);color:var(--bad)}
+
+  /* sign in */
+  .signin{max-width:340px;margin:12vh auto 0;text-align:center}
+  .signin h2{font-size:21px;margin-bottom:6px}
+  .signin p{color:var(--soft);font-size:14px;line-height:1.55;margin:0 0 18px}
+  .signin input{width:100%;font:600 27px var(--mono);letter-spacing:.22em;text-align:center;
+    padding:14px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink)}
+  .signin button{width:100%;margin-top:10px;font:600 16px var(--sans);padding:14px;border-radius:10px;
+    border:0;background:var(--accent);color:var(--on-accent);cursor:pointer}
+
+  .area{width:100%;text-align:left;display:grid;grid-template-columns:1fr auto;
+    gap:4px 12px;align-items:center;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:13px 14px;margin-bottom:8px;cursor:pointer;color:inherit;
+    font:inherit;box-shadow:var(--shadow)}
+  .area .nm{grid-column:1;grid-row:1;min-width:0;font-family:var(--serif);font-size:16px;
+    font-weight:600;overflow-wrap:anywhere}
+  .area .sub{grid-column:1;grid-row:2;font-size:12px;color:var(--soft);font-variant-numeric:tabular-nums}
+  .area .left{grid-column:2;grid-row:1 / span 2;font-family:var(--mono);font-size:19px;
+    font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+  .area .left small{display:block;font:400 10px var(--sans);letter-spacing:.08em;
+    text-transform:uppercase;color:var(--soft)}
+  .area[data-done="1"]{opacity:.55}
+  .again{display:inline-block;margin-left:2px;padding:1px 7px;border-radius:999px;
+    border:1px solid var(--miss);color:var(--miss);font-size:11px;white-space:nowrap}
+  .bar{grid-column:1 / -1;grid-row:3;height:4px;border-radius:2px;background:var(--faint);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent)}
+
+  .back{display:inline-flex;gap:6px;background:none;border:0;color:var(--accent);
+    font:500 14px var(--sans);padding:8px 0;cursor:pointer}
+
+  .door{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:13px 14px;margin-bottom:8px;box-shadow:var(--shadow)}
+  .door .addr{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.25}
+  .door .meta{font-size:12.5px;color:var(--soft);margin-top:3px;font-variant-numeric:tabular-nums}
+  .acts{display:flex;gap:6px;margin-top:11px}
+  .acts button{flex:1;font:600 12.5px var(--sans);padding:12px 4px;border-radius:8px;
+    border:1px solid var(--line);background:transparent;color:var(--soft);cursor:pointer}
+  .acts button[data-k="booked"]{color:var(--booked);border-color:var(--booked)}
+  .acts button[data-k="later"]{color:var(--later);border-color:var(--later)}
+  .acts button:active{transform:scale(.98)}
+
+  .done{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:transparent;border:1px dashed var(--line);box-shadow:none}
+  .done .addr{font-size:14px;font-weight:400;color:var(--soft)}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+    padding:3px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+  .tag.booked{color:var(--booked)} .tag.later{color:var(--later)}
+  .tag.miss{color:var(--miss)} .tag.pending{color:var(--bad)}
+  .by{font-size:11px;color:var(--soft)}
+  .undo{background:none;border:0;color:var(--accent);font:500 12.5px var(--sans);cursor:pointer;padding:4px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:7px 8px 7px 0;border-bottom:1px solid var(--faint)}
+  th{font:600 10.5px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--soft)}
+  td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .adminlink{display:inline-block;margin-top:10px;color:var(--accent);font-size:13.5px}
+
+  footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11.5px;line-height:1.6;color:var(--soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header hidden id="hdr">
+    <div class="top">
+      <h1>Door rounds</h1>
+      <span class="who" id="who"></span>
+    </div>
+    <div class="regions" id="regions"></div>
+  </header>
+  <div id="view"></div>
+  <footer id="foot" hidden>
+    Lot sizes from county assessor public records. Every door listed is one where the owner
+    lives at the property. Mark every door, including the misses.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var API = '../api/rounds.php';
+  var OUT = { booked: 'Quote booked', later: 'Not now', miss: 'No answer' };
+  var QKEY = 'sixfold.rounds.queue';
+
+  var view = document.getElementById('view');
+  var hdr = document.getElementById('hdr');
+  var foot = document.getElementById('foot');
+  var regionBar = document.getElementById('regions');
+  var whoEl = document.getElementById('who');
+
+  var S = { me: null, role: 'crew', regions: [], region: null, area: null, doors: [], busy: false };
+
+  function q(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t !== undefined) e.textContent = t; return e; }
+
+  /* ---- offline queue ---- */
+  function queue() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch (e) { return []; } }
+  function setQueue(a) { try { localStorage.setItem(QKEY, JSON.stringify(a)); } catch (e) {} }
+  function enqueue(item) { var a = queue(); a.push(item); setQueue(a); }
+  function pendingFor(id) { return queue().filter(function (x) { return x.id === id; }).pop(); }
+
+  function api(action, opts) {
+    opts = opts || {};
+    var url = API + '?action=' + encodeURIComponent(action);
+    if (opts.params) for (var k in opts.params) url += '&' + k + '=' + encodeURIComponent(opts.params[k]);
+    return fetch(url, {
+      method: opts.body ? 'POST' : 'GET',
+      headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      credentials: 'same-origin'
+    }).then(function (r) {
+      return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.' }; })
+        .then(function (j) { j._status = r.status; return j; });
+    });
+  }
+
+  function flush() {
+    var a = queue();
+    if (!a.length) return Promise.resolve();
+    var item = a[0];
+    return api('mark', { body: item }).then(function (j) {
+      if (!j.ok && j._status !== 500) return;          /* a rejected mark is not retried forever */
+      var rest = queue().slice(1);
+      setQueue(rest);
+      if (rest.length) return flush();
+    }).catch(function () {});
+  }
+
+  /* ---- views ---- */
+  function signinView(err) {
+    hdr.hidden = true; foot.hidden = true;
+    view.textContent = '';
+    var box = q('div', 'signin');
+    box.appendChild(q('h2', null, 'Sixfold door rounds'));
+    box.appendChild(q('p', null, 'Enter your six-digit code.'));
+    var inp = document.createElement('input');
+    inp.id = 'code'; inp.type = 'text'; inp.inputMode = 'numeric'; inp.autocomplete = 'one-time-code';
+    inp.maxLength = 6; inp.placeholder = '••••••'; inp.setAttribute('aria-label', 'Six digit code');
+    var btn = q('button', null, 'Sign in');
+    btn.type = 'button';
+    function go() {
+      if (S.busy) return;
+      S.busy = true; btn.textContent = 'Checking…';
+      api('signin', { body: { code: inp.value } }).then(function (j) {
+        S.busy = false; btn.textContent = 'Sign in';
+        if (!j.ok) return signinView(j.error || 'That code was not recognised.');
+        S.me = j.name; S.role = j.role; start();
+      }).catch(function () {
+        S.busy = false; btn.textContent = 'Sign in';
+        signinView('No connection. Try again when you have signal.');
+      });
+    }
+    btn.addEventListener('click', go);
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+    box.appendChild(inp); box.appendChild(btn);
+    if (err) { var m = q('div', 'msg bad', err); m.style.marginTop = '16px'; box.appendChild(m); }
+    view.appendChild(box);
+    inp.focus();
+  }
+
+  /* ⚑ A DROPDOWN, NOT CHIPS. Chips were right at three towns. At eleven they
+     wrapped to four rows in a STICKY header — about 40% of a phone screen
+     permanently occupied by town buttons while scrolling doors. A native select
+     is one row, and on a phone it opens the OS picker, which is easier to hit
+     with gloves on than a small pill. */
+  function renderRegions() {
+    regionBar.textContent = '';
+    var sel = document.createElement('select');
+    sel.id = 'region';
+    sel.setAttribute('aria-label', 'Town');
+    S.regions.forEach(function (r) {
+      var o = document.createElement('option');
+      o.value = r.key;
+      var doors = r.areas.reduce(function (n, a) { return n + (a.total - a.done - (a.noanswer || 0)); }, 0);
+      o.textContent = r.label + ' — ' + doors + ' to knock';
+      if (r.key === S.region) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () {
+      if (S.region === sel.value) return;
+      S.region = sel.value; S.area = null; renderAreas();
+    });
+    regionBar.appendChild(sel);
+  }
+
+  function renderAreas() {
+    view.textContent = '';
+    var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
+    if (!r) return;
+    view.appendChild(q('h2', null, r.label + ' — pick a neighbourhood'));
+    var pend = queue().length;
+    if (pend) view.appendChild(q('div', 'msg bad', pend + ' mark' + (pend === 1 ? '' : 's') + ' still waiting for signal. Keep the page open.'));
+    r.areas.forEach(function (a) {
+      var na = a.noanswer || 0;
+      var left = a.total - a.done - na;          /* a no-answer is not finished */
+      var btn = q('button', 'area');
+      btn.type = 'button';
+      if (left === 0 && na === 0) btn.setAttribute('data-done', '1');
+      btn.appendChild(q('div', 'nm', a.name));
+      var cnt = q('div', 'left', (left === 0 && na === 0) ? 'done' : String(left));
+      if (!(left === 0 && na === 0)) cnt.appendChild(q('small', null, 'to knock'));
+      btn.appendChild(cnt);
+      var sub = a.total + (a.total === 1 ? ' door' : ' doors') + (a.avg ? ' · average lot ' + a.avg.toFixed(2) + ' acres' : '');
+      var subEl = q('div', 'sub', sub);
+      if (na) {
+        var tag = q('span', 'again', na + ' to try again');
+        subEl.appendChild(document.createTextNode(' '));
+        subEl.appendChild(tag);
+      }
+      btn.appendChild(subEl);
+      var bar = q('div', 'bar'); var fill = q('i');
+      fill.style.width = (a.total ? Math.round(a.done / a.total * 100) : 0) + '%';
+      bar.appendChild(fill); btn.appendChild(bar);
+      btn.addEventListener('click', function () { openArea(a.name); });
+      view.appendChild(btn);
+    });
+    {
+      var link = q('button', 'adminlink', 'See who marked what →');
+      link.type = 'button';
+      link.style.background = 'none'; link.style.border = '0'; link.style.cursor = 'pointer';
+      link.addEventListener('click', renderReport);
+      view.appendChild(link);
+    }
+  }
+
+  function openArea(name) {
+    view.textContent = '';
+    view.appendChild(q('div', 'msg', 'Loading ' + name + '…'));
+    api('area', { params: { region: S.region, area: name } }).then(function (j) {
+      if (!j.ok) return renderAreas();
+      S.area = j.area; S.doors = j.doors; S.avg = j.avg;
+      renderDoors();
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function markDoor(d, kind) {
+    var item = { region: S.region, id: d.id, outcome: kind };
+    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true };
+    renderDoors();
+    api('mark', { body: item }).then(function (j) {
+      if (j.ok) { if (d.mark) d.mark.pending = false; }
+      else if (j._status === 401) { return signinView('Signed out. Enter your code again.'); }
+      else { enqueue(item); }
+      renderDoors();
+    }).catch(function () { enqueue(item); renderDoors(); });
+  }
+
+  function renderDoors() {
+    view.textContent = '';
+    var back = q('button', 'back', '← All neighbourhoods');
+    back.type = 'button';
+    back.addEventListener('click', function () { S.area = null; refresh(); });
+    view.appendChild(back);
+
+    /* THREE states, not two. A no-answer means nobody was home — that door is not
+       finished, it needs another evening. So it leaves the main list (nobody wants
+       to re-knock it the same afternoon) but lands in its own section with the
+       buttons still live, instead of disappearing among the booked jobs. */
+    var todo = S.doors.filter(function (d) { return !d.mark; });
+    var again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss'; });
+    var done = S.doors.filter(function (d) { return d.mark && d.mark.outcome !== 'miss'; });
+
+    view.appendChild(q('h2', null, S.area + ' — ' + todo.length + ' to knock'));
+    if (!todo.length && !again.length) view.appendChild(q('div', 'msg', 'Every door here is done. Pick another neighbourhood.'));
+    else if (!todo.length) view.appendChild(q('div', 'msg', 'First pass finished. The doors below had no answer — try them another evening.'));
+
+    function doorCard(d) {
+      var card = q('div', 'door');
+      card.appendChild(q('div', 'addr', d.address));
+      card.appendChild(q('div', 'meta', d.acres.toFixed(2) + ' acres · ' + d.owner));
+      if (d.mark && d.mark.outcome === 'miss') {
+        var was = q('div', 'meta', 'No answer' + (d.mark.by ? ' · ' + d.mark.by : ''));
+        was.style.color = 'var(--miss)';
+        card.appendChild(was);
+      }
+      var acts = q('div', 'acts');
+      ['booked', 'later', 'miss'].forEach(function (k) {
+        var b = q('button', null, OUT[k]);
+        b.type = 'button'; b.setAttribute('data-k', k);
+        b.addEventListener('click', function () { markDoor(d, k); });
+        acts.appendChild(b);
+      });
+      card.appendChild(acts);
+      return card;
+    }
+
+    todo.forEach(function (d) { view.appendChild(doorCard(d)); });
+
+    if (again.length) {
+      view.appendChild(q('h2', null, 'No answer — try again · ' + again.length));
+      var toggle = q('button', 'back', (S.showAgain ? '↓ Hide' : '→ Show') + ' these ' + again.length + ' doors');
+      toggle.type = 'button';
+      toggle.addEventListener('click', function () { S.showAgain = !S.showAgain; renderDoors(); });
+      view.appendChild(toggle);
+      if (S.showAgain) again.forEach(function (d) { view.appendChild(doorCard(d)); });
+    }
+
+    if (done.length) {
+      view.appendChild(q('h2', null, 'Done · ' + done.length));
+      done.forEach(function (d) {
+        var row = q('div', 'door done');
+        var lhs = q('div');
+        lhs.appendChild(q('div', 'addr', d.address));
+        if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
+        var rhs = q('div');
+        rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';
+        var pending = d.mark.pending || pendingFor(d.id);
+        rhs.appendChild(q('span', 'tag ' + (pending ? 'pending' : d.mark.outcome),
+          pending ? 'not sent yet' : (OUT[d.mark.outcome] || d.mark.outcome)));
+        var u = q('button', 'undo', 'Undo');
+        u.type = 'button';
+        u.addEventListener('click', function () { markDoor(d, null); });
+        rhs.appendChild(u);
+        row.appendChild(lhs); row.appendChild(rhs);
+        view.appendChild(row);
+      });
+    }
+  }
+
+  function renderReport() {
+    view.textContent = '';
+    var back = q('button', 'back', '← Back');
+    back.type = 'button';
+    back.addEventListener('click', renderAreas);
+    view.appendChild(back);
+    view.appendChild(q('h2', null, 'Who marked what'));
+    api('report').then(function (j) {
+      if (!j.ok) { view.appendChild(q('div', 'msg bad', j.error || 'Could not load that.')); return; }
+      var t = document.createElement('table');
+      var hr = document.createElement('tr');
+      ['Person', 'Booked', 'Not now', 'No answer', 'Total'].forEach(function (h, i) {
+        var th = q('th', null, h); if (i) th.style.textAlign = 'right'; hr.appendChild(th);
+      });
+      t.appendChild(hr);
+      var any = false;
+      for (var who in j.byPerson) {
+        any = true;
+        var p = j.byPerson[who], tr = document.createElement('tr');
+        tr.appendChild(q('td', null, who));
+        [p.booked, p.later, p.miss, p.booked + p.later + p.miss].forEach(function (n) {
+          tr.appendChild(q('td', 'n', String(n)));
+        });
+        t.appendChild(tr);
+      }
+      if (!any) { view.appendChild(q('div', 'msg', 'Nothing marked yet.')); return; }
+      view.appendChild(t);
+      if (S.role === 'admin') {
+        var a = document.createElement('a');
+        a.className = 'adminlink'; a.href = API + '?action=export'; a.textContent = 'Download everything as CSV';
+        view.appendChild(a);
+      }
+    });
+  }
+
+  function refresh() {
+    return api('regions').then(function (j) {
+      if (!j.ok) { if (j._status === 401) return signinView(); return; }
+      S.regions = j.regions;
+      if (!S.region && S.regions.length) S.region = S.regions[0].key;
+      hdr.hidden = false; foot.hidden = false;
+      whoEl.textContent = S.me || '';
+      var so = q('button', null, 'Sign out');
+      so.type = 'button';
+      so.addEventListener('click', function () { api('signout').then(function () { S.me = null; signinView(); }); });
+      whoEl.appendChild(so);
+      renderRegions();
+      renderAreas();
+    });
+  }
+
+  function start() { flush().then(refresh); }
+
+  api('me').then(function (j) {
+    if (j.ok) { S.me = j.name; S.role = j.role; start(); }
+    else signinView();
+  }).catch(function () { signinView('No connection.'); });
+
+  window.addEventListener('online', function () { flush().then(function () { if (!S.area) refresh(); }); });
+})();
+</script>
+</body>
+</html>

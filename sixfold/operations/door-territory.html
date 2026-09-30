@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold — Door territory from public parcel data</title>
+<style>
+/* ------------------------------------------------------------------
+   Sixfold — tax credit notebook, shared print register.
+
+   Extended from marketing/funding-one-pager.html. Same tokens, same
+   type stack, same ink-on-paper commitment: these sheets exist to be
+   printed and put in a binder, so there is no dark theme and every
+   colour is painted explicitly.
+
+   What is NEW here, over the one-pager:
+     - multi-sheet pagination (.sheet + page-break-after)
+     - fill-in furniture: .rule, .box, .grid-form, .tbl
+     - .internal / .clientfacing masthead flags
+   Do not restyle. Extend.
+   ------------------------------------------------------------------ */
+:root {
+  --paper: #FFFFFF;
+  --tint: #F3EFE6;
+  --tint-edge: #DED5C4;
+  --ink: #14201B;
+  --ink-mid: #46534B;
+  --ink-soft: #6E7A72;
+  --ember: #E4703A;
+  --ember-text: #B84C15;
+  --moss-text: #45583A;
+
+  --f-display: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+  --f-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-data: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: #4A5550; }
+body {
+  margin: 0;
+  background: #4A5550;
+  color: var(--ink);
+  font-family: var(--f-body);
+  padding: 24px 12px 48px;
+}
+
+/* The sheet -------------------------------------------------------- */
+.sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto 22px;
+  background: var(--paper);
+  color: var(--ink);
+  /* Matches @page below exactly, so the on-screen sheet is a true proof:
+     11in tall minus 0.5in top and bottom leaves the 10in the printer gives
+     you. If content clears the white here, it clears one printed page. */
+  padding: 0.5in 0.55in;
+  font-size: 9.5pt;
+  line-height: 1.34;
+  box-shadow: 0 8px 34px rgba(0,0,0,0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Masthead --------------------------------------------------------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.3in;
+  border-bottom: 2.5pt solid var(--ember);
+  padding-bottom: 6pt;
+}
+.brand { display: flex; align-items: flex-end; gap: 8pt; }
+.mark { width: 33pt; height: 38pt; flex: none; display: block; color: var(--ink); }
+.wordmark {
+  font-family: var(--f-display);
+  font-size: 19pt;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--ink);
+}
+.descriptor {
+  font-family: var(--f-data);
+  font-size: 6pt;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 4pt 0 0;
+}
+.whatitis {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0;
+  padding-top: 3pt;
+  max-width: 2.3in;
+  line-height: 1.7;
+}
+.whatitis b { color: var(--ember-text); font-weight: 400; display: block; }
+
+/* Sheet headline --------------------------------------------------- */
+.sheetnum {
+  font-family: var(--f-data);
+  font-size: 6.4pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+}
+h1.headline {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.09;
+  text-wrap: balance;
+  margin: 4pt 0 0;
+  color: var(--ink);
+}
+.standfirst {
+  font-size: 9.6pt;
+  line-height: 1.4;
+  color: var(--ink-mid);
+  margin: 5pt 0 0;
+  max-width: 6.5in;
+}
+
+h2.sec {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: 12.5pt;
+  line-height: 1.12;
+  margin: 9pt 0 4pt;
+  color: var(--ember-text);
+}
+h3.sub {
+  font-family: var(--f-data);
+  font-size: 6.6pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 8pt 0 4pt;
+  font-weight: 400;
+}
+p { margin: 0 0 5pt; }
+
+/* Blocks ----------------------------------------------------------- */
+.block {
+  background: var(--tint);
+  border: 0.75pt solid var(--tint-edge);
+  border-left: 3pt solid var(--ember);
+  padding: 8pt 10pt 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin: 8pt 0 0;
+}
+.block.moss { border-left-color: var(--moss-text); background: var(--paper); }
+.block > :last-child { margin-bottom: 0; }
+.block-eyebrow {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--moss-text);
+  margin: 0 0 5pt;
+}
+
+/* Lists ------------------------------------------------------------ */
+ul.terms { margin: 0 0 5pt; padding-left: 12pt; list-style: none; }
+ul.terms li { position: relative; margin-bottom: 3pt; padding-left: 1pt; }
+ul.terms li::before {
+  content: "";
+  position: absolute;
+  left: -10pt;
+  top: 0.42em;
+  width: 4pt;
+  height: 4pt;
+  background: var(--moss-text);
+}
+ul.terms li:last-child { margin-bottom: 0; }
+ul.terms.no li::before { background: var(--ember-text); }
+
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s;
+  position: relative;
+  padding-left: 24pt;
+  margin-bottom: 7pt;
+  break-inside: avoid;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0;
+  top: -1pt;
+  width: 18pt;
+  height: 18pt;
+  background: var(--ember);
+  color: #FFF;
+  font-family: var(--f-data);
+  font-size: 9pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ol.steps > li:last-child { margin-bottom: 0; }
+ol.steps b { display: block; color: var(--ink); }
+ol.steps p { margin: 1pt 0 0; color: var(--ink-mid); font-size: 8.9pt; }
+
+/* Tables ----------------------------------------------------------- */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.6pt;
+  margin: 0 0 5pt;
+}
+table.tbl th {
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  font-weight: 400;
+  padding: 0 6pt 4pt 0;
+  border-bottom: 1.25pt solid var(--ink);
+  vertical-align: bottom;
+}
+table.tbl td {
+  padding: 3.5pt 6pt 3.5pt 0;
+  border-bottom: 0.75pt solid var(--tint-edge);
+  vertical-align: top;
+  line-height: 1.35;
+}
+table.tbl td:last-child, table.tbl th:last-child { padding-right: 0; }
+table.tbl .num { font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.tbl tr.hi td { background: #FBE6DC; font-weight: 600; }
+table.tbl tr.dim td { color: var(--ink-soft); }
+
+/* Fill-in furniture ------------------------------------------------ */
+.rule {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-soft);
+  min-width: 1in;
+  height: 1.05em;
+  vertical-align: baseline;
+}
+.rule.w2 { min-width: 2in; }
+.rule.w3 { min-width: 3in; }
+.rule.fill { display: block; width: 100%; }
+
+.grid-form { display: flex; flex-wrap: wrap; gap: 7pt 12pt; margin: 0 0 6pt; }
+.field { flex: 1 1 2.2in; min-width: 1.6in; }
+.field.wide { flex: 1 1 100%; }
+.field.half { flex: 1 1 3.1in; }
+.field label {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8pt;
+}
+.field .line { border-bottom: 0.75pt solid var(--ink-mid); height: 2pt; }
+.field .hint { font-size: 7.4pt; color: var(--ink-soft); margin: 3pt 0 0; line-height: 1.35; }
+
+.tick { display: flex; align-items: flex-start; gap: 6pt; margin-bottom: 3pt; break-inside: avoid; }
+.tick .sq {
+  flex: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin-top: 1.5pt;
+  background: var(--paper);
+}
+.tick .lbl { flex: 1; line-height: 1.38; }
+.tick .lbl small { display: block; color: var(--ink-soft); font-size: 8.2pt; line-height: 1.35; margin-top: 1pt; }
+.ticks.two { display: flex; flex-wrap: wrap; gap: 0 16pt; }
+.ticks.two .tick { flex: 1 1 2.7in; }
+
+.yn { font-family: var(--f-data); font-size: 8.4pt; letter-spacing: 0.06em; color: var(--ink-mid); white-space: nowrap; }
+.yn span {
+  display: inline-block;
+  width: 9pt; height: 9pt;
+  border: 0.9pt solid var(--ink-mid);
+  margin: 0 3pt 0 8pt;
+  vertical-align: -1pt;
+}
+
+.sign { display: flex; gap: 16pt; margin-top: 10pt; }
+.sign .field { flex: 1 1 auto; }
+.sign .field.date { flex: 0 0 1.5in; }
+
+/* Callouts --------------------------------------------------------- */
+.warn {
+  border: 0.9pt solid var(--ember-text);
+  background: #FBE6DC;
+  padding: 7pt 10pt;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+.warn .block-eyebrow { color: var(--ember-text); }
+.warn > :last-child { margin-bottom: 0; }
+
+.note {
+  font-family: var(--f-data);
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  border-top: 0.75pt solid var(--tint-edge);
+  padding-top: 5pt;
+  margin: 7pt 0 0;
+}
+.note b { color: var(--ink-mid); font-weight: 400; }
+
+/* Footer ----------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding-top: 6pt;
+  border-top: 0.75pt solid var(--tint-edge);
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4pt 12pt;
+  font-family: var(--f-data);
+  font-size: 7.4pt;
+  letter-spacing: 0.05em;
+  color: var(--ink-mid);
+}
+.contact .co { color: var(--ink); letter-spacing: 0.13em; text-transform: uppercase; }
+.contact .pg { margin-left: auto; color: var(--ink-soft); }
+.disclaimer {
+  font-size: 7.2pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 6pt 0 0;
+  max-width: 6.6in;
+}
+
+/* Print ------------------------------------------------------------ */
+@media print {
+  html, body { background: #FFF; padding: 0; margin: 0; }
+  .sheet {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .sheet:last-of-type { page-break-after: auto; break-after: auto; }
+  @page { size: letter; margin: 0.5in 0.55in; }
+  .screenonly { display: none !important; }
+}
+
+@media screen and (max-width: 8.9in) {
+  .sheet { width: 100%; min-height: 0; font-size: 10pt; }
+  .top { flex-direction: column; gap: 10pt; }
+  .whatitis { text-align: left; max-width: none; }
+}
+
+/* ==================================================================
+   CONTRACT FURNITURE — added for the service agreement.
+   Extends the notebook print register; nothing above is overridden.
+   ================================================================== */
+
+/* Numbered clauses. The numbers are real references — a change order or a
+   dispute needs to be able to cite one — so they are not decoration. */
+ol.clauses { margin: 0; padding: 0; list-style: none; counter-reset: cl; }
+ol.clauses > li {
+  counter-increment: cl;
+  position: relative;
+  padding-left: 20pt;
+  margin-bottom: 5pt;
+  break-inside: avoid;
+}
+ol.clauses > li::before {
+  content: counter(cl) ".";
+  position: absolute; left: 0; top: 0;
+  font-family: var(--f-data);
+  font-size: 8pt;
+  color: var(--ember-text);
+}
+ol.clauses > li:last-child { margin-bottom: 0; }
+ol.clauses b.h { display: block; color: var(--ink); }
+
+/* Inline fill-in rule that sits in running text. */
+.fi {
+  display: inline-block;
+  border-bottom: 0.75pt solid var(--ink-mid);
+  min-width: 0.9in;
+  height: 1.02em;
+  vertical-align: -0.2em;
+}
+.fi.w2 { min-width: 1.8in; }
+.fi.w3 { min-width: 2.7in; }
+
+/* Money line. Tabular figures and a box, so a filled-in price is unambiguous
+   and hard to alter after signing. */
+.money { display: flex; flex-wrap: wrap; gap: 10pt; margin: 6pt 0 0; }
+.money .m { flex: 1 1 2in; border: 0.9pt solid var(--ink-mid); padding: 5pt 8pt 6pt; }
+.money .m span {
+  display: block;
+  font-family: var(--f-data);
+  font-size: 6.2pt; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 8pt;
+}
+.money .m .amt {
+  font-family: var(--f-data); font-size: 12pt; color: var(--ink);
+  border-bottom: 0.9pt solid var(--ink-mid); padding-bottom: 2pt;
+}
+
+/* THE CANCELLATION STATEMENT.
+   16 CFR 429.1(a) requires this in bold face type of a minimum size of TEN
+   POINTS, in immediate proximity to the buyer's signature space. The register's
+   body copy is 9.5pt, so this is set explicitly and must not be reduced to make
+   a page fit. Same for the notice forms — 429.1(b) sets the same floor. */
+.legal10 { font-size: 10.5pt; font-weight: 700; line-height: 1.34; }
+.cancelbox {
+  border: 1.4pt solid var(--ink);
+  padding: 9pt 11pt;
+  margin: 10pt 0 0;
+  break-inside: avoid;
+}
+
+/* Signature blocks. */
+.sigs { display: flex; flex-wrap: wrap; gap: 14pt 20pt; margin-top: 12pt; }
+.sigs .s { flex: 1 1 2.9in; }
+.sigs .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigs .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+
+/* The statutory notice form — plain, boxed, unmistakably a separate document. */
+.noticeform { border: 1.4pt solid var(--ink); padding: 14pt 16pt 16pt; margin-top: 10pt; }
+.noticeform h2 {
+  font-family: var(--f-data); font-size: 12pt; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  margin: 0 0 10pt; color: var(--ink);
+}
+.noticeform p { font-size: 10.5pt; font-weight: 700; line-height: 1.34; margin: 0 0 8pt; }
+.noticeform .datefield { margin: 0 0 10pt; }
+
+/* Internal sheet flag — never appears on a customer-facing page. */
+.internalflag {
+  background: var(--ink); color: var(--paper);
+  font-family: var(--f-data); font-size: 7pt;
+  letter-spacing: .2em; text-transform: uppercase;
+  padding: 3pt 7pt; display: inline-block;
+}
+
+/* ==================================================================
+   PAGINATION HARDENING — added 2026-08-21.
+
+   Each .sheet is designed to be exactly one printed page and is
+   measured to fit. This block is the safety net for when it is not:
+   if a page shrinks (a printer with a larger unprintable margin, or
+   browser headers/footers left switched on), content must break at a
+   clean boundary rather than mid-topic. Better an extra page than a
+   heading stranded at the bottom or a table cut in half.
+   ================================================================== */
+h1.headline, h2.sec, h3.sub, .sheetnum, .block-eyebrow {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+.block, .warn, .noticeform, .money, .totals, .grid-form, .ticks,
+.sigs, .catkey, .figures, .paperwork, footer {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+ol.clauses > li, ol.steps > li, ul.terms li, .tick, .field, .money .m {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+table.tbl { break-inside: auto; page-break-inside: auto; }
+table.tbl tr, table.tbl thead { break-inside: avoid; page-break-inside: avoid; }
+table.tbl thead { break-after: avoid-page; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+
+/* Signature rows — one party per row, three columns.
+   The previous flat .sigs flex wrapped six equal items two-per-row, which
+   put the Sixfold representative's signature beside the owner's date. It
+   read as one muddled grid instead of two signature blocks. */
+.sigrow { display: flex; gap: 10pt 18pt; margin-top: 11pt; break-inside: avoid; page-break-inside: avoid; }
+.sigrow .s { flex: 1 1 0; min-width: 0; }
+.sigrow .s.wide { flex: 1.5 1 0; }
+.sigrow .s.narrow { flex: 0.75 1 0; }
+.sigrow .s .ln { border-bottom: 0.9pt solid var(--ink); height: 26pt; }
+.sigrow .s label {
+  display: block; margin-top: 4pt;
+  font-family: var(--f-data); font-size: 6.2pt;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--ink-soft);
+}
+</style>
+<style>
+  /* ==================================================================
+     DOOR TERRITORY — a conversation piece for the team meeting,
+     2026-09-29. NOT a finished system.
+
+     Built in the half hour before the meeting, deliberately as a
+     discussion document rather than a tool: the decisions on this sheet
+     are the team's to make, and the gaps are named rather than filled in
+     with something plausible.
+
+     Register: same as the other operations sheets. Print light, put it on
+     the table, mark it up.
+     ================================================================== */
+  .lead { font-size: 10.5pt; line-height: 1.55; color: var(--ink-mid); margin: 0 0 14px; }
+  .q { background: var(--tint); border: 1px solid var(--tint-edge);
+       padding: 10px 12px; margin: 12px 0; border-radius: 3px; }
+  .q h4 { margin: 0 0 4px; font-family: var(--f-data); font-size: 8pt;
+          letter-spacing: .12em; text-transform: uppercase; color: var(--ember-text); }
+  .q p { margin: 0; font-size: 9.5pt; line-height: 1.5; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cols h4 { margin: 0 0 5px; font-size: 9.5pt; }
+  .cols ul { margin: 0; padding-left: 16px; }
+  .cols li { font-size: 9pt; line-height: 1.5; margin-bottom: 3px; }
+  .walk { font-size: 8.4pt; }
+  .walk th, .walk td { padding: 4px 7px 4px 0; }
+  .gap { border-left: 3px solid var(--ember); padding-left: 11px; margin: 11px 0; }
+  .gap h4 { margin: 0 0 3px; font-size: 9.5pt; color: var(--ember-text); }
+  .gap p { margin: 0; font-size: 9pt; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="masthead">
+    <div>
+      <h1>Door territory from public records</h1>
+      <p class="sub">Which doors to knock, and why that one</p>
+    </div>
+    <div class="internalflag">Internal · discussion</div>
+  </div>
+
+  <p class="lead">Every county publishes its assessor roll. <strong>El Paso County's is free,
+  official, updated weekly, and downloads as a spreadsheet</strong> — ownership, land use, lot
+  size and value, parcel by parcel. Nothing about this is scraped or bought. The question for
+  this meeting is not whether we can have the data. It is <strong>what we do with it.</strong></p>
+
+  <h2>The two fields that do the work</h2>
+
+  <div class="cols">
+    <div>
+      <h4>Lot size</h4>
+      <ul>
+        <li>A direct proxy for <strong>how much lawn there is</strong>.</li>
+        <li>Lets us skip the doors where a machine visit cannot pay — condos, tiny lots.</li>
+        <li>And skip the other end: acreage that is pasture, not irrigated turf.</li>
+        <li>We can sort a street by job size <strong>before anyone drives to it</strong>.</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Owner's mailing address</h4>
+      <ul>
+        <li>When it <strong>differs</strong> from the property address, nobody who decides
+            lives there — it is a rental or an absentee owner.</li>
+        <li>Those doors waste a knock. The person answering cannot say yes.</li>
+        <li>They are not worthless, they are a <strong>different channel</strong>: post, not
+            doorstep.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>What a rep would actually carry</h2>
+
+  <p class="lead" style="margin-bottom:8px">A walk list, in street order, with the reason for
+  each door already on it — so the opening line is an observation rather than a pitch.
+  <strong>Illustrative rows, not real addresses:</strong></p>
+
+  <table class="tbl walk">
+    <thead>
+      <tr><th>Street order</th><th>Lot</th><th>Owner-occupied</th><th>Why this door</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1 — 100 block, east side</td><td class="num">0.34 ac</td><td>Yes</td><td>Lawn worth a full aeration and overseed</td></tr>
+      <tr><td>2 — next door</td><td class="num">0.31 ac</td><td>Yes</td><td>Same size. Two in a row is a route, not a stop</td></tr>
+      <tr class="dim"><td>3 — corner</td><td class="num">0.29 ac</td><td>No — absentee</td><td>Skip. Post instead</td></tr>
+      <tr><td>4 — 100 block, west side</td><td class="num">0.52 ac</td><td>Yes</td><td>Largest on the block. Lead with this one</td></tr>
+    </tbody>
+  </table>
+
+  <div class="q">
+    <h4>For the room</h4>
+    <p>Does a rep want <strong>the biggest lots first</strong>, or <strong>the tightest
+    cluster</strong>? Biggest lots mean bigger jobs and more driving. A dense block means more
+    doors an hour and smaller tickets. <strong>We can sort it either way — pick one and we
+    will know in a month which was right.</strong></p>
+  </div>
+
+  <p class="foot-note">Source: El Paso County Assessor / GIS Open Data Portal — parcel data
+  including ownership, land use and value, updated weekly, downloadable as CSV or GeoJSON.
+  Public record, free, no licence required. Sixfold Colorado · internal · 2026-09-29 · 1 of 2</p>
+</div>
+
+<div class="sheet">
+  <div class="masthead">
+    <div>
+      <h1>Door territory — what is not decided</h1>
+      <p class="sub">The gaps, named rather than filled in</p>
+    </div>
+    <div class="internalflag">Internal · discussion</div>
+  </div>
+
+  <h2>The same file finds fire mitigation work</h2>
+
+  <p class="lead">Overlay the state's wildfire hazard mapping and the parcels sort themselves
+  again: treed acreage, high hazard rating, a structure worth defending. That is the list where
+  the funding story actually applies — and <strong>it is the one pitch we have where somebody
+  else may pay for the work.</strong></p>
+
+  <h2>⚑ What is not decided, and should not be decided by me</h2>
+
+  <div class="gap">
+    <h4>Knocking is clean. Calling is not.</h4>
+    <p>Parcel records carry addresses and owner names — <strong>no phone numbers</strong>.
+    Adding phone numbers turns this into a cold-call list, which brings in the federal Do Not
+    Call rules and per-call penalties. <strong>Door-to-door carries none of that.</strong>
+    If we want a calling operation, it is a separate conversation with real compliance work in
+    it, not an extension of this.</p>
+  </div>
+
+  <div class="gap">
+    <h4>Solicitation permits — unchecked</h4>
+    <p>Several Front Range municipalities require a solicitor's licence to knock doors
+    commercially, and they differ between Monument, Colorado Springs and unincorporated El Paso
+    County. <strong>Nobody has checked which apply to us.</strong> That is a phone call per
+    jurisdiction and it should happen before the first route, not after a complaint.</p>
+  </div>
+
+  <div class="gap">
+    <h4>Teller and Douglas are not built</h4>
+    <p>Our service area spans three counties and <strong>this sheet only describes El Paso's
+    data</strong>. The other two publish their own rolls in their own formats. One county is a
+    fair test; three is a project.</p>
+  </div>
+
+  <div class="gap">
+    <h4>No route has been driven</h4>
+    <p>Everything above is what the data can do. <strong>None of it has met a real street
+    yet.</strong> The honest first step is one block, one afternoon, and a count of what
+    actually happened at those doors.</p>
+  </div>
+
+  <div class="q">
+    <h4>What I need from this meeting</h4>
+    <p>Which suburb we test first · whether we sort by lot size or by density · who walks it ·
+    and whether anyone already knows the permit position. <strong>With those four answers the
+    first walk list can exist this week.</strong></p>
+  </div>
+
+  <p class="foot-note">Source: El Paso County Assessor / GIS Open Data Portal — parcel data
+  including ownership, land use and value, updated weekly, downloadable as CSV or GeoJSON.
+  Public record, free, no licence required. Sixfold Colorado · internal · 2026-09-29 · 2 of 2</p>
+</div>
+
+</body>
+</html>

@@ -3,15 +3,39 @@
 **Built:** 2026-08-21
 **Status:** Draft. **Not printed, not used, and not reviewed by an attorney.**
 
-> **Two documents added 2026-09-25 for Kara** — `kara-aeration-agreement` (one-off, $1,100)
-> and `kara-maintenance-agreement` (twelve months, $250/month). Both 5 pages, both built from
-> the job-2 fill, both drafts. **Read [kara-2026-09-25.notes.md](kara-2026-09-25.notes.md)
-> before either is sent** — it carries the margin flag on $1,100, the seed-rate arithmetic,
-> the pesticide-licence line, and a defect it turned up in the *job-2* packet's PDF scale.
+> **Two documents for Kara** — `kara-aeration-agreement` (one-off, $1,100, **5 pages**) and
+> `kara-maintenance-agreement` (twelve months, $250/month, **6 pages**). Both built from the
+> job-2 fill, both drafts, neither signed. **Read
+> [kara-2026-09-25.notes.md](kara-2026-09-25.notes.md) before either is sent** — it carries the
+> margin flag on $1,100, the seed-rate arithmetic, the pesticide-licence line, and a defect it
+> turned up in the *job-2* packet's PDF scale.
 >
 > The maintenance one is the first **recurring** agreement here: 17 clauses rather than 13,
 > a fixed twelve-month term that **deliberately does not auto-renew**, and snow clearing,
 > which is the part most worth an attorney's eye.
+>
+> **⚑ Both were revised 2026-09-30** — the job is booked for **Monday 12 October 2026**, and
+> the maintenance scope is now mowing and edging on the third Thursday, spot treatment every
+> other month, aeration twice a year and snow clearing capped at five visits a month. Deep
+> root feeding was dropped. Three things to know before either goes out:
+>
+> - **The last safe signing date for a 12 October start is Wednesday 7 October 2026.** It is the
+>   Sunday exclusion that creates that, not Columbus Day — re-checked three ways 2026-09-30 and
+>   7 October is the answer under all of them. **The analysis assumes Sixfold solicited the sale;
+>   if Kara made first contact there may be no deadline at all.** Treat it as covered anyway —
+>   guessing wrong the other way opens a three-year cancellation right. Reasoning in the notes.
+> - **The aeration billing is an unmarked tick box** at section 2 of the maintenance agreement
+>   — included in the $250, or invoiced separately. It is not decided. Mark it before signing.
+> - The maintenance agreement went from five pages to six. Sheet 1 was split and clause 11
+>   moved sheets; the revision box in the notes records the measured slack on every page.
+>
+> Invoices for both: [kara-invoices-2026-09-30.md](kara-invoices-2026-09-30.md).
+>
+> **Sending by DocuSign:** [kara-docusign-setup.md](kara-docusign-setup.md) — the field map, the
+> three values that must be burned into the PDF **before** upload, and the reason **pages 4 and 5
+> get no tags at all** (tagging them would require her to sign her own cancellation notice to
+> complete the envelope). **No separate `-DocuSign.pdf` is needed** — upload the ordinary flat
+> render, as the sedalia one already proves.
 
 Two documents:
 

@@ -1,8 +1,32 @@
 <!doctype html>
 <!--
-  Sixfold Colorado — door-to-door leave-behind. 2026-09-25.
+  Sixfold Colorado — door-to-door leave-behind. 2026-09-25, rebuilt 2026-09-28.
 
   Brandon hands this over, or leaves it when nobody answers.
+
+  ---- 2026-09-28: BRANDON ASKED FOR THE LAWN EXPLAINER ---------------------
+  His ask: "add something like lawn rehab, or a short explainer of what we'd do
+  — like, your lawn sucks, we will make it not." So the piece stopped being a
+  list of four service nouns and became one argument with a service list under
+  it. What changed:
+
+  * LAWN REHAB is now the hero: the question in the biggest type on the page,
+    then the symptom line the reader can check against their own yard, then
+    Aerate / Seed / Feed. "Does your lawn suck?" is Matthew's, 2026-09-28 —
+    the first pass opened on the symptom line and he moved it into the body.
+  * CUT 2026-09-28, his call, both are doorstep conversation and not print:
+    the watering tip ("water it a couple of days ahead") and the mowing and
+    edging line. That freed 0.44in, which went back into type size and the
+    gaps between blocks — NOT into more copy. 4.613in of 4.700in is used.
+  * The other three services keep their own block, unranked and unsequenced —
+    landscaping is NOT written as the after-job of fire mitigation (copy rule).
+  * NO RESULT IS PROMISED. Brandon's "we will make it not suck" is the tone,
+    not the claim: the copy says what we do, never what the lawn will become.
+    There is also NO PRICE on here, because there is still no aeration rate.
+  * Descriptor is now "Lawn, Land & Fire" (settled 2026-09-28) — it said
+    "Land & Fire", which the cards and magnets no longer do.
+  * "We stopped by today" moved to the top of the QR column, freeing the left
+    column for the argument and giving the right column a top anchor.
 
   ---- THE CONSTRAINT IS INK, AND IT DROVE EVERY DECISION -------------------
   Printed on Sixfold's own office printer, in volume. So:
@@ -16,10 +40,10 @@
   3. NO PHOTOGRAPHS. A photo block is orders of magnitude more ink than type,
      and there is still no photograph of a real Sixfold aeration job anyway
      (PHOTOS.md, The turf gap).
-  4. ONE accent colour, in hairlines and the mark only — and it is a single
-     CSS token, so the mono build overrides it to black in one line. The mono
-     PDF is the one to print in volume; the green one is for when a nicer
-     piece is wanted.
+  4. ONE accent colour, in hairlines, the mark and the step numerals only —
+     and it is a single CSS token, so the mono build overrides it to black in
+     one line. The mono PDF is the one to print in volume; the green one is
+     for when a nicer piece is wanted.
   5. The QR is sixfold-qr-brand-on-white.png — branded geometry, green centre
      mark, PAPER WHITE ground. The Bone-ground code would have put a tint
      behind every code, which is both an ink cost and, per brand/qr/README.md,
@@ -28,6 +52,10 @@
      a raster, so the green centre mark would otherwise have been the one thing
      on a mono page that did not go black. Both codes decode to the same URL and
      both are verified at 1200/400/240/160px.
+
+  ---- EDITING ------------------------------------------------------------
+  The flyer appears TWICE below and the two copies must stay identical. They
+  were generated from one template; if you edit one by hand, edit the other.
 
   Two jobs in tools/html-to-pdf.mjs, both scale 1 (this carries its own @page):
     Sixfold-Door-Flyer-Mono.pdf   <- print this one
@@ -57,54 +85,74 @@
 
   /* The cut line. A hairline dash, mid grey — visible to cut against, almost
      nothing on the ink bill. */
-  .cut{height:0;border-top:1px dashed var(--rule);position:relative}
+  .cut{height:0;border-top:1px dashed var(--rule);position:relative;margin-top:-1px}
   .cut::after{content:"cut";position:absolute;right:.18in;top:-.075in;background:#fff;
               padding:0 4px;font-family:var(--mono);font-size:6.5pt;color:var(--rule);
               letter-spacing:.14em;text-transform:uppercase}
 
-  .flyer{height:5.5in;padding:.46in .48in;display:grid;
-         grid-template-columns:1fr 1.78in;gap:.36in}
+  .flyer{height:5.5in;padding:.4in .44in;display:grid;
+         grid-template-columns:1fr 1.66in;gap:.3in}
+  .left{min-width:0}
 
   /* ---- left column ---- */
-  .lockup{display:flex;align-items:flex-start;gap:.11in}
-  .lockup svg{width:.5in;flex:none;color:var(--accent);margin-top:.02in}
-  .name{margin:0;font-family:var(--serif);font-size:23pt;line-height:1;letter-spacing:-.01em}
-  .desc{margin:.04in 0 0;font-family:var(--mono);font-size:7.4pt;letter-spacing:.2em;
+  .lockup{display:flex;align-items:flex-start;gap:.1in}
+  .lockup svg{width:.44in;flex:none;color:var(--accent);margin-top:.02in}
+  .name{margin:0;font-family:var(--serif);font-size:20pt;line-height:1;letter-spacing:-.01em}
+  .desc{margin:.035in 0 0;font-family:var(--mono);font-size:6.9pt;letter-spacing:.19em;
         text-transform:uppercase;color:var(--accent)}
-
-  .knock{margin:.21in 0 0;font-family:var(--serif);font-size:17pt;line-height:1.15}
-  .tag{margin:.07in 0 0;font-family:var(--serif);font-style:italic;font-size:12.5pt;
+  .tag{margin:.07in 0 0;font-family:var(--serif);font-style:italic;font-size:11pt;
        color:var(--soft)}
 
-  .hr{border:0;border-top:1.4px solid var(--accent);margin:.2in 0 .18in;width:2.4in}
+  .hr{border:0;border-top:1.4px solid var(--accent);margin:.14in 0 .13in;width:2.2in}
+  .hr2{border-top:1px solid var(--rule);width:100%;margin:.2in 0 .15in}
 
-  .svc{margin:0;padding:0;list-style:none;display:grid;gap:.125in}
-  .svc dt{font-family:var(--mono);font-size:7.2pt;letter-spacing:.15em;text-transform:uppercase;
-          color:var(--accent);margin:0}
-  .svc dd{margin:.022in 0 0;font-size:10pt;line-height:1.32;color:var(--ink)}
-  .any{margin:.19in 0 0;font-size:10.5pt;font-weight:600}
+  .kick{margin:0;font-family:var(--mono);font-size:9.6pt;font-weight:700;letter-spacing:.14em;
+        text-transform:uppercase;color:var(--accent)}
+  .hed{margin:.06in 0 0;font-family:var(--serif);font-size:21.5pt;line-height:1.1;text-wrap:balance;
+       font-weight:normal;letter-spacing:-.005em}
+  .sub{margin:.085in 0 0;font-size:10.2pt;line-height:1.36;color:var(--soft);text-wrap:pretty}
 
-  .walk{margin:.11in 0 0;font-size:9.6pt;line-height:1.38;color:var(--soft);max-width:3.9in}
+  /* Aerate / Seed / Feed. Numerals are the accent, set in the gutter by a
+     counter so the text hangs in a clean column. */
+  .steps{margin:.17in 0 0;padding:0;list-style:none;counter-reset:s;display:grid;gap:.1in}
+  .steps li{counter-increment:s;position:relative;padding-left:.26in;font-size:9.5pt;
+            line-height:1.33;color:var(--ink)}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:.005in;
+                    font-family:var(--mono);font-size:10pt;font-weight:700;color:var(--accent)}
+  .steps b{font-weight:600}
+
+  .note{margin:.105in 0 0;font-size:8.8pt;line-height:1.36;color:var(--soft);font-style:italic}
+
+  .svc{margin:0;padding:0;display:grid;gap:.09in}
+  .svc div{display:flex;gap:.09in;align-items:baseline}
+  .svc dt{font-family:var(--mono);font-size:6.8pt;letter-spacing:.11em;text-transform:uppercase;
+          color:var(--accent);margin:0;flex:none;width:1.06in;line-height:1.5}
+  .svc dd{margin:0;font-size:8.8pt;line-height:1.35;color:var(--ink)}
+
+  .walk{margin:.18in 0 0;font-size:9pt;line-height:1.36;color:var(--soft);text-wrap:pretty}
+  .walk b{color:var(--ink);font-weight:600}
 
   /* ---- right column ---- */
   .right{display:flex;flex-direction:column;align-items:center;text-align:center;
-         justify-content:flex-start;padding-top:.02in}
-  .qr{width:1.72in;height:1.72in;display:block}
-  .scan{margin:.09in 0 0;font-family:var(--mono);font-size:7.2pt;letter-spacing:.11em;
+         justify-content:flex-start}
+  .knock{margin:0 0 .11in;font-family:var(--mono);font-size:7.4pt;letter-spacing:.11em;
+         text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--rule);
+         padding-bottom:.07in;width:100%;line-height:1.4}
+  .qr{width:1.62in;height:1.62in;display:block}
+  .scan{margin:.08in 0 0;font-family:var(--mono);font-size:7pt;letter-spacing:.11em;
         text-transform:uppercase;color:var(--soft);line-height:1.5}
-  .phone{margin:.17in 0 0;font-family:var(--serif);font-size:18.5pt;line-height:1;white-space:nowrap}
-  .contact{margin:.1in 0 0;font-size:8.4pt;line-height:1.5;color:var(--soft);word-break:break-word}
-  .area{margin:.14in 0 0;font-family:var(--mono);font-size:6.6pt;letter-spacing:.09em;
-        text-transform:uppercase;color:var(--soft);line-height:1.55}
+  .phone{margin:.17in 0 0;font-family:var(--serif);font-size:19pt;line-height:1;white-space:nowrap}
+  .contact{margin:.1in 0 0;font-size:8pt;line-height:1.5;color:var(--soft);word-break:break-word}
+  .area{margin:auto 0 0;font-family:var(--mono);font-size:6.6pt;letter-spacing:.08em;
+        text-transform:uppercase;color:var(--soft);line-height:1.55;width:100%;
+        border-top:1px solid var(--rule);padding-top:.09in}
 </style>
 </head>
 <body>
 <div class="sheet">
 
-  <!-- ONE flyer, repeated. Identical by construction: change it once here and the
-       second copy is generated from the same markup below. -->
   <div class="flyer">
-    <div>
+    <div class="left">
       <div class="lockup">
         <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold">
           <g fill="currentColor">
@@ -115,28 +163,41 @@
         </svg>
         <div>
           <p class="name">Sixfold Colorado</p>
-          <p class="desc">Land &amp; Fire</p>
+          <p class="desc">Lawn, Land &amp; Fire</p>
         </div>
       </div>
-
-      <p class="knock">We stopped by today.</p>
       <p class="tag">From the lawn to the treeline, all year long.</p>
 
       <hr class="hr">
 
+      <p class="kick">Lawn rehab</p>
+      <h1 class="hed">Does your lawn suck?</h1>
+      <p class="sub">Thin, patchy, hard as a driveway? Hard ground sheds water instead of
+      sucking it up, and the grass on top thins out no matter what you feed it!</p>
+
+      <ol class="steps">
+        <li><b>Aerate.</b> Hollow tines pull soil cores two to three inches deep, two to four
+        inches apart. The cores stay on the lawn and break back down into it.</li>
+        <li><b>Seed.</b> Overseed goes down while the holes are still open. That is the part
+        that thickens it up.</li>
+        <li><b>Feed.</b> Fertilizer the same day — all three in the one visit. Spring and fall
+        are the windows.</li>
+      </ol>
+
+      <hr class="hr hr2">
+
       <dl class="svc">
-        <div><dt>Lawn &amp; turf</dt><dd>Core aeration, overseeding, fertilizing, mowing and edging</dd></div>
-        <div><dt>Landscaping</dt><dd>Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away</dd></div>
-        <div><dt>Land clearing</dt><dd>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement</dd></div>
-        <div><dt>Fire mitigation</dt><dd>Defensible space, fuel breaks and thinning, to Colorado State Forest Service standards</dd></div>
+        <div><dt>Landscaping</dt><dd>Trimming, plants and trees taken out, bed clean-up and haul-away</dd></div>
+        <div><dt>Land clearing</dt><dd>Brush, undergrowth and dead fall off a lot, a pasture or an easement</dd></div>
+        <div><dt>Fire mitigation</dt><dd>Defensible space and thinning, to Colorado State Forest Service standards</dd></div>
       </dl>
 
-      <p class="any">Any one of them, or all four.</p>
-      <p class="walk">We walk the property with you, count what is actually there,
-      and price it from that.</p>
+      <p class="walk"><b>Any one of them, or all of it.</b> We walk the property with you,
+      count what is actually there, and price it from that.</p>
     </div>
 
     <div class="right">
+      <p class="knock">We stopped by today</p>
       <img class="qr" src="../brand/qr/sixfold-qr-brand-on-white.png" alt="Scan for Sixfold Colorado">
       <p class="scan">Scan for the<br>full list</p>
       <p class="phone">(303)<br>915-1045</p>
@@ -148,7 +209,7 @@
   <div class="cut"></div>
 
   <div class="flyer">
-    <div>
+    <div class="left">
       <div class="lockup">
         <svg viewBox="0 0 100 96" role="img" aria-label="Sixfold">
           <g fill="currentColor">
@@ -159,28 +220,41 @@
         </svg>
         <div>
           <p class="name">Sixfold Colorado</p>
-          <p class="desc">Land &amp; Fire</p>
+          <p class="desc">Lawn, Land &amp; Fire</p>
         </div>
       </div>
-
-      <p class="knock">We stopped by today.</p>
       <p class="tag">From the lawn to the treeline, all year long.</p>
 
       <hr class="hr">
 
+      <p class="kick">Lawn rehab</p>
+      <h1 class="hed">Does your lawn suck?</h1>
+      <p class="sub">Thin, patchy, hard as a driveway? Hard ground sheds water instead of
+      sucking it up, and the grass on top thins out no matter what you feed it!</p>
+
+      <ol class="steps">
+        <li><b>Aerate.</b> Hollow tines pull soil cores two to three inches deep, two to four
+        inches apart. The cores stay on the lawn and break back down into it.</li>
+        <li><b>Seed.</b> Overseed goes down while the holes are still open. That is the part
+        that thickens it up.</li>
+        <li><b>Feed.</b> Fertilizer the same day — all three in the one visit. Spring and fall
+        are the windows.</li>
+      </ol>
+
+      <hr class="hr hr2">
+
       <dl class="svc">
-        <div><dt>Lawn &amp; turf</dt><dd>Core aeration, overseeding, fertilizing, mowing and edging</dd></div>
-        <div><dt>Landscaping</dt><dd>Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away</dd></div>
-        <div><dt>Land clearing</dt><dd>Brush, undergrowth and dead fall taken off a lot, a pasture or an easement</dd></div>
-        <div><dt>Fire mitigation</dt><dd>Defensible space, fuel breaks and thinning, to Colorado State Forest Service standards</dd></div>
+        <div><dt>Landscaping</dt><dd>Trimming, plants and trees taken out, bed clean-up and haul-away</dd></div>
+        <div><dt>Land clearing</dt><dd>Brush, undergrowth and dead fall off a lot, a pasture or an easement</dd></div>
+        <div><dt>Fire mitigation</dt><dd>Defensible space and thinning, to Colorado State Forest Service standards</dd></div>
       </dl>
 
-      <p class="any">Any one of them, or all four.</p>
-      <p class="walk">We walk the property with you, count what is actually there,
-      and price it from that.</p>
+      <p class="walk"><b>Any one of them, or all of it.</b> We walk the property with you,
+      count what is actually there, and price it from that.</p>
     </div>
 
     <div class="right">
+      <p class="knock">We stopped by today</p>
       <img class="qr" src="../brand/qr/sixfold-qr-brand-on-white.png" alt="Scan for Sixfold Colorado">
       <p class="scan">Scan for the<br>full list</p>
       <p class="phone">(303)<br>915-1045</p>

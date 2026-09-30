@@ -523,22 +523,15 @@ p, li { orphans: 3; widows: 3; }
    Not touched: any wording; the type on pages 3–5; the .legal10 and
    .noticeform statutory blocks; sheets 2–5.
    ------------------------------------------------------------------ */
-.sheet:first-of-type { font-size: 8.5pt; line-height: 1.2; }
-.sheet:first-of-type .top { padding-bottom: 4pt; }
-.sheet:first-of-type .sheetnum { margin-top: 3pt; }
-.sheet:first-of-type h1.headline { font-size: 13pt; margin-top: 2pt; }
-.sheet:first-of-type .standfirst { font-size: 8.4pt; margin-top: 3pt; }
-.sheet:first-of-type h2.sec { font-size: 11.5pt; margin: 2.5pt 0 1.5pt; }
-.sheet:first-of-type p { margin: 0 0 2pt; }
-.sheet:first-of-type .grid-form { gap: 2pt 12pt; margin-bottom: 2pt; }
-.sheet:first-of-type .field label { margin-bottom: 1.5pt; }
-.sheet:first-of-type .field.wide p { margin-top: 1pt; }
-.sheet:first-of-type .ticks.two .tick,
-.sheet:first-of-type .tick { margin-bottom: 1pt; }
-.sheet:first-of-type .money { margin-top: 3pt; }
-.sheet:first-of-type .money .m { padding: 4pt 8pt 4pt; }
-.sheet:first-of-type footer { padding-top: 4pt; }
-.sheet:first-of-type .disclaimer { font-size: 7pt; margin-top: 3pt; }
+.sqi { display:inline-block; width:9pt; height:9pt; border:0.9pt solid var(--ink-mid); background:var(--paper); vertical-align:-0.05em; margin-right:2.5pt; }
+.sheet:first-of-type table.tbl { font-size: 8.6pt; }
+.sheet:first-of-type table.tbl td { padding: 3pt 6pt 3pt 0; }
+/* Pen room. Measured 2026-09-30: _style.css sets .field .line to height 2pt,
+   which leaves 3.5mm between the label and the rule — not enough to write a date
+   in by hand. 9pt takes it to about 6mm. Scoped to this document on purpose:
+   _style.css governs nine other agreements that are proofed at their own page
+   counts, and raising it there would repaginate all of them. */
+.field .line { height: 9pt; }
 @media print { @page { margin: 0.45in 0.5in; } }
 </style>
 </head>
@@ -546,11 +539,28 @@ p, li { orphans: 3; widows: 3; }
 
 <!-- ================================================================
      JOB-SPECIFIC FILL — Kara Rosenstrauch, 3846 Deboodt Ct, Colorado Springs
-     Job:   Twelve-month grounds maintenance — mowing, root feeding, snow clearing.
-            $250.00 a month, 12 months, $3,000.00 over the term.
+     Job:   Twelve-month grounds maintenance. $250.00 a month, 12 months, $3,000.00.
+
+     SCOPE REWRITTEN 2026-09-30 to what Matthew confirmed. It is NOT what the
+     2026-09-25 build said, so do not carry wording back from that version:
+       - ONE mowing + edging visit a month, on the THIRD THURSDAY. His call.
+       - Spot treatment EVERY OTHER MONTH — fertilizer, aeration and seed into thin
+         and bare areas. NOT herbicide. He confirmed this, and it is the reason the
+         CDA Commercial Applicator licence question does not arise. If it ever turns
+         into weed spray, Sixfold cannot do it for hire.
+       - Core aeration TWICE a year, six months apart. The 12 Oct 2026 one-off is
+         aeration #1 of the cycle, so the contract pair falls ~April and ~October.
+       - Snow: up to FIVE clearing visits a calendar month included, and beyond five
+         is not covered. His call, chosen over billing extras.
+       - DEEP ROOT FEEDING REMOVED. It was in the 2026-09-25 draft and he dropped it.
+
+     ⚑ THE AERATION BILLING IS UNDECIDED and is a TICK BOX at section 2. He did not
+     know the answer on 2026-09-30 and I did not invent one. Two aerations against a
+     $3,000 annual total is the largest open number in this document — the one-off
+     the same week is priced at $1,100. MARK A BOX BEFORE THIS IS SIGNED.
      Built 2026-09-25 from job2-service-agreement.src.html. Sections 1-6 rewritten;
      PAGES 4-5 (Notice of Cancellation x2) are verbatim from the reviewed template
-     and must not be altered. FIVE pages — re-count after any edit.
+     and must not be altered. SIX pages since 2026-09-30 — re-count after any edit.
 
      SEVENTEEN CLAUSES, not the template's thirteen. Four are new and specific to a
      recurring contract: 14 what clearing snow does and does not mean, 15 getting to
@@ -558,7 +568,7 @@ p, li { orphans: 3; widows: 3; }
 
      ⚑ THE CLAUSE LISTS WERE REBALANCED 2026-09-25. Sheet 2 carries terms 1-10 and
      sheet 3 carries 11-17, because seventeen clauses put sheet 3 about 175px over a
-     page and sheet 2 had the room. The second <ol> therefore reads start="11" with
+     page and sheet 2 had the room. Those sheets are now 3 and 4. The second <ol> therefore reads start="11" with
      counter-reset: cl 10, and BOTH sheet headers name those ranges. If a clause is
      ever added or moved, all four move together — that exact mistake shipped in the
      job-2 packet on 2026-09-15 and left the contract with no clause 8.
@@ -612,10 +622,10 @@ p, li { orphans: 3; widows: 3; }
         <p class="descriptor">Land &amp; Fire · Monument, CO</p>
       </div>
     </div>
-    <p class="whatitis"><b>Maintenance agreement</b>Page 1 of 5<br>Agreement no. <span class="fi"></span></p>
+    <p class="whatitis"><b>Maintenance agreement</b>Page 1 of 6<br>Agreement no. <span class="fi"></span></p>
   </div>
 
-  <p class="sheetnum">Monthly grounds maintenance &mdash; mowing, root feeding and snow clearing</p>
+  <p class="sheetnum">Monthly grounds maintenance &mdash; mowing, edging, spot treatment, aeration and snow clearing</p>
   <h1 class="headline">Grounds Maintenance Agreement</h1>
   <p class="standfirst"><strong>Date of this transaction:</strong> <span class="fi w2"></span> &nbsp; This is the date you sign. Your three business days to cancel run from it — see section 7.</p>
 
@@ -623,30 +633,86 @@ p, li { orphans: 3; widows: 3; }
   <p><strong>Contractor:</strong> Sixfold, LLC · 17890 Sierra Way, Monument, Colorado 80132 · (303) 915-1045 · Contact@SixfoldColorado.com</p>
   <div class="grid-form">
     <div class="field half"><label>Property owner — full name(s)</label><div class="line" style="height:auto;padding-bottom:1.5pt">Kara Rosenstrauch</div></div>
-    <div class="field half"><label>Phone</label><div class="line"></div></div>
+    <div class="field half"><label>Phone</label><div class="line" style="height:auto;padding-bottom:1.5pt">(719) 306-1031</div></div>
     <div class="field wide"><label>Address of the property where the work will be done</label><div class="line" style="height:auto;padding-bottom:1.5pt">3846 Deboodt Ct</div></div>
     <div class="field half"><label>City, state, ZIP</label><div class="line" style="height:auto;padding-bottom:1.5pt">Colorado Springs, CO</div></div>
-    <div class="field half"><label>Email</label><div class="line"></div></div>
+    <div class="field half"><label>Email</label><div class="line" style="height:auto;padding-bottom:1.5pt">drkara@msn.com</div></div>
     <div class="field wide"><label>Mailing address, if different from the property</label><div class="line"></div></div>
   </div>
 
   <h2 class="sec">2 · The work, month by month</h2>
-  <p>A <strong>twelve-month</strong> agreement. What happens in any given month depends on the season and the weather; <strong>the price at section&nbsp;5 is the same every month regardless.</strong></p>
-  <div class="grid-form" style="margin-top:6pt">
-    <div class="field wide"><label>Growing season &mdash; mowing, trimming and edging</label>
-      <p style="margin:4pt 0 0">Mowing the open turf, trimming and edging in against beds, walls, drive and walks, and blowing the hard surfaces clear before leaving. Clippings are mulched back into the turf unless the owner asks at the walk for them to be removed. <strong>Mowing visits per month:</strong> <span class="fi w2"></span> &nbsp; <strong>Months this runs:</strong> <span class="fi"></span> to <span class="fi"></span>.</p>
+  <p>A <strong>twelve-month</strong> agreement. <strong>The work and the dates are subject to change with the weather and the seasons.</strong> The areas worked are fixed by the walk, not by this table alone.</p>
+  <table class="tbl">
+    <thead><tr><th style="width:1.25in">Service and when</th><th>What it covers</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Mowing<br>and edging</strong><br><span class="num" style="font-size:7.4pt">Third Thursday<br>of each month</span></td>
+        <td>Mowing the open turf, edging in against beds, walls, drive and walks, and blowing the hard surfaces clear before leaving. Clippings are mulched back into the turf where the cut allows, and bagged and left on the property where it does not. If the third Thursday is unworkable the visit moves to the first workable day after it.</td>
+      </tr>
+      <tr>
+        <td><strong>Spot<br>treatment</strong><br><span class="num" style="font-size:7.4pt">Every other month</span></td>
+        <td>Repairing the <strong>dead and worn spots</strong> &mdash; the areas that need more than the lawn as a whole. Aeration, seed and fertilizer worked into the patch, on the same third-Thursday visit, across the spots walked and agreed at it. <strong>Fertilizer and seed only &mdash; no pesticide, herbicide or weed-and-feed of any kind, see section&nbsp;3.</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Core<br>aeration</strong><br><span class="num" style="font-size:7.4pt">Twice a year<br>April and<br>October</span></td>
+        <td>A machine with hollow tines pulls plugs of soil and thatch from the open turf. <strong>The plugs stay on the surface</strong> and break down back into the lawn; they are not debris the crew failed to clear. This does <strong>not</strong> include overseeding or fertilizing the turf as a whole &mdash; see section&nbsp;3. <strong>Both visits are included in the monthly price at section&nbsp;5</strong> and nothing further is invoiced for them.</td>
+      </tr>
+      <tr>
+        <td><strong>Snow<br>clearing</strong><br><span class="num" style="font-size:7.4pt">Weather-driven<br>up to five<br>a month</span></td>
+        <td>The driveway, the front walk and the path to the front door, and any other surface written here: <span class="fi"></span>. Visits are <strong>as needed</strong>. No fixed depth starts one and no clear-by time is promised. Sixfold attends when a fall needs clearing and as soon as conditions allow, and the owner may also call for a visit. These visits are additional to the third-Thursday visit. <strong>Up to five clearing visits in any one calendar month are included</strong>; clearing beyond five in a month is not covered by this agreement, and is a separate written agreement and price. See clause&nbsp;14 for what clearing snow does and does not mean.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer>
+    <div class="contact">
+      <span class="co">Sixfold, LLC</span>
+      <span>(303) 915-1045</span>
+      <span>Contact@SixfoldColorado.com</span>
+      <span class="pg">Page 1 of 6</span>
     </div>
-    <div class="field wide"><label>Root feeding &mdash; fertilizer only</label>
-      <p style="margin:4pt 0 0">Deep root feeding of the trees and shrubs identified and agreed at the walk, <strong>twice</strong> in the twelve months, once in spring and once in fall. <strong>Fertilizer only.</strong> No pesticide, herbicide, weed killer or weed-and-feed product of any kind is applied under this agreement &mdash; see section&nbsp;3.</p>
+    <p class="disclaimer">Owner's initials <span class="fi"></span> &nbsp; Sixfold representative's initials <span class="fi"></span> &nbsp;·&nbsp; The scope continues on sheet 2, where the price and the dates are set.</p>
+  </footer>
+
+</div>
+
+<!-- ================================================================
+     PAGE 2 — WHAT IS NOT INCLUDED, THE TERM, THE PRICE
+     Split off sheet 1 on 2026-09-30. Four services with four different
+     cadences would not fit one sheet without dropping the body below 8.1pt
+     and leaving under 15px of slack, which is what breaks on a printer with
+     a larger unprintable margin. SIX pages now, not five.
+     ================================================================ -->
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="4 14 94 77" role="img" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+          <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+          <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+          <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+          <rect x="20.4" y="77" width="3.2" height="7"/>
+          <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+          <path d="M22 62 L12 74 L32 74 Z"/>
+          <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+          <rect x="4" y="86" width="92" height="5"/>
+        </g>
+      </svg>
+      <div>
+        <p class="wordmark">Sixfold</p>
+        <p class="descriptor">Land &amp; Fire · Monument, CO</p>
+      </div>
     </div>
-    <div class="field wide"><label>Snow season &mdash; what is cleared, and what starts a visit</label>
-      <p style="margin:4pt 0 0">Clearing snow from the <strong>driveway, the front walk and the path to the front door</strong>, and from any other surface written here: <span class="fi"></span>. A visit is triggered by a snowfall leaving <strong><span class="fi w2"></span> inches or more</strong>, and the surfaces are cleared within <strong><span class="fi w2"></span> hours</strong> of the snow stopping. <strong>Months this runs:</strong> <span class="fi"></span> to <span class="fi"></span>. See clause&nbsp;14 for what clearing snow does and does not mean.</p>
-    </div>
+    <p class="whatitis"><b>Maintenance agreement</b>Page 2 of 6<br>Price and dates</p>
   </div>
 
+  <p class="sheetnum">What is not included &middot; how long this runs &middot; the price &middot; the dates</p>
+
   <h2 class="sec">3 · What is not included</h2>
-  <p>Unless written below, this does <strong>not</strong> cover weed control, herbicide, pesticide or weed-and-feed of any kind; <strong>ice melt, salt, sand or any other ice treatment</strong>; aeration, overseeding, dethatching or topdressing; tree felling, limbing or stump work; bed planting, mulching or replanting; irrigation repair, blow-out or start-up; gutter, roof or structural work of any kind; hauling non-green debris; leaf collection and removal beyond the blowing described in section&nbsp;2; or permit fees.</p>
-  <p style="margin-top:5pt"><strong>Sixfold applies no weed control and no ice treatment under this agreement.</strong> Fertilizer is not weed killer. If either is wanted, it is a separate written agreement and a separate price &mdash; it is not something this one covers, prices or implies.</p>
+  <p>Unless written below, this does <strong>not</strong> cover weed control, herbicide, pesticide or weed-and-feed of any kind; overseeding or fertilizing the turf as a whole, beyond the spot treatment described in section&nbsp;2; dethatching, topdressing or soil testing; tree felling, limbing or stump work; bed planting, mulching or replanting; irrigation repair, blow-out or start-up; gutter, roof or structural work of any kind; hauling non-green debris; leaf collection and removal beyond the blowing described in section&nbsp;2; or permit fees.</p>
+  <p style="margin-top:5pt"><strong>Sixfold applies no weed control under this agreement.</strong> Fertilizer is not weed killer. If it is wanted, it is a separate written agreement and a separate price.</p>
   <div class="grid-form">
     <div class="field wide"><label>Added to the scope by agreement</label>
       <p style="margin:4pt 0 0">Nothing added. Scope is as described in section&nbsp;2.</p>
@@ -654,8 +720,7 @@ p, li { orphans: 3; widows: 3; }
   </div>
 
   <h2 class="sec">4 · How long this runs</h2>
-  <p><strong>Twelve months</strong> from the start date at section&nbsp;6. <strong>It does not renew itself.</strong> When the twelve months are up this agreement simply ends, and if both sides want it to carry on a new one is signed. Nothing rolls over, no notice has to be given to stop it, and no payment is taken after the twelfth month.</p>
-  <p style="margin-top:5pt">Either side may end it earlier than that under clause&nbsp;16.</p>
+  <p><strong>Twelve months &mdash; November 2026 to October 2027</strong>, from the start date at section&nbsp;6. <strong>It does not renew itself.</strong> Sixfold will contact you about <strong>45 days before the end of the term</strong> to go over how the year has gone and agree what the next one should cover. Either side may end it earlier under clause&nbsp;16.</p>
 
   <h2 class="sec">5 · Price</h2>
   <div class="money">
@@ -663,14 +728,22 @@ p, li { orphans: 3; widows: 3; }
     <div class="m"><span>Number of months</span><div class="amt">12</div></div>
     <div class="m"><span>Total over the term</span><div class="amt">$&nbsp;3,000.00</div></div>
   </div>
-  <p style="margin-top:6pt"><strong>$250.00 per month, the same every month</strong>, for the work in section&nbsp;2. Travel is not billed. The monthly payment does not change with the number of visits a month happens to need. Nothing further is owed unless the owner signs a written change order under clause&nbsp;9. <strong>Payment:</strong> due on the same day of each month, set at section&nbsp;6, by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>. <strong>If this agreement is cancelled under section&nbsp;7, every payment made is returned in full within ten business days.</strong></p>
+  <p style="margin-top:6pt"><strong>$250.00 per month, the same every month</strong>, for the work in section&nbsp;2. Travel is not billed. Within the limits set at section&nbsp;2 the monthly payment does not change with the number of visits a month needs. <strong>The two aeration visits are inside this price</strong> and are not invoiced separately. Nothing further is owed unless the owner signs a written change order under clause&nbsp;9. <strong>Payment:</strong> due on the same day of each month, set at section&nbsp;6, by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>. <strong>If this agreement is cancelled under section&nbsp;7, every payment made is returned in full within ten business days.</strong></p>
+
+  <h2 class="sec">6 · Dates</h2>
+  <div class="grid-form">
+    <div class="field"><label>Cancellation period ends (midnight)</label><div class="line"></div><p class="hint">Third business day after signing. A business day is any day except Sunday and federal holidays; Saturday counts.</p></div>
+    <div class="field"><label>First month begins on</label><div class="line" style="height:auto;padding-bottom:1.5pt">November 2026</div><p class="hint">The twelve months run from this date and end after October 2027. The first third-Thursday visit is <strong>19 November 2026</strong>.</p></div>
+    <div class="field"><label>Payment due each month on the</label><div class="line" style="height:auto;padding-bottom:1.5pt">1st</div><p class="hint">The first payment falls due <strong>1 November 2026</strong> and the twelfth and last on <strong>1 October 2027</strong>.</p></div>
+  </div>
+  <p>Dates are estimates. Weather, ground conditions and fire restrictions move them, and a representative from Sixfold will contact you if a date needs to change.</p>
 
   <footer>
     <div class="contact">
       <span class="co">Sixfold, LLC</span>
       <span>(303) 915-1045</span>
       <span>Contact@SixfoldColorado.com</span>
-      <span class="pg">Page 1 of 5</span>
+      <span class="pg">Page 2 of 6</span>
     </div>
     <p class="disclaimer">Owner's initials <span class="fi"></span> &nbsp; Sixfold representative's initials <span class="fi"></span> &nbsp;·&nbsp; The last two pages of this maintenance agreement are the owner's two copies of the Notice of Cancellation and are part of it.</p>
   </footer>
@@ -702,26 +775,18 @@ p, li { orphans: 3; widows: 3; }
         <p class="descriptor">Land &amp; Fire · Monument, CO</p>
       </div>
     </div>
-    <p class="whatitis"><b>Maintenance agreement</b>Page 2 of 5<br>Dates and terms</p>
+    <p class="whatitis"><b>Maintenance agreement</b>Page 3 of 6<br>Terms 1 to 11</p>
   </div>
 
-  <p class="sheetnum">Dates, and terms 1 to 10 · these apply to the work described on sheet 1 of this agreement</p>
-
-  <h2 class="sec">6 · Dates</h2>
-  <div class="grid-form">
-    <div class="field"><label>Cancellation period ends (midnight)</label><div class="line"></div><p class="hint">Third business day after signing. A business day is any day except Sunday and federal holidays; Saturday counts.</p></div>
-    <div class="field"><label>First month begins on</label><div class="line"></div><p class="hint">On or after the cancellation deadline, unless the owner asks in writing to start sooner. The twelve months run from this date.</p></div>
-    <div class="field"><label>Payment due each month on the</label><div class="line"></div><p class="hint">The day of the month each payment falls due. The twelfth and last payment is twelve months after the first.</p></div>
-  </div>
-  <p>Dates are estimates. Weather, ground conditions and fire restrictions move them, and Sixfold will say so when they move.</p>
+  <p class="sheetnum">Terms 1 to 11 · these apply to the work described on sheets 1 and 2 of this agreement</p>
 
   <h2 class="sec">Terms</h2>
   <ol class="clauses" style="margin-top:6pt">
-    <li><b class="h">What Sixfold gives you with the job, whether or not you ask</b>
+    <li><b class="h">What Sixfold gives you with the job</b>
       A written scope of exactly what was done and where, and an itemised invoice.</li>
 
     <li><b class="h">What this work does and does not do</b>
-      This is routine grounds maintenance &mdash; mowing, feeding and snow clearing. <strong>It is not a defensible-space or wildfire mitigation treatment.</strong> It does not guarantee any particular condition, thickness or colour of turf, and it is not a promise that any surface is safe underfoot &mdash; see clause&nbsp;14.</li>
+      This is routine grounds maintenance &mdash; mowing, edging, spot treatment, aeration and snow clearing. <strong>It is not a defensible-space or wildfire mitigation treatment</strong>, and it is not a promise that any surface is safe underfoot &mdash; see clause&nbsp;14. How the turf comes on depends on water, weather and soil.</li>
 
     <li><b class="h">You confirm you can authorise the work</b>
       By signing, you confirm you are the owner of record of the property, or that you have the owner's authority to have this work done, and that no part of the area to be worked is on land belonging to someone else.</li>
@@ -730,7 +795,7 @@ p, li { orphans: 3; widows: 3; }
       You will identify the property boundaries. Sixfold will request public utility locates through Colorado 811 before any stump grinding or ground disturbance. <strong>Private and unmarked lines are yours to point out</strong> — irrigation, septic tanks and leach fields, wells, invisible pet fencing, low-voltage lighting, buried propane, and anything else not on a public locate. Sixfold is not responsible for damage to a line it was not told about and that a public locate did not mark.</li>
 
     <li><b class="h">Clearing the way</b>
-      Before the crew arrives, please move vehicles, secure pets and livestock, and keep people out of the work area while saws are running.</li>
+      Before the crew arrives, please move vehicles, secure pets and livestock, and keep people out of the work area while machines are running. <strong>Please water the lawn a day or two before an aeration visit</strong> &mdash; aeration pulls a proper plug from moist ground and very little from ground that is dry and hard. Keep to the watering days and hours your water provider allows.</li>
 
     <li><b class="h">HOA rules and permits</b>
       Where a covenant, HOA architectural rule, or local permit applies to removing trees, obtaining that approval is the owner's responsibility unless section 3 says otherwise in writing.</li>
@@ -744,10 +809,13 @@ p, li { orphans: 3; widows: 3; }
       Hidden rot, a hazard lean, a hornet nest, a stump on a boulder — if a condition appears that changes the work, the crew stops and tells you before continuing.</li>
 
     <li><b class="h">Changes to the work</b>
-      <strong>Any change to the scope or the price has to be written down and signed by both of us before that work is done.</strong> A verbal agreement to do extra work does not create a charge you owe.</li>
+      <strong>Any change to the scope or the price has to be written down and signed by both of us before that work is done.</strong></li>
 
     <li><b class="h">Paying</b>
       $250.00 is due on the same day of each month, on the date set at section 6, and may be paid by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>. Every payment is refundable in full, within ten business days, if you cancel under section 7 — including any payment made before the cancellation period has run. If this agreement ends early under clause 16, any month paid for in advance and not begun is refunded within ten business days.</li>
+
+    <li><b class="h">Damage</b>
+      Sixfold is responsible for damage its crew causes by negligence in doing this work. Tell us within <strong>14 days</strong> of completion so we can look at it while the evidence is fresh. Sixfold is not responsible for pre-existing conditions, for the access marking described in clause 7, or for damage arising from a line or structure that was not disclosed under clause 4.</li>
   </ol>
 
   <footer>
@@ -755,9 +823,9 @@ p, li { orphans: 3; widows: 3; }
       <span class="co">Sixfold, LLC</span>
       <span>17890 Sierra Way, Monument, CO 80132</span>
       <span>(303) 915-1045</span>
-      <span class="pg">Page 2 of 5</span>
+      <span class="pg">Page 3 of 6</span>
     </div>
-    <p class="disclaimer">Owner's initials <span class="fi"></span> &nbsp; Sixfold representative's initials <span class="fi"></span> &nbsp;·&nbsp; Terms continue on sheet 3 of this agreement, where it is signed.</p>
+    <p class="disclaimer">Owner's initials <span class="fi"></span> &nbsp; Sixfold representative's initials <span class="fi"></span> &nbsp;·&nbsp; Terms continue on sheet 4 of this agreement, where it is signed.</p>
   </footer>
 
 </div>
@@ -787,28 +855,26 @@ p, li { orphans: 3; widows: 3; }
         <p class="descriptor">Land &amp; Fire · Monument, CO</p>
       </div>
     </div>
-    <p class="whatitis"><b>Maintenance agreement</b>Page 3 of 5<br>Terms and signatures</p>
+    <p class="whatitis"><b>Maintenance agreement</b>Page 4 of 6<br>Terms and signatures</p>
   </div>
 
-  <p class="sheetnum">Terms 11 to 17 · your right to cancel · signatures</p>
+  <p class="sheetnum">Terms 12 to 17 · your right to cancel · signatures</p>
 
   <!-- start="8", NOT 9. Corrected 2026-09-15. Deleting a clause from the first list
        on 2026-09-14 left this one starting where it used to, so the contract ran
        1-7 then 9-14 with no clause 8, and two cross-references resolved to the
        wrong clause. The citations were already written for continuous numbering.
        If a clause is ever added or removed above, this start value moves with it. -->
-  <ol class="clauses" start="11" style="margin-top:9pt;counter-reset:cl 10">
-    <li><b class="h">Damage</b>
-      Sixfold is responsible for damage its crew causes by negligence in doing this work. Tell us within <strong>14 days</strong> of completion so we can look at it while the evidence is fresh. Sixfold is not responsible for pre-existing conditions, for the access marking described in clause 7, or for damage arising from a line or structure that was not disclosed under clause 4.</li>
+  <ol class="clauses" start="12" style="margin-top:9pt;counter-reset:cl 11">
 
     <li><b class="h">Colorado law</b>
       This agreement is governed by the law of the State of Colorado, and any dispute is brought in the county where the property is located.</li>
 
     <li><b class="h">This document is the agreement</b>
-      What is written on the five pages of this agreement is the whole agreement. Nothing said at the door changes it. A change is only effective if it is in writing and signed by both of us.</li>
+      What is written on the six pages of this agreement is the whole agreement. Nothing said at the door changes it. A change is only effective if it is in writing and signed by both of us.</li>
 
     <li><b class="h">What clearing snow does and does not mean</b>
-      Sixfold clears snow from the surfaces listed in section 2. <strong>Clearing snow does not make a surface safe to walk or drive on</strong>, and no ice treatment of any kind is applied under this agreement — snow can compact, melt and refreeze, and a cleared surface can still be icy. Sixfold does not undertake to keep any surface free of ice or to make it safe.</li>
+      Sixfold clears snow from the surfaces listed in section 2. <strong>Clearing snow does not make a surface safe to walk or drive on</strong> — snow can compact, melt and refreeze, and a cleared surface can still be icy. Sixfold does not undertake to keep any surface free of ice or to make it safe.</li>
 
     <li><b class="h">Getting to the work</b>
       Snow clearing needs the driveway clear of vehicles, and mowing needs the turf clear of hoses, toys, furniture and pet waste. Where it is not clear the crew works around it and says so on the work record. Anything hidden under snow or in long grass is the owner's to point out under clause 4.</li>
@@ -844,7 +910,7 @@ p, li { orphans: 3; widows: 3; }
       <span class="co">Sixfold, LLC</span>
       <span>17890 Sierra Way, Monument, CO 80132</span>
       <span>(303) 915-1045</span>
-      <span class="pg">Page 3 of 5</span>
+      <span class="pg">Page 4 of 6</span>
     </div>
     <p class="disclaimer">A signed copy of this agreement, and both Notice of Cancellation forms, are given to the property owner at the time of signing.</p>
   </footer>
@@ -882,7 +948,7 @@ p, li { orphans: 3; widows: 3; }
     <p class="whatitis"><b>Copy 1 — keep this</b>Notice of<br>cancellation</p>
   </div>
 
-  <p class="sheetnum">Page 4 of 5 · Your copy to keep</p>
+  <p class="sheetnum">Page 5 of 6 · Your copy to keep</p>
 
   <div class="noticeform">
     <h2>Notice of Cancellation</h2>
@@ -911,7 +977,7 @@ p, li { orphans: 3; widows: 3; }
       <span class="co">Sixfold, LLC</span>
       <span>17890 Sierra Way, Monument, CO 80132</span>
       <span>(303) 915-1045</span>
-      <span class="pg">Page 4 of 5</span>
+      <span class="pg">Page 5 of 6</span>
     </div>
     <p class="disclaimer">This form is completed by the Sixfold representative — seller name, seller address, date of transaction and the cancellation deadline — <strong>before</strong> it is handed over.</p>
   </footer>
@@ -943,7 +1009,7 @@ p, li { orphans: 3; widows: 3; }
     <p class="whatitis"><b>Copy 2 — send this</b>Notice of<br>cancellation</p>
   </div>
 
-  <p class="sheetnum">Page 5 of 5 · Sign and send this copy if you want to cancel</p>
+  <p class="sheetnum">Page 6 of 6 · Sign and send this copy if you want to cancel</p>
 
   <div class="noticeform">
     <h2>Notice of Cancellation</h2>
@@ -972,7 +1038,7 @@ p, li { orphans: 3; widows: 3; }
       <span class="co">Sixfold, LLC</span>
       <span>17890 Sierra Way, Monument, CO 80132</span>
       <span>(303) 915-1045</span>
-      <span class="pg">Page 5 of 5</span>
+      <span class="pg">Page 6 of 6</span>
     </div>
     <p class="disclaimer">Both copies of this form are completed and handed to the property owner at the time of signing, together with a signed copy of the agreement.</p>
   </footer>

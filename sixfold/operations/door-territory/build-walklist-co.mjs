@@ -1,0 +1,253 @@
+/* Sixfold — walk lists for Teller, Douglas and the rest of Colorado. 2026-09-29.
+
+   Sibling to build-walklist.mjs. Same CSV out, same PDF step — different source,
+   because the two are genuinely different problems.
+
+   ---- WHY THIS IS A SEPARATE SCRIPT ----------------------------------------
+
+   `build-walklist.mjs` talks to El Paso County's own GIS services and has to
+   work for its living: the parcel layer carries no property address, so it
+   forward-geocodes every owner's mailing address and measures the distance back
+   to the parcel.
+
+   This one uses the STATEWIDE layer, which already carries both addresses:
+
+     https://gis.colorado.gov/public/rest/services/Address_and_Parcel/
+       Colorado_Public_Parcels/FeatureServer/0
+
+   So occupancy is a string comparison, lot size is a field, and land use is a
+   field. No geocoding at all — which makes it far faster than the El Paso run.
+
+   ⚑ AND EL PASO CANNOT USE IT. Measured 2026-09-29 over a 1,000-parcel sample
+   per county, the share of rows carrying each field:
+
+                      El Paso   Teller   Douglas
+        owner              0%      99%      100%
+        ownerAdd           0%      99%      100%
+        situsAdd           0%      79%       82%
+        landAcres          0%      99%       98%
+        landUseDsc         0%      65%      100%
+
+   El Paso contributes geometry and nothing else. That is the whole reason the
+   other script exists. **Re-run that coverage check before trusting this for a
+   county nobody has used it for yet** — `--coverage` does it.
+
+   Run:
+     node build-walklist-co.mjs --place=castle-rock --radius=1.5
+     node build-walklist-co.mjs --county=TELLER --lat=39.0 --lon=-105.057 --radius=2
+     node build-walklist-co.mjs --coverage=DOUGLAS                                   */
+
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const UA = { 'user-agent': 'Mozilla/5.0 (compatible; Sixfold walk-list builder)' };
+const LAYER = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
+
+/* Towns inside, or just outside, the derived service area. The radius does the
+   rest. ⚑ Widening where Sixfold actually sells is Brandon's call, not a
+   consequence of a town being listed here. */
+const PLACES = {
+  /* Douglas */
+  'castle-rock': ['DOUGLAS', 39.3722, -104.8561],
+  sedalia:       ['DOUGLAS', 39.4386, -104.9614],
+  larkspur:      ['DOUGLAS', 39.2311, -104.8747],
+  franktown:     ['DOUGLAS', 39.3894, -104.7519],
+  /* Teller */
+  'woodland-park': ['TELLER', 39.0000, -105.0569],
+  divide:          ['TELLER', 38.9469, -105.1636],
+  florissant:      ['TELLER', 38.9469, -105.2911],
+  'cripple-creek': ['TELLER', 38.7466, -105.1783],
+};
+
+const arg = (k, d) => {
+  const hit = process.argv.find((a) => a.startsWith(`--${k}=`));
+  return hit ? hit.split('=').slice(1).join('=') : d;
+};
+
+async function getJSON(url, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, { headers: UA });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      if (j.error) throw new Error(JSON.stringify(j.error).slice(0, 160));
+      return j;
+    } catch (e) {
+      if (i === tries - 1) throw e;
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+}
+
+/* ---- --coverage: the check to run before trusting a new county ------------ */
+const coverage = arg('coverage');
+if (coverage) {
+  const county = coverage.toUpperCase();
+  const cnt = await getJSON(`${LAYER}?${new URLSearchParams({ f: 'json', where: `countyName='${county}'`, returnCountOnly: 'true' })}`);
+  const s = await getJSON(`${LAYER}?${new URLSearchParams({
+    f: 'json', where: `countyName='${county}'`, returnGeometry: 'false',
+    outFields: 'owner,ownerAdd,situsAdd,landAcres,landUseDsc', resultRecordCount: '1000', orderByFields: 'OBJECTID',
+  })}`);
+  const rows = (s.features ?? []).map((f) => f.attributes);
+  if (!rows.length) { console.log(`${county}: no rows returned — is the name right?`); process.exit(1); }
+  const pct = (fn) => `${Math.round(100 * rows.filter(fn).length / rows.length)}%`;
+  console.log(`\n${county} — ${(cnt.count ?? 0).toLocaleString()} parcels, sampled ${rows.length}\n`);
+  console.log(`   owner       ${pct((a) => (a.owner || '').trim())}`);
+  console.log(`   ownerAdd    ${pct((a) => (a.ownerAdd || '').trim())}`);
+  console.log(`   situsAdd    ${pct((a) => (a.situsAdd || '').trim())}`);
+  console.log(`   landAcres   ${pct((a) => a.landAcres > 0)}`);
+  console.log(`   landUseDsc  ${pct((a) => (a.landUseDsc || '').trim())}`);
+  console.log('\n   Anything at 0% means the county shares geometry only — this script cannot use it.');
+  process.exit(0);
+}
+
+/* ---- args ---------------------------------------------------------------- */
+const place = arg('place');
+let county = (arg('county') || '').toUpperCase(), lat = Number(arg('lat')), lon = Number(arg('lon'));
+if (place) {
+  if (!PLACES[place]) {
+    console.error(`unknown place "${place}". known: ${Object.keys(PLACES).join(', ')}`);
+    process.exit(1);
+  }
+  [county, lat, lon] = PLACES[place];
+}
+if (!county || !Number.isFinite(lat) || !Number.isFinite(lon)) {
+  console.error('need --place=<name>, or --county= with --lat= and --lon=');
+  process.exit(1);
+}
+const radiusMi = Number(arg('radius', '1.5'));
+const minAcres = Number(arg('min-acres', '0.18'));
+const maxAcres = Number(arg('max-acres', '2.5'));
+const outFile = arg('out', `walklist-${place ?? county.toLowerCase()}.csv`);
+/* used when the county leaves the situs city blank — see the note at its use */
+const REGION_FALLBACK = (place ?? `${county} COUNTY`).replace(/-/g, ' ').toUpperCase();
+
+/* ---- pull ---------------------------------------------------------------- */
+const dLat = radiusMi / 69;
+const dLon = radiusMi / (69 * Math.cos(lat * Math.PI / 180));
+const envelope = [lon - dLon, lat - dLat, lon + dLon, lat + dLat].join(',');
+
+console.log(`\n${county} county — centre ${lat.toFixed(5)}, ${lon.toFixed(5)}, radius ${radiusMi} mi`);
+console.log(`lot filter ${minAcres}–${maxAcres} acres\n`);
+
+const feats = [];
+let offset = 0;
+for (;;) {
+  const p = new URLSearchParams({
+    f: 'json', where: `countyName='${county}'`, geometry: envelope,
+    geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'owner,owner2,ownerAdd,ownAddCty,ownAddStt,ownAddZip,situsAdd,sitAddCty,sitAddZip,landAcres,landUseDsc,parcel_id',
+    returnGeometry: 'true', resultOffset: String(offset), resultRecordCount: '1000',
+  });
+  const r = await getJSON(`${LAYER}?${p}`);
+  const got = r.features ?? [];
+  feats.push(...got);
+  process.stdout.write(`\r  parcels pulled: ${feats.length}`);
+  if (got.length < 1000) break;
+  offset += got.length;
+}
+console.log('');
+
+/* ---- filter -------------------------------------------------------------- */
+/* Land use is a field here, so residential is a real filter rather than the
+   owner-name guessing the El Paso build has to fall back on. Blank is KEPT —
+   Teller only fills this on about two thirds of rows, and dropping blanks would
+   quietly throw away a third of the county. */
+const NOT_RESIDENTIAL = /EXEMPT|COMMERCIAL|INDUSTRIAL|AGRICULT|VACANT|MINING|UTILIT|CHURCH|SCHOOL|GOVERNMENT|CONDO|APARTMENT|MOBILE/i;
+const centroid = (ring) => [
+  ring.reduce((s, p) => s + p[0], 0) / ring.length,
+  ring.reduce((s, p) => s + p[1], 0) / ring.length,
+];
+
+let noAcres = 0, wrongSize = 0, notRes = 0, noSitus = 0;
+const kept = [];
+for (const f of feats) {
+  const a = f.attributes;
+  if (!f.geometry?.rings?.length) continue;
+  const acres = Number(a.landAcres);
+  if (!(acres > 0)) { noAcres++; continue; }
+  if (acres < minAcres || acres > maxAcres) { wrongSize++; continue; }
+  const use = (a.landUseDsc || '').trim();
+  if (use && NOT_RESIDENTIAL.test(use)) { notRes++; continue; }
+  if (!(a.situsAdd || '').trim()) { noSitus++; continue; }
+  kept.push({ a, acres, c: centroid(f.geometry.rings[0]) });
+}
+console.log(`  in size band:   ${kept.length + noSitus + notRes}`);
+console.log(`  dropped:        ${notRes} non-residential land use · ${noSitus} with no property address · ${noAcres} with no acreage`);
+
+/* ---- does the owner live there? -----------------------------------------
+
+   No geocoding needed: both addresses are on the record. Normalise hard,
+   because the two are entered by different people — "1270 FAWNWOOD RD" against
+   "1270 FAWNWOOD ROAD" is the same door.                                     */
+const norm = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ')
+  .replace(/\b(ROAD|RD|STREET|ST|AVENUE|AVE|DRIVE|DR|LANE|LN|COURT|CT|CIRCLE|CIR|PLACE|PL|TRAIL|TRL|WAY|BOULEVARD|BLVD|POINT|PT|TERRACE|TER|PARKWAY|PKWY|HIGHWAY|HWY|NORTH|SOUTH|EAST|WEST|N|S|E|W)\b/g, ' ')
+  .replace(/\s+/g, ' ').trim();
+const houseNo = (s) => (String(s || '').match(/\b(\d+)\b/) || [])[1] || '';
+
+const rows = [];
+for (const k of kept) {
+  const a = k.a;
+  const situs = (a.situsAdd || '').trim();
+  const mail = (a.ownerAdd || '').trim();
+  const isPOBox = /\bP\s*O\s*BOX\b|\bPOBOX\b/i.test(mail);
+
+  let occupied = false, why = '';
+  if (isPOBox) { why = 'owner mails to a PO box'; }
+  else {
+    const sameNum = houseNo(situs) && houseNo(situs) === houseNo(mail);
+    const sn = norm(situs).replace(/^\d+\s*/, ''), mn = norm(mail).replace(/^\d+\s*/, '');
+    const sameStreet = sn && mn && (sn === mn || sn.startsWith(mn) || mn.startsWith(sn));
+    occupied = Boolean(sameNum && sameStreet);
+    why = occupied ? 'owner lives here'
+      : norm(a.ownAddCty) === norm(a.sitAddCty) ? 'owner is local but lives elsewhere'
+      : `owner is in ${(a.ownAddCty || a.ownAddStt || 'another area').trim()}`;
+  }
+
+  const m = situs.match(/^\s*(\d+)\s+(.*)$/);
+  rows.push({
+    knock: occupied, num: m ? m[1] : '', street: m ? m[2].trim() : situs,
+    /* ⚑ Teller populates sitAddCty on 0% of rows; Douglas on 100%. Without a
+       fallback every Teller sheet came out headed "Unknown". Falls back to the
+       place asked for, then to the county. */
+    city: (a.sitAddCty || '').trim() || REGION_FALLBACK,
+    /* the statewide layer right-pads zips to nine digits ("801040000") */
+    zip: String(a.sitAddZip || '').replace(/\D/g, '').slice(0, 5),
+    acres: k.acres, owner: [a.owner, a.owner2].filter(Boolean).join(' / ').trim(),
+    mail: [mail, a.ownAddCty, a.ownAddStt, a.ownAddZip].filter(Boolean).join(', '),
+    why, use: (a.landUseDsc || '').trim(), parcel: a.parcel_id ?? '',
+    lat: k.c[1], lon: k.c[0],
+  });
+}
+
+rows.sort((x, y) => {
+  const s = (x.street || 'ZZZ').localeCompare(y.street || 'ZZZ');
+  return s !== 0 ? s : (Number(x.num) || 0) - (Number(y.num) || 0);
+});
+
+/* ---- out — identical columns to build-walklist.mjs ----------------------- */
+const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+const csv = [
+  ['knock', 'address', 'city', 'zip', 'acres', 'owner', 'owner_mailing', 'why', 'parcel', 'lat', 'lon'].join(','),
+  ...rows.map((r) => [
+    r.knock ? 'YES' : 'no — post',
+    `${r.num} ${r.street}`.trim(), r.city, r.zip, r.acres.toFixed(2),
+    r.owner, r.mail, r.why, r.parcel, r.lat.toFixed(6), r.lon.toFixed(6),
+  ].map(esc).join(',')),
+].join('\n');
+writeFileSync(join(HERE, outFile), csv, 'utf8');
+
+const knock = rows.filter((r) => r.knock);
+const avg = knock.length ? (knock.reduce((s, r) => s + r.acres, 0) / knock.length).toFixed(2) : '—';
+console.log(`
+  ── result ─────────────────────────────────
+  doors to knock      ${String(knock.length).padStart(5)}   avg ${avg} acres
+  post instead        ${String(rows.length - knock.length).padStart(5)}   owner not resident
+  ───────────────────────────────────────────
+  streets covered     ${new Set(knock.map((r) => r.street)).size}
+
+  written: ${outFile}
+  next:    node build-walklist-pdf.mjs ${outFile}`);

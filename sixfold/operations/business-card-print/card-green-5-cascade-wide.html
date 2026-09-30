@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sixfold business card — 5 — Cascade, wide</title>
+<style>
+  /* 3.75 x 2.25 in = a 3.5 x 2 in card plus 0.125 in bleed on every side.
+     Two pages: 1 front, 2 back. Render at scale 1 — see tools/html-to-pdf.mjs. */
+  @page { size: 3.75in 2.25in; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Cascadia Mono", Consolas, "SFMono-Regular", monospace; }
+
+  .page { position: relative; width: 3.75in; height: 2.25in; background: linear-gradient(to top, #2b6e48, #103c2b);
+    overflow: hidden; page-break-after: always; break-after: page;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .pad { position: absolute; inset: 0.345in; }
+
+  @media screen {
+    body { background: #4A5550; padding: 24px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .page { box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+    .page::after { content: ""; position: absolute; inset: 0.125in;
+      border: 0.4pt dashed rgba(255,255,255,.35); pointer-events: none; }
+  }
+
+  .wordmark { font-family: "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    font-size: 19pt; letter-spacing: -.3pt; line-height: 1; color: #EDE7DC; }
+  .nm  { font-family: "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    font-size: 12pt; line-height: 1.1; color: #EDE7DC; }
+  .ti  { font-size: 5.8pt; letter-spacing: 1.4pt; text-transform: uppercase; color: #A7BE93; margin-top: 2pt; }
+  .dt  { font-size: 6.6pt; line-height: 1.85; color: #EDE7DC; }
+  .dt .web { color: #EDE7DC; }
+  .svc { font-size: 5.6pt; letter-spacing: 1.2pt; color: rgba(237,231,220,.74); }
+  .band { font-size: 5.4pt; letter-spacing: 3.2pt; color: #A7BE93; margin-top: 4pt; }
+  .co   { font-size: 5.2pt; letter-spacing: 3.6pt; color: rgba(237,231,220,.78); margin-top: 2.5pt; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 — FRONT -->
+<div class="page">
+  <div class="pad" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 116" width="76" height="88" role="img" aria-label="Sixfold mark, Ridge"><path fill="#EDE7DC" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84Z"/>
+  <path fill="#EDE7DC" fill-rule="evenodd" d="M9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5Z"/>
+  <path fill="#EDE7DC" d="M4 86L96 86L96 91L4 91Z"/><g fill="none" stroke="#EDE7DC" stroke-linecap="round" stroke-linejoin="round"><path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/><path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/><path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/><path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/><path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/><path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/><path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/><path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/><path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/><path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/></g></svg>
+    <div class="wordmark" style="margin-top:3pt">Sixfold</div>
+    <div class="band">LAWN, LAND &amp; FIRE</div>
+    <div class="co">COLORADO</div>
+  </div>
+</div>
+
+<!-- PAGE 2 — BACK -->
+<div class="page">
+  <div class="pad" style="display:flex;flex-direction:column;justify-content:space-between">
+    <div>
+      <div class="nm">Brandon Long</div>
+      <div class="ti">Owner</div>
+    </div>
+    <div class="dt">
+      (303) 915-1045<br>
+      Contact@SixfoldColorado.com<br>
+      <span class="web">SixfoldColorado.com</span>
+    </div>
+    <div class="svc">AERATION &middot; LAWN CARE &middot; LANDSCAPING &middot; FIRE</div>
+  </div>
+</div>
+
+</body>
+</html>

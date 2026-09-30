@@ -104,3 +104,327 @@ node tools/html-to-pdf.mjs FedEx
 The PNGs come from a CDP screenshot at deviceScaleFactor 3.125 (96 → 300 dpi) in print
 media — `build-png.mjs` in this folder, run with the page URL and two output paths. **`scale: 1` on the JOBS entry must stay** — the tool defaults to 0.8, which
 would print the card at 80% inside a full page.
+
+---
+
+# Green ground study — 2026-09-29
+
+**Built because the crew picked `card-green-pine` and then asked to go greener.** A
+colleague wanted a darker shade, with the worry that it would "fade into blackness".
+
+`node build-card-greens.mjs` → six `card-green-*.html` · `node build-greens-proof.mjs`
+→ `card-greens-proof.png` (all six, front and back, one sheet). **No PDFs yet — those get
+built for the one that wins, not for six that don't.**
+
+## ⚑ The finding: the current card is already black, so "darker" has nowhere to go
+
+Pine `#0E1512` is **HSL lightness 6.9% at 20% saturation**. It is a black with a green
+cast, not a dark green. The way to make the card read *green* is to move **up** in
+lightness while holding chroma, not down. That inverts the request — and it is why the
+study exists rather than a single darker swatch.
+
+| | Ground | HSL-L | After CMYK | Verdict |
+|---|---|---|---|---|
+| **0** Pine (current) | `#0E1512` | 6.9% | 2.9% | **reads black** |
+| **1** Deep | `#174a32` | 19.0% | 15.0% | borderline — the darkest defensible flat green |
+| **2** Mid | `#205b3d` | 24.1% | 20.1% | reads green |
+| **3** Open | `#2b6e4a` | 30.0% | 26.0% | reads green |
+| **4** Cascade | `#113b29` → `#246140` | 14.9 → 26.1% | 10.9 → 22.1% | dark at the top, green at the foot |
+| **5** Cascade, wide | `#103c2b` → `#2b6e48` | 14.9 → 30.0% | 10.9 → 26.0% | as above, longer travel |
+
+**Two different floors, deliberately.** A *flat* ground must clear **L 15%** after the CMYK
+allowance, because it has to hold the whole card. A *gradient's top* may go to **L 10%** —
+it is a narrow band read against the lighter green below it, so the eye takes it as deep
+green where a whole card at that value would just look black.
+
+## ⚑ The CMYK allowance is an assumption, not a measurement
+
+**4 points of lightness. Nobody has run a proof of these greens.** The existing warning in
+this README ("comes back duller and browner") is qualitative and carries no number, so the
+figure is a deliberately conservative guess. **If FedEx returns a proof, measure it and
+correct `SHIFT` in `build-card-greens.mjs`.** Every verdict above moves with it.
+
+## What changed on the lighter grounds, and why
+
+Sage `#A7BE93` loses separation as the ground lightens. So on **3** and **5** the mark and
+the URL go **Bone**, not Sage. That is a contrast fix, not a different design — but it does
+change the card's character from two-tone green to cream-on-green. Worth seeing before
+choosing. The service line's alpha was also lifted on those two (.62 → .74) to clear 3:1.
+
+Every face was measured on the **lightest** part of its ground — worst case — and all six
+now clear 4.5:1 for body type and 3:1 for the small service line. The script prints the
+table on every run.
+
+## Before choosing a gradient, two practical costs
+
+1. **Gradients band on digital presses.** A long smooth travel across a small card is the
+   most likely thing here to show stepping. **5** is the biggest risk of the six.
+2. **A flat colour is far easier to hold across a print family.** There are already vehicle
+   magnets, door flyers and a social kit in these greens. Matching a flat hex across
+   different vendors and substrates is routine; matching a gradient is not.
+
+**Recommendation if one is wanted: 2 (Mid).** It is unmistakably green at arm's length,
+it clears every contrast threshold with room, it keeps the Sage/Bone two-tone the rest of
+the brand uses, and it is a flat colour so everything else can follow it. **4 (Cascade)** is
+the one to look at if the crew wants the card to be distinctive rather than safe.
+
+---
+
+# Mark colour study — 2026-09-29
+
+**Same question, other half of the card.** Matthew: leave the ground black, put the shades
+into the trees instead.
+
+`node build-card-marks.mjs` → six `card-mark-*.html` · `node build-marks-proof.mjs`
+→ `card-marks-proof.png`. **No PDFs until one is picked.**
+
+| | What changes | Weakest element vs Pine |
+|---|---|---|
+| **0** Sage throughout | the current card, as the control | Sage 9.19:1 |
+| **1** Two-tone | ridge Sage, conifer + ground bar + roots Moss | Moss 6.51:1 |
+| **2** Stepped, lighter up | back mass Fern → middle Moss → tall peak Mist | Fern 4.92:1 |
+| **3** Stepped, darker up | back mass Mist → middle Moss → tall peak Turf | Turf 3.54:1 |
+| **4** Gradient, dark at top | Turf at the summit falling to Mist at the base | Turf 3.54:1 |
+| **5** Gradient, light at top | Mist at the summit falling to Fern at the base | Fern 4.92:1 |
+
+Two shades were added to give a three-stop ramp without reusing a brand value twice:
+**Fern `#6E8C61`** (between Moss and Turf) and **Mist `#C3D4B4`** (a step lighter than Sage).
+
+## The visibility question, measured — and the warning that did not survive it
+
+A shape on a black ground exists only by being lighter than it, so "darker as it goes up"
+is working against the ground. **I expected the tall peak to disappear in 3 and 4. It does
+not** — Turf lands at **3.54:1** against Pine, clear of the 3:1 floor for a graphical
+element. It is the weakest thing on either card, but it reads.
+
+What actually happens in **3** is not that the peak goes dark, it is that it goes
+**saturated** — Turf is far more chromatic than Mist, so the tall peak reads as a strong
+green against pale distant ones. That is atmospheric perspective and it is correct: the
+far masses are hazy, the near one is solid.
+
+**2** does the opposite and is also true to a real ridge — dark rock below, light on the
+summit.
+
+| Shade | Hex | vs Pine |
+|---|---|---|
+| Mist | `#C3D4B4` | 11.81:1 |
+| Sage | `#A7BE93` | 9.19:1 |
+| Moss | `#8AA07A` | 6.51:1 |
+| Fern | `#6E8C61` | 4.92:1 |
+| Turf | `#2F7A4F` | 3.54:1 |
+
+**Same unmeasured caveat as the ground study:** these are screen values. No CMYK proof of
+these greens exists, so assume the press takes a little off each one.
+
+## ⚑ The ridge is one compound path, and it was split to do this
+
+`build-card-marks.mjs` splits the ridge `d` into three masses so the peaks can take
+separate fills. **That split was verified before use** — rendered against the unsplit
+original at 600px, **41 bytes of 1,382,400 differ, max delta 2**: edge antialiasing, no
+fill-rule change. **If the geometry in `build-mark-flat.mjs` changes, re-run that check.**
+
+Subpath map, in case it is needed again: indices **0–4** are the left mass and its slivers,
+**5** the middle peak, **6** the tall one.
+
+## Choosing between the two studies
+
+They are independent and can be combined — a green ground from the first study with a
+stepped mark from this one. **But not both at full strength.** A graded mark on a graded
+ground is two gradients arguing on a 3.5 × 2 in card, and the mark is the thing that has to
+survive being shrunk onto a magnet, a shirt and a door flyer.
+
+**If the card stays black, 2 or 3 are the ones worth printing.** 3 is the more distinctive
+and the more literal answer to the ask; 2 is the safer one. **1** is there for anyone who
+wants the change to be barely perceptible.
+
+---
+
+# Cascading mark — 2026-09-29
+
+**The one Matthew actually described:** one tree starts much lighter and it gets
+progressively darker as the ridge climbs.
+
+`node build-card-cascade.mjs` → four `card-casc-*.html` · `node build-cascade-proof.mjs`
+→ `card-cascade-proof.png`. Ground stays Pine. **No PDFs until one is picked.**
+
+## ⚑ The mark has FOUR masses, not three — which is why the last study missed
+
+`build-card-marks.mjs` stepped only the ridge and left the conifer at a fixed colour, so it
+never read as a cascade. In height order, left to right:
+
+| | Mass | Apex |
+|---|---|---|
+| 1 | the conifer — the fir at the front | shortest |
+| 2 | the left mass | y=38 |
+| 3 | the middle peak | y=26 |
+| 4 | the tall peak | y=14 |
+
+**The conifer is the "1 tree" that starts light**, and the ramp has four stops.
+
+| | Ramp (light → dark) | Darkest |
+|---|---|---|
+| **1** Brand shades | Mist 11.8 → Sage 9.2 → Moss 6.5 → Turf 3.5 | 3.54:1 |
+| **2** Wide start | Frost 14.5 → Sage 9.2 → Fern 4.9 → Turf 3.5 | 3.54:1 |
+| **3** Gradient, along the climb | Frost → Turf, low-left to high-right | 3.54:1 |
+| **4** Gradient, bottom to top | Frost → Turf, vertical | 3.54:1 |
+
+**Frost `#DCE7D2`** was added for the "much lighter" start — a step above Mist.
+
+## Why the ramp stops at Turf
+
+On a Pine ground a shape exists only by being lighter than it. **Turf `#2F7A4F` is 3.54:1
+against `#0E1512`** — clear of the 3:1 floor for a graphical mass, and the darkest brand
+green that is. Past it the tall peak starts dissolving into the card. The ramp ends there
+on all four.
+
+## ⚑ Roots never join the ramp
+
+They are **0.15–0.32 mm hairlines** at card size and the first thing a press drops, so they
+need the *most* contrast on the card, not the least. They sit at the lightest stop on all
+four variants, and the script holds them to a **5:1** floor rather than 3:1.
+
+## ⚑ userSpaceOnUse on the gradient variants, deliberately
+
+With SVG's default `objectBoundingBox`, every path gets its own copy of the ramp — the
+conifer would run light-to-dark all by itself and the cascade would break into four
+separate fades. `gradientUnits="userSpaceOnUse"` makes one ramp span the whole mark.
+**Do not "tidy" it away.**
+
+## The practical difference between 1–2 and 3–4
+
+**The stepped versions are flat colours. The gradients are not.** Four flat greens can be
+screen-printed on a shirt, cut in vinyl for a vehicle magnet, or embroidered. A gradient
+can do none of those, and it is also the thing most likely to band on a small digital
+press. Given there are already vehicle magnets and a door flyer in this family, **stepped
+is the safer mark and gradient is the card-only one.**
+
+**1 and 2 are close at card size.** The visible difference is the third step — Moss in 1,
+the darker Fern in 2, which gives 2 a slightly stronger fall. **2 is the one to print** if
+the point is that the cascade is noticeable.
+
+---
+
+# ⚑ THE CHOSEN CARD — `Sixfold-Card-Cascade.pdf`, 2026-09-29
+
+**Crew picked `casc-2-wide`** from `card-cascade-proof.png` — the four-step cascade with the
+wide start, Frost → Sage → Fern → Turf, conifer lightest and the tall peak darkest. Built by
+`build-card-final.mjs` → `card-cascade-final.html` → `node ../../tools/html-to-pdf.mjs
+Sixfold-Card-Cascade`. **This is the file to give a printer.** The four older cards are the
+options it was chosen from, not alternatives to send.
+
+Verified from the PDF, not eyeballed: **2 pages, both 3.750 × 2.250 in.**
+
+## Front — the lockup grew, but not the way it looks
+
+Asked for: fill more of the empty space, without overwhelming the card. Two things had to
+happen, because **the old front stack already measured 1.525 in of the 1.56 in safe area** —
+there was no empty space to grow into, only apparent emptiness.
+
+1. **The mark's viewBox was cropped to its own ink.** The brand file is `0 0 100 116` but the
+   artwork only runs x 4–98, y 14–113 — roughly **12% of the box is empty sky above the tall
+   peak**, and the layout was paying for it. The card now uses `3.5 13 95 101`, half a unit of
+   slack past the root strokes. Same footprint, visibly bigger mark.
+   **⚑ Do not copy that viewBox onto anything expecting the brand geometry — it is a crop for
+   this card, not a change to the mark.**
+2. **The pad came in from 0.345 in to 0.30 in** — 0.175 in inside the trim, against FedEx's
+   rule of nothing important within 0.125 in. The four older cards sit at 0.22 in inside,
+   which is more conservative than asked for; reclaiming that band is what funded the growth.
+
+Wordmark 19 → 21 pt, band 5.4 → 6.2 pt, COLORADO 5.2 → 5.8 pt. Front stack now measures
+**1.622 in of the 1.65 in pad**.
+
+### ⚑ An SVG in a flex column gets silently squashed
+
+The first attempt used a 96 px mark. The stack overflowed, and because the `<svg>` is a flex
+item with the default `flex-shrink: 1`, **it compressed instead of overflowing** — the mark
+came out distorted at the right overall height, and nothing looked wrong until it was
+measured. `.pad > svg, .wordmark, .band, .co { flex: none; }` now prevents it. **Measure the
+mark's rendered height against its natural height after any layout change here.**
+
+## Back — the QR
+
+`sixfold-qr-brand-on-white.png`, on a Bone plate drawn as **padding outside the image**, never
+a crop. Contact block left, QR right, service line wrapped to two lines to clear the column.
+
+| | |
+|---|---|
+| Image placed at | **1.22 in / 31.0 mm** |
+| **Actual modules** | **24.9 mm** — the image is 80.5% modules, the rest is the 4-module quiet zone |
+| Bone plate | 33.8 mm square |
+
+**Sizing the image is not sizing the code.** `brand/qr/README.md` puts the hand-held floor at
+20 mm and the comfortable range at 25–30 mm; that is the *module* span, so the placed width
+has to be divided by 0.805. At 24.9 mm this lands at the bottom of the comfortable range.
+
+**Not re-decoded here, and it does not need to be** — the asset is unmodified, and the
+generator verified it at 1200 / 400 / 240 / 160 px. At 1.22 in and 300 dpi it prints at
+366 px, inside that range. **Re-run `build-qr.mjs` if the artwork is ever edited.**
+
+**The white ground is deliberate.** `brand/qr/README.md`: *"The code is never inverted"* —
+light modules on dark is the standard way to make a QR a meaningful share of phones refuse.
+`sixfold-qr-on-dark-tile.png` also exists, but its plate carries a 6.3-module quiet zone, so
+the same 24.9 mm of code would need a 1.37 in image. On-white plus a CSS plate is smaller.
+
+## ⚑ The QR does not point at the website
+
+It encodes **`https://linktr.ee/SixFoldColorado`** — built 2026-08-21, *before*
+sixfoldcolorado.com went live. As of that date the Linktree carried **exactly one link**, to
+a Nextdoor page, plus Linktree's own free-tier "Join SixFoldColorado" footer.
+
+So a card handed to a customer currently routes them through a middleman, past a sign-up
+button, to Nextdoor — when there is now a live aeration-led website of their own.
+
+**This is Matthew's call, not a build fix**, and it is the one thing on the card that should
+be settled before anything is ordered. Repointing it means re-running `build-qr.mjs`, which
+needs `qrcode` and `jsqr` installed **outside OneDrive** — neither is currently in the
+project. The caption on the card reads "SCAN FOR OUR PAGE" and works either way.
+
+## Audit — 2026-09-29, and the three things it changed
+
+Measured from the render and the PDF, not eyeballed. Scripts are throwaway; the numbers are
+here so they do not have to be re-derived.
+
+### Passed
+
+| Check | Result |
+|---|---|
+| PDF geometry | 2 pages, both **3.750 × 2.250 in** — 3.5 × 2 trim plus full bleed |
+| Trim clearance | nothing closer than **0.175 in** to the trim; FedEx's guard is 0.125 in |
+| Hairlines | finest root stroke **0.178 mm**, heaviest 0.379 mm. Up from 0.150 mm on the four older cards, because the bigger mark scales them. Digital-press floor is about 0.12 mm |
+| Type contrast | every piece of text **4.5:1 or better** on Pine; the wordmark and name are 15:1 |
+| Mark contrast | darkest stop (Turf) **3.54:1**, over the 3:1 floor for a graphical mass |
+| **QR, end to end** | **decoded back out of the finished card layout** at 300 dpi and at every reduction down to **80 px across the plate**. Returned `https://linktr.ee/SixFoldColorado` exactly |
+
+The QR check is the real one: rendered the back page at press resolution, cropped the plate
+out of the finished artwork, and decoded it with jsQR — not a check of the source asset, a
+check of what this card actually puts on paper.
+
+### ⚑ Fixed during the audit
+
+1. **Four pieces of reversed type were under 6 pt** — COLORADO 5.8, Owner 5.8, the service
+   line 5.6, the QR caption 5.0. **Light type on a dark ground fills in below about 6 pt**, and
+   this README already warned that texture breaks up 5–6 pt light-on-dark lettering. All are
+   now **6–6.2 pt**. The generous tracking on them helps too, but it does not excuse the size.
+2. **The contact block went 6.6 → 7 pt.** The phone and the email are the reason the card
+   exists; they were the third-smallest thing on it.
+3. **⚑ THE QR GROUND DID NOT MATCH ITS PLATE.** `sixfold-qr-brand-on-white.png` is on pure
+   `#FFFFFF`; the CSS plate behind it is Bone `#EDE7DC`. On screen that is nearly invisible.
+   In print it is **a white square inside a cream border** — a visible step. Switched to
+   `sixfold-qr-brand.png`, which is the same code on a Bone ground, and **re-ran the decode
+   after the swap** (still passes at every size). **Check ground colours match whenever a QR
+   is dropped onto a drawn plate.**
+
+### Still open — decisions, not defects
+
+- **The QR points at Linktree, not the website.** See the section above. Repointing is now
+  unblocked: `jsqr` and `qrcode` install cleanly into a scratch directory outside OneDrive,
+  which was the stated obstacle.
+- **"Owner" is still the placeholder title** flagged when the four cards were built. Confirm
+  with Brandon before ordering.
+- **Only Brandon has a card.** If Matthew hands cards out too, he needs his own — the
+  generator takes the name and title in one place, so it is a small job, not a redesign.
+- **Turf is the most saturated ink on the card** and will shift most in CMYK. Expect it duller
+  and browner; that is the press, not the file.
+- **Stock: smooth or matte, never linen or textured**, and matte or soft-touch coating if
+  offered. 6 pt reversed type on a textured dark stock is the one combination that will look
+  bad no matter how good the file is.

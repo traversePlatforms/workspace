@@ -36,6 +36,12 @@
 .sheet:first-of-type .money .m { padding: 4pt 8pt 4pt; }
 .sheet:first-of-type footer { padding-top: 4pt; }
 .sheet:first-of-type .disclaimer { font-size: 7pt; margin-top: 3pt; }
+/* Pen room. Measured 2026-09-30: _style.css sets .field .line to height 2pt,
+   which leaves 3.5mm between the label and the rule — not enough to write a date
+   in by hand. 9pt takes it to about 6mm. Scoped to this document on purpose:
+   _style.css governs nine other agreements that are proofed at their own page
+   counts, and raising it there would repaginate all of them. */
+.field .line { height: 9pt; }
 @media print { @page { margin: 0.45in 0.5in; } }
 </style>
 </head>
@@ -62,6 +68,23 @@
      Price boxes read "First payment / On completion", never "Deposit" — the packet
      rule, and it makes the three boxes the payment schedule rather than a deposit
      line the document never uses again.
+
+     DATED 2026-09-30: the job is booked for MONDAY 12 OCTOBER 2026, filled into section 6.
+     ⚑ LAST SAFE SIGNING DATE: WEDNESDAY 7 OCTOBER 2026, for a 12 October start.
+     Sign Thu 8 Oct and the deadline lands Tue 13 Oct, after the job. Under C.R.S. 5-3-405(3)
+     work done inside the cancellation window earns nothing if she cancels.
+
+     It is the SUNDAY exclusion that creates this, not Columbus Day. Re-checked 2026-09-30
+     three ways — federal holidays, Colorado state holidays (Cabrini Day, not Columbus, since
+     2020), and none at all — and 7 October is the answer under all three. Columbus Day only
+     makes a late signing worse. The section 6 hint still names it because whoever fills in the
+     deadline at signing has to exclude it.
+
+     ⚑ The whole cooling-off analysis assumes SIXFOLD SOLICITED THE SALE. C.R.S. 5-3-401 needs
+     a consumer CREDIT sale (two payments, no finance charge, arguably not one) and both it and
+     16 CFR 429 need the seller to have PERSONALLY SOLICITED. If Kara rang us, neither may
+     apply. Nobody recorded who made first contact. Treat it as covered regardless: the downside
+     of assuming it is not covered is a THREE-YEAR cancellation right under 5-3-403(3).
 
      ⚑ scale: 1 in tools/html-to-pdf.mjs is NOT optional. .legal10 and .noticeform
      are 10.5pt against a 10pt statutory floor; the tool's default 0.8 prints them
@@ -103,7 +126,7 @@
     <p class="whatitis"><b>Service agreement</b>Page 1 of 5<br>Agreement no. <span class="fi"></span></p>
   </div>
 
-  <p class="sheetnum">Core aeration, overseeding and feeding across the turf</p>
+  <p class="sheetnum">Core aeration, overseeding and feeding across the turf &middot; scheduled for Monday 12 October 2026</p>
   <h1 class="headline">Service Agreement</h1>
   <p class="standfirst"><strong>Date of this transaction:</strong> <span class="fi w2"></span> &nbsp; This is the date you sign. Your three business days to cancel run from it — see section 7.</p>
 
@@ -111,34 +134,29 @@
   <p><strong>Contractor:</strong> Sixfold, LLC · 17890 Sierra Way, Monument, Colorado 80132 · (303) 915-1045 · Contact@SixfoldColorado.com</p>
   <div class="grid-form">
     <div class="field half"><label>Property owner — full name(s)</label><div class="line" style="height:auto;padding-bottom:1.5pt">Kara Rosenstrauch</div></div>
-    <div class="field half"><label>Phone</label><div class="line"></div></div>
+    <div class="field half"><label>Phone</label><div class="line" style="height:auto;padding-bottom:1.5pt">(719) 306-1031</div></div>
     <div class="field wide"><label>Address of the property where the work will be done</label><div class="line" style="height:auto;padding-bottom:1.5pt">3846 Deboodt Ct</div></div>
     <div class="field half"><label>City, state, ZIP</label><div class="line" style="height:auto;padding-bottom:1.5pt">Colorado Springs, CO</div></div>
-    <div class="field half"><label>Email</label><div class="line"></div></div>
+    <div class="field half"><label>Email</label><div class="line" style="height:auto;padding-bottom:1.5pt">drkara@msn.com</div></div>
     <div class="field wide"><label>Mailing address, if different from the property</label><div class="line"></div></div>
   </div>
 
   <h2 class="sec">2 · The work</h2>
   <div class="grid-form" style="margin-top:6pt">
     <div class="field wide"><label>Exactly what is being done, and where on the property</label>
-      <p style="margin:4pt 0 0">Two crew on site. The work comprises the following, carried out in whatever order conditions on the day allow: (1)&nbsp;<strong>core aeration</strong> of the open turf across the property &mdash; a machine carrying hollow tines that pushes down and pulls plugs of soil and thatch out of the ground, worked in a pattern that covers the whole area; (2)&nbsp;<strong>overseeding</strong> the aerated ground with <strong>200&nbsp;lb of grass seed</strong>, supplied by Sixfold; (3)&nbsp;applying <strong>150&nbsp;lb of fertilizer</strong>, supplied by Sixfold, across the same ground; (4)&nbsp;blowing the drive, walks and any hard surface clear of seed and fertilizer that lands on them; (5)&nbsp;walking the finished job with the owner before leaving, and putting right anything in this section not completed as described, while the crew and machines are still on site. An itemised invoice and a written work record are supplied on completion. <strong>The plugs the aerator pulls stay on the surface</strong> &mdash; see section&nbsp;4. <strong>Location:</strong> the open turf areas of the property walked and agreed at the site walk.</p>
+      <p style="margin:4pt 0 0">Two crew on site. The work comprises the following, carried out in whatever order conditions on the day allow: (1)&nbsp;<strong>core aeration</strong> of the open turf across the property &mdash; a machine carrying hollow tines that pushes down and pulls plugs of soil and thatch out of the ground, worked in a pattern that covers the whole area; (2)&nbsp;<strong>overseeding</strong> the aerated ground with <strong>200&nbsp;lb of grass seed</strong>, supplied by Sixfold; (3)&nbsp;applying <strong>150&nbsp;lb of fertilizer</strong>, supplied by Sixfold, across the same ground; (4)&nbsp;blowing the drive, walks and any hard surface clear of seed and fertilizer that lands on them; (5)&nbsp;<strong>watering the treated ground in on the day</strong>, within the days and hours the property’s water provider allows; (6)&nbsp;walking the finished job with the owner before leaving, and putting right anything in this section not done as described, while the crew and machines are still on site. An itemised invoice and a written work record are supplied on completion. <strong>The plugs the aerator pulls stay on the surface</strong> &mdash; see section&nbsp;4. <strong>Location:</strong> the open turf areas of the property walked and agreed at the site walk.</p>
     </div>
     <div class="field wide"><label>What Sixfold supplies, what is not applied, and how the area is fixed</label>
-      <p style="margin:4pt 0 0">The seed and the fertilizer are both supplied by Sixfold and included in the price at section&nbsp;5; the mix and the analysis used are written on the work record at completion. <strong>No pesticide, herbicide, weed killer or weed-and-feed product of any kind is applied under this agreement</strong> &mdash; see section&nbsp;3. The turf to be treated is walked and agreed with the owner before any work starts, and anything to be left alone &mdash; beds, new planting, ground being kept bare &mdash; is pointed out then, along with irrigation heads and invisible pet fencing under clause&nbsp;4. <strong>That walk, not an area written in advance, fixes the scope.</strong></p>
+      <p style="margin:4pt 0 0">The seed and the fertilizer are supplied by Sixfold and included in the price at section&nbsp;5; the mix and analysis used are written on the work record. <strong>No pesticide, herbicide, weed killer or weed-and-feed product of any kind is applied</strong> &mdash; see section&nbsp;3. The turf is walked and agreed with the owner before work starts, and anything to be left alone &mdash; beds, new planting, ground being kept bare &mdash; is pointed out then, with irrigation heads and invisible pet fencing under clause&nbsp;4. <strong>That walk, not an area written in advance, fixes the scope.</strong></p>
     </div>
   </div>
 
   <h2 class="sec">3 · What is not included</h2>
-  <p>Unless written below, this does <strong>not</strong> cover watering of any kind, before or after seeding; any guarantee that seed germinates or that any particular thickness, colour or coverage results; weed control, herbicide, pesticide or weed-and-feed of any kind; dethatching, topdressing, soil testing, levelling or grading; repair or replacement of irrigation heads, lines or valves, or of invisible pet fencing; mowing; tree, shrub or bed work; hauling anything off the property; or permit fees.</p>
-  <p style="margin-top:5pt"><strong>Sixfold does not water.</strong> Overseeded ground needs water to germinate and keeping it watered is the owner's to do. <strong>Sixfold applies no weed control</strong> &mdash; fertilizer is not weed killer. If the ground is frozen, saturated or baked hard on the day, the crew says so and agrees a return date rather than run a machine that pulls no plug.</p>
-  <div class="grid-form">
-    <div class="field wide"><label>Added to the scope by agreement</label>
-      <p style="margin:4pt 0 0">Nothing added. Scope is as described in section&nbsp;2.</p>
-    </div>
-  </div>
+  <p>Unless written below, this does <strong>not</strong> cover watering after the day of the work, or any return visit to water; any guarantee that seed germinates or that any particular thickness, colour or coverage results; weed control, herbicide, pesticide or weed-and-feed of any kind; dethatching, topdressing, soil testing, levelling or grading; repair or replacement of irrigation heads, lines or valves, or of invisible pet fencing; mowing; tree, shrub or bed work; hauling anything off the property; or permit fees.</p>
+  <p style="margin-top:5pt"><strong>The ground is watered in on the day</strong> &mdash; see section&nbsp;2. <strong>After that, keeping it watered is the owner’s to do</strong>; Sixfold does not return to water, and overseeded ground needs regular water over the following weeks. <strong>Sixfold applies no weed control</strong> &mdash; fertilizer is not weed killer. If the ground is frozen, saturated or baked hard on the day, the crew says so and agrees a return date rather than run a machine that pulls no plug.</p>
 
   <h2 class="sec">4 · What happens to the plugs</h2>
-  <p>Core aeration drops the plugs it pulls onto the surface and <strong>they stay there</strong>. They break down back into the lawn over the following weeks and that is what they are for &mdash; they are not debris the crew has failed to clear. Nothing is hauled off the property under this agreement. If the owner would rather the plugs were collected and taken away, that is a separate price agreed in writing beforehand, under clause&nbsp;9.</p>
+  <p>Core aeration drops the plugs it pulls onto the surface and <strong>they stay there</strong>. They break down back into the lawn over the following weeks and that is what they are for &mdash; not debris the crew has failed to clear. Nothing is hauled off the property. If the owner would rather they were collected and taken away, that is a separate price agreed in writing beforehand, under clause&nbsp;9.</p>
 
   <h2 class="sec">5 · Price</h2>
   <div class="money">
@@ -146,7 +164,7 @@
     <div class="m"><span>First payment, on or before day one</span><div class="amt">$&nbsp;550.00</div></div>
     <div class="m"><span>On completion</span><div class="amt">$&nbsp;550.00</div></div>
   </div>
-  <p style="margin-top:6pt">This is the whole price for the work in section&nbsp;2, and it includes the seed, the fertilizer and the machine. Travel is not billed. Nothing further is owed unless the owner signs a written change order under clause&nbsp;9. <strong>Payment schedule:</strong> the first $550.00 is due on or before the first day of work and may be paid by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>; the remaining $550.00 is due on completion of the work in section&nbsp;2. <strong>If this agreement is cancelled under section&nbsp;7, every payment made is returned in full within ten business days.</strong></p>
+  <p style="margin-top:6pt">This is the whole price for the work in section&nbsp;2, and it includes the seed, the fertilizer and the machine. Travel is not billed. Nothing further is owed unless the owner signs a written change order under clause&nbsp;9. <strong>Payment schedule:</strong> the first $550.00 is due on or before the first day of work, by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>; the remaining $550.00 on completion. <strong>The first payment books the date</strong> &mdash; see clause&nbsp;10. <strong>If this agreement is cancelled under section&nbsp;7, every payment made is returned in full within ten business days.</strong></p>
 
   <footer>
     <div class="contact">
@@ -192,19 +210,19 @@
 
   <h2 class="sec">6 · Dates</h2>
   <div class="grid-form">
-    <div class="field"><label>Cancellation period ends (midnight)</label><div class="line"></div><p class="hint">Third business day after signing. A business day is any day except Sunday and federal holidays; Saturday counts.</p></div>
-    <div class="field"><label>Work begins on or after</label><div class="line"></div><p class="hint">On or after the cancellation deadline, unless the owner asks in writing to start sooner.</p></div>
-    <div class="field"><label>Estimated completion</label><div class="line"></div><p class="hint">About one day on site. There is no return visit under this agreement.</p></div>
+    <div class="field"><label>Cancellation period ends (midnight)</label><div class="line"></div><p class="hint">Third business day after signing. A business day is any day except Sunday and federal holidays; Saturday counts. <strong>Monday 12 October 2026 is Columbus Day, a federal holiday, and does not count.</strong></p></div>
+    <div class="field"><label>Work begins on or after</label><div class="line" style="height:auto;padding-bottom:1.5pt">Monday, October 12, 2026</div><p class="hint">On or after the cancellation deadline, unless the owner asks in writing to start sooner. <strong>For a 12 October start, this agreement must be signed on or before Wednesday 7 October 2026.</strong></p></div>
+    <div class="field"><label>Estimated completion</label><div class="line" style="height:auto;padding-bottom:1.5pt">Monday, October 12, 2026</div><p class="hint">One day on site. There is no return visit under this agreement.</p></div>
   </div>
-  <p>Dates are estimates. Weather, ground conditions and fire restrictions move them, and Sixfold will say so when they move.</p>
+  <p>Dates are estimates. Weather, ground conditions and fire restrictions move them, and a representative from Sixfold will contact you if a date needs to change.</p>
 
   <h2 class="sec">Terms</h2>
   <ol class="clauses" style="margin-top:6pt">
-    <li><b class="h">What Sixfold gives you with the job, whether or not you ask</b>
+    <li><b class="h">What Sixfold gives you with the job</b>
       A written scope of exactly what was done and where, and an itemised invoice.</li>
 
     <li><b class="h">What this work does and does not do</b>
-      This is turf work &mdash; aeration, overseeding and feeding. <strong>It is not a defensible-space or wildfire mitigation treatment and it makes no difference to how a property behaves in a wildfire.</strong> It also <strong>does not guarantee that seed germinates, that the lawn thickens, or that any particular colour or coverage results.</strong> Those depend on water, weather and soil, and Sixfold controls none of them.</li>
+      This is turf work &mdash; aeration, overseeding and feeding. <strong>It is not a defensible-space or wildfire mitigation treatment.</strong> How the seed comes in depends on water, weather and soil in the weeks after the visit.</li>
 
     <li><b class="h">You confirm you can authorise the work</b>
       By signing, you confirm you are the owner of record of the property, or that you have the owner's authority to have this work done, and that no part of the area to be worked is on land belonging to someone else.</li>
@@ -213,7 +231,7 @@
       You will identify the property boundaries. Sixfold will request public utility locates through Colorado 811 before any stump grinding or ground disturbance. <strong>Private and unmarked lines are yours to point out</strong> — irrigation, septic tanks and leach fields, wells, invisible pet fencing, low-voltage lighting, buried propane, and anything else not on a public locate. Sixfold is not responsible for damage to a line it was not told about and that a public locate did not mark.</li>
 
     <li><b class="h">Clearing the way</b>
-      Before the crew arrives, please move vehicles, secure pets and livestock, and keep people out of the work area while saws are running.</li>
+      Before the crew arrives, please move vehicles, secure pets and livestock, and keep people out of the work area while machines are running. <strong>Please water the lawn a day or two before the visit</strong> &mdash; aeration pulls a proper plug from moist ground and very little from ground that is dry and hard. Keep to the watering days and hours your water provider allows.</li>
 
     <li><b class="h">HOA rules and permits</b>
       Where a covenant, HOA architectural rule, or local permit applies to removing trees, obtaining that approval is the owner's responsibility unless section 3 says otherwise in writing.</li>
@@ -275,10 +293,10 @@
       Hidden rot, a hazard lean, a hornet nest, a stump on a boulder — if a condition appears that changes the work, the crew stops and tells you before continuing.</li>
 
     <li><b class="h">Changes to the work</b>
-      <strong>Any change to the scope or the price has to be written down and signed by both of us before that work is done.</strong> A verbal agreement to do extra work does not create a charge you owe.</li>
+      <strong>Any change to the scope or the price has to be written down and signed by both of us before that work is done.</strong></li>
 
     <li><b class="h">Paying</b>
-      The first $550.00 is due on or before the first day of work and may be paid by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>. The remaining $550.00 is due when the work described in section 2 is complete. Every payment is refundable in full, within ten business days, if you cancel under section 7 — including any payment made before the cancellation period has run.</li>
+      The first $550.00 is due on or before the first day of work and may be paid by electronic transfer, cash, or check made payable to <strong>Sixfold, LLC</strong>. The remaining $550.00 is due when the work described in section 2 is complete. <strong>The first payment books the date.</strong> Once it is paid, Monday 12 October 2026 is held for this job and no other work is booked into it. <strong>That does not affect your right to cancel</strong> — every payment is refundable in full, within ten business days, if you cancel under section 7, including any payment made before the cancellation period has run.</li>
 
     <li><b class="h">Damage</b>
       Sixfold is responsible for damage its crew causes by negligence in doing this work. Tell us within <strong>14 days</strong> of completion so we can look at it while the evidence is fresh. Sixfold is not responsible for pre-existing conditions, for the access marking described in clause 7, or for damage arising from a line or structure that was not disclosed under clause 4.</li>

@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold — Water Restrictions 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   Sixfold — Fire-Mitigation Funding Directory
+   Dark-first (house register); light print + light-OS register.
+   Palette: Pine Black / Timber / Bone / Ember / Moss.
+   ============================================================ */
+
+:root {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --ground:    var(--pine);
+  --surface:   var(--timber);
+  --surface-2: var(--timber-2);
+  --ink:       var(--bone);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+  --measure: 70ch;
+  --pad: clamp(1.1rem, 4vw, 2.6rem);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pine:      #F3EFE6;
+    --pine-2:    #EEE9DD;
+    --timber:    #FBF8F2;
+    --timber-2:  #F4EFE4;
+    --bone:      #1B211E;
+    --bark:      #5E6B60;
+    --ember:     #BE4E1C;
+    --ember-ink: #B6480F;
+    --moss:      #5C7350;
+    --moss-ink:  #4F6644;
+    --rule:      rgba(20, 30, 25, 0.14);
+    --rule-2:    rgba(20, 30, 25, 0.26);
+    --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+  }
+}
+
+:root[data-theme="light"] {
+  --pine:      #F3EFE6;
+  --pine-2:    #EEE9DD;
+  --timber:    #FBF8F2;
+  --timber-2:  #F4EFE4;
+  --bone:      #1B211E;
+  --bark:      #5E6B60;
+  --ember:     #BE4E1C;
+  --ember-ink: #B6480F;
+  --moss:      #5C7350;
+  --moss-ink:  #4F6644;
+  --rule:      rgba(20, 30, 25, 0.14);
+  --rule-2:    rgba(20, 30, 25, 0.26);
+  --shadow:    0 1px 0 rgba(255,255,255,0.6), 0 16px 34px -26px rgba(30,20,10,0.35);
+}
+
+:root[data-theme="dark"] {
+  --pine:      #0E1512;
+  --pine-2:    #131C18;
+  --timber:    #1F2A25;
+  --timber-2:  #26332C;
+  --bone:      #EDE7DC;
+  --bark:      #97A499;
+  --ember:     #E4703A;
+  --ember-ink: #F0824E;
+  --moss:      #8AA07A;
+  --moss-ink:  #9DB78C;
+  --rule:      rgba(237, 231, 220, 0.14);
+  --rule-2:    rgba(237, 231, 220, 0.30);
+  --shadow:    0 1px 0 rgba(0,0,0,0.4), 0 18px 40px -24px rgba(0,0,0,0.7);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap { max-width: 62rem; margin: 0 auto; padding: clamp(1.5rem, 5vw, 4rem) var(--pad) 5rem; }
+
+h1, h2, h3, h4 {
+  font-family: "Bitter", Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  line-height: 1.18;
+  text-wrap: balance;
+  color: var(--ink);
+}
+h1 { font-size: clamp(2rem, 6vw, 3.1rem); font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.5rem; }
+h2 { font-size: clamp(1.4rem, 3.4vw, 1.9rem); margin: 0; letter-spacing: -0.005em; }
+h3 { font-size: 1.16rem; font-weight: 700; margin: 2rem 0 0.4rem; color: var(--ink); }
+h4 { font-size: 1rem; font-weight: 700; margin: 1.4rem 0 0.3rem; }
+
+p { margin: 0 0 1rem; max-width: var(--measure); }
+strong { font-weight: 600; }
+em { font-style: italic; }
+ul, ol { max-width: var(--measure); }
+li { margin-bottom: 0.35rem; }
+
+a {
+  color: var(--ember-ink);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  word-break: break-word;
+}
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 2px solid var(--ember-ink); outline-offset: 2px; border-radius: 2px; }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  margin: 0 0 0.6rem;
+}
+
+/* masthead */
+.masthead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1rem, 4vw, 2rem);
+  align-items: start;
+  padding-bottom: 1.8rem;
+  border-bottom: 2px solid var(--rule-2);
+}
+.mark { width: clamp(52px, 12vw, 78px); height: auto; color: var(--ember); flex: none; }
+.masthead .lede { font-size: clamp(1rem, 2.4vw, 1.15rem); color: var(--bark); max-width: 48ch; margin: 0.4rem 0 0; }
+.meta {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--bark);
+}
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* callout */
+.callout {
+  margin: 2rem 0;
+  padding: 1.2rem 1.3rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ember);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.callout > :last-child { margin-bottom: 0; }
+.callout.moss { border-left-color: var(--moss); }
+.callout p { max-width: 64ch; }
+.callout .eyebrow { color: var(--ember-ink); }
+.callout.moss .eyebrow { color: var(--moss-ink); }
+
+/* sections */
+section { margin-top: 3.2rem; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.tag {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ember-ink);
+  flex: none;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scope { color: var(--bark); font-size: 0.95rem; margin: 0.5rem 0 1.1rem; max-width: var(--measure); }
+
+/* program card */
+.prog {
+  margin: 1.3rem 0;
+  padding: 1.15rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+}
+.prog h3 { margin-top: 0; }
+.prog .who {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bark);
+  margin: 0 0 0.7rem;
+}
+.prog p { max-width: none; }
+.prog dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0.7rem 0 0;
+  font-size: 0.92rem;
+}
+.prog dt {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--moss-ink);
+  padding-top: 0.18rem;
+}
+.prog dd { margin: 0; }
+.prog .sixfold {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--rule-2);
+  font-size: 0.92rem;
+}
+.prog .sixfold b {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ember-ink);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+/* tables */
+.twrap {
+  overflow-x: auto;
+  margin: 1.1rem 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 46rem; }
+thead th {
+  text-align: left;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--bark);
+  background: var(--surface);
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--rule-2);
+  position: sticky;
+  top: 0;
+}
+tbody td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface) 45%, transparent); }
+td .prog-name { font-weight: 600; color: var(--ink); display: block; }
+td.amt {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+}
+
+/* badges + pills */
+.badge {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.42rem;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+.badge.t1 { color: var(--moss-ink); }
+.badge.t2 { color: var(--ember-ink); }
+.badge.t3 { color: #C9962F; }
+.badge.t4 { color: var(--bark); }
+:root[data-theme="light"] .badge.t3, :root:not([data-theme="dark"]) .badge.t3 { color: #9A6B12; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .badge.t3 { color: #9A6B12; } }
+
+.pill {
+  display: inline-block;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.14rem 0.44rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.owner { color: var(--moss-ink); border: 1px solid var(--moss); }
+.pill.contractor { color: var(--ember-ink); border: 1px solid var(--ember); }
+.pill.entity { color: #C9962F; border: 1px solid currentColor; }
+
+.bottom-line {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  max-width: none;
+}
+.bottom-line b {
+  color: var(--moss-ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.fc h3 { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ember-ink); }
+.fc ul { padding-left: 1.1rem; max-width: var(--measure); }
+.fc li { margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+.sources { font-size: 0.82rem; color: var(--bark); }
+.sources li { margin-bottom: 0.35rem; word-break: break-word; }
+
+hr.div { border: none; border-top: 1px solid var(--rule-2); margin: 3rem 0 0; }
+
+.foot {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 2px solid var(--rule-2);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--bark);
+  letter-spacing: 0.03em;
+}
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ============================================================
+   PRINT — force the light register, Letter sheet, tight type.
+   ============================================================ */
+@page { size: Letter; margin: 15mm 16mm 16mm; }
+
+@media print {
+  :root, :root[data-theme="dark"] {
+    --pine: #ffffff; --pine-2: #f6f3ec; --timber: #f6f3ec; --timber-2: #efe9dd;
+    --bone: #17201b; --bark: #4c574d;
+    --ember: #A8410F; --ember-ink: #9c3c0c;
+    --moss: #4a6140; --moss-ink: #3f5537;
+    --rule: rgba(20,30,25,0.22); --rule-2: rgba(20,30,25,0.4);
+    --shadow: none;
+  }
+  body { font-size: 9.6pt; line-height: 1.44; background: #fff; }
+  .wrap { max-width: none; margin: 0; padding: 0; }
+  a { color: inherit; text-decoration: none; }
+  .masthead { border-bottom-width: 1.5pt; }
+  .mark { color: #A8410F; width: 58px; }
+  thead th { position: static; font-size: 6pt; }
+  table { font-size: 8pt; min-width: 0; }
+  .twrap { overflow: visible; break-inside: auto; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  h2, h3, h4, .section-head { break-after: avoid; }
+  section { break-inside: auto; margin-top: 1.5rem; }
+  .prog, .callout, .bottom-line { break-inside: avoid; }
+  .badge, .pill { border-color: #7c7c7c !important; color: #333 !important; }
+  .foot { break-before: avoid; }
+  p, li { orphans: 3; widows: 3; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+      <g fill="currentColor">
+        <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        <rect x="4" y="86" width="92" height="5"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Sixfold LLC &nbsp;·&nbsp; Internal — Crew &amp; Office</p>
+      <h1>Water Restrictions 2026</h1>
+      <p class="lede">What the crew needs to know before promising anything about a lawn. Organised by the towns we actually work, not by which agency wrote the rule. Bold lines are for the door. Sources are for the office.</p>
+      <div class="meta">
+        <span>Researched <b>2026-09-30</b></span>
+        <span>Base <b>Monument, CO</b></span>
+        <span>Draft 1 &mdash; <b>not customer-facing</b></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="callout">
+    <p class="eyebrow">⚑ This document goes stale</p>
+    <p><strong>Drought stages move without warning.</strong> Denver Water went from normal summer rules to a total lawn-watering ban in about five weeks. <strong>Nothing here should be quoted to a customer as current without checking the provider's own page that week.</strong> Every provider is linked at the foot of this page.</p>
+  </div>
+
+  <div class="callout moss">
+    <p class="eyebrow">The one thing that shapes everything else</p>
+    <p><strong>Aeration does not need water. Overseeding does.</strong></p>
+    <p>Core aeration is a machine pass. It works on moist ground, and a customer under the tightest restrictions in our territory can still legally water enough to soften a lawn before we arrive. <strong>Our lead service is not threatened by any of this.</strong></p>
+    <p>Overseeding is the exposed half. Seed needs light, frequent watering to germinate — more often than most providers now allow by sprinkler. <strong>A customer allowed to water two or three days a week is unlikely to get a good take from an overseed</strong>, and we do not water and do not guarantee germination.</p>
+    <p>So the risk is not legal. It is this: <strong>we take money for seed that does not come up, and the customer blames us.</strong> Everything below is about not walking into that.</p>
+  </div>
+
+  <div class="section-head"><h2>Who governs which town</h2></div>
+  <p>These are the providers for the towns on our walk lists. <strong>Find out which one the property is on before promising anything about watering</strong> — Monument alone has four.</p>
+
+  <div class="twrap">
+  <table>
+    <thead><tr><th>Town / area</th><th>Provider</th><th>Where it stood 2026-09-30</th></tr></thead>
+    <tbody>
+      <tr><td class="who"><b>Colorado Springs</b></td><td>Colorado Springs Utilities</td><td><b>3 days a week</b>, your choice of days. Before 10am / after 6pm <b>May 1 – Oct 15</b>. Fines from <b>$100</b>. Entered &ldquo;Water Shortage Preparation&rdquo; 18 March — a preliminary stage that <b>kept the normal rules</b> rather than adding to them.</td></tr>
+      <tr><td class="who"><b>Woodland Park</b></td><td>City of Woodland Park</td><td><b>⚑ Level 2 — two days a week</b>, assigned by address. No watering noon–6pm May–Sept. <b>The strictest in our territory.</b></td></tr>
+      <tr><td class="who"><b>Monument</b> (town water)</td><td>Town of Monument</td><td>Odd/even, 3 days a week, no Sunday. <b>Extended for 2026 only: 7 April – 30 October</b> (normally 15 May – 30 Sept).</td></tr>
+      <tr><td class="who"><b>Monument / Gleneagle</b></td><td>Woodmoor W&amp;SD</td><td>Odd/even 3 days a week, no Monday, nothing 10am–6pm. Programme ran <b>1 June – 30 September</b>, so it has just lapsed for the season. <b>No drought stage declared.</b></td></tr>
+      <tr><td class="who"><b>Castle Rock</b></td><td>Castle Rock Water</td><td>Went <b>Stage 2 mandatory in July</b>, back to <b>Stage 1 on 1 September</b>. Every third day, before 8am / after 8pm.</td></tr>
+      <tr><td class="who"><b>Larkspur, Sedalia, Franktown, Divide, Florissant, rural Monument / Black Forest</b></td><td><b>Mostly private wells</b></td><td>No municipal restriction — <b>and possibly no legal lawn watering at all.</b> See the next section.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>Denver's total ban does not apply to us.</strong> Denver Water banned all lawn watering and spray irrigation from 1 October, with $500 and $1,000 fines, and it runs until the board lifts it — possibly through spring 2027. <strong>No property we work is on Denver Water.</strong> It matters only because customers read the news and will ask, and because it shows where the region is heading.</p>
+
+  <div class="section-head"><h2>The one most people get wrong: wells</h2></div>
+
+  <div class="callout">
+    <p class="eyebrow">⚑ A well is not a loophole</p>
+    <p>Most private wells on parcels <strong>under 35 acres</strong> permitted since <strong>8 May 1972</strong> are <strong>household-use-only</strong>. That means water for inside the house. <strong>It cannot legally be used to irrigate a lawn or garden at all</strong> — not two days a week, not at night, not ever. This is a condition of the well permit and has nothing to do with drought.</p>
+    <p>Parcels of <strong>35 acres or more</strong> may carry full exempt-well uses, which can include <strong>up to one acre of lawn and garden</strong>.</p>
+  </div>
+
+  <p><strong>What this means at the door:</strong> on a rural property, <em>&ldquo;I'm on a well so restrictions don't apply to me&rdquo;</em> may be exactly backwards. <strong>Ask what the well permit allows before quoting an overseed.</strong> If the answer is household-use-only, the seed has no legal water, and we should be selling aeration, mowing or cleanup instead.</p>
+  <p class="scope">The permit is the owner's and so is the responsibility. But quoting an overseed to someone who cannot legally water it is a job that fails and a customer who is unhappy.</p>
+
+  <div class="section-head"><h2>The closing tool nobody else is using</h2></div>
+  <p><strong>Colorado Springs Utilities issues establishment permits</strong>, and most lawn outfits never mention them. It is the single most useful thing in this document for selling an overseed in the Springs.</p>
+  <ul>
+    <li>Allows watering <strong>more often than three days a week, and during normally banned daytime hours</strong></li>
+    <li><strong>42 days for seeding projects</strong> (28 days for sod, flowers, shrubs, trees)</li>
+    <li>Only needed for <strong>sprinklers</strong>. Drip, watering cans and hose-end with a shut-off nozzle are allowed any time regardless</li>
+    <li>Apply online, or in person at the Conservation and Environmental Center, 2855 Mesa Rd</li>
+    <li>Customer gets a printable permit and can pick up a yard sign</li>
+  </ul>
+
+  <div class="callout">
+    <p class="eyebrow">⚑ Read this before promising a customer they can get one</p>
+    <p>For <strong>sod or non-native grass seed</strong>, they must submit receipts for <strong>either</strong> <strong>4 cubic yards per 1,000 sq ft of approved soil amendment, mixed into the soil</strong>, or <strong>a soil test from a professional laboratory</strong>.</p>
+    <p>On a ¾-acre lawn the amendment option is about <strong>131 cubic yards</strong>. That does not happen on an aeration job. <strong>The soil test is the realistic route</strong>, and it is not something we currently include or price.</p>
+    <p><strong>For native grass there is no soil prep requirement at all</strong> — just a receipt showing the mix, which has to be on the utility's qualifying list. <strong>That makes seed choice a business decision, not just an agronomy one.</strong> A qualifying native mix turns the permit into a receipt. A non-native mix turns it into a soil test the customer has to go and buy.</p>
+  </div>
+
+  <h3>Can Sixfold get the permit itself?</h3>
+  <p><strong>Almost certainly not in our own name.</strong> The utility's wording is <em>&ldquo;any residential or commercial water customer.&rdquo;</em> At a customer's house the water customer is the customer — we have no account at that address and nothing to attach a permit to. <strong>The permit belongs to the property, not to the contractor.</strong></p>
+  <p>What we can realistically do is <strong>apply on their behalf, or walk them through it</strong> — which is the useful version anyway, because it costs us nothing and it is the part customers do not know about. <strong>Whether the utility formally allows a contractor to file for a customer is not confirmed.</strong> The state landscape trade association publishes a contractor-facing video on these permits, which suggests contractors handle them routinely, but the video could not be reviewed and the utility's own document says nothing either way.</p>
+  <p><strong>One call settles it: ESTP@csu.org, or the Conservation and Environmental Center, 2855 Mesa Rd.</strong></p>
+
+  <h3>Does it cost money?</h3>
+  <p><strong>No fee appears anywhere in the utility's own document.</strong> Both published copies of the establishment permit PDF were fetched and they are byte-identical — neither mentions a fee, a charge, or a cost.</p>
+  <p>A secondary site said <strong>$50</strong>. That figure is <strong>not corroborated by the utility</strong> and should not be repeated to a customer. Ask on the same phone call.</p>
+
+  <h3>⚑ It is not a licence, and it is not per county</h3>
+  <p>Three things that are easy to run together, and are not the same:</p>
+  <div class="twrap">
+  <table>
+    <thead><tr><th>Thing</th><th>What it is</th><th>Scope</th></tr></thead>
+    <tbody>
+      <tr><td class="who"><b>Establishment permit / irrigation exemption</b></td><td>A temporary watering allowance for <b>one property</b> while new planting takes</td><td><b>Per water provider</b>, tied to a service address</td></tr>
+      <tr><td class="who"><b>Contractor registration</b></td><td>A provider or town signing off on who may do the work</td><td>Per jurisdiction, where it exists at all</td></tr>
+      <tr><td class="who"><b>Trade licence</b></td><td>e.g. the Colorado Springs tree licence for trees 15 ft and over</td><td>Per jurisdiction. Separate question, already tracked</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>The unit is the water provider, not the county.</strong> El Paso County alone contains Colorado Springs Utilities, Town of Monument, Woodmoor, Donala, Triview and Palmer Lake — six providers, six sets of rules, in one county. <strong>A permit from one is worth nothing at an address served by another.</strong></p>
+
+  <div class="twrap">
+  <table>
+    <thead><tr><th>Provider</th><th>Scheme</th><th>Terms</th></tr></thead>
+    <tbody>
+      <tr><td class="who"><b>Colorado Springs Utilities</b></td><td>Establishment permit</td><td><b>42 days for seed</b>, 28 for sod. Lifts the three-day limit and the daytime ban. Soil test or amendment receipts for non-native seed</td></tr>
+      <tr><td class="who"><b>Castle Rock Water</b></td><td><b>Temporary Irrigation Exemption</b></td><td><b>30 consecutive days for seed</b>, 21 for new turf. Water any day — <b>but the time-of-day rule still applies</b> (before 8am / after 8pm). <b>⚑ Not available during July</b></td></tr>
+      <tr class="dim"><td class="who"><b>Woodland Park, Town of Monument, Woodmoor, Donala, Triview, Palmer Lake</b></td><td><b>Unknown</b></td><td><b>Not checked. Do not assume a scheme exists</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Castle Rock also runs a &ldquo;Registered Landscape Professional&rdquo; programme</strong>, and its resource page carries the exemption forms — the closest thing in our territory to the licence-per-area question. <strong>Whether registration is required or voluntary, what it costs, and whether it lets a contractor file exemptions for a client are all unconfirmed.</strong> Castle Rock Water conservation team, <strong>720-733-2306</strong>.</p>
+
+  <div class="section-head"><h2>What to say, and what not to</h2></div>
+
+  <div class="twrap">
+  <table>
+    <thead><tr><th>Say</th><th>Do not say</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><em>&ldquo;Aeration works fine under the current restrictions.&rdquo;</em> True everywhere in our territory.</td>
+        <td>Anything that sounds like a promise the seed will come up. We do not water and do not guarantee germination — that is in the agreement, and it needs to match what we say at the door.</td>
+      </tr>
+      <tr>
+        <td><em>&ldquo;Which water provider are you on?&rdquo;</em> Ask it on every lawn walk. One line, and it changes what we should sell.</td>
+        <td>A specific watering schedule for a provider without checking it that week.</td>
+      </tr>
+      <tr>
+        <td><em>&ldquo;If you're on Colorado Springs Utilities there's a permit that lets you water more often while new seed comes in. I can tell you how to get it.&rdquo;</em></td>
+        <td><em>&ldquo;You're on a well so the restrictions don't apply.&rdquo;</em> Often the opposite.</td>
+      </tr>
+      <tr>
+        <td><em>&ldquo;Water the lawn a day or two before we come out.&rdquo;</em> Now written into the agreements.</td>
+        <td>A price for the establishment permit. We have not confirmed there is one.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="section-head"><h2>What is not settled</h2></div>
+  <p>Named here rather than quietly filled in.</p>
+  <ol>
+    <li><strong>Colorado Springs' current stage was last confirmed in May.</strong> Utilities entered Water Shortage Preparation in March and the Gazette reported in April that they were emphasising caution rather than new restrictions. <strong>Denver escalated hard in late August and no September source for Colorado Springs could be found.</strong> The three-day figure is what our quotes and ads depend on. <strong>One phone call settles it.</strong></li>
+    <li><strong>Donala, Triview and Palmer Lake were not pinned down.</strong> All three serve parts of Monument and Gleneagle. Donala draws from the depleting Denver Basin aquifer, which is the profile most likely to restrict.</li>
+    <li><strong>Three things about permits, all answerable in two phone calls.</strong> (a) Whether Colorado Springs lets a contractor file on a customer's behalf — <strong>ESTP@csu.org</strong>. (b) Whether there is a fee at all; a secondary source said $50 and <strong>both copies of the utility's own PDF are silent</strong>, so do not quote a price. (c) Whether Castle Rock's Registered Landscape Professional programme is required of us to work there, and what it costs — <strong>720-733-2306</strong>.</li>
+    <li><strong>Whether the other six providers have an establishment scheme at all.</strong> Woodland Park, Town of Monument, Woodmoor, Donala, Triview and Palmer Lake were not checked. <strong>Do not assume.</strong></li>
+    <li><strong>Whether mid-October is too late to seed at all.</strong> Cool-season overseeding is normally a late-summer job. If it is past the window, that is a bigger problem than the watering rules, and <strong>dormant seeding</strong> — seed down late, germinates in spring — may be the honest version. Not researched.</li>
+    <li><strong>Our live Meta ad says nothing about water.</strong> &ldquo;Fall Aeration 2026&rdquo; is running at $50/day and is aeration-led, which is the safe half. Worth a read-through now that this is known.</li>
+  </ol>
+
+  <div class="section-head"><h2>Fact-check log</h2></div>
+  <p><span class="badge t1">Tier A</span> first-party source, read directly. &nbsp; <span class="badge t2">Tier B</span> named outlet. &nbsp; <span class="badge t3">Tier C</span> inferred or secondary — treat as unconfirmed.</p>
+
+  <div class="twrap">
+  <table>
+    <thead><tr><th>Claim</th><th>Tier</th><th>Source and date</th></tr></thead>
+    <tbody>
+      <tr><td>Denver Water banned all lawn watering and spray irrigation from 1 Oct 2026; runs until the board lifts it</td><td><span class="badge t1">A</span></td><td>denverwater.org, board decision reported 26 Aug 2026</td></tr>
+      <tr><td>Denver fines $500 / $1,000 residential, $1,000 / $2,000 commercial</td><td><span class="badge t2">B</span></td><td>Denverite, 29 Sept 2026</td></tr>
+      <tr><td>Colorado Springs: 3 days/week, before 10am / after 6pm May 1 – Oct 15</td><td><span class="badge t1">A</span></td><td>csu.org Water Wise Rules</td></tr>
+      <tr><td>Colorado Springs entered &ldquo;Water Shortage Preparation&rdquo; 18 March 2026, rules unchanged</td><td><span class="badge t1">A</span></td><td>csu.org Water Shortage Preparation</td></tr>
+      <tr><td>Colorado Springs fines start at $100</td><td><span class="badge t2">B</span></td><td>KOAA</td></tr>
+      <tr><td>Colorado Springs is <b>not</b> on mandatory two-day odd/even restrictions</td><td><span class="badge t1">A</span></td><td>csu.org, corroborated by CPR 14 Apr 2026. <b>Two SEO sites asserted the opposite</b> — see the note below</td></tr>
+      <tr><td>Establishment permit: 42 days for seed, 28 for sod; sprinklers only; soil amendment 4 yd³/1,000 sq ft <b>or</b> a professional soil test; native grass exempt from soil prep</td><td><span class="badge t1">A</span></td><td>csu.org EstablishmentPermit.pdf, read in full</td></tr>
+      <tr><td>Establishment permit costs $50</td><td><span class="badge t3">C</span></td><td>Secondary source only. <b>Both published copies of the utility's PDF were fetched, are byte-identical, and mention no fee. Do not quote it</b></td></tr>
+      <tr><td>The permit attaches to the water customer, not the contractor</td><td><span class="badge t1">A</span></td><td>csu.org EstablishmentPermit.pdf — <em>&ldquo;any residential or commercial water customer&rdquo;</em></td></tr>
+      <tr class="dim"><td>Whether a contractor may file on a customer's behalf</td><td><span class="badge t4">—</span></td><td><b>Not confirmed.</b> The utility's document is silent. A trade-association video aimed at contractors exists but could not be reviewed</td></tr>
+      <tr><td>Castle Rock Temporary Irrigation Exemption: 30 days seed, 21 days turf, any day, time-of-day still applies, <b>not available in July</b></td><td><span class="badge t1">A</span></td><td>crconserve.com / crgov.com</td></tr>
+      <tr><td>Castle Rock runs a Registered Landscape Professional programme whose resource page carries the exemption forms</td><td><span class="badge t1">A</span></td><td>crgov.com. <b>Whether it is required, what it costs and what it permits are unconfirmed</b></td></tr>
+      <tr><td>Woodland Park at Level 2, two days a week by address, no watering noon–6pm May–Sept</td><td><span class="badge t1">A</span></td><td>woodlandpark.gov</td></tr>
+      <tr><td>Town of Monument: odd/even, no Sunday, extended 7 Apr – 30 Oct for 2026 only</td><td><span class="badge t1">A</span></td><td>townofmonument.org newsflash</td></tr>
+      <tr><td>Woodmoor: odd/even, no Monday, 1 June – 30 Sept, no drought stage declared</td><td><span class="badge t1">A</span></td><td>woodmoorwater.com; Q3 newsletter asks only that customers &ldquo;be mindful&rdquo;</td></tr>
+      <tr><td>Castle Rock: Stage 2 in July, back to Stage 1 on 1 September</td><td><span class="badge t2">B</span></td><td>Colorado Politics 22 July 2026; Castle Rock drought management page</td></tr>
+      <tr><td>Wells under 35 acres permitted since 8 May 1972 are commonly household-use-only and <b>may not irrigate a lawn</b></td><td><span class="badge t1">A</span></td><td>Colorado DWR, <em>Guideline 2023-1, Uses of Water From Exempt and Small Capacity Wells</em></td></tr>
+      <tr><td>35+ acre parcels may irrigate up to one acre of lawn and garden</td><td><span class="badge t1">A</span></td><td>Same guideline, citing C.R.S. 37-92-602(3)(b)(II)(A)</td></tr>
+      <tr><td>Colorado Springs adjusted expected water yield to 41% of average, lowest on record; ~3 years in storage</td><td><span class="badge t2">B</span></td><td>KKTV / Axios, spring 2026</td></tr>
+      <tr class="dim"><td>Donala, Triview, Palmer Lake current status</td><td><span class="badge t4">—</span></td><td><b>Not checked.</b> Listed as an open item</td></tr>
+      <tr class="dim"><td>Whether mid-October is too late to overseed</td><td><span class="badge t4">—</span></td><td><b>Not researched.</b> Listed as an open item</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">⚑ A sourcing note worth keeping</p>
+    <p>Two sites — <code>water-restrictions.com</code> and <code>lawnbyseason.com</code> — confidently asserted that Colorado Springs is under &ldquo;Stage 1 Mandatory, twice per week, odd Monday/Wednesday, even Tuesday/Thursday.&rdquo; <strong>That is Denver and Aurora's rule, misattributed to Colorado Springs.</strong> Both were blocked and the figures re-taken from csu.org and CPR.</p>
+    <p>This is the same failure that set the research standard in the house rules: content farms recycling confident, wrong specifics. <strong>If a watering schedule cannot be found on the provider's own site, it does not go in a quote.</strong></p>
+  </div>
+
+  <div class="section-head"><h2>Sources</h2></div>
+  <ul class="sources">
+    <li>Denver Water — https://www.denverwater.org/tap/drought-conditions-worsen-denver-board-water-commissioners-declares-formal-end-lawn-watering</li>
+    <li>Colorado Springs Utilities, Water Wise Rules — https://www.csu.org/water-wise-rules/</li>
+    <li>Colorado Springs Utilities, Establishment Permits — https://www.csu.org/hubfs/Document%20Library/EstablishmentPermit.pdf</li>
+    <li>Colorado Springs Utilities, Water Shortage Preparation — https://www.csu.org/water-service/sustainable-water-plan/water-shortage-preparation</li>
+    <li>Town of Monument — https://www.townofmonument.org/m/newsflash/home/detail/359</li>
+    <li>Woodmoor W&amp;SD — https://www.woodmoorwater.com/mandatory-water-use-program</li>
+    <li>Woodland Park — https://woodlandpark.gov/190/Water-Restrictions-Conservation</li>
+    <li>Castle Rock Water, drought management — https://www.crgov.com/2979/Drought-Management</li>
+    <li>Castle Rock Water, temporary irrigation exemption — https://crconserve.com/196/Guidelines</li>
+    <li>Castle Rock, Registered Landscape Professional resources — https://www.crgov.com/3904/Registered-Landscape-Professional-Resour</li>
+    <li>Colorado DWR, well permitting — https://dwr.colorado.gov/services/well-permitting</li>
+    <li>Colorado DWR, Guideline 2023-1 — https://dnrweblink.state.co.us/dwr/ElectronicFile.aspx?docid=4187690&amp;dbid=0</li>
+    <li>CPR, restrictions roundup — https://www.cpr.org/2026/04/14/colorado-water-restrictions-drought/</li>
+    <li>Colorado Politics, Castle Rock Stage 2 — https://www.coloradopolitics.com/2026/07/22/castle-rock-implements-mandatory-stage-2-water-restrictions/</li>
+  </ul>
+
+  <div class="foot">
+    <p>Sixfold LLC &nbsp;·&nbsp; 17890 Sierra Way, Monument, CO 80132 &nbsp;·&nbsp; (303) 915-1045 &nbsp;·&nbsp; Contact@SixfoldColorado.com</p>
+    <p>Internal reference. Researched 2026-09-30. Not legal advice and not customer-facing. Drought stages change — check the provider before quoting.</p>
+  </div>
+
+</div>
+</body>
+</html>

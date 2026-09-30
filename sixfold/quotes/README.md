@@ -1,5 +1,82 @@
 # Sixfold quotes
 
+> ## Kara — aeration, overseeding and feeding (2026-09-30)
+>
+> **$1,100.00 fixed, split $550 / $550. Job booked for Monday 12 October 2026.**
+> Same customer as job 2. Every figure and every line of scope is taken from
+> [../agreements/kara-aeration-agreement](../agreements/kara-aeration-agreement.html) sections 2
+> and 5 — **if the agreement changes, this changes.**
+>
+> | File | Pages | For |
+> |---|---|---|
+> | `Sixfold-Quote-Aeration-Kara-Rosenstrauch.pdf` | 1 | The quote alone, to send on its own |
+> | `Sixfold-Quote-and-Agreement-Aeration-Kara-Rosenstrauch.pdf` | 6 | Quote + agreement, for DocuSign |
+>
+> Same two-render arrangement as job 2: one source, one sentence different, switched by the
+> `css` field on each JOBS entry. The packet half is `_part-quote-aeration.pdf` — **`_part-` means
+> intermediate, never send.**
+>
+> ```
+> node quotes/build.mjs && node agreements/build.mjs
+> node tools/html-to-pdf.mjs quote-aeration Quote-Aeration kara-aeration
+> py -3 tools/merge-pdf.py quotes/Sixfold-Quote-and-Agreement-Aeration-Kara-Rosenstrauch.pdf \
+>   quotes/_part-quote-aeration.pdf agreements/kara-aeration-agreement.pdf
+> ```
+>
+> **`py -3`, not `python`** — the Store stub shadows the real 3.13 on PATH.
+>
+> ### Two things this sheet deliberately does NOT do, unlike job 2
+>
+> **No "typical local rate" comparison column.** The only market figure on record for aeration
+> is *"¾ of an acre. Bryce said 11-1400 for aeration"* in
+> [rates-brandon-brad-2026-09-23.md](rates-brandon-brad-2026-09-23.md), and that file itself says
+> Bryce appears nowhere else in the repo, the figure is unattributed, and **$1,100–1,400 for ¾
+> acre "is high … it wants a second look."** It also covers **aeration only**, not the seed or
+> the fertilizer, so it is not comparable to this job. A comparison column built on it would be
+> an invented number on a customer-facing sheet. **Matthew confirmed 2026-09-30 that none is
+> wanted.** Add one when there are sourced rates for all three services, not before.
+>
+> **No per-line prices.** The agreement prices this job as **one fixed sum**, so the scope lines
+> read "Included" and only the total carries a figure. Splitting $1,100 across them would be an
+> allocation nobody agreed — and
+> [../operations/invoice-spec.md](../operations/invoice-spec.md) §2 records exactly that mistake
+> from job 2, where re-allocated line items *"would have billed two specific tasks as though they
+> were the deposit's scope, when the agreement prices the job as one fixed sum and splits the
+> **payment**, not the work."* The invoice reprints these lines unchanged.
+>
+> **Sending it:** [../agreements/kara-docusign-setup.md](../agreements/kara-docusign-setup.md).
+> Draft only — nothing has been sent.
+>
+> ---
+>
+> ### Kara — twelve-month grounds maintenance (2026-09-30)
+>
+> **$250.00 a month, November 2026 to October 2027, $3,000.00 over the term.** First visit
+> **Thursday 19 November 2026**, first payment **1 November 2026**. Traces to
+> [../agreements/kara-maintenance-agreement](../agreements/kara-maintenance-agreement.html)
+> sections 2 to 6.
+>
+> | File | Pages | For |
+> |---|---|---|
+> | `Sixfold-Quote-Maintenance-Kara-Rosenstrauch.pdf` | 1 | The quote alone |
+> | `Sixfold-Quote-and-Agreement-Maintenance-Kara-Rosenstrauch.pdf` | **7** | Quote + agreement, for DocuSign |
+>
+> Same two omissions as the aeration quote and for the same reasons: no comparison column, no
+> per-line prices. **Two things this sheet does say out loud:** the snow cap — *up to five
+> clearing visits in any one calendar month* — because it is a real limit on what she is buying
+> and she should not find it in clause 14; and that **clearing snow does not make a surface
+> safe**, which is the clause most worth an attorney's eye.
+>
+> **⚑ No ice treatment is mentioned anywhere, deliberately** — Matthew's call 2026-09-30.
+> Neither confirmed nor denied, handled verbally if it comes up. **Do not add it back.**
+>
+> ```
+> py -3 tools/merge-pdf.py quotes/Sixfold-Quote-and-Agreement-Maintenance-Kara-Rosenstrauch.pdf \
+>   quotes/_part-quote-maintenance.pdf agreements/kara-maintenance-agreement.pdf
+> ```
+
+---
+
 > ## Job 2 — yard clearance, trimming and planting (2026-09-14, revised 2026-09-15)
 >
 > **CURRENT: $1,500, three small tree removals.** Matthew's instruction 2026-09-15, replacing the

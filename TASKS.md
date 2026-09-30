@@ -1,0 +1,189 @@
+# Matthew — the working register
+
+**Opened 2026-09-29** from a brain dump. Not a plan, a **place to put things** so they stop
+living in a notes app. Ordered inside each lane by what unblocks the most, not by urgency.
+
+**How to use it:** each item has an ID. Say *"let's do SX-2"* and we do that one. Tick the box
+when it's done; leave the line in place — a finished item is a record of what was decided.
+
+**Four lanes, kept apart** — see [CLAUDE.md](CLAUDE.md). Nothing here blends them; the
+cross-cutting section is admin that happens to touch more than one.
+
+**⚑ Two items in the dump were the same thing** — "content plan and schedule" and "posting
+schedule" are merged into X-6. Twenty-seven lines in, twenty-six items out.
+
+---
+
+## ⚑ Read this before X-1 (passwords)
+
+**I won't write passwords into this repo**, and you shouldn't either. It's a git repository
+*and* it's mirrored to OneDrive, so a plaintext list becomes two synced copies immediately and
+a permanent entry in git history that surviving deletion doesn't remove. That's not caution —
+it's that a single file would hold every account for three businesses.
+
+**What actually solves it: a password manager with a shared vault per entity.** Bitwarden's
+free tier covers this; 1Password Business if you want proper per-person access control. Either
+gives you the thing you're really after — Brandon getting into the Sixfold accounts without you
+texting him a password.
+
+**What I can build, and what's genuinely missing: an account inventory with no secrets in it.**
+Which accounts exist, which entity owns each, which email it's tied to, who has access, whether
+2FA is on, and what the recovery method is. That's the document that makes the migration
+possible, and right now nobody could list those accounts from memory. That's X-1 below.
+
+---
+
+## Sixfold
+
+- [ ] **SX-1 — Equipment list.** An accurate inventory of what Sixfold owns. **Do this early:**
+      the quote engine prices off what the crew can actually do, the ad copy claims capability,
+      and right now "we own an aerator and a riding mower" is the whole written record. Needs
+      Brandon walking the yard with a phone, not me guessing.
+- [ ] **SX-2 — Finalise the quote program** as far as the information allows. Engine is at v7,
+      repriced to $100/man-hour. **Known open:** job 2 prices out at $2,250 against $1,500
+      charged and that gap has never been resolved. Partly blocked by SX-1.
+- [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** When a fire quote is
+      selected, surface the tax credit / grant / insurer re-score material. **This one is
+      genuinely good** — the funding research already exists and currently only lives in a
+      pamphlet nobody reads at quote time. Build after SX-2.
+- [ ] **SX-3a — Kara: mark the aeration tick box, then sign.** Both agreements are drafted and
+      rendered (`sixfold/agreements/kara-aeration-agreement.pdf`, 5 pages;
+      `kara-maintenance-agreement.pdf`, 6 pages). **Blocked on one decision only:** section 2 of
+      the maintenance agreement carries an unmarked tick box — the two yearly aerations are
+      either inside the $250/month or invoiced separately at a per-visit price. Two aerations
+      against a $3,000 annual total, when the same work sells as a one-off the same week for
+      $1,100, is the whole question.
+      **⚑ Hard date: the aeration job is Monday 12 October 2026, which is Columbus Day — not a
+      business day, so the cooling-off count skips it. The last safe signing date is Wednesday
+      7 October 2026.** Sign later than that and the job falls inside the cancellation window,
+      where C.R.S. 5-3-405(3) means the work earns nothing if she cancels.
+      Still blank besides: mowing months, snow months, snow trigger inches, snow clear-by hours.
+      Invoice shapes are worked out in `sixfold/agreements/kara-invoices-2026-09-30.md`.
+- [ ] **SX-4 — Kara end-of-work email**, carrying the relevant packet material. **The only item
+      on the list with a real customer waiting.** No template exists — what exists is the
+      referral packet (customer-facing) and the job close-out sheet (crew-facing, internal).
+- [ ] **SX-4a — Build the end-of-work email standard** as a reference doc (.md + designed .html
+      + PDF), so Kara's email is the first use of it rather than a one-off. Covers what every
+      close-out email carries: what was done, what was left, what the customer does next, the
+      referral ask, the review ask.
+- [ ] **SX-5 — Yard signs.** Reuses the brand kit and the cascading mark. Own constraint set:
+      read at 20–30 ft from a road, so the QR has to be much bigger than the card's and the
+      type is a different scale problem entirely.
+- [ ] **SX-6 — Giveaway merch** — stickers, magnets, pens. Magnet artwork already exists and is
+      unordered; stickers are close to the same file. Pens need a one-colour version of the
+      mark, which the cascade is not.
+- [ ] **SX-7 — PPE branding.** Hi-vis, helmets, hoodies. Needs the single-ink mark from SX-6,
+      plus a decision on embroidery vs print — the cascade cannot be embroidered.
+- [ ] **SX-8 — Loyalty / repeat-customer programme.** Worth doing *after* the first season's
+      close-out sheets exist, or it's designed against no data.
+- [ ] **SX-9 — Territory and lead list from public parcel data.** ✅ Scoped 2026-09-29: county
+      assessor records, not bought consumer lists. Output is a **door-to-door walk list and a
+      territory map**, ranked by lot size and wildfire hazard.
+      **⚑ Two things settle before building.** (1) **Cold calling is the regulated half** —
+      parcel records carry addresses and owner names but no phone numbers, and appending them
+      pulls you into DNC/TCPA territory. Door-knocking does not. (2) **Whose team is walking
+      it** — Sixfold's own crew, or Surge's field team with Sixfold as a client? Different
+      entities, so it changes what gets built and under whose name.
+      **2026-09-29: settled — Sixfold's own crew, nothing to do with Surge's field team.**
+      Meeting piece: `sixfold/operations/Sixfold-Door-Territory.pdf`.
+      ✅ **The tool is built and working** — `sixfold/operations/door-territory/`. First run on
+      Monument at 0.7 mi returned **320 doors to knock across 68 streets**, averaging 0.35
+      acres, with the non-resident owners separated out. Run it for any place and radius.
+      **⚑ Still needs from the meeting:** which suburb to work first, and the solicitation
+      permit position for Monument / Colorado Springs / unincorporated El Paso.
+- [x] **SX-9a — Teller and Douglas.** ✅ **Done 2026-09-29** via the statewide Colorado parcel
+      composite — `build-walklist-co.mjs`. Castle Rock 1 mi → **1,216 doors**; Woodland Park
+      0.8 mi → **1,143 doors**, avg 0.52 acres. Faster than El Paso: both addresses are on the
+      record, so no geocoding. **⚑ El Paso cannot use that layer** — it contributes geometry
+      only, which is why two scripts exist.
+- [x] **SX-9c — Door rounds on the website.** ✅ **LIVE 2026-09-29** at
+      `sixfoldcolorado.com/summit-de59ae83/`. Crew codes issued. See [DEPLOY-ROUNDS.md](sixfold/site/rounds/DEPLOY-ROUNDS.md). Codes: Matthew
+      admin, Brandon and Brad crew. **⚑ Your next step is the upload and the three curl checks**
+      — a `200` on the data path means the door list is public. Original scope:
+      [ROUNDS-WEB-SCOPE.md](sixfold/operations/door-territory/ROUNDS-WEB-SCOPE.md). The Claude
+      artifact works but needs a Claude seat per crew member, so it is your view, not theirs.
+      The site version needs no accounts. **⚑ Waiting on one decision: a code per person, or
+      one shared crew link.** Per person is the recommendation — it is what makes
+      knock-to-quote real.
+- [ ] **SX-9d — Two open decisions on the door data**, both just a regenerate + upload:
+      **Colorado Springs** (121,709 parcels — feasible now, but city lots are small and the case
+      is weaker than the big-lot towns; probably specific neighbourhoods), and **raising the
+      2.5-acre ceiling** so Black Forest, Larkspur, Divide and Florissant stop being clipped.
+      ⚑ Widening is safe — marks survive a rebuild. Narrowing retires the marks on dropped doors.
+- [ ] **SX-9b — Still open on the walk list.** The wildfire layer (`TetraTechWUI` exists but its
+      `gridcode` legend is undocumented — needs the source doc before it can be trusted), and
+      whatever the first real afternoon of knocking says about the lot-size band.
+
+## Surge
+
+- [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
+      their notes** — I don't have them. Also note staging is two commits behind local, so
+      re-bundle before anyone reviews anything.
+- [ ] **SG-2 — Finish the remaining social accounts** and level the branding across all of them.
+      The cross-platform kit already exists for seven platforms, draft-only.
+- [ ] **SG-3 — Surge Linktree** — accuracy pass. Pairs with X-2.
+- [ ] **SG-4 — Google Drive for Surge content.** Sixfold's team share is a working model to copy.
+- [ ] **SG-5 — Pull down the WhatsApp content** from the Surge chats while it's still there.
+      **Time-sensitive in a way the rest of this list isn't** — chat history is the one thing
+      that disappears on someone else's schedule.
+- [ ] **SG-6 — Get team leaders into reviews and content.** The one-page field guide for
+      capturing raw material already exists and has never been handed out.
+
+## Cross-cutting
+
+- [ ] **X-1 — Account inventory** (read the section above — inventory, not passwords).
+      Underpins X-4 and X-5.
+- [x] **X-2 — QR audit across everything.** ✅ **Done 2026-09-29** — all 13 assets decoded, 2
+      destinations, **no defects found**. Register: [shared/qr-register.md](shared/qr-register.md).
+      It turned up three *gaps* rather than errors, now split out below.
+- [ ] **X-2a — Sixfold has no review QR.** Blocks X-3 at parity with Surge. **Needs Sixfold's
+      Place ID or `g.page` review link from its Google Business Profile** — then the generator
+      makes the family and Surge's review collateral can be reskinned.
+- [ ] **X-2b — Surge has no general/social QR**, only a review one. **⚑ Gated on SG-2 — the
+      moment the Surge socials are all built, they need one scannable front door.** Linktree is
+      the obvious route but not the only one: a page on the Surge site is the version Surge owns
+      outright, and does not depend on a free tier staying free. Decide the destination first,
+      generate the code second — see the Linktree lesson in
+      [shared/qr-register.md](shared/qr-register.md).
+- [ ] **X-2c — Future Sixfold collateral should point at the website, not Linktree.** Not a
+      reprint — the cards are done. See the register for why this matters more than it looks.
+- [ ] **X-3 — Reviews push**, both entities. The real Google review link, Place ID and QR
+      collateral already exist for Sixfold. Overlaps SG-6.
+- [ ] **X-4 — Move everything you manage onto the right email accounts.** Needs X-1 first or
+      you'll miss things.
+- [ ] **X-5 — Inbox sweep** — Surge, Sixfold, personal.
+- [ ] **X-6 — Content plan, schedule, and start posting.** Both entities, separate voices,
+      never blended. ⚑ **Standing rule: I draft and stage, nothing gets posted or scheduled
+      without your explicit go each time.**
+- [ ] **X-7 — Ad budget and cost-per-lead discipline.** Currently $50/day on one Meta ad with no
+      review date set. Do this *with* the first week's numbers rather than before them.
+- [ ] **X-8 — Weekly analytics pull** across everything running. **Do this last** — it's a
+      wrapper around things that are still moving, and building it now means rebuilding it.
+
+## Personal
+
+- [ ] **P-1 — Tacoma contract.** ⚑ The buy-side redline is answered and **not sent**, and the
+      deal is guaranteed-negative as drafted. You're the seller and the buyer is your boss.
+      **This is the highest-consequence item on the whole list** and the only one with a
+      counterparty waiting on you.
+- [ ] **P-2 — Stringline plan**, finalise and start pushing. Still ahead: the full USPTO search
+      and the LLC-vs-trade-name question. Nothing registered yet.
+- [ ] **P-3 — Clear the phone photos.** ⚑ **Confirm they're in the OneDrive mirror before
+      deleting anything** — and Sixfold has a standing photo gap, so check whether any job
+      photos on there are the only copies before they go.
+
+---
+
+## Suggested order, if you want one
+
+**This week, because they expire or block other things:**
+SG-5 (chat history disappears) · P-1 (someone is waiting) · SX-4 (a customer is waiting) ·
+X-2 (printed cards are already in circulation pointing at it)
+
+**Next, because everything else sits on them:**
+SX-1 → SX-2 → SX-3 · X-1 → X-4
+
+**Then the build work:** SX-5, SX-6, SX-7 share one dependency — a single-ink mark — so doing
+them together is much less work than doing them apart.
+
+**Last:** X-8, SX-8. Both need data that doesn't exist yet.

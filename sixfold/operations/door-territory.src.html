@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold — Door territory from public parcel data</title>
+<!--STYLE-->
+<style>
+  /* ==================================================================
+     DOOR TERRITORY — a conversation piece for the team meeting,
+     2026-09-29. NOT a finished system.
+
+     Built in the half hour before the meeting, deliberately as a
+     discussion document rather than a tool: the decisions on this sheet
+     are the team's to make, and the gaps are named rather than filled in
+     with something plausible.
+
+     Register: same as the other operations sheets. Print light, put it on
+     the table, mark it up.
+     ================================================================== */
+  .lead { font-size: 10.5pt; line-height: 1.55; color: var(--ink-mid); margin: 0 0 14px; }
+  .q { background: var(--tint); border: 1px solid var(--tint-edge);
+       padding: 10px 12px; margin: 12px 0; border-radius: 3px; }
+  .q h4 { margin: 0 0 4px; font-family: var(--f-data); font-size: 8pt;
+          letter-spacing: .12em; text-transform: uppercase; color: var(--ember-text); }
+  .q p { margin: 0; font-size: 9.5pt; line-height: 1.5; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cols h4 { margin: 0 0 5px; font-size: 9.5pt; }
+  .cols ul { margin: 0; padding-left: 16px; }
+  .cols li { font-size: 9pt; line-height: 1.5; margin-bottom: 3px; }
+  .walk { font-size: 8.4pt; }
+  .walk th, .walk td { padding: 4px 7px 4px 0; }
+  .gap { border-left: 3px solid var(--ember); padding-left: 11px; margin: 11px 0; }
+  .gap h4 { margin: 0 0 3px; font-size: 9.5pt; color: var(--ember-text); }
+  .gap p { margin: 0; font-size: 9pt; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="masthead">
+    <div>
+      <h1>Door territory from public records</h1>
+      <p class="sub">Which doors to knock, and why that one</p>
+    </div>
+    <div class="internalflag">Internal · discussion</div>
+  </div>
+
+  <p class="lead">Every county publishes its assessor roll. <strong>El Paso County's is free,
+  official, updated weekly, and downloads as a spreadsheet</strong> — ownership, land use, lot
+  size and value, parcel by parcel. Nothing about this is scraped or bought. The question for
+  this meeting is not whether we can have the data. It is <strong>what we do with it.</strong></p>
+
+  <h2>The two fields that do the work</h2>
+
+  <div class="cols">
+    <div>
+      <h4>Lot size</h4>
+      <ul>
+        <li>A direct proxy for <strong>how much lawn there is</strong>.</li>
+        <li>Lets us skip the doors where a machine visit cannot pay — condos, tiny lots.</li>
+        <li>And skip the other end: acreage that is pasture, not irrigated turf.</li>
+        <li>We can sort a street by job size <strong>before anyone drives to it</strong>.</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Owner's mailing address</h4>
+      <ul>
+        <li>When it <strong>differs</strong> from the property address, nobody who decides
+            lives there — it is a rental or an absentee owner.</li>
+        <li>Those doors waste a knock. The person answering cannot say yes.</li>
+        <li>They are not worthless, they are a <strong>different channel</strong>: post, not
+            doorstep.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>What a rep would actually carry</h2>
+
+  <p class="lead" style="margin-bottom:8px">A walk list, in street order, with the reason for
+  each door already on it — so the opening line is an observation rather than a pitch.
+  <strong>Illustrative rows, not real addresses:</strong></p>
+
+  <table class="tbl walk">
+    <thead>
+      <tr><th>Street order</th><th>Lot</th><th>Owner-occupied</th><th>Why this door</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1 — 100 block, east side</td><td class="num">0.34 ac</td><td>Yes</td><td>Lawn worth a full aeration and overseed</td></tr>
+      <tr><td>2 — next door</td><td class="num">0.31 ac</td><td>Yes</td><td>Same size. Two in a row is a route, not a stop</td></tr>
+      <tr class="dim"><td>3 — corner</td><td class="num">0.29 ac</td><td>No — absentee</td><td>Skip. Post instead</td></tr>
+      <tr><td>4 — 100 block, west side</td><td class="num">0.52 ac</td><td>Yes</td><td>Largest on the block. Lead with this one</td></tr>
+    </tbody>
+  </table>
+
+  <div class="q">
+    <h4>For the room</h4>
+    <p>Does a rep want <strong>the biggest lots first</strong>, or <strong>the tightest
+    cluster</strong>? Biggest lots mean bigger jobs and more driving. A dense block means more
+    doors an hour and smaller tickets. <strong>We can sort it either way — pick one and we
+    will know in a month which was right.</strong></p>
+  </div>
+
+  <p class="foot-note">Source: El Paso County Assessor / GIS Open Data Portal — parcel data
+  including ownership, land use and value, updated weekly, downloadable as CSV or GeoJSON.
+  Public record, free, no licence required. Sixfold Colorado · internal · 2026-09-29 · 1 of 2</p>
+</div>
+
+<div class="sheet">
+  <div class="masthead">
+    <div>
+      <h1>Door territory — what is not decided</h1>
+      <p class="sub">The gaps, named rather than filled in</p>
+    </div>
+    <div class="internalflag">Internal · discussion</div>
+  </div>
+
+  <h2>The same file finds fire mitigation work</h2>
+
+  <p class="lead">Overlay the state's wildfire hazard mapping and the parcels sort themselves
+  again: treed acreage, high hazard rating, a structure worth defending. That is the list where
+  the funding story actually applies — and <strong>it is the one pitch we have where somebody
+  else may pay for the work.</strong></p>
+
+  <h2>⚑ What is not decided, and should not be decided by me</h2>
+
+  <div class="gap">
+    <h4>Knocking is clean. Calling is not.</h4>
+    <p>Parcel records carry addresses and owner names — <strong>no phone numbers</strong>.
+    Adding phone numbers turns this into a cold-call list, which brings in the federal Do Not
+    Call rules and per-call penalties. <strong>Door-to-door carries none of that.</strong>
+    If we want a calling operation, it is a separate conversation with real compliance work in
+    it, not an extension of this.</p>
+  </div>
+
+  <div class="gap">
+    <h4>Solicitation permits — unchecked</h4>
+    <p>Several Front Range municipalities require a solicitor's licence to knock doors
+    commercially, and they differ between Monument, Colorado Springs and unincorporated El Paso
+    County. <strong>Nobody has checked which apply to us.</strong> That is a phone call per
+    jurisdiction and it should happen before the first route, not after a complaint.</p>
+  </div>
+
+  <div class="gap">
+    <h4>Teller and Douglas are not built</h4>
+    <p>Our service area spans three counties and <strong>this sheet only describes El Paso's
+    data</strong>. The other two publish their own rolls in their own formats. One county is a
+    fair test; three is a project.</p>
+  </div>
+
+  <div class="gap">
+    <h4>No route has been driven</h4>
+    <p>Everything above is what the data can do. <strong>None of it has met a real street
+    yet.</strong> The honest first step is one block, one afternoon, and a count of what
+    actually happened at those doors.</p>
+  </div>
+
+  <div class="q">
+    <h4>What I need from this meeting</h4>
+    <p>Which suburb we test first · whether we sort by lot size or by density · who walks it ·
+    and whether anyone already knows the permit position. <strong>With those four answers the
+    first walk list can exist this week.</strong></p>
+  </div>
+
+  <p class="foot-note">Source: El Paso County Assessor / GIS Open Data Portal — parcel data
+  including ownership, land use and value, updated weekly, downloadable as CSV or GeoJSON.
+  Public record, free, no licence required. Sixfold Colorado · internal · 2026-09-29 · 2 of 2</p>
+</div>
+
+</body>
+</html>
