@@ -108,6 +108,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       be quoted. `ESTP@csu.org`, or the Conservation Center, 2855 Mesa Rd. Background:
       `sixfold/research/water-restrictions-2026.md`.
 
+- [ ] **SX-11 — Message Karen on Nextdoor, 8 October.** ⚑ **A dated commitment**, and the
+      only thing on this list with a fixed day rather than a deadline. **Karen, not Kara** —
+      different person, and Nextdoor is the channel. Nothing else is on file about who she is or
+      what the message is for, so ask before drafting anything.
+
 - [ ] **SX-5 — Yard signs.** Reuses the brand kit and the cascading mark. Own constraint set:
       read at 20–30 ft from a road, so the QR has to be much bigger than the card's and the
       type is a different scale problem entirely.
@@ -226,6 +231,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 | **P-1** | A counterparty is waiting, and it is the highest-consequence item here |
 | **SG-5** | Chat history disappears on someone else’s schedule. Nothing else on this list does |
 | **SX-10** | One phone call, and the ads and lawn quotes rest on the answer |
+| **SX-11** | Dated: **8 October**. A fixed day, not a deadline |
 
 **Next, because everything else sits on them:** SX-1b → SX-2 → SX-3 · X-1 → X-4
 
