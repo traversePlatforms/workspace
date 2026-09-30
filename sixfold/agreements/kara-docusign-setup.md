@@ -141,6 +141,30 @@ Sixfold's commitment to make, not the customer's to write in.
 **There is no "first payment books the date" on this one** — it is billed monthly, so there is no
 date being held and nothing to say about it.
 
+## ⚑ Correct, do not void — added 2026-09-30
+
+**An in-flight envelope can be corrected without voiding it**, and this is the answer to “I have
+already sent it and I do not want to look unprofessional.”
+
+| | Void | **Correct** |
+|---|---|---|
+| Envelope | Dead. VOID watermark on every page | Stays alive |
+| Recipient email | **Yes** — they are told it was voided, with your reason | **No**, as long as you do not touch recipient information |
+| Then what | Build and send a new envelope | Nothing. They open the same link and see the fixed document |
+
+**Deleting a field tag is a document change, not a recipient change**, so the customer is not
+notified and has nothing to explain away. Changing their name, email or routing order is what
+triggers a fresh email — so do not touch those.
+
+**⚑ It only works while status is “In Process” and only for a recipient who has not yet
+finished signing.** Once they sign, their fields are frozen. So a correction is cheap today and
+impossible tomorrow.
+
+**If a correction is no longer possible** because they have signed, the fallback costs nothing:
+on the phone call you have to make anyway for the spoken notice, say *“the last two pages are
+your copies of the cancellation form — you do not need to fill those in unless you actually want
+to cancel.”* One sentence, in a call that is already required, and the risk is gone.
+
 ## The part DocuSign cannot do
 
 **Tell her out loud, at the time she signs, that she can cancel.** 16 CFR 429.1(e) requires it
