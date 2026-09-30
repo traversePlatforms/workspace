@@ -6,6 +6,31 @@ instruction ("archive everything, delete nothing"). Empty any pile you're confid
 [MOVE-MANIFEST-2026-09-13.csv](MOVE-MANIFEST-2026-09-13.csv) lists all 69 moves made during the
 reorganisation, `From` → `To`. This project is not under git, so that CSV is the only undo record.
 
+## Added 2026-09-30 — four more piles
+
+Unlike the 2026-09-13 move, **these are all in git history too**, so the manifests are a
+convenience rather than the only undo record. The exception is the site bundles, which are
+gitignored and therefore exist only here and in the OneDrive mirror.
+
+| Pile | Files | Why |
+|---|---|---|
+| [`card-studies-2026-09-30/`](card-studies-2026-09-30/) | 25 | The mark, green and cascade studies. The cards went to print 2026-09-29, so the studies that produced them are finished |
+| [`sedalia-job-2026-09-30/`](sedalia-job-2026-09-30/) | 11 | Job closed. The agreement in all four forms it existed in, and both quote options |
+| [`pricing-sheets-2026-09-30/`](pricing-sheets-2026-09-30/) | 15 | Rate sheets A–C priced off the card that lost money on Sedalia; sheet D predates the aeration rebrand and omits the lead service |
+| [`brand-orphans-2026-09-30/`](brand-orphans-2026-09-30/) | 3 | The sweep mark and a header options sheet. Zero references anywhere |
+| [`site-bundles-superseded/`](site-bundles-superseded/) | 2 bundles + 2 zips | Only the 09-28 deploy is current. **Gitignored — git is not a backup for these** |
+
+**The rule applied throughout: records stay, artefacts go.** Where a file was being cited by
+live work as the reason something is true — the Sedalia notes, `pricing-guide.md`,
+`operations/business-cards.html` — it stayed where it was and only its printable output moved.
+Archiving a well-cited file trades folder clutter for stale links, which is worse.
+
+Each pile has its own README explaining what it settled, and a `MOVE-MANIFEST-2026-09-30.csv`.
+`.gitignore` was changed the same day so those records stay tracked even though the payload
+does not.
+
+---
+
 ## What's here
 
 ### `node_modules-checklist-pdf/` — 1,643 files, 21 MB
