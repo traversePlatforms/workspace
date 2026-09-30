@@ -156,6 +156,18 @@ already sent it and I do not want to look unprofessional.”
 notified and has nothing to explain away. Changing their name, email or routing order is what
 triggers a fresh email — so do not touch those.
 
+**Two sizes of correction, and they are not the same job:**
+
+| | Deleting a stray tag | Swapping in the packet |
+|---|---|---|
+| Effort | Seconds. Nothing else moves | Every page shifts by one, so **every existing tag has to be repositioned** |
+| Risk | None | Replacing a document displaces its fields. **Re-check every tag afterwards** — a signature box that lands on page 6 or 7 is the exact fault being fixed |
+| Needs approval? | **No.** A misplaced field is a mechanical error, not a change to the terms | Yes, if the wording changed too |
+
+**So the tag fix does not wait on anybody.** A review is about what the agreement says, not about
+where the signature boxes sit. Do the small one as soon as it is noticed and the big one only if
+the document itself is actually changing.
+
 **⚑ It only works while status is “In Process” and only for a recipient who has not yet
 finished signing.** Once they sign, their fields are frozen. So a correction is cheap today and
 impossible tomorrow.
