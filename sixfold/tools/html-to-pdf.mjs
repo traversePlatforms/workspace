@@ -138,8 +138,9 @@ const JOBS = [
      Check the page count after any edit, do not eyeball the screen height — an
      overflowing sheet pushes its footer alone onto a page of its own, which
      looks like a two-page quote until you count. */
-  { src: 'quotes/sedalia-haul-off.html',        out: 'quotes/Sixfold-Quote-Sedalia-A-Hauled-Away.pdf',    mode: 'light' },
-  { src: 'quotes/sedalia-chip-on-site.html',    out: 'quotes/Sixfold-Quote-Sedalia-B-Chipped-On-Site.pdf', mode: 'light' },
+  /* The two Sedalia quotes and the Sedalia agreement were archived 2026-09-30 to
+     _archive/sedalia-job-2026-09-30/ — job closed. Their JOBS entries went with
+     them; restore from the manifest there if the job ever reopens. */
 
   /* Job 2 — yard clearance, trimming and planting. Walked by Brandon 2026-09-14.
      Quote is ONE page and the agreement is FIVE; re-count after any edit. */
@@ -257,7 +258,6 @@ const JOBS = [
      ONE page is the spec. */
   { src: 'agreements/remote-signing.html',           out: 'agreements/remote-signing.pdf',                 mode: 'light' },
   { src: 'agreements/service-agreement-tablet.html', out: 'agreements/service-agreement-tablet.pdf',       mode: 'light' },
-  { src: 'agreements/sedalia-A-service-agreement.html', out: 'agreements/sedalia-A-service-agreement.pdf', mode: 'light' },
   /* Kara, 2026-09-25. Two documents: the aeration job and the twelve-month
      maintenance agreement. FIVE pages each — re-count after any edit, and note the
      maintenance one carries four more clauses than the template, which is the thing

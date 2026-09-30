@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(join(here, '_style.css'), 'utf8');
 
-for (const name of ['sedalia-haul-off', 'sedalia-chip-on-site', 'job2-yard-clearance', 'kara-aeration', 'kara-maintenance']) {
+for (const name of ['job2-yard-clearance', 'kara-aeration', 'kara-maintenance']) {
   const src = readFileSync(join(here, `${name}.src.html`), 'utf8');
   if (!src.includes('<!--STYLE-->')) throw new Error(`${name}: no <!--STYLE--> marker`);
   const out = src.replace('<!--STYLE-->', `<style>\n${css}</style>`);

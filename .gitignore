@@ -36,6 +36,12 @@ _archive/**
 !_archive/
 !_archive/README.md
 !_archive/MOVE-MANIFEST-2026-09-13.csv
+# The archived PAYLOAD stays out of git; the RECORD of what moved does not.
+# Without these, every new archive folder loses its manifest and README the
+# moment the payload is cleared, and the undo record goes with it.
+!_archive/*/
+!_archive/*/README.md
+!_archive/*/MOVE-MANIFEST-*.csv
 
 # --- Regenerable dependency trees (npm install rebuilds)
 node_modules/
