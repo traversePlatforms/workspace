@@ -1,5 +1,17 @@
 # Business card — print files for FedEx Office
 
+> ## ⚑ The study files moved on 2026-09-30
+>
+> The cards are printed, so the three studies that produced them were archived to
+> [`_archive/card-studies-2026-09-30/`](../../../_archive/card-studies-2026-09-30/) — 25 files:
+> the **mark** study, the **green** study and the **cascade** study, each with its generator and
+> proof sheet. **Everything this README says about them is still true; the files are just
+> somewhere else.** Commands like `node build-card-marks.mjs` now run from the archive folder.
+>
+> What stayed here: `card-cascade-final.html` and `build-card-final.mjs`, which made the printed
+> card, and the earlier four-card set, whose palette question is still open for the magnets.
+
+
 **Built 2026-09-18, rebuilt 2026-09-28.** Under **Brandon Long**. **Nothing ordered.**
 
 ## ⚑ FOUR OPTIONS — pick one before ordering

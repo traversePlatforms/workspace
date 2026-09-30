@@ -1,6 +1,6 @@
 /* Sixfold — THE CHOSEN CARD. 2026-09-29.
 
-   Crew picked `casc-2-wide` from card-cascade-proof.png: the four-step cascade
+   Crew picked `casc-2-wide` from card-cascade-proof.png (now in _archive/card-studies-2026-09-30/): the four-step cascade
    with the wide start — Frost -> Sage -> Fern -> Turf, conifer lightest, tall
    peak darkest. This file is that card with the two changes asked for on top:
 
@@ -34,7 +34,7 @@
    https://linktr.ee/SixFoldColorado — built 2026-08-21, before the site was
    live. See the README note; this is a decision for Matthew, not a build fix.
 
-   ⚑ ROOTS and the compound-path split: see build-card-marks.mjs.
+   ⚑ ROOTS and the compound-path split: see build-card-marks.mjs (now in _archive/card-studies-2026-09-30/).
 
    Run:  node sixfold/operations/business-card-print/build-card-final.mjs        */
 import { readFileSync, writeFileSync } from 'node:fs';
