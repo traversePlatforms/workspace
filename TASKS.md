@@ -58,6 +58,24 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **SX-2 — Finalise the quote program** as far as the information allows. Engine is at v7,
       repriced to $100/man-hour. **Known open:** job 2 prices out at $2,250 against $1,500
       charged and that gap has never been resolved. Partly blocked by SX-1.
+- [ ] **SX-2a — Put the quote engine on the site, beside the doors app.** Matthew’s idea
+      2026-09-30: `/summit-de59ae83/` asks for a code, then offers **Doors** or **Quote**.
+      **The argument is already on record** — doors moved to the site because the Claude artifact
+      “needs a Claude seat per crew member, so it is your view, not theirs”. That is truer of a
+      quote, which gets built at a kitchen table by whoever is standing there.
+      **Smaller than it looks:** the engine is 1,271 lines but touches storage in exactly two
+      places — `config/rates-v3` and the `jobs` collection. A small `api/quote.php` on the session
+      cookie the doors app already issues replaces both. The CSV export drops the artifact
+      `downloads` capability for an ordinary link, which works better. **None of the pricing logic
+      changes.**
+      **⚑ Three decisions first. (1)** This puts the cost model and saved customer quotes on a
+      shared host behind a 6-digit code — heavier than door addresses. Keep the data outside the
+      web root the way the door JSON turned out to be. **(2) Retire the artifact rather than run
+      both** — the version trap already bit once, when the live tool sat on v2 at $70/man-hour
+      while the file said v3 at $100 and every quote in between was 43% low on labour. **(3) Can a
+      crew code edit rates, or only build quotes?** The rounds app already separates admin from
+      crew.
+
 - [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** When a fire quote is
       selected, surface the tax credit / grant / insurer re-score material. **This one is
       genuinely good** — the funding research already exists and currently only lives in a
