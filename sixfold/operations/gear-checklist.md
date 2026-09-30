@@ -42,7 +42,7 @@ documents, so where it disagrees with what is below, it wins.
 | Item | Against the old record |
 |---|---|
 | Riding lawn mower | Already recorded 2026-09-25 |
-| **Core aerator** | Already recorded 2026-09-25. **Owned** |
+| **Core aerator** | **Owned — bought 2026-09-30.** ⚑ The turf section below dates it 2026-09-25; that is wrong. Matthew: *“we had just bought the aerator today so we didn’t have it at first.”* It arrived **twelve days before the job it was bought for** |
 | **Edger** | **New** — was nowhere in this file |
 | **Leaf blower** | **New** as an owned item |
 | **Power washer** | **New** — and no service currently sold uses it |
@@ -116,7 +116,7 @@ trailer capacity, which sets how much can move in one run. Also still absent: an
 
 ### Turf equipment — added 2026-09-25
 
-**Sixfold owns an aerator and a riding mower.** Matthew, 2026-09-25. That closes the
+**Sixfold owns an aerator and a riding mower.** Matthew, 2026-09-25. **⚑ Date corrected 2026-09-30: the AERATOR was not bought until 2026-09-30.** Whatever was confirmed on the 25th, it was not that machine. Everything below about the mower stands. That closes the
 capability gate in [../REBRAND-PATH-2026-09.md](../REBRAND-PATH-2026-09.md) §Phase 0.1 and it
 retires the one unverified claim on the repositioned website — that Sixfold can actually
 aerate. Both machines were bought after this file was written, which is why the count run on
