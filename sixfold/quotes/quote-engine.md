@@ -2,6 +2,7 @@
 
 **Built:** 2026-09-14 · **Status:** internal tool, draft-only. Nothing it produces has been sent.
 **Live:** https://claude.ai/code/artifact/31b44b1b-38e8-4a19-8938-e1279c71883a
+**Published:** version 8, 2026-09-30 — rates v4. The artifact and this file are in step.
 **Source:** [quote-engine.artifact.html](quote-engine.artifact.html) — hand-written, single file, no build step.
 
 ---
@@ -22,6 +23,50 @@
 > | Job 2 calibration | **16.82 h predicted vs 16 recorded** — drift 0.82 h, still inside the 1 h threshold |
 > | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
 > | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
+>
+> ## RESOLVED AND REPRICED 2026-09-30 — rates v4, artifact version 8
+>
+> **Matthew confirmed the scope:** *"30-35 minutes means the tree is dealt with. It's taken down,
+> it's bucked, it's loaded or chipped."* Two people. So **65 man-minutes**, not 30.
+>
+> The double-count worry did not apply. Three things were checked before touching anything:
+> **`limb` is "trees to limb or trim, NOT remove"** — a standing tree, which is what job 2 bought,
+> so it does not overlap a removal. **Job 2's calibration sits on the sapling line, not `t30`**, so
+> 16.82-vs-16 is undisturbed. **The haul lines are costs**, not labour.
+>
+> | | was | now |
+> |---|---|---|
+> | `t30`, 10–30 ft | 30 man-min · $50 a tree | **65 man-min · $108 a tree** |
+> | `htPerFt` | 1.0 min/ft | **2.17 min/ft** (65 ÷ 30) |
+> | rates key | `config/rates-v3` | **`config/rates-v4`** |
+> | local draft key | `-v3` | **`-v4`**, v3 dropped not migrated |
+>
+> **Two open items closed by this, with no measurement needed.** The sapling collision is gone —
+> `sap` stays 30 and `t30` is 65, which is the sensible ordering, and the flag that warned about it
+> was removed. The band cliff fell from elevenfold to about **fivefold**, which is a plausible step
+> to a bigger tree; that flag now says what is actually wrong, which is that **nothing above 30 ft
+> is a Sixfold figure at all.**
+>
+> **The per-foot model was demoted rather than retired.** Matthew, 2026-09-30: *"we can't get a
+> perfect estimate... every tree is different, placement could make it take longer, the thickness
+> could make it take longer... the point is really to just try and get as close to accurate pricing
+> as possible."* Pricing a tree to two decimals by its height claims a precision the work does not
+> have, so the line is relabelled **"Cross-check: price the same trees by height"** and its own copy
+> says the bands are what quote a job. It was realigned to 2.17 so it stops contradicting them.
+>
+> **⚑ The distinction worth keeping.** Variance — every tree differing — scatters around a centre,
+> averages out across jobs, and the fixed price already absorbs it (*"overruns are Sixfold's cost"*).
+> **Bias — the number being half — does not average out.** It loses money on every tree, in the same
+> direction, forever. The 30→65 fix is a bias fix. The scatter underneath it needs no fixing.
+>
+> **⚑ What the reprice does to the team**, the same way the v3 bump did: anyone holding rates saved
+> under v3 loses those customisations, which is the point of a reprice. **And a tree quoted from the
+> tool before today was priced at half its labour** — worth checking whether one went out.
+>
+> **Still open above 30 ft.** The 30–60 ft band is Wexford's 330 and the 60–80 is Wexford's 570.
+> Brandon and Brad have given nothing above 30 ft, and that is the most dangerous work Sixfold sells.
+>
+> ---
 >
 > ### ⚑ 2026-09-30 — the t30 source figure is contradicted, and the tool may be half
 >

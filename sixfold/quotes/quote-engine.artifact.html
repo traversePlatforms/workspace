@@ -236,7 +236,7 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
     </svg>
     <div>
       <h1>Sixfold Quote Build</h1>
-      <div class="sub">Cost-up pricing from walk-sheet counts · Sixfold LLC, Monument CO<br><b>Rates v3 · 2026-09-23</b> — Brandon and Brad, $100/man-hour</div>
+      <div class="sub">Cost-up pricing from walk-sheet counts · Sixfold LLC, Monument CO<br><b>Rates v4 · 2026-09-30</b> — $100/man-hour · tree under 30 ft repriced</div>
     </div>
   </div>
   <div class="stamp">Internal · draft only · no price on the property</div>
@@ -416,8 +416,8 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
       <p style="margin:7px 0 0"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--warn)">UNRESOLVED AS OF 2026-09-23</b><br>
       <b>Limbing contradicts itself.</b> Brandon and Brad now say $600 for 13 trees; Brandon previously said $975
       for the same 13, and Hawk's published $75 floor × 13 corroborated that exactly. The table carries the newer
-      figure and this note. <b>The tree bands do not line up</b> — under 30 ft is their 30 man-minutes, 30–60 ft is
-      still Wexford's 330. <b>An 8×14 trailer of rounds is deliberately unpriced</b>: “a lot more than that” is
+      figure and this note. <b>Nothing above 30 ft is a Sixfold figure</b> — under 30 ft is now 65 man-minutes
+      (Matthew, 2026-09-30, a whole tree with two people), 30–60 ft is still Wexford's 330. <b>An 8×14 trailer of rounds is deliberately unpriced</b>: “a lot more than that” is
       not a figure. <b>Nobody has timed an aeration.</b></p>
     </div>
   </div>
@@ -443,9 +443,9 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
 const LINES = [
   {s:1, id:"mob",     lbl:"Mobilisation, per job", sub:"Load out, drive, walk-through, before and after photos", unit:"man-min / job", min:90, step:1, src:"sixfold"},
 
-  {s:1, id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees, allocated. NOTE: now identical to the 10–30 ft line below, which came from Brandon and Brad directly — this line is probably too high and wants a real timing", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
-  {s:1, id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Brandon and Brad 2026-09-23: “complete fell, 15 minutes”, two people. Was 150 (Wexford). Five times under the published trade figure — see the flag", unit:"man-min / tree", min:30, step:5, src:"quoted", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
-  {s:1, id:"tht",     lbl:"…or enter the heights instead — under 30 ft", sub:"Type the actual heights: “7, 12, 25”. Same height several times is “4x7”. Each tree is priced from Brandon and Brad's 30 ft anchor. Use this OR the two lines above, not both", unit:"—", min:0, step:1, src:"quoted", custom:"heights", noRate:true},
+  {s:1, id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees, allocated from its recorded 16 man-hours. Was identical to the 10–30 ft line until 2026-09-30; that line is now 65 and these two sit apart, which is the sensible ordering. Still an allocation, not a timing", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
+  {s:1, id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Matthew 2026-09-30: about 30–35 minutes with TWO people for the whole tree — taken down, bucked, and loaded or chipped. 65 man-min is the midpoint. SUPERSEDES Brandon and Brad 2026-09-23, “complete fell, 15 minutes” (30 man-min), which was half this and may have covered felling only. Does NOT include limbing a tree that stays standing — that is its own line", unit:"man-min / tree", min:65, step:5, src:"quoted", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
+  {s:1, id:"tht",     lbl:"Cross-check: price the same trees by height", sub:"⚑ A CHECK, NOT THE PRICE — the banded lines above are what quotes a job. Type heights as “7, 12, 25”, or “4x7” for four the same, and compare. Every tree differs by placement and thickness as much as by height, so a figure to the foot claims more accuracy than the work has. Use this OR the lines above, never both", unit:"—", min:0, step:1, src:"quoted", custom:"heights", noRate:true},
   {s:1, id:"t3060",   lbl:"Trees to take down — 30 to 60 ft", sub:"Wexford: 4.0–7.0 man-hours at 30–50 ft. Brandon and Brad did not give a figure for this band — it still carries the trade number", unit:"man-min / tree", min:330, step:5, src:"comp", mkt:500, mktSrc:"Hawk, 30–60 ft, $500–$1,000"},
   {s:1, id:"t6080",   lbl:"Trees to take down — 60 to 80 ft", sub:"Wexford: 7.0–12.0 man-hours at 50–70 ft", unit:"man-min / tree", min:570, step:5, src:"comp", mkt:1000, mktSrc:"Hawk, 60 ft+, $1,000–$2,000+"},
   {s:1, id:"t80",     lbl:"Trees over 80 ft", sub:"Call-in, not a quote. Wexford puts these at 12–24 man-hours and Sixfold carries no insurance", unit:"—", min:0, step:1, src:"stop", noRate:true},
@@ -493,8 +493,14 @@ const DEFAULT_CFG = {
 /* Height-driven pricing, added 2026-09-23 on Matthew's ask.
    time per tree = htBase + htPerFt × height, floored at htMin.
 
-   htPerFt defaults to 1.0 man-min/ft, which is Brandon and Brad's 30 man-minutes
-   divided straight across their 30 ft anchor — the pure per-foot model asked for.
+   htPerFt defaults to 2.17 man-min/ft — Matthew's 65 man-minutes at 30 ft,
+   divided across the height. Was 1.0, off the superseded 30-minute figure.
+
+   ⚑ THIS IS A CROSS-CHECK, NOT THE PRICE. Matthew, 2026-09-30: every tree is
+   different, placement and thickness move it as much as height does, and the
+   point is to get close rather than exact. The BANDS are the price; this line
+   exists to sanity-check them, and pricing a tree to two decimals by its height
+   claims a precision the work does not have.
    htBase defaults to 0 so that model is what you get out of the box; raise it and
    you get "a fixed handling time plus a slope" instead, which is the shape the
    sapling evidence actually argues for.
@@ -504,7 +510,7 @@ const DEFAULT_CFG = {
    underquote on the most dangerous work Sixfold touches. Anything over 30 ft is
    refused here and sent to the banded lines. */
 const HT_CAP = 30;
-const HT_DEFAULTS = {htPerFt:1.0, htBase:0, htMin:0};
+const HT_DEFAULTS = {htPerFt:2.17, htBase:0, htMin:0};
 
 /* "7, 12, 25" or "4x7, 30" -> a list of heights in feet */
 function parseHeights(str){
@@ -875,7 +881,7 @@ function renderHeights(ht){
       Math.round(base + perFt * 30) + ' min</b> against Brandon and Brad\'s <b>' + rates.t30 + '</b>. ' +
       'Under 10 ft it is <b>' + Math.round(Math.max(rates.htMin || 0, base + perFt * 7)) +
       ' min</b> for a 7 ft tree against the sapling line\'s <b>' + rates.sap + '</b> — ' +
-      'both are Sixfold figures and they do not agree. Raising the base is what closes that gap.' +
+      'both are Sixfold figures. The bands are what price a job — this ladder is a sanity check on them, not a replacement.' +
     '</div></div>';
 }
 
@@ -910,7 +916,7 @@ function renderFlags(m){
       " man-minutes, against the sapling line's " + rates.sap + " for the same tree. With no base time, the model says a small tree costs almost nothing to take down — " +
       "but setup, drag-out and cleanup happen whatever the height. Job 2's own saplings took nearer " + rates.sap + "."]);
   if ((qty.t3060 || 0) > 0 || (qty.t6080 || 0) > 0)
-    f.push(["Tree bands do not line up", "A tree under 30 ft is 30 man-minutes on Brandon and Brad's own figure, but 30–60 ft is still 330 from Wexford — an eleven-fold jump across the band line. They gave no figure above 30 ft. One of the two is wrong; do not quote a big tree off this until it is settled."]);
+    f.push(["No Sixfold figure above 30 ft", "A tree under 30 ft is 65 man-minutes on Matthew's 2026-09-30 timing, but 30–60 ft is still 330 from Wexford — about a five-fold step, which is plausible for a genuinely bigger tree but is nobody's measurement. Brandon and Brad have never given a figure above 30 ft, and this is the most dangerous work Sixfold sells. Do not quote a big tree off this band until it is settled."]);
   if ((qty.loads || 0) > 0 && (cost.dump || 0) === 0)
     f.push(["No dump fee entered", "Haul-off is where this business has lost money. Call the site, get today's commercial rate, and put it in before quoting."]);
   const groundUsed = LINES.filter(l => l.s === 2 && (qty[l.id] || 0) > 0);
@@ -925,8 +931,6 @@ function renderFlags(m){
   if (cfg.billable > 71.5)
     f.push(["Above the local ceiling — by choice", "Hawk publishes $115–$143/hr for a two-person crew in Colorado Springs, which is $57.50–$71.50 a man-hour. At $" +
       cfg.billable + " a man-hour a two-person crew bills $" + (cfg.billable * 2) + "/hr — above the top of the only published rate in Sixfold's own market. That is Brandon and Brad's stated rate, so this is a standing position, not an error. It will fire on every quote."]);
-  if ((qty.sap || 0) > 0 && (qty.t30 || 0) === 0 && (qty.sap || 0) >= 4)
-    f.push(["Sapling and small-tree lines now match", "Both sit at 30 man-minutes — the sapling figure was allocated off job 2, the 10–30 ft figure came from Brandon and Brad directly. A 10 ft sapling and a full 30 ft tree cannot really cost the same. Time one of each and split them again."]);
 
   $("flagbox").innerHTML = f.length
     ? '<ul class="flags">' + f.map(x => '<li><b>' + x[0] + '</b>' + x[1] + '</li>').join("") + '</ul>'
@@ -1053,9 +1057,11 @@ $("ovrClear").addEventListener("click", () => { cfg.override = ""; $("ovrIn").va
    with job 2, so they were not anybody's unfinished work.
    v3 (2026-09-23): a v2 draft carries the old $70 billable and the superseded
    rate table inside it, so restoring one would put withdrawn prices back on
-   screen without saying so. Dropped, not migrated. */
-const LS = "sixfold-quote-build-draft-v3";
-["sixfold-quote-build-draft", "sixfold-quote-build-draft-v2"].forEach(k => {
+   screen without saying so. Dropped, not migrated.
+   v4 (2026-09-30): same reasoning — a v3 draft holds the 30 man-min tree,
+   which is half the current figure. Dropped. */
+const LS = "sixfold-quote-build-draft-v4";
+["sixfold-quote-build-draft", "sixfold-quote-build-draft-v2", "sixfold-quote-build-draft-v3"].forEach(k => {
   try { localStorage.removeItem(k); } catch(e){}
 });
 function snapshot(){
@@ -1153,7 +1159,7 @@ function internalCsv(){
     ["Billable $/man-hour", cfg.billable, "RECORDED — Brandon and Brad 2026-09-23, confirmed as a man-hour"],
     ["Trailer", cfg.trailer, "Haul floor $" + (cfg.trailer === "large" ? 300 : 150) + "/load — Brandon and Brad 2026-09-23"],
     ["Haul floor top-up", m.haulTopUp.toFixed(2), m.haulTopUp > 0 ? "cost-up build came in under the floor" : "not applied"],
-    ["Rates version", "v3 (2026-09-23)", "Brandon and Brad"]);
+    ["Rates version", "v4 (2026-09-30)", "Tree under 30 ft repriced to 65 man-min on Matthew's timing; $100/man-hour from Brandon and Brad"]);
   return rows.map(r => r.map(esc).join(",")).join("\r\n");
 }
 async function offer(filename, data){
@@ -1196,7 +1202,7 @@ function saveRates(){
   if (!db || !ratesDocReady) return;
   clearTimeout(rateWriteT);
   rateWriteT = setTimeout(() => {
-    db.doc("config/rates-v3").set(ratesPayload()).catch(() => {});
+    db.doc("config/rates-v4").set(ratesPayload()).catch(() => {});
   }, 900);
 }
 function renderJobs(){
@@ -1244,7 +1250,7 @@ $("bSave").addEventListener("click", async () => {
   if (!db){ $("bSave").disabled = true; $("jobEmpty").textContent = "Not connected — jobs cannot be saved in this view."; return; }
 
   let firstRates = true;
-  db.doc("config/rates-v3").onSnapshot(snap => {
+  db.doc("config/rates-v4").onSnapshot(snap => {
     ratesDocReady = true;
     if (!snap.exists){ firstRates = false; return; }
     const d = snap.data() || {};
