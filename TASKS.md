@@ -35,10 +35,6 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 ## Sixfold
 
-- [ ] **SX-1 — Equipment list.** An accurate inventory of what Sixfold owns. **Do this early:**
-      the quote engine prices off what the crew can actually do, the ad copy claims capability,
-      and right now "we own an aerator and a riding mower" is the whole written record. Needs
-      Brandon walking the yard with a phone, not me guessing.
 - [x] **SX-1 — Equipment list.** ✅ **Given 2026-09-30:** riding mower, aerator, edger, leaf
       blower, power washer, chain saws, axes, PPE gear, two trucks, two trailers. Recorded in
       `operations/gear-checklist.md`. **Three flags came out of it, all still open** — see SX-1b.
@@ -102,6 +98,15 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       once. Check the roots are present in the proof before ordering.
       FedEx wants a two-page PDF, front then back; the spec is in
       `operations/business-card-print/README.md`.
+
+- [ ] **SX-10 — One call to Colorado Springs Utilities.** Settles three things at once, and
+      the first is load-bearing: **(1)** whether the three-day watering limit still stands —
+      last confirmed **May 2026**, Denver escalated to a total ban in August, and that figure is
+      what the ads and the lawn quotes rest on. **(2)** Whether a contractor may file an
+      establishment permit on a customer’s behalf. **(3)** Whether it costs anything — a
+      secondary site said $50 and both copies of the utility’s own PDF are silent, so it cannot
+      be quoted. `ESTP@csu.org`, or the Conservation Center, 2855 Mesa Rd. Background:
+      `sixfold/research/water-restrictions-2026.md`.
 
 - [ ] **SX-5 — Yard signs.** Reuses the brand kit and the cascading mark. Own constraint set:
       read at 20–30 ft from a road, so the QR has to be much bigger than the card's and the
@@ -211,16 +216,21 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 ---
 
-## Suggested order, if you want one
+## Suggested order — refreshed 2026-09-30
 
-**This week, because they expire or block other things:**
-SG-5 (chat history disappears) · P-1 (someone is waiting) · SX-4 (a customer is waiting) ·
-X-2 (printed cards are already in circulation pointing at it)
+**This week, because they expire or someone is waiting:**
 
-**Next, because everything else sits on them:**
-SX-1 → SX-2 → SX-3 · X-1 → X-4
+| | Why now |
+|---|---|
+| **SX-3a** | Correct the DocuSign tags **before Kara signs** — impossible afterwards. Signing by **7 Oct** keeps the 12 Oct job |
+| **P-1** | A counterparty is waiting, and it is the highest-consequence item here |
+| **SG-5** | Chat history disappears on someone else’s schedule. Nothing else on this list does |
+| **SX-10** | One phone call, and the ads and lawn quotes rest on the answer |
 
-**Then the build work:** SX-5, SX-6, SX-7 share one dependency — a single-ink mark — so doing
-them together is much less work than doing them apart.
+**Next, because everything else sits on them:** SX-1b → SX-2 → SX-3 · X-1 → X-4
 
-**Last:** X-8, SX-8. Both need data that doesn't exist yet.
+**Share one dependency** — a single-ink mark: SX-5, SX-6, SX-7. Much less work together than apart.
+
+**Last, both need data that does not exist yet:** X-8, SX-8.
+
+**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2.
