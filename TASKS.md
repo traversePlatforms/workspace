@@ -39,6 +39,25 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       the quote engine prices off what the crew can actually do, the ad copy claims capability,
       and right now "we own an aerator and a riding mower" is the whole written record. Needs
       Brandon walking the yard with a phone, not me guessing.
+- [x] **SX-1 — Equipment list.** ✅ **Given 2026-09-30:** riding mower, aerator, edger, leaf
+      blower, power washer, chain saws, axes, PPE gear, two trucks, two trailers. Recorded in
+      `operations/gear-checklist.md`. **Three flags came out of it, all still open** — see SX-1b.
+- [ ] **SX-1a — Port the gear checklist into its printable version.** The `.md` and the
+      `.src.html` are parallel documents and the designed one has been stale since 2026-09-25:
+      **the 7-page PDF has never mentioned the aerator or the riding mower**, and it still lists
+      a stump grinder. It is the crew-facing copy. **Do not hand it out until this is done.**
+- [ ] **SX-1b — Three questions the inventory raised**, none of them cosmetic:
+      **(1) Is there a chipper and a stump grinder or not?** The checklist claims both, sourced
+      from a planning document rather than a count. Matthew did not list either. **Chipping is a
+      sold service** — half the Sedalia quote pair, the reason the debris-disposal research
+      exists, and an assumption inside the quote engine.
+      **(2) What is in “PPE gear”?** The checklist prices PPE per person against named standards.
+      With no workers’ comp and no general liability on file, the PPE is the whole protection.
+      **(3) Nothing owned clears snow** — no blade, blower, spreader or shovels — and snow is in
+      Kara’s twelve-month agreement from November.
+      Plus the numbers pricing needs: aerator tine spec and type, mower deck width, trailer
+      capacity. And no overseeder is recorded, though 200 lb of seed goes down on 12 October.
+
 - [ ] **SX-2 — Finalise the quote program** as far as the information allows. Engine is at v7,
       repriced to $100/man-hour. **Known open:** job 2 prices out at $2,250 against $1,500
       charged and that gap has never been resolved. Partly blocked by SX-1.

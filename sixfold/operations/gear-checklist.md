@@ -3,6 +3,17 @@
 **Written:** 2026-08-21 as the *fire mitigation* gear checklist
 **Turf equipment added:** 2026-09-25
 **Status:** Internal. Nothing here is published, and nothing in it is a claim Sixfold may make in copy.
+> ## ⚑ THE PRINTED VERSION IS STALE — found 2026-09-30
+>
+> `gear-checklist.html` and the 7-page PDF are built from `gear-checklist.src.html`, **not from
+> this file.** The turf section added on 2026-09-25 went into the markdown only, so the printable
+> checklist **has never mentioned the aerator or the riding mower** — the two machines the whole
+> aeration-led rebrand depends on. The 2026-09-30 inventory below is not in it either, and it
+> still lists a stump grinder Matthew did not name.
+>
+> **Do not print or hand out the PDF until it is ported.** This markdown is the accurate record.
+> Tracked as SX-1a.
+
 **Printable version:** [gear-checklist.html](gear-checklist.html) → [gear-checklist.pdf](gear-checklist.pdf) — seven sheets, one printed page each.
 
 This is the equipment needed to deliver the six service lines already on the signed agreement — felling, stump grinding, slash and chipping, rounds, defensible space, fuel break and thinning — plus the work Sixfold will meet on site whether or not it was sold, of which climbing is the big one.
@@ -18,6 +29,72 @@ Organised as **buy before job one** and **buy when the job requires it**, becaus
 From [../marketing/minimum-viable-start.html](../marketing/minimum-viable-start.html) and [../README.md](../README.md): saws for felling and limbing, a stump grinder, a chipper, and haul capacity. Every machine on the sellable list is owned. **What is missing is not machines — it is the safety, fire, medical and documentation kit that has to ride with them**, and that is most of what follows.
 
 The one machine gap is unchanged: no masticator or mulching head. That is a pricing and quoting decision, already recorded in the marketing plan §1, and this list does not reopen it.
+
+## ⚑ The inventory Matthew gave, 2026-09-30
+
+Asked for a complete list of what Sixfold owns. **Verbatim:** *"A riding lawn mower, an
+aerator, an edger, a leaf blower, a power washer, chain saws, axes, PPE gear, two trucks, two
+trailers. That’s all I have at this time."*
+
+This is the **first inventory stated as a whole** rather than assembled from planning
+documents, so where it disagrees with what is below, it wins.
+
+| Item | Against the old record |
+|---|---|
+| Riding lawn mower | Already recorded 2026-09-25 |
+| **Core aerator** | Already recorded 2026-09-25. **Owned** |
+| **Edger** | **New** — was nowhere in this file |
+| **Leaf blower** | **New** as an owned item |
+| **Power washer** | **New** — and no service currently sold uses it |
+| Chain saws | Already recorded |
+| **Axes** | **New** — was nowhere in this file |
+| PPE gear | See the flag below. This file treats PPE as the main gap |
+| **Two trucks, two trailers** | Vehicles were referenced but **never counted**. Now counted |
+
+### ⚑ Flag 1 — the stump grinder and the chipper are not on his list
+
+Line 18 of this file says Sixfold owns *"saws for felling and limbing, a stump grinder, a
+chipper, and haul capacity"* and that **"every machine on the sellable list is owned."** That
+claim came from `marketing/minimum-viable-start.html`, a planning document, not from anyone
+counting machines.
+
+**Matthew listed neither, and said "that’s all I have at this time."**
+
+This is not a tidy-up. **Chipping is a sold service** — it is on the archived services sheet D,
+it is half of the Sedalia quote pair (*chipped on site* against *hauled away*), the whole
+`research/debris-disposal-directory` exists to price hauling against chipping, and the quote
+engine assumes both. **Stump grinding likewise appears in the six service lines this file opens
+with.** If neither machine exists, a service line is being quoted that cannot be delivered
+without a rental nobody is pricing.
+
+**Do not resolve this by guessing.** Either he omitted them or the planning document was
+aspirational and has been treated as fact ever since. One question settles it.
+
+### ⚑ Flag 2 — "PPE gear" is not specific enough to check anything against
+
+Sections 1.1 onward price PPE **per person on site** against named standards — chaps, a helmet,
+ANSI Z87.1 eye protection, mesh face protection, hearing protection above 85 dBA. *"PPE gear"*
+does not say which of those exist, how many sets, or what condition they are in.
+
+It matters more here than it would elsewhere: `research/crew-safety-and-compliance.md` records
+that Sixfold carries **no workers’ compensation and no general liability**. Where insurance is
+absent, the PPE is not a box-tick — it is the whole of the protection.
+
+### ⚑ Flag 3 — nothing on the list clears snow
+
+No blade, no blower, no spreader, no shovels. **Snow clearing is in Kara’s twelve-month
+agreement** — up to five visits a month, first winter starting November 2026 — and the
+equipment to do it is not owned. Flagged here rather than guessed at, exactly as the
+2026-09-25 note flagged it. It has since stopped being hypothetical.
+
+### What is still not recorded about the machines that do exist
+
+Make, model and the numbers that pricing depends on: **aerator tine spec and whether it is
+walk-behind, tow-behind or ride-on**; **mower deck width**, which sets mowing time per acre;
+trailer capacity, which sets how much can move in one run. Also still absent: an **overseeder**
+— 200 lb of seed went into Kara’s job and how it goes down is not written anywhere.
+
+---
 
 ### Turf equipment — added 2026-09-25
 
