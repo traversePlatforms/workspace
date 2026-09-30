@@ -51,7 +51,25 @@ documents, so where it disagrees with what is below, it wins.
 | PPE gear | See the flag below. This file treats PPE as the main gap |
 | **Two trucks, two trailers** | Vehicles were referenced but **never counted**. Now counted |
 
-### ⚑ Flag 1 — the stump grinder and the chipper are not on his list
+### ✅ Flag 1 — ANSWERED 2026-09-30: rented, not owned
+
+**Matthew:** *“We don’t have a chipper or a grinder, however those are things we can rent. We just
+don’t have them on hand, that’s why we still offer the service.”*
+
+So the capability is real and the service list stands. **What was wrong is the ownership claim**,
+not the offering. Line 18 of this file says *“every machine on the sellable list is owned”* — that
+is false and it came from a planning document rather than a count.
+
+**⚑ The consequence is a pricing one, and it is the important half.** A rented machine is a cost
+that appears only on the jobs that use it, and it is exactly the kind of cost this company has
+already been caught by: the Sedalia job lost money and job 2’s real numbers — which *did* include
+24-hour rentals — are what proved the rate card was under water. **Every chipping or stump-grinding
+quote has to carry the rental, the fuel and the collection trip as line costs**, and the quote
+engine should not be able to price either service without them. Worth checking that it cannot.
+
+The original flag, left for the record:
+
+### ⚑ Flag 1 (superseded) — the stump grinder and the chipper are not on his list
 
 Line 18 of this file says Sixfold owns *"saws for felling and limbing, a stump grinder, a
 chipper, and haul capacity"* and that **"every machine on the sellable list is owned."** That

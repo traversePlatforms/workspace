@@ -47,10 +47,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **the 7-page PDF has never mentioned the aerator or the riding mower**, and it still lists
       a stump grinder. It is the crew-facing copy. **Do not hand it out until this is done.**
 - [ ] **SX-1b — Three questions the inventory raised**, none of them cosmetic:
-      **(1) Is there a chipper and a stump grinder or not?** The checklist claims both, sourced
-      from a planning document rather than a count. Matthew did not list either. **Chipping is a
-      sold service** — half the Sedalia quote pair, the reason the debris-disposal research
-      exists, and an assumption inside the quote engine.
+      **(1)** ✅ **Answered 2026-09-30: the chipper and grinder are RENTED, not owned.** The
+      service list stands; the ownership claim in the gear checklist was false. **What is left is
+      the pricing half:** every chipping or stump-grinding quote must carry the rental, fuel and
+      collection trip as line costs. **Check the quote engine cannot price either service without
+      them** — rentals are precisely what job 2 proved the old rate card was missing.
       **(2) What is in “PPE gear”?** The checklist prices PPE per person against named standards.
       With no workers’ comp and no general liability on file, the PPE is the whole protection.
       **(3) Nothing owned clears snow** — no blade, blower, spreader or shovels — and snow is in
