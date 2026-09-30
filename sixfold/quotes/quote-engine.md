@@ -2,7 +2,7 @@
 
 **Built:** 2026-09-14 · **Status:** internal tool, draft-only. Nothing it produces has been sent.
 **Live:** https://claude.ai/code/artifact/31b44b1b-38e8-4a19-8938-e1279c71883a
-**Published:** version 8, 2026-09-30 — rates v4. The artifact and this file are in step.
+**Published:** version 9, 2026-09-30 — rates v4, job-type split. The artifact and this file are in step.
 **Source:** [quote-engine.artifact.html](quote-engine.artifact.html) — hand-written, single file, no build step.
 
 ---
@@ -23,6 +23,49 @@
 > | Job 2 calibration | **16.82 h predicted vs 16 recorded** — drift 0.82 h, still inside the 1 h threshold |
 > | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
 > | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
+>
+> ## DECLUTTERED 2026-09-30 — job types, artifact version 9
+>
+> Matthew: *“it feels like its too busy... maybe organize it by job type.”* He was right, and that
+> third idea was the structural one rather than a cosmetic one.
+>
+> **The page had 40 rows and about 6,400 characters of explanation at rest** — 2,778 in the ledger
+> sub-text, 3,585 in the sources card, 1,193 in the section intros. The original rule, *every rate
+> carries its provenance on screen next to the number*, was the right instinct; at 18 paragraphs it
+> achieved the opposite, because nobody reads any of them.
+>
+> | | rows shown |
+> |---|---|
+> | Lawn | **13** |
+> | Land | **22** |
+> | Fire | **22** |
+> | before | 40 |
+>
+> **Lines carry the modes they belong to rather than living in containers**, so a tree line shows
+> under both Land and Fire. `inMode()` is the only filter.
+>
+> - **The sheet opens on a job-type picker**, never on a mode — the same rule as never opening on
+>   somebody else’s job with a price on it. Matthew’s choice: always ask, start clean.
+> - **Provenance moved behind a *why this number* disclosure** on every row. One click, not deleted.
+> - **“Where the numbers come from” is its own view**, reached from the mode bar or the picker.
+> - **Crew and rates fold away** — set once, touched rarely.
+> - **Section intros cut from 1,193 characters to 456.**
+> - **Flags stay always visible.** They only appear when tripped and they are the part that stops a
+>   bad price leaving the room.
+> - **Switching type never throws work away.** A count on a hidden line still prices, so a flag says
+>   so by name rather than letting it price invisibly.
+>
+> **⚑ Land and Fire currently show the same 22 rows.** That was flagged to Matthew before he chose
+> the split and he took it anyway, because it matches the descriptor. Today the difference is a
+> label and a subtitle. **It earns its keep when SX-3 lands** — surfacing the tax credit, grant and
+> insurer re-score material when a fire quote is selected. Choosing Fire is exactly the trigger that
+> task was waiting for, and the picker is now the hook for it.
+>
+> **⚑ A <details> inside a <p> is invalid nesting** and broke the file once during this edit — the
+> page nearly doubled in size and the inline script stopped parsing. Restored from git and redone
+> without it. The section intros are plain paragraphs now.
+>
+> ---
 >
 > ## RESOLVED AND REPRICED 2026-09-30 — rates v4, artifact version 8
 >
