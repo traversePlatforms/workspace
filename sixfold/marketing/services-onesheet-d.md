@@ -1,5 +1,12 @@
 # Sheet D — services, no prices
 
+> **⚑ Archived 2026-09-30.** The sheet and its PDF moved to
+> `_archive/pricing-sheets-2026-09-30/`. The list below is Brandon’s from 25 August and it has
+> **no aeration, no mowing and no lawn work in it** — it predates the aeration-led rebrand of
+> 2026-09-23 and omits what is now the lead service. Rebuild it from the current service list
+> rather than editing the old one. **This file stays as the record of what Brandon said and
+> the caveat he said it with.**
+
 **Built:** 2026-08-25
 **Deliverable:** [Sixfold-Services-Sheet-D.pdf](Sixfold-Services-Sheet-D.pdf) — one Letter page, print register.
 **Design source:** [services-onesheet-d.html](services-onesheet-d.html)

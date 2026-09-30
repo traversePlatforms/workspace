@@ -282,11 +282,12 @@ const JOBS = [
   /* scale 1.0, not the default 0.8: at 0.8 the card comes out 7 pages instead of
      9 and the internal band stops starting its own page. Found by comparing
      against the pre-sweep file rather than by reading it. */
-  { src: 'marketing/pricing-guide.html',         out: 'marketing/Sixfold-Rate-Card-INTERNAL.pdf',     mode: 'light', scale: 1.0 },
-  { src: 'marketing/pricing-onesheet.html',      out: 'marketing/Sixfold-Rate-Sheet-A.pdf',          mode: 'light' },
-  { src: 'marketing/pricing-onesheet-b.html',    out: 'marketing/Sixfold-Rate-Sheet-B.pdf',          mode: 'light' },
-  { src: 'marketing/pricing-onesheet-c.html',    out: 'marketing/Sixfold-Rate-Sheet-C.pdf',          mode: 'light' },
-  { src: 'marketing/services-onesheet-d.html',   out: 'marketing/Sixfold-Services-Sheet-D.pdf',      mode: 'light' },
+  /* The four rate/service sheets A-D and the internal rate card were archived
+     2026-09-30 to _archive/pricing-sheets-2026-09-30/. A, B and C carried prices
+     off the rate card that lost money on Sedalia, plus stump grinding, crew time
+     and the old county line; D carried no prices but its service list predates
+     the aeration-led rebrand and omits the lead service. pricing-guide.md and
+     services-onesheet-d.md stayed put as the records of both. */
   { src: 'operations/gear-checklist.html',       out: 'operations/gear-checklist.pdf',               mode: 'light' },
   { src: 'tax-credit-notebook/reference-notebook.html', out: 'tax-credit-notebook/reference-notebook.pdf', mode: 'light' },
   { src: 'tax-credit-notebook/client-forms.html',      out: 'tax-credit-notebook/client-forms.pdf',       mode: 'light' },

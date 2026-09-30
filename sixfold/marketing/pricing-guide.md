@@ -1,5 +1,9 @@
 # Pricing Guide — Sixfold
 
+> **The printable versions moved on 2026-09-30** to `_archive/pricing-sheets-2026-09-30/` —
+> `pricing-guide.html` and `Sixfold-Rate-Card-INTERNAL.pdf`. A card you cannot print is a card
+> nobody quotes from by accident. **This file stays as the record of what was built and why.**
+>
 > ## ⚠ Do not quote from this card — 2026-09-16
 >
 > **Superseded for pricing on 2026-09-13.** The Sedalia job, priced off these rates, lost money, and job 2's
