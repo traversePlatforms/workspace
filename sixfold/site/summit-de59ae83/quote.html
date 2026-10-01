@@ -874,6 +874,11 @@ function render(){
   });
   COSTS.forEach(c => {
     const el = $("co_" + c.id);
+    /* a cost row the current job type does not show was never built. Without this
+       guard render() throws here and the PRICE NEVER UPDATES — the maths is fine,
+       the write of it is what dies. Found 2026-10-01 on a lawn job, where dump
+       fees are tagged land/fire and co_dump is null. */
+    if (!el) return;
     const v = cost[c.id] || 0;
     el.textContent = v <= 0 ? "—" : (c.billed ? money2(v * (1 + cfg.handling/100)) : "not billed");
     el.className = "out" + (v > 0 ? " live" : "");
@@ -883,13 +888,19 @@ function render(){
     te.textContent = m.loadsQ > 0 ? money(m.haulFloor) + " floor" : "—";
     te.className = "out" + (m.loadsQ > 0 ? " live" : "");
   }
-  $("go_billable").textContent = m.hours > 0 ? money(m.labourRev) : "—";
-  $("go_handling").textContent = m.passCost > 0 ? "+" + money(m.passRev - m.passCost) : "—";
-  $("go_crewCost").textContent = m.hours > 0 ? money(m.hours * cfg.crewCost) : "—";
-  $("go_overhead").textContent = m.hours > 0 ? money(m.hours * cfg.overhead) : "—";
-  $("go_freeHours").textContent = m.freeHours > 0 ? "−" + money(m.freeCost) : "—";
-  $("go_hoursOverride").textContent = m.hoursOverridden ? "was " + hrs(m.rawHours) : "—";
-  $("go_rounding").textContent = m.raw > 0 ? "−" + money2(m.raw - m.costUp) : "—";
+  /* Section 4 is not filtered by job type, so these exist whenever buildLedger
+     has run — but render() must never be able to die on a missing node again.
+     A write that throws here leaves the PRICE UNWRITTEN while every number
+     behind it is correct, which is exactly how the $0 bug on 2026-10-01 looked. */
+  if ($("go_billable")) {
+    $("go_billable").textContent = m.hours > 0 ? money(m.labourRev) : "—";
+    $("go_handling").textContent = m.passCost > 0 ? "+" + money(m.passRev - m.passCost) : "—";
+    $("go_crewCost").textContent = m.hours > 0 ? money(m.hours * cfg.crewCost) : "—";
+    $("go_overhead").textContent = m.hours > 0 ? money(m.hours * cfg.overhead) : "—";
+    $("go_freeHours").textContent = m.freeHours > 0 ? "−" + money(m.freeCost) : "—";
+    $("go_hoursOverride").textContent = m.hoursOverridden ? "was " + hrs(m.rawHours) : "—";
+    $("go_rounding").textContent = m.raw > 0 ? "−" + money2(m.raw - m.costUp) : "—";
+  }
 
   /* price rail */
   $("pPrice").textContent = m.price > 0 ? money(m.price) : "$0";

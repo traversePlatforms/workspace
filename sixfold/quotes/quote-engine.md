@@ -2,7 +2,7 @@
 
 **Built:** 2026-09-14 · **Status:** internal tool, draft-only. Nothing it produces has been sent.
 **Live:** https://claude.ai/code/artifact/31b44b1b-38e8-4a19-8938-e1279c71883a
-**Published:** version 9, 2026-09-30 — rates v4, job-type split. The artifact and this file are in step.
+**Published:** version 10, 2026-10-01 — rates v4, job-type split, $0 bug fixed. Artifact, this file and the site page are in step.
 **Source:** [quote-engine.artifact.html](quote-engine.artifact.html) — hand-written, single file, no build step.
 
 ---
@@ -23,6 +23,31 @@
 > | Job 2 calibration | **16.82 h predicted vs 16 recorded** — drift 0.82 h, still inside the 1 h threshold |
 > | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
 > | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
+>
+> ## ⚑ BUG FIXED 2026-10-01 — the job-type split shipped with a silent $0, version 10
+>
+> Matthew: *“I selected lawn as my job type. When i add in jobs/tasks it doesnt change the quote
+> price, quote price still stays at zero.”* Reproduced headlessly in a minute; a real defect
+> introduced by the version 9 restructure.
+>
+> **`render()` was throwing.** The cost loop writes every cost row’s output without checking the
+> node exists — and once lines are filtered by job type, some do not. On a lawn job `dump` is
+> tagged `land fire`, so `co_dump` is null, `render()` died on it, and **everything after that
+> line never ran — including the write of the price.**
+>
+> **⚑ The maths was never wrong.** Mow at 1 acre showed its 2 man-hours correctly the whole time;
+> only the write of the total was missing. That is the nastiest shape this kind of bug takes: the
+> page looks alive, the line outputs update, and the one number anybody reads stays at zero.
+>
+> Fixed in two places: `if (!el) return;` in the cost loop, and a single guard around the
+> section-4 config writes. Section 4 is not mode-filtered so those always exist in practice, but
+> **render() should not be able to die on a missing node at all** — that is the general lesson,
+> not the specific null.
+>
+> Verified by driving the page: pick Lawn, set mow to 1, price goes to **$200** (2 man-hours ×
+> $100). Aeration still adds nothing, correctly, because it has no rate — and three flags fire.
+>
+> ---
 >
 > ## DECLUTTERED 2026-09-30 — job types, artifact version 9
 >
