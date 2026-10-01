@@ -98,12 +98,23 @@ It matters more here than it would elsewhere: `research/crew-safety-and-complian
 that Sixfold carries **no workers’ compensation and no general liability**. Where insurance is
 absent, the PPE is not a box-tick — it is the whole of the protection.
 
-### ⚑ Flag 3 — nothing on the list clears snow
+### Flag 3 — snow: partly answered 2026-10-01
 
-No blade, no blower, no spreader, no shovels. **Snow clearing is in Kara’s twelve-month
-agreement** — up to five visits a month, first winter starting November 2026 — and the
-equipment to do it is not owned. Flagged here rather than guessed at, exactly as the
-2026-09-25 note flagged it. It has since stopped being hypothetical.
+**Shovels ARE owned.** Matthew, 2026-10-01 — the original inventory was wrong to say
+otherwise, and this list is corrected rather than the correction being argued with.
+**A snow blower is believed to be on order from Brandon, but Matthew is explicitly not certain
+and nobody has confirmed it. Treat it as unconfirmed until Brandon says so.**
+
+**Matthew's position: the gear will be in place by the time that part of the contract has to
+be fulfilled.** Recorded as his call. Snow clearing is in Kara's twelve-month agreement — up
+to five visits a month, first winter starting **November 2026**.
+
+**⚑ What is still not owned, and is not covered by shovels or a blower:** no **spreader**, and
+no **salt or ice melt** recorded. Five visits a month across a winter is not a shovel job, and
+the slip-and-fall exposure below is unchanged by any of this.
+
+**The date to work back from is November 2026.** If the blower is not confirmed by late
+October there is still time to rent or subcontract; there is not time in December.
 
 ### What is still not recorded about the machines that do exist
 

@@ -56,8 +56,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       refuse to price, the way the $0 bug now does.
       **(2) What is in “PPE gear”?** The checklist prices PPE per person against named standards.
       With no workers’ comp and no general liability on file, the PPE is the whole protection.
-      **(3) Nothing owned clears snow** — no blade, blower, spreader or shovels — and snow is in
-      Kara’s twelve-month agreement from November.
+      **(3) ✅ Snow, partly answered 2026-10-01. Shovels ARE owned** — the inventory was wrong.
+      **A snow blower is believed to be coming from Brandon but Matthew is not certain and
+      nobody has confirmed it — unconfirmed until Brandon says so.** His call: the gear will be
+      in place by the time that part of Kara’s contract has to be fulfilled.
+      **⚑ Still not owned and not covered by either: a spreader, and salt or ice melt.** Five
+      visits a month across a winter is not a shovel job. **Work back from November 2026** — if
+      the blower is unconfirmed by late October there is still time to rent or subcontract;
+      there is not time in December.
       Plus the numbers pricing needs: aerator tine spec and type, mower deck width, trailer
       capacity. And no overseeder is recorded, though 200 lb of seed goes down on 12 October.
 
@@ -208,8 +214,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 - [ ] **SX-11 — Message Karen on Nextdoor, 8 October.** ⚑ **A dated commitment**, and the
       only thing on this list with a fixed day rather than a deadline. **Karen, not Kara** —
-      different person, and Nextdoor is the channel. Nothing else is on file about who she is or
-      what the message is for, so ask before drafting anything.
+      different person, and Nextdoor is the channel.
+      **✅ Who she is, answered 2026-10-01: a live inbound lead for TREE CLEARING.** She posted
+      on Nextdoor about needing trees cleared; Matthew reached out around early September; she
+      replied **Sun 27 or Mon 28 Sep** saying she wants Sixfold to come out and quote, but
+      needed some time first. **The 8th is the reconnect** — the goal is to book a site visit,
+      walk it with a team, and quote. **This is a prospective client, not an errand.**
+      **⚑ Find out where she is before the visit is booked.** If the property is inside
+      **Colorado Springs city limits** and the trees are **15 ft or taller**, that work needs a
+      city tree-contractor licence, which is gated on insurance Sixfold does not carry — see
+      the licence note. Out in the county it is not an issue. **One question on the 8th.**
+      Tools are ready: the walk sheet, and the quote build at `/summit-de59ae83/`.
 
 - [ ] **SX-5 — Yard signs.** Reuses the brand kit and the cascading mark. Own constraint set:
       read at 20–30 ft from a road, so the QR has to be much bigger than the card's and the
@@ -255,11 +270,20 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       The site version needs no accounts. **✅ The one open decision is settled by what was
       issued: a code per person**, not a shared crew link — six of them, with roles separating
       the two views. That is what makes knock-to-quote real.
-- [ ] **SX-9d — Two open decisions on the door data**, both just a regenerate + upload:
-      **Colorado Springs** (121,709 parcels — feasible now, but city lots are small and the case
-      is weaker than the big-lot towns; probably specific neighbourhoods), and **raising the
-      2.5-acre ceiling** so Black Forest, Larkspur, Divide and Florissant stop being clipped.
-      ⚑ Widening is safe — marks survive a rebuild. Narrowing retires the marks on dropped doors.
+- [ ] **SX-9d — Door data: decided 2026-10-01, execution deferred.** Matthew delegated the
+      call — *“whatever is best for the company”* — and said waiting for usage to reset is fine.
+      **✅ RAISE THE 2.5-ACRE CEILING — do it.** Black Forest, Larkspur, Divide and Florissant are
+      being clipped, and those are exactly the big-lot properties the fire and land work is
+      built for. **Widening is safe: marks survive a rebuild**, so nothing already knocked is
+      lost. Clear win.
+      **❌ COLORADO SPRINGS — NOT NOW.** Three reasons, and the third is the one that decides it:
+      121,709 parcels is a lot of regeneration; city lots are small so the per-door case is
+      weaker than the big-lot towns; and **Colorado Springs is the one market where trees 15 ft
+      and over need a city licence Sixfold cannot get without insurance it does not carry.**
+      Knocking doors for tree work in the exact city where the tree work cannot be sold is
+      backwards. Revisit when the insurance exists.
+      **⚑ Execution deferred to a fresh day** — the regenerate + upload is the expensive half.
+      Remember: publish → regenerate → upload → flush.
 - [ ] **SX-9b — Still open on the walk list.** The wildfire layer (`TetraTechWUI` exists but its
       `gridcode` legend is undocumented — needs the source doc before it can be trusted), and
       whatever the first real afternoon of knocking says about the lot-size band.
