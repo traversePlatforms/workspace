@@ -210,6 +210,14 @@ const JOBS = [
      grown, and the QR on the back. From build-card-final.mjs. This is the one to
      give a printer; the four above are the options it was chosen from. */
   { src: 'operations/business-card-print/card-cascade-final.html', out: 'operations/business-card-print/Sixfold-Card-Cascade.pdf', mode: 'dark', scale: 1 },
+  /* ONE CARD PER PERSON, 2026-10-01 (SX-4b). From build-card-person.mjs, which is
+     the card above with the name, number and colourway lifted out. Brandon's is
+     regenerated only as a regression check — his cards are printed. ⚑ Matthew's is
+     the first card on a LIGHT ground, so it prints mode 'light'; giving it 'dark'
+     renders Bone-on-Bone and the card comes out blank. */
+  { src: 'operations/business-card-print/card-brandon.html', out: 'operations/business-card-print/Sixfold-Card-Brandon-Long.pdf',   mode: 'dark',  scale: 1 },
+  { src: 'operations/business-card-print/card-brad.html',    out: 'operations/business-card-print/Sixfold-Card-Brad-McPherson.pdf', mode: 'dark',  scale: 1 },
+  { src: 'operations/business-card-print/card-matthew.html', out: 'operations/business-card-print/Sixfold-Card-Matthew-Sharpe.pdf', mode: 'light', scale: 1 },
   /* Vehicle magnets, 2026-09-16 — each page carries its own @page size (24.25 x
      12.25 / 18.25 in with bleed), which preferCSSPageSize honours; scale must be
      1 so an inch is an inch. Print-ready: the vendor gets the PDF as is. */

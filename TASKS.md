@@ -138,21 +138,35 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       + PDF), so Kara's email is the first use of it rather than a one-off. Covers what every
       close-out email carries: what was done, what was left, what the customer does next, the
       referral ask, the review ask.
-- [ ] **SX-4b — Business cards for Matthew and Brad.** The printed card’s back is
-      **Brandon Long · Owner · (303) 915-1045 · Contact@SixfoldColorado.com**, so two new backs
-      are needed. **The front does not change** — same cascading mark, same "Lawn, Land & Fire".
-      Regenerate with `build-card-final.mjs`, which already holds the printed layout.
-      **Three things to decide before anything is generated:**
-      **Titles** — Brandon is "Owner". What are you and Brad? Nothing on file says.
-      **Phone** — Brandon’s carries the company number. Same on all three, or individual ones?
-      **Email** — Brandon’s carries the shared `Contact@`, and that was your explicit
-      instruction at the time ("not a personal one"). Same rule for these, or do they get
-      individual Workspace addresses? Sixfold’s tenant exists but **Brandon still is not on it**.
-      **⚑ Regenerating touches the roots.** The Ridge mark has ten root strokes and the flat
-      mark is cropped above them, so the wrong mark silently deletes them — it has happened
-      once. Check the roots are present in the proof before ordering.
-      FedEx wants a two-page PDF, front then back; the spec is in
-      `operations/business-card-print/README.md`.
+- [ ] **SX-4b — Business cards for Matthew and Brad.** **✅ PRINT FILES BUILT AND VERIFIED
+      2026-10-01. Nothing is ordered — that is what is left, plus one decision.**
+      `Sixfold-Card-Brad-McPherson.pdf` and `Sixfold-Card-Matthew-Sharpe.pdf`, two pages each,
+      front then back, from the new `build-card-person.mjs`.
+      **Two of the three questions are answered by what he asked for:** **titles** — none, left
+      empty on both, Brandon keeps "Owner"; **phone** — individual, Brad (303) 945-1514 and
+      Matthew (803) 260-7359.
+      **⚑ The third is still open and gates the order. Email** — all three carry the shared
+      `Contact@SixfoldColorado.com`, which was the explicit instruction when Brandon’s was built
+      ("not a personal one"), so it is deliberate rather than a default. Individual Workspace
+      addresses would exist for two of the three people, because **Brandon still is not on the
+      tenant**. One line each to change.
+      **⚑ Matthew’s is ember on Bone — the COLOURWAY, not the old ember-bone card.** That file
+      reads `LAND & FIRE`, leads with fire mitigation and has no QR; the README says not to
+      migrate those to the new descriptor. His card is the current card recoloured: same
+      lockup, same QR, same "Lawn, Land & Fire". **If the fire-led copy is what he actually
+      wanted, that is a reversal of the 2026-09-28 descriptor decision — say so and it is two
+      lines.**
+      **⚑ On a light ground the roots move to the other end of the ramp.** Ten hairlines at
+      0.15–0.32 mm; they need the most contrast, which is the lightest stop on Pine (Frost,
+      14.46:1) and the DARKEST on Bone (Timber, 12.05:1). Copying the Pine ramp across renders
+      fine and the press drops the root system. The build now asserts it.
+      **Verified, not eyeballed:** 2 pages each at 3.750 × 2.250 in read out of the PDFs; 10/10
+      roots on all three; every ramp stop ≥ 3:1; and **the QR decoded back out of the finished
+      PDFs** — all three return the same `linktr.ee/SixFoldColorado` that is on the printed
+      cards. Brandon’s is regenerated **only as a regression test** — it is byte-identical to
+      the printed card once comments are stripped, which is what proves the other two inherit
+      an audited layout. His cards are printed; nothing reorders them.
+      Spec and the full trade-offs: `operations/business-card-print/README.md`.
 
 - [ ] **SX-10 — One call to Colorado Springs Utilities.** Settles three things at once, and
       the first is load-bearing: **(1)** whether the three-day watering limit still stands —

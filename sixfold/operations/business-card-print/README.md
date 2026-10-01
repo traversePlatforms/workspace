@@ -445,3 +445,99 @@ check of what this card actually puts on paper.
 - **Stock: smooth or matte, never linen or textured**, and matte or soft-touch coating if
   offered. 6 pt reversed type on a textured dark stock is the one combination that will look
   bad no matter how good the file is.
+
+---
+
+# ONE CARD PER PERSON — 2026-10-01 (SX-4b)
+
+Brad and Matthew asked for their own. Built by **`build-card-person.mjs`**, which is
+`build-card-final.mjs` with the person and the colourway lifted out as parameters. The printed
+card's builder is untouched — it is the record of a physical artefact that exists.
+
+| File to give FedEx | Who | Colourway | Title | Phone |
+|---|---|---|---|---|
+| `Sixfold-Card-Brandon-Long.pdf` | Brandon Long | cascade on Pine | Owner | (303) 915-1045 |
+| `Sixfold-Card-Brad-McPherson.pdf` | Brad McPherson | cascade on Pine | *none* | (303) 945-1514 |
+| `Sixfold-Card-Matthew-Sharpe.pdf` | Matthew Sharpe | **ember on Bone** | *none* | (803) 260-7359 |
+
+Each is **two pages — page 1 front, page 2 back**, 3.750 × 2.250 in, verified from the PDF.
+
+**⚑ Brandon's is a regression test, not a reprint.** His cards are printed. He is in the
+roster so the generator's output can be diffed against `card-cascade-final.html`: strip the
+comments and the `<title>` and the two files are **byte-identical**, which is what proves the
+other two inherit a layout that was already audited and sent to press. Nothing here reorders
+his.
+
+## ⚑ The ember-bone request was for the COLOURWAY, not the old ember-bone card
+
+`Sixfold-Card-Ember-Bone.pdf` (2026-09-28) is one of the four options the cascade card was
+chosen from. It reads **`LAND & FIRE`**, leads its service line with fire mitigation, has **no
+QR**, and uses the older, smaller layout. This README already says not to migrate those cards
+to the new descriptor — *they are the other option, not a half-migrated one.*
+
+So Matthew's card is **the current card in an ember-on-Bone colourway**, not that file with a
+new name on it. Same lockup, same QR, same `LAWN, LAND & FIRE`, same service line. A card in
+his pocket that dropped lawn would contradict both the descriptor decision of 2026-09-28 and
+the cards already in Brandon's hand.
+
+**If the fire-led copy was actually what he wanted**, that is a different card and a reversal
+of the descriptor decision — say so and it is a two-line change in `build-card-person.mjs`.
+
+## ⚑ ON A LIGHT GROUND THE ROOTS MOVE TO THE OTHER END OF THE RAMP
+
+The roots are ten hairlines, **0.15–0.32 mm**. They need the *most* contrast on the card, never
+the least. On Pine that is the lightest stop (Frost, 14.46:1). **On Bone the lightest stop is
+the worst thing on the card** — Frost on Bone is about 1.1:1, invisible. Matthew's card puts
+them at the dark end, Timber `#1F2A25`, **12.05:1**.
+
+Copying the Pine ramp onto a Bone card is a silent failure: it renders, it looks fine at
+thumbnail size, and the press drops the root system. `build-card-person.mjs` asserts the roots
+carry the maximum contrast in their own ramp and exits non-zero if any stop falls under 3:1.
+
+**Ember itself is not in the Bone ramp.** `#E4703A` is **2.56:1** on Bone — under the floor.
+That is why the older ember-on-Bone card used Ember Ink for its peaks too. The ramp is the
+ember family darkened until every stop clears:
+
+| Stop | Pine card | | Bone card | |
+|---|---|---|---|---|
+| conifer | Frost `#DCE7D2` | 14.46:1 | Clay `#C9561F` | 3.53:1 |
+| low mass | Sage `#A7BE93` | 9.19:1 | Ember Ink `#B84C15` | 4.18:1 |
+| middle peak | Fern `#6E8C61` | 4.92:1 | Deep `#8A3A10` | 6.34:1 |
+| tall peak | Turf `#2F7A4F` | 3.54:1 | Bark `#6E2E0C` | 8.29:1 |
+| **roots + ground bar** | Frost `#DCE7D2` | **14.46:1** | Timber `#1F2A25` | **12.05:1** |
+
+**The cascade reads the opposite way round on Bone, and that is unavoidable.** The crew chose
+"conifer lightest, tall peak darkest". On Pine the lightest stop is the one that pops; on Bone
+the darkest is. Same ramp, same order, inverted emphasis — it is the ground doing it, not a
+different design.
+
+**One thing the Bone card is better at:** 6 pt reversed type is the combination that fills in
+on a dark stock. Matthew's card sets dark type on a light ground, so that trap does not apply
+to his at all.
+
+## Verified, not eyeballed
+
+- **2 pages each, both 3.750 × 2.250 in**, read out of the PDFs.
+- **10/10 root strokes on all three**, asserted at build time against the Ridge master.
+- **Every ramp stop ≥ 3:1** against its own ground; the build exits non-zero otherwise.
+- **The QR was decoded back out of the finished PDFs**, not out of the source asset — the
+  embedded 1200 × 1200 image was pulled from each file and run through jsQR. All three return
+  `https://linktr.ee/SixFoldColorado`, **the same code that is on the printed cards**. One code
+  in circulation, not three. (That it points at Linktree and not the website is the standing
+  decision in X-2c, unchanged here.)
+- Rendered and **looked at**, both grounds.
+
+## Still open before anything is ordered
+
+- **⚑ Email is the shared `Contact@SixfoldColorado.com` on all three.** That was the explicit
+  instruction when Brandon's was built — "not a personal one" — so it is deliberate, not a
+  default. It is also one of the three questions SX-4b raised and the only one still unanswered:
+  Sixfold's Workspace tenant exists but **Brandon is not on it**, so individual addresses would
+  exist for two of the three people. One line each to change.
+- **The QR's centre mark is Turf green** on every card, including the ember one. It is the
+  standard brand asset and all three therefore carry the identical code; a green pip on an
+  ember card is a look, not a defect. `sixfold-qr-brand-nologo.png` is the alternative.
+- **Clay at 3.53:1 is the thinnest margin on Matthew's card.** It is a solid mass, not a
+  hairline, so it clears — but it is the first thing to darken if the proof looks weak.
+- **Nothing is ordered.** FedEx wants the two-page PDF, front then back. Stock smooth or matte,
+  never linen or textured.
