@@ -480,6 +480,30 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **So the order collapses to one item: capture the number at the door.** It is the only
       route that is free, consented, accurate and actually available. Everything else is a
       vendor invoice.
+      **▶ 2026-10-01 — Matthew asked whether Via’s method could be built in.** Via (a roofing
+      company he helps — separate entity) takes names and addresses from **Prospect Now**, then
+      hand-checks each on **Fast People Finder / True People Search**, using their “last seen”
+      dates to pick the live number before cold calling.
+      **What carries over, and what does not:**
+      • **Prospect Now would mostly duplicate what Sixfold already has free.** Its names and
+      addresses come largely from county assessor records — the same source the walk lists
+      pull from the state and El Paso GIS layers at no cost. **Via pays for Sixfold’s free tier.**
+      • **The people-finder lookup can be supported but not automated.** A human looking a
+      name up by hand is what Via does and is fine. Scraping 31,422 names breaks those sites’
+      terms, gets blocked, and produces exactly the same regulated phone list.
+      • **Buildable and small: a phone field on each door** (with a “found on / last-seen”
+      note), filled by hand from a lookup *or* at the door. **It is the same field SX-14
+      already needs**, so it is not wasted whichever way calling goes.
+      **⚑ The bar that applies whatever the source:** telemarketing to consumers means scrubbing
+      every number against the **national Do Not Call registry** and **Colorado’s no-call list**
+      before it is dialled, keeping an internal do-not-call list, calling only in permitted
+      hours, **no autodialers or prerecorded calls to cells, and no texts**, without prior
+      consent. *Shapes, not citations — get a real opinion before a calling programme starts.*
+      **Worth knowing for Via too: does it scrub?** That is what decides whether its model is
+      safe to copy.
+      **Recommendation for Sixfold: not yet.** The door list just doubled, door-knocking carries
+      none of this exposure, and Sixfold has no general liability cover on file. **Build the
+      phone field (useful either way) and revisit calling once the doors are worked.**
 
 - [ ] **SX-15 — Enrich each door from the parcel source you already query.** Found 2026-10-01
       while answering “can we attach Whitepages data to each door?” — **the answer is yes to
