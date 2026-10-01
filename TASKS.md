@@ -339,15 +339,25 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       12-month ROFR after it that is **24 months you cannot sell**, and if he walks you keep
       **$0** against a $24,000 cash offer that was real on 24 Sep. The 80/20 read means this is
       about what the 20% costs — and right now it costs you everything and him nothing.
-      **⚑ The fix that was decided on 24 Sep is still not in the terms:** keep the deposit whole
-      but make **~$2,500 non-refundable**, earned if he walks, credited if he buys. It never came
-      up on the 29th. It is the only change that makes the walk-away outcome non-negative, and it
-      *lowers* his exposure too, which makes it easier to ask for, not harder.
-      **⚑ Total Purchase Price is still blank** — the one line that decides the deal.
-      Nine open items listed at the foot of the redline note; the ones that cannot wait are the
-      price, the escrow question in Brandon's own words, and whether registration goes on with
-      “OR” or “AND” — **“AND” hands him a veto over your own title**, which is the lienholder
-      idea you already rejected arriving by a different door.
+      **✅ 2026-10-01, three of his calls are in. (1) The non-refundable deposit is DROPPED** —
+      his call, his reasoning: the read is that they buy it out, so a clause that only bites in
+      the walk-away case is not worth asking for. Removed everywhere. **Do not re-propose it.**
+      **(2) Escrow is settled** — §3 now states outright that Owner remains the owner and the
+      named owner on the title for the whole Term, and that **any arrangement requiring him to
+      endorse the title before completion is outside the Agreement.** The only remaining choice
+      is who physically holds the unsigned certificate. **(3) He is filling in the price
+      himself.**
+      **⚑ “DUAL REGISTRATION” CANNOT BE DONE — AND DOES NOT NEED TO BE.** Checked against the
+      statute. **C.R.S. 42-3-113(2):** registration cards are issued **to the owner**, so adding
+      Brandon to the registration means adding him to the **title**, making him a co-owner — the
+      lienholder exposure already rejected, by another door. **C.R.S. 42-3-113(6):** the card
+      must be *“in the possession of the driver or carried in the vehicle”* — **the statute asks
+      where the card is, not whose name is on it.** So §5.1 keeps the truck in Matthew’s name and
+      a new **§5.6 + Exhibit E** do the job the proposal was reaching for: registration card,
+      proof of insurance, and a signed one-page **Authority to Operate** in the glovebox, with a
+      notary line. It answers the roadside worry better than a second name would.
+      **⚑ Still blank and it can cost real money: the §6.6 repair cap.** Uncapped, one
+      transmission costs more than the whole deposit.
       **This is the highest-consequence item on the whole list** and the only one with a
       counterparty waiting on you.
 - [ ] **P-2 — Stringline plan**, finalise and start pushing. Still ahead: the full USPTO search
