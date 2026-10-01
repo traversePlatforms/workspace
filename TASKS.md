@@ -130,10 +130,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       fault being fixed. A straight tag delete moves nothing and needs no re-check.
       **Either way she was not emailed**, as long as her name, email and routing order were not
       touched — those are what trigger a fresh notification, not a document change.
-      **(2)** Say the three-day cancellation right **out loud** on the phone at the moment she
-      signs — 16 CFR 429.1(e); an envelope does not discharge it. Note in the job file that you
-      did and when.
-      **(3)** **Signing by Wednesday 7 October** keeps the 12 October start. Later is not fatal,
+      **(2) ✅ DONE 2026-10-01 — Matthew spoke to her on the phone about the cancellation
+      policy.** 16 CFR 429.1(e) wants it spoken and it was. **⚑ Write it into the job file with
+      the date** — the spoken notice only helps later if there is a record that it happened,
+      and right now the only record is this line.
+      **(3) The one thing left: her signature.** **Wednesday 7 October** keeps the 12 October
+      start. Later is not fatal,
       the job just moves. Download the certificate of completion, not just the signed PDF.
       Maintenance has no deadline pressure — first payment 1 Nov, first visit Thu 19 Nov.
 - [ ] **SX-4 — Kara end-of-work email**, carrying the relevant packet material. **The only item
@@ -324,8 +326,28 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 ## Personal
 
-- [ ] **P-1 — Tacoma contract.** ⚑ The buy-side redline is answered and **not sent**, and the
-      deal is guaranteed-negative as drafted. You're the seller and the buyer is your boss.
+- [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
+      in the document** — see [redline-2026-10-01.md](personal/redline-2026-10-01.md).
+      Term 12 months, deposit $7,000, §12 split into Holder default and **Owner default**, a new
+      **§6.6 ninety-day mechanical** clause with an as-is carve-out, and escrow and registration
+      drafted as **tick-boxes rather than decisions made for you**. The insurance half of term 6
+      turned out to **already exist** — additional insured, loss payee, certificate and
+      cancellation notice are all in the Insurance Agreement already.
+      **⚑ Nothing sent, nothing signed. You're the seller and the buyer is your boss.**
+      **⚑ THE MONEY GOT WORSE, NOT BETTER.** The term doubled to 12 months, the deposit fell
+      $1,000 and is **still refundable in full**, and you picked up a repair obligation. With the
+      12-month ROFR after it that is **24 months you cannot sell**, and if he walks you keep
+      **$0** against a $24,000 cash offer that was real on 24 Sep. The 80/20 read means this is
+      about what the 20% costs — and right now it costs you everything and him nothing.
+      **⚑ The fix that was decided on 24 Sep is still not in the terms:** keep the deposit whole
+      but make **~$2,500 non-refundable**, earned if he walks, credited if he buys. It never came
+      up on the 29th. It is the only change that makes the walk-away outcome non-negative, and it
+      *lowers* his exposure too, which makes it easier to ask for, not harder.
+      **⚑ Total Purchase Price is still blank** — the one line that decides the deal.
+      Nine open items listed at the foot of the redline note; the ones that cannot wait are the
+      price, the escrow question in Brandon's own words, and whether registration goes on with
+      “OR” or “AND” — **“AND” hands him a veto over your own title**, which is the lienholder
+      idea you already rejected arriving by a different door.
       **This is the highest-consequence item on the whole list** and the only one with a
       counterparty waiting on you.
 - [ ] **P-2 — Stringline plan**, finalise and start pushing. Still ahead: the full USPTO search
