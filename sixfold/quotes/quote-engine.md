@@ -22,9 +22,46 @@
 > |---|---|
 > | Job 2 calibration | **16.82 h predicted vs 16 recorded** — drift 0.82 h, still inside the 1 h threshold |
 > | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
+>
+> ⚑ **TWO DIFFERENT $2,250s, AND THEY ARE NOT THE SAME NUMBER. Corrected 2026-10-01.**
+> The row above is the **engine's repriced output for job 2**, whose real price was $1,500.
+> The Sedalia pack also carries **$2,250** as its Option A quote, to a different customer.
+> They are a coincidence. **Conflating them has already happened once** — see the reference
+> set below, which is the thing to price from.
 > | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
 >
-> ## AUDITED 2026-10-01 — version 11
+> ## ⚑ THE PRICING REFERENCE SET — from Matthew, 2026-10-01
+
+**This replaces guessing from the job-2 drift figures.** His instruction, in his order of
+authority:
+
+| Reference | Figure | What it anchors | Status |
+|---|---|---|---|
+| **Kara — tree removal, planting etc.** | **$1,500** | **The primary reference.** The most recent **completed** job, so it is the one to price from first | ✅ Done |
+| **Kara — aeration** | **$1,100** | Aeration pricing | Quoted, 12 Oct |
+| **Kara — monthly** | **$250/mo** | Mowing, edging, spot treatment, **snow removal**, and an aeration revisit — the recurring/maintenance anchor | Quoted, from 1 Nov |
+| **Sedalia — whole job** | **$2,250** | **A cautionary reference, not a target.** See below | ⚠️ Unfinished |
+
+### ⚑ The Sedalia job is the warning, not the benchmark
+
+Matthew, 2026-10-01: **“we grossly under estimated the work and under priced that job. We were
+unable to finish the work and have to come back at a later time so we were only given the
+$1,125 deposit.”**
+
+- **$1,125 is exactly half of $2,250**, which matches the half-and-half payment terms recorded
+  for Option A. The arithmetic is consistent.
+- **The customer is Shannon.** Her name appears nowhere else in this folder — every other
+  document calls this “Sedalia”. *Inference, from the $2,250 + whole-job + half-deposit match;
+  worth one word of confirmation.*
+- **So $2,250 is not evidence that $2,250 was right.** It is evidence that a job quoted at
+  $2,250 could not be completed for $2,250. Price **above** it, not at it.
+- **The work is not finished and a return visit is owed**, with the other half outstanding.
+  That is now tracked as **SX-12**, not as a pricing note.
+
+**None of this changes a rate.** The billable stays $100/man-hour and rates v4 stands. What
+changes is which real job the engine's output gets sanity-checked against.
+
+## AUDITED 2026-10-01 — version 11
 >
 > Matthew asked for an audit of both tools while he was out. **Values all checked out** —
 > billable 100, `t30` 65, `sap` 30, `limb` 28, `t3060` 330, `htPerFt` 2.17, and the three hits for

@@ -72,8 +72,25 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       `t30` reprice to 65 man-min, the job-type split, the silent $0 that split introduced, and
       a provenance audit that added a sixth **Timed** badge and moved `dump` and the drive blow
       to `all`. Changelog: [quote-engine.md](sixfold/quotes/quote-engine.md).
-      **Known open, unchanged:** job 2 prices out at $2,250 against $1,500 charged and that gap
-      has never been resolved. Partly blocked by SX-1.
+      **✅ THE PRICING REFERENCE SET IS SETTLED — Matthew, 2026-10-01**, and it corrects a
+      conflation that had been sitting in the file:
+      **⚑ There are TWO different $2,250s.** One is the engine’s repriced output for job 2
+      (whose real price was $1,500). The other is the **Sedalia** pack’s Option A quote, to a
+      **different customer**. They are a coincidence, and treating them as one number is what
+      made “the gap has never been resolved” look like a mystery.
+      **The references, in his order of authority:**
+      • **$1,500 — Kara, tree removal + planting. The PRIMARY one**: the most recent
+      **completed** job, so price from it first.
+      • **$1,100 — Kara, aeration.** The aeration anchor.
+      • **$250/mo — Kara**: mowing, edging, spot treatment, snow removal, aeration revisit. The
+      recurring/maintenance anchor.
+      • **$2,250 — Sedalia (Shannon). A WARNING, NOT A TARGET** — *“grossly under estimated …
+      under priced”*, the work could not be finished, only the $1,125 half was paid. It is
+      evidence to price **above** $2,250, not at it.
+      **None of this moves a rate** — $100/man-hour and rates v4 stand. It changes what the
+      engine gets sanity-checked against. **Cheap to apply: the figures live in
+      `quote-engine.md` only, not in the artifact or the live site copy.** Partly blocked by
+      SX-1.
 - [x] **SX-2a — Put the quote engine on the site, beside the doors app.** ✅ **LIVE 2026-09-30**,
       uploaded and confirmed on the host 2026-10-01. `/summit-de59ae83/` asks for a code, then
       offers **Door rounds** (everyone) or **Quote build** (admins). `api/quote.php`,
@@ -118,6 +135,21 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **The decision is still the decision.** Retiring the artifact leaves one source and one
       live copy. Keeping both means the four steps have to run every time, by someone who
       remembers all four.
+
+- [ ] **SX-12 — Shannon / Sedalia: the job is unfinished and a return visit is owed.** Surfaced
+      2026-10-01 while correcting the pricing references, and **it was not on this list.**
+      Quoted **$2,250** for the whole job, **grossly underestimated and underpriced**, the crew
+      **could not finish**, and only the **$1,125 half** has been paid. **A real customer is
+      owed a return visit and roughly half the money is outstanding.**
+      **Three things to settle, and the first is not a money question:**
+      **(1) Has she been told when?** An unfinished job with no date is how a customer becomes
+      a bad review. **(2) What is actually left to do**, in hours, against the cost-up engine at
+      $100/man-hour — not against the original quote, which is the number that failed.
+      **(3) Is the balance still $1,125, or does finishing it cost more than the quote allows?**
+      If it does, that is a conversation to have **before** the crew goes back, not after.
+      **⚑ Her name is recorded nowhere in `sixfold/quotes/` — every document says “Sedalia”.**
+      Matthew supplied “Shannon” 2026-10-01; the link is an inference from the $2,250 +
+      half-deposit match and is worth one word of confirmation.
 
 - [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** When a fire quote is
       selected, surface the tax credit / grant / insurer re-score material. **This one is
