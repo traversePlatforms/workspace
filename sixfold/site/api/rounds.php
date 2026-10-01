@@ -175,6 +175,45 @@ function appendMark(string $key, array $row): bool {
     return (bool) @file_put_contents(marksFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 
+/* ---- phone numbers ------------------------------------------------------
+ *
+ * Added 2026-10-01 (SX-14). Same shape as the marks log, for the same reason:
+ * numbers are keyed on door id in their OWN append-only file, so they survive
+ * every rebuild of the door lists. Storing them inside the door files would
+ * wipe every number the next time the lists are regenerated.
+ *
+ * ⚑ `source` IS THE COMPLIANCE FIELD, NOT DECORATION. 'door' means the
+ * homeowner gave it to us in person -- consent. 'tps' / 'fps' / 'other' means it
+ * was looked up, and calling a looked-up number to sell is telemarketing: it
+ * must be scrubbed against the national DNC registry and Colorado's no-call
+ * list first. Keeping the two distinguishable is the whole point of the field.
+ *
+ * Numbers are entered BY A PERSON. Nothing here fetches from a people-search
+ * site -- automated pulling was declined on 2026-10-01 and stays declined. */
+function phonesFile(string $key): string { return DATA_DIR . '/phones-' . $key . '.log'; }
+
+/** Replay the append-only log: last line per door wins; a null phone removes it. */
+function loadPhones(string $key): array {
+    $f = phonesFile($key);
+    if (!is_readable($f)) return [];
+    $out = [];
+    $fh = @fopen($f, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $p = json_decode(trim($line), true);
+        if (!is_array($p) || !isset($p['id'])) continue;
+        if (($p['phone'] ?? null) === null) unset($out[$p['id']]);   // removed
+        else $out[$p['id']] = ['phone' => $p['phone'], 'source' => $p['source'] ?? 'other',
+                                'seen' => $p['seen'] ?? '', 'by' => $p['by'] ?? '', 'at' => $p['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendPhone(string $key, array $row): bool {
+    return (bool) @file_put_contents(phonesFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
+
 /* ---- routing ----------------------------------------------------------- */
 $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
@@ -268,14 +307,18 @@ if ($action === 'area') {
     $data = loadRegion($key);
     if (!$data) fail('No such region.', 404);
     $marks = loadMarks($key);
+    $phones = loadPhones($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
         foreach ($a['doors'] as $d) {
             $m = $marks[$d['id']] ?? null;
+            $p = $phones[$d['id']] ?? null;
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by']] : null,
+                'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
+                                 'by' => $p['by'], 'at' => $p['at']] : null,
             ];
         }
         out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors]);
@@ -293,6 +336,32 @@ if ($action === 'mark') {
     if ($out !== null && !in_array($out, ['booked', 'later', 'miss'], true)) fail('Bad outcome.');
     $ok = appendMark($key, ['id' => $id, 'outcome' => $out, 'by' => $me, 'at' => time()]);
     if (!$ok) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+if ($action === 'phone') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    $raw = $body['phone'] ?? null;
+    if ($raw === null || trim((string) $raw) === '') {             // remove the number
+        if (!appendPhone($key, ['id' => $id, 'phone' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    $digits = preg_replace('/\D/', '', (string) $raw);
+    if (strlen($digits) === 11 && $digits[0] === '1') $digits = substr($digits, 1);
+    /* North American numbering: area code and exchange both start 2-9 */
+    if (!preg_match('/^[2-9]\d{2}[2-9]\d{6}$/', $digits)) fail('That is not a valid 10-digit US number.');
+    $source = (string) ($body['source'] ?? '');
+    if (!in_array($source, PHONE_SOURCES, true)) fail('Pick where the number came from.');
+    $seen = (string) ($body['seen'] ?? '');
+    if ($seen !== '' && !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $seen)) fail('Last seen must be a month, like 2026-08.');
+    if ($source === 'door') $seen = '';                             // given in person: the date given is `at`
+    if (!appendPhone($key, ['id' => $id, 'phone' => $digits, 'source' => $source, 'seen' => $seen, 'by' => $me, 'at' => time()])) {
+        fail('Could not save that. Try again.', 500);
+    }
     out(['ok' => true]);
 }
 
@@ -349,17 +418,23 @@ if ($action === 'report' || $action === 'export') {
     $fh = fopen('php://output', 'w');
     /* the explicit $escape is required from PHP 8.4 and accepted since 5.5; '' is
        also the standards-correct choice — no backslash escaping in CSV */
-    fputcsv($fh, ['region', 'neighbourhood', 'address', 'acres', 'owner', 'outcome', 'by', 'when'], ',', '"', '');
+    fputcsv($fh, ['region', 'neighbourhood', 'address', 'acres', 'owner', 'outcome', 'by', 'when',
+                  'phone', 'phone_source', 'phone_last_seen', 'phone_added_by', 'phone_added'], ',', '"', '');
+    $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         $marks = loadMarks($r['key']);
+        $phones = loadPhones($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
-                if (!$m) continue;
+                $p = $phones[$d['id']] ?? null;
+                if (!$m && !$p) continue;                          // a door with a number is worth exporting too
                 fputcsv($fh, [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
-                              $m['outcome'], $m['by'], date('Y-m-d H:i', (int) $m['at'])], ',', '"', '');
+                              $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '',
+                              $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
+                              $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : ''], ',', '"', '');
             }
         }
     }

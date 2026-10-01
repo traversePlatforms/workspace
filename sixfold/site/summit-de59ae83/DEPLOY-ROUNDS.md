@@ -7,6 +7,45 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Phone numbers added 2026-10-01 — upload these two (SX-14)
+
+| From | To | Note |
+|---|---|---|
+| `api/rounds.php` | `public_html/api/rounds.php` | over the existing one — adds the `phone` action |
+| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` | over the existing one — the phone field |
+
+**Nothing to create by hand.** The first number saved creates `phones-<town>.log` in
+`sixfold-data/rounds/`, beside the marks logs and outside `public_html` for the same reason.
+
+**Why a separate log and not the door files:** the door files are rebuilt from county data
+(as they were on 2026-10-01). Numbers stored inside them would be wiped by the next rebuild.
+Keyed on door id in their own append-only file, they survive exactly the way marks do.
+
+**What a crew member sees:** each door shows its number, a line saying where it came from
+— *"Given at the door · 1 Oct 2026"* or *"Found on True People Search · last seen Aug
+2026"* — and **"+ Add a phone number"** or **"Edit number"**. Booked quotes in the Done list
+take a number too, since that is the moment one is usually handed over.
+
+**⚑ Numbers are typed in by a person.** Nothing in the app fetches from a people-search site.
+Automated pulling was declined on 2026-10-01 — blocked by the permission system as personal-
+data harvesting, and against those sites' terms besides.
+
+**⚑ The source field decides what you may do with a number.** *Given at the door* is consent.
+*Looked up* is a cold call, and those doors carry an amber note: check the national and Colorado
+Do Not Call lists before calling.
+
+**Tested before shipping:** 32 checks against a scratch copy on real HTTP with throwaway codes
+— save, read back, normalisation, eight refusals (bad number, bad source, bad month, unknown
+town, path traversal, GET on a write), removal, marks unaffected, crew blocked from export,
+admin export carrying five phone columns, log unreachable over HTTP. Then rendered at iPhone
+width and looked at: no sideways scroll, inputs at 16 px so iOS does not zoom on tap.
+
+**One known limit:** a phone save is not in the offline queue (that queue is mark-only and
+would misread it). With no signal, the form stays open with the number still typed and asks
+for a retry — nothing is lost unless the crew member navigates away.
+
+**After uploading: flush the cache, then check plain against busted** — see below.
+
 ## ⚑ Quote build added 2026-09-30 — upload this too
 
 Signing in now lands on a **tools chooser** rather than straight on doors. Two tiles: **Door

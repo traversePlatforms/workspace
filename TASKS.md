@@ -506,6 +506,19 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **Recommendation for Sixfold: not yet.** The door list just doubled, door-knocking carries
       none of this exposure, and Sixfold has no general liability cover on file. **Build the
       phone field (useful either way) and revisit calling once the doors are worked.**
+      **✅ PHONE FIELD BUILT AND TESTED 2026-10-01 — awaiting upload** (`api/rounds.php` +
+      `summit-de59ae83/index.html`; steps in DEPLOY-ROUNDS.md). Every door now takes a number
+      with a source statement: *“Given at the door · 1 Oct 2026”* or *“Found on True People
+      Search · last seen Aug 2026”*. Booked quotes in Done take one too. Stored in its own
+      append-only `phones-<town>.log`, so it **survives door rebuilds** the way marks do.
+      **32/32 end-to-end checks passed**, then rendered and looked at on an iPhone-width screen.
+      **⚑ The automated pull from True / Fast People Search was NOT built.** Matthew asked for
+      it; the permission system blocked it as personal-data harvesting, and it is against those
+      sites’ terms besides. **Lookup stays a human step — exactly how Via does it.** Do not
+      try to route around this.
+      **The source field is the compliance control:** looked-up numbers show an amber
+      “check the Do Not Call lists before calling” note; numbers given at the door do not.
+      **Ticks when it is live.**
 
 - [ ] **SX-15 — Enrich each door from the parcel source you already query.** Found 2026-10-01
       while answering “can we attach Whitepages data to each door?” — **the answer is yes to

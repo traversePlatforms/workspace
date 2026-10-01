@@ -130,6 +130,26 @@
   .tag.booked{color:var(--booked)} .tag.later{color:var(--later)}
   .tag.miss{color:var(--miss)} .tag.pending{color:var(--bad)}
   .by{font-size:11px;color:var(--soft)}
+
+  /* phone numbers (SX-14). Inputs are 16px so iOS does not zoom the page on focus. */
+  .ph{margin-top:9px;font-size:13px}
+  .ph a.num{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ink);text-decoration:none}
+  .ph .src{display:block;font-size:11.5px;color:var(--soft);margin-top:2px}
+  .ph .dnc{display:block;font-size:11px;color:var(--later);margin-top:2px}
+  .ph button.lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font:500 13px var(--sans);cursor:pointer}
+  .phf{margin-top:4px;display:grid;gap:9px}
+  .phf label{font-size:11.5px;color:var(--soft);display:grid;gap:4px}
+  .phf input,.phf select{font:16px var(--sans);padding:11px 10px;border:1px solid var(--line);
+    border-radius:8px;background:var(--card);color:var(--ink);width:100%;box-sizing:border-box}
+  .phf .row{display:flex;gap:6px}
+  .phf .row button{flex:1;font:600 13px var(--sans);padding:12px 4px;border-radius:8px;
+    border:1px solid var(--line);background:transparent;color:var(--soft);cursor:pointer}
+  .phf .row button.save{color:var(--booked);border-color:var(--booked)}
+  .phf .err{font-size:12px;color:var(--bad);min-height:0}
+  .phf .err:empty{display:none}
+  /* on a Done row the number wraps onto its own full-width line */
+  .done{flex-wrap:wrap}
+  .done .ph{flex-basis:100%;margin-top:4px}
   .undo{background:none;border:0;color:var(--accent);font:500 12.5px var(--sans);cursor:pointer;padding:4px}
 
   table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -347,7 +367,7 @@
     view.appendChild(q('div', 'msg', 'Loading ' + name + '…'));
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
-      S.area = j.area; S.doors = j.doors; S.avg = j.avg;
+      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null;
       renderDoors();
       window.scrollTo(0, 0);
     });
@@ -363,6 +383,118 @@
       else { enqueue(item); }
       renderDoors();
     }).catch(function () { enqueue(item); renderDoors(); });
+  }
+
+  /* ---- phone numbers (SX-14) ----
+     Entered BY A PERSON: from the homeowner at the door, or from a manual lookup.
+     Nothing here fetches from a people-search site.
+     The source is kept because it decides what may be done with the number. One
+     given at the door is consent. One looked up is a cold call, and must clear the
+     national and Colorado Do Not Call lists before anyone dials it.
+     ⚑ Phone saves are NOT in the offline queue. That queue is mark-only and
+     pendingFor() matches on door id alone, so a phone item there would show as a
+     phantom mark and be posted to the wrong action. A failed save instead keeps
+     the form open with what was typed. */
+  var SRC = { door: 'Given at the door', tps: 'Found on True People Search',
+              fps: 'Found on Fast People Search', other: 'From another source' };
+  var SRC_PICK = { door: 'They gave it to me at the door', tps: 'True People Search',
+                   fps: 'Fast People Search', other: 'Somewhere else' };
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function digits(p) { return String(p || '').replace(/\D/g, ''); }
+  function fmtPhone(p) {
+    var n = digits(p);
+    if (n.length === 11 && n.charAt(0) === '1') n = n.slice(1);
+    return n.length === 10 ? '(' + n.slice(0, 3) + ') ' + n.slice(3, 6) + '-' + n.slice(6) : n;
+  }
+  function phoneStatement(ph) {
+    var s = SRC[ph.source] || SRC.other;
+    if (ph.source === 'door') {
+      if (ph.at) { var d = new Date(ph.at * 1000); s += ' · ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
+    } else if (ph.seen) {
+      var m = /^(\d{4})-(\d{2})$/.exec(ph.seen);
+      if (m) s += ' · last seen ' + MONTHS[+m[2] - 1] + ' ' + m[1];
+    }
+    return s;
+  }
+  function savePhone(d, data, errEl) {
+    errEl.textContent = '';
+    var body = { region: S.region, id: d.id, phone: data.phone, source: data.source, seen: data.seen };
+    return api('phone', { body: body }).then(function (j) {
+      if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
+      if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
+      var n = digits(data.phone);
+      if (n.length === 11 && n.charAt(0) === '1') n = n.slice(1);
+      d.phone = n ? { phone: n, source: data.source, seen: data.source === 'door' ? '' : (data.seen || ''),
+                      by: S.me, at: Math.floor(Date.now() / 1000) } : null;
+      S.editPhone = null;
+      renderDoors();
+      return true;
+    }).catch(function () {
+      errEl.textContent = 'Could not send — check your signal and tap Save again. What you typed is kept.';
+      return false;
+    });
+  }
+  function phoneBlock(d) {
+    var box = q('div', 'ph');
+    if (S.editPhone === d.id) {
+      var f = q('div', 'phf');
+      var li = q('label', null, 'Phone number');
+      var inp = q('input');
+      inp.type = 'tel'; inp.inputMode = 'tel'; inp.autocomplete = 'off'; inp.placeholder = '(719) 555-0123';
+      inp.value = d.phone ? fmtPhone(d.phone.phone) : '';
+      li.appendChild(inp); f.appendChild(li);
+      var ls = q('label', null, 'Where it came from');
+      var sel = q('select');
+      ['door', 'tps', 'fps', 'other'].forEach(function (k) {
+        var o = q('option', null, SRC_PICK[k]); o.value = k; sel.appendChild(o);
+      });
+      sel.value = d.phone ? d.phone.source : 'door';
+      ls.appendChild(sel); f.appendChild(ls);
+      var lm = q('label', null, 'Last seen on the site');
+      var mon = q('input');
+      mon.type = 'month'; mon.value = d.phone && d.phone.seen ? d.phone.seen : '';
+      lm.appendChild(mon); f.appendChild(lm);
+      function sync() { lm.style.display = sel.value === 'door' ? 'none' : ''; }
+      sel.addEventListener('change', sync); sync();
+      var err = q('div', 'err'); f.appendChild(err);
+      var row = q('div', 'row');
+      var sv = q('button', 'save', 'Save'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        if (!inp.value.trim()) { err.textContent = 'Type a number first, or tap Remove.'; return; }
+        sv.disabled = true;
+        savePhone(d, { phone: inp.value, source: sel.value, seen: sel.value === 'door' ? '' : mon.value }, err)
+          .then(function () { sv.disabled = false; });
+      });
+      row.appendChild(sv);
+      if (d.phone) {
+        var rm = q('button', null, 'Remove'); rm.type = 'button';
+        rm.addEventListener('click', function () { savePhone(d, { phone: '', source: 'door', seen: '' }, err); });
+        row.appendChild(rm);
+      }
+      var cx = q('button', null, 'Cancel'); cx.type = 'button';
+      cx.addEventListener('click', function () { S.editPhone = null; renderDoors(); });
+      row.appendChild(cx);
+      f.appendChild(row);
+      box.appendChild(f);
+      setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
+      return box;
+    }
+    if (d.phone) {
+      var a = q('a', 'num', fmtPhone(d.phone.phone));
+      a.href = 'tel:' + digits(d.phone.phone);
+      box.appendChild(a);
+      box.appendChild(q('span', 'src', phoneStatement(d.phone)));
+      if (d.phone.source !== 'door') box.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
+      var ed = q('button', 'lnk', 'Edit number'); ed.type = 'button';
+      ed.addEventListener('click', function () { S.editPhone = d.id; renderDoors(); });
+      box.appendChild(ed);
+    } else {
+      var ad = q('button', 'lnk', '+ Add a phone number'); ad.type = 'button';
+      ad.addEventListener('click', function () { S.editPhone = d.id; renderDoors(); });
+      box.appendChild(ad);
+    }
+    return box;
   }
 
   function renderDoors() {
@@ -393,6 +525,7 @@
         was.style.color = 'var(--miss)';
         card.appendChild(was);
       }
+      card.appendChild(phoneBlock(d));
       var acts = q('div', 'acts');
       ['booked', 'later', 'miss'].forEach(function (k) {
         var b = q('button', null, OUT[k]);
@@ -432,6 +565,7 @@
         u.addEventListener('click', function () { markDoor(d, null); });
         rhs.appendChild(u);
         row.appendChild(lhs); row.appendChild(rhs);
+        row.appendChild(phoneBlock(d));
         view.appendChild(row);
       });
     }
