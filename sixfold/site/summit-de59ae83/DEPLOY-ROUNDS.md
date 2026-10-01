@@ -7,6 +7,81 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Quote build added 2026-09-30 — upload this too
+
+Signing in now lands on a **tools chooser** rather than straight on doors. Two tiles: **Door
+rounds** for everyone, **Quote build** for admins only.
+
+| From | To | Note |
+|---|---|---|
+| `api/quote.php` | `public_html/api/quote.php` | **New.** Admin-only storage for rates and saved jobs |
+| `summit-de59ae83/index.html` | over the existing one | The chooser |
+| `summit-de59ae83/quote.html` | `public_html/summit-de59ae83/quote.html` | **New.** Generated — do not hand-edit |
+
+**Nothing to create by hand.** `quote.php` makes `sixfold-data/quote/` itself on first write,
+beside `sixfold-data/rounds/` and outside `public_html` for the same reason: this is the cost
+model, the margins and saved customer quotes, and an `.htaccess` deny already failed once on
+this host.
+
+### The gate is a ROLE, not a code
+
+Matthew asked for it locked to him while he tests it. **His six-digit code is not written
+anywhere in the site** — putting a code into a file the web server serves is one
+misconfiguration away from publishing it, and `rounds-codes.php` says of itself *"never commit,
+never paste it anywhere".*
+
+Instead the check is `role === 'admin'`, in **two** places: the tile is not rendered for crew,
+and `quote.php` refuses them 403. The second one is what matters — a crew sign-in produces a
+valid session, so hiding the button alone would protect nothing.
+
+**To let Brad in later:** change his line in `api/rounds-codes.php` from `crew` to `admin` and
+re-upload that one file. Nothing else changes. ⚑ Note that also gives him the doors admin view —
+who marked what, the totals and the CSV export. If those need to be separate, the roles need a
+third level rather than a second.
+
+### Check it, in this order
+
+```
+curl -s -o /dev/null -w "%{http_code}\n" https://sixfoldcolorado.com/api/quote.php?action=me
+```
+
+**Expect 401** signed out. Then sign in as **crew** in a browser and load
+`/summit-de59ae83/quote.html` — expect the page to replace itself with *"Your code opens door
+rounds but not the quote build."* Then sign in as **admin**: the Quote build tile appears and the
+page loads.
+
+### ⚑ What the gate does NOT protect
+
+**`quote.html` is an ordinary page and its source carries the default rate table** — $100 a
+man-hour, 65 man-minutes a tree, the dump presets, the haul floors, the whole cost model as plain
+JavaScript. Anyone who knows the `summit-de59ae83` URL can read it **without signing in at all.**
+
+What the gate protects is the *saved* side: rates anyone has edited, and every saved job with its
+customer name and price. Those live behind `quote.php` and outside the web root.
+
+So the defaults rest on the same thing the doors page rests on: **the path being unguessable.**
+That was accepted for a door list. Whether it is accepted for the margins is a separate decision,
+and if not, the fix is to serve `LINES` and `COSTS` from `quote.php` too rather than baking them
+into the page. **Not done, and worth deciding before anyone else is given the URL.**
+
+### Keeping the two copies in step
+
+`quote.html` is **generated** from `quotes/quote-engine.artifact.html` by
+`sixfold/site/build-quote-page.mjs`. The artifact stays the single source of the pricing logic;
+the generator changes only the two storage calls and the file download.
+
+**Re-run it after any reprice, and re-upload**, or the site keeps quoting the old numbers:
+
+```
+node sixfold/site/build-quote-page.mjs
+```
+
+That is the v2/v3 trap in a new place. The artifact sat two days behind the file once and every
+quote built in between was 43% low on labour. There are now **three** things that can drift —
+the file, the artifact and the site — so a reprice means publish *and* regenerate *and* upload.
+
+---
+
 ## Upload
 
 | From | To | Notes |

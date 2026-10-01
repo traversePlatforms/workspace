@@ -1,0 +1,162 @@
+<?php
+/**
+ * api/quote.php — storage for the Quote Build tool at /summit-de59ae83/quote.html
+ *
+ * Replaces the two things the Claude artifact got from `claude.use("db")`:
+ *   config/rates   — the standing rate table, shared by everyone who may use it
+ *   jobs           — saved jobs, newest first
+ *
+ * ⚑ ADMIN ONLY, AND DELIBERATELY. Matthew, 2026-09-30: he wants to test it
+ * before anyone else is let in. The gate is the session's ROLE, never a
+ * particular person's code — hardcoding a six-digit code into a file the web
+ * server serves would put it one misconfiguration away from being public, and
+ * the codes file says of itself "never commit, never paste it anywhere".
+ * To let Brad in later, change his line in api/rounds-codes.php from 'crew' to
+ * 'admin'. Nothing in this file or the page changes.
+ *
+ * ⚑ WHERE THE DATA LIVES. Outside public_html, for the reason recorded in
+ * rounds.php: on 2026-09-29 an .htaccess deny on public_html/data FAILED on this
+ * host and served real addresses over the web. This is worse than addresses —
+ * it is the cost model, the margins and saved customer quotes — so it never goes
+ * under the document root at all.
+ *
+ * Session, signing and the cookie are rounds.php's, unchanged: one code, both
+ * tools. A quote session is the same session as a doors session.
+ */
+
+declare(strict_types=1);
+
+/* A notice printed into the body corrupts every response — same trap rounds.php
+   hit with PHP 8.4's fputcsv deprecation. Errors go to the log, never the output. */
+@ini_set('display_errors', '0');
+@ini_set('log_errors', '1');
+
+function quoteDir(): string {
+    $outside = dirname(__DIR__, 2) . '/sixfold-data/quote';
+    if (is_dir($outside)) return $outside;
+    return __DIR__ . '/../data/quote';          // dev checkout only
+}
+define('QUOTE_DIR', quoteDir());
+const COOKIE = 'sfr';
+const MAX_JOBS = 400;          // a job is small; this is a sanity ceiling, not a product limit
+
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+header('X-Robots-Tag: noindex, nofollow');
+header('Referrer-Policy: no-referrer');
+
+function out(array $body, int $status = 200): never {
+    http_response_code($status);
+    echo json_encode($body, JSON_UNESCAPED_SLASHES);
+    exit;
+}
+function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
+
+$cfgPath = __DIR__ . '/rounds-codes.php';
+if (!is_readable($cfgPath)) fail('Not configured on this server.', 503);
+$cfg = (array) (require $cfgPath);
+$sessionKey = (string) ($cfg['session_key'] ?? '');
+if ($sessionKey === '' || $sessionKey === 'REPLACE-WITH-64-RANDOM-HEX-CHARACTERS') {
+    fail('Not configured on this server.', 503);
+}
+
+/* ---- session, identical to rounds.php so one sign-in covers both ---- */
+function b64u_dec(string $s): string {
+    return (string) base64_decode(strtr($s, '-_', '+/') . str_repeat('=', (4 - strlen($s) % 4) % 4), true);
+}
+function b64u(string $s): string { return rtrim(strtr(base64_encode($s), '+/', '-_'), '='); }
+function verify(?string $token, string $key): ?array {
+    if (!$token || substr_count($token, '.') !== 1) return null;
+    [$body, $mac] = explode('.', $token, 2);
+    if (!hash_equals(b64u(hash_hmac('sha256', $body, $key, true)), $mac)) return null;   // constant time
+    $p = json_decode(b64u_dec($body), true);
+    if (!is_array($p) || ($p['exp'] ?? 0) < time()) return null;
+    return $p;
+}
+
+$session = verify($_COOKIE[COOKIE] ?? null, $sessionKey);
+if (!$session) fail('Sign in first.', 401);
+
+$me   = (string) ($session['n'] ?? '');
+$role = (string) ($session['r'] ?? 'crew');
+
+/* ⚑ The gate. A crew member signing in for doors gets a valid session, so the
+   check has to be here and not only on the button that links to the page. */
+if ($role !== 'admin') fail('Not allowed.', 403);
+
+/* ---- storage ------------------------------------------------------------
+ * Two files, both plain JSON. Writes go through a temp file and rename so a
+ * half-written file can never be read: rename is atomic on the same volume.  */
+if (!is_dir(QUOTE_DIR)) @mkdir(QUOTE_DIR, 0775, true);
+if (!is_dir(QUOTE_DIR)) fail('Storage is not set up on this server.', 503);
+
+function readJson(string $path, array $fallback): array {
+    if (!is_readable($path)) return $fallback;
+    $raw = @file_get_contents($path);
+    if ($raw === false || $raw === '') return $fallback;
+    $v = json_decode($raw, true);
+    return is_array($v) ? $v : $fallback;
+}
+function writeJson(string $path, array $value): bool {
+    $tmp = $path . '.' . bin2hex(random_bytes(4)) . '.tmp';
+    $ok = @file_put_contents($tmp, json_encode($value, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), LOCK_EX);
+    if ($ok === false) { @unlink($tmp); return false; }
+    if (!@rename($tmp, $path)) { @unlink($tmp); return false; }
+    return true;
+}
+
+$ratesFile = QUOTE_DIR . '/rates.json';
+$jobsFile  = QUOTE_DIR . '/jobs.json';
+
+$action = (string) ($_REQUEST['action'] ?? '');
+$isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+$body   = [];
+if ($isPost) {
+    $raw  = file_get_contents('php://input') ?: '';
+    $body = (array) (json_decode($raw, true) ?? []);
+}
+
+/* who am I — the page uses this to confirm the gate before rendering anything */
+if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role]);
+
+/* the standing rate table */
+if ($action === 'rates') {
+    if (!$isPost) out(['ok' => true, 'rates' => readJson($ratesFile, [])]);
+    $payload = (array) ($body['rates'] ?? []);
+    if (!$payload) fail('Nothing to save.');
+    $payload['updatedAt'] = gmdate('c');
+    $payload['updatedBy'] = $me;
+    if (!writeJson($ratesFile, $payload)) fail('Could not save the rate table.', 500);
+    out(['ok' => true, 'updatedAt' => $payload['updatedAt']]);
+}
+
+/* saved jobs */
+if ($action === 'jobs') out(['ok' => true, 'jobs' => readJson($jobsFile, [])]);
+
+if ($action === 'save') {
+    if (!$isPost) fail('POST required', 405);
+    $job = (array) ($body['job'] ?? []);
+    $name = trim((string) ($job['name'] ?? ''));
+    if ($name === '') fail('Give the job a name first.');
+    $jobs = readJson($jobsFile, []);
+    if (count($jobs) >= MAX_JOBS) fail('The job list is full — delete an old one first.', 507);
+    $job['id'] = bin2hex(random_bytes(8));
+    $job['savedAt'] = gmdate('c');
+    $job['savedBy'] = $me;
+    array_unshift($jobs, $job);                       // newest first, no sort needed on read
+    if (!writeJson($jobsFile, $jobs)) fail('Could not save the job.', 500);
+    out(['ok' => true, 'id' => $job['id'], 'savedAt' => $job['savedAt']]);
+}
+
+if ($action === 'delete') {
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? '');
+    if ($id === '') fail('Which job?');
+    $jobs = readJson($jobsFile, []);
+    $kept = array_values(array_filter($jobs, fn($j) => (string) ($j['id'] ?? '') !== $id));
+    if (count($kept) === count($jobs)) out(['ok' => true, 'removed' => 0]);   // idempotent
+    if (!writeJson($jobsFile, $kept)) fail('Could not delete the job.', 500);
+    out(['ok' => true, 'removed' => 1]);
+}
+
+fail('Unknown action.', 404);

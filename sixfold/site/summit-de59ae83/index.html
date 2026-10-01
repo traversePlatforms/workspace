@@ -75,6 +75,19 @@
   .signin input{width:100%;font:600 27px var(--mono);letter-spacing:.22em;text-align:center;
     padding:14px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);
     color:var(--ink)}
+  .choose{max-width:420px;margin:10vh auto 0}
+  .choose h2{font-size:21px;margin:0 0 4px}
+  .choose p.who{color:var(--soft);font-size:14px;margin:0 0 20px}
+  .choose a.tile,.choose button.tile{display:block;width:100%;text-align:left;cursor:pointer;
+    margin-bottom:11px;padding:16px 17px;border-radius:12px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);box-shadow:var(--shadow);font:inherit;
+    text-decoration:none;-webkit-tap-highlight-color:transparent}
+  .choose .tile:hover{border-color:var(--accent)}
+  .choose .tile b{display:block;font-size:17px;font-weight:600;margin-bottom:3px}
+  .choose .tile span{display:block;font-size:13.5px;color:var(--soft);line-height:1.45}
+  .choose .tile .tag{display:inline-block;margin-top:9px;font:600 10px var(--mono);
+    letter-spacing:.11em;text-transform:uppercase;color:var(--accent)}
+  .choose .out{margin-top:18px;font-size:13px;color:var(--soft)}
   .signin button{width:100%;margin-top:10px;font:600 16px var(--sans);padding:14px;border-radius:10px;
     border:0;background:var(--accent);color:var(--on-accent);cursor:pointer}
 
@@ -213,7 +226,7 @@
       api('signin', { body: { code: inp.value } }).then(function (j) {
         S.busy = false; btn.textContent = 'Sign in';
         if (!j.ok) return signinView(j.error || 'That code was not recognised.');
-        S.me = j.name; S.role = j.role; start();
+        S.me = j.name; S.role = j.role; chooseView();
       }).catch(function () {
         S.busy = false; btn.textContent = 'Sign in';
         signinView('No connection. Try again when you have signal.');
@@ -225,6 +238,43 @@
     if (err) { var m = q('div', 'msg bad', err); m.style.marginTop = '16px'; box.appendChild(m); }
     view.appendChild(box);
     inp.focus();
+  }
+
+  /* Signing in no longer lands straight on doors. There are two tools behind one
+     code now, so the code opens a door onto both — and the quote side is gated on
+     ROLE, never on a particular person's code. Making Brad an admin in
+     api/rounds-codes.php is what gives him the quote tool; nothing here changes. */
+  function chooseView() {
+    hdr.hidden = true; foot.hidden = true;
+    view.textContent = '';
+    var box = q('div', 'choose');
+    box.appendChild(q('h2', null, 'Sixfold field tools'));
+    box.appendChild(q('p', 'who', 'Signed in as ' + (S.me || 'crew') + '.'));
+
+    var doors = q('button', 'tile');
+    doors.type = 'button';
+    doors.innerHTML = '<b>Door rounds</b><span>Walk a neighbourhood and mark every door, including the misses. Works offline and syncs when you have signal.</span>';
+    doors.addEventListener('click', start);
+    box.appendChild(doors);
+
+    if (S.role === 'admin') {
+      var quote = document.createElement('a');
+      quote.className = 'tile';
+      quote.href = 'quote.html';
+      quote.innerHTML = '<b>Quote build</b><span>Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.</span><span class="tag">Admin only &middot; in testing</span>';
+      box.appendChild(quote);
+    }
+
+    var out = q('div', 'out');
+    var so = q('button', null, 'Sign out');
+    so.type = 'button';
+    so.style.cssText = 'background:none;border:0;color:var(--soft);font:inherit;text-decoration:underline;cursor:pointer;padding:0';
+    so.addEventListener('click', function () {
+      api('signout').then(function () { S.me = null; S.role = 'crew'; signinView(); });
+    });
+    out.appendChild(so);
+    box.appendChild(out);
+    view.appendChild(box);
   }
 
   /* ⚑ A DROPDOWN, NOT CHIPS. Chips were right at three towns. At eleven they
@@ -439,9 +489,20 @@
   }
 
   function start() { flush().then(refresh); }
+  /* the header is built by refresh(); hang a way back off it rather than
+     rebuilding the header markup */
+  function backTile() {
+    if (document.getElementById('toTools')) return;
+    var b = document.createElement('button');
+    b.id = 'toTools'; b.type = 'button'; b.textContent = 'Tools';
+    b.style.cssText = 'background:none;border:1px solid var(--line);border-radius:8px;color:var(--soft);' +
+      'font:600 12px var(--sans);padding:5px 10px;cursor:pointer;margin-left:auto';
+    b.addEventListener('click', chooseView);
+    if (whoEl && whoEl.parentNode) whoEl.parentNode.appendChild(b);
+  }
 
   api('me').then(function (j) {
-    if (j.ok) { S.me = j.name; S.role = j.role; start(); }
+    if (j.ok) { S.me = j.name; S.role = j.role; chooseView(); }
     else signinView();
   }).catch(function () { signinView('No connection.'); });
 
