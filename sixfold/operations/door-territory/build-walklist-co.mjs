@@ -119,7 +119,13 @@ if (!county || !Number.isFinite(lat) || !Number.isFinite(lon)) {
 }
 const radiusMi = Number(arg('radius', '1.5'));
 const minAcres = Number(arg('min-acres', '0.18'));
-const maxAcres = Number(arg('max-acres', '2.5'));
+/* Raised 2.5 -> 10 on 2026-10-01 (SX-9d). 2.5 was clipping Black Forest, Larkspur,
+   Divide and Florissant, where RR-5 zoning makes ~5 acres the normal lot -- exactly the
+   big wooded lots the fire and land work is built for. 10 sits well under Colorado's
+   35-acre ranch threshold, and the owner-lives-here filter still drops absentee land.
+   ⚑ WIDENING IS SAFE, NARROWING IS NOT: marks survive a rebuild that adds doors, but
+   a door that drops out orphans its mark. Do not lower this without reading SX-13. */
+const maxAcres = Number(arg('max-acres', '10'));
 const outFile = arg('out', `walklist-${place ?? county.toLowerCase()}.csv`);
 /* used when the county leaves the situs city blank — see the note at its use */
 const REGION_FALLBACK = (place ?? `${county} COUNTY`).replace(/-/g, ' ').toUpperCase();

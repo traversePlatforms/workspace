@@ -90,9 +90,20 @@ if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
 }
 const radiusMi = Number(arg('radius', '1.5'));
 const minAcres = Number(arg('min-acres', '0.18'));
-const maxAcres = Number(arg('max-acres', '2.5'));
+/* Raised 2.5 -> 10 on 2026-10-01 (SX-9d). 2.5 was clipping Black Forest, Larkspur,
+   Divide and Florissant, where RR-5 zoning makes ~5 acres the normal lot -- exactly the
+   big wooded lots the fire and land work is built for. 10 sits well under Colorado's
+   35-acre ranch threshold, and the owner-lives-here filter still drops absentee land.
+   ⚑ WIDENING IS SAFE, NARROWING IS NOT: marks survive a rebuild that adds doors, but
+   a door that drops out orphans its mark. Do not lower this without reading SX-13. */
+const maxAcres = Number(arg('max-acres', '10'));
 const outFile = arg('out', `walklist-${place ?? 'area'}.csv`);
-const limit = Number(arg('limit', '4000'));
+/* ⚑ RAISED 4000 -> 50000 on 2026-10-01, and the cap now SHOUTS when it bites.
+   At 4000 it silently truncated Monument and Black Forest once their boxes grew: the
+   pull stopped mid-stream and dropped whatever parcels came back last — 101 doors that
+   crews may already have marked. A cap that drops data without saying so is worse than
+   no cap. If this ever trips, raise --limit; never ship a truncated pull. */
+const limit = Number(arg('limit', '50000'));
 
 /* ---- geometry ------------------------------------------------------------ */
 /* Planar area of a lat/lon ring in square metres, via a local equirectangular
@@ -153,7 +164,15 @@ for (;;) {
   const got = r.features ?? [];
   parcels.push(...got);
   process.stdout.write(`\r  parcels pulled: ${parcels.length}`);
-  if (got.length < 1000 || parcels.length >= limit) break;
+  if (got.length < 1000) break;
+  if (parcels.length >= limit) {
+    console.error(`
+
+  ⚑⚑ PARCEL CAP HIT at ${limit} — THIS PULL IS TRUNCATED. Doors past the cap are`);
+    console.error(`  silently missing. Re-run with a higher --limit. Do NOT build from this CSV.
+`);
+    process.exit(2);
+  }
   offset += got.length;
 }
 console.log('');
