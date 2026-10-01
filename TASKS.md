@@ -478,6 +478,19 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       the expensive half is the regenerate + upload, not the edit. Raising the acre ceiling and
       adding fields in one pass costs what one of them costs. **Adding fields drops no doors,
       so marks survive** — same safety as widening.
+      **⚑ EL PASO CANNOT BE ENRICHED FROM ITS CURRENT LAYER — checked 2026-10-01.**
+      `build-walklist.mjs` reads El Paso’s `MailingLabelParcels`, and that layer’s 26 fields
+      carry **no sale date, price, value or year built** — names and mailing addresses only, as
+      the name says. It does have a per-parcel `hyperlink`, probably to the assessor record.
+      **So the split, by door:** statewide composite (Castle Rock, Woodland Park, Franktown,
+      Larkspur, Divide, Florissant, Cripple Creek, Sedalia) **~11,600 doors, enrichable free**.
+      **El Paso — Monument, Black Forest, Palmer Lake — ~3,800 doors, not**, and those are
+      core territory near the base. *(Sedalia is Douglas County; its region field says so,
+      which puts it on the statewide side.)*
+      **Recommended scope:** enrich the ~75% that is free, raise the acre ceiling everywhere,
+      and treat El Paso enrichment as a **separate research question** — find whether El Paso
+      publishes an assessor layer with sale data. **The app must show El Paso doors cleanly
+      with the fields absent**, not as blanks that look like a bug.
 
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
