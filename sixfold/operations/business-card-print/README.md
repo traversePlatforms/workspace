@@ -458,7 +458,7 @@ card's builder is untouched — it is the record of a physical artefact that exi
 |---|---|---|---|---|---|
 | `Sixfold-Card-Brandon-Long.pdf` | Brandon Long | cascade on Pine | Owner | (303) 915-1045 | `Contact@` |
 | `Sixfold-Card-Brad-McPherson.pdf` | Brad McPherson | cascade on Pine | *none* | (303) 945-1514 | `Contact@` |
-| `Sixfold-Card-Matthew-Sharpe.pdf` | Matthew Sharpe | **ember on Bone** | CTO | (803) 260-7359 | **`M.Sharpe@`** |
+| `Sixfold-Card-Matthew-Sharpe.pdf` | Matthew Sharpe | **ember on Bone** | Chief Technology Officer | (803) 260-7359 | **`M.Sharpe@`** |
 
 Each is **two pages — page 1 front, page 2 back**, 3.750 × 2.250 in, verified from the PDF.
 
@@ -514,6 +514,38 @@ Glyph positions pulled from the finished PDF's content stream, in inches from th
 added to that block, overflows. `build-card-person.mjs` prints an estimate from the font metric
 on every build and flags anything past 92% — the estimate is there to catch a long address
 before the render, never instead of looking at the render.
+
+### ⚑ The title's tracking is solved for, not set
+
+`CTO` was replaced with **`CHIEF TECHNOLOGY OFFICER`** on 2026-10-01: three letters read as a
+hole in the block rather than a line of type.
+
+**At the card's 1.4 pt tracking it does not fit.** 24 characters × (0.6 em at 6.2 pt + 1.4 pt)
+is **1.71 in** against a **1.69 in** column, so it would wrap — and a wrapped title under a
+one-line name reads as a mistake, not a choice.
+
+Rather than hard-code a second number, `titleTracking()` opens the tracking to the card's
+**1.4 pt whenever the title is short enough** and otherwise closes it until the line fills
+**95%** of the column. **This is what keeps Brandon's card byte-identical:** `OWNER` clamps to
+1.4 pt and nothing in his output moves.
+
+| | Tracking | Measured width |
+|---|---|---|
+| `OWNER` (Brandon) | 1.4 pt — the card default | 0.336 in |
+| `CHIEF TECHNOLOGY OFFICER` (Matthew) | **1.096 pt**, closed to fit | **1.575 in** |
+
+Measured out of the finished PDF: the title runs **0.300 → 1.875 in** and the email **0.300 →
+1.894 in**. The two longest lines on the card now end **within 0.019 in of each other**, which
+is the balance that was asked for. 1.096 pt also lands beside the services line's 1.2 pt, so
+the back reads as one tracked system rather than one line set differently.
+
+**The size did not change.** 6.2 pt is the card's small-type size, shared with the band on the
+front and the service line. If the title still wants more presence, size is the lever — but it
+is a change to the type scale, not to this one line.
+
+**⚑ Letter-spacing in CSS is added after EVERY character, the last one included.** The advance
+per character is (glyph + tracking) and the visible line ends one tracking unit short of the
+computed width. Dropping that term over-estimates by a whole character at these lengths.
 
 ## ⚑ ON A LIGHT GROUND THE ROOTS MOVE TO THE OTHER END OF THE RAMP
 

@@ -147,8 +147,15 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Matthew (803) 260-7359.
       **✅ The third is answered too, 2026-10-01, and it splits. Email** — Brandon and Brad keep
       the shared `Contact@SixfoldColorado.com`; **Matthew’s carries `M.Sharpe@SixfoldColorado.com`**
-      and the title **CTO**. Two conventions in one card family, on purpose — a fourth card has
-      to be told which one it gets.
+      and the title **Chief Technology Officer**, spelled out — `CTO` read as a hole in the block
+      rather than a line of type. Two conventions in one card family, on purpose — a fourth card
+      has to be told which one it gets.
+      **⚑ The title no longer fits at the card’s tracking, so the tracking is solved for.**
+      24 characters at 1.4 pt is 1.71 in against a 1.69 in column and would wrap. `titleTracking()`
+      keeps 1.4 pt for anything short (Brandon’s `OWNER`, so **his card stays byte-identical**)
+      and otherwise closes it to fill 95% — 1.096 pt here. Title and email now end within
+      0.019 in of each other. **The type size did not change**; if it still wants presence, size
+      is the lever and that is a change to the scale, not to one line.
       **⚑ The only thing now between this and an order: confirm the mailbox exists.**
       `M.Sharpe@SixfoldColorado.com` appears nowhere in the repo before today, while `Contact@`
       is on 34 documents. Matthew is the tenant’s only super admin so it is a minute’s work, but

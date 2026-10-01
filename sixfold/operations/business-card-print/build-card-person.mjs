@@ -149,10 +149,41 @@ const PEOPLE = [
   { file: 'card-brad', name: 'Brad McPherson', title: null,
     phone: '(303) 945-1514', email: SHARED_EMAIL, colourway: 'cascade-pine',
     note: 'Same card as the printed one, new name and number.' },
-  { file: 'card-matthew', name: 'Matthew Sharpe', title: 'CTO',
+  { file: 'card-matthew', name: 'Matthew Sharpe', title: 'Chief Technology Officer',
     phone: '(803) 260-7359', email: 'M.Sharpe@SixfoldColorado.com', colourway: 'ember-bone',
-    note: 'Ember on Bone, personal address, CTO. Asked for 2026-10-01.' },
+    note: 'Ember on Bone, personal address, title spelled out. Asked for 2026-10-01.' },
 ];
+
+/* ---- the title's tracking is computed, not fixed ---------------------------
+   ⚑ "CHIEF TECHNOLOGY OFFICER" DOES NOT FIT AT THE CARD'S 1.4pt TRACKING.
+   24 characters x (0.6em at 6.2pt + 1.4pt) = 1.71in against a 1.69in column —
+   it would wrap, and a wrapped title under a one-line name looks like a mistake
+   rather than a choice.
+
+   Rather than set a second hard number, the tracking is solved for: open it to
+   the card's 1.4pt whenever the title is short enough (OWNER, and anything up to
+   about 17 characters), and otherwise close it until the line fills TARGET_FILL
+   of the column. ⚑ This is what keeps Brandon's card byte-identical — his OWNER
+   clamps to 1.4pt and nothing about his output moves.
+
+   Letter-spacing in CSS is added AFTER every character, the last one included,
+   so the advance per character is (glyph + tracking) and the visible line ends
+   one tracking unit short of the computed width. */
+/* The contact column: the card's inner width less the QR plate and the gap. */
+const COL_IN = 3.75 - 0.30 * 2 - (QR_IMG + QR_PAD * 2) - 0.13;
+const CH_IN = 7 / 72 * 0.6;          // Cascadia Mono advance at the 7pt body size
+
+const TI_PT = 6.2;
+const TI_GLYPH = TI_PT * 0.6;        // Cascadia Mono advance
+const TI_MAX_TRACK = 1.4;            // the card's tracking, unchanged where it fits
+const TARGET_FILL = 0.95;            // of the contact column
+function titleTracking(title, colIn) {
+  const n = title.length;
+  if (!n) return TI_MAX_TRACK;
+  const budgetPt = colIn * 72 * TARGET_FILL;
+  const track = (budgetPt - n * TI_GLYPH) / n;
+  return Math.max(0, Math.min(TI_MAX_TRACK, Number(track.toFixed(3))));
+}
 
 function page(p) {
   const c = COLOURWAYS[p.colourway];
@@ -200,7 +231,7 @@ function page(p) {
     justify-content: space-between; }
   .nm  { font-family: "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
     font-size: 12pt; line-height: 1.1; color: ${c.ink}; }
-  .ti  { font-size: 6.2pt; letter-spacing: 1.4pt; text-transform: uppercase; color: ${c.ti}; margin-top: 2pt; }
+  .ti  { font-size: ${TI_PT}pt; letter-spacing: ${titleTracking(p.title || '', COL_IN)}pt; text-transform: uppercase; color: ${c.ti}; margin-top: 2pt; }
   .dt  { font-size: 7pt; line-height: 1.8; color: ${c.ink}; }
   .dt .web { color: ${c.web}; }
   .svc { font-size: 6.2pt; letter-spacing: 1.2pt; color: ${c.svc}; }
@@ -265,11 +296,14 @@ function page(p) {
    so the budget is about 29 characters. This is an estimate off the metric, not
    a measurement — it exists to catch a long address before the render, never
    instead of looking at the render. */
-const COL_IN = 3.75 - 0.30 * 2 - (QR_IMG + QR_PAD * 2) - 0.13;
-const CH_IN = 7 / 72 * 0.6;
 for (const p of PEOPLE) {
   writeFileSync(join(HERE, `${p.file}.html`), page(p));
   console.log(`wrote ${p.file}.html  —  ${p.name}${p.title ? ', ' + p.title : ' (no title)'}  ·  ${p.phone}  ·  ${p.email}  ·  ${COLOURWAYS[p.colourway].label}`);
+  if (p.title) {
+    const tr = titleTracking(p.title, COL_IN);
+    const tw = (p.title.length * (TI_GLYPH + tr) - tr) / 72;
+    console.log(`   title "${p.title.toUpperCase()}" ${p.title.length} chars, tracking ${tr}pt${tr === TI_MAX_TRACK ? ' (the card default, unchanged)' : ' (closed from ' + TI_MAX_TRACK + 'pt so it fits one line)'} ≈ ${tw.toFixed(3)}in of ${COL_IN.toFixed(3)}in`);
+  }
   const w = p.email.length * CH_IN;
   const pct = (w / COL_IN) * 100;
   console.log(`   email ${p.email.length} chars ≈ ${w.toFixed(3)}in of ${COL_IN.toFixed(3)}in (${pct.toFixed(0)}%)${pct > 100 ? '  ⚑ OVERFLOWS — it will wrap' : pct > 92 ? '  ⚑ within 8% of the edge — LOOK at the render' : ''}`);
