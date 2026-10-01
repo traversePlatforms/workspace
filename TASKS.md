@@ -138,8 +138,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       + PDF), so Kara's email is the first use of it rather than a one-off. Covers what every
       close-out email carries: what was done, what was left, what the customer does next, the
       referral ask, the review ask.
-- [ ] **SX-4b — Business cards for Matthew and Brad.** **✅ PRINT FILES BUILT AND VERIFIED
-      2026-10-01. Nothing is ordered — that is what is left, plus one decision.**
+- [x] **SX-4b — Business cards for Matthew and Brad.** **✅ ORDERED 2026-10-01.** Print files
+      built and verified the same day.
       `Sixfold-Card-Brad-McPherson.pdf` and `Sixfold-Card-Matthew-Sharpe.pdf`, two pages each,
       front then back, from the new `build-card-person.mjs`.
       **Two of the three questions are answered by what he asked for:** **titles** — none, left
@@ -158,14 +158,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       is the lever and that is a change to the scale, not to one line.
       **✅ The mailbox question is closed — confirmed 2026-10-01: `M.Sharpe@` is an ALIAS on
       `Contact@`, not a separate mailbox.** It will not bounce, and it costs no extra Workspace
-      seat. **Nothing now blocks the order.**
+      seat.
       **⚑ But an alias means the card address lands in the shared inbox.** Academic today —
       Matthew is the only person on the tenant — and **not academic the moment Brandon is added**,
       which is an open item: mail to the address on Matthew’s card becomes readable by whoever
       else is in `Contact@`. Making it a real mailbox later is a Workspace change, not a
       reprint, but it has to happen **before** the second person joins.
-      **⚑ Also set "Send mail as" for the alias** (Gmail → Settings → Accounts) before the cards
-      go out, or a reply to the card address arrives from `Contact@` instead.
+      **⚑ Still to do, now that the box is coming. Set "Send mail as" for the alias** (Gmail →
+      Settings → Accounts) before the cards are handed out, or a reply to the card address
+      arrives from `Contact@` instead. **And check the roots survived the press** — ten
+      hairlines at 0.15–0.32 mm, the first thing a digital press drops; if they did not, the
+      widths are in the build output and the heaviest few are the fallback.
       **⚑ The contact column has 2.5 mm of slack left**, measured out of the PDF’s own glyph
       positions: the email line ends at 1.894 in and the QR plate starts at 2.121 in, of which
       0.130 in is the designed gap. It fits and does not wrap. A longer address does not.
@@ -349,7 +352,7 @@ every reprice), the chipper-hire guard inside SX-1b(1), SX-9e.
 
 **Last, both need data that does not exist yet:** X-8, SX-8.
 
-**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a.
+**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b.
 
 **Reconciled against the commits 2026-10-01.** Eight commits had landed since the register was
 last touched and none of them were on it. What changed: SX-2a ticked; SX-2 was three versions
