@@ -356,6 +356,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       a new **§5.6 + Exhibit E** do the job the proposal was reaching for: registration card,
       proof of insurance, and a signed one-page **Authority to Operate** in the glovebox, with a
       notary line. It answers the roadside worry better than a second name would.
+      **✅ AUDITED 2026-10-01 — six defects found and fixed**, four of them introduced by the
+      redraft and **two that pre-dated it**. The two that mattered most:
+      **⚑ §13 did not survive outcome (b)** — the clause keeping this deal out of the employment
+      relationship died exactly when the deal failed and they still worked together. It now
+      survives however the Agreement ends, and says so itself.
+      **⚑ A note claiming §12(a) and §12(b) mirror each other would have handed Brandon a 10-day
+      cure right on concealing the truck, not returning it, and using it in a crime** — the
+      three things you need to act on at once. Replaced with the real asymmetry and why.
+      Also: an ambiguous §12(b)(3), Exhibit A having no mechanical section to baseline §6.6
+      against, an ambiguous 90-day window, and §5.6 not covering every way the Term can end.
+      Re-runnable: `node personal/audit-agreement.mjs` — all checks pass.
       **⚑ Still blank and it can cost real money: the §6.6 repair cap.** Uncapped, one
       transmission costs more than the whole deposit.
       **This is the highest-consequence item on the whole list** and the only one with a
