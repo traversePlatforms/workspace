@@ -277,7 +277,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       plus a decision on embroidery vs print — the cascade cannot be embroidered.
 - [ ] **SX-8 — Loyalty / repeat-customer programme.** Worth doing *after* the first season's
       close-out sheets exist, or it's designed against no data.
-- [ ] **SX-9 — Territory and lead list from public parcel data.** ✅ Scoped 2026-09-29: county
+- [x] **SX-9 — Territory and lead list from public parcel data.** **✅ DONE — the deliverable
+      exists and is in use: 11 towns, 378 neighbourhoods, 15,442 doors, live on the site and
+      being knocked.** Ticked 2026-10-01. **The two things still “needed from the meeting” were
+      never build work — they are decisions, and they are split out as SX-9f** so this line
+      stops looking unfinished when the tool it describes has been working for days.
+      Original scope and reasoning: ✅ Scoped 2026-09-29: county
       assessor records, not bought consumer lists. Output is a **door-to-door walk list and a
       territory map**, ranked by lot size and wildfire hazard.
       **⚑ Two things settle before building.** (1) **Cold calling is the regulated half** —
@@ -290,8 +295,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       ✅ **The tool is built and working** — `sixfold/operations/door-territory/`. First run on
       Monument at 0.7 mi returned **320 doors to knock across 68 streets**, averaging 0.35
       acres, with the non-resident owners separated out. Run it for any place and radius.
-      **⚑ Still needs from the meeting:** which suburb to work first, and the solicitation
-      permit position for Monument / Colorado Springs / unincorporated El Paso.
+      (Those two meeting questions are now **SX-9f**.)
 - [x] **SX-9a — Teller and Douglas.** ✅ **Done 2026-09-29** via the statewide Colorado parcel
       composite — `build-walklist-co.mjs`. Castle Rock 1 mi → **1,216 doors**; Woodland Park
       0.8 mi → **1,143 doors**, avg 0.52 acres. Faster than El Paso: both addresses are on the
@@ -340,6 +344,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       `curl -s .../api/rounds-codes.php | wc -c` must be 0.
 
 ## Surge
+
+- [ ] **SX-9f — Two things the door programme still needs from the team meeting.** Split out
+      of SX-9 2026-10-01 — they were holding a finished build open.
+      **(1) Which suburb gets walked first.** The data covers 11 towns and nobody has picked
+      the starting one. Worth deciding against where the crew actually is, not where the
+      biggest door count is.
+      **(2) The solicitation-permit position for Monument, Colorado Springs and unincorporated
+      El Paso.** ⚑ **This is the only item on the door programme that can produce a fine
+      rather than a wasted afternoon.** Rules differ by jurisdiction and some require a permit
+      per canvasser. **Settle it before the first real afternoon, not after someone is turned
+      away mid-street.**
 
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
@@ -478,7 +493,12 @@ every reprice), the chipper-hire guard inside SX-1b(1), SX-9e.
 
 **Last, both need data that does not exist yet:** X-8, SX-8.
 
-**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b.
+**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b, SX-9.
+
+**Partly done, deliberately not ticked — the list should not flatter:** SX-9d (decided, not
+executed) · SX-1b (two of three answered; PPE still open) · SX-3a (envelope fixed and the
+spoken notice given; waiting on her signature) · SX-2 (reference set settled, item is wider)
+· P-1 (drafted and audited, not signed).
 
 **Reconciled against the commits 2026-10-01.** Eight commits had landed since the register was
 last touched and none of them were on it. What changed: SX-2a ticked; SX-2 was three versions
