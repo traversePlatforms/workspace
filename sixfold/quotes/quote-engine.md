@@ -2,7 +2,7 @@
 
 **Built:** 2026-09-14 · **Status:** internal tool, draft-only. Nothing it produces has been sent.
 **Live:** https://claude.ai/code/artifact/31b44b1b-38e8-4a19-8938-e1279c71883a
-**Published:** version 10, 2026-10-01 — rates v4, job-type split, $0 bug fixed. Artifact, this file and the site page are in step.
+**Published:** version 11, 2026-10-01 — rates v4, job-type split, $0 fixed, audited. Artifact, this file and the site page are in step. **The SITE copy needs re-uploading after any publish.**
 **Source:** [quote-engine.artifact.html](quote-engine.artifact.html) — hand-written, single file, no build step.
 
 ---
@@ -23,6 +23,55 @@
 > | Job 2 calibration | **16.82 h predicted vs 16 recorded** — drift 0.82 h, still inside the 1 h threshold |
 > | Job 2 price | **$1,700 → $2,250.** They actually charged $1,500. Worth his eye before this prices anything |
 > | Their one-tree job | Engine returns **$550**; they said $450 cost-up, $600 to match market |
+>
+> ## AUDITED 2026-10-01 — version 11
+>
+> Matthew asked for an audit of both tools while he was out. **Values all checked out** —
+> billable 100, `t30` 65, `sap` 30, `limb` 28, `t3060` 330, `htPerFt` 2.17, and the three hits for
+> "v3", "$70" and "30 man-min" are all inside comments that correctly describe what was
+> superseded. Nothing stale. Three real defects, all now fixed:
+>
+> ### 1 · A timing was wearing a price’s badge
+>
+> `t30` still carried `src:"quoted"`, so the badge said **Priced** and its tooltip claimed
+> *"Brandon and Brad’s own price for this exact line, divided by their own $100/man-hour."* Since
+> 2026-09-30 that figure is **Matthew’s stated duration**, which is a different kind of claim.
+> **In a tool whose entire purpose is correct provenance, that is not cosmetic.**
+>
+> A sixth badge now exists: **Timed** — *somebody said how long this takes, and said it with the
+> crew size. A duration, not a price divided by a rate. Still nobody’s stopwatch.* Double-bordered
+> so it reads apart from Priced (dotted) and Allocated (dashed).
+>
+> **⚑ The same false claim was in the scope draft, which gets SENT.** Its fact-check table listed
+> tree removal among the lines priced off Brandon and Brad’s figures. It now excludes them and
+> adds a Tree removal row of its own when a tree is on the sheet. The sources card had it too, in
+> the Priced paragraph, and now carries a Timed paragraph beside it.
+>
+> ### 2 · A lawn job could haul a load but not record the tip fee
+>
+> `loads` is tagged `all` but `dump` was `land fire`, so on a lawn job you could count a haul and
+> have nowhere to put what the tip cost. **Haul-off is the one line this business has demonstrably
+> lost money on**, which makes a load you cannot cost the worst possible gap to leave. `dump` is
+> now `all`.
+>
+> ### 3 · Blowing the drive down was lawn-only
+>
+> It happens at the end of any job. Now `all`.
+>
+> Row counts after: **lawn 14, land 23, fire 23**, against 40 before the split.
+>
+> ### The doors side, same audit
+>
+> **Clean.** The door data on disk is **11 towns and 15,442 doors**, matching the record exactly,
+> and `index.json` lists the same eleven regions as the files on disk. The roster in
+> `rounds-codes.php` — Matthew admin, Brandon, Brad, Nneka, Cai and Will D crew — matches the
+> table in `DEPLOY-ROUNDS.md` with no phantom entries either way.
+>
+> **One observation, not a defect:** Cripple Creek carries **40 doors across 15 areas**, under
+> three a street, and it is the furthest town on the list. Worth asking whether it earns its place
+> on a walk list at all. Castle Rock, at 6,564, is 42% of every door Sixfold holds.
+>
+> ---
 >
 > ## ⚑ BUG FIXED 2026-10-01 — the job-type split shipped with a silent $0, version 10
 >

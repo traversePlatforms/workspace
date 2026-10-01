@@ -149,6 +149,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:var(--accent)}
 .badge.sixfold{color:var(--good);border-color:var(--good);background:var(--good-bg)}
 .badge.alloc{color:var(--good);border-color:var(--good);border-style:dashed;background:transparent}
 .badge.quoted{color:var(--good);border-color:var(--good);border-style:dotted;background:var(--good-bg)}
+.badge.timed{color:var(--good);border-color:var(--good);border-style:double;background:transparent}
 
 /* ---------- job type picker ---------- */
 .pick{max-width:760px;margin:38px auto 0}
@@ -446,10 +447,16 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
     <div class="srcs">
       <p style="margin:0 0 7px"><b style="font-family:var(--f-data);font-size:11px;letter-spacing:.06em;color:var(--good)">RECORDED · PRICED · ALLOCATED</b><br>
       <b>Priced</b> arrived 2026-09-23: Brandon and Brad gave a price for one named line — $150 to mow ¾ acre, $50
-      to edge it, $16.66 a plant, $600 for 13 trees limbed, and a complete fell under 30 ft — and the table carries
-      that price divided by their own $100/man-hour. The figure is theirs and it is per-line, which is what
-      separates it from Allocated below; the division is arithmetic, not judgement. Nobody has yet timed any of
-      these with a stopwatch.<br><br>
+      to edge it, $16.66 a plant and $600 for 13 trees limbed — and the table carries that price divided by their
+      own $100/man-hour. The figure is theirs and it is per-line, which is what separates it from Allocated below;
+      the division is arithmetic, not judgement. <b>A price is not a time.</b> It carries margin and overhead, so
+      dividing it by the billable rate only yields a duration if the price were pure labour at cost — these read
+      back as whatever Brandon charged, which is circular as evidence even though it is fine as pricing.<br><br>
+      <b>Timed</b> is the other direction, and so far it is one line: <b>tree removal under 30 ft</b>. Matthew,
+      2026-09-30 — about 30–35 minutes with two people for the whole tree, down, bucked and loaded or chipped, so
+      65 man-minutes at the midpoint. That is a duration someone stated, with the crew size attached. It replaced
+      a figure of 30 taken from "complete fell, 15 minutes", which was half as much and may have covered only the
+      felling. <b>Still nobody's stopwatch.</b><br><br>
       <b>Recorded</b> is Brandon's own number for that line: every recorded cost on a job — dump fees, hire,
       purchases, fuel — plus the handling percentage, the rounding, and the 16-hour total. <b>Allocated</b> is
       that total shared out across the time lines by Matthew so the table reproduces
@@ -513,7 +520,7 @@ const LINES = [
   {s:1, m:"all", id:"mob",     lbl:"Mobilisation, per job", sub:"Load out, drive, walk-through, before and after photos", unit:"man-min / job", min:90, step:1, src:"sixfold"},
 
   {s:1, m:"land fire", id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees, allocated from its recorded 16 man-hours. Was identical to the 10–30 ft line until 2026-09-30; that line is now 65 and these two sit apart, which is the sensible ordering. Still an allocation, not a timing", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
-  {s:1, m:"land fire", id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Matthew 2026-09-30: about 30–35 minutes with TWO people for the whole tree — taken down, bucked, and loaded or chipped. 65 man-min is the midpoint. SUPERSEDES Brandon and Brad 2026-09-23, “complete fell, 15 minutes” (30 man-min), which was half this and may have covered felling only. Does NOT include limbing a tree that stays standing — that is its own line", unit:"man-min / tree", min:65, step:5, src:"quoted", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
+  {s:1, m:"land fire", id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Matthew 2026-09-30: about 30–35 minutes with TWO people for the whole tree — taken down, bucked, and loaded or chipped. 65 man-min is the midpoint. SUPERSEDES Brandon and Brad 2026-09-23, “complete fell, 15 minutes” (30 man-min), which was half this and may have covered felling only. Does NOT include limbing a tree that stays standing — that is its own line", unit:"man-min / tree", min:65, step:5, src:"timed", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
   {s:1, m:"land fire", id:"tht",     lbl:"Cross-check: price the same trees by height", sub:"⚑ A CHECK, NOT THE PRICE — the banded lines above are what quotes a job. Type heights as “7, 12, 25”, or “4x7” for four the same, and compare. Every tree differs by placement and thickness as much as by height, so a figure to the foot claims more accuracy than the work has. Use this OR the lines above, never both", unit:"—", min:0, step:1, src:"quoted", custom:"heights", noRate:true},
   {s:1, m:"land fire", id:"t3060",   lbl:"Trees to take down — 30 to 60 ft", sub:"Wexford: 4.0–7.0 man-hours at 30–50 ft. Brandon and Brad did not give a figure for this band — it still carries the trade number", unit:"man-min / tree", min:330, step:5, src:"comp", mkt:500, mktSrc:"Hawk, 30–60 ft, $500–$1,000"},
   {s:1, m:"land fire", id:"t6080",   lbl:"Trees to take down — 60 to 80 ft", sub:"Wexford: 7.0–12.0 man-hours at 50–70 ft", unit:"man-min / tree", min:570, step:5, src:"comp", mkt:1000, mktSrc:"Hawk, 60 ft+, $1,000–$2,000+"},
@@ -534,11 +541,11 @@ const LINES = [
   {s:2, m:"lawn", id:"edge",    lbl:"Edge", sub:"Brandon and Brad 2026-09-23: $50 for the same ¾ acre, converted at $100/man-hour. Was 60", unit:"man-min / acre", min:40, step:5, src:"quoted", qstep:0.25},
   {s:2, m:"lawn", id:"pullout", lbl:"Existing plants to pull out", sub:"Brandon and Brad 2026-09-23: $16.66 a plant — exactly $100 ÷ 6, a ten-minute task. Was 12", unit:"man-min / plant", min:10, step:1, src:"quoted"},
   {s:2, m:"lawn", id:"plantin", lbl:"Plants to dig in and set", sub:"“Not planting” — Brandon and Brad, 2026-09-23. Sixfold does not offer this", unit:"—", min:0, step:1, src:"off", noRate:true, rateNote:"not offered"},
-  {s:2, m:"lawn", id:"blow",    lbl:"Blow down drive and walks, per job", unit:"man-min / job", min:30, step:1, src:"sixfold"}
+  {s:2, m:"all", id:"blow",    lbl:"Blow down drive and walks, per job", unit:"man-min / job", min:30, step:1, src:"sixfold"}
 ];
 
 const COSTS = [
-  {id:"dump", m:"land fire", lbl:"Dump and tip fees", sub:"Called and confirmed today, commercial rate — not the homeowner SLASH rate. Tipping is charged by WEIGHT, so what is in the trailer matters more than how full it is", billed:true,
+  {id:"dump", m:"all", lbl:"Dump and tip fees", sub:"Called and confirmed today, commercial rate — not the homeowner SLASH rate. Tipping is charged by WEIGHT, so what is in the trailer matters more than how full it is", billed:true,
    presets:[["7×14 wood-heavy", 269], ["7×14 mostly brush", 110], ["One tree's share", 125]]},
   {id:"hire", m:"all", lbl:"Equipment hire", sub:"Mower, edger, chipper, grinder — whatever is rented for this job", billed:true,
    presets:[["Chipper, 24 h", 320], ["Mower + edger (job 2)", 269]]},
@@ -704,6 +711,7 @@ function badgeFor(l){
   if (l.src === "off") return {cls:"comp", txt:"Not offered", title:"Sixfold does not offer this — Brandon and Brad, 2026-09-23"};
   if (l.src === "noprice") return {cls:"unbacked", txt:"No rate yet", title:"Sixfold has no rate of its own for this. The only figure on file is a competitor's, and it is used for the market check only — it cannot price a job"};
   if (confirmed[l.id]) return {cls:"sixfold", txt:"Recorded ✓", title:"Confirmed by Brandon as Sixfold's own rate — tap to unset"};
+  if (l.src === "timed") return {cls:"timed", txt:"Timed", title:"Somebody said how long this takes, and said it with the crew size — a DURATION, not a price divided by a rate. Sixfold's own figure, but still one person's recollection rather than a stopwatch on a recorded job. Tap when it has been timed for real."};
   if (l.src === "quoted") return {cls:"quoted", txt:"Priced", title:"Brandon and Brad's own price for this exact line, 2026-09-23, divided by their own $100/man-hour. The figure is theirs and it is per-line — only the conversion to minutes is Matthew's. Tap when one of them confirms the TIME as well as the price"};
   if (l.src === "comp") return {cls:"comp", txt:"Competitor", title:"From outside trade research, not a Sixfold figure"};
   if (l.src === "sixfold") return {cls:"alloc", txt:"Allocated", title:"Brandon's recorded 16 man-hours on job 2, shared out across the lines by Matthew — the total is recorded, this line's share is not. Tap when Brandon confirms it outright"};
@@ -1252,7 +1260,9 @@ function scopeMarkdown(){
   out.push("", "## Fact-check log", "", "| Figure | Source |", "|---|---|");
   out.push("| $" + cfg.billable + "/man-hour billable | **Recorded** — Brandon and Brad, 2026-09-23, \"labor $100 dollars an hour minimum\", confirmed as a man-hour. Replaced the SynkedUP $65–$75 trade band. At $" + (cfg.billable*2) + "/hr for a two-person crew this is above Hawk's published $115–$143 in Colorado Springs |");
   out.push("| Counts and recorded costs | **Recorded** — off the walk sheet. Not independently verified |");
-  out.push("| Time per unit | **Mixed** — mow, edge, plant removal, limbing and tree removal under 30 ft come from Brandon and Brad's own prices of 2026-09-23, converted at $" + cfg.billable + "/man-hour. The rest is Sixfold's recorded 16 man-hours on job 2 shared out by hand, or unbacked where listed above |");
+  out.push("| Time per unit | **Mixed** — mow, edge, plant removal and limbing come from Brandon and Brad's own prices of 2026-09-23, converted at $" + cfg.billable + "/man-hour. The rest is Sixfold's recorded 16 man-hours on job 2 shared out by hand, or unbacked where listed above |");
+  if ((qty.t30 || 0) > 0 || parseHeights(heightsRaw).length)
+    out.push("| Tree removal under 30 ft | **Timed, not priced** — Matthew, 2026-09-30: about 30–35 minutes with two people for the whole tree, down, bucked and loaded or chipped. " + rates.t30 + " man-minutes is the midpoint. A stated duration rather than a price divided by a rate, and not yet a stopwatch reading on a recorded job |");
   out.push("| Limbing | **Unresolved** — $600 for 13 trees (2026-09-23) contradicts Brandon's earlier $975 for the same 13, which Hawk's published $75 floor corroborated exactly. The newer figure is in use |");
   if ((qty.t3060||0) > 0 || (qty.t6080||0) > 0)
     out.push("| Trees over 30 ft | **Competitor** — Wexford/TreeGuard. Brandon and Brad gave no figure above 30 ft, and their under-30 figure is eleven times lower per tree. Do not rely on this band |");
