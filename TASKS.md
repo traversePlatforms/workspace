@@ -56,6 +56,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       refuse to price, the way the $0 bug now does.
       **(2) What is in “PPE gear”?** The checklist prices PPE per person against named standards.
       With no workers’ comp and no general liability on file, the PPE is the whole protection.
+      **▶ In motion 2026-10-01 — Matthew is asking Brandon and Brad what they actually have.**
+      **Ask for counts and sizes, not categories** — “we have hard hats” is not an answer the
+      checklist can price or a crew can rely on.
       **(3) ✅ Snow, partly answered 2026-10-01. Shovels ARE owned** — the inventory was wrong.
       **A snow blower is believed to be coming from Brandon but Matthew is not certain and
       nobody has confirmed it — unconfirmed until Brandon says so.** His call: the gear will be
@@ -147,9 +150,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and staff. **That is generosity, not a contract.**
       *Provenance: Matthew’s account of Brandon’s account — he was not there and said so.*
       **What this needs, cheapest first:**
-      **(1) Write down what Brandon and Lonnie actually agreed, and confirm it with them.**
-      Nothing is in writing, it is second-hand, and it is the only thing holding roughly $1,125
-      and a customer relationship. **This costs nothing and is the whole of the risk.**
+      **(1) ▶ ASSIGNED 2026-10-01 — Brandon is writing down what he and Lonnie agreed and
+      signing off on it.** Matthew's call, and the right owner: Brandon was the one on the
+      property. **Not ticked until the document exists** — an intention to write something
+      down protects nothing.
+      **Three things it has to say, or it is just a note:** what work is outstanding, roughly
+      **when** Sixfold returns, and what is still owed. A date or even a month beats “later”.
       **(2) A date, or at least a month.** Open-ended goodwill has a half-life. It survives
       Brandon; it may not survive Lonnie moving, or a winter passing with no contact.
       **(3) What is left, in hours**, against the cost-up engine at $100/man-hour — not against
@@ -351,10 +357,34 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       the starting one. Worth deciding against where the crew actually is, not where the
       biggest door count is.
       **(2) The solicitation-permit position for Monument, Colorado Springs and unincorporated
-      El Paso.** ⚑ **This is the only item on the door programme that can produce a fine
-      rather than a wasted afternoon.** Rules differ by jurisdiction and some require a permit
-      per canvasser. **Settle it before the first real afternoon, not after someone is turned
-      away mid-street.**
+      El Paso.** **Matthew 2026-10-01: the doors team researches neighbourhoods before going
+      out and marks off the ones posted no-solicitation.** Sound for signs and HOAs — and it
+      became SX-13, a flag in the app.
+      **⚑ BUT IT DOES NOT CLOSE THIS ITEM, AND THIS IS THE HALF THAT PRODUCES THE FINE.**
+      A **municipal canvassing permit** is a jurisdiction-level requirement, not a
+      neighbourhood one. If Monument requires a permit per canvasser, the crew needs it on
+      **every street in Monument** — no amount of researching neighbourhoods avoids it.
+      **Still needs a phone call, per jurisdiction. Pairs with SX-10**, which is already a call
+      to a Colorado Springs public body.
+
+- [ ] **SX-13 — “No soliciting” flags in the rounds app.** Matthew's idea 2026-10-01, scoped
+      and **not built**: [NO-SOLICIT-SCOPE.md](sixfold/operations/door-territory/NO-SOLICIT-SCOPE.md).
+      **Two levels, and the door-level one matters more than the ask.** A sign is **per house**,
+      the crew sees it standing there, and ignoring one is trespass in some places. Door
+      outcomes are `booked | later | miss` in an append-only log validated in exactly one
+      place, so a fourth outcome is a contained change — **but it must never come back.**
+      *Not now* returns next season, *no answer* returns the same afternoon; **no soliciting is
+      permanent and should not offer an easy undo.**
+      **Neighbourhood level is the ask**: flag it, visible **before** anyone drives out. Two
+      calls when building — warn rather than hide (an entrance posting does not always mean
+      every door), and **admin-only to clear**, or one wrong flag quietly deletes a
+      neighbourhood from the programme.
+      **⚑ A rebuild can orphan the flag.** Marks survive rebuilds, but a door that *drops out*
+      leaves its mark orphaned and the report already prunes those. Harmless for a *not now*;
+      for a no-soliciting flag it is **a protection silently disappearing and the door being
+      knocked again.** Store it outside the ordinary marks log, or exempt it from pruning.
+      Widening (SX-9d) is safe; narrowing is not.
+      **Deferred: the app is live, so this is code + upload + cache flush.**
 
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
@@ -364,6 +394,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **SG-3 — Surge Linktree** — accuracy pass. Pairs with X-2.
 - [ ] **SG-4 — Google Drive for Surge content.** Sixfold's team share is a working model to copy.
 - [ ] **SG-5 — Pull down the WhatsApp content** from the Surge chats while it's still there.
+      **▶ In progress 2026-10-01 — Matthew is pulling the photos he can get now.** Photos are
+      the urgent half; **the text is worth a second pass** — quotes, agreements and what was
+      promised to whom live in the messages, not the images.
       **Time-sensitive in a way the rest of this list isn't** — chat history is the one thing
       that disappears on someone else's schedule.
 - [ ] **SG-6 — Get team leaders into reviews and content.** The one-page field guide for
