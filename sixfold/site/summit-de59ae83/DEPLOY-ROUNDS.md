@@ -108,11 +108,19 @@ the file, the artifact and the site — so a reprice means publish *and* regener
 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` | the crew page |
 | `api/rounds.php` | `public_html/api/rounds.php` | the only thing that serves door data |
 | `api/rounds-codes.php` | `public_html/api/rounds-codes.php` | ⚑ the live codes — see below |
-| `data/rounds/*.json` | `public_html/data/rounds/` | the door lists |
-| `data/rounds/.htaccess` | `public_html/data/rounds/.htaccess` | ⚑ **upload this FIRST** |
+| `data/rounds/*.json` | **`sixfold-data/rounds/`** — beside `public_html`, **NOT inside it** | the door lists |
 
-**⚑ Upload `data/rounds/.htaccess` before the JSON files, not after.** Between the two there
-is a window where 2,656 home addresses are downloadable by anyone who guesses the path.
+**⚑⚑ CORRECTED 2026-10-01 — the door data goes OUTSIDE `public_html`.** This row used to say
+`public_html/data/rounds/`, which is **where the data lived on the first deploy and is exactly
+the location that leaked**: `/data/rounds/monument.json` returned **200 and served home
+addresses to anyone**, because SiteGround did not honour the `.htaccess` deny. `api/rounds.php`
+now reads `dirname(__DIR__, 2) . '/sixfold-data/rounds'` — a sibling of `public_html` that the
+web server cannot serve at all. **The stale row survived the fix and would have walked the next
+upload straight back into the leak** — as of 2026-10-01 that is 31,422 names and addresses.
+
+**Upload the `.json` files into `sixfold-data/rounds/`, overwriting what is there.** No
+`.htaccess` is needed there — nothing outside the web root can be requested. **After uploading,
+confirm `https://sixfoldcolorado.com/data/rounds/monument.json` still returns 404.**
 
 **⚑ `api/rounds-codes.php` is gitignored and holds the live codes.** It is not in the
 repository; it is on this machine only. Treat it like `secrets.php`.
