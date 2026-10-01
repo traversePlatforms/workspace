@@ -39,6 +39,25 @@ re-upload that one file. Nothing else changes. ⚑ Note that also gives him the 
 who marked what, the totals and the CSV export. If those need to be separate, the roles need a
 third level rather than a second.
 
+### ⚑ FLUSH THE CACHE FIRST, then check PLAIN urls
+
+**Site Tools → Speed → Caching → Flush**, then hard-refresh. This is step one, not an
+afterthought, and it bit on 2026-10-01: both files were uploaded correctly and the chooser still
+did not appear, because SiteGround kept serving the previous day’s `index.html` on the plain URL.
+
+**A cache-busted check cannot see this.** `?v=123` is a different URL, so it misses the proxy and
+fetches the new file every time — the verification passes while every real browser gets the old
+page. Check **plain AND busted** and compare:
+
+```
+curl -s https://sixfoldcolorado.com/summit-de59ae83/ | wc -c
+curl -s "https://sixfoldcolorado.com/summit-de59ae83/?v=$(date +%s)" | wc -c
+```
+
+**Different byte counts mean the cache is stale.** `curl -D-` shows `X-Proxy-Cache: HIT` and a
+`Last-Modified` from before the upload, which is the tell. API responses are not cached, so a
+passing `quote.php` check proves nothing about the pages.
+
 ### Check it, in this order
 
 ```
