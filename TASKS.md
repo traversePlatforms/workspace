@@ -59,6 +59,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **▶ In motion 2026-10-01 — Matthew is asking Brandon and Brad what they actually have.**
       **Ask for counts and sizes, not categories** — “we have hard hats” is not an answer the
       checklist can price or a crew can rely on.
+      **⏰ REMIND HIM 2026-10-03 to hand over what he has got back.**
       **(3) ✅ Snow, partly answered 2026-10-01. Shovels ARE owned** — the inventory was wrong.
       **A snow blower is believed to be coming from Brandon but Matthew is not certain and
       nobody has confirmed it — unconfirmed until Brandon says so.** His call: the gear will be
@@ -386,6 +387,40 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Widening (SX-9d) is safe; narrowing is not.
       **Deferred: the app is live, so this is code + upload + cache flush.**
 
+- [ ] **SX-14 — Phone numbers on the door list.** Matthew asked 2026-10-01 whether numbers can
+      be cross-referenced onto the addresses, and whether an API could be wired in here.
+      **Short answer: yes technically, and the far better version is free and already missing.**
+      **⚑ THE APP CAPTURES NO PHONE NUMBER AT ALL. THAT IS THE REAL GAP.** A door is
+      `{address, acres, owner}` and a mark is `{outcome, by, when}` — there is nowhere to put
+      one. **So when a crew member books a quote, the number the homeowner just handed them
+      goes onto a scrap of paper and into nobody’s system.** That number has **consent given
+      in person**, it belongs to someone who already said yes, and it costs nothing to collect.
+      It is worth more than 15,442 appended numbers. **Do this first, and it is a small change:
+      a field on the “quote booked” outcome.** Same shape as the lead-intake problem.
+      **On appending — it is possible, with three real problems.**
+      **(1) The name on parcel data is the OWNER, not the resident**, and the walk lists already
+      separate non-resident owners out. Appending to those reaches a landlord in another state,
+      not the person who answers the door.
+      **(2) The legal exposure is the kind that attracts plaintiffs, not regulators.** TCPA
+      restricts automated calls and texts to cell phones without prior express consent, **a text
+      counts as a call**, and it carries **statutory damages per message with a private right of
+      action** — which is why it is an industry for litigators. On top of that: the **national
+      Do Not Call registry** (scrub, and keep an internal list) and **Colorado’s own no-call
+      list**. *Shapes, not citations — I could not re-verify the current specifics in session,
+      and a calling or texting programme needs a real opinion before it starts, not mine.*
+      **(3) It reverses a decision already made.** SX-9 was scoped to door-knocking precisely
+      because *“parcel records carry addresses and owner names but no phone numbers, and
+      appending them pulls you into DNC/TCPA territory. Door-knocking does not.”* Fine to
+      revisit — but revisit it knowingly.
+      **The API question: yes.** Property-data and skip-trace vendors sell exactly this behind an
+      API key, and the site already has the pattern for holding one — `api/secrets.php`, same as
+      the Gmail SMTP credentials, kept out of the repo and out of the web root. **Give me an
+      account and a key and wiring it in is straightforward.** *Not naming vendors or prices
+      here: I could not verify either this session, and stale pricing is worse than none.*
+      **Recommended order: capture-at-the-door first, append later if ever.** The first is free,
+      consented and immediately useful. The second costs money, needs legal advice, and mostly
+      returns landlords.
+
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
       re-bundle before anyone reviews anything.
@@ -393,10 +428,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       The cross-platform kit already exists for seven platforms, draft-only.
 - [ ] **SG-3 — Surge Linktree** — accuracy pass. Pairs with X-2.
 - [ ] **SG-4 — Google Drive for Surge content.** Sixfold's team share is a working model to copy.
-- [ ] **SG-5 — Pull down the WhatsApp content** from the Surge chats while it's still there.
-      **▶ In progress 2026-10-01 — Matthew is pulling the photos he can get now.** Photos are
-      the urgent half; **the text is worth a second pass** — quotes, agreements and what was
-      promised to whom live in the messages, not the images.
+- [x] **SG-5 — Pull down the WhatsApp content** from the Surge chats while it's still there.
+      **✅ PHOTOS PULLED 2026-10-01.** The urgent half is done — the thing that disappears on
+      someone else's schedule is off the clock.
+      **⏰ REMIND HIM 2026-10-08: pull again. Content comes in regularly**, so this is a
+      recurring sweep, not a one-off — his words. Pairs with SX-11, which is the same day.
+      **⚑ The TEXT has still never been pulled.** Quotes, agreements and what was promised to
+      whom live in the messages, not the images. Worth one pass of its own.
       **Time-sensitive in a way the rest of this list isn't** — chat history is the one thing
       that disappears on someone else's schedule.
 - [ ] **SG-6 — Get team leaders into reviews and content.** The one-page field guide for
@@ -505,6 +543,20 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 ---
 
+## ⏰ Dated reminders — check these at the top of a session
+
+| When | What |
+|---|---|
+| **3 Oct** | **SX-1b(2)** — ask Matthew for the PPE counts and sizes back from Brandon and Brad |
+| **7 Oct** | **SX-3a** — last safe signing day for Kara to keep the 12 Oct start |
+| **8 Oct** | **SX-11** — Karen on Nextdoor, and **SG-5** — pull WhatsApp again |
+| **12 Oct** | Kara's aeration job |
+| **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
+| **1 Nov** | Kara's first monthly payment · **19 Nov** first monthly visit |
+
+**⚑ These are written here on purpose.** Session-scheduled reminders do not survive the
+session — the register does, and it is read at the start of each one.
+
 ## Suggested order — refreshed 2026-10-01
 
 **This week, because they expire or someone is waiting:**
@@ -526,7 +578,7 @@ every reprice), the chipper-hire guard inside SX-1b(1), SX-9e.
 
 **Last, both need data that does not exist yet:** X-8, SX-8.
 
-**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b, SX-9.
+**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b, SX-9, SG-5.
 
 **Partly done, deliberately not ticked — the list should not flatter:** SX-9d (decided, not
 executed) · SX-1b (two of three answered; PPE still open) · SX-3a (envelope fixed and the
