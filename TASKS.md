@@ -156,10 +156,16 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and otherwise closes it to fill 95% — 1.096 pt here. Title and email now end within
       0.019 in of each other. **The type size did not change**; if it still wants presence, size
       is the lever and that is a change to the scale, not to one line.
-      **⚑ The only thing now between this and an order: confirm the mailbox exists.**
-      `M.Sharpe@SixfoldColorado.com` appears nowhere in the repo before today, while `Contact@`
-      is on 34 documents. Matthew is the tenant’s only super admin so it is a minute’s work, but
-      **a printed address that bounces cannot be fixed after the box arrives.**
+      **✅ The mailbox question is closed — confirmed 2026-10-01: `M.Sharpe@` is an ALIAS on
+      `Contact@`, not a separate mailbox.** It will not bounce, and it costs no extra Workspace
+      seat. **Nothing now blocks the order.**
+      **⚑ But an alias means the card address lands in the shared inbox.** Academic today —
+      Matthew is the only person on the tenant — and **not academic the moment Brandon is added**,
+      which is an open item: mail to the address on Matthew’s card becomes readable by whoever
+      else is in `Contact@`. Making it a real mailbox later is a Workspace change, not a
+      reprint, but it has to happen **before** the second person joins.
+      **⚑ Also set "Send mail as" for the alias** (Gmail → Settings → Accounts) before the cards
+      go out, or a reply to the card address arrives from `Contact@` instead.
       **⚑ The contact column has 2.5 mm of slack left**, measured out of the PDF’s own glyph
       positions: the email line ends at 1.894 in and the QR plate starts at 2.121 in, of which
       0.130 in is the designed gap. It fits and does not wrap. A longer address does not.
@@ -277,6 +283,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 - [ ] **X-1 — Account inventory** (read the section above — inventory, not passwords).
       Underpins X-4 and X-5.
+      **⚑ Aliases belong in it, not just mailboxes.** 2026-10-01: `M.Sharpe@SixfoldColorado.com`
+      turned out to be an alias on `Contact@`, which is invisible from outside and changes who
+      can read mail sent to it. An inventory that lists mailboxes but not their aliases misses
+      exactly the thing that decides access.
 - [x] **X-2 — QR audit across everything.** ✅ **Done 2026-09-29** — all 13 assets decoded, 2
       destinations, **no defects found**. Register: [shared/qr-register.md](shared/qr-register.md).
       It turned up three *gaps* rather than errors, now split out below.

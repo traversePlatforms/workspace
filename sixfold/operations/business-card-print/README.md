@@ -593,15 +593,25 @@ to his at all.
 
 ## Still open before anything is ordered
 
-- **⚑ `M.Sharpe@SixfoldColorado.com` appears nowhere in this repo before 2026-10-01.**
-  `Contact@` is referenced on 34 documents; the personal address is new. Sixfold's Workspace
-  tenant is real and Matthew is its only super admin, so creating the mailbox is a minute's
-  work — **but confirm it exists and routes before the order goes in.** A printed address that
-  bounces is the one error on a business card that cannot be fixed after the box arrives.
+- **✅ `M.Sharpe@SixfoldColorado.com` exists — confirmed by Matthew 2026-10-01. It is an ALIAS
+  on `Contact@SixfoldColorado.com`, not a separate mailbox.** The printed address will not
+  bounce, which is what the order was waiting on. An alias also costs no extra Workspace seat,
+  which a second mailbox would.
+  **⚑ Two things follow from it being an alias, and neither is a reason to change the card.**
+  **(1) Mail to the card address lands in the shared inbox** — the same one the website form and
+  the general enquiries go to. Today that is academic, because Matthew is the only person on
+  the tenant. **It stops being academic the moment Brandon is added**, which is an open item:
+  anything sent to the address on Matthew's card is then readable by whoever else is in
+  `Contact@`. If that is not wanted, the alias has to become its own mailbox before the second
+  person joins — and that is a Workspace change, not a reprint.
+  **(2) Replies go out as `Contact@` unless send-as is configured.** Gmail → Settings →
+  Accounts → "Send mail as" has to carry the alias, or someone who emails the card address gets
+  an answer from a different address than the one they wrote to. **Worth setting before the
+  cards are handed out**, not after.
 - **The QR's centre mark is Turf green** on every card, including the ember one. It is the
   standard brand asset and all three therefore carry the identical code; a green pip on an
   ember card is a look, not a defect. `sixfold-qr-brand-nologo.png` is the alternative.
 - **Clay at 3.53:1 is the thinnest margin on Matthew's card.** It is a solid mass, not a
   hairline, so it clears — but it is the first thing to darken if the proof looks weak.
-- **Nothing is ordered.** FedEx wants the two-page PDF, front then back. Stock smooth or matte,
-  never linen or textured.
+- **Nothing is ordered, and as of 2026-10-01 nothing blocks it.** FedEx wants the two-page PDF,
+  front then back. Stock smooth or matte, never linen or textured.
