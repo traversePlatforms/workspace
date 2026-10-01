@@ -424,20 +424,33 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       authoritative file to look numbers up in.** What vendors sell is *assembled* — stitched
       together from credit headers, marketing lists and purchase histories — which is why it
       costs money, why match rates are imperfect, and why it is regulated.
-      **Two genuinely free exceptions, both narrow and both worth doing before paying anyone:**
-      **(1) LLC- and trust-owned parcels → Colorado Secretary of State business search**, free,
-      gives a registered agent with an address and often a contact. **These are disproportionately
-      the non-resident owners the walk lists already separate out**, so it covers part of exactly
-      the group door-knocking cannot reach.
-      **(2) The Colorado voter file** is sold cheaply by the state and can carry a phone.
-      **⚑ Commercial use of voter data is restricted in many states and I have not verified
-      Colorado's rule — do not touch this one until that is checked.**
+      **✅ BOTH “free source” IDEAS WERE CHECKED 2026-10-01 AND BOTH ARE DEAD. Do not build
+      either.**
+      **(1) The Secretary of State lookup — measured against the real data, and it returns
+      almost nothing.** Scanned all 11 walk lists: **2,030 of 15,442 owners (13.1%) look like
+      entities — and 2,024 of those are TRUSTS.** Trust 1,013 · living trust 657 · revocable
+      354. **Zero LLCs. Zero Inc, Corp, Ltd, LLP, LP.** Only ~5 doors in the whole dataset would
+      resolve at the SoS.
+      **⚑ And the premise was wrong, which matters more than the yield.** I assumed
+      entity-owned meant investor or absentee. **A revocable living trust is an estate-planning
+      wrapper, is not filed with the state, has no registered agent, and the people in it LIVE
+      THERE.** 13% of the walk list being family trusts means **long-tenured owners on big
+      lots** — among the best doors to knock, not landlords to route around. Worth saying to
+      the crew.
+      **(2) The Colorado voter file — the legal risk is lower than I flagged, but the data is
+      not there.** Primary source: **C.R.S. 1-2-227** — voter registration records *“are public
+      records subject to examination by any person, and such person has the right to make
+      copies”*. No commercial-use prohibition in that section. **But Douglas County’s own list
+      product lists what it excludes — SSNs, licence numbers, signatures, email addresses, vote
+      choices — and phone is not among the fields offered**, and Colorado registration does not
+      require one. **So the question is moot: you cannot buy what is not collected.** One call
+      to the SoS would settle it definitively; not worth making until something else needs it.
       **The quality argument matters as much as the price.** A bought number that is stale, that
       belongs to a landlord in another state, and that cannot legally be texted is a bad
       purchase at any price.
-      **Recommended order: capture-at-the-door first, the free SoS pass second, buying last or
-      never.** The first is free, consented and immediately useful. The second is free and
-      legitimate. The third costs money, needs legal advice, and mostly returns landlords.
+      **So the order collapses to one item: capture the number at the door.** It is the only
+      route that is free, consented, accurate and actually available. Everything else is a
+      vendor invoice.
 
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
