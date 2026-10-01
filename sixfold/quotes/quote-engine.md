@@ -50,9 +50,17 @@ $1,125 deposit.”**
 
 - **$1,125 is exactly half of $2,250**, which matches the half-and-half payment terms recorded
   for Option A. The arithmetic is consistent.
-- **The customer is Shannon.** Her name appears nowhere else in this folder — every other
-  document calls this “Sedalia”. *Inference, from the $2,250 + whole-job + half-deposit match;
-  worth one word of confirmation.*
+- **✅ Confirmed 2026-10-01: Shannon is one of the owners on the Sedalia job.** Her husband is
+  **Lonnie**. Every other document in this folder calls this only “Sedalia”.
+- **⚑ THE REAL LESSON IS NOT “UNDERPRICED” — IT IS THAT HAUL-OFF BROKE THE JOB MID-FLIGHT.**
+  Option A was quoted at $2,250 **to haul everything away**. In the field *“it became too
+  expensive and there was just too much stuff”*, so the crew **chipped some on the property
+  instead**. That is Option B behaviour delivered against an Option A price — the volume was
+  wrong and the haul rate could not absorb it.
+  **This is the sharpest evidence on file that haul-off is underwater**, and it is a volume
+  failure before it is a rate failure: nothing in the walk sheet caught how much material was
+  actually there. **Price haul-off off measured volume, and carry a trigger for what happens
+  when the volume exceeds the quote — in the quote, not in the truck.**
 - **So $2,250 is not evidence that $2,250 was right.** It is evidence that a job quoted at
   $2,250 could not be completed for $2,250. Price **above** it, not at it.
 - **The work is not finished and a return visit is owed**, with the other half outstanding.

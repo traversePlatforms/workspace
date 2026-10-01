@@ -136,20 +136,29 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       live copy. Keeping both means the four steps have to run every time, by someone who
       remembers all four.
 
-- [ ] **SX-12 — Shannon / Sedalia: the job is unfinished and a return visit is owed.** Surfaced
-      2026-10-01 while correcting the pricing references, and **it was not on this list.**
-      Quoted **$2,250** for the whole job, **grossly underestimated and underpriced**, the crew
-      **could not finish**, and only the **$1,125 half** has been paid. **A real customer is
-      owed a return visit and roughly half the money is outstanding.**
-      **Three things to settle, and the first is not a money question:**
-      **(1) Has she been told when?** An unfinished job with no date is how a customer becomes
-      a bad review. **(2) What is actually left to do**, in hours, against the cost-up engine at
-      $100/man-hour — not against the original quote, which is the number that failed.
-      **(3) Is the balance still $1,125, or does finishing it cost more than the quote allows?**
-      If it does, that is a conversation to have **before** the crew goes back, not after.
-      **⚑ Her name is recorded nowhere in `sixfold/quotes/` — every document says “Sedalia”.**
-      Matthew supplied “Shannon” 2026-10-01; the link is an inference from the $2,250 +
-      half-deposit match and is worth one word of confirmation.
+- [ ] **SX-12 — Sedalia (Shannon and Lonnie): unfinished, and the return is a GOODWILL
+      arrangement with no date and nothing in writing.** Surfaced 2026-10-01 while correcting
+      the pricing references — **it was on nobody’s list.**
+      **What happened.** Quoted **$2,250** to haul everything away. In the field it became too
+      expensive and there was too much material, so the crew **chipped some on the property
+      instead** and could not finish. **Only the $1,125 half has been paid.**
+      **⚑ Brandon met Lonnie on the property and Lonnie is letting Sixfold come back later** —
+      deliberately giving them room to take other jobs first and build up income for equipment
+      and staff. **That is generosity, not a contract.**
+      *Provenance: Matthew’s account of Brandon’s account — he was not there and said so.*
+      **What this needs, cheapest first:**
+      **(1) Write down what Brandon and Lonnie actually agreed, and confirm it with them.**
+      Nothing is in writing, it is second-hand, and it is the only thing holding roughly $1,125
+      and a customer relationship. **This costs nothing and is the whole of the risk.**
+      **(2) A date, or at least a month.** Open-ended goodwill has a half-life. It survives
+      Brandon; it may not survive Lonnie moving, or a winter passing with no contact.
+      **(3) What is left, in hours**, against the cost-up engine at $100/man-hour — not against
+      the original quote, which is the number that already failed.
+      **(4) Does the paperwork match what was delivered?** Option A was *hauled away*; chips
+      were left on her property. **Billing the Option A balance for an Option B outcome is a
+      dispute waiting to happen**, and the chips are a deliverable she never agreed to.
+      **⚑ Nothing in `sixfold/quotes/` carries either name** — every document says only
+      “Sedalia”. Shannon and Lonnie confirmed by Matthew 2026-10-01.
 
 - [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** When a fire quote is
       selected, surface the tax credit / grant / insurer re-score material. **This one is
