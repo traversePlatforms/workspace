@@ -417,9 +417,27 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       the Gmail SMTP credentials, kept out of the repo and out of the web root. **Give me an
       account and a key and wiring it in is straightforward.** *Not naming vendors or prices
       here: I could not verify either this session, and stale pricing is worse than none.*
-      **Recommended order: capture-at-the-door first, append later if ever.** The first is free,
-      consented and immediately useful. The second costs money, needs legal advice, and mostly
-      returns landlords.
+      **⚑ Asked 2026-10-01: is there anywhere free to pull it from? Essentially no, and the
+      reason is structural rather than commercial. Cell numbers were never public records.**
+      Landline white pages were public because the phone company published a directory; cell
+      numbers never had one, and most households are now wireless-only. **So there is no
+      authoritative file to look numbers up in.** What vendors sell is *assembled* — stitched
+      together from credit headers, marketing lists and purchase histories — which is why it
+      costs money, why match rates are imperfect, and why it is regulated.
+      **Two genuinely free exceptions, both narrow and both worth doing before paying anyone:**
+      **(1) LLC- and trust-owned parcels → Colorado Secretary of State business search**, free,
+      gives a registered agent with an address and often a contact. **These are disproportionately
+      the non-resident owners the walk lists already separate out**, so it covers part of exactly
+      the group door-knocking cannot reach.
+      **(2) The Colorado voter file** is sold cheaply by the state and can carry a phone.
+      **⚑ Commercial use of voter data is restricted in many states and I have not verified
+      Colorado's rule — do not touch this one until that is checked.**
+      **The quality argument matters as much as the price.** A bought number that is stale, that
+      belongs to a landlord in another state, and that cannot legally be texted is a bad
+      purchase at any price.
+      **Recommended order: capture-at-the-door first, the free SoS pass second, buying last or
+      never.** The first is free, consented and immediately useful. The second is free and
+      legitimate. The third costs money, needs legal advice, and mostly returns landlords.
 
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
@@ -433,8 +451,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       someone else's schedule is off the clock.
       **⏰ REMIND HIM 2026-10-08: pull again. Content comes in regularly**, so this is a
       recurring sweep, not a one-off — his words. Pairs with SX-11, which is the same day.
-      **⚑ The TEXT has still never been pulled.** Quotes, agreements and what was promised to
-      whom live in the messages, not the images. Worth one pass of its own.
+      **✅ The TEXT is pulled too — confirmed 2026-10-01, “all the content”.** So the quotes,
+      agreements and promises that lived only in those messages are now off someone else's
+      phone. **Nothing on this list is time-expiring any more.**
+      **⚑ Next question for it is where it landed and whether it is backed up** — content
+      rescued onto one machine is one machine away from being lost again. If it is not in the
+      OneDrive mirror it is not safe. Pairs with P-3, the same problem with phone photos.
       **Time-sensitive in a way the rest of this list isn't** — chat history is the one thing
       that disappears on someone else's schedule.
 - [ ] **SG-6 — Get team leaders into reviews and content.** The one-page field guide for
