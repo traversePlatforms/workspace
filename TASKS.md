@@ -456,6 +456,29 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       route that is free, consented, accurate and actually available. Everything else is a
       vendor invoice.
 
+- [ ] **SX-15 — Enrich each door from the parcel source you already query.** Found 2026-10-01
+      while answering “can we attach Whitepages data to each door?” — **the answer is yes to
+      enrichment, no to Whitepages, and the good fields are already free.**
+      **The statewide layer exposes 35 fields. `build-walklist-co.mjs` asks for 12.** Left on
+      the table, all free, all authoritative county record:
+      • **`saleDate`** — when they bought it. **The single most useful one.**
+      • **`salePrice`**, **`apprValTot`**, **`asedValTot`** — value, a rough qualifier for
+      whether a $2,000+ mitigation job is plausible at that door.
+      • **`zoningCode` / `zoningDesc`**, **`subName`** (subdivision), **`legalDesc`**,
+      **`account`**, and **`URL`** — a direct link to the county record for that parcel.
+      **⚑ Why `saleDate` beats a phone number for a knocker.** A 15-year owner has mature
+      trees, an established lawn and deferred work — that is the fire-mitigation and aeration
+      conversation. Someone who bought six months ago is in the fixing-up-the-new-place window
+      and is spending. **Both are good doors; the opener is different, and right now the crew
+      cannot tell them apart.**
+      **This is free, accurate, legal and already in the query** — unlike scraped people-search
+      data, which is assembled, wrong often enough to matter, against the site’s terms, and
+      still regulated the moment you call it.
+      **⚑ DO IT IN THE SAME REGENERATE AS SX-9d.** Both are a rebuild of all 11 walk lists and
+      the expensive half is the regenerate + upload, not the edit. Raising the acre ceiling and
+      adding fields in one pass costs what one of them costs. **Adding fields drops no doors,
+      so marks survive** — same safety as widening.
+
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
       re-bundle before anyone reviews anything.
