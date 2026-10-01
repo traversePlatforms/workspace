@@ -117,11 +117,22 @@ const COLOURWAYS = {
 };
 
 /* ---- who gets a card ------------------------------------------------------- */
-/* ⚑ EMAIL IS THE SHARED Contact@ ON ALL THREE, deliberately and not by default.
-   That was the explicit instruction when Brandon's was built — "not a personal
-   one" — and Sixfold's Workspace tenant does not yet have Brandon on it, so
-   individual addresses would exist for two of the three. Open question in SX-4b;
-   changing it is one line each.
+/* ⚑ EMAIL IS NOW PER PERSON, AND IT IS SPLIT. Answered 2026-10-01: Brandon and
+   Brad keep the shared Contact@ — the original instruction, "not a personal one"
+   — and Matthew takes M.Sharpe@. So the card family carries two conventions on
+   purpose, not by oversight. Anyone adding a fourth card has to be told which
+   one they are getting; the default here is the shared address.
+
+   ⚑ THE DOMAIN IS CAMEL-CASED TO MATCH THE CARD, not as typed. `SixfoldColorado`
+   reads better at 7pt than `sixfoldcolorado` and the local part is untouched.
+   The domain half of an address is case-insensitive, so this changes nothing
+   about where mail goes.
+
+   ⚑ CONFIRM THE MAILBOX EXISTS BEFORE ORDERING. Contact@ is in use on 34
+   documents; M.Sharpe@SixfoldColorado.com appears nowhere in this repo before
+   today. Sixfold's Workspace tenant is real and Matthew is its only super admin,
+   so creating it is a minute's work — but a printed address that bounces is the
+   one error on a business card you cannot fix after the box arrives.
 
    ⚑ THE DESCRIPTOR IS `LAWN, LAND & FIRE` ON ALL THREE, INCLUDING THE EMBER ONE.
    The older `Sixfold-Card-Ember-Bone.pdf` reads `LAND & FIRE` and leads its
@@ -130,16 +141,17 @@ const COLOURWAYS = {
    one. Matthew asked for the ember-bone COLOURWAY, and a card in his pocket that
    drops lawn would contradict the descriptor decision of 2026-09-28 and the
    cards already printed. The colourway moved; the copy did not. */
+const SHARED_EMAIL = 'Contact@SixfoldColorado.com';
 const PEOPLE = [
   { file: 'card-brandon', name: 'Brandon Long', title: 'Owner',
-    phone: '(303) 915-1045', colourway: 'cascade-pine',
+    phone: '(303) 915-1045', email: SHARED_EMAIL, colourway: 'cascade-pine',
     note: 'REGRESSION CHECK — diff against card-cascade-final.html. Printed; do not reorder.' },
   { file: 'card-brad', name: 'Brad McPherson', title: null,
-    phone: '(303) 945-1514', colourway: 'cascade-pine',
+    phone: '(303) 945-1514', email: SHARED_EMAIL, colourway: 'cascade-pine',
     note: 'Same card as the printed one, new name and number.' },
-  { file: 'card-matthew', name: 'Matthew Sharpe', title: null,
-    phone: '(803) 260-7359', colourway: 'ember-bone',
-    note: 'Ember on Bone, asked for 2026-10-01. Same layout and copy as the others.' },
+  { file: 'card-matthew', name: 'Matthew Sharpe', title: 'CTO',
+    phone: '(803) 260-7359', email: 'M.Sharpe@SixfoldColorado.com', colourway: 'ember-bone',
+    note: 'Ember on Bone, personal address, CTO. Asked for 2026-10-01.' },
 ];
 
 function page(p) {
@@ -227,7 +239,7 @@ function page(p) {
         </div>
         <div class="dt">
           ${p.phone}<br>
-          Contact@SixfoldColorado.com<br>
+          ${p.email}<br>
           <span class="web">SixfoldColorado.com</span>
         </div>
         <div class="svc">AERATION &middot; LAWN CARE<br>LANDSCAPING &middot; FIRE</div>
@@ -247,9 +259,20 @@ function page(p) {
 `;
 }
 
+/* ⚑ THE CONTACT COLUMN IS THE TIGHT DIMENSION, and the email is its longest
+   line. Inner width 3.15in, less the QR plate (1.22 + 2x0.055) and the 0.13in
+   gap, leaves ~1.69in. Cascadia Mono at 7pt advances 0.6em = 0.0583in a glyph,
+   so the budget is about 29 characters. This is an estimate off the metric, not
+   a measurement — it exists to catch a long address before the render, never
+   instead of looking at the render. */
+const COL_IN = 3.75 - 0.30 * 2 - (QR_IMG + QR_PAD * 2) - 0.13;
+const CH_IN = 7 / 72 * 0.6;
 for (const p of PEOPLE) {
   writeFileSync(join(HERE, `${p.file}.html`), page(p));
-  console.log(`wrote ${p.file}.html  —  ${p.name}${p.title ? ', ' + p.title : ' (no title)'}  ·  ${p.phone}  ·  ${COLOURWAYS[p.colourway].label}`);
+  console.log(`wrote ${p.file}.html  —  ${p.name}${p.title ? ', ' + p.title : ' (no title)'}  ·  ${p.phone}  ·  ${p.email}  ·  ${COLOURWAYS[p.colourway].label}`);
+  const w = p.email.length * CH_IN;
+  const pct = (w / COL_IN) * 100;
+  console.log(`   email ${p.email.length} chars ≈ ${w.toFixed(3)}in of ${COL_IN.toFixed(3)}in (${pct.toFixed(0)}%)${pct > 100 ? '  ⚑ OVERFLOWS — it will wrap' : pct > 92 ? '  ⚑ within 8% of the edge — LOOK at the render' : ''}`);
 }
 
 /* ---- contrast, per colourway ----------------------------------------------- */

@@ -454,11 +454,11 @@ Brad and Matthew asked for their own. Built by **`build-card-person.mjs`**, whic
 `build-card-final.mjs` with the person and the colourway lifted out as parameters. The printed
 card's builder is untouched — it is the record of a physical artefact that exists.
 
-| File to give FedEx | Who | Colourway | Title | Phone |
-|---|---|---|---|---|
-| `Sixfold-Card-Brandon-Long.pdf` | Brandon Long | cascade on Pine | Owner | (303) 915-1045 |
-| `Sixfold-Card-Brad-McPherson.pdf` | Brad McPherson | cascade on Pine | *none* | (303) 945-1514 |
-| `Sixfold-Card-Matthew-Sharpe.pdf` | Matthew Sharpe | **ember on Bone** | *none* | (803) 260-7359 |
+| File to give FedEx | Who | Colourway | Title | Phone | Email |
+|---|---|---|---|---|---|
+| `Sixfold-Card-Brandon-Long.pdf` | Brandon Long | cascade on Pine | Owner | (303) 915-1045 | `Contact@` |
+| `Sixfold-Card-Brad-McPherson.pdf` | Brad McPherson | cascade on Pine | *none* | (303) 945-1514 | `Contact@` |
+| `Sixfold-Card-Matthew-Sharpe.pdf` | Matthew Sharpe | **ember on Bone** | CTO | (803) 260-7359 | **`M.Sharpe@`** |
 
 Each is **two pages — page 1 front, page 2 back**, 3.750 × 2.250 in, verified from the PDF.
 
@@ -482,6 +482,38 @@ the cards already in Brandon's hand.
 
 **If the fire-led copy was actually what he wanted**, that is a different card and a reversal
 of the descriptor decision — say so and it is a two-line change in `build-card-person.mjs`.
+
+## The card family now carries two email conventions, on purpose
+
+Answered 2026-10-01. **Brandon and Brad keep the shared `Contact@SixfoldColorado.com`** — the
+original instruction, "not a personal one". **Matthew's carries
+`M.Sharpe@SixfoldColorado.com`**, and his is the only card with a title other than Owner: CTO.
+
+**Anyone adding a fourth card has to be told which convention they are getting.** The default in
+`build-card-person.mjs` is the shared address; the personal one is set per person.
+
+**The domain is camel-cased to match the card**, not as it was typed — `SixfoldColorado` reads
+better at 7 pt than `sixfoldcolorado`, and the domain half of an address is case-insensitive, so
+nothing about delivery changes. The local part is untouched.
+
+### ⚑ The contact column is the tight dimension, and it was measured out of the PDF
+
+The email is the longest line on the back, and `M.Sharpe@` is **one character longer** than
+`Contact@`. The printed card was already running at about 93% of the column.
+
+Glyph positions pulled from the finished PDF's content stream, in inches from the page edge:
+
+| | |
+|---|---|
+| Email line ends at | **1.894 in** |
+| QR plate begins at | **2.121 in** |
+| Of which the designed flex gap is | 0.130 in |
+| **True slack left in the text column** | **0.097 in — about 2.5 mm, or 1.6 characters** |
+
+**It fits, and it does not wrap.** But that is the budget: a longer address, or a second line
+added to that block, overflows. `build-card-person.mjs` prints an estimate from the font metric
+on every build and flags anything past 92% — the estimate is there to catch a long address
+before the render, never instead of looking at the render.
 
 ## ⚑ ON A LIGHT GROUND THE ROOTS MOVE TO THE OTHER END OF THE RAMP
 
@@ -529,11 +561,11 @@ to his at all.
 
 ## Still open before anything is ordered
 
-- **⚑ Email is the shared `Contact@SixfoldColorado.com` on all three.** That was the explicit
-  instruction when Brandon's was built — "not a personal one" — so it is deliberate, not a
-  default. It is also one of the three questions SX-4b raised and the only one still unanswered:
-  Sixfold's Workspace tenant exists but **Brandon is not on it**, so individual addresses would
-  exist for two of the three people. One line each to change.
+- **⚑ `M.Sharpe@SixfoldColorado.com` appears nowhere in this repo before 2026-10-01.**
+  `Contact@` is referenced on 34 documents; the personal address is new. Sixfold's Workspace
+  tenant is real and Matthew is its only super admin, so creating the mailbox is a minute's
+  work — **but confirm it exists and routes before the order goes in.** A printed address that
+  bounces is the one error on a business card that cannot be fixed after the box arrives.
 - **The QR's centre mark is Turf green** on every card, including the ember one. It is the
   standard brand asset and all three therefore carry the identical code; a green pip on an
   ember card is a look, not a defect. `sixfold-qr-brand-nologo.png` is the alternative.

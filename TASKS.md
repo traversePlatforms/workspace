@@ -145,11 +145,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **Two of the three questions are answered by what he asked for:** **titles** — none, left
       empty on both, Brandon keeps "Owner"; **phone** — individual, Brad (303) 945-1514 and
       Matthew (803) 260-7359.
-      **⚑ The third is still open and gates the order. Email** — all three carry the shared
-      `Contact@SixfoldColorado.com`, which was the explicit instruction when Brandon’s was built
-      ("not a personal one"), so it is deliberate rather than a default. Individual Workspace
-      addresses would exist for two of the three people, because **Brandon still is not on the
-      tenant**. One line each to change.
+      **✅ The third is answered too, 2026-10-01, and it splits. Email** — Brandon and Brad keep
+      the shared `Contact@SixfoldColorado.com`; **Matthew’s carries `M.Sharpe@SixfoldColorado.com`**
+      and the title **CTO**. Two conventions in one card family, on purpose — a fourth card has
+      to be told which one it gets.
+      **⚑ The only thing now between this and an order: confirm the mailbox exists.**
+      `M.Sharpe@SixfoldColorado.com` appears nowhere in the repo before today, while `Contact@`
+      is on 34 documents. Matthew is the tenant’s only super admin so it is a minute’s work, but
+      **a printed address that bounces cannot be fixed after the box arrives.**
+      **⚑ The contact column has 2.5 mm of slack left**, measured out of the PDF’s own glyph
+      positions: the email line ends at 1.894 in and the QR plate starts at 2.121 in, of which
+      0.130 in is the designed gap. It fits and does not wrap. A longer address does not.
       **⚑ Matthew’s is ember on Bone — the COLOURWAY, not the old ember-bone card.** That file
       reads `LAND & FIRE`, leads with fire mitigation and has no QR; the README says not to
       migrate those to the new descriptor. His card is the current card recoloured: same
