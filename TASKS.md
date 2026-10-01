@@ -390,7 +390,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **SX-14 — Phone numbers on the door list.** Matthew asked 2026-10-01 whether numbers can
       be cross-referenced onto the addresses, and whether an API could be wired in here.
       **Short answer: yes technically, and the far better version is free and already missing.**
-      **⚑ THE APP CAPTURES NO PHONE NUMBER AT ALL. THAT IS THE REAL GAP.** A door is
+      **✅ CORRECTION 2026-10-01: lead NOTIFICATION is not the problem.** Matthew gets
+      notifications from **Google Business Profile, Nextdoor, Meta and the website** — all four.
+      The “3 of 4 channels notify nobody” note predates the 2026-09-28 site-email fix and is
+      **stale; stop repeating it.** His actual constraint is **traffic volume, not capture.**
+      **⚑ THE APP STILL CAPTURES NO PHONE NUMBER AT THE DOOR — that part stands.** A door is
       `{address, acres, owner}` and a mark is `{outcome, by, when}` — there is nowhere to put
       one. **So when a crew member books a quote, the number the homeowner just handed them
       goes onto a scrap of paper and into nobody’s system.** That number has **consent given
