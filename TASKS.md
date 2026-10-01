@@ -367,8 +367,21 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Also: an ambiguous §12(b)(3), Exhibit A having no mechanical section to baseline §6.6
       against, an ambiguous 90-day window, and §5.6 not covering every way the Term can end.
       Re-runnable: `node personal/audit-agreement.mjs` — all checks pass.
-      **⚑ Still blank and it can cost real money: the §6.6 repair cap.** Uncapped, one
-      transmission costs more than the whole deposit.
+      **⚑ NOT READY TO SIGN. Of 113 blanks, ~14 are decisions; the rest are identity, dates
+      and exhibit line-items filled at handover.** The decisions: the price, the §6.6 repair cap
+      (uncapped, one transmission costs more than the deposit), **the §6.4 mileage cap**, the two
+      refund day-counts (§8(b) and §11), the ROFR deposit, venue county, the escrow tick-box, and
+      **four coverage limits in the Insurance Agreement** — those limits are the pot your assets
+      sit behind.
+      **⚑ THE MILEAGE CAP IS THE ONE TO NOTICE.** §6.4 is unticked and both figures are blank,
+      and §8(b)(3) can only deduct “mileage overage under Section 6.4” — **no cap set means no
+      overage to deduct.** That mattered less at six months. At twelve it is the biggest
+      uncompensated transfer left: a year of miles, truck handed back, $7,000 refunded in full.
+      It is **not** the non-refundable deposit by another name — it is payment for value actually
+      consumed, standard in every lease, and it costs Brandon nothing if he buys.
+      **⚑ Still unresolved since 2026-09-23 and it now has teeth: whose names are on the physical
+      title.** §1 carries a clear-title representation and the new §12(b)(4) makes an untrue §1
+      representation an **Owner default**. Check the paper title before signing anything.
       **This is the highest-consequence item on the whole list** and the only one with a
       counterparty waiting on you.
 - [ ] **P-2 — Stringline plan**, finalise and start pushing. Still ahead: the full USPTO search
