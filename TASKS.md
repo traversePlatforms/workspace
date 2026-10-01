@@ -322,7 +322,32 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       The site version needs no accounts. **✅ The one open decision is settled by what was
       issued: a code per person**, not a shared crew link — six of them, with roles separating
       the two views. That is what makes knock-to-quote real.
-- [ ] **SX-9d — Door data: decided 2026-10-01, execution deferred.** Matthew delegated the
+- [ ] **SX-9d — Door data: ✅ BUILT AND VERIFIED 2026-10-01 — awaiting Matthew’s upload.**
+      **15,442 → 31,422 doors**, proven a **pure superset** before shipping: every existing
+      door kept its id AND its address (0 lost, 0 moved, 0 renamed), so every crew mark lands on
+      the house it was made on. **Ticks when it is live**, not before. Upload steps below.
+      **⚑ THE BIG FINDING: Monument and Black Forest had been silently TRUNCATED since the day
+      they were built.** `build-walklist.mjs` capped every El Paso pull at 4,000 parcels and
+      **stopped without a word** when it hit it. Monument’s box holds 14,737 parcels, Black
+      Forest’s 20,436. **Monument was showing 2,330 of ~7,500 eligible doors; Black Forest 1,005
+      of ~9,300. The home market was running at about a quarter of its real size.**
+      It surfaced only because the superset gate failed — the first rebuild lost 101 doors, all
+      El Paso, all past the cap. The cap is now 50,000 and **exits with an error when it bites**.
+      A cap that drops data silently is worse than none.
+      | | before | after |
+      |---|---|---|
+      | Black Forest | 1,005 | **9,286** |
+      | Monument | 2,330 | **7,515** |
+      | Castle Rock | 6,564 | 7,189 |
+      | Woodland Park | 2,578 | 2,751 |
+      | Franktown | 1,030 | 1,656 |
+      | the other six | 1,935 | 3,025 |
+      **Field impact: none.** The app sends one neighbourhood at a time; the largest any phone
+      receives is 44 KB. **⚑ But Wolf Village Dr is now one 404-door “neighbourhood”** — more
+      than an afternoon. Worth splitting if the crew finds it unwieldy.
+      **Re-run `verify-superset.mjs` before EVERY future upload** of rebuilt door data.
+      Original decision record:
+      Matthew delegated the
       call — *“whatever is best for the company”* — and said waiting for usage to reset is fine.
       **✅ RAISE THE 2.5-ACRE CEILING — do it.** Black Forest, Larkspur, Divide and Florissant are
       being clipped, and those are exactly the big-lot properties the fire and land work is
@@ -478,6 +503,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       the expensive half is the regenerate + upload, not the edit. Raising the acre ceiling and
       adding fields in one pass costs what one of them costs. **Adding fields drops no doors,
       so marks survive** — same safety as widening.
+      **⚑⚑ MOSTLY DEAD — MEASURED 2026-10-01, AFTER I RECOMMENDED IT. The fields exist in the
+      schema but are EMPTY.** Across all 165,309 addressed parcels in Douglas and Teller:
+      **`saleDate` 0% · `salePrice` 0% · `zoningDesc` 0% · `URL` 0%** · `subName` 0% Douglas /
+      100% Teller. **Only `apprValTot` (appraised value) is filled everywhere.** I pitched
+      “owned since” off the field list without checking it held data — the exact error the
+      repo’s research standard exists to catch. **What survives is value-only, on ~75% of doors
+      (none in El Paso). Held for Matthew’s call rather than spending an app change on it.**
       **⚑ EL PASO CANNOT BE ENRICHED FROM ITS CURRENT LAYER — checked 2026-10-01.**
       `build-walklist.mjs` reads El Paso’s `MailingLabelParcels`, and that layer’s 26 fields
       carry **no sale date, price, value or year built** — names and mailing addresses only, as
