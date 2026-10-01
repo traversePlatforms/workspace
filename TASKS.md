@@ -120,11 +120,16 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **SX-3a — Kara: get both agreements signed.** **Drafting is done.** Aeration $1,100
       (5pp) and maintenance $250/mo (6pp), both signed-shape, both with a quote and a DocuSign
       packet. Field map and sending rules in `agreements/kara-docusign-setup.md`.
-      **⚑ Three things left, in order:**
-      **(1)** The live envelope has optional signature tags on the two Notice of Cancellation
-      pages. **Correct the envelope — do not void it.** Deleting a tag sends her no email, and
-      it needs no approval from anyone because a misplaced field is not a change to the terms.
-      **Only possible while she has not signed.**
+      **⚑ Two things left. (1) is done.**
+      **(1) ✅ DONE 2026-10-01 — Matthew changed out the document and the tags.** The stray
+      signature tags on the two Notice of Cancellation pages are dealt with.
+      **⚑ One check follows from HOW it was done, and it is the one the setup doc insists on.**
+      If the DOCUMENT was swapped rather than a tag simply deleted, **every page shifts by one
+      and every existing tag moves with it** — so re-open the envelope and confirm no recipient
+      tag has landed on **pages 4 and 5**, because a signature box arriving there is the exact
+      fault being fixed. A straight tag delete moves nothing and needs no re-check.
+      **Either way she was not emailed**, as long as her name, email and routing order were not
+      touched — those are what trigger a fresh notification, not a document change.
       **(2)** Say the three-day cancellation right **out loud** on the phone at the moment she
       signs — 16 CFR 429.1(e); an envelope does not discharge it. Note in the job file that you
       did and when.

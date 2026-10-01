@@ -177,6 +177,18 @@ on the phone call you have to make anyway for the spoken notice, say *“the las
 your copies of the cancellation form — you do not need to fill those in unless you actually want
 to cancel.”* One sentence, in a call that is already required, and the risk is gone.
 
+### ✅ Done 2026-10-01 — the envelope was corrected
+
+Matthew changed out the document and the tags. **The stray tags on pages 4 and 5 are dealt
+with and the envelope was not voided**, so Kara was not emailed and has nothing to explain
+away.
+
+**⚑ If it was the DOCUMENT that was swapped, not just a tag deleted, re-check every tag.**
+That is the right-hand column of the table above: replacing a document displaces its fields,
+every page shifts by one, and **a signature box that lands on page 6 or 7 is the exact fault
+being fixed.** Open the envelope and confirm pages 4 and 5 carry no recipient tag. A straight
+tag delete moves nothing and needs no re-check.
+
 ## The part DocuSign cannot do
 
 **Tell her out loud, at the time she signs, that she can cancel.** 16 CFR 429.1(e) requires it
