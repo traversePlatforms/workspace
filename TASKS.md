@@ -322,7 +322,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       The site version needs no accounts. **✅ The one open decision is settled by what was
       issued: a code per person**, not a shared crew link — six of them, with roles separating
       the two views. That is what makes knock-to-quote real.
-- [ ] **SX-9d — Door data: ✅ BUILT AND VERIFIED 2026-10-01 — awaiting Matthew’s upload.**
+- [x] **SX-9d — Door data: ✅ LIVE 2026-10-01 — confirmed on the site by Matthew:** Monument
+      **7,514 to knock** (7,515 doors, one already marked — a pre-rebuild crew mark still on its
+      house, which is live proof the superset held) and Black Forest **9,286**.
       **15,442 → 31,422 doors**, proven a **pure superset** before shipping: every existing
       door kept its id AND its address (0 lost, 0 moved, 0 renamed), so every crew mark lands on
       the house it was made on. **Ticks when it is live**, not before. Upload steps below.
@@ -709,7 +711,7 @@ every reprice), the chipper-hire guard inside SX-1b(1), SX-9e.
 
 **Last, both need data that does not exist yet:** X-8, SX-8.
 
-**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b, SX-9, SG-5.
+**Done 2026-09-29/30:** SX-1, SX-9a, SX-9c, X-2. **Done 2026-09-30/10-01:** SX-2a, SX-4b, SX-9, SG-5, SX-9d.
 
 **Partly done, deliberately not ticked — the list should not flatter:** SX-9d (decided, not
 executed) · SX-1b (two of three answered; PPE still open) · SX-3a (envelope fixed and the
