@@ -165,7 +165,35 @@ oak mostly scored 11–30. Cut-off set at **10.5**.
 - 845 Circle Rd was dropped as a test lot. Google's newer photo shows a mostly brown yard, so the
   two pictures disagree on what's lawn. Matthew's yard total there: 7,696 sq ft.
 
-**Still missing: one more independent measurement, on a lot the filter wasn't tuned on.** Brandon's lot confirms the boundaries and the
+## Fourth check, the unseen lot: 9554 Penstemon Ct, Colorado Springs 80920 (2026-10-02)
+
+The address is in the Black Forest door list because that town's radius reaches into north
+Colorado Springs; the county and Google both say Colorado Springs. It's a pie-shaped cul-de-sac lot
+with mature trees, a pond and beds, and a new planted border (not in the 2023 photo). The left side
+yard is mostly trees and beds and couldn't be measured by eye, so it was **skipped (no lawn
+confirmed)**. The main lawn shape measured **5,746 sq ft, an upper bound**: it includes the new
+border and a shrub strip, so the true lawn is probably 4,000–5,000.
+
+**Method: 2,369 sq ft**, in nine small patches (8 Oct 2023 photo). **Roughly 40–50% low**, even
+allowing generously for the border and shrubs.
+
+### Scorecard after four lots
+
+| Lot | Type | Method vs hand-measured |
+|---|---|---|
+| 2787 Russet Sky Ct | open, sunny | +9% |
+| 7378 Upton Ct | open, sunny | +8% |
+| 1648 Marsh Hawk Cir | mature trees | −20% |
+| 9554 Penstemon Ct | mature trees, October photo | ≈ −45% |
+
+**Conclusion:** reliable on open lots; **consistently undercounts where mature trees break up and
+shade the lawn**, which describes much of the established suburban territory. **Recommendation:**
+don't show square feet yet. Show a **lawn level (Small / Medium / Large)** and use it to **rank
+neighbourhoods for aeration**; ranking survives a bias that absolute numbers don't. A square-foot
+figure needs a tree-cover correction calibrated on ~10 more measured lots with trees.
+
+**Matthew's hand measurements were done in Google Maps on 2026-10-02.** Google's imagery is dated
+2026, so yard changes since 2023 (new beds, a removed trampoline) are part of every gap. Brandon's lot confirms the boundaries and the
 scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
 or a walk-sheet measurement) is the remaining test.
 
