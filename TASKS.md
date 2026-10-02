@@ -363,9 +363,22 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       backwards. Revisit when the insurance exists.
       **⚑ Execution deferred to a fresh day** — the regenerate + upload is the expensive half.
       Remember: publish → regenerate → upload → flush.
-- [ ] **SX-9b — Still open on the walk list.** The wildfire layer (`TetraTechWUI` exists but its
-      `gridcode` legend is undocumented — needs the source doc before it can be trusted), and
-      whatever the first real afternoon of knocking says about the lot-size band.
+- [ ] **SX-9b — Wildfire hazard per door: ✅ RESEARCHED 2026-10-01, ready to build.** Write-up:
+      [WILDFIRE-HAZARD.md](sixfold/operations/door-territory/WILDFIRE-HAZARD.md).
+      **The undocumented `TetraTechWUI` layer is replaced by the USDA Forest Service’s Wildfire
+      Hazard Potential (2023, 270 m)** — open, documented, authoritative. Class mapping **proven on
+      known places**, not assumed: 1 very low · 2 low · 3 moderate · 4 high · 5 very high ·
+      6 non-burnable · 7 water (the Divide conifer lot reads 4, Pueblo Reservoir 7).
+      **All 31,422 doors sampled, zero missing. It narrows hard: 861 very high, 6,705 high or
+      above (21%).** By town: Florissant 68%, Palmer Lake 48%, Woodland Park 46%, **Monument 29%
+      — 2,212 high-hazard doors around the base** — down to Castle Rock 6%.
+      **This is Sixfold’s version of Via’s hail map**: hazard map → satellite → knock → manual
+      lookup for the few worth calling.
+      **⚑ Caveats:** 270 m cells rate *neighbourhoods*, not lots (the satellite button is the
+      per-house check); class 6 “non-burnable” means town or farmland, **not** “safe” — never
+      exclude on it; hazard is not a sales signal; data is 2023.
+      **Next: build it** — sample at rebuild, store per door, badge + sort/filter in the app.
+      Must pass `verify-superset.mjs`. Lot-size band still to be judged on a real afternoon.
 - [ ] **SX-9e — Move `rounds-codes.php` and `secrets.php` above the document root.** Found by
       the live check on 2026-09-30, added to the register 2026-10-01. **Both return 200 with a
       zero-byte body** — not a leak, but the `.htaccess` deny is not what is protecting them.
