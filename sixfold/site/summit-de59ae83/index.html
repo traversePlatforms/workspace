@@ -384,6 +384,55 @@
   .geohelp ol{margin:6px 0 4px;padding-left:20px;color:var(--ink);font-size:13.5px;line-height:1.5}
   .geohelp li+li{margin-top:4px}
   .geohelp .back{color:var(--bad)}
+  /* map card: the full door card slides up over the map; minimise to tap the next house */
+  .msheet{max-height:72%;overflow-y:auto;padding:6px 10px 10px}
+  .msheet .shbar{display:flex;align-items:center;gap:8px;position:sticky;top:0;background:var(--card);padding:4px 0 6px;z-index:1}
+  .msheet .shbar .grabbtn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:6px 2px;color:var(--ink)}
+  .msheet .shbar .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0;flex:none}
+  .msheet .shbar .shaddr{flex:1;min-width:0;text-align:left;font:400 16px var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msheet .shbar .shbtn{width:36px;height:36px;border-radius:11px;border:0;background:var(--sunk);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}
+  .msheet .shbar .shbtn .ic{width:18px;height:18px}
+  .msheet .door{box-shadow:none;border:0;margin:0;padding:2px 2px 4px 12px;background:transparent}
+  .msheet .door::before{border-radius:3px}
+  /* email */
+  .ph.em a.num .ic{color:var(--accent)}
+  /* photos */
+  .photos{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px}
+  .photos button{flex:none;width:76px;height:76px;border-radius:10px;border:0;padding:0;overflow:hidden;background:var(--sunk);cursor:pointer}
+  .photos img{width:100%;height:100%;object-fit:cover;display:block}
+  .phrule{font-size:11.5px;color:var(--soft);margin-top:4px}
+  .pviewer{position:fixed;inset:0;z-index:45;background:#0b0f0d;display:flex;flex-direction:column;color:#EDE7DC}
+  .pviewer .pvimg{flex:1;min-height:0;display:grid;place-items:center;padding:10px}
+  .pviewer img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+  .pviewer .pvbar{display:flex;gap:10px;align-items:center;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px}
+  .pviewer .pvbar span{flex:1;min-width:0;font-size:13.5px;color:#A9B5AC}
+  .pviewer button{border:0;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px;cursor:pointer;background:rgba(237,231,220,.12);color:#EDE7DC;display:inline-flex;align-items:center;gap:6px}
+  .pviewer button.del{background:#A33A2A}
+  /* stats */
+  .stoday{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+  .stoday h3{margin:0 0 10px;font:400 20px var(--serif)}
+  .stgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stgrid div{background:var(--sunk);border-radius:14px;padding:11px 12px}
+  .stgrid b{display:block;font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
+  .stgrid span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  .stgrid .hl b{color:var(--ember-ink)}
+  .stcmp{margin:12px 2px 0;font-size:13.5px;color:var(--soft);line-height:1.5}
+  .stcmp .up{color:var(--go);font-weight:700} .stcmp .dn{color:var(--bad);font-weight:700}
+  .stchart{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 10px 6px;box-shadow:var(--shadow)}
+  .stchart svg{display:block;width:100%;height:auto}
+  .stchart .key{display:flex;gap:14px;font-size:12px;color:var(--soft);margin:4px 4px 6px}
+  .stchart .key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .stday{display:flex;align-items:baseline;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .stday b{min-width:84px;font-weight:700}
+  .stday span{flex:1;min-width:0;color:var(--soft);font-size:13.5px}
+  .stday em{font-style:normal;font-weight:700;color:var(--ember-ink)}
+  .teamrow{width:100%;text-align:left;display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;align-items:baseline;background:var(--card);
+    border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;cursor:pointer;color:inherit;box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
+  .teamrow .tn{font:400 17px var(--serif);grid-column:1}
+  .teamrow .tv{text-align:right}
+  .teamrow .tv b{display:block;font-size:19px}
+  .teamrow .tv small{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .teamrow .ts{grid-column:1/-1;font-size:12.5px;color:var(--soft)}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
     border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:13.5px;font-weight:700;cursor:pointer}
   .nsflag .ic{width:16px;height:16px}
@@ -527,6 +576,11 @@
     note: '<path d="M5 4h14v10.5L14.5 19H5z"/><path d="M14 19v-5h5"/>',
     flame: '<path d="M12 3c.8 3 5 4.8 5 9.8a5 5 0 0 1-10 0c0-2.2 1.1-3.7 2.1-4.6.2 1.5.9 2.5 2 3 0-2.8-.9-4.8.9-8.2z"/>',
     flag: '<path d="M6 21V4M6 4.5h10.5l-2 4 2 4H6"/>',
+    mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/>',
+    camera: '<path d="M4 8.5h3l1.8-2.5h6.4L17 8.5h3v10H4z"/><circle cx="12" cy="13.2" r="3.4"/>',
+    chart: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/>',
+    users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
     list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/>',
     near: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>',
@@ -775,6 +829,10 @@
       box.appendChild(tile('button', 'clip', 'Quotes to build',
         'Every door marked Quote booked, newest first, with the number, the note, the fire hazard and a satellite link. Tick each one off when the quote goes out.', 'Admin only', quotesView));
     }
+    box.appendChild(tile('button', 'chart', 'My stats',
+      'How your days went: doors knocked, people talked to, quotes booked. Today next to your recent days.', null, function () { statsView(S.me, chooseView); }));
+    if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Team stats',
+      'Everyone' + "'" + 's doors, conversations and quotes, today and over the last week and month.', 'Admin only', teamView));
     var out = q('div', 'out');
     var so = q('button', null, 'Sign out');
     so.type = 'button';
@@ -1017,6 +1075,118 @@
     window.scrollTo(0, 0);
   }
 
+  /* ---- stats (2026-10-02) ----
+     A door counts once per person per day, at its last outcome that day. "Talked to"
+     leaves out no-answers, so the quote rate is quotes per conversation. */
+  var ZERO = { doors: 0, booked: 0, later: 0, miss: 0, nosolicit: 0, phones: 0, emails: 0, photos: 0, notes: 0 };
+  function isoMinus(base, n) { var p = base.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2] - n); return isoOf(d); }
+  function rate(b, t) { return t ? Math.round(b / t * 100) + '%' : '—'; }
+  function dayName(iso) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]; }
+  function sumDays(rows) { var t = {}; Object.keys(ZERO).forEach(function (k) { t[k] = 0; }); rows.forEach(function (r) { Object.keys(ZERO).forEach(function (k) { t[k] += r[k] || 0; }); }); return t; }
+  function statsView(name, back) {
+    hideToast(); S.signin = null; S.screen = 'stats';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: name === S.me ? 'My stats' : name, sub: 'Last 30 days', back: back || chooseView, backLabel: 'Back' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    var params = { days: 30 }; if (S.role === 'admin' && name !== S.me) params.who = name;
+    if (S.role === 'admin' && name === S.me) params.who = S.me;
+    api('stats', { params: params }).then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the stats.')); return; }
+      var p = (j.people || []).filter(function (x) { return x.name === name; })[0] || { days: [] };
+      var by = {}; p.days.forEach(function (r) { by[r.date] = r; });
+      var T = by[j.today] || ZERO, talked = T.doors - T.miss;
+      var card = q('div', 'stoday');
+      card.appendChild(q('h3', null, 'Today'));
+      var g = q('div', 'stgrid');
+      [[T.doors, 'Doors knocked'], [talked, 'Talked to'], [T.booked, 'Quotes booked', 'hl'], [rate(T.booked, talked), 'Quote rate']].forEach(function (c) {
+        var x = q('div', c[2] || null); x.appendChild(q('b', null, String(c[0]))); x.appendChild(q('span', null, c[1])); g.appendChild(x);
+      });
+      card.appendChild(g);
+      /* compare with the recent working days (days with doors), not counting today */
+      var prior = []; for (var i = 1; i <= 14 && prior.length < 7; i++) { var r = by[isoMinus(j.today, i)]; if (r && r.doors) prior.push(r); }
+      var cmp = q('div', 'stcmp');
+      if (!prior.length) cmp.textContent = T.doors ? 'Your first day on record. Tomorrow you' + "'" + 'll have something to compare with.' : 'Nothing marked today yet.';
+      else {
+        var avg = sumDays(prior), n = prior.length, ad = avg.doors / n, ab = avg.booked / n;
+        var line = function (label, now, was) {
+          var diff = now - was, el = q('span', diff >= 0 ? 'up' : 'dn', (diff >= 0 ? '▲ ' : '▼ ') + Math.abs(Math.round(diff * 10) / 10));
+          var w = q('div'); w.appendChild(document.createTextNode(label + ': ' + now + ' today vs ' + (Math.round(was * 10) / 10) + ' on an average day ')); w.appendChild(el); return w;
+        };
+        cmp.appendChild(q('div', null, 'Compared with your last ' + n + (n === 1 ? ' working day' : ' working days') + ':'));
+        cmp.appendChild(line('Doors', T.doors, ad));
+        cmp.appendChild(line('Quotes', T.booked, ab));
+      }
+      card.appendChild(cmp);
+      holder.appendChild(card);
+      /* last 14 days, drawn to one scale */
+      holder.appendChild(q('h2', null, 'Last 14 days'));
+      var days = []; for (var k2 = 13; k2 >= 0; k2--) { var iso = isoMinus(j.today, k2); days.push({ iso: iso, r: by[iso] || ZERO }); }
+      var max = Math.max(5, Math.max.apply(null, days.map(function (x) { return x.r.doors; })));
+      var W = 340, H = 150, padL = 26, padB = 26, bw = (W - padL) / 14;
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Doors and quotes per day, last 14 days">';
+      [0, max / 2, max].forEach(function (v) { var y = H - padB - (v / max) * (H - padB - 10);
+        svg += '<line x1="' + padL + '" x2="' + W + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)" stroke-width="1"/>' +
+               '<text x="' + (padL - 5) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="var(--soft)">' + Math.round(v) + '</text>'; });
+      days.forEach(function (x, idx) {
+        var h = (x.r.doors / max) * (H - padB - 10), hb = (x.r.booked / max) * (H - padB - 10), bx = padL + idx * bw + 3, y0 = H - padB;
+        svg += '<rect x="' + bx + '" y="' + (y0 - h) + '" width="' + (bw - 6) + '" height="' + h + '" rx="2" fill="var(--sunk)" stroke="var(--line)"/>';
+        if (hb) svg += '<rect x="' + bx + '" y="' + (y0 - hb) + '" width="' + (bw - 6) + '" height="' + hb + '" rx="2" fill="var(--ember-ink)"/>';
+        var p2 = x.iso.split('-');
+        svg += '<text x="' + (bx + (bw - 6) / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="var(--soft)"' + (idx === 13 ? ' font-weight="700"' : '') + '>' + (+p2[2]) + '</text>';
+      });
+      svg += '</svg>';
+      var ch = q('div', 'stchart'); ch.innerHTML = svg;
+      var key = q('div', 'key'); key.innerHTML = '<span><i style="background:var(--sunk);border:1px solid var(--line)"></i>Doors</span><span><i style="background:var(--ember-ink)"></i>Quotes booked</span>';
+      ch.insertBefore(key, ch.firstChild);
+      holder.appendChild(ch);
+      /* day by day */
+      var worked = p.days.filter(function (r) { return r.doors || r.phones || r.emails || r.photos; });
+      holder.appendChild(q('h2', null, 'Day by day'));
+      if (!worked.length) { holder.appendChild(q('div', 'msg', 'Nothing marked in the last 30 days yet.')); return; }
+      worked.forEach(function (r) {
+        var row = q('div', 'stday');
+        row.appendChild(q('b', null, dayName(r.date)));
+        var extra = []; if (r.phones) extra.push(r.phones + ' phone'); if (r.emails) extra.push(r.emails + ' email'); if (r.photos) extra.push(r.photos + ' photo');
+        row.appendChild(q('span', null, r.doors + ' doors · ' + (r.doors - r.miss) + ' talked' + (extra.length ? ' · ' + extra.join(', ') : '')));
+        row.appendChild(q('em', null, r.booked + ' booked'));
+        holder.appendChild(row);
+      });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
+  function teamView() {
+    hideToast(); S.signin = null; S.screen = 'team';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Team stats', sub: 'Today, last 7 days, last 30 days', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel s2')); view.appendChild(holder);
+    api('stats', { params: { days: 30 } }).then(function (j) {
+      holder.textContent = '';
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the stats.')); return; }
+      if (!(j.people || []).length) { holder.appendChild(q('div', 'msg', 'Nothing marked in the last 30 days yet.')); return; }
+      var week = isoMinus(j.today, 6);
+      var rows = j.people.map(function (p) {
+        var t = sumDays(p.days.filter(function (r) { return r.date === j.today; }));
+        var w = sumDays(p.days.filter(function (r) { return r.date >= week; }));
+        var m = sumDays(p.days);
+        return { name: p.name, t: t, w: w, m: m };
+      }).sort(function (a, b) { return b.w.doors - a.w.doors || b.m.doors - a.m.doors; });
+      holder.appendChild(q('div', 'sub2', 'Tap a person for their day-by-day. Quote rate = quotes booked per person talked to.'));
+      rows.forEach(function (r) {
+        var b = q('button', 'teamrow'); b.type = 'button';
+        b.appendChild(q('div', 'tn', r.name));
+        var v1 = q('div', 'tv'); v1.appendChild(q('b', null, String(r.w.doors))); v1.appendChild(q('small', null, 'doors 7d')); b.appendChild(v1);
+        var v2 = q('div', 'tv'); v2.appendChild(q('b', null, String(r.w.booked))); v2.appendChild(q('small', null, 'quotes 7d')); b.appendChild(v2);
+        b.appendChild(q('div', 'ts', 'Today ' + r.t.doors + ' doors, ' + r.t.booked + ' booked · 7 days rate ' + rate(r.w.booked, r.w.doors - r.w.miss) +
+          ' · 30 days ' + r.m.doors + ' doors, ' + r.m.booked + ' booked (' + rate(r.m.booked, r.m.doors - r.m.miss) + ')'));
+        b.addEventListener('click', function () { statsView(r.name, teamView); });
+        holder.appendChild(b);
+      });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
+
   /* marking with motion: stamp, slide away, then the real mark. Undo in a toast. */
   function animateMark(card, d, kind, btn, revisit) {
     if (!card || card.classList.contains('marking')) return;
@@ -1052,7 +1222,7 @@
     for (var sk = 0; sk < 3; sk++) view.appendChild(q('div', 'skel'));
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
-      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null;
+      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null;
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
       if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
@@ -1253,18 +1423,148 @@
     var wrap = q('div', 'xt');
     if (S.editPhone === d.id || d.phone) wrap.appendChild(phoneBlock(d));
     if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
+    if (S.editEmail === d.id || d.email) wrap.appendChild(emailBlock(d));
+    if (d.photos && d.photos.length) wrap.appendChild(photoStrip(d, S.region));
     /* slimmer card: satellite and the add buttons share one row of small chips */
-    var editing = S.editPhone === d.id || S.editNote === d.id;      /* one form at a time */
+    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id;      /* one form at a time */
     var row = q('div', 'adds'), n = 0;
     var sat = satLink(d, true);
     if (sat) { row.appendChild(sat); n++; }
     if (!editing) {
-      if (!d.phone) { addLink(row, 'phone', '+ Phone', 'Add a phone number', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); }); n++; }
-      if (!d.note) { addLink(row, 'note', '+ Note', 'Add a note', function () { S.editNote = d.id; S.editPhone = null; renderDoors(); }); n++; }
+      if (!d.phone) { addLink(row, 'phone', '+ Phone', 'Add a phone number', function () { S.editPhone = d.id; S.editNote = null; S.editEmail = null; renderDoors(); }); n++; }
+      if (!d.email) { addLink(row, 'mail', '+ Email', 'Add an email address', function () { S.editEmail = d.id; S.editPhone = null; S.editNote = null; renderDoors(); }); n++; }
+      if (!d.note) { addLink(row, 'note', '+ Note', 'Add a note', function () { S.editNote = d.id; S.editPhone = null; S.editEmail = null; renderDoors(); }); n++; }
+      if (!d.photos || d.photos.length < 20) { addLink(row, 'camera', '+ Photo', 'Add photos of the property', function () { pickPhotos(d, S.region, renderDoors); }); n++; }
     }
     if (n) wrap.appendChild(row);
     return wrap;
   }
+  /* ---- email (2026-10-02): for people who'd rather not give a number ---- */
+  function emailBlock(d) {
+    var box = q('div', 'ph em');
+    if (S.editEmail === d.id) {
+      var f = q('div', 'phf');
+      var lb = q('label', null, 'Email address (given at the door)');
+      var inp = q('input'); inp.type = 'email'; inp.inputMode = 'email'; inp.autocomplete = 'off'; inp.autocapitalize = 'off'; inp.spellcheck = false;
+      inp.placeholder = 'name@example.com'; inp.value = d.email ? d.email.email : '';
+      lb.appendChild(inp); f.appendChild(lb);
+      var err = q('div', 'err'); f.appendChild(err);
+      var row = q('div', 'row');
+      var sv = q('button', 'save', 'Save'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        if (!inp.value.trim()) { err.textContent = 'Type an email first, or tap Remove.'; return; }
+        sv.disabled = true; saveEmail(d, inp.value.trim(), err).then(function () { sv.disabled = false; });
+      });
+      row.appendChild(sv);
+      if (d.email) { var rm = q('button', null, 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { saveEmail(d, '', err); }); row.appendChild(rm); }
+      var cx = q('button', null, 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.editEmail = null; renderDoors(); }); row.appendChild(cx);
+      f.appendChild(row); box.appendChild(f);
+      setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
+      return box;
+    }
+    var a = q('a', 'num'); a.href = 'mailto:' + d.email.email;
+    a.appendChild(ico('mail', 2.2)); a.appendChild(document.createTextNode(d.email.email));
+    box.appendChild(a);
+    box.appendChild(q('span', 'src', 'Given at the door' + (d.email.at ? ' · ' + fmtDay(d.email.at) : '') + (d.email.by ? ' · ' + d.email.by : '')));
+    var ed = q('button', 'lnk', 'Edit email'); ed.type = 'button';
+    ed.addEventListener('click', function () { S.editEmail = d.id; S.editPhone = null; S.editNote = null; renderDoors(); });
+    box.appendChild(ed);
+    return box;
+  }
+  function saveEmail(d, value, errEl) {
+    errEl.textContent = '';
+    return api('email', { body: { region: S.region, id: d.id, email: value } }).then(function (j) {
+      if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
+      if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
+      d.email = value ? { email: value.toLowerCase(), by: S.me, at: Math.floor(Date.now() / 1000) } : null;
+      S.editEmail = null; renderDoors(); return true;
+    }).catch(function () { errEl.textContent = 'Could not send — check your signal and tap Save again. What you typed is kept.'; return false; });
+  }
+
+  /* ---- photos (2026-10-02): walk-through photos for whoever builds the quote ----
+     Shrunk on the phone to 1600 px before sending (fast on poor signal), and
+     re-encoding as JPEG drops the phone's GPS tag. Stored off the public site. */
+  function photoUrl(region, id, f) { return API + '?action=photoget&region=' + encodeURIComponent(region) + '&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(f); }
+  function photoStrip(d, region) {
+    var wrap = q('div');
+    var strip = q('div', 'photos');
+    d.photos.forEach(function (p) {
+      var b = q('button'); b.type = 'button'; b.setAttribute('aria-label', 'Photo by ' + (p.by || 'crew') + ', ' + fmtDay(p.at));
+      var im = q('img'); im.loading = 'lazy'; im.alt = ''; im.src = photoUrl(region, d.id, p.f);
+      b.appendChild(im); b.addEventListener('click', function () { photoViewer(d, region, p); });
+      strip.appendChild(b);
+    });
+    wrap.appendChild(strip);
+    return wrap;
+  }
+  function shrinkPhoto(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () {
+        var k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
+        var c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { if (b) res(b); else rej(new Error('encode')); }, 'image/jpeg', 0.82);
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('That file is not a photo this phone can open.')); };
+      im.src = url;
+    });
+  }
+  function pickPhotos(d, region, after) {
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.addEventListener('change', function () { uploadPhotos(d, region, [].slice.call(inp.files || []), after); });
+    inp.click();
+  }
+  function uploadPhotos(d, region, files, after) {
+    if (!files.length) return;
+    files = files.slice(0, Math.max(0, 20 - (d.photos || []).length));
+    var done = 0, failed = 0, k = 0;
+    function next() {
+      if (k >= files.length) {
+        toast(done + (done === 1 ? ' photo' : ' photos') + ' added', failed ? failed + ' did not send — try those again' : d.address, null);
+        if (after) after();
+        return;
+      }
+      var f = files[k++];
+      toast('Sending photo ' + k + ' of ' + files.length, 'Keep the app open', null);
+      shrinkPhoto(f).then(function (blob) {
+        return fetch(API + '?action=photo&region=' + encodeURIComponent(region) + '&id=' + encodeURIComponent(d.id),
+          { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, credentials: 'same-origin' }).then(function (r) { return r.json(); });
+      }).then(function (j) {
+        if (j && j.ok) { (d.photos = d.photos || []).push({ f: j.f, by: S.me, at: Math.floor(Date.now() / 1000) }); done++; }
+        else failed++;
+      }).catch(function () { failed++; }).then(next);
+    }
+    next();
+  }
+  function photoViewer(d, region, p) {
+    var old = document.getElementById('pviewer'); if (old) old.parentNode.removeChild(old);
+    var v = q('div', 'pviewer'); v.id = 'pviewer';
+    var bar = q('div', 'pvbar');
+    var close = q('button'); close.type = 'button'; close.appendChild(ico('close', 2.4)); close.appendChild(document.createTextNode('Close'));
+    close.addEventListener('click', function () { v.parentNode.removeChild(v); });
+    bar.appendChild(close);
+    bar.appendChild(q('span', null, (p.by || 'crew') + ' · ' + fmtDay(p.at)));
+    if (p.by === S.me || S.role === 'admin') {
+      var del = q('button', 'del', 'Remove'); del.type = 'button';
+      del.addEventListener('click', function () {
+        if (!window.confirm('Remove this photo for everyone?')) return;
+        api('photodel', { body: { region: region, id: d.id, f: p.f } }).then(function (j) {
+          if (!j.ok) { toast('Not removed', j.error || 'Try again.', null); return; }
+          d.photos = (d.photos || []).filter(function (x) { return x.f !== p.f; });
+          v.parentNode.removeChild(v);
+          if (S.screen === 'quotes') quotesView(); else renderDoors();
+        }).catch(function () { toast('No signal', 'The photo was not removed.', null); });
+      });
+      bar.appendChild(del);
+    }
+    v.appendChild(bar);
+    var box = q('div', 'pvimg'); var im = q('img'); im.alt = 'Photo of ' + d.address; im.src = photoUrl(region, d.id, p.f);
+    box.appendChild(im); v.appendChild(box);
+    document.body.appendChild(v);
+  }
+
   function addLink(row, icn, label, aria, fn) {
     var x = q('button', 'lnk'); x.type = 'button';
     x.appendChild(ico(icn, 2.2)); x.appendChild(document.createTextNode(label));
@@ -1392,32 +1692,33 @@
   }
   /* Tapping a dot opens a card from the bottom of the map rather than a small
      pop-up: big enough to read, and its button is big enough to hit. */
+  /* the map card (2026-10-02): the FULL door card slides up over the map, so a door
+     can be marked, noted or photographed without leaving the map. Minimise it to a
+     bar to see the dots; tap another dot to switch. */
   function sheetFor(d, box) {
     var old = box.querySelector('.msheet'); if (old) old.parentNode.removeChild(old);
-    var st = statusOf(d);
-    var s = q('div', 'msheet');
-    s.appendChild(q('div', 'grab'));
-    s.appendChild(q('div', 'pa', d.address));
-    var ps = q('div', 'ps');
-    var fb = fireBadge(d); if (fb) ps.appendChild(fb);
-    var lab = { k: 'To knock', d: 'Due back', a: 'No answer — try again', x: d.mark ? (OUT[d.mark.outcome] || 'Done') : 'Done' }[st];
-    ps.appendChild(q('span', null, lab + ' · ' + d.acres.toFixed(2) + ' acres'));
-    s.appendChild(ps);
-    var row = q('div', 'row');
-    var b = q('button', 'pb'); b.type = 'button';
-    b.appendChild(ico('card', 2.2)); b.appendChild(document.createTextNode('Show card'));
-    b.addEventListener('click', function () {
-      S.dview = 'street';
-      try { localStorage.setItem('sixfold.rounds.doorview', 'street'); } catch (e) {}
-      if (d.mark && d.mark.outcome === 'miss') S.showAgain = true;   /* that section is collapsed by default */
-      S.flash = d.id; renderDoors();
+    var s = q('div', 'msheet' + (S.sheetMin ? ' min' : ''));
+    var bar = q('div', 'shbar');
+    var gb = q('button', 'grabbtn'); gb.type = 'button';
+    gb.setAttribute('aria-label', S.sheetMin ? 'Open the card' : 'Minimise the card');
+    gb.appendChild(q('span', 'grab'));
+    if (S.sheetMin) gb.appendChild(q('span', 'shaddr', d.address));
+    gb.addEventListener('click', function () { S.sheetMin = !S.sheetMin; sheetFor(d, box); });
+    bar.appendChild(gb);
+    var mn = q('button', 'shbtn'); mn.type = 'button'; mn.setAttribute('aria-label', S.sheetMin ? 'Open the card' : 'Minimise the card');
+    mn.textContent = S.sheetMin ? '▲' : '▼';
+    mn.addEventListener('click', function () { S.sheetMin = !S.sheetMin; sheetFor(d, box); });
+    var cl = q('button', 'shbtn'); cl.type = 'button'; cl.setAttribute('aria-label', 'Close the card'); cl.appendChild(ico('close', 2.4));
+    cl.addEventListener('click', function () {
+      S.mapSel = null; S.sheetMin = false;
+      s.parentNode.removeChild(s); box.classList.remove('has-sheet');
+      if (S.liveMap) S.liveMap.restyle();
     });
-    row.appendChild(b);
-    var sat = satLink(d, true);
-    if (sat) { sat.className = 'px'; row.appendChild(sat); }
-    s.appendChild(row);
+    bar.appendChild(mn); bar.appendChild(cl);
+    s.appendChild(bar);
+    if (!S.sheetMin) s.appendChild(doorCardFor(d));
     box.appendChild(s);
-    box.style.setProperty('--sheet-h', (s.offsetHeight + 16) + 'px');
+    box.style.setProperty('--sheet-h', (Math.min(s.offsetHeight, box.offsetHeight * 0.72) + 16) + 'px');
     box.classList.add('has-sheet');
   }
   function renderMap() {
@@ -1451,11 +1752,21 @@
       var pts = [], markers = {};
       function base(d) { return statusOf(d) === 'x' ? 7 : 10; }
       function select(d) {
-        if (S.mapSel && markers[S.mapSel]) markers[S.mapSel].m.setRadius(base(markers[S.mapSel].d));
+        if (S.mapSel !== d.id) S.sheetMin = false;
         S.mapSel = d.id;
-        markers[d.id].m.setRadius(base(d) + 4);
+        restyle();
         sheetFor(d, box);
       }
+      /* marking from the card redraws the dots in place: no new map, no lost position */
+      function restyle() {
+        Object.keys(markers).forEach(function (k) {
+          var x = markers[k], st = statusOf(x.d), hot = x.d.fire === 4 || x.d.fire === 5;
+          x.m.setStyle({ fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95, color: hot ? '#9E2A1C' : '#ffffff' });
+          x.m.setRadius(base(x.d) + (k === S.mapSel ? 4 : 0));
+        });
+      }
+      S.liveMap = { el: el, box: box, area: S.area, restyle: restyle,
+        refresh: function () { restyle(); var sd = S.mapSel && markers[S.mapSel]; if (sd) sheetFor(sd.d, box); } };
       S.doors.forEach(function (d) {
         if (typeof d.lat !== 'number') return;
         var st = statusOf(d), hot = d.fire === 4 || d.fire === 5;
@@ -1498,6 +1809,12 @@
       if (x.phone.source !== 'door') ph.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
       c.appendChild(ph);
     } else c.appendChild(q('div', 'meta', 'No phone number on file.'));
+    if (x.email) {
+      var em = q('div', 'ph em'); var ea = q('a', 'num'); ea.href = 'mailto:' + x.email.email;
+      ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode(x.email.email)); em.appendChild(ea);
+      em.appendChild(q('span', 'src', 'Given at the door · ' + fmtDay(x.email.at))); c.appendChild(em);
+    }
+    if (x.photos && x.photos.length) c.appendChild(photoStrip({ id: x.id, address: x.address, photos: x.photos }, x.region));
     if (x.note) {
       var nt = q('div', 'nt'); nt.appendChild(q('div', 'ntxt', x.note.note));
       nt.appendChild(q('span', 'src', 'Note · ' + (x.note.by || 'crew') + ' · ' + fmtDay(x.note.at))); c.appendChild(nt);
@@ -1790,6 +2107,58 @@
     return box;
   }
 
+  /* the door card, shared by the list and the map (2026-10-02) */
+  function doorCardFor(d) {
+    var card = q('div', 'door ' + fireClass(d.fire)); card.setAttribute('data-id', d.id);
+    var top = q('div', 'd-top');
+    top.appendChild(q('div', 'addr', d.address));
+    var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
+    card.appendChild(top);
+    /* slimmer card: the fire badge sits at the start of the details line */
+    var meta = q('div', 'meta');
+    var fb = fireBadge(d); if (fb) meta.appendChild(fb);
+    var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
+    meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · ' + d.owner));
+    card.appendChild(meta);
+    if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
+    if (d.mark && d.mark.outcome === 'miss') {
+      var was = q('div', 'meta st');
+      was.appendChild(q('span', null, 'No answer' + (d.mark.by ? ' · ' + d.mark.by : '')));
+      was.style.color = 'var(--miss)';
+      /* back into the to-knock list, e.g. the house was a miss only because of the hour */
+      var pb = q('button', 'putback', 'Put back on the list'); pb.type = 'button';
+      pb.addEventListener('click', function () { markDoor(d, null); toast('Back on the list', d.address, function () { markDoor(d, 'miss'); }); });
+      was.appendChild(pb);
+      card.appendChild(was);
+    }
+    if (d.mark && d.mark.outcome === 'later' && d.mark.revisit) {
+      var isDue = d.mark.revisit <= todayISO();
+      var rv = q('div', 'meta st', 'Not now · asked us back ' + fmtDate(d.mark.revisit) + (isDue ? ' — due' : '') + (d.mark.by ? ' · ' + d.mark.by : ''));
+      rv.style.color = isDue ? 'var(--go)' : 'var(--later)';
+      card.appendChild(rv);
+    }
+    if (d.mark && (d.mark.outcome === 'booked' || d.mark.outcome === 'nosolicit' || (d.mark.outcome === 'later' && !d.mark.revisit))) {
+      var dn = q('div', 'meta st', OUT[d.mark.outcome] + (d.mark.by ? ' · ' + d.mark.by : ''));
+      dn.style.color = d.mark.outcome === 'booked' ? 'var(--go)' : d.mark.outcome === 'later' ? 'var(--later)' : 'var(--miss)';
+      card.appendChild(dn);
+    }
+    card.appendChild(extras(d));
+    if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
+    if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
+    var acts = q('div', 'acts');
+    [['booked', 'check'], ['later', 'clock'], ['miss', 'knock']].forEach(function (k) {
+      var b = q('button'); b.type = 'button'; b.setAttribute('data-k', k[0]);
+      b.appendChild(ico(k[1], 2.3)); b.appendChild(document.createTextNode(OUT[k[0]]));
+      b.addEventListener('click', function () {
+        if (k[0] === 'later') { S.pickLater = d.id; S.editPhone = null; S.editNote = null; renderDoors(); return; }
+        animateMark(card, d, k[0], b);
+      });
+      acts.appendChild(b);
+    });
+    card.appendChild(acts);
+    return card;
+  }
+
   function renderDoors() {
     S.signin = null; S.screen = 'doors';
     hideSplash();
@@ -1820,6 +2189,8 @@
     }
     doorDock();
     foot.hidden = true;
+    if (S.dview === 'map' && S.liveMap && S.liveMap.area === S.area && document.body.contains(S.liveMap.el)) { S.liveMap.refresh(); return; }
+    S.liveMap = null;
     view.textContent = '';
 
     var finished = S.doors.length > 0 && !todo.length && !again.length && !due.length;
@@ -1866,57 +2237,13 @@
     }
     if (S.dview === 'map') { renderMap(); return; }
 
-    function doorCard(d) {
-      var card = q('div', 'door ' + fireClass(d.fire)); card.setAttribute('data-id', d.id);
-      var top = q('div', 'd-top');
-      top.appendChild(q('div', 'addr', d.address));
-      var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
-      card.appendChild(top);
-      /* slimmer card: the fire badge sits at the start of the details line */
-      var meta = q('div', 'meta');
-      var fb = fireBadge(d); if (fb) meta.appendChild(fb);
-      var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
-      meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · ' + d.owner));
-      card.appendChild(meta);
-      if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
-      if (d.mark && d.mark.outcome === 'miss') {
-        var was = q('div', 'meta st');
-        was.appendChild(q('span', null, 'No answer' + (d.mark.by ? ' · ' + d.mark.by : '')));
-        was.style.color = 'var(--miss)';
-        /* back into the to-knock list, e.g. the house was a miss only because of the hour */
-        var pb = q('button', 'putback', 'Put back on the list'); pb.type = 'button';
-        pb.addEventListener('click', function () { markDoor(d, null); toast('Back on the list', d.address, function () { markDoor(d, 'miss'); }); });
-        was.appendChild(pb);
-        card.appendChild(was);
-      }
-      if (d.mark && d.mark.outcome === 'later' && d.mark.revisit) {
-        var isDue = d.mark.revisit <= todayISO();
-        var rv = q('div', 'meta st', 'Not now · asked us back ' + fmtDate(d.mark.revisit) + (isDue ? ' — due' : '') + (d.mark.by ? ' · ' + d.mark.by : ''));
-        rv.style.color = isDue ? 'var(--go)' : 'var(--later)';
-        card.appendChild(rv);
-      }
-      card.appendChild(extras(d));
-      if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
-      var acts = q('div', 'acts');
-      [['booked', 'check'], ['later', 'clock'], ['miss', 'knock']].forEach(function (k) {
-        var b = q('button'); b.type = 'button'; b.setAttribute('data-k', k[0]);
-        b.appendChild(ico(k[1], 2.3)); b.appendChild(document.createTextNode(OUT[k[0]]));
-        b.addEventListener('click', function () {
-          if (k[0] === 'later') { S.pickLater = d.id; S.editPhone = null; S.editNote = null; renderDoors(); return; }
-          animateMark(card, d, k[0], b);
-        });
-        acts.appendChild(b);
-      });
-      card.appendChild(acts);
-      return card;
-    }
 
-    todo.forEach(function (d) { view.appendChild(doorCard(d)); });
+    todo.forEach(function (d) { view.appendChild(doorCardFor(d)); });
 
     if (due.length) {
       var dh = q('h2', null, 'Due to revisit · ' + due.length); dh.id = 'dueHead';
       view.appendChild(dh);
-      due.forEach(function (d) { view.appendChild(doorCard(d)); });
+      due.forEach(function (d) { view.appendChild(doorCardFor(d)); });
       if (S.jumpDue) { S.jumpDue = false; try { dh.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {} }
     }
 
@@ -1927,7 +2254,7 @@
       toggle.type = 'button';
       toggle.addEventListener('click', function () { S.showAgain = !S.showAgain; renderDoors(); });
       view.appendChild(toggle);
-      if (S.showAgain) again.forEach(function (d) { view.appendChild(doorCard(d)); });
+      if (S.showAgain) again.forEach(function (d) { view.appendChild(doorCardFor(d)); });
       if (S.jumpAgain) { S.jumpAgain = false; try { ah.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {} }
     }
 

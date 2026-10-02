@@ -244,6 +244,59 @@ function loadLawnFix(string $key): array {
 function appendLawnFix(string $key, array $row): bool {
     return (bool) @file_put_contents(lawnfixFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- emails (2026-10-02) ------------------------------------------------
+ * For people who'd rather not give a number. Given at the door only: nothing looks
+ * emails up. Last line per door wins; null removes it. */
+function emailsFile(string $key): string { return DATA_DIR . '/emails-' . $key . '.log'; }
+function loadEmails(string $key): array {
+    $f = emailsFile($key);
+    if (!is_readable($f)) return [];
+    $out = [];
+    $fh = @fopen($f, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $r = json_decode(trim($line), true);
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (($r['email'] ?? null) === null) unset($out[$r['id']]);
+        else $out[$r['id']] = ['email' => $r['email'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendEmail(string $key, array $row): bool {
+    return (bool) @file_put_contents(emailsFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+
+/* ---- photos (2026-10-02) ------------------------------------------------
+ * Walk-through photos for whoever builds the quote. The phone shrinks each one to
+ * ~1600 px and re-encodes it as JPEG before sending, which also strips the phone's
+ * GPS tag. Stored OUTSIDE public_html beside the logs, served only to a signed-in
+ * session. Rule shown under the button: only with the owner's OK; the property, not
+ * people. Log rows {id, f, by, at} add; {id, f, del:true} remove. */
+const PHOTO_MAX_BYTES = 4194304;
+const PHOTO_PER_DOOR = 20;
+function photosFile(string $key): string { return DATA_DIR . '/photos-' . $key . '.log'; }
+function photoPath(string $key, string $id, string $f): string { return DATA_DIR . '/photos/' . $key . '/' . $id . '/' . $f; }
+function loadPhotos(string $key): array {
+    $p = photosFile($key);
+    if (!is_readable($p)) return [];
+    $out = [];
+    $fh = @fopen($p, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $r = json_decode(trim($line), true);
+        if (!is_array($r) || !isset($r['id'], $r['f'])) continue;
+        if (!empty($r['del'])) { if (isset($out[$r['id']])) $out[$r['id']] = array_values(array_filter($out[$r['id']], fn($x) => $x['f'] !== $r['f'])); }
+        else $out[$r['id']][] = ['f' => $r['f'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendPhotoLog(string $key, array $row): bool {
+    return (bool) @file_put_contents(photosFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+function validPhotoName(string $f): bool { return (bool) preg_match('/^\d{8}-\d{6}-[0-9a-f]{8}\.jpg$/', $f); }
+
 /* the level that counts: the crew's answer if there is one, else the photo's */
 function lawnLevel(array $d, array $fix): ?string {
     if (isset($fix[$d['id']])) return $fix[$d['id']]['lv'];
@@ -457,6 +510,8 @@ if ($action === 'area') {
     $phones = loadPhones($key);
     $notes = loadNotes($key);
     $lfix = loadLawnFix($key);
+    $emails = loadEmails($key);
+    $photos = loadPhotos($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -474,6 +529,8 @@ if ($action === 'area') {
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
                 'lawn' => $d['lawn'] ?? null,
                 'lawnfix' => $lfix[$d['id']] ?? null,
+                'email' => $emails[$d['id']] ?? null,
+                'photos' => $photos[$d['id']] ?? [],
             ];
         }
         out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors,
@@ -532,6 +589,144 @@ if ($action === 'phone') {
         fail('Could not save that. Try again.', 500);
     }
     out(['ok' => true]);
+}
+
+if ($action === 'email') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    $e = trim((string) ($body['email'] ?? ''));
+    if ($e === '') {
+        if (!appendEmail($key, ['id' => $id, 'email' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    if (strlen($e) > 120 || !filter_var($e, FILTER_VALIDATE_EMAIL)) fail('That does not look like an email address.');
+    if (!appendEmail($key, ['id' => $id, 'email' => strtolower($e), 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+if ($action === 'photo') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($_GET['region'] ?? '');
+    $id  = (string) ($_GET['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    $bin = $raw ?? '';
+    if (strlen($bin) < 100) fail('No photo received.');
+    if (strlen($bin) > PHOTO_MAX_BYTES) fail('That photo is too big to send.', 413);
+    $info = @getimagesizefromstring($bin);
+    if (!$info || ($info['mime'] ?? '') !== 'image/jpeg' || $info[0] > 6000 || $info[1] > 6000) fail('That is not a JPEG photo.');
+    $have = loadPhotos($key)[$id] ?? [];
+    if (count($have) >= PHOTO_PER_DOOR) fail('This door already has ' . PHOTO_PER_DOOR . ' photos. Remove one first.');
+    $dir = DATA_DIR . '/photos/' . $key . '/' . $id;
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true)) fail('Could not save that. Try again.', 500);
+    $f = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.jpg';
+    if (@file_put_contents($dir . '/' . $f, $bin, LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    if (!appendPhotoLog($key, ['id' => $id, 'f' => $f, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'f' => $f]);
+}
+
+if ($action === 'photoget') {
+    $key = (string) ($_GET['region'] ?? '');
+    $id  = (string) ($_GET['id'] ?? '');
+    $f   = (string) ($_GET['f'] ?? '');
+    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/', $id) || !validPhotoName($f)) fail('No such photo.', 404);
+    $listed = array_column(loadPhotos($key)[$id] ?? [], 'f');
+    $path = photoPath($key, $id, $f);
+    if (!in_array($f, $listed, true) || !is_readable($path)) fail('No such photo.', 404);
+    header('Content-Type: image/jpeg');
+    header('Cache-Control: private, max-age=604800');
+    header('Content-Length: ' . filesize($path));
+    readfile($path);
+    exit;
+}
+
+if ($action === 'photodel') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    $f   = (string) ($body['f'] ?? '');
+    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/', $id) || !validPhotoName($f)) fail('No such photo.', 404);
+    $hit = null;
+    foreach (loadPhotos($key)[$id] ?? [] as $x) if ($x['f'] === $f) $hit = $x;
+    if (!$hit) fail('No such photo.', 404);
+    if ($hit['by'] !== $me && $role !== 'admin') fail('Only the person who took it, or an admin, can remove it.', 403);
+    if (!appendPhotoLog($key, ['id' => $id, 'f' => $f, 'del' => true, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    @unlink(photoPath($key, $id, $f));
+    out(['ok' => true]);
+}
+
+/* ---- stats (2026-10-02) ---------------------------------------------------
+ * Built from the logs, so it covers every day since the app went live, not just
+ * since this was added. A door counts once per person per day, at its LAST outcome
+ * that day (marking then changing a door is one door; an undo removes it). Days are
+ * Colorado days. Crew see their own; an admin sees everyone, or one person. */
+if ($action === 'stats') {
+    $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
+    $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
+    $tz = new DateTimeZone('America/Denver');
+    $since = (new DateTime('today', $tz))->modify('-' . ($days - 1) . ' days')->getTimestamp();
+    $dayOf = function ($ts) use ($tz) { return (new DateTime('@' . (int) $ts))->setTimezone($tz)->format('Y-m-d'); };
+    $people = [];
+    $bump = function (string $name, string $date, string $k) use (&$people) {
+        if (!isset($people[$name][$date])) $people[$name][$date] = ['doors' => 0, 'booked' => 0, 'later' => 0, 'miss' => 0, 'nosolicit' => 0, 'phones' => 0, 'emails' => 0, 'photos' => 0, 'notes' => 0];
+        $people[$name][$date][$k]++;
+    };
+    $lines = function (string $file) use ($since) {
+        $out = [];
+        if (!is_readable($file)) return $out;
+        $fh = @fopen($file, 'r');
+        if (!$fh) return $out;
+        while (($line = fgets($fh)) !== false) {
+            $r = json_decode(trim($line), true);
+            if (is_array($r) && isset($r['id']) && (int) ($r['at'] ?? 0) >= $since) $out[] = $r;
+        }
+        fclose($fh);
+        return $out;
+    };
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    foreach (($idx['regions'] ?? []) as $rg) {
+        $k = $rg['key'];
+        $last = [];
+        foreach ($lines(marksFile($k)) as $m) $last[($m['by'] ?? '') . '|' . $dayOf($m['at']) . '|' . $m['id']] = $m['outcome'] ?? null;
+        foreach ($last as $kk => $o) {
+            if ($o === null) continue;
+            [$n, $dt] = explode('|', $kk);
+            if ($who !== '' && $n !== $who) continue;
+            $bump($n, $dt, 'doors');
+            if (in_array($o, ['booked', 'later', 'miss', 'nosolicit'], true)) $bump($n, $dt, $o);
+        }
+        foreach ([['phones', phonesFile($k), 'phone'], ['emails', emailsFile($k), 'email'], ['notes', notesFile($k), 'note']] as [$what, $file, $field]) {
+            $seen = [];
+            foreach ($lines($file) as $r) {
+                if (($r[$field] ?? null) === null) continue;
+                if ($what === 'phones' && ($r['source'] ?? '') !== 'door') continue;     /* only numbers GIVEN at the door count */
+                $n = $r['by'] ?? ''; $dt = $dayOf($r['at']);
+                if ($who !== '' && $n !== $who) continue;
+                if (isset($seen["$n|$dt|{$r['id']}"])) continue;
+                $seen["$n|$dt|{$r['id']}"] = 1;
+                $bump($n, $dt, $what);
+            }
+        }
+        foreach ($lines(photosFile($k)) as $r) {
+            if (!empty($r['del'])) continue;
+            $n = $r['by'] ?? '';
+            if ($who !== '' && $n !== $who) continue;
+            $bump($n, $dayOf($r['at']), 'photos');
+        }
+    }
+    $list = [];
+    foreach ($people as $n => $byDay) {
+        if ($n === '') continue;
+        krsort($byDay);
+        $rows = [];
+        foreach ($byDay as $dt => $c) $rows[] = ['date' => $dt] + $c;
+        $list[] = ['name' => $n, 'days' => $rows];
+    }
+    usort($list, fn($a, $b) => strcmp($a['name'], $b['name']));
+    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', $tz))->format('Y-m-d'), 'who' => $who, 'people' => $list]);
 }
 
 if ($action === 'lawnfix') {
@@ -607,6 +802,8 @@ if ($action === 'quotes') {
         $notes = loadNotes($r['key']);
         $quoted = loadQuoted($r['key']);
         $lfix = loadLawnFix($r['key']);
+        $emails = loadEmails($r['key']);
+        $photos = loadPhotos($r['key']);
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
@@ -623,6 +820,7 @@ if ($action === 'quotes') {
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
                     'quoted' => $qd,
                     'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null,
+                    'email' => $emails[$d['id']] ?? null, 'photos' => $photos[$d['id']] ?? [],
                 ];
             }
         }
@@ -699,7 +897,8 @@ if ($action === 'report' || $action === 'export') {
     fputcsv($fh, ['region', 'neighbourhood', 'address', 'acres', 'owner', 'outcome', 'by', 'when', 'come_back',
                   'phone', 'phone_source', 'phone_last_seen', 'phone_added_by', 'phone_added',
                   'note', 'note_by', 'note_added',
-                  'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by'], ',', '"', '');
+                  'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
+                  'email', 'email_by', 'email_added', 'photos'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -707,6 +906,8 @@ if ($action === 'report' || $action === 'export') {
         $phones = loadPhones($r['key']);
         $notes = loadNotes($r['key']);
         $lfix = loadLawnFix($r['key']);
+        $emails = loadEmails($r['key']);
+        $photos = loadPhotos($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
@@ -714,13 +915,16 @@ if ($action === 'report' || $action === 'export') {
                 $p = $phones[$d['id']] ?? null;
                 $n = $notes[$d['id']] ?? null;
                 $lf = $lfix[$d['id']] ?? null;
-                if (!$m && !$p && !$n && !$lf) continue;           // a number, a note or a lawn answer is worth exporting too
+                $em = $emails[$d['id']] ?? null;
+                $ph = count($photos[$d['id']] ?? []);
+                if (!$m && !$p && !$n && !$lf && !$em && !$ph) continue;   // anything collected at a door is worth exporting
                 fputcsv($fh, [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
                               $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '', $m['revisit'] ?? '',
                               $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
                               $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : '',
                               $n['note'] ?? '', $n['by'] ?? '', $n ? date('Y-m-d', (int) $n['at']) : '',
-                              $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? ''], ',', '"', '');
+                              $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
+                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: ''], ',', '"', '');
             }
         }
     }

@@ -7,6 +7,37 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Doors-team requests — 2026-10-02: `rounds.php` + `index.html`
+
+From a crew member's walkthrough of the app with Matthew:
+- **Stats.** A **My stats** tile for everyone: today's doors knocked, people talked to, quotes
+  booked and quote rate (quotes ÷ people talked to; no-answers left out), compared with their
+  last 7 working days, a 14-day chart and a day-by-day list. A **Team stats** tile for admins:
+  everyone's today / 7 days / 30 days; tap a person for their day-by-day.
+  - Built from the logs, so it covers every day since the app went live.
+  - A door counts once per person per day, at its last outcome; an undo removes it. Days are
+    Colorado days.
+  - Crew can only see their own: the API ignores a crew request for anyone else.
+- **The card on the map.** Tapping a dot now opens the door's **full card** in a sheet over the
+  map, with the mark buttons, phone, email, note and photos. Marking from it recolours the dot in
+  place (the map doesn't reload). **▼** minimises the card to a bar so you can see the dots; tap
+  another dot to switch; **×** closes it.
+- **Email** beside the phone number: given at the door only, validated, in the export
+  (`email`, `email_by`, `email_added`). New log `emails-<town>.log`.
+- **Photos** for walk-throughs. **+ Photo** opens the camera or library.
+  - The phone shrinks each photo to 1600 px and re-encodes it as JPEG before sending (a 172 KB
+    test image arrived as 111 KB). That also **strips the phone's GPS tag**.
+  - Stored in `sixfold-data/rounds/photos/<town>/<door>/`, **outside public_html**, and served
+    only to a signed-in session. Up to 20 per door.
+  - The person who took a photo, or an admin, can remove it.
+  - The card reminds the crew: *only with the owner's OK · the property, not people.*
+  - Quotes to build shows email and photos.
+  - New log `photos-<town>.log`; the folders are created on first upload.
+  - **Watch the SiteGround disk quota** if photo use grows (each photo is ~100–300 KB).
+
+Tested: 45/45 new checks (email, photos with a real upload from the page, stats rules and
+permissions, map card), plus all twelve earlier suites (326 total).
+
 ## ⚑ Location help for the phone in hand — 2026-10-02, `index.html` only
 
 A crew member's home-screen app kept saying location was blocked after he'd allowed it in the
