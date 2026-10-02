@@ -619,6 +619,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-20 — Doors-team requests: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** My stats
+      (everyone) and Team stats (admin), the full door card on the map (minimise, next dot), email
+      per door, walk-through photos (shrunk and GPS-stripped on the phone, stored outside
+      public_html). Upload is `rounds.php` + `index.html`. It can ride with the lawn door files.
+      Researched whatgrassisthis.com: a free AI grass identifier with no API and no named operator.
+      Fine on a crew phone, nothing to build on. Offered a grass-type quick-pick for overseeding
+      quotes (not built). 326/326 checks.
 - [ ] **SX-19 — Lawn size per door, the aeration counterpart to the fire map. BUILT 2026-10-02 as a
       LAWN LEVEL (Matthew: "build it out now, calibrate over time with input from the doors"). Crew
       correct it in the app, and their answers are exported as calibration data. Awaiting the full
