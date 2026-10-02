@@ -93,7 +93,27 @@ Her notes record **~¾ acre of turf**, carried from job 2 and not re-measured.
   a mowed empty field and the next as a foundation under construction. This is failure mode 4 in
   action, and it's why every lawn figure must carry its photo date.
 
-**Still missing: a lawn measured on the ground.** Brandon's lot confirms the boundaries and the
+## First independent check: 2787 Russet Sky Ct, Castle Rock (2026-10-02)
+
+Matthew measured the lawns by hand with Google Maps' area tool on Google's 2026 imagery, outlining
+the grass and leaving out patios, beds and the pool area, but including grass under the trees.
+Compared with this method on the September 2023 photo:
+
+| Lawn | Google, hand-measured | This method | Difference |
+|---|---|---|---|
+| Backyard | 2,984 sq ft | 3,432 | +15% |
+| Front, beside the house (with a tree) | 603 | 593 | −2% |
+| Front, below the driveway (heavy tree shadow) | 311 | 231 | −26% |
+| **Whole lot** | **3,898** | **4,266** | **+9%** |
+
+- **Within about 10% overall.**
+- **The errors run in opposite directions.** Open lawn reads high: edge fringe at 30 cm pixels,
+  plus any change between 2023 and 2026. Shaded lawn reads low: grass under a canopy or in deep
+  shadow is classed as tree.
+- **One lot only.** Two or three more are needed before calling the bias typical or applying a
+  correction.
+
+**Still missing: more independent measurements.** Brandon's lot confirms the boundaries and the
 scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
 or a walk-sheet measurement) is the remaining test.
 
