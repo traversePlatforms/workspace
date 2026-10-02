@@ -7,7 +7,17 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Doors-team requests — 2026-10-02: `rounds.php` + `index.html`
+## ⚑ Neighbourhoods open on Street order — 2026-10-02, `index.html` only
+
+Looking at one neighbourhood on the map used to leave every other neighbourhood opening on the
+map too. Now the map is something you glance at, not a mode you stay in: every neighbourhood
+opens on **Street order**, including after the app is closed and reopened. **Nearest** is still
+remembered, because it is a way of sorting the list you would want to keep across an area.
+
+Tested: Map, then the next neighbourhood → Street order. Map, then reopen the app → Street
+order. Nearest, then the next neighbourhood → Nearest. The batch, crew and nearhood suites still pass.
+
+## ⚑ Doors-team requests — 2026-10-02: `rounds.php` + `index.html`  *(live 2026-10-02)*
 
 From a crew member's walkthrough of the app with Matthew:
 - **Stats.** A **My stats** tile for everyone: today's doors knocked, people talked to, quotes

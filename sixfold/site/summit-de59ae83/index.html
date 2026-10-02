@@ -1225,6 +1225,9 @@
       S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null;
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
+      /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
+      if (S.dview === 'map') S.dview = 'street';
+      S.mapSel = null; S.sheetMin = false;
       if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
       renderDoors();
@@ -1647,7 +1650,7 @@
   function doorDock() {
     setDock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['map', 'Map', 'map']], S.dview, function (v) {
       S.dview = v;
-      try { localStorage.setItem('sixfold.rounds.doorview', v); } catch (e) {}
+      if (v !== 'map') { try { localStorage.setItem('sixfold.rounds.doorview', v); } catch (e) {} }
       if (v === 'near') locate(function () { if (S.area) renderDoors(); });
       renderDoors();
       window.scrollTo(0, 0);
