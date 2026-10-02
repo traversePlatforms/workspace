@@ -413,8 +413,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **Still needs a phone call, per jurisdiction. Pairs with SX-10**, which is already a call
       to a Colorado Springs public body.
 
-- [ ] **SX-13 — “No soliciting” flags in the rounds app.** Matthew's idea 2026-10-01, scoped
-      and **not built**: [NO-SOLICIT-SCOPE.md](sixfold/operations/door-territory/NO-SOLICIT-SCOPE.md).
+- [ ] **SX-13 — “No soliciting” flags in the rounds app: ✅ BOTH LEVELS BUILT AND TESTED 2026-10-01,
+      awaiting upload** (ticks when live). **Door:** a fourth outcome, `nosolicit`, under Not now.
+      It counts as done and leaves the hazard count, and Undo asks first. **Neighbourhood:** any
+      crew member can raise it, only an admin can clear it, and it warns rather than hides. It is
+      **stored against the door ids, not the name**, and a simulated rename-and-split rebuild left
+      both halves flagged. The orphan risk below is answered: the marks log is never pruned, so the
+      door flag is never deleted, and `verify-superset` keeps ids stable.
+      Original scope: [NO-SOLICIT-SCOPE.md](sixfold/operations/door-territory/NO-SOLICIT-SCOPE.md).
       **Two levels, and the door-level one matters more than the ask.** A sign is **per house**,
       the crew sees it standing there, and ignoring one is trespass in some places. Door
       outcomes are `booked | later | miss` in an append-only log validated in exactly one
@@ -591,8 +597,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Two stacked bugs — a one-shot splitter that dumped leftovers into the biggest piece, and
       same-street pieces being glued back together by name. Clashing names now carry a
       house-number range (*“Wolf Village Dr 5738–5842”*). 36/36 tests. **Ticks when live.**
-      **Still on the list from the improvements:** knock-to-quote handoff, nearest-door GPS sort,
-      neighbourhood map, slimmer cards, a progress line per town.
+      **The rest of the improvements list is built too: see SX-17.**
+- [ ] **SX-17 — Slimmer cards, town progress line, nearest-door GPS sort, neighbourhood map,
+      admin "Quotes to build": ✅ BUILT AND TESTED 2026-10-01, awaiting upload** (ticks when live).
+      Built in the same pass as SX-13 and SX-16, so **everything from 2026-10-01 goes up as ONE
+      upload**: `rounds.php`, `index.html` and the 12 door files. See the top of DEPLOY-ROUNDS.md.
+      The map is Leaflet from cdnjs, pinned by checksum, on OpenStreetMap tiles. Quotes-to-build
+      lives inside the door app, so SX-2b gets no fourth copy. **180/180 checks** across six suites.
 
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so

@@ -220,6 +220,75 @@ const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
  * spring". Same append-only, keyed-on-door-id shape as marks and phones, so notes
  * survive every rebuild of the door lists. Last line wins; an empty note removes it. */
 const NOTE_MAX = 500;
+
+/* ---- neighbourhood no-soliciting flag (2026-10-01, SX-13) ----------------
+ * A posting at a subdivision entrance. Any crew member can raise it; only an
+ * admin can clear it, or one wrong tap quietly drops a neighbourhood from the
+ * programme. The neighbourhood still shows, with a warning: an entrance sign does
+ * not always cover every street.
+ *
+ * ⚑ STORED AGAINST THE DOOR IDS IT COVERED, NOT THE NEIGHBOURHOOD NAME. Names
+ * change when the lists are rebuilt (the 2026-10-01 split renamed dozens). A flag
+ * keyed on a name would silently fall off and the doors would be knocked again.
+ * Keyed on doors, a neighbourhood shows as flagged if ANY of its doors was under a
+ * flag — so a flagged pocket that gets split leaves both halves flagged, which is
+ * the safe direction. Rows: {fid, name, ids, on, by, at}; last line per fid wins. */
+function areaflagFile(string $key): string { return DATA_DIR . '/areaflags-' . $key . '.log'; }
+function loadAreaFlags(string $key): array {
+    $f = areaflagFile($key);
+    if (!is_readable($f)) return [];
+    $out = [];
+    $fh = @fopen($f, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $r = json_decode(trim($line), true);
+        if (!is_array($r) || !isset($r['fid'])) continue;
+        if (empty($r['on'])) { unset($out[$r['fid']]); continue; }
+        $out[$r['fid']] = ['name' => $r['name'] ?? '', 'ids' => array_flip((array) ($r['ids'] ?? [])),
+                           'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendAreaFlag(string $key, array $row): bool {
+    return (bool) @file_put_contents(areaflagFile($key), json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+/* every active flag that covers any door of this neighbourhood */
+function flagsOver(array $doors, array $flags): array {
+    $hit = [];
+    foreach ($flags as $fid => $fl) {
+        foreach ($doors as $d) { if (isset($fl['ids'][$d['id']])) { $hit[$fid] = $fl; break; } }
+    }
+    return $hit;
+}
+function flagSummary(array $hit): ?array {
+    if (!$hit) return null;
+    $first = reset($hit);
+    return ['by' => $first['by'], 'at' => $first['at']];
+}
+
+/* ---- quote sent (2026-10-01) -------------------------------------------
+ * The admin "Quotes to build" list shows every door marked Quote booked. Ticking
+ * "quote sent" moves it to the Sent section. Same append-only shape as the rest. */
+function quotedFile(string $key): string { return DATA_DIR . '/quoted-' . $key . '.log'; }
+function loadQuoted(string $key): array {
+    $f = quotedFile($key);
+    if (!is_readable($f)) return [];
+    $out = [];
+    $fh = @fopen($f, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $q = json_decode(trim($line), true);
+        if (!is_array($q) || !isset($q['id'])) continue;
+        if (empty($q['quoted'])) unset($out[$q['id']]);
+        else $out[$q['id']] = ['by' => $q['by'] ?? '', 'at' => $q['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendQuoted(string $key, array $row): bool {
+    return (bool) @file_put_contents(quotedFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
 function notesFile(string $key): string { return DATA_DIR . '/notes-' . $key . '.log'; }
 function loadNotes(string $key): array {
     $f = notesFile($key);
@@ -309,6 +378,7 @@ if ($action === 'regions') {
         $data = loadRegion($r['key']);
         if (!$data) continue;
         $marks = loadMarks($r['key']);
+        $aflags = loadAreaFlags($r['key']);
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -321,7 +391,7 @@ if ($action === 'regions') {
                it simply is not counted as high. */
             /* due: a Not-now door whose come-back date has arrived. It is open again,
                so a due high-hazard door counts towards the hazard sort as well. */
-            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0;
+            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0;
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
                 $f = (int) ($d['fire'] ?? 0);
@@ -330,10 +400,12 @@ if ($action === 'regions') {
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if (!$m) continue;
                 if ($isDue) $due++;
+                if ($m['outcome'] === 'booked') $booked++;
                 if ($m['outcome'] === 'miss') $noanswer++; else $done++;
             }
             $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
-                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due];
+                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'booked' => $booked,
+                        'nosol' => flagSummary(flagsOver($a['doors'], $aflags))];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
@@ -365,7 +437,8 @@ if ($action === 'area') {
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
             ];
         }
-        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors]);
+        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors,
+             'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key)))]);
     }
     fail('No such neighbourhood.', 404);
 }
@@ -377,7 +450,9 @@ if ($action === 'mark') {
     $out = $body['outcome'] ?? null;                              // null = undo
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
-    if ($out !== null && !in_array($out, ['booked', 'later', 'miss'], true)) fail('Bad outcome.');
+    /* 'nosolicit' (2026-10-01): the door shows a no-soliciting sign. A finished door,
+       permanently — counted as done, never as open, never in the hazard count. */
+    if ($out !== null && !in_array($out, ['booked', 'later', 'miss', 'nosolicit'], true)) fail('Bad outcome.');
     /* "Come back when" rides on the Not-now mark itself, so it travels through the
        offline queue with the mark: a date picked in a dead zone is not lost. */
     $row = ['id' => $id, 'outcome' => $out, 'by' => $me, 'at' => time()];
@@ -438,6 +513,83 @@ if ($action === 'note') {
     out(['ok' => true]);
 }
 
+if ($action === 'areaflag') {
+    if (!$isPost) fail('POST required', 405);
+    $key  = (string) ($body['region'] ?? '');
+    $name = (string) ($body['area'] ?? '');
+    $on   = !empty($body['on']);
+    $data = loadRegion($key);
+    if (!$data) fail('No such region.', 404);
+    $area = null;
+    foreach ($data['areas'] as $a) { if ($a['name'] === $name) { $area = $a; break; } }
+    if (!$area) fail('No such neighbourhood.', 404);
+    $hit = flagsOver($area['doors'], loadAreaFlags($key));
+    if ($on) {
+        if ($hit) out(['ok' => true]);                              // already flagged
+        $row = ['fid' => bin2hex(random_bytes(8)), 'name' => $area['name'],
+                'ids' => array_map(fn($d) => $d['id'], $area['doors']), 'on' => true, 'by' => $me, 'at' => time()];
+        if (!appendAreaFlag($key, $row)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    if ($role !== 'admin') fail('Only an admin can clear a no-soliciting flag.', 403);
+    foreach (array_keys($hit) as $fid) {
+        if (!appendAreaFlag($key, ['fid' => $fid, 'on' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    }
+    out(['ok' => true]);
+}
+
+/* ---- quotes to build (admin) ---------------------------------------------
+ * The knock-to-quote handoff. Every door marked Quote booked, across every town,
+ * newest first, with everything the person building the quote needs: address,
+ * owner, acres, fire hazard, coordinates, the number and its source, the note.
+ * Kept inside the door app on purpose — the Quote Build tool already exists in
+ * three copies that must be kept in step (SX-2b); this adds no fourth. */
+if ($action === 'quotes') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $list = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $data = loadRegion($r['key']);
+        if (!$data) continue;
+        $marks = loadMarks($r['key']);
+        $phones = loadPhones($r['key']);
+        $notes = loadNotes($r['key']);
+        $quoted = loadQuoted($r['key']);
+        foreach ($data['areas'] as $a) {
+            foreach ($a['doors'] as $d) {
+                $m = $marks[$d['id']] ?? null;
+                if (!$m || $m['outcome'] !== 'booked') continue;
+                $p = $phones[$d['id']] ?? null;
+                $n = $notes[$d['id']] ?? null;
+                $qd = $quoted[$d['id']] ?? null;
+                $list[] = [
+                    'region' => $r['key'], 'town' => $r['label'], 'area' => $a['name'], 'id' => $d['id'],
+                    'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
+                    'fire' => $d['fire'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
+                    'by' => $m['by'], 'at' => $m['at'],
+                    'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] : null,
+                    'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
+                    'quoted' => $qd,
+                ];
+            }
+        }
+    }
+    usort($list, function ($x, $y) { return $y['at'] <=> $x['at']; });
+    out(['ok' => true, 'quotes' => $list]);
+}
+
+if ($action === 'quoted') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    $row = ['id' => $id, 'quoted' => empty($body['quoted']) ? null : true, 'by' => $me, 'at' => time()];
+    if (!appendQuoted($key, $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
 /* ---- the scoreboard, and the export -------------------------------------
  *
  * ⚑ 'report' IS OPEN TO EVERYONE, deliberately. Matthew's call 2026-09-30:
@@ -471,14 +623,14 @@ if ($action === 'report' || $action === 'export') {
             foreach (($data['areas'] ?? []) as $a) {
                 foreach ($a['doors'] as $d) $live[$d['id']] = true;
             }
-            $tot = ['booked' => 0, 'later' => 0, 'miss' => 0];
+            $tot = ['booked' => 0, 'later' => 0, 'miss' => 0, 'nosolicit' => 0];
             foreach ($marks as $id => $m) {
                 if (!isset($live[$id])) continue;
                 $o = $m['outcome'];
                 if (!isset($tot[$o])) continue;
                 $tot[$o]++;
                 $who = $m['by'] !== '' ? $m['by'] : 'unknown';
-                if (!isset($byPerson[$who])) $byPerson[$who] = ['booked' => 0, 'later' => 0, 'miss' => 0];
+                if (!isset($byPerson[$who])) $byPerson[$who] = ['booked' => 0, 'later' => 0, 'miss' => 0, 'nosolicit' => 0];
                 $byPerson[$who][$o]++;
             }
             $byRegion[] = ['label' => $r['label'], 'knocked' => array_sum($tot)] + $tot;

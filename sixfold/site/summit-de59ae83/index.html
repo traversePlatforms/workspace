@@ -132,7 +132,7 @@
   .tag{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;
     padding:3px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
   .tag.booked{color:var(--booked)} .tag.later{color:var(--later)}
-  .tag.miss{color:var(--miss)} .tag.pending{color:var(--bad)}
+  .tag.miss{color:var(--miss)} .tag.pending{color:var(--bad)} .tag.nosolicit{color:var(--miss)}
   .by{font-size:11px;color:var(--soft)}
 
   /* phone numbers (SX-14). Inputs are 16px so iOS does not zoom the page on focus. */
@@ -203,6 +203,46 @@
     border:1px solid var(--line);background:transparent;color:var(--soft);cursor:pointer}
   .duep{display:inline-block;margin-left:2px;padding:1px 7px;border-radius:999px;font-weight:600;
     border:1px solid var(--booked);color:var(--booked)}
+
+  /* batch (2026-10-01): slim cards, distance, progress, no soliciting, map, quotes */
+  .meta .fire{margin:0 6px 1px 0;vertical-align:middle}
+  .meta .dist{display:inline-block;margin-left:6px;font:600 11px var(--mono);color:var(--accent)}
+  .adds a.sat{margin-top:0;font-size:13px}
+  .door.flash{box-shadow:0 0 0 3px var(--accent)}
+  .prog{margin:-2px 0 12px}
+  .prog .pt{font-size:12.5px;color:var(--soft);font-variant-numeric:tabular-nums}
+  .prog .pbar{height:5px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:6px}
+  .prog .pbar i{display:block;height:100%;background:var(--booked)}
+  .later .nosol{display:block;width:100%;margin-top:8px;padding:10px;border-radius:8px;
+    border:1px dashed var(--line);background:transparent;color:var(--soft);font:600 12.5px var(--sans);cursor:pointer}
+  .mapwrap{margin-top:4px}
+  /* isolation keeps Leaflet's internal z-indexes (up to 1000) from drawing over the sticky header */
+  .map{height:62vh;min-height:320px;border-radius:10px;border:1px solid var(--line);overflow:hidden;
+    position:relative;z-index:0;isolation:isolate}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 2px 0;font-size:11.5px;color:var(--soft)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+  .legend i.h{background:transparent;border:3px solid #9E2A1C;box-shadow:none}
+  .pop .pa{font:600 14px var(--serif)}
+  .pop .ps{font-size:12px;color:#555;margin:2px 0 8px}
+  .pop .pb{font:600 12.5px var(--sans);padding:7px 12px;border-radius:7px;border:1px solid #2F7A4F;
+    background:#fff;color:#2F7A4F;cursor:pointer}
+  .qc .meta{margin-top:3px}
+  .qsent{display:block;width:100%;margin-top:11px;padding:12px;border-radius:8px;border:1px solid var(--booked);
+    background:transparent;color:var(--booked);font:600 13px var(--sans);cursor:pointer}
+  .qsent.on{border-color:var(--line);color:var(--soft)}
+  .qc.sent{opacity:.75}
+  .sub2{font-size:12.5px;color:var(--soft);margin:-4px 0 12px}
+  .nsp{display:inline-block;margin-left:2px;padding:1px 7px;border-radius:999px;font-weight:600;
+    background:var(--ink);color:var(--paper)}
+  .area[data-nosol] .nm{text-decoration:line-through;text-decoration-thickness:1px}
+  .nsban{margin:0 0 12px;padding:11px 13px;border-radius:10px;border:1.5px solid var(--ink);font-size:13.5px;line-height:1.45}
+  .nsban b{display:block;font-size:14px;margin-bottom:2px}
+  .nsban button{margin-top:9px;padding:8px 12px;border-radius:7px;border:1px solid var(--line);background:transparent;
+    color:var(--soft);font:600 12.5px var(--sans);cursor:pointer}
+  .nsflag{display:block;width:100%;margin:22px 0 4px;padding:12px;border-radius:9px;border:1px dashed var(--line);
+    background:transparent;color:var(--soft);font:600 13px var(--sans);cursor:pointer}
   .done a.sat{margin-top:3px;font-size:12px}
   .undo{background:none;border:0;color:var(--accent);font:500 12.5px var(--sans);cursor:pointer;padding:4px}
 
@@ -236,7 +276,7 @@
 <script>
 (function () {
   var API = '../api/rounds.php';
-  var OUT = { booked: 'Quote booked', later: 'Not now', miss: 'No answer' };
+  var OUT = { booked: 'Quote booked', later: 'Not now', miss: 'No answer', nosolicit: 'No soliciting' };
   var QKEY = 'sixfold.rounds.queue';
 
   var view = document.getElementById('view');
@@ -337,6 +377,11 @@
       quote.href = 'quote.html';
       quote.innerHTML = '<b>Quote build</b><span>Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.</span><span class="tag">Admin only &middot; in testing</span>';
       box.appendChild(quote);
+
+      var qs = q('button', 'tile'); qs.type = 'button';
+      qs.innerHTML = '<b>Quotes to build</b><span>Every door marked Quote booked, newest first, with the number, the note, the fire hazard and a satellite link. Tick each one off when the quote goes out.</span><span class="tag">Admin only</span>';
+      qs.addEventListener('click', quotesView);
+      box.appendChild(qs);
     }
 
     var out = q('div', 'out');
@@ -381,6 +426,16 @@
     var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
     if (!r) return;
     view.appendChild(q('h2', null, r.label + ' — pick a neighbourhood'));
+    /* town progress (2026-10-01): visited = every door with any mark, misses included */
+    var T = r.areas.reduce(function (t, a) { t.t += a.total; t.v += a.done + (a.noanswer || 0); t.b += (a.booked || 0); t.d += (a.due || 0); return t; }, { t: 0, v: 0, b: 0, d: 0 });
+    var pg = q('div', 'prog');
+    var line = T.v.toLocaleString() + ' of ' + T.t.toLocaleString() + ' doors visited';
+    if (T.b) line += ' · ' + T.b + (T.b === 1 ? ' quote' : ' quotes') + ' booked';
+    if (T.d) line += ' · ' + T.d + ' due back';
+    pg.appendChild(q('div', 'pt', line));
+    var pb = q('div', 'pbar'), pf = q('i');
+    pf.style.width = (T.t ? Math.max(T.v ? 1 : 0, Math.round(T.v / T.t * 100)) : 0) + '%';
+    pb.appendChild(pf); pg.appendChild(pb); view.appendChild(pg);
     var pend = queue().length;
     if (pend) view.appendChild(q('div', 'msg bad', pend + ' mark' + (pend === 1 ? '' : 's') + ' still waiting for signal. Keep the page open.'));
 
@@ -407,7 +462,8 @@
     var list = r.areas.slice();
     if (mode === 'fire') {
       list.sort(function (x, y) {
-        return (y.hot || 0) - (x.hot || 0) || (y.vhot || 0) - (x.vhot || 0) ||
+        return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) ||           /* posted neighbourhoods sink */
+               (y.hot || 0) - (x.hot || 0) || (y.vhot || 0) - (x.vhot || 0) ||
                (y.total - y.done - (y.noanswer || 0)) - (x.total - x.done - (x.noanswer || 0));
       });
     }
@@ -418,6 +474,7 @@
       var btn = q('button', 'area');
       btn.type = 'button';
       if (left === 0 && na === 0) btn.setAttribute('data-done', '1');
+      if (a.nosol) btn.setAttribute('data-nosol', '1');
       btn.appendChild(q('div', 'nm', a.name));
       var cnt = q('div', 'left', (left === 0 && na === 0) ? 'done' : String(left));
       if (!(left === 0 && na === 0)) cnt.appendChild(q('small', null, 'to knock'));
@@ -433,6 +490,10 @@
         var dp = q('span', 'duep', a.due + ' due back');
         subEl.appendChild(document.createTextNode(' '));
         subEl.appendChild(dp);
+      }
+      if (a.nosol) {
+        subEl.appendChild(document.createTextNode(' '));
+        subEl.appendChild(q('span', 'nsp', 'No soliciting posted'));
       }
       if (a.hot) {
         var h = q('span', 'hot' + (a.vhot ? ' v' : ''),
@@ -462,6 +523,9 @@
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
       S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null;
+      S.areaNosol = j.nosol || null;
+      if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
+      if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       renderDoors();
       window.scrollTo(0, 0);
     });
@@ -590,6 +654,11 @@
     cx.addEventListener('click', function () { S.pickLater = null; renderDoors(); });
     row.appendChild(nd); row.appendChild(cx);
     box.appendChild(row);
+    /* No-soliciting lives here, not as a fourth big button: it is the other answer to
+       "can I knock this door", and a fourth button would not fit a phone row. */
+    var ns = q('button', 'nosol', 'No-soliciting sign — skip this door for good'); ns.type = 'button';
+    ns.addEventListener('click', function () { S.pickLater = null; markDoor(d, 'nosolicit'); });
+    box.appendChild(ns);
     return box;
   }
 
@@ -653,20 +722,213 @@
     var wrap = q('div', 'xt');
     if (S.editPhone === d.id || d.phone) wrap.appendChild(phoneBlock(d));
     if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
-    if (S.editPhone === d.id || S.editNote === d.id) return wrap;       /* one form at a time */
-    var adds = [];
-    if (!d.phone) adds.push(['+ Add a phone number', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); }]);
-    if (!d.note) adds.push(['+ Add a note', function () { S.editNote = d.id; S.editPhone = null; renderDoors(); }]);
-    if (adds.length) {
-      var row = q('div', 'adds');
-      adds.forEach(function (b, i) {
-        if (i) row.appendChild(q('span', 'sep', '·'));
-        var x = q('button', 'lnk', b[0]); x.type = 'button';
-        x.addEventListener('click', b[1]); row.appendChild(x);
-      });
-      wrap.appendChild(row);
+    /* slimmer card: the satellite link lives in this row now, beside the add links */
+    var editing = S.editPhone === d.id || S.editNote === d.id;      /* one form at a time */
+    var row = q('div', 'adds'), n = 0;
+    var sat = satLink(d, true);
+    if (sat) { row.appendChild(sat); n++; }
+    if (!editing) {
+      if (!d.phone) addLink(row, n++, '+ Add phone', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
+      if (!d.note) addLink(row, n++, '+ Add note', function () { S.editNote = d.id; S.editPhone = null; renderDoors(); });
     }
+    if (n) wrap.appendChild(row);
     return wrap;
+  }
+  function addLink(row, i, label, fn) {
+    if (i) row.appendChild(q('span', 'sep', '·'));
+    var x = q('button', 'lnk', label); x.type = 'button';
+    x.addEventListener('click', fn); row.appendChild(x);
+  }
+
+  /* ---- nearest door (2026-10-01) ----
+     One location fix on request, not continuous tracking — watchPosition would
+     drain a phone over an afternoon. "Update my location" re-fixes on demand. */
+  function locate(cb) {
+    if (!navigator.geolocation) { S.geoErr = 'This phone cannot share its location here.'; S.locating = false; return cb(false); }
+    S.locating = true; S.geoErr = null;
+    navigator.geolocation.getCurrentPosition(function (p) {
+      S.here = { lat: p.coords.latitude, lon: p.coords.longitude }; S.locating = false; cb(true);
+    }, function (e) {
+      S.locating = false;
+      S.geoErr = e && e.code === 1 ? 'Location is blocked for this site. Allow it in your browser settings to sort by distance.'
+                                   : 'Could not get a location fix. Try again in the open.';
+      cb(false);
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+  }
+  function metresTo(d) {
+    if (!S.here || typeof d.lat !== 'number') return null;
+    var R = 6371000, la = (d.lat + S.here.lat) / 2 * Math.PI / 180;
+    var dx = (d.lon - S.here.lon) * Math.PI / 180 * Math.cos(la) * R, dy = (d.lat - S.here.lat) * Math.PI / 180 * R;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function distLabel(d) {
+    if (S.dview !== 'near') return null;
+    var m = metresTo(d); if (m === null) return null;
+    var ft = m * 3.28084;
+    return ft < 528 ? Math.max(10, Math.round(ft / 10) * 10) + ' ft' : (m / 1609.344).toFixed(1) + ' mi';
+  }
+  function doorViewBar() {
+    var bar = q('div', 'sortbar');
+    [['street', 'Street order'], ['near', 'Nearest'], ['map', 'Map']].forEach(function (m) {
+      var b = q('button', null, m[1]); b.type = 'button';
+      b.setAttribute('aria-pressed', String(S.dview === m[0]));
+      b.addEventListener('click', function () {
+        S.dview = m[0];
+        try { localStorage.setItem('sixfold.rounds.doorview', m[0]); } catch (e) {}
+        if (m[0] === 'near') locate(function () { if (S.area) renderDoors(); });
+        renderDoors();
+      });
+      bar.appendChild(b);
+    });
+    return bar;
+  }
+  function flashCard() {
+    if (!S.flash) return;
+    var id = S.flash; S.flash = null;
+    var c = view.querySelector('[data-id="' + id + '"]');      /* ids are [a-z0-9-] only */
+    if (c) { c.classList.add('flash'); try { c.scrollIntoView({ block: 'center' }); } catch (e) {} }
+  }
+
+  /* ---- neighbourhood map (2026-10-01) ----
+     Leaflet 1.9.4 from cdnjs, loaded only when Map is opened so the list stays fast,
+     and PINNED BY CHECKSUM (subresource integrity): this page is signed in to every
+     door's name and address, so a tampered copy of the library must not run.
+     Street tiles from OpenStreetMap, attributed as their policy requires. Satellite
+     stays on the per-door Google link rather than a tile service with murkier terms. */
+  var LEAFLET = { js: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js', jsSri: 'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH',
+                  css: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css', cssSri: 'sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H' };
+  var MAPC = { k: '#2563A8', d: '#2F7A4F', a: '#B5761F', x: '#8A948E' };
+  function loadLeaflet(cb) {
+    if (window.L) return cb();
+    S.leafletQ = S.leafletQ || [];
+    S.leafletQ.push(cb);
+    if (S.leafletLoading) return;
+    S.leafletLoading = true;
+    var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = LEAFLET.css;
+    l.integrity = LEAFLET.cssSri; l.crossOrigin = 'anonymous'; document.head.appendChild(l);
+    var sc = document.createElement('script'); sc.src = LEAFLET.js;
+    sc.integrity = LEAFLET.jsSri; sc.crossOrigin = 'anonymous';
+    var done = function () { S.leafletLoading = false; var qq = S.leafletQ; S.leafletQ = []; qq.forEach(function (f) { f(); }); };
+    sc.onload = done; sc.onerror = done;
+    document.head.appendChild(sc);
+  }
+  function statusOf(d) {
+    if (!d.mark) return 'k';
+    if (d.mark.outcome === 'later' && d.mark.revisit && d.mark.revisit <= todayISO()) return 'd';
+    if (d.mark.outcome === 'miss') return 'a';
+    return 'x';
+  }
+  function popupFor(d, st) {
+    var p = q('div', 'pop');
+    p.appendChild(q('div', 'pa', d.address));
+    var lab = { k: 'To knock', d: 'Due back', a: 'No answer — try again', x: d.mark ? (OUT[d.mark.outcome] || 'Done') : 'Done' }[st];
+    p.appendChild(q('div', 'ps', lab + (FIRE[d.fire] ? ' · ' + FIRE[d.fire] : '')));
+    var b = q('button', 'pb', 'Show card'); b.type = 'button';
+    b.addEventListener('click', function () {
+      S.dview = 'street';
+      try { localStorage.setItem('sixfold.rounds.doorview', 'street'); } catch (e) {}
+      if (d.mark && d.mark.outcome === 'miss') S.showAgain = true;   /* that section is collapsed by default */
+      S.flash = d.id; renderDoors();
+    });
+    p.appendChild(b);
+    return p;
+  }
+  function renderMap() {
+    var box = q('div', 'mapwrap');
+    var el = q('div', 'map');
+    box.appendChild(el);
+    var lg = q('div', 'legend');
+    /* "you" is near-black, never blue: blue is To knock */
+    var keys = [['k', 'To knock'], ['d', 'Due back'], ['a', 'No answer'], ['x', 'Done'], ['h', 'High fire hazard']];
+    if (S.here) keys.push(['u', 'You']);
+    keys.forEach(function (x) {
+      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : null);
+      if (x[0] !== 'h') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
+      sp.appendChild(i); sp.appendChild(document.createTextNode(x[1])); lg.appendChild(sp);
+    });
+    box.appendChild(lg);
+    view.appendChild(box);
+    loadLeaflet(function () {
+      if (!document.body.contains(el)) return;                     /* re-rendered while loading */
+      if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load — no signal, or the map service is down. Street order still works.')); return; }
+      var map = L.map(el);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      var pts = [];
+      S.doors.forEach(function (d) {
+        if (typeof d.lat !== 'number') return;
+        var st = statusOf(d), hot = d.fire === 4 || d.fire === 5;
+        L.circleMarker([d.lat, d.lon], { radius: st === 'x' ? 6 : 9, color: hot ? '#9E2A1C' : '#ffffff', weight: hot ? 3 : 2,
+          fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.6 : 0.95 }).addTo(map).bindPopup(popupFor(d, st));
+        pts.push([d.lat, d.lon]);
+      });
+      if (S.here) L.circleMarker([S.here.lat, S.here.lon], { radius: 6, color: '#fff', weight: 3, fillColor: '#111', fillOpacity: 1 })
+        .addTo(map).bindTooltip('You are here');
+      if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
+      else if (pts.length) map.fitBounds(pts, { padding: [24, 24], maxZoom: 18 });
+      map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
+    });
+  }
+
+  /* ---- quotes to build (admin, 2026-10-01) ----
+     The knock-to-quote handoff: every door marked Quote booked, with what the person
+     building the quote needs, and a tick for "quote sent". */
+  function quoteCard(x) {
+    var c = q('div', 'door qc' + (x.quoted ? ' sent' : ''));
+    c.appendChild(q('div', 'addr', x.address));
+    c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
+    var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
+    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres · ' + x.owner)); c.appendChild(meta);
+    if (x.phone) {
+      var ph = q('div', 'ph'); var a = q('a', 'num', fmtPhone(x.phone.phone)); a.href = 'tel:' + digits(x.phone.phone);
+      ph.appendChild(a); ph.appendChild(q('span', 'src', phoneStatement(x.phone)));
+      if (x.phone.source !== 'door') ph.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
+      c.appendChild(ph);
+    } else c.appendChild(q('div', 'meta', 'No phone number on file.'));
+    if (x.note) {
+      var nt = q('div', 'nt'); nt.appendChild(q('div', 'ntxt', x.note.note));
+      nt.appendChild(q('span', 'src', 'Note · ' + (x.note.by || 'crew') + ' · ' + fmtDay(x.note.at))); c.appendChild(nt);
+    }
+    c.appendChild(q('div', 'meta', 'Booked by ' + (x.by || 'crew') + ' · ' + fmtDay(x.at)));
+    var tools = q('div', 'adds'); var sat = satLink(x, true); if (sat) { tools.appendChild(sat); c.appendChild(tools); }
+    var b = q('button', x.quoted ? 'qsent on' : 'qsent',
+      x.quoted ? 'Quote sent · ' + fmtDay(x.quoted.at) + ' — undo' : 'Mark quote sent');
+    b.type = 'button';
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      api('quoted', { body: { region: x.region, id: x.id, quoted: !x.quoted } }).then(function (j) {
+        if (!j.ok) { b.disabled = false; window.alert(j.error || 'Could not save that.'); return; }
+        quotesView();
+      }).catch(function () { b.disabled = false; window.alert('No connection. Try again when you have signal.'); });
+    });
+    c.appendChild(b);
+    return c;
+  }
+  function quotesView() {
+    hdr.hidden = true; foot.hidden = true;
+    view.textContent = '';
+    var back = q('button', 'back', '← Field tools'); back.type = 'button';
+    back.addEventListener('click', chooseView); view.appendChild(back);
+    view.appendChild(q('h2', null, 'Quotes to build'));
+    var holder = q('div'); holder.appendChild(q('div', 'msg', 'Loading…')); view.appendChild(holder);
+    api('quotes').then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the list.')); return; }
+      if (!j.quotes.length) { holder.appendChild(q('div', 'msg', 'No quotes booked yet. They appear here the moment a crew member taps Quote booked.')); return; }
+      var open = j.quotes.filter(function (x) { return !x.quoted; });
+      var sent = j.quotes.filter(function (x) { return x.quoted; });
+      holder.appendChild(q('div', 'sub2', open.length + ' to build · ' + sent.length + ' sent'));
+      open.forEach(function (x) { holder.appendChild(quoteCard(x)); });
+      if (sent.length) {
+        holder.appendChild(q('h2', null, 'Sent · ' + sent.length));
+        var tg = q('button', 'back', (S.showSent ? '↓ Hide' : '→ Show') + ' sent quotes'); tg.type = 'button';
+        tg.addEventListener('click', function () { S.showSent = !S.showSent; quotesView(); });
+        holder.appendChild(tg);
+        if (S.showSent) sent.forEach(function (x) { holder.appendChild(quoteCard(x)); });
+      }
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
 
   /* ---- wildfire hazard badge (SX-9b) ----
@@ -761,6 +1023,7 @@
     back.type = 'button';
     back.addEventListener('click', function () { S.area = null; refresh(); });
     view.appendChild(back);
+    view.appendChild(doorViewBar());
 
     /* THREE states, not two. A no-answer means nobody was home — that door is not
        finished, it needs another evening. So it leaves the main list (nobody wants
@@ -777,12 +1040,31 @@
     else if (!todo.length && !due.length) view.appendChild(q('div', 'msg', 'First pass finished. The doors below had no answer — try them another evening.'));
     else if (!todo.length) view.appendChild(q('div', 'msg', 'First pass finished. Start with the doors due back.'));
 
+    if (S.areaNosol) view.appendChild(nosolBanner());
+
+    /* ---- street order, nearest to me, or a map (2026-10-01) ---- */
+    if (S.dview === 'near') {
+      if (S.locating) view.appendChild(q('div', 'msg', 'Finding where you are…'));
+      else if (S.geoErr) view.appendChild(q('div', 'msg bad', S.geoErr));
+      if (S.here) {
+        var byDist = function (a, b) { var ma = metresTo(a), mb = metresTo(b); return (ma === null ? 1e12 : ma) - (mb === null ? 1e12 : mb); };
+        todo.sort(byDist); due.sort(byDist); again.sort(byDist);
+        var rf = q('button', 'back', '↻ Update my location'); rf.type = 'button';
+        rf.addEventListener('click', function () { locate(function () { if (S.area) renderDoors(); }); renderDoors(); });
+        view.appendChild(rf);
+      }
+    }
+    if (S.dview === 'map') { renderMap(); return; }
+
     function doorCard(d) {
-      var card = q('div', 'door');
+      var card = q('div', 'door'); card.setAttribute('data-id', d.id);
       card.appendChild(q('div', 'addr', d.address));
-      var fb = fireBadge(d); if (fb) card.appendChild(fb);
-      card.appendChild(q('div', 'meta', d.acres.toFixed(2) + ' acres · ' + d.owner));
-      var sat = satLink(d); if (sat) card.appendChild(sat);
+      /* slimmer card: the fire badge sits at the start of the details line */
+      var meta = q('div', 'meta');
+      var fb = fireBadge(d); if (fb) meta.appendChild(fb);
+      meta.appendChild(document.createTextNode(d.acres.toFixed(2) + ' acres · ' + d.owner));
+      var dl = distLabel(d); if (dl) meta.appendChild(q('span', 'dist', dl));
+      card.appendChild(meta);
       if (d.mark && d.mark.outcome === 'miss') {
         var was = q('div', 'meta', 'No answer' + (d.mark.by ? ' · ' + d.mark.by : ''));
         was.style.color = 'var(--miss)';
@@ -829,12 +1111,11 @@
     if (done.length) {
       view.appendChild(q('h2', null, 'Done · ' + done.length));
       done.forEach(function (d) {
-        var row = q('div', 'door done');
+        var row = q('div', 'door done'); row.setAttribute('data-id', d.id);
         var lhs = q('div');
         lhs.appendChild(q('div', 'addr', d.address));
         var fb2 = fireBadge(d); if (fb2) lhs.appendChild(fb2);
         if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
-        var sat2 = satLink(d, true); if (sat2) lhs.appendChild(sat2);   /* look before the quote visit */
         var rhs = q('div');
         rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';
         var pending = d.mark.pending || pendingFor(d.id);
@@ -843,13 +1124,47 @@
             (d.mark.outcome === 'later' && d.mark.revisit ? ' · back ' + fmtMonth(d.mark.revisit) : '')));
         var u = q('button', 'undo', 'Undo');
         u.type = 'button';
-        u.addEventListener('click', function () { markDoor(d, null); });
+        u.addEventListener('click', function () {
+          if (d.mark.outcome === 'nosolicit' && !window.confirm('Undo the no-soliciting flag? Only if the sign was a mistake — otherwise this door gets knocked again.')) return;
+          markDoor(d, null);
+        });
         rhs.appendChild(u);
         row.appendChild(lhs); row.appendChild(rhs);
         row.appendChild(extras(d));
         view.appendChild(row);
       });
     }
+    if (!S.areaNosol) {
+      var fl = q('button', 'nsflag', 'No-soliciting sign at the entrance? Flag this neighbourhood');
+      fl.type = 'button';
+      fl.addEventListener('click', function () {
+        if (!window.confirm('Flag ' + S.area + ' as no soliciting? Everyone will see a warning on it. Only an admin can clear it.')) return;
+        setAreaFlag(true);
+      });
+      view.appendChild(fl);
+    }
+    flashCard();
+  }
+  function nosolBanner() {
+    var b = q('div', 'nsban');
+    b.appendChild(q('b', null, 'No soliciting posted'));
+    b.appendChild(document.createTextNode('Flagged by ' + (S.areaNosol.by || 'crew') + ' · ' + fmtDay(S.areaNosol.at) +
+      '. Read the posting before knocking — a sign at one entrance may not cover every street.'));
+    if (S.role === 'admin') {
+      var c = q('button', null, 'Clear the flag (admin)'); c.type = 'button';
+      c.addEventListener('click', function () {
+        if (!window.confirm('Clear the no-soliciting flag on ' + S.area + '? Only if the posting is gone or was never there.')) return;
+        setAreaFlag(false);
+      });
+      b.appendChild(c);
+    }
+    return b;
+  }
+  function setAreaFlag(on) {
+    api('areaflag', { body: { region: S.region, area: S.area, on: on } }).then(function (j) {
+      if (!j.ok) { window.alert(j.error || 'Could not save that.'); return; }
+      refresh().then(function () { openArea(S.area); });
+    }).catch(function () { window.alert('No connection. Try again when you have signal.'); });
   }
 
   function renderReport() {
@@ -863,7 +1178,7 @@
       if (!j.ok) { view.appendChild(q('div', 'msg bad', j.error || 'Could not load that.')); return; }
       var t = document.createElement('table');
       var hr = document.createElement('tr');
-      ['Person', 'Booked', 'Not now', 'No answer', 'Total'].forEach(function (h, i) {
+      ['Person', 'Booked', 'Not now', 'No answer', 'No soliciting', 'Total'].forEach(function (h, i) {
         var th = q('th', null, h); if (i) th.style.textAlign = 'right'; hr.appendChild(th);
       });
       t.appendChild(hr);
@@ -872,7 +1187,8 @@
         any = true;
         var p = j.byPerson[who], tr = document.createElement('tr');
         tr.appendChild(q('td', null, who));
-        [p.booked, p.later, p.miss, p.booked + p.later + p.miss].forEach(function (n) {
+        var ns = p.nosolicit || 0;
+        [p.booked, p.later, p.miss, ns, p.booked + p.later + p.miss + ns].forEach(function (n) {
           tr.appendChild(q('td', 'n', String(n)));
         });
         t.appendChild(tr);

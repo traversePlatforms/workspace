@@ -7,6 +7,95 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑⚑ THE ONE UPLOAD — everything built 2026-10-01, in a single pass
+
+**Every section below dated 2026-10-01 goes up in this one upload.** Nothing from today has
+been uploaded yet; the files on disk carry all of it.
+
+| From | To |
+|---|---|
+| `api/rounds.php` | `public_html/api/rounds.php` (over the existing one) |
+| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` (over the existing one) |
+| all 12 `data/rounds/*.json` | **`sixfold-data/rounds/`**, beside `public_html` and **NOT inside it** (overwrite) |
+
+Then **flush the cache** (Site Tools → Speed → Caching → Flush) and run the checks under
+*The check that matters*. **Nothing to create by hand:** the new `quoted-<town>.log` appears the
+first time an admin ticks a quote sent, and `areaflags-<town>.log` the first time a
+neighbourhood is flagged. **No data rebuild was needed for this batch.** The door
+files are the ones verified as a pure superset at commit `b6efb24`.
+
+## ⚑ Slimmer cards, town progress, no soliciting, nearest door, map, quotes to build — 2026-10-01
+
+### Slimmer cards
+The fire badge now sits at the start of the acres/owner line. The satellite link moved into
+one tools row: **Satellite ↗ · + Add phone · + Add note**. That's about two lines shorter per
+door, so you get more doors per screen.
+
+### Town progress
+Under *"pick a neighbourhood"* there's now a line like *"212 of 737 doors visited · 9 quotes
+booked · 3 due back"* with a bar under it. **Visited** means every door with any mark,
+including no-answers, because the door was walked to.
+
+### No soliciting (SX-13)
+Inside the **Not now** chooser: **"No-soliciting sign — skip this door for good."** It counts
+as done and leaves the fire-hazard count. It also has its own column in *Who marked what* and
+appears in the export as `nosolicit`. **Undoing it asks first.** An accidental undo would put
+the door back in front of the next crew member. Every other Undo still goes straight through.
+**The neighbourhood flag too.** At the bottom of every door list: *"No-soliciting sign at the
+entrance? Flag this neighbourhood."* Any crew member can raise it, after a confirm. After
+that:
+- the neighbourhood card shows **No soliciting posted** with its name struck through, and it
+  sinks to the bottom of the fire-hazard sort;
+- opening it shows a warning naming who flagged it and when, above the list and the map.
+
+**It warns, it doesn't lock.** A sign at one entrance may not cover every street, so the
+doors stay markable. **Only an admin can clear it**, with a confirm. Otherwise one wrong tap
+quietly drops a neighbourhood from the programme. Crew get 403 from the API, not just a
+missing button.
+
+**⚑ The flag is stored against the door ids it covered, not the neighbourhood name.** Names
+change when the lists are rebuilt, and today's split renamed dozens of them. A flag keyed on
+a name would silently fall off and those doors would get knocked again. **Tested:** a flagged
+neighbourhood renamed and split in two by a simulated rebuild came out with **both** halves
+still flagged, and nothing else picked it up. Clearing either half clears the posting.
+
+Checking for HOA bans before heading out is still the doors team's research job. The flag is
+where they record what they find.
+
+### Street order · Nearest · Map
+A switch at the top of every neighbourhood, and each phone remembers its own choice.
+- **Nearest** asks the phone for its location **once**, then sorts the doors nearest first,
+  showing *"20 ft"* or *"0.3 mi"* on each card. It never tracks continuously, because that
+  drains a phone over an afternoon. **↻ Update my location** takes a new fix. If location is
+  blocked, the page says so and the list still works.
+- **Map** shows every door as a dot: blue = to knock, green = due back, amber = no answer,
+  grey = done. A **red ring** marks high fire hazard and a **black dot** is you. Tapping a dot
+  shows the address and status. **Show card** jumps back to the list and highlights that door.
+  - Street tiles come from **OpenStreetMap**, with the credit their policy requires.
+  - The map library is **Leaflet 1.9.4 from cdnjs, pinned by checksum** (subresource integrity).
+    This page is signed in to names and addresses, so a tampered copy of the library is
+    refused rather than run.
+  - The library loads only when Map is tapped, so the list stays fast. With no signal the map
+    says it couldn't load and Street order carries on.
+
+### Quotes to build (admins)
+A new tile on the tools chooser. It lists every door marked **Quote booked**, across every
+town, newest first. Each one has the address, the town and neighbourhood, the owner, acres,
+the fire badge, the number with its source (tap to call), the note, who booked it, and a
+satellite link. **Mark quote sent** moves it into a collapsed *Sent* list, and it can be
+undone. Crew get 403 from both new API actions, not just a missing tile.
+It's kept inside the door app on purpose. The Quote Build tool already exists in three copies
+that must be kept in step (SX-2b), and this doesn't add a fourth.
+
+### Tested
+**62/62** on the new batch plus **25/25** on the neighbourhood flag, against a scratch copy on real PHP with throwaway codes, then
+deleted. That includes a faked GPS position (the nearest door came out first and distances
+ran in order), location refused, the map with the network cut, the real Leaflet file passing
+its checksum, real taps on map markers, and both new admin actions refused to crew. **All four
+earlier suites rerun against the final files:** phone 32/32, satellite 8/8, fire 17/17,
+notes and come-back 36/36. That's **180 checks** in total. Rendered at iPhone width in light
+and dark.
+
 ## ⚑ Notes, "come back when", and walkable neighbourhoods — 2026-10-01, same three uploads
 
 **Same three uploads again, newer versions:** `api/rounds.php`, `summit-de59ae83/index.html`, and
