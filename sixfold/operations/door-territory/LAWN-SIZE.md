@@ -113,6 +113,29 @@ Compared with this method on the September 2023 photo:
 - **One lot only.** Two or three more are needed before calling the bias typical or applying a
   correction.
 
+## Second independent check: 1648 Marsh Hawk Cir, Castle Rock (2026-10-02)
+
+Hand-measured by Matthew in Google Maps, with the official lot line drawn on the 2023 photo
+(`lawn-trial/marsh-hawk-lot-line.png`) as a guide. The backyard lawn runs under about three mature
+trees and was outlined straight across them. Matthew rates the outlines as best effort.
+
+| Lawn | Google, hand-measured | This method | Difference |
+|---|---|---|---|
+| Front | 1,079 sq ft | 945 | −12% |
+| Backyard, under trees | 1,265 | 915 (3 patches) | −28% |
+| **Whole lot** | **2,344** | **1,866** | **−20%** |
+
+The three tree canopies were also measured (540, 622 and 469 sq ft). They total more than the
+backyard because they include crown outside the lawn, so they can't be subtracted to get the
+visible grass.
+
+**The pattern from two lots: trees decide the direction of the miss.** On the open lots (Russet
+Sky) the method reads about 9% high, from edge fringe. Under canopy (Marsh Hawk) it reads 20% low,
+because hidden grass is classed as tree. **A single correction won't fit both.** Plan: report the
+visible lawn and adjust by the lot's tree cover, which the height map already gives; or label
+tree-heavy lots "plus lawn under trees". The open lots still to measure (845 Circle Rd, 7378 Upton
+Ct) will set the open-lot adjustment.
+
 **Still missing: more independent measurements.** Brandon's lot confirms the boundaries and the
 scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
 or a walk-sheet measurement) is the remaining test.
