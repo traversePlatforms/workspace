@@ -7,6 +7,35 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Lawn level per door (SX-19) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
+
+| From | To |
+|---|---|
+| `api/rounds.php` | `public_html/api/rounds.php` |
+| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` |
+| all 12 `data/rounds/*.json` | **`sixfold-data/rounds/`**, beside `public_html`, NOT inside it (overwrite) |
+
+Then flush the cache. `lawn-cache.json` is **not** uploaded; it's a build input.
+
+What it does:
+- **Every door carries a lawn level:** *Large lawn · 2023*, *Medium*, *Small*, *Little or no lawn*,
+  or *Mostly trees*. It comes from the 2023 USDA aerial photo plus a tree-height map
+  (`operations/door-territory/lawn-trial/sample-lawn.mjs`; method and checks in `LAWN-SIZE.md`).
+  **A level, never square feet:** the method reads open lots ~8% high and lawn under mature trees
+  20–45% low.
+- **Crew correct it at the door.** Tap the badge, then None / Small / Medium / Large. The answer
+  replaces the photo's for everyone, shows as *"· crew"*, and goes in the export
+  (`lawn_crew_level`, `lawn_crew_by`, beside the photo level and its approximate square feet).
+  **Those answers are the calibration data:** after a season, the export is the dataset that
+  re-tunes the cut-offs. New log: `lawnfix-<town>.log`, created on first use.
+- **A Lawn sort** on the town screen (the bottom bar is now Map order · Nearest · Fire · Lawn).
+  It puts the neighbourhoods with the most large and medium lawns still to knock first, and each
+  card shows *"6 large · 22 medium lawns"*. Crew answers count.
+- **Quotes to build** shows the lawn on each booked door.
+
+Tested: 24/24 new checks, plus all nine earlier suites (263 total). Rebuilt door files verified as a
+pure superset (31,422 doors, same ids).
+
 ## ⚑ Nearest neighbourhood — 2026-10-02, `rounds.php` + `index.html`
 
 | From | To |

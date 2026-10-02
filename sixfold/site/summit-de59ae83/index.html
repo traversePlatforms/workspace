@@ -196,8 +196,8 @@
   .prog .ring em small{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--soft);margin-top:3px}
   .ring.done em .ic{width:18px;height:18px;color:var(--go)}
   .chips{display:flex;gap:5px;flex-wrap:wrap}
-  .chip,.again,.duep,.nsp,.hot,.bk{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap}
-  .chip .ic,.again .ic,.duep .ic,.nsp .ic,.hot .ic,.bk .ic{width:13px;height:13px}
+  .chip,.again,.duep,.nsp,.hot,.bk,.lawnc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap}
+  .chip .ic,.again .ic,.duep .ic,.nsp .ic,.hot .ic,.bk .ic,.lawnc .ic{width:13px;height:13px}
   .bk{background:var(--go-tint);color:var(--go)}
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
@@ -346,6 +346,28 @@
   #dueHead,#againHead{scroll-margin-top:calc(88px + env(safe-area-inset-top,0px))}   /* land below the sticky app bar */
   .jump .ic:last-child{margin-left:auto}
   .putback{border:0;background:var(--sunk);color:var(--ink);border-radius:9px;padding:5px 10px;font-size:12.5px;font-weight:700;cursor:pointer}
+  /* lawn level (SX-19): from the 2023 aerial photo, or the crew's answer */
+  .lawn{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font:700 12px/1.35 var(--sans);
+    white-space:nowrap;border:0;cursor:pointer}
+  span.lawn{cursor:default}
+  .lawn .ic{width:13px;height:13px}
+  .lawn em{font-style:normal;font-weight:400;opacity:.85}
+  .lawn.lv-L{background:var(--go);color:var(--on-go)}
+  .lawn.lv-M{background:var(--go-tint);color:var(--go)}
+  .lawn.lv-S{background:transparent;color:var(--go);box-shadow:inset 0 0 0 1.5px var(--go)}
+  .lawn.lv-N{background:var(--miss-tint);color:var(--miss)}
+  .lawn.lv-T{background:transparent;color:var(--miss);box-shadow:inset 0 0 0 1.5px var(--miss)}
+  .lawn.lv-x{background:transparent;color:var(--soft);box-shadow:inset 0 0 0 1.5px var(--line)}
+  .door.done .lawn{margin-top:5px;font-size:11px;padding:2px 7px}
+  .lawnc{background:var(--go-tint);color:var(--go)}
+  .lawnfix{margin-top:10px;border-radius:14px;padding:12px;background:var(--go-tint);animation:rise .25s ease both;flex-basis:100%}
+  .lawnfix .lq{font-size:14px;font-weight:700;color:var(--go)}
+  .lawnfix .lsub{font-size:12.5px;color:var(--soft);margin:2px 0 9px}
+  .lawnfix .lrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .lawnfix .lrow button{border:0;border-radius:11px;padding:10px 4px;background:var(--card);color:var(--ink);font-size:13.5px;font-weight:700;cursor:pointer}
+  .lawnfix .lrow button.on{background:var(--go);color:var(--on-go)}
+  .lawnfix .lrow2{display:flex;gap:7px;margin-top:8px}
+  .lawnfix .lrow2 button{flex:1;border:0;border-radius:11px;padding:9px;background:transparent;color:var(--soft);font-size:13px;font-weight:700;cursor:pointer}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
     border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:13.5px;font-weight:700;cursor:pointer}
   .nsflag .ic{width:16px;height:16px}
@@ -489,6 +511,7 @@
     note: '<path d="M5 4h14v10.5L14.5 19H5z"/><path d="M14 19v-5h5"/>',
     flame: '<path d="M12 3c.8 3 5 4.8 5 9.8a5 5 0 0 1-10 0c0-2.2 1.1-3.7 2.1-4.6.2 1.5.9 2.5 2 3 0-2.8-.9-4.8.9-8.2z"/>',
     flag: '<path d="M6 21V4M6 4.5h10.5l-2 4 2 4H6"/>',
+    leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
     list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/>',
     near: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>',
     map: '<path d="M9 4.5L3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
@@ -825,9 +848,12 @@
     var hasFire = r.areas.some(function (a) { return typeof a.hot === 'number'; });
     var mode = 'map';
     try { mode = localStorage.getItem('sixfold.rounds.sort') || 'map'; } catch (e) {}
+    var hasLawn = r.areas.some(function (a) { return (a.lawnL || 0) + (a.lawnM || 0) > 0; });
     if (mode === 'fire' && !hasFire) mode = 'map';
+    if (mode === 'lawn' && !hasLawn) mode = 'map';
     var opts = [['map', 'Map order', 'route'], ['near', 'Nearest', 'near']];
-    if (hasFire) opts.push(['fire', 'Fire hazard', 'flame']);
+    if (hasFire) opts.push(['fire', 'Fire', 'flame']);
+    if (hasLawn) opts.push(['lawn', 'Lawn', 'leaf']);
     setDock(opts, mode, function (v) {
       try { localStorage.setItem('sixfold.rounds.sort', v); } catch (e) {}
       if (v === 'near') { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
@@ -860,7 +886,7 @@
     }
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'near' ? 'Nearest first' : 'Map order'));
+    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'near' ? 'Nearest first' : 'Map order'));
     view.appendChild(sect);
 
     var list = r.areas.slice();
@@ -868,6 +894,13 @@
       list.sort(function (x, y) {
         var mx = hoodDist(x), my = hoodDist(y);
         return (mx === null ? 1e12 : mx) - (my === null ? 1e12 : my);
+      });
+    }
+    /* lawn: neighbourhoods with the most large and medium lawns STILL TO KNOCK first */
+    if (mode === 'lawn') {
+      list.sort(function (x, y) {
+        return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) ||
+               ((y.lawnL || 0) + (y.lawnM || 0)) - ((x.lawnL || 0) + (x.lawnM || 0)) || (y.lawnL || 0) - (x.lawnL || 0);
       });
     }
     if (mode === 'fire') {
@@ -897,6 +930,7 @@
       mid.appendChild(sub);
       var chips = q('div', 'chips');
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
+      if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ' lawns'));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : '')));
       if (a.due) chips.appendChild(chipEl('duep', null, a.due + ' due back'));
       if (na) chips.appendChild(chipEl('again', null, na + ' to try again'));
@@ -1002,7 +1036,7 @@
     for (var sk = 0; sk < 3; sk++) view.appendChild(q('div', 'skel'));
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
-      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null;
+      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null;
       S.areaNosol = j.nosol || null;
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
       if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
@@ -1399,6 +1433,7 @@
     c.appendChild(q('div', 'addr', x.address));
     c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
+    var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
     meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres · ' + x.owner)); c.appendChild(meta);
     if (x.phone) {
       var ph = q('div', 'ph'); var a = q('a', 'num', fmtPhone(x.phone.phone)); a.href = 'tel:' + digits(x.phone.phone);
@@ -1474,6 +1509,64 @@
       return s;
     }
     return q('span', 'fire fx', 'Fire map: not rated');       /* 6 town/farm, 7 water */
+  }
+
+  /* ---- lawn level (2026-10-02, SX-19) ----
+     From the 2023 aerial photo + a tree-height map. Shown as a LEVEL because the
+     method reads open lots ~8% high and lawn under mature trees 20-45% low. Tap it to
+     say what is really there: the crew's answer replaces the photo's for everyone,
+     and every answer is calibration data (it goes in the export). */
+  var DOT = '·';
+  var LAWN = { L: 'Large lawn', M: 'Medium lawn', S: 'Small lawn', N: 'Little or no lawn', T: 'Mostly trees' };
+  function lawnLevelOf(d) { return d.lawnfix ? d.lawnfix.lv : (d.lawn ? d.lawn.lv : null); }
+  function lawnChip(d, tappable) {
+    var lv = lawnLevelOf(d);
+    if (!lv && !tappable) return null;
+    var el = q(tappable ? 'button' : 'span', 'lawn lv-' + (lv || 'x'));
+    if (tappable) {
+      el.type = 'button';
+      el.setAttribute('aria-label', (lv ? LAWN[lv] : 'Lawn size unknown') + ' ' + DOT + ' tap to say what is really here');
+      el.addEventListener('click', function () { S.editLawn = S.editLawn === d.id ? null : d.id; S.editPhone = null; S.editNote = null; renderDoors(); });
+    }
+    el.appendChild(ico('leaf', 2.2));
+    el.appendChild(document.createTextNode(lv ? LAWN[lv] : 'Lawn?'));
+    if (d.lawnfix) el.appendChild(q('em', null, ' ' + DOT + ' crew'));
+    else if (d.lawn && lv) el.appendChild(q('em', null, ' ' + DOT + ' ' + d.lawn.yr));
+    return el;
+  }
+  function lawnChooser(d) {
+    var box = q('div', 'lawnfix');
+    box.appendChild(q('div', 'lq', 'What lawn is really here?'));
+    box.appendChild(q('div', 'lsub', d.lawn ? 'The ' + d.lawn.yr + ' aerial photo says: ' + LAWN[d.lawn.lv] + '. Your answer replaces it for everyone.'
+                                             : 'No photo estimate for this door. Your answer helps tune the map.'));
+    var row = q('div', 'lrow');
+    [['N', 'None'], ['S', 'Small'], ['M', 'Medium'], ['L', 'Large']].forEach(function (o) {
+      var b = q('button', d.lawnfix && d.lawnfix.lv === o[0] ? 'on' : null, o[1]); b.type = 'button';
+      b.addEventListener('click', function () { saveLawn(d, o[0]); });
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+    var row2 = q('div', 'lrow2');
+    if (d.lawnfix) {
+      var cl = q('button', null, 'Back to the photo estimate'); cl.type = 'button';
+      cl.addEventListener('click', function () { saveLawn(d, null); });
+      row2.appendChild(cl);
+    }
+    var cx = q('button', null, 'Cancel'); cx.type = 'button';
+    cx.addEventListener('click', function () { S.editLawn = null; renderDoors(); });
+    row2.appendChild(cx);
+    box.appendChild(row2);
+    return box;
+  }
+  function saveLawn(d, lv) {
+    api('lawnfix', { body: { region: S.region, id: d.id, lv: lv } }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      d.lawnfix = lv ? { lv: lv, by: S.me, at: Math.floor(Date.now() / 1000) } : null;
+      S.editLawn = null;
+      renderDoors();
+      toast(lv ? LAWN[lv] : 'Back to the photo estimate', d.address, null);
+    }).catch(function () { toast('No signal', 'The lawn answer was not saved. Try again.', null); });
   }
 
   function satLink(d, small) {
@@ -1638,8 +1731,10 @@
       /* slimmer card: the fire badge sits at the start of the details line */
       var meta = q('div', 'meta');
       var fb = fireBadge(d); if (fb) meta.appendChild(fb);
+      var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
       meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · ' + d.owner));
       card.appendChild(meta);
+      if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
       if (d.mark && d.mark.outcome === 'miss') {
         var was = q('div', 'meta st');
         was.appendChild(q('span', null, 'No answer' + (d.mark.by ? ' · ' + d.mark.by : '')));
@@ -1699,6 +1794,7 @@
         var lhs = q('div');
         lhs.appendChild(q('div', 'addr', d.address));
         var fb2 = fireBadge(d); if (fb2) lhs.appendChild(fb2);
+        var lc2 = lawnChip(d, true); if (lc2) { if (fb2) lhs.appendChild(document.createTextNode(' ')); lhs.appendChild(lc2); }
         if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
         var rhs = q('div');
         rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';
@@ -1714,6 +1810,7 @@
         });
         rhs.appendChild(u);
         row.appendChild(lhs); row.appendChild(rhs);
+        if (S.editLawn === d.id) row.appendChild(lawnChooser(d));
         row.appendChild(extras(d));
         view.appendChild(row);
       });

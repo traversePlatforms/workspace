@@ -42,6 +42,24 @@ const FIRE_CACHE = join(HERE, 'wildfire-cache.json');
 const fireByCoord = existsSync(FIRE_CACHE) ? JSON.parse(readFileSync(FIRE_CACHE, 'utf8')) : {};
 const fireOf = (d) => (typeof d.la === 'number' && typeof d.lo === 'number') ? (fireByCoord[`${d.la},${d.lo}`] ?? null) : null;
 
+/* Lawn per door, from lawn-trial/sample-lawn.mjs (2023 NAIP + canopy height; SX-19).
+   Shown as a LEVEL, never square feet: the method reads open lots ~8% high and lawn
+   under mature trees 20-45% low (LAWN-SIZE.md). Cut-offs set against four
+   hand-measured lots; crews correct them in the app, and those corrections are the
+   calibration data.
+     T mostly trees : more than 60% of the lot under trees and under 1,500 sq ft seen
+     N little lawn  : under 300 sq ft     S small : 300-1,199
+     M medium       : 1,200-2,999         L large : 3,000 and up
+   sq is kept (rounded to 100) for the export and calibration; the app never shows it. */
+const LAWN_CACHE = join(HERE, 'lawn-cache.json');
+const lawnByCoord = existsSync(LAWN_CACHE) ? JSON.parse(readFileSync(LAWN_CACHE, 'utf8')) : {};
+function lawnOf(d) {
+  const c = typeof d.la === 'number' ? lawnByCoord[`${d.la},${d.lo}`] : null;
+  if (!c || c.err) return null;
+  const lv = c.t > 0.6 && c.s < 1500 ? 'T' : c.s < 300 ? 'N' : c.s < 1200 ? 'S' : c.s < 3000 ? 'M' : 'L';
+  return { lv, sq: Math.round(c.s / 100) * 100, yr: +String(c.d).slice(0, 4) };
+}
+
 const index = [];
 for (const [key, label, fileName] of SOURCES) {
   const p = join(HERE, fileName);
@@ -55,7 +73,7 @@ for (const [key, label, fileName] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d) };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d) };
     }),
   }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');

@@ -619,8 +619,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
-- [ ] **SX-19 — Lawn size per door, the aeration counterpart to the fire map. TRIAL DONE 2026-10-02,
-      decision pending.** 2023 USDA aerial photos (30 cm, near-infrared, public domain) plus a tree-
+- [ ] **SX-19 — Lawn size per door, the aeration counterpart to the fire map. BUILT 2026-10-02 as a
+      LAWN LEVEL (Matthew: "build it out now, calibrate over time with input from the doors"). Crew
+      correct it in the app, and their answers are exported as calibration data. Awaiting the full
+      measuring run, then upload.** 2023 USDA aerial photos (30 cm, near-infrared, public domain) plus a tree-
       height map: green and under 1 m counts as lawn. **Suburban lots photographed in September come
       out right**, e.g. Russet Sky's outline matches the photo. **Four failure modes:** mid-October
       photos undercount (13 of 39 lots); brown dormant lawns are missed; scrub oak on wooded acreage

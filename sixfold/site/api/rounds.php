@@ -221,6 +221,35 @@ const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
  * survive every rebuild of the door lists. Last line wins; an empty note removes it. */
 const NOTE_MAX = 500;
 
+/* ---- crew lawn corrections (2026-10-02, SX-19) ---------------------------
+ * The lawn level comes from a 2023 aerial photo and is a rough guide. Anyone at the
+ * door can say what is really there: N none/little, S small, M medium, L large.
+ * Last line per door wins; null clears it. These are the calibration data. */
+function lawnfixFile(string $key): string { return DATA_DIR . '/lawnfix-' . $key . '.log'; }
+function loadLawnFix(string $key): array {
+    $f = lawnfixFile($key);
+    if (!is_readable($f)) return [];
+    $out = [];
+    $fh = @fopen($f, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $r = json_decode(trim($line), true);
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (empty($r['lv'])) unset($out[$r['id']]);
+        else $out[$r['id']] = ['lv' => $r['lv'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendLawnFix(string $key, array $row): bool {
+    return (bool) @file_put_contents(lawnfixFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+/* the level that counts: the crew's answer if there is one, else the photo's */
+function lawnLevel(array $d, array $fix): ?string {
+    if (isset($fix[$d['id']])) return $fix[$d['id']]['lv'];
+    return $d['lawn']['lv'] ?? null;
+}
+
 /* ---- neighbourhood no-soliciting flag (2026-10-01, SX-13) ----------------
  * A posting at a subdivision entrance. Any crew member can raise it; only an
  * admin can clear it, or one wrong tap quietly drops a neighbourhood from the
@@ -379,6 +408,7 @@ if ($action === 'regions') {
         if (!$data) continue;
         $marks = loadMarks($r['key']);
         $aflags = loadAreaFlags($r['key']);
+        $lfix = loadLawnFix($r['key']);
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -393,6 +423,7 @@ if ($action === 'regions') {
                so a due high-hazard door counts towards the hazard sort as well. */
             $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0;
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
+            $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
                 $f = (int) ($d['fire'] ?? 0);
@@ -400,6 +431,7 @@ if ($action === 'regions') {
                 $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
                 $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
+                if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
                 if (!$m) continue;
                 if ($isDue) $due++;
                 if ($m['outcome'] === 'booked') $booked++;
@@ -408,7 +440,8 @@ if ($action === 'regions') {
             $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
-                        'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null];
+                        'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
+                        'lawnL' => $lawnL, 'lawnM' => $lawnM];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
@@ -423,6 +456,7 @@ if ($action === 'area') {
     $marks = loadMarks($key);
     $phones = loadPhones($key);
     $notes = loadNotes($key);
+    $lfix = loadLawnFix($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -438,6 +472,8 @@ if ($action === 'area') {
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] : null,
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
+                'lawn' => $d['lawn'] ?? null,
+                'lawnfix' => $lfix[$d['id']] ?? null,
             ];
         }
         out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors,
@@ -495,6 +531,18 @@ if ($action === 'phone') {
     if (!appendPhone($key, ['id' => $id, 'phone' => $digits, 'source' => $source, 'seen' => $seen, 'by' => $me, 'at' => time()])) {
         fail('Could not save that. Try again.', 500);
     }
+    out(['ok' => true]);
+}
+
+if ($action === 'lawnfix') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    $lv  = $body['lv'] ?? null;
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if ($lv !== null && !in_array($lv, ['N', 'S', 'M', 'L'], true)) fail('Bad lawn size.');
+    if (!appendLawnFix($key, ['id' => $id, 'lv' => $lv, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
 
@@ -558,6 +606,7 @@ if ($action === 'quotes') {
         $phones = loadPhones($r['key']);
         $notes = loadNotes($r['key']);
         $quoted = loadQuoted($r['key']);
+        $lfix = loadLawnFix($r['key']);
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
@@ -573,6 +622,7 @@ if ($action === 'quotes') {
                     'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] : null,
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
                     'quoted' => $qd,
+                    'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null,
                 ];
             }
         }
@@ -648,25 +698,29 @@ if ($action === 'report' || $action === 'export') {
        also the standards-correct choice — no backslash escaping in CSV */
     fputcsv($fh, ['region', 'neighbourhood', 'address', 'acres', 'owner', 'outcome', 'by', 'when', 'come_back',
                   'phone', 'phone_source', 'phone_last_seen', 'phone_added_by', 'phone_added',
-                  'note', 'note_by', 'note_added'], ',', '"', '');
+                  'note', 'note_by', 'note_added',
+                  'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         $marks = loadMarks($r['key']);
         $phones = loadPhones($r['key']);
         $notes = loadNotes($r['key']);
+        $lfix = loadLawnFix($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
                 $p = $phones[$d['id']] ?? null;
                 $n = $notes[$d['id']] ?? null;
-                if (!$m && !$p && !$n) continue;                   // a number or a note is worth exporting too
+                $lf = $lfix[$d['id']] ?? null;
+                if (!$m && !$p && !$n && !$lf) continue;           // a number, a note or a lawn answer is worth exporting too
                 fputcsv($fh, [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
                               $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '', $m['revisit'] ?? '',
                               $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
                               $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : '',
-                              $n['note'] ?? '', $n['by'] ?? '', $n ? date('Y-m-d', (int) $n['at']) : ''], ',', '"', '');
+                              $n['note'] ?? '', $n['by'] ?? '', $n ? date('Y-m-d', (int) $n['at']) : '',
+                              $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? ''], ',', '"', '');
             }
         }
     }
