@@ -201,6 +201,7 @@
   .bk{background:var(--go-tint);color:var(--go)}
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
+  .chip.wait{background:var(--sunk);color:var(--soft)}
   .nsp{background:var(--ink);color:var(--bg)}
   .hot{background:var(--fire-h);color:var(--fire-on)} .hot.v{background:var(--fire-vh)}
   .sect{display:flex;align-items:baseline;justify-content:space-between;margin:22px 4px 10px}
@@ -890,7 +891,7 @@
   }
 
   function renderAreas() {
-    S.returnTo = null;                            /* the neighbourhood list is home again */
+    S.returnTo = null; S.backFirst = false;       /* the neighbourhood list is home again */
     var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
     if (!r) return;
     hideSplash(); hideToast();
@@ -1026,7 +1027,8 @@
       if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ' lawns'));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : '')));
       if (a.due) chips.appendChild(chipEl('duep', null, a.due + ' due back'));
-      if (na) chips.appendChild(chipEl('again', null, na + ' to try again'));
+      if (a.retry) chips.appendChild(chipEl('again', null, a.retry + ' to try again'));
+      if (na) chips.appendChild(chipEl('chip wait', null, na + ' no answer · waiting'));
       if (chips.children.length) mid.appendChild(chips);
       btn.appendChild(mid);
       var cnt = q('div', 'left');
@@ -1051,10 +1053,10 @@
   function followups() {
     var out = { na: 0, due: 0, towns: 0, groups: [] };
     S.regions.forEach(function (r) {
-      var areas = r.areas.filter(function (a) { return (a.noanswer || 0) + (a.due || 0) > 0; });
+      var areas = r.areas.filter(function (a) { return (a.retry || 0) + (a.due || 0) > 0; });
       if (!areas.length) return;
       out.towns++;
-      areas.forEach(function (a) { out.na += a.noanswer || 0; out.due += a.due || 0; });
+      areas.forEach(function (a) { out.na += a.retry || 0; out.due += a.due || 0; });
       out.groups.push({ key: r.key, label: r.label, areas: areas });
     });
     return out;
@@ -1067,16 +1069,16 @@
     view.textContent = '';
     var F = followups();
     if (!F.groups.length) { view.appendChild(q('div', 'msg', 'Nothing to come back to. No-answers and come-back dates show up here.')); return; }
-    view.appendChild(q('div', 'sub2', 'No-answers, and Not-now doors whose come-back date has arrived. Tap a neighbourhood to open it at those doors.'));
+    view.appendChild(q('div', 'sub2', 'Doors back on the list: no-answers after their wait, and Not-now doors on their come-back date. Tap a neighbourhood to open it with those doors first.'));
     F.groups.forEach(function (g) {
       view.appendChild(q('h2', null, g.label));
       g.areas.forEach(function (a) {
         var btn = q('button', 'area'); btn.type = 'button';
-        var n = (a.noanswer || 0) + (a.due || 0);
+        var n = (a.retry || 0) + (a.due || 0);
         var mid = q('div', 'mid');
         mid.appendChild(q('div', 'nm', a.name));
         var chips = q('div', 'chips');
-        if (a.noanswer) chips.appendChild(chipEl('again', 'knock', a.noanswer + ' no answer'));
+        if (a.retry) chips.appendChild(chipEl('again', 'knock', a.retry + ' no answer'));
         if (a.due) chips.appendChild(chipEl('duep', 'clock', a.due + ' due back'));
         mid.appendChild(chips);
         btn.appendChild(mid);
@@ -1084,7 +1086,7 @@
         btn.appendChild(cnt);
         btn.addEventListener('click', function () {
           S.region = g.key; S.area = null;
-          if (a.noanswer) { S.showAgain = true; S.jumpAgain = true; } else S.jumpDue = true;
+          S.backFirst = true;
           S.dview = S.dview === 'map' ? 'street' : S.dview;
           openArea(a.name);
         });
@@ -1217,7 +1219,7 @@
       if ((S.mdRange || '').indexOf('day:') === 0) dayIn.value = S.mdRange.slice(4);
       var kind = document.createElement('select'); kind.setAttribute('aria-label', 'What was done');
       [['all', 'Everything'], ['booked', 'Quote booked'], ['later', 'Not now'], ['miss', 'No answer'], ['nosolicit', 'No soliciting'],
-       ['back', 'Put back on the list'], ['info', 'Phone, email, note or photo only']].forEach(function (x) {
+       ['info', 'Phone, email, note or photo only']].forEach(function (x) {
         var o = document.createElement('option'); o.value = x[0]; o.textContent = x[1]; kind.appendChild(o);
       });
       kind.value = S.mdKind || 'all';
@@ -1235,7 +1237,7 @@
         if (rg === 'week') return d >= isoMinus(j.today, 6);
         return true;
       }
-      function kindOf(r) { return r.mine ? (r.mine.outcome || 'back') : 'info'; }
+      function kindOf(r) { return r.mine ? r.mine.outcome : 'info'; }
       function when(r) {
         var dt = new Date(r.at * 1000), h = dt.getHours(), m = dt.getMinutes();
         var t = ((h % 12) || 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' am' : ' pm');
@@ -1250,7 +1252,7 @@
           seg.appendChild(b);
         });
         var k = S.mdKind || 'all';
-        var shown = rows.filter(function (r) { return inRange(r) && (k === 'all' || kindOf(r) === k); });
+        var shown = rows.filter(function (r) { return !r.gone && inRange(r) && (k === 'all' || kindOf(r) === k); });
         var nb = shown.filter(function (r) { return r.mine && r.mine.outcome === 'booked'; }).length;
         sum.textContent = shown.length ? shown.length + (shown.length === 1 ? ' door' : ' doors') + (nb ? ' · ' + nb + ' booked' : '') +
           '. Newest first. Fix a mark here; open the door for notes, phone and photos.' : '';
@@ -1261,20 +1263,21 @@
       function setMark(r, o, rv, quiet) {
         if (o === null && !quiet && r.now && r.now.outcome === 'nosolicit' &&
             !window.confirm('Undo the no-soliciting flag? Only if the sign was a mistake — otherwise this door gets knocked again.')) return;
-        var prev = r.now ? { outcome: r.now.outcome, revisit: r.now.revisit || '' } : null;
+        var prev = r.now ? { outcome: r.now.outcome, revisit: r.now.revisit || '' } : null, prevMine = r.mine;
         var item = { region: r.region, id: r.id, outcome: o };
         if (o === 'later' && rv) item.revisit = rv;
         var at = Math.floor(Date.now() / 1000);
         S.mdLater = null; S.mdEdit = null;
         r.now = o === null ? null : { outcome: o, by: S.me, at: at, revisit: item.revisit || '', pending: true };
-        if (who === S.me) r.mine = { outcome: o, at: at, revisit: item.revisit || '' };
+        if (o === null) { r.mine = null; r.gone = !r.did.length; }        /* a mistake: off the list and the stats */
+        else { r.gone = false; r.mine = who === S.me ? { outcome: o, at: at, revisit: item.revisit || '' } : (r.mine || prevMine); }
         draw();
         api('mark', { body: item }).then(function (j2) {
           if (j2._status === 401) return signinView('Signed out. Enter your code again.');
           if (j2.ok) { if (r.now) r.now.pending = false; } else enqueue(item);
           draw();
         }).catch(function () { enqueue(item); draw(); });
-        if (!quiet) toast(o === null ? 'Back on the list' : OUT[o], r.address, function () { setMark(r, prev ? prev.outcome : null, prev ? prev.revisit : '', true); });
+        if (!quiet) toast(o === null ? 'Back on the list' : OUT[o], r.address, function () { setMark(r, prev ? prev.outcome : null, prev ? prev.revisit : '', true); if (who !== S.me) { r.mine = prevMine; draw(); } });
       }
       function laterRow(r) {
         var w = q('div', 'mdlater');
@@ -1412,8 +1415,8 @@
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
       S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
-      S.areaNosol = j.nosol || null;
-      if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss') S.showAgain = true; }
+      S.areaNosol = j.nosol || null; S.rest = j.rest || 2;
+      if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss' && !backOn(fd)) S.showAgain = true; }
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
       /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
       if (S.dview === 'map') S.dview = 'street';
@@ -1877,9 +1880,16 @@
     sc.onload = done; sc.onerror = done;
     document.head.appendChild(sc);
   }
+  /* back on the list (2026-10-02): a Not-now whose date has come, or a no-answer that has
+     rested (the server sends its come-back day as mark.retry) */
+  function backOn(d) {
+    var m = d.mark, t = todayISO();
+    return !!m && ((m.outcome === 'later' && !!m.revisit && m.revisit <= t) || (m.outcome === 'miss' && !!m.retry && m.retry <= t));
+  }
+  function fmtDay(s) { return fmtDate(s).replace(/ \d{4}$/, ''); }
   function statusOf(d) {
     if (!d.mark) return 'k';
-    if (d.mark.outcome === 'later' && d.mark.revisit && d.mark.revisit <= todayISO()) return 'd';
+    if (backOn(d)) return 'd';
     if (d.mark.outcome === 'miss') return 'a';
     return 'x';
   }
@@ -1920,7 +1930,7 @@
     box.appendChild(el);
     var lg = q('div', 'legend');
     /* "you" is near-black, never blue: blue is To knock */
-    var keys = [['k', 'To knock'], ['d', 'Due back'], ['a', 'No answer'], ['x', 'Done'], ['h', 'High fire hazard']];
+    var keys = [['k', 'To knock'], ['d', 'Back on the list'], ['a', 'No answer, waiting'], ['x', 'Done'], ['h', 'High fire hazard']];
     if (S.here) keys.push(['u', 'You']);
     keys.forEach(function (x) {
       var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : null);
@@ -2316,12 +2326,16 @@
     if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
     if (d.mark && d.mark.outcome === 'miss') {
       var was = q('div', 'meta st');
-      was.appendChild(q('span', null, 'No answer' + (d.mark.by ? ' · ' + d.mark.by : '')));
-      was.style.color = 'var(--miss)';
-      /* back into the to-knock list, e.g. the house was a miss only because of the hour */
-      var pb = q('button', 'putback', 'Put back on the list'); pb.type = 'button';
-      pb.addEventListener('click', function () { markDoor(d, null); toast('Back on the list', d.address, function () { markDoor(d, 'miss'); }); });
-      was.appendChild(pb);
+      var ready = backOn(d);
+      was.appendChild(q('span', null, (ready ? 'No answer last time · try again' : 'No answer' + (d.mark.retry ? ' · back on the list ' + fmtDay(d.mark.retry) : '')) + (d.mark.by ? ' · ' + d.mark.by : '')));
+      was.style.color = ready ? 'var(--go)' : 'var(--miss)';
+      /* a mistake fix, not a retry: waiting no-answers come back by themselves. It takes the
+         mark off the knocker's stats too. */
+      if (!ready) {
+        var pb = q('button', 'putback', 'Put back on the list'); pb.type = 'button';
+        pb.addEventListener('click', function () { markDoor(d, null); toast('Back on the list', d.address, function () { markDoor(d, 'miss'); }); });
+        was.appendChild(pb);
+      }
       card.appendChild(was);
     }
     if (d.mark && d.mark.outcome === 'later' && d.mark.revisit) {
@@ -2360,10 +2374,12 @@
        to re-knock it the same afternoon) but lands in its own section with the
        buttons still live, instead of disappearing among the booked jobs. */
     var today = todayISO();
-    var todo = S.doors.filter(function (d) { return !d.mark; });
-    var due = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'later' && d.mark.revisit && d.mark.revisit <= today; });
-    var again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss'; });
-    var done = S.doors.filter(function (d) { return d.mark && d.mark.outcome !== 'miss' && due.indexOf(d) < 0; });
+    /* 2026-10-02: doors back on the list (a Not-now on its date, a no-answer after its rest)
+       rejoin the to-knock list in street order. Opened from "Doors to come back to", they go first. */
+    var todo = S.doors.filter(function (d) { return !d.mark || backOn(d); });
+    if (S.backFirst) todo.sort(function (a, b) { return (backOn(b) ? 1 : 0) - (backOn(a) ? 1 : 0); });
+    var again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss' && !backOn(d); });
+    var done = S.doors.filter(function (d) { return d.mark && d.mark.outcome !== 'miss' && !backOn(d); });
 
     /* the bar is kept, not rebuilt, while on the same neighbourhood: a mark redraws
        the page twice (at once, then when the server answers), and a rebuilt bar
@@ -2386,7 +2402,7 @@
     S.liveMap = null;
     view.textContent = '';
 
-    var finished = S.doors.length > 0 && !todo.length && !again.length && !due.length;
+    var finished = S.doors.length > 0 && !todo.length && !again.length;
     if (finished) {
       var fin = q('div', 'finished');
       fin.appendChild(ridge('mkf'));
@@ -2399,15 +2415,14 @@
       view.appendChild(fin);
       if (S.celebrate) setTimeout(function () { burst(fin.querySelector('svg')); }, 120);
     }
-    else if (!todo.length && !due.length) view.appendChild(q('div', 'msg', 'First pass finished. The doors below had no answer — try them another evening.'));
-    else if (!todo.length) view.appendChild(q('div', 'msg', 'First pass finished. Start with the doors due back.'));
+    else if (!todo.length) view.appendChild(q('div', 'msg', 'Every door is knocked for now. The no-answers below come back on the list by themselves, ' + (S.rest || 2) + ' days after the knock.'));
     S.celebrate = false;
 
     /* no-answer doors sit in a collapsed section below the list; say so up top */
-    if (again.length && (todo.length || due.length)) {
+    if (again.length && todo.length) {
       var jb = q('button', 'jump'); jb.type = 'button';
       jb.appendChild(ico('knock', 2.2));
-      jb.appendChild(document.createTextNode(again.length + (again.length === 1 ? ' no answer' : ' no answers') + ' to try again'));
+      jb.appendChild(document.createTextNode(again.length + (again.length === 1 ? ' no answer' : ' no answers') + ' waiting to come back'));
       jb.appendChild(ico('chev', 2.4));
       jb.addEventListener('click', function () { S.showAgain = true; S.jumpAgain = true; renderDoors(); });
       view.appendChild(jb);
@@ -2421,7 +2436,7 @@
       else if (S.geoErr) view.appendChild(geoMsg());
       if (S.here) {
         var byDist = function (a, b) { var ma = metresTo(a), mb = metresTo(b); return (ma === null ? 1e12 : ma) - (mb === null ? 1e12 : mb); };
-        todo.sort(byDist); due.sort(byDist); again.sort(byDist);
+        todo.sort(byDist); again.sort(byDist);
         var rf = q('button', 'back'); rf.type = 'button';
         rf.appendChild(ico('refresh', 2.2)); rf.appendChild(document.createTextNode('Update my location'));
         rf.addEventListener('click', function () { locate(function () { if (S.area) renderDoors(); }); renderDoors(); });
@@ -2433,15 +2448,8 @@
 
     todo.forEach(function (d) { view.appendChild(doorCardFor(d)); });
 
-    if (due.length) {
-      var dh = q('h2', null, 'Due to revisit · ' + due.length); dh.id = 'dueHead';
-      view.appendChild(dh);
-      due.forEach(function (d) { view.appendChild(doorCardFor(d)); });
-      if (S.jumpDue) { S.jumpDue = false; try { dh.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {} }
-    }
-
     if (again.length) {
-      var ah = q('h2', null, 'No answer — try again · ' + again.length); ah.id = 'againHead';
+      var ah = q('h2', null, 'No answer — back on the list soon · ' + again.length); ah.id = 'againHead';
       view.appendChild(ah);
       var toggle = q('button', 'back', (S.showAgain ? '↓ Hide' : '→ Show') + ' these ' + again.length + ' doors');
       toggle.type = 'button';

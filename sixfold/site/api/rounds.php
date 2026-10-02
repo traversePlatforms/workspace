@@ -176,6 +176,27 @@ function appendMark(string $key, array $row): bool {
     return (bool) @file_put_contents(marksFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 
+/* A no-answer rests, then comes back on the to-knock list by itself (2026-10-02, Matthew):
+   not the same afternoon, and nobody has to remember to put it back. One number to change. */
+const MISS_REST_DAYS = 2;
+function missRetry(array $m): string {
+    return (new DateTime('@' . (int) ($m['at'] ?? 0)))->setTimezone(new DateTimeZone('America/Denver'))
+        ->modify('+' . MISS_REST_DAYS . ' days')->format('Y-m-d');
+}
+/* Put back on the list is for mistakes (2026-10-02): it cancels the mark it undid, so that
+   mark never counts on anyone's stats. Returns the marks still standing, oldest first. */
+function liveMarks(array $rows): array {
+    $stack = [];
+    foreach ($rows as $m) {
+        if (($m['outcome'] ?? null) === null) { if (!empty($stack[$m['id']])) array_pop($stack[$m['id']]); }
+        else $stack[$m['id']][] = $m;
+    }
+    $out = [];
+    foreach ($stack as $evs) foreach ($evs as $m) $out[] = $m;
+    usort($out, fn($a, $b) => ($a['at'] ?? 0) <=> ($b['at'] ?? 0));
+    return $out;
+}
+
 /* ---- phone numbers ------------------------------------------------------
  *
  * Added 2026-10-01 (SX-14). Same shape as the marks log, for the same reason:
@@ -474,7 +495,9 @@ if ($action === 'regions') {
                it simply is not counted as high. */
             /* due: a Not-now door whose come-back date has arrived. It is open again,
                so a due high-hazard door counts towards the hazard sort as well. */
-            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0;
+            /* retry: a no-answer that has rested MISS_REST_DAYS, back on the list. noanswer is
+               now only the ones still resting. */
+            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0; $retry = 0;
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
             foreach ($a['doors'] as $d) {
@@ -486,12 +509,14 @@ if ($action === 'regions') {
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
                 if (!$m) continue;
-                if ($isDue) $due++;
                 if ($m['outcome'] === 'booked') $booked++;
-                if ($m['outcome'] === 'miss') $noanswer++; else $done++;
+                if ($isDue) $due++;
+                elseif ($m['outcome'] === 'miss' && missRetry($m) <= $today) $retry++;
+                elseif ($m['outcome'] === 'miss') $noanswer++;
+                else $done++;
             }
             $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
-                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'booked' => $booked,
+                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
                         'lawnL' => $lawnL, 'lawnM' => $lawnM];
@@ -523,7 +548,8 @@ if ($action === 'area') {
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'fire' => $d['fire'] ?? null,
-                'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? ''] : null,
+                'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? '',
+                               'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] : null,
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
@@ -533,7 +559,7 @@ if ($action === 'area') {
                 'photos' => $photos[$d['id']] ?? [],
             ];
         }
-        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors,
+        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS,
              'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key)))]);
     }
     fail('No such neighbourhood.', 404);
@@ -661,7 +687,8 @@ if ($action === 'photodel') {
 /* ---- stats (2026-10-02) ---------------------------------------------------
  * Built from the logs, so it covers every day since the app went live, not just
  * since this was added. A door counts once per person per day, at its LAST outcome
- * that day (marking then changing a door is one door; an undo removes it). Days are
+ * that day (marking then changing a door is one door). A put-back cancels the mark it
+ * undid, on whatever day that mark was made. Days are
  * Colorado days. Crew see their own; an admin sees everyone, or one person. */
 if ($action === 'stats') {
     $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
@@ -690,7 +717,7 @@ if ($action === 'stats') {
     foreach (($idx['regions'] ?? []) as $rg) {
         $k = $rg['key'];
         $last = [];
-        foreach ($lines(marksFile($k)) as $m) $last[($m['by'] ?? '') . '|' . $dayOf($m['at']) . '|' . $m['id']] = $m['outcome'] ?? null;
+        foreach (liveMarks($lines(marksFile($k))) as $m) $last[($m['by'] ?? '') . '|' . $dayOf($m['at']) . '|' . $m['id']] = $m['outcome'] ?? null;
         foreach ($last as $kk => $o) {
             if ($o === null) continue;
             [$n, $dt] = explode('|', $kk);
@@ -730,8 +757,8 @@ if ($action === 'stats') {
 }
 
 /* ---- my doors (2026-10-02) ------------------------------------------------
- * Every door one person acted on in the window: marked, put back, or gave a phone,
- * email, note or photo. Each row carries what THEY last did and what the door shows
+ * Every door one person acted on in the window: marked, or gave a phone, email, note
+ * or photo. A mark that was put back (a mistake) does not count. Each row carries what THEY last did and what the door shows
  * NOW, so the page can tell "still yours" from "since changed by someone else".
  * Crew see their own; an admin may ask for anyone's (who=). Newest first. */
 if ($action === 'mydoors') {
@@ -739,14 +766,14 @@ if ($action === 'mydoors') {
     $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
     if ($who === '') $who = $me;
     $since = (new DateTime('today', new DateTimeZone('America/Denver')))->modify('-' . ($days - 1) . ' days')->getTimestamp();
-    $mine = function (string $file) use ($since, $who) {
+    $read = function (string $file, bool $onlyWho) use ($since, $who) {
         $out = [];
         if (!is_readable($file)) return $out;
         $fh = @fopen($file, 'r');
         if (!$fh) return $out;
         while (($line = fgets($fh)) !== false) {
             $r = json_decode(trim($line), true);
-            if (is_array($r) && isset($r['id']) && ($r['by'] ?? '') === $who && (int) ($r['at'] ?? 0) >= $since) $out[] = $r;
+            if (is_array($r) && isset($r['id']) && (!$onlyWho || ($r['by'] ?? '') === $who) && (int) ($r['at'] ?? 0) >= $since) $out[] = $r;
         }
         fclose($fh);
         return $out;
@@ -756,14 +783,16 @@ if ($action === 'mydoors') {
     foreach (($idx['regions'] ?? []) as $rg) {
         $k = $rg['key'];
         $hit = [];                                   /* door id => what this person did */
-        foreach ($mine(marksFile($k)) as $m) {
+        /* everyone's marks, so a put-back by anyone cancels what it undid; then keep this person's */
+        foreach (liveMarks($read(marksFile($k), false)) as $m) {
+            if (($m['by'] ?? '') !== $who) continue;
             $h = $hit[$m['id']] ?? ['at' => 0, 'did' => []];
             $h['mine'] = ['outcome' => $m['outcome'] ?? null, 'at' => (int) $m['at'], 'revisit' => $m['revisit'] ?? ''];
             $h['at'] = max($h['at'], (int) $m['at']);
             $hit[$m['id']] = $h;
         }
         foreach ([['phone', phonesFile($k)], ['email', emailsFile($k)], ['note', notesFile($k)], ['photo', photosFile($k)]] as [$what, $file]) {
-            foreach ($mine($file) as $r) {
+            foreach ($read($file, true) as $r) {
                 if ($what === 'photo' && !empty($r['del'])) continue;
                 if ($what !== 'photo' && ($r[$what] ?? null) === null) continue;
                 $h = $hit[$r['id']] ?? ['at' => 0, 'did' => []];

@@ -7,6 +7,26 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Doors come back on their own; Put back is for mistakes — 2026-10-02: `rounds.php` + `index.html`
+
+Matthew's rules:
+- **Put back on the list means "that was a mistake".** It cancels the mark it undid. That mark
+  leaves the knocker's My doors list and every stats count, whatever day it was made. Undo in the
+  toast brings it back.
+- **Not now** with a date goes back into the to-knock list, in street order, on that date. It no
+  longer sits in a separate "Due to revisit" section.
+- **No answer** waits **2 days** and then comes back into the to-knock list by itself. Its card
+  says "No answer last time · try again". While it waits, it sits in a collapsed "No answer — back
+  on the list soon" section showing the day it returns. Put back on a waiting no-answer is the
+  mistake fix.
+  To change the wait, edit `MISS_REST_DAYS` at the top of the marks section in `rounds.php`.
+  It is the only place the number lives.
+- The neighbourhood count "to knock" includes doors back on the list. The cards show "N to try
+  again" for rested no-answers and "N no answer · waiting" for the rest. **Doors to come back to**
+  lists only doors back on the list now, and opens a neighbourhood with those doors first.
+
+Tested: a no-answer dated 3 days ago comes back, and today's waits. 364 checks across 15 suites pass.
+
 ## ⚑ My doors on My stats — 2026-10-02: `rounds.php` + `index.html`
 
 My stats now has two tabs: **Numbers** (what it showed before) and **Doors**, which lists every door

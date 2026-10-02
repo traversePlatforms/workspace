@@ -619,6 +619,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-22 — Doors come back on their own: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.**
+      Put back = mistake (off My doors and the stats). Not now rejoins the to-knock list on its date.
+      No answer rejoins it after `MISS_REST_DAYS` = 2, a default I picked; Matthew can change it.
+      Same two files as SX-21. 364/364 checks.
 - [ ] **SX-21 — My doors on My stats: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** Every door
       the person acted on, filtered by day or week, with Change / Put back / Open door on each one.
       Matthew's request. Also: neighbourhoods now open on Street order, not the last-used map.
