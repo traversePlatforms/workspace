@@ -425,6 +425,24 @@
   .stday{display:flex;align-items:baseline;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
   .stday b{min-width:84px;font-weight:700}
   .stday span{flex:1;min-width:0;color:var(--soft);font-size:13.5px}
+  .seg{display:flex;gap:4px;margin:0 0 12px;padding:4px;background:var(--sunk);border-radius:14px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--soft);font:700 14px var(--sans);padding:9px 4px;border-radius:11px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+  .mdrow2{display:flex;gap:8px;margin:0 0 10px}
+  .mdrow2 input,.mdrow2 select,.mdlater input{flex:1;min-width:0;font:600 14px var(--sans);padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .mdlater input{display:block;width:100%;margin-top:8px}
+  .tag.onlist{color:var(--ink);background:var(--sunk)}
+  .mdacts{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center}
+  .mdb{border:0;border-radius:11px;padding:8px 11px;font:700 13px var(--sans);cursor:pointer}
+  .mdb.booked{background:var(--ember-ink);color:var(--on-ember)}
+  .mdb.later{background:var(--later-tint);color:var(--later)}
+  .mdb.miss{background:var(--miss-tint);color:var(--miss)}
+  .mdb.nosolicit{background:var(--sunk);color:var(--ink)}
+  .mdacts .putback{font:700 13px var(--sans);padding:8px 11px;border-radius:11px}
+  .mdopen{margin-left:auto;border:0;background:transparent;color:var(--ember-ink);font:700 13.5px var(--sans);display:inline-flex;align-items:center;gap:2px;cursor:pointer;padding:8px 2px}
+  .mdopen .ic{width:16px;height:16px}
+  .tag.later{margin-top:0;padding:3px 10px;border-radius:999px;animation:none}
+  .mdb.later{margin-top:0;padding:8px 11px;border-radius:11px;animation:none}
   .stday em{font-style:normal;font-weight:700;color:var(--ember-ink)}
   .teamrow{width:100%;text-align:left;display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;align-items:baseline;background:var(--card);
     border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;cursor:pointer;color:inherit;box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
@@ -872,6 +890,7 @@
   }
 
   function renderAreas() {
+    S.returnTo = null;                            /* the neighbourhood list is home again */
     var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
     if (!r) return;
     hideSplash(); hideToast();
@@ -1088,6 +1107,8 @@
     foot.hidden = true; setDock(null);
     setBar('back', { title: name === S.me ? 'My stats' : name, sub: 'Last 30 days', back: back || chooseView, backLabel: 'Back' });
     view.textContent = '';
+    view.appendChild(statTabs(name, back));
+    if (S.statTab === 'doors') return myDoors(name, back);
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     var params = { days: 30 }; if (S.role === 'admin' && name !== S.me) params.who = name;
     if (S.role === 'admin' && name === S.me) params.who = S.me;
@@ -1156,6 +1177,172 @@
       });
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
+  /* ---- my doors (2026-10-02) ----
+     Every door this person acted on, by day or week, with the fix right there:
+     change the outcome, or put a door back on the list after a slip of the thumb.
+     Crew cannot change a door someone else has marked since; they open it instead. */
+  var MD_RANGES = [['today', 'Today'], ['yday', 'Yesterday'], ['week', '7 days'], ['month', '30 days']];
+  function statTabs(name, back) {
+    var t = q('div', 'seg');
+    [['nums', 'Numbers'], ['doors', 'Doors']].forEach(function (x) {
+      var b = q('button', null, x[1]); b.type = 'button';
+      b.setAttribute('aria-pressed', String((S.statTab || 'nums') === x[0]));
+      b.addEventListener('click', function () { if ((S.statTab || 'nums') === x[0]) return; S.statTab = x[0]; statsView(name, back); });
+      t.appendChild(b);
+    });
+    return t;
+  }
+  function openDoorFrom(r, name, back) {
+    var go = function () {
+      S.region = r.region; S.area = null; S.flash = r.id;
+      S.returnTo = function () { statsView(name, back); };
+      openArea(r.area);
+    };
+    if (S.regions.length) go();
+    else api('regions').then(function (j) { if (j.ok) S.regions = j.regions; go(); }).catch(go);
+  }
+  function myDoors(name, back) {
+    var who = name;
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    var params = { days: 30 }; if (S.role === 'admin') params.who = name;
+    api('mydoors', { params: params }).then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the doors.')); return; }
+      var rows = j.doors || [];
+      var seg = q('div', 'seg'); holder.appendChild(seg);
+      var row2 = q('div', 'mdrow2');
+      var dayIn = document.createElement('input'); dayIn.type = 'date'; dayIn.setAttribute('aria-label', 'Pick a day');
+      dayIn.max = j.today; dayIn.min = isoMinus(j.today, 29);
+      if ((S.mdRange || '').indexOf('day:') === 0) dayIn.value = S.mdRange.slice(4);
+      var kind = document.createElement('select'); kind.setAttribute('aria-label', 'What was done');
+      [['all', 'Everything'], ['booked', 'Quote booked'], ['later', 'Not now'], ['miss', 'No answer'], ['nosolicit', 'No soliciting'],
+       ['back', 'Put back on the list'], ['info', 'Phone, email, note or photo only']].forEach(function (x) {
+        var o = document.createElement('option'); o.value = x[0]; o.textContent = x[1]; kind.appendChild(o);
+      });
+      kind.value = S.mdKind || 'all';
+      row2.appendChild(dayIn); row2.appendChild(kind); holder.appendChild(row2);
+      var sum = q('div', 'sub2'); holder.appendChild(sum);
+      var list = q('div'); holder.appendChild(list);
+      dayIn.addEventListener('change', function () { S.mdRange = dayIn.value ? 'day:' + dayIn.value : 'today'; draw(); });
+      kind.addEventListener('change', function () { S.mdKind = kind.value; draw(); });
+      function dayOf(r) { return isoOf(new Date(r.at * 1000)); }
+      function inRange(r) {
+        var d = dayOf(r), rg = S.mdRange || 'today';
+        if (rg.indexOf('day:') === 0) return d === rg.slice(4);
+        if (rg === 'today') return d === j.today;
+        if (rg === 'yday') return d === isoMinus(j.today, 1);
+        if (rg === 'week') return d >= isoMinus(j.today, 6);
+        return true;
+      }
+      function kindOf(r) { return r.mine ? (r.mine.outcome || 'back') : 'info'; }
+      function when(r) {
+        var dt = new Date(r.at * 1000), h = dt.getHours(), m = dt.getMinutes();
+        var t = ((h % 12) || 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' am' : ' pm');
+        return dayOf(r) === j.today ? t : dayName(dayOf(r)) + ' · ' + t;
+      }
+      function draw() {
+        seg.textContent = '';
+        MD_RANGES.forEach(function (x) {
+          var b = q('button', null, x[1]); b.type = 'button';
+          b.setAttribute('aria-pressed', String((S.mdRange || 'today') === x[0]));
+          b.addEventListener('click', function () { S.mdRange = x[0]; dayIn.value = ''; draw(); });
+          seg.appendChild(b);
+        });
+        var k = S.mdKind || 'all';
+        var shown = rows.filter(function (r) { return inRange(r) && (k === 'all' || kindOf(r) === k); });
+        var nb = shown.filter(function (r) { return r.mine && r.mine.outcome === 'booked'; }).length;
+        sum.textContent = shown.length ? shown.length + (shown.length === 1 ? ' door' : ' doors') + (nb ? ' · ' + nb + ' booked' : '') +
+          '. Newest first. Fix a mark here; open the door for notes, phone and photos.' : '';
+        list.textContent = '';
+        if (!shown.length) { list.appendChild(q('div', 'msg', rows.length ? 'Nothing here for that filter. Try 7 days or 30 days.' : 'No doors in the last 30 days yet.')); return; }
+        shown.forEach(function (r) { list.appendChild(rowFor(r)); });
+      }
+      function setMark(r, o, rv, quiet) {
+        if (o === null && !quiet && r.now && r.now.outcome === 'nosolicit' &&
+            !window.confirm('Undo the no-soliciting flag? Only if the sign was a mistake — otherwise this door gets knocked again.')) return;
+        var prev = r.now ? { outcome: r.now.outcome, revisit: r.now.revisit || '' } : null;
+        var item = { region: r.region, id: r.id, outcome: o };
+        if (o === 'later' && rv) item.revisit = rv;
+        var at = Math.floor(Date.now() / 1000);
+        S.mdLater = null; S.mdEdit = null;
+        r.now = o === null ? null : { outcome: o, by: S.me, at: at, revisit: item.revisit || '', pending: true };
+        if (who === S.me) r.mine = { outcome: o, at: at, revisit: item.revisit || '' };
+        draw();
+        api('mark', { body: item }).then(function (j2) {
+          if (j2._status === 401) return signinView('Signed out. Enter your code again.');
+          if (j2.ok) { if (r.now) r.now.pending = false; } else enqueue(item);
+          draw();
+        }).catch(function () { enqueue(item); draw(); });
+        if (!quiet) toast(o === null ? 'Back on the list' : OUT[o], r.address, function () { setMark(r, prev ? prev.outcome : null, prev ? prev.revisit : '', true); });
+      }
+      function laterRow(r) {
+        var w = q('div', 'mdlater');
+        w.appendChild(q('div', 'meta st', 'Not now — when should we come back?'));
+        var inp = document.createElement('input'); inp.type = 'date'; inp.min = j.today; inp.setAttribute('aria-label', 'Come back on');
+        if (r.now && r.now.revisit) inp.value = r.now.revisit;
+        w.appendChild(inp);
+        var bs = q('div', 'mdacts');
+        var sv = q('button', 'mdb later', 'Save'); sv.type = 'button';
+        sv.addEventListener('click', function () { setMark(r, 'later', inp.value || ''); });
+        var nd = q('button', 'mdb nosolicit', 'No date'); nd.type = 'button';
+        nd.addEventListener('click', function () { setMark(r, 'later', ''); });
+        var cx = q('button', 'undo', 'Cancel'); cx.type = 'button';
+        cx.addEventListener('click', function () { S.mdLater = null; S.mdEdit = null; draw(); });
+        bs.appendChild(sv); bs.appendChild(nd); bs.appendChild(cx); w.appendChild(bs);
+        return w;
+      }
+      function rowFor(r) {
+        var c = q('div', 'door mdrow'); c.setAttribute('data-id', r.id);
+        if (S.mdEdit === r.id && S.mdLater === r.id) S.mdEdit = null;
+        var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', r.address)); top.appendChild(q('span', 'dist', when(r))); c.appendChild(top);
+        c.appendChild(q('div', 'meta', r.area + ' · ' + r.town));
+        var now = r.now, pend = now && (now.pending || pendingFor(r.id));
+        var st = q('div', 'meta');
+        st.appendChild(q('span', 'tag ' + (pend ? 'pending' : now ? now.outcome : 'onlist'),
+          pend ? 'not sent yet' : now ? OUT[now.outcome] + (now.outcome === 'later' && now.revisit ? ' · back ' + fmtDate(now.revisit).replace(/ \d{4}$/, '') : '') : 'On the list'));
+        var bits = [];
+        if (now && now.by && now.by !== who) bits.push('changed since by ' + now.by);
+        else if (!now && r.mine && r.mine.outcome) bits.push('put back on the list since');
+        if (r.did.length) bits.push('added ' + r.did.join(', '));
+        if (bits.length) st.appendChild(q('span', null, bits.join(' · ')));
+        c.appendChild(st);
+        if (S.mdLater === r.id) { c.appendChild(laterRow(r)); return c; }
+        var mayEdit = S.role === 'admin' || !now || now.by === S.me;
+        var acts = q('div', 'mdacts');
+        if (mayEdit && S.mdEdit !== r.id) {
+          var ch = q('button', 'mdb nosolicit', 'Change'); ch.type = 'button';
+          ch.addEventListener('click', function () { S.mdEdit = r.id; S.mdLater = null; draw(); });
+          acts.appendChild(ch);
+        }
+        if (mayEdit && S.mdEdit === r.id) {
+          ['booked', 'later', 'miss', 'nosolicit'].forEach(function (o) {
+            if (now && now.outcome === o && o !== 'later') return;
+            var b = q('button', 'mdb ' + o, o === 'later' && now && now.outcome === 'later' ? 'Change date' : OUT[o]); b.type = 'button';
+            b.addEventListener('click', function () { if (o === 'later') { S.mdLater = r.id; draw(); return; } setMark(r, o, ''); });
+            acts.appendChild(b);
+          });
+          var cc = q('button', 'undo', 'Cancel'); cc.type = 'button';
+          cc.addEventListener('click', function () { S.mdEdit = null; draw(); });
+          acts.appendChild(cc);
+        }
+        if (mayEdit && now && S.mdEdit !== r.id) {
+          {
+            var pb = q('button', 'putback', 'Put back on the list'); pb.type = 'button';
+            pb.addEventListener('click', function () { setMark(r, null, ''); });
+            acts.appendChild(pb);
+          }
+        }
+        var op = q('button', 'mdopen'); op.type = 'button';
+        op.appendChild(document.createTextNode('Open door')); op.appendChild(ico('chev', 2.4));
+        op.addEventListener('click', function () { openDoorFrom(r, name, back); });
+        acts.appendChild(op);
+        c.appendChild(acts);
+        return c;
+      }
+      draw();
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
   function teamView() {
     hideToast(); S.signin = null; S.screen = 'team';
     foot.hidden = true; setDock(null);
@@ -1215,8 +1402,10 @@
     if (c) animateMark(c, d, kind, null, revisit); else markDoor(d, kind, revisit);
   }
 
+  /* back out of a neighbourhood: to My stats if the door was opened from there, else the neighbourhood list */
+  function areaBack() { S.area = null; S.mapSel = null; var f = S.returnTo; S.returnTo = null; if (f) f(); else refresh(); }
   function openArea(name) {
-    setBar('area', { title: name, sub: townLabel(), back: function () { S.area = null; refresh(); }, backLabel: 'All neighbourhoods' });
+    setBar('area', { title: name, sub: townLabel(), back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighbourhoods' });
     setDock(null); foot.hidden = true;
     view.textContent = '';
     for (var sk = 0; sk < 3; sk++) view.appendChild(q('div', 'skel'));
@@ -1224,6 +1413,7 @@
       if (!j.ok) return renderAreas();
       S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null;
+      if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss') S.showAgain = true; }
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
       /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
       if (S.dview === 'map') S.dview = 'street';
@@ -2187,7 +2377,7 @@
       }
     } else {
       setBar('area', { title: S.area, sub: townLabel() + ' · ' + S.doors.length + (S.doors.length === 1 ? ' door' : ' doors'), count: todo.length,
-        back: function () { S.area = null; S.mapSel = null; refresh(); }, backLabel: 'All neighbourhoods' });
+        back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighbourhoods' });
       S.barArea = S.area;
     }
     doorDock();

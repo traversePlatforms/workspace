@@ -729,6 +729,72 @@ if ($action === 'stats') {
     out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', $tz))->format('Y-m-d'), 'who' => $who, 'people' => $list]);
 }
 
+/* ---- my doors (2026-10-02) ------------------------------------------------
+ * Every door one person acted on in the window: marked, put back, or gave a phone,
+ * email, note or photo. Each row carries what THEY last did and what the door shows
+ * NOW, so the page can tell "still yours" from "since changed by someone else".
+ * Crew see their own; an admin may ask for anyone's (who=). Newest first. */
+if ($action === 'mydoors') {
+    $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
+    $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
+    if ($who === '') $who = $me;
+    $since = (new DateTime('today', new DateTimeZone('America/Denver')))->modify('-' . ($days - 1) . ' days')->getTimestamp();
+    $mine = function (string $file) use ($since, $who) {
+        $out = [];
+        if (!is_readable($file)) return $out;
+        $fh = @fopen($file, 'r');
+        if (!$fh) return $out;
+        while (($line = fgets($fh)) !== false) {
+            $r = json_decode(trim($line), true);
+            if (is_array($r) && isset($r['id']) && ($r['by'] ?? '') === $who && (int) ($r['at'] ?? 0) >= $since) $out[] = $r;
+        }
+        fclose($fh);
+        return $out;
+    };
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $rows = [];
+    foreach (($idx['regions'] ?? []) as $rg) {
+        $k = $rg['key'];
+        $hit = [];                                   /* door id => what this person did */
+        foreach ($mine(marksFile($k)) as $m) {
+            $h = $hit[$m['id']] ?? ['at' => 0, 'did' => []];
+            $h['mine'] = ['outcome' => $m['outcome'] ?? null, 'at' => (int) $m['at'], 'revisit' => $m['revisit'] ?? ''];
+            $h['at'] = max($h['at'], (int) $m['at']);
+            $hit[$m['id']] = $h;
+        }
+        foreach ([['phone', phonesFile($k)], ['email', emailsFile($k)], ['note', notesFile($k)], ['photo', photosFile($k)]] as [$what, $file]) {
+            foreach ($mine($file) as $r) {
+                if ($what === 'photo' && !empty($r['del'])) continue;
+                if ($what !== 'photo' && ($r[$what] ?? null) === null) continue;
+                $h = $hit[$r['id']] ?? ['at' => 0, 'did' => []];
+                $h['did'][$what] = 1;
+                $h['at'] = max($h['at'], (int) $r['at']);
+                $hit[$r['id']] = $h;
+            }
+        }
+        if (!$hit) continue;
+        $data = loadRegion($k);
+        if (!$data) continue;
+        $marks = loadMarks($k);
+        foreach ($data['areas'] as $a) {
+            foreach ($a['doors'] as $d) {
+                if (!isset($hit[$d['id']])) continue;
+                $h = $hit[$d['id']];
+                $now = $marks[$d['id']] ?? null;
+                $rows[] = [
+                    'region' => $k, 'town' => $data['label'] ?? $k, 'area' => $a['name'],
+                    'id' => $d['id'], 'address' => $d['address'], 'at' => $h['at'],
+                    'mine' => $h['mine'] ?? null, 'did' => array_keys($h['did']),
+                    'now' => $now ? ['outcome' => $now['outcome'], 'by' => $now['by'], 'at' => $now['at'], 'revisit' => $now['revisit'] ?? ''] : null,
+                ];
+                unset($hit[$d['id']]);
+            }
+        }
+    }
+    usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
+    out(['ok' => true, 'who' => $who, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'doors' => $rows]);
+}
+
 if ($action === 'lawnfix') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');

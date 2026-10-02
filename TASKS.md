@@ -619,6 +619,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-21 — My doors on My stats: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** Every door
+      the person acted on, filtered by day or week, with Change / Put back / Open door on each one.
+      Matthew's request. Also: neighbourhoods now open on Street order, not the last-used map.
+      Upload is `rounds.php` + `index.html`. 359/359 checks.
 - [ ] **SX-20 — Doors-team requests: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** My stats
       (everyone) and Team stats (admin), the full door card on the map (minimise, next dot), email
       per door, walk-through photos (shrunk and GPS-stripped on the phone, stored outside

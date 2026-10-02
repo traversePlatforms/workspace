@@ -7,6 +7,26 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ My doors on My stats — 2026-10-02: `rounds.php` + `index.html`
+
+My stats now has two tabs: **Numbers** (what it showed before) and **Doors**, which lists every door
+that person acted on in the last 30 days, newest first. That covers marked, put back, or a phone,
+email, note or photo added.
+- **Filters:** Today / Yesterday / 7 days / 30 days, any single day from the date box, and a "what
+  was done" dropdown (Quote booked, Not now, No answer, No soliciting, Put back, info only).
+- **Fix it in place:** **Change** opens the outcome buttons. Not now asks for a come-back date.
+  **Put back on the list** returns a door to the to-knock list. Every change has Undo in the toast.
+- **Open door** opens the door's neighbourhood with that card highlighted, for notes, phone, email
+  and photos. **Back** returns to the list with its filter kept.
+- **A door someone else marked after you** shows "changed since by <name>", without change
+  buttons, for crew. Admins can still change it. An admin opening someone's stats from Team
+  stats sees that person's doors.
+- Also fixed: the **Not now** tag in a neighbourhood's Done list was drawn oversized. A style for
+  the come-back chooser was leaking onto it.
+
+New server action `mydoors`. Signed out it returns 401, and crew can only ever get their own list.
+Tested: 29 new checks, and all 15 suites (359 checks) pass.
+
 ## ⚑ Neighbourhoods open on Street order — 2026-10-02, `index.html` only
 
 Looking at one neighbourhood on the map used to leave every other neighbourhood opening on the
