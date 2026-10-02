@@ -380,6 +380,10 @@
   .aerial .afoot a{display:inline-flex;align-items:center;gap:6px;background:var(--ember-ink);color:var(--on-ember);border-radius:12px;
     padding:11px 15px;font-weight:700;font-size:14px;text-decoration:none;flex:none}
   .aerial .afoot a .ic{width:17px;height:17px}
+  .geohelp b{display:block;font-size:15px;margin-bottom:4px}
+  .geohelp ol{margin:6px 0 4px;padding-left:20px;color:var(--ink);font-size:13.5px;line-height:1.5}
+  .geohelp li+li{margin-top:4px}
+  .geohelp .back{color:var(--bad)}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
     border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:13.5px;font-weight:700;cursor:pointer}
   .nsflag .ic{width:16px;height:16px}
@@ -881,7 +885,7 @@
     if (mode === 'near') {
       if (!S.here && !S.locating && !S.geoErr) { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
       if (S.locating) view.appendChild(q('div', 'msg', 'Finding where you are\u2026'));
-      else if (S.geoErr) view.appendChild(q('div', 'msg bad', S.geoErr));
+      else if (S.geoErr) view.appendChild(geoMsg());
       if (S.here && S.pickTown) {
         S.pickTown = false;
         var best = null;
@@ -1279,10 +1283,50 @@
       S.here = { lat: p.coords.latitude, lon: p.coords.longitude }; S.locating = false; cb(true);
     }, function (e) {
       S.locating = false;
-      S.geoErr = e && e.code === 1 ? 'Location is blocked for this site. Allow it in your browser settings to sort by distance.'
-                                   : 'Could not get a location fix. Try again in the open.';
+      S.geoErr = e && e.code === 1 ? 'DENIED' : 'Could not get a location fix. Try again in the open.';
       cb(false);
     }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+  }
+  /* location refused: the steps for THIS phone (2026-10-02). The home-screen app has
+     its own permission, separate from the browser tab; on iPhone it follows the
+     'Safari Websites' switch under Location Services. */
+  function phoneKind() {
+    var ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+    if (/Android/.test(ua)) return 'android';
+    return 'other';
+  }
+  function geoMsg() {
+    if (S.geoErr !== 'DENIED') return q('div', 'msg bad', S.geoErr);
+    var box = q('div', 'msg bad geohelp');
+    box.appendChild(q('b', null, 'Location is blocked on this phone'));
+    var kind = phoneKind(), app = standalone(), steps;
+    if (kind === 'ios') steps = [
+      'Settings → Privacy & Security → Location Services: turn it On.',
+      'On that same screen, scroll to Safari Websites and pick While Using the App.',
+      'Settings → Apps → Safari → Location: pick Ask or Allow (on older iPhones: Settings → Safari → Location).',
+      app ? 'Still blocked? Delete this home-screen icon, add it again from Safari (Share → Add to Home Screen), then tap Allow when it asks.'
+          : 'Still blocked? Close this tab, open the page again and tap Allow when it asks.'
+    ];
+    else if (kind === 'android') steps = [
+      'Phone Settings → Location: turn it On.',
+      'Settings → Apps → Chrome → Permissions → Location: Allow only while using the app.',
+      'In Chrome: … menu → Settings → Site settings → Location → sixfoldcolorado.com → Allow (take it off the Blocked list).',
+      app ? 'Using the home-screen icon? Long-press it → App info → Permissions → Location → Allow.'
+          : 'Then come back and tap Try again.'
+    ];
+    else steps = ['Allow location for sixfoldcolorado.com in your browser\'s site settings, and make sure the computer or phone has location turned on.'];
+    var ol = q('ol');
+    steps.forEach(function (t) { ol.appendChild(q('li', null, t)); });
+    box.appendChild(ol);
+    var b = q('button', 'back'); b.type = 'button';
+    b.appendChild(ico('refresh', 2.2)); b.appendChild(document.createTextNode('Try again'));
+    b.addEventListener('click', function () {
+      locate(function () { if (S.screen === 'areas') renderAreas(); else if (S.area) renderDoors(); });
+      if (S.screen === 'areas') renderAreas(); else if (S.area) renderDoors();
+    });
+    box.appendChild(b);
+    return box;
   }
   function metresTo(d) {
     if (!S.here || typeof d.lat !== 'number') return null;
@@ -1810,7 +1854,7 @@
     /* ---- street order, nearest to me, or a map (2026-10-01) ---- */
     if (S.dview === 'near') {
       if (S.locating) view.appendChild(q('div', 'msg', 'Finding where you are…'));
-      else if (S.geoErr) view.appendChild(q('div', 'msg bad', S.geoErr));
+      else if (S.geoErr) view.appendChild(geoMsg());
       if (S.here) {
         var byDist = function (a, b) { var ma = metresTo(a), mb = metresTo(b); return (ma === null ? 1e12 : ma) - (mb === null ? 1e12 : mb); };
         todo.sort(byDist); due.sort(byDist); again.sort(byDist);

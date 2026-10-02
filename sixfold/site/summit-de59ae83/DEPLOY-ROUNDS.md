@@ -7,6 +7,16 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Location help for the phone in hand — 2026-10-02, `index.html` only
+
+A crew member's home-screen app kept saying location was blocked after he'd allowed it in the
+browser. **The home-screen app has its own permission, separate from the browser tab.** On iPhone
+it follows the **Safari Websites** switch under Location Services, which nobody finds unprompted.
+When location is refused, the app now shows the steps **for that phone**: iPhone steps on
+iPhones (including "delete and re-add the icon" when they're using the home-screen app), Android
+steps on Android, a short general line otherwise. A **Try again** button sits in the same card.
+Tested 10/10 as an iPhone and as an Android phone; the GPS suites still pass.
+
 ## ⚑ Aerial view with the property line — 2026-10-02, `index.html` only
 
 Matthew's report: the Satellite button "doesn't hone in accurately enough and doesn't highlight

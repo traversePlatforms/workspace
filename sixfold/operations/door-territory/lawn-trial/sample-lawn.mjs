@@ -95,7 +95,9 @@ async function measure(d, rings, item) {
   const cp = ([X, Y]) => [(X - ch.origin[0]) / ch.res[0], (Y - ch.origin[1]) / ch.res[1]];
   const p00 = cp(toM(0, 0)), p10 = cp(toM(w, 0)), p01 = cp(toM(0, h)), p11 = cp(toM(w, h));
   const hx0 = Math.max(0, Math.floor(Math.min(p00[0], p10[0], p01[0], p11[0])) - 1), hy0 = Math.max(0, Math.floor(Math.min(p00[1], p10[1], p01[1], p11[1])) - 1);
-  const hx1 = Math.ceil(Math.max(p00[0], p10[0], p01[0], p11[0])) + 1, hy1 = Math.ceil(Math.max(p00[1], p10[1], p01[1], p11[1])) + 1;
+  /* stop at the tile's edge: a lot on a height-map tile boundary otherwise reads past it and fails */
+  const hx1 = Math.min(ch.im.getWidth(), Math.ceil(Math.max(p00[0], p10[0], p01[0], p11[0])) + 1), hy1 = Math.min(ch.im.getHeight(), Math.ceil(Math.max(p00[1], p10[1], p01[1], p11[1])) + 1);
+  if (hx1 <= hx0 || hy1 <= hy0) return { err: 'lot off the height-map tile' };
   const HT = (await ch.im.readRasters({ window: [hx0, hy0, hx1, hy1] }))[0], hw = hx1 - hx0;
   const local = px.map((r) => r.map(([a, b]) => [a - x0, b - y0]));
   const cls = new Uint8Array(n); let inside = 0;
