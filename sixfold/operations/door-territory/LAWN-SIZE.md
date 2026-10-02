@@ -136,7 +136,36 @@ visible lawn and adjust by the lot's tree cover, which the height map already gi
 tree-heavy lots "plus lawn under trees". The open lots still to measure (845 Circle Rd, 7378 Upton
 Ct) will set the open-lot adjustment.
 
-**Still missing: more independent measurements.** Brandon's lot confirms the boundaries and the
+## Third check, 7378 Upton Ct, Franktown, and a new filter (2026-10-02)
+
+Matthew measured only the bright watered lawn and left out the native field grass. His lawn was
+2,595 sq ft (west side 1,759; back by the pond 460; back right 376). Three of the method's patches
+matched his within −6% to +12%. Two more (549 and 614 sq ft) were **lacy, ragged shapes**: green
+flecks in shrubs and house shadow, and the edge of a big tree.
+
+**New filter: outline raggedness** (edge pixels ÷ √area; a square scores ~4). Every patch confirmed
+by hand on the three lots scored **3.7–9.3**. Upton's false patches scored 13.5 and 16.5. Scrub
+oak mostly scored 11–30. Cut-off set at **10.5**.
+
+| Lot | Hand-measured (Google) | Method, with the filter | Difference |
+|---|---|---|---|
+| 2787 Russet Sky Ct | 3,898 | 4,266 | **+9%** |
+| 1648 Marsh Hawk Cir (lawn under trees) | 2,344 | 1,866 | **−20%** |
+| 7378 Upton Ct | 2,595 | 2,808 | **+8%** |
+
+- **Open lots read about 8–9% high, and consistently so.** A fixed trim would fix it.
+- **Lawn under trees reads low**, and needs a tree-cover allowance.
+- **Scrub lots improved but aren't fixed:** Eagle Rd went from 30,063 to 11,595, Cedar Ct from
+  30,782 to 5,882. The "mostly trees" rule is still needed.
+- **⚑ The filter was tuned on the same lots it's being judged on,** so Upton's +8% is partly built
+  in. **One more lot it has never seen is needed to confirm it** (suggested: 9554 Penstemon Ct).
+- **Side effect to check:** two patchy lots with no hand measurement dropped sharply (845 Circle Rd
+  1,233 → 158; 3840 Sierra Vista Rd → 0). The filter may remove real but broken-up lawn, especially
+  dry or mid-October photos.
+- 845 Circle Rd was dropped as a test lot. Google's newer photo shows a mostly brown yard, so the
+  two pictures disagree on what's lawn. Matthew's yard total there: 7,696 sq ft.
+
+**Still missing: one more independent measurement, on a lot the filter wasn't tuned on.** Brandon's lot confirms the boundaries and the
 scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
 or a walk-sheet measurement) is the remaining test.
 

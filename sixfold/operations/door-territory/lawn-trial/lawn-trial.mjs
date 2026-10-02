@@ -11,9 +11,10 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 
 import { fileURLToPath } from 'node:url';
 const DATA = fileURLToPath(new URL('../../../site/data/rounds', import.meta.url));
+import { fileURLToPath } from 'node:url';
 const OUT = fileURLToPath(new URL('./out/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
-const T = { ctex: +(process.env.T_CTEX || 99), ndvi: +(process.env.T_NDVI || 0.36), tall: +(process.env.T_TALL || 2), short: +(process.env.T_SHORT || 1), minpx: +(process.env.T_MINPX || 150) };
+const T = { rag: +(process.env.T_RAG || 10.5), ctex: +(process.env.T_CTEX || 99), ndvi: +(process.env.T_NDVI || 0.36), tall: +(process.env.T_TALL || 2), short: +(process.env.T_SHORT || 1), minpx: +(process.env.T_MINPX || 150) };
 /* tree height: Meta + World Resources Institute, High Resolution Canopy Height Maps (1.2 m, metres, EPSG:3857) */
 const CHM = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float/chm/';
 function quadkey(lon, lat, z) { const s = Math.sin(lat * Math.PI / 180); const x = Math.floor((lon + 180) / 360 * 2 ** z), y = Math.floor((0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * 2 ** z); let q = ''; for (let i = z; i > 0; i--) { let dd = 0; const m = 1 << (i - 1); if (x & m) dd++; if (y & m) dd += 2; q += dd; } return q; }
@@ -143,8 +144,13 @@ async function measure(d) {
         const qi = qy * w + qx; if (!seen[qi] && cls[qi] === 2) { seen[qi] = 1; stack.push(qi); } } }
     /* a lawn is one smooth patch; scrub oak is green and short too, but rough and broken up */
     let ct = 0; for (const p of comp) ct += TEX[p]; ct /= comp.length;
-    if (process.env.CDIAG && comp.length >= T.minpx) console.log('   comp', comp.length, 'px, mean texture', ct.toFixed(1));
-    if (comp.length < T.minpx || ct > T.ctex) for (const p of comp) cls[p] = 3;
+    /* raggedness: edge pixels / sqrt(area). A square scores ~4, a disc ~3.5; lacy flecks score high */
+    const inC = new Set(comp); let edge = 0;
+    for (const p of comp) { const px0 = p % w, py0 = (p - px0) / w; if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => !inC.has((py0 + dy) * w + px0 + dx))) edge++; }
+    const rag = edge / Math.sqrt(comp.length);
+    if (process.env.CDIAG && comp.length >= T.minpx) console.log('   comp', comp.length, 'px, mean texture', ct.toFixed(1), 'ragged', rag.toFixed(1));
+    /* a lawn is a solid patch; shrubs, tree edges and scrub oak make lacy, ragged ones */
+    if (comp.length < T.minpx || ct > T.ctex || rag > T.rag) for (const p of comp) cls[p] = 3;
   }
   for (let k = 0; k < n; k++) { if (cls[k] === 2) lawn++; else if (cls[k] === 3) tree++; }
   const m2 = res[0] * -res[1];
@@ -169,6 +175,17 @@ async function measure(d) {
 }
 
 let sample = pick();
+if (process.env.LATLON) {   /* measure a lot by map point, e.g. a customer outside the door lists */
+  const [la, lo] = process.env.LATLON.split(',').map(Number);
+  sample = [{ id: process.env.ID || 'point', address: process.env.LABEL || 'point', town: 'ref', area: '', lat: la, lon: lo, acres: +(process.env.ACRES || 0) }];
+} else if (process.env.ADDR) {   /* measure one named door from the door lists */
+  sample = [];
+  for (const town of Object.keys(JSON.parse(readFileSync(`${DATA}/index.json`, 'utf8')).regions.map ? {} : {})) {}
+  for (const f of ['monument', 'castle-rock', 'black-forest', 'woodland-park', 'palmer-lake', 'larkspur', 'franktown', 'divide', 'florissant', 'sedalia', 'cripple-creek']) {
+    const j = JSON.parse(readFileSync(`${DATA}/${f}.json`, 'utf8'));
+    for (const a of j.areas) for (const d of a.doors) if (d.address === process.env.ADDR) sample.push({ ...d, town: f, area: a.name });
+  }
+}
 if (process.env.ONLY) sample = sample.filter((d) => process.env.ONLY.split('|').some((a) => d.address.includes(a)));
 console.log(`${sample.length} doors, thresholds ${JSON.stringify(T)}`);
 const results = [];
