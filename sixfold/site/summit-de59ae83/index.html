@@ -368,6 +368,18 @@
   .lawnfix .lrow button.on{background:var(--go);color:var(--on-go)}
   .lawnfix .lrow2{display:flex;gap:7px;margin-top:8px}
   .lawnfix .lrow2 button{flex:1;border:0;border-radius:11px;padding:9px;background:transparent;color:var(--soft);font-size:13px;font-weight:700;cursor:pointer}
+  /* aerial view: the lot, its line, the photo */
+  .aerial{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+  .aerial .ahead{background:var(--bar);color:var(--bar-ink);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 12px;display:flex;gap:10px;align-items:center}
+  .aerial .ahead b{flex:1;min-width:0;font:400 19px/1.2 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .aerial .ahead button{width:40px;height:40px;border-radius:12px;border:0;background:var(--bar-lift);color:var(--bar-ink);display:grid;place-items:center;cursor:pointer;flex:none}
+  .aerial .amap{flex:1;min-height:0;position:relative;isolation:isolate;z-index:0;background:#2a332e}
+  .aerial .afoot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    background:var(--card);border-top:1px solid var(--line)}
+  .aerial .afoot span{flex:1;min-width:190px;font-size:12.5px;line-height:1.4;color:var(--soft)}
+  .aerial .afoot a{display:inline-flex;align-items:center;gap:6px;background:var(--ember-ink);color:var(--on-ember);border-radius:12px;
+    padding:11px 15px;font-weight:700;font-size:14px;text-decoration:none;flex:none}
+  .aerial .afoot a .ic{width:17px;height:17px}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
     border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:13.5px;font-weight:700;cursor:pointer}
   .nsflag .ic{width:16px;height:16px}
@@ -1569,6 +1581,93 @@
     }).catch(function () { toast('No signal', 'The lawn answer was not saved. Try again.', null); });
   }
 
+  /* ---- aerial view (2026-10-02) ----
+     Google's links can centre a satellite map OR drop a pin, never both, and can't draw a
+     property line, so the old link landed near the lot with nothing marked. This shows
+     the lot itself: the 2023 USDA photo (public domain; tiles from Microsoft's Planetary
+     Computer, a free PREVIEW service, so it has a fallback) fitted to the parcel boundary,
+     which is read live from the Colorado statewide parcel service. Google stays one tap
+     away for a newer picture, now aimed at the lot's real centre and zoom. */
+  var PARCEL_API = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
+  var PC_API = 'https://planetarycomputer.microsoft.com/api';
+  function zoomFor(acres) { return acres >= 3 ? 18 : acres >= 1 ? 19 : 20; }
+  function googleSat(lat, lon, zoom) {
+    return 'https://www.google.com/maps/@?api=1&map_action=map&center=' + lat + '%2C' + lon + '&zoom=' + zoom + '&basemap=satellite';
+  }
+  function closeAerial() {
+    var a = document.getElementById('aerial');
+    if (a) { a.parentNode.removeChild(a); document.body.style.overflow = ''; }
+  }
+  window.addEventListener('popstate', function () { if (document.getElementById('aerial')) closeAerial(); });
+  function aerialView(d) {
+    closeAerial();
+    var box = q('div', 'aerial'); box.id = 'aerial';
+    var head = q('div', 'ahead');
+    var x = q('button'); x.type = 'button'; x.setAttribute('aria-label', 'Close the aerial view'); x.appendChild(ico('back', 2.4));
+    x.addEventListener('click', function () { if (history.state && history.state.aerial) history.back(); else closeAerial(); });
+    head.appendChild(x); head.appendChild(q('b', null, d.address || 'This lot'));
+    box.appendChild(head);
+    var mapEl = q('div', 'amap'); box.appendChild(mapEl);
+    var foot = q('div', 'afoot'), cap = q('span', null, 'Loading the photo and the property line…');
+    var g = q('a'); g.href = googleSat(d.lat, d.lon, zoomFor(d.acres)); g.target = '_blank'; g.rel = 'noopener noreferrer';
+    g.appendChild(ico('globe', 2.2)); g.appendChild(document.createTextNode('Google Maps'));
+    foot.appendChild(cap); foot.appendChild(g); box.appendChild(foot);
+    document.body.appendChild(box); document.body.style.overflow = 'hidden';
+    try { history.pushState({ aerial: 1 }, ''); } catch (e) {}           /* the phone's Back closes it */
+    var st = { photo: null, line: null, year: '' };
+    function setCap() {
+      var parts = [];
+      if (st.photo === false) parts.push('Aerial photo unavailable right now, so this is the street map. Google Maps has satellite.');
+      else if (st.photo) parts.push(st.year + ' aerial photo.');
+      if (st.line === true) parts.push('Yellow = the property line from county records (can be off by a few feet).');
+      else if (st.line === false) parts.push('The property line could not load; the orange dot is the middle of the lot.');
+      if (parts.length) cap.textContent = parts.join(' ');
+    }
+    loadLeaflet(function () {
+      if (!document.body.contains(mapEl)) return;
+      if (!window.L) { cap.textContent = 'The map could not load (no signal?). Use Google Maps.'; return; }
+      var map = L.map(mapEl, { zoomControl: true });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, maxNativeZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      map.setView([d.lat, d.lon], zoomFor(d.acres));
+      mapEl.addEventListener('click', function (e) {                 /* credit links open in a new tab, never over the app */
+        var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null;
+        if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+      }, true);
+      fetch(PC_API + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collections: ['naip'], intersects: { type: 'Point', coordinates: [d.lon, d.lat] }, query: { 'naip:year': { eq: '2023' } }, limit: 4 }) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var f = (j.features || []).sort(function (a, b) { return a.properties.gsd - b.properties.gsd; })[0];
+          if (!f) throw new Error('no photo');
+          st.year = String(f.properties.datetime).slice(0, 4);
+          L.tileLayer(PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(f.id) +
+            '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png', { maxZoom: 21, maxNativeZoom: 19, minZoom: 12,
+            attribution: 'USDA NAIP ' + st.year + ' (public domain)' }).addTo(map);
+          st.photo = true; setCap();
+        })
+        .catch(function () { st.photo = false; setCap(); });
+      fetch(PARCEL_API + '?' + new URLSearchParams({ f: 'json', geometry: d.lon + ',' + d.lat, geometryType: 'esriGeometryPoint', inSR: '4326', outSR: '4326',
+        spatialRel: 'esriSpatialRelIntersects', returnGeometry: 'true', outFields: 'OBJECTID', geometryPrecision: '7' }).toString())
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var geo = j.features && j.features[0] && j.features[0].geometry;
+          if (!geo || !geo.rings) throw new Error('no parcel');
+          var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
+          L.polygon(ll, { color: '#000', weight: 6, opacity: 0.5, fill: false, interactive: false }).addTo(map);
+          var poly = L.polygon(ll, { color: '#FFE600', weight: 3, fillColor: '#FFE600', fillOpacity: 0.07, interactive: false }).addTo(map);
+          map.fitBounds(poly.getBounds(), { padding: [26, 26], maxZoom: 20 });
+          var c = poly.getBounds().getCenter();
+          g.href = googleSat(c.lat.toFixed(6), c.lng.toFixed(6), Math.max(16, Math.min(20, map.getZoom())));
+          st.line = true; setCap();
+        })
+        .catch(function () {
+          L.circleMarker([d.lat, d.lon], { radius: 8, color: '#fff', weight: 3, fillColor: '#E4703A', fillOpacity: 1 }).addTo(map);
+          st.line = false; setCap();
+        });
+    });
+  }
+
   function satLink(d, small) {
     if (typeof d.lat !== 'number' || typeof d.lon !== 'number') return null;
     var zoom = d.acres >= 3 ? 18 : d.acres >= 1 ? 19 : 20;
@@ -1578,7 +1677,8 @@
     a.href = 'https://www.google.com/maps/@?api=1&map_action=map&center=' +
       d.lat + '%2C' + d.lon + '&zoom=' + zoom + '&basemap=satellite';
     a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.setAttribute('aria-label', 'Satellite view of ' + (d.address || 'this lot') + ' (opens Google Maps)');
+    a.setAttribute('aria-label', 'Aerial view of ' + (d.address || 'this lot') + ', with the property line');
+    a.addEventListener('click', function (e) { e.preventDefault(); aerialView(d); });
     return a;
   }
 

@@ -7,6 +7,28 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Aerial view with the property line — 2026-10-02, `index.html` only
+
+Matthew's report: the Satellite button "doesn't hone in accurately enough and doesn't highlight
+the property." The cause: it sent Google Maps the **centre of the parcel** with satellite on. On a
+big lot that's well away from the house, and **Google's links can't show satellite and drop a pin
+at the same time, or draw a property line at all.** (Address points weren't the fix either: in El
+Paso they mark the street frontage. Brandon's sits 29 m from the lot centre, on the side away from
+his house.)
+
+**Now Satellite opens an aerial view inside the app:**
+- the 2023 USDA photo **fitted to that exact lot**, with **the property line in yellow**, read live
+  from the Colorado statewide parcel service;
+- a **Google Maps** button for a newer picture, now aimed at the lot's real centre and zoom.
+
+Fallbacks: if the photo service is down, it shows the street map and says so; if the line can't
+load, it shows a dot at the lot centre and says so. The phone's Back button closes it.
+
+The photo tiles come from Microsoft's Planetary Computer. The imagery is public domain, but the
+service is a free **preview**, and its terms say not to rely on it for anything mission-critical.
+That's why Google stays one tap away. Tested 9/9 on Brandon's lot (outline drawn, photo loaded,
+view fitted, Back closes), plus all ten other suites (272 checks).
+
 ## ⚑ Lawn level per door (SX-19) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
 
 | From | To |
