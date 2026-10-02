@@ -7,7 +7,17 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Fixes from the first live look — 2026-10-02, `index.html` only
+## ⚑ Doors to come back to — 2026-10-02, `index.html` only
+
+With about 30,000 doors, a no-answer showed only as one chip on one neighbourhood card among
+thousands. The town screen now shows **"N doors to come back to"**, counting every no-answer
+and every door whose come-back date has arrived, **across every town**. Tapping it lists just
+those neighbourhoods, grouped by town. Tapping one switches to its town and opens it at the
+right section (No answer, or Due to revisit). Built from counts the page already loads, so it
+makes no extra request. Also fixed: opening a neighbourhood reset the scroll after drawing,
+which undid any jump to a section. 8/8 new checks plus the earlier suites.
+
+## ⚑ Fixes from the first live look — 2026-10-02, `index.html` only  *(live 2026-10-02)*
 
 Matthew's notes after signing in on phone and desktop:
 - **An empty black bar on the report page (and any page without a view switch).** The page

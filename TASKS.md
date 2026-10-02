@@ -609,7 +609,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Chrome reports it installable; denials hold.
       **Follow-up fixes built 2026-10-02 after his first live look (awaiting upload, `index.html`
       only):** empty bar on the report page, the dock covering text, Quote booked green → ember,
-      and no-answer doors made findable with "Put back on the list". 220/220. Built from the approved preview. **Upload is `index.html` plus five new
+      and no-answer doors made findable with "Put back on the list". 220/220. **Live and verified
+      2026-10-02.** Then **"Doors to come back to"** (every no-answer and due door, across all
+      towns, one tap to the right neighbourhood): built and tested, awaiting upload, `index.html` only. Built from the approved preview. **Upload is `index.html` plus five new
       files** (manifest + 4 icons) into `public_html/summit-de59ae83/`. The API and door data are
       unchanged. Includes the home-screen install, the splash, the keypad sign-in, motion with Undo,
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
