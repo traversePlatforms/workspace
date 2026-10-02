@@ -78,6 +78,21 @@ Brandon's figures: **2.75 acres; house 1,600 sq ft footprint** (two storeys, 3,2
 | **House, as a scale check** | Measured by hand on the 2023 photo against a 3 m grid: roof **≈ 160–165 m², ≈ 1,750 sq ft**. A 1,600 sq ft footprint plus eaves lands there. **The photo's scale is right.** (The automatic colour test couldn't find the roof: it's a green-grey, close to the pines) |
 | **Lawn** | **≈ 1,200 sq ft lawn against 104,500 sq ft of trees**. The lot is almost entirely pine. This is exactly the wooded-lot case: the app should show **"mostly trees"**, not a lawn number. Fire badge: high |
 
+## Reference lot: Kara's, 3846 Deboodt Ct (2026-10-02)
+
+Her figures: **1-acre lot; 1,543 sq ft garage; 2,318 sq ft finished above ground, 2,574 below.**
+Her notes record **~¾ acre of turf**, carried from job 2 and not re-measured.
+
+- **Finding it:** Zillow and the post office call it Colorado Springs 80908; El Paso County files
+  it as **Monument** 80908. Searches using "Colorado Springs" found nothing; the county's address
+  suggester found it. The address point sits in the street, so the lot was identified from the
+  parcels fronting Deboodt Ct.
+- **Lot size:** both candidate lots measure **1.00 acre** by the boundary (43,547 and 43,616 sq ft).
+  Matches.
+- **Lawn:** **can't be tested. The house wasn't built yet.** The 19 Oct 2023 photo shows one lot as
+  a mowed empty field and the next as a foundation under construction. This is failure mode 4 in
+  action, and it's why every lawn figure must carry its photo date.
+
 **Still missing: a lawn measured on the ground.** Brandon's lot confirms the boundaries and the
 scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
 or a walk-sheet measurement) is the remaining test.
