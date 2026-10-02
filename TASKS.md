@@ -413,8 +413,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **Still needs a phone call, per jurisdiction. Pairs with SX-10**, which is already a call
       to a Colorado Springs public body.
 
-- [ ] **SX-13 — “No soliciting” flags in the rounds app: ✅ BOTH LEVELS BUILT AND TESTED 2026-10-01,
-      awaiting upload** (ticks when live). **Door:** a fourth outcome, `nosolicit`, under Not now.
+- [x] **SX-13 — “No soliciting” flags in the rounds app: ✅ BOTH LEVELS LIVE 2026-10-02**
+      (uploaded and checked by Matthew on his phone). **Door:** a fourth outcome, `nosolicit`, under Not now.
       It counts as done and leaves the hazard count, and Undo asks first. **Neighbourhood:** any
       crew member can raise it, only an admin can clear it, and it warns rather than hides. It is
       **stored against the door ids, not the name**, and a simulated rename-and-split rebuild left
@@ -587,8 +587,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       publishes an assessor layer with sale data. **The app must show El Paso doors cleanly
       with the fields absent**, not as blanks that look like a bug.
 
-- [ ] **SX-16 — Notes, “come back when”, walkable neighbourhoods: ✅ BUILT AND TESTED 2026-10-01,
-      awaiting upload.** My top three from the improvements list, shipped together.
+- [x] **SX-16 — Notes, “come back when”, walkable neighbourhoods: ✅ LIVE 2026-10-02.** My top three from the improvements list, shipped together.
       **Notes** on every door (500 chars, who and when, in the export). **“Not now” asks when to
       come back** — a month, three months, spring, fall, a date or none — and the door returns in a
       **“Due to revisit”** section when its date arrives. **The date rides on the mark**, so it is
@@ -598,8 +597,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       same-street pieces being glued back together by name. Clashing names now carry a
       house-number range (*“Wolf Village Dr 5738–5842”*). 36/36 tests. **Ticks when live.**
       **The rest of the improvements list is built too: see SX-17.**
-- [ ] **SX-17 — Slimmer cards, town progress line, nearest-door GPS sort, neighbourhood map,
-      admin "Quotes to build": ✅ BUILT AND TESTED 2026-10-01, awaiting upload** (ticks when live).
+- [x] **SX-17 — Slimmer cards, town progress line, nearest-door GPS sort, neighbourhood map,
+      admin "Quotes to build": ✅ LIVE 2026-10-02.** Checked: page byte-identical to the tested
+      file; denials hold; Matthew confirmed Quotes to build, badges/satellite, house-number names.
       Built in the same pass as SX-13 and SX-16, so **everything from 2026-10-01 goes up as ONE
       upload**: `rounds.php`, `index.html` and the 12 door files. See the top of DEPLOY-ROUNDS.md.
       The map is Leaflet from cdnjs, pinned by checksum, on OpenStreetMap tiles. Quotes-to-build
