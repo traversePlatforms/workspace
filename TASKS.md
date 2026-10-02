@@ -604,8 +604,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       upload**: `rounds.php`, `index.html` and the 12 door files. See the top of DEPLOY-ROUNDS.md.
       The map is Leaflet from cdnjs, pinned by checksum, on OpenStreetMap tiles. Quotes-to-build
       lives inside the door app, so SX-2b gets no fourth copy. **180/180 checks** across six suites.
-- [ ] **SX-18 — The new look for door rounds: ✅ BUILT AND TESTED 2026-10-02, awaiting upload**
-      (ticks when live). Built from the approved preview. **Upload is `index.html` plus five new
+- [x] **SX-18 — The new look for door rounds: ✅ LIVE 2026-10-02.** Checked live: page and all five
+      new files byte-identical to the tested build; keypad sign-in renders with no script errors;
+      Chrome reports it installable; denials hold. Built from the approved preview. **Upload is `index.html` plus five new
       files** (manifest + 4 icons) into `public_html/summit-de59ae83/`. The API and door data are
       unchanged. Includes the home-screen install, the splash, the keypad sign-in, motion with Undo,
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
