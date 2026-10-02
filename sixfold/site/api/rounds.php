@@ -316,6 +316,7 @@ if ($action === 'area') {
             $p = $phones[$d['id']] ?? null;
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
+                'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by']] : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] : null,

@@ -7,12 +7,38 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Phone numbers added 2026-10-01 — upload these two (SX-14)
+## ⚑ Phone numbers + satellite view, 2026-10-01 — ONE upload, three parts (SX-14)
 
 | From | To | Note |
 |---|---|---|
-| `api/rounds.php` | `public_html/api/rounds.php` | over the existing one — adds the `phone` action |
-| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` | over the existing one — the phone field |
+| `api/rounds.php` | `public_html/api/rounds.php` | over the existing one — the `phone` action, and coordinates on each door |
+| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` | over the existing one — the phone field and the satellite link |
+| `data/rounds/*.json` | **`sixfold-data/rounds/`** — beside `public_html`, NOT inside it | the door files, now carrying each parcel’s coordinates |
+
+**⚑ The satellite link needs the new door files.** Upload the page without them and the link
+simply does not appear (it hides itself when a door has no coordinates) — nothing breaks, but
+nothing shows either. All three together.
+
+### Satellite view
+
+Each door shows **"Satellite view ↗"**, which opens Google Maps in satellite mode on that
+parcel — in the Maps app on a phone, if installed. It is the Google Earth step in Via’s
+funnel: **see the trees and brush crowding the house before knocking or quoting.** Booked
+quotes in Done get a smaller one, for a look before the estimate visit.
+
+- **Uses the parcel centroid, not the address.** Rural addresses here can geocode to the
+  nearest road; the coordinates come from the parcel boundary itself.
+- **Zoom follows lot size** — 20 under an acre, 19 for 1–3, 18 from 3 up — because the
+  centroid is the middle of the *lot*, not the house, and a 10-acre lot needs the room.
+- **Format is Google’s documented Maps URL** (`map_action=map`, `basemap=satellite`), checked
+  against Google’s own docs rather than remembered.
+- **Coordinates were carried through the pipeline**, not bolted on: they were already parsed
+  by `build-walklist-pdf.mjs` for the neighbourhood clustering and thrown away on the line
+  that writes the sidecar. All 31,422 doors carry them, all inside Colorado; the rebuild was
+  verified a pure superset (same doors, same ids) before shipping.
+- **Tested:** 8 checks on a scratch copy, then the link followed in a real browser — it opened
+  Google Maps in satellite on 480 High Rd, Divide: a 10-acre lot that is nearly solid conifer,
+  which is the whole point.
 
 **Nothing to create by hand.** The first number saved creates `phones-<town>.log` in
 `sixfold-data/rounds/`, beside the marks logs and outside `public_html` for the same reason.

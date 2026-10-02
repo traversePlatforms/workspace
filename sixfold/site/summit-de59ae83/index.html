@@ -150,6 +150,8 @@
   /* on a Done row the number wraps onto its own full-width line */
   .done{flex-wrap:wrap}
   .done .ph{flex-basis:100%;margin-top:4px}
+  a.sat{display:inline-block;margin-top:6px;font:500 13px var(--sans);color:var(--accent);text-decoration:none}
+  .done a.sat{margin-top:3px;font-size:12px}
   .undo{background:none;border:0;color:var(--accent);font:500 12.5px var(--sans);cursor:pointer;padding:4px}
 
   table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -435,6 +437,23 @@
       return false;
     });
   }
+  /* ---- satellite view (2026-10-01) ----
+     The Google Earth step from Via's funnel: look at the lot from above before
+     knocking or quoting — trees and brush crowding the house are the job.
+     Uses the parcel centroid, not the address: rural addresses here can geocode
+     to the nearest road. Zoom scales with lot size because the centroid is the
+     middle of the LOT, not the house, and a 10-acre lot needs room. Format is
+     Google's documented Maps URL; on a phone it opens the Maps app if installed. */
+  function satLink(d, small) {
+    if (typeof d.lat !== 'number' || typeof d.lon !== 'number') return null;
+    var zoom = d.acres >= 3 ? 18 : d.acres >= 1 ? 19 : 20;
+    var a = q('a', 'sat', small ? 'Satellite ↗' : 'Satellite view ↗');
+    a.href = 'https://www.google.com/maps/@?api=1&map_action=map&center=' +
+      d.lat + '%2C' + d.lon + '&zoom=' + zoom + '&basemap=satellite';
+    a.target = '_blank'; a.rel = 'noopener noreferrer';
+    return a;
+  }
+
   function phoneBlock(d) {
     var box = q('div', 'ph');
     if (S.editPhone === d.id) {
@@ -520,6 +539,7 @@
       var card = q('div', 'door');
       card.appendChild(q('div', 'addr', d.address));
       card.appendChild(q('div', 'meta', d.acres.toFixed(2) + ' acres · ' + d.owner));
+      var sat = satLink(d); if (sat) card.appendChild(sat);
       if (d.mark && d.mark.outcome === 'miss') {
         var was = q('div', 'meta', 'No answer' + (d.mark.by ? ' · ' + d.mark.by : ''));
         was.style.color = 'var(--miss)';
@@ -555,6 +575,7 @@
         var lhs = q('div');
         lhs.appendChild(q('div', 'addr', d.address));
         if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
+        var sat2 = satLink(d, true); if (sat2) lhs.appendChild(sat2);   /* look before the quote visit */
         var rhs = q('div');
         rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';
         var pending = d.mark.pending || pendingFor(d.id);

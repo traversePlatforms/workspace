@@ -49,7 +49,7 @@ for (const [key, label, fileName] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null };
     }),
   }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');

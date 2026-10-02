@@ -374,7 +374,13 @@ writeFileSync(join(HERE, `${areaSlug}-areas.json`), JSON.stringify({
     const ps = pages.filter((p) => (p.area ?? p.region) === name);
     return {
       name, region: ps[0].region, avg: ps[0].avg ?? null,
-      doors: ps.flatMap((p) => p.rows).map((d) => ({ a: d.address, ac: +d.acres.toFixed(2), o: d.owner })),
+      /* la/lo added 2026-10-01 for the satellite link. They were already parsed for the
+         clustering and then dropped right here. Parcel centroid, not a geocoded guess. */
+      doors: ps.flatMap((p) => p.rows).map((d) => ({
+        a: d.address, ac: +d.acres.toFixed(2), o: d.owner,
+        la: Number.isFinite(d.lat) ? +d.lat.toFixed(6) : null,
+        lo: Number.isFinite(d.lon) ? +d.lon.toFixed(6) : null,
+      })),
     };
   }),
 }), 'utf8');
