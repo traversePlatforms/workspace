@@ -7,7 +7,46 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑⚑ THE ONE UPLOAD — everything built 2026-10-01, in a single pass
+## ⚑ The new look — 2026-10-02, page + five new files (SX-18)
+
+| From | To |
+|---|---|
+| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` (over the existing one) |
+| `manifest.json`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` | `public_html/summit-de59ae83/` (**new**, next to `index.html`) |
+
+**`rounds.php` and the door files are unchanged.** Don't re-upload them. Then flush the cache.
+
+What changed, from the approved preview (https://claude.ai/artifact/Q32vDrTndXxnazGLuxooWJ):
+- **Sign in:** a dark screen with the Ridge mark, six code boxes and a big number pad. Six digits
+  sends the code. A wrong code shakes and clears. A keyboard works too.
+- **App bar:** a dark Timber bar on every screen, with the mark, the town picker and your initials.
+  Tap your initials to get back to field tools and sign out.
+- **Neighbourhoods:** a town summary card with a progress ring, a ring on each neighbourhood, and
+  coloured chips. The sort switch is a dock at the bottom of the screen.
+- **Doors:** a coloured edge for fire hazard, small Satellite / + Phone / + Note chips, and solid
+  buttons with icons.
+  - Marking a door stamps it, slides it away, ticks the count down and shows a toast with
+    **Undo**. The toast names what was marked and **never says "saved"**: offline marks still
+    show *not sent yet*.
+  - An ember burst on Quote booked, and a finished screen when the last door is marked. A
+    no-answer doesn't count as finished.
+- **Map:** tapping a dot opens a card from the bottom. "You" is a pulsing dot.
+  - **The map's credit links now open in a new tab.** Testing found that tapping the
+    OpenStreetMap link navigated the whole app away mid-round.
+- **Home screen:** a manifest and icons. Add it from the browser's share menu and it opens full
+  screen with the Sixfold icon. A splash with the mark shows while it loads.
+  - **No service worker, on purpose.** The page always loads fresh, so an upload is never hidden
+    behind a stale offline copy. Offline marking works exactly as before.
+- Phones set to reduce motion get every change without the animation.
+
+**Tested:** **211 checks, all passing**, on a scratch copy with throwaway codes:
+- a new 30-check suite for the look: keypad, wrong code, keyboard entry, motion on, toast, Undo
+  on the server, the finished screen, the icons, no script errors;
+- all six earlier suites, updated for the new sign-in and map card.
+
+Rendered at iPhone width in light and dark.
+
+## ⚑⚑ THE ONE UPLOAD — everything built 2026-10-01, in a single pass  *(live 2026-10-02)*
 
 **Every section below dated 2026-10-01 goes up in this one upload.** Nothing from today has
 been uploaded yet; the files on disk carry all of it.
