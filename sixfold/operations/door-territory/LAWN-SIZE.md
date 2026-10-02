@@ -68,6 +68,20 @@ are also right. New construction shows 0, correctly (bare dirt in 2023).
   rows, so neighbouring lots share reads; lot by lot it would be tens of gigabytes. Must pass
   `verify-superset.mjs` like any rebuild.
 
+## Reference lot: Brandon's, 17890 Sierra Way, Monument (2026-10-02)
+
+Brandon's figures: **2.75 acres; house 1,600 sq ft footprint** (two storeys, 3,200 sq ft total).
+
+| Check | Result |
+|---|---|
+| **Lot area** | The parcel boundary measures **109,580 sq ft = 2.52 acres**, matching the county's 2.52. **Brandon's 2.75 is 0.23 acres (~10,000 sq ft) more.** Worth checking his deed or plat against the county; a road easement or a second parcel are common reasons |
+| **House, as a scale check** | Measured by hand on the 2023 photo against a 3 m grid: roof **≈ 160–165 m², ≈ 1,750 sq ft**. A 1,600 sq ft footprint plus eaves lands there. **The photo's scale is right.** (The automatic colour test couldn't find the roof: it's a green-grey, close to the pines) |
+| **Lawn** | **≈ 1,200 sq ft lawn against 104,500 sq ft of trees**. The lot is almost entirely pine. This is exactly the wooded-lot case: the app should show **"mostly trees"**, not a lawn number. Fire badge: high |
+
+**Still missing: a lawn measured on the ground.** Brandon's lot confirms the boundaries and the
+scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
+or a walk-sheet measurement) is the remaining test.
+
 ## Fact-check log
 
 - **Verified:**
@@ -80,6 +94,7 @@ are also right. New construction shows 0, correctly (bare dirt in 2023).
   and a lawn-heavy lot (Marsh Hawk) have near-identical median brightness (52 vs 49) and
   overlapping texture. Patch roughness for real lawns beside trees (13–20) overlaps scrub oak
   (14–25).
+- **Verified against a real lot (Brandon's):** boundary area matches the county exactly; photo scale matches his house footprint within the eaves.
 - **Not verified:** the canopy-height licence wording (understood CC BY 4.0); the acquisition
   dates behind the height map (it has a date layer, not yet read); accuracy on a lot measured on
   the ground. *Kara's lawn, or any lot Sixfold has walked, would be the first true check.*
