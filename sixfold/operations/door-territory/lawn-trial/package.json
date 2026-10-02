@@ -1,0 +1,1 @@
+{ "private": true, "type": "module", "description": "Lawn-size trial, 2026-10-02. npm install, then: node lawn-trial.mjs", "dependencies": { "geotiff": "^2.1.3", "proj4": "^2.22.0", "pngjs": "^7.0.0" } }

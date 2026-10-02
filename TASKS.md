@@ -619,6 +619,15 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-19 — Lawn size per door, the aeration counterpart to the fire map. TRIAL DONE 2026-10-02,
+      decision pending.** 2023 USDA aerial photos (30 cm, near-infrared, public domain) plus a tree-
+      height map: green and under 1 m counts as lawn. **Suburban lots photographed in September come
+      out right**, e.g. Russet Sky's outline matches the photo. **Four failure modes:** mid-October
+      photos undercount (13 of 39 lots); brown dormant lawns are missed; scrub oak on wooded acreage
+      reads as lawn; anything after 2023 isn't in the photo. **Next if he wants it:** add the 2021
+      photo as a second look, show "mostly trees" on wooded lots, then a "Most lawn" sort and a
+      per-door figure. **First true check: one lot Sixfold has measured on the ground.** Write-up:
+      [LAWN-SIZE.md](sixfold/operations/door-territory/LAWN-SIZE.md).
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
       re-bundle before anyone reviews anything.

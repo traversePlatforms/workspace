@@ -1,0 +1,4 @@
+# contact-sheet pictures: aerial photos of private lots with addresses, ~30 MB.
+# Kept on disk (and in the OneDrive mirror), not in git.
+*.png
+sheet.html
