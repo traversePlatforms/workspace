@@ -363,7 +363,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       backwards. Revisit when the insurance exists.
       **⚑ Execution deferred to a fresh day** — the regenerate + upload is the expensive half.
       Remember: publish → regenerate → upload → flush.
-- [ ] **SX-9b — Wildfire hazard per door: ✅ RESEARCHED 2026-10-01, ready to build.** Write-up:
+- [ ] **SX-9b — Wildfire hazard per door: ✅ BUILT AND TESTED 2026-10-01 — awaiting upload.**
+      A badge on every door and a **“Most fire hazard”** sort on the neighbourhood list, which
+      ranks by high-hazard doors **still to knock** (Palmer Lake: Forest View Way first, 46 left,
+      18 very high). 17/17 tests, light and dark checked, every colour ≥ 4.5:1. Ships in the
+      same upload as the phone field and satellite link. **Ticks when live.**
+      Pipeline step `sample-wildfire.mjs` (incremental, cached by coordinate). Write-up:
       [WILDFIRE-HAZARD.md](sixfold/operations/door-territory/WILDFIRE-HAZARD.md).
       **The undocumented `TetraTechWUI` layer is replaced by the USDA Forest Service’s Wildfire
       Hazard Potential (2023, 270 m)** — open, documented, authoritative. Class mapping **proven on

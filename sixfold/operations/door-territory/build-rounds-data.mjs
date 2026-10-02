@@ -36,6 +36,12 @@ const slug = (s) => s.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g
 
 mkdirSync(OUT, { recursive: true });
 
+/* Wildfire hazard class per door, from sample-wildfire.mjs (USFS WHP 2023).
+   Keyed by coordinate. Missing cache = no badges; nothing else changes. */
+const FIRE_CACHE = join(HERE, 'wildfire-cache.json');
+const fireByCoord = existsSync(FIRE_CACHE) ? JSON.parse(readFileSync(FIRE_CACHE, 'utf8')) : {};
+const fireOf = (d) => (typeof d.la === 'number' && typeof d.lo === 'number') ? (fireByCoord[`${d.la},${d.lo}`] ?? null) : null;
+
 const index = [];
 for (const [key, label, fileName] of SOURCES) {
   const p = join(HERE, fileName);
@@ -49,7 +55,7 @@ for (const [key, label, fileName] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d) };
     }),
   }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');

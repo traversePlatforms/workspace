@@ -90,6 +90,8 @@ mirrored to OneDrive. They regenerate in a few minutes; nothing is lost by not k
 - **No zoning filter.** `Public/ZoningConsolidatedEPC` exists and carries a `ZoneCategory`
   field; the acre band plus the owner-occupancy test already removes most commercial parcels,
   so it was left out rather than half-built.
+- **✅ Wildfire layer: built 2026-10-01** — USFS Wildfire Hazard Potential via `sample-wildfire.mjs`;
+  see [WILDFIRE-HAZARD.md](WILDFIRE-HAZARD.md). The note below is the old reason it was blocked.
 - **No wildfire layer yet.** `Public/TetraTechWUI` is there and carries a `gridcode`, but
   **nothing on the service documents what the gridcode values mean**, so mapping them to hazard
   classes would be inventing a legend. Needs the source document before it goes in.
@@ -314,3 +316,13 @@ unless the page count is checked, which is why every build asserts `sheets == pa
 
 The owner column is now clipped to one line with an ellipsis. The address and the lot size are
 what a door is chosen on; the full name is in the CSV if anyone needs it.
+
+## Rebuilding the door data — the full pipeline (2026-10-01)
+
+1. **Snapshot** `../../site/data/rounds/` first.
+2. Builder per town — `build-walklist.mjs` (El Paso) or `build-walklist-co.mjs` (statewide), with
+   that town's radius and `--out=<town>.csv`.
+3. `node build-walklist-pdf.mjs <town>.csv` — writes the sidecar (with coordinates) and the book.
+4. `node sample-wildfire.mjs` — fire hazard per coordinate, incremental, cached.
+5. `node build-rounds-data.mjs` — the files the app reads.
+6. `node verify-superset.mjs <snapshot>` — **must say PURE SUPERSET before any upload.**

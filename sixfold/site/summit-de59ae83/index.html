@@ -27,6 +27,9 @@
     --line:#DCD7CB; --faint:#E9E4DA;
     --accent:#2F7A4F; --on-accent:#FFFFFF;
     --booked:#2F7A4F; --later:#B5761F; --miss:#6E7A72; --bad:#A33A2A;
+    /* wildfire hazard — every pairing checked >= 4.5:1, and every badge says its level
+       in words, so colour is never the only signal */
+    --fire-vh:#9E2A1C; --fire-h:#A8460F; --fire-m:#85600F; --fire-low:#5F6B63; --fire-on:#FFFFFF;
     --shadow:0 1px 2px rgba(20,32,27,.06), 0 6px 18px rgba(20,32,27,.05);
     --serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
     --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
@@ -39,6 +42,7 @@
       --line:#2A352E; --faint:#222C26;
       --accent:#8AA07A; --on-accent:#0E1512;
       --booked:#8AA07A; --later:#D9A05B; --miss:#8B968E; --bad:#E0715C;
+      --fire-vh:#F0806A; --fire-h:#F2A35E; --fire-m:#E0B85E; --fire-low:#9AA79E; --fire-on:#0E1512;
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
     }
   }
@@ -151,6 +155,23 @@
   .done{flex-wrap:wrap}
   .done .ph{flex-basis:100%;margin-top:4px}
   a.sat{display:inline-block;margin-top:6px;font:500 13px var(--sans);color:var(--accent);text-decoration:none}
+
+  /* wildfire hazard (SX-9b) */
+  .fire{display:inline-block;margin-top:6px;font:600 10px var(--mono);letter-spacing:.07em;
+    text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+  .fire.f5{background:var(--fire-vh);border-color:var(--fire-vh);color:var(--fire-on)}
+  .fire.f4{background:var(--fire-h);border-color:var(--fire-h);color:var(--fire-on)}
+  .fire.f3{color:var(--fire-m)}
+  .fire.f1,.fire.f2{color:var(--fire-low)}
+  .fire.fx{color:var(--fire-low);border-style:dashed}
+  .done .fire{margin-top:4px;font-size:9px;padding:2px 6px}
+  .hot{display:inline-block;margin-left:2px;padding:1px 7px;border-radius:999px;font-weight:600;
+    background:var(--fire-h);color:var(--fire-on)}
+  .hot.v{background:var(--fire-vh)}
+  .sortbar{display:flex;gap:6px;margin:4px 0 12px}
+  .sortbar button{flex:1;font:600 12.5px var(--sans);padding:10px 4px;border-radius:8px;
+    border:1px solid var(--line);background:transparent;color:var(--soft);cursor:pointer}
+  .sortbar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .done a.sat{margin-top:3px;font-size:12px}
   .undo{background:none;border:0;color:var(--accent);font:500 12.5px var(--sans);cursor:pointer;padding:4px}
 
@@ -331,7 +352,36 @@
     view.appendChild(q('h2', null, r.label + ' — pick a neighbourhood'));
     var pend = queue().length;
     if (pend) view.appendChild(q('div', 'msg bad', pend + ' mark' + (pend === 1 ? '' : 's') + ' still waiting for signal. Keep the page open.'));
-    r.areas.forEach(function (a) {
+
+    /* Sort: map order keeps walking routes sensible; fire hazard puts the
+       neighbourhoods with the most high-hazard doors STILL TO KNOCK first. The
+       choice is remembered on this phone only. */
+    var hasFire = r.areas.some(function (a) { return typeof a.hot === 'number'; });
+    var mode = 'map';
+    try { mode = localStorage.getItem('sixfold.rounds.sort') || 'map'; } catch (e) {}
+    if (!hasFire) mode = 'map';
+    if (hasFire) {
+      var bar0 = q('div', 'sortbar');
+      [['map', 'Map order'], ['fire', 'Most fire hazard']].forEach(function (m) {
+        var b = q('button', null, m[1]); b.type = 'button';
+        b.setAttribute('aria-pressed', String(mode === m[0]));
+        b.addEventListener('click', function () {
+          try { localStorage.setItem('sixfold.rounds.sort', m[0]); } catch (e) {}
+          renderAreas();
+        });
+        bar0.appendChild(b);
+      });
+      view.appendChild(bar0);
+    }
+    var list = r.areas.slice();
+    if (mode === 'fire') {
+      list.sort(function (x, y) {
+        return (y.hot || 0) - (x.hot || 0) || (y.vhot || 0) - (x.vhot || 0) ||
+               (y.total - y.done - (y.noanswer || 0)) - (x.total - x.done - (x.noanswer || 0));
+      });
+    }
+
+    list.forEach(function (a) {
       var na = a.noanswer || 0;
       var left = a.total - a.done - na;          /* a no-answer is not finished */
       var btn = q('button', 'area');
@@ -347,6 +397,12 @@
         var tag = q('span', 'again', na + ' to try again');
         subEl.appendChild(document.createTextNode(' '));
         subEl.appendChild(tag);
+      }
+      if (a.hot) {
+        var h = q('span', 'hot' + (a.vhot ? ' v' : ''),
+          a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : ''));
+        subEl.appendChild(document.createTextNode(' '));
+        subEl.appendChild(h);
       }
       btn.appendChild(subEl);
       var bar = q('div', 'bar'); var fill = q('i');
@@ -444,6 +500,20 @@
      to the nearest road. Zoom scales with lot size because the centroid is the
      middle of the LOT, not the house, and a 10-acre lot needs room. Format is
      Google's documented Maps URL; on a phone it opens the Maps app if installed. */
+  /* ---- wildfire hazard badge (SX-9b) ----
+     USFS Wildfire Hazard Potential 2023, sampled at the parcel centroid. 270 m cells,
+     so it rates the NEIGHBOURHOOD — the satellite link is the per-house check.
+     ⚑ Class 6/7 is shown as "not rated", NEVER as low: 6 means the cell is mapped
+     as town or farmland, and a wooded lot can sit inside one. */
+  var FIRE = { 5: 'Very high fire hazard', 4: 'High fire hazard', 3: 'Moderate fire hazard',
+               2: 'Low fire hazard', 1: 'Very low fire hazard' };
+  function fireBadge(d) {
+    var f = d.fire;
+    if (f === null || f === undefined) return null;          /* no data yet: say nothing */
+    if (FIRE[f]) return q('span', 'fire f' + f, FIRE[f]);
+    return q('span', 'fire fx', 'Fire map: not rated');       /* 6 town/farm, 7 water */
+  }
+
   function satLink(d, small) {
     if (typeof d.lat !== 'number' || typeof d.lon !== 'number') return null;
     var zoom = d.acres >= 3 ? 18 : d.acres >= 1 ? 19 : 20;
@@ -538,6 +608,7 @@
     function doorCard(d) {
       var card = q('div', 'door');
       card.appendChild(q('div', 'addr', d.address));
+      var fb = fireBadge(d); if (fb) card.appendChild(fb);
       card.appendChild(q('div', 'meta', d.acres.toFixed(2) + ' acres · ' + d.owner));
       var sat = satLink(d); if (sat) card.appendChild(sat);
       if (d.mark && d.mark.outcome === 'miss') {
@@ -574,6 +645,7 @@
         var row = q('div', 'door done');
         var lhs = q('div');
         lhs.appendChild(q('div', 'addr', d.address));
+        var fb2 = fireBadge(d); if (fb2) lhs.appendChild(fb2);
         if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
         var sat2 = satLink(d, true); if (sat2) lhs.appendChild(sat2);   /* look before the quote visit */
         var rhs = q('div');

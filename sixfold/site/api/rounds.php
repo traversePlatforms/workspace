@@ -287,14 +287,22 @@ if ($action === 'regions') {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
                separately so a second pass round the neighbourhood is visible
                rather than something someone has to remember to plan. */
-            $done = 0; $noanswer = 0;
+            /* hot / vhot: high (4) and very high (5) fire-hazard doors STILL TO KNOCK.
+               A finished door is not a reason to send anyone back, so a neighbourhood
+               sinks down the hazard sort as its high-hazard doors get done. A no-answer
+               still needs a knock, so it still counts. Class 6 never counts as safe;
+               it simply is not counted as high. */
+            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0;
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
+                $f = (int) ($d['fire'] ?? 0);
+                $open = !$m || $m['outcome'] === 'miss';
+                if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if (!$m) continue;
                 if ($m['outcome'] === 'miss') $noanswer++; else $done++;
             }
             $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
-                        'done' => $done, 'noanswer' => $noanswer];
+                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
@@ -317,6 +325,7 @@ if ($action === 'area') {
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
+                'fire' => $d['fire'] ?? null,
                 'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by']] : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] : null,

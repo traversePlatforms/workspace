@@ -7,6 +7,48 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Fire hazard badges + sort, 2026-10-01 — upload the same three again (SX-9b)
+
+**Same three uploads as below, newer versions** — `api/rounds.php`, `summit-de59ae83/index.html`,
+and every `data/rounds/*.json` into **`sixfold-data/rounds/`** (beside `public_html`, not in it).
+This one upload carries the phone field, the satellite link AND the fire hazard together.
+**Then flush the cache** — Site Tools → Speed → Caching → Flush.
+
+**`wildfire-cache.json` is NOT uploaded.** It is a build input; the hazard class is already baked
+into each door in the `.json` files.
+
+### What the crew sees
+
+- **A badge on every door:** *Very high fire hazard* (solid red) · *High* (solid orange) ·
+  *Moderate* (amber outline) · *Low* / *Very low* (grey outline) · **Fire map: not rated**
+  (dashed). Booked quotes in Done carry a small one, for the estimate visit.
+- **A sort switch on the neighbourhood list:** *Map order* (walking routes, the default) or
+  *Most fire hazard*, which puts the neighbourhoods with the most high-hazard doors **still to
+  knock** first. Each neighbourhood shows a pill — *"46 high fire hazard · 18 very high"*.
+  The choice is remembered on that phone.
+
+### ⚑ Rules built into it — do not "simplify" these away
+
+- **"Not rated" is never "low".** Class 6 means the 270 m cell is mapped as town or farmland; a
+  wooded lot can sit inside one. It gets a dashed badge and is never hidden or sorted out.
+- **The count is high-hazard doors STILL TO KNOCK.** Booking one drops it; a *no answer* does
+  not, because that door still needs a visit. A worked-out neighbourhood sinks down the sort.
+- **It rates neighbourhoods, not houses** (270 m cells). The satellite link is the per-house check.
+
+### Tested
+
+17/17 on a scratch copy with throwaway codes: the per-neighbourhood count matched an
+independent recount of its doors (46 = 46, very-high 18 = 18); booking dropped it, a no-answer
+did not, undo restored it; the sort was strictly descending; map order came back exactly; the
+choice survived a reload; every card showed a badge; class 6 read "not rated". Rendered at
+iPhone width in light and dark. Every badge colour checked at ≥ 4.5:1 contrast.
+
+### Rebuilding the hazard data
+
+`node sample-wildfire.mjs` then `node build-rounds-data.mjs`. Sampling is incremental — it
+only asks the Forest Service about coordinates it has not seen — so after a door rebuild it
+fetches the new doors only. Run `verify-superset.mjs` before uploading, as always.
+
 ## ⚑ Phone numbers + satellite view, 2026-10-01 — ONE upload, three parts (SX-14)
 
 | From | To | Note |
