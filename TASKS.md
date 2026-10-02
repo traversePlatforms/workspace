@@ -611,7 +611,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       only):** empty bar on the report page, the dock covering text, Quote booked green → ember,
       and no-answer doors made findable with "Put back on the list". 220/220. **Live and verified
       2026-10-02.** Then **"Doors to come back to"** (every no-answer and due door, across all
-      towns, one tap to the right neighbourhood): built and tested, awaiting upload, `index.html` only. Built from the approved preview. **Upload is `index.html` plus five new
+      towns, one tap to the right neighbourhood): **live 2026-10-02, confirmed by Matthew.** Then
+      **Nearest neighbourhood** on the town screen (sorts by distance, picks the closest town): built
+      and tested, awaiting upload, `rounds.php` + `index.html`. Built from the approved preview. **Upload is `index.html` plus five new
       files** (manifest + 4 icons) into `public_html/summit-de59ae83/`. The API and door data are
       unchanged. Includes the home-screen install, the splash, the keypad sign-in, motion with Undo,
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the

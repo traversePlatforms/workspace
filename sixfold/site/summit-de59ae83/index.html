@@ -825,17 +825,51 @@
     var hasFire = r.areas.some(function (a) { return typeof a.hot === 'number'; });
     var mode = 'map';
     try { mode = localStorage.getItem('sixfold.rounds.sort') || 'map'; } catch (e) {}
-    if (!hasFire) mode = 'map';
-    setDock(hasFire ? [['map', 'Map order', 'route'], ['fire', 'Most fire hazard', 'flame']] : null, mode, function (v) {
+    if (mode === 'fire' && !hasFire) mode = 'map';
+    var opts = [['map', 'Map order', 'route'], ['near', 'Nearest', 'near']];
+    if (hasFire) opts.push(['fire', 'Fire hazard', 'flame']);
+    setDock(opts, mode, function (v) {
       try { localStorage.setItem('sixfold.rounds.sort', v); } catch (e) {}
+      if (v === 'near') { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
       renderAreas();
+      window.scrollTo(0, 0);
     });
+
+    /* ---- nearest NEIGHBOURHOOD (2026-10-02) ----
+       Inside a neighbourhood the doors are all a few hundred feet apart; the useful
+       question is which neighbourhood to drive to. One location fix, then sorted by
+       the distance to each neighbourhood's centre. On a fresh fix it also moves to
+       the closest TOWN, and says so. */
+    if (mode === 'near') {
+      if (!S.here && !S.locating && !S.geoErr) { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
+      if (S.locating) view.appendChild(q('div', 'msg', 'Finding where you are\u2026'));
+      else if (S.geoErr) view.appendChild(q('div', 'msg bad', S.geoErr));
+      if (S.here && S.pickTown) {
+        S.pickTown = false;
+        var best = null;
+        S.regions.forEach(function (rg) { rg.areas.forEach(function (a) { var m = hoodDist(a); if (m !== null && (!best || m < best.m)) best = { m: m, key: rg.key, label: rg.label }; }); });
+        if (best && best.key !== S.region) { S.region = best.key; S.townNote = 'Showing ' + best.label + ', the closest town to you.'; return renderAreas(); }
+      }
+      if (S.townNote) { view.appendChild(q('div', 'msg', S.townNote)); S.townNote = null; }
+      if (S.here) {
+        var rf = q('button', 'back'); rf.type = 'button';
+        rf.appendChild(ico('refresh', 2.2)); rf.appendChild(document.createTextNode('Update my location'));
+        rf.addEventListener('click', function () { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); renderAreas(); });
+        view.appendChild(rf);
+      }
+    }
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : 'Map order'));
+    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'near' ? 'Nearest first' : 'Map order'));
     view.appendChild(sect);
 
     var list = r.areas.slice();
+    if (mode === 'near' && S.here) {
+      list.sort(function (x, y) {
+        var mx = hoodDist(x), my = hoodDist(y);
+        return (mx === null ? 1e12 : mx) - (my === null ? 1e12 : my);
+      });
+    }
     if (mode === 'fire') {
       list.sort(function (x, y) {
         return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) ||           /* posted neighbourhoods sink */
@@ -856,7 +890,11 @@
       btn.appendChild(ring(48, 5, vis, fin ? ico('check', 3) : pctText(vis), fin));
       var mid = q('div', 'mid');
       mid.appendChild(q('div', 'nm', a.name));
-      mid.appendChild(q('div', 'sub', a.total + (a.total === 1 ? ' door' : ' doors') + (a.avg ? ' · average lot ' + a.avg.toFixed(2) + ' acres' : '')));
+      var sub = q('div', 'sub');
+      var hd = mode === 'near' ? hoodDist(a) : null;
+      if (hd !== null) { sub.appendChild(q('span', 'dist', distText(hd))); sub.appendChild(document.createTextNode(' \u00b7 ')); }
+      sub.appendChild(document.createTextNode(a.total + (a.total === 1 ? ' door' : ' doors') + (a.avg ? ' \u00b7 average lot ' + a.avg.toFixed(2) + ' acres' : '')));
+      mid.appendChild(sub);
       var chips = q('div', 'chips');
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : '')));
@@ -1206,12 +1244,16 @@
     var dx = (d.lon - S.here.lon) * Math.PI / 180 * Math.cos(la) * R, dy = (d.lat - S.here.lat) * Math.PI / 180 * R;
     return Math.sqrt(dx * dx + dy * dy);
   }
-  function distLabel(d) {
-    if (S.dview !== 'near') return null;
-    var m = metresTo(d); if (m === null) return null;
+  function distText(m) {
     var ft = m * 3.28084;
     return ft < 528 ? Math.max(10, Math.round(ft / 10) * 10) + ' ft' : (m / 1609.344).toFixed(1) + ' mi';
   }
+  function distLabel(d) {
+    if (S.dview !== 'near') return null;
+    var m = metresTo(d); if (m === null) return null;
+    return distText(m);
+  }
+  function hoodDist(a) { return typeof a.la === 'number' && typeof a.lo === 'number' ? metresTo({ lat: a.la, lon: a.lo }) : null; }
   function doorDock() {
     setDock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['map', 'Map', 'map']], S.dview, function (v) {
       S.dview = v;

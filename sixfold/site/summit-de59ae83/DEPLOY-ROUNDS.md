@@ -7,7 +7,28 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Doors to come back to — 2026-10-02, `index.html` only
+## ⚑ Nearest neighbourhood — 2026-10-02, `rounds.php` + `index.html`
+
+| From | To |
+|---|---|
+| `api/rounds.php` | `public_html/api/rounds.php` |
+| `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` |
+
+Matthew's point: inside a neighbourhood the doors are all close together; the useful question is
+**which neighbourhood to drive to**. The town screen's bottom bar is now **Map order · Nearest ·
+Fire hazard**.
+- **Nearest** takes one location fix and sorts neighbourhoods by distance to each one's centre,
+  showing *"0.2 mi"* on every card.
+- On a fresh fix it **moves to the closest town** and says *"Showing Monument, the closest town to
+  you."* Picking a different town by hand afterwards sticks.
+- The API's `regions` action now returns `la`/`lo` per neighbourhood: the average of its doors'
+  parcel centroids, computed when the list is served. **No data rebuild.**
+- Nearest inside a neighbourhood is kept, because rural neighbourhoods can spread over miles.
+
+11/11 new checks, including the first card matching an independent distance recount. All eight
+earlier suites pass.
+
+## ⚑ Doors to come back to — 2026-10-02, `index.html` only  *(live 2026-10-02)*
 
 With about 30,000 doors, a no-answer showed only as one chip on one neighbourhood card among
 thousands. The town screen now shows **"N doors to come back to"**, counting every no-answer

@@ -392,9 +392,11 @@ if ($action === 'regions') {
             /* due: a Not-now door whose come-back date has arrived. It is open again,
                so a due high-hazard door counts towards the hazard sort as well. */
             $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0;
+            $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
                 $f = (int) ($d['fire'] ?? 0);
+                if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
                 $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
                 $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
@@ -405,7 +407,8 @@ if ($action === 'regions') {
             }
             $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'booked' => $booked,
-                        'nosol' => flagSummary(flagsOver($a['doors'], $aflags))];
+                        'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
+                        'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
