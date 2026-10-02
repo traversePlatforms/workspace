@@ -536,6 +536,7 @@ Six digits each, handed out in person or by a channel you trust — not in a gro
 | Nneka | crew | neighbourhoods and doors |
 | Cai | crew | neighbourhoods and doors |
 | Will D | crew | neighbourhoods and doors |
+| Christian Jensen | crew | neighbourhoods and doors — added 2026-10-02 |
 
 **Roster corrected 2026-09-30** — Nneka and Cai were already in `rounds-codes.php` and missing
 from this table, and **Will D was added the same day**. The codes themselves are never written
