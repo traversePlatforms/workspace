@@ -72,13 +72,16 @@
     }
   }
   *{box-sizing:border-box}
+  /* ⚑ hidden must beat every display rule below: without this the dock's
+     display:flex kept an empty bar on screen where no switch belongs */
+  [hidden]{display:none!important}
   html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);
     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
   button{font:inherit;color:inherit}
   :focus-visible{outline:3px solid var(--ember);outline-offset:2px}
   .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .wrap{max-width:680px;margin:0 auto;padding-inline:14px;padding-block:14px 40px}
-  body.has-dock .wrap{padding-bottom:110px}
+  body.has-dock .wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
   .ic{width:20px;height:20px;flex:none}
 
   /* ---- splash, while the page asks who you are ---- */
@@ -114,9 +117,9 @@
   .regions select option{color:#16201C;background:#FFFDF9}
 
   /* ---- dock: the view switch, at the bottom where the thumb is ---- */
-  .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:12;
-    width:min(652px,calc(100% - 28px));display:flex;gap:4px;padding:5px;border-radius:18px;background:var(--bar);
-    box-shadow:0 14px 30px -12px rgba(0,0,0,.55)}
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;gap:6px;background:var(--bar);
+    padding:7px max(10px,calc((100% - 680px) / 2)) calc(7px + env(safe-area-inset-bottom,0px));
+    box-shadow:0 -8px 20px -14px rgba(0,0,0,.6)}
   .dock button{flex:1;border:0;background:transparent;color:var(--bar-soft);padding:9px 4px 7px;border-radius:13px;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12.5px;font-weight:700;transition:background .2s,color .2s}
   .dock button .ic{width:22px;height:22px}
@@ -243,7 +246,7 @@
     font-size:13px;font-weight:700;cursor:pointer;transition:transform .08s}
   .acts button:active{transform:scale(.95)}
   .acts button .ic{width:22px;height:22px}
-  .acts button[data-k="booked"]{background:var(--go);color:var(--on-go)}
+  .acts button[data-k="booked"]{background:var(--ember-ink);color:var(--on-ember)}
   .acts button[data-k="later"]{background:var(--later-tint);color:var(--later)}
   .acts button[data-k="miss"]{background:var(--miss-tint);color:var(--miss)}
   .stamp{position:absolute;inset:0;display:grid;place-items:center;opacity:0;pointer-events:none;font-weight:700;font-size:17px;
@@ -334,6 +337,12 @@
   .nsban b{display:flex;align-items:center;gap:7px;font-size:15px;margin-bottom:3px}
   .nsban b .ic{width:17px;height:17px}
   .nsban button{margin-top:10px;padding:8px 12px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .jump{display:flex;align-items:center;gap:8px;width:100%;margin:2px 0 12px;padding:12px 14px;border-radius:14px;border:0;
+    background:var(--miss-tint);color:var(--miss);font-size:14.5px;font-weight:700;cursor:pointer;text-align:left}
+  .jump .ic{width:19px;height:19px}
+  #againHead{scroll-margin-top:calc(88px + env(safe-area-inset-top,0px))}   /* land below the sticky app bar */
+  .jump .ic:last-child{margin-left:auto}
+  .putback{border:0;background:var(--sunk);color:var(--ink);border-radius:9px;padding:5px 10px;font-size:12.5px;font-weight:700;cursor:pointer}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
     border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:13.5px;font-weight:700;cursor:pointer}
   .nsflag .ic{width:16px;height:16px}
@@ -383,7 +392,7 @@
   td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 
   /* ---- toast + burst ---- */
-  .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
+  .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
     font-size:14px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);transform:translate(-50%,24px);opacity:0;pointer-events:none;
     transition:transform .28s cubic-bezier(.2,.9,.3,1.2),opacity .2s}
@@ -1480,6 +1489,16 @@
     else if (!todo.length) view.appendChild(q('div', 'msg', 'First pass finished. Start with the doors due back.'));
     S.celebrate = false;
 
+    /* no-answer doors sit in a collapsed section below the list; say so up top */
+    if (again.length && (todo.length || due.length)) {
+      var jb = q('button', 'jump'); jb.type = 'button';
+      jb.appendChild(ico('knock', 2.2));
+      jb.appendChild(document.createTextNode(again.length + (again.length === 1 ? ' no answer' : ' no answers') + ' to try again'));
+      jb.appendChild(ico('chev', 2.4));
+      jb.addEventListener('click', function () { S.showAgain = true; S.jumpAgain = true; renderDoors(); });
+      view.appendChild(jb);
+    }
+
     if (S.areaNosol) view.appendChild(nosolBanner());
 
     /* ---- street order, nearest to me, or a map (2026-10-01) ---- */
@@ -1509,8 +1528,13 @@
       meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · ' + d.owner));
       card.appendChild(meta);
       if (d.mark && d.mark.outcome === 'miss') {
-        var was = q('div', 'meta st', 'No answer' + (d.mark.by ? ' · ' + d.mark.by : ''));
+        var was = q('div', 'meta st');
+        was.appendChild(q('span', null, 'No answer' + (d.mark.by ? ' · ' + d.mark.by : '')));
         was.style.color = 'var(--miss)';
+        /* back into the to-knock list, e.g. the house was a miss only because of the hour */
+        var pb = q('button', 'putback', 'Put back on the list'); pb.type = 'button';
+        pb.addEventListener('click', function () { markDoor(d, null); toast('Back on the list', d.address, function () { markDoor(d, 'miss'); }); });
+        was.appendChild(pb);
         card.appendChild(was);
       }
       if (d.mark && d.mark.outcome === 'later' && d.mark.revisit) {
@@ -1543,12 +1567,14 @@
     }
 
     if (again.length) {
-      view.appendChild(q('h2', null, 'No answer — try again · ' + again.length));
+      var ah = q('h2', null, 'No answer — try again · ' + again.length); ah.id = 'againHead';
+      view.appendChild(ah);
       var toggle = q('button', 'back', (S.showAgain ? '↓ Hide' : '→ Show') + ' these ' + again.length + ' doors');
       toggle.type = 'button';
       toggle.addEventListener('click', function () { S.showAgain = !S.showAgain; renderDoors(); });
       view.appendChild(toggle);
       if (S.showAgain) again.forEach(function (d) { view.appendChild(doorCard(d)); });
+      if (S.jumpAgain) { S.jumpAgain = false; try { ah.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {} }
     }
 
     if (done.length) {

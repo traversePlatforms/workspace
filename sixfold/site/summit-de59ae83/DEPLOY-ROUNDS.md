@@ -7,7 +7,23 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ The new look — 2026-10-02, page + five new files (SX-18)
+## ⚑ Fixes from the first live look — 2026-10-02, `index.html` only
+
+Matthew's notes after signing in on phone and desktop:
+- **An empty black bar on the report page (and any page without a view switch).** The page
+  never declared `[hidden]{display:none}`, so the dock's `display:flex` overrode the `hidden`
+  attribute. Fixed globally.
+- **The bottom bar covered text.** It floated over the list. Now it's a solid bar flush with
+  the bottom edge (safe-area aware), and the page is padded so the last item clears it.
+- **Quote booked was green, which read as "already booked".** It's ember now. Green only
+  ever means done.
+- **No-answer doors were hard to find and couldn't be put back.** A row at the top now says
+  *"1 no answer to try again"*; tapping it opens the section and scrolls to it. Each no-answer
+  door has **Put back on the list**, with Undo in the toast.
+
+220/220 checks across seven suites.
+
+## ⚑ The new look — 2026-10-02, page + five new files (SX-18)  *(live 2026-10-02)*
 
 | From | To |
 |---|---|
