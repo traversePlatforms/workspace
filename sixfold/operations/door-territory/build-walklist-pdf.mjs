@@ -166,35 +166,42 @@ function clusterRaw(list, CLUSTER_M) {
    sent to walk. MAX_DOORS is about two full sheets. */
 const MAX_DOORS = Number((process.argv.find((a) => a.startsWith('--max-area=')) || '').split('=')[1] || 55);
 
-/* ⚑ First attempt re-clustered the big one at a tighter distance, recursively.
-   That shattered Woodland Park into 334 sheets of about three doors each —
-   single-link at a small threshold breaks into per-street crumbs. Worse than
-   the problem it was fixing.
+/* ⚑ HOW A BIG CLUSTER GETS SPLIT — four attempts, and why each was replaced.
 
-   A grid split is predictable instead: cut the cluster's own bounding box into
-   roughly (doors / MAX_DOORS) cells and keep each cell whole. Cells are
-   contiguous by construction, so every piece is still somewhere you can walk,
-   and the sheet count lands where you expect it. */
-function splitBig(doors) {
-  if (doors.length <= MAX_DOORS) return [doors];
+   1. Re-cluster at a tighter distance, recursively. Shattered Woodland Park into
+      334 sheets of about three doors: single-link at a small threshold breaks
+      into per-street crumbs.
+   2. Grid split, ONCE. Cut the bounding box into ~doors/MAX_DOORS cells. Never
+      re-checked the pieces, and folded every crumb into the BIGGEST one — so where
+      doors bunched into one corner it stayed huge. Left 76 neighbourhoods over
+      100 doors, Wolf Village Dr at 404.
+   3. Grid split, recursive (2026-10-01 morning). Fixed the giants, but an n x n
+      grid OVER-splits: a 60-door area became four pieces of 15. Median fell from
+      29 to 19 and the list doubled to ~1,500 — a mild relapse of attempt 1.
+   4. NOW: halve along the longer side at the median, repeat until walkable.
+      Every piece lands between about MAX_DOORS/2 and MAX_DOORS, so nothing
+      shatters and nothing stays huge; a long street splits into stretches.
+
+   ⚑ Splitting alone was never enough — see uniqueNames(): pieces sharing a street
+   name were being glued back together by the sidecar. */
+const centreOf = (p) => [p.reduce((s, d) => s + d.lat, 0) / p.length, p.reduce((s, d) => s + d.lon, 0) / p.length];
+function splitBig(doors, depth = 0) {
+  /* Halve along the longer side at the median, and repeat until every piece is
+     walkable. Replaced a grid split the same day: an n x n grid over-splits (a 60-door
+     area became four pieces of 15), whereas halving lands every piece between about
+     MAX_DOORS/2 and MAX_DOORS. A long street gets cut into stretches, which is what
+     the house-number names describe. No crumbs to fold — halves are equal. */
+  if (doors.length <= MAX_DOORS || depth > 12) return [doors];
+  const [la0] = centreOf(doors);
+  const kx = Math.cos(la0 * Math.PI / 180);
   const lats = doors.map((d) => d.lat), lons = doors.map((d) => d.lon);
-  const [y0, y1] = [Math.min(...lats), Math.max(...lats)];
-  const [x0, x1] = [Math.min(...lons), Math.max(...lons)];
-  const n = Math.max(2, Math.ceil(Math.sqrt(doors.length / MAX_DOORS)));
-  const cells = new Map();
-  for (const d of doors) {
-    const gy = Math.min(n - 1, Math.floor((d.lat - y0) / ((y1 - y0) || 1e-9) * n));
-    const gx = Math.min(n - 1, Math.floor((d.lon - x0) / ((x1 - x0) || 1e-9) * n));
-    const k = `${gy},${gx}`;
-    if (!cells.has(k)) cells.set(k, []);
-    cells.get(k).push(d);
-  }
-  /* a nearly-empty cell is not a neighbourhood — fold it into the biggest one */
-  const parts = [...cells.values()].sort((a, b) => b.length - a.length);
-  const keep = parts.filter((p) => p.length >= 6);
-  const crumbs = parts.filter((p) => p.length < 6).flat();
-  if (keep.length && crumbs.length) keep[0].push(...crumbs);
-  return keep.length ? keep : [doors];
+  const spanY = Math.max(...lats) - Math.min(...lats);
+  const spanX = (Math.max(...lons) - Math.min(...lons)) * kx;
+  if (spanY === 0 && spanX === 0) return [doors];          /* every door on one spot: cannot split */
+  const byY = spanY >= spanX;
+  const sorted = doors.slice().sort((a, b) => (byY ? a.lat - b.lat : a.lon - b.lon));
+  const mid = Math.ceil(sorted.length / 2);
+  return [...splitBig(sorted.slice(0, mid), depth + 1), ...splitBig(sorted.slice(mid), depth + 1)];
 }
 
 function describe(list) {
@@ -215,6 +222,33 @@ function describe(list) {
   });
 }
 
+/* ⚑ Neighbourhood names must be UNIQUE ACROSS THE WHOLE TOWN. The sidecar groups
+   sheets by name, so two different pockets that shared a dominant street were
+   silently glued back into one — which is how splitting could still end in a
+   404-door "WOLF VILLAGE DR". A clashing name becomes the street plus its house-
+   number range ("WOLF VILLAGE DR 2100–2490"), which tells a crew exactly which
+   stretch they are on. Names that do not clash are left alone, so crews keep the
+   names they already know. Door ids are untouched: marks, numbers and notes are
+   keyed on the door, never on the neighbourhood. */
+function uniqueNames(areas) {
+  const count = new Map();
+  for (const a of areas) count.set(a.name, (count.get(a.name) || 0) + 1);
+  const used = new Set(areas.filter((a) => count.get(a.name) === 1).map((a) => a.name));
+  for (const a of areas) {
+    if (count.get(a.name) === 1) continue;
+    const base = a.name;
+    const nums = a.doors.filter((d) => streetOf(d.address) === base).map((d) => numOf(d.address)).filter((n) => n > 0);
+    let name = base;
+    if (nums.length) {
+      const lo = Math.min(...nums), hi = Math.max(...nums);
+      name = lo === hi ? `${base} ${lo}` : `${base} ${lo}–${hi}`;
+    }
+    if (used.has(name)) { let k = 2; while (used.has(`${name} · ${k}`)) k++; name = `${name} · ${k}`; }
+    used.add(name);
+    a.name = name;
+  }
+}
+
 function clusterDoors(list) {
   return describe(clusterRaw(list, CLUSTER_M).flatMap((c) => splitBig(c)));
 }
@@ -228,10 +262,16 @@ const pages = [];
 if (!byStreet && !bySize) {
   /* DEFAULT: neighbourhoods, ranked by how good their lawns are, walked whole */
   const regionsRanked = [...regions.entries()].sort((a, b) => b[1].length - a[1].length);
+  /* every pocket in the town first, so names can be made unique town-wide */
+  const pockets = [];
   for (const [region, list] of regionsRanked) {
     const areas = clusterDoors(list)
       .sort((a, b) => b.avg - a.avg || b.doors.length - a.doors.length);
-    for (const area of areas) {
+    for (const area of areas) pockets.push({ region, area });
+  }
+  uniqueNames(pockets.map((x) => x.area));
+  for (const { region, area } of pockets) {
+    {
       const parts = Math.ceil(area.doors.length / PER_PAGE);
       for (let i = 0; i < area.doors.length; i += PER_PAGE) {
         pages.push({

@@ -172,6 +172,37 @@
   .sortbar button{flex:1;font:600 12.5px var(--sans);padding:10px 4px;border-radius:8px;
     border:1px solid var(--line);background:transparent;color:var(--soft);cursor:pointer}
   .sortbar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* notes and come-back dates (2026-10-01) */
+  .xt{margin-top:2px}
+  .done .xt{flex-basis:100%}
+  .adds{margin-top:6px}
+  .adds .lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:500 13px var(--sans);cursor:pointer}
+  .adds .sep{color:var(--soft);margin:0 7px}
+  .nt{margin-top:9px}
+  .ntxt{font-size:13.5px;line-height:1.4;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
+    border-left:3px solid var(--accent);padding:4px 0 4px 9px}
+  .nt .src{display:block;font-size:11.5px;color:var(--soft);margin-top:3px}
+  .nt button.lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font:500 13px var(--sans);cursor:pointer}
+  .phf textarea{font:16px var(--sans);padding:10px;border:1px solid var(--line);border-radius:8px;
+    background:var(--card);color:var(--ink);width:100%;box-sizing:border-box;resize:vertical;min-height:72px}
+  .phf .cnt{font-size:11px;color:var(--soft);margin-top:-4px}
+  .later{margin-top:11px;border:1px solid var(--later);border-radius:9px;padding:10px}
+  .later .lq{font:600 13px var(--sans);color:var(--ink);margin-bottom:8px}
+  .later .chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .later .chip{text-align:left;padding:9px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);cursor:pointer;font:600 13px var(--sans)}
+  .later .chip .cd{display:block;font:400 11.5px var(--sans);color:var(--soft);margin-top:2px}
+  .later .pick{display:flex;gap:6px;align-items:flex-end;margin-top:8px}
+  .later .pick label{flex:1;font-size:11.5px;color:var(--soft);display:grid;gap:4px}
+  .later .pick input{font:16px var(--sans);padding:9px;border:1px solid var(--line);border-radius:8px;
+    background:var(--card);color:var(--ink);width:100%;box-sizing:border-box}
+  .later .pick .chip{flex:none}
+  .later .row2{display:flex;gap:6px;margin-top:8px}
+  .later .row2 button{flex:1;font:600 12.5px var(--sans);padding:11px 4px;border-radius:8px;
+    border:1px solid var(--line);background:transparent;color:var(--soft);cursor:pointer}
+  .duep{display:inline-block;margin-left:2px;padding:1px 7px;border-radius:999px;font-weight:600;
+    border:1px solid var(--booked);color:var(--booked)}
   .done a.sat{margin-top:3px;font-size:12px}
   .undo{background:none;border:0;color:var(--accent);font:500 12.5px var(--sans);cursor:pointer;padding:4px}
 
@@ -398,6 +429,11 @@
         subEl.appendChild(document.createTextNode(' '));
         subEl.appendChild(tag);
       }
+      if (a.due) {
+        var dp = q('span', 'duep', a.due + ' due back');
+        subEl.appendChild(document.createTextNode(' '));
+        subEl.appendChild(dp);
+      }
       if (a.hot) {
         var h = q('span', 'hot' + (a.vhot ? ' v' : ''),
           a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : ''));
@@ -425,15 +461,16 @@
     view.appendChild(q('div', 'msg', 'Loading ' + name + '…'));
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
-      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null;
+      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null;
       renderDoors();
       window.scrollTo(0, 0);
     });
   }
 
-  function markDoor(d, kind) {
+  function markDoor(d, kind, revisit) {
     var item = { region: S.region, id: d.id, outcome: kind };
-    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true };
+    if (kind === 'later' && revisit) item.revisit = revisit;      /* travels in the offline queue too */
+    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '' };
     renderDoors();
     api('mark', { body: item }).then(function (j) {
       if (j.ok) { if (d.mark) d.mark.pending = false; }
@@ -500,6 +537,138 @@
      to the nearest road. Zoom scales with lot size because the centroid is the
      middle of the LOT, not the house, and a 10-acre lot needs room. Format is
      Google's documented Maps URL; on a phone it opens the Maps app if installed. */
+  /* ---- dates, for "come back when" (2026-10-01) ----
+     All local to the phone. Spring = 1 April, fall = 1 September: the next one
+     still ahead. Every chip shows its actual month, so nobody has to guess. */
+  function isoOf(dt) { var m = dt.getMonth() + 1, d = dt.getDate(); return dt.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (d < 10 ? '0' : '') + d; }
+  function todayISO() { return isoOf(new Date()); }
+  function addMonthsISO(n) {
+    var t = new Date(), y = t.getFullYear(), m = t.getMonth() + n, d = t.getDate();
+    var last = new Date(y, m + 1, 0).getDate();
+    return isoOf(new Date(y, m, Math.min(d, last)));
+  }
+  function nextISO(month, day) {
+    var t = new Date(), c = new Date(t.getFullYear(), month - 1, day);
+    if (c <= t) c = new Date(t.getFullYear() + 1, month - 1, day);
+    return isoOf(c);
+  }
+  function fmtMonth(s) { var p = String(s).split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; }
+  function fmtDate(s) { var p = String(s).split('-'); return (+p[2]) + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0]; }
+  function fmtDay(ts) { var d = new Date(ts * 1000); return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
+
+  /* ---- "Not now" -> "come back when" ----
+     The date rides on the Not-now mark, so it uses the same offline queue. A door
+     whose date arrives comes back into its own "Due to revisit" section. */
+  function laterChooser(d) {
+    var box = q('div', 'later');
+    box.appendChild(q('div', 'lq', 'When should we come back?'));
+    var chips = q('div', 'chips');
+    [['In a month', addMonthsISO(1)], ['In 3 months', addMonthsISO(3)],
+     ['Spring', nextISO(4, 1)], ['Fall', nextISO(9, 1)]].forEach(function (o) {
+      var b = q('button', 'chip'); b.type = 'button';
+      b.appendChild(q('span', null, o[0]));
+      b.appendChild(q('span', 'cd', fmtMonth(o[1])));
+      b.addEventListener('click', function () { S.pickLater = null; markDoor(d, 'later', o[1]); });
+      chips.appendChild(b);
+    });
+    box.appendChild(chips);
+    var pick = q('div', 'pick');
+    var lab = q('label', null, 'Or pick a date');
+    var di = q('input'); di.type = 'date'; di.min = todayISO();
+    lab.appendChild(di); pick.appendChild(lab);
+    var go = q('button', 'chip', 'Save'); go.type = 'button';
+    go.addEventListener('click', function () {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(di.value)) { di.focus(); return; }
+      S.pickLater = null; markDoor(d, 'later', di.value);
+    });
+    pick.appendChild(go);
+    box.appendChild(pick);
+    var row = q('div', 'row2');
+    var nd = q('button', null, 'Not now — no date'); nd.type = 'button';
+    nd.addEventListener('click', function () { S.pickLater = null; markDoor(d, 'later', null); });
+    var cx = q('button', null, 'Cancel'); cx.type = 'button';
+    cx.addEventListener('click', function () { S.pickLater = null; renderDoors(); });
+    row.appendChild(nd); row.appendChild(cx);
+    box.appendChild(row);
+    return box;
+  }
+
+  /* ---- notes ---- */
+  function saveNote(d, text, errEl) {
+    errEl.textContent = '';
+    return api('note', { body: { region: S.region, id: d.id, note: text } }).then(function (j) {
+      if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
+      if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
+      var t = String(text || '').trim();
+      d.note = t ? { note: t, by: S.me, at: Math.floor(Date.now() / 1000) } : null;
+      S.editNote = null; renderDoors(); return true;
+    }).catch(function () {
+      errEl.textContent = 'Could not send — check your signal and tap Save again. What you typed is kept.';
+      return false;
+    });
+  }
+  function noteBlock(d) {
+    var box = q('div', 'nt');
+    if (S.editNote === d.id) {
+      var f = q('div', 'phf');
+      var lb = q('label', null, 'Note for this door');
+      var ta = q('textarea'); ta.maxLength = 500; ta.rows = 3;
+      ta.placeholder = 'Dog in the yard · back after 5 · wants aeration in spring';
+      ta.value = d.note ? d.note.note : '';
+      lb.appendChild(ta); f.appendChild(lb);
+      var cnt = q('div', 'cnt');
+      function upd() { cnt.textContent = (500 - ta.value.length) + ' characters left'; }
+      ta.addEventListener('input', upd); upd(); f.appendChild(cnt);
+      var err = q('div', 'err'); f.appendChild(err);
+      var row = q('div', 'row');
+      var sv = q('button', 'save', 'Save'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        if (!ta.value.trim()) { err.textContent = 'Type a note first, or tap Remove.'; return; }
+        sv.disabled = true;
+        saveNote(d, ta.value, err).then(function () { sv.disabled = false; });
+      });
+      row.appendChild(sv);
+      if (d.note) {
+        var rm = q('button', null, 'Remove'); rm.type = 'button';
+        rm.addEventListener('click', function () { saveNote(d, '', err); });
+        row.appendChild(rm);
+      }
+      var cx = q('button', null, 'Cancel'); cx.type = 'button';
+      cx.addEventListener('click', function () { S.editNote = null; renderDoors(); });
+      row.appendChild(cx);
+      f.appendChild(row); box.appendChild(f);
+      setTimeout(function () { try { ta.focus(); } catch (e) {} }, 0);
+      return box;
+    }
+    box.appendChild(q('div', 'ntxt', d.note.note));
+    box.appendChild(q('span', 'src', 'Note' + (d.note.by ? ' · ' + d.note.by : '') + (d.note.at ? ' · ' + fmtDay(d.note.at) : '')));
+    var ed = q('button', 'lnk', 'Edit note'); ed.type = 'button';
+    ed.addEventListener('click', function () { S.editNote = d.id; S.editPhone = null; renderDoors(); });
+    box.appendChild(ed);
+    return box;
+  }
+  /* phone + note + the add links for whichever is missing, on one line when both
+     are empty — which is most doors — so an untouched card stays short. */
+  function extras(d) {
+    var wrap = q('div', 'xt');
+    if (S.editPhone === d.id || d.phone) wrap.appendChild(phoneBlock(d));
+    if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
+    if (S.editPhone === d.id || S.editNote === d.id) return wrap;       /* one form at a time */
+    var adds = [];
+    if (!d.phone) adds.push(['+ Add a phone number', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); }]);
+    if (!d.note) adds.push(['+ Add a note', function () { S.editNote = d.id; S.editPhone = null; renderDoors(); }]);
+    if (adds.length) {
+      var row = q('div', 'adds');
+      adds.forEach(function (b, i) {
+        if (i) row.appendChild(q('span', 'sep', '·'));
+        var x = q('button', 'lnk', b[0]); x.type = 'button';
+        x.addEventListener('click', b[1]); row.appendChild(x);
+      });
+      wrap.appendChild(row);
+    }
+    return wrap;
+  }
+
   /* ---- wildfire hazard badge (SX-9b) ----
      USFS Wildfire Hazard Potential 2023, sampled at the parcel centroid. 270 m cells,
      so it rates the NEIGHBOURHOOD — the satellite link is the per-house check.
@@ -576,7 +745,7 @@
       box.appendChild(q('span', 'src', phoneStatement(d.phone)));
       if (d.phone.source !== 'door') box.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
       var ed = q('button', 'lnk', 'Edit number'); ed.type = 'button';
-      ed.addEventListener('click', function () { S.editPhone = d.id; renderDoors(); });
+      ed.addEventListener('click', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
       box.appendChild(ed);
     } else {
       var ad = q('button', 'lnk', '+ Add a phone number'); ad.type = 'button';
@@ -597,13 +766,16 @@
        finished, it needs another evening. So it leaves the main list (nobody wants
        to re-knock it the same afternoon) but lands in its own section with the
        buttons still live, instead of disappearing among the booked jobs. */
+    var today = todayISO();
     var todo = S.doors.filter(function (d) { return !d.mark; });
+    var due = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'later' && d.mark.revisit && d.mark.revisit <= today; });
     var again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss'; });
-    var done = S.doors.filter(function (d) { return d.mark && d.mark.outcome !== 'miss'; });
+    var done = S.doors.filter(function (d) { return d.mark && d.mark.outcome !== 'miss' && due.indexOf(d) < 0; });
 
     view.appendChild(q('h2', null, S.area + ' — ' + todo.length + ' to knock'));
-    if (!todo.length && !again.length) view.appendChild(q('div', 'msg', 'Every door here is done. Pick another neighbourhood.'));
-    else if (!todo.length) view.appendChild(q('div', 'msg', 'First pass finished. The doors below had no answer — try them another evening.'));
+    if (!todo.length && !again.length && !due.length) view.appendChild(q('div', 'msg', 'Every door here is done. Pick another neighbourhood.'));
+    else if (!todo.length && !due.length) view.appendChild(q('div', 'msg', 'First pass finished. The doors below had no answer — try them another evening.'));
+    else if (!todo.length) view.appendChild(q('div', 'msg', 'First pass finished. Start with the doors due back.'));
 
     function doorCard(d) {
       var card = q('div', 'door');
@@ -616,12 +788,22 @@
         was.style.color = 'var(--miss)';
         card.appendChild(was);
       }
-      card.appendChild(phoneBlock(d));
+      if (d.mark && d.mark.outcome === 'later' && d.mark.revisit) {
+        var isDue = d.mark.revisit <= todayISO();
+        var rv = q('div', 'meta', 'Not now · asked us back ' + fmtDate(d.mark.revisit) + (isDue ? ' — due' : '') + (d.mark.by ? ' · ' + d.mark.by : ''));
+        rv.style.color = isDue ? 'var(--booked)' : 'var(--later)';
+        card.appendChild(rv);
+      }
+      card.appendChild(extras(d));
+      if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
       var acts = q('div', 'acts');
       ['booked', 'later', 'miss'].forEach(function (k) {
         var b = q('button', null, OUT[k]);
         b.type = 'button'; b.setAttribute('data-k', k);
-        b.addEventListener('click', function () { markDoor(d, k); });
+        b.addEventListener('click', function () {
+          if (k === 'later') { S.pickLater = d.id; S.editPhone = null; S.editNote = null; renderDoors(); return; }
+          markDoor(d, k);
+        });
         acts.appendChild(b);
       });
       card.appendChild(acts);
@@ -629,6 +811,11 @@
     }
 
     todo.forEach(function (d) { view.appendChild(doorCard(d)); });
+
+    if (due.length) {
+      view.appendChild(q('h2', null, 'Due to revisit · ' + due.length));
+      due.forEach(function (d) { view.appendChild(doorCard(d)); });
+    }
 
     if (again.length) {
       view.appendChild(q('h2', null, 'No answer — try again · ' + again.length));
@@ -652,13 +839,14 @@
         rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';
         var pending = d.mark.pending || pendingFor(d.id);
         rhs.appendChild(q('span', 'tag ' + (pending ? 'pending' : d.mark.outcome),
-          pending ? 'not sent yet' : (OUT[d.mark.outcome] || d.mark.outcome)));
+          pending ? 'not sent yet' : (OUT[d.mark.outcome] || d.mark.outcome) +
+            (d.mark.outcome === 'later' && d.mark.revisit ? ' · back ' + fmtMonth(d.mark.revisit) : '')));
         var u = q('button', 'undo', 'Undo');
         u.type = 'button';
         u.addEventListener('click', function () { markDoor(d, null); });
         rhs.appendChild(u);
         row.appendChild(lhs); row.appendChild(rhs);
-        row.appendChild(phoneBlock(d));
+        row.appendChild(extras(d));
         view.appendChild(row);
       });
     }

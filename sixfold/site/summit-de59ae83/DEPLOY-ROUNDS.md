@@ -7,6 +7,39 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Notes, "come back when", and walkable neighbourhoods — 2026-10-01, same three uploads
+
+**Same three uploads again, newer versions:** `api/rounds.php`, `summit-de59ae83/index.html`, and
+all 12 `data/rounds/*.json` into **`sixfold-data/rounds/`** (beside `public_html`). One upload
+carries everything built today. **Flush the cache afterwards.**
+
+### Notes on every door
+**"+ Add a note"** on each card: *"dog in the yard"*, *"back after 5"*, *"wants aeration in spring"*.
+Up to 500 characters, line breaks kept. Shows who wrote it and when. Stored in
+`notes-<town>.log` beside the marks — keyed on the door, so it survives rebuilds. In the export.
+
+### "Not now" now asks "when should we come back?"
+**In a month · In 3 months · Spring · Fall** (each showing its actual month), **pick a date**, or
+**Not now — no date**. When the date arrives the door comes back in its own **"Due to revisit"**
+section, buttons live, saying *"asked us back 1 Apr 2027 — due"*. Neighbourhood cards show
+*"2 due back"*. Done rows read *"Not now · back Apr 2027"*.
+
+**⚑ The date rides on the Not-now mark itself**, so it uses the same offline queue: **tested
+with the network cut** — held on the phone as "not sent yet", sent with its date intact when
+signal returned. A due high-hazard door counts towards the fire sort again.
+
+### Neighbourhoods are walkable now
+**Biggest 404 → 55 doors. None over 60** (was 183). Median unchanged at 29. 727 → 1,167
+neighbourhoods. **Two stacked bugs:** the splitter split once and dumped leftovers into the
+biggest piece; and pieces that shared a street name were glued back together, because the
+neighbourhood file groups by name. Clashing names now carry their house-number range —
+*"Wolf Village Dr 5738–5842"* — so a crew knows which stretch. **Non-clashing names did not
+change.** Door ids are untouched: marks, numbers and notes all stay on their doors.
+
+### Tested
+**36/36** on a scratch copy with throwaway codes, including the offline case. Rebuild verified a
+pure superset (31,422 doors, same ids). Rendered at iPhone width, light and dark.
+
 ## ⚑ Fire hazard badges + sort, 2026-10-01 — upload the same three again (SX-9b)
 
 **Same three uploads as below, newer versions** — `api/rounds.php`, `summit-de59ae83/index.html`,

@@ -581,6 +581,19 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       publishes an assessor layer with sale data. **The app must show El Paso doors cleanly
       with the fields absent**, not as blanks that look like a bug.
 
+- [ ] **SX-16 — Notes, “come back when”, walkable neighbourhoods: ✅ BUILT AND TESTED 2026-10-01,
+      awaiting upload.** My top three from the improvements list, shipped together.
+      **Notes** on every door (500 chars, who and when, in the export). **“Not now” asks when to
+      come back** — a month, three months, spring, fall, a date or none — and the door returns in a
+      **“Due to revisit”** section when its date arrives. **The date rides on the mark**, so it is
+      offline-safe: tested with the network cut, held on the phone, delivered intact.
+      **Neighbourhoods split properly:** biggest 404 → 55, none over 60, median unchanged at 29.
+      Two stacked bugs — a one-shot splitter that dumped leftovers into the biggest piece, and
+      same-street pieces being glued back together by name. Clashing names now carry a
+      house-number range (*“Wolf Village Dr 5738–5842”*). 36/36 tests. **Ticks when live.**
+      **Still on the list from the improvements:** knock-to-quote handoff, nearest-door GPS sort,
+      neighbourhood map, slimmer cards, a progress line per town.
+
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
       re-bundle before anyone reviews anything.

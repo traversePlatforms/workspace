@@ -166,7 +166,8 @@ function loadMarks(string $key): array {
         $m = json_decode(trim($line), true);
         if (!is_array($m) || !isset($m['id'])) continue;
         if (($m['outcome'] ?? null) === null) unset($out[$m['id']]);   // an undo
-        else $out[$m['id']] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0];
+        else $out[$m['id']] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0,
+                               'revisit' => $m['revisit'] ?? ''];
     }
     fclose($fh);
     return $out;
@@ -213,6 +214,31 @@ function appendPhone(string $key, array $row): bool {
     return (bool) @file_put_contents(phonesFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
+
+/* ---- notes (2026-10-01) ------------------------------------------------
+ * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
+ * spring". Same append-only, keyed-on-door-id shape as marks and phones, so notes
+ * survive every rebuild of the door lists. Last line wins; an empty note removes it. */
+const NOTE_MAX = 500;
+function notesFile(string $key): string { return DATA_DIR . '/notes-' . $key . '.log'; }
+function loadNotes(string $key): array {
+    $f = notesFile($key);
+    if (!is_readable($f)) return [];
+    $out = [];
+    $fh = @fopen($f, 'r');
+    if (!$fh) return [];
+    while (($line = fgets($fh)) !== false) {
+        $n = json_decode(trim($line), true);
+        if (!is_array($n) || !isset($n['id'])) continue;
+        if (($n['note'] ?? null) === null) unset($out[$n['id']]);
+        else $out[$n['id']] = ['note' => $n['note'], 'by' => $n['by'] ?? '', 'at' => $n['at'] ?? 0];
+    }
+    fclose($fh);
+    return $out;
+}
+function appendNote(string $key, array $row): bool {
+    return (bool) @file_put_contents(notesFile($key), json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
 
 /* ---- routing ----------------------------------------------------------- */
 $action = (string) ($_REQUEST['action'] ?? '');
@@ -278,6 +304,7 @@ if ($action === 'regions') {
     }
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $regions = [];
+    $today = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d');
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         if (!$data) continue;
@@ -292,17 +319,21 @@ if ($action === 'regions') {
                sinks down the hazard sort as its high-hazard doors get done. A no-answer
                still needs a knock, so it still counts. Class 6 never counts as safe;
                it simply is not counted as high. */
-            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0;
+            /* due: a Not-now door whose come-back date has arrived. It is open again,
+               so a due high-hazard door counts towards the hazard sort as well. */
+            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0;
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
                 $f = (int) ($d['fire'] ?? 0);
-                $open = !$m || $m['outcome'] === 'miss';
+                $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
+                $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if (!$m) continue;
+                if ($isDue) $due++;
                 if ($m['outcome'] === 'miss') $noanswer++; else $done++;
             }
             $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
-                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot];
+                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
@@ -316,19 +347,22 @@ if ($action === 'area') {
     if (!$data) fail('No such region.', 404);
     $marks = loadMarks($key);
     $phones = loadPhones($key);
+    $notes = loadNotes($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
         foreach ($a['doors'] as $d) {
             $m = $marks[$d['id']] ?? null;
             $p = $phones[$d['id']] ?? null;
+            $n = $notes[$d['id']] ?? null;
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'fire' => $d['fire'] ?? null,
-                'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by']] : null,
+                'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? ''] : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] : null,
+                'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
             ];
         }
         out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors]);
@@ -344,7 +378,18 @@ if ($action === 'mark') {
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
     if ($out !== null && !in_array($out, ['booked', 'later', 'miss'], true)) fail('Bad outcome.');
-    $ok = appendMark($key, ['id' => $id, 'outcome' => $out, 'by' => $me, 'at' => time()]);
+    /* "Come back when" rides on the Not-now mark itself, so it travels through the
+       offline queue with the mark: a date picked in a dead zone is not lost. */
+    $row = ['id' => $id, 'outcome' => $out, 'by' => $me, 'at' => time()];
+    $rv = (string) ($body['revisit'] ?? '');
+    if ($rv !== '') {
+        if ($out !== 'later') fail('A come-back date only goes with Not now.');
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $rv, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1])) {
+            fail('That is not a real date.');
+        }
+        $row['revisit'] = $rv;
+    }
+    $ok = appendMark($key, $row);
     if (!$ok) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
@@ -372,6 +417,24 @@ if ($action === 'phone') {
     if (!appendPhone($key, ['id' => $id, 'phone' => $digits, 'source' => $source, 'seen' => $seen, 'by' => $me, 'at' => time()])) {
         fail('Could not save that. Try again.', 500);
     }
+    out(['ok' => true]);
+}
+
+if ($action === 'note') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    $raw = (string) ($body['note'] ?? '');
+    /* keep line breaks and tabs; drop every other control character */
+    $t = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", $raw));
+    if ($t === null) fail('That note has characters that cannot be saved.');
+    $t = trim($t);
+    $len = function_exists('mb_strlen') ? mb_strlen($t, 'UTF-8') : strlen($t);
+    if ($len > NOTE_MAX) fail('Keep notes under ' . NOTE_MAX . ' characters.');
+    $row = ['id' => $id, 'note' => $t === '' ? null : $t, 'by' => $me, 'at' => time()];
+    if (!appendNote($key, $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
 
@@ -428,23 +491,27 @@ if ($action === 'report' || $action === 'export') {
     $fh = fopen('php://output', 'w');
     /* the explicit $escape is required from PHP 8.4 and accepted since 5.5; '' is
        also the standards-correct choice — no backslash escaping in CSV */
-    fputcsv($fh, ['region', 'neighbourhood', 'address', 'acres', 'owner', 'outcome', 'by', 'when',
-                  'phone', 'phone_source', 'phone_last_seen', 'phone_added_by', 'phone_added'], ',', '"', '');
+    fputcsv($fh, ['region', 'neighbourhood', 'address', 'acres', 'owner', 'outcome', 'by', 'when', 'come_back',
+                  'phone', 'phone_source', 'phone_last_seen', 'phone_added_by', 'phone_added',
+                  'note', 'note_by', 'note_added'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         $marks = loadMarks($r['key']);
         $phones = loadPhones($r['key']);
+        $notes = loadNotes($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = $marks[$d['id']] ?? null;
                 $p = $phones[$d['id']] ?? null;
-                if (!$m && !$p) continue;                          // a door with a number is worth exporting too
+                $n = $notes[$d['id']] ?? null;
+                if (!$m && !$p && !$n) continue;                   // a number or a note is worth exporting too
                 fputcsv($fh, [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
-                              $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '',
+                              $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '', $m['revisit'] ?? '',
                               $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
-                              $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : ''], ',', '"', '');
+                              $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : '',
+                              $n['note'] ?? '', $n['by'] ?? '', $n ? date('Y-m-d', (int) $n['at']) : ''], ',', '"', '');
             }
         }
     }
