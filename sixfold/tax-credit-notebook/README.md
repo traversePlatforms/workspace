@@ -47,7 +47,7 @@ So the four forms are Sixfold's own, not the state's, and each says so on its fa
 
 ## What is deliberately absent
 
-- **The Douglas County cost-share.** *(Superseded 2026-10-02: the county list is preferred, not required — residents may use any qualified contractor. See the refresh in `../research/mitigation-funding-directory.md`. The notebook sheets have not been rebuilt.)* Was: standing prohibition until Sixfold is on the county's approved contractor list. The programme needs two bids from that list, so naming it now sends a homeowner after money we cannot help them claim.
+- **The Douglas County cost-share.** *(Superseded 2026-10-02: the county list is preferred, not required — residents may use any qualified contractor. See the refresh in `../research/mitigation-funding-directory.md`. Sheets 3, 6 and 7 were updated to v1.1, the PDF rebuilt (still 7 pages) and the artifact republished the same day.)* Was: standing prohibition until Sixfold is on the county's approved contractor list. The programme needs two bids from that list, so naming it now sends a homeowner after money we cannot help them claim.
 - **Any form of "licensed, insured, certified, Firewise."** None of it is true yet.
 - **Prices, or any job cost range.** Not until Sixfold has priced its own completed work.
 - **A percentage figure for the insurance discount.** HB25-1182 requires a discount; it does not set a rate. Any number would be invention.
@@ -84,7 +84,7 @@ So the four forms are Sixfold's own, not the state's, and each says so on its fa
 
 ### Corrected while building this
 
-1. **"Thinning woody vegetation was added as qualifying work in 2027."** Wrong, and it overstates the change in Sixfold's favour — thinning has qualified under §(2)(d) since well before. Still present in **[../research/fire-mitigation-market-research.md](../research/fire-mitigation-market-research.md)**, **[../marketing/marketing-plan.md](../marketing/marketing-plan.md)** and **[../marketing/funding-one-pager.md](../marketing/funding-one-pager.md)**. The marketing plan and the one-pager are both published artifacts, so fixing them means republishing to the same URLs. **Not done — still open.**
+1. **"Thinning woody vegetation was added as qualifying work in 2027."** Wrong, and it overstates the change in Sixfold's favour — thinning has qualified under §(2)(d) since well before. Still present in **[../research/fire-mitigation-market-research.md](../research/fire-mitigation-market-research.md)**, **[../marketing/marketing-plan.md](../marketing/marketing-plan.md)** and **[../marketing/funding-one-pager.md](../marketing/funding-one-pager.md)**. **✅ Fixed 2026-10-02** in all three `.md` files; the marketing-plan HTML, PDF and artifact were rebuilt and republished the same day. (The one-pager HTML had already been corrected 2026-09-18.)
 2. **Non-refundability through tax year 2026** is missing from the market research file and the marketing plan entirely. It is the single most likely thing to disappoint a customer, and it is now on two sheets of this notebook and on Form C.
 3. **The DOR guidance page is stale for 2027** — still $1,000 with a TBD limit, where the statute says $2,000 at $300,000 AGI and refundable. Notebook sheet 4 states which source wins and why.
 4. **The HB26-1289 fiscal note's five-year carry-forward** describes a version of the bill that did not survive. Enacted text wins.

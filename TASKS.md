@@ -624,12 +624,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       flags were rejected after counting: tax applies to every door; insurance has no per-door signal beyond
       the fire badge; no door is 40+ acres. Research refreshed the same day. **Douglas County's contractor
       list is PREFERRED, not required, so the old "never mention it" rule is gone.** The 2026 round is closed.
-      Upload: rounds.php + index.html + docs/money.json. **Still open:** the funding directory HTML/PDF/artifact,
-      the tax notebook sheets and the published marketing-plan artifact still carry the old text and need
-      rebuilding or republishing.
+      Upload: rounds.php + index.html + docs/money.json. **✅ Documents rebuilt 2026-10-02:** the funding directory
+      (HTML, PDF 16 pp, artifact v2), the tax notebook (v1.1, PDF 7 pp, artifact v2, which also replaced a stale
+      Englewood build) and the marketing plan (HTML, PDF 16 pp, artifact v2) all carry the corrected Douglas rule
+      and thinning line.
 - [x] **SX-22 — Doors come back on their own: ✅ LIVE 2026-10-02, checked on Matthew's phone.**
       Put back = mistake (off My doors and the stats). Not now rejoins the to-knock list on its date.
-      No answer rejoins it after `MISS_REST_DAYS` = 2, a default I picked; Matthew can change it.
+      No answer rejoins it after `MISS_REST_DAYS` = 2 — **confirmed by Matthew 2026-10-02**.
       Same two files as SX-21. 364/364 checks.
 - [x] **SX-21 — My doors on My stats: ✅ LIVE 2026-10-02, checked on Matthew's phone.** Every door
       the person acted on, filtered by day or week, with Change / Put back / Open door on each one.

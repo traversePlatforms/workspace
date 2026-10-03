@@ -38,7 +38,7 @@ Tiers run most-universal to most-specialised. **Paid to** matters for invoicing:
 |---|---|---|---|---|---|---|
 | 1 | State wildfire-mitigation income **tax credit** | CO Dept of Revenue | 100% of contractor cost for defensible space, fuel breaks, thinning, slash treatment | $1,000 (2025–26) → $2,000 (2027–30) | owner | Any private CO land |
 | 1 | **Insurance** mitigation discount | Each insurer (per HB25-1182) | Premium reduction for documented defensible space / home hardening | No set rate; varies by carrier | owner | Statewide, from 1 Jul 2026 |
-| 2 | **Douglas County** Wildfire Mitigation Cost-Share | Douglas County | 50% match; defensible space, fuel reduction; community; chipping | $25,000 home · $50,000 community · $7,000 chipping | contractor | Douglas County |
+| 2 | **Douglas County** Wildfire Mitigation Cost-Share | Douglas County | 50% match; defensible space, fuel reduction; community; chipping | $25,000 home · $50,000 community · $7,500 chipping | contractor | Douglas County |
 | 2 | **COSWAP** landowner cost-share | CO DNR / CSFS via WAP | Up to 50% of a mitigation project after a free assessment | Set per parcel | owner | Mapped COSWAP areas |
 | 2 | **Wildfire Partners** rebate | Boulder County | Labor + cash costs of eligible mitigation actions | $500 per household | owner | Boulder County |
 | 2 | **Grand County** Wildfire Council cost-share | Grand County Wildfire Council | Home hardening + first-5-ft + vent screening (separate fuels pot exists) | $1,000/property or 50%, whichever is less | owner | Grand County |
@@ -87,11 +87,11 @@ Most follow one pattern: **free assessment first → signed award before work �
 
 The strongest county program in Sixfold's service area. A **50% financial match**.
 
-- **Amount.** Up to **$25,000** to a homeowner (50% match). Up to **$50,000** community project. Up to **$7,000** community chipping / slash pickup.
-- **To apply.** Detailed scope of work, site map, and **two contractor estimates from the county's approved contractor list.**
-- **Timing.** 2026 primary window ~**13 April – 13 May**; second window anticipated late 2026. ~10 months to complete.
+- **Amount.** Up to **$25,000** to a homeowner (50% match). Up to **$50,000** community project. Up to **$7,500** community chipping / slash pickup *(corrected 2026-10-02)*.
+- **To apply.** Detailed scope of work, site map, and a minimum of **two contractor bids, "preferably" from the county's list** — *"Residents may choose any qualified contractor"* (revised 2026-10-02). Site visit with applicant and contractor before approval.
+- **Timing.** **2026 round closed** (checked 2026-10-02); next round not announced. Work only after the signed award; 10 months to complete.
 - **Payment.** County inspects on completion; homeowner pays the contractor their share; on submission of final invoice + proof of payment, **Douglas County Finance releases the 50% match directly to the contractor.**
-- **Sixfold's role.** **Getting on the approved contractor list is a gate, not a marketing task.** A homeowner needs two bids from that list; until Sixfold is on it, naming the program to a Douglas County client sends them toward money Sixfold cannot help them get. This is the highest-leverage phone call on the whole funding picture — already the project's standing #1 action item.
+- **Sixfold's role.** *Revised 2026-10-02:* the list is **preferred, not required**, so Sixfold can be one of the two bids today and the program can be named — as the county's, with the round's status, never claiming Sixfold is on the list. Getting onto the Preferred list is still worth doing.
 
 ### COSWAP — landowner cost-share
 **CO DNR / CSFS, delivered by Wildfire Adapted Partnership**
