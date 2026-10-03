@@ -65,7 +65,7 @@ for (const [town, county] of Object.entries(TOWNS)) {
           if (!house) cache[k] = { err: 'no house outline' };
           else if (PROJECT[county]) {
             const others = cand.filter((b) => b.ring !== house.ring && inRings(b.c[0], b.c[1], pc.rings)).map((b) => ({ m: b.ring.map(([lo, la]) => merc(lo, la)) }));
-            const m = await measureLidar(d.la, d.lo, pc.rings, house, others, PROJECT[county], null);
+            const m = await measureLidar(d.la, d.lo, pc.rings, house, others, PROJECT[county], join(HERE, 'lidar-cache'));   /* tiles kept on disk: later tuning re-measures without re-downloading */
             /* a house newer than the survey gets no reading: the canopy map is just as old */
             cache[k] = m.err === 'house newer than the LiDAR' ? { err: m.err } : m.err ? { ...(await measure(d.la, d.lo, pc.rings, house)), src: 'canopy' } : m;
           } else {

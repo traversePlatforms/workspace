@@ -2128,12 +2128,13 @@
      Tree-cover share of the lot in the state's defensible-space zones: 0-5 ft, 5-30 ft and
      30-100 ft from the house. LiDAR (USGS 3DEP) where it exists; the canopy map in Teller,
      which undercounts — the detail line says which. The level drives the chip:
-       against  trees in the first 5 ft (>= 15% cover)
+       against  trees at the walls AND dense beyond: >= 25% cover in 0-5 ft and in 5-30 ft
+                (zone 1 alone is too narrow for 1 m LiDAR plus outline error to trust)
        heavy    >= 35% cover within 5-30 ft     some >= 10%     clear otherwise */
   var TREE_LV = { against: 'Trees against house', heavy: 'Heavy trees, 30 ft', some: 'Some trees, 30 ft', clear: 'Clear, 30 ft' };
   function treeLevel(d) {
     var t = d.trees; if (!t) return null;
-    if ((t.z1 || 0) >= 0.15) return 'against';
+    if ((t.z1 || 0) >= 0.25 && t.z2 >= 0.25) return 'against';
     if (t.z2 >= 0.35) return 'heavy';
     if (t.z2 >= 0.10) return 'some';
     return 'clear';

@@ -10,7 +10,7 @@ modified, moved, or re-uploaded.
 ## ⚑ Trees near the house + neighbourhood tags (SX-24, SX-25) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
 
 **Trees near the house:** a chip on each door, using the state's defensible-space zones:
-- **Trees against house**: 15% or more tree cover in the first 5 ft;
+- **Trees against house**: 25% or more tree cover in the first 5 ft and in 5–30 ft;
 - **Heavy trees, 30 ft**: 35% or more in the 5–30 ft zone;
 - **Some trees, 30 ft**: 10% or more;
 - **Clear, 30 ft**: less than that.

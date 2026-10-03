@@ -190,6 +190,13 @@ export async function measureLidar(lat, lon, lotRings, house, others, project, c
   const roofV = bestSt.rv.sort((a, b) => a - b);
   const roofH = roofV.length ? roofV[Math.floor(roofV.length / 2)] : 5;
   const O = others.map((b) => b.m.map(([x, y]) => [x + best[0], y + best[1]]));
+  /* despeckle (2026-10-03, after the Castle Rock spot-check): a tree-like cell only counts when
+     at least 3 of its 8 neighbours are tree-like too. Trees and shrubs are blobs; the lines of
+     single cells along walls and fences, where a cell is half roof or fence and half ground and
+     its pulse splits, are not. */
+  const cand = new Uint8Array(G.w * G.h);
+  for (let o = 0; o < G.w * G.h; o++) { const v = G.hgt[o]; cand[o] = !Number.isNaN(v) && v >= TALL && G.multi[o] === 1 ? 1 : 0; }
+  const blob = (r, c) => { let k2 = 0; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const rr = r + dr, cc = c + dc; if (rr >= 0 && cc >= 0 && rr < G.h && cc < G.w && cand[rr * G.w + cc]) k2++; } return k2 >= 3; };
   const n = { z1: 0, z2: 0, z3: 0 }, t = { z1: 0, z2: 0, z3: 0 }; let tallest = 0;
   const zoneOf = debug ? new Uint8Array(G.w * G.h) : null, treeOf = debug ? new Uint8Array(G.w * G.h) : null;
   for (let r = 0; r < G.h; r++) for (let c = 0; c < G.w; c++) {
@@ -199,9 +206,11 @@ export async function measureLidar(lat, lon, lotRings, house, others, project, c
     const dm = ringDist(X, Y, H) * k, z = dm <= ZONES.z1 ? 'z1' : dm <= ZONES.z2 ? 'z2' : dm <= ZONES.z3 ? 'z3' : null;
     if (!z) continue;
     n[z]++;
-    /* eaves: within 1 m of the wall a pulse clipping the roof edge splits like canopy does,
-       so there a cell only counts when it stands clearly above the roof (a crown over it) */
-    const tree = v >= TALL && G.multi[o] === 1 && (dm > 1.0 || v > roofH + 1.5);
+    /* roof edges: within 2 m of the wall, a cell straddling the roof edge reads as split-pulse
+       "canopy" at about eave-to-roof height. There a cell counts only when it is clearly a
+       crown over the roof (> roof + 1.5 m) or a shrub well below the eaves (< roof - 3 m). */
+    const nearWall = dm <= 2.0, edgeLike = nearWall && v >= roofH - 3 && v <= roofH + 1.5;
+    const tree = cand[o] === 1 && blob(r, c) && !edgeLike;
     if (tree) { t[z]++; if (z !== 'z3' && v > tallest) tallest = v; }
     if (debug) { zoneOf[o] = z === 'z1' ? 1 : z === 'z2' ? 2 : 3; treeOf[o] = tree ? 1 : 0; }
   }

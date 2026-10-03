@@ -17,10 +17,12 @@ const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=
 const LEVEL = arg('level', 'against'), N = +arg('n', 9); let seed = +arg('seed', 1);
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const COUNTY = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas' };
-const lv = (t) => (t.err || t.z2 == null ? null : (t.z1 || 0) >= 0.15 ? 'against' : t.z2 >= 0.35 ? 'heavy' : t.z2 >= 0.10 ? 'some' : 'clear');
+const lv = (t) => (t.err || t.z2 == null ? null : (t.z1 || 0) >= 0.25 && t.z2 >= 0.25 ? 'against' : t.z2 >= 0.35 ? 'heavy' : t.z2 >= 0.10 ? 'some' : 'clear');
 const cache = JSON.parse(readFileSync(join(DT, 'tree-cache.json'), 'utf8'));
 const pool = [];
+const ONLY = arg('town', null);
 for (const town of Object.keys(COUNTY)) {
+  if (ONLY && town !== ONLY) continue;
   let a; try { a = JSON.parse(readFileSync(join(DT, `${town}-areas.json`), 'utf8')).areas; } catch { continue; }
   for (const ar of a) for (const d of ar.doors) { const c = cache[`${d.la},${d.lo}`]; if (c && c.src === 'lidar' && lv(c) === LEVEL) pool.push({ town, d, c }); }
 }

@@ -2,7 +2,7 @@
 
 **What the crew sees:** a chip on each door card, using the Colorado State Forest Service's
 defensible-space zones around the house:
-- **Trees against house**: 15% or more tree cover in the first 5 ft;
+- **Trees against house**: 25% or more tree cover in the first 5 ft AND 25% or more in 5–30 ft (revised 2026-10-03; zone 1 alone was too noisy);
 - **Heavy trees, 30 ft**: 35% or more in the 5–30 ft zone;
 - **Some trees, 30 ft**: 10% or more in that zone;
 - **Clear, 30 ft**: less than that.
@@ -64,6 +64,21 @@ One house was newer than the 2018 survey and so wasn't in the LiDAR at all.
 
 The re-check of the same nine showed outlines on their roofs and red cells only where trees
 touch the walls. Every LiDAR door was re-measured with the fix.
+
+## The second spot-check (Douglas, 2026-10-03)
+Castle Rock read 69% "trees against house", which was implausible for its newer suburbs. The
+photos showed lines of one or two cells tracing just outside the walls and along fences: cells
+straddling a roof edge or fence read as split-pulse "canopy".
+
+**The fixes, applied to every survey:**
+- **Neighbour rule:** a tree-like cell counts only when 3 of its 8 neighbours are tree-like too.
+- **Roof-edge band:** within 2 m of the wall, a cell counts only if it is a crown above the roof
+  (roof + 1.5 m) or a shrub well below the eaves (roof − 3 m).
+- **"Against" needs both zones:** zone 1 and zone 2 cover both have to reach 25%.
+
+On the checked lots: Brandon's, El Rancho, Mount Herman and Indian Summer stay "against", open
+Russet Sky reads "clear", and Marsh Hawk, Johnson Dr and Red Hawk Ridge read "heavy". The tiles
+are now kept on disk (`lidar-cache/`, gitignored), so future tuning needs no re-download.
 
 ## Limits, stated on the card
 - **LiDAR is from 2018 (El Paso) and 2020 (Douglas).** Trees cut since still show; houses built
