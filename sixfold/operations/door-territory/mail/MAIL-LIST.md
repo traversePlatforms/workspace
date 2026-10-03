@@ -29,6 +29,12 @@ California 211, Florida 127, Arizona 100) · 1,601 PO boxes · 791 very close by
 1,711 moderate · 283 low or very low · 2,603 not rated (town or farmland on the 270 m map; not
 "safe"). **2,883 letters cover a high or very-high hazard property, 541 of them out of state.**
 
+**Trees near the house** (per property, same measure as the door app): 1,000 against the house ·
+947 heavy · 2,057 some · 2,000 clear · 4,204 no reading. Most of the no-reading properties
+(3,717) have no building outline at all, which means vacant land: common among absentee owners,
+especially in Black Forest and the Teller towns. Another 379 are houses built after the LiDAR
+survey. Teller readings use the canopy map, which undercounts evergreens; the file marks them.
+
 ## Files
 
 - `mail-recipients.csv`: **one row per letter.** Name(s), mailing address, owner type, where they

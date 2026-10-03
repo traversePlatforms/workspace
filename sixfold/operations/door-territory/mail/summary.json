@@ -41,6 +41,13 @@
     "not rated": 2603,
     "water": 3
   },
+  "byTrees": {
+    "clear": 2000,
+    "heavy": 947,
+    "some": 2057,
+    "no reading": 4204,
+    "against house": 1000
+  },
   "byTown": {
     "monument": 1634,
     "palmer-lake": 883,
