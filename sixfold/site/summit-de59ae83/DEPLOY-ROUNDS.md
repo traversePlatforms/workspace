@@ -7,6 +7,25 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Everything saves with no signal (SX-26) — 2026-10-03: `index.html` only
+
+Before, only door marks waited on the phone for signal. Now **notes, phone numbers, emails,
+lawn answers and photos** do too:
+- the card shows the change at once, with "Saved on this phone";
+- it sends by itself when signal comes back: on reconnect, when the app is reopened, and every
+  minute while anything is waiting;
+- a newer edit to the same door replaces an unsent older one;
+- photos are held in the phone's browser database, since they're too big for the queue;
+- the town page says how many changes are waiting.
+
+**Also fixed in the existing queue:**
+- it used to drop an item when the server reported an error, which is exactly when it should be
+  kept;
+- it used to get stuck forever on an item the server refused as invalid.
+
+Now it keeps items on no signal, a server error or a signed-out phone, and moves past refused
+items. Tested with the network cut: 18 checks, and all 20 suites (414 checks) pass.
+
 ## ⚑ Codes and the email password move out of public_html (SX-9e) — 2026-10-03: `rounds.php` + `quote.php` + `config.php`, then two moves on the host
 
 **Why:** `api/rounds-codes.php` (every crew code) and `api/secrets.php` (the Gmail app password)

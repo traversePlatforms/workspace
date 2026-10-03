@@ -583,7 +583,16 @@
   function queue() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch (e) { return []; } }
   function setQueue(a) { try { localStorage.setItem(QKEY, JSON.stringify(a)); } catch (e) {} }
   function enqueue(item) { var a = queue(); a.push(item); setQueue(a); }
-  function pendingFor(id) { return queue().filter(function (x) { return x.id === id; }).pop(); }
+  /* marks only — notes, phones, emails and lawn answers share the queue (2026-10-03) */
+  function pendingFor(id) { return queue().filter(function (x) { return x.id === id && (!x.kind || x.kind === 'mark'); }).pop(); }
+  /* offline saves (2026-10-03): with no signal, a note, phone, email or lawn answer is kept on
+     the phone and sent later. A newer one for the same door replaces an unsent older one. */
+  function enqueueSave(kind, body) {
+    var a = queue().filter(function (x) { return !(x.kind === kind && x.id === body.id && x.region === body.region); });
+    var it = { kind: kind }; for (var k in body) it[k] = body[k];
+    a.push(it); setQueue(a);
+    toast('Saved on this phone', 'No signal right now. It sends by itself when you have signal.', null);
+  }
 
   function api(action, opts) {
     opts = opts || {};
@@ -600,16 +609,72 @@
     });
   }
 
+  /* sends the queue in order. Kept for later: anything that met no signal, a server error
+     (5xx) or a signed-out session (401). Dropped: anything sent, or refused as invalid (other
+     4xx), so one bad item can never block the rest. (Fixed 2026-10-03: this used to drop on a
+     server error and stall for ever on a refused item.) Photos go after. */
+  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix' };
+  var flushing = null;
   function flush() {
-    var a = queue();
-    if (!a.length) return Promise.resolve();
-    var item = a[0];
-    return api('mark', { body: item }).then(function (j) {
-      if (!j.ok && j._status !== 500) return;          /* a rejected mark is not retried forever */
-      var rest = queue().slice(1);
-      setQueue(rest);
-      if (rest.length) return flush();
-    }).catch(function () {});
+    if (flushing) return flushing;
+    flushing = (function step() {
+      var a = queue();
+      if (!a.length) return flushPhotos();
+      var item = a[0], body = {};
+      for (var k in item) if (k !== 'kind') body[k] = item[k];
+      return api(QACTION[item.kind || 'mark'] || 'mark', { body: body }).then(function (j) {
+        if (j._status === 401 || (!j.ok && j._status >= 500)) return;
+        var sig = JSON.stringify(item), cur = queue(), i = -1;
+        for (var n = 0; n < cur.length; n++) if (JSON.stringify(cur[n]) === sig) { i = n; break; }
+        if (i >= 0) { cur.splice(i, 1); setQueue(cur); }
+        return step();
+      }).catch(function () {});
+    })().then(function () { flushing = null; }, function () { flushing = null; });
+    return flushing;
+  }
+
+  /* ---- photos taken with no signal (2026-10-03): kept in the phone's browser database
+     (too big for the queue above) and sent by flush(). ---- */
+  var PDB = null;
+  function pdb() {
+    if (PDB) return PDB;
+    PDB = new Promise(function (res, rej) {
+      if (!window.indexedDB) return rej(new Error('no database'));
+      var r = indexedDB.open('sixfold-rounds', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('photos', { keyPath: 'k', autoIncrement: true }); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+    PDB.catch(function () { PDB = null; });
+    return PDB;
+  }
+  function pstore(mode, fn) {
+    return pdb().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('photos', mode), req = fn(tx.objectStore('photos'));
+        tx.oncomplete = function () { res(req ? req.result : undefined); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  function queuePhoto(region, id, blob) { return pstore('readwrite', function (st) { return st.add({ region: region, id: id, blob: blob, at: Date.now() }); }).then(countPhotos); }
+  function queuedPhotos() { return pstore('readonly', function (st) { return st.getAll(); }); }
+  function countPhotos() { return queuedPhotos().then(function (a) { S.photoPending = a.length; }, function () { S.photoPending = 0; }); }
+  function flushPhotos() {
+    return queuedPhotos().then(function (all) {
+      function one(i) {
+        if (i >= all.length) return;
+        var p = all[i];
+        return fetch(API + '?action=photo&region=' + encodeURIComponent(p.region) + '&id=' + encodeURIComponent(p.id),
+          { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: p.blob, credentials: 'same-origin' })
+          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); })
+          .then(function (j) {
+            if (j._status === 401 || (!j.ok && j._status >= 500)) return;
+            return pstore('readwrite', function (st) { return st.delete(p.k); }).then(function () { return one(i + 1); });
+          });
+      }
+      return one(0);
+    }).catch(function () {}).then(countPhotos);
   }
 
   /* ---- the 2026-10-02 look: icons, rings, app bar, dock, toast, burst ----
@@ -945,8 +1010,8 @@
     if (sc.children.length) pi.appendChild(sc);
     pg.appendChild(pi);
     view.appendChild(pg);
-    var pend = queue().length;
-    if (pend) view.appendChild(q('div', 'msg bad', pend + ' mark' + (pend === 1 ? '' : 's') + ' still waiting for signal. Keep the page open.'));
+    var pend = queue().length + (S.photoPending || 0);
+    if (pend) view.appendChild(q('div', 'msg bad', pend + (pend === 1 ? ' change' : ' changes') + ' saved on this phone, waiting for signal. They send by themselves.'));
 
     /* doors to come back to, across EVERY town: with ~30,000 doors a no-answer is
        otherwise one chip on one card among thousands */
@@ -1489,10 +1554,8 @@
      The source is kept because it decides what may be done with the number. One
      given at the door is consent. One looked up is a cold call, and must clear the
      national and Colorado Do Not Call lists before anyone dials it.
-     ⚑ Phone saves are NOT in the offline queue. That queue is mark-only and
-     pendingFor() matches on door id alone, so a phone item there would show as a
-     phantom mark and be posted to the wrong action. A failed save instead keeps
-     the form open with what was typed. */
+     With no signal a phone save is kept on the phone and sent later (2026-10-03): the
+     queue items carry a kind, and pendingFor() looks at marks only. */
   var SRC = { door: 'Given at the door', tps: 'Found on True People Search',
               fps: 'Found on Fast People Search', other: 'From another source' };
   var SRC_PICK = { door: 'They gave it to me at the door', tps: 'True People Search',
@@ -1529,8 +1592,13 @@
       renderDoors();
       return true;
     }).catch(function () {
-      errEl.textContent = 'Could not send — check your signal and tap Save again. What you typed is kept.';
-      return false;
+      /* no signal: keep it on the phone and show it now (2026-10-03) */
+      enqueueSave('phone', body);
+      var n = digits(data.phone);
+      if (n.length === 11 && n.charAt(0) === '1') n = n.slice(1);
+      d.phone = n ? { phone: n, source: data.source, seen: data.source === 'door' ? '' : (data.seen || ''),
+                      by: S.me, at: Math.floor(Date.now() / 1000), pending: true } : null;
+      S.editPhone = null; renderDoors(); return true;
     });
   }
   /* ---- satellite view (2026-10-01) ----
@@ -1605,15 +1673,18 @@
   /* ---- notes ---- */
   function saveNote(d, text, errEl) {
     errEl.textContent = '';
-    return api('note', { body: { region: S.region, id: d.id, note: text } }).then(function (j) {
+    var body = { region: S.region, id: d.id, note: text };
+    return api('note', { body: body }).then(function (j) {
       if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
       if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
       var t = String(text || '').trim();
       d.note = t ? { note: t, by: S.me, at: Math.floor(Date.now() / 1000) } : null;
       S.editNote = null; renderDoors(); return true;
     }).catch(function () {
-      errEl.textContent = 'Could not send — check your signal and tap Save again. What you typed is kept.';
-      return false;
+      enqueueSave('note', body);
+      var t = String(text || '').trim();
+      d.note = t ? { note: t, by: S.me, at: Math.floor(Date.now() / 1000), pending: true } : null;
+      S.editNote = null; renderDoors(); return true;
     });
   }
   function noteBlock(d) {
@@ -1712,12 +1783,19 @@
   }
   function saveEmail(d, value, errEl) {
     errEl.textContent = '';
-    return api('email', { body: { region: S.region, id: d.id, email: value } }).then(function (j) {
+    var body = { region: S.region, id: d.id, email: value };
+    return api('email', { body: body }).then(function (j) {
       if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
       if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
       d.email = value ? { email: value.toLowerCase(), by: S.me, at: Math.floor(Date.now() / 1000) } : null;
       S.editEmail = null; renderDoors(); return true;
-    }).catch(function () { errEl.textContent = 'Could not send — check your signal and tap Save again. What you typed is kept.'; return false; });
+    }).catch(function () {
+      /* no signal: the full check runs on the server, so only a plausible address is held */
+      if (value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) { errEl.textContent = 'That does not look like an email address.'; return false; }
+      enqueueSave('email', body);
+      d.email = value ? { email: value.toLowerCase(), by: S.me, at: Math.floor(Date.now() / 1000), pending: true } : null;
+      S.editEmail = null; renderDoors(); return true;
+    });
   }
 
   /* ---- photos (2026-10-02): walk-through photos for whoever builds the quote ----
@@ -1758,10 +1836,11 @@
   function uploadPhotos(d, region, files, after) {
     if (!files.length) return;
     files = files.slice(0, Math.max(0, 20 - (d.photos || []).length));
-    var done = 0, failed = 0, k = 0;
+    var done = 0, failed = 0, held = 0, k = 0;
     function next() {
       if (k >= files.length) {
-        toast(done + (done === 1 ? ' photo' : ' photos') + ' added', failed ? failed + ' did not send — try those again' : d.address, null);
+        if (held && !done) toast(held + (held === 1 ? ' photo' : ' photos') + ' saved on this phone', 'No signal right now. They send by themselves when you have signal.', null);
+        else toast(done + (done === 1 ? ' photo' : ' photos') + ' added', held ? held + ' more saved on this phone, sending when you have signal' : failed ? failed + ' did not send — try those again' : d.address, null);
         if (after) after();
         return;
       }
@@ -1769,9 +1848,13 @@
       toast('Sending photo ' + k + ' of ' + files.length, 'Keep the app open', null);
       shrinkPhoto(f).then(function (blob) {
         return fetch(API + '?action=photo&region=' + encodeURIComponent(region) + '&id=' + encodeURIComponent(d.id),
-          { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, credentials: 'same-origin' }).then(function (r) { return r.json(); });
+          { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          /* no signal: hold the shrunk photo on the phone (2026-10-03) */
+          .catch(function () { return queuePhoto(region, d.id, blob).then(function () { return { held: true }; }); });
       }).then(function (j) {
-        if (j && j.ok) { (d.photos = d.photos || []).push({ f: j.f, by: S.me, at: Math.floor(Date.now() / 1000) }); done++; }
+        if (j && j.held) held++;
+        else if (j && j.ok) { (d.photos = d.photos || []).push({ f: j.f, by: S.me, at: Math.floor(Date.now() / 1000) }); done++; }
         else failed++;
       }).catch(function () { failed++; }).then(next);
     }
@@ -2221,7 +2304,11 @@
       S.editLawn = null;
       renderDoors();
       toast(lv ? LAWN[lv] : 'Back to the photo estimate', d.address, null);
-    }).catch(function () { toast('No signal', 'The lawn answer was not saved. Try again.', null); });
+    }).catch(function () {
+      enqueueSave('lawnfix', { region: S.region, id: d.id, lv: lv });
+      d.lawnfix = lv ? { lv: lv, by: S.me, at: Math.floor(Date.now() / 1000), pending: true } : null;
+      S.editLawn = null; renderDoors();
+    });
   }
 
   /* ---- aerial view (2026-10-02) ----
@@ -2729,7 +2816,9 @@
     });
   }
 
-  function start() { flush().then(refresh); }
+  function start() { countPhotos(); flush().then(refresh); }
+  setInterval(function () { if (S.me && (queue().length || S.photoPending)) flush(); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.me) flush(); });
 
   document.getElementById('toastUndo').addEventListener('click', function () { var f = toastUndo; hideToast(); if (f) f(); });
   document.addEventListener('keydown', function (e) {
