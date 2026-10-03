@@ -7,6 +7,28 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Codes and the email password move out of public_html (SX-9e) — 2026-10-03: `rounds.php` + `quote.php` + `config.php`, then two moves on the host
+
+**Why:** `api/rounds-codes.php` (every crew code) and `api/secrets.php` (the Gmail app password)
+sit inside `public_html`. Today they're safe only because the server runs them as programs. If
+that ever stops, they're served as plain text. The door data was moved out for the same reason.
+
+**On the host, in this order:**
+1. Upload the three new files over the old ones: `api/rounds.php`, `api/quote.php`, and the
+   website's `api/config.php`. They read the new location first and fall back to the old one,
+   so nothing breaks in between.
+2. In File Manager, create a folder **`sixfold-private`** beside `public_html`, at the same
+   level as `sixfold-data`.
+3. **Move** `public_html/api/rounds-codes.php` into `sixfold-private/`. Move it; don't leave
+   a copy behind.
+4. **Move** `public_html/api/secrets.php` into `sixfold-private/`.
+5. Check: sign in on the door app, and send one test enquiry through the website form.
+6. Flush the cache. Both old addresses should now return **404**:
+   `/api/rounds-codes.php` and `/api/secrets.php`.
+
+The site bundle (`make-bundle.mjs`) now refuses to include either file, so a future website
+upload can't put them back in `public_html`.
+
 ## ⚑ Trees near the house + neighbourhood tags (SX-24, SX-25) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
 
 **Trees near the house:** a chip on each door, using the state's defensible-space zones:

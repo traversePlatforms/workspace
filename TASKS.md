@@ -384,7 +384,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       exclude on it; hazard is not a sales signal; data is 2023.
       **Next: build it** — sample at rebuild, store per door, badge + sort/filter in the app.
       Must pass `verify-superset.mjs`. Lot-size band still to be judged on a real afternoon.
-- [ ] **SX-9e — Move `rounds-codes.php` and `secrets.php` above the document root.** Found by
+- [ ] **SX-9e — Move `rounds-codes.php` and `secrets.php` above the document root. ✅ CODE DONE 2026-10-03, awaiting the host moves (DEPLOY-ROUNDS.md).** Found by
       the live check on 2026-09-30, added to the register 2026-10-01. **Both return 200 with a
       zero-byte body** — not a leak, but the `.htaccess` deny is not what is protecting them.
       PHP executing the file is. That holds until the day PHP does not run for that directory —

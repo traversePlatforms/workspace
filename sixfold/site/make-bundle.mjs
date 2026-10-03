@@ -37,6 +37,8 @@ const DENY_FILES = new Set([
   'build-photos.mjs', 'make-bundle.mjs', 'serve.mjs',
   'audit-links.mjs', 'audit-runtime.mjs',
   'submissions.log',
+  /* SX-9e: credentials live in sixfold-private/ above public_html, never in a bundle */
+  'secrets.php', 'rounds-codes.php',
 ]);
 /* held in reserve, referenced by no page — see PHOTOS.md */
 const DENY_UNUSED = new Set(['limbing.jpg', 'limbing.webp', 'stand.jpg', 'stand.webp']);

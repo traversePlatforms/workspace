@@ -75,7 +75,12 @@ function out(array $body, int $status = 200): never {
 }
 function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
 
-$cfgPath = __DIR__ . '/rounds-codes.php';
+/* SX-9e (2026-10-03): the crew codes live ABOVE public_html, in sixfold-private/, beside
+   sixfold-data/. If PHP ever stops running in this folder, a file in here is served as plain
+   text — every code public. The copy beside this file is read only during the changeover;
+   delete it from the host once the private copy is up. */
+$cfgPath = dirname(__DIR__, 2) . '/sixfold-private/rounds-codes.php';
+if (!is_readable($cfgPath)) $cfgPath = __DIR__ . '/rounds-codes.php';
 if (!is_readable($cfgPath)) fail('Rounds is not configured on this server.', 503);
 $cfg = (array) (require $cfgPath);
 $people      = (array) ($cfg['people'] ?? []);

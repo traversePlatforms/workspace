@@ -10,7 +10,12 @@
  */
 // The one live credential, kept out of git. Missing file is not fatal: the form
 // still logs every lead and simply records that it could not send.
-$secrets = is_readable(__DIR__ . '/secrets.php') ? (array) (require __DIR__ . '/secrets.php') : [];
+// SX-9e (2026-10-03): kept ABOVE public_html in sixfold-private/; the copy beside this file is
+// read only during the changeover and is then deleted from the host. make-bundle.mjs no longer
+// ships it.
+$secretsPath = dirname(__DIR__, 2) . '/sixfold-private/secrets.php';
+if (!is_readable($secretsPath)) $secretsPath = __DIR__ . '/secrets.php';
+$secrets = is_readable($secretsPath) ? (array) (require $secretsPath) : [];
 
 return [
     // Where submissions are emailed.

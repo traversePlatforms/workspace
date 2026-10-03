@@ -1,6 +1,6 @@
 <?php
 /**
- * Template for api/rounds-codes.php — copy it, fill it in, never commit the copy.
+ * Template for sixfold-private/rounds-codes.php (the folder BESIDE public_html, SX-9e) — copy it, fill it in, never commit the copy.
  *
  * Same arrangement as secrets.php: the real file is gitignored and this tracked
  * example keeps the shape. It holds the sign-in codes for /rounds/ and the key

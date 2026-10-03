@@ -5,10 +5,10 @@
  * secrets.php is the ONLY file in this site that holds a live credential, and it
  * is gitignored. This example is the tracked version so the shape is not lost.
  *
- * ⚑ It IS uploaded to the server. make-bundle.mjs allows `.php`, so the real
- *   secrets.php ships with every bundle — which is what we want, since the form
- *   cannot send without it. `api/.htaccess` already blocks the directory from
- *   being served, and .php would be executed rather than printed in any case.
+ * ⚑ WHERE IT GOES (changed 2026-10-03, SX-9e): in `sixfold-private/secrets.php`, the folder
+ *   BESIDE public_html (same level as sixfold-data/) — never inside public_html. A .php file
+ *   inside public_html is protected only by PHP executing it. make-bundle.mjs refuses to ship
+ *   secrets.php; api/config.php reads the private copy first.
  *
  * To produce the app password:
  *   1. Sign in as Contact@SixfoldColorado.com
