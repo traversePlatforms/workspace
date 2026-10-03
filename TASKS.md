@@ -167,7 +167,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **⚑ Nothing in `sixfold/quotes/` carries either name** — every document says only
       “Sedalia”. Shannon and Lonnie confirmed by Matthew 2026-10-01.
 
-- [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** When a fire quote is
+- [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** *(Half answered 2026-10-02 by SX-23: the money sheets are on every door card. The quote-build half is still open, and it can reuse `money.json`.)* When a fire quote is
       selected, surface the tax credit / grant / insurer re-score material. **This one is
       genuinely good** — the funding research already exists and currently only lives in a
       pamphlet nobody reads at quote time. Build after SX-2.
@@ -363,7 +363,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       backwards. Revisit when the insurance exists.
       **⚑ Execution deferred to a fresh day** — the regenerate + upload is the expensive half.
       Remember: publish → regenerate → upload → flush.
-- [ ] **SX-9b — Wildfire hazard per door: ✅ BUILT AND TESTED 2026-10-01 — awaiting upload.**
+- [x] **SX-9b — Wildfire hazard per door: ✅ LIVE 2026-10-02 (with the 1 October batch).**
       A badge on every door and a **“Most fire hazard”** sort on the neighbourhood list, which
       ranks by high-hazard doors **still to knock** (Palmer Lake: Forest View Way first, 46 left,
       18 very high). 17/17 tests, light and dark checked, every colour ≥ 4.5:1. Ships in the
@@ -438,7 +438,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Widening (SX-9d) is safe; narrowing is not.
       **Deferred: the app is live, so this is code + upload + cache flush.**
 
-- [ ] **SX-14 — Phone numbers on the door list.** Matthew asked 2026-10-01 whether numbers can
+- [x] **SX-14 — Phone numbers on the door list. ✅ LIVE 2026-10-02 (with the 1 October batch).** Matthew asked 2026-10-01 whether numbers can
       be cross-referenced onto the addresses, and whether an API could be wired in here.
       **Short answer: yes technically, and the far better version is free and already missing.**
       **✅ CORRECTION 2026-10-01: lead NOTIFICATION is not the problem.** Matthew gets
