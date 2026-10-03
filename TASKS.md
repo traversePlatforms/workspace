@@ -619,6 +619,18 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [x] **SX-29 — Mailing list of owners who live elsewhere: ✅ BUILT 2026-10-03.** 7,483 letters
+      covering 10,207 properties, with fire hazard and trees near the house. El Paso property
+      addresses come from state address points (96% right on 311 known doors). Nothing mailed.
+      `sixfold/operations/door-territory/mail/MAIL-LIST.md`. Lists stay out of git, as the walk lists do.
+- [x] **SX-30 — HOA list: ✅ BUILT 2026-10-03, no records request needed.** The Division of Real
+      Estate's free roster, cut to our counties: 97 HOAs matched to our neighbourhoods (32,087
+      units); RowCal runs 166 in scope. The roster has no phone or email; a narrowed request for
+      those is drafted, NOT sent. `door-territory/hoa-registry/HOA-LIST.md`.
+- [ ] **SX-31 — Lawn health (NDVI) trial on the 2,053 large lawns: RUNNING 2026-10-03.** Sentinel-2,
+      summer 2025 vs 2026, weighted by the door app's own lawn outline. Early finding: at 10 m only
+      about a third of Palmer Lake's large lawns are compact enough to read. The image metadata's
+      offset turned out to be wrong for these files and was dropped (measured on lake water).
 - [ ] **SX-28 — Security fixes from the Fable review: ✅ BUILT AND TESTED 2026-10-03, awaiting upload (`rounds.php` + `api/submit.php`).**
       Removed codes now sign out at once and the role comes from the list; a right code no longer
       clears wrong ones; locked sign-in counting; site-wide pause after 60 wrong codes an hour;

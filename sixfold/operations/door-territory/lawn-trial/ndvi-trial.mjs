@@ -8,18 +8,25 @@
    Earth Search STAC: https://earth-search.aws.element84.com/v1, collection sentinel-2-l2a.
    10 m pixels, a pass every ~5 days. Bands used: red (B04), near-infrared (B08), and the scene
    classification layer (SCL, 20 m) to drop cloud, shadow and snow pixel by pixel.
-   ⚑ Values are stored with an offset: reflectance = DN * scale + offset, read per image from
-   raster:bands (scale 0.0001, offset -0.1 on 2025-26 images). Ignoring it biases NDVI.
+   ⚑ THE METADATA'S OFFSET IS WRONG FOR THESE FILES. Each image's raster:bands says
+   reflectance = DN * 0.0001 - 0.1, and the first run applied it: Palmer Lake came out with
+   NDVI above 1.0, which can't happen. Measured 2026-10-03 on S2A_13SED_20250718: Monument Lake
+   (open water) reads near-infrared DN 37 and red 131, and 8% of red pixels over dry grassland
+   sit under 1000. With the offset baked in, water would read about 1000 or more. So these
+   copies are already offset-free: reflectance = DN * 0.0001, and the offset is NOT applied.
 
    METHOD, per door with a Large lawn level (>= 3,000 sq ft of lawn in the 2023 aerial):
-     1. The lot (statewide parcels) and the house (Microsoft building outline), in UTM 13N.
-     2. The yard = the 10 m pixels whose centre is on the lot and more than 4 m from the house.
-        ⚑ A Large lawn is only ~3 pixels of lawn. So this is the YARD's greenness (lawn plus
-        trees, beds, drive), not the lawn's. Trees and drives barely change between summers,
-        so the year-on-year change is still mostly the lawn.
+     1. The lot (statewide parcels) and the 2023 aerial (NAIP, 30-60 cm).
+     2. The lawn = the door app's own classifier (lawn-mask.mjs, lifted unchanged from
+        sample-lawn.mjs), turned into the lawn share of each 10 m Sentinel pixel. Pixels at
+        least 30% lawn count, weighted by that share.
+        ⚑ The first version averaged the whole lot minus the house: a median 98 pixels on
+        Palmer Lake for ~3 pixels of lawn, so it measured native grass and trees. Even now an
+        edge pixel mixes lawn with whatever is next to it; trees and drives barely change
+        between summers, so the year-on-year change is still mostly the lawn.
      3. The clearest images each summer (3 each in July and August, 1 each in June and
         September), read one 1024-px image tile at a time so towns share downloads: yard NDVI
-        = mean over clear pixels, kept only if >= 60% of the yard is clear.
+        = lawn-weighted mean over clear pixels, kept only if >= 60% of the lawn is clear.
      4. Monthly median per door; "peak" = mean of July and August.
      5. Change = peak 2026 - peak 2025. Neighbourhood change = median change of the Large-lawn
         doors in the same neighbourhood (>= 3 of them; else the town). Relative = the door's
@@ -33,11 +40,11 @@ import proj4 from 'proj4';
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { inRings, pickHouse, loadBuildings, townParcels } from '../tree-zones/zones.mjs';
+import { inRings, townParcels } from '../tree-zones/zones.mjs';
+import { measure as measureLawn, STAC as NAIP_STAC, json } from './lawn-mask.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROUNDS = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
-const BUILDINGS = join(HERE, '..', 'tree-zones', 'buildings');
 const CACHE = join(HERE, 'ndvi-cache.json');
 const STAC = 'https://earth-search.aws.element84.com/v1/search';
 const YEARS = [2025, 2026], MONTHS = [6, 7, 8, 9], PER_MONTH = { 6: 1, 7: 3, 8: 3, 9: 1 };   /* July-August carry the comparison */
@@ -48,17 +55,9 @@ const utm = (lon, lat) => proj4('EPSG:4326', 'EPSG:32613', [lon, lat]);
 
 const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, 'utf8')) : {};
 const save = () => writeFileSync(CACHE, JSON.stringify(cache));
-
-/* distance from a point to a ring's edges, metres (UTM) */
-function ringDist(x, y, ring) {
-  let d = Infinity;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [x1, y1] = ring[j], [x2, y2] = ring[i], dx = x2 - x1, dy = y2 - y1;
-    const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy || 1)));
-    d = Math.min(d, Math.hypot(x - x1 - t * dx, y - y1 - t * dy));
-  }
-  return d;
-}
+const MASKS = join(HERE, 'lawnmask-cache.json');
+const maskCache = existsSync(MASKS) ? JSON.parse(readFileSync(MASKS, 'utf8')) : {};
+const MIN_SHARE = 0.3;   /* a 10 m pixel counts if at least 30% of it is lawn */
 
 /* ---- the doors ---- */
 const towns = {};
@@ -87,29 +86,41 @@ const T = 1024;   /* Sentinel-2 COG internal tile, pixels */
 const groups = new Map();   // MGRS tile -> doors (every town whose doors it holds)
 for (const [town, doors] of Object.entries(towns)) {
   const bbox = [Math.min(...doors.map((d) => d.lon)) - 0.003, Math.min(...doors.map((d) => d.lat)) - 0.003, Math.max(...doors.map((d) => d.lon)) + 0.003, Math.max(...doors.map((d) => d.lat)) + 0.003];
-  const parcels = await townParcels(bbox);
-  const blds = await loadBuildings(BUILDINGS, bbox);
+  /* ⚑ First version used the whole lot minus the house: on Palmer Lake that was a median
+     98 pixels (2.4 acres) for ~3 pixels of lawn, i.e. it measured native grass and trees.
+     Now: the door app's own lawn classifier on the 2023 aerial (lawn-mask.mjs) gives each
+     10 m pixel's lawn share; only pixels >= MIN_SHARE lawn count, weighted by that share. */
+  const missing = doors.filter((d) => !maskCache[`${town}/${d.id}`]);
+  if (missing.length) {
+    const parcels = await townParcels(bbox);
+    const st = await json(NAIP_STAC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['naip'], bbox, query: { 'naip:year': { eq: '2023' } }, limit: 250 }) });
+    const photos = (st.features || []).map((f) => ({ id: f.id, href: f.assets.image.href, date: f.properties.datetime.slice(0, 10), bb: f.bbox, gsd: f.properties.gsd }));
+    let i = 0;
+    async function maskWorker() {
+      for (;;) {
+        const d = missing[i++]; if (!d) return;
+        const k = `${town}/${d.id}`;
+        const pc = parcels.find((c) => d.lon >= c.bb[0] && d.lon <= c.bb[2] && d.lat >= c.bb[1] && d.lat <= c.bb[3] && inRings(d.lon, d.lat, c.rings));
+        const ph = photos.filter((it) => d.lon >= it.bb[0] && d.lon <= it.bb[2] && d.lat >= it.bb[1] && d.lat <= it.bb[3]).sort((a, b) => a.gsd - b.gsd)[0];
+        if (!pc) { maskCache[k] = { err: 'no parcel' }; continue; }
+        if (!ph) { maskCache[k] = { err: 'no 2023 photo' }; continue; }
+        try { const m = await measureLawn({ la: d.lat, lo: d.lon }, pc.rings, ph); maskCache[k] = m.err ? { err: m.err } : { s: m.s, px10: m.px10 }; }
+        catch (e) { maskCache[k] = { err: 'photo read failed' }; }
+      }
+    }
+    await Promise.all(Array.from({ length: 4 }, maskWorker));
+    writeFileSync(MASKS, JSON.stringify(maskCache));
+  }
   for (const d of doors) {
     d.key = `${town}/${d.id}`;
-    const pc = parcels.find((c) => d.lon >= c.bb[0] && d.lon <= c.bb[2] && d.lat >= c.bb[1] && d.lat <= c.bb[3] && inRings(d.lon, d.lat, c.rings));
-    if (!pc) { d.err = 'no parcel'; continue; }
-    const cand = blds.filter((b) => b.c[0] >= pc.bb[0] - 0.001 && b.c[0] <= pc.bb[2] + 0.001 && b.c[1] >= pc.bb[1] - 0.001 && b.c[1] <= pc.bb[3] + 0.001);
-    const house = pickHouse(pc.rings, cand);
-    const lot = pc.rings.map((r) => r.map(([lo, la]) => utm(lo, la)));
-    const hr = house ? house.ring.map(([lo, la]) => utm(lo, la)) : null;
-    const xs = lot.flat().map((p) => p[0]), ys = lot.flat().map((p) => p[1]);
-    d.px = [];
-    for (let gx = Math.floor(Math.min(...xs) / 10); gx <= Math.floor(Math.max(...xs) / 10); gx++)
-      for (let gy = Math.floor(Math.min(...ys) / 10); gy <= Math.floor(Math.max(...ys) / 10); gy++) {
-        const cx = gx * 10 + 5, cy = gy * 10 + 5;
-        if (!inRings(cx, cy, lot)) continue;
-        if (hr && (inRings(cx, cy, [hr]) || ringDist(cx, cy, hr) <= 4)) continue;
-        d.px.push([gx, gy]);
-      }
-    if (d.px.length < 3) d.err = `yard too small for 10 m pixels (${d.px.length})`;
+    const m = maskCache[d.key];
+    if (!m || m.err) { d.err = m?.err || 'no lawn outline'; continue; }
+    d.px = m.px10.filter((p) => p[2] >= MIN_SHARE);
+    d.w = d.px.reduce((s, p) => s + p[2], 0);
+    if (d.w < 1) d.err = `lawn too broken up for 10 m pixels (${d.px.length} pixels at ${MIN_SHARE * 100}%+)`;
   }
   const ok = doors.filter((d) => !d.err);
-  console.log(`${town}: ${doors.length} large-lawn doors, ${ok.length} usable yards, median ${ok.map((d) => d.px.length).sort((a, b) => a - b)[ok.length >> 1]} pixels`);
+  console.log(`${town}: ${doors.length} large-lawn doors, ${ok.length} usable, median ${ok.map((d) => d.px.length).sort((a, b) => a - b)[ok.length >> 1]} lawn pixels`);
   /* the tile: first, alphabetically, whose footprint holds every door of the town */
   const items = await stac(bbox, 2026);
   const holds = (it) => { const b = it.bbox; return b[0] <= bbox[0] && b[1] <= bbox[1] && b[2] >= bbox[2] && b[3] >= bbox[3]; };
@@ -161,15 +172,15 @@ for (const [tile, g] of groups) {
           const rs = band('red'), ns = band('nir'), vals = {};
           for (const d of g.doors) {
             let sum = 0, n = 0;
-            for (const [gx, gy] of d.px) {
+            for (const [gx, gy, f] of d.px) {
               const c = gx - x0 / 10, r = y0 / 10 - 1 - gy;
               const s = scl.get(Math.floor(c / 2), Math.floor(r / 2)), R = red.get(c, r), N = nir.get(c, r);
               if (!CLEAR_SCL.has(s) || !R || !N) continue;
-              const rr = R * (rs.scale ?? 1e-4) + (rs.offset ?? 0), nn = N * (ns.scale ?? 1e-4) + (ns.offset ?? 0);
+              const rr = R * (rs.scale ?? 1e-4), nn = N * (ns.scale ?? 1e-4);   /* no offset: see the header */
               if (rr + nn <= 0) continue;
-              sum += (nn - rr) / (nn + rr); n++;
+              sum += f * (nn - rr) / (nn + rr); n += f;   /* weighted by lawn share */
             }
-            if (n >= 0.6 * d.px.length) vals[d.key] = +(sum / n).toFixed(4);
+            if (n >= 0.6 * d.w) vals[d.key] = +(sum / n).toFixed(4);
           }
           cache[key] = { date: it.properties.datetime.slice(0, 10), vals };
           save();
