@@ -7,6 +7,35 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Security fixes from the review (SX-28) — 2026-10-03: `rounds.php` + `api/submit.php`
+
+From a read-only security review by a second model (Fable), every finding checked against
+the code before fixing. Nothing critical. Upload both files, then sign in once to check.
+
+**What changes for the crew:**
+- **Removing someone's line in the code list now signs them out at once.** It used to leave
+  their phone signed in for up to 45 days. A demoted admin loses admin straight away too.
+  ⚑ **The name in the list must stay spelled exactly as it was.** Renaming someone in the
+  list signs them out, and they sign in again with their code.
+- **A correct code no longer wipes earlier wrong ones.** It used to, which let one valid code
+  buy unlimited guesses at the others. Wrong codes now just expire after 15 minutes. The
+  29 September lockout stays fixed, because a correct code is still never counted.
+- **If more than 60 wrong codes arrive in an hour from anywhere, new sign-ins pause** for the
+  rest of that hour. Phones already signed in keep working. Someone could trigger this on
+  purpose to stop new sign-ins for an hour; that is the trade for stopping guessing from many
+  addresses at once.
+
+**Also fixed:** the sign-in limit could be beaten by sending guesses all at once; IPv6
+addresses are now grouped so one connection can't rotate through them; door ids with a
+trailing newline are refused; crew notes starting with = can't run as formulas in the admin
+export; a website enquiry with broken characters no longer vanishes from both logs; Reply-To
+works for names like "Smith, John"; and if the data folder outside public_html ever goes
+missing, the app stops instead of quietly writing inside public_html.
+
+**Checked and already fine:** the site forces HTTPS (every plain-HTTP address redirects).
+
+Tested: 16 new checks; all 21 suites pass (424 checks).
+
 ## ⚑ Leads (SX-27) — 2026-10-03: `rounds.php` + `index.html` + `api/submit.php`  *(live 2026-10-03)*
 
 **⚑ This one touches `api/submit.php`, the live website form.** The note at the top saying

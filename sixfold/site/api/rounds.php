@@ -56,12 +56,19 @@ declare(strict_types=1);
 function dataDir(): string {
     $outside = dirname(__DIR__, 2) . '/sixfold-data/rounds';
     if (is_dir($outside)) return $outside;
-    return __DIR__ . '/../data/rounds';          // dev checkout only
+    /* 2026-10-03 (review): the fallback is inside public_html, and leads would follow it there.
+       So it is for a local checkout only; on the host a missing data folder is an error. */
+    $host = strtolower((string) ($_SERVER['SERVER_NAME'] ?? ''));
+    if (in_array($host, ['localhost', '127.0.0.1'], true)) return __DIR__ . '/../data/rounds';
+    http_response_code(503); header('Content-Type: application/json');
+    exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
 define('DATA_DIR', dataDir());
 const COOKIE     = 'sfr';
-const MAX_TRIES  = 8;      // sign-in attempts per IP per window
+const MAX_TRIES  = 8;      // wrong codes per address per window
 const TRY_WINDOW = 900;    // 15 minutes
+const SITE_TRIES = 60;     // wrong codes from ALL addresses per hour before new sign-ins pause
+const SITE_WINDOW = 3600;
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -110,6 +117,19 @@ function verify(?string $token, string $key): ?array {
 }
 
 $session = verify($_COOKIE[COOKIE] ?? null, $sessionKey);
+/* 2026-10-03 (review): the cookie proves who signed in, not that they still may. Deleting a
+   person's line used to leave their phone signed in for up to 45 days, and a demoted admin
+   kept admin. So the name is checked against the current list on every request, and the role
+   comes from the list, never from the cookie. */
+if ($session) {
+    $roleNow = null;
+    foreach ($people as $who) {
+        if (!is_array($who) || (string) ($who[0] ?? '') !== (string) ($session['n'] ?? '')) continue;
+        $r = (string) ($who[1] ?? 'crew');
+        $roleNow = ($roleNow === 'admin' || $r === 'admin') ? 'admin' : $r;
+    }
+    if ($roleNow === null) $session = null; else $session['r'] = $roleNow;
+}
 
 /* ---- sign-in rate limit -------------------------------------------------
  *
@@ -118,39 +138,63 @@ $session = verify($_COOKIE[COOKIE] ?? null, $sessionKey);
  * exactly what happened on 2026-09-29: testing from one office used up the
  * allowance for everyone behind that IP, and the next correct code was refused.
  *
- * A limiter exists to slow down someone guessing. Someone who just proved they
- * know the code is not guessing, so a success clears the counter.
+ * ⚑ 2026-10-03 (security review): a success used to CLEAR the address's failures.
+ * That let one valid code buy unlimited guesses at the others: 7 wrong, 1 right,
+ * repeat, until an admin code turned up. Now failures just expire. The 09-29
+ * lockout stays fixed because a success is still never counted.
+ * Also from the review:
+ *   - the check and the count are one locked step (parallel requests used to all
+ *     pass before any of them was counted);
+ *   - IPv6 addresses are grouped by /64 (one home connection has billions);
+ *   - a site-wide ceiling pauses NEW sign-ins when wrong codes pour in from many
+ *     addresses. Phones already signed in keep working through a pause.
  */
-function rateFile(): string {
+function clientKey(): string {
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0');
+    if (str_contains($ip, ':') && ($bin = @inet_pton($ip)) !== false && strlen($bin) === 16) return bin2hex(substr($bin, 0, 8)) . '/64';
+    return $ip;
+}
+function rateFile(string $who): string {
     $dir = __DIR__ . '/.ratelimit';
     if (!is_dir($dir)) @mkdir($dir, 0700, true);
-    return $dir . '/r' . hash('sha256', ($_SERVER['REMOTE_ADDR'] ?? '0') . '|rounds');
+    return $dir . '/r' . hash('sha256', $who . '|rounds');
 }
-/** True if this address may still try. Records nothing. */
-function throttleOk(): bool {
-    $raw = @file_get_contents(rateFile());
-    if ($raw === false) return true;                      // no history, or unreadable: let them try
-    $hits = array_filter((array) json_decode($raw, true), fn($t) => is_int($t) && $t > time() - TRY_WINDOW);
-    return count($hits) < MAX_TRIES;
-}
-/** Record one FAILED attempt. */
-function throttleFail(): void {
-    $fh = @fopen(rateFile(), 'c+');
-    if (!$fh) return;                                     // fail open: a disk problem must never lock anyone out
+/** Under the lock: refuse if over the limit, else count this attempt now. A success gives it back. */
+function throttleTake(string $file, int $max, int $window): bool {
+    global $throttleHeld;
+    $fh = @fopen($file, 'c+');
+    if (!$fh) return true;                                // fail open: a disk problem must never lock anyone out
     @flock($fh, LOCK_EX);
     $raw = stream_get_contents($fh) ?: '[]';
-    $hits = array_values(array_filter((array) json_decode($raw, true), fn($t) => is_int($t) && $t > time() - TRY_WINDOW));
-    $hits[] = time();
+    $hits = array_values(array_filter((array) json_decode($raw, true), fn($t) => is_int($t) && $t > time() - $window));
+    $ok = count($hits) < $max;
+    if ($ok) { $now = time(); $hits[] = $now; $throttleHeld[$file] = $now; }
     ftruncate($fh, 0); rewind($fh);
     @fwrite($fh, json_encode($hits));
     @flock($fh, LOCK_UN); @fclose($fh);
+    return $ok;
 }
-/** A correct code clears the history for that address. */
-function throttleClear(): void { @unlink(rateFile()); }
+/** The code was right: remove the attempt this request counted. Never touches earlier failures. */
+function throttleGiveBack(string $file): void {
+    global $throttleHeld;
+    if (!isset($throttleHeld[$file])) return;
+    $fh = @fopen($file, 'c+');
+    if (!$fh) return;
+    @flock($fh, LOCK_EX);
+    $hits = (array) json_decode(stream_get_contents($fh) ?: '[]', true);
+    $i = array_search($throttleHeld[$file], $hits, true);
+    if ($i !== false) array_splice($hits, $i, 1);
+    ftruncate($fh, 0); rewind($fh);
+    @fwrite($fh, json_encode(array_values($hits)));
+    @flock($fh, LOCK_UN); @fclose($fh);
+    unset($throttleHeld[$file]);
+}
+$throttleHeld = [];
+
 
 /* ---- data -------------------------------------------------------------- */
 function regionFile(string $key): ?string {
-    if (!preg_match('/^[a-z0-9-]{1,40}$/', $key)) return null;   // never let a path in
+    if (!preg_match('/^[a-z0-9-]{1,40}$/D', $key)) return null;   // never let a path in
     $f = DATA_DIR . '/' . $key . '.json';
     return is_readable($f) ? $f : null;
 }
@@ -321,7 +365,7 @@ function loadPhotos(string $key): array {
 function appendPhotoLog(string $key, array $row): bool {
     return (bool) @file_put_contents(photosFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
-function validPhotoName(string $f): bool { return (bool) preg_match('/^\d{8}-\d{6}-[0-9a-f]{8}\.jpg$/', $f); }
+function validPhotoName(string $f): bool { return (bool) preg_match('/^\d{8}-\d{6}-[0-9a-f]{8}\.jpg$/D', $f); }
 
 /* the level that counts: the crew's answer if there is one, else the photo's */
 /* trees near the house (2026-10-03): the same levels as the door chip — against needs >= 25%
@@ -437,14 +481,16 @@ if ($isPost) {
 
 if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
-    if (!throttleOk()) fail('Too many wrong codes from here. Wait fifteen minutes.', 429);
+    $addrFile = rateFile(clientKey()); $siteFile = rateFile('*site*');
+    if (!throttleTake($addrFile, MAX_TRIES, TRY_WINDOW)) fail('Too many wrong codes from here. Wait fifteen minutes.', 429);
+    if (!throttleTake($siteFile, SITE_TRIES, SITE_WINDOW)) { throttleGiveBack($addrFile); fail('Sign-in is paused for a while after too many wrong codes. Phones already signed in still work.', 429); }
     $code = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
     $hit = null;
     foreach ($people as $c => $who) {                            // constant-time-ish: check all
         if (hash_equals((string) $c, (string) $code)) $hit = $who;
     }
-    if (!$hit) { throttleFail(); fail('That code was not recognised.', 401); }
-    throttleClear();                                             // they knew it; forget the history
+    if (!$hit) fail('That code was not recognised.', 401);      // the attempt already counted stands
+    throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
     $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'exp' => time() + $sessionDays * 86400];
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
     setcookie(COOKIE, sign($payload, $sessionKey), [
@@ -588,7 +634,7 @@ if ($action === 'mark') {
     $id  = (string) ($body['id'] ?? '');
     $out = $body['outcome'] ?? null;                              // null = undo
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     /* 'nosolicit' (2026-10-01): the door shows a no-soliciting sign. A finished door,
        permanently — counted as done, never as open, never in the hazard count. */
     if ($out !== null && !in_array($out, ['booked', 'later', 'miss', 'nosolicit'], true)) fail('Bad outcome.');
@@ -598,7 +644,7 @@ if ($action === 'mark') {
     $rv = (string) ($body['revisit'] ?? '');
     if ($rv !== '') {
         if ($out !== 'later') fail('A come-back date only goes with Not now.');
-        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $rv, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1])) {
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $rv, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1])) {
             fail('That is not a real date.');
         }
         $row['revisit'] = $rv;
@@ -613,7 +659,7 @@ if ($action === 'phone') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $raw = $body['phone'] ?? null;
     if ($raw === null || trim((string) $raw) === '') {             // remove the number
         if (!appendPhone($key, ['id' => $id, 'phone' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
@@ -622,11 +668,11 @@ if ($action === 'phone') {
     $digits = preg_replace('/\D/', '', (string) $raw);
     if (strlen($digits) === 11 && $digits[0] === '1') $digits = substr($digits, 1);
     /* North American numbering: area code and exchange both start 2-9 */
-    if (!preg_match('/^[2-9]\d{2}[2-9]\d{6}$/', $digits)) fail('That is not a valid 10-digit US number.');
+    if (!preg_match('/^[2-9]\d{2}[2-9]\d{6}$/D', $digits)) fail('That is not a valid 10-digit US number.');
     $source = (string) ($body['source'] ?? '');
     if (!in_array($source, PHONE_SOURCES, true)) fail('Pick where the number came from.');
     $seen = (string) ($body['seen'] ?? '');
-    if ($seen !== '' && !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $seen)) fail('Last seen must be a month, like 2026-08.');
+    if ($seen !== '' && !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/D', $seen)) fail('Last seen must be a month, like 2026-08.');
     if ($source === 'door') $seen = '';                             // given in person: the date given is `at`
     if (!appendPhone($key, ['id' => $id, 'phone' => $digits, 'source' => $source, 'seen' => $seen, 'by' => $me, 'at' => time()])) {
         fail('Could not save that. Try again.', 500);
@@ -639,7 +685,7 @@ if ($action === 'email') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $e = trim((string) ($body['email'] ?? ''));
     if ($e === '') {
         if (!appendEmail($key, ['id' => $id, 'email' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
@@ -655,7 +701,7 @@ if ($action === 'photo') {
     $key = (string) ($_GET['region'] ?? '');
     $id  = (string) ($_GET['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $bin = $raw ?? '';
     if (strlen($bin) < 100) fail('No photo received.');
     if (strlen($bin) > PHOTO_MAX_BYTES) fail('That photo is too big to send.', 413);
@@ -675,7 +721,7 @@ if ($action === 'photoget') {
     $key = (string) ($_GET['region'] ?? '');
     $id  = (string) ($_GET['id'] ?? '');
     $f   = (string) ($_GET['f'] ?? '');
-    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/', $id) || !validPhotoName($f)) fail('No such photo.', 404);
+    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
     $listed = array_column(loadPhotos($key)[$id] ?? [], 'f');
     $path = photoPath($key, $id, $f);
     if (!in_array($f, $listed, true) || !is_readable($path)) fail('No such photo.', 404);
@@ -691,7 +737,7 @@ if ($action === 'photodel') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     $f   = (string) ($body['f'] ?? '');
-    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/', $id) || !validPhotoName($f)) fail('No such photo.', 404);
+    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
     $hit = null;
     foreach (loadPhotos($key)[$id] ?? [] as $x) if ($x['f'] === $f) $hit = $x;
     if (!$hit) fail('No such photo.', 404);
@@ -913,7 +959,7 @@ if ($action === 'leadstatus') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? '');
-    if (!preg_match('/^[wm]\d{14}[0-9a-f]{6}$/', $id)) fail('No such lead.', 404);
+    if (!preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id)) fail('No such lead.', 404);
     $known = false; foreach (readLines(leadsDir() . '/leads.log') as $l) if ($l['id'] === $id) { $known = true; break; }
     if (!$known) fail('No such lead.', 404);
     $status = (string) ($body['status'] ?? ''); $note = $clean($body['note'] ?? '', 500);
@@ -930,7 +976,7 @@ if ($action === 'lawnfix') {
     $id  = (string) ($body['id'] ?? '');
     $lv  = $body['lv'] ?? null;
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     if ($lv !== null && !in_array($lv, ['N', 'S', 'M', 'L'], true)) fail('Bad lawn size.');
     if (!appendLawnFix($key, ['id' => $id, 'lv' => $lv, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
@@ -941,7 +987,7 @@ if ($action === 'note') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $raw = (string) ($body['note'] ?? '');
     /* keep line breaks and tabs; drop every other control character */
     $t = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", $raw));
@@ -1030,7 +1076,7 @@ if ($action === 'quoted') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
-    if (!preg_match('/^[a-z0-9-]{1,80}$/', $id)) fail('Bad door id.');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $row = ['id' => $id, 'quoted' => empty($body['quoted']) ? null : true, 'by' => $me, 'at' => time()];
     if (!appendQuoted($key, $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
@@ -1084,6 +1130,9 @@ if ($action === 'report' || $action === 'export') {
         out(['ok' => true, 'byPerson' => $byPerson, 'byRegion' => $byRegion]);
     }
 
+    /* 2026-10-03 (review): crew-typed text goes into a file an admin opens in Excel or Sheets.
+       A note starting "=" (or + - @, tab, CR) would run as a formula; a leading ' stops that. */
+    function csvSafe($v) { return is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v; }
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sixfold-rounds.csv"');
     $fh = fopen('php://output', 'w');
@@ -1114,7 +1163,7 @@ if ($action === 'report' || $action === 'export') {
                 $em = $emails[$d['id']] ?? null;
                 $ph = count($photos[$d['id']] ?? []);
                 if (!$m && !$p && !$n && !$lf && !$em && !$ph) continue;   // anything collected at a door is worth exporting
-                fputcsv($fh, [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
+                fputcsv($fh, array_map('csvSafe', [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
                               $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '', $m['revisit'] ?? '',
                               $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
                               $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : '',
@@ -1122,7 +1171,7 @@ if ($action === 'report' || $action === 'export') {
                               $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
                               $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
-                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: ''], ',', '"', '');
+                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '']), ',', '"', '');
             }
         }
     }

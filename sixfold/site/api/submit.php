@@ -45,8 +45,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     respond_bad('Method not allowed', $wantsJson, 405);
 }
 
+/* 2026-10-03 (security review): mb_scrub swaps invalid UTF-8 for "?". Without it, a post with
+   broken bytes made json_encode return false, so an EMPTY line went to both logs and the lead
+   survived only in the email. Every input passes through here, so this covers all of them. */
 $field = static fn(string $k, int $max = 2000): string =>
-    mb_substr(trim((string) ($_POST[$k] ?? '')), 0, $max);
+    mb_substr(trim(mb_scrub((string) ($_POST[$k] ?? ''), 'UTF-8')), 0, $max);
 
 /**
  * Honeypot. A filled field means a bot, so say yes and do nothing — telling it it
@@ -274,7 +277,9 @@ $result = smtp_send(
     $cfg['subject_prefix'] . $title,
     $body,
     [
-        'Reply-To: ' . $safeName . ' <' . $safeEmail . '>',
+        /* 2026-10-03 (review): quoted, and encoded when it isn't plain ASCII. "Smith, John" bare
+           read as two addresses, and accented names went out as raw 8-bit header bytes. */
+        'Reply-To: ' . smtp_mime_header('"' . str_replace(['\\', '"'], ['\\\\', '\\"'], $safeName) . '"') . ' <' . $safeEmail . '>',
         'X-Mailer: sixfold-site',
     ]
 );
