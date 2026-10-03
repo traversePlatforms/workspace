@@ -7,6 +7,33 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ One town per door (SX-32) — 2026-10-03: all 12 door files (incl. `index.json`) + `rounds.php` + `index.html`
+
+**Upload these WITH `rounds.php`, never without it.** The new door files only work with the server
+that knows to read the partner towns' logs.
+
+The town search circles overlapped, so 958 doors were in two town lists at once: **every Palmer
+Lake door was also in Monument**, and Castle Rock shared 136 doors with Franktown and 85 with
+Sedalia. Each copy kept its own marks, so a door marked "Not now" under Monument still showed
+as open under Palmer Lake, and its notes and phone numbers were split between the two.
+
+**Now each door is in one town**, the town whose centre it is nearest to. Palmer Lake keeps 444
+doors and 293 on the Monument side count as Monument; Castle Rock keeps its overlap with
+Franktown and Sedalia where it is nearer. **No door id or address changed.**
+
+**Nothing recorded is lost.** Everything already saved under the other town (marks, come-back
+dates, notes, phone numbers, emails, lawn answers, photos, quote sent) follows the door: the server
+reads each town's logs together with its partner towns' (named in `index.json` "shared"). A phone
+still holding the old list can keep saving under the old town; the server files it under the
+door's new town. A door that is on no town's list is refused, rather than saved onto nothing.
+
+**What the crew will notice:** Palmer Lake is smaller (444 doors), Monument a little smaller
+(7,071), and town totals change. Two Palmer Lake neighbourhoods are down to one door each,
+scraps of the old overlap.
+
+The rebuild check passed: 958 doors moved to a partner town, none lost, moved or renamed. Tested:
+16 new checks (records made under the old towns, then the new files swapped in).
+
 ## ⚑ Security and save fixes from the reviews (SX-28) — 2026-10-03: `rounds.php` + `quote.php` + `api/submit.php` + `index.html`
 
 From a read-only security review by a second model (Fable), every finding checked against
@@ -836,12 +863,25 @@ everyone signs in again with new codes.
 
 ## Refreshing the door lists
 
+**⚑ The check is part of the procedure, not optional** (added 2026-10-03, after a review found it
+missing from this section). It is what stops a rebuild putting one house's marks on another.
+
 ```
+# 1. baseline = what is LIVE now, straight from git (not a hand copy: cp -r into an existing
+#    folder nests it, and the check used to "pass" having compared nothing)
+mkdir -p /tmp/rounds-before && for f in $(git ls-files sixfold/site/data/rounds/*.json); do git show HEAD:$f > /tmp/rounds-before/$(basename $f); done
+# 2. rebuild
 node ../../operations/door-territory/build-walklist-pdf.mjs <area>.csv   # clustering
 node ../../operations/door-territory/build-rounds-data.mjs              # writes data/rounds/
+# 3. the gate
+node ../../operations/door-territory/verify-superset.mjs /tmp/rounds-before
 ```
-Then re-upload `data/rounds/*.json` only. **The marks log is never regenerated** — it lives on
-the server and is the record.
+**Exit 1 means do not upload.** It fails on a lost, moved or renamed door, on a town missing from
+the new index.json, and when it had nothing to compare. A door that left a town for its partner
+town (see "One town per door" above) is reported as a move and passes.
+
+Then re-upload `data/rounds/*.json` (including index.json) only. **The marks log is never
+regenerated** — it lives on the server and is the record.
 
 ## What was tested here, and what was not
 

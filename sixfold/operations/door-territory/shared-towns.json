@@ -1,0 +1,18 @@
+{
+  "monument": [
+    "palmer-lake"
+  ],
+  "palmer-lake": [
+    "monument"
+  ],
+  "castle-rock": [
+    "franktown",
+    "sedalia"
+  ],
+  "franktown": [
+    "castle-rock"
+  ],
+  "sedalia": [
+    "castle-rock"
+  ]
+}

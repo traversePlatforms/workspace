@@ -631,6 +631,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       summer 2025 vs 2026, weighted by the door app's own lawn outline. Early finding: at 10 m only
       about a third of Palmer Lake's large lawns are compact enough to read. The image metadata's
       offset turned out to be wrong for these files and was dropped (measured on lake water).
+- [ ] **SX-32 — One town per door: ✅ BUILT AND TESTED 2026-10-03, rides with SX-28.** 958 doors were in two
+      town lists (all of Palmer Lake inside Monument; Castle Rock overlapping Franktown and Sedalia),
+      each copy with its own marks. Each door now belongs to the nearest town; everything recorded under
+      the other town follows it (the server reads partner towns' logs). No id or address changed; gate
+      passed. Also from Fable's review: the gate now fails when it compared nothing or a town vanished
+      from index.json; the refresh steps include the gate; saves for doors on no list are refused (409).
+      **Still open: the house-sale question** (old owner's phone and notes stay with the address).
 - [ ] **SX-28 — Security fixes from the Fable review: ✅ BUILT AND TESTED 2026-10-03, awaiting upload (`rounds.php` + `quote.php` + `api/submit.php` + `index.html`).**
       Removed codes now sign out at once; sessions are tied to the code (not the name) and the role
       comes from the list; a right code no longer clears wrong ones; locked sign-in counting; site-wide pause after 60 wrong codes an hour;

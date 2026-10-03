@@ -106,7 +106,23 @@ function firewiseOf(doors) {
   return out.length ? out : null;
 }
 
-const index = [];
+/* ---- one town per door (2026-10-03) ----------------------------------------
+ * The town search circles overlap: every Palmer Lake door was ALSO in Monument, and Castle
+ * Rock shared doors with Franktown and Sedalia (958 in all). Each copy kept its own marks,
+ * so a door marked under one town still showed open under the other. Now a door listed by
+ * two towns goes to the town whose centre is nearest, and is dropped from the other.
+ * Ids are made exactly as before (per town, in order) and only then filtered, so no door's
+ * id changes. The pairs go into index.json "shared": the server reads a town's logs together
+ * with its partners', so what was recorded under the other town follows the door. The pairs
+ * are kept in shared-towns.json and only ever added to: old rows stay in the old file. */
+const CENTRE = {
+  monument: [39.0917, -104.8722], 'palmer-lake': [39.1222, -104.9169], 'black-forest': [39.0138, -104.7025],
+  'castle-rock': [39.3722, -104.8561], larkspur: [39.2311, -104.8747], sedalia: [39.4386, -104.9614],
+  franktown: [39.3894, -104.7519], 'woodland-park': [39.0000, -105.0569], divide: [38.9469, -105.1636],
+  florissant: [38.9469, -105.2911], 'cripple-creek': [38.7466, -105.1783],
+};
+const km = (la1, lo1, la2, lo2) => Math.hypot((la1 - la2) * 111, (lo1 - lo2) * 111 * Math.cos((la1 * Math.PI) / 180));
+const built = [];
 for (const [key, label, fileName] of SOURCES) {
   const p = join(HERE, fileName);
   if (!existsSync(p)) { console.log(`skipping ${label} — no ${fileName}`); continue; }
@@ -115,8 +131,7 @@ for (const [key, label, fileName] of SOURCES) {
   const areas = j.areas.map((a) => ({
     name: a.name,
     avg: a.avg ? +a.avg.toFixed(2) : null,
-    place: placeOf(a.doors),
-    fw: firewiseOf(a.doors),
+    src: a.doors,
     doors: a.doors.map((d) => {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
@@ -124,11 +139,39 @@ for (const [key, label, fileName] of SOURCES) {
       return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d) };
     }),
   }));
+  built.push({ key, label, j, areas });
+}
+const towns = new Map();   /* id -> towns listing it */
+for (const b of built) for (const a of b.areas) for (const d of a.doors) { if (!towns.has(d.id)) towns.set(d.id, []); towns.get(d.id).push(b.key); }
+const SHARED_FILE = join(HERE, 'shared-towns.json');
+const shared = existsSync(SHARED_FILE) ? JSON.parse(readFileSync(SHARED_FILE, 'utf8')) : {};
+const addPair = (x, y) => { (shared[x] ||= []); if (!shared[x].includes(y)) shared[x].push(y); };
+let moved = 0;
+const owner = new Map();
+for (const b of built) for (const a of b.areas) for (const d of a.doors) {
+  const list = towns.get(d.id);
+  if (list.length < 2 || owner.has(d.id)) continue;
+  const near = list.filter((t) => CENTRE[t] && d.lat != null).sort((x, y) => km(d.lat, d.lon, ...CENTRE[x]) - km(d.lat, d.lon, ...CENTRE[y]))[0] || list[0];
+  owner.set(d.id, near);
+  for (const t of list) for (const u of list) if (t !== u) addPair(t, u);
+}
+for (const b of built) for (const a of b.areas) {
+  const keep = a.doors.map((d, i) => ({ d, src: a.src[i] })).filter(({ d }) => !owner.has(d.id) || owner.get(d.id) === b.key);
+  moved += a.doors.length - keep.length;
+  a.doors = keep.map((x) => x.d); a.src = keep.map((x) => x.src);
+}
+for (const k of Object.keys(shared)) shared[k].sort();
+writeFileSync(SHARED_FILE, JSON.stringify(shared, null, 2) + '\n', 'utf8');
+if (owner.size) console.log(`${owner.size} doors were listed by two towns: each kept by the nearest town (${moved} copies dropped)`);
+
+const index = [];
+for (const { key, label, j, areas: raw } of built) {
+  const areas = raw.filter((a) => a.doors.length).map((a) => ({ name: a.name, avg: a.avg, place: placeOf(a.src), fw: firewiseOf(a.src), doors: a.doors }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');
   index.push({ key, label, areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
   console.log(`${key}.json  ${areas.length} areas, ${index[index.length - 1].doors} doors`);
 }
-writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, built: new Date().toISOString().slice(0, 10) }), 'utf8');
+writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');
 
 /* Kept only as a second line of defence. ⚑ On 2026-09-29 SiteGround did NOT honour
    this deny — the JSON was served at 200 while the .htaccess itself returned 403.

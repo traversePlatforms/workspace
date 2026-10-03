@@ -214,23 +214,73 @@ function loadRegion(string $key): ?array {
     $f = regionFile($key);
     return $f ? json_decode((string) file_get_contents($f), true) : null;
 }
+
+/* ---- towns that used to share doors (2026-10-03) --------------------------
+ * 958 doors were listed under two towns at once (all of Palmer Lake inside Monument; Castle
+ * Rock overlapping Franktown and Sedalia), so a door marked under one still showed open under
+ * the other, and its notes and numbers were split. Each door now belongs to ONE town. Whatever
+ * was already recorded for it under the other town follows it: a town's logs are read together
+ * with its partners' logs, keeping only rows for doors this town owns, oldest first, so "last
+ * line wins" still holds. index.json "shared" names the partners; it only ever grows, because
+ * the old rows stay in the old town's file for good. Writes go to the town that owns the door. */
+function sharedWith(string $key): array {
+    static $map = null;
+    if ($map === null) {
+        $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: [];
+        $map = (array) ($idx['shared'] ?? []);
+    }
+    return array_values(array_filter((array) ($map[$key] ?? []), fn($k) => is_string($k) && regionFile($k)));
+}
+function doorIds(string $key): array {
+    static $cache = [];
+    if (!isset($cache[$key])) {
+        $ids = [];
+        foreach ((loadRegion($key)['areas'] ?? []) as $a) foreach (($a['doors'] ?? []) as $d) $ids[$d['id']] = true;
+        $cache[$key] = $ids;
+    }
+    return $cache[$key];
+}
+/** Rows of one log ('marks', 'phones', ...) for a town, its partners' rows for its doors merged in. */
+function logRows(string $kind, string $key): array {
+    $read = static function (string $file): array {
+        $rows = [];
+        if (!is_readable($file) || !($fh = @fopen($file, 'r'))) return $rows;
+        while (($line = fgets($fh)) !== false) { $r = json_decode(trim($line), true); if (is_array($r)) $rows[] = $r; }
+        fclose($fh);
+        return $rows;
+    };
+    $own = $read(DATA_DIR . '/' . $kind . '-' . $key . '.log');
+    $partners = sharedWith($key);
+    if (!$partners) return $own;
+    $mine = doorIds($key);
+    $all = []; $seq = 0;
+    foreach ($own as $r) $all[] = [(int) ($r['at'] ?? 0), $seq++, $r];
+    foreach ($partners as $p) foreach ($read(DATA_DIR . '/' . $kind . '-' . $p . '.log') as $r) {
+        $hit = isset($r['id']) ? isset($mine[$r['id']])
+             : (isset($r['ids']) && array_intersect_key(array_flip((array) $r['ids']), $mine));   /* area flags carry a list */
+        if ($hit) { $r['_from'] = $p; $all[] = [(int) ($r['at'] ?? 0), $seq++, $r]; }
+    }
+    usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: $a[1] <=> $b[1]);
+    return array_column($all, 2);
+}
+/** The town a door belongs to now, given the town the phone asked for. 409 when no town has it:
+ *  a phone holding an old list must not save onto nothing (or, worse, onto another door). */
+function doorHome(string $key, string $id): string {
+    if (isset(doorIds($key)[$id])) return $key;
+    foreach (sharedWith($key) as $p) if (isset(doorIds($p)[$id])) return $p;
+    fail('That door is no longer on this list. Reload the neighbourhood.', 409);
+}
 function marksFile(string $key): string { return DATA_DIR . '/marks-' . $key . '.log'; }
 
 /** Replay the append-only log: last line per door wins. */
 function loadMarks(string $key): array {
-    $f = marksFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $m = json_decode(trim($line), true);
+    foreach (logRows('marks', $key) as $m) {
         if (!is_array($m) || !isset($m['id'])) continue;
         if (($m['outcome'] ?? null) === null) unset($out[$m['id']]);   // an undo
         else $out[$m['id']] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0,
                                'revisit' => $m['revisit'] ?? ''];
     }
-    fclose($fh);
     return $out;
 }
 function appendMark(string $key, array $row): bool {
@@ -277,19 +327,13 @@ function phonesFile(string $key): string { return DATA_DIR . '/phones-' . $key .
 
 /** Replay the append-only log: last line per door wins; a null phone removes it. */
 function loadPhones(string $key): array {
-    $f = phonesFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $p = json_decode(trim($line), true);
+    foreach (logRows('phones', $key) as $p) {
         if (!is_array($p) || !isset($p['id'])) continue;
         if (($p['phone'] ?? null) === null) unset($out[$p['id']]);   // removed
         else $out[$p['id']] = ['phone' => $p['phone'], 'source' => $p['source'] ?? 'other',
                                 'seen' => $p['seen'] ?? '', 'by' => $p['by'] ?? '', 'at' => $p['at'] ?? 0];
     }
-    fclose($fh);
     return $out;
 }
 function appendPhone(string $key, array $row): bool {
@@ -309,18 +353,12 @@ const NOTE_MAX = 500;
  * Last line per door wins; null clears it. These are the calibration data. */
 function lawnfixFile(string $key): string { return DATA_DIR . '/lawnfix-' . $key . '.log'; }
 function loadLawnFix(string $key): array {
-    $f = lawnfixFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $r = json_decode(trim($line), true);
+    foreach (logRows('lawnfix', $key) as $r) {
         if (!is_array($r) || !isset($r['id'])) continue;
         if (empty($r['lv'])) unset($out[$r['id']]);
         else $out[$r['id']] = ['lv' => $r['lv'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
     }
-    fclose($fh);
     return $out;
 }
 function appendLawnFix(string $key, array $row): bool {
@@ -331,18 +369,12 @@ function appendLawnFix(string $key, array $row): bool {
  * emails up. Last line per door wins; null removes it. */
 function emailsFile(string $key): string { return DATA_DIR . '/emails-' . $key . '.log'; }
 function loadEmails(string $key): array {
-    $f = emailsFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $r = json_decode(trim($line), true);
+    foreach (logRows('emails', $key) as $r) {
         if (!is_array($r) || !isset($r['id'])) continue;
         if (($r['email'] ?? null) === null) unset($out[$r['id']]);
         else $out[$r['id']] = ['email' => $r['email'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
     }
-    fclose($fh);
     return $out;
 }
 function appendEmail(string $key, array $row): bool {
@@ -360,18 +392,12 @@ const PHOTO_PER_DOOR = 20;
 function photosFile(string $key): string { return DATA_DIR . '/photos-' . $key . '.log'; }
 function photoPath(string $key, string $id, string $f): string { return DATA_DIR . '/photos/' . $key . '/' . $id . '/' . $f; }
 function loadPhotos(string $key): array {
-    $p = photosFile($key);
-    if (!is_readable($p)) return [];
     $out = [];
-    $fh = @fopen($p, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $r = json_decode(trim($line), true);
+    foreach (logRows('photos', $key) as $r) {
         if (!is_array($r) || !isset($r['id'], $r['f'])) continue;
         if (!empty($r['del'])) { if (isset($out[$r['id']])) $out[$r['id']] = array_values(array_filter($out[$r['id']], fn($x) => $x['f'] !== $r['f'])); }
-        else $out[$r['id']][] = ['f' => $r['f'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+        else $out[$r['id']][] = ['f' => $r['f'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0, 'k' => $r['_from'] ?? $key];
     }
-    fclose($fh);
     return $out;
 }
 function appendPhotoLog(string $key, array $row): bool {
@@ -408,19 +434,13 @@ function lawnLevel(array $d, array $fix): ?string {
  * the safe direction. Rows: {fid, name, ids, on, by, at}; last line per fid wins. */
 function areaflagFile(string $key): string { return DATA_DIR . '/areaflags-' . $key . '.log'; }
 function loadAreaFlags(string $key): array {
-    $f = areaflagFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $r = json_decode(trim($line), true);
+    foreach (logRows('areaflags', $key) as $r) {
         if (!is_array($r) || !isset($r['fid'])) continue;
         if (empty($r['on'])) { unset($out[$r['fid']]); continue; }
         $out[$r['fid']] = ['name' => $r['name'] ?? '', 'ids' => array_flip((array) ($r['ids'] ?? [])),
                            'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
     }
-    fclose($fh);
     return $out;
 }
 function appendAreaFlag(string $key, array $row): bool {
@@ -445,18 +465,12 @@ function flagSummary(array $hit): ?array {
  * "quote sent" moves it to the Sent section. Same append-only shape as the rest. */
 function quotedFile(string $key): string { return DATA_DIR . '/quoted-' . $key . '.log'; }
 function loadQuoted(string $key): array {
-    $f = quotedFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $q = json_decode(trim($line), true);
+    foreach (logRows('quoted', $key) as $q) {
         if (!is_array($q) || !isset($q['id'])) continue;
         if (empty($q['quoted'])) unset($out[$q['id']]);
         else $out[$q['id']] = ['by' => $q['by'] ?? '', 'at' => $q['at'] ?? 0];
     }
-    fclose($fh);
     return $out;
 }
 function appendQuoted(string $key, array $row): bool {
@@ -464,18 +478,12 @@ function appendQuoted(string $key, array $row): bool {
 }
 function notesFile(string $key): string { return DATA_DIR . '/notes-' . $key . '.log'; }
 function loadNotes(string $key): array {
-    $f = notesFile($key);
-    if (!is_readable($f)) return [];
     $out = [];
-    $fh = @fopen($f, 'r');
-    if (!$fh) return [];
-    while (($line = fgets($fh)) !== false) {
-        $n = json_decode(trim($line), true);
+    foreach (logRows('notes', $key) as $n) {
         if (!is_array($n) || !isset($n['id'])) continue;
         if (($n['note'] ?? null) === null) unset($out[$n['id']]);
         else $out[$n['id']] = ['note' => $n['note'], 'by' => $n['by'] ?? '', 'at' => $n['at'] ?? 0];
     }
-    fclose($fh);
     return $out;
 }
 function appendNote(string $key, array $row): bool {
@@ -654,6 +662,7 @@ if ($action === 'mark') {
     $out = $body['outcome'] ?? null;                              // null = undo
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     /* 'nosolicit' (2026-10-01): the door shows a no-soliciting sign. A finished door,
        permanently — counted as done, never as open, never in the hazard count. */
     if ($out !== null && !in_array($out, ['booked', 'later', 'miss', 'nosolicit'], true)) fail('Bad outcome.');
@@ -679,6 +688,7 @@ if ($action === 'phone') {
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     $raw = $body['phone'] ?? null;
     if ($raw === null || trim((string) $raw) === '') {             // remove the number
         if (!appendPhone($key, ['id' => $id, 'phone' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
@@ -705,6 +715,7 @@ if ($action === 'email') {
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     $e = trim((string) ($body['email'] ?? ''));
     if ($e === '') {
         if (!appendEmail($key, ['id' => $id, 'email' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
@@ -721,6 +732,7 @@ if ($action === 'photo') {
     $id  = (string) ($_GET['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     $bin = $raw ?? '';
     if (strlen($bin) < 100) fail('No photo received.');
     if (strlen($bin) > PHOTO_MAX_BYTES) fail('That photo is too big to send.', 413);
@@ -741,9 +753,10 @@ if ($action === 'photoget') {
     $id  = (string) ($_GET['id'] ?? '');
     $f   = (string) ($_GET['f'] ?? '');
     if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
-    $listed = array_column(loadPhotos($key)[$id] ?? [], 'f');
-    $path = photoPath($key, $id, $f);
-    if (!in_array($f, $listed, true) || !is_readable($path)) fail('No such photo.', 404);
+    $hit = null;
+    foreach (loadPhotos($key)[$id] ?? [] as $x) if ($x['f'] === $f) $hit = $x;
+    $path = $hit ? photoPath($hit['k'], $id, $f) : '';
+    if (!$hit || !is_readable($path)) fail('No such photo.', 404);
     header('Content-Type: image/jpeg');
     header('Cache-Control: private, max-age=604800');
     header('Content-Length: ' . filesize($path));
@@ -761,8 +774,9 @@ if ($action === 'photodel') {
     foreach (loadPhotos($key)[$id] ?? [] as $x) if ($x['f'] === $f) $hit = $x;
     if (!$hit) fail('No such photo.', 404);
     if ($hit['by'] !== $me && $role !== 'admin') fail('Only the person who took it, or an admin, can remove it.', 403);
+    $key = doorHome($key, $id);
     if (!appendPhotoLog($key, ['id' => $id, 'f' => $f, 'del' => true, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
-    @unlink(photoPath($key, $id, $f));
+    @unlink(photoPath($hit['k'], $id, $f));
     out(['ok' => true]);
 }
 
@@ -848,17 +862,10 @@ if ($action === 'mydoors') {
     $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
     if ($who === '') $who = $me;
     $since = (new DateTime('today', new DateTimeZone('America/Denver')))->modify('-' . ($days - 1) . ' days')->getTimestamp();
-    $read = function (string $file, bool $onlyWho) use ($since, $who) {
-        $out = [];
-        if (!is_readable($file)) return $out;
-        $fh = @fopen($file, 'r');
-        if (!$fh) return $out;
-        while (($line = fgets($fh)) !== false) {
-            $r = json_decode(trim($line), true);
-            if (is_array($r) && isset($r['id']) && (!$onlyWho || ($r['by'] ?? '') === $who) && (int) ($r['at'] ?? 0) >= $since) $out[] = $r;
-        }
-        fclose($fh);
-        return $out;
+    /* rows come through logRows(), so a door that now belongs to another town keeps its history
+       (2026-10-03: each door belongs to one town; its old rows stay in the old town's file) */
+    $read = function (array $rows, bool $onlyWho) use ($since, $who) {
+        return array_values(array_filter($rows, fn($r) => isset($r['id']) && (!$onlyWho || ($r['by'] ?? '') === $who) && (int) ($r['at'] ?? 0) >= $since));
     };
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $rows = [];
@@ -866,15 +873,15 @@ if ($action === 'mydoors') {
         $k = $rg['key'];
         $hit = [];                                   /* door id => what this person did */
         /* everyone's marks, so a put-back by anyone cancels what it undid; then keep this person's */
-        foreach (liveMarks($read(marksFile($k), false)) as $m) {
+        foreach (liveMarks($read(logRows('marks', $k), false)) as $m) {
             if (($m['by'] ?? '') !== $who) continue;
             $h = $hit[$m['id']] ?? ['at' => 0, 'did' => []];
             $h['mine'] = ['outcome' => $m['outcome'] ?? null, 'at' => (int) $m['at'], 'revisit' => $m['revisit'] ?? ''];
             $h['at'] = max($h['at'], (int) $m['at']);
             $hit[$m['id']] = $h;
         }
-        foreach ([['phone', phonesFile($k)], ['email', emailsFile($k)], ['note', notesFile($k)], ['photo', photosFile($k)]] as [$what, $file]) {
-            foreach ($read($file, true) as $r) {
+        foreach ([['phone', 'phones'], ['email', 'emails'], ['note', 'notes'], ['photo', 'photos']] as [$what, $kind]) {
+            foreach ($read(logRows($kind, $k), true) as $r) {
                 if ($what === 'photo' && !empty($r['del'])) continue;
                 if ($what !== 'photo' && ($r[$what] ?? null) === null) continue;
                 $h = $hit[$r['id']] ?? ['at' => 0, 'did' => []];
@@ -996,6 +1003,7 @@ if ($action === 'lawnfix') {
     $lv  = $body['lv'] ?? null;
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     if ($lv !== null && !in_array($lv, ['N', 'S', 'M', 'L'], true)) fail('Bad lawn size.');
     if (!appendLawnFix($key, ['id' => $id, 'lv' => $lv, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
@@ -1007,6 +1015,7 @@ if ($action === 'note') {
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     $raw = (string) ($body['note'] ?? '');
     /* keep line breaks and tabs; drop every other control character */
     $t = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", $raw));
@@ -1096,6 +1105,7 @@ if ($action === 'quoted') {
     $id  = (string) ($body['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
     $row = ['id' => $id, 'quoted' => empty($body['quoted']) ? null : true, 'by' => $me, 'at' => time()];
     if (!appendQuoted($key, $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);

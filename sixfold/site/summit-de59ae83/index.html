@@ -661,7 +661,8 @@
      413, a JSON reply). Anything else is kept (2026-10-03 review): a Wi-Fi sign-in page or a
      firewall page answers with HTML, and the old rule read that as "refused" and emptied the
      whole queue in one pass. */
-  function letGo(j) { return j.ok || (!j._notOurs && (j._status === 400 || j._status === 404 || j._status === 413)); }
+  /* 409: the door is on no town's list any more (rounds.php doorHome), so the save has no home */
+  function letGo(j) { return j.ok || (!j._notOurs && (j._status === 400 || j._status === 404 || j._status === 409 || j._status === 413)); }
   function mine(x) { return !x.who || x.who === S.me; }       /* items from before 'who' existed go with whoever is signed in */
   var flushing = null;
   function flush() {
