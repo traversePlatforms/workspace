@@ -7,7 +7,7 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Money sheets on every door card (SX-23) — 2026-10-02: `rounds.php` + `index.html` + one NEW file
+## ⚑ Money sheets on every door card (SX-23) — 2026-10-02: `rounds.php` + `index.html` + one NEW file  *(live 2026-10-02)*
 
 | File | Where |
 |---|---|
@@ -29,7 +29,7 @@ says "not on this server yet", the JSON is in the wrong folder.
 
 Tested: 12 new checks, and all 16 suites (376 checks) pass.
 
-## ⚑ Doors come back on their own; Put back is for mistakes — 2026-10-02: `rounds.php` + `index.html`
+## ⚑ Doors come back on their own; Put back is for mistakes — 2026-10-02: `rounds.php` + `index.html`  *(live 2026-10-02)*
 
 Matthew's rules:
 - **Put back on the list means "that was a mistake".** It cancels the mark it undid. That mark
@@ -49,7 +49,7 @@ Matthew's rules:
 
 Tested: a no-answer dated 3 days ago comes back, and today's waits. 364 checks across 15 suites pass.
 
-## ⚑ My doors on My stats — 2026-10-02: `rounds.php` + `index.html`
+## ⚑ My doors on My stats — 2026-10-02: `rounds.php` + `index.html`  *(live 2026-10-02)*
 
 My stats now has two tabs: **Numbers** (what it showed before) and **Doors**, which lists every door
 that person acted on in the last 30 days, newest first. That covers marked, put back, or a phone,
@@ -69,7 +69,7 @@ email, note or photo added.
 New server action `mydoors`. Signed out it returns 401, and crew can only ever get their own list.
 Tested: 29 new checks, and all 15 suites (359 checks) pass.
 
-## ⚑ Neighbourhoods open on Street order — 2026-10-02, `index.html` only
+## ⚑ Neighbourhoods open on Street order — 2026-10-02, `index.html` only  *(live 2026-10-02)*
 
 Looking at one neighbourhood on the map used to leave every other neighbourhood opening on the
 map too. Now the map is something you glance at, not a mode you stay in: every neighbourhood
@@ -110,7 +110,7 @@ From a crew member's walkthrough of the app with Matthew:
 Tested: 45/45 new checks (email, photos with a real upload from the page, stats rules and
 permissions, map card), plus all twelve earlier suites (326 total).
 
-## ⚑ Location help for the phone in hand — 2026-10-02, `index.html` only
+## ⚑ Location help for the phone in hand — 2026-10-02, `index.html` only  *(live 2026-10-02)*
 
 A crew member's home-screen app kept saying location was blocked after he'd allowed it in the
 browser. **The home-screen app has its own permission, separate from the browser tab.** On iPhone
@@ -120,7 +120,7 @@ iPhones (including "delete and re-add the icon" when they're using the home-scre
 steps on Android, a short general line otherwise. A **Try again** button sits in the same card.
 Tested 10/10 as an iPhone and as an Android phone; the GPS suites still pass.
 
-## ⚑ Aerial view with the property line — 2026-10-02, `index.html` only
+## ⚑ Aerial view with the property line — 2026-10-02, `index.html` only  *(live 2026-10-02)*
 
 Matthew's report: the Satellite button "doesn't hone in accurately enough and doesn't highlight
 the property." The cause: it sent Google Maps the **centre of the parcel** with satellite on. On a
@@ -142,7 +142,7 @@ service is a free **preview**, and its terms say not to rely on it for anything 
 That's why Google stays one tap away. Tested 9/9 on Brandon's lot (outline drawn, photo loaded,
 view fitted, Back closes), plus all ten other suites (272 checks).
 
-## ⚑ Lawn level per door (SX-19) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
+## ⚑ Lawn level per door (SX-19) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files  *(live 2026-10-02)*
 
 **The measuring run finished 2026-10-02.** Upload the 12 files from `sixfold/site/data/rounds/` (11 towns + `index.json`) into `sixfold-data/rounds/`, over the old ones. Do NOT upload `docs/MONEY-SHEETS.md`. Rebuilt and verified as a PURE SUPERSET: all 31,422 doors kept their id and address. 31,060 doors have a lawn level. Six Black Forest lots use the 2021 photo, because the 2023 photo is unreadable at Prima Ln / Old River Dr, and their cards show `· 2021`.
 

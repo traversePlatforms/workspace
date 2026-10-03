@@ -619,7 +619,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
-- [ ] **SX-23 — Money sheets on door cards: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** Tax credit ·
+- [x] **SX-23 — Money sheets on door cards: ✅ LIVE 2026-10-02, checked on Matthew's phone.** Tax credit ·
       Insurance · Grants, each an internal sheet with say / don't-say lines. Grants is county-aware. Per-door
       flags were rejected after counting: tax applies to every door; insurance has no per-door signal beyond
       the fire badge; no door is 40+ acres. Research refreshed the same day. **Douglas County's contractor
@@ -627,22 +627,22 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Upload: rounds.php + index.html + docs/money.json. **Still open:** the funding directory HTML/PDF/artifact,
       the tax notebook sheets and the published marketing-plan artifact still carry the old text and need
       rebuilding or republishing.
-- [ ] **SX-22 — Doors come back on their own: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.**
+- [x] **SX-22 — Doors come back on their own: ✅ LIVE 2026-10-02, checked on Matthew's phone.**
       Put back = mistake (off My doors and the stats). Not now rejoins the to-knock list on its date.
       No answer rejoins it after `MISS_REST_DAYS` = 2, a default I picked; Matthew can change it.
       Same two files as SX-21. 364/364 checks.
-- [ ] **SX-21 — My doors on My stats: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** Every door
+- [x] **SX-21 — My doors on My stats: ✅ LIVE 2026-10-02, checked on Matthew's phone.** Every door
       the person acted on, filtered by day or week, with Change / Put back / Open door on each one.
       Matthew's request. Also: neighbourhoods now open on Street order, not the last-used map.
       Upload is `rounds.php` + `index.html`. 359/359 checks.
-- [ ] **SX-20 — Doors-team requests: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** My stats
+- [x] **SX-20 — Doors-team requests: ✅ LIVE 2026-10-02, checked on Matthew's phone.** My stats
       (everyone) and Team stats (admin), the full door card on the map (minimise, next dot), email
       per door, walk-through photos (shrunk and GPS-stripped on the phone, stored outside
       public_html). Upload is `rounds.php` + `index.html`. It can ride with the lawn door files.
       Researched whatgrassisthis.com: a free AI grass identifier with no API and no named operator.
       Fine on a crew phone, nothing to build on. Offered a grass-type quick-pick for overseeding
       quotes (not built). 326/326 checks.
-- [ ] **SX-19 — ✅ LAWN RUN FINISHED 2026-10-02: 31,060 of 31,422 doors have a lawn level (6 Black Forest lots from the 2021 photo — the 2023 tile is unreadable there; 362 with none: 240 no parcel at the point, 102 lot too big, 4 off the photo). Door files rebuilt, PURE SUPERSET, committed. AWAITING UPLOAD of the 12 door files.** Lawn size per door, the aeration counterpart to the fire map. BUILT 2026-10-02 as a
+- [x] **SX-19 — ✅ LIVE 2026-10-02 (all 12 door files uploaded, checked on Matthew's phone). LAWN RUN FINISHED 2026-10-02: 31,060 of 31,422 doors have a lawn level (6 Black Forest lots from the 2021 photo — the 2023 tile is unreadable there; 362 with none: 240 no parcel at the point, 102 lot too big, 4 off the photo). Door files rebuilt, PURE SUPERSET, committed. AWAITING UPLOAD of the 12 door files.** Lawn size per door, the aeration counterpart to the fire map. BUILT 2026-10-02 as a
       LAWN LEVEL (Matthew: "build it out now, calibrate over time with input from the doors"). Crew
       correct it in the app, and their answers are exported as calibration data. Awaiting the full
       measuring run, then upload.**
