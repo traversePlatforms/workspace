@@ -384,7 +384,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       exclude on it; hazard is not a sales signal; data is 2023.
       **Next: build it** — sample at rebuild, store per door, badge + sort/filter in the app.
       Must pass `verify-superset.mjs`. Lot-size band still to be judged on a real afternoon.
-- [ ] **SX-9e — Move `rounds-codes.php` and `secrets.php` above the document root. ✅ CODE DONE 2026-10-03, awaiting the host moves (DEPLOY-ROUNDS.md).** Found by
+- [x] **SX-9e — Move `rounds-codes.php` and `secrets.php` above the document root. ✅ LIVE 2026-10-03, verified: both old URLs 404, sign-in and the form email work from sixfold-private/.** Found by
       the live check on 2026-09-30, added to the register 2026-10-01. **Both return 200 with a
       zero-byte body** — not a leak, but the `.htaccess` deny is not what is protecting them.
       PHP executing the file is. That holds until the day PHP does not run for that directory —
@@ -619,24 +619,24 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
-- [ ] **SX-27 — Leads screen: ✅ BUILT AND TESTED 2026-10-03, rides with the SX-24 upload (+ `api/submit.php`).**
+- [x] **SX-27 — Leads screen: ✅ LIVE 2026-10-03, verified (page matches build, test enquiry emailed and appeared in Leads).**
       One admin list for every enquiry, with status and notes. Website form leads file themselves;
       Meta/Nextdoor/phone/referral are added by hand. This tracks what happened to a lead. It is
       not a notification fix (notifications already work, see SX-14). **Also fixed:** the
       website form's default "lawn" choice had no label, so most site enquiries arrived as
       "Enquiry". Upload notes: DEPLOY-ROUNDS.md, SX-27.
-- [ ] **SX-26 — Everything saves with no signal: ✅ BUILT AND TESTED 2026-10-03, rides with the SX-24 upload.**
+- [x] **SX-26 — Everything saves with no signal: ✅ LIVE 2026-10-03, verified.**
       Notes, phones, emails, lawn answers and photos join marks in the offline queue (photos in
       IndexedDB). The queue now keeps on 5xx and moves past refused items; it used to do the
       opposite. index.html only.
-- [ ] **SX-24 — Trees near the house: BUILT AND TESTED 2026-10-02, FULL RUN FINISHED 2026-10-03 — ready to upload.** 26,430 of 31,422 doors have a reading. Most of the rest are houses built after the survey (whole new subdivisions in Black Forest: 1,882 doors). Superset gate passed, all 20 suites pass.
+- [x] **SX-24 — Trees near the house: ✅ LIVE 2026-10-03, verified.** 26,430 of 31,422 doors have a reading. Most of the rest are houses built after the survey (whole new subdivisions in Black Forest: 1,882 doors). Superset gate passed, all 20 suites pass.
       LiDAR (USGS 3DEP) for El Paso 2018 and Douglas 2020, the canopy map for Teller (no 3DEP
       there). Zones 0–5 / 5–30 / 30–100 ft from the house. The canopy map was tried first and
       missed whole evergreen clumps, so LiDAR replaced it where it exists. Upload: rounds.php +
       index.html + 12 door files. Method: tree-zones/TREES.md. Plus a **Trees** neighbourhood sort (Matthew: "add the tree sort
       before the upload"). Two spot-checks reshaped the rules: roof-aware alignment, despeckling, the roof-edge band, and
       "against" needing zone 1 and zone 2.
-- [ ] **SX-25 — Neighbourhood subdivision + Firewise tags: BUILT AND TESTED 2026-10-02, rides with SX-24.**
+- [x] **SX-25 — Neighbourhood subdivision + Firewise tags: ✅ LIVE 2026-10-03, verified.**
       Subdivision names: Teller from the statewide record, Douglas from the county table; El Paso
       uses metro districts (~30%, no public subdivision names). NFPA Firewise sites within 600 m,
       labelled "nearby, confirm". **Draft CORA request for the HOA registry, NOT SENT**

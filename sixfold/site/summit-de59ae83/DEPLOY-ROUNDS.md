@@ -7,7 +7,7 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Leads (SX-27) — 2026-10-03: `rounds.php` + `index.html` + `api/submit.php`
+## ⚑ Leads (SX-27) — 2026-10-03: `rounds.php` + `index.html` + `api/submit.php`  *(live 2026-10-03)*
 
 **⚑ This one touches `api/submit.php`, the live website form.** The note at the top saying
 submit.php is never modified is out of date as of this upload.
@@ -36,7 +36,7 @@ doesn't sit in the count.
 
 Tested: 26 checks, run through the real submit.php. All 20 suites pass (408 checks).
 
-## ⚑ Everything saves with no signal (SX-26) — 2026-10-03: `index.html` only
+## ⚑ Everything saves with no signal (SX-26) — 2026-10-03: `index.html` only  *(live 2026-10-03)*
 
 Before, only door marks waited on the phone for signal. Now **notes, phone numbers, emails,
 lawn answers and photos** do too:
@@ -55,7 +55,7 @@ lawn answers and photos** do too:
 Now it keeps items on no signal, a server error or a signed-out phone, and moves past refused
 items. Tested with the network cut: 18 checks, and all 20 suites (414 checks) pass.
 
-## ⚑ Codes and the email password move out of public_html (SX-9e) — 2026-10-03: `rounds.php` + `quote.php` + `config.php`, then two moves on the host
+## ⚑ Codes and the email password move out of public_html (SX-9e) — 2026-10-03: `rounds.php` + `quote.php` + `config.php`, then two moves on the host  *(live 2026-10-03)*
 
 **Why:** `api/rounds-codes.php` (every crew code) and `api/secrets.php` (the Gmail app password)
 sit inside `public_html`. Today they're safe only because the server runs them as programs. If
@@ -77,7 +77,7 @@ that ever stops, they're served as plain text. The door data was moved out for t
 The site bundle (`make-bundle.mjs`) now refuses to include either file, so a future website
 upload can't put them back in `public_html`.
 
-## ⚑ Trees near the house + neighbourhood tags (SX-24, SX-25) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
+## ⚑ Trees near the house + neighbourhood tags (SX-24, SX-25) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files  *(live 2026-10-03)*
 
 **Trees near the house:** a chip on each door, using the state's defensible-space zones:
 - **Trees against house**: 25% or more tree cover in the first 5 ft and in 5–30 ft;
