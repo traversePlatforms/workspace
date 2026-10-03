@@ -153,6 +153,9 @@ $message = $field('message', 6000);
 // had nowhere to land. 'both' became 'multiple' at the same time — with three
 // services "both" no longer says anything.
 $needs = [
+    // 'lawn' added 2026-10-03: the contact page's DEFAULT option since the aeration-led site
+    // (2026-09-25), missing here, so most enquiries were arriving labelled just "Enquiry".
+    'lawn'        => 'Lawn & turf care',
     'fire'        => 'Fire mitigation',
     'clearing'    => 'Land clearing',
     'landscaping' => 'Landscaping',
@@ -201,6 +204,17 @@ $lines[] = 'Sent ' . date('c')
     . ' — page ' . ($_SERVER['HTTP_REFERER'] ?? '?')
     . ' — IP ' . ($_SERVER['REMOTE_ADDR'] ?? '?');
 $body = implode("\n", $lines);
+
+// The door app's Leads screen (2026-10-03): the same lead, filed beside the door data and
+// outside public_html, so it shows up in the app with a status. Only where sixfold-data
+// exists (the host); a local checkout skips it. Never allowed to put the lead at risk.
+$leadsHome = dirname(__DIR__, 2) . '/sixfold-data';
+if (is_dir($leadsHome) && (is_dir($leadsHome . '/leads') || @mkdir($leadsHome . '/leads', 0750))) {
+    @file_put_contents($leadsHome . '/leads/leads.log', json_encode([
+        'id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'website', 'at' => time(),
+        'need' => $needLabel, 'name' => $name, 'phone' => $phone, 'email' => $email, 'town' => $town, 'msg' => $message,
+    ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
 
 // Backup log first, so a mail() failure never loses the lead.
 @file_put_contents(

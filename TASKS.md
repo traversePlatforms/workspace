@@ -619,6 +619,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-27 — Leads screen: ✅ BUILT AND TESTED 2026-10-03, rides with the SX-24 upload (+ `api/submit.php`).**
+      One admin list for every enquiry, with status and notes. Website form leads file themselves;
+      Meta/Nextdoor/phone/referral are added by hand. This tracks what happened to a lead. It is
+      not a notification fix (notifications already work, see SX-14). **Also fixed:** the
+      website form's default "lawn" choice had no label, so most site enquiries arrived as
+      "Enquiry". Upload notes: DEPLOY-ROUNDS.md, SX-27.
 - [ ] **SX-26 — Everything saves with no signal: ✅ BUILT AND TESTED 2026-10-03, rides with the SX-24 upload.**
       Notes, phones, emails, lawn answers and photos join marks in the offline queue (photos in
       IndexedDB). The queue now keeps on 5xx and moves past refused items; it used to do the

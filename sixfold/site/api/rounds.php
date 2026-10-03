@@ -852,6 +852,78 @@ if ($action === 'money') {
     out(['ok' => true] + $j);
 }
 
+/* ---- leads (2026-10-03) ---------------------------------------------------
+ * One list for every way an enquiry arrives. The website form files its leads here itself
+ * (api/submit.php, beside the email it already sends). Meta ad leads, Nextdoor messages,
+ * phone calls and referrals are added by hand from the app. Door bookings stay in Quotes to
+ * build. Admin only: these are customers' names and numbers. Append-only, like the marks:
+ *   leads/leads.log   one line per lead        { id, src, at, need, name, phone, email, town, msg, by? }
+ *   leads/leadst.log  one line per update      { id, status?, note?, by, at }   last status wins */
+const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other'];
+const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost'];
+function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
+function readLines(string $f): array {
+    $out = [];
+    if (!is_readable($f)) return $out;
+    $fh = @fopen($f, 'r'); if (!$fh) return $out;
+    while (($line = fgets($fh)) !== false) { $r = json_decode(trim($line), true); if (is_array($r) && isset($r['id'])) $out[] = $r; }
+    fclose($fh);
+    return $out;
+}
+function appendLine(string $f, array $row): bool {
+    if (!is_dir(dirname($f)) && !@mkdir(dirname($f), 0750, true)) return false;
+    return (bool) @file_put_contents($f, json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+$clean = function ($v, int $max): string {
+    $t = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) $v));
+    $t = trim((string) $t);
+    return function_exists('mb_substr') ? mb_substr($t, 0, $max, 'UTF-8') : substr($t, 0, $max);
+};
+
+if ($action === 'leads') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $leads = []; foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null];
+    foreach (readLines(leadsDir() . '/leadst.log') as $u) {
+        if (!isset($leads[$u['id']])) continue;
+        if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
+        if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
+    }
+    $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
+    usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
+    $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
+    if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
+    out(['ok' => true, 'new' => $new, 'leads' => $list]);
+}
+
+if ($action === 'leadadd') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $src = (string) ($body['src'] ?? '');
+    if (!in_array($src, LEAD_SRC, true) || $src === 'website') fail('Pick where the lead came from.');
+    $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => time(),
+            'need' => $clean($body['need'] ?? '', 60), 'name' => $clean($body['name'] ?? '', 120), 'phone' => $clean($body['phone'] ?? '', 40),
+            'email' => $clean($body['email'] ?? '', 160), 'town' => $clean($body['town'] ?? '', 160), 'msg' => $clean($body['msg'] ?? '', 2000), 'by' => $me];
+    if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Add at least a name, a phone number or an email.');
+    if ($row['email'] !== '' && !filter_var($row['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+    if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'id' => $row['id']]);
+}
+
+if ($action === 'leadstatus') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? '');
+    if (!preg_match('/^[wm]\d{14}[0-9a-f]{6}$/', $id)) fail('No such lead.', 404);
+    $known = false; foreach (readLines(leadsDir() . '/leads.log') as $l) if ($l['id'] === $id) { $known = true; break; }
+    if (!$known) fail('No such lead.', 404);
+    $status = (string) ($body['status'] ?? ''); $note = $clean($body['note'] ?? '', 500);
+    if ($status !== '' && !in_array($status, LEAD_STATUS, true)) fail('Bad status.');
+    if ($status === '' && $note === '') fail('Nothing to save.');
+    $row = ['id' => $id, 'by' => $me, 'at' => time()]; if ($status !== '') $row['status'] = $status; if ($note !== '') $row['note'] = $note;
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
 if ($action === 'lawnfix') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');

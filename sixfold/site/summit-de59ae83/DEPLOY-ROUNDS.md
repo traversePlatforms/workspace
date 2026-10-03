@@ -7,6 +7,35 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Leads (SX-27) — 2026-10-03: `rounds.php` + `index.html` + `api/submit.php`
+
+**⚑ This one touches `api/submit.php`, the live website form.** The note at the top saying
+submit.php is never modified is out of date as of this upload.
+
+A **Leads** tile for admins, above Quotes to build: one list for every enquiry, each with a
+status (New → Contacted → Walk booked → Quoted → Won / Lost), notes with who wrote them, and
+Call / Text / Email buttons. The tile shows how many are still New. Crew don't see it.
+
+- **Website form leads arrive by themselves.** submit.php files each one into
+  `sixfold-data/leads/leads.log`, beside the email it already sends. The email is unchanged.
+  It only does this when `sixfold-data/` exists, so it does nothing on a local checkout, and
+  a failure there can't lose the lead (the backup log and the email still run).
+- **Meta, Nextdoor, phone calls, Linktree and referrals are added by hand** with "+ Add a lead".
+  Meta Instant Form leads still only land in Leads Center; copy them across.
+- **Door bookings stay in Quotes to build.** The Leads screen links there.
+- Nothing to create on the host: `sixfold-data/leads/` makes itself on the first lead.
+
+**Bug fixed in submit.php on the way:** the contact page's default choice is "Lawn & turf care"
+(value `lawn`, since the aeration-led site went up 2026-09-25), but submit.php had no label for
+it. So most enquiries have been arriving in the inbox labelled just **"Enquiry"**. They now say
+"Lawn & turf care".
+
+**After uploading:** send one test enquiry from the contact page. It should arrive by email as
+before, now labelled "Lawn & turf care", and appear under Leads as New. Then mark it Lost so it
+doesn't sit in the count.
+
+Tested: 26 checks, run through the real submit.php. All 20 suites pass (408 checks).
+
 ## ⚑ Everything saves with no signal (SX-26) — 2026-10-03: `index.html` only
 
 Before, only door marks waited on the phone for signal. Now **notes, phone numbers, emails,

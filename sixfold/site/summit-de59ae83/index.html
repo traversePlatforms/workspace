@@ -202,6 +202,27 @@
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
   .chip.wait{background:var(--sunk);color:var(--soft)}
+  .lead .lhead{display:flex;align-items:baseline;gap:8px}
+  .lead .lhead .addr{flex:1}
+  .lead .lage{font-size:12.5px;color:var(--soft);white-space:nowrap}
+  .lead .lmsg{margin-top:8px;font-size:14px;line-height:1.45;white-space:pre-wrap;color:var(--ink)}
+  .lead .lnotes{margin-top:8px;font-size:13px;color:var(--soft)}
+  .lead .lnotes div{margin-top:3px}
+  .lcontact{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .lcontact a{display:inline-flex;align-items:center;gap:5px;border-radius:11px;padding:8px 12px;font:700 13.5px var(--sans);text-decoration:none;background:var(--sunk);color:var(--ink)}
+  .lcontact a .ic{width:16px;height:16px}
+  .lstat{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .lstat button{border:1.5px solid var(--line);background:transparent;color:var(--soft);border-radius:999px;padding:5px 10px;font:700 12.5px var(--sans);cursor:pointer}
+  .lstat button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+  .lnote{display:flex;gap:7px;margin-top:9px}
+  .lnote input{flex:1;min-width:0;font:15px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
+  .lnote button{border:0;border-radius:11px;padding:9px 13px;font:700 13.5px var(--sans);background:var(--sunk);color:var(--ink);cursor:pointer}
+  .tag.l-new{color:var(--on-ember);background:var(--ember-ink)}
+  .tag.l-contacted,.tag.l-walk,.tag.l-quoted{color:var(--later);background:var(--later-tint)}
+  .tag.l-won{color:var(--go);background:var(--go-tint)}
+  .tag.l-lost{color:var(--miss);background:var(--miss-tint)}
+  .addlead{width:100%;border:0;border-radius:14px;padding:13px;font:700 15px var(--sans);background:var(--ember-ink);color:var(--on-ember);cursor:pointer;margin-bottom:10px}
+  .tolink{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:11px 13px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:2px 0 12px}
   .treec{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;border:1.5px solid var(--bad);color:var(--bad)}
   .treec .ic{width:13px;height:13px}
   .fwc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;background:var(--go-tint);color:var(--go)}
@@ -940,6 +961,12 @@
     if (S.role === 'admin') {
       box.appendChild(tile('a', 'calc', 'Quote build',
         'Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.', 'Admin only · in testing', null, 'quote.html'));
+      var lt = tile('button', 'users', 'Leads',
+        'Every enquiry in one list: website form leads arrive by themselves; add Meta, Nextdoor, phone and referral leads by hand. Status and notes on each.', 'Admin only', leadsView);
+      box.appendChild(lt);
+      api('leads', { params: { count: 1 } }).then(function (j) {
+        var tg = lt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Admin only';
+      }).catch(function () {});
       box.appendChild(tile('button', 'clip', 'Quotes to build',
         'Every door marked Quote booked, newest first, with the number, the note, the fire hazard and a satellite link. Tick each one off when the quote goes out.', 'Admin only', quotesView));
     }
@@ -1454,6 +1481,129 @@
       draw();
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
+  /* ---- leads (2026-10-03) ----
+     One list for every channel. Website form leads arrive by themselves (api/submit.php files
+     them); everything else is added here by hand. Door bookings stay in Quotes to build.
+     Admin only. Names, numbers and messages are drawn with textContent. */
+  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other' };
+  var LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', 'Walk booked'], ['quoted', 'Quoted'], ['won', 'Won'], ['lost', 'Lost']];
+  var LEAD_NEED = ['Lawn & turf care', 'Fire mitigation', 'Land clearing', 'Landscaping', 'More than one service', 'Question'];
+  function ago(ts) {
+    var m = Math.max(0, Math.round((Date.now() / 1000 - ts) / 60));
+    if (m < 60) return m <= 1 ? 'just now' : m + ' min ago';
+    if (m < 1440) return Math.round(m / 60) + ' h ago';
+    return dayName(isoOf(new Date(ts * 1000)));
+  }
+  function leadsView() {
+    hideToast(); S.signin = null; S.screen = 'leads';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Leads', sub: 'Every enquiry, every channel', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('leads').then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the leads.')); return; }
+      var leads = j.leads || [];
+      var add = q('button', 'addlead', S.leadAdd ? 'Close the form' : '+ Add a lead'); add.type = 'button';
+      add.addEventListener('click', function () { S.leadAdd = !S.leadAdd; leadsView(); });
+      holder.appendChild(add);
+      if (S.leadAdd) holder.appendChild(leadForm());
+      var seg = q('div', 'seg');
+      var filters = [['open', 'Open'], ['won', 'Won'], ['lost', 'Lost'], ['all', 'All']];
+      var cur = S.leadFilter || 'open';
+      filters.forEach(function (x) {
+        var n = leads.filter(function (l) { return x[0] === 'all' || (x[0] === 'open' ? l.status !== 'won' && l.status !== 'lost' : l.status === x[0]); }).length;
+        var b = q('button', null, x[1] + ' ' + n); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === x[0]));
+        b.addEventListener('click', function () { S.leadFilter = x[0]; leadsView(); });
+        seg.appendChild(b);
+      });
+      holder.appendChild(seg);
+      var tq = q('button', 'tolink', 'Door bookings live in Quotes to build \u2192'); tq.type = 'button';
+      tq.addEventListener('click', quotesView);
+      holder.appendChild(tq);
+      var shown = leads.filter(function (l) { return cur === 'all' || (cur === 'open' ? l.status !== 'won' && l.status !== 'lost' : l.status === cur); });
+      if (!shown.length) { holder.appendChild(q('div', 'msg', leads.length ? 'Nothing here for that filter.' : 'No leads yet. Website enquiries appear here by themselves; add the others with the button above.')); return; }
+      shown.forEach(function (l) { holder.appendChild(leadCard(l)); });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
+  function leadCard(l) {
+    var c = q('div', 'door lead'); c.setAttribute('data-id', l.id);
+    var h = q('div', 'lhead'); h.appendChild(q('div', 'addr', l.name || l.phone || l.email || 'No name')); h.appendChild(q('span', 'lage', ago(l.at))); c.appendChild(h);
+    var meta = q('div', 'meta');
+    var st = LEAD_ST.filter(function (x) { return x[0] === l.status; })[0];
+    meta.appendChild(q('span', 'tag l-' + l.status, st ? st[1] : l.status));
+    meta.appendChild(q('span', null, [l.need, l.town, LEAD_SRC[l.src] || l.src].filter(Boolean).join(' \u00b7 ')));
+    c.appendChild(meta);
+    var ct = q('div', 'lcontact');
+    var tel = digits(l.phone);
+    if (tel.length >= 10) {
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('note', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
+    }
+    if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
+    if (ct.children.length) c.appendChild(ct);
+    if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
+    if (l.notes && l.notes.length) {
+      var nt = q('div', 'lnotes');
+      l.notes.forEach(function (n) { nt.appendChild(q('div', null, n.note + ' \u2014 ' + n.by + ', ' + ago(n.at))); });
+      c.appendChild(nt);
+    }
+    var sb = q('div', 'lstat');
+    LEAD_ST.forEach(function (x) {
+      var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === x[0]));
+      b.addEventListener('click', function () { if (l.status !== x[0]) saveLead(l, { status: x[0] }); });
+      sb.appendChild(b);
+    });
+    c.appendChild(sb);
+    var nr = q('div', 'lnote');
+    var inp = q('input'); inp.type = 'text'; inp.maxLength = 500; inp.placeholder = 'Add a note: left a voicemail, walk on Tuesday\u2026';
+    var sv = q('button', null, 'Save'); sv.type = 'button';
+    sv.addEventListener('click', function () { var v = inp.value.trim(); if (v) saveLead(l, { note: v }); });
+    nr.appendChild(inp); nr.appendChild(sv); c.appendChild(nr);
+    return c;
+  }
+  function saveLead(l, change) {
+    var body = { id: l.id }; for (var k in change) body[k] = change[k];
+    api('leadstatus', { body: body }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      toast(change.status ? 'Marked ' + (LEAD_ST.filter(function (x) { return x[0] === change.status; })[0] || ['', change.status])[1] : 'Note saved', l.name || '', null);
+      leadsView();
+    }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+  }
+  function leadForm() {
+    var f = q('div', 'phf');
+    function field(label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; }
+    var src = q('select'); [['', 'Where did it come from?']].concat(Object.keys(LEAD_SRC).filter(function (k) { return k !== 'website'; }).map(function (k) { return [k, LEAD_SRC[k]]; }))
+      .forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; src.appendChild(op); });
+    field('Source', src);
+    var nm = field('Name', q('input')); nm.maxLength = 120;
+    var ph = field('Phone', q('input')); ph.type = 'tel'; ph.maxLength = 40;
+    var em = field('Email', q('input')); em.type = 'email'; em.maxLength = 160;
+    var tw = field('Town or address', q('input')); tw.maxLength = 160;
+    var nd = q('select'); [''].concat(LEAD_NEED).forEach(function (o) { var op = q('option', null, o || 'What do they want?'); op.value = o; nd.appendChild(op); });
+    field('Service', nd);
+    var msg = field('What they said', q('textarea')); msg.rows = 3; msg.maxLength = 2000;
+    var err = q('div', 'err'); f.appendChild(err);
+    var row = q('div', 'row');
+    var sv = q('button', 'save', 'Save lead'); sv.type = 'button';
+    sv.addEventListener('click', function () {
+      err.textContent = '';
+      if (!src.value) { err.textContent = 'Pick where the lead came from.'; return; }
+      if (!nm.value.trim() && !ph.value.trim() && !em.value.trim()) { err.textContent = 'Add at least a name, a phone number or an email.'; return; }
+      sv.disabled = true;
+      api('leadadd', { body: { src: src.value, name: nm.value, phone: ph.value, email: em.value, town: tw.value, need: nd.value, msg: msg.value } }).then(function (j) {
+        sv.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
+        S.leadAdd = false; S.leadFilter = 'open'; toast('Lead added', nm.value || ph.value || em.value, null); leadsView();
+      }).catch(function () { sv.disabled = false; err.textContent = 'No signal. What you typed is kept; tap Save again when you have signal.'; });
+    });
+    row.appendChild(sv); f.appendChild(row);
+    return f;
+  }
+
   function teamView() {
     hideToast(); S.signin = null; S.screen = 'team';
     foot.hidden = true; setDock(null);
