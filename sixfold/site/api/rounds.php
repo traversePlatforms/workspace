@@ -824,6 +824,17 @@ if ($action === 'mydoors') {
     out(['ok' => true, 'who' => $who, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'doors' => $rows]);
 }
 
+/* ---- money sheets (2026-10-02, SX-23) --------------------------------------
+ * Short internal sheets on the tax credit, insurance and grants, opened from a door card.
+ * Kept in the private data folder, not the page: they sit behind the sign-in like the
+ * doors, and a fact can be corrected by uploading the JSON alone. */
+if ($action === 'money') {
+    $f = DATA_DIR . '/docs/money.json';
+    $j = is_readable($f) ? json_decode((string) file_get_contents($f), true) : null;
+    if (!is_array($j)) fail('The money sheets are not on this server yet.', 404);
+    out(['ok' => true] + $j);
+}
+
 if ($action === 'lawnfix') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');

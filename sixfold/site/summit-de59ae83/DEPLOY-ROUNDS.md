@@ -7,6 +7,28 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Money sheets on every door card (SX-23) — 2026-10-02: `rounds.php` + `index.html` + one NEW file
+
+| File | Where |
+|---|---|
+| `api/rounds.php` | over the existing one |
+| `summit-de59ae83/index.html` | over the existing one |
+| `data/rounds/docs/money.json` | **new folder**: `sixfold-data/rounds/docs/money.json`, next to the door files and **outside `public_html`** |
+
+Every door card gets a **Money** row: **Tax credit · Insurance · Grants**. Each opens a short internal sheet:
+what it is, who qualifies, what to **say** and what **not to say**, and the sources. Tabs switch between the
+three, and Back closes. **Grants follows the town's county:**
+- Castle Rock, Larkspur, Sedalia and Franktown get the Douglas County cost-share.
+- El Paso towns and Teller towns get "no county grant, talk tax credit and insurance".
+
+The sheets are fetched after sign-in from the private data folder. To correct a fact, upload `money.json`
+alone. Sources and the fact-check log: `data/rounds/docs/MONEY-SHEETS.md` (repo only, not uploaded).
+
+**Check after upload:** signed out, `/api/rounds.php?action=money` must answer 401. Signed in, if a sheet
+says "not on this server yet", the JSON is in the wrong folder.
+
+Tested: 12 new checks, and all 16 suites (376 checks) pass.
+
 ## ⚑ Doors come back on their own; Put back is for mistakes — 2026-10-02: `rounds.php` + `index.html`
 
 Matthew's rules:

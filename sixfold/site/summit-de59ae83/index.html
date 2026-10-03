@@ -371,6 +371,20 @@
   .lawnfix .lrow2 button{flex:1;border:0;border-radius:11px;padding:9px;background:transparent;color:var(--soft);font-size:13px;font-weight:700;cursor:pointer}
   /* aerial view: the lot, its line, the photo */
   .aerial{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+  .money{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:9px}
+  .money .ml{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-right:2px}
+  .money button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:5px 9px;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}
+  .mbody{flex:1;min-height:0;overflow:auto;padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+  .mbody .seg{position:sticky;top:0;z-index:1}
+  .mbody .mlead{font:400 18px/1.35 var(--serif);margin:4px 2px 14px}
+  .mbody .mblk{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:10px}
+  .mbody .mblk h3{font:700 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin:0 0 7px}
+  .mbody .mblk p{margin:0 0 7px;font-size:14.5px;line-height:1.45}
+  .mbody .mblk p:last-child{margin-bottom:0}
+  .mbody .msay{border-left:4px solid var(--go)}
+  .mbody .mdont{border-left:4px solid var(--bad)}
+  .mbody .msay p,.mbody .mdont p{padding-left:2px}
+  .mbody .msrc{font-size:12px;line-height:1.45;color:var(--soft);margin:12px 2px 0}
   .aerial .ahead{background:var(--bar);color:var(--bar-ink);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 12px;display:flex;gap:10px;align-items:center}
   .aerial .ahead b{flex:1;min-width:0;font:400 19px/1.2 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .aerial .ahead button{width:40px;height:40px;border-radius:12px;border:0;background:var(--bar-lift);color:var(--bar-ink);display:grid;place-items:center;cursor:pointer;flex:none}
@@ -2158,6 +2172,72 @@
   function googleSat(lat, lon, zoom) {
     return 'https://www.google.com/maps/@?api=1&map_action=map&center=' + lat + '%2C' + lon + '&zoom=' + zoom + '&basemap=satellite';
   }
+  /* ---- money sheets (2026-10-02, SX-23) ----
+     Tax credit · Insurance · Grants: the crew's short internal sheets, fetched after sign-in
+     (from the private data folder) and kept for the session. Grants follows the town's county.
+     Everything is drawn with textContent. */
+  function moneyRow() {
+    var r = q('div', 'money');
+    r.appendChild(q('span', 'ml', 'Money'));
+    [['tax', 'Tax credit'], ['insurance', 'Insurance'], ['grants', 'Grants']].forEach(function (x) {
+      var b = q('button', null, x[1]); b.type = 'button';
+      b.addEventListener('click', function () { moneyView(x[0]); });
+      r.appendChild(b);
+    });
+    return r;
+  }
+  function closeMoney() {
+    var m = document.getElementById('moneyv');
+    if (m) { m.parentNode.removeChild(m); document.body.style.overflow = ''; }
+  }
+  window.addEventListener('popstate', function () { if (document.getElementById('moneyv')) closeMoney(); });
+  function moneyView(topic) {
+    closeMoney();
+    var box = q('div', 'aerial'); box.id = 'moneyv';
+    var head = q('div', 'ahead');
+    var x = q('button'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(ico('back', 2.4));
+    x.addEventListener('click', function () { if (history.state && history.state.money) history.back(); else closeMoney(); });
+    var ttl = q('b', null, 'Fire-work money');
+    head.appendChild(x); head.appendChild(ttl); box.appendChild(head);
+    var body = q('div', 'mbody'); body.appendChild(q('div', 'skel')); box.appendChild(body);
+    document.body.appendChild(box); document.body.style.overflow = 'hidden';
+    try { history.pushState({ money: 1 }, ''); } catch (e) {}           /* the phone's Back closes it */
+    function draw(M) {
+      body.textContent = '';
+      var seg = q('div', 'seg');
+      [['tax', 'Tax credit'], ['insurance', 'Insurance'], ['grants', 'Grants']].forEach(function (t) {
+        var b = q('button', null, t[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(topic === t[0]));
+        b.addEventListener('click', function () { topic = t[0]; draw(M); body.scrollTop = 0; });
+        seg.appendChild(b);
+      });
+      body.appendChild(seg);
+      var T = M.topics[topic], lead = T.lead;
+      if (topic === 'grants') {
+        var county = (M.counties || {})[S.region];
+        lead = T.lead; T = (T.byCounty || {})[county];
+        if (!T) { body.appendChild(q('p', 'mlead', lead)); body.appendChild(q('div', 'msg', 'No grant sheet for this town yet. Talk about the tax credit and insurance.')); return; }
+      }
+      ttl.textContent = T.title;
+      if (lead) body.appendChild(q('p', 'mlead', lead));
+      (T.blocks || []).forEach(function (bk) {
+        var c = q('div', 'mblk'); c.appendChild(q('h3', null, bk.h));
+        (bk.p || []).forEach(function (t) { c.appendChild(q('p', null, t)); });
+        body.appendChild(c);
+      });
+      if (T.say && T.say.length) { var s1 = q('div', 'mblk msay'); s1.appendChild(q('h3', null, 'Say')); T.say.forEach(function (t) { s1.appendChild(q('p', null, t)); }); body.appendChild(s1); }
+      if (T.dont && T.dont.length) { var s2 = q('div', 'mblk mdont'); s2.appendChild(q('h3', null, "Don't say")); T.dont.forEach(function (t) { s2.appendChild(q('p', null, t)); }); body.appendChild(s2); }
+      if (T.sources && T.sources.length) body.appendChild(q('p', 'msrc', 'Sources: ' + T.sources.join('; ') + '.'));
+      if (M.footer) body.appendChild(q('p', 'msrc', M.footer));
+    }
+    if (S.money) return draw(S.money);
+    api('money').then(function (j) {
+      if (!document.body.contains(body)) return;
+      if (j._status === 401) { closeMoney(); return signinView('Signed out. Enter your code again.'); }
+      if (!j.ok) { body.textContent = ''; body.appendChild(q('div', 'msg bad', j.error || 'Could not load the money sheets.')); return; }
+      S.money = j; draw(j);
+    }).catch(function () { body.textContent = ''; body.appendChild(q('div', 'msg bad', 'No connection. The money sheets need signal the first time.')); });
+  }
+
   function closeAerial() {
     var a = document.getElementById('aerial');
     if (a) { a.parentNode.removeChild(a); document.body.style.overflow = ''; }
@@ -2351,6 +2431,7 @@
     }
     card.appendChild(extras(d));
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
+    card.appendChild(moneyRow());
     if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
     var acts = q('div', 'acts');
     [['booked', 'check'], ['later', 'clock'], ['miss', 'knock']].forEach(function (k) {

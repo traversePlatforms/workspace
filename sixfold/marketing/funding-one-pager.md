@@ -47,7 +47,7 @@ Colorado's wildfire mitigation tax credit covers **100% of what you spend** on q
 - **Tax year 2026:** 100% of costs, up to **$1,000**
 - **Tax year 2027:** 100% of costs, up to **$2,000**, and **refundable** — meaning you can receive it even if you owe no state tax. The income limit rises to $300,000 AGI.
 - Extended through **tax year 2030**
-- **Thinning woody vegetation now qualifies explicitly** — that is the core of this work
+- **Vegetation work qualifies** — thinning, fuel removal and defensible space. *(Corrected 2026-10-02 to match the designed sheet, fixed 2026-09-18: thinning already qualified before HB26-1289; the bill only adds beetle-killed or at-risk vegetation as a category.)*
 - Income limits apply. The credit covers vegetation work, **not** structural work like roofing, vents or siding.
 
 *Source: Colorado General Assembly 2026 tax expenditure evaluation; Colorado Department of Revenue, tax.colorado.gov/wildfire-tax-benefits. Confirm your own eligibility with your accountant.*
@@ -127,7 +127,7 @@ Kept here so the sheet can be lengthened later without re-researching.
 
 **Verified — primary sources, via [../research/fire-mitigation-market-research.md](../research/fire-mitigation-market-research.md), which holds the full citations:**
 
-- Tax credit at 100% of costs, $1,000 cap for tax years 2025 and 2026; $2,000 cap and refundable from tax year 2027; income limit rising to $300,000 federal AGI in 2027; extension through tax year 2030; thinning woody vegetation added as qualifying work; structural work excluded — Colorado General Assembly 2026 tax expenditure evaluation (2026-TE4), with the Department of Revenue wildfire tax benefits page as the reader-facing reference
+- Tax credit at 100% of costs, $1,000 cap for tax years 2025 and 2026; $2,000 cap and refundable from tax year 2027; income limit rising to $300,000 federal AGI in 2027; extension through tax year 2030; adds a narrower category for thinning vegetation at risk of or killed by mountain pine or spruce beetle (ordinary thinning already qualified); structural work excluded — Colorado General Assembly 2026 tax expenditure evaluation (2026-TE4), with the Department of Revenue wildfire tax benefits page as the reader-facing reference
 - All five HB25-1182 obligations as listed — annual written score notice, disclosure of available discounts, parcel-level mitigation incorporated into scoring and pricing, a discount for documented mitigation even absent a formal model, and the policyholder's right to appeal — Colorado HB25-1182, effective 1 July 2026
 - Douglas County cost-share terms in the held-back block: 50% up to $25,000, $50,000 community, $7,000 chipping, scope of work, site map, two estimates from the approved list — Douglas County programme page and Denver Gazette, 1 Apr 2026
 

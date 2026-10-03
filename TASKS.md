@@ -619,6 +619,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-23 — Money sheets on door cards: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.** Tax credit ·
+      Insurance · Grants, each an internal sheet with say / don't-say lines. Grants is county-aware. Per-door
+      flags were rejected after counting: tax applies to every door; insurance has no per-door signal beyond
+      the fire badge; no door is 40+ acres. Research refreshed the same day. **Douglas County's contractor
+      list is PREFERRED, not required, so the old "never mention it" rule is gone.** The 2026 round is closed.
+      Upload: rounds.php + index.html + docs/money.json. **Still open:** the funding directory HTML/PDF/artifact,
+      the tax notebook sheets and the published marketing-plan artifact still carry the old text and need
+      rebuilding or republishing.
 - [ ] **SX-22 — Doors come back on their own: ✅ BUILT AND TESTED 2026-10-02, awaiting upload.**
       Put back = mistake (off My doors and the stats). Not now rejoins the to-knock list on its date.
       No answer rejoins it after `MISS_REST_DAYS` = 2, a default I picked; Matthew can change it.

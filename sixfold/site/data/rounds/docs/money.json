@@ -1,0 +1,155 @@
+{
+  "checked": "2026-10-02",
+  "footer": "Checked 2 Oct 2026. These rules change every year. If a homeowner is counting on a number, they confirm it with the source before relying on it. Sources and the fact-check log: sixfold/site/data/rounds/docs/MONEY-SHEETS.md.",
+  "counties": {
+    "castle-rock": "douglas", "larkspur": "douglas", "sedalia": "douglas", "franktown": "douglas",
+    "black-forest": "elpaso", "monument": "elpaso", "palmer-lake": "elpaso",
+    "woodland-park": "teller", "divide": "teller", "florissant": "teller", "cripple-creek": "teller"
+  },
+  "topics": {
+    "tax": {
+      "title": "Colorado wildfire tax credit",
+      "lead": "The state gives back what a homeowner pays a contractor for wildfire mitigation on their own land, as a credit on their Colorado income tax.",
+      "blocks": [
+        { "h": "How much", "p": [
+          "Tax years 2025 and 2026: 100% of the cost, up to $1,000.",
+          "From tax year 2027: up to $2,000, and any credit above what they owe is paid out as a refund.",
+          "Before 2027, credit above what they owe in state tax is lost. It is not refunded and does not carry forward." ] },
+        { "h": "Who can claim it", "p": [
+          "An owner of record of private land in Colorado. A recorded lease also counts. Only one person per ownership group can claim.",
+          "Income limit: federal taxable income up to $129,200 for 2025. The 2026 limit is not published yet. From 2027: income (AGI) up to $300,000.",
+          "There is no wildfire-zone test. Any private land in Colorado can qualify.",
+          "Owned by an LLC or other company: send them to an accountant. The rules for companies are unsettled." ] },
+        { "h": "What work counts", "p": [
+          "Defensible space around buildings, fuel breaks, thinning to protect buildings, and dealing with what we cut: chipping, piling, lop-and-scatter, hauling off or burning.",
+          "It has to meet Colorado State Forest Service or Division of Fire Prevention and Control standards.",
+          "Only what they pay a contractor counts. Their own equipment or labor does not." ] },
+        { "h": "What does not count", "p": [
+          "Anything paid by a grant or cost-share. On a Douglas County cost-share job, only the homeowner's own half can go toward the credit.",
+          "Inspection or certification fees. Buying or renting equipment." ] },
+        { "h": "How they claim it", "p": [
+          "They claim it themselves, on form DR 0104CR filed with their Colorado return, with our receipts attached.",
+          "We give them an itemized invoice that separates the qualifying work, and a note of the standard we worked to." ] }
+      ],
+      "say": [
+        "Colorado has a tax credit for this: 100% of what you pay us, up to $1,000 this year, and $2,000 from 2027.",
+        "We itemize the invoice so the qualifying work is easy to claim.",
+        "Your accountant can confirm how it works for you."
+      ],
+      "dont": [
+        "\"We handle the paperwork for you.\" We don't prepare or file tax returns.",
+        "\"You'll get $1,000 back.\" It depends on their income and their tax bill.",
+        "Any example that stacks a grant and the credit on the same dollars."
+      ],
+      "sources": [
+        "Colorado Department of Revenue, Income Tax Topics: Wildfire Mitigation Measures (read in full 21 Aug 2026; 2026 limit re-checked as TBD 2 Oct 2026)",
+        "C.R.S. 39-22-543 as amended by HB26-1289 (enacted text)"
+      ]
+    },
+    "insurance": {
+      "title": "Insurance and mitigation",
+      "lead": "Since 1 July 2026, Colorado law (HB25-1182) requires insurers that use wildfire risk scores to tell homeowners their score and how mitigation is counted, to give credit for documented mitigation, and to let homeowners appeal.",
+      "blocks": [
+        { "h": "What the homeowner can do", "p": [
+          "Ask their insurer for their wildfire risk score and the discounts it gives for mitigation.",
+          "An insurer that gives mitigation discounts has to post them, with the amounts, on its website. One that gives none has to say so.",
+          "After the work, they send the insurer the evidence and ask for their score to be reviewed. The insurer has 30 days to update it or explain in writing why not. They can appeal." ] },
+        { "h": "What counts as evidence", "p": [
+          "Receipts and photos of the work.",
+          "Letters or reports from the mitigation contractor, which is us.",
+          "Inspection reports from a fire department or county, and community certificates such as Firewise.",
+          "On every fire job we give dated before-and-after photos and an itemized record they can send." ] },
+        { "h": "What nobody can tell them in advance", "p": [
+          "How big the discount will be. The law sets no percentage, and every insurer is different.",
+          "Some insurers build mitigation into the score instead of giving a separate discount.",
+          "These rules cover admitted insurers and the Colorado FAIR Plan, not non-admitted (surplus lines) insurers." ] }
+      ],
+      "say": [
+        "Colorado now makes your insurer tell you your wildfire score and what they give for mitigation.",
+        "We'll give you before-and-after photos and a written record of the work to send them."
+      ],
+      "dont": [
+        "\"This will lower your premium,\" or any percentage.",
+        "\"We'll call your insurer for you.\"",
+        "\"This will stop a non-renewal.\""
+      ],
+      "sources": [
+        "Colorado HB25-1182, effective 1 July 2026",
+        "Division of Insurance Regulation 5-1-28 (3 CCR 702-5): draft text read 2 Oct 2026. The adopted version may differ in detail; its effective date is reported inconsistently, so none is given here."
+      ]
+    },
+    "grants": {
+      "lead": "Grant money for homeowners depends on the county. This sheet changes with the town you're in.",
+      "byCounty": {
+        "douglas": {
+          "title": "Douglas County cost-share",
+          "blocks": [
+            { "h": "What it is", "p": [
+              "Douglas County pays 50% of a homeowner's wildfire mitigation project, up to $25,000. Community projects can get up to $50,000, and community chipping up to $7,500.",
+              "The county pays its half straight to the contractor after inspecting the finished work." ] },
+            { "h": "Where it stands", "p": [
+              "The 2026 round is closed. The next round has not been announced." ] },
+            { "h": "How it works", "p": [
+              "The homeowner applies with two contractor bids, a scope of work and a site map. The county visits with the homeowner and the contractor before approving.",
+              "Work starts only after the award is signed. They then have 10 months to finish. Work done before the award is not covered.",
+              "Homeowners can use any qualified contractor. The county keeps a preferred list and encourages people to use it. Sixfold is not on that list." ] }
+          ],
+          "say": [
+            "Douglas County runs a 50% cost-share for this. This year's round has closed. We can quote now so you're ready for the next one.",
+            "Our bid can be one of the two the county asks for."
+          ],
+          "dont": [
+            "\"We're on the county's approved list.\" We're not.",
+            "\"You'll get the grant.\" Awards are competitive.",
+            "\"Start now and the county will pay half.\" Work before the award isn't covered."
+          ],
+          "sources": [
+            "Douglas County, Wildfire Mitigation Cost-Share Program page (read 2 Oct 2026)",
+            "Douglas County, cost-share contractor list, August 2026: \"Residents may choose any qualified contractor to complete eligible work.\""
+          ]
+        },
+        "elpaso": {
+          "title": "El Paso County",
+          "blocks": [
+            { "h": "What exists", "p": [
+              "We have not found a county cost-share for homeowners here.",
+              "Fire districts sometimes run chipping days or small programs with grant money. None is confirmed running right now." ] },
+            { "h": "What to talk about instead", "p": [
+              "The state tax credit and insurance. Both apply here." ] }
+          ],
+          "say": [
+            "There's no county grant here right now, but the state tax credit covers 100% of what you pay us, up to $1,000."
+          ],
+          "dont": [
+            "\"The county will pay part of it.\"",
+            "Any grant or program by name."
+          ],
+          "sources": [
+            "Sixfold funding directory, 8 Sep 2026, re-searched 2 Oct 2026: no confirmed homeowner cost-share in El Paso County"
+          ]
+        },
+        "teller": {
+          "title": "Teller County",
+          "blocks": [
+            { "h": "What exists", "p": [
+              "We have not found a cost-share for homeowners here.",
+              "Teller County and Woodland Park have a $1 million state grant for a fuel buffer around Woodland Park. It protects utilities and roads. It is not money for homeowners." ] },
+            { "h": "What to talk about instead", "p": [
+              "The state tax credit and insurance. Both apply here." ] }
+          ],
+          "say": [
+            "There's no county grant for homeowners right now, but the state tax credit covers 100% of what you pay us, up to $1,000."
+          ],
+          "dont": [
+            "\"The Woodland Park grant will pay for this.\" It funds the city buffer, not private lots.",
+            "Any grant or program by name."
+          ],
+          "sources": [
+            "KOAA, Teller County and Woodland Park receive $1M COSWAP grant",
+            "Sixfold funding directory, 8 Sep 2026, re-searched 2 Oct 2026"
+          ]
+        }
+      }
+    }
+  }
+}

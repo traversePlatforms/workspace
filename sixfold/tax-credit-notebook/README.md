@@ -47,7 +47,7 @@ So the four forms are Sixfold's own, not the state's, and each says so on its fa
 
 ## What is deliberately absent
 
-- **The Douglas County cost-share.** Standing prohibition until Sixfold is on the county's approved contractor list. The programme needs two bids from that list, so naming it now sends a homeowner after money we cannot help them claim.
+- **The Douglas County cost-share.** *(Superseded 2026-10-02: the county list is preferred, not required — residents may use any qualified contractor. See the refresh in `../research/mitigation-funding-directory.md`. The notebook sheets have not been rebuilt.)* Was: standing prohibition until Sixfold is on the county's approved contractor list. The programme needs two bids from that list, so naming it now sends a homeowner after money we cannot help them claim.
 - **Any form of "licensed, insured, certified, Firewise."** None of it is true yet.
 - **Prices, or any job cost range.** Not until Sixfold has priced its own completed work.
 - **A percentage figure for the insurance discount.** HB25-1182 requires a discount; it does not set a rate. Any number would be invention.

@@ -96,7 +96,7 @@ Per the Colorado General Assembly's 2026 tax expenditure evaluation:
 Additional findings from that evaluation:
 - **About 450 claims statewide in tax year 2023.** Total revenue impact: $198,158.
 - The evaluation's own conclusion: the credit "has been underutilized," and "awareness of the credit is low, with many reporting they had not heard about the credit prior to our outreach."
-- HB26-1289 extended the credit through **tax year 2030**, made it refundable from 2027, raised the cap to $2,000, raised the income limit to $300,000 AGI, and **expanded eligibility to include thinning woody vegetation** — precisely Sixfold's core service.
+- HB26-1289 extended the credit through **tax year 2030**, made it refundable from 2027, raised the cap to $2,000, raised the income limit to $300,000 AGI, and adds a narrower category for thinning vegetation at risk of or killed by mountain pine or spruce beetle (ordinary thinning already qualified). *(Corrected 2026-10-02: this line used to say the bill "expanded eligibility to include thinning woody vegetation", which overstated it. The credit is also neither refunded nor carried forward before tax year 2027.)*
 - The credit cannot be claimed for structural work (roofing, vents, siding). It covers the vegetation work.
 - The older WUI-only *deduction* ended after tax year 2024; from 2025 only the credit is available.
 

@@ -120,7 +120,7 @@ Everything below has a source in the research file. Dates that conflict across s
 | **Late 2026** | Douglas County cost-share second window *anticipated* | **Dates conflict across sources — verify by phone.** Sixfold must be on the approved list *before* it opens |
 | **Late fall – early spring** | Dormant season | Best conditions, lowest demand, open capacity |
 | **Jan – Apr 2027** | Tax filing season | When the credit becomes real money in a homeowner's hand. Tax year 2026 claims filed here |
-| **Tax year 2027** | Credit rises to $2,000 and becomes **refundable**; income limit $300k AGI; thinning woody vegetation added as qualifying work | The strongest funding story Sixfold will ever have — work done in 2027 |
+| **Tax year 2027** | Credit rises to $2,000 and becomes **refundable**; income limit $300k AGI; adds a narrower category for thinning vegetation at risk of or killed by mountain pine or spruce beetle (ordinary thinning already qualified) | The strongest funding story Sixfold will ever have — work done in 2027 |
 | **31 Mar 2027** | FRWRM awards announced | Grantees suddenly need contractors |
 | **Spring 2027** | Demand peak, insurance renewal cycle | The push |
 
@@ -208,7 +208,7 @@ The winter offer, honestly argued: better for the property, better conditions, o
 January through April is when the credit stops being abstract. Two audiences:
 
 - **Homeowners who did work in 2026** — a short "here's how to claim it, here's your scope document, here's the form" note to every phase 1 customer. Costs nothing, generates referrals, and is the single most concrete demonstration of the positioning.
-- **Homeowners considering 2027 work** — tax year 2027 is when the credit hits $2,000, becomes refundable, raises the income limit to $300k AGI, and explicitly adds thinning woody vegetation. That is the strongest version of the story and it applies to work booked in the spring.
+- **Homeowners considering 2027 work** — tax year 2027 is when the credit hits $2,000, becomes refundable, raises the income limit to $300k AGI, and adds a narrower category for thinning vegetation at risk of or killed by mountain pine or spruce beetle (ordinary thinning already qualified). That is the strongest version of the story and it applies to work booked in the spring.
 
 ### Train the canvass
 
@@ -344,7 +344,7 @@ The number that matters most across all three phases: **jobs delivered on the da
 
 **Verified — traced to primary or first-party sources via [fire-mitigation-market-research.md](../research/fire-mitigation-market-research.md), which holds the full citations:**
 - WUI acreage, building and population figures — CSFS, 28 Sep 2023, on end-of-2022 CO-WRA data
-- Tax credit percentages, caps, income limits, refundability from tax year 2027, the ~450 TY2023 claims, the underutilisation finding, extension through 2030 and the addition of thinning woody vegetation — Colorado General Assembly 2026 tax expenditure evaluation (2026-TE4)
+- Tax credit percentages, caps, income limits, refundability from tax year 2027, the ~450 TY2023 claims, the underutilisation finding, extension through 2030 and the beetle-vegetation category (corrected 2026-10-02: thinning already qualified) — Colorado General Assembly 2026 tax expenditure evaluation (2026-TE4)
 - HB25-1182 requirements and the 1 July 2026 effective date — bill page and Colorado House Democrats joint release
 - FRWRM open funding ($7.04M), 8 Oct 2026 deadline, 31 Mar 2027 award announcement, and contractor ineligibility — CSFS announcements, 31 Mar 2026 and 3 Aug 2026
 - Douglas County cost-share terms: 50% up to $25,000, $50k community, $7k chipping, two bids from the approved list — Douglas County programme page and Denver Gazette, 1 Apr 2026

@@ -8,6 +8,18 @@ Artifact: https://claude.ai/code/artifact/4760fbf1-aecf-4c5f-965b-cbbd64b57fad
 
 ---
 
+## ⚑ Refresh 2026-10-02 — what changed since 8 September
+
+Checked against first-party pages for the in-app "Money" sheets (door-rounds app, SX-23). **The designed HTML, the PDF and the artifact above still show the 8 September text** — they need rebuilding from this file before anyone prints or sends them.
+
+- **Douglas County: the approved list is PREFERRED, not required.** The county's August 2026 list (*cost-share-contractors-aug-2026.pdf*, 28 companies) states: *"Residents may choose any qualified contractor to complete eligible work. However, we strongly encourage residents to consider contractors from the County's Preferred Contractor List."* The program page asks for *"a MINIMUM of two detailed contractor bids, preferably from the list of approved contractors."* **The old rule here — never name the program until Sixfold is on the list — rested on reading "preferably" as "must". Sixfold can be one of the two bids today.** Being on the list still helps, and Sixfold is not on it.
+- **Douglas County 2026 round: closed.** The page says *"The 2026 application period is now closed."* Awards are notified in the fall; the next round is not announced. Chipping cap is **$7,500**, not $7,000. Projects get a coordinated site visit with applicant and contractor before approval, and 10 months to finish after the award.
+- **Insurance (HB25-1182, in force since 1 Jul 2026), and the detail of DOI Regulation 5-1-28** (3 CCR 702-5). Read from the Division's PDF, which is **marked DRAFT** and gives an effective date of 14 Feb 2026; a trade summary (ResourcePro) gives 1 Oct 2026. **The dates conflict, so no date is used.** The substance, from the draft text: applies to admitted insurers and the Colorado FAIR Plan, not non-admitted carriers; an insurer that gives mitigation discounts must post them, with amounts, on its public website, or post that it gives none; one that does not must give the policyholder their wildfire risk score and the actions that could change it; evidence of completed mitigation must be reviewed and the score updated within **30 days**; appeals acknowledged within 10 days and decided within 30; evidence an insurer will consider includes **receipts and photos** and **letters, reports or certifications from mitigation contractors**.
+- **Tax credit: no change.** The Department of Revenue still lists the 2026 income limit as **TBD**. A search summary claiming $120,000 for 2026 was checked and is wrong — that is the 2023 figure.
+- **El Paso and Teller: still no homeowner cost-share found.** Teller County and Woodland Park's **$1M COSWAP grant** funds a buffer zone around Woodland Park protecting utilities and infrastructure — no homeowner component (KOAA). **HB26-1310**, which would have funded home-hardening grants for homeowners, was **postponed indefinitely on 23 March 2026** and is dead.
+
+---
+
 ## Why this document exists
 
 Every competitor sells the work. Almost nobody explains the money. The state's own 2026 evaluation of the wildfire-mitigation tax credit found **fewer than half** of surveyed landowners had ever heard of it. If Sixfold is the crew that shows up understanding what a client can claim, that is an advantage a new company can hold without out-crediting a veteran outfit.
@@ -203,7 +215,7 @@ The only NRCS financial-assistance program covering forestry resource concerns. 
 ## What this means for Sixfold
 
 1. **Tier 1 is the universal pitch.** The state tax credit and the insurance discount apply to essentially every client regardless of county — the two things every rep and crew lead should describe accurately, and the only funding Sixfold can point to on a first visit anywhere.
-2. **Douglas County is the one local cheque worth chasing — and it is gated.** Getting on the approved contractor list is the highest-leverage action here. Until then, describe the program but do not imply Sixfold can help access it.
+2. **Douglas County is the one local cheque worth chasing.** *(Revised 2026-10-02: the list is preferred, not required — see the refresh at the top.)* Sixfold can bid today; getting on the preferred list still helps. Never claim Sixfold is on it.
 3. **El Paso County, where Sixfold is based, has the thinnest county-money picture.** Do not imply a local cost-share exists there until one is confirmed by name. Sell Tier 1.
 4. **Tier 3 is a reason to court HOAs, fire districts and water providers**, not homeowners. The HOA/fire-district funding one-pager and the 8 Oct 2026 FRWRM deadline are the concrete openings.
 5. **The stacking rule shapes how Sixfold talks about combining money.** "These can often be combined; your accountant can tell you how they interact" is safe. A worked grant-plus-credit example is not.
