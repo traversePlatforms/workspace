@@ -619,6 +619,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
       app away mid-round. 211/211 checks.
 
+- [ ] **SX-24 — Trees near the house: BUILT AND TESTED 2026-10-02, full run in progress, then upload.**
+      LiDAR (USGS 3DEP) for El Paso 2018 and Douglas 2020, the canopy map for Teller (no 3DEP
+      there). Zones 0–5 / 5–30 / 30–100 ft from the house. The canopy map was tried first and
+      missed whole evergreen clumps, so LiDAR replaced it where it exists. Upload: rounds.php +
+      index.html + 12 door files. Method: tree-zones/TREES.md.
+- [ ] **SX-25 — Neighbourhood subdivision + Firewise tags: BUILT AND TESTED 2026-10-02, rides with SX-24.**
+      Subdivision names: Teller from the statewide record, Douglas from the county table; El Paso
+      uses metro districts (~30%, no public subdivision names). NFPA Firewise sites within 600 m,
+      labelled "nearby, confirm". **Draft CORA request for the HOA registry, NOT SENT**
+      (HOA-RECORDS-REQUEST.md). Declined: the senior/veteran homestead flag (not in the data, and
+      it would be a list of seniors). Already done before this request: the owner-address match.
 - [x] **SX-23 — Money sheets on door cards: ✅ LIVE 2026-10-02, checked on Matthew's phone.** Tax credit ·
       Insurance · Grants, each an internal sheet with say / don't-say lines. Grants is county-aware. Per-door
       flags were rejected after counting: tax applies to every door; insurance has no per-door signal beyond

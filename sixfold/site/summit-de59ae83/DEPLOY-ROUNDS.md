@@ -7,6 +7,29 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
+## ⚑ Trees near the house + neighbourhood tags (SX-24, SX-25) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
+
+**Trees near the house:** a chip on each door, using the state's defensible-space zones:
+- **Trees against house**: 15% or more tree cover in the first 5 ft;
+- **Heavy trees, 30 ft**: 35% or more in the 5–30 ft zone;
+- **Some trees, 30 ft**: 10% or more;
+- **Clear, 30 ft**: less than that.
+
+Tapping the chip shows cover at 0–5, 5–30 and 30–100 ft, the tallest tree within 30 ft, and the
+source. **USGS LiDAR** covers El Paso (2018) and Douglas (2020). **Teller has no LiDAR**, so it
+uses the satellite canopy map, marked "map" on the chip; the detail line warns that it misses
+trees. Doors with no building outline (new builds) get no chip. The export gains five tree
+columns. Method and checks: `operations/door-territory/tree-zones/TREES.md`.
+
+**Neighbourhood tags:** each neighbourhood card leads with its subdivision name (Teller,
+Douglas) or metro district (El Paso). A green **Firewise nearby: …** chip appears when an NFPA
+Firewise site in good standing is within 600 m of its doors. The door list opens with the same
+line plus "Ask before saying they are in it", because NFPA publishes a dot per site, not a
+boundary.
+- El Paso has no public subdivision names, so only about 30% of its doors get a name.
+- The HOA registry can only be searched by name. A draft open-records request is in
+  `operations/door-territory/HOA-RECORDS-REQUEST.md`, **not sent**.
+
 ## ⚑ Money sheets on every door card (SX-23) — 2026-10-02: `rounds.php` + `index.html` + one NEW file  *(live 2026-10-02)*
 
 | File | Where |
