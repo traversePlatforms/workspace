@@ -1,42 +1,56 @@
-# Draft: Colorado Open Records Act request for the HOA registry
+# HOA registry: what we got, and the one request left
 
-**Status:** DRAFT, 2026-10-02. Not sent. Matthew decides whether and when, and who signs it.
-**Why:** the state HOA registry can only be searched one name at a time. The full list would
-let the door app name the HOA, its management company, and a contact for each neighbourhood.
-That matters because:
-- HOAs can apply for state wildfire grants (FRWRM), which individual homeowners cannot;
-- HOAs control common-area work;
-- HOAs set the soliciting rules for their streets.
+**Status 2026-10-03: the HOA list is DONE without a records request.** The narrowed request
+below (phone and email only) is drafted and **NOT sent**. Matthew decides whether and who signs.
 
-**What it can't do:** an HOA's registration carries its name and address but no map boundary.
-Matching HOAs to our neighbourhoods still runs through subdivision names, which the app now has
-for Teller and Douglas, plus metro districts in El Paso.
+## What happened
+
+The original plan was an open-records (CORA) request for the state HOA registry. While checking
+where to send it, the Division of Real Estate's own records page turned out to say it is
+"regularly asked for lists of licensees or HOA registrations. This is publicly available
+information," and points to a free roster generator instead.
+
+So the list was downloaded the same day, free:
+`apps2.colorado.gov/dre/licensing/Lookup/GenerateRoster.aspx` -> "HOA - Home Owner's
+Association - Active" -> Download -> CSV. **8,596 active HOAs statewide.** Saved as
+`hoa-registry/hoa-roster-active-2026-10-03.csv`; `hoa-registry/build-hoa-list.mjs` cuts it to
+our ground. Results and method: [hoa-registry/HOA-LIST.md](hoa-registry/HOA-LIST.md).
+
+**What the roster leaves out: phone and email.** It has the designated agent's name and the
+mailing address, but not the agent's phone or email, even though registration collects them.
+
+## Is the request still worth sending?
+
+**Probably not first.** About 85% of the in-scope HOAs are professionally managed, and the
+management companies publish their own phone numbers. One call to RowCal reaches 166 of them.
+Send this only if the self-managed ones (153) turn out to matter.
+
+The roster page also says "This is the only information we collect on HOAs", which may mean the
+Division treats agent phone and email as not for release. The letter asks them to say so.
 
 ---
 
-**To:** Colorado Division of Real Estate, HOA Information and Resource Center.
-Send it through DORA's open-records request route, or to `dora_dre_hoainquiries@state.co.us`
-asking them to forward it to the records custodian.
+**To:** `DORA_DRE_RecordRequests@state.co.us` (the Division's Custodian of Records; requests
+must be in writing, and cannot be made by phone)
 
-**Subject:** Open records request — HOA registration list (El Paso, Douglas and Teller counties)
+**Subject:** Open records request: designated agent phone and email, HOA registrations in El Paso, Douglas and Teller counties
 
-Under the Colorado Open Records Act (C.R.S. 24-72-201 et seq.), I request a copy of the current
-registration records the Division holds for unit owners' associations registered under
-C.R.S. 38-33.3-401, limited to associations whose community is in El Paso, Douglas or Teller
-County. For each association, please include the fields collected at registration:
-- legal name;
-- address;
-- Secretary of State ID;
-- type of community;
-- number of units;
-- whether it is self-managed or professionally managed, and the management company's name;
-- designated agent / contact name, address, phone and email, as recorded.
+Under the Colorado Open Records Act (C.R.S. 24-72-201 et seq.), I request the designated agent
+**telephone number and email address**, as recorded at registration under C.R.S. 38-33.3-401,
+for each currently active unit owners' association whose community is in El Paso, Douglas or
+Teller County.
+
+I already have the public HOA roster from the Division's roster generator, so this request is
+limited to those two fields. Please include each association's legal name and credential
+number so the records can be matched to the roster.
 
 An electronic file (CSV or spreadsheet) is preferred. If the records cannot be filtered by
-county, the full statewide list is acceptable.
+county, the same two fields for all active associations is acceptable.
 
-If fees apply for research and retrieval time, please send an estimate before starting the work.
-If any part of the request is withheld, please identify the part and the basis for withholding it.
+If fees apply, please send an estimate before starting. If any part is withheld, please identify
+the part and the basis for withholding it.
+
+I would appreciate a reply by [date].
 
 [Name]
 [Sixfold LLC — title]
@@ -45,13 +59,17 @@ If any part of the request is withheld, please identify the part and the basis f
 ---
 
 ## Fact-check log
-- **Registration duty and fields:** the Division's HOA Center describes annual registration and
-  lists the fields above (legal name, address, SOS ID, date of incorporation, entity type,
-  community type, number of units, managed or self-managed, designated agent, revenue band).
-  Search result summary of dre.colorado.gov, 2026-10-02.
-- **Lookup is by name only:** the Division's licensee lookup, "Business Name/DBA" field. No bulk
-  download was found on data.colorado.gov or dre.colorado.gov, 2026-10-02.
-- **Not stated on purpose:** a fee figure. CORA's hourly research-and-retrieval cap is adjusted
-  over time and was not verified today, so the letter asks for an estimate instead.
-- **Unresolved:** whether the Division treats contact emails as releasable. The letter asks them
-  to name anything withheld.
+- **Where to send:** the Division's Open Record Requests page, dre.colorado.gov, read 2026-10-03.
+  It says `DORA_DRE_RecordRequests@state.co.us`, written requests only, include a deadline, and
+  say whether you want electronic copies. **Corrected:** the first draft sent it to the HOA
+  enquiries inbox, which is the wrong one.
+- **Fees:** same page. $41.37 an hour for research and retrieval, the first hour free, billed in
+  quarter hours. An estimate comes before any work. Not quoted in the letter on purpose.
+- **Response time:** same page, citing C.R.S. 24-72-203(3): presumed 3 working days, extendable
+  by up to 7 more.
+- **Fields collected at registration, including agent phone and email:** the Division's "HOA
+  Center Advisory: Registration Changes Pursuant to Section 38-33.3-401", read 2026-10-03, which
+  also lists the HB25-1043 additions (delinquency, judgments, payment plans, foreclosures).
+- **Roster download and "the only information we collect":** the roster generator page, used
+  2026-10-03.
+- **Unresolved:** whether agent phone and email are releasable.

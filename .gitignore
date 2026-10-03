@@ -72,6 +72,16 @@ sixfold/site/api/secrets.php
 # minutes; nothing is lost by keeping them out of git and the OneDrive mirror.
 sixfold/operations/door-territory/*.csv
 sixfold/operations/door-territory/.address-cache.json
+# 2026-10-03, same reasoning: the mailing list (owners at their mailing addresses), the
+# property-address cache behind it, the state HOA roster (designated agents' names and
+# addresses), and the lawn-health trial's per-door results. All regenerable by script.
+sixfold/operations/door-territory/mail/*.csv
+sixfold/operations/door-territory/.situs-cache.json
+sixfold/operations/door-territory/hoa-registry/*.csv
+sixfold/operations/door-territory/lawn-trial/ndvi-results.csv
+sixfold/operations/door-territory/lawn-trial/ndvi-cache.json
+sixfold/operations/door-territory/**/*.log
+sixfold/operations/door-territory/*.log
 # and the printed versions of the same thing
 sixfold/operations/door-territory/*.pdf
 sixfold/operations/door-territory/walklist-print.html

@@ -1,0 +1,64 @@
+{
+  "built": "2026-10-03",
+  "nonResident": 10948,
+  "government": 390,
+  "communityParcels": 350,
+  "communityOwners": 116,
+  "mailableProperties": 10208,
+  "recipients": 7483,
+  "multiProperty": 861,
+  "byType": {
+    "company": 1031,
+    "trust": 1055,
+    "person + company": 25,
+    "person": 5239,
+    "company + person + trust": 1,
+    "trust + company": 9,
+    "company + person": 32,
+    "person + trust": 6,
+    "company + trust": 8,
+    "church / nonprofit": 58,
+    "company + church / nonprofit": 1,
+    "trust + person": 14,
+    "person + trust + company": 1,
+    "church / nonprofit + company": 1,
+    "company + church / nonprofit + person": 1,
+    "trust + person + company": 1
+  },
+  "byWhere": {
+    "elsewhere in Colorado": 3331,
+    "PO box": 1601,
+    "very close (may live on the lot)": 791,
+    "unknown": 229,
+    "out of state": 1531
+  },
+  "byFire": {
+    "very high": 626,
+    "high": 2257,
+    "moderate": 1711,
+    "low": 260,
+    "very low": 23,
+    "not rated": 2603,
+    "water": 3
+  },
+  "byTown": {
+    "monument": 1634,
+    "palmer-lake": 883,
+    "black-forest": 2529,
+    "castle-rock": 777,
+    "larkspur": 85,
+    "sedalia": 114,
+    "franktown": 160,
+    "woodland-park": 1627,
+    "divide": 671,
+    "florissant": 811,
+    "cripple-creek": 917
+  },
+  "addressSource": {
+    "state address point": 4000,
+    "state address point (lot has several)": 219,
+    "no address point on the lot": 756,
+    "county parcel point": 71,
+    "county record": 5162
+  }
+}

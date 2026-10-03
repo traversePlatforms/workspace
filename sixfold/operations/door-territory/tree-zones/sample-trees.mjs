@@ -26,6 +26,18 @@ const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'el
   'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller' };
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
+/* --mail: measure the mailing-list properties (../mail/mail-properties.csv, owners who live
+   elsewhere) instead of the doors. Same cache, same key: the two sets never share a parcel. */
+const MAIL = process.argv.includes('--mail');
+function mailDoors(p, town) {
+  const [h, ...lines] = readFileSync(p, 'utf8').trim().split('\n');
+  const head = h.split(','), rows = lines.map((l) => l.slice(1, -1).split('","'));   /* header unquoted, rows fully quoted */
+  const ix = (k) => head.indexOf(k);
+  return rows.filter((r) => r[ix('town')] === town)
+    .map((r) => ({ a: r[ix('property_address')] || `parcel ${r[ix('parcel')]}`, la: Number(r[ix('lat')]), lo: Number(r[ix('lon')]) }))
+    .filter((d) => Number.isFinite(d.la))
+    .sort((x, y) => Math.round(x.la * 200) - Math.round(y.la * 200) || x.lo - y.lo);   /* rough grid order = tile reuse */
+}
 setMemoMax(500);
 
 const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, 'utf8')) : {};
@@ -34,9 +46,10 @@ function save() { writeFileSync(CACHE + '.tmp', JSON.stringify(cache)); renameSy
 const started = Date.now(); let done = 0;
 for (const [town, county] of Object.entries(TOWNS)) {
   if (ONLY && town !== ONLY) continue;
-  const p = join(DT, `${town}-areas.json`);
+  const p = MAIL ? join(DT, 'mail', 'mail-properties.csv') : join(DT, `${town}-areas.json`);
   if (!existsSync(p)) continue;
-  const all = JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.la === 'number');   /* neighbourhood order = good tile reuse */
+  const all = MAIL ? mailDoors(p, town)
+    : JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.la === 'number');   /* neighbourhood order = good tile reuse */
   const todo = all.filter((d) => !cache[`${d.la},${d.lo}`]).slice(0, LIMIT);
   if (!todo.length) { console.log(`${town}: all ${all.length} measured`); continue; }
   const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);

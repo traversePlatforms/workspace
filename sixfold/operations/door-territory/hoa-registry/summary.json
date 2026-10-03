@@ -1,0 +1,26 @@
+{
+  "roster": "hoa-roster-active-2026-10-03.csv",
+  "rosterRows": 8596,
+  "countyBlank": 7959,
+  "inScope": 1022,
+  "byWhy": {
+    "match+zip": 90,
+    "match+county+zip": 6,
+    "match+county": 1,
+    "name only, manager in Denver metro: confirm": 42,
+    "county+zip": 74,
+    "county": 1,
+    "zip": 808
+  },
+  "matched": 97,
+  "matchedUnits": 32087,
+  "ourPlaces": 186,
+  "placesMatched": 54,
+  "landOwners": 93,
+  "landOwnersMatched": 60,
+  "managed": {
+    "Professionally Managed": 869,
+    "Self-Managed": 153
+  },
+  "managers": 65
+}
