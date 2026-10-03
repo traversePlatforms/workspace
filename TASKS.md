@@ -843,6 +843,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 | **12 Oct** | Kara's aeration job |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
 | **1 Nov** | Kara's first monthly payment · **19 Nov** first monthly visit |
+| **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold doesn't keep the old owner's phone, email and notes. Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists"). The owner-change handling in the app is NOT built yet: say whether to build it first |
 
 **⚑ These are written here on purpose.** Session-scheduled reminders do not survive the
 session — the register does, and it is read at the start of each one.
