@@ -642,7 +642,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Researched whatgrassisthis.com: a free AI grass identifier with no API and no named operator.
       Fine on a crew phone, nothing to build on. Offered a grass-type quick-pick for overseeding
       quotes (not built). 326/326 checks.
-- [ ] **SX-19 — Lawn size per door, the aeration counterpart to the fire map. BUILT 2026-10-02 as a
+- [ ] **SX-19 — ✅ LAWN RUN FINISHED 2026-10-02: 31,060 of 31,422 doors have a lawn level (6 Black Forest lots from the 2021 photo — the 2023 tile is unreadable there; 362 with none: 240 no parcel at the point, 102 lot too big, 4 off the photo). Door files rebuilt, PURE SUPERSET, committed. AWAITING UPLOAD of the 12 door files.** Lawn size per door, the aeration counterpart to the fire map. BUILT 2026-10-02 as a
       LAWN LEVEL (Matthew: "build it out now, calibrate over time with input from the doors"). Crew
       correct it in the app, and their answers are exported as calibration data. Awaiting the full
       measuring run, then upload.**

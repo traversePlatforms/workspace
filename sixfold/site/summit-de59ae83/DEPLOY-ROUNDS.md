@@ -144,6 +144,8 @@ view fitted, Back closes), plus all ten other suites (272 checks).
 
 ## ⚑ Lawn level per door (SX-19) — 2026-10-02: `rounds.php` + `index.html` + all 12 door files
 
+**The measuring run finished 2026-10-02.** Upload the 12 files from `sixfold/site/data/rounds/` (11 towns + `index.json`) into `sixfold-data/rounds/`, over the old ones. Do NOT upload `docs/MONEY-SHEETS.md`. Rebuilt and verified as a PURE SUPERSET: all 31,422 doors kept their id and address. 31,060 doors have a lawn level. Six Black Forest lots use the 2021 photo, because the 2023 photo is unreadable at Prima Ln / Old River Dr, and their cards show `· 2021`.
+
 | From | To |
 |---|---|
 | `api/rounds.php` | `public_html/api/rounds.php` |

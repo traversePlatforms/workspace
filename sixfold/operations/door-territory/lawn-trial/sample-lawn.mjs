@@ -87,7 +87,7 @@ async function measure(d, rings, item) {
   const x1 = Math.min(W, Math.ceil(Math.max(...xs)) + pad), y1 = Math.min(H, Math.ceil(Math.max(...ys)) + pad);
   if (x1 <= x0 || y1 <= y0) return { err: 'lot off the photo tile' };
   if (x1 - x0 > 2200 || y1 - y0 > 2200) return { err: 'lot too big to measure' };
-  const [R, , , N] = await im.readRasters({ window: [x0, y0, x1, y1], interleave: false });
+  const [R, , , N] = await im.readRasters({ window: [x0, y0, x1, y1], interleave: false }).catch((e) => { throw new Error('photo read ' + [x0, y0, x1, y1, W, H].join(',') + ': ' + e.message); });
   const w = x1 - x0, h = y1 - y0, n = w * h;
   /* heights, affine from the window corners into the height map */
   const ch = await chm(d.lo, d.la);
@@ -98,7 +98,7 @@ async function measure(d, rings, item) {
   /* stop at the tile's edge: a lot on a height-map tile boundary otherwise reads past it and fails */
   const hx1 = Math.min(ch.im.getWidth(), Math.ceil(Math.max(p00[0], p10[0], p01[0], p11[0])) + 1), hy1 = Math.min(ch.im.getHeight(), Math.ceil(Math.max(p00[1], p10[1], p01[1], p11[1])) + 1);
   if (hx1 <= hx0 || hy1 <= hy0) return { err: 'lot off the height-map tile' };
-  const HT = (await ch.im.readRasters({ window: [hx0, hy0, hx1, hy1] }))[0], hw = hx1 - hx0;
+  const HT = (await ch.im.readRasters({ window: [hx0, hy0, hx1, hy1] }).catch((e) => { throw new Error('height read ' + [hx0, hy0, hx1, hy1, ch.im.getWidth(), ch.im.getHeight()].join(',') + ': ' + e.message); }))[0], hw = hx1 - hx0;
   const local = px.map((r) => r.map(([a, b]) => [a - x0, b - y0]));
   const cls = new Uint8Array(n); let inside = 0;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
@@ -164,7 +164,7 @@ for (const town of TOWNS) {
   for (const d of todo) d.item = pick(d);
   todo.sort((a, b) => ((a.item && a.item.id) || '').localeCompare((b.item && b.item.id) || '') || b.la - a.la);
   console.log(`${town}: ${todo.length} doors to measure, ${parcels.length} parcels, ${items.length} photo tiles`);
-  let i = 0, errs = 0;
+  let i = 0, errs = 0, items21 = null;
   async function worker() {
     for (;;) {
       const d = todo[i++]; if (!d) return;
@@ -173,8 +173,22 @@ for (const town of TOWNS) {
         const pc = (grid.get(key(d.lo, d.la)) || []).find((c) => d.lo >= c.bb[0] && d.lo <= c.bb[2] && d.la >= c.bb[1] && d.la <= c.bb[3] && inRings(d.lo, d.la, c.rings));
         if (!pc) cache[k] = { err: 'no parcel at the point' };
         else if (!d.item) cache[k] = { err: 'no 2023 photo' };
-        else cache[k] = await measure(d, pc.rings, d.item);
-      } catch (e) { errs++; if (errs <= 5) console.log('   ', d.a, e.message.slice(0, 100)); continue; }   /* not cached: retried next run */
+        else {
+          try { cache[k] = await measure(d, pc.rings, d.item); }
+          catch (e) {
+            /* 2026-10-02: a few lots sit on an unreadable patch of their 2023 photo (Black Forest,
+               Prima Ln / Old River Dr). Fall back to the 2021 photo; the card shows the year. */
+            if (!/^photo read/.test(e.message)) throw e;
+            if (!items21) {
+              const s21 = await json(STAC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['naip'], bbox, query: { 'naip:year': { eq: '2021' } }, limit: 250 }) });
+              items21 = (s21.features || []).map((f) => ({ id: f.id, href: f.assets.image.href, date: f.properties.datetime.slice(0, 10), bb: f.bbox, gsd: f.properties.gsd }));
+            }
+            const it = items21.filter((x) => d.lo >= x.bb[0] && d.lo <= x.bb[2] && d.la >= x.bb[1] && d.la <= x.bb[3]).sort((p, q2) => p.gsd - q2.gsd)[0];
+            if (!it) throw e;
+            cache[k] = await measure(d, pc.rings, it);
+          }
+        }
+      } catch (e) { errs++; if (errs <= 5) console.log('   ', d.a, process.env.LAWN_DEBUG ? e.stack : e.message.slice(0, 100)); continue; }   /* not cached: retried next run */
       done++;
       if (done % 100 === 0) { save(); const rate = done / ((Date.now() - started) / 1000); console.log(`   ${done} measured · ${rate.toFixed(2)}/s · ${town} ${i}/${todo.length}`); }
     }
