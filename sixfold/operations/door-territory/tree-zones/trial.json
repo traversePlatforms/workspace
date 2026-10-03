@@ -1,0 +1,657 @@
+[
+ {
+  "town": "monument",
+  "address": "16118 KITCHENER WAY",
+  "acres": 0.28,
+  "fire": 6,
+  "z1": 0.05,
+  "z2": 0.38,
+  "z3": 0.38,
+  "n": [
+   123,
+   578,
+   332
+  ],
+  "h": 10,
+  "hs": 2758,
+  "px": 0.86,
+  "level": "heavy"
+ },
+ {
+  "town": "monument",
+  "address": "17890 NEW LONDON RD",
+  "acres": 0.74,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0.04,
+  "n": [
+   129,
+   847,
+   1758
+  ],
+  "h": 0,
+  "hs": 2311,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "monument",
+  "address": "3685 EL RANCHO WAY",
+  "acres": 1.11,
+  "fire": 4,
+  "z1": 0.52,
+  "z2": 0.38,
+  "z3": 0.78,
+  "n": [
+   102,
+   755,
+   2529
+  ],
+  "h": 17,
+  "hs": 1644,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "monument",
+  "address": "19675 DRACO DR",
+  "acres": 5,
+  "fire": 4,
+  "z1": 0.11,
+  "z2": 0.31,
+  "z3": 0.48,
+  "n": [
+   164,
+   1038,
+   4813
+  ],
+  "h": 8,
+  "hs": 3396,
+  "px": 0.86,
+  "level": "some"
+ },
+ {
+  "town": "monument",
+  "address": "16761 BUFFALO VALLEY PATH",
+  "acres": 0.23,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0,
+  "n": [
+   107,
+   449,
+   298
+  ],
+  "h": 0,
+  "hs": 2223,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "monument",
+  "address": "845 CIRCLE RD",
+  "acres": 0.34,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0,
+  "n": [
+   94,
+   692,
+   612
+  ],
+  "h": 0,
+  "hs": 1786,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "monument",
+  "address": "18665 ARROWWOOD DR",
+  "acres": 2.56,
+  "fire": 6,
+  "z1": 0.46,
+  "z2": 0.63,
+  "z3": 0.94,
+  "n": [
+   140,
+   899,
+   4581
+  ],
+  "h": 21,
+  "hs": 2767,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "castle-rock",
+  "address": "1488 S COLUMBINE DR",
+  "err": "no house outline"
+ },
+ {
+  "town": "castle-rock",
+  "address": "4975 HICKORY OAKS ST",
+  "err": "no house outline"
+ },
+ {
+  "town": "castle-rock",
+  "address": "1125 RIDGE OAKS DR",
+  "acres": 1.19,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0.05,
+  "z3": 0.09,
+  "n": [
+   190,
+   1186,
+   3525
+  ],
+  "h": 5,
+  "hs": 5114,
+  "px": 0.85,
+  "level": "clear"
+ },
+ {
+  "town": "castle-rock",
+  "address": "3618 ROCKY VIEW PL",
+  "acres": 3.77,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0.07,
+  "n": [
+   203,
+   1193,
+   4847
+  ],
+  "h": 0,
+  "hs": 5231,
+  "px": 0.85,
+  "level": "clear"
+ },
+ {
+  "town": "castle-rock",
+  "address": "1648 MARSH HAWK CIR",
+  "acres": 0.2,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0.3,
+  "z3": 0.16,
+  "n": [
+   141,
+   544,
+   31
+  ],
+  "h": 11,
+  "hs": 2392,
+  "px": 0.85,
+  "level": "some"
+ },
+ {
+  "town": "castle-rock",
+  "address": "2787 RUSSET SKY CT",
+  "acres": 0.34,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0,
+  "n": [
+   128,
+   781,
+   414
+  ],
+  "h": 0,
+  "hs": 2660,
+  "px": 0.85,
+  "level": "clear"
+ },
+ {
+  "town": "castle-rock",
+  "address": "1435 WHITE FIR TER",
+  "acres": 1.48,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0,
+  "n": [
+   169,
+   1081,
+   3755
+  ],
+  "h": 0,
+  "hs": 4816,
+  "px": 0.85,
+  "level": "clear"
+ },
+ {
+  "town": "castle-rock",
+  "address": "2759 CASTLE CREST DR",
+  "acres": 5.75,
+  "fire": 4,
+  "z1": 0.03,
+  "z2": 0.36,
+  "z3": 0.71,
+  "n": [
+   169,
+   1111,
+   3777
+  ],
+  "h": 19,
+  "hs": 5248,
+  "px": 0.85,
+  "level": "heavy"
+ },
+ {
+  "town": "black-forest",
+  "address": "5215 MOUNT CUTLER CT",
+  "acres": 0.25,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0,
+  "n": [
+   154,
+   598,
+   37
+  ],
+  "h": 0,
+  "hs": 3491,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "black-forest",
+  "address": "9742 KEATING DR",
+  "acres": 0.48,
+  "fire": 3,
+  "z1": 0,
+  "z2": 0.01,
+  "z3": 0.14,
+  "n": [
+   144,
+   800,
+   1076
+  ],
+  "h": 2,
+  "hs": 2354,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "black-forest",
+  "address": "7937 RANNOCH MOOR WAY",
+  "err": "no house outline"
+ },
+ {
+  "town": "black-forest",
+  "address": "9443 SHIPMAN LN",
+  "acres": 5.64,
+  "fire": 4,
+  "z1": 0,
+  "z2": 0.25,
+  "z3": 0.5,
+  "n": [
+   181,
+   1116,
+   5278
+  ],
+  "h": 17,
+  "hs": 4551,
+  "px": 0.86,
+  "level": "some"
+ },
+ {
+  "town": "black-forest",
+  "address": "6373 MONDRIAN WAY",
+  "err": "no house outline"
+ },
+ {
+  "town": "black-forest",
+  "address": "9554 PENSTEMON CT",
+  "acres": 0.34,
+  "fire": 6,
+  "z1": 0.03,
+  "z2": 0.16,
+  "z3": 0.09,
+  "n": [
+   146,
+   671,
+   434
+  ],
+  "h": 7,
+  "hs": 3201,
+  "px": 0.86,
+  "level": "some"
+ },
+ {
+  "town": "woodland-park",
+  "address": "218 CORALINE ST",
+  "acres": 0.22,
+  "fire": 4,
+  "z1": 0.24,
+  "z2": 0.32,
+  "z3": 0.68,
+  "n": [
+   58,
+   358,
+   439
+  ],
+  "h": 8,
+  "hs": 929,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "woodland-park",
+  "address": "671 N WALNUT ST",
+  "acres": 0.34,
+  "fire": 6,
+  "z1": 0.28,
+  "z2": 0.61,
+  "z3": 0.86,
+  "n": [
+   83,
+   490,
+   747
+  ],
+  "h": 12,
+  "hs": 1041,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "woodland-park",
+  "address": "200 BRIDLEWOOD LN",
+  "err": "no house outline"
+ },
+ {
+  "town": "woodland-park",
+  "address": "103 SPRUCE DR",
+  "acres": 3.74,
+  "fire": 5,
+  "z1": 0.28,
+  "z2": 0.31,
+  "z3": 0.29,
+  "n": [
+   103,
+   720,
+   2841
+  ],
+  "h": 8,
+  "hs": 1496,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "woodland-park",
+  "address": "760 PINON RIDGE DR",
+  "acres": 0.21,
+  "fire": 6,
+  "z1": 0.38,
+  "z2": 0.48,
+  "z3": 0.27,
+  "n": [
+   104,
+   615,
+   315
+  ],
+  "h": 9,
+  "hs": 1695,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "woodland-park",
+  "address": "1321 SPRUCE RIDGE LN",
+  "acres": 0.55,
+  "fire": 6,
+  "z1": 0.55,
+  "z2": 0.61,
+  "z3": 0.54,
+  "n": [
+   138,
+   919,
+   1111
+  ],
+  "h": 13,
+  "hs": 3583,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "palmer-lake",
+  "address": "88 HERMOSA AVE",
+  "acres": 0.28,
+  "fire": 4,
+  "z1": 0.1,
+  "z2": 0.59,
+  "z3": 0.62,
+  "n": [
+   31,
+   283,
+   964
+  ],
+  "h": 9,
+  "hs": 607,
+  "px": 0.86,
+  "level": "heavy"
+ },
+ {
+  "town": "palmer-lake",
+  "address": "311 HIGHLAND RD",
+  "acres": 0.43,
+  "fire": 5,
+  "z1": 0.24,
+  "z2": 0.39,
+  "z3": 0.12,
+  "n": [
+   99,
+   591,
+   1133
+  ],
+  "h": 6,
+  "hs": 1516,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "palmer-lake",
+  "address": "3840 SIERRA VISTA RD",
+  "acres": 1.01,
+  "fire": 5,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0.01,
+  "n": [
+   141,
+   903,
+   2408
+  ],
+  "h": 0,
+  "hs": 2535,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "palmer-lake",
+  "address": "774 FOREST VIEW WAY",
+  "acres": 3.37,
+  "fire": 5,
+  "z1": 0,
+  "z2": 0.05,
+  "z3": 0.11,
+  "n": [
+   160,
+   1105,
+   4314
+  ],
+  "h": 8,
+  "hs": 3987,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "larkspur",
+  "address": "218 COLORADO AVE",
+  "acres": 0.23,
+  "fire": 6,
+  "z1": 0.06,
+  "z2": 0.72,
+  "z3": 0.89,
+  "n": [
+   111,
+   503,
+   285
+  ],
+  "h": 11,
+  "hs": 1784,
+  "px": 0.86,
+  "level": "heavy"
+ },
+ {
+  "town": "larkspur",
+  "address": "1239 TENDERFOOT DR",
+  "acres": 0.9,
+  "fire": 3,
+  "z1": 0.15,
+  "z2": 0.61,
+  "z3": 0.46,
+  "n": [
+   120,
+   798,
+   2704
+  ],
+  "h": 9,
+  "hs": 1899,
+  "px": 0.86,
+  "level": "against"
+ },
+ {
+  "town": "larkspur",
+  "address": "9140 FRANK RD",
+  "acres": 2.41,
+  "fire": 4,
+  "z1": 0,
+  "z2": 0.17,
+  "z3": 0.75,
+  "n": [
+   123,
+   862,
+   4573
+  ],
+  "h": 10,
+  "hs": 2337,
+  "px": 0.86,
+  "level": "some"
+ },
+ {
+  "town": "larkspur",
+  "address": "7944 EAGLE RD",
+  "acres": 5.42,
+  "fire": 4,
+  "z1": 0,
+  "z2": 0.06,
+  "z3": 0.18,
+  "n": [
+   128,
+   892,
+   3827
+  ],
+  "h": 3,
+  "hs": 2892,
+  "px": 0.86,
+  "level": "clear"
+ },
+ {
+  "town": "franktown",
+  "address": "7482 GREENWATER CIR",
+  "acres": 0.21,
+  "fire": 6,
+  "z1": 0,
+  "z2": 0,
+  "z3": 0,
+  "n": [
+   89,
+   484,
+   144
+  ],
+  "h": 0,
+  "hs": 3129,
+  "px": 0.85,
+  "level": "clear"
+ },
+ {
+  "town": "franktown",
+  "address": "6199 MOULTON CT",
+  "acres": 0.83,
+  "fire": 6,
+  "z1": 0.12,
+  "z2": 0.24,
+  "z3": 0.07,
+  "n": [
+   178,
+   992,
+   2003
+  ],
+  "h": 7,
+  "hs": 4342,
+  "px": 0.85,
+  "level": "some"
+ },
+ {
+  "town": "franktown",
+  "address": "7378 UPTON CT",
+  "acres": 1.2,
+  "fire": 3,
+  "z1": 0,
+  "z2": 0.05,
+  "z3": 0,
+  "n": [
+   192,
+   1107,
+   2489
+  ],
+  "h": 6,
+  "hs": 6060,
+  "px": 0.85,
+  "level": "clear"
+ },
+ {
+  "town": "franktown",
+  "address": "2133 CEDAR CT",
+  "acres": 5,
+  "fire": 6,
+  "z1": 0.13,
+  "z2": 0.29,
+  "z3": 0.39,
+  "n": [
+   149,
+   991,
+   4979
+  ],
+  "h": 12,
+  "hs": 3271,
+  "px": 0.85,
+  "level": "some"
+ },
+ {
+  "town": "monument",
+  "address": "17890 SIERRA WAY",
+  "acres": 2.52,
+  "fire": 4,
+  "z1": 0.27,
+  "z2": 0.68,
+  "z3": 0.99,
+  "n": [
+   109,
+   739,
+   2667
+  ],
+  "h": 15,
+  "hs": 1909,
+  "px": 0.86,
+  "level": "against"
+ }
+]

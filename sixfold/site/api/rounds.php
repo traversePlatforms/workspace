@@ -519,7 +519,7 @@ if ($action === 'regions') {
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
-                        'lawnL' => $lawnL, 'lawnM' => $lawnM];
+                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
@@ -555,11 +555,12 @@ if ($action === 'area') {
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
                 'lawn' => $d['lawn'] ?? null,
                 'lawnfix' => $lfix[$d['id']] ?? null,
+                'trees' => $d['trees'] ?? null,
                 'email' => $emails[$d['id']] ?? null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
         }
-        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS,
+        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
              'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key)))]);
     }
     fail('No such neighbourhood.', 404);
@@ -925,7 +926,7 @@ if ($action === 'quotes') {
                     'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] : null,
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
                     'quoted' => $qd,
-                    'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null,
+                    'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null,
                     'email' => $emails[$d['id']] ?? null, 'photos' => $photos[$d['id']] ?? [],
                 ];
             }
@@ -1004,6 +1005,7 @@ if ($action === 'report' || $action === 'export') {
                   'phone', 'phone_source', 'phone_last_seen', 'phone_added_by', 'phone_added',
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
+                  'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
                   'email', 'email_by', 'email_added', 'photos'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
@@ -1030,6 +1032,8 @@ if ($action === 'report' || $action === 'export') {
                               $p['by'] ?? '', $p ? date('Y-m-d', (int) $p['at']) : '',
                               $n['note'] ?? '', $n['by'] ?? '', $n ? date('Y-m-d', (int) $n['at']) : '',
                               $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
+                              $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
+                              isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
                               $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: ''], ',', '"', '');
             }
         }

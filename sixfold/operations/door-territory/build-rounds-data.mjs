@@ -60,6 +60,52 @@ function lawnOf(d) {
   return { lv, sq: Math.round(c.s / 100) * 100, yr: +String(c.d).slice(0, 4) };
 }
 
+/* Trees near the house, from tree-zones/sample-trees.mjs (2026-10-02). Tree-cover share of
+   the lot in the state defensible-space zones: z1 0-5 ft, z2 5-30 ft, z3 30-100 ft; h =
+   tallest tree within 30 ft (m). src 'lidar' (USGS 3DEP, El Paso 2018 / Douglas 2020) or
+   'canopy' (Meta canopy map, Teller — undercounts). */
+const TREE_CACHE = join(HERE, 'tree-cache.json');
+const treeByCoord = existsSync(TREE_CACHE) ? JSON.parse(readFileSync(TREE_CACHE, 'utf8')) : {};
+function treesOf(d) {
+  const c = typeof d.la === 'number' ? treeByCoord[`${d.la},${d.lo}`] : null;
+  if (!c || c.err || c.z2 == null) return null;
+  return { z1: c.z1 ?? 0, z2: c.z2, z3: c.z3 ?? null, h: c.h ?? 0, src: c.src === 'lidar' ? 'lidar' : 'canopy', yr: c.yr ?? null };
+}
+
+/* Neighbourhood place name and nearby Firewise communities, from sample-hoa.mjs (2026-10-02).
+   place: the most common subdivision (Teller, Douglas) or metro district (El Paso) among the
+   neighbourhood's doors, when at least 40% share it. Filing and phase suffixes are dropped,
+   so "CASTLE OAKS FLG 3" and "CASTLE OAKS FLG 4" count as one.
+   fw: Firewise sites within 600 m of at least 3 doors, or of a fifth of them. */
+const HOA_CACHE = join(HERE, 'hoa-cache.json');
+const hoaByCoord = existsSync(HOA_CACHE) ? JSON.parse(readFileSync(HOA_CACHE, 'utf8')) : {};
+function cleanPlace(s) {
+  let t = String(s || '').toUpperCase()
+    .replace(/\s+(MD|METRO(POLITAN)? DIST(RICT)?)(\s*(NO\.?|#)?\s*\d+)?(\s*--.*)?$/, '')
+    .replace(/\s+(FLG|FIL|FILING|PH|PHASE|UNIT|TRACT|SEC|SECTION|AMD|AMENDED|REPLAT|REPLT|RESUB|SUB|SUBDIVISION)\b.*$/, '')
+    .replace(/\s+(NO\.?|#)\s*\d+.*$/, '').replace(/\s+\d+$/, '').trim();
+  t = t.replace(/^(.*?),?\s+THE$/, 'THE $1');                       /* assessor style: "MEADOWS THE" */
+  return t.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase());
+}
+function placeOf(doors) {
+  const c = new Map(); let kind = 'sub';
+  for (const d of doors) {
+    const h = typeof d.la === 'number' ? hoaByCoord[`${d.la},${d.lo}`] : null;
+    const raw = h && (h.sub || h.metro); if (!raw) continue;
+    if (!h.sub) kind = 'metro';
+    const n = cleanPlace(raw); if (n) c.set(n, (c.get(n) || 0) + 1);
+  }
+  let best = null, bn = 0; for (const [n, k] of c) if (k > bn) { bn = k; best = n; }
+  return best && bn / doors.length >= 0.4 ? { n: best, k: kind, s: +(bn / doors.length).toFixed(2) } : null;
+}
+function firewiseOf(doors) {
+  const c = new Map();
+  const short = (n) => n.replace(/\bHome\s?owners'?\s+Association\b/i, 'HOA').replace(/\bProperty\s+Owners'?\s+Association\b/i, 'POA');
+  for (const d of doors) { const h = typeof d.la === 'number' ? hoaByCoord[`${d.la},${d.lo}`] : null; if (h && h.fw) { const n = short(h.fw); c.set(n, (c.get(n) || 0) + 1); } }
+  const out = [...c].filter(([, k]) => k >= 3 || k / doors.length >= 0.2).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([n, k]) => ({ n, d: k }));
+  return out.length ? out : null;
+}
+
 const index = [];
 for (const [key, label, fileName] of SOURCES) {
   const p = join(HERE, fileName);
@@ -69,11 +115,13 @@ for (const [key, label, fileName] of SOURCES) {
   const areas = j.areas.map((a) => ({
     name: a.name,
     avg: a.avg ? +a.avg.toFixed(2) : null,
+    place: placeOf(a.doors),
+    fw: firewiseOf(a.doors),
     doors: a.doors.map((d) => {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d) };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d) };
     }),
   }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');

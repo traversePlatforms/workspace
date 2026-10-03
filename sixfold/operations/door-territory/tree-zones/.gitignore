@@ -1,0 +1,5 @@
+# downloaded building outlines (~120 MB) and trial pictures: regenerate, never commit
+buildings/
+*.png
+*.log
+lidar-cache/

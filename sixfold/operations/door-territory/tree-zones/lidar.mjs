@@ -1,0 +1,205 @@
+/* USGS 3DEP LiDAR point clouds (public, on AWS as Entwine Point Tiles, Web Mercator),
+   turned into a 1 m height-above-ground grid for a small box. 2026-10-02.
+
+   Why: the Meta canopy-height map missed whole clumps of evergreens on test lots, and a
+   house wrongly read as "clear" is the error that costs a fire-mitigation lead. LiDAR
+   measures height directly.
+
+   Coverage (checked 2026-10-02): El Paso = CO_Eastern_ElPaso_2018; Douglas =
+   CO_DRCOG_2_2020. Teller has none in the 3DEP index, so Teller doors keep the canopy map.
+
+   Height: per 1 m cell, top = highest return that is not noise, water or a building
+   (classes 7, 9, 18, 6); ground = lowest class-2 return in the cell, gaps filled from the
+   nearest cell that has one. Height = top - ground.
+   Vegetation: the cell also records whether any above-ground return came from a pulse
+   that split into several returns. Canopy does that; a solid roof does not. These surveys
+   leave roofs unclassified, so this is what keeps a roof edge from counting as a tree. */
+import { Las } from 'copc';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const BASE = 'https://s3-us-west-2.amazonaws.com/usgs-lidar-public/';
+const SKIP = new Set([6, 7, 9, 18]);
+const info = new Map(), hier = new Map();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function get(url, type) {
+  for (let i = 0; i < 4; i++) {
+    try { const r = await fetch(url); if (r.ok) return type === 'json' ? await r.json() : new Uint8Array(await r.arrayBuffer()); if (r.status === 404) return null; } catch {}
+    await sleep(800 * (i + 1));
+  }
+  throw new Error('fetch failed: ' + url);
+}
+async function eptInfo(p) { if (!info.has(p)) info.set(p, await get(`${BASE}${p}/ept.json`, 'json')); return info.get(p); }
+async function hierarchy(p, key) {
+  const k = p + '/' + key;
+  if (!hier.has(k)) hier.set(k, await get(`${BASE}${p}/ept-hierarchy/${key}.json`, 'json'));
+  return hier.get(k);
+}
+function nodeBox(root, key) {
+  const [d, x, y, z] = key.split('-').map(Number), w = (root[3] - root[0]) / 2 ** d;
+  return [root[0] + x * w, root[1] + y * w, root[2] + z * w, root[0] + (x + 1) * w, root[1] + (y + 1) * w, root[2] + (z + 1) * w];
+}
+const hits = (a, b) => a[0] < b[2] && a[3] > b[0] && a[1] < b[3] && a[4] > b[1];   /* xy only; b = [xmin,ymin,xmax,ymax] */
+
+/* MAX_DEPTH: deeper tiles only add density beyond what a 1 m grid uses. Depth 9 alone
+   carries ~2 returns per square metre on these surveys; set from the comparison of
+   2026-10-02 (see TREES.md). */
+export let MAX_DEPTH = +(process.env.LIDAR_MAX_DEPTH || 0);
+/* per survey: the depth whose tiles give ~1 m spacing (El Paso depth 9 ~ 175 m tiles; Douglas
+   depth 10 ~ 120 m). Checked 2026-10-02: same answers as full depth on the test lots, ~10x less download. */
+const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10 };
+export function setMaxDepth(n) { MAX_DEPTH = n; }
+async function nodesFor(p, box) {
+  const e = await eptInfo(p), root = e.bounds, out = [];
+  async function walk(key, h) {
+    if (!(key in h)) return;
+    let cnt = h[key];
+    if (cnt === -1) { h = await hierarchy(p, key); cnt = h[key]; }
+    if (!cnt || !hits(nodeBox(root, key), box)) return;
+    out.push(key);
+    const [d, x, y, z] = key.split('-').map(Number);
+    if (d >= (MAX_DEPTH || PROJECT_DEPTH[p] || 99)) return;
+    for (const dx of [0, 1]) for (const dy of [0, 1]) for (const dz of [0, 1]) await walk(`${d + 1}-${2 * x + dx}-${2 * y + dy}-${2 * z + dz}`, h);
+  }
+  await walk('0-0-0-0', await hierarchy(p, '0-0-0-0'));
+  return out;
+}
+
+/* decoded tiles are cached on disk as compact Float64 triples + class bytes, per project */
+const memo = new Map();
+/* one decode per tile, shared by every worker that wants it at the same moment */
+function tilePoints(p, key, cacheDir) {
+  const mk = p + '/' + key;
+  if (memo.has(mk)) { const v = memo.get(mk); memo.delete(mk); memo.set(mk, v); return v; }
+  const pr = loadTile(p, key, cacheDir);
+  memo.set(mk, pr);
+  if (memo.size > MEMO_MAX) memo.delete(memo.keys().next().value);
+  pr.catch(() => memo.delete(mk));
+  return pr;
+}
+export let MEMO_MAX = 400;
+export function setMemoMax(n) { MEMO_MAX = n; }
+async function loadTile(p, key, cacheDir) {
+  let pts;
+  const f = cacheDir && join(cacheDir, p, key + '.bin');
+  if (f && existsSync(f)) {
+    const b = readFileSync(f), n = b.readUInt32LE(0);
+    pts = { n, xyz: new Float64Array(b.buffer.slice(b.byteOffset + 4, b.byteOffset + 4 + n * 24)), cls: new Uint8Array(b.buffer.slice(b.byteOffset + 4 + n * 24, b.byteOffset + 4 + n * 25)), nr: new Uint8Array(b.buffer.slice(b.byteOffset + 4 + n * 25, b.byteOffset + 4 + n * 26)) };
+  } else {
+    const buf = await get(`${BASE}${p}/ept-data/${key}.laz`, 'bin');
+    if (!buf) pts = { n: 0, xyz: new Float64Array(0), cls: new Uint8Array(0), nr: new Uint8Array(0) };
+    else {
+      const header = Las.Header.parse(buf);
+      const data = await Las.PointData.decompressFile(buf);
+      const view = Las.View.create(data, header);
+      const gx = view.getter('X'), gy = view.getter('Y'), gz = view.getter('Z'), gc = view.getter('Classification'), gn = view.getter('NumberOfReturns');
+      const n = view.pointCount, xyz = new Float64Array(n * 3), cls = new Uint8Array(n), nr = new Uint8Array(n);
+      for (let i = 0; i < n; i++) { xyz[i * 3] = gx(i); xyz[i * 3 + 1] = gy(i); xyz[i * 3 + 2] = gz(i); cls[i] = gc(i); nr[i] = gn(i); }
+      pts = { n, xyz, cls, nr };
+    }
+    if (f) {
+      mkdirSync(join(cacheDir, p), { recursive: true });
+      const out = Buffer.alloc(4 + pts.n * 26); out.writeUInt32LE(pts.n, 0);
+      Buffer.from(pts.xyz.buffer).copy(out, 4); Buffer.from(pts.cls.buffer).copy(out, 4 + pts.n * 24); Buffer.from(pts.nr.buffer).copy(out, 4 + pts.n * 25);
+      writeFileSync(f, out);
+    }
+  }
+  return pts;
+}
+
+/* Height grid over box [xmin,ymin,xmax,ymax] in EPSG:3857, cell = `cell` 3857 units.
+   Returns { x0, y1, cell, w, h, hgt: Float32Array (NaN = no data), multi: Uint8Array (1 =
+   split-pulse returns, i.e. vegetation) } — row 0 is the north edge. */
+export async function heightGrid(p, box, cell, cacheDir) {
+  const w = Math.ceil((box[2] - box[0]) / cell), h = Math.ceil((box[3] - box[1]) / cell);
+  const top = new Float32Array(w * h).fill(-Infinity), gnd = new Float32Array(w * h).fill(Infinity), multi = new Uint8Array(w * h);
+  for (const key of await nodesFor(p, box)) {
+    const t = await tilePoints(p, key, cacheDir);
+    for (let i = 0; i < t.n; i++) {
+      const x = t.xyz[i * 3], y = t.xyz[i * 3 + 1];
+      if (x < box[0] || x >= box[2] || y < box[1] || y >= box[3]) continue;
+      const c = Math.floor((x - box[0]) / cell), r = Math.floor((box[3] - y) / cell), o = r * w + c, z = t.xyz[i * 3 + 2], k = t.cls[i];
+      if (k === 2) { if (z < gnd[o]) gnd[o] = z; }
+      if (!SKIP.has(k)) { if (z > top[o]) top[o] = z; if (k !== 2 && t.nr[i] > 1) multi[o] = 1; }
+    }
+  }
+  /* fill ground gaps (under trees and houses) from the nearest cell with ground, by rings */
+  const g = Float32Array.from(gnd);
+  for (let pass = 0; pass < 12; pass++) {
+    let missing = 0;
+    const next = Float32Array.from(g);
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      const o = r * w + c; if (g[o] !== Infinity) continue;
+      let s = 0, n = 0;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if (rr < 0 || cc < 0 || rr >= h || cc >= w) continue; const v = g[rr * w + cc]; if (v !== Infinity) { s += v; n++; } }
+      if (n) next[o] = s / n; else missing++;
+    }
+    g.set(next);
+    if (!missing) break;
+  }
+  const hgt = new Float32Array(w * h);
+  for (let o = 0; o < w * h; o++) hgt[o] = top[o] === -Infinity || g[o] === Infinity ? NaN : Math.max(0, top[o] - g[o]);
+  return { x0: box[0], y1: box[3], cell, w, h, hgt, multi };
+}
+
+export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020' };
+export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020 };
+
+/* ---- the measurement on LiDAR -------------------------------------------------------
+   Same zones as zones.mjs. The building outline is first slid (up to 4 m each way) to
+   where it sits on the most roof — outlines traced from photos are often a metre or two
+   off the LiDAR — and every other outline on the lot (garage, shed) is masked with it.
+   A cell counts as tree when it stands 2 m or taller AND shows split-pulse returns, and
+   within 1 m of the wall only when it also rises 1.5 m above the roof (eaves). */
+import { ZONES, TALL, inRing, inRings, ringDist, merc } from './zones.mjs';
+export async function measureLidar(lat, lon, lotRings, house, others, project, cacheDir, debug) {
+  const k = Math.cos(lat * Math.PI / 180), cell = 1 / k;
+  const P = lotRings.map((r) => r.map(([lo, la]) => merc(lo, la)));
+  const xs = house.m.map((p) => p[0]), ys = house.m.map((p) => p[1]);
+  const pad = ZONES.z3 / k + 6, box = [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) + pad, Math.max(...ys) + pad];
+  const G = await heightGrid(project, box, cell, cacheDir);
+  if (!G.hgt.some((v) => !Number.isNaN(v))) return { err: 'no LiDAR here' };
+  const at = (X, Y) => { const c = Math.floor((X - G.x0) / cell), r = Math.floor((G.y1 - Y) / cell); return c < 0 || r < 0 || c >= G.w || r >= G.h ? -1 : r * G.w + c; };
+  /* slide the outline onto the roof: score = mean height (capped) of cells inside it */
+  let best = [0, 0], bestS = -1;
+  const hb = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  for (let dx = -5; dx <= 5; dx++) for (let dy = -5; dy <= 5; dy++) {
+    const ox = dx * cell, oy = dy * cell, ring = house.m.map(([x, y]) => [x + ox, y + oy]);
+    let s = 0, n = 0;
+    for (let X = hb[0] + ox + cell / 2; X < hb[2] + ox; X += cell) for (let Y = hb[1] + oy + cell / 2; Y < hb[3] + oy; Y += cell) {
+      if (!inRing(X, Y, ring)) continue; const o = at(X, Y); if (o < 0) continue; const v = G.hgt[o]; if (Number.isNaN(v)) continue; s += Math.min(v, 8); n++;
+    }
+    const sc = n ? s / n - Math.hypot(dx, dy) * 0.05 : -1;     /* tiny preference for no shift */
+    if (sc > bestS) { bestS = sc; best = [ox, oy]; }
+  }
+  const H = house.m.map(([x, y]) => [x + best[0], y + best[1]]);
+  /* the roof height, for the eave rule below */
+  const roofV = [];
+  for (let X = hb[0] + best[0] + cell / 2; X < hb[2] + best[0]; X += cell) for (let Y = hb[1] + best[1] + cell / 2; Y < hb[3] + best[1]; Y += cell) {
+    if (!inRing(X, Y, H)) continue; const o = at(X, Y); if (o >= 0 && !Number.isNaN(G.hgt[o])) roofV.push(G.hgt[o]);
+  }
+  roofV.sort((a, b) => a - b);
+  const roofH = roofV.length ? roofV[Math.floor(roofV.length / 2)] : 0;
+  const O = others.map((b) => b.m.map(([x, y]) => [x + best[0], y + best[1]]));
+  const n = { z1: 0, z2: 0, z3: 0 }, t = { z1: 0, z2: 0, z3: 0 }; let tallest = 0;
+  const zoneOf = debug ? new Uint8Array(G.w * G.h) : null, treeOf = debug ? new Uint8Array(G.w * G.h) : null;
+  for (let r = 0; r < G.h; r++) for (let c = 0; c < G.w; c++) {
+    const X = G.x0 + (c + 0.5) * cell, Y = G.y1 - (r + 0.5) * cell, o = r * G.w + c;
+    if (inRing(X, Y, H) || O.some((ring) => inRing(X, Y, ring)) || !inRings(X, Y, P)) continue;
+    const v = G.hgt[o]; if (Number.isNaN(v)) continue;
+    const dm = ringDist(X, Y, H) * k, z = dm <= ZONES.z1 ? 'z1' : dm <= ZONES.z2 ? 'z2' : dm <= ZONES.z3 ? 'z3' : null;
+    if (!z) continue;
+    n[z]++;
+    /* eaves: within 1 m of the wall a pulse clipping the roof edge splits like canopy does,
+       so there a cell only counts when it stands clearly above the roof (a crown over it) */
+    const tree = v >= TALL && G.multi[o] === 1 && (dm > 1.0 || v > roofH + 1.5);
+    if (tree) { t[z]++; if (z !== 'z3' && v > tallest) tallest = v; }
+    if (debug) { zoneOf[o] = z === 'z1' ? 1 : z === 'z2' ? 2 : 3; treeOf[o] = tree ? 1 : 0; }
+  }
+  const share = (z) => (n[z] ? +(t[z] / n[z]).toFixed(2) : null);
+  const ringArea = (rr) => { let a = 0; for (let i = 0, j = rr.length - 1; i < rr.length; j = i++) a += (rr[j][0] + rr[i][0]) * (rr[j][1] - rr[i][1]); return Math.abs(a / 2); };
+  const res = { z1: share('z1'), z2: share('z2'), z3: share('z3'), n: [n.z1, n.z2, n.z3], h: Math.round(tallest), hs: Math.round(ringArea(H) * k * k * 10.7639),
+    src: 'lidar', yr: PROJECT_YEAR[project] || null, roof: +roofH.toFixed(1), shift: [+(best[0] * k).toFixed(1), +(best[1] * k).toFixed(1)] };
+  if (debug) Object.assign(res, { G, H, zoneOf, treeOf });
+  return res;
+}

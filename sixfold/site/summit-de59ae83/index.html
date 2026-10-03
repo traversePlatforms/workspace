@@ -202,6 +202,10 @@
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
   .chip.wait{background:var(--sunk);color:var(--soft)}
+  .fwc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;background:var(--go-tint);color:var(--go)}
+  .fwc .ic{width:13px;height:13px}
+  .placeline{font-size:13.5px;line-height:1.45;color:var(--soft);margin:0 4px 10px}
+  .placeline b{color:var(--ink)}
   .nsp{background:var(--ink);color:var(--bg)}
   .hot{background:var(--fire-h);color:var(--fire-on)} .hot.v{background:var(--fire-vh)}
   .sect{display:flex;align-items:baseline;justify-content:space-between;margin:22px 4px 10px}
@@ -372,6 +376,15 @@
   /* aerial view: the lot, its line, the photo */
   .aerial{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
   .money{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:9px}
+  .tree{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font:700 12px var(--sans);line-height:1.35;white-space:nowrap;cursor:pointer;border:1.5px solid currentColor;background:transparent}
+  .tree .ic{width:13px;height:13px}
+  .tree em{font-style:normal;font-weight:400;opacity:.8}
+  .tree.tl-against{color:var(--bad)}
+  .tree.tl-heavy{color:var(--ember-ink)}
+  .tree.tl-some{color:var(--later)}
+  .tree.tl-clear{color:var(--soft)}
+  .treedet{margin-top:6px;font-size:12.5px;line-height:1.45;color:var(--soft)}
+  .treedet b{color:var(--ink)}
   .money .ml{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-right:2px}
   .money button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:5px 9px;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}
   .mbody{flex:1;min-height:0;overflow:auto;padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px))}
@@ -615,6 +628,7 @@
     users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
+    tree: '<path d="M12 3l-5 7h3l-4 6h12l-4-6h3z"/><path d="M12 16v5"/>',
     list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/>',
     near: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>',
     map: '<path d="M9 4.5L3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
@@ -1034,10 +1048,11 @@
       var sub = q('div', 'sub');
       var hd = mode === 'near' ? hoodDist(a) : null;
       if (hd !== null) { sub.appendChild(q('span', 'dist', distText(hd))); sub.appendChild(document.createTextNode(' \u00b7 ')); }
-      sub.appendChild(document.createTextNode(a.total + (a.total === 1 ? ' door' : ' doors') + (a.avg ? ' \u00b7 average lot ' + a.avg.toFixed(2) + ' acres' : '')));
+      sub.appendChild(document.createTextNode((a.place ? a.place.n + ' \u00b7 ' : '') + a.total + (a.total === 1 ? ' door' : ' doors') + (a.avg ? ' \u00b7 average lot ' + a.avg.toFixed(2) + ' acres' : '')));
       mid.appendChild(sub);
       var chips = q('div', 'chips');
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
+      if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
       if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ' lawns'));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : '')));
       if (a.due) chips.appendChild(chipEl('duep', null, a.due + ' due back'));
@@ -1429,7 +1444,7 @@
     api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok) return renderAreas();
       S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
-      S.areaNosol = j.nosol || null; S.rest = j.rest || 2;
+      S.areaNosol = j.nosol || null; S.rest = j.rest || 2; S.areaPlace = j.place || null; S.areaFw = j.fw || null;
       if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss' && !backOn(fd)) S.showAgain = true; }
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
       /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
@@ -2109,6 +2124,41 @@
   var DOT = '·';
   var LAWN = { L: 'Large lawn', M: 'Medium lawn', S: 'Small lawn', N: 'Little or no lawn', T: 'Mostly trees' };
   function lawnLevelOf(d) { return d.lawnfix ? d.lawnfix.lv : (d.lawn ? d.lawn.lv : null); }
+  /* ---- trees near the house (2026-10-02) ----
+     Tree-cover share of the lot in the state's defensible-space zones: 0-5 ft, 5-30 ft and
+     30-100 ft from the house. LiDAR (USGS 3DEP) where it exists; the canopy map in Teller,
+     which undercounts — the detail line says which. The level drives the chip:
+       against  trees in the first 5 ft (>= 15% cover)
+       heavy    >= 35% cover within 5-30 ft     some >= 10%     clear otherwise */
+  var TREE_LV = { against: 'Trees against house', heavy: 'Heavy trees, 30 ft', some: 'Some trees, 30 ft', clear: 'Clear, 30 ft' };
+  function treeLevel(d) {
+    var t = d.trees; if (!t) return null;
+    if ((t.z1 || 0) >= 0.15) return 'against';
+    if (t.z2 >= 0.35) return 'heavy';
+    if (t.z2 >= 0.10) return 'some';
+    return 'clear';
+  }
+  function treeChip(d) {
+    var lv = treeLevel(d); if (!lv) return null;
+    var el = q('button', 'tree tl-' + lv); el.type = 'button';
+    el.setAttribute('aria-label', TREE_LV[lv] + ' ' + DOT + ' tap for the numbers');
+    el.appendChild(ico('tree', 2.2));
+    el.appendChild(document.createTextNode(TREE_LV[lv]));
+    if (d.trees.src !== 'lidar') el.appendChild(q('em', null, ' ' + DOT + ' map'));
+    el.addEventListener('click', function () { S.treeOpen = S.treeOpen === d.id ? null : d.id; renderDoors(); });
+    return el;
+  }
+  function treeDetail(d) {
+    var t = d.trees, pc = function (v) { return v == null ? '—' : Math.round(v * 100) + '%'; };
+    var box = q('div', 'treedet');
+    box.appendChild(q('b', null, 'Tree cover: '));
+    box.appendChild(document.createTextNode('0–5 ft ' + pc(t.z1) + ' ' + DOT + ' 5–30 ft ' + pc(t.z2) + ' ' + DOT + ' 30–100 ft ' + pc(t.z3) +
+      (t.h ? ' ' + DOT + ' tallest within 30 ft ~' + Math.round(t.h * 3.28) + ' ft' : '') + '. '));
+    box.appendChild(document.createTextNode(t.src === 'lidar'
+      ? 'Measured by LiDAR' + (t.yr ? ' (' + t.yr + ')' : '') + ', so trees cut since then still show.'
+      : 'From a satellite canopy map, which misses some trees. Look before you quote.'));
+    return box;
+  }
   function lawnChip(d, tappable) {
     var lv = lawnLevelOf(d);
     if (!lv && !tappable) return null;
@@ -2401,8 +2451,10 @@
     var meta = q('div', 'meta');
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
+    var tc = treeChip(d); if (tc) meta.appendChild(tc);
     meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · ' + d.owner));
     card.appendChild(meta);
+    if (S.treeOpen === d.id && d.trees) card.appendChild(treeDetail(d));
     if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
     if (d.mark && d.mark.outcome === 'miss') {
       var was = q('div', 'meta st');
@@ -2510,6 +2562,7 @@
     }
 
     if (S.areaNosol) view.appendChild(nosolBanner());
+    if (S.areaPlace || S.areaFw) view.appendChild(placeLine());
 
     /* ---- street order, nearest to me, or a map (2026-10-01) ---- */
     if (S.dview === 'near') {
@@ -2579,6 +2632,17 @@
       view.appendChild(fl);
     }
     flashCard();
+  }
+  /* subdivision / metro district and nearby Firewise sites (2026-10-02). Firewise sites are
+     map dots, not boundaries, so the line says "nearby" and asks the crew to confirm. */
+  function placeLine() {
+    var el = q('div', 'placeline');
+    if (S.areaPlace) { el.appendChild(q('b', null, S.areaPlace.n)); el.appendChild(document.createTextNode(S.areaPlace.k === 'metro' ? ' (metro district)' : ' (subdivision)')); }
+    if (S.areaFw) {
+      if (S.areaPlace) el.appendChild(document.createTextNode(' \u00b7 '));
+      el.appendChild(document.createTextNode('Firewise community nearby: ' + S.areaFw.map(function (f) { return f.n; }).join(', ') + '. Ask before saying they are in it.'));
+    }
+    return el;
   }
   function nosolBanner() {
     var b = q('div', 'nsban');
