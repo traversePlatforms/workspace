@@ -7,7 +7,7 @@
 touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
 modified, moved, or re-uploaded.
 
-## ⚑ Security fixes from the review (SX-28) — 2026-10-03: `rounds.php` + `api/submit.php`
+## ⚑ Security and save fixes from the reviews (SX-28) — 2026-10-03: `rounds.php` + `quote.php` + `api/submit.php` + `index.html`
 
 From a read-only security review by a second model (Fable), every finding checked against
 the code before fixing. Nothing critical. Fable then checked the fixes and found three more
@@ -42,9 +42,25 @@ works for names like "Smith, John" and shows accented names cleanly; very long n
 capped in email headers; and if the data folder outside public_html ever goes
 missing, the app stops instead of quietly writing inside public_html.
 
+**The quote tool** (`quote.php`) now uses the same code check, so a removed or demoted admin
+loses it at once too. It was still trusting the cookie.
+
+**Saving with no signal (`index.html`), from Fable's review of the save queue:**
+- A save that reaches the server now beats an older one still waiting on the phone for that
+  door. Before, the older one could be sent later and land on top (an Undo, or a "Quote booked",
+  could be overwritten by a queued "No answer").
+- A save refused because the phone was signed out is now kept and sent after the code is typed.
+  It used to be thrown away, which would have lost every crew member's first save after this
+  upload, since everyone has to sign in again.
+- Each waiting change remembers who made it, and only sends while that person is signed in.
+  Before, it went out under whoever signed in next on that phone.
+- Only a real answer from our server can make the phone let go of a waiting change. A hotel
+  Wi-Fi sign-in page or a firewall page used to empty the whole queue in one go.
+- Signing out with changes still waiting asks first. Signing in sends anything waiting at once.
+
 **Checked and already fine:** the site forces HTTPS (every plain-HTTP address redirects).
 
-Tested: 20 new checks; all 21 suites pass (428 checks).
+Tested: 33 new checks; all 22 suites pass (441 checks).
 
 ## ⚑ Leads (SX-27) — 2026-10-03: `rounds.php` + `index.html` + `api/submit.php`  *(live 2026-10-03)*
 

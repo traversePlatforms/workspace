@@ -601,18 +601,40 @@
   function q(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t !== undefined) e.textContent = t; return e; }
 
   /* ---- offline queue ---- */
-  function queue() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch (e) { return []; } }
-  function setQueue(a) { try { localStorage.setItem(QKEY, JSON.stringify(a)); } catch (e) {} }
-  function enqueue(item) { var a = queue(); a.push(item); setQueue(a); }
+  /* A queue that will not parse is set aside rather than overwritten by the next save
+     (2026-10-03 review): the old code read it as empty and the next write wiped it. */
+  function queue() {
+    var raw = null;
+    try { raw = localStorage.getItem(QKEY); return JSON.parse(raw || '[]'); }
+    catch (e) { try { if (raw) localStorage.setItem(QKEY + '.unreadable', raw); localStorage.removeItem(QKEY); } catch (e2) {} return []; }
+  }
+  function setQueue(a) { try { localStorage.setItem(QKEY, JSON.stringify(a)); return true; } catch (e) { return false; } }
+  /* every queued item remembers WHO made it (2026-10-03 review): the queue belongs to the phone,
+     and without this a mark left by one person was sent under the next person to sign in */
+  function enqueue(item) { var a = queue(); var it = {}; for (var k in item) it[k] = item[k]; it.who = S.me; a.push(it); return setQueue(a); }
+  /* A save that reached the server supersedes anything older still waiting for the same door and
+     kind (2026-10-03 review): otherwise the queued older one was sent later and landed on top. */
+  function dropQueued(kind, region, id) {
+    var a = queue(), b = a.filter(function (x) { return !((x.kind || 'mark') === kind && x.id === id && x.region === region); });
+    if (b.length !== a.length) setQueue(b);
+  }
   /* marks only — notes, phones, emails and lawn answers share the queue (2026-10-03) */
   function pendingFor(id) { return queue().filter(function (x) { return x.id === id && (!x.kind || x.kind === 'mark'); }).pop(); }
   /* offline saves (2026-10-03): with no signal, a note, phone, email or lawn answer is kept on
      the phone and sent later. A newer one for the same door replaces an unsent older one. */
-  function enqueueSave(kind, body) {
+  function enqueueSave(kind, body, why) {
     var a = queue().filter(function (x) { return !(x.kind === kind && x.id === body.id && x.region === body.region); });
-    var it = { kind: kind }; for (var k in body) it[k] = body[k];
-    a.push(it); setQueue(a);
-    toast('Saved on this phone', 'No signal right now. It sends by itself when you have signal.', null);
+    var it = { kind: kind, who: S.me }; for (var k in body) it[k] = body[k];
+    a.push(it);
+    if (!setQueue(a)) { toast('Not saved', 'This phone could not store it. Keep this screen open and try again when you have signal.', null); return false; }
+    if (why !== 'signin') toast('Saved on this phone', 'No signal right now. It sends by itself when you have signal.', null);
+    return true;
+  }
+  /* signed out mid-save (a revoked or expired session, or the first save after an update):
+     keep the work, then ask for the code (2026-10-03 review: it used to be thrown away) */
+  function keepAndSignIn(kind, body) {
+    if (kind === 'mark') enqueue(body); else enqueueSave(kind, body, 'signin');
+    signinView('Signed out. Enter your code again — what you just saved is kept and sends after.');
   }
 
   function api(action, opts) {
@@ -625,7 +647,7 @@
       body: opts.body ? JSON.stringify(opts.body) : undefined,
       credentials: 'same-origin'
     }).then(function (r) {
-      return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.' }; })
+      return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.', _notOurs: true }; })
         .then(function (j) { j._status = r.status; return j; });
     });
   }
@@ -635,16 +657,26 @@
      4xx), so one bad item can never block the rest. (Fixed 2026-10-03: this used to drop on a
      server error and stall for ever on a refused item.) Photos go after. */
   var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix' };
+  /* An item is let go only when OUR server answered: sent (ok), or refused as invalid (400/404/
+     413, a JSON reply). Anything else is kept (2026-10-03 review): a Wi-Fi sign-in page or a
+     firewall page answers with HTML, and the old rule read that as "refused" and emptied the
+     whole queue in one pass. */
+  function letGo(j) { return j.ok || (!j._notOurs && (j._status === 400 || j._status === 404 || j._status === 413)); }
+  function mine(x) { return !x.who || x.who === S.me; }       /* items from before 'who' existed go with whoever is signed in */
   var flushing = null;
   function flush() {
     if (flushing) return flushing;
+    var skip = 0;
     flushing = (function step() {
-      var a = queue();
-      if (!a.length) return flushPhotos();
-      var item = a[0], body = {};
-      for (var k in item) if (k !== 'kind') body[k] = item[k];
-      return api(QACTION[item.kind || 'mark'] || 'mark', { body: body }).then(function (j) {
-        if (j._status === 401 || (!j.ok && j._status >= 500)) return;
+      if (!S.me) return;                                     /* nobody signed in: nothing can send */
+      var a = queue().filter(mine);
+      if (skip >= a.length) return flushPhotos();
+      var item = a[skip], body = {};
+      if (item.kind && !QACTION[item.kind]) { var c0 = queue(), s0 = JSON.stringify(item); setQueue(c0.filter(function (x) { return JSON.stringify(x) !== s0; })); return step(); }   /* unknown kind: never guess it is a mark */
+      for (var k in item) if (k !== 'kind' && k !== 'who') body[k] = item[k];
+      return api(QACTION[item.kind || 'mark'], { body: body }).then(function (j) {
+        if (j._status === 401) { var n0 = queue().filter(mine).length; signinView('Signed out. Enter your code again to send ' + n0 + (n0 === 1 ? ' waiting change.' : ' waiting changes.')); return; }
+        if (!letGo(j)) { skip++; return step(); }          /* kept: try the rest, this one again next time */
         var sig = JSON.stringify(item), cur = queue(), i = -1;
         for (var n = 0; n < cur.length; n++) if (JSON.stringify(cur[n]) === sig) { i = n; break; }
         if (i >= 0) { cur.splice(i, 1); setQueue(cur); }
@@ -678,19 +710,21 @@
       });
     });
   }
-  function queuePhoto(region, id, blob) { return pstore('readwrite', function (st) { return st.add({ region: region, id: id, blob: blob, at: Date.now() }); }).then(countPhotos); }
+  function queuePhoto(region, id, blob) { return pstore('readwrite', function (st) { return st.add({ region: region, id: id, blob: blob, at: Date.now(), who: S.me }); }).then(countPhotos); }
   function queuedPhotos() { return pstore('readonly', function (st) { return st.getAll(); }); }
   function countPhotos() { return queuedPhotos().then(function (a) { S.photoPending = a.length; }, function () { S.photoPending = 0; }); }
   function flushPhotos() {
-    return queuedPhotos().then(function (all) {
+    return queuedPhotos().then(function (every) {
+      var all = every.filter(mine);                       /* only the signed-in person's photos */
       function one(i) {
-        if (i >= all.length) return;
+        if (i >= all.length || !S.me) return;
         var p = all[i];
         return fetch(API + '?action=photo&region=' + encodeURIComponent(p.region) + '&id=' + encodeURIComponent(p.id),
           { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: p.blob, credentials: 'same-origin' })
-          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); })
+          .then(function (r) { return r.json().catch(function () { return { _notOurs: true }; }).then(function (j) { j._status = r.status; return j; }); })
           .then(function (j) {
-            if (j._status === 401 || (!j.ok && j._status >= 500)) return;
+            if (j._status === 401) return;
+            if (!letGo(j)) return one(i + 1);              /* kept for next time (same rule as the queue above) */
             return pstore('readwrite', function (st) { return st.delete(p.k); }).then(function () { return one(i + 1); });
           });
       }
@@ -898,6 +932,7 @@
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         S.me = j.name; S.role = j.role; S.signin = null;
+        flush();                                    /* anything this person left waiting goes now (2026-10-03) */
         boxes.className = 'boxes ok';
         say.textContent = 'Welcome back, ' + String(j.name || '').split(' ')[0];
         setTimeout(chooseView, reduced() ? 0 : 650);
@@ -978,6 +1013,10 @@
     var so = q('button', null, 'Sign out');
     so.type = 'button';
     so.addEventListener('click', function () {
+      /* unsent work stays on this phone under this person's name and sends when they sign in
+         here again (2026-10-03 review). Say so before they go. */
+      var waiting = queue().filter(mine).length + (S.photoPending || 0);
+      if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       api('signout').then(function () { S.me = null; S.role = 'crew'; signinView(); });
     });
     out.appendChild(so);
@@ -1408,8 +1447,8 @@
         else { r.gone = false; r.mine = who === S.me ? { outcome: o, at: at, revisit: item.revisit || '' } : (r.mine || prevMine); }
         draw();
         api('mark', { body: item }).then(function (j2) {
-          if (j2._status === 401) return signinView('Signed out. Enter your code again.');
-          if (j2.ok) { if (r.now) r.now.pending = false; } else enqueue(item);
+          if (j2._status === 401) return keepAndSignIn('mark', item);
+          if (j2.ok) { dropQueued('mark', item.region, item.id); if (r.now) r.now.pending = false; } else enqueue(item);
           draw();
         }).catch(function () { enqueue(item); draw(); });
         if (!quiet) toast(o === null ? 'Back on the list' : OUT[o], r.address, function () { setMark(r, prev ? prev.outcome : null, prev ? prev.revisit : '', true); if (who !== S.me) { r.mine = prevMine; draw(); } });
@@ -1691,8 +1730,8 @@
     d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '' };
     renderDoors();
     api('mark', { body: item }).then(function (j) {
-      if (j.ok) { if (d.mark) d.mark.pending = false; }
-      else if (j._status === 401) { return signinView('Signed out. Enter your code again.'); }
+      if (j.ok) { dropQueued('mark', item.region, item.id); if (d.mark) d.mark.pending = false; }
+      else if (j._status === 401) { return keepAndSignIn('mark', item); }
       else { enqueue(item); }
       renderDoors();
     }).catch(function () { enqueue(item); renderDoors(); });
@@ -1732,8 +1771,10 @@
     errEl.textContent = '';
     var body = { region: S.region, id: d.id, phone: data.phone, source: data.source, seen: data.seen };
     return api('phone', { body: body }).then(function (j) {
-      if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
+      if (j._status === 401) { keepAndSignIn('phone', body); return false; }
+      if (j._notOurs) throw new Error('not our server');   /* e.g. a Wi-Fi sign-in page: handled as no signal, so it is kept */
       if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
+      dropQueued('phone', body.region, body.id);
       var n = digits(data.phone);
       if (n.length === 11 && n.charAt(0) === '1') n = n.slice(1);
       d.phone = n ? { phone: n, source: data.source, seen: data.source === 'door' ? '' : (data.seen || ''),
@@ -1825,8 +1866,10 @@
     errEl.textContent = '';
     var body = { region: S.region, id: d.id, note: text };
     return api('note', { body: body }).then(function (j) {
-      if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
+      if (j._status === 401) { keepAndSignIn('note', body); return false; }
+      if (j._notOurs) throw new Error('not our server');   /* e.g. a Wi-Fi sign-in page: handled as no signal, so it is kept */
       if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
+      dropQueued('note', body.region, body.id);
       var t = String(text || '').trim();
       d.note = t ? { note: t, by: S.me, at: Math.floor(Date.now() / 1000) } : null;
       S.editNote = null; renderDoors(); return true;
@@ -1935,8 +1978,10 @@
     errEl.textContent = '';
     var body = { region: S.region, id: d.id, email: value };
     return api('email', { body: body }).then(function (j) {
-      if (j._status === 401) { signinView('Signed out. Enter your code again.'); return false; }
+      if (j._status === 401) { keepAndSignIn('email', body); return false; }
+      if (j._notOurs) throw new Error('not our server');   /* e.g. a Wi-Fi sign-in page: handled as no signal, so it is kept */
       if (!j.ok) { errEl.textContent = j.error || 'Could not save that.'; return false; }
+      dropQueued('email', body.region, body.id);
       d.email = value ? { email: value.toLowerCase(), by: S.me, at: Math.floor(Date.now() / 1000) } : null;
       S.editEmail = null; renderDoors(); return true;
     }).catch(function () {
@@ -1999,7 +2044,13 @@
       shrinkPhoto(f).then(function (blob) {
         return fetch(API + '?action=photo&region=' + encodeURIComponent(region) + '&id=' + encodeURIComponent(d.id),
           { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, credentials: 'same-origin' })
-          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            /* signed out, or an answer that isn't our server's: hold it too (2026-10-03 review) */
+            return r.json().catch(function () { return { _notOurs: true }; }).then(function (j) {
+              if (r.status === 401 || j._notOurs) return queuePhoto(region, d.id, blob).then(function () { return { held: true, signedOut: r.status === 401 }; });
+              return j;
+            });
+          })
           /* no signal: hold the shrunk photo on the phone (2026-10-03) */
           .catch(function () { return queuePhoto(region, d.id, blob).then(function () { return { held: true }; }); });
       }).then(function (j) {
@@ -2448,8 +2499,9 @@
   }
   function saveLawn(d, lv) {
     api('lawnfix', { body: { region: S.region, id: d.id, lv: lv } }).then(function (j) {
-      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (j._status === 401) return keepAndSignIn('lawnfix', { region: S.region, id: d.id, lv: lv });
       if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      dropQueued('lawnfix', S.region, d.id);
       d.lawnfix = lv ? { lv: lv, by: S.me, at: Math.floor(Date.now() / 1000) } : null;
       S.editLawn = null;
       renderDoors();

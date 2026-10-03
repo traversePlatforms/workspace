@@ -82,8 +82,19 @@ function verify(?string $token, string $key): ?array {
 $session = verify($_COOKIE[COOKIE] ?? null, $sessionKey);
 if (!$session) fail('Sign in first.', 401);
 
-$me   = (string) ($session['n'] ?? '');
-$role = (string) ($session['r'] ?? 'crew');
+/* 2026-10-03 (review): the same check as rounds.php. The person is looked up by the keyed hash
+   of their code ('c') in the CURRENT list; name and role come from that line, never from the
+   cookie. Without it a deleted or demoted admin kept the cost model and saved quotes for up to
+   45 days. ⚑ Keep codeId() identical to rounds.php's, or every admin is refused here. */
+function codeId(string $code, string $key): string { return substr(hash_hmac('sha256', 'code|' . $code, $key), 0, 20); }
+$line = null;
+foreach ((array) ($cfg['people'] ?? []) as $c => $who) {
+    if (is_array($who) && hash_equals(codeId((string) $c, $sessionKey), (string) ($session['c'] ?? ''))) $line = $who;
+}
+if ($line === null) fail('Sign in first.', 401);
+
+$me   = (string) ($line[0] ?? '');
+$role = (string) ($line[1] ?? 'crew');
 
 /* ⚑ The gate. A crew member signing in for doors gets a valid session, so the
    check has to be here and not only on the button that links to the page. */
