@@ -58,8 +58,9 @@ function dataDir(): string {
     if (is_dir($outside)) return $outside;
     /* 2026-10-03 (review): the fallback is inside public_html, and leads would follow it there.
        So it is for a local checkout only; on the host a missing data folder is an error. */
-    $host = strtolower((string) ($_SERVER['SERVER_NAME'] ?? ''));
-    if (in_array($host, ['localhost', '127.0.0.1'], true)) return __DIR__ . '/../data/rounds';
+    /* PHP's own test server, never the host: SERVER_NAME can come from the visitor's Host header
+       on Apache, and on a LAN-bound test server it isn't "localhost" (second review) */
+    if (PHP_SAPI === 'cli-server') return __DIR__ . '/../data/rounds';
     http_response_code(503); header('Content-Type: application/json');
     exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
@@ -119,16 +120,21 @@ function verify(?string $token, string $key): ?array {
 $session = verify($_COOKIE[COOKIE] ?? null, $sessionKey);
 /* 2026-10-03 (review): the cookie proves who signed in, not that they still may. Deleting a
    person's line used to leave their phone signed in for up to 45 days, and a demoted admin
-   kept admin. So the name is checked against the current list on every request, and the role
-   comes from the list, never from the cookie. */
+   kept admin. So every request looks the person up in the CURRENT list, and the name and role
+   come from that line, never from the cookie.
+   ⚑ Looked up by CODE, not by name (second review): matching by name merged two people who
+   share one (a crew test code called "Matthew" became admin), and deleting one of two
+   same-named lines left that phone signed in. The cookie carries a keyed hash of the code
+   ('c'), never the code itself. Cookies from before this change have no 'c' and are refused,
+   so everyone signs in once after the upload. */
+function codeId(string $code, string $key): string { return substr(hash_hmac('sha256', 'code|' . $code, $key), 0, 20); }
 if ($session) {
-    $roleNow = null;
-    foreach ($people as $who) {
-        if (!is_array($who) || (string) ($who[0] ?? '') !== (string) ($session['n'] ?? '')) continue;
-        $r = (string) ($who[1] ?? 'crew');
-        $roleNow = ($roleNow === 'admin' || $r === 'admin') ? 'admin' : $r;
+    $line = null;
+    foreach ($people as $c => $who) {
+        if (is_array($who) && hash_equals(codeId((string) $c, $sessionKey), (string) ($session['c'] ?? ''))) $line = $who;
     }
-    if ($roleNow === null) $session = null; else $session['r'] = $roleNow;
+    if ($line === null) $session = null;
+    else { $session['n'] = (string) ($line[0] ?? ''); $session['r'] = (string) ($line[1] ?? 'crew'); }
 }
 
 /* ---- sign-in rate limit -------------------------------------------------
@@ -151,11 +157,17 @@ if ($session) {
  */
 function clientKey(): string {
     $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0');
-    if (str_contains($ip, ':') && ($bin = @inet_pton($ip)) !== false && strlen($bin) === 16) return bin2hex(substr($bin, 0, 8)) . '/64';
+    if (str_contains($ip, ':') && ($bin = @inet_pton($ip)) !== false && strlen($bin) === 16) {
+        /* an IPv4 visitor reported as ::ffff:a.b.c.d would otherwise land every visitor in ONE
+           bucket (all zeros /64), the 2026-09-29 lockout again (second review) */
+        if (substr($bin, 0, 12) === "\0\0\0\0\0\0\0\0\0\0\xff\xff") return inet_ntop(substr($bin, 12));
+        return bin2hex(substr($bin, 0, 8)) . '/64';
+    }
     return $ip;
 }
+/* outside public_html, beside the door data (second review). The contact form still keeps its own counters in api/.ratelimit. */
 function rateFile(string $who): string {
-    $dir = __DIR__ . '/.ratelimit';
+    $dir = dirname(DATA_DIR) . '/ratelimit';
     if (!is_dir($dir)) @mkdir($dir, 0700, true);
     return $dir . '/r' . hash('sha256', $who . '|rounds');
 }
@@ -163,7 +175,7 @@ function rateFile(string $who): string {
 function throttleTake(string $file, int $max, int $window): bool {
     global $throttleHeld;
     $fh = @fopen($file, 'c+');
-    if (!$fh) return true;                                // fail open: a disk problem must never lock anyone out
+    if (!$fh) { error_log('sixfold rounds: sign-in limiter cannot write ' . $file . ' - limit is OFF'); return true; }   // fail open, but say so
     @flock($fh, LOCK_EX);
     $raw = stream_get_contents($fh) ?: '[]';
     $hits = array_values(array_filter((array) json_decode($raw, true), fn($t) => is_int($t) && $t > time() - $window));
@@ -483,15 +495,21 @@ if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
     $addrFile = rateFile(clientKey()); $siteFile = rateFile('*site*');
     if (!throttleTake($addrFile, MAX_TRIES, TRY_WINDOW)) fail('Too many wrong codes from here. Wait fifteen minutes.', 429);
-    if (!throttleTake($siteFile, SITE_TRIES, SITE_WINDOW)) { throttleGiveBack($addrFile); fail('Sign-in is paused for a while after too many wrong codes. Phones already signed in still work.', 429); }
+    if (!throttleTake($siteFile, SITE_TRIES, SITE_WINDOW)) {
+        throttleGiveBack($addrFile);
+        /* written down so a pause is noticed (second review): one line per refused sign-in.
+           To lift a pause early, delete sixfold-data/ratelimit/ entirely. */
+        @file_put_contents(dirname(DATA_DIR) . '/ratelimit/paused.log', json_encode(['at' => time(), 'ip' => clientKey()]) . "\n", FILE_APPEND | LOCK_EX);
+        fail('Sign-in is paused for up to an hour after too many wrong codes. Phones already signed in still work. Tell an admin.', 429);
+    }
     $code = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
-    $hit = null;
+    $hit = null; $hitCode = '';
     foreach ($people as $c => $who) {                            // constant-time-ish: check all
-        if (hash_equals((string) $c, (string) $code)) $hit = $who;
+        if (hash_equals((string) $c, (string) $code)) { $hit = $who; $hitCode = (string) $c; }
     }
     if (!$hit) fail('That code was not recognised.', 401);      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
-    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'exp' => time() + $sessionDays * 86400];
+    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400];
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
     setcookie(COOKIE, sign($payload, $sessionKey), [
         'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
@@ -501,7 +519,8 @@ if ($action === 'signin') {
 }
 
 if ($action === 'signout') {
-    setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => '/']);
+    $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
+    setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $secure]);
     out(['ok' => true]);
 }
 

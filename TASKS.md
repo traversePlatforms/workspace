@@ -632,9 +632,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       about a third of Palmer Lake's large lawns are compact enough to read. The image metadata's
       offset turned out to be wrong for these files and was dropped (measured on lake water).
 - [ ] **SX-28 — Security fixes from the Fable review: ✅ BUILT AND TESTED 2026-10-03, awaiting upload (`rounds.php` + `api/submit.php`).**
-      Removed codes now sign out at once and the role comes from the list; a right code no longer
-      clears wrong ones; locked sign-in counting; site-wide pause after 60 wrong codes an hour;
-      plus five smaller fixes. Nothing critical was found. Notes: DEPLOY-ROUNDS.md, SX-28.
+      Removed codes now sign out at once; sessions are tied to the code (not the name) and the role
+      comes from the list; a right code no longer clears wrong ones; locked sign-in counting; site-wide pause after 60 wrong codes an hour;
+      plus smaller fixes. Nothing critical was found. Fable re-checked the fixes and found three
+      more (same-name merge, IPv4-in-IPv6 shared counter, silent pause); fixed and re-tested.
+      **Everyone signs in once after the upload.** Notes: DEPLOY-ROUNDS.md, SX-28.
 - [x] **SX-27 — Leads screen: ✅ LIVE 2026-10-03, verified (page matches build, test enquiry emailed and appeared in Leads).**
       One admin list for every enquiry, with status and notes. Website form leads file themselves;
       Meta/Nextdoor/phone/referral are added by hand. This tracks what happened to a lead. It is

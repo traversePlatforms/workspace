@@ -184,8 +184,10 @@ if ($missing) {
 // newlines, but it is stripped here too rather than resting on that.
 $hdr = static fn(string $s): string => trim(preg_replace('/[\r\n\t]+/', ' ', $s));
 
-$safeName  = $hdr($name);
-$safeTown  = $hdr($town);
+/* capped at 80 for the Subject and Reply-To headers (second review): a long name in 4-byte
+   characters could push a header line past the 998-character limit. The body keeps it whole. */
+$safeName  = mb_substr($hdr($name), 0, 80);
+$safeTown  = mb_substr($hdr($town), 0, 80);
 $safeEmail = $hdr($email);
 
 $title = $needLabel . ' — ' . $safeName . ($safeTown !== '' ? ' (' . $safeTown . ')' : '');
@@ -277,9 +279,13 @@ $result = smtp_send(
     $cfg['subject_prefix'] . $title,
     $body,
     [
-        /* 2026-10-03 (review): quoted, and encoded when it isn't plain ASCII. "Smith, John" bare
-           read as two addresses, and accented names went out as raw 8-bit header bytes. */
-        'Reply-To: ' . smtp_mime_header('"' . str_replace(['\\', '"'], ['\\\\', '\\"'], $safeName) . '"') . ' <' . $safeEmail . '>',
+        /* 2026-10-03 (review): "Smith, John" bare read as two addresses, and accented names went
+           out as raw 8-bit header bytes. Plain ASCII: a quoted, escaped name. Anything else: the
+           name alone as an encoded word, NOT quoted first, or mail clients show the quotes and
+           backslashes literally (second review). Commas are safe inside an encoded word. */
+        'Reply-To: ' . (preg_match('/[\x80-\xFF]/', $safeName)
+            ? mb_encode_mimeheader($safeName, 'UTF-8', 'B', "\r\n")
+            : '"' . str_replace(['\\', '"'], ['\\\\', '\\"'], $safeName) . '"') . ' <' . $safeEmail . '>',
         'X-Mailer: sixfold-site',
     ]
 );
