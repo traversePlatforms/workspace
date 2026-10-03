@@ -202,6 +202,8 @@
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
   .chip.wait{background:var(--sunk);color:var(--soft)}
+  .treec{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;border:1.5px solid var(--bad);color:var(--bad)}
+  .treec .ic{width:13px;height:13px}
   .fwc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;background:var(--go-tint);color:var(--go)}
   .fwc .ic{width:13px;height:13px}
   .placeline{font-size:13.5px;line-height:1.45;color:var(--soft);margin:0 4px 10px}
@@ -973,9 +975,12 @@
     var hasLawn = r.areas.some(function (a) { return (a.lawnL || 0) + (a.lawnM || 0) > 0; });
     if (mode === 'fire' && !hasFire) mode = 'map';
     if (mode === 'lawn' && !hasLawn) mode = 'map';
+    var hasTrees = r.areas.some(function (a) { return (a.treeA || 0) + (a.treeH || 0) > 0; });
+    if (mode === 'trees' && !hasTrees) mode = 'map';
     var opts = [['map', 'Map order', 'route'], ['near', 'Nearest', 'near']];
     if (hasFire) opts.push(['fire', 'Fire', 'flame']);
     if (hasLawn) opts.push(['lawn', 'Lawn', 'leaf']);
+    if (hasTrees) opts.push(['trees', 'Trees', 'tree']);
     setDock(opts, mode, function (v) {
       try { localStorage.setItem('sixfold.rounds.sort', v); } catch (e) {}
       if (v === 'near') { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
@@ -1008,7 +1013,7 @@
     }
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'near' ? 'Nearest first' : 'Map order'));
+    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Map order'));
     view.appendChild(sect);
 
     var list = r.areas.slice();
@@ -1023,6 +1028,14 @@
       list.sort(function (x, y) {
         return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) ||
                ((y.lawnL || 0) + (y.lawnM || 0)) - ((x.lawnL || 0) + (x.lawnM || 0)) || (y.lawnL || 0) - (x.lawnL || 0);
+      });
+    }
+    /* trees (2026-10-03): neighbourhoods with the most doors still to knock where trees are
+       against the house or heavy within 30 ft first, "against" breaking ties */
+    if (mode === 'trees') {
+      list.sort(function (x, y) {
+        return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) ||
+               ((y.treeA || 0) + (y.treeH || 0)) - ((x.treeA || 0) + (x.treeH || 0)) || (y.treeA || 0) - (x.treeA || 0);
       });
     }
     if (mode === 'fire') {
@@ -1053,6 +1066,7 @@
       var chips = q('div', 'chips');
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
+      if (mode === 'trees' && (a.treeA || a.treeH)) chips.appendChild(chipEl('treec', 'tree', (a.treeA ? a.treeA + ' trees against house' : '') + (a.treeA && a.treeH ? ' · ' : '') + (a.treeH ? a.treeH + ' heavy' : '')));
       if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ' lawns'));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : '')));
       if (a.due) chips.appendChild(chipEl('duep', null, a.due + ' due back'));

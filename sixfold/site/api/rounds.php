@@ -319,6 +319,15 @@ function appendPhotoLog(string $key, array $row): bool {
 function validPhotoName(string $f): bool { return (bool) preg_match('/^\d{8}-\d{6}-[0-9a-f]{8}\.jpg$/', $f); }
 
 /* the level that counts: the crew's answer if there is one, else the photo's */
+/* trees near the house (2026-10-03): the same levels as the door chip — against needs >= 25%
+   cover in both 0-5 ft and 5-30 ft; heavy is >= 35% in 5-30 ft */
+function treeLevel(array $d): ?string {
+    $t = $d['trees'] ?? null;
+    if (!$t || !isset($t['z2'])) return null;
+    if (($t['z1'] ?? 0) >= 0.25 && $t['z2'] >= 0.25) return 'against';
+    if ($t['z2'] >= 0.35) return 'heavy';
+    return $t['z2'] >= 0.10 ? 'some' : 'clear';
+}
 function lawnLevel(array $d, array $fix): ?string {
     if (isset($fix[$d['id']])) return $fix[$d['id']]['lv'];
     return $d['lawn']['lv'] ?? null;
@@ -498,6 +507,7 @@ if ($action === 'regions') {
             /* retry: a no-answer that has rested MISS_REST_DAYS, back on the list. noanswer is
                now only the ones still resting. */
             $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0; $retry = 0;
+            $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
             foreach ($a['doors'] as $d) {
@@ -508,6 +518,7 @@ if ($action === 'regions') {
                 $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
+                if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
                 if (!$m) continue;
                 if ($m['outcome'] === 'booked') $booked++;
                 if ($isDue) $due++;
@@ -519,7 +530,7 @@ if ($action === 'regions') {
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
-                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null];
+                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }

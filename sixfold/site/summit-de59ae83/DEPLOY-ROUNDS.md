@@ -19,7 +19,8 @@ Tapping the chip shows cover at 0–5, 5–30 and 30–100 ft, the tallest tree 
 source. **USGS LiDAR** covers El Paso (2018) and Douglas (2020). **Teller has no LiDAR**, so it
 uses the satellite canopy map, marked "map" on the chip; the detail line warns that it misses
 trees. Doors with no building outline (new builds) get no chip. The export gains five tree
-columns. Method and checks: `operations/door-territory/tree-zones/TREES.md`.
+columns. **Trees sort:** a fifth dock button ranks neighbourhoods by doors still to knock that read
+"against" or "heavy" ("against" breaks ties). While it is on, each card shows a tree count chip. Method and checks: `operations/door-territory/tree-zones/TREES.md`.
 
 **Neighbourhood tags:** each neighbourhood card leads with its subdivision name (Teller,
 Douglas) or metro district (El Paso). A green **Firewise nearby: …** chip appears when an NFPA

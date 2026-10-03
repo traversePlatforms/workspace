@@ -623,7 +623,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       LiDAR (USGS 3DEP) for El Paso 2018 and Douglas 2020, the canopy map for Teller (no 3DEP
       there). Zones 0–5 / 5–30 / 30–100 ft from the house. The canopy map was tried first and
       missed whole evergreen clumps, so LiDAR replaced it where it exists. Upload: rounds.php +
-      index.html + 12 door files. Method: tree-zones/TREES.md.
+      index.html + 12 door files. Method: tree-zones/TREES.md. Plus a **Trees** neighbourhood sort (Matthew: "add the tree sort
+      before the upload"). Two spot-checks reshaped the rules: roof-aware alignment, despeckling, the roof-edge band, and
+      "against" needing zone 1 and zone 2.
 - [ ] **SX-25 — Neighbourhood subdivision + Firewise tags: BUILT AND TESTED 2026-10-02, rides with SX-24.**
       Subdivision names: Teller from the statewide record, Douglas from the county table; El Paso
       uses metro districts (~30%, no public subdivision names). NFPA Firewise sites within 600 m,
