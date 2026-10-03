@@ -629,7 +629,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Notes, phones, emails, lawn answers and photos join marks in the offline queue (photos in
       IndexedDB). The queue now keeps on 5xx and moves past refused items; it used to do the
       opposite. index.html only.
-- [ ] **SX-24 — Trees near the house: BUILT AND TESTED 2026-10-02, FULL RUN FINISHED 2026-10-03 — ready to upload.** 26,836 of 31,422 doors have a reading. Most of the rest are houses built after the survey (whole new subdivisions in Black Forest: 1,882 doors). Superset gate passed, all 20 suites pass.
+- [ ] **SX-24 — Trees near the house: BUILT AND TESTED 2026-10-02, FULL RUN FINISHED 2026-10-03 — ready to upload.** 26,430 of 31,422 doors have a reading. Most of the rest are houses built after the survey (whole new subdivisions in Black Forest: 1,882 doors). Superset gate passed, all 20 suites pass.
       LiDAR (USGS 3DEP) for El Paso 2018 and Douglas 2020, the canopy map for Teller (no 3DEP
       there). Zones 0–5 / 5–30 / 30–100 ft from the house. The canopy map was tried first and
       missed whole evergreen clumps, so LiDAR replaced it where it exists. Upload: rounds.php +
