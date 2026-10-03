@@ -50,6 +50,21 @@ wherever 3DEP exists. That covers about 27,500 of the 31,422 doors.
 | 1648 Marsh Hawk Cir | 0.07 / 0.35 / 0.07 | Mature trees in the yard (Matthew measured three canopies) |
 | 3685 El Rancho Way | 0.44 / 0.64 / 0.66 | Trees against the house |
 
+## The spot-check that changed the alignment (2026-10-02)
+Nine random "trees against house" doors were checked against the photo (`spot-check.mjs`). Five
+were right. Three were wrong, and they shared one cause: the outline had been slid onto whatever
+stood tallest, and on wooded lots that meant tree crowns, so yard trees then counted as "against".
+One house was newer than the 2018 survey and so wasn't in the LiDAR at all.
+
+**The fix:**
+- the outline aligns only on roof-like cells (2.5 m+ with single returns);
+- the slide is capped at 3 m;
+- where the roof is hidden under canopy, the outline stays as drawn;
+- where there is no roof at all, the house is newer than the survey and the door gets no reading.
+
+The re-check of the same nine showed outlines on their roofs and red cells only where trees
+touch the walls. Every LiDAR door was re-measured with the fix.
+
 ## Limits, stated on the card
 - **LiDAR is from 2018 (El Paso) and 2020 (Douglas).** Trees cut since still show; houses built
   since may have no outline.

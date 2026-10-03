@@ -3,3 +3,4 @@ buildings/
 *.png
 *.log
 lidar-cache/
+*.bak

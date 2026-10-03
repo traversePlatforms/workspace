@@ -66,7 +66,8 @@ for (const [town, county] of Object.entries(TOWNS)) {
           else if (PROJECT[county]) {
             const others = cand.filter((b) => b.ring !== house.ring && inRings(b.c[0], b.c[1], pc.rings)).map((b) => ({ m: b.ring.map(([lo, la]) => merc(lo, la)) }));
             const m = await measureLidar(d.la, d.lo, pc.rings, house, others, PROJECT[county], null);
-            cache[k] = m.err ? { ...(await measure(d.la, d.lo, pc.rings, house)), src: 'canopy' } : m;
+            /* a house newer than the survey gets no reading: the canopy map is just as old */
+            cache[k] = m.err === 'house newer than the LiDAR' ? { err: m.err } : m.err ? { ...(await measure(d.la, d.lo, pc.rings, house)), src: 'canopy' } : m;
           } else {
             cache[k] = { ...(await measure(d.la, d.lo, pc.rings, house)), src: 'canopy' };
           }

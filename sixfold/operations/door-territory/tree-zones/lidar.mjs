@@ -160,26 +160,35 @@ export async function measureLidar(lat, lon, lotRings, house, others, project, c
   const G = await heightGrid(project, box, cell, cacheDir);
   if (!G.hgt.some((v) => !Number.isNaN(v))) return { err: 'no LiDAR here' };
   const at = (X, Y) => { const c = Math.floor((X - G.x0) / cell), r = Math.floor((G.y1 - Y) / cell); return c < 0 || r < 0 || c >= G.w || r >= G.h ? -1 : r * G.w + c; };
-  /* slide the outline onto the roof: score = mean height (capped) of cells inside it */
-  let best = [0, 0], bestS = -1;
+  /* slide the outline onto the roof (2026-10-02, revised after the spot-check): a cell is
+     roof-like when it stands 2.5 m+ with single returns, canopy when its returns split. Score
+     = roof-like share minus canopy share, within 3 m. Scoring plain height slid outlines onto
+     tree crowns on wooded lots, so yard trees then read as "against the house". */
   const hb = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
-  for (let dx = -5; dx <= 5; dx++) for (let dy = -5; dy <= 5; dy++) {
-    const ox = dx * cell, oy = dy * cell, ring = house.m.map(([x, y]) => [x + ox, y + oy]);
-    let s = 0, n = 0;
+  const stats = (ox, oy) => {
+    const ring = house.m.map(([x, y]) => [x + ox, y + oy]); let n = 0, roof = 0, can = 0, sum = 0; const rv = [];
     for (let X = hb[0] + ox + cell / 2; X < hb[2] + ox; X += cell) for (let Y = hb[1] + oy + cell / 2; Y < hb[3] + oy; Y += cell) {
-      if (!inRing(X, Y, ring)) continue; const o = at(X, Y); if (o < 0) continue; const v = G.hgt[o]; if (Number.isNaN(v)) continue; s += Math.min(v, 8); n++;
+      if (!inRing(X, Y, ring)) continue; const o = at(X, Y); if (o < 0) continue; const v = G.hgt[o]; if (Number.isNaN(v)) continue;
+      n++; sum += v;
+      if (G.multi[o] === 1 && v >= TALL) can++; else if (v >= 2.5) { roof++; rv.push(v); }
     }
-    const sc = n ? s / n - Math.hypot(dx, dy) * 0.05 : -1;     /* tiny preference for no shift */
-    if (sc > bestS) { bestS = sc; best = [ox, oy]; }
+    return { n, roof: n ? roof / n : 0, can: n ? can / n : 0, mean: n ? sum / n : 0, rv };
+  };
+  let best = [0, 0], bestS = -Infinity, bestSt = stats(0, 0);
+  for (let dx = -3; dx <= 3; dx++) for (let dy = -3; dy <= 3; dy++) {
+    const st = stats(dx * cell, dy * cell); if (!st.n) continue;
+    const sc = st.roof - st.can - Math.hypot(dx, dy) * 0.02;
+    if (sc > bestS) { bestS = sc; best = [dx * cell, dy * cell]; bestSt = st; }
   }
+  /* no roof at all where the outline is: the house is newer than the survey */
+  const at0 = stats(0, 0);
+  if (at0.mean < 1.5 && bestSt.roof < 0.3) return { err: 'house newer than the LiDAR' };
+  /* roof hidden under canopy: keep the outline as drawn rather than chase the trees */
+  if (bestSt.roof < 0.3) { best = [0, 0]; bestSt = at0; }
   const H = house.m.map(([x, y]) => [x + best[0], y + best[1]]);
-  /* the roof height, for the eave rule below */
-  const roofV = [];
-  for (let X = hb[0] + best[0] + cell / 2; X < hb[2] + best[0]; X += cell) for (let Y = hb[1] + best[1] + cell / 2; Y < hb[3] + best[1]; Y += cell) {
-    if (!inRing(X, Y, H)) continue; const o = at(X, Y); if (o >= 0 && !Number.isNaN(G.hgt[o])) roofV.push(G.hgt[o]);
-  }
-  roofV.sort((a, b) => a - b);
-  const roofH = roofV.length ? roofV[Math.floor(roofV.length / 2)] : 0;
+  /* the roof height, for the eave rule below: from roof-like cells only (5 m if none) */
+  const roofV = bestSt.rv.sort((a, b) => a - b);
+  const roofH = roofV.length ? roofV[Math.floor(roofV.length / 2)] : 5;
   const O = others.map((b) => b.m.map(([x, y]) => [x + best[0], y + best[1]]));
   const n = { z1: 0, z2: 0, z3: 0 }, t = { z1: 0, z2: 0, z3: 0 }; let tallest = 0;
   const zoneOf = debug ? new Uint8Array(G.w * G.h) : null, treeOf = debug ? new Uint8Array(G.w * G.h) : null;
