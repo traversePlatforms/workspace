@@ -42,11 +42,13 @@ rep(`  try { downloads = await claude.use("downloads"); } catch(e){ downloads = 
   if (!db){ $("bSave").disabled = true; $("jobEmpty").textContent = "Not connected — jobs cannot be saved in this view."; return; }
 
   let firstRates = true;
-  db.doc("config/rates-v4").onSnapshot(snap => {
+  db.doc("config/" + RATES_V).onSnapshot(snap => {
     ratesDocReady = true;
     if (!snap.exists){ firstRates = false; return; }
     const d = snap.data() || {};
     if (d.rates) Object.keys(d.rates).forEach(k => { if (rates[k] != null){ rates[k] = d.rates[k]; const el = $("r_" + k); if (el) el.value = d.rates[k]; } });
+    if (d.rates) storedRates = {...rates};
+    if (d.cfg) storedCfg = {...d.cfg};
     /* The standing rates apply once, on open. After that a job you have loaded
        keeps its own figures rather than being stomped by a later write. */
     if (firstRates && d.cfg){
@@ -85,8 +87,13 @@ rep(`  try { downloads = await claude.use("downloads"); } catch(e){ downloads = 
   const r = await api("rates");
   if (r.ok && r.rates && Object.keys(r.rates).length){
     const d = r.rates;
-    if (d.rates) Object.keys(d.rates).forEach(k => { if (rates[k] != null){ rates[k] = d.rates[k]; const el = $("r_" + k); if (el) el.value = d.rates[k]; } });
-    if (d.cfg) Object.keys(d.cfg).forEach(k => { if (cfg[k] != null){ cfg[k] = d.cfg[k]; const el = $("g_" + k); if (el) el.value = d.cfg[k]; } });
+    /* ⚑ review 2026-10-03: rates.json had no version, so after a reprice the old stored table
+       went straight back over the new figures. A table from another version is ignored (the
+       badges still apply). The first save under the new version replaces it. */
+    const current = d.v === RATES_V;
+    if (current && d.rates) Object.keys(d.rates).forEach(k => { if (rates[k] != null){ rates[k] = d.rates[k]; const el = $("r_" + k); if (el) el.value = d.rates[k]; } });
+    if (current && d.cfg) Object.keys(d.cfg).forEach(k => { if (cfg[k] != null){ cfg[k] = d.cfg[k]; const el = $("g_" + k); if (el) el.value = d.cfg[k]; } });
+    storedRates = current && d.rates ? {...rates} : null; storedCfg = current && d.cfg ? {...d.cfg} : null;
     if (d.confirmed){
       confirmed = d.confirmed;
       LINES.forEach(l => { const b = badgeFor(l), el = $("b_" + l.id);
@@ -102,10 +109,10 @@ rep(`  try { downloads = await claude.use("downloads"); } catch(e){ downloads = 
 })();`);
 
 /* ---- 2 · saving the rate table ---- */
-rep(`    db.doc("config/rates-v4").set(ratesPayload()).catch(() => {});`,
-    `    api("rates", {rates: ratesPayload()}).catch(() => {});`);
-rep('function saveRates(){\n  if (!db || !ratesDocReady) return;',
-    'function saveRates(){\n  if (!ratesDocReady) return;');
+rep(`    db.doc("config/" + RATES_V).set(p).catch(() => {});`,
+    `    api("rates", {rates: p}).catch(() => {});`);
+rep('function saveRates(what){\n  if (!db || !ratesDocReady) return;',
+    'function saveRates(what){\n  if (!ratesDocReady) return;');
 
 /* ---- 3 · saving a job ---- */
 rep(`  if (!db){ toast("Not connected — the local draft is still kept in this browser"); return; }

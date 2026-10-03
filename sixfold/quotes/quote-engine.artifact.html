@@ -372,7 +372,7 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
           <input type="number" id="ovrIn" min="0" step="25" placeholder="cost-up price">
           <button class="act ghost" id="ovrClear" style="padding:6px 9px;font-size:12px">Clear</button>
         </div>
-        <div class="delta" id="pDelta">Brandon set job 2 himself at $1,900 over a $1,700 build. His number wins — this checks it.</div>
+        <div class="delta" id="pDelta">Brandon set job 2 himself at $1,900. Today's build for the same work is $2,250. His number was the price; this checks it.</div>
       </div>
     </div>
 
@@ -507,7 +507,7 @@ const LINES = [
 
   {s:1, m:"land fire", id:"sap",     lbl:"Saplings to take down — under 10 ft", sub:"Job 2's five trees, allocated from its recorded 16 man-hours. Was identical to the 10–30 ft line until 2026-09-30; that line is now 65 and these two sit apart, which is the sensible ordering. Still an allocation, not a timing", unit:"man-min / tree", min:30, step:1, src:"sixfold"},
   {s:1, m:"land fire", id:"t30",     lbl:"Trees to take down — 10 to 30 ft", sub:"Matthew 2026-09-30: about 30–35 minutes with TWO people for the whole tree — taken down, bucked, and loaded or chipped. 65 man-min is the midpoint. SUPERSEDES Brandon and Brad 2026-09-23, “complete fell, 15 minutes” (30 man-min), which was half this and may have covered felling only. Does NOT include limbing a tree that stays standing — that is its own line", unit:"man-min / tree", min:65, step:5, src:"timed", mkt:150, mktSrc:"Hawk, under 30 ft, $150–$500"},
-  {s:1, m:"land fire", id:"tht",     lbl:"Cross-check: price the same trees by height", sub:"⚑ A CHECK, NOT THE PRICE — the banded lines above are what quotes a job. Type heights as “7, 12, 25”, or “4x7” for four the same, and compare. Every tree differs by placement and thickness as much as by height, so a figure to the foot claims more accuracy than the work has. Use this OR the lines above, never both", unit:"—", min:0, step:1, src:"quoted", custom:"heights", noRate:true},
+  {s:1, m:"land fire", id:"tht",     lbl:"Cross-check: price the same trees by height", sub:"⚑ A CHECK, NOT THE PRICE — the banded lines above are what quotes a job. Type heights as “7, 12, 25”, or “4x7” for four the same, and compare. Every tree differs by placement and thickness as much as by height, so a figure to the foot claims more accuracy than the work has. It never changes the price: count the trees in the lines above, then compare", unit:"—", min:0, step:1, src:"quoted", custom:"heights", noRate:true},
   {s:1, m:"land fire", id:"t3060",   lbl:"Trees to take down — 30 to 60 ft", sub:"Wexford: 4.0–7.0 man-hours at 30–50 ft. Brandon and Brad did not give a figure for this band — it still carries the trade number", unit:"man-min / tree", min:330, step:5, src:"comp", mkt:500, mktSrc:"Hawk, 30–60 ft, $500–$1,000"},
   {s:1, m:"land fire", id:"t6080",   lbl:"Trees to take down — 60 to 80 ft", sub:"Wexford: 7.0–12.0 man-hours at 50–70 ft", unit:"man-min / tree", min:570, step:5, src:"comp", mkt:1000, mktSrc:"Hawk, 60 ft+, $1,000–$2,000+"},
   {s:1, m:"land fire", id:"t80",     lbl:"Trees over 80 ft", sub:"Call-in, not a quote. Wexford puts these at 12–24 man-hours and Sixfold carries no insurance", unit:"—", min:0, step:1, src:"stop", noRate:true},
@@ -577,7 +577,10 @@ const HT_DEFAULTS = {htPerFt:2.17, htBase:0, htMin:0};
 /* "7, 12, 25" or "4x7, 30" -> a list of heights in feet */
 function parseHeights(str){
   const out = [];
-  String(str || "").split(/[,;\n]+|\s+/).forEach(tok => {
+  /* "4 x 20" with spaces used to split into 4 and 20: two trees, not four at 20 ft (review).
+     Close up the spaces round the x first. A function replacement, never "$1": the site copy
+     is generated from this file with string replace, which would expand it. */
+  String(str || "").replace(/(\d+)\s*[x×]\s*([\d.]+)/gi, (m0, a, b) => a + "x" + b).split(/[,;\n]+|\s+/).forEach(tok => {
     tok = tok.trim().replace(/(ft|')$/i, "");
     if (!tok) return;
     let m = tok.match(/^(\d+)\s*[x×]\s*([\d.]+)$/i);
@@ -629,7 +632,11 @@ const hrs = n => n.toFixed(2).replace(/\.00$/, "") + " h";
 function manMinutes(q, r){
   let t = 0;
   LINES.forEach(l => { if (l.noRate) return; t += (q[l.id] || 0) * (r[l.id] || 0); });
-  return t + heightMinutes().total;
+  /* 2026-10-03 (review): the height cross-check is NOT added. It was, despite its own label
+     ("a check, not the price") and Matthew's 2026-09-30 ruling that the bands are the price:
+     heights typed with no tree counts priced a job ($400 for "4x20"), and heights typed beside
+     the counts priced the same trees twice. It is shown beside the bands, never summed. */
+  return t;
 }
 function compute(){
   const rawHours = manMinutes(qty, rates) / 60;
@@ -724,8 +731,10 @@ function buildLedger(){
           render();
         });
         ["htPerFt","htBase"].forEach(k => $("r_" + k).addEventListener("input", e => {
-          rates[k] = Math.max(0, parseFloat(e.target.value) || 0);
-          saveRates(); render();
+          const v = parseFloat(e.target.value);
+          if (!(isFinite(v) && v >= 0)) { render(); return; }   /* blank while retyping: not saved */
+          rates[k] = v;
+          saveRates({rate:k}); render();
         }));
       } else {
       $("q_" + l.id).addEventListener("input", e => {
@@ -736,8 +745,11 @@ function buildLedger(){
       }
       if (!l.noRate){
         $("r_" + l.id).addEventListener("input", e => {
-          rates[l.id] = Math.max(0, parseFloat(e.target.value) || 0);
-          saveRates();          /* the rate table is the company's, not this job's — keep it */
+          /* review 2026-10-03: a field cleared to retype it used to save 0 to the shared table */
+          const v = parseFloat(e.target.value);
+          if (!(isFinite(v) && v >= 0)) { render(); return; }
+          rates[l.id] = v;
+          saveRates({rate:l.id});          /* the rate table is the company's, not this job's — keep it */
           render();
         });
       }
@@ -820,10 +832,14 @@ function buildLedger(){
       '<div class="out" id="go_' + c.id + '">—</div>';
     h4.appendChild(row);
     $("g_" + c.id).addEventListener("input", e => {
-      cfg[c.id] = c.blank ? e.target.value : (parseFloat(e.target.value) || 0);
+      /* review 2026-10-03: never negative, and a field cleared to retype it is NOT saved as 0
+         to the shared table (it was: every admin's next quote opened with $0 labour) */
+      const v = parseFloat(e.target.value);
+      if (!c.blank && !(isFinite(v) && v >= 0)) { render(); return; }
+      cfg[c.id] = c.blank ? e.target.value : v;
       /* the standing rates persist; the two job-specific ones (free hours, hours
          override) belong to the job in front of you and are not written back */
-      if (["billable","handling","crewCost","overhead","rounding"].includes(c.id)) saveRates();
+      if (["billable","handling","crewCost","overhead","rounding"].includes(c.id)) saveRates({cfg:c.id});
       render();
     });
   });
@@ -895,6 +911,9 @@ function render(){
     ["Dump, hire, purchases", m.passCost > 0 ? money(m.passCost) + " + " + cfg.handling + "% handling" : "nothing recorded", money(m.passRev)],
     ["Truck fuel", "carried by the man-hour rate", "not billed"]
   ];
+  /* review 2026-10-03: the lines now add up to the total; the rounding used to show only in section 4 */
+  if (m.raw > m.costUp && m.raw > 0)
+    bl.splice(bl.length - 1, 0, ["Rounding", "down to the nearest " + money(cfg.rounding), "−" + money2(m.raw - m.costUp)]);
   if (m.haulTopUp > 0)
     bl.splice(2, 0, ["Haul floor top-up", m.loadsQ + " × " + money(HAUL_FLOOR[cfg.trailer]) + " " + cfg.trailer + " trailer, less " + money(m.haulRev) + " built", money(m.haulTopUp)]);
   $("pBuild").innerHTML = bl.map(r =>
@@ -909,7 +928,7 @@ function render(){
       ? "<b>" + money(d) + " above the build.</b> Extra margin against a day that runs long."
       : "<b>" + money(-d) + " below the build.</b> That comes straight out of the margin.";
   } else {
-    dEl.textContent = "Brandon set job 2 himself at $1,900 over a $1,700 build. His number wins — this checks it.";
+    dEl.textContent = "Brandon set job 2 himself at $1,900. Today's build for the same work is $2,250. His number was the price; this checks it.";
   }
 
   /* meters */
@@ -1021,6 +1040,9 @@ function renderFlags(m){
       ". Change job type to see them, or clear the sheet."]);
   if ((qty.loads || 0) > 0 && (cost.dump || 0) === 0)
     f.push(["No dump fee entered", "Haul-off is where this business has lost money. Call the site, get today's commercial rate, and put it in before quoting."]);
+  /* review 2026-10-03: chipping priced with no machine hire came out ~$400 under, silently */
+  if ((qty.chip || 0) > 0 && (cost.hire || 0) === 0)
+    f.push(["Chipping with no chipper hire", "Chipper feeding is priced as labour only. The chipper is rented, so put the hire in Equipment hire (the 24-hour rate is " + money(320) + "), or the machine is free in this quote."]);
   const groundUsed = LINES.filter(l => l.s === 2 && (qty[l.id] || 0) > 0);
   if (groundUsed.length)
     f.push(["Landscaping rates come from one property", "Mow, edge and plant removal are Brandon and Brad's own figures as of 2026-09-23 — but all three were quoted on the same ¾ acre, which is job 2's property. They have never been tested on a different shape of ground."]);
@@ -1148,7 +1170,11 @@ $("bLoadJob2").addEventListener("click", () => {
   toast("Job 2 loaded — Brandon's $1,900 sits in the override");
 });
 $("bNew").addEventListener("click", () => {
-  applyState({qty:{}, cost:{}, cfg:DEFAULT_CFG, name:"", override:""});
+  /* review 2026-10-03: back to the SHARED rate table and standing settings. Opening a saved job
+     loads that job's rates, and Clear used to keep them, so the next rate edit saved the old
+     job's figures over everyone's table. */
+  if (storedRates) Object.keys(storedRates).forEach(k => { if (rates[k] != null){ rates[k] = storedRates[k]; const el = $("r_" + k); if (el) el.value = storedRates[k]; } });
+  applyState({qty:{}, cost:{}, cfg:{...DEFAULT_CFG, ...(storedCfg || {})}, name:"", override:""});
   toast("Cleared");
 });
 $("ovrIn").addEventListener("input", e => { cfg.override = e.target.value; render(); });
@@ -1220,7 +1246,7 @@ function scopeMarkdown(){
   const htE = heightMinutes();
   htE.per.filter(t => !t.over).forEach(t => out.push("| Tree taken down — " + t.ft + " ft | 1 |"));
   if (htE.over.length) out.push("| **NOT PRICED — over the 30 ft cap** | " + htE.over.map(t => t.ft + " ft").join(", ") + " |");
-  out.push("", "## Price", "", "**" + money(m.price) + "**" + (m.overridden ? "  — set above the cost-up build of " + money(m.costUp) + "." : "  — cost-up build, rounded down."), "");
+  out.push("", "## Price", "", "**" + money(m.price) + "**" + (m.overridden ? "  — set " + (m.price >= m.costUp ? "above" : "below") + " the cost-up build of " + money(m.costUp) + "." : "  — cost-up build, rounded down."), "");
   if (m.freeHours > 0) out.push("Includes " + hrs(m.freeHours) + " of work given at no charge (" + money(m.freeCost) + " at cost). Recorded so it is a known giveaway.", "");
   out.push("## Before this goes anywhere near a customer", "");
   out.push("- No price is given on the property — the estimate is written up and sent.");
@@ -1253,7 +1279,7 @@ function internalCsv(){
   htC.per.forEach(t => rows.push(["Tree by height — " + t.ft + " ft", 1, t.over ? "OVER 30 FT CAP" : Math.round(t.min),
     t.over ? "NOT PRICED" : "PRICED", t.over ? "0.00" : (t.min/60).toFixed(2)]));
   if (htC.per.length) rows.push(["Height model", (rates.htBase||0) + " min base + " + (rates.htPerFt||0) + " min/ft",
-    "Derived from Brandon and Brad's 30 man-min at 30 ft. Capped at 30 ft"]);
+    "Derived from Matthew's 65 man-min at 30 ft (2.17 per ft). A cross-check only, not in the price. Capped at 30 ft"]);
   rows.push([], ["Man-hours", m.hours.toFixed(2), m.hoursOverridden ? "overridden (raw " + m.rawHours.toFixed(2) + ")" : ""]);
   COSTS.forEach(c => rows.push([c.lbl, cost[c.id] || 0, c.billed ? "billed at +" + cfg.handling + "%" : "cost only, not billed"]));
   rows.push([], ["Cost-up price", m.costUp], ["Quoted price", m.price], ["Fully loaded cost", m.totalCost.toFixed(2)],
@@ -1296,24 +1322,47 @@ function toast(msg){
 }
 
 /* ====================== db ====================== */
+/* ⚑ BUMP THIS ON EVERY REPRICE. It names the artifact's rates document and stamps the site's
+   rates.json; a stored table from another version is ignored, so it can't quietly override the
+   new figures (review 2026-10-03: the site's copy had no version at all). */
+const RATES_V = "rates-v4";
+/* the shared table as last read, so Clear goes back to it rather than keeping the last job's */
+let storedRates = null, storedCfg = null;
 function ratesPayload(){
-  return {rates:{...rates}, confirmed:{...confirmed},
+  return {v:RATES_V, rates:{...rates}, confirmed:{...confirmed},
     cfg:{billable:cfg.billable, handling:cfg.handling, crewCost:cfg.crewCost, overhead:cfg.overhead, rounding:cfg.rounding},
     updatedAt:new Date().toISOString()};
 }
-let rateWriteT = null;
-function saveRates(){
+let rateWriteT = null, pendingRates = new Set(), pendingCfg = new Set();
+function saveRates(what){
   if (!db || !ratesDocReady) return;
+  if (what && what.rate) pendingRates.add(what.rate);
+  if (what && what.cfg) pendingCfg.add(what.cfg);
   clearTimeout(rateWriteT);
   rateWriteT = setTimeout(() => {
-    db.doc("config/rates-v4").set(ratesPayload()).catch(() => {});
+    const p = sharedPayload();
+    db.doc("config/" + RATES_V).set(p).catch(() => {});
   }, 900);
+}
+/* Only the figures someone actually edited go into the shared table; the rest stay as last
+   stored. A saved job open with its own older rates used to leak ALL of them into everyone's
+   table the moment anyone tapped a badge (review 2026-10-03). */
+function sharedPayload(){
+  const p = ratesPayload();
+  if (storedRates){ const r = {...storedRates}; pendingRates.forEach(k => { r[k] = rates[k]; }); p.rates = r; }
+  if (storedCfg){ const c = {...storedCfg}; pendingCfg.forEach(k => { c[k] = cfg[k]; }); p.cfg = c; }
+  pendingRates.clear(); pendingCfg.clear();
+  storedRates = {...p.rates}; storedCfg = {...p.cfg};
+  return p;
 }
 function renderJobs(){
   const ul = $("jobList");
+  /* names and ids are typed by people: escaped, or one admin could plant a script that runs for
+     another (review 2026-10-03) */
+  const h = s => String(s).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch]);
   ul.innerHTML = jobs.map(j =>
-    '<li><span class="jn">' + (j.name || "Untitled") + '<br><span class="jm">' + (j.savedAt || "").slice(0,10) + " · " + money(j.price || 0) + '</span></span>' +
-    '<span><button class="link" data-load="' + j.id + '">Open</button></span></li>').join("");
+    '<li><span class="jn">' + h(j.name || "Untitled") + '<br><span class="jm">' + h((j.savedAt || "").slice(0,10)) + " · " + money(+j.price || 0) + '</span></span>' +
+    '<span><button class="link" data-load="' + h(j.id) + '">Open</button></span></li>').join("");
   $("jobEmpty").hidden = jobs.length > 0;
   ul.querySelectorAll("[data-load]").forEach(b => b.addEventListener("click", () => {
     const j = jobs.find(x => x.id === b.dataset.load);
@@ -1385,11 +1434,13 @@ $("bPickJob2").addEventListener("click", () => {
   if (!db){ $("bSave").disabled = true; $("jobEmpty").textContent = "Not connected — jobs cannot be saved in this view."; return; }
 
   let firstRates = true;
-  db.doc("config/rates-v4").onSnapshot(snap => {
+  db.doc("config/" + RATES_V).onSnapshot(snap => {
     ratesDocReady = true;
     if (!snap.exists){ firstRates = false; return; }
     const d = snap.data() || {};
     if (d.rates) Object.keys(d.rates).forEach(k => { if (rates[k] != null){ rates[k] = d.rates[k]; const el = $("r_" + k); if (el) el.value = d.rates[k]; } });
+    if (d.rates) storedRates = {...rates};
+    if (d.cfg) storedCfg = {...d.cfg};
     /* The standing rates apply once, on open. After that a job you have loaded
        keeps its own figures rather than being stomped by a later write. */
     if (firstRates && d.cfg){
