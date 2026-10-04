@@ -7,7 +7,11 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD + ONE SITEGROUND SETTING — automatic nightly backups (same upload as the water rules and cleanup below)
+## ✅ LIVE 2026-10-04 (verified 15/15) — cleanup + water rules + nightly backups. ⏳ STILL TO DO: the SiteGround cron job (step B); 0 nightly copies so far
+
+Verified: page identical at all four addresses, money.json carries the water rules, backups list answers, the job is not reachable from the web, the Water line and sheet work on a Woodland Park door, Keep a copy shows the nightly section ("none yet"). Whether nightly-backup.php sits in the right folder can only be confirmed by the first nightly copy appearing.
+
+### the backup steps
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
