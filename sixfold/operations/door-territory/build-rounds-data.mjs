@@ -56,8 +56,13 @@ const lawnByCoord = existsSync(LAWN_CACHE) ? JSON.parse(readFileSync(LAWN_CACHE,
 function lawnOf(d) {
   const c = typeof d.la === 'number' ? lawnByCoord[`${d.la},${d.lo}`] : null;
   if (!c || c.err) return null;
-  const lv = c.t > 0.6 && c.s < 1500 ? 'T' : c.s < 300 ? 'N' : c.s < 1200 ? 'S' : c.s < 3000 ? 'M' : 'L';
-  return { lv, sq: Math.round(c.s / 100) * 100, yr: +String(c.d).slice(0, 4) };
+  /* c.c (2026-10-03): the COMPACT lawn, only patches of 400+ sq ft within 30 m of the house
+     (lawn-trial/sample-lawn-compact.mjs). A blind visual check found the raw figure counting
+     specks between trees and shrubs on big lots as a "Large" lawn where there was none.
+     Measured for Medium and Large doors only, since the rule can only shrink a lawn. */
+  const s = c.c ?? c.s;
+  const lv = c.t > 0.6 && s < 1500 ? 'T' : s < 300 ? 'N' : s < 1200 ? 'S' : s < 3000 ? 'M' : 'L';
+  return { lv, sq: Math.round(s / 100) * 100, yr: +String(c.d).slice(0, 4) };
 }
 
 /* Trees near the house, from tree-zones/sample-trees.mjs (2026-10-02). Tree-cover share of

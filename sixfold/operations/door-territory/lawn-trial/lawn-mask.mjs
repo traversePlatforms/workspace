@@ -111,4 +111,33 @@ async function measure(d, rings, item) {
 }
 
 
+/* Every lawn patch (connected lawn pixels) with its size and its distance from the house
+   (houseLocal: the house outline in window pixels). For the compact-lawn rule. */
+export function patches(D, houseLocal) {
+  const { w, h, cls } = D, seen = new Uint8Array(w * h), out = [];
+  const m2 = D.res[0] * -D.res[1];
+  const segDist = (x, y, r) => { let best = Infinity; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [x1, y1] = r[j], [x2, y2] = r[i], dx = x2 - x1, dy = y2 - y1; const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy || 1))); best = Math.min(best, Math.hypot(x - x1 - t * dx, y - y1 - t * dy)); } return best; };
+  for (let s = 0; s < w * h; s++) {
+    if (cls[s] !== 2 || seen[s]) continue;
+    const stack = [s]; seen[s] = 1; let n = 0, near = Infinity;
+    while (stack.length) {
+      const p = stack.pop(); n++;
+      const x = p % w, y = (p - x) / w;
+      if (houseLocal && (n % 7 === 1)) near = Math.min(near, segDist(x, y, houseLocal));   /* sample every 7th pixel: plenty for a distance */
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const qx = x + dx, qy = y + dy; if (qx < 0 || qy < 0 || qx >= w || qy >= h) continue; const q = qy * w + qx; if (!seen[q] && cls[q] === 2) { seen[q] = 1; stack.push(q); } }
+    }
+    out.push({ sqft: n * m2 * 10.7639, distM: houseLocal ? near * D.res[0] : null });
+  }
+  return out;
+}
+
+/* The compact-lawn rule, calibrated 2026-10-03 against a blind visual check of 12 lots: only
+   patches of 400 sq ft or more, within 30 m of the house, count. On big wooded or meadow lots
+   the classifier finds specks between trees and shrubs that added up to a "Large" lawn where
+   there is none; real lawns are solid and sit by the house. With no house outline, size only. */
+export const COMPACT = { minSqFt: 400, nearM: 30 };
+export function compactSqFt(ps, haveHouse) {
+  return Math.round(ps.filter((p) => p.sqft >= COMPACT.minSqFt && (!haveHouse || (p.distM ?? Infinity) <= COMPACT.nearM)).reduce((s, p) => s + p.sqft, 0));
+}
+
 export { measure, STAC, json };

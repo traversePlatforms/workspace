@@ -197,6 +197,62 @@ figure needs a tree-cover correction calibrated on ~10 more measured lots with t
 scale, but there's no real lawn to check. One suburban customer lot with a measured lawn (Kara's,
 or a walk-sheet measurement) is the remaining test.
 
+## Fifth check, blind, by a second model: 12 large lots (2026-10-03)
+
+**What prompted it.** The lawn-health trial needed to know which 10 m satellite pixels are
+lawn, so it re-ran this classifier on the 2,053 Large-lawn doors. Matthew asked for an
+independent check. Twelve finished lots (11 Black Forest, 1 Palmer Lake) were drawn twice: the
+aerial photo with only the lot line, and the same photo with the classifier's lawn and the
+satellite pixels drawn on. **Fable** (a separate Claude model) estimated each lawn from the plain
+photos first, wrote those down, and only then judged the outlines. It never saw these numbers.
+
+| Lot | Classifier, raw | Fable, blind | Fable on the outline |
+|---|---|---|---|
+| 02 Ridge Run Dr | 5,821 | ~6,000 | GOOD |
+| 04 Bynum Dr | 3,460 | ~5,500 | GOOD |
+| 05 Henman Ter | 3,533 | ~3,000 | GOOD |
+| 09 Hartman Rocks Ct | 5,672 | ~4,500 | GOOD |
+| 11 Highland Glen Pl | 8,132 | ~5,000 | GOOD (shade unclear) |
+| 10 Old Stagecoach Rd | 8,197 | ~7,500 | WRONG: missed the real lawn, marked trees and meadow |
+| 01, 03, 06, 08, 12 | 3,383 to 6,745 | none (forest; 12 maybe 1,000) | WRONG: specks between trees |
+| 07 Bridle Bit Rd | 3,097 | ~4,500 | WRONG: marked shrub clumps |
+
+**Every one of the twelve reads "Large lawn" in the app.** On five there is no lawn at all.
+
+**The failure:** on a big wooded or meadow lot, a dozen or more specks of green, low vegetation
+between trees and shrubs (each a few hundred sq ft, all passing the "green and under 1 m" test)
+add up past 3,000 sq ft. On a 5-acre lot that is under 2% of the ground. In Black Forest 164
+of 450 Large doors look like this.
+
+**Lot 07 is probably not a miss.** The bright green area beside the house that Fable expected to
+be marked reads as NOT living plant in the photo's near-infrared band, though it looks green.
+Even colour, a printed circle, next to a tennis court: almost certainly artificial turf, which
+gives off little infrared. It does not need aerating. The shrub clumps marked elsewhere on 07
+are real mistakes.
+
+### The fix: compact lawn only
+
+Only lawn patches of **400 sq ft or more within 30 m of the house** count (`lawn-mask.mjs`
+`COMPACT`; `sample-lawn-compact.mjs` writes `c` into lawn-cache.json; the door builder uses
+it for the level). Chosen by trying eight rules on the same twelve lots against Fable's
+estimates (`compact-calibrate.mjs`):
+
+| Rule | Mean error vs Fable (lot 10 left out) |
+|---|---|
+| any patch over 150 sq ft, anywhere (the old rule) | 2,838 sq ft |
+| 400 sq ft, anywhere | 1,056 |
+| 800 sq ft, anywhere | 851, but it wipes out lot 10's real lawn (882 vs ~7,500) |
+| 400 sq ft within 40 m | 881 |
+| **400 sq ft within 30 m** | **775** |
+
+Under it the five forest lots read 0 to 1,122 sq ft, lot 07 reads 0, and the real lawns keep
+their size. **Twelve lots is a small calibration**; the crews' corrections in the app are the
+next check. A lot with no house outline is judged on patch size only. The rule can only shrink
+a lawn, so it was run on the Medium and Large doors only (about 9,000).
+
+**Still wrong after the fix:** lot 10's real lawn is under-read (~3,500 vs ~7,500), and lot 11
+may be over-read where shade hides whether the ground is lawn or trees.
+
 ## Fact-check log
 
 - **Verified:**
