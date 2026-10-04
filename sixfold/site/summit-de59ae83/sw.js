@@ -25,7 +25,7 @@ const TIMEOUT = 6000;
 const AREA_MAX = 40;
 const MAX_AGE = 7 * 86400 * 1000;
 const SHELL = ['./', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
-const KEEP = /\/api\/rounds\.php\?(?:.*&)?action=(me|regions|area|money)(?:&|$)/;
+const KEEP = /\/api\/rounds\.php\?(?:.*&)?action=(me|regions|area|money|customers)(?:&|$)/;   /* customers: admins' list opens with no signal (2026-10-04) */
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL_V).then((c) => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting()));

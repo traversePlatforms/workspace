@@ -248,7 +248,11 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <h3>What is due</h3>
   <p><strong>Due this week</strong> sits at the top of the list: active customers whose next visit falls in the next seven days, with overdue ones marked. Logging a done visit on a monthly plan sets the next due date a month after that visit (a year on a yearly plan), so a mow a day early still moves it on. A visit from weeks ago typed in late never pulls the date back. A visit on the 31st is next due on the last day of a shorter month. One-off and custom customers keep whatever date you set.</p>
   <h3>On the doors</h3>
-  <p>A door that belongs to an active customer shows a dark <strong>Customer</strong> tag on its card, for crew as well as admins, so nobody knocks it cold or pitches a job Sixfold already does there.</p>
+  <p>A door that belongs to an active customer shows a dark <strong>Customer</strong> tag on its card, for crew as well as admins, so nobody knocks it cold or pitches a job Sixfold already does there. On the Map view the customer's dot has a dark ring, and the legend says Customer.</p>
+  <h3>Today's route</h3>
+  <p>When anyone is due today or overdue, or has a visit booked for today, Due this week offers <strong>Route for today</strong>: those stops in driving order (nearest first from where the phone is, when it knows), opened in Google Maps. Customers from door rounds go by their door's spot on the map; the rest by address. Google Maps takes up to ten stops.</p>
+  <h3>Asking for a review</h3>
+  <p><strong>Ask for a review</strong> on a customer's page opens a text to their number: "Hi Grant, thanks for having Sixfold Colorado out. If you have a minute, a Google review helps others find us," with Sixfold's Google review link. It greets by first name (from a county owner name, the first name after the comma; a trust or a company gets "there"). Sent from the admin's own phone, the same words to every customer: asking only the happy ones is against Google's rules. The button shows once the review link is in <code>money.json</code> (<code>links.googleReview</code>).</p>
   <h3>Keeping a copy</h3>
   <ul>
     <li><strong>Download customers (spreadsheet):</strong> every customer with plan, price, next due, visits done and spend, as a CSV that opens in Excel or Google Sheets.</li>
@@ -350,7 +354,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Lawn sizes are estimates</strong> from a photo. Shade, garden beds and dead grass can read wrong; the crew can correct any door. Six Black Forest lawns couldn't be outlined.</li>
     <li><strong>The owner of record may not be who answers.</strong> Trusts, rentals and recent sales all happen.</li>
     <li><strong>County values</strong> are only for Douglas and Teller; <strong>wildfire-plan ratings</strong> only for Teller.</li>
-    <li><strong>Search and the office tools need signal.</strong> Knocking, marking and recording don't.</li>
+    <li><strong>Search and the office tools need signal</strong>, except the customer list, which opens from the copy on the phone once it has been opened with signal. Knocking, marking and recording don't need signal either. Saving a customer or a visit does.</li>
     <li><strong>Printing the homeowner report from the home-screen app on an iPad</strong> hasn't been tested yet. It works in a browser tab.</li>
     <li><strong>Meta ad leads</strong> arrive in Meta's own Leads Center, not in the app; add them through + Add a lead.</li>
     <li><strong>Customers are not billing.</strong> There are no invoices, payments or contracts in the app. Prices and visits are a record of the work; the signed agreement stays in DocuSign or Drive and is linked.</li>

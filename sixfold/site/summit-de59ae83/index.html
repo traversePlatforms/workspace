@@ -604,6 +604,7 @@
   .metaprev .save{flex:1;min-height:44px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14px var(--sans);cursor:pointer}
   .metaprev .lnk{background:none;border:0;font:700 14px var(--sans);color:var(--soft);cursor:pointer}
   .cnight{margin-top:12px;display:flex;flex-direction:column;gap:2px}
+  .walkup .custroute{display:block;margin-top:6px}
   .cnight .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .cnight .adminlink{margin:2px 0 0}
   .bkrem{display:flex;gap:12px;align-items:center;margin:0 0 14px;padding:13px 15px;border-radius:16px;background:var(--later-tint);color:var(--later);text-decoration:none;border:1.5px solid currentColor}
@@ -820,6 +821,7 @@
   .legend span{display:inline-flex;align-items:center;gap:5px;background:var(--card);color:var(--ink);border-radius:999px;padding:4px 9px 4px 6px;
     font-size:11.5px;font-weight:700;box-shadow:0 2px 6px -2px rgba(0,0,0,.3)}
   .legend i{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+  .legend i.c{background:transparent;border:2.5px solid #16201C;box-shadow:none}
   .legend i.h{background:transparent;border:2.5px solid #9E2A1C;box-shadow:none}
   .mapwrap.has-sheet .leaflet-bottom{bottom:var(--sheet-h,0px);transition:bottom .3s}
   .msheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;background:var(--card);border-radius:18px;padding:14px 14px 12px;
@@ -3507,6 +3509,43 @@
       S.custs = j.customers; S.custToday = j.today; drawCustomers(holder);
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Customers need signal.')); });
   }
+  /* today's visits in driving order (2026-10-04): customers due today or overdue, and visits booked for today.
+     From where you are when the phone knows, nearest first; customers from door rounds have their door's
+     spot, the rest go by address. Opens in Google Maps (it takes up to 9 stops after the start). */
+  /* a first name to greet by: county owner names read "LAST, FIRST M" in capitals; a trust or a company gets "there" */
+  function greetName(n) {
+    n = String(n || '').trim();
+    if (!n || COMPANY_RE.test(n) || /\bTRUST\b/i.test(n)) return 'there';
+    if (n.indexOf(',') > 0) n = n.split(',')[1].trim();
+    var w = n.split(/\s+/)[0] || '';
+    if (w === w.toUpperCase()) w = streetCase(w);
+    return w.replace(/[^A-Za-z'\-]/g, '') || 'there';
+  }
+  function custRoute(all) {
+    var today = S.custToday || todayISO();
+    var stops = all.filter(function (c) {
+      if ((c.status || 'active') !== 'active') return false;
+      if (c.next && c.next <= today) return true;
+      return (c.visits || []).some(function (v) { return v.status === 'booked' && v.date === today; });
+    });
+    if (!stops.length) return null;
+    var here = S.here ? [S.here.lat, S.here.lon] : null, left = stops.slice(), order = [];
+    var dist = function (a, b) { var dx = (a[1] - b[1]) * Math.cos(a[0] * Math.PI / 180), dy = a[0] - b[0]; return dx * dx + dy * dy; };
+    var at = here;
+    while (left.length) {
+      var k = 0;
+      if (at) { var best = Infinity; left.forEach(function (c, i) { if (c.ll) { var dd = dist(at, c.ll); if (dd < best) { best = dd; k = i; } } }); }
+      var nx = left.splice(k, 1)[0]; order.push(nx); if (nx.ll) at = nx.ll;
+    }
+    order = order.slice(0, 10);
+    var place = function (c) { return c.ll ? c.ll[0] + ',' + c.ll[1] : [c.address, c.town, 'CO'].filter(Boolean).join(', '); };
+    var last = order[order.length - 1], mid = order.slice(0, -1);
+    var url = 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(place(last)) +
+      (mid.length ? '&waypoints=' + encodeURIComponent(mid.map(place).join('|')) : '');
+    var a = q('a', 'adminlink custroute', 'Route for today · ' + order.length + (order.length === 1 ? ' stop' : ' stops') + ' in Google Maps');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    return a;
+  }
   function custRow(c) {
     var b = q('button', 'door crow'); b.type = 'button';
     var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', c.name || 'Customer')); top.appendChild(ico('chev', 2.4)); b.appendChild(top);
@@ -3534,6 +3573,8 @@
       var dbox = q('div', 'walkup');
       dbox.appendChild(q('div', 'wl', 'Due this week'));
       due.forEach(function (c) { var r = q('div', 'wur'); r.appendChild(q('b', null, (c.overdue ? 'Overdue · ' : '') + fmtD(c.next))); r.appendChild(q('span', null, c.name + ' · ' + (PLAN_L[c.plan] || '') + (c.price ? ' · ' + money(c.price) : ''))); dbox.appendChild(r); });
+      var rt = custRoute(all);
+      if (rt) dbox.appendChild(rt);
       holder.appendChild(dbox);
     }
     var bar = q('div', 'cbar');
@@ -3663,6 +3704,13 @@
       var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
     }
     if (c.email) { var a3 = q('a'); a3.href = 'mailto:' + c.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(c.email)); ct.appendChild(a3); }
+    /* ask for a Google review (2026-10-04): the same words to every customer, sent from the admin's own phone.
+       Shown once the review link is in money.json (links.googleReview); asked of everyone, never only the happy ones. */
+    var rv = S.money && S.money.links && S.money.links.googleReview;
+    if (rv && /^https:\/\//.test(rv) && tel.length >= 10) {
+      var a6 = q('a'); a6.href = 'sms:' + tel + '?&body=' + encodeURIComponent('Hi ' + greetName(c.name) + ', thanks for having Sixfold Colorado out. If you have a minute, a Google review helps others find us: ' + rv);
+      a6.appendChild(ico('chat', 2.2)); a6.appendChild(document.createTextNode('Ask for a review')); ct.appendChild(a6);
+    }
     if (c.agreement) { var a4 = q('a'); a4.href = c.agreement; a4.target = '_blank'; a4.rel = 'noopener noreferrer'; a4.appendChild(ico('clip', 2.2)); a4.appendChild(document.createTextNode('Agreement')); ct.appendChild(a4); }
     if (c.door) {
       var a5 = q('button'); a5.type = 'button'; a5.appendChild(ico('door', 2.2)); a5.appendChild(document.createTextNode('Their door'));
@@ -4519,10 +4567,11 @@
     var lg = q('div', 'legend');
     /* "you" is near-black, never blue: blue is To knock */
     var keys = [['k', 'To knock'], ['d', 'Back on the list'], ['a', 'No answer, waiting'], ['x', 'Done'], ['h', 'High fire hazard']];
+    if (S.doors.some(function (d) { return d.cust; })) keys.push(['c', 'Customer']);   /* where we already work (2026-10-04) */
     if (S.here) keys.push(['u', 'You']);
     keys.forEach(function (x) {
-      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : null);
-      if (x[0] !== 'h') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
+      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : x[0] === 'c' ? 'c' : null);
+      if (x[0] !== 'h' && x[0] !== 'c') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
       sp.appendChild(i); sp.appendChild(document.createTextNode(x[1])); lg.appendChild(sp);
     });
     box.appendChild(lg);
@@ -4564,6 +4613,7 @@
         var m = L.circleMarker([d.lat, d.lon], { radius: base(d), color: hot ? '#9E2A1C' : '#ffffff', weight: hot ? 3.5 : 2.5,
           fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95 }).addTo(map);
         m.on('click', function (e) { L.DomEvent.stopPropagation(e); select(d); });
+        if (d.cust) L.circleMarker([d.lat, d.lon], { radius: base(d) + 6, color: '#16201C', weight: 3, fill: false, interactive: false }).addTo(map);
         markers[d.id] = { m: m, d: d };
         pts.push([d.lat, d.lon]);
       });

@@ -7,6 +7,28 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ THE NEXT UPLOAD, ALL TOGETHER — leads, morning email, sign-out fix, aeration wording, smaller jobs
+
+| Step | File (from `sixfold/site/`) | Goes to | Bytes |
+|---|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` | 414,548 |
+| 2 | `summit-de59ae83/sw.js` | `public_html/summit-de59ae83/` | 6,526 |
+| 3 | `api/rounds.php` | `public_html/api/` | 169,754 |
+| 4 | `api/submit.php` | `public_html/api/` | 14,563 |
+| 5 | `contact/index.html` | `public_html/contact/` | 11,394 |
+| 6 | `assets/site.js` | `public_html/assets/` | 4,140 |
+| 7 | `data/rounds/docs/money.json` | `sixfold-data/rounds/docs/` | 24,894 |
+| 8 | `tools/morning-email.php` | `sixfold-tools/` | 6,745 |
+| 9 | — | Flush the cache | |
+| 10 | — | SiteGround → Devs → Cron Jobs → second job, **Once Per Hour**: `php /home/customer/www/sixfoldcolorado.com/sixfold-tools/morning-email.php` | |
+
+The sections below explain each part. **Smaller jobs (in steps 1–3, 7):** *Ask for a review* on a customer's page
+(texts their number the Google review link by first name; hidden while `links.googleReview` in money.json is empty; Matthew supplied
+https://g.page/r/CdxyzSzq9tvEEBM/review on 2026-10-04, so it ships switched on); *Route for today* in Due this week (today's and overdue visits, plus visits booked today, in
+driving order in Google Maps; door customers by their door's spot, rounds.php's customers answer now carries `ll`);
+customers ringed on the Map view with a legend key; the customer list kept on the phone for no signal (sw.js KEEP
+gains `customers`; wiped at sign-out like the rest). Tested: smalljobs-test 10/10.
+
 ## ⏳ (same upload) — the morning email: one new file and a second cron job
 
 | Step | File (from `sixfold/site/`) | Goes to |

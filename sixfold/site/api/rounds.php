@@ -1702,6 +1702,14 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
             $list[] = $c;
         }
         usort($list, fn($a, $b) => strcmp(mb_strtolower((string) ($a['name'] ?? '')), mb_strtolower((string) ($b['name'] ?? ''))));
+        /* where each customer from door rounds is, so the day's visits can be put in driving order */
+        $regs = [];
+        foreach ($list as &$c) {
+            if (empty($c['door']) || !preg_match('/^([a-z0-9-]{1,40})\/([a-z0-9-]{1,80})$/D', (string) $c['door'], $dm)) continue;
+            if (!array_key_exists($dm[1], $regs)) { $rd = loadRegion($dm[1]); $pos = []; if ($rd) foreach ($rd['areas'] as $a) foreach ($a['doors'] as $d) if (isset($d['lat'], $d['lon'])) $pos[$d['id']] = [$d['lat'], $d['lon']]; $regs[$dm[1]] = $pos; }
+            if (isset($regs[$dm[1]][$dm[2]])) $c['ll'] = $regs[$dm[1]][$dm[2]];
+        }
+        unset($c);
         out(['ok' => true, 'today' => $today, 'customers' => $list]);
     }
     /* every log the app keeps, in one file the admin saves somewhere safe. Rebuilding is putting each

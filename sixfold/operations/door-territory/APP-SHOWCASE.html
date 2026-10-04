@@ -170,6 +170,7 @@ button { font: inherit; color: inherit }
 .duebox { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 11px 13px; margin-bottom: 10px; display: grid; gap: 5px; font-size: 13px }
 .duebox .wl { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
 .duebox b { color: var(--go); margin-right: 6px } .duebox .over b { color: var(--bad) }
+.duebox .rtlink { justify-self: start; border: 0; background: none; padding: 4px 0 0; color: var(--go); font: 700 13.5px var(--sans); cursor: pointer }
 .cfind { display: flex; gap: 6px; margin-bottom: 8px }
 .cfind input { flex: 1; min-width: 0; font: 600 15px var(--sans); padding: 8px 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink) }
 .ctot { font-size: 12.5px; color: var(--soft); margin: 0 2px 8px }
@@ -293,6 +294,7 @@ button { font: inherit; color: inherit }
         <div class="why"><h3>Customers kept, work repeats</h3><ul>
           <li><b>Every customer in one list:</b> contact, plan, price, every visit, what they have spent and when they are due next.</li>
           <li><b>Due this week on top,</b> overdue flagged, so a monthly lawn or a yearly aeration never slips.</li>
+          <li><b>Repeat work runs itself:</b> today's visits as a route in Google Maps, and a review request texted in one tap after the job.</li>
           <li><b>One tap from a won job or a won lead:</b> name, address and price carry over, and the door is tagged so nobody knocks it cold.</li>
           <li><b>Nothing is overwritten, and nothing is lost.</b> Every change is kept as its own line, a backup saves itself on the server every night (the last 30 are kept), and admins are reminded to download one to a device each week.</li>
         </ul></div>
@@ -693,6 +695,8 @@ button { font: inherit; color: inherit }
     if (due.length) {
       var db = el('div', 'duebox'); db.appendChild(el('div', 'wl', 'Due this week'));
       due.forEach(function (c) { var r = el('div', isOver(c) ? 'over' : null); r.appendChild(el('b', null, (isOver(c) ? 'Overdue · ' : '') + fmtD(c.next))); r.appendChild(document.createTextNode(c.name + ' · ' + PLAN[c.plan] + ' · ' + usd(c.price))); db.appendChild(r); });
+      var rtb = el('button', 'rtlink', 'Route for today · ' + due.filter(function (c) { return c.next <= TODAY; }).length + ' stops in Google Maps'); rtb.type = 'button';
+      rtb.addEventListener('click', function () { toastMsg('Route for today', 'Today’s and overdue visits in driving order, opened in Google Maps'); }); db.appendChild(rtb);
       $screen.appendChild(db);
     }
     var fb = el('div', 'cfind'); var inp = el('input'); inp.type = 'search'; inp.placeholder = 'Find a customer'; inp.setAttribute('aria-label', 'Find a customer'); inp.value = S.custFind; fb.appendChild(inp); $screen.appendChild(fb);
@@ -748,6 +752,7 @@ button { font: inherit; color: inherit }
     var ct = el('div', 'cct');
     if (c.agree) { var ag = el('button'); ag.type = 'button'; ag.appendChild(ico('clip', 2.2)); ag.appendChild(document.createTextNode('Agreement')); ag.addEventListener('click', function () { toastMsg('Agreement', 'Opens the signed copy in DocuSign or Drive'); }); ct.appendChild(ag); }
     var since = el('button'); since.type = 'button'; since.appendChild(ico('user', 2.2)); since.appendChild(document.createTextNode('Customer since ' + c.since)); ct.appendChild(since);
+    if (c.phone) { var rvb = el('button'); rvb.type = 'button'; rvb.appendChild(ico('chat', 2.2)); rvb.appendChild(document.createTextNode('Ask for a review')); rvb.addEventListener('click', function () { toastMsg('Ask for a review', 'Texts ' + c.name.split(' ')[0] + ' the Google review link, the same words to every customer'); }); ct.appendChild(rvb); }
     $screen.appendChild(ct);
     if (c.notes) $screen.appendChild(el('div', 'cnote', c.notes));
     var ac = el('div', 'cacts');
