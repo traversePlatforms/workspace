@@ -631,6 +631,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       summer 2025 vs 2026, weighted by the door app's own lawn outline. Early finding: at 10 m only
       about a third of Palmer Lake's large lawns are compact enough to read. The image metadata's
       offset turned out to be wrong for these files and was dropped (measured on lake water).
+- [ ] **SX-34 — Door app opens with no signal: ✅ BUILT AND TESTED 2026-10-03, rides with SX-28/32 (adds `sw.js`).**
+      Network-first service worker: with signal nothing changes; with none, the last copy of the page,
+      sign-in, towns and recent neighbourhoods open with a strip. Sign-out wipes it. 12 checks with the
+      server really off.
+- [ ] **SX-35 — When a house sells: ✅ BUILT AND TESTED 2026-10-03, rides with the upload.** Owner history
+      across rebuilds; a real change (no shared name) sets "new owner since", and the previous owner's
+      mark, phone, email and note are set aside and labelled. Detection starts from the re-pull after
+      the first build. Needed before the January re-pull (SX-33).
 - [ ] **SX-32 — One town per door: ✅ BUILT AND TESTED 2026-10-03, rides with SX-28.** 958 doors were in two
       town lists (all of Palmer Lake inside Monument; Castle Rock overlapping Franktown and Sedalia),
       each copy with its own marks. Each door now belongs to the nearest town; everything recorded under
@@ -843,7 +851,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 | **12 Oct** | Kara's aeration job |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
 | **1 Nov** | Kara's first monthly payment · **19 Nov** first monthly visit |
-| **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold doesn't keep the old owner's phone, email and notes. Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists"). The owner-change handling in the app is NOT built yet: say whether to build it first |
+| **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold shows "new owner since" and the old owner's phone, email and notes are set aside (SX-35, built 2026-10-03). Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists") |
 
 **⚑ These are written here on purpose.** Session-scheduled reminders do not survive the
 session — the register does, and it is read at the start of each one.

@@ -15,7 +15,7 @@ the 12 `.json` files in `sixfold-data/rounds/`. These are the undo.
 
 | Step | File (from `sixfold/site/`) | Goes to | Why this order |
 |---|---|---|---|
-| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` | Works with the old server too, so it goes first. Flush the cache; anyone with the app open closes and reopens it |
+| 1 | `summit-de59ae83/index.html` **and the NEW `summit-de59ae83/sw.js`** | `public_html/summit-de59ae83/` | Works with the old server too, so it goes first. `sw.js` is what lets the app open with no signal; it must sit beside index.html. Flush the cache; anyone with the app open closes and reopens it |
 | 2 | `api/rounds.php` | `public_html/api/` | Everyone is signed out from this moment, and asked for their code |
 | 3 | `api/quote.php` | `public_html/api/` | Needs the new rounds.php's sign-in, so after step 2 |
 | 4 | `summit-de59ae83/quote.html` | `public_html/summit-de59ae83/` | Goes with quote.php (rates version) |
@@ -36,6 +36,7 @@ file by file.
   with `?cb=<random>` (a cached old copy is a false pass);
 - must be **404**: `/data/rounds/monument.json`, `/api/rounds-codes.php`, `/api/secrets.php`;
 - must be **401**: `/api/rounds.php?action=regions`, `/api/quote.php?action=me`;
+- `/summit-de59ae83/sw.js` returns 200 and starts with `/* Sixfold Rounds — opens with no signal`;
 - in the app: a phone that was signed in is asked for its code; mark a door, then sign in again
   when asked, and it is still marked; Palmer Lake shows 444 doors and Monument about 7,071; a door
   marked before the upload still shows its mark; note and photo dates read as dates;
@@ -52,6 +53,37 @@ their old-town marks until it goes up); rounds.php while crews still run the old
 save is lost when signed out: reload first); quote.php before rounds.php (admins locked out of
 Quote build until step 2); deleting the `sixfold-data/rounds/` folder (permanent loss); door JSON
 inside public_html (31,000 names and addresses public); a truncated upload (check the sizes).
+
+## ⚑ Opens with no signal (SX-34), when a house sells (SX-35), and the third round of reviews — 2026-10-03: `index.html` + NEW `sw.js` + `rounds.php` + door files
+
+**Opens with no signal (SX-34).** A small service worker (`sw.js`) keeps the last copy of the
+page, the sign-in, the towns and recently opened neighbourhoods. With signal nothing changes:
+everything still comes fresh from the server, so an upload is never hidden behind an old copy
+(the reason there was no service worker before). With no signal the app opens anyway, a strip
+says it is a saved copy, and marks queue as before. **Signing out deletes the saved data**
+(shared iPads). The quote tool and all saves stay online-only. Tested with the server really
+switched off: 12 checks.
+
+**When a house sells (SX-35).** The door builder keeps `owner-history.json`. At the next
+quarterly re-pull, a door whose owner shares no name with the last one gets "new owner since"
+(a spouse added or a move into a family trust is not a sale). Everything recorded before that
+date is the previous owner's: the door is back on the list, out of Quotes to build, and its old
+phone, email and note are labelled as the previous owner's, with no Call/Email links. The export
+keeps everything, with an `owner_since` column. **The first build after this only records
+owners; changes show from the following re-pull.** 11 checks.
+
+**Third round of reviews (Fable: phone screenshots, stats and dates, iPad screenshots):**
+- **Dates read "NaN undefined …"** on notes, emails, photos, Booked by and Quote sent since
+  2026-10-02 (a function defined twice). Fixed.
+- Stats: undo across the town split, "talked to" no longer counts no-soliciting doors, undo
+  restores the previous mark (a mistaken tap no longer wipes someone's Not now), no-signal saves
+  count on the day they were tapped, My doors files a door under its mark's day.
+- Clearer on a phone: 44 px tool buttons, roomier Money row, outlined No answer, bigger map dots
+  and zoom, bigger Leads buttons, plainer labels (Owner:, No trees within 30 ft, 2023 photo).
+- On an iPad: a **Back button in the bottom bar** (pinned to the left edge on a wide screen), the
+  sign-in holds together, come-back dates in one row, tidier cards and stats chart.
+- **Lawn levels count compact lawn only** (see LAWN-SIZE.md): specks between trees on big lots
+  no longer read as a Large lawn. The door files carry the new levels.
 
 ## ⚑ One town per door (SX-32) — 2026-10-03: all 12 door files (incl. `index.json`) + `rounds.php` + `index.html`
 
