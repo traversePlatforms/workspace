@@ -174,7 +174,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **⚑ Nothing in `sixfold/quotes/` carries either name** — every document says only
       “Sedalia”. Shannon and Lonnie confirmed by Matthew 2026-10-01.
 
-- [x] **SX-3 — ✅ BUILT AND TESTED 2026-10-03, rides with the upload (`quote.html` + `index.html`).** Fire jobs
+- [x] **SX-3 — ✅ LIVE 2026-10-03, verified. Was: rides with the upload (`quote.html` + `index.html`).** Fire jobs
       in Quote build show the tax-credit ceiling for the price, the county's grant position and the
       insurance rules, with say / don't-say lines, all from `money.json`; the scope draft carries
       them with sources; Quotes to build cards link straight in with address + county. 14 checks.
@@ -645,24 +645,24 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       summer 2025 vs 2026, weighted by the door app's own lawn outline. Early finding: at 10 m only
       about a third of Palmer Lake's large lawns are compact enough to read. The image metadata's
       offset turned out to be wrong for these files and was dropped (measured on lake water).
-- [ ] **SX-34 — Door app opens with no signal: ✅ BUILT AND TESTED 2026-10-03, rides with SX-28/32 (adds `sw.js`).**
+- [x] **SX-34 — Door app opens with no signal: ✅ LIVE 2026-10-03, verified signed in (Claude Check code), rides with SX-28/32 (adds `sw.js`).**
       Network-first service worker: with signal nothing changes; with none, the last copy of the page,
       sign-in, towns and recent neighbourhoods open with a strip. Sign-out wipes it. 12 checks with the
       server really off.
-- [ ] **SX-35 — When a house sells: ✅ BUILT AND TESTED 2026-10-03, rides with the upload.** Owner history
+- [x] **SX-35 — When a house sells: ✅ LIVE 2026-10-03, verified signed in (Claude Check code), rides with the upload.** Owner history
       across rebuilds; a real change (no shared name) sets "new owner since". Records surely from before
       the sale are set aside and labelled; ones from the window around the sale stay live with "check
       it's the new owner's" (no sale dates in county data). Fable review fixes in (name-check bug,
       sale window, offline sign-out, stale saved copies). Detection starts from the re-pull after
       the first build. Needed before the January re-pull (SX-33).
-- [ ] **SX-32 — One town per door: ✅ BUILT AND TESTED 2026-10-03, rides with SX-28.** 958 doors were in two
+- [x] **SX-32 — One town per door: ✅ LIVE 2026-10-03, verified signed in (Claude Check code), rides with SX-28.** 958 doors were in two
       town lists (all of Palmer Lake inside Monument; Castle Rock overlapping Franktown and Sedalia),
       each copy with its own marks. Each door now belongs to the nearest town; everything recorded under
       the other town follows it (the server reads partner towns' logs). No id or address changed; gate
       passed. Also from Fable's review: the gate now fails when it compared nothing or a town vanished
       from index.json; the refresh steps include the gate; saves for doors on no list are refused (409).
       **Still open: the house-sale question** (old owner's phone and notes stay with the address).
-- [ ] **SX-28 — Security fixes from the Fable review: ✅ BUILT AND TESTED 2026-10-03, awaiting upload (`rounds.php` + `quote.php` + `api/submit.php` + `index.html`).**
+- [x] **SX-28 — Security fixes from the Fable review: ✅ LIVE 2026-10-03, verified signed in (Claude Check code), awaiting upload (`rounds.php` + `quote.php` + `api/submit.php` + `index.html`).**
       Removed codes now sign out at once; sessions are tied to the code (not the name) and the role
       comes from the list; a right code no longer clears wrong ones; locked sign-in counting; site-wide pause after 60 wrong codes an hour;
       plus smaller fixes. Nothing critical was found. Fable re-checked the fixes and found three
