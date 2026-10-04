@@ -39,6 +39,8 @@ const DENY_FILES = new Set([
   'submissions.log',
   /* SX-9e: credentials live in sixfold-private/ above public_html, never in a bundle */
   'secrets.php', 'rounds-codes.php',
+  /* review 2026-10-03: the shapes of those files have no business on the live site either */
+  'secrets.example.php', 'rounds-codes.example.php', 'build-quote-page.mjs', 'DEPLOY-ROUNDS.md',
 ]);
 /* held in reserve, referenced by no page — see PHOTOS.md */
 const DENY_UNUSED = new Set(['limbing.jpg', 'limbing.webp', 'stand.jpg', 'stand.webp']);

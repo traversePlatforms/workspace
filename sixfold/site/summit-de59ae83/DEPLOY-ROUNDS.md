@@ -1,11 +1,57 @@
 # Door rounds — what to upload, and the one check that matters
 
-**Built 2026-09-29. Nothing has been uploaded.** Phase 1 of
+**Live = commit `406236b` (verified 2026-10-03).** Everything since is in the batch below. The
+dated sections further down explain each change; the checklist is what to follow. Phase 1 of
 [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-**Additive only.** Every file below is new. Nothing that already works on the site is
-touched — in particular `api/submit.php`, `api/config.php` and `api/secrets.php` are not
-modified, moved, or re-uploaded.
+## ⚑⚑ NEXT UPLOAD — the 2026-10-03 batch, in this order
+
+Built from a review of the whole batch (Fable, 2026-10-03). **Do it in the evening, when no crew
+are out. Tell the crew beforehand: everyone types their code once after this.**
+
+**0. Keep copies first.** In File Manager, download the live `public_html/api/rounds.php`,
+`quote.php`, `submit.php`, `public_html/summit-de59ae83/index.html` and `quote.html`, and
+the 12 `.json` files in `sixfold-data/rounds/`. These are the undo.
+
+| Step | File (from `sixfold/site/`) | Goes to | Why this order |
+|---|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` | Works with the old server too, so it goes first. Flush the cache; anyone with the app open closes and reopens it |
+| 2 | `api/rounds.php` | `public_html/api/` | Everyone is signed out from this moment, and asked for their code |
+| 3 | `api/quote.php` | `public_html/api/` | Needs the new rounds.php's sign-in, so after step 2 |
+| 4 | `summit-de59ae83/quote.html` | `public_html/summit-de59ae83/` | Goes with quote.php (rates version) |
+| 5 | all 12 `data/rounds/*.json` (11 towns + `index.json`) | **`sixfold-data/rounds/`** (beside public_html, never inside) | Needs the new rounds.php. **Overwrite only these 12 files. Never delete or replace the folder: the `*.log` files in it are every mark, note and number ever recorded** |
+| 6 | `api/submit.php` | `public_html/api/` | Independent; `smtp.php` and `config.php` are unchanged |
+| 7 | — | — | Check each uploaded file's size against the list below, then flush the cache again |
+
+{{SIZES}}
+
+**Never upload:** `DEPLOY-ROUNDS.md` (it sits in the summit folder and would be public),
+`build-quote-page.mjs`, `make-bundle.mjs`, anything in `dist/` (an old 2026-09-28 zip), and
+`api/rounds-codes.php` / `api/secrets.php` (they live in `sixfold-private/`, never from the repo).
+`make-bundle.mjs` builds the WHOLE site and cannot carry the door data, so this batch goes up
+file by file.
+
+**After uploading, check (all from outside, no sign-in needed except the last group):**
+- the page: `/summit-de59ae83/` and `/summit-de59ae83/quote.html` give the same byte count plain and
+  with `?cb=<random>` (a cached old copy is a false pass);
+- must be **404**: `/data/rounds/monument.json`, `/api/rounds-codes.php`, `/api/secrets.php`;
+- must be **401**: `/api/rounds.php?action=regions`, `/api/quote.php?action=me`;
+- in the app: a phone that was signed in is asked for its code; mark a door, then sign in again
+  when asked, and it is still marked; Palmer Lake shows 444 doors and Monument about 7,071; a door
+  marked before the upload still shows its mark; note and photo dates read as dates;
+- quote tool: an admin code opens Quote build, a crew code is refused;
+- website form: send a test enquiry named "Smith, John"; check the email's Reply-To and that it
+  appears under Leads, then mark it Lost;
+- `sixfold-data/ratelimit/` now exists beside public_html.
+
+**If something breaks:** put back the step-0 copy of that file (or `git show 406236b:<path>`).
+The `.log` files are never touched by this upload.
+
+**What would take the app down:** door files without the new rounds.php (958 doors lose sight of
+their old-town marks until it goes up); rounds.php while crews still run the old page (their next
+save is lost when signed out: reload first); quote.php before rounds.php (admins locked out of
+Quote build until step 2); deleting the `sixfold-data/rounds/` folder (permanent loss); door JSON
+inside public_html (31,000 names and addresses public); a truncated upload (check the sizes).
 
 ## ⚑ One town per door (SX-32) — 2026-10-03: all 12 door files (incl. `index.json`) + `rounds.php` + `index.html`
 
@@ -38,7 +84,7 @@ The rebuild check passed: 958 doors moved to a partner town, none lost, moved or
 
 From a read-only security review by a second model (Fable), every finding checked against
 the code before fixing. Nothing critical. Fable then checked the fixes and found three more
-things, also fixed below. Upload both files, then sign in once to check.
+things, also fixed below. The files and their order are in the NEXT UPLOAD checklist at the top.
 
 **⚑ Everyone signs in once after this upload.** Sessions are now tied to the code itself, so
 phones signed in before it are asked for their code again. Tell the crew before uploading.
@@ -764,7 +810,7 @@ the file, the artifact and the site — so a reprice means publish *and* regener
 |---|---|---|
 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/index.html` | the crew page |
 | `api/rounds.php` | `public_html/api/rounds.php` | the only thing that serves door data |
-| `api/rounds-codes.php` | `public_html/api/rounds-codes.php` | ⚑ the live codes — see below |
+| `rounds-codes.php` | **`sixfold-private/`** (beside public_html) — **never `public_html/api/`**, never from the repo | ⚑ the live codes. Moved out of the web root 2026-10-03 (SX-9e); this row used to say `public_html/api/`, which would undo that |
 | `data/rounds/*.json` | **`sixfold-data/rounds/`** — beside `public_html`, **NOT inside it** | the door lists |
 
 **⚑⚑ CORRECTED 2026-10-01 — the door data goes OUTSIDE `public_html`.** This row used to say
@@ -779,8 +825,8 @@ upload straight back into the leak** — as of 2026-10-01 that is 31,422 names a
 `.htaccess` is needed there — nothing outside the web root can be requested. **After uploading,
 confirm `https://sixfoldcolorado.com/data/rounds/monument.json` still returns 404.**
 
-**⚑ `api/rounds-codes.php` is gitignored and holds the live codes.** It is not in the
-repository; it is on this machine only. Treat it like `secrets.php`.
+**⚑ `rounds-codes.php` is gitignored and holds the live codes.** It is not in the repository;
+it lives in `sixfold-private/` on the host (since SX-9e, 2026-10-03). Treat it like `secrets.php`.
 
 ## The check that matters — do this immediately after uploading
 
@@ -800,8 +846,8 @@ check was actually run against the live host for the first time.
 | Request | Got | Verdict |
 |---|---|---|
 | `/data/rounds/monument.json` | **404** | **Safe.** `/data/` 404s exactly like a path that does not exist, and this host *does* return 403 where it means it (`/api/` and `/api/.ratelimit/` both do). **The door JSON is not under the document root at all** — which is better than a 403, because there is nothing there to deny |
-| `/api/rounds-codes.php` | **200, and zero bytes** | **Not a leak, but not the designed protection either.** PHP executes the file and a top-level `return` emits nothing, so the body is empty. **The `.htaccess` deny is not what is protecting it** |
-| `/api/secrets.php` | **200, and zero bytes** | Same situation, same caveat |
+| `/api/rounds-codes.php` | **200, and zero bytes** (2026-09-30). **Since SX-9e (2026-10-03) it must be 404** — the file is no longer there | **Not a leak, but not the designed protection either.** PHP executes the file and a top-level `return` emits nothing, so the body is empty. **The `.htaccess` deny is not what is protecting it** |
+| `/api/secrets.php` | **200, and zero bytes** (2026-09-30). **Since SX-9e it must be 404** | Same situation, same caveat |
 | `/api/submissions.log` | **403** | **Safe, and this closes an assumption that had been carried untested since the app went live.** `.htaccess` deny *does* work for `.log` on this host |
 | `/api/rounds.php?action=regions` | **401** | The sign-in gate working without a session |
 
