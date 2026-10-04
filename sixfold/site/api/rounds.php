@@ -12,7 +12,9 @@
  *
  *   1. Every action except 'signin' requires a valid session. No secret URL.
  *   2. 'area' returns ONE neighbourhood. The whole list is never sent to a
- *      phone, so a stolen session leaks ~26 doors and not 2,656.
+ *      phone, so a stolen session leaks ~26 doors and not 2,656. 'search'
+ *      (2026-10-04) answers at most 25 addresses, needs a street name, and is
+ *      counted per person (60 per 10 minutes); it carries no owner names.
  *   3. Sign-in is rate limited per IP, on the same pattern submit.php uses.
  *
  * ---- WHY NO DATABASE -----------------------------------------------------
@@ -113,8 +115,14 @@ function accountsFile(): string {
     return (is_dir($priv) ? $priv : dirname(DATA_DIR)) . '/rounds-accounts.json';
 }
 function loadAccounts(): array {
-    $a = json_decode((string) @file_get_contents(accountsFile()), true);
-    $a = is_array($a) ? $a : [];
+    $f = accountsFile();
+    if (!file_exists($f)) $a = [];
+    else {
+        /* present but unreadable or broken (Fable 2026-10-04): carrying on would bring back everyone removed,
+           demoted or signed out in the app and drop every app-made sign-in, silently. Stop instead. */
+        $raw = @file_get_contents($f); $a = $raw === false ? null : json_decode($raw, true);
+        if (!is_array($a)) { error_log('sixfold rounds: ' . $f . ' is unreadable or not valid JSON - sign-ins stopped'); fail('Sign-ins are unavailable for a moment. Tell the office.', 503); }
+    }
     foreach (['people', 'off', 'over'] as $k) if (!isset($a[$k]) || !is_array($a[$k])) $a[$k] = [];
     return $a;
 }
@@ -590,6 +598,14 @@ function customerDoors(): array {
     $out = [];
     foreach (loadCustomers() as $c) if (($c['status'] ?? 'active') === 'active' && !empty($c['door'])) $out[(string) $c['door']] = ['plan' => $c['plan'] ?? 'oneoff', 'service' => $c['service'] ?? '', 'since' => $c['start'] ?? ''];
     return $out;
+}
+/* next visit after a done one: a month or a year on, kept inside the month (Fable 2026-10-04: PHP's
+   '+1 month' turns 31 Jan into 3 Mar and skips February; 29 Feb + a year becomes 28 Feb) */
+function nextDue(string $date, string $plan): string {
+    [$y, $m, $d] = array_map('intval', explode('-', $date));
+    if ($plan === 'yearly') $y++; else { $m++; if ($m > 12) { $m = 1; $y++; } }
+    $last = (int) (new DateTime(sprintf('%04d-%02d-01', $y, $m)))->format('t');
+    return sprintf('%04d-%02d-%02d', $y, $m, min($d, $last));
 }
 function dateOk(string $d): bool { return (bool) preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $d, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]); }
 /* ---- the walk (SX-51, 2026-10-04) ------------------------------------------------------
@@ -1656,13 +1672,13 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
         $photos = [];
         foreach ((glob(DATA_DIR . '/photos/*/*/*') ?: []) as $p) $photos[] = 'sixfold-data/rounds/photos/' . substr($p, strlen(DATA_DIR . '/photos/'));
         $doc = ['backup' => 'Sixfold field tools', 'made' => date('c'), 'by' => $me,
-                'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes are not included; photos are listed, not copied.',
+                'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
                 'files' => $files, 'photos' => $photos];
         accountLog(['by' => $me, 'what' => 'backup', 'n' => count($files)]);
         header('Content-Type: application/json; charset=utf-8');
         header('Content-Disposition: attachment; filename="sixfold-backup-' . date('Y-m-d-His') . '.json"');
         header('Cache-Control: no-store');
-        echo json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        echo json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         exit;
     }
     if ($action === 'customersexport') {
@@ -1717,7 +1733,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
             $lid = (string) $body['lead']; $L = null;
             foreach (readLines(leadsDir() . '/leads.log') as $l) if (($l['id'] ?? '') === $lid) $L = $l;
             if (!$L) fail('No such lead.', 404);
-            foreach ($cs as $c) if (($c['lead'] ?? '') === $lid) out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
+            foreach ($cs as $c) if (($c['lead'] ?? '') === $lid && ($c['status'] ?? 'active') !== 'ended') out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
             $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($L['town'] ?? '', 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
             if (preg_match('/aerat/i', (string) ($L['need'] ?? ''))) $f['service'] = 'aeration'; elseif (preg_match('/fire/i', (string) ($L['need'] ?? ''))) $f['service'] = 'fire';
         } else {
@@ -1728,7 +1744,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
             $door = null; foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) if ($d['id'] === $did) $door = $d;
             if (!$door) fail('No such door.', 404);
             $dk = $key . '/' . $did;
-            foreach ($cs as $c) if (($c['door'] ?? '') === $dk) out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
+            foreach ($cs as $c) if (($c['door'] ?? '') === $dk && ($c['status'] ?? 'active') !== 'ended') out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
             $p = loadPhones($key)[$did] ?? null; $p = ($p && ($p['source'] ?? '') === 'door' && empty(ownerFlag($door, $p)['prev'])) ? $p : null;
             $em = loadEmails($key)[$did] ?? null; $em = ($em && empty(ownerFlag($door, $em)['prev'])) ? $em : null;
             $res = loadResults($key)[$did] ?? null;
@@ -1759,9 +1775,11 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
                 'note' => $clean($body['note'] ?? '', 600), 'by' => $me, 'at' => time()];
         if (!appendLine(custDir() . '/visits.log', $row)) fail('Could not save that. Try again.', 500);
         $c = $cs[$cid]; $next = null;
-        if ($status === 'done' && in_array($c['plan'] ?? '', ['monthly', 'yearly'], true) && (empty($c['next']) || $date >= $c['next'])) {
-            $next = (new DateTime($date . ' 00:00', $tz))->modify(($c['plan'] === 'monthly') ? '+1 month' : '+1 year')->format('Y-m-d');
-            $write($cid, ['next' => $next]);
+        /* next due becomes a month (or a year) after this visit, unless that is earlier than it already is:
+           a mow a day early still moves it on, and last month's visit typed in late never pulls it back */
+        if ($status === 'done' && in_array($c['plan'] ?? '', ['monthly', 'yearly'], true)) {
+            $cand = nextDue($date, (string) $c['plan']);
+            if (empty($c['next']) || $cand > $c['next']) { $next = $cand; $write($cid, ['next' => $next]); }
         }
         out(['ok' => true, 'vid' => $vid, 'next' => $next]);
     }
@@ -1837,14 +1855,22 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         out(['ok' => true, 'accounts' => $list]);
     }
     if (!$isPost) fail('POST required', 405);
+    /* every change works on a fresh copy under a lock (Fable 2026-10-04): the file is rewritten whole, so
+       two admins saving at once used to keep only one change. The lock goes when the request ends. */
+    if ($action !== 'accountpins') {
+        $acctLock = @fopen(accountsFile() . '.lock', 'c');
+        if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+        $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
+    }
     /* every PIN, for an admin who types their own code again (Matthew 2026-10-04). Wrong codes count
        against the same limit as the sign-in screen; every reveal is logged. */
     if ($action === 'accountpins') {
-        $addrFile = rateFile(clientKey());
+        $addrFile = rateFile(clientKey()); $siteFile = rateFile('*site*');
         if (!throttleTake($addrFile, MAX_TRIES, TRY_WINDOW)) fail('Too many wrong codes from here. Wait fifteen minutes.', 429);
+        if (!throttleTake($siteFile, SITE_TRIES, SITE_WINDOW)) { throttleGiveBack($addrFile); fail('Too many wrong codes. Try again in an hour.', 429); }
         $mine = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
         if ($mine === '' || !hash_equals($myId, codeId($mine, $sessionKey)) || !isset($people[$mine])) fail('That is not your code.', 401);
-        throttleGiveBack($addrFile);
+        throttleGiveBack($addrFile); throttleGiveBack($siteFile);
         $pins = []; foreach ($rows as $r) if (!$r['off']) $pins[$r['id']] = $r['code'];
         accountLog(['by' => $me, 'what' => 'showed pins', 'n' => count($pins)]);
         out(['ok' => true, 'pins' => $pins]);
@@ -1867,7 +1893,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $name = array_key_exists('name', $body) ? acctName((string) $body['name']) : $t['name'];
         $r = array_key_exists('role', $body) ? (string) $body['role'] : $t['role'];
         if ($t['off']) fail('Turn the account back on first.');
-        if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
+        if (array_key_exists('name', $body) && !acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if (!in_array($r, ['crew', 'admin'], true)) fail('Pick crew or admin.');
         if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
         if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
@@ -2033,12 +2059,20 @@ if ($action === 'assign') {
     out(['ok' => true]);
 }
 
+const SEARCH_TYPES = ['DR', 'RD', 'LN', 'CT', 'ST', 'AVE', 'AV', 'WAY', 'CIR', 'PL', 'TRL', 'BLVD', 'PKWY', 'HWY', 'LOOP', 'TER', 'PT', 'RUN', 'PASS', 'VW', 'HTS', 'N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'];
 if ($action === 'search') {
     $q = strtoupper(trim((string) ($_GET['q'] ?? '')));
     $q = (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $q);
     $words = array_values(array_filter(explode(' ', $q), fn($w) => $w !== ''));
     if (strlen(implode('', $words)) < 3) out(['ok' => true, 'q' => $q, 'results' => []]);
     $words = array_slice(array_map(fn($w) => SEARCH_SYN[$w] ?? $w, $words), 0, 6);
+    /* a street name has to be in it (Fable 2026-10-04): "DRIVE" or "100" alone matched a whole class of
+       streets or house numbers, and a loop of them could pull every address in every town. A number with a
+       street name ("1840 ponderosa") or a street name alone ("ponderosa") still works. Counted per person:
+       60 searches in 10 minutes is far past what a driver needs, and far short of the whole list. */
+    $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
+    if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
+    if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 60, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $hits = [];
     foreach (searchIndex() as $line) {
         $p = explode("\t", $line); if (count($p) < 9) continue;

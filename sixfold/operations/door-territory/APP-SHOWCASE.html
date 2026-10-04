@@ -8,18 +8,18 @@
   --bar: #1F2A25; --bar-ink: #EDE7DC; --bar-soft: #A9B5AC; --bar-lift: rgba(237,231,220,.09);
   --ember: #E4703A; --ember-ink: #B84C15; --go: #2F7A4F; --go-tint: #DDEBE1; --on-go: #FFFFFF;
   --later: #8F5C0E; --later-tint: #F5E7CF; --miss: #4C5A53; --miss-tint: #E7E3DA;
-  --fvh: #9E2A1C; --fh: #A8460F; --fm: #85600F; --flow: #5F6B63; --fon: #FFFFFF; --bad: #A33A2A;
+  --fvh: #9E2A1C; --fh: #A8460F; --fm: #85600F; --flow: #5F6B63; --fon: #FFFFFF; --bad: #A33A2A; --on-ember: #FFFFFF;
   --display: "Bitter", Georgia, serif; --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --shadow: 0 1px 2px rgba(22,32,28,.05), 0 10px 24px -14px rgba(22,32,28,.28);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0E1512; --card: #18221D; --sunk: #131C18; --ink: #EDE7DC; --soft: #A3AEA6; --line: #2B3731; --bar: #16201B;
   --ember-ink: #F08A57; --go: #7FC195; --go-tint: #1B3323; --on-go: #0A1A10; --later: #E2AA5C; --later-tint: #3B2C12; --miss: #B4BEB7; --miss-tint: #222C27;
-  --fvh: #F0806A; --fh: #F2A35E; --fm: #E0B85E; --flow: #9AA79E; --fon: #0E1512; --bad: #E0715C; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6); color-scheme: dark } }
+  --fvh: #F0806A; --fh: #F2A35E; --fm: #E0B85E; --flow: #9AA79E; --fon: #0E1512; --bad: #E0715C; --on-ember: #1A0E07; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6); color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0E1512; --card: #18221D; --sunk: #131C18; --ink: #EDE7DC; --soft: #A3AEA6; --line: #2B3731; --bar: #16201B;
   --ember-ink: #F08A57; --go: #7FC195; --go-tint: #1B3323; --on-go: #0A1A10; --later: #E2AA5C; --later-tint: #3B2C12; --miss: #B4BEB7; --miss-tint: #222C27;
-  --fvh: #F0806A; --fh: #F2A35E; --fm: #E0B85E; --flow: #9AA79E; --fon: #0E1512; --bad: #E0715C; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6); color-scheme: dark }
+  --fvh: #F0806A; --fh: #F2A35E; --fm: #E0B85E; --flow: #9AA79E; --fon: #0E1512; --bad: #E0715C; --on-ember: #1A0E07; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6); color-scheme: dark }
 * { box-sizing: border-box }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); -webkit-font-smoothing: antialiased }
 button { font: inherit; color: inherit }
@@ -52,7 +52,7 @@ button { font: inherit; color: inherit }
 .dock { flex: none; display: flex; gap: 6px; background: var(--bar); padding: 7px 8px; overflow-x: auto; scrollbar-width: none }
 .dock::-webkit-scrollbar { display: none }
 .dock button { flex: 1 0 auto; min-width: 54px; border: 0; background: transparent; color: var(--bar-soft); padding: 7px 6px 6px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font: 700 11.5px var(--sans); white-space: nowrap }
-.dock button[aria-pressed="true"] { background: var(--ember-ink); color: #fff }
+.dock button[aria-pressed="true"] { background: var(--ember-ink); color: var(--on-ember) }
 .dock .ic { width: 19px; height: 19px }
 .ic { width: 18px; height: 18px; flex: none }
 /* overview + lists */
@@ -113,7 +113,7 @@ button { font: inherit; color: inherit }
 .acts button { border: 0; border-radius: 15px; padding: 10px 4px 9px; display: flex; flex-direction: column; align-items: center; gap: 5px; font: 700 13px var(--sans); cursor: pointer; transition: transform .1s }
 .acts button:active { transform: scale(.95) }
 .acts button .ic { width: 32px; height: 32px; padding: 6px; border-radius: 50%; background: rgba(255,255,255,.2) }
-.acts .bk { background: linear-gradient(160deg, var(--ember), var(--ember-ink)); color: #fff; box-shadow: 0 12px 22px -14px var(--ember-ink) }
+.acts .bk { background: linear-gradient(160deg, var(--ember), var(--ember-ink)); color: var(--on-ember); box-shadow: 0 12px 22px -14px var(--ember-ink) }
 .acts .lt { background: var(--later-tint); color: var(--later) } .acts .lt .ic { background: rgba(143,92,14,.14) }
 .acts .ms { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--miss) } .acts .ms .ic { background: var(--sunk) }
 /* panels */
@@ -166,7 +166,7 @@ button { font: inherit; color: inherit }
 /* customers */
 .tag.cust { background: var(--ink); color: var(--card) }
 .donel .mk2 { background: var(--go); color: var(--on-go) }
-.addc { width: 100%; border: 0; border-radius: 14px; min-height: 46px; background: var(--ember-ink); color: #fff; font: 700 14.5px var(--sans); cursor: pointer; margin-bottom: 10px }
+.addc { width: 100%; border: 0; border-radius: 14px; min-height: 46px; background: var(--ember-ink); color: var(--on-ember); font: 700 14.5px var(--sans); cursor: pointer; margin-bottom: 10px }
 .duebox { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 11px 13px; margin-bottom: 10px; display: grid; gap: 5px; font-size: 13px }
 .duebox .wl { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
 .duebox b { color: var(--go); margin-right: 6px } .duebox .over b { color: var(--bad) }
@@ -330,13 +330,13 @@ button { font: inherit; color: inherit }
   var HOODS = [
     { n: 'PONDEROSA RIDGE DR', sub: 'Example Estates · 24 doors · average lot 1.40 acres', left: 24, hot: 19, vh: 11, lawn: '3 large · 6 medium lawns', all3: 4, fw: 'Firewise nearby' },
     { n: 'ASPEN HOLLOW RD', sub: 'Sample Hills · 31 doors · average lot 0.90 acres', left: 31, hot: 12, vh: 3, lawn: '8 medium lawns', all3: 2 },
-    { n: 'MEADOWLARK LN', sub: 'Demo Park · 18 doors · average lot 0.60 acres', left: 18, hot: 4, vh: 0, lawn: '5 large lawns', all3: 0, due: 2 }
+    { n: 'SAMPLE MEADOW LN', sub: 'Demo Park · 18 doors · average lot 0.60 acres', left: 18, hot: 4, vh: 0, lawn: '5 large lawns', all3: 0, due: 2 }
   ];
   var DOORS0 = [
     { id: 1, a: '1840 PONDEROSA RIDGE DR', st: 'PONDEROSA RIDGE DR', f: 5, lv: 'L', tl: 'against', acres: 1.62, val: '$742k', owner: 'EXAMPLE FAMILY TRUST', county: 'teller', dist: '120 ft' },
     { id: 2, a: '1862 PONDEROSA RIDGE DR', st: 'PONDEROSA RIDGE DR', f: 4, lv: 'M', tl: 'heavy', acres: 1.18, val: '$655k', owner: 'SAMPLE, JORDAN & CASEY', county: 'teller', dist: '310 ft', newown: 'Jun 2026' },
     { id: 3, a: '1901 PONDEROSA RIDGE DR', st: 'PONDEROSA RIDGE DR', f: 3, lv: 'M', tl: 'some', acres: 0.94, val: '$588k', owner: 'DEMO, ALEX', county: 'teller', dist: '0.1 mi' },
-    { id: 4, a: '214 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 5, lv: 'S', tl: 'against', acres: 2.30, val: '$910k', owner: 'RIDGELINE HOLDINGS LLC', county: 'teller', dist: '0.2 mi' },
+    { id: 4, a: '214 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 5, lv: 'S', tl: 'against', acres: 2.30, val: '$910k', owner: 'EXAMPLE RIDGE HOLDINGS LLC', county: 'teller', dist: '0.2 mi' },
     { id: 5, a: '230 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 4, lv: 'L', tl: 'clear', acres: 1.05, val: '$612k', owner: 'EXAMPLE, MORGAN', county: 'teller', dist: '0.2 mi' },
     { id: 6, a: '255 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 0, lv: 'T', tl: 'heavy', acres: 0.71, val: '$498k', owner: 'SAMPLE, RILEY', county: 'teller', dist: '0.3 mi' }
   ];
@@ -430,7 +430,7 @@ button { font: inherit; color: inherit }
         var mid = el('div', 'mid'); mid.appendChild(el('div', 'nm', t[0])); mid.appendChild(el('div', 'sub', t[1].toLocaleString('en-US') + ' doors'));
         var ch = el('div', 'chips'); if (t[2]) ch.appendChild(chip('c-hot', 'flame', t[2].toLocaleString('en-US') + ' high-risk left')); if (t[3]) ch.appendChild(chip('c-all3', 'check', t[3] + ' with fire, lawn and trees')); mid.appendChild(ch);
         b.appendChild(mid);
-        var l = el('div', 'left'); l.appendChild(el('b', null, t[1].toLocaleString('en-US'))); l.appendChild(el('small', null, 'to knock')); b.appendChild(l);
+        var l = el('div', 'left'); l.appendChild(el('b', null, Math.round(t[1] * 0.961).toLocaleString('en-US'))); l.appendChild(el('small', null, 'to knock')); b.appendChild(l);
         b.addEventListener('click', function () { go('town'); });
         list.appendChild(b);
       });
@@ -652,8 +652,9 @@ button { font: inherit; color: inherit }
   }
   function yesPanel(d) {
     var p = el('div', 'walkp'); p.appendChild(el('div', 'wpt', 'Quote booked · ' + d.a));
-    if (!d.saved.walk && S.form !== 'walk:' + d.id) S.form = 'walk:' + d.id;
+    if (!d.saved.walk && !S.form) S.form = 'walk:' + d.id;   /* the walk first, unless another form is open */
     if (S.form === 'walk:' + d.id) p.appendChild(formFor(d, 'walk'));
+    else if (!d.saved.walk) { var bw = el('button', 'done-btn', 'Book the walk'); bw.type = 'button'; bw.style.width = '100%'; bw.style.marginTop = '8px'; bw.addEventListener('click', function () { S.form = 'walk:' + d.id; render(); }); p.appendChild(bw); }
     else if (d.saved.walk) { var s = el('div', 'saved'); s.appendChild(el('span', 'wl', 'Walk')); s.appendChild(el('span', 'v', d.walkText)); p.appendChild(s); }
     p.appendChild(capPanel(d, true));
     var dn = el('button', 'done-btn', 'Done with this door'); dn.type = 'button'; dn.style.width = '100%'; dn.style.marginTop = '8px';
@@ -763,8 +764,9 @@ button { font: inherit; color: inherit }
     sv.addEventListener('click', function () {
       var p = +pr.value || 0, st = S.vf.day > TODAY && S.vf.status === 'done' ? 'booked' : S.vf.status;
       c.visits.unshift([S.vf.day, c.svc, p, st, '']); c.visits.sort(function (a, b) { return a[0] < b[0] ? 1 : -1; });
-      if (st === 'done' && c.plan === 'monthly') c.next = nextMonth(S.vf.day);
-      else if (st === 'done' && c.plan === 'yearly') { var y = S.vf.day.split('-'); c.next = (+y[0] + 1) + '-' + y[1] + '-' + y[2]; }
+      /* as the app does it: a month (or a year) after the visit, unless that is earlier than it already is */
+      var y = S.vf.day.split('-'), cand = c.plan === 'monthly' ? nextMonth(S.vf.day) : c.plan === 'yearly' ? (+y[0] + 1) + '-' + y[1] + '-' + y[2] : null;
+      if (st === 'done' && cand && (!c.next || cand > c.next)) c.next = cand;
       toastMsg(st === 'done' ? 'Visit logged' : 'Visit booked', st === 'done' && c.plan !== 'oneoff' ? 'Next due ' + fmtD(c.next) : c.name);
       render();
     });

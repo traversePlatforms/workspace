@@ -7,6 +7,31 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — fixes from Fable's review of everything since e5c51f8
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+
+Sizes: `index.html` **414,896**, `rounds.php` **161,262**. Flush after step 2. quote.html unchanged.
+
+Server: a monthly plan's next due stays inside the month (31 Jan → 28 Feb, was 3 Mar), and is a month after the
+visit unless that is earlier than it already is (a mow a day early still moves it; an old visit typed in late
+doesn't pull it back). Search needs a street name and is counted per person (60 per 10 minutes), so a stolen phone
+can't page through every address. A broken or unreadable `rounds-accounts.json` stops sign-ins (503) instead of
+silently undoing every removal; account changes lock and re-read the file (a `rounds-accounts.json.lock` appears
+beside it in `sixfold-private/`). Show PINs also counts against the site-wide wrong-code limit. Make customer skips
+ended customers (a house that sold). The backup says app-made sign-ins aren't in it, and never sends an empty file.
+
+Page: a slow Territories answer no longer empties Door rounds; save buttons ignore a second tap (sign-in, customer,
+visit, Make customer); a customer that answers after you left doesn't take over the screen; Back after Make customer
+returns to the Pipeline; the new code and PINs are forgotten when you leave Accounts; failed visit removals and
+status changes say so; search asks for the street name; the lead note box is 16px.
+
+Rebuilding the host from these notes: `summit-de59ae83/.htaccess` (Cache-Control private, keeps the folder out of
+SiteGround's Dynamic Cache) goes in `public_html/summit-de59ae83/` with index.html.
+
 ## ✅ LIVE 2026-10-04 — Customers (the CRM) and the full backup (verified 25/25: page identical at all four addresses, every action answering, backup downloads with 9 logs and no codes, Customers screen opens on a phone)
 
 | Step | File (from `sixfold/site/`) | Goes to |

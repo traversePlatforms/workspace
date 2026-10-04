@@ -170,7 +170,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <p>Opens in <strong>street order</strong>: grouped by street, the street the neighbourhood is named after first, in walking order. One door is open as a full card (the next to knock); every other door is one line with its chips and distance. Tapping a line opens it. Other views: <strong>Nearest</strong> (by distance from you), <strong>Route</strong> (a walking order through every door, with the first stops opened in Google Maps), and <strong>Map</strong> (every door on a street map, coloured by fire hazard; tap a pin for its full card).</p>
   <p>The <strong>Show doors with</strong> filter (High fire · Large or medium lawn · Trees close) narrows the list to doors with every driver picked, and says how many match. No-answer doors wait in their own section and come back on the list after two days; not-now doors come back on their date; finished doors sit under Done, with Undo.</p>
   <h3>Search</h3>
-  <p><strong>Find an address</strong> on the tools screen, or the magnifying glass in the top bar. Type part of an address (words in any order; "drive", "road", "north" match DR, RD, N) and pick the result. It opens that door's full card in its neighbourhood, from any town. It needs signal.</p>
+  <p><strong>Find an address</strong> on the tools screen, or the magnifying glass in the top bar. Type the street name, with the house number if you have it (words in any order; "drive", "road", "north" match DR, RD, N), and pick the result. It opens that door's full card in its neighbourhood, from any town. A house number or a street type on its own ("100", "drive") asks for the street name. It shows up to 25 matches and needs signal.</p>
   <h3>Your own numbers</h3>
   <p><strong>My stats</strong>: today next to recent days (doors, people talked to, quotes booked, numbers given, photos), with tips drawn from your own figures. <strong>My doors</strong>: every door you acted on, what you did and what it shows now, with a jump straight to its card and a way to change a come-back date.</p>
 </section>
@@ -244,7 +244,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     </tbody>
   </table></div>
   <h3>What is due</h3>
-  <p><strong>Due this week</strong> sits at the top of the list: active customers whose next visit falls in the next seven days, with overdue ones marked. Logging a done visit on a monthly plan moves the next due date on a month; on a yearly plan, a year. One-off and custom customers keep whatever date you set.</p>
+  <p><strong>Due this week</strong> sits at the top of the list: active customers whose next visit falls in the next seven days, with overdue ones marked. Logging a done visit on a monthly plan sets the next due date a month after that visit (a year on a yearly plan), so a mow a day early still moves it on. A visit from weeks ago typed in late never pulls the date back. A visit on the 31st is next due on the last day of a shorter month. One-off and custom customers keep whatever date you set.</p>
   <h3>On the doors</h3>
   <p>A door that belongs to an active customer shows a dark <strong>Customer</strong> tag on its card, for crew as well as admins, so nobody knocks it cold or pitches a job Sixfold already does there.</p>
   <h3>Keeping a copy</h3>
@@ -252,7 +252,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Download customers (spreadsheet):</strong> every customer with plan, price, next due, visits done and spend, as a CSV that opens in Excel or Google Sheets.</li>
     <li><strong>Download a full backup:</strong> one file holding every log the app keeps: door outcomes, phones, emails, notes, photo records, extra work, fire checks, walks, quotes sent, results, territories, goals, leads, customers and visits. Each log is included exactly as it sits on the server, with the path it came from.</li>
   </ul>
-  <p><strong>Rebuilding from a backup:</strong> each entry goes back to its path beside the website (<code>sixfold-data/...</code>) as its own file. The app reads those logs every time it opens, so putting them back puts everything back. The door lists themselves are rebuilt from the build files on the computer. The sign-in codes and photos are not in the backup: the codes stay in the private folder, and the photos are listed by name so you can see what is missing.</p>
+  <p><strong>Rebuilding from a backup:</strong> each entry goes back to its path beside the website (<code>sixfold-data/...</code>) as its own file. The app reads those logs every time it opens, so putting them back puts everything back. The door lists themselves are rebuilt from the build files on the computer. The sign-in codes and photos are not in the backup: the codes stay in the private folder, and the photos are listed by name so you can see what is missing. People added in Accounts are not in it either; if the private folder were lost, add them again there.</p>
   <div class="note"><p><strong>Save a backup every week, and keep it somewhere private.</strong> It holds customer names, addresses and phone numbers. Until now the field data has existed only on SiteGround; this download is the copy that survives losing the server.</p></div>
 </section>
 
@@ -319,6 +319,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Backups:</strong> each download is logged with who took it. The file never contains a sign-in code.</li>
     <li><strong>Phone numbers:</strong> each number records whether it was given at the door or looked up. Only door-given numbers get Call and Text buttons without a warning; looked-up numbers must clear the national and Colorado Do Not Call lists first.</li>
     <li><strong>Photos:</strong> only with the owner's OK, of the property, not people.</li>
+    <li><strong>Search:</strong> up to 25 addresses a time, a street name required, and 60 searches per person in ten minutes, so a stolen phone can't pull the whole list. Results carry no owner names.</li>
     <li><strong>Search engines:</strong> the app's pages are marked not to be indexed.</li>
   </ul>
 </section>
@@ -349,7 +350,8 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Meta ad leads</strong> arrive in Meta's own Leads Center, not in the app; add them through + Add a lead.</li>
     <li><strong>Customers are not billing.</strong> There are no invoices, payments or contracts in the app. Prices and visits are a record of the work; the signed agreement stays in DocuSign or Drive and is linked.</li>
     <li><strong>Backups are by hand.</strong> Nothing reminds anyone to take one, and putting one back is a File Manager upload, not a button.</li>
-    <li><strong>Removing a visit</strong> hides it; the log keeps the original line. There is no delete for a whole customer: set them to Ended.</li>
+    <li><strong>Removing a visit</strong> hides it; the log keeps the original line. It does not move the next due date back, so fix that with Edit. There is no delete for a whole customer: set them to Ended.</li>
+    <li><strong>Downloading the backup from the home-screen app on an iPad or iPhone</strong> hasn't been tested. iOS may open the file instead of saving it; a browser tab, or a computer, is the sure way.</li>
     <li><strong>Add a person</strong> needs the server to be able to write to its private folder. It hasn't been tried on the live site yet.</li>
     <li><strong>Overgrowth year over year</strong> waits for late-spring photos, in 2027.</li>
   </ul>

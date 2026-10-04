@@ -232,7 +232,7 @@
   .lstat button{border:1.5px solid var(--line);background:transparent;color:var(--soft);border-radius:999px;padding:0 15px;min-height:40px;font:700 13.5px var(--sans);cursor:pointer}
   .lstat button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
   .lnote{display:flex;gap:7px;margin-top:9px}
-  .lnote input{flex:1;min-width:0;font:15px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
+  .lnote input{flex:1;min-width:0;font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
   .lnote button{border:0;border-radius:11px;padding:9px 13px;font:700 13.5px var(--sans);background:var(--sunk);color:var(--ink);cursor:pointer}
   .tag.l-new{color:var(--on-ember);background:var(--ember-ink)}
   .tag.l-contacted,.tag.l-walk,.tag.l-quoted{color:var(--later);background:var(--later-tint)}
@@ -1660,6 +1660,7 @@
   function chooseView() {
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools';
+    S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
     foot.hidden = true; setDock(null);
     setBar('tools', { title: 'Sixfold', sub: 'Field tools' });
     view.textContent = '';
@@ -2641,6 +2642,7 @@
     api('assign', { body: { region: region, area: area, who: who } }).then(function (j) {
       if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
       toast(who ? 'Assigned to ' + who : 'Unassigned', area, null);
+      if (S.screen !== 'board') return;
       S.regions = [];                                      /* reloaded, so the picker shows the change (the door list reloads its own) */
       boardView();
     }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
@@ -3268,6 +3270,7 @@
     setBar('town'); renderRegions();
     /* Nearest town: find where you are and open the closest town, sorted by distance */
     setDock([['near', 'Nearest town', 'near']], null, function () {
+      if (!S.regions || !S.regions.length) { refresh(); return; }
       try { localStorage.setItem('sixfold.rounds.sort', 'near'); } catch (e) {}
       S.region = S.regions[0].key; S.pickTown = true; S.townNote = null;
       locate(function () { if (S.screen === 'areas') renderAreas(); });
@@ -3329,6 +3332,7 @@
     api('territories').then(function (j) {
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the territories.')); return; }
+      if (S.screen !== 'territories') return;              /* answered after you left: Door rounds keeps its towns (Fable) */
       S.terr = j; S.regions = []; drawTerritories(holder);
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Territories need signal.')); });
   }
@@ -3492,11 +3496,13 @@
     var err = q('div', 'err'); fm.appendChild(err);
     var sv = q('button', 'save', 'Make the sign-in'); sv.type = 'button';
     sv.addEventListener('click', function () {
-      err.textContent = '';
+      if (sv.disabled) return;
+      err.textContent = ''; sv.disabled = true;
       api('accountadd', { body: { name: nm.value, role: r } }).then(function (j) {
+        sv.disabled = false;
         if (!j.ok) { err.textContent = j.error || 'Could not make that.'; return; }
         S.acctAdd = false; S.newCode = { name: j.name, role: j.role, code: j.code, fresh: true }; accountsView();
-      }).catch(function () { err.textContent = 'No signal. Try again.'; });
+      }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Try again.'; });
     });
     fm.appendChild(sv);
     setTimeout(function () { try { nm.focus(); } catch (e) {} }, 50);
@@ -3566,11 +3572,15 @@
   function money(n) { return '$' + Math.round(+n || 0).toLocaleString('en-US'); }
   function fmtD(iso) { if (!iso) return ''; var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + (p[0] !== String(new Date().getFullYear()) ? ' ' + p[0] : ''); }
   function makeCustomer(from) {
+    if (S.custBusy) return;                              /* a double tap makes one customer (Fable) */
+    S.custBusy = true; var was = S.screen;
     api('customerfrom', { body: from }).then(function (j) {
+      S.custBusy = false;
       if (!j.ok) { toast('Not done', j.error || 'Try again.', null); return; }
+      if (S.screen !== was) return;                      /* you moved on: don't pull you back */
       toast(j.existing ? 'Already a customer' : 'Customer added', 'Check the plan and the next visit', null);
-      customerView(j.id);
-    }).catch(function () { toast('No signal', 'Try again when you have signal.', null); });
+      customerView(j.id, pipelineView, 'Pipeline');
+    }).catch(function () { S.custBusy = false; toast('No signal', 'Try again when you have signal.', null); });
   }
   function customersView() {
     hideToast(); S.signin = null; S.screen = 'customers';
@@ -3596,7 +3606,7 @@
     else if (c.next && c.status === 'active') m.appendChild(q('span', null, 'Next ' + fmtD(c.next)));
     if (c.spent) m.appendChild(q('span', null, money(c.spent) + ' so far'));
     b.appendChild(m);
-    b.addEventListener('click', function () { customerView(c.id); });
+    b.addEventListener('click', function () { customerView(c.id, customersView, 'Customers'); });
     return b;
   }
   function drawCustomers(holder) {
@@ -3667,24 +3677,29 @@
     var err = q('div', 'err'); fm.appendChild(err);
     var sv = q('button', 'save', c ? 'Save changes' : 'Add the customer'); sv.type = 'button';
     sv.addEventListener('click', function () {
-      err.textContent = '';
+      if (sv.disabled) return;
+      err.textContent = ''; sv.disabled = true;
       var body = c ? { id: c.id } : {};
       Object.keys(inputs).forEach(function (k) { body[k] = inputs[k].value; });
       api('customersave', { body: body }).then(function (j) {
+        sv.disabled = false;
         if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
         toast(c ? 'Saved' : 'Customer added', body.name || '', null); done(j.id);
-      }).catch(function () { err.textContent = 'No signal. Try again.'; });
+      }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Try again.'; });
     });
     fm.appendChild(sv);
     return fm;
   }
-  function customerView(id) {
-    hideToast(); S.signin = null; S.screen = 'customer';
+  function customerView(id, back, backLabel) {
+    /* Back goes where you came from: Customers, or the Pipeline after Make customer (Fable) */
+    if (back) { S.custBack = back; S.custBackLabel = backLabel; } else if (S.screen !== 'customer') { S.custBack = null; S.custBackLabel = null; }
+    hideToast(); S.signin = null; S.screen = 'customer'; S.custOpen = id;
     foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Customer', sub: 'Plan, visits and contact', back: customersView, backLabel: 'Customers' });
+    setBar('back', { title: 'Customer', sub: 'Plan, visits and contact', back: S.custBack || customersView, backLabel: S.custBackLabel || 'Customers' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('customers').then(function (j) {
+      if (S.screen !== 'customer' || S.custOpen !== id) return;   /* answered after you left (Fable) */
       if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the customer.')); return; }
       S.custs = j.customers; S.custToday = j.today;
       var c = j.customers.filter(function (x) { return x.id === id; })[0];
@@ -3694,7 +3709,7 @@
   }
   function drawCustomer(holder, c) {
     holder.textContent = '';
-    setBar('back', { title: c.name || 'Customer', sub: [c.address, c.town].filter(Boolean).join(' · '), back: customersView, backLabel: 'Customers' });
+    setBar('back', { title: c.name || 'Customer', sub: [c.address, c.town].filter(Boolean).join(' · '), back: S.custBack || customersView, backLabel: S.custBackLabel || 'Customers' });
     if (S.custEdit === c.id) { holder.appendChild(customerForm(c, function () { S.custEdit = null; customerView(c.id); })); var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custEdit = null; drawCustomer(holder, c); }); holder.appendChild(cx); return; }
     var head = q('div', 'chead');
     head.appendChild(q('div', 'cname', c.name || 'Customer'));
@@ -3730,7 +3745,7 @@
     [['active', 'Make active'], ['paused', 'Pause'], ['ended', 'End']].forEach(function (o) {
       if (o[0] === st) return;
       var b = q('button', 'lnk' + (o[0] === 'ended' ? ' danger' : ''), o[1]); b.type = 'button';
-      b.addEventListener('click', function () { api('customersave', { body: { id: c.id, status: o[0] } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } toast(STATUS_L[o[0]], c.name, null); customerView(c.id); }); });
+      b.addEventListener('click', function () { api('customersave', { body: { id: c.id, status: o[0] } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } toast(STATUS_L[o[0]], c.name, null); customerView(c.id); }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); }); });
       ed.appendChild(b);
     });
     holder.appendChild(ed);
@@ -3742,7 +3757,7 @@
       var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', fmtD(v.date) + ' · ' + (SERVICE_L[v.service] || v.service))); if (v.price != null) top.appendChild(q('span', 'vprice', money(v.price))); r.appendChild(top);
       r.appendChild(q('div', 'meta', (v.status === 'booked' ? 'Booked' : 'Done') + (v.by ? ' · ' + v.by : '') + (v.note ? ' · ' + v.note : '')));
       var del = q('button', 'lnk danger', 'Remove'); del.type = 'button';
-      del.addEventListener('click', function () { if (!window.confirm('Remove this visit from ' + c.name + '’s history?')) return; api('visitsave', { body: { cid: c.id, vid: v.vid, del: true } }).then(function () { customerView(c.id); }); });
+      del.addEventListener('click', function () { if (!window.confirm('Remove this visit from ' + c.name + '’s history?')) return; api('visitsave', { body: { cid: c.id, vid: v.vid, del: true } }).then(function (j) { if (!j.ok) { toast('Not removed', j.error || 'Try again.', null); return; } customerView(c.id); }).catch(function () { toast('No signal', 'Not removed. Try again when you have signal.', null); }); });
       r.appendChild(del);
       holder.appendChild(r);
     });
@@ -3763,11 +3778,13 @@
     var err = q('div', 'err'); fm.appendChild(err);
     var go = q('button', 'save', 'Save the visit'); go.type = 'button';
     go.addEventListener('click', function () {
-      err.textContent = '';
+      if (go.disabled) return;
+      err.textContent = ''; go.disabled = true;
       api('visitsave', { body: { cid: c.id, date: dt.value, service: sv.value, price: pr.value, status: stv, note: nt.value } }).then(function (j) {
+        go.disabled = false;
         if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
         toast(stv === 'done' ? 'Visit logged' : 'Visit booked', j.next ? 'Next due ' + fmtD(j.next) : c.name, null); customerView(c.id);
-      }).catch(function () { err.textContent = 'No signal. Try again.'; });
+      }).catch(function () { go.disabled = false; err.textContent = 'No signal. Try again.'; });
     });
     fm.appendChild(go);
     return fm;
@@ -3897,6 +3914,7 @@
         res.textContent = '';
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work. Try again.')); return; }
+        if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, for example “1840 Ponderosa” or just “Ponderosa”.')); return; }
         if (!j.results.length) { res.appendChild(q('div', 'msg', 'No door on our lists matches “' + v + '”. Our lists cover owner-occupied homes in our 11 towns; check the spelling, or try just the number and the street name.')); return; }
         j.results.forEach(function (r) { res.appendChild(searchRow(r)); });
         if (j.more) res.appendChild(q('div', 'msg soft', 'More doors match. Add more of the address to narrow it down.'));
