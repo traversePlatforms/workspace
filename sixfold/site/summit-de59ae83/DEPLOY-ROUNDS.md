@@ -16,7 +16,8 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 | 3 | `api/submit.php` | `public_html/api/` |
 | 4 | `contact/index.html` | `public_html/contact/` |
 | 5 | `assets/site.js` | `public_html/assets/` |
-| 6 | — | Flush the cache (the contact page and site.js are cached like any page) |
+| 6 | `summit-de59ae83/sw.js` | `public_html/summit-de59ae83/` (**6,450** bytes) — a privacy fix, see below |
+| 7 | — | Flush the cache (the contact page and site.js are cached like any page) |
 
 Sizes: `index.html` **410,988**, `rounds.php` **165,714**, `submit.php` **14,563**, `contact/index.html` **11,394**,
 `site.js` **4,140**.
@@ -33,6 +34,8 @@ the message, organic leads marked. Meta's lead id is kept, so the same file twic
 the Pipeline by phone or email is counted, not added. Up to 500 at once.
 
 Tested: leadimport-test 25/25; leads, pipeline, customers, security, fable2, backup suites pass.
+
+**sw.js (privacy fix, found by the full test run):** on sign-out the phone wipes its saved copies of server answers (names and addresses; shared iPads). The service worker took its "has anyone signed out?" reading when an answer ARRIVED, so a slow answer that finished after a sign-out looked fresh and was saved again. The money sheets grew with the water rules and now often finish after a quick sign-out, which is how the test caught it; the live site has had this window since the water upload. Now the reading is taken when the request STARTS, and checked again after saving. Full run: 58 suites, 1,042 checks, all pass with the fix (sw-test 5/5 alone).
 
 ## ⏳ (same upload) — corrected aeration wording (money.json only)
 

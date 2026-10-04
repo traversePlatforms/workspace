@@ -48,14 +48,17 @@ function offline(res) {
 }
 /* kept with the time it was kept. Never awaited, and a failure (a full disk, a private window)
    only means nothing is kept: the live answer still reaches the page (review 2026-10-03) */
-function keep(cacheName, key, res) {
-  const g = gen;
+/* g is the sign-out count when the REQUEST started (2026-10-04): taken when the answer arrived, a slow
+   answer (the money sheets grew with the water rules) that finished after a sign-out looked fresh and was kept */
+function keep(cacheName, key, res, g) {
   return res.blob().then((b) => {
     if (cacheName === API && g !== gen) return;                 /* signed out meanwhile */
     const h = new Headers(res.headers); h.set('X-Sixfold-Kept', String(Date.now()));
     h.delete('Content-Encoding'); h.delete('Content-Length');   /* the body is already decoded (Fable) */
+    /* checked again after the save (2026-10-04): an answer still on its way when someone signs out could
+       pass the check above, then land after the wipe and put names and addresses back on a shared iPad */
     return caches.open(cacheName).then((c) => c.put(key, new Response(b, { status: 200, statusText: 'OK', headers: h }))
-      .then(() => { if (cacheName === API) return trim(c); }));
+      .then(() => { if (cacheName !== API) return; if (g !== gen) return caches.delete(API); return trim(c); }));
   }).catch(() => {});
 }
 function fresh(hit) { const t = +(hit && hit.headers.get('X-Sixfold-Kept')); return !!hit && !!t && Date.now() - t < MAX_AGE; }
@@ -64,8 +67,9 @@ async function trim(cache) {
   for (let i = 0; i < keys.length - AREA_MAX; i++) await cache.delete(keys[i]);
 }
 function networkFirst(e, req, cacheName, fallbackKey, flag) {
+  const g0 = gen;
   const net = fetch(req).then((res) => {
-    if (res && res.status === 200) e.waitUntil(keep(cacheName, fallbackKey || req, res.clone()));
+    if (res && res.status === 200) e.waitUntil(keep(cacheName, fallbackKey || req, res.clone(), g0));
     else if (res && res.status === 401 && cacheName === API) caches.delete(API).catch(() => {});   /* signed out: nothing kept */
     return res;
   });
