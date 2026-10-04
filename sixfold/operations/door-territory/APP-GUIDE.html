@@ -214,7 +214,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
       <tr><td class="k">Leaderboard</td><td>Rankings by quotes booked and one daily goal per person. No location tracking. Admins only while it is tested.</td></tr>
       <tr><td class="k">Accounts</td><td>Add a person (the code is shown once, with Text it and Copy), rename them, switch crew or admin, give a new code, sign them out, remove them, or turn a server account back on. Show PINs reveals everyone's code after you type your own, until you leave the screen. Every change is logged.</td></tr>
       <tr><td class="k">Fire-weather call list</td><td>When a red-flag or fire-weather alert covers a town, or a wildfire is within 30 miles, the alert offers a list of customers won, quotes sent and booked doors there, with a check-in script. A check-in, not a pitch.</td></tr>
-      <tr><td class="k">Exports</td><td>A full CSV of every door with anything recorded (admins only), a Jobber client import of door bookings, and a "who marked what" report.</td></tr>
+      <tr><td class="k">Exports</td><td>A full CSV of every door with anything recorded (admins only), a Jobber client import of door bookings, a "who marked what" report, the customer spreadsheet, and the full backup with the last 30 nightly copies (see <a href="#customers">Customers and backups</a>).</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -363,16 +363,17 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
 
 <section id="uploads">
   <h2>Updating the app</h2>
-  <p>Changes are built and tested on a computer first, against a full copy of the app (over 50 automatic test suites, run before every upload), then uploaded through SiteGround's File Manager.</p>
+  <p>Changes are built and tested on a computer first, against a full copy of the app (57 automatic test suites, over 1,000 checks, run before every upload), then uploaded through SiteGround's File Manager.</p>
   <ul>
     <li><strong>The app:</strong> <code>summit-de59ae83/index.html</code> into <code>public_html/summit-de59ae83/</code>. That folder skips SiteGround's cache, so a new version shows up straight away.</li>
     <li><strong>The server program:</strong> <code>api/rounds.php</code> into <code>public_html/api/</code>.</li>
     <li><strong>Quote builder:</strong> <code>summit-de59ae83/quote.html</code>, generated from its source file. The app links to it with a version stamp, so phones never keep an old copy.</li>
-    <li><strong>Door data, lawn outlines, money sheets:</strong> into <code>sixfold-data/rounds/</code>, beside the website, never inside it.</li>
+    <li><strong>Door data, lawn outlines:</strong> into <code>sixfold-data/rounds/</code>, beside the website, never inside it. <strong>Money sheets and water rules</strong> (one file, <code>money.json</code>) go in <code>sixfold-data/rounds/docs/</code>; correcting a rule is an upload of that file alone.</li>
+    <li><strong>The nightly backup job:</strong> <code>tools/nightly-backup.php</code> into <code>sixfold-tools/</code>, beside the website, never inside it. A SiteGround cron job (Site Tools → Devs → Cron Jobs) runs it once a day: <code>php /home/customer/www/sixfoldcolorado.com/sixfold-tools/nightly-backup.php</code>. It refuses to run from a browser.</li>
   </ul>
   <p>The exact files and sizes for each upload are kept in <code>DEPLOY-ROUNDS.md</code>, and every upload is checked on the live site afterwards.</p>
 </section>
 
-<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 4 Oct 2026, customers included · source: sixfold/operations/door-territory/APP-GUIDE.html</footer>
+<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 4 Oct 2026: customers, water rules and nightly backups included · source: sixfold/operations/door-territory/APP-GUIDE.html</footer>
 </main>
 </div>

@@ -292,7 +292,7 @@ button { font: inherit; color: inherit }
           <li><b>Every customer in one list:</b> contact, plan, price, every visit, what they have spent and when they are due next.</li>
           <li><b>Due this week on top,</b> overdue flagged, so a monthly lawn or a yearly aeration never slips.</li>
           <li><b>One tap from a won job or a won lead:</b> name, address and price carry over, and the door is tagged so nobody knocks it cold.</li>
-          <li><b>Nothing is overwritten.</b> Every change is kept as its own line, and one button downloads a full backup to rebuild from, plus a customer spreadsheet.</li>
+          <li><b>Nothing is overwritten, and nothing is lost.</b> Every change is kept as its own line, a backup saves itself on the server every night (the last 30 are kept), and admins are reminded to download one to a device each week.</li>
         </ul></div>
       </div>
       <div class="foot">The real app runs on the Sixfold website for signed-in crew. Door data comes from county parcel records, the USDA Forest Service wildfire hazard map, USDA aerial photos, USGS lidar and state and county funding sources. This page uses invented properties.</div>
@@ -707,7 +707,10 @@ button { font: inherit; color: inherit }
     var cp = el('div', 'copyc'); cp.appendChild(el('div', 'wl', 'Keep a copy'));
     var b1 = el('button', null, 'Download customers (spreadsheet)'); b1.type = 'button'; b1.addEventListener('click', function () { toastMsg('Spreadsheet', 'Every customer with plan, price, visits and spend, ready for Excel or Jobber'); }); cp.appendChild(b1);
     var b2 = el('button', null, 'Download a full backup'); b2.type = 'button'; b2.addEventListener('click', function () { toastMsg('Full backup', 'Every log the app keeps, in one file to rebuild from'); }); cp.appendChild(b2);
-    cp.appendChild(el('p', null, 'The backup is every log the app keeps (doors, numbers, notes, walks, results, leads, customers and visits). Save one somewhere safe each week. Sign-in codes are never in it.'));
+    cp.appendChild(el('p', null, 'The backup is every log the app keeps (doors, numbers, notes, walks, results, leads, customers and visits). Sign-in codes are never in it.'));
+    cp.appendChild(el('div', 'wl', 'Nightly copies on the server'));
+    cp.appendChild(el('p', null, 'Saved automatically every night; the last 30 are kept. Any of them downloads as a full backup.'));
+    ['Sun 4 Oct', 'Sat 3 Oct', 'Fri 2 Oct'].forEach(function (dy, i) { var b3 = el('button', null, dy + ' \u00b7 ' + (14 - i) + ' KB'); b3.type = 'button'; b3.addEventListener('click', function () { toastMsg('Nightly copy', dy + ': the same file as a fresh backup'); }); cp.appendChild(b3); });
     $screen.appendChild(cp);
   }
   function custRow(c) {
@@ -856,7 +859,7 @@ button { font: inherit; color: inherit }
     ['A yes, captured', 'Quote booked opens the walk booking and everything else in one panel.', function () { reset(); S.screen = 'doors'; S.anim = true; var d = S.doors[0]; d.mark = 'booked'; S.yes = d.id; S.open = null; render(); }],
     ['The homeowner fire report', 'A quick visual check turned into a report they can send their insurer.', function () { reset(); S.screen = 'doors'; S.fc = { debris: 'fx', z1plants: 'fx', vents: 'fx', overhang: 'ok', grass: 'ok', ladder: 'fx', firewood: 'na' }; S.doors[0].saved.fc = 'Fire check'; S.sheet = 'report:1'; render(); }],
     ['A won job becomes a customer', 'Tap Make customer on the won door: name, address and price carry over, and the door is tagged for the crew.', function () { reset(); S.screen = 'doors'; S.anim = true; var d = S.doors[0]; d.mark = 'booked'; d.walkText = 'Thu 8 Oct 9:00 am'; d.saved.walk = 'Walk Thu 8 Oct 9:00 am'; S.open = null; render(); var mk = $screen.querySelector('.mk2'); if (mk) mk.scrollIntoView({ block: 'center' }); }],
-    ['Customers and what is due', 'Every customer with plan, visits and spend. Due this week on top, overdue flagged, a full backup one tap away.', function () { reset(); go('customers'); }],
+    ['Customers and what is due', 'Every customer with plan, visits and spend. Due this week on top, overdue flagged. Backups save themselves every night.', function () { reset(); go('customers'); }],
     ['One customer, every visit', 'Contact, agreement, the visit history, and Log a visit that moves the next due date on by itself.', function () { reset(); S.cust = 'c1'; S.custBack = 'state'; go('customer'); }]
   ];
   var $tour = document.getElementById('tour'), tourAt = -1;
