@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — the new layout for everyone, search, Pipeline (3 files)
+## ✅ LIVE 2026-10-04 — the new layout for everyone, search, Pipeline (verified 14/14)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
