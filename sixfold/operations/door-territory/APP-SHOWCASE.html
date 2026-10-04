@@ -275,6 +275,7 @@ button { font: inherit; color: inherit }
         <div class="why"><h3>A sale the homeowner can afford</h3><ul>
           <li><b>The money line</b> on every door: the state tax credit, the insurance law, and the county's grant situation.</li>
           <li><b>What to say and what not to say,</b> one tap away.</li>
+          <li><b>Water rules by town:</b> aeration needs none; seed does, and on most rural lots a well may not water a lawn at all.</li>
           <li><b>The homeowner fire report:</b> a before-and-after check they can send their insurer.</li>
         </ul></div>
         <div class="why"><h3>The office picks it up instantly</h3><ul>
@@ -552,6 +553,9 @@ button { font: inherit; color: inherit }
     if (S.cap !== d.id) { var ai = el('button', 'addinfo'); ai.type = 'button'; ai.appendChild(ico('note', 2.2)); ai.appendChild(document.createTextNode('Add info')); ai.addEventListener('click', function () { S.cap = d.id; S.form = null; render(); }); adds.appendChild(ai); }
     c.appendChild(adds);
     c.appendChild(moneyLine(d));
+    var wl = el('button', 'moneyl'); wl.type = 'button'; wl.appendChild(el('span', 'ml', 'Water')); wl.appendChild(ico('chev', 2.4));
+    wl.appendChild(el('span', null, 'Aeration needs no watering')); wl.appendChild(el('span', 'warn', 'Woodland Park: 2 days a week'));
+    wl.addEventListener('click', function () { S.sheet = 'water'; render(); }); c.appendChild(wl);
     if (S.cap === d.id) c.appendChild(capPanel(d, false));
     var acts = el('div', 'acts');
     [['bk', 'check', 'Quote booked', 'booked'], ['lt', 'clock', 'Not now', 'later'], ['ms', 'knock', 'No answer', 'miss']].forEach(function (a) {
@@ -802,6 +806,21 @@ button { font: inherit; color: inherit }
       var dont = el('p'); dont.appendChild(el('span', 'dont', 'Don’t say: ')); dont.appendChild(document.createTextNode(M[3])); mc.appendChild(dont);
       body.appendChild(mc);
       body.appendChild(el('div', 'day', 'Checked 2 Oct 2026 against state and county sources. Shortened for the demo.'));
+    } else if (S.sheet === 'water' || S.sheet.indexOf('water:') === 0) {
+      var wt = S.sheet.split(':')[1] || 'town';
+      hd.appendChild(el('b', null, 'Woodland Park water'));
+      var wseg = el('div', 'seg'); wseg.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      [['town', 'This town'], ['wells', 'Wells'], ['permits', 'Permits'], ['say', 'Say']].forEach(function (t) { var b = el('button', null, t[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(wt === t[0])); b.addEventListener('click', function () { S.sheet = 'water:' + t[0]; render(); }); wseg.appendChild(b); });
+      body.appendChild(wseg);
+      body.appendChild(el('div', 'day', 'Aeration does not need water. Overseeding does. Every rule here is about seed.'));
+      var WT = {
+        town: [['City of Woodland Park', 'Level 2: two days a week, on days assigned by address. No watering from noon to 6pm, May to September. The strictest rules in our area.'], ['Outside the city', 'Usually wells. See Wells.']],
+        wells: [['A well is not a loophole', 'Most wells on lots under 35 acres, permitted since 1972, are for household use only and may not water a lawn at all.'], ['At the door', 'Ask what the well permit allows before quoting seed. If it is household use only, sell aeration, mowing or cleanup.']],
+        permits: [['Colorado Springs Utilities', 'An establishment permit: 42 days of extra watering for new seed. It belongs to the homeowner; we walk them through it.'], ['Castle Rock Water', '30 days for seed, still before 8am or after 8pm. Not in July.'], ['Everyone else', 'Not checked. Don’t promise a permit.']],
+        say: [['Say', '“Aeration works fine under the current restrictions.” “Which water provider are you on?”'], ['Don’t say', 'Anything that sounds like the seed is guaranteed to come up. “You’re on a well, so the rules don’t apply.”']]
+      }[wt];
+      WT.forEach(function (x) { var mc = el('div', 'mcard'); mc.appendChild(el('h4', null, x[0])); mc.appendChild(el('p', null, x[1])); body.appendChild(mc); });
+      body.appendChild(el('div', 'day', 'Checked 30 Sep 2026 against each provider’s own page. Shortened for the demo.'));
     } else {
       var d = S.doors.filter(function (z) { return 'report:' + z.id === S.sheet; })[0];
       hd.appendChild(el('b', null, 'Homeowner report'));

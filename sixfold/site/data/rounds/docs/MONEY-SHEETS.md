@@ -16,6 +16,14 @@ so a fact can be corrected by uploading the JSON alone, with no new page upload.
 - The one county programme, Douglas County's cost-share, applies to 10,094 doors across 4 towns.
   That is why Grants is county-aware.
 
+**Water (added 2026-10-04).** money.json also carries a `water` block: the Water line on each door card
+(aeration needs no water; the town's provider rule; in the six mostly-well towns, the well rule for a lot
+of that size) and a four-tab sheet (This town · Wells · Permits · Say). Every line comes from
+[../../../../research/water-restrictions-2026.md](../../../../research/water-restrictions-2026.md), checked
+**2026-09-30**, and its fact-check log covers it. Providers that were not checked (Donala, Triview, Palmer
+Lake, Cripple Creek, every scheme outside Colorado Springs and Castle Rock) say "not checked" in the app
+rather than guessing. Re-check the provider pages before the 2027 season; drought stages move without warning.
+
 **Derived from:** [../../../../tax-credit-notebook/README.md](../../../../tax-credit-notebook/README.md) and
 [../../../../research/mitigation-funding-directory.md](../../../../research/mitigation-funding-directory.md),
 including the refresh at the top of the directory.

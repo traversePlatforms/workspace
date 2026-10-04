@@ -158,5 +158,346 @@
         }
       }
     }
+  },
+  "water": {
+    "checked": "2026-09-30",
+    "footer": "Checked 30 Sep 2026 against each provider's own page. Drought stages change without warning: Denver went from normal rules to a total ban in about five weeks. Check the provider's page that week before telling anyone a watering schedule. Sources and the fact-check log: sixfold/research/water-restrictions-2026.md.",
+    "wellTowns": [
+      "black-forest",
+      "franktown",
+      "larkspur",
+      "sedalia",
+      "divide",
+      "florissant"
+    ],
+    "cards": {
+      "_note": "One short line each for the door card. Keep them in step with the sheets below.",
+      "aeration": "Aeration needs no watering",
+      "towns": {
+        "woodland-park": "Woodland Park: 2 days a week",
+        "castle-rock": "Castle Rock: every third day",
+        "monument": "4 water providers here: ask which",
+        "palmer-lake": "Rules not checked: ask the provider",
+        "cripple-creek": "Rules not checked: ask the provider",
+        "black-forest": "Mostly wells: ask what it allows",
+        "franktown": "Mostly wells: ask what it allows",
+        "larkspur": "Mostly wells: ask what it allows",
+        "sedalia": "Mostly wells: ask what it allows",
+        "divide": "Mostly wells: ask what it allows",
+        "florissant": "Mostly wells: ask what it allows"
+      },
+      "wellSmall": "Under 35 acres: a well may not water a lawn",
+      "wellBig": "35 acres or more: a well may water up to 1 acre"
+    },
+    "lead": "Aeration does not need water. Overseeding does. Every rule here is about seed.",
+    "topics": {
+      "town": {
+        "byTown": {
+          "woodland-park": {
+            "title": "Woodland Park water",
+            "blocks": [
+              {
+                "h": "City of Woodland Park",
+                "p": [
+                  "Level 2: two days a week, on days assigned by address.",
+                  "No watering from noon to 6pm, May to September.",
+                  "The strictest rules in our area. An overseed is unlikely to take on two days a week."
+                ]
+              },
+              {
+                "h": "Outside the city",
+                "p": [
+                  "Homes outside the city's water are usually on wells. See Wells."
+                ]
+              },
+              {
+                "h": "A permit for new seed",
+                "p": [
+                  "Not checked for Woodland Park. Don't promise one."
+                ]
+              }
+            ]
+          },
+          "castle-rock": {
+            "title": "Castle Rock water",
+            "blocks": [
+              {
+                "h": "Castle Rock Water",
+                "p": [
+                  "Stage 1 since 1 September (it was Stage 2 in July).",
+                  "Every third day, before 8am or after 8pm."
+                ]
+              },
+              {
+                "h": "A permit for new seed",
+                "p": [
+                  "Castle Rock's Temporary Irrigation Exemption: 30 days for seed, 21 for new turf.",
+                  "Water any day while it runs, but still only before 8am or after 8pm.",
+                  "Not available in July."
+                ]
+              },
+              {
+                "h": "Outside town",
+                "p": [
+                  "Homes outside Castle Rock's water may be on wells. See Wells."
+                ]
+              }
+            ]
+          },
+          "monument": {
+            "title": "Monument water",
+            "blocks": [
+              {
+                "h": "Four providers in one town",
+                "p": [
+                  "Ask which one the house is on. A schedule from one is wrong at a house on another."
+                ]
+              },
+              {
+                "h": "Town of Monument",
+                "p": [
+                  "Odd/even, three days a week, no Sunday.",
+                  "This year only, the season runs 7 April to 30 October (usually 15 May to 30 September)."
+                ]
+              },
+              {
+                "h": "Woodmoor Water and Sanitation",
+                "p": [
+                  "Odd/even, three days a week, no Monday, nothing 10am to 6pm.",
+                  "The season ran 1 June to 30 September, so it is over for this year. No drought stage declared."
+                ]
+              },
+              {
+                "h": "Donala and Triview",
+                "p": [
+                  "Not checked. Don't guess their rules."
+                ]
+              },
+              {
+                "h": "Rural Monument",
+                "p": [
+                  "Mostly private wells. See Wells."
+                ]
+              }
+            ]
+          },
+          "palmer-lake": {
+            "title": "Palmer Lake water",
+            "blocks": [
+              {
+                "h": "Not checked yet",
+                "p": [
+                  "Palmer Lake's watering rules were not checked. Ask which provider they are on, and don't guess a schedule.",
+                  "Rural homes may be on wells. See Wells."
+                ]
+              }
+            ]
+          },
+          "cripple-creek": {
+            "title": "Cripple Creek water",
+            "blocks": [
+              {
+                "h": "Not checked yet",
+                "p": [
+                  "Cripple Creek's watering rules were not checked. Ask which provider they are on, and don't guess a schedule."
+                ]
+              }
+            ]
+          },
+          "black-forest": {
+            "title": "Black Forest water",
+            "blocks": [
+              {
+                "h": "Mostly private wells",
+                "p": [
+                  "Most homes here are on their own wells, so no town watering rules apply.",
+                  "That does not mean they can water a lawn. Most wells on lots under 35 acres may not water a lawn at all. See Wells."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Ask whether they are on a well, and what the well permit allows.",
+                  "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          },
+          "franktown": {
+            "title": "Franktown water",
+            "blocks": [
+              {
+                "h": "Mostly private wells",
+                "p": [
+                  "Most homes here are on their own wells, so no town watering rules apply.",
+                  "That does not mean they can water a lawn. Most wells on lots under 35 acres may not water a lawn at all. See Wells."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Ask whether they are on a well, and what the well permit allows.",
+                  "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          },
+          "larkspur": {
+            "title": "Larkspur water",
+            "blocks": [
+              {
+                "h": "Mostly private wells",
+                "p": [
+                  "Most homes here are on their own wells, so no town watering rules apply.",
+                  "That does not mean they can water a lawn. Most wells on lots under 35 acres may not water a lawn at all. See Wells."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Ask whether they are on a well, and what the well permit allows.",
+                  "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          },
+          "sedalia": {
+            "title": "Sedalia water",
+            "blocks": [
+              {
+                "h": "Mostly private wells",
+                "p": [
+                  "Most homes here are on their own wells, so no town watering rules apply.",
+                  "That does not mean they can water a lawn. Most wells on lots under 35 acres may not water a lawn at all. See Wells."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Ask whether they are on a well, and what the well permit allows.",
+                  "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          },
+          "divide": {
+            "title": "Divide water",
+            "blocks": [
+              {
+                "h": "Mostly private wells",
+                "p": [
+                  "Most homes here are on their own wells, so no town watering rules apply.",
+                  "That does not mean they can water a lawn. Most wells on lots under 35 acres may not water a lawn at all. See Wells."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Ask whether they are on a well, and what the well permit allows.",
+                  "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          },
+          "florissant": {
+            "title": "Florissant water",
+            "blocks": [
+              {
+                "h": "Mostly private wells",
+                "p": [
+                  "Most homes here are on their own wells, so no town watering rules apply.",
+                  "That does not mean they can water a lawn. Most wells on lots under 35 acres may not water a lawn at all. See Wells."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Ask whether they are on a well, and what the well permit allows.",
+                  "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "wells": {
+        "title": "Wells",
+        "blocks": [
+          {
+            "h": "A well is not a loophole",
+            "p": [
+              "Most private wells on lots under 35 acres, permitted since 8 May 1972, are for household use only: water inside the house.",
+              "They may not legally water a lawn or garden at all. Not two days a week, not at night, not ever. It is a condition of the well permit and has nothing to do with the drought."
+            ]
+          },
+          {
+            "h": "35 acres or more",
+            "p": [
+              "These may carry fuller well rights, which can include up to one acre of lawn and garden."
+            ]
+          },
+          {
+            "h": "At the door",
+            "p": [
+              "\"I'm on a well, so the restrictions don't apply\" is often exactly backwards.",
+              "Ask what the well permit allows before quoting an overseed. If it is household use only, the seed has no legal water: sell aeration, mowing or cleanup instead.",
+              "The permit is the owner's responsibility, not ours. But seed nobody can water is a job that fails."
+            ]
+          }
+        ],
+        "sources": [
+          "Colorado Division of Water Resources, Guideline 2023-1"
+        ]
+      },
+      "permits": {
+        "title": "Permits for new seed",
+        "blocks": [
+          {
+            "h": "Colorado Springs Utilities: establishment permit",
+            "p": [
+              "Only for homes on Colorado Springs Utilities water.",
+              "Lets them water more often than three days a week, and in the daytime hours that are normally banned: 42 days for seed, 28 for sod. Only needed for sprinklers.",
+              "For non-native seed they need a lab soil test, or receipts for 4 cubic yards of soil amendment per 1,000 sq ft. For a qualifying native mix, just the seed receipt.",
+              "The permit belongs to the water customer, not to us. We can walk them through applying: online, or at 2855 Mesa Rd.",
+              "No fee appears in the utility's own permit document. Don't quote one."
+            ]
+          },
+          {
+            "h": "Castle Rock Water: Temporary Irrigation Exemption",
+            "p": [
+              "30 days for seed, any day, still before 8am or after 8pm. Not available in July."
+            ]
+          },
+          {
+            "h": "Everyone else",
+            "p": [
+              "Woodland Park, Town of Monument, Woodmoor, Donala, Triview and Palmer Lake: not checked. Don't assume a permit exists."
+            ]
+          }
+        ]
+      },
+      "say": {
+        "title": "What to say",
+        "blocks": [
+          {
+            "h": "If they ask about Denver",
+            "p": [
+              "Denver Water banned all lawn watering from 1 October. It doesn't reach any town we work."
+            ]
+          }
+        ],
+        "say": [
+          "Aeration works fine under the current restrictions.",
+          "Which water provider are you on?",
+          "If you're on Colorado Springs Utilities, there's a permit that lets you water more often while new seed comes in. I can show you how to get it.",
+          "Water the lawn a day or two before we come out."
+        ],
+        "dont": [
+          "Anything that sounds like a promise the seed will come up. We don't water and we don't guarantee germination.",
+          "A watering schedule for a provider, unless you checked its page this week.",
+          "\"You're on a well, so the restrictions don't apply.\" Often the opposite."
+        ]
+      }
+    }
   }
 }

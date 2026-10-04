@@ -701,6 +701,7 @@
   .moneyl span:not(.ml){order:2}   /* the label gets its own line; the items sit under it as pills (Matthew: long text stacked unevenly) */
   .moneyl span:not(.ml){display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;background:var(--go-tint);line-height:1.3}
   .moneyl > .ic{order:1;margin-left:auto}
+  .moneyl.waterl{margin-top:2px}
   .moneyl .ml{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .moneyl span:not(.ml){color:var(--go)}
   .moneyl span.warn{color:var(--fire-h);background:var(--later-tint)}
@@ -3058,6 +3059,60 @@
     b.addEventListener('click', function () { moneyView('tax'); });
     return b;
   }
+  /* ---- water (Matthew 2026-10-04) ----
+     From sixfold/research/water-restrictions-2026.md, kept in money.json under "water". Aeration needs
+     no water; overseeding does, so the line says what this town's provider allows and, in the towns that
+     are mostly wells, what a well on a lot this size may do. The unit is the water provider, not the town:
+     the sheet says so, and says plainly where a provider was not checked. */
+  function waterLine(d) {
+    var W = S.money && S.money.water; if (!W || !W.cards) return null;
+    var C = W.cards, b = q('button', 'moneyl waterl'); b.type = 'button';
+    b.appendChild(q('span', 'ml', 'Water'));
+    b.appendChild(q('span', null, C.aeration));
+    var t = (C.towns || {})[S.region]; if (t) b.appendChild(q('span', 'warn', t));
+    if ((W.wellTowns || []).indexOf(S.region) >= 0 && typeof d.acres === 'number') b.appendChild(q('span', 'warn', d.acres >= 35 ? C.wellBig : C.wellSmall));
+    b.appendChild(ico('chev', 2.4));
+    b.addEventListener('click', function () { waterView('town'); });
+    return b;
+  }
+  function waterView(tab) {
+    closeMoney();
+    var W = S.money && S.money.water; if (!W) return;
+    var box = q('div', 'aerial'); box.id = 'moneyv';                      /* shares the money sheet's slot, so Back closes it the same way */
+    var head = q('div', 'ahead');
+    var x = q('button'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(ico('back', 2.4));
+    x.addEventListener('click', function () { if (history.state && history.state.money) history.back(); else closeMoney(); });
+    var ttl = q('b', null, 'Water');
+    head.appendChild(x); head.appendChild(ttl); box.appendChild(head);
+    var body = q('div', 'mbody'); box.appendChild(body);
+    document.body.appendChild(box); document.body.style.overflow = 'hidden';
+    try { history.pushState({ money: 1 }, ''); } catch (e) {}
+    var draw = function () {
+      body.textContent = '';
+      var seg = q('div', 'seg');
+      [['town', 'This town'], ['wells', 'Wells'], ['permits', 'Permits'], ['say', 'Say']].forEach(function (t) {
+        var b = q('button', null, t[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(tab === t[0]));
+        b.addEventListener('click', function () { tab = t[0]; draw(); body.scrollTop = 0; });
+        seg.appendChild(b);
+      });
+      body.appendChild(seg);
+      var T = W.topics[tab];
+      if (tab === 'town') T = (T.byTown || {})[S.region];
+      if (!T) { body.appendChild(q('p', 'mlead', W.lead)); body.appendChild(q('div', 'msg', 'Pick a town first: the rules depend on who supplies the water.')); return; }
+      ttl.textContent = T.title;
+      body.appendChild(q('p', 'mlead', W.lead));
+      (T.blocks || []).forEach(function (bk) {
+        var c = q('div', 'mblk'); c.appendChild(q('h3', null, bk.h));
+        (bk.p || []).forEach(function (p) { c.appendChild(q('p', null, p)); });
+        body.appendChild(c);
+      });
+      if (T.say && T.say.length) { var s1 = q('div', 'mblk msay'); s1.appendChild(q('h3', null, 'Say')); T.say.forEach(function (p) { s1.appendChild(q('p', null, p)); }); body.appendChild(s1); }
+      if (T.dont && T.dont.length) { var s2 = q('div', 'mblk mdont'); s2.appendChild(q('h3', null, "Don't say")); T.dont.forEach(function (p) { s2.appendChild(q('p', null, p)); }); body.appendChild(s2); }
+      if (T.sources && T.sources.length) body.appendChild(q('p', 'msrc', 'Sources: ' + T.sources.join('; ') + '.'));
+      if (W.footer) body.appendChild(q('p', 'msrc', W.footer));
+    };
+    draw();
+  }
   /* the three drivers: show only doors that have every one picked */
   var MATCH = [['fire', 'flame', 'High fire'], ['lawn', 'leaf', 'Large or medium lawn'], ['trees', 'tree', 'Trees close']];
   function matchOn() { var m = S.match || {}; return !!(m.fire || m.lawn || m.trees); }
@@ -5086,6 +5141,7 @@
     card.appendChild(extras(d));
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
     card.appendChild(moneyLine(d));
+    var wl = waterLine(d); if (wl) card.appendChild(wl);
     if (capOpen(d)) card.appendChild(capturePanel(d, { region: S.region, redraw: renderDoors, phone: d.phone }, false));
     if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
     var acts = q('div', 'acts');

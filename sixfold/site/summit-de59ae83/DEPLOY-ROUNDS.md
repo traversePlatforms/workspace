@@ -7,15 +7,26 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — tighter code (Fable's cleanup; nothing the app does changes)
+## ⏳ TO UPLOAD — water rules on the door card, plus the cleanup below (one upload covers both)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
 | 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
 | 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | `data/rounds/docs/money.json` | `sixfold-data/rounds/docs/` (beside public_html, NOT inside it) |
 
-Sizes: `index.html` **396,493** (was 414,896), `rounds.php` **161,059** (comments only). Flush after step 2.
+Sizes: `index.html` **400,131**, `rounds.php` **161,059**, `money.json` **23,956**. Flush after step 2.
 quote.html unchanged.
+
+**Water** (Matthew 2026-10-04): a Water line under the Money line on every door card: "Aeration needs no
+watering", the town's provider rule, and in the six mostly-well towns the well rule for that lot size (none of
+their 13,061 doors is 35+ acres, so all say a well may not water a lawn). Tap for a sheet: This town · Wells ·
+Permits · Say. Content in money.json under `water`, from sixfold/research/water-restrictions-2026.md (checked
+2026-09-30); no server change. If money.json isn't uploaded, the Water line simply doesn't show.
+
+## ⏳ (same upload) — tighter code (Fable's cleanup; nothing the app does changes)
+
+`index.html` was **396,493** after the cleanup (from 414,896), `rounds.php` **161,059** (comments only).
 
 Removed from the page: every old-layout branch (the `S.ui2` flag is gone; `html.ui2` is set in the markup and the
 `.ui2` CSS prefix stays because the cascade was tuned with it), the retired Leads and Quotes-to-build screens
