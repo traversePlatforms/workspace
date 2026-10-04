@@ -23,7 +23,28 @@ the 12 `.json` files in `sixfold-data/rounds/`. These are the undo.
 | 6 | `api/submit.php` | `public_html/api/` | Independent; `smtp.php` and `config.php` are unchanged |
 | 7 | — | — | Check each uploaded file's size against the list below, then flush the cache again |
 
-{{SIZES}}
+**Sizes to check after upload** (bytes; the File Manager may round to KB):
+
+| File | Bytes |
+|---|---:|
+| `summit-de59ae83/index.html` | 204562 |
+| `summit-de59ae83/sw.js` | 5960 |
+| `api/rounds.php` | 72896 |
+| `api/quote.php` | 10504 |
+| `summit-de59ae83/quote.html` | 104099 |
+| `api/submit.php` | 14088 |
+| `sixfold-data/rounds/black-forest.json` | 2413222 |
+| `sixfold-data/rounds/castle-rock.json` | 1904274 |
+| `sixfold-data/rounds/cripple-creek.json` | 16347 |
+| `sixfold-data/rounds/divide.json` | 153343 |
+| `sixfold-data/rounds/florissant.json` | 108482 |
+| `sixfold-data/rounds/franktown.json` | 419068 |
+| `sixfold-data/rounds/index.json` | 909 |
+| `sixfold-data/rounds/larkspur.json` | 184206 |
+| `sixfold-data/rounds/monument.json` | 1921437 |
+| `sixfold-data/rounds/palmer-lake.json` | 117976 |
+| `sixfold-data/rounds/sedalia.json` | 162333 |
+| `sixfold-data/rounds/woodland-park.json` | 740193 |
 
 **Never upload:** `DEPLOY-ROUNDS.md` (it sits in the summit folder and would be public),
 `build-quote-page.mjs`, `make-bundle.mjs`, anything in `dist/` (an old 2026-09-28 zip), and

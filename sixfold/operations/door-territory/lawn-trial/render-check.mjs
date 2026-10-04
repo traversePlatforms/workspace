@@ -36,7 +36,9 @@ const scored = Object.entries(masks).filter(([, m]) => !m.err).map(([k, m]) => {
 }).filter((x) => doors.has(x.id));
 const hash = (s) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const pick = (arr, n) => arr.sort((a, b) => hash(a.k) - hash(b.k)).slice(0, n);
-const sample = [...pick(scored.filter((x) => x.w >= 1), Math.ceil(COUNT / 2)), ...pick(scored.filter((x) => x.w < 1), Math.floor(COUNT / 2))]
+/* PICK=<json [{id,lawnSqFt,compact}]>: draw these doors instead of sampling the trial's lawns */
+const PICKED = process.env.PICK ? JSON.parse(readFileSync(process.env.PICK, 'utf8')) : null;
+const sample = PICKED ? PICKED.map((p) => ({ k: 'pick/' + p.id, id: p.id, s: p.lawnSqFt, w: 0, used: 0, cells: 0 })) : [...pick(scored.filter((x) => x.w >= 1), Math.ceil(COUNT / 2)), ...pick(scored.filter((x) => x.w < 1), Math.floor(COUNT / 2))]
   .sort((a, b) => hash(a.k + 'order') - hash(b.k + 'order'));
 
 mkdirSync(OUT, { recursive: true });
