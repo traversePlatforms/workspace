@@ -5,6 +5,11 @@
 **Published:** version 11, 2026-10-01 — rates v4, job-type split, $0 fixed, audited. Artifact, this file and the site page are in step. **The SITE copy needs re-uploading after any publish.**
 **Source:** [quote-engine.artifact.html](quote-engine.artifact.html) — hand-written, single file, no build step.
 
+> **⚑ 2026-10-03 — THE ARTIFACT ABOVE IS RETIRED (SX-2b).** It now shows a notice pointing to the door
+> app. The tool runs as `sixfold/site/summit-de59ae83/quote.html`, generated from this source by
+> `sixfold/site/build-quote-page.mjs`. Do not republish the tool to the artifact. Every "artifact
+> version N" below is history.
+
 ---
 
 > ## RESUME HERE — repriced 2026-09-23, four things still open

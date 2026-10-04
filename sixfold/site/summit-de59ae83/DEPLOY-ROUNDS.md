@@ -61,16 +61,31 @@ page, the sign-in, the towns and recently opened neighbourhoods. With signal not
 everything still comes fresh from the server, so an upload is never hidden behind an old copy
 (the reason there was no service worker before). With no signal the app opens anyway, a strip
 says it is a saved copy, and marks queue as before. **Signing out deletes the saved data**
-(shared iPads). The quote tool and all saves stay online-only. Tested with the server really
-switched off: 12 checks.
+(shared iPads), **with or without signal**: with none, the app also stays on the sign-in screen
+and tells the server the moment signal is back. A saved copy older than 7 days is not shown, and
+a "signed out" answer from the server wipes it too. After each save the open neighbourhood is
+fetched again, so the saved copy shows the latest marks. The quote tool and all saves stay
+online-only. Tested with the server really switched off: 15 checks.
+
+⚑ **iPads: add the app to the Home Screen** (Share → Add to Home Screen). Safari deletes a
+website's saved data after about 7 days without a visit; an app on the Home Screen is exempt.
 
 **When a house sells (SX-35).** The door builder keeps `owner-history.json`. At the next
 quarterly re-pull, a door whose owner shares no name with the last one gets "new owner since"
-(a spouse added or a move into a family trust is not a sale). Everything recorded before that
-date is the previous owner's: the door is back on the list, out of Quotes to build, and its old
-phone, email and note are labelled as the previous owner's, with no Call/Email links. The export
-keeps everything, with an `owner_since` column. **The first build after this only records
-owners; changes show from the following re-pull.** 11 checks.
+(a spouse added or a move into a family trust is not a sale). County records carry no sale date,
+so the sale fell somewhere between the last pull that showed the old owner and this one:
+- recorded more than 45 days before that last pull: **surely the previous owner's.** The door is
+  back on the list, out of Quotes to build, and its old phone, email and note are labelled as the
+  previous owner's, with no Call/Email buttons;
+- recorded in the window around the sale: **could be either owner's.** It stays live (a Quote
+  booked stays in Quotes to build), marked "check it's the new owner's".
+The export keeps everything, with `owner_since` and `previous_owner_before` columns. **The first
+build after this only records owners; changes show from the following re-pull.** 17 checks.
+(Fable's review caught that the first version set aside everything before the re-pull — which
+would have hidden a new owner's own Quote booked — and that its name check was broken by a lost
+backslash, so every rewording read as a sale. Both fixed; the test now runs the builder's own rule.)
+Also from that review: Quotes to build no longer shows "quote sent" for a sent date older than the
+latest booking.
 
 **Third round of reviews (Fable: phone screenshots, stats and dates, iPad screenshots):**
 - **Dates read "NaN undefined …"** on notes, emails, photos, Booked by and Quote sent since

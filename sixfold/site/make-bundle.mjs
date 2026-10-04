@@ -68,6 +68,9 @@ function walk(dir) {
   }
 }
 
+/* the quote page must match its source, or the upload ships old prices (SX-2b, the v2/v3 trap) */
+try { execFileSync(process.execPath, [join(SITE, 'build-quote-page.mjs'), '--check'], { stdio: 'inherit' }); }
+catch { console.error('Bundle NOT built.'); process.exit(1); }
 rmSync(STAGE, { recursive: true, force: true });
 mkdirSync(STAGE, { recursive: true });
 walk(SITE);

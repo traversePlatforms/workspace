@@ -127,7 +127,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       crew code edit rates, or only build quotes?** The rounds app already separates admin from
       crew.
 
-- [ ] **SX-2b — Three copies of the quote engine can now drift.** Split out of SX-2a
+- [x] **SX-2b — ✅ DECIDED AND DONE 2026-10-03: the artifact is retired.** Matthew left the call to me. Its
+      database held ONE saved job (Kara, 15 Sep, $350 on the old $70 rate) and nothing since — the
+      door app's quote page is the copy in use. The artifact now shows a "retired, use the door app"
+      notice with that job's figures; its database is kept. One source
+      (`quote-engine.artifact.html`), one live copy (`quote.html`). A reprice is edit → `node
+      sixfold/site/build-quote-page.mjs` → upload → flush, and **`make-bundle.mjs` now refuses to
+      build if quote.html is stale** (`build-quote-page.mjs --check`, proven both ways).
+      *Original note:* **Three copies of the quote engine can now drift.** Split out of SX-2a
       2026-10-01, because the decision that line called for — *retire the artifact rather than
       run both* — was not taken, and the build added a third copy rather than a second: the
       **artifact** (version 11), **`quote-engine.artifact.html`** as its source, and the
@@ -636,8 +643,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       sign-in, towns and recent neighbourhoods open with a strip. Sign-out wipes it. 12 checks with the
       server really off.
 - [ ] **SX-35 — When a house sells: ✅ BUILT AND TESTED 2026-10-03, rides with the upload.** Owner history
-      across rebuilds; a real change (no shared name) sets "new owner since", and the previous owner's
-      mark, phone, email and note are set aside and labelled. Detection starts from the re-pull after
+      across rebuilds; a real change (no shared name) sets "new owner since". Records surely from before
+      the sale are set aside and labelled; ones from the window around the sale stay live with "check
+      it's the new owner's" (no sale dates in county data). Fable review fixes in (name-check bug,
+      sale window, offline sign-out, stale saved copies). Detection starts from the re-pull after
       the first build. Needed before the January re-pull (SX-33).
 - [ ] **SX-32 — One town per door: ✅ BUILT AND TESTED 2026-10-03, rides with SX-28.** 958 doors were in two
       town lists (all of Palmer Lake inside Monument; Castle Rock overlapping Franktown and Sedalia),

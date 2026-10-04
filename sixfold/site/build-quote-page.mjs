@@ -1,6 +1,14 @@
 /*
   Generates summit-de59ae83/quote.html from the Claude artifact source.
 
+  ⚑ ONE SOURCE, ONE LIVE COPY since 2026-10-03 (SX-2b). The published artifact
+  (claude.ai/artifact/78zD1AzZZpk9PhkLuWX7Eq) is RETIRED — it now shows a notice
+  pointing to the door app. Do not republish the tool there. A reprice is: edit
+  ../quotes/quote-engine.artifact.html → run this → upload quote.html → flush.
+  make-bundle.mjs runs this with --check and refuses a stale page.
+  The file keeps its name and its claude.use() code because this generator
+  rewrites that code; renaming it would only break the references to it.
+
   WHY A GENERATOR AND NOT A COPY: the pricing logic is 1,400 lines and it is the
   thing nobody should be hand-editing twice. ../quotes/quote-engine.artifact.html
   stays the single source; this script changes only what has to change to run on
@@ -201,5 +209,13 @@ const head = [
 ].join('\n');
 s = head + s + '\n</body>\n</html>\n';
 
+/* --check: say whether quote.html is what the source makes now, and change nothing.
+   make-bundle.mjs runs this and refuses to build an upload from a stale page (SX-2b). */
+if (process.argv.includes('--check')) {
+  let cur = ''; try { cur = readFileSync(OUT, 'utf8'); } catch {}
+  if (cur === s) { console.log('quote.html is up to date with the source'); process.exit(0); }
+  console.error('quote.html is OUT OF DATE with quotes/quote-engine.artifact.html. Run: node sixfold/site/build-quote-page.mjs');
+  process.exit(1);
+}
 writeFileSync(OUT, s, 'utf8');
 console.log('wrote summit-de59ae83/quote.html  ' + (s.length / 1024).toFixed(1) + ' KB');

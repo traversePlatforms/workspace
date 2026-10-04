@@ -242,6 +242,12 @@ function doorIds(string $key): array {
     return $cache[$key];
 }
 /** Rows of one log ('marks', 'phones', ...) for a town, its partners' rows for its doors merged in. */
+/** every door-log row also carries 'rt', when the server received it, to the microsecond. 'at' is
+ *  when it was tapped (whole seconds), so two rows for one door can share it; within one file the
+ *  line order settles that, but a door whose rows sit in two town files (SX-32) needs 'rt' to
+ *  know which came last (found 2026-10-03: a "No answer" and an undo in the same second read in
+ *  the wrong order). Rows from before this have no 'rt' and keep their line order. */
+function stamped(array $row): array { $row['rt'] = round(microtime(true), 4); return $row; }
 function logRows(string $kind, string $key): array {
     $read = static function (string $file): array {
         $rows = [];
@@ -254,28 +260,45 @@ function logRows(string $kind, string $key): array {
     $partners = sharedWith($key);
     $mine = $partners ? doorIds($key) : [];
     $all = []; $seq = 0;
-    foreach ($own as $r) $all[] = [(int) ($r['at'] ?? 0), $seq++, $r];
+    foreach ($own as $r) $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r];
     foreach ($partners as $p) foreach ($read(DATA_DIR . '/' . $kind . '-' . $p . '.log') as $r) {
         $hit = isset($r['id']) ? isset($mine[$r['id']])
              : (isset($r['ids']) && array_intersect_key(array_flip((array) $r['ids']), $mine));   /* area flags carry a list */
-        if ($hit) { $r['_from'] = $p; $all[] = [(int) ($r['at'] ?? 0), $seq++, $r]; }
+        if ($hit) { $r['_from'] = $p; $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r]; }
     }
-    usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: $a[1] <=> $b[1]);
-    return array_column($all, 2);
+    /* rt only breaks a tie between two files; inside one file the line order already holds */
+    usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: (($a[3]['_from'] ?? '') !== ($b[3]['_from'] ?? '') && $a[1] && $b[1] ? $a[1] <=> $b[1] : 0) ?: $a[2] <=> $b[2]);
+    return array_map(function ($x) { unset($x[3]['rt']); return $x[3]; }, $all);
 }
 /* ---- when a house sells (2026-10-03) ---------------------------------------
  * The door lists are rebuilt from county records every quarter. When the owner on the record
  * changes (build-rounds-data.mjs compares names; a spouse added or a move into a family trust
- * is not a change), the door carries 'os', the date the new owner was first seen. Anything
- * recorded before that date belonged to the previous owner: the door is back on the list, an
- * old Quote booked leaves Quotes to build, and the old phone, email and note are shown as the
- * previous owner's. Nothing is deleted; the export keeps it all, with the date. */
-function ownerSinceTs(array $d): int {
-    if (empty($d['os']) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D', (string) $d['os'])) return 0;
-    return (new DateTime($d['os'] . ' 00:00', new DateTimeZone('America/Denver')))->getTimestamp();
+ * is not a change), the door carries 'os', the date the new owner was first seen, and 'oa'.
+ * County records carry no sale date, so the sale fell somewhere before 'os':
+ *   - recorded before 'oa': surely the previous owner's. The door is back on the list, an old
+ *     Quote booked leaves Quotes to build, and the old phone, email and note are shown as the
+ *     previous owner's, with no Call or Email button;
+ *   - recorded between 'oa' and 'os': could be either. It stays live, marked "check it's the
+ *     new owner's" (review 2026-10-03: a Quote booked by the new owner between the sale and
+ *     the re-pull must not vanish).
+ * Nothing is deleted; the export keeps it all, with both dates. */
+function dayTs(array $d, string $k): int {
+    if (empty($d[$k]) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D', (string) $d[$k])) return 0;
+    return (new DateTime($d[$k] . ' 00:00', new DateTimeZone('America/Denver')))->getTimestamp();
 }
-/** the mark, unless it was made for the previous owner */
-function freshMark(array $d, ?array $m): ?array { return ($m && (int) ($m['at'] ?? 0) >= ownerSinceTs($d)) ? $m : null; }
+/** 'prev' (surely the previous owner's), 'maybe' (either owner's) or '' (the current owner's) */
+function ownerAge(array $d, ?array $r): string {
+    $os = dayTs($d, 'os');
+    if (!$os || !$r) return '';
+    $at = (int) ($r['at'] ?? 0);
+    if ($at >= $os) return '';
+    $oa = dayTs($d, 'oa');
+    return ($oa && $at >= $oa) ? 'maybe' : 'prev';
+}
+/** the mark, unless it was surely made for the previous owner */
+function freshMark(array $d, ?array $m): ?array { return ($m && ownerAge($d, $m) !== 'prev') ? $m : null; }
+/** the flag a record carries in the app: ['prev' => true], ['maybe' => true] or nothing */
+function ownerFlag(array $d, ?array $r): array { $a = ownerAge($d, $r); return $a ? [$a => true] : []; }
 
 /** The town a door belongs to now, given the town the phone asked for. 409 when no town has it:
  *  a phone holding an old list must not save onto nothing (or, worse, onto another door). */
@@ -302,7 +325,7 @@ function loadMarks(string $key): array {
     return $out;
 }
 function appendMark(string $key, array $row): bool {
-    return (bool) @file_put_contents(marksFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(marksFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 
 /* A no-answer rests, then comes back on the to-knock list by itself (2026-10-02, Matthew):
@@ -355,7 +378,7 @@ function loadPhones(string $key): array {
     return $out;
 }
 function appendPhone(string $key, array $row): bool {
-    return (bool) @file_put_contents(phonesFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(phonesFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
 
@@ -380,7 +403,7 @@ function loadLawnFix(string $key): array {
     return $out;
 }
 function appendLawnFix(string $key, array $row): bool {
-    return (bool) @file_put_contents(lawnfixFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(lawnfixFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 /* ---- emails (2026-10-02) ------------------------------------------------
  * For people who'd rather not give a number. Given at the door only: nothing looks
@@ -396,7 +419,7 @@ function loadEmails(string $key): array {
     return $out;
 }
 function appendEmail(string $key, array $row): bool {
-    return (bool) @file_put_contents(emailsFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(emailsFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 
 /* ---- photos (2026-10-02) ------------------------------------------------
@@ -419,7 +442,7 @@ function loadPhotos(string $key): array {
     return $out;
 }
 function appendPhotoLog(string $key, array $row): bool {
-    return (bool) @file_put_contents(photosFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(photosFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 function validPhotoName(string $f): bool { return (bool) preg_match('/^\d{8}-\d{6}-[0-9a-f]{8}\.jpg$/D', $f); }
 
@@ -462,7 +485,7 @@ function loadAreaFlags(string $key): array {
     return $out;
 }
 function appendAreaFlag(string $key, array $row): bool {
-    return (bool) @file_put_contents(areaflagFile($key), json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(areaflagFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
 /* every active flag that covers any door of this neighbourhood */
 function flagsOver(array $doors, array $flags): array {
@@ -492,7 +515,7 @@ function loadQuoted(string $key): array {
     return $out;
 }
 function appendQuoted(string $key, array $row): bool {
-    return (bool) @file_put_contents(quotedFile($key), json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(quotedFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 function notesFile(string $key): string { return DATA_DIR . '/notes-' . $key . '.log'; }
 function loadNotes(string $key): array {
@@ -505,7 +528,7 @@ function loadNotes(string $key): array {
     return $out;
 }
 function appendNote(string $key, array $row): bool {
-    return (bool) @file_put_contents(notesFile($key), json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+    return (bool) @file_put_contents(notesFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
 
 /* When a save happened. A phone with no signal sends its queue later, and the time it was TAPPED
@@ -661,23 +684,21 @@ if ($action === 'area') {
             $p = $phones[$d['id']] ?? null;
             $n = $notes[$d['id']] ?? null;
             $em = $emails[$d['id']] ?? null;
-            $os = ownerSinceTs($d);
-            $old = fn($r) => $os && $r && (int) ($r['at'] ?? 0) < $os;   /* recorded for the previous owner */
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'fire' => $d['fire'] ?? null,
                 'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? '',
-                               'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] : null,
+                               'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] + ownerFlag($d, $m) : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
-                                 'by' => $p['by'], 'at' => $p['at']] + ($old($p) ? ['prev' => true] : []) : null,
-                'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ($old($n) ? ['prev' => true] : []) : null,
+                                 'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) : null,
+                'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
                 'prevMark' => ($m0 && !$m) ? ['outcome' => $m0['outcome'], 'by' => $m0['by'], 'at' => $m0['at']] : null,
                 'lawn' => $d['lawn'] ?? null,
                 'lawnfix' => $lfix[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
-                'email' => $em ? $em + ($old($em) ? ['prev' => true] : []) : null,
+                'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
         }
@@ -928,12 +949,12 @@ if ($action === 'mydoors') {
             foreach ($a['doors'] as $d) {
                 if (!isset($hit[$d['id']])) continue;
                 $h = $hit[$d['id']];
-                $now = freshMark($d, $marks[$d['id']] ?? null);
+                $now = $marks[$d['id']] ?? null;
                 $rows[] = [
                     'region' => $k, 'town' => $data['label'] ?? $k, 'area' => $a['name'],
                     'id' => $d['id'], 'address' => $d['address'], 'at' => $h['mine']['at'] ?? $h['at'],   /* the mark's day (review 2026-10-03) */
                     'mine' => $h['mine'] ?? null, 'did' => array_keys($h['did']),
-                    'now' => $now ? ['outcome' => $now['outcome'], 'by' => $now['by'], 'at' => $now['at'], 'revisit' => $now['revisit'] ?? ''] : null,
+                    'now' => $now ? ['outcome' => $now['outcome'], 'by' => $now['by'], 'at' => $now['at'], 'revisit' => $now['revisit'] ?? ''] + ownerFlag($d, $now) : null,
                 ];
                 unset($hit[$d['id']]);
             }
@@ -1110,16 +1131,19 @@ if ($action === 'quotes') {
                 $p = $phones[$d['id']] ?? null;
                 $n = $notes[$d['id']] ?? null;
                 $qd = $quoted[$d['id']] ?? null;
+                /* a "quote sent" from before this booking was for an earlier booking — or the previous owner (review 2026-10-03) */
+                if ($qd && (int) $qd['at'] < (int) $m['at']) $qd = null;
+                $em = $emails[$d['id']] ?? null;
                 $list[] = [
                     'region' => $r['key'], 'town' => $r['label'], 'area' => $a['name'], 'id' => $d['id'],
                     'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                     'fire' => $d['fire'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
-                    'by' => $m['by'], 'at' => $m['at'],
-                    'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] : null,
-                    'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
+                    'by' => $m['by'], 'at' => $m['at'], 'os' => $d['os'] ?? null, 'maybe' => ownerAge($d, $m) === 'maybe',
+                    'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] + ownerFlag($d, $p) : null,
+                    'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                     'quoted' => $qd,
                     'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null,
-                    'email' => $emails[$d['id']] ?? null, 'photos' => $photos[$d['id']] ?? [],
+                    'email' => $em ? $em + ownerFlag($d, $em) : null, 'photos' => $photos[$d['id']] ?? [],
                 ];
             }
         }
@@ -1202,7 +1226,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos', 'owner_since'], ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1230,7 +1254,7 @@ if ($action === 'report' || $action === 'export') {
                               $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
                               $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
-                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '']), ',', '"', '');
+                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '']), ',', '"', '');
             }
         }
     }

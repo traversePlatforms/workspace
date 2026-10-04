@@ -18,7 +18,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
 <!--
   Sixfold Colorado — door rounds, crew page. 2026-09-29.
 
@@ -561,6 +561,7 @@
   .tag.newown{background:var(--ember-ink);color:var(--on-ember);font-weight:700}
   .old{opacity:.72}
   .old .oldl{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-bottom:3px}
+  .oldl.maybe{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-top:3px}
   .prevm{font-style:italic}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
@@ -586,7 +587,7 @@
 </svg>
 <div class="splash" id="splash" aria-hidden="true"><svg viewBox="0 0 100 96"><use href="#ridge"/></svg><b>Sixfold</b></div>
 <header class="appbar" id="hdr" hidden><div class="barin" id="barin"></div></header>
-<div class="offbar" id="offbar" hidden role="status">No signal. Showing what this device saved; marks and notes save here and send when signal is back.</div>
+<div class="offbar" id="offbar" hidden role="status">Slow or no signal. Showing what this device saved; marks and notes save here and send when signal is back.</div>
 <div class="wrap">
   <div id="view"></div>
   <footer id="foot" hidden>
@@ -654,6 +655,27 @@
      fails, and marks it; the strip says so, and goes the moment a live answer arrives */
   function warmSaved() { try { if (S.me && navigator.serviceWorker && navigator.serviceWorker.controller) fetch(API + '?action=me', { credentials: 'same-origin' }).catch(function () {}); } catch (e) {} }
   function showOffline(on) { var b = document.getElementById('offbar'); if (b) b.hidden = !on; S.offline = !!on; }
+  /* Signing out has to hold with no signal too (review 2026-10-03): the sign-in cookie can only be
+     cleared by the server, so a sign-out that never reached it left the next person on a shared
+     iPad signed in as the last one. Now the saved copy is wiped here at once, this flag keeps the
+     app on the sign-in screen, and the server is told the next time there is signal. */
+  var OUTKEY = 'sixfold.rounds.signedout';
+  function markOut(on) { try { if (on) localStorage.setItem(OUTKEY, '1'); else localStorage.removeItem(OUTKEY); } catch (e) {} }
+  function isOut() { try { return localStorage.getItem(OUTKEY) === '1'; } catch (e) { return false; } }
+  function tellServerOut() {
+    S.outP = fetch(API + '?action=signout', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (r.ok && r.headers.get('X-Sixfold-Offline') !== '1') markOut(false); }, function () {})
+      .then(function () { S.outP = null; });
+    return S.outP;
+  }
+  /* after a save, ask for the neighbourhood again so the copy kept for no-signal shows it */
+  var warmT = null;
+  function warmArea() {
+    if (!S.area || !S.region || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+    clearTimeout(warmT);
+    var u = API + '?action=area&region=' + encodeURIComponent(S.region) + '&area=' + encodeURIComponent(S.area);
+    warmT = setTimeout(function () { fetch(u, { credentials: 'same-origin' }).catch(function () {}); }, 3000);
+  }
   function clearSaved() {
     try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage('clear-api'); } catch (e) {}
     try { if (window.caches) return caches.delete('rounds-api').catch(function () {}); } catch (e) {}
@@ -672,7 +694,11 @@
       var fromSaved = r.headers.get('X-Sixfold-Offline') === '1';
       showOffline(fromSaved);
       return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.', _notOurs: true }; })
-        .then(function (j) { j._status = r.status; if (fromSaved) j._saved = true; return j; });
+        .then(function (j) {
+          j._status = r.status; if (fromSaved) j._saved = true;
+          if (j.ok && opts.body && action !== 'signin') warmArea();
+          return j;
+        });
     });
   }
 
@@ -963,9 +989,10 @@
     function go() {
       if (S.busy) return;
       S.busy = true; boxes.className = 'boxes busy'; say.className = 'say'; say.textContent = 'Checking…';
-      api('signin', { body: { code: code } }).then(function (j) {
+      (S.outP || Promise.resolve()).then(function () { return api('signin', { body: { code: code } }); }).then(function (j) {
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
+        markOut(false);
         S.me = j.name; S.role = j.role; S.signin = null;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         boxes.className = 'boxes ok';
@@ -1052,7 +1079,9 @@
          here again (2026-10-03 review). Say so before they go. */
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
-      api('signout').then(function () { S.me = null; S.role = 'crew'; return clearSaved(); }).then(function () { signinView(); }, function () { signinView(); });
+      S.me = null; S.role = 'crew'; markOut(true);
+      clearSaved().then(function () { signinView(); });
+      tellServerOut();
     });
     out.appendChild(so);
     box.appendChild(out);
@@ -1525,6 +1554,7 @@
         st.appendChild(q('span', 'tag ' + (pend ? 'pending' : now ? now.outcome : 'onlist'),
           pend ? 'not sent yet' : now ? OUT[now.outcome] + (now.outcome === 'later' && now.revisit ? ' · back ' + fmtDate(now.revisit).replace(/ \d{4}$/, '') : '') : 'On the list'));
         var bits = [];
+        if (now && now.prev) bits.push('before the house sold');
         if (now && now.by && now.by !== who) bits.push('changed since by ' + now.by);
         else if (!now && r.mine && r.mine.outcome) bits.push('put back on the list since');
         if (r.did.length) bits.push('added ' + r.did.join(', '));
@@ -1767,7 +1797,18 @@
       if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
       renderDoors();
+    }).catch(function () {
+      view.textContent = '';
+      view.appendChild(q('div', 'msg', 'No signal, and this neighbourhood is not saved on this device. Neighbourhoods open without signal once they have been opened with it. Go back and pick one you have opened, or try again with signal.'));
     });
+  }
+  /* signal is back: fetch the open neighbourhood again in place, without moving the page */
+  function reloadArea() {
+    var name = S.area;
+    return api('area', { params: { region: S.region, area: name } }).then(function (j) {
+      if (!j.ok || S.area !== name || S.screen !== 'doors') return;
+      S.doors = j.doors; S.areaNosol = j.nosol || null; renderDoors();
+    }).catch(function () {});
   }
 
   function markDoor(d, kind, revisit) {
@@ -1962,6 +2003,7 @@
     if (d.note.prev) { box.classList.add('old'); box.appendChild(q('span', 'oldl', 'Note from before the new owner')); }
     box.appendChild(q('div', 'ntxt', d.note.note));
     box.appendChild(q('span', 'src', 'Note' + (d.note.by ? ' · ' + d.note.by : '') + (d.note.at ? ' · ' + fmtDay(d.note.at) : '')));
+    maybeNote(box, d.note);
     var ed = q('button', 'lnk', 'Edit note'); ed.type = 'button';
     ed.addEventListener('click', function () { S.editNote = d.id; S.editPhone = null; renderDoors(); });
     box.appendChild(ed);
@@ -2017,6 +2059,7 @@
     a.appendChild(ico('mail', 2.2)); a.appendChild(document.createTextNode(d.email.email));
     box.appendChild(a);
     box.appendChild(q('span', 'src', 'Given at the door' + (d.email.at ? ' · ' + fmtDay(d.email.at) : '') + (d.email.by ? ' · ' + d.email.by : '')));
+    maybeNote(box, d.email);
     var ed = q('button', 'lnk', 'Edit email'); ed.type = 'button';
     ed.addEventListener('click', function () { S.editEmail = d.id; S.editPhone = null; S.editNote = null; renderDoors(); });
     box.appendChild(ed);
@@ -2378,6 +2421,9 @@
   /* ---- quotes to build (admin, 2026-10-01) ----
      The knock-to-quote handoff: every door marked Quote booked, with what the person
      building the quote needs, and a tick for "quote sent". */
+  /* recorded between the last county pull that showed the old owner and the one that showed the
+     new one: it could be either owner's (review 2026-10-03), so it stays live with a warning */
+  function maybeNote(box, r) { if (r && r.maybe) box.appendChild(q('span', 'oldl maybe', "Recorded around the time the house sold: check it's the new owner's")); }
   function quoteCard(x) {
     var c = q('div', 'door qc ' + fireClass(x.fire) + (x.quoted ? ' sent' : ''));
     c.appendChild(q('div', 'addr', x.address));
@@ -2385,21 +2431,29 @@
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
     var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
     meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres · Owner: ' + x.owner)); c.appendChild(meta);
-    if (x.phone) {
+    if (x.maybe) { var mb = q('div', 'meta st'); mb.appendChild(q('span', 'oldl maybe', "Booked around the time the house sold: check it was the new owner who booked")); c.appendChild(mb); }
+    if (x.phone && x.phone.prev) {
+      /* the previous owner's number: no Call button (review 2026-10-03) */
+      var ph0 = q('div', 'ph old'); ph0.appendChild(q('span', 'oldl', "Previous owner's number, probably not the new owner's"));
+      ph0.appendChild(q('span', 'num', fmtPhone(x.phone.phone))); c.appendChild(ph0);
+    } else if (x.phone) {
       var ph = q('div', 'ph'); var a = q('a', 'num', fmtPhone(x.phone.phone)); a.href = 'tel:' + digits(x.phone.phone);
       a.insertBefore(ico('phone', 2.2), a.firstChild);
-      ph.appendChild(a); ph.appendChild(q('span', 'src', phoneStatement(x.phone)));
+      ph.appendChild(a); ph.appendChild(q('span', 'src', phoneStatement(x.phone))); maybeNote(ph, x.phone);
       if (x.phone.source !== 'door') ph.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
       c.appendChild(ph);
     } else c.appendChild(q('div', 'meta', 'No phone number on file.'));
     if (x.email) {
-      var em = q('div', 'ph em'); var ea = q('a', 'num'); ea.href = 'mailto:' + x.email.email;
+      var em = q('div', 'ph em' + (x.email.prev ? ' old' : ''));
+      if (x.email.prev) em.appendChild(q('span', 'oldl', "Previous owner's email"));
+      var ea = q(x.email.prev ? 'span' : 'a', 'num'); if (!x.email.prev) ea.href = 'mailto:' + x.email.email;
       ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode(x.email.email)); em.appendChild(ea);
-      em.appendChild(q('span', 'src', 'Given at the door · ' + fmtDay(x.email.at))); c.appendChild(em);
+      em.appendChild(q('span', 'src', 'Given at the door · ' + fmtDay(x.email.at))); maybeNote(em, x.email); c.appendChild(em);
     }
     if (x.photos && x.photos.length) c.appendChild(photoStrip({ id: x.id, address: x.address, photos: x.photos }, x.region));
     if (x.note) {
-      var nt = q('div', 'nt'); nt.appendChild(q('div', 'ntxt', x.note.note));
+      var nt = q('div', 'nt' + (x.note.prev ? ' old' : '')); if (x.note.prev) nt.appendChild(q('span', 'oldl', 'Note from before the new owner'));
+      nt.appendChild(q('div', 'ntxt', x.note.note)); maybeNote(nt, x.note);
       nt.appendChild(q('span', 'src', 'Note · ' + (x.note.by || 'crew') + ' · ' + fmtDay(x.note.at))); c.appendChild(nt);
     }
     c.appendChild(q('div', 'meta', 'Booked by ' + (x.by || 'crew') + ' · ' + fmtDay(x.at)));
@@ -2793,6 +2847,7 @@
       a.insertBefore(ico('phone', 2.2), a.firstChild);
       box.appendChild(a);
       box.appendChild(q('span', 'src', phoneStatement(d.phone)));
+      maybeNote(box, d.phone);
       if (d.phone.source !== 'door') box.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
       var ed = q('button', 'lnk', 'Edit number'); ed.type = 'button';
       ed.addEventListener('click', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
@@ -2823,6 +2878,7 @@
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
     card.appendChild(meta);
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + (OUT[d.prevMark.outcome] || d.prevMark.outcome) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
+    if (d.mark && d.mark.maybe) { var mb = q('div', 'meta st'); maybeNote(mb, d.mark); card.appendChild(mb); }
     if (S.treeOpen === d.id && d.trees) card.appendChild(treeDetail(d));
     if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
     if (d.mark && d.mark.outcome === 'miss') {
@@ -3094,12 +3150,21 @@
     else if (e.key === 'Backspace') { e.preventDefault(); S.signin('del'); }
   });
 
-  api('me').then(function (j) {
+  if (isOut()) { signinView(); tellServerOut(); }
+  else api('me').then(function (j) {
     if (j.ok) { S.me = j.name; S.role = j.role; chooseView(); }
     else signinView();
   }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
 
-  window.addEventListener('online', function () { flush().then(function () { if (S.screen === 'areas') refresh(); }); });
+  window.addEventListener('online', function () {
+    if (isOut()) tellServerOut();
+    var wasOff = S.offline;
+    flush().then(function () {
+      if (S.screen === 'areas') refresh();
+      else if (S.screen === 'doors' && wasOff) reloadArea();
+      else if (wasOff && S.me) api('me').catch(function () {});   /* a live answer takes the strip down */
+    });
+  });
   /* network first: with signal nothing changes; with none, the last saved copy opens (sw.js) */
   if ('serviceWorker' in navigator) {
     try { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {}); } catch (e) {}
