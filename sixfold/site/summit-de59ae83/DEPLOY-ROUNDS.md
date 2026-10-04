@@ -15,7 +15,7 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 | 1b | `summit-de59ae83/quote.html` (no double-tap zoom on phones) | `public_html/summit-de59ae83/` |
 | 2 | `api/rounds.php` | `public_html/api/` |
 | 3 | `data/rounds/docs/money.json` (adds the one-line "cards") | `sixfold-data/rounds/docs/` |
-| 4 | `data/rounds/lawnmask-castle-rock.json` (finished) | `sixfold-data/rounds/` |
+| 4 | the 8 new lawn outline packs from `data/rounds/`: `lawnmask-castle-rock.json` (4,081,889), `lawnmask-franktown.json` (1,957,117), `lawnmask-sedalia.json` (613,226), `lawnmask-larkspur.json` (562,790), `lawnmask-woodland-park.json` (174,462), `lawnmask-divide.json` (11,699), `lawnmask-florissant.json` (5,289), `lawnmask-cripple-creek.json` (268). Monument, Palmer Lake and Black Forest are already live and unchanged | `sixfold-data/rounds/` |
 | 5 | — | Flush the cache. |
 
 Sizes: `index.html` **312,592**, `quote.html` **110,290**, `rounds.php` **125,144**, `money.json` **10,238**.
