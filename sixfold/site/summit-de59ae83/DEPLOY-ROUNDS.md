@@ -5,16 +5,17 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — around our jobs + fire-weather call list + homeowner fire check (2 files) + the remaining lawn outlines
+## ⚑ NEXT UPLOAD — the whole competitor-audit list (SX-48..54): 3 files + the remaining lawn outlines
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
 | 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
-| 2 | `api/rounds.php` | `public_html/api/` |
-| 3 | the `data/rounds/lawnmask-<town>.json` files finished since the last upload | `sixfold-data/rounds/` |
-| 4 | — | Flush the cache. No one signs in again. |
+| 2 | `summit-de59ae83/quote.html` (regenerated from the quote engine source, SX-52) | `public_html/summit-de59ae83/` |
+| 3 | `api/rounds.php` | `public_html/api/` |
+| 4 | the `data/rounds/lawnmask-<town>.json` files finished since the last upload (Black Forest's live copy is partial) | `sixfold-data/rounds/` |
+| 5 | — | Flush the cache. No one signs in again. |
 
-Sizes to check after upload: `index.html` **270,525** bytes, `rounds.php` **107,427** bytes.
+Sizes to check after upload: `index.html` **296,424** bytes, `quote.html` **110,003** bytes, `rounds.php` **124,799** bytes.
 
 **Around our jobs (SX-48, after GlassHouse).** A strip on each town's list: jobs won there in the last
 60 days, each with the 40 nearest doors still to knock within half a mile, a route from the job, and
@@ -32,6 +33,26 @@ before the house itself; the full check; the door's photos; how to use it with a
 HB25-1182 and for the DR 0104CR tax credit) with Print or save as PDF. It says plainly it is a visual
 check, not an inspection, certification or guarantee. Saves with no signal like everything else; the
 export gains a `fire_check` column.
+
+**Book the walk (SX-51, after KnockBase / Knockio).** Tapping Quote booked opens "Book the walk" at the top
+of the list: a day and a time (or time to agree), with the walks already booked that day underneath so
+two walks don't land on top of each other. Then "Add to calendar" (reminders a day and an hour before)
+and "Text a confirmation", sent from the crew member's own phone and only to a number given at the
+door. Quotes to build lists the walks coming up; the export gains a `walk` column.
+
+**Measure from the lawn outline (SX-52, after SiteRecon / Beam AI).** "Build quote" on a booked door now
+opens Quote build with the door's lawn: counted near the house and all the grass, in square feet and
+acres, from the outline on the aerial photo. "Use" fills aeration (or the lawn lines already counted);
+nothing is filled in on its own, and the scope draft says where the area came from.
+
+**Leaderboard, daily goals, territories (SX-53, admins only while tested).** A new admin tile: ranked by
+quotes booked (today, 7 days, 30 days), progress against one daily goal per person, and neighbourhoods
+assigned to people, which show on the neighbourhood list. No location tracking. To show it to the crew
+later: `BOARD_OPEN = true` in rounds.php, one upload.
+
+**Odds (SX-54).** A sixth sort on the neighbourhood list: most quotes expected from the doors still to
+knock, at the rate our own doors like them have booked. Admins see it now with how many conversations
+it still needs (150); the crew get it once it is ready.
 
 ---
 

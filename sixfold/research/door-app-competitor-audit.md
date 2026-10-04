@@ -6,7 +6,7 @@
 
 - Nothing on the market puts **fire hazard, trees, lawn size and wildfire funding on the same door** the way our app does. The door-knocking apps sell homeowner contact data and storm maps; the measuring tools are desk tools for quoting, not knocking.
 - The others are ahead on **homeowner phone numbers and emails**, **manager tools** (territories per rep, leaderboards, contracts) and **precise measuring for bids**.
-- We are taking the best of what works for them. The first three (a route around every won job, a call list when fire weather hits, and a fire check report for the homeowner) are built and go live with the next update.
+- We are taking the best of what works for them. All seven are built and go live with the next update. The leaderboard shows to admins only while it is tested, and the booking-rate sort switches on once the team has 150 conversations logged.
 
 ## What our app is
 
@@ -65,17 +65,17 @@ SalesRabbit Pro with its homeowner-data and storm-data add-ons comes to $87–13
 | 1 | A route around every won job, with a "we're doing your neighbour's yard" opener | GlassHouse | Built, goes live with the next update |
 | 2 | When fire weather or a nearby fire hits, a call list of our customers and booked doors there | HailTrace | Built, goes live with the next update |
 | 3 | A defensible-space report for the homeowner: Zone 0 checklist and photos, the evidence insurers now have to count | Firemaps, Fire Aside | Built, goes live with the next update |
-| 4 | Book the walk at the door: date, time, reminder | KnockBase, Knockio | Next |
-| 5 | Measure from the lawn outline the app already draws, straight into Quote Build | SiteRecon, Beam AI | Next |
-| 6 | Territories per person, daily goals and a team leaderboard, without live location tracking | SalesRabbit, KnockBase | Later |
-| 7 | Sort neighbourhoods by our own booking rate once results build up | (beats SalesRabbit) | After a season |
+| 4 | Book the walk at the door: date, time, reminder | KnockBase, Knockio | Built, goes live with the next update |
+| 5 | Measure from the lawn outline the app already draws, straight into Quote Build | SiteRecon, Beam AI | Built, goes live with the next update |
+| 6 | Territories per person, daily goals and a team leaderboard, without live location tracking | SalesRabbit, KnockBase | Built, admins only while it is tested |
+| 7 | Sort neighbourhoods by our own booking rate once results build up | (beats SalesRabbit) | Built, switches on at 150 conversations |
 
 ## For Brandon to decide
 
 1. **Licensed homeowner contact data.** Worth buying, or not? If yes, only through a licensed provider and only for doors we've already spoken to.
 2. **Do Not Call registration.** The federal list is free for our area codes (719, 303, 720), and Colorado's list is free for businesses under five employees. Registration is still required to download them. **Whether Sixfold's follow-up calls also need the Colorado Attorney General's telemarketer registration is a question for the attorney.**
 3. **Jobber.** The export is ready if we adopt it; nothing changes if we don't.
-4. **Leaderboards.** Worth adding? The proposal leaves out live location tracking.
+4. **Leaderboards.** Approved to try (3 October). Built for admins only while it is tested, without live location tracking. When should the crew see it?
 
 ## Fact-check log
 

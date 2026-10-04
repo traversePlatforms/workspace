@@ -97,6 +97,12 @@ h1{font-size:27px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
 .sec-n{font-family:var(--f-data);font-size:11px;color:var(--ink-soft);letter-spacing:.1em}
 .sec-head h2{font-size:17px;font-weight:600}
 .sec-note{font-size:12.5px;color:var(--ink-soft);margin:7px 0 4px}
+/* measured from the door app's lawn outline (SX-52) */
+.lawnm{margin:9px 0 8px;padding:10px 12px;border:1px solid var(--edge);background:var(--surface);display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.lawnm .lm-h{font-family:var(--f-data);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft)}
+.lawnm .lm-fig{font-family:var(--f-data);font-size:13px;font-variant-numeric:tabular-nums}
+.lawnm .lm-soft{color:var(--ink-soft)}
+.lawnm .btns{margin-top:4px}
 
 .row{display:grid;grid-template-columns:minmax(0,1fr) 78px 128px 96px 74px;gap:10px;align-items:center;
   padding:7px 0;border-bottom:1px solid var(--edge-soft)}
@@ -359,6 +365,7 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
       <div class="sec-head"><span class="sec-n">2</span><h2>Ground work — mowing, edging, aeration</h2></div>
       <p class="sec-note"><b>Aeration leads the positioning and still has no Sixfold rate of its own.</b> The rest
       is Brandon and Brad's 2026-09-23 figures, all quoted on the same ¾ acre.</p>
+      <div class="lawnm" id="lawnMeasure" hidden></div>
       <div class="row head"><span>Line</span><span class="r">Count</span><span>Time rate</span><span>Source</span><span class="r">Man-hrs</span></div>
       <div id="sec2"></div>
     </section>
@@ -1302,6 +1309,75 @@ function loadMoney(){
 }
 /* opened from a door (quote.html?region=castle-rock&name=...): the county follows the town */
 const PAGE_Q = (() => { try { return new URLSearchParams(location.search); } catch(e){ return new URLSearchParams(""); } })();
+/* ---- measured from the lawn outline (SX-52, 2026-10-04) ----
+   Opened from a door (quote.html?region=…&id=…), the lawn the door app outlined on the 2023
+   aerial photo is measured here: the lawn it counted near the house, and the other grass it left
+   out (far from the house or in small patches). Offered, never filled in on its own: "Use" puts
+   the acres into the area-based lawn lines. A desk measure to check on the walk, not a survey. */
+const SQFT_ACRE = 43560;
+const LAWN_WORD = {L:"Large", M:"Medium", S:"Small", N:"Little or none", T:"Mostly trees"};
+let lawnM = null, lawnUsed = null;
+function measureMask(m){
+  let c1 = 0, c2 = 0;
+  String(m.r || "").split(",").forEach(run => { const p = run.split(":"), v = +p[0], n = +p[1] || 0; if (v === 1) c1 += n; else if (v === 2) c2 += n; });
+  const lat = (m.b[0] + m.b[2]) / 2;
+  const dx = (m.b[3] - m.b[1]) * 111320 * Math.cos(lat * Math.PI / 180) / m.w, dy = (m.b[2] - m.b[0]) * 110574 / m.h;
+  const ft = dx * dy * 10.7639;   /* square metres per photo pixel, in square feet */
+  return {counted: m.sq || Math.round(c1 * ft), out: Math.round(c2 * ft), date: m.d || "", near: !!m.hs, outline: true};
+}
+function loadLawnMeasure(){
+  const reg = PAGE_Q.get("region") || "", id = PAGE_Q.get("id") || "";
+  const sq = parseInt(PAGE_Q.get("lawn") || "", 10), yr = (PAGE_Q.get("yr") || "").replace(/\D/g, "").slice(0, 4);
+  const crew = LAWN_WORD[PAGE_Q.get("crew") || ""] || "";
+  const fallback = () => { if (sq > 0) lawnM = {counted: sq, out: 0, date: yr, near: false, outline: false}; };
+  const done = () => { if (lawnM) lawnM.crew = crew; renderLawnMeasure(); };
+  if (!/^[a-z0-9-]{1,40}$/.test(reg) || !/^[a-z0-9-]{1,80}$/.test(id)){ fallback(); done(); return; }
+  fetch("../api/rounds.php?action=lawnmask&region=" + encodeURIComponent(reg) + "&id=" + encodeURIComponent(id), {credentials:"same-origin"})
+    .then(r => r.json()).then(j => { if (j && j.ok && j.mask) lawnM = measureMask(j.mask); else fallback(); })
+    .catch(fallback).then(done);
+}
+function acresOf(sq){ return Math.max(0.01, Math.round(sq / SQFT_ACRE * 100) / 100); }
+function photoWhen(d){
+  const m = /^(\d{4})-(\d{2})/.exec(d || "");
+  return m ? ["January","February","March","April","May","June","July","August","September","October","November","December"][+m[2] - 1] + " " + m[1] : (d || "2023");
+}
+function renderLawnMeasure(){
+  const box = $("lawnMeasure"); if (!box) return;
+  const show = !!lawnM && !!$("q_aer");   /* only where the lawn lines are on the sheet */
+  box.hidden = !show; if (!show) return;
+  box.innerHTML = "";
+  const el = (cls, txt) => { const e = document.createElement("div"); if (cls) e.className = cls; e.textContent = txt; box.appendChild(e); return e; };
+  const n = v => v.toLocaleString("en-US");
+  el("lm-h", "Lawn measured from the aerial photo");
+  el("lm-fig", "Counted" + (lawnM.near ? " near the house" : "") + ": " + n(lawnM.counted) + " sq ft · " + acresOf(lawnM.counted) + " acre");
+  const all = lawnM.counted + lawnM.out;
+  if (lawnM.out > 0) el("lm-fig", "With the grass left out (" + (lawnM.near ? "far from the house or small patches" : "small patches") + "): " + n(all) + " sq ft · " + acresOf(all) + " acre");
+  el("lm-soft", lawnM.outline
+    ? "From the lawn outline on the " + photoWhen(lawnM.date) + " aerial photo, about 30 cm per pixel. Check it on the walk: shade, beds and dead grass can read wrong."
+    : "The door's " + (lawnM.date || "2023") + " photo estimate. This lawn has no outline (outlines are kept for Medium and Large lawns), so treat it as rough.");
+  if (lawnM.crew) el("lm-soft", "The crew marked this lawn as " + lawnM.crew + " at the door.");
+  const btns = document.createElement("div"); btns.className = "btns"; box.appendChild(btns);
+  const add = (sq, label) => {
+    const b = document.createElement("button"); b.className = "act ghost"; b.type = "button";
+    b.textContent = "Use " + acresOf(sq) + " acre" + (label ? " (" + label + ")" : "");
+    b.addEventListener("click", () => useLawnAcres(sq, label));
+    btns.appendChild(b);
+  };
+  add(lawnM.counted, lawnM.out > 0 ? "counted" : "");
+  if (lawnM.out > 0) add(all, "all the grass");
+  if (lawnUsed) el("lm-soft", "Used " + lawnUsed.ac + " acre on " + lawnUsed.lines + ".");
+}
+/* fills the area-based lawn lines already counted; on a fresh sheet, aeration (the lead service) */
+function useLawnAcres(sq, label){
+  const ac = acresOf(sq);
+  const ids = ["aer", "mow", "edge"].filter(k => $("q_" + k));
+  let fill = ids.filter(k => (qty[k] || 0) > 0); if (!fill.length) fill = ids.filter(k => k === "aer");
+  fill.forEach(k => { const e = $("q_" + k); e.value = ac; e.dispatchEvent(new Event("input", {bubbles: true})); });
+  const names = fill.map(k => ({aer:"aeration", mow:"mow and trim", edge:"edge"})[k]).join(", ");
+  lawnUsed = {ac, sq, label: label || "counted", lines: names, outline: lawnM.outline, date: lawnM.date};
+  renderLawnMeasure();
+  toast("Lawn " + ac + " acre on " + names);
+}
 function presetCounty(){
   const sel = $("fundCounty"), reg = PAGE_Q.get("region");
   if (sel && !sel.value && reg && moneyDoc && moneyDoc.counties && moneyDoc.counties[reg]) sel.value = moneyDoc.counties[reg];
@@ -1363,6 +1439,7 @@ function scopeMarkdown(){
   const offCounted = LINES.filter(l => l.src === "off" && (qty[l.id]||0) > 0);
   if (offCounted.length) out.push("- **Scope includes work Sixfold does not offer** (" + offCounted.map(l => l.lbl.split(" — ")[0]).join("; ") + ") — retired 2026-09-23. Nothing here prices it.");
   if ((qty.aer||0) > 0) out.push("- **Aeration is on this scope and Sixfold has no rate for it.** The price below does not include it.");
+  if (lawnUsed) out.push("- Lawn area " + lawnUsed.ac + " acre (" + lawnUsed.sq.toLocaleString("en-US") + " sq ft, " + lawnUsed.label + ") measured from the " + (lawnUsed.outline ? "lawn outline on the " + photoWhen(lawnUsed.date) : (lawnUsed.date || "2023") + " estimate from the") + " aerial photo. Check it on the walk.");
   if ((qty.t80||0) > 0) out.push("- A tree over 80 ft is on this sheet. That is a call-in, not a quote.");
   const unbacked = LINES.filter(l => !l.noRate && (qty[l.id]||0) > 0 && l.src === "unbacked" && !confirmed[l.id]);
   if (unbacked.length) out.push("- **" + unbacked.length + " line(s) priced off an unconfirmed rate:** " + unbacked.map(l => l.lbl).join("; ") + ".");
@@ -1528,6 +1605,7 @@ function setMode(mode){
     buildLedger();
     applyState(keep);   /* rebuilding wipes the inputs, so read the values back in */
   }
+  renderLawnMeasure();
   render();
 }
 function showSources(on){
@@ -1556,6 +1634,7 @@ $("bPickJob2").addEventListener("click", () => {
   if (PAGE_Q.get("name") && !$("jobName").value) $("jobName").value = PAGE_Q.get("name").slice(0, 120);
   $("fundCounty").addEventListener("change", render);
   loadMoney();
+  loadLawnMeasure();
 
   /* The site has no realtime store, so the rate table is read once on open —
      which is what the artifact did anyway: "the standing rates apply once, on

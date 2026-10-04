@@ -683,10 +683,21 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       check + note; every check kept, so after-the-job sits beside before. Printable homeowner report: what to do
       first (Zone 0 first), full check with Before/Now, photos, HB25-1182 insurance + DR 0104CR credit, "not an
       inspection" disclaimer. Export column `fire_check`. Not a certification, and must never be sold as one.
-- [ ] **SX-51..54 — the rest of the competitor audit (sixfold/research/door-app-competitor-audit.md), in its order:**
-      **SX-51** book the walk at the door (date, time, reminder) · **SX-52** measure from the lawn
-      outline into Quote Build · **SX-53** territories per person, daily goals, team leaderboard, no live
-      location tracking (Brandon to decide) · **SX-54** sort neighbourhoods by our own booking rate, after a season.
+- [ ] **SX-51 Book the walk at the door: ✅ BUILT AND TESTED 2026-10-03, next upload.** Quote booked opens "Book the walk"
+      at the top of the list: day (Tomorrow + 2 more, or a date), time or "time to agree", and the walks already
+      booked that day. Calendar file (reminders a day and an hour before) and a confirmation text the crew send
+      from their own phone, only to a number given at the door. Quotes to build lists the walks coming up.
+- [ ] **SX-52 Measure from the lawn outline: ✅ BUILT AND TESTED 2026-10-03, next upload (quote.html too).** Build quote
+      on a booked door opens Quote build with the door: the outline measured (counted near the house, and all
+      the grass) in sq ft and acres, Use fills aeration or the lawn lines already counted. Offered, never filled
+      in on its own; the scope draft says where the area came from. Redrawing the outline by hand: not built.
+- [ ] **SX-53 Leaderboard, daily goals, territories: ✅ BUILT AND TESTED 2026-10-03, admins only.** Matthew 2026-10-03:
+      permission to run it, admins only while tested. `BOARD_OPEN` in rounds.php opens it to the crew. Ranked by
+      quotes booked, then talked to; won is credited to whoever booked the door; one daily goal per person; a
+      neighbourhood assigned to a person shows on the list. No location tracking. Test sign-ins left out.
+- [ ] **SX-54 Odds sort: ✅ BUILT AND TESTED 2026-10-03, switches on at 150 conversations.** Neighbourhoods by quotes expected
+      from the doors still to knock, at the rate doors like them (fire hazard x lawn size) have booked, across
+      every town (k = 10 toward the overall rate). Admins see it now with the count so far; crew once ready.
 - [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`
       compares a month with the same month a year earlier (May-Sept only; winter refused; clouds, shadow
       and snow masked per pixel), writes ndvi-results-YYYY-MM.csv; `node build-lawn-outlines.mjs --green-only`

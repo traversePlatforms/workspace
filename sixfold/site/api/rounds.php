@@ -448,6 +448,65 @@ function loadResults(string $key): array {
 function appendResult(string $key, array $row): bool {
     return (bool) @file_put_contents(DATA_DIR . '/result-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- leaderboard, daily goals, territories (SX-53, 2026-10-04) --------------------------
+ * From the competitor audit (SalesRabbit, KnockBase), without live location tracking. Brandon
+ * agreed to try it; Matthew 2026-10-04: admins only while it is tested. BOARD_OPEN = true shows
+ * the board, the goals and each person's neighbourhoods to the crew as well.
+ * Territories: a neighbourhood assigned to one person (newest row wins; who '' clears it).
+ * Goals: one daily target per person for the whole team, in goals.json.
+ * Test sign-ins (Claude Check, Fable, the harness's Test people) never appear on the board. */
+const BOARD_OPEN = false;
+const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
+function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin'; }
+function boardHidden(string $name): bool { return (bool) preg_match('/^(claude|fable)\b/i', $name); }
+function loadAssign(string $key): array {
+    $out = [];
+    foreach (logRows('assign', $key) as $r) {
+        if (!is_array($r) || !isset($r['area'])) continue;
+        if (($r['who'] ?? '') === '') unset($out[$r['area']]); else $out[$r['area']] = (string) $r['who'];
+    }
+    return $out;
+}
+function appendAssign(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/assign-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+function loadGoals(): array {
+    $g = json_decode((string) @file_get_contents(DATA_DIR . '/goals.json'), true);
+    return is_array($g) ? $g : ['doors' => null, 'talked' => null, 'booked' => null];
+}
+/* ---- the walk (SX-51, 2026-10-04) ------------------------------------------------------
+ * Sixfold quotes from a walk of the property, so a booked quote is a booked walk. The crew picks
+ * the date and, if agreed, the time at the door; an admin can set or change it after a call. The
+ * newest row per door wins; a cleared walk has date null. A walk saved before the door's current
+ * booking belongs to an earlier one and is not shown (same rule as "quote sent"). */
+function loadWalks(string $key): array {
+    $out = [];
+    foreach (logRows('walk', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (empty($r['date'])) { unset($out[$r['id']]); continue; }
+        $out[$r['id']] = ['date' => (string) $r['date'], 'time' => (string) ($r['time'] ?? ''), 'by' => $r['by'] ?? '', 'at' => (int) ($r['at'] ?? 0)];
+    }
+    return $out;
+}
+function appendWalk(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/walk-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+/** the walk for a door's current booking, or null */
+function walkFor(?array $m, ?array $w): ?array {
+    if (!$m || ($m['outcome'] ?? '') !== 'booked' || !$w) return null;
+    return (int) $w['at'] >= (int) ($m['at'] ?? 0) ? $w : null;
+}
+function regionLabel(string $key): string {
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    foreach (($idx['regions'] ?? []) as $r) if (($r['key'] ?? '') === $key) return (string) ($r['label'] ?? $key);
+    return $key;
+}
+/* iCalendar text: escape, then fold at 75 octets (RFC 5545 3.1, 3.3.11) */
+function icsEsc(string $v): string { return str_replace(["\\", ';', ',', "\r\n", "\n", "\r"], ["\\\\", '\;', '\,', '\n', '\n', ''], $v); }
+function icsLine(string $l): string {
+    $out = ''; while (strlen($l) > 75) { $cut = 75; while ($cut > 0 && (ord($l[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($l, 0, $cut) . "\r\n "; $l = substr($l, $cut); }
+    return $out . $l . "\r\n";
+}
 /* ---- fire check (SX-50, 2026-10-03) ------------------------------------------------------
  * A visual check of the home ignition zone, item by item, from the Colorado State Forest
  * Service's Home Ignition Zone guide (2021). Each item is 'ok' (done), 'fix' (needs work) or 'na'
@@ -692,12 +751,14 @@ if ($action === 'regions') {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $regions = [];
     $today = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d');
+    $segT = []; $segB = [];                  /* SX-54: conversations and quotes per kind of door, across every town */
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         if (!$data) continue;
         $marks = loadMarks($r['key']);
         $aflags = loadAreaFlags($r['key']);
         $lfix = loadLawnFix($r['key']);
+        $assign = boardOpen($role) ? loadAssign($r['key']) : [];
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -717,6 +778,7 @@ if ($action === 'regions') {
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
             $streets = [];                           /* doors per street: a neighbourhood is named after its biggest street only */
+            $aseg = [];                              /* SX-54: doors still to knock, per kind of door */
             foreach ($a['doors'] as $d) {
                 $sn = streetName((string) ($d['address'] ?? ''));
                 if ($sn !== '') $streets[$sn] = ($streets[$sn] ?? 0) + 1;
@@ -729,6 +791,9 @@ if ($action === 'regions') {
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
                 if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
+                $seg = (in_array($f, [3, 4, 5], true) ? (string) $f : 'x') . (lawnLevel($d, $lfix) ?: 'x');
+                if ($open) $aseg[$seg] = ($aseg[$seg] ?? 0) + 1;
+                if ($m && in_array($m['outcome'], ['booked', 'later'], true)) { $segT[$seg] = ($segT[$seg] ?? 0) + 1; if ($m['outcome'] === 'booked') $segB[$seg] = ($segB[$seg] ?? 0) + 1; }
                 if (!$m) continue;
                 if ($m['outcome'] === 'booked') $booked++;
                 if ($isDue) $due++;
@@ -741,11 +806,32 @@ if ($action === 'regions') {
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
-                        'st' => topStreets($streets, 4), 'ns' => count($streets),
-                        'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null];
+                        'st' => topStreets($streets, 4), 'ns' => count($streets), 'who' => $assign[$a['name']] ?? null,
+                        'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
+                        '_seg' => $aseg];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
+    /* ---- our own odds (SX-54, 2026-10-04) ----
+       Expected quotes from the doors still to knock: each door counts at the rate doors like it
+       (fire hazard x lawn size) have booked when someone answered, across every town. A kind of
+       door with few conversations leans on the overall rate (k = 10). Nothing until the team has
+       ODDS_MIN conversations: before that the numbers are noise. */
+    $T = array_sum($segT); $B = array_sum($segB); $ready = $T >= ODDS_MIN;
+    $base = $T ? $B / $T : 0;
+    foreach ($regions as &$rg) {
+        foreach ($rg['areas'] as &$ar) {
+            if ($ready) {
+                $e = 0.0; $n = 0;
+                foreach ($ar['_seg'] as $sg => $c) { $e += $c * ((($segB[$sg] ?? 0) + 10 * $base) / (($segT[$sg] ?? 0) + 10)); $n += $c; }
+                $ar['odds'] = ['exp' => round($e, 1), 'open' => $n];
+            }
+            unset($ar['_seg']);
+        }
+        unset($ar);
+        $rg['odds'] = ['ready' => $ready, 'talked' => $T, 'booked' => $B, 'min' => ODDS_MIN];
+    }
+    unset($rg);
     out(['ok' => true, 'regions' => $regions]);
 }
 
@@ -762,6 +848,7 @@ if ($action === 'area') {
     $photos = loadPhotos($key);
     $work = loadWork($key);
     $fchk = loadFireChecks($key);
+    $walks = loadWalks($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -787,6 +874,7 @@ if ($action === 'area') {
                 'val' => $d['val'] ?? null,
                 'work' => $work[$d['id']] ?? null,
                 'fc' => isset($fchk[$d['id']]) ? lastChecks($fchk[$d['id']]) : null,
+                'walk' => walkFor($m, $walks[$d['id']] ?? null),
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
@@ -928,9 +1016,9 @@ if ($action === 'photodel') {
  * that day (marking then changing a door is one door). A put-back cancels the mark it
  * undid, on whatever day that mark was made. Days are
  * Colorado days. Crew see their own; an admin sees everyone, or one person. */
-if ($action === 'stats') {
-    $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
-    $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
+/* everyone's (or one person's) days: doors, outcomes, phones given, emails, notes, photos. Shared
+   by My stats, Team stats and the leaderboard (SX-53), so they always count the same way. */
+function teamDays(int $days, string $who): array {
     $tz = new DateTimeZone('America/Denver');
     $since = (new DateTime('today', $tz))->modify('-' . ($days - 1) . ' days')->getTimestamp();
     $dayOf = function ($ts) use ($tz) { return (new DateTime('@' . (int) $ts))->setTimezone($tz)->format('Y-m-d'); };
@@ -989,7 +1077,13 @@ if ($action === 'stats') {
         $list[] = ['name' => $n, 'days' => $rows];
     }
     usort($list, fn($a, $b) => strcmp($a['name'], $b['name']));
-    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', $tz))->format('Y-m-d'), 'who' => $who, 'people' => $list]);
+    return $list;
+}
+if ($action === 'stats') {
+    $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
+    $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
+    $list = teamDays($days, $who);
+    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'who' => $who, 'people' => $list]);
 }
 
 /* ---- my doors (2026-10-02) ------------------------------------------------
@@ -1428,6 +1522,183 @@ if ($action === 'work') {
     out(['ok' => true]);
 }
 
+/* the board: per person, today / 7 days / 30 days. Talked to = doors minus no-answers and
+   no-soliciting. Won = jobs won on doors that person booked, credited when the job was won. */
+if ($action === 'board') {
+    if (!boardOpen($role)) fail('Not allowed.', 403);
+    $tz = new DateTimeZone('America/Denver');
+    $today = (new DateTime('today', $tz));
+    $from = ['today' => $today->format('Y-m-d'), 'week' => (clone $today)->modify('-6 days')->format('Y-m-d'), 'month' => (clone $today)->modify('-29 days')->format('Y-m-d')];
+    $zero = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'won' => 0];
+    $rows = [];
+    foreach (teamDays(30, '') as $p) {
+        if (boardHidden($p['name'])) continue;
+        $r = ['name' => $p['name'], 'today' => $zero, 'week' => $zero, 'month' => $zero];
+        foreach ($p['days'] as $d) foreach ($from as $per => $since) {
+            if ($d['date'] < $since) continue;
+            $r[$per]['doors'] += $d['doors'];
+            $r[$per]['talked'] += $d['doors'] - $d['miss'] - $d['nosolicit'];
+            $r[$per]['booked'] += $d['booked'];
+        }
+        $rows[$p['name']] = $r;
+    }
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $terr = [];
+    foreach (($idx['regions'] ?? []) as $rg) {
+        $data = loadRegion($rg['key']); if (!$data) continue;
+        $marks = loadMarks($rg['key']); $res = loadResults($rg['key']); $assign = loadAssign($rg['key']);
+        foreach ($data['areas'] as $a) {
+            $total = 0; $knocked = 0;
+            foreach ($a['doors'] as $d) {
+                $m = freshMark($d, $marks[$d['id']] ?? null);
+                $total++; if ($m) $knocked++;
+                $x = $res[$d['id']] ?? null;
+                if (!$m || $m['outcome'] !== 'booked' || !$x || ($x['result'] ?? '') !== 'won' || (int) $x['at'] < (int) $m['at']) continue;
+                $who = (string) ($m['by'] ?? ''); if ($who === '' || boardHidden($who)) continue;
+                $day = (new DateTime('@' . (int) $x['at']))->setTimezone($tz)->format('Y-m-d');
+                if (!isset($rows[$who])) $rows[$who] = ['name' => $who, 'today' => $zero, 'week' => $zero, 'month' => $zero];
+                foreach ($from as $per => $since) if ($day >= $since) $rows[$who][$per]['won']++;
+            }
+            if (isset($assign[$a['name']])) $terr[] = ['region' => $rg['key'], 'town' => $rg['label'], 'area' => $a['name'], 'who' => $assign[$a['name']], 'total' => $total, 'knocked' => $knocked];
+        }
+    }
+    $names = [];
+    foreach ($people as $code => $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }   /* names only, never codes */
+    ksort($names);
+    out(['ok' => true, 'today' => $from['today'], 'open' => BOARD_OPEN, 'goals' => loadGoals(), 'people' => array_values($rows),
+         'territories' => $terr, 'names' => $role === 'admin' ? array_keys($names) : []]);
+}
+
+if ($action === 'goals') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $g = ['by' => $me, 'at' => time()];
+    foreach (['doors', 'talked', 'booked'] as $k) {
+        $v = $body[$k] ?? null;
+        if ($v === null || $v === '') { $g[$k] = null; continue; }
+        if (!is_numeric($v) || (int) $v != $v || (int) $v < 0 || (int) $v > 300) fail('Goals are whole numbers from 0 to 300.');
+        $g[$k] = (int) $v;
+    }
+    if (!@file_put_contents(DATA_DIR . '/goals.json', json_encode($g, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'goals' => $g]);
+}
+
+if ($action === 'assign') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? ''); $area = (string) ($body['area'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
+    $data = loadRegion($key);
+    if (!$data) fail('No such region.', 404);
+    if (!in_array($area, array_column($data['areas'], 'name'), true)) fail('No such neighbourhood.', 404);
+    if ($who !== '') {
+        $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
+        if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
+    }
+    if (!appendAssign($key, ['area' => $area, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+if ($action === 'walk') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    $date = $body['date'] ?? null;                                  // null = no walk booked after all
+    $time = (string) ($body['time'] ?? '');                         // '' = time still to agree
+    if ($date !== null) {
+        $date = (string) $date;
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1])) fail('That is not a real date.');
+        $tz = new DateTimeZone('America/Denver');
+        $day = new DateTime($date . ' 00:00', $tz); $today = new DateTime('today', $tz);
+        $diff = (int) round(($day->getTimestamp() - $today->getTimestamp()) / 86400);
+        if ($diff < -30) fail('That date is more than a month ago.');
+        if ($diff > 180) fail('Pick a date within the next six months.');
+        if ($time !== '' && !preg_match('/^(0[6-9]|1\d|20):(00|15|30|45)$/D', $time)) fail('Pick a time between 6 am and 8:45 pm.');
+    } else $time = '';
+    if (!appendWalk($key, ['id' => $id, 'date' => $date, 'time' => $time, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+/* walks booked in a date range, for the date picker ("already booked that day") and the
+   admin's list. Addresses only: the crew see these doors anyway. No phones, no owners. */
+if ($action === 'walks') {
+    $tz = new DateTimeZone('America/Denver');
+    $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
+    $ok = fn($d) => (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/D', $d);
+    if (!$ok($from)) $from = (new DateTime('today', $tz))->format('Y-m-d');
+    if (!$ok($to) || $to < $from) $to = (new DateTime($from . ' 00:00', $tz))->modify('+14 days')->format('Y-m-d');
+    if ((new DateTime($to . ' 00:00', $tz))->getTimestamp() - (new DateTime($from . ' 00:00', $tz))->getTimestamp() > 62 * 86400) fail('Ask for two months at most.');
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $list = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $walks = loadWalks($r['key']);
+        if (!$walks) continue;
+        $data = loadRegion($r['key']); if (!$data) continue;
+        $marks = loadMarks($r['key']);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            if (!isset($walks[$d['id']])) continue;
+            $w = walkFor(freshMark($d, $marks[$d['id']] ?? null), $walks[$d['id']]);
+            if (!$w || $w['date'] < $from || $w['date'] > $to) continue;
+            $list[] = ['date' => $w['date'], 'time' => $w['time'], 'by' => $w['by'], 'region' => $r['key'], 'town' => $r['label'],
+                       'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null];
+        }
+    }
+    usort($list, fn($x, $y) => [$x['date'], $x['time'] === '' ? '99' : $x['time']] <=> [$y['date'], $y['time'] === '' ? '99' : $y['time']]);
+    out(['ok' => true, 'from' => $from, 'to' => $to, 'walks' => $list]);
+}
+
+/* a calendar file for one walk, with reminders the day before and an hour before. Opens in
+   the phone's calendar. The phone number goes in only when it was given at the door by the
+   current owner, the one number that is consent. */
+if ($action === 'walkics') {
+    $key = (string) ($_GET['region'] ?? '');
+    $id  = (string) ($_GET['id'] ?? '');
+    $data = loadRegion($key);
+    if (!$data) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $home = doorHome($key, $id); if ($home !== $key) { $key = $home; $data = loadRegion($key); }
+    $door = null; foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) if ($d['id'] === $id) { $door = $d; $area = $a['name']; }
+    if (!$door) fail('No such door.', 404);
+    $m = freshMark($door, loadMarks($key)[$id] ?? null);
+    $w = walkFor($m, loadWalks($key)[$id] ?? null);
+    if (!$w) fail('No walk booked for this door.', 404);
+    $tz = new DateTimeZone('America/Denver'); $utc = new DateTimeZone('UTC');
+    $town = regionLabel($key);
+    $p = loadPhones($key)[$id] ?? null; $p = ($p && ($p['source'] ?? '') === 'door' && empty(ownerFlag($door, $p)['prev'])) ? $p : null;
+    $n = loadNotes($key)[$id] ?? null; $n = ($n && empty(ownerFlag($door, $n)['prev'])) ? $n : null;
+    $desc = 'Yard walk for a quote. Booked at the door by ' . ($w['by'] ?: 'the crew') . '.';
+    if ($p) $desc .= "\nPhone (given at the door): " . $p['phone'];
+    if ($n) $desc .= "\nNote: " . mb_substr((string) $n['note'], 0, 300);
+    $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sixfold Colorado//Door rounds//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+          'UID:walk-' . $key . '-' . $id . '-' . $w['at'] . '@sixfoldcolorado.com',
+          'DTSTAMP:' . (new DateTime('now', $utc))->format('Ymd\THis\Z')];
+    if ($w['time'] !== '') {
+        $st = new DateTime($w['date'] . ' ' . $w['time'], $tz);
+        $L[] = 'DTSTART:' . (clone $st)->setTimezone($utc)->format('Ymd\THis\Z');
+        $L[] = 'DTEND:' . (clone $st)->modify('+1 hour')->setTimezone($utc)->format('Ymd\THis\Z');
+    } else {
+        $st = new DateTime($w['date'] . ' 00:00', $tz);
+        $L[] = 'DTSTART;VALUE=DATE:' . $st->format('Ymd');
+        $L[] = 'DTEND;VALUE=DATE:' . (clone $st)->modify('+1 day')->format('Ymd');
+    }
+    $L[] = 'SUMMARY:' . icsEsc('Yard walk: ' . $door['address'] . ($w['time'] === '' ? ' (time to agree)' : ''));
+    $L[] = 'LOCATION:' . icsEsc($door['address'] . ', ' . $town . ', CO');
+    if (isset($door['lat'], $door['lon'])) $L[] = 'GEO:' . $door['lat'] . ';' . $door['lon'];
+    $L[] = 'DESCRIPTION:' . icsEsc($desc);
+    /* the day before; and an hour before when there is a time (an all-day walk gets 9 am the day before) */
+    foreach ($w['time'] !== '' ? ['-P1D', '-PT1H'] : ['-PT15H'] as $tr) {
+        array_push($L, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' . icsEsc('Yard walk: ' . $door['address']), 'TRIGGER:' . $tr, 'END:VALARM');
+    }
+    array_push($L, 'END:VEVENT', 'END:VCALENDAR');
+    header('Content-Type: text/calendar; charset=utf-8');
+    header('Content-Disposition: attachment; filename="sixfold-walk-' . $w['date'] . '.ics"');
+    header('Cache-Control: no-store');
+    echo implode('', array_map('icsLine', $L));
+    exit;
+}
+
 if ($action === 'firecheck') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
@@ -1580,6 +1851,7 @@ if ($action === 'quotes') {
         $photos = loadPhotos($r['key']);
         $work = loadWork($r['key']);
         $res = loadResults($r['key']);
+        $walks = loadWalks($r['key']);
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = freshMark($d, $marks[$d['id']] ?? null);
@@ -1600,6 +1872,7 @@ if ($action === 'quotes') {
                     'quoted' => $qd,
                     'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null,
                     'work' => $work[$d['id']] ?? null,
+                    'walk' => walkFor($m, $walks[$d['id']] ?? null),
                     /* a result from before this booking belongs to an earlier one */
                     'result' => (($res[$d['id']] ?? null) && (int) $res[$d['id']]['at'] >= (int) $m['at']) ? $res[$d['id']] : null,
                     'email' => $em ? $em + ownerFlag($d, $em) : null, 'photos' => $photos[$d['id']] ?? [],
@@ -1740,7 +2013,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason', 'fire_check'], ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason', 'fire_check', 'walk'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1753,6 +2026,7 @@ if ($action === 'report' || $action === 'export') {
         $work = loadWork($r['key']);
         $res = loadResults($r['key']);
         $fchk = loadFireChecks($r['key']);
+        $walks = loadWalks($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
@@ -1777,7 +2051,8 @@ if ($action === 'report' || $action === 'export') {
                               $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '', $d['val'] ?? '',
                               $wk ? implode('; ', array_map(fn($t) => WORK_LABEL[$t] ?? $t, $wk['tags'])) : '',
                               $rs['result'] ?? '', $rs['value'] ?? '', $rs ? (LOST_LABEL[$rs['why']] ?? '') : '',
-                              $fc ? (count(array_filter($fc['items'], fn($v) => $v === 'ok')) . ' done, ' . count(array_filter($fc['items'], fn($v) => $v === 'fix')) . ' to fix (' . date('Y-m-d', (int) $fc['at']) . ')') : '']), ',', '"', '');
+                              $fc ? (count(array_filter($fc['items'], fn($v) => $v === 'ok')) . ' done, ' . count(array_filter($fc['items'], fn($v) => $v === 'fix')) . ' to fix (' . date('Y-m-d', (int) $fc['at']) . ')') : '',
+                              ($wk2 = walkFor($m, $walks[$d['id']] ?? null)) ? trim($wk2['date'] . ' ' . $wk2['time']) : '']), ',', '"', '');
             }
         }
     }

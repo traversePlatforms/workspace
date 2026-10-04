@@ -200,8 +200,8 @@
   .prog .ring em small{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--soft);margin-top:3px}
   .ring.done em .ic{width:18px;height:18px;color:var(--go)}
   .chips{display:flex;gap:5px;flex-wrap:wrap}
-  .chip,.again,.duep,.nsp,.hot,.bk,.lawnc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap}
-  .chip .ic,.again .ic,.duep .ic,.nsp .ic,.hot .ic,.bk .ic,.lawnc .ic{width:13px;height:13px}
+  .chip,.again,.duep,.nsp,.hot,.bk,.lawnc,.mine,.oddc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap}
+  .chip .ic,.again .ic,.duep .ic,.nsp .ic,.hot .ic,.bk .ic,.lawnc .ic,.mine .ic,.oddc .ic{width:13px;height:13px}
   .bk{background:var(--go-tint);color:var(--go)}
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
@@ -513,6 +513,42 @@
   .teamrow .tv b{display:block;font-size:19px}
   .teamrow .tv small{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .teamrow .ts{grid-column:1/-1;font-size:12.5px;color:var(--soft)}
+  /* leaderboard (SX-53) */
+  .bseg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 12px}
+  .bseg button{border:1px solid var(--line);border-radius:12px;min-height:42px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}
+  .bseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .bcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:5px}
+  .bcard .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .bcard .bgv{font-size:15px;font-weight:700}
+  .bcard .lnk{align-self:flex-start;background:none;border:0;padding:4px 0 0;color:var(--accent);font:700 13px var(--sans);cursor:pointer}
+  .bgf{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .bgf label{display:grid;gap:4px;font-size:12.5px;font-weight:700;color:var(--soft)}
+  .bgf input,.bassign select{min-width:0;font:600 16px var(--sans);padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .bcard .row2{display:flex;gap:8px;margin-top:6px}
+  .bcard .row2 button{flex:1;min-height:42px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:transparent;color:var(--soft)}
+  .bcard .row2 button.save{background:var(--go);color:var(--on-go)}
+  .brow{display:grid;grid-template-columns:40px 1fr auto;gap:4px 12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
+  .brow .brk{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 15px var(--sans);background:var(--bg);color:var(--soft)}
+  .brow.r1 .brk{background:#C9A227;color:#1B1405}
+  .brow.r2 .brk{background:#AEB4B8;color:#15191B}
+  .brow.r3 .brk{background:#B87333;color:#1A0E04}
+  .brow .bnm,.bcard .bnm{font:400 17px var(--serif)}
+  .bcard .bnm.sm{font-size:15px;margin-top:4px}
+  .brow .bsub,.bcard .bsub{font-size:12.5px;color:var(--soft)}
+  .brow .bbig{text-align:right}
+  .brow .bbig b{display:block;font-size:24px;color:var(--go)}
+  .brow .bbig small{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .bgoal{display:grid;grid-template-columns:1fr 116px;gap:8px;align-items:center;margin-top:4px;font-size:12px;color:var(--soft)}
+  .bgoal .btr{height:7px;border-radius:99px;background:var(--line);overflow:hidden}
+  .bgoal .bfl{height:100%;border-radius:99px;background:var(--later)}
+  .bgoal .bfl.hit{background:var(--go)}
+  .bter{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:13.5px}
+  .bter .lnk{padding:0}
+  .bassign{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .bassign .save{min-height:42px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:var(--go);color:var(--on-go)}
+  .chips .mine{background:var(--go-tint);color:var(--go)}
+  .chips .oddc{background:var(--go-tint);color:var(--go);white-space:normal}
+  .chips .mine.me{background:var(--go);color:var(--on-go)}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
     border:1.5px dashed var(--line);background:transparent;color:var(--soft);font-size:13.5px;font-weight:700;cursor:pointer}
   .nsflag .ic{width:16px;height:16px}
@@ -583,6 +619,29 @@
   .wkf .row2{display:flex;gap:8px;margin-top:10px}
   .wkf .row2 button{flex:1;min-height:44px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:transparent;color:var(--soft)}
   .wkf .row2 button.save{background:var(--later);color:var(--card)}
+  /* the walk (SX-51) */
+  .walkb{display:inline-flex;align-items:center;gap:6px;margin-top:10px;border:1.5px dashed var(--go);border-radius:12px;padding:9px 13px;background:transparent;color:var(--go);font:700 13.5px var(--sans);cursor:pointer}
+  .walkb .ic{width:16px;height:16px}
+  .wk .wt.walkt{background:var(--go-tint);color:var(--go)}
+  .wk a.lnk{padding:6px 0 0;color:var(--accent);font-size:13px;font-weight:700;text-decoration:none}
+  .walkl .lnk{margin-right:14px}
+  .walkf .wchips{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .walkf .wchips button{border:1px solid var(--line);border-radius:12px;min-height:42px;padding:8px;background:var(--card);color:var(--ink);font:700 13.5px var(--sans);cursor:pointer}
+  .walkf .wchips button[aria-pressed="true"]{background:var(--later);border-color:var(--later);color:var(--card)}
+  .walkf .wrow{display:flex;gap:7px;margin-top:8px}
+  .walkf .wrow input,.walkf .wrow select{flex:1;min-width:0;font:600 16px var(--sans);padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .walkf .wday{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:12.5px;color:var(--soft)}
+  .walkf .wday b{color:var(--ink)}
+  .walkf .err{color:var(--fire-h);font-size:13px;font-weight:700}
+  .walkf .err:empty{display:none}
+  .walkp{margin:0 0 14px;border-radius:16px;padding:12px;background:var(--card);border:2px solid var(--go)}
+  .walkp .wpt{font-size:13px;font-weight:700;color:var(--go)}
+  .walkp .wkf{margin-top:8px}
+  .walkup{margin:12px 0 14px;border-radius:14px;padding:12px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:5px}
+  .walkup .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .walkup .wur{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13.5px}
+  .walkup .wur b{color:var(--go)}
+  .walkup .wur.soft{color:var(--soft);font-size:12.5px}
   .res{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
   .res .rb{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .res .rb.won{border-color:var(--go);color:var(--go)}
@@ -808,7 +867,7 @@
      (5xx) or a signed-out session (401). Dropped: anything sent, or refused as invalid (other
      4xx), so one bad item can never block the rest. (Fixed 2026-10-03: this used to drop on a
      server error and stall for ever on a refused item.) Photos go after. */
-  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix', work: 'work', firecheck: 'firecheck' };
+  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix', work: 'work', firecheck: 'firecheck', walk: 'walk' };
   /* An item is let go only when OUR server answered: sent (ok), or refused as invalid (400/404/
      413, a JSON reply). Anything else is kept (2026-10-03 review): a Wi-Fi sign-in page or a
      firewall page answers with HTML, and the old rule read that as "refused" and emptied the
@@ -892,6 +951,8 @@
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     chat: '<path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    award: '<circle cx="12" cy="9" r="5.5"/><path d="M8.6 13.4L7.2 21l4.8-2.6 4.8 2.6-1.4-7.6"/>',
     knock: '<path d="M7 21V4.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V21M4.5 21h15"/><circle cx="13.8" cy="12.5" r=".9" fill="currentColor"/>',
     globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.6 5.4 3.6 8.5s-1 6.1-3.6 8.5c-2.6-2.4-3.6-5.4-3.6-8.5s1-6.1 3.6-8.5z"/>',
     phone: '<path d="M6 3.5h3.2l1.6 4.4-2.1 1.3a10.5 10.5 0 0 0 6.1 6.1l1.3-2.1 4.4 1.6V18a2 2 0 0 1-2 2A15.5 15.5 0 0 1 4 6a2 2 0 0 1 2-2.5z"/>',
@@ -1340,6 +1401,8 @@
       'How your days went: doors knocked, people talked to, quotes booked. Today next to your recent days.', null, function () { statsView(S.me, chooseView); }));
     if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Team stats',
       'Everyone' + "'" + 's doors, conversations and quotes, today and over the last week and month.', 'Admin only', teamView));
+    if (S.role === 'admin') box.appendChild(tile('button', 'award', 'Leaderboard',
+      'Who booked the most this week, a daily goal for everyone, and neighbourhoods assigned to each person. No location tracking.', 'Admin only · in testing', boardView));
     var out = q('div', 'out');
     var so = q('button', null, 'Sign out');
     so.type = 'button';
@@ -1445,6 +1508,10 @@
     if (hasFire) opts.push(['fire', 'Fire', 'flame']);
     if (hasLawn) opts.push(['lawn', 'Lawn', 'leaf']);
     if (hasTrees) opts.push(['trees', 'Trees', 'tree']);
+    /* SX-54: our own booking rate. Admins always see it (with how far off it is); the crew once there is enough to go on */
+    var od = r.odds || null;
+    if (od && (od.ready || S.role === 'admin')) opts.push(['odds', 'Odds', 'chart']);
+    else if (mode === 'odds') mode = 'map';
     setDock(opts, mode, function (v) {
       try { localStorage.setItem('sixfold.rounds.sort', v); } catch (e) {}
       if (v === 'near') { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
@@ -1479,10 +1546,17 @@
     view.appendChild(aroundStrip(S.region));         /* neighbours of jobs won here (2026-10-03) */
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
+    sect.appendChild(q('span', null, mode === 'odds' && od && od.ready ? 'Most quotes expected first' : mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
     view.appendChild(sect);
 
+    if (mode === 'odds' && od && !od.ready) view.appendChild(q('div', 'msg', 'Odds sorts by the rate our own doors book at, by fire hazard and lawn size. It needs ' + od.min + ' conversations across the team first; there are ' + od.talked + ' so far. Until then this list is biggest lots first.'));
     var list = r.areas.slice();
+    /* SX-54: most quotes expected from the doors still to knock */
+    if (mode === 'odds' && od && od.ready) {
+      list.sort(function (x, y) {
+        return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || ((y.odds && y.odds.exp) || 0) - ((x.odds && x.odds.exp) || 0);
+      });
+    }
     if (mode === 'near' && S.here) {
       list.sort(function (x, y) {
         var mx = hoodDist(x), my = hoodDist(y);
@@ -1532,6 +1606,8 @@
       var also = alsoStreets(a);
       if (also) mid.appendChild(q('div', 'sub also', also));
       var chips = q('div', 'chips');
+      if (a.who) chips.appendChild(chipEl('mine' + (a.who === S.me ? ' me' : ''), 'users', a.who === S.me ? 'Yours' : 'Assigned to ' + a.who));
+      if (mode === 'odds' && a.odds && a.odds.open) chips.appendChild(chipEl('oddc', 'chart', 'About ' + a.odds.exp + (a.odds.exp === 1 ? ' quote' : ' quotes') + ' expected from ' + a.odds.open + ' to knock'));
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
       if (a.cwpp) chips.appendChild(chipEl('hot' + (a.cwpp.rating === 'Extreme' ? ' v' : ''), 'flame', 'County plan: ' + a.cwpp.rating));
@@ -2054,6 +2130,143 @@
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
 
+  /* ---- leaderboard, daily goals, territories (SX-53, 2026-10-04) ----
+     From the competitor audit (SalesRabbit, KnockBase), without live location tracking. Admins
+     only while it is tested (Matthew, 2026-10-04); the server's BOARD_OPEN shows it to the crew.
+     Ranked by quotes booked, then people talked to, then doors. Won = jobs won on doors that
+     person booked. The goal is one daily target per person for the whole team. */
+  var BOARD_PER = [['today', 'Today'], ['week', '7 days'], ['month', '30 days']];
+  function boardView() {
+    hideToast(); S.signin = null; S.screen = 'board';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Leaderboard', sub: 'In testing · admins only', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel s2')); view.appendChild(holder);
+    api('board').then(function (j) {
+      if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the leaderboard.')); return; }
+      S.board = j; drawBoard(holder);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
+  function drawBoard(holder) {
+    var j = S.board, per = S.boardPer || 'week';
+    holder.textContent = '';
+    var seg = q('div', 'bseg');
+    BOARD_PER.forEach(function (p) {
+      var b = q('button', null, p[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(p[0] === per));
+      b.addEventListener('click', function () { S.boardPer = p[0]; drawBoard(holder); });
+      seg.appendChild(b);
+    });
+    holder.appendChild(seg);
+    holder.appendChild(goalCard(holder));
+    var g = j.goals || {};
+    var rows = (j.people || []).filter(function (r) { return r[per].doors || r[per].won; })
+      .sort(function (a, b) { return b[per].booked - a[per].booked || b[per].talked - a[per].talked || b[per].doors - a[per].doors || (a.name < b.name ? -1 : 1); });
+    if (!rows.length) holder.appendChild(q('div', 'msg', per === 'today' ? 'Nobody has knocked yet today.' : 'Nothing knocked in this stretch yet.'));
+    var rank = 0, last = null;
+    rows.forEach(function (r, i) {
+      var c = r[per], key = c.booked + '|' + c.talked + '|' + c.doors;
+      if (key !== last) { rank = i + 1; last = key; }   /* a tie shares the place */
+      var row = q('div', 'brow' + (rank <= 3 ? ' top r' + rank : ''));
+      row.appendChild(q('div', 'brk', String(rank)));
+      var mid = q('div', 'bmid');
+      mid.appendChild(q('div', 'bnm', r.name));
+      mid.appendChild(q('div', 'bsub', c.talked + ' talked to · ' + c.doors + ' doors · rate ' + rate(c.booked, c.talked) + (c.won ? ' · ' + c.won + ' won' : '')));
+      if (per === 'today') [['doors', 'doors'], ['talked', 'talked to'], ['booked', 'quotes']].forEach(function (k) {
+        if (!g[k[0]]) return;
+        var bar = q('div', 'bgoal'), v = c[k[0]], pctv = Math.min(100, Math.round(100 * v / g[k[0]]));
+        var tr = q('div', 'btr'), fl = q('div', 'bfl' + (v >= g[k[0]] ? ' hit' : '')); fl.style.width = pctv + '%'; tr.appendChild(fl);
+        bar.appendChild(tr); bar.appendChild(q('span', null, v + ' / ' + g[k[0]] + ' ' + k[1]));
+        mid.appendChild(bar);
+      });
+      row.appendChild(mid);
+      var big = q('div', 'bbig'); big.appendChild(q('b', null, String(c.booked))); big.appendChild(q('small', null, c.booked === 1 ? 'quote' : 'quotes'));
+      row.appendChild(big);
+      holder.appendChild(row);
+    });
+    holder.appendChild(q('div', 'sub2', 'Talked to = doors knocked minus no-answers and no-soliciting. Rate = quotes per person talked to. Test sign-ins are left out.'));
+    holder.appendChild(territoryCard(holder));
+  }
+  function goalCard(holder) {
+    var g = S.board.goals || {}, box = q('div', 'bcard');
+    box.appendChild(q('div', 'wl', 'Daily goal, per person'));
+    if (S.editGoal) {
+      var f = q('div', 'bgf'), ins = {};
+      [['doors', 'Doors'], ['talked', 'Talked to'], ['booked', 'Quotes']].forEach(function (k) {
+        var lb = q('label', null, k[1]); var inp = q('input'); inp.type = 'number'; inp.min = '0'; inp.max = '300'; inp.inputMode = 'numeric';
+        inp.value = g[k[0]] === null || g[k[0]] === undefined ? '' : String(g[k[0]]); lb.appendChild(inp); f.appendChild(lb); ins[k[0]] = inp;
+      });
+      box.appendChild(f);
+      var r2 = q('div', 'row2');
+      var sv = q('button', 'save', 'Save the goal'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        var body = {}; for (var k in ins) body[k] = ins[k].value === '' ? null : ins[k].value;
+        api('goals', { body: body }).then(function (j) {
+          if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+          S.board.goals = j.goals; S.editGoal = false; drawBoard(holder); toast('Goal saved', '', null);
+        }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+      });
+      var cx = q('button', null, 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.editGoal = false; drawBoard(holder); });
+      r2.appendChild(sv); r2.appendChild(cx); box.appendChild(r2);
+      return box;
+    }
+    var parts = []; if (g.doors) parts.push(g.doors + ' doors'); if (g.talked) parts.push(g.talked + ' talked to'); if (g.booked) parts.push(g.booked + (g.booked === 1 ? ' quote' : ' quotes'));
+    box.appendChild(q('div', 'bgv', parts.length ? parts.join(' · ') : 'No goal set yet.'));
+    var ed = q('button', 'lnk', parts.length ? 'Change the goal' : 'Set a goal'); ed.type = 'button';
+    ed.addEventListener('click', function () { S.editGoal = true; drawBoard(holder); });
+    box.appendChild(ed);
+    return box;
+  }
+  /* neighbourhoods assigned to people: one person per neighbourhood, shown on the neighbourhood list */
+  function territoryCard(holder) {
+    var j = S.board, box = q('div', 'bcard');
+    box.appendChild(q('div', 'wl', 'Neighbourhoods by person'));
+    var by = {}; (j.territories || []).forEach(function (t) { (by[t.who] = by[t.who] || []).push(t); });
+    var names = Object.keys(by).sort();
+    if (!names.length) box.appendChild(q('div', 'bsub', 'None assigned yet. Assigned neighbourhoods show the person' + "'" + 's name on the neighbourhood list.'));
+    names.forEach(function (n) {
+      box.appendChild(q('div', 'bnm sm', n));
+      by[n].forEach(function (t) {
+        var r = q('div', 'bter');
+        r.appendChild(q('span', null, t.area + ' · ' + t.town + ' · ' + t.knocked + ' of ' + t.total + ' knocked'));
+        var rm = q('button', 'lnk', 'Unassign'); rm.type = 'button';
+        rm.addEventListener('click', function () { assignArea(holder, t.region, t.area, ''); });
+        r.appendChild(rm); box.appendChild(r);
+      });
+    });
+    /* assign: town, neighbourhood, person */
+    var f = q('div', 'bassign');
+    var ts = q('select'), as = q('select'), ps = q('select');
+    ts.setAttribute('aria-label', 'Town'); as.setAttribute('aria-label', 'Neighbourhood'); ps.setAttribute('aria-label', 'Person');
+    var fillAreas = function () {
+      as.textContent = '';
+      var rg = (S.regions || []).filter(function (r) { return r.key === ts.value; })[0];
+      (rg ? rg.areas : []).forEach(function (a) { var o = q('option', null, a.name + (a.who ? ' (' + a.who + ')' : '')); o.value = a.name; as.appendChild(o); });
+    };
+    var go = function () {
+      ts.textContent = '';
+      (S.regions || []).forEach(function (r) { var o = q('option', null, r.label); o.value = r.key; ts.appendChild(o); });
+      if (S.region) ts.value = S.region;
+      fillAreas();
+    };
+    ts.addEventListener('change', fillAreas);
+    (j.names || []).forEach(function (n) { var o = q('option', null, n); o.value = n; ps.appendChild(o); });
+    var ab = q('button', 'save', 'Assign'); ab.type = 'button';
+    ab.addEventListener('click', function () { if (ts.value && as.value && ps.value) assignArea(holder, ts.value, as.value, ps.value); });
+    f.appendChild(ts); f.appendChild(as); f.appendChild(ps); f.appendChild(ab);
+    box.appendChild(q('div', 'bsub', 'Assign a neighbourhood'));
+    box.appendChild(f);
+    if (S.regions && S.regions.length) go(); else api('regions').then(function (r) { if (r.ok) { S.regions = r.regions; go(); } }).catch(function () {});
+    return box;
+  }
+  function assignArea(holder, region, area, who) {
+    api('assign', { body: { region: region, area: area, who: who } }).then(function (j) {
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      toast(who ? 'Assigned to ' + who : 'Unassigned', area, null);
+      S.regions = [];                                      /* reloaded, so the picker shows the change (the door list reloads its own) */
+      boardView();
+    }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+  }
+
   /* marking with motion: stamp, slide away, then the real mark. Undo in a toast. */
   function animateMark(card, d, kind, btn, revisit) {
     if (!card || card.classList.contains('marking')) return;
@@ -2151,6 +2364,7 @@
     var item = { region: S.region, id: d.id, outcome: kind };
     if (kind === 'later' && revisit) item.revisit = revisit;      /* travels in the offline queue too */
     d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -2) : '' };
+    if (kind === 'booked' && !d.walk) { S.walkPrompt = d.id; S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; }   /* SX-51: book the walk while still at the door */
     renderDoors();
     api('mark', { body: item }).then(function (j) {
       if (j.ok) { dropQueued('mark', item.region, item.id); if (d.mark) d.mark.pending = false; }
@@ -2349,6 +2563,7 @@
      are empty — which is most doors — so an untouched card stays short. */
   function extras(d) {
     var wrap = q('div', 'xt');
+    if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
     if (S.editPhone === d.id || d.phone) wrap.appendChild(phoneBlock(d));
     if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
     if (S.editEmail === d.id || d.email) wrap.appendChild(emailBlock(d));
@@ -2356,7 +2571,7 @@
     if (S.editFc === d.id || (d.fc && d.fc.length)) wrap.appendChild(fireCheckBlock(d));
     if (d.photos && d.photos.length) wrap.appendChild(photoStrip(d, S.region));
     /* slimmer card: satellite and the add buttons share one row of small chips */
-    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id || S.editWork === d.id || S.editFc === d.id;      /* one form at a time */
+    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id || S.editWork === d.id || S.editFc === d.id || S.editWalk === d.id;      /* one form at a time */
     var row = q('div', 'adds'), n = 0;
     var sat = satLink(d, true);
     if (sat) { row.appendChild(sat); n++; }
@@ -2519,6 +2734,143 @@
       dropQueued('firecheck', S.region, d.id);
       after(false); toast('Fire check saved', d.address, null);
     }).catch(function () { if (enqueueSave('firecheck', body)) after(true); });
+  }
+  /* ---- the walk (SX-51, 2026-10-04) ----
+     Sixfold quotes from a walk of the property, so booking the quote means booking the walk.
+     Picked at the door: a day, and a time if one was agreed. The day's other walks show under
+     the picker so walks are not stacked on top of each other and one trip covers a town. Then a
+     calendar file with reminders, and a confirmation text the crew member sends from their own
+     phone, only to a number the owner gave at the door. Saved with no signal like everything else. */
+  var WDAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var MONTH_L = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  function t12(t) { if (!t) return ''; var p = t.split(':'), h = +p[0]; return (h % 12 || 12) + ':' + p[1] + (h < 12 ? ' am' : ' pm'); }
+  function fmtWalk(w) { return dayName(w.date) + ' · ' + (w.time ? t12(w.time) : 'time to agree'); }
+  function longDay(iso) { var p = iso.split('-'), dt = new Date(+p[0], +p[1] - 1, +p[2]); return WDAY[dt.getDay()] + ', ' + MONTH_L[dt.getMonth()] + ' ' + dt.getDate(); }
+  function titleAddr(a) { return String(a || '').toLowerCase().replace(/\b([a-z])/g, function (c) { return c.toUpperCase(); }); }
+  function walkText(d) {
+    var first = String(S.me || '').split(' ')[0] || 'the crew';
+    return 'Hi, this is ' + first + ' with Sixfold Colorado. Your yard walk at ' + titleAddr(d.address) + ' is booked for ' + longDay(d.walk.date) +
+      (d.walk.time ? ' at ' + t12(d.walk.time) : '; we will call to agree a time') + '. To change it, call (303) 915-1045.';
+  }
+  function walkBlock(d, ctx) {
+    if (S.editWalk === d.id) return walkForm(d, ctx);
+    if (!d.walk) {
+      var bb = q('button', 'walkb'); bb.type = 'button';
+      bb.appendChild(ico('cal', 2.2)); bb.appendChild(document.createTextNode('Book the walk'));
+      bb.addEventListener('click', function () { S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; S.editPhone = null; S.editNote = null; S.editEmail = null; S.editWork = null; S.editFc = null; ctx.redraw(); });
+      return bb;
+    }
+    var box = q('div', 'wk walkl');
+    box.appendChild(q('span', 'wl', 'Walk'));
+    box.appendChild(q('span', 'wt walkt', fmtWalk(d.walk)));
+    box.appendChild(q('span', 'src', 'Booked by ' + (d.walk.by || 'crew') + (d.walk.pending ? ' · not sent yet' : '')));
+    var ch = q('button', 'lnk', 'Change'); ch.type = 'button';
+    ch.addEventListener('click', function () { S.editWalk = d.id; S.walkDate = d.walk.date; S.walkTime = d.walk.time || ''; ctx.redraw(); });
+    box.appendChild(ch);
+    if (!d.walk.pending) {
+      var ca = q('a', 'lnk', 'Add to calendar');
+      ca.href = API + '?action=walkics&region=' + encodeURIComponent(ctx.region) + '&id=' + encodeURIComponent(d.id);
+      box.appendChild(ca);
+    }
+    var ph = ctx.phone;
+    if (ph && ph.source === 'door' && !ph.prev && digits(ph.phone).length >= 10) {
+      var tx = q('a', 'lnk', 'Text a confirmation');
+      tx.href = 'sms:' + digits(ph.phone) + '?&body=' + encodeURIComponent(walkText(d));
+      box.appendChild(tx);
+    }
+    return box;
+  }
+  function walkForm(d, ctx) {
+    var f = q('div', 'wkf walkf');
+    f.appendChild(q('div', 'lq', d.walk ? 'Change the walk' : 'Book the walk'));
+    f.appendChild(q('div', 'lsub', 'When can we walk the property? Pick a day, and a time if you agreed one.'));
+    var chips = q('div', 'wchips');
+    var di = q('input'); di.type = 'date'; di.min = todayISO(); di.max = isoMinus(todayISO(), -180); di.value = S.walkDate || ''; di.setAttribute('aria-label', 'Day of the walk');
+    [1, 2, 3].forEach(function (n) {
+      var iso = isoMinus(todayISO(), -n);
+      var b = q('button', null, n === 1 ? 'Tomorrow' : dayName(iso)); b.type = 'button';
+      b.setAttribute('aria-pressed', String(di.value === iso));
+      b.addEventListener('click', function () { di.value = iso; S.walkDate = iso; [].forEach.call(chips.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); showDay(); });
+      chips.appendChild(b);
+    });
+    f.appendChild(chips);
+    var row = q('div', 'wrow');
+    var ts = q('select'); ts.setAttribute('aria-label', 'Time of the walk');
+    var opts = [['', 'Time to agree']];
+    for (var h = 7; h <= 19; h++) ['00', '30'].forEach(function (mm) { var v = (h < 10 ? '0' : '') + h + ':' + mm; opts.push([v, t12(v)]); });
+    if (S.walkTime && !opts.some(function (o) { return o[0] === S.walkTime; })) opts.push([S.walkTime, t12(S.walkTime)]);
+    opts.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; ts.appendChild(op); });
+    ts.value = S.walkTime || '';
+    ts.addEventListener('change', function () { S.walkTime = ts.value; });
+    row.appendChild(di); row.appendChild(ts); f.appendChild(row);
+    var day = q('div', 'wday'); f.appendChild(day);
+    var err = q('div', 'err'); f.appendChild(err);
+    function showDay() {
+      var v = di.value; day.textContent = '';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+      day.textContent = 'Checking ' + dayName(v) + '…';
+      api('walks', { params: { from: v, to: v } }).then(function (j) {
+        if (di.value !== v) return;
+        day.textContent = '';
+        var others = (j && j.ok ? j.walks : []).filter(function (w) { return w.id !== d.id; });
+        if (!j || !j.ok) { day.textContent = 'Could not check the other walks that day.'; return; }
+        if (!others.length) { day.textContent = 'No other walks booked ' + dayName(v) + '.'; return; }
+        day.appendChild(q('b', null, 'Already booked ' + dayName(v) + ':'));
+        others.forEach(function (w) { day.appendChild(q('span', null, (w.time ? t12(w.time) : 'Time to agree') + ' · ' + w.town + ' · ' + w.address)); });
+      }).catch(function () { if (di.value === v) day.textContent = 'The other walks that day show when there is signal.'; });
+    }
+    di.addEventListener('change', function () { S.walkDate = di.value; [].forEach.call(chips.children, function (x) { x.setAttribute('aria-pressed', 'false'); }); showDay(); });
+    if (di.value) showDay();
+    var r2 = q('div', 'row2');
+    var sv = q('button', 'save', 'Save the walk'); sv.type = 'button';
+    sv.addEventListener('click', function () {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(di.value)) { err.textContent = 'Pick a day.'; di.focus(); return; }
+      saveWalk(d, ctx, di.value, ts.value);
+    });
+    var cx = q('button', null, S.walkPrompt === d.id ? 'Later' : 'Cancel'); cx.type = 'button';
+    cx.addEventListener('click', function () { S.editWalk = null; if (S.walkPrompt === d.id) S.walkPrompt = null; ctx.redraw(); });
+    r2.appendChild(sv); r2.appendChild(cx);
+    if (d.walk) {
+      var rm = q('button', null, 'No walk'); rm.type = 'button';
+      rm.addEventListener('click', function () { saveWalk(d, ctx, null, ''); });
+      r2.appendChild(rm);
+    }
+    f.appendChild(r2);
+    return f;
+  }
+  function walkPromptBox(d) {
+    var box = q('div', 'walkp');
+    box.appendChild(q('div', 'wpt', 'Quote booked · ' + d.address));
+    box.appendChild(walkForm(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
+    return box;
+  }
+  function saveWalk(d, ctx, date, time) {
+    var body = { region: ctx.region, id: d.id, date: date, time: date ? (time || '') : '' };
+    var after = function (pending) {
+      d.walk = date ? { date: date, time: body.time, by: S.me, at: Math.floor(Date.now() / 1000), pending: !!pending } : null;
+      S.editWalk = null; if (S.walkPrompt === d.id) S.walkPrompt = null; ctx.redraw();
+    };
+    api('walk', { body: body }).then(function (j) {
+      if (j._status === 401) return keepAndSignIn('walk', body);
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      dropQueued('walk', ctx.region, d.id);
+      after(false);
+      toast(date ? 'Walk booked' : 'Walk taken off', date ? d.address + ' · ' + fmtWalk(d.walk) : d.address, null);
+    }).catch(function () { if (enqueueSave('walk', body)) after(true); });
+  }
+  /* quotes to build: what is coming up, so the week can be planned by town */
+  function walksUp(list) {
+    var box = q('div', 'walkup'), today = todayISO();
+    var up = list.filter(function (x) { return !x.result && x.walk && x.walk.date >= today; })
+      .sort(function (a, b) { return (a.walk.date + (a.walk.time || '99')) < (b.walk.date + (b.walk.time || '99')) ? -1 : 1; });
+    var none = list.filter(function (x) { return !x.result && !x.walk; }).length;
+    box.appendChild(q('div', 'wl', 'Walks coming up'));
+    if (!up.length) box.appendChild(q('div', 'wur soft', 'None booked yet.'));
+    up.forEach(function (x) {
+      var r = q('div', 'wur'); r.appendChild(q('b', null, fmtWalk(x.walk))); r.appendChild(q('span', null, x.address + ' · ' + x.town)); box.appendChild(r);
+    });
+    if (none) box.appendChild(q('div', 'wur soft', none + (none === 1 ? ' booked quote has' : ' booked quotes have') + ' no walk date yet.'));
+    return box;
   }
   function fireReport(d) {
     var last = d.fc[d.fc.length - 1], prev = d.fc.length > 1 ? d.fc[0] : null, n = fcCount(last);
@@ -3042,10 +3394,13 @@
     }
     if (x.work) c.appendChild(workChips(x.work, false));
     c.appendChild(q('div', 'meta', 'Booked by ' + (x.by || 'crew') + ' · ' + fmtDay(x.at)));
+    if (!x.result) c.appendChild(walkBlock(x, { region: x.region, redraw: drawQuotes, phone: x.phone }));
     var tools = q('div', 'adds'); var sat = satLink(x, true); if (sat) tools.appendChild(sat);
     /* straight into Quote build with the address as the job name and the county's funding picked (SX-3) */
     var bq = q('a', 'sat'); bq.appendChild(ico('calc', 2.2)); bq.appendChild(document.createTextNode('Build quote'));
-    bq.href = 'quote.html?region=' + encodeURIComponent(x.region) + '&name=' + encodeURIComponent(x.address);
+    /* SX-52: the door and its lawn go along, so Quote build can measure from the outline */
+    bq.href = 'quote.html?region=' + encodeURIComponent(x.region) + '&name=' + encodeURIComponent(x.address) + '&id=' + encodeURIComponent(x.id) +
+      (x.lawn && x.lawn.sq ? '&lawn=' + x.lawn.sq + '&yr=' + (x.lawn.yr || '') : '') + (x.lawnfix && x.lawnfix.lv ? '&crew=' + x.lawnfix.lv : '');
     tools.appendChild(bq); c.appendChild(tools);
     var b = q('button', x.quoted ? 'qsent on' : 'qsent',
       x.quoted ? 'Quote sent · ' + fmtDay(x.quoted.at) + ' — undo' : 'Mark quote sent');
@@ -3137,6 +3492,7 @@
     /* SX-45: the booked doors as a Jobber client import (only matters if Jobber is adopted) */
     var jb = q('a', 'adminlink', 'Download for Jobber (CSV)'); jb.href = API + '?action=jobber'; jb.setAttribute('download', '');
     holder.appendChild(jb);
+    holder.appendChild(walksUp(list));
     open.forEach(function (x) { holder.appendChild(quoteCard(x)); });
     [['sent', 'Sent', sent, 'showSent'], ['closed', 'Won or lost', closed, 'showClosed']].forEach(function (g) {
       if (!g[2].length) return;
@@ -3796,6 +4152,8 @@
     if (S.dview === 'map' && S.liveMap && S.liveMap.area === S.area && document.body.contains(S.liveMap.el)) { S.liveMap.refresh(); return; }
     S.liveMap = null;
     view.textContent = '';
+    var wp = S.walkPrompt ? S.doors.filter(function (x) { return x.id === S.walkPrompt; })[0] : null;
+    if (wp && wp.mark && wp.mark.outcome === 'booked' && !wp.walk) view.appendChild(walkPromptBox(wp)); else S.walkPrompt = null;
 
     var finished = S.doors.length > 0 && !todo.length && !again.length;
     if (finished) {
