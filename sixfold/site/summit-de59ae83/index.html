@@ -659,13 +659,22 @@
      cleared by the server, so a sign-out that never reached it left the next person on a shared
      iPad signed in as the last one. Now the saved copy is wiped here at once, this flag keeps the
      app on the sign-in screen, and the server is told the next time there is signal. */
+  /* The flag holds the tag of the session being signed out, so a late "sign out" can only end
+     that session, never the next person's (Fable, 2026-10-03). It clears only when OUR server
+     answers ok: a Wi-Fi sign-in page also answers 200, with HTML. */
   var OUTKEY = 'sixfold.rounds.signedout';
-  function markOut(on) { try { if (on) localStorage.setItem(OUTKEY, '1'); else localStorage.removeItem(OUTKEY); } catch (e) {} }
-  function isOut() { try { return localStorage.getItem(OUTKEY) === '1'; } catch (e) { return false; } }
+  function markOut(on) { try { if (on) localStorage.setItem(OUTKEY, S.sid || '1'); else localStorage.removeItem(OUTKEY); } catch (e) {} }
+  function outTag() { try { return localStorage.getItem(OUTKEY) || ''; } catch (e) { return ''; } }
+  function isOut() { return outTag() !== ''; }
   function tellServerOut() {
-    S.outP = fetch(API + '?action=signout', { credentials: 'same-origin', cache: 'no-store' })
-      .then(function (r) { if (r.ok && r.headers.get('X-Sixfold-Offline') !== '1') markOut(false); }, function () {})
-      .then(function () { S.outP = null; });
+    if (S.outP) return S.outP;                                  /* one at a time */
+    var tag = outTag(), ctl = window.AbortController ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 8000) : null;
+    S.outP = fetch(API + '?action=signout' + (tag && tag !== '1' ? '&sid=' + encodeURIComponent(tag) : ''),
+                   { credentials: 'same-origin', cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.ok === true && outTag() === tag) markOut(false); }, function () {})
+      .then(function () { clearTimeout(timer); S.outP = null; });
     return S.outP;
   }
   /* after a save, ask for the neighbourhood again so the copy kept for no-signal shows it */
@@ -674,7 +683,7 @@
     if (!S.area || !S.region || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
     clearTimeout(warmT);
     var u = API + '?action=area&region=' + encodeURIComponent(S.region) + '&area=' + encodeURIComponent(S.area);
-    warmT = setTimeout(function () { fetch(u, { credentials: 'same-origin' }).catch(function () {}); }, 3000);
+    warmT = setTimeout(function () { if (S.me) fetch(u, { credentials: 'same-origin' }).catch(function () {}); }, 3000);
   }
   function clearSaved() {
     try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage('clear-api'); } catch (e) {}
@@ -989,11 +998,11 @@
     function go() {
       if (S.busy) return;
       S.busy = true; boxes.className = 'boxes busy'; say.className = 'say'; say.textContent = 'Checking…';
-      (S.outP || Promise.resolve()).then(function () { return api('signin', { body: { code: code } }); }).then(function (j) {
+      api('signin', { body: { code: code } }).then(function (j) {
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.role = j.role; S.signin = null;
+        S.me = j.name; S.role = j.role; S.sid = j.sid || null; S.signin = null;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         boxes.className = 'boxes ok';
         say.textContent = 'Welcome back, ' + String(j.name || '').split(' ')[0];
@@ -1079,7 +1088,7 @@
          here again (2026-10-03 review). Say so before they go. */
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
-      S.me = null; S.role = 'crew'; markOut(true);
+      markOut(true); S.me = null; S.role = 'crew'; S.sid = null; clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       tellServerOut();
     });
@@ -1785,7 +1794,12 @@
     setDock(null); foot.hidden = true;
     view.textContent = '';
     for (var sk = 0; sk < 3; sk++) view.appendChild(q('div', 'skel'));
-    api('area', { params: { region: S.region, area: name } }).then(function (j) {
+    api('area', { params: { region: S.region, area: name } }).then(null, function () {
+      view.textContent = '';
+      view.appendChild(q('div', 'msg', 'No signal, and this neighbourhood is not saved on this device. Neighbourhoods open without signal once they have been opened with it. Go back and pick one you have opened, or try again with signal.'));
+      return null;
+    }).then(function (j) {
+      if (!j) return;
       if (!j.ok) return renderAreas();
       S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null; S.rest = j.rest || 2; S.areaPlace = j.place || null; S.areaFw = j.fw || null;
@@ -1797,16 +1811,17 @@
       if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
       renderDoors();
-    }).catch(function () {
-      view.textContent = '';
-      view.appendChild(q('div', 'msg', 'No signal, and this neighbourhood is not saved on this device. Neighbourhoods open without signal once they have been opened with it. Go back and pick one you have opened, or try again with signal.'));
     });
   }
   /* signal is back: fetch the open neighbourhood again in place, without moving the page */
   function reloadArea() {
     var name = S.area;
+    var ae = document.activeElement;
+    if (S.editPhone || S.editNote || S.editEmail || S.editLawn || S.pickLater || (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) return Promise.resolve();
     return api('area', { params: { region: S.region, area: name } }).then(function (j) {
       if (!j.ok || S.area !== name || S.screen !== 'doors') return;
+      var ae2 = document.activeElement;
+      if (S.editPhone || S.editNote || S.editEmail || S.editLawn || S.pickLater || (ae2 && /^(INPUT|TEXTAREA|SELECT)$/.test(ae2.tagName))) return;
       S.doors = j.doors; S.areaNosol = j.nosol || null; renderDoors();
     }).catch(function () {});
   }
@@ -2424,13 +2439,15 @@
   /* recorded between the last county pull that showed the old owner and the one that showed the
      new one: it could be either owner's (review 2026-10-03), so it stays live with a warning */
   function maybeNote(box, r) { if (r && r.maybe) box.appendChild(q('span', 'oldl maybe', "Recorded around the time the house sold: check it's the new owner's")); }
+  /* the assessor's total value for the parcel, Douglas and Teller only (2026-10-03) */
+  function fmtVal(v) { return !v ? '' : v >= 999500 ? '$' + (v / 1e6).toFixed(2).replace(/0$/, '') + 'M' : '$' + Math.round(v / 1000) + 'k'; }
   function quoteCard(x) {
     var c = q('div', 'door qc ' + fireClass(x.fire) + (x.quoted ? ' sent' : ''));
     c.appendChild(q('div', 'addr', x.address));
     c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
     var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
-    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres · Owner: ' + x.owner)); c.appendChild(meta);
+    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres' + (x.val ? ' · County value ' + fmtVal(x.val) : '') + ' · Owner: ' + x.owner)); c.appendChild(meta);
     if (x.maybe) { var mb = q('div', 'meta st'); mb.appendChild(q('span', 'oldl maybe', "Booked around the time the house sold: check it was the new owner who booked")); c.appendChild(mb); }
     if (x.phone && x.phone.prev) {
       /* the previous owner's number: no Call button (review 2026-10-03) */
@@ -2457,7 +2474,11 @@
       nt.appendChild(q('span', 'src', 'Note · ' + (x.note.by || 'crew') + ' · ' + fmtDay(x.note.at))); c.appendChild(nt);
     }
     c.appendChild(q('div', 'meta', 'Booked by ' + (x.by || 'crew') + ' · ' + fmtDay(x.at)));
-    var tools = q('div', 'adds'); var sat = satLink(x, true); if (sat) { tools.appendChild(sat); c.appendChild(tools); }
+    var tools = q('div', 'adds'); var sat = satLink(x, true); if (sat) tools.appendChild(sat);
+    /* straight into Quote build with the address as the job name and the county's funding picked (SX-3) */
+    var bq = q('a', 'sat'); bq.appendChild(ico('calc', 2.2)); bq.appendChild(document.createTextNode('Build quote'));
+    bq.href = 'quote.html?region=' + encodeURIComponent(x.region) + '&name=' + encodeURIComponent(x.address);
+    tools.appendChild(bq); c.appendChild(tools);
     var b = q('button', x.quoted ? 'qsent on' : 'qsent',
       x.quoted ? 'Quote sent · ' + fmtDay(x.quoted.at) + ' — undo' : 'Mark quote sent');
     b.type = 'button';
@@ -2872,7 +2893,7 @@
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
-    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres · Owner: ' + d.owner));
+    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + d.owner));
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
@@ -3152,7 +3173,7 @@
 
   if (isOut()) { signinView(); tellServerOut(); }
   else api('me').then(function (j) {
-    if (j.ok) { S.me = j.name; S.role = j.role; chooseView(); }
+    if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; chooseView(); }
     else signinView();
   }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
 

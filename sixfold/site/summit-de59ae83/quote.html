@@ -260,6 +260,18 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
 .foot{margin-top:38px;padding-top:14px;border-top:1px solid var(--edge);font-size:11.5px;color:var(--ink-soft)}
 .foot code{font-family:var(--f-data);font-size:11px}
 .srcs{font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.55}
+/* ---------- funding panel (SX-3, fire jobs) ---------- */
+.fund{padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.fund-sel{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink-mid)}
+.fund-sel select{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid var(--edge);border-radius:2px;background:var(--surface);color:var(--ink)}
+.fund-t{display:flex;flex-direction:column;gap:5px;padding-top:10px;border-top:1px solid var(--edge-soft)}
+.fund-t:first-child{border-top:0;padding-top:0}
+.fund-t h4{margin:0;font-size:13.5px;font-weight:600}
+.fund-t .fig{font-family:var(--f-data);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--good)}
+.fund-t ul{margin:0;padding-left:17px;font-size:12.5px;color:var(--ink-mid);display:flex;flex-direction:column;gap:3px}
+.fund-t .dont{color:var(--warn)}
+.fund-t .lab{font-family:var(--f-data);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.fund-foot{font-size:11px;color:var(--ink-soft);margin:0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--ground);
   font-size:13px;padding:10px 16px;border-radius:2px;box-shadow:var(--shadow);z-index:50}
 @media (prefers-reduced-motion:no-preference){.toast{animation:pop .18s ease-out}}
@@ -387,6 +399,21 @@ table.cal td.n{font-family:var(--f-data);text-align:right;font-variant-numeric:t
           <button class="act ghost" id="ovrClear" style="padding:6px 9px;font-size:12px">Clear</button>
         </div>
         <div class="delta" id="pDelta">Brandon set job 2 himself at $1,900. Today's build for the same work is $2,250. His number was the price; this checks it.</div>
+      </div>
+    </div>
+
+    <div class="panel" id="fundPanel" hidden>
+      <div class="panel-h">What the customer can claim</div>
+      <div class="fund">
+        <label class="fund-sel" for="fundCounty">County
+          <select id="fundCounty">
+            <option value="">Pick the county</option>
+            <option value="douglas">Douglas</option>
+            <option value="elpaso">El Paso</option>
+            <option value="teller">Teller</option>
+          </select>
+        </label>
+        <div id="fundBody"></div>
       </div>
     </div>
 
@@ -874,6 +901,7 @@ function buildLedger(){
 /* ====================== render: everything ====================== */
 function render(){
   const m = compute();
+  renderFund(m);
   /* a section with nothing left in it is noise */
   [1,2].forEach(sn => {
     const host = $("sec" + sn);
@@ -1258,6 +1286,61 @@ function offerDraft(){
   });
 }
 
+/* ====================== funding (SX-3, 2026-10-03) ======================
+   On a fire job, what the customer can put toward the price: the state tax credit, the county's
+   grant position and the insurance rules. The words are the door app's money sheets
+   (data/rounds/docs/money.json, served by api/rounds.php to a signed-in admin), so the quote and
+   the door say the same thing and there is one place to keep them current. Nothing here changes
+   the price. */
+const MONEY_URL = "../api/rounds.php?action=money";
+let moneyDoc = null, moneyErr = "";
+function loadMoney(){
+  fetch(MONEY_URL, {credentials:"same-origin"}).then(r => r.json()).then(j => {
+    if (j && j.ok && j.topics) moneyDoc = j; else moneyErr = (j && j.error) || "The funding sheets could not be loaded.";
+  }).catch(() => { moneyErr = "The funding sheets load in the door app's quote page, signed in as an admin."; })
+    .then(() => { presetCounty(); render(); });
+}
+/* opened from a door (quote.html?region=castle-rock&name=...): the county follows the town */
+const PAGE_Q = (() => { try { return new URLSearchParams(location.search); } catch(e){ return new URLSearchParams(""); } })();
+function presetCounty(){
+  const sel = $("fundCounty"), reg = PAGE_Q.get("region");
+  if (sel && !sel.value && reg && moneyDoc && moneyDoc.counties && moneyDoc.counties[reg]) sel.value = moneyDoc.counties[reg];
+}
+/* the credit can never exceed the price, and it is 100% of the cost up to the cap */
+function creditCeiling(price){
+  return {now: Math.max(0, Math.min(price, 1000)), from2027: Math.max(0, Math.min(price, 2000))};
+}
+function fundTopic(title, fig, say, dont){
+  const box = document.createElement("div"); box.className = "fund-t";
+  const h = document.createElement("h4"); h.textContent = title; box.appendChild(h);
+  if (fig){ const p = document.createElement("div"); p.className = "fig"; p.textContent = fig; box.appendChild(p); }
+  [["Say", say, ""], ["Don’t say", dont, "dont"]].forEach(([lab, list, cls]) => {
+    if (!list || !list.length) return;
+    const l = document.createElement("span"); l.className = "lab"; l.textContent = lab; box.appendChild(l);
+    const ul = document.createElement("ul"); if (cls) ul.className = cls;
+    list.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+    box.appendChild(ul);
+  });
+  return box;
+}
+function renderFund(m){
+  const panel = $("fundPanel"), body = $("fundBody");
+  if (!panel || !body) return;
+  panel.hidden = jobMode !== "fire";
+  if (panel.hidden) return;
+  body.textContent = "";
+  if (!moneyDoc){ const p = document.createElement("p"); p.className = "fund-foot"; p.textContent = moneyErr || "Loading the funding sheets…"; body.appendChild(p); return; }
+  const t = moneyDoc.topics, cty = $("fundCounty").value, c = creditCeiling(m.price);
+  body.appendChild(fundTopic(t.tax.title,
+    m.price > 0 ? "On " + money(m.price) + ": the credit can cover up to " + money(c.now) + " for work paid in 2026, up to " + money(c.from2027) + " from 2027. Only if they owe that much state tax, and under the income limit." : "",
+    t.tax.say, t.tax.dont));
+  const g = cty && t.grants && t.grants.byCounty ? t.grants.byCounty[cty] : null;
+  if (g) body.appendChild(fundTopic(g.title, "", g.say, g.dont));
+  else { const p = document.createElement("p"); p.className = "fund-foot"; p.textContent = "Pick the county to see its grant position."; body.appendChild(p); }
+  body.appendChild(fundTopic(t.insurance.title, "", t.insurance.say, t.insurance.dont));
+  const ft = document.createElement("p"); ft.className = "fund-foot"; ft.textContent = moneyDoc.footer || ""; body.appendChild(ft);
+}
+
 /* ====================== exports ====================== */
 function scopeMarkdown(){
   const m = compute();
@@ -1283,7 +1366,20 @@ function scopeMarkdown(){
   if ((qty.t80||0) > 0) out.push("- A tree over 80 ft is on this sheet. That is a call-in, not a quote.");
   const unbacked = LINES.filter(l => !l.noRate && (qty[l.id]||0) > 0 && l.src === "unbacked" && !confirmed[l.id]);
   if (unbacked.length) out.push("- **" + unbacked.length + " line(s) priced off an unconfirmed rate:** " + unbacked.map(l => l.lbl).join("; ") + ".");
+  if (jobMode === "fire" && moneyDoc){
+    const t = moneyDoc.topics, cty = $("fundCounty").value, g = cty && t.grants.byCounty ? t.grants.byCounty[cty] : null, c = creditCeiling(m.price);
+    out.push("", "## Funding the customer may be able to use", "");
+    out.push("*Lines the team may say, from the door app's money sheets (checked " + moneyDoc.checked + "). Keep or cut; never add a figure that is not here.*", "");
+    t.tax.say.concat(g ? g.say : [], t.insurance.say).forEach(x => out.push("- " + x));
+    out.push("", "Ceiling on this price: up to " + money(c.now) + " (paid in 2026), " + money(c.from2027) + " from 2027, and only if they owe that much state tax.", "");
+    out.push("**Never say:** " + t.tax.dont.concat(g ? g.dont : [], t.insurance.dont).join(" · "));
+    if (!g) out.push("", "- **County not picked** — the grant position is missing from this draft.");
+  }
   out.push("", "## Fact-check log", "", "| Figure | Source |", "|---|---|");
+  if (jobMode === "fire" && moneyDoc){
+    const t = moneyDoc.topics, cty = $("fundCounty").value, g = cty && t.grants.byCounty ? t.grants.byCounty[cty] : null;
+    out.push("| Funding lines | " + t.tax.sources.concat(g ? g.sources : [], t.insurance.sources).join("; ") + " |");
+  }
   out.push("| $" + cfg.billable + "/man-hour billable | **Recorded** — Brandon and Brad, 2026-09-23, \"labor $100 dollars an hour minimum\", confirmed as a man-hour. Replaced the SynkedUP $65–$75 trade band. At $" + (cfg.billable*2) + "/hr for a two-person crew this is above Hawk's published $115–$143 in Colorado Springs |");
   out.push("| Counts and recorded costs | **Recorded** — off the walk sheet. Not independently verified |");
   out.push("| Time per unit | **Mixed** — mow, edge, plant removal and limbing come from Brandon and Brad's own prices of 2026-09-23, converted at $" + cfg.billable + "/man-hour. The rest is Sixfold's recorded 16 man-hours on job 2 shared out by hand, or unbacked where listed above |");
@@ -1457,6 +1553,9 @@ $("bPickJob2").addEventListener("click", () => {
   applyState({qty:{}, cost:{}, cfg:DEFAULT_CFG, name:"", override:""});
   offerDraft();
   ["input","change"].forEach(ev => document.addEventListener(ev, saveDraft));
+  if (PAGE_Q.get("name") && !$("jobName").value) $("jobName").value = PAGE_Q.get("name").slice(0, 120);
+  $("fundCounty").addEventListener("change", render);
+  loadMoney();
 
   /* The site has no realtime store, so the rate table is read once on open —
      which is what the artifact did anyway: "the standing rates apply once, on

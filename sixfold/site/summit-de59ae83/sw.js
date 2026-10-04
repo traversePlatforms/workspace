@@ -19,7 +19,7 @@
 
    ⚑ Bump SHELL_V when this file changes. The browser re-checks this file on every visit
    (registered with updateViaCache: 'none'); flush SiteGround's cache after uploading it. */
-const SHELL_V = 'rounds-shell-2026-10-03b';
+const SHELL_V = 'rounds-shell-2026-10-03c';
 const API = 'rounds-api';
 const TIMEOUT = 6000;
 const AREA_MAX = 40;
@@ -35,8 +35,10 @@ self.addEventListener('activate', (e) => {
     .then((ks) => Promise.all(ks.filter((k) => k !== SHELL_V && k !== API).map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
+/* bumped on sign-out, so a copy still being saved when someone signs out is dropped (Fable) */
+let gen = 0;
 self.addEventListener('message', (e) => {
-  if (e.data === 'clear-api') e.waitUntil(caches.delete(API));
+  if (e.data === 'clear-api') { gen++; e.waitUntil(caches.delete(API)); }
 });
 
 function offline(res) {
@@ -47,8 +49,11 @@ function offline(res) {
 /* kept with the time it was kept. Never awaited, and a failure (a full disk, a private window)
    only means nothing is kept: the live answer still reaches the page (review 2026-10-03) */
 function keep(cacheName, key, res) {
+  const g = gen;
   return res.blob().then((b) => {
+    if (cacheName === API && g !== gen) return;                 /* signed out meanwhile */
     const h = new Headers(res.headers); h.set('X-Sixfold-Kept', String(Date.now()));
+    h.delete('Content-Encoding'); h.delete('Content-Length');   /* the body is already decoded (Fable) */
     return caches.open(cacheName).then((c) => c.put(key, new Response(b, { status: 200, statusText: 'OK', headers: h }))
       .then(() => { if (cacheName === API) return trim(c); }));
   }).catch(() => {});
@@ -58,15 +63,19 @@ async function trim(cache) {
   const keys = (await cache.keys()).filter((r) => /action=area/.test(r.url));
   for (let i = 0; i < keys.length - AREA_MAX; i++) await cache.delete(keys[i]);
 }
-function networkFirst(req, cacheName, fallbackKey, flag) {
+function networkFirst(e, req, cacheName, fallbackKey, flag) {
   const net = fetch(req).then((res) => {
-    if (res && res.status === 200) keep(cacheName, fallbackKey || req, res.clone());
+    if (res && res.status === 200) e.waitUntil(keep(cacheName, fallbackKey || req, res.clone()));
     else if (res && res.status === 401 && cacheName === API) caches.delete(API).catch(() => {});   /* signed out: nothing kept */
     return res;
   });
   const kept = () => caches.open(cacheName).then((c) => c.match(fallbackKey || req, { ignoreVary: true }))
     .then((hit) => hit || (fallbackKey ? caches.open(cacheName).then((c) => c.match('./')) : null))
-    .then((hit) => (cacheName !== API || fresh(hit)) ? hit : null)
+    .then((hit) => {
+      if (cacheName !== API || fresh(hit)) return hit;
+      if (hit) caches.open(API).then((c) => c.delete(req)).catch(() => {});   /* a week old: gone, not just hidden (Fable) */
+      return null;
+    })
     .catch(() => null);
   const timer = new Promise((res) => setTimeout(() => res('timeout'), TIMEOUT));
   return Promise.race([net.catch(() => 'down'), timer]).then(async (r) => {
@@ -84,9 +93,9 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== self.location.origin) return;        /* map tiles, fonts, Leaflet: the browser's own cache */
   if (req.mode === 'navigate' && url.pathname.startsWith(new URL('./', self.location).pathname)) {
     if (/quote\.html$/.test(url.pathname)) return;        /* the quote tool stays online-only */
-    e.respondWith(networkFirst(req, SHELL_V, './', false));
+    e.respondWith(networkFirst(e, req, SHELL_V, './', false));
     return;
   }
-  if (KEEP.test(url.pathname + url.search)) { e.respondWith(networkFirst(req, API, null, true)); return; }
-  if (SHELL.some((p) => url.pathname.endsWith(p.replace('./', '/')) && p !== './')) e.respondWith(networkFirst(req, SHELL_V, null, false));
+  if (KEEP.test(url.pathname + url.search)) { e.respondWith(networkFirst(e, req, API, null, true)); return; }
+  if (SHELL.some((p) => url.pathname.endsWith(p.replace('./', '/')) && p !== './')) e.respondWith(networkFirst(e, req, SHELL_V, null, false));
 });

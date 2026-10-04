@@ -10,6 +10,7 @@
 const NOT_A_NAME = new Set(['AND', 'THE', 'TRUST', 'TRUSTS', 'TRUSTEE', 'TRUSTEES', 'LIVING', 'REVOCABLE', 'REV', 'IRREVOCABLE',
   'FAMILY', 'ESTATE', 'OF', 'LLC', 'INC', 'CO', 'CORP', 'LTD', 'JT', 'TEN', 'ET', 'AL', 'UX', 'JR', 'SR', 'II', 'III', 'IV', 'LP',
   'TR', 'DTD', 'DATED', 'AGREEMENT', 'MR', 'MRS', 'MS', 'DR', 'PROPERTIES', 'PROPERTY', 'HOLDINGS', 'HOMES', 'INVESTMENTS',
+  'REVOC', 'LIV', 'DECLARATION', 'TTEE', 'TTEES', 'TRS', 'TOD', 'AS', 'FOR', 'FAM', 'LLLP', 'TRST', 'UNDER', 'UTA', 'UDT',
   'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']);
 export function ownerNames(o) {
   return new Set(String(o || '').toUpperCase().replace(/[^A-Z ]/g, ' ').split(/\s+/).filter((t) => t.length > 1 && !NOT_A_NAME.has(t)));

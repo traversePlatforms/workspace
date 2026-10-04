@@ -78,6 +78,16 @@ function treesOf(d) {
   return { z1: c.z1 ?? 0, z2: c.z2, z3: c.z3 ?? null, h: c.h ?? 0, src: c.src === 'lidar' ? 'lidar' : 'canopy', yr: c.yr ?? null };
 }
 
+/* County appraised value (sample-value.mjs, 2026-10-03): the assessor's total value for the
+   parcel, Douglas and Teller only — El Paso's layer carries none. A rough qualifier for whether
+   a bigger job is plausible, nothing more. */
+const VALUE_CACHE = join(HERE, 'value-cache.json');
+const valueByCoord = existsSync(VALUE_CACHE) ? JSON.parse(readFileSync(VALUE_CACHE, 'utf8')) : {};
+function valueOf(d) {
+  const c = typeof d.la === 'number' ? valueByCoord[`${d.la},${d.lo}`] : null;
+  return c && c.v > 0 ? c.v : null;
+}
+
 /* Neighbourhood place name and nearby Firewise communities, from sample-hoa.mjs (2026-10-02).
    place: the most common subdivision (Teller, Douglas) or metro district (El Paso) among the
    neighbourhood's doors, when at least 40% share it. Filing and phase suffixes are dropped,
@@ -142,7 +152,7 @@ for (const [key, label, fileName] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d) };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d), val: valueOf(d) };
     }),
   }));
   built.push({ key, label, j, areas });
@@ -182,6 +192,8 @@ if (owner.size) console.log(`${owner.size} doors were listed by two towns: each 
  * Quote booked whenever we had knocked between the sale and the re-pull). A change only counts
  * when the old and new names share NO name at all, so a spouse added, a move into a family
  * trust, or a record written differently is not a sale. The first build only records owners. */
+/* ⚑ gitignored, like every list of named people here — and unlike them it CANNOT be rebuilt:
+   lose it and sale detection starts over. The OneDrive mirror is its backup. */
 const OWNERS = join(HERE, 'owner-history.json');
 const hist = existsSync(OWNERS) ? JSON.parse(readFileSync(OWNERS, 'utf8')) : {};
 const firstOwnerBuild = !existsSync(OWNERS);

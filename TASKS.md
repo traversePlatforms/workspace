@@ -174,7 +174,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **⚑ Nothing in `sixfold/quotes/` carries either name** — every document says only
       “Sedalia”. Shannon and Lonnie confirmed by Matthew 2026-10-01.
 
-- [ ] **SX-3 — Fire-mitigation funding inside the quote generator.** *(Half answered 2026-10-02 by SX-23: the money sheets are on every door card. The quote-build half is still open, and it can reuse `money.json`.)* When a fire quote is
+- [x] **SX-3 — ✅ BUILT AND TESTED 2026-10-03, rides with the upload (`quote.html` + `index.html`).** Fire jobs
+      in Quote build show the tax-credit ceiling for the price, the county's grant position and the
+      insurance rules, with say / don't-say lines, all from `money.json`; the scope draft carries
+      them with sources; Quotes to build cards link straight in with address + county. 14 checks.
+      *Original:* **SX-3 — Fire-mitigation funding inside the quote generator.** *(Half answered 2026-10-02 by SX-23: the money sheets are on every door card. The quote-build half is still open, and it can reuse `money.json`.)* When a fire quote is
       selected, surface the tax credit / grant / insurer re-score material. **This one is
       genuinely good** — the funding research already exists and currently only lives in a
       pamphlet nobody reads at quote time. Build after SX-2.
@@ -551,7 +555,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       “check the Do Not Call lists before calling” note; numbers given at the door do not.
       **Ticks when it is live.**
 
-- [ ] **SX-15 — Enrich each door from the parcel source you already query.** Found 2026-10-01
+- [x] **SX-15 — ✅ The surviving half is BUILT 2026-10-03: county value on every Douglas and Teller door**
+      (13,884 doors, 46% of all; El Paso none). Matthew: "if it gives us more data, add it." `sample-value.mjs`
+      → `value-cache.json` → door files → card + export. Re-run it at each quarterly re-pull (SX-33).
+      *Original:* **SX-15 — Enrich each door from the parcel source you already query.** Found 2026-10-01
       while answering “can we attach Whitepages data to each door?” — **the answer is yes to
       enrichment, no to Whitepages, and the good fields are already free.**
       **The statewide layer exposes 35 fields. `build-walklist-co.mjs` asks for 12.** Left on

@@ -87,6 +87,25 @@ backslash, so every rewording read as a sale. Both fixed; the test now runs the 
 Also from that review: Quotes to build no longer shows "quote sent" for a sent date older than the
 latest booking.
 
+**Also in this batch (2026-10-03, later):**
+- **Quote build shows what a fire customer can claim (SX-3).** On a Fire job, a panel under the
+  price gives the tax-credit ceiling for that price, the county's grant position and the insurance
+  rules, each with the lines the team may and may not say. The words come from the door app's money
+  sheets, so the door and the quote never disagree. The scope draft carries them, with sources.
+  Every card in Quotes to build has a **Build quote** link that opens the tool with the address as
+  the job name and the county picked. `quote.html` is regenerated — it is step 4 of the upload.
+- **County value on the door cards** ("County value $698k" beside the acres), Douglas and Teller
+  only — El Paso's records carry none. The assessor's total for the parcel, from the state parcel
+  composite (received from the counties Mar–Apr 2026). 13,884 doors, every Douglas and Teller one.
+  In the export as `county_value`.
+- **Fable's recheck of the fixes:** no HIGH findings. Fixed what it found: a sign-out now names
+  the session it is for, so one sent late can never sign the next person out; a Wi-Fi sign-in page
+  can no longer clear the signed-out flag; a sign-out gives up after 8 seconds; signal coming back
+  no longer redraws over someone typing; a week-old saved copy is deleted, not just hidden; more
+  record words ("REVOC", "TTEE", ...) no longer hide a sale; the merge of two towns' rows is one
+  consistent order. `owner-history.json` is kept out of git (named owners) — it cannot be rebuilt,
+  so the OneDrive mirror is its backup.
+
 **Third round of reviews (Fable: phone screenshots, stats and dates, iPad screenshots):**
 - **Dates read "NaN undefined …"** on notes, emails, photos, Booked by and Quote sent since
   2026-10-02 (a function defined twice). Fixed.
@@ -964,6 +983,7 @@ missing from this section). It is what stops a rebuild putting one house's marks
 #    folder nests it, and the check used to "pass" having compared nothing)
 mkdir -p /tmp/rounds-before && for f in $(git ls-files sixfold/site/data/rounds/*.json); do git show HEAD:$f > /tmp/rounds-before/$(basename $f); done
 # 2. rebuild
+node ../../operations/door-territory/sample-value.mjs                   # county values (Douglas, Teller)
 node ../../operations/door-territory/build-walklist-pdf.mjs <area>.csv   # clustering
 node ../../operations/door-territory/build-rounds-data.mjs              # writes data/rounds/
 # 3. the gate

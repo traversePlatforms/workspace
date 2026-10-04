@@ -119,6 +119,8 @@ function verify(?string $token, string $key): ?array {
 }
 
 $session = verify($_COOKIE[COOKIE] ?? null, $sessionKey);
+/** a short tag for one sign-in, so the page can name its own session without seeing the cookie */
+function sessionTag(string $tok): string { return substr(hash('sha256', 'sid|' . $tok), 0, 20); }
 /* 2026-10-03 (review): the cookie proves who signed in, not that they still may. Deleting a
    person's line used to leave their phone signed in for up to 45 days, and a demoted admin
    kept admin. So every request looks the person up in the CURRENT list, and the name and role
@@ -243,10 +245,10 @@ function doorIds(string $key): array {
 }
 /** Rows of one log ('marks', 'phones', ...) for a town, its partners' rows for its doors merged in. */
 /** every door-log row also carries 'rt', when the server received it, to the microsecond. 'at' is
- *  when it was tapped (whole seconds), so two rows for one door can share it; within one file the
- *  line order settles that, but a door whose rows sit in two town files (SX-32) needs 'rt' to
- *  know which came last (found 2026-10-03: a "No answer" and an undo in the same second read in
- *  the wrong order). Rows from before this have no 'rt' and keep their line order. */
+ *  when it was tapped (whole seconds), so two rows for one door can share it, and a door whose
+ *  rows sit in two town files (SX-32) needs 'rt' to know which came last (found 2026-10-03: a
+ *  "No answer" and an undo in the same second read in the wrong order). Rows from before this
+ *  have no 'rt' and keep their file order. */
 function stamped(array $row): array { $row['rt'] = round(microtime(true), 4); return $row; }
 function logRows(string $kind, string $key): array {
     $read = static function (string $file): array {
@@ -256,18 +258,18 @@ function logRows(string $kind, string $key): array {
         fclose($fh);
         return $rows;
     };
-    $own = $read(DATA_DIR . '/' . $kind . '-' . $key . '.log');
     $partners = sharedWith($key);
     $mine = $partners ? doorIds($key) : [];
     $all = []; $seq = 0;
-    foreach ($own as $r) $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r];
     foreach ($partners as $p) foreach ($read(DATA_DIR . '/' . $kind . '-' . $p . '.log') as $r) {
         $hit = isset($r['id']) ? isset($mine[$r['id']])
              : (isset($r['ids']) && array_intersect_key(array_flip((array) $r['ids']), $mine));   /* area flags carry a list */
         if ($hit) { $r['_from'] = $p; $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r]; }
     }
-    /* rt only breaks a tie between two files; inside one file the line order already holds */
-    usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: (($a[3]['_from'] ?? '') !== ($b[3]['_from'] ?? '') && $a[1] && $b[1] ? $a[1] <=> $b[1] : 0) ?: $a[2] <=> $b[2]);
+    foreach ($read(DATA_DIR . '/' . $kind . '-' . $key . '.log') as $r) $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r];
+    /* one total order (Fable): tap second, then unstamped before stamped, then receipt time,
+       then file order — partner files first, because they hold the door's older history */
+    usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: ($a[1] > 0) <=> ($b[1] > 0) ?: $a[1] <=> $b[1] ?: $a[2] <=> $b[2]);
     return array_map(function ($x) { unset($x[3]['rt']); return $x[3]; }, $all);
 }
 /* ---- when a house sells (2026-10-03) ---------------------------------------
@@ -568,14 +570,22 @@ if ($action === 'signin') {
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
     $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400];
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
-    setcookie(COOKIE, sign($payload, $sessionKey), [
+    $tok = sign($payload, $sessionKey);
+    setcookie(COOKIE, $tok, [
         'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
         'samesite' => 'Lax', 'secure' => $secure,
     ]);
-    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r']]);
+    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'], 'sid' => sessionTag($tok)]);
 }
 
+/* A sign-out names the session it is for (Fable, 2026-10-03). A phone that signed out with no
+   signal tells the server later; by then someone else may have signed in on the same iPad, and
+   a late "sign out" must not end THEIR session. The page only knows the tag (the cookie itself
+   is HttpOnly); a sign-out with no tag clears whatever is there, as before. */
 if ($action === 'signout') {
+    $sid = (string) ($_GET['sid'] ?? '');
+    $cur = (string) ($_COOKIE[COOKIE] ?? '');
+    if ($sid !== '' && $cur !== '' && !hash_equals(sessionTag($cur), $sid)) out(['ok' => true, 'kept' => true]);
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
     setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $secure]);
     out(['ok' => true]);
@@ -586,7 +596,7 @@ if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
 
-if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role]);
+if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? ''))]);
 
 if ($action === 'diag') {
     /* ⚑ Added after the first live deploy returned an empty list with no reason.
@@ -698,6 +708,7 @@ if ($action === 'area') {
                 'lawn' => $d['lawn'] ?? null,
                 'lawnfix' => $lfix[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
+                'val' => $d['val'] ?? null,
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
@@ -1142,7 +1153,7 @@ if ($action === 'quotes') {
                     'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] + ownerFlag($d, $p) : null,
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                     'quoted' => $qd,
-                    'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null,
+                    'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null,
                     'email' => $em ? $em + ownerFlag($d, $em) : null, 'photos' => $photos[$d['id']] ?? [],
                 ];
             }
@@ -1226,7 +1237,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before'], ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1254,7 +1265,7 @@ if ($action === 'report' || $action === 'export') {
                               $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
                               $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
-                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '']), ',', '"', '');
+                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '', $d['val'] ?? '']), ',', '"', '');
             }
         }
     }

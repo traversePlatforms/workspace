@@ -90,3 +90,7 @@ sixfold/operations/door-territory/walklist-print.html
 sixfold/site/api/rounds-codes.php
 # The marks log written beside the door lists.
 sixfold/site/data/rounds/*.log
+
+# Owner history across door-list rebuilds (SX-35): named owners and every previous owner.
+# Not rebuildable — the OneDrive mirror is its only backup.
+sixfold/operations/door-territory/owner-history.json
