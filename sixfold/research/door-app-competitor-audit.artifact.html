@@ -1,0 +1,227 @@
+<title>Door App Competitor Audit</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Sixfold house register: dark-first, Pine / Timber / Bone / Ember / Moss.
+   Layout: one reading column; a verdict strip up top, then evidence, then decisions. */
+:root {
+  --pine: #0E1512; --timber: #1F2A25; --timber-2: #26332C;
+  --bone: #EDE7DC; --bark: #97A499;
+  --ember: #E4703A; --ember-ink: #F0824E;
+  --moss: #8AA07A; --moss-ink: #9DB78C;
+  --rule: rgba(237, 231, 220, 0.14); --rule-2: rgba(237, 231, 220, 0.30);
+  --ground: var(--pine); --surface: var(--timber); --ink: var(--bone);
+  --f-display: "Bitter", Georgia, "Times New Roman", serif;
+  --f-body: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --measure: 68ch; --pad: clamp(1rem, 4vw, 2.6rem);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --pine: #F3EFE6; --timber: #FBF8F2; --timber-2: #F4EFE4;
+    --bone: #1B211E; --bark: #5E6B60;
+    --ember: #BE4E1C; --ember-ink: #B6480F;
+    --moss: #5C7350; --moss-ink: #4F6644;
+    --rule: rgba(20, 30, 25, 0.14); --rule-2: rgba(20, 30, 25, 0.26);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --pine: #F3EFE6; --timber: #FBF8F2; --timber-2: #F4EFE4;
+  --bone: #1B211E; --bark: #5E6B60;
+  --ember: #BE4E1C; --ember-ink: #B6480F;
+  --moss: #5C7350; --moss-ink: #4F6644;
+  --rule: rgba(20, 30, 25, 0.14); --rule-2: rgba(20, 30, 25, 0.26);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --pine: #0E1512; --timber: #1F2A25; --timber-2: #26332C;
+  --bone: #EDE7DC; --bark: #97A499;
+  --ember: #E4703A; --ember-ink: #F0824E;
+  --moss: #8AA07A; --moss-ink: #9DB78C;
+  --rule: rgba(237, 231, 220, 0.14); --rule-2: rgba(237, 231, 220, 0.30);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 60rem; margin: 0 auto; padding-inline: var(--pad); padding-block: clamp(1.5rem, 5vw, 3.6rem) 4.5rem; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; line-height: 1.18; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.35rem, 3.2vw, 1.8rem); margin: 3rem 0 0.9rem; }
+p, li { max-width: var(--measure); }
+p { margin: 0 0 1rem; }
+strong { font-weight: 600; }
+a { color: var(--ember-ink); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--ember-ink); outline-offset: 2px; border-radius: 2px; }
+.eyebrow { font-family: var(--f-data); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--moss-ink); margin: 0 0 0.6rem; }
+
+.masthead { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(1rem, 4vw, 2rem); align-items: start; padding-bottom: 1.6rem; border-bottom: 2px solid var(--rule-2); }
+.mark { width: clamp(50px, 11vw, 74px); height: auto; color: var(--ember); }
+.lede { font-size: clamp(1rem, 2.4vw, 1.15rem); color: var(--bark); margin: 0.5rem 0 0; max-width: 50ch; }
+.meta { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.3rem 1.4rem; font-family: var(--f-data); font-size: 0.74rem; letter-spacing: 0.04em; color: var(--bark); }
+.meta b { color: var(--ink); font-weight: 600; }
+
+/* the verdict: three findings side by side */
+.verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin: 2rem 0 0; }
+.verdict > div { background: var(--surface); border-top: 3px solid var(--moss); padding: 1rem 1.1rem 1.1rem; border-radius: 3px; min-width: 0; }
+.verdict > div.behind { border-top-color: var(--ember); }
+.verdict > div.doing { border-top-color: var(--bone); }
+.verdict b { display: block; font-family: var(--f-data); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bark); margin-bottom: 0.35rem; }
+.verdict p { margin: 0; font-size: 0.98rem; }
+
+ul.facts, ol.facts { padding-left: 1.2rem; margin: 0 0 1rem; display: grid; gap: 0.45rem; }
+
+.twrap { overflow-x: auto; margin: 0.8rem 0 0.6rem; border: 1px solid var(--rule); border-radius: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 38rem; }
+thead th { text-align: left; font-family: var(--f-data); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bark); background: var(--surface); padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--rule-2); }
+tbody td { padding: 0.7rem 0.85rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+td.name { font-weight: 600; white-space: nowrap; }
+td.price { font-family: var(--f-data); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+.note { font-size: 0.9rem; color: var(--bark); }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1.4rem 2rem; }
+.cols h2 { margin-top: 2.4rem; }
+
+.status { display: inline-block; font-family: var(--f-data); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 3px; border: 1px solid var(--rule-2); color: var(--bark); white-space: nowrap; }
+.status.now { border-color: var(--moss); color: var(--moss-ink); }
+.status.next { border-color: var(--ember); color: var(--ember-ink); }
+
+.decide { background: var(--surface); border-left: 3px solid var(--ember); padding: 1.1rem 1.3rem; border-radius: 3px; }
+.decide ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.7rem; }
+
+.log { font-size: 0.9rem; color: var(--bark); }
+.log li { max-width: none; }
+.log strong { color: var(--ink); }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--f-data); font-size: 0.72rem; color: var(--bark); letter-spacing: 0.03em; }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <svg class="mark" viewBox="0 0 100 116" role="img" aria-label="Sixfold Ridge mark">
+      <g fill="currentColor">
+        <path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/>
+        <path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/>
+        <path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/>
+        <path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/>
+        <rect x="20.4" y="77" width="3.2" height="7"/>
+        <path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/>
+        <path d="M22 62 L12 74 L32 74 Z"/>
+        <path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/>
+        <rect x="4" y="86" width="92" height="5"/>
+      </g>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="1.6"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="1.35"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.1"/>
+        <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.15"/>
+        <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.05"/>
+        <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="0.9"/>
+        <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="0.85"/>
+        <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="0.8"/>
+        <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="0.75"/>
+        <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="0.85"/>
+      </g>
+    </svg>
+    <div>
+      <p class="eyebrow">Sixfold LLC · Internal · For discussion</p>
+      <h1>Door App Competitor Audit</h1>
+      <p class="lede">How our door app compares with eleven products sold to door-knocking, landscaping and wildfire companies, and what we are taking from them.</p>
+      <div class="meta"><span><b>For</b> Brandon, team meeting</span><span><b>Prepared</b> 3 Oct 2026</span><span><b>Prices checked</b> 3 Oct 2026</span></div>
+    </div>
+  </header>
+
+  <section class="verdict" aria-label="The short version">
+    <div><b>Where we lead</b><p>Nothing on the market puts fire hazard, trees, lawn size and wildfire funding on the same door. The door-knocking apps sell contact data and storm maps; the measuring tools are desk tools for quoting.</p></div>
+    <div class="behind"><b>Where they lead</b><p>Homeowner phone numbers and emails, manager tools (territories, leaderboards, contracts), and precise measuring for bids.</p></div>
+    <div class="doing"><b>What we're doing</b><p>Taking the best of what works for them. The first two, a route around every won job and a call list when fire weather hits, are being built now.</p></div>
+  </section>
+
+  <h2>What our app is</h2>
+  <p>Built in-house and running on the Sixfold website. Every door in 11 towns (30,464 doors) carries its wildfire hazard rating, how close trees are to the house, its lawn size with the aerial photo it was measured from, the county's appraised value (Douglas and Teller), and the Teller County wildfire plan's rating where the community is named (62 neighbourhoods).</p>
+  <p>At the door the crew sees the tax credit, grant and insurance rules, logs outcomes (with no signal if need be), notes extra work such as gutters, branches over the roof or irrigation, and books quotes. Admins get Quotes to build, won and lost, a Results screen showing which doors turn into jobs, Communities (HOAs and Firewise sites ranked by high-risk doors), fire-weather alerts, walking routes and a Jobber export. There are no per-person fees, and the data comes from free public sources.</p>
+
+  <h2>Who we compared</h2>
+  <div class="twrap">
+    <table>
+      <thead><tr><th>Product</th><th>What it is</th><th>Price as published</th></tr></thead>
+      <tbody>
+        <tr><td class="name">SalesRabbit</td><td>Door-to-door sales app</td><td class="price">$49–75 per person/mo (Pro) + $19–31 each for homeowner data and storm data</td></tr>
+        <tr><td class="name">Spotio</td><td>Field sales app</td><td class="price">Quote only · 5-user minimum</td></tr>
+        <tr><td class="name">KnockBase</td><td>Door-to-door sales app</td><td class="price">Not published</td></tr>
+        <tr><td class="name">Knockio</td><td>Door-to-door sales app</td><td class="price">$25–35 per person/mo</td></tr>
+        <tr><td class="name">SiteRecon</td><td>Aerial lawn and landscape measuring</td><td class="price">$250–500/mo</td></tr>
+        <tr><td class="name">Beam AI (Attentive.ai)</td><td>Done-for-you aerial measuring</td><td class="price">From $10,000/yr per trade</td></tr>
+        <tr><td class="name">PropertyIntel (Aspire)</td><td>Measuring for commercial landscapers</td><td class="price">From ~$199/mo (third-party figure)</td></tr>
+        <tr><td class="name">GlassHouse</td><td>Texts and emails to a neighbourhood's homeowners</td><td class="price">$3,500/yr + $79 per hot lead or 12¢ per text</td></tr>
+        <tr><td class="name">HailTrace</td><td>Storm maps, alerts and canvassing for roofers</td><td class="price">Free tier · paid plans not published</td></tr>
+        <tr><td class="name">Firemaps</td><td>Drone wildfire assessment and contractor marketplace</td><td class="price">Seed-funded 2021 · status not confirmed</td></tr>
+        <tr><td class="name">Fire Aside</td><td>Defensible-space inspection software for fire agencies</td><td class="price">Sold to agencies</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">For scale: SalesRabbit Pro with its homeowner-data and storm-data add-ons comes to $87–137 per person, per month.</p>
+
+  <div class="cols">
+    <section>
+      <h2>Where we're ahead</h2>
+      <ol class="facts">
+        <li><strong>Fire, lawn and trees on every door.</strong> None of the door-knocking apps checked has wildfire hazard, trees near the house or lawn size.</li>
+        <li><strong>Funding at the door.</strong> Tax credit, county grants and the 2025 insurance law, with what the crew may and may not say. Not found elsewhere.</li>
+        <li><strong>Communities.</strong> HOAs, Firewise sites and county plan ratings grouped to pitch a whole community as one job.</li>
+        <li><strong>Our own conversion data.</strong> SalesRabbit charges for national "buyer propensity" scores. Our Results screen learns from our own doors.</li>
+        <li><strong>A source and a date on every figure.</strong> The lawn photo shows exactly what was counted.</li>
+        <li><strong>Clean data.</strong> No scraped contact lists.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>Where they're ahead</h2>
+      <ol class="facts">
+        <li><strong>Homeowner contact data</strong>, licensed, with texting compliance handled (GlassHouse, SalesRabbit, HailTrace).</li>
+        <li><strong>Manager tools:</strong> territories per rep, leaderboards, commission calculators, live rep tracking, contracts in the app.</li>
+        <li><strong>Precise measuring for bids:</strong> turf, beds and hardscape measured separately, done for you in about 90 minutes (SiteRecon, Beam AI).</li>
+        <li><strong>"Your customers were hit" alerts</strong> (HailTrace).</li>
+        <li><strong>Marketing around existing jobs</strong> (GlassHouse).</li>
+        <li><strong>On-site detail:</strong> Firemaps maps a house by drone to the centimetre and works with cities.</li>
+        <li><strong>Native phone apps.</strong> Ours is a web app; on the iPad home screen it behaves much the same.</li>
+      </ol>
+    </section>
+  </div>
+
+  <h2>What we're taking from them</h2>
+  <div class="twrap">
+    <table>
+      <thead><tr><th>Idea</th><th>Borrowed from</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>A route around every won job, with a "we're doing your neighbour's yard" opener</td><td>GlassHouse</td><td><span class="status now">Being built</span></td></tr>
+        <tr><td>When fire weather or a nearby fire hits, a call list of our customers and booked doors there</td><td>HailTrace</td><td><span class="status now">Being built</span></td></tr>
+        <tr><td>A defensible-space report for the homeowner: Zone 0 checklist and photos, the evidence insurers now have to count</td><td>Firemaps, Fire Aside</td><td><span class="status next">Next</span></td></tr>
+        <tr><td>Book the walk at the door: date, time, reminder</td><td>KnockBase, Knockio</td><td><span class="status next">Next</span></td></tr>
+        <tr><td>Measure from the lawn outline the app already draws, straight into Quote Build</td><td>SiteRecon, Beam AI</td><td><span class="status next">Next</span></td></tr>
+        <tr><td>Territories per person, daily goals and a team leaderboard, without live location tracking</td><td>SalesRabbit, KnockBase</td><td><span class="status">Later</span></td></tr>
+        <tr><td>Sort neighbourhoods by our own booking rate once results build up</td><td>Beats SalesRabbit's paid scoring</td><td><span class="status">After a season</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>For Brandon to decide</h2>
+  <div class="decide">
+    <ol>
+      <li><strong>Licensed homeowner contact data.</strong> Worth buying, or not? If yes, only through a licensed provider and only for doors we have already spoken to.</li>
+      <li><strong>Do Not Call registration.</strong> The federal list is free for our area codes (719, 303, 720), and Colorado's list is free for businesses under five employees. Registration is still required to download them. Whether our follow-up calls also need the Colorado Attorney General's telemarketer registration is a question for the attorney.</li>
+      <li><strong>Jobber.</strong> The export is ready if we adopt it; nothing changes if we don't.</li>
+      <li><strong>Leaderboards.</strong> Worth adding? The proposal leaves out live location tracking.</li>
+    </ol>
+  </div>
+
+  <h2>Fact-check log</h2>
+  <ul class="log">
+    <li><strong>Verified on the company's own site, 3 Oct 2026:</strong> SalesRabbit, SiteRecon, Beam AI and GlassHouse pricing (GlassHouse's page dated 2 Oct 2026); KnockBase features (offline mode, gamification, HailTrace integration); HailTrace and Spotio plan tiers; Aspire's PropertyIntel launch (1 Feb 2023, commercial landscapers).</li>
+    <li><strong>From review or news sites:</strong> Knockio pricing (Capterra); PropertyIntel's ~$199/mo (MyQuoteIQ, a competitor's blog); Firemaps (TechCrunch, Aug 2021, and a West Hollywood program page); Fire Aside (Tahoe Living With Fire).</li>
+    <li><strong>Unresolved:</strong> KnockBase, HailTrace and Spotio do not publish prices. Firemaps' current status is not confirmed.</li>
+    <li><strong>Do Not Call:</strong> FTC fiscal-2027 fees (from 1 Oct 2026; first five area codes free); C.R.S. 6-1-905(3)(b)(II) (no fee under five employees); Colorado Department of Law, telemarketing registration.</li>
+  </ul>
+
+  <footer>Sixfold LLC · Internal · Not for distribution · Source: sixfold/research/door-app-competitor-audit.md</footer>
+</div>
