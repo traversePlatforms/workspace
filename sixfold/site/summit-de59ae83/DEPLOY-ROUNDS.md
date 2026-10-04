@@ -7,6 +7,27 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⚑ NEXT UPLOAD — Accounts, Territories, sign a person out, show PINs (2 files)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | — | Flush the cache. |
+
+Sizes: `index.html` **384,530**, `rounds.php` **142,530**.
+
+**Accounts** (admin tile): add a person (name, crew or admin; the code is shown once, with Text it and Copy), Change
+(rename, crew/admin), New code, Sign out (their phone is signed out, the code still works), Remove (signed out at
+once, everything they recorded stays), Turn back on. Show PINs asks for your own code, shows every PIN until you leave
+the screen, and is logged. The codes file is never edited: app-made sign-ins and changes are kept in
+`sixfold-private/rounds-accounts.json` (+ `rounds-accounts.log`), beside it, outside public_html. **PHP must be able to
+write to `sixfold-private/`**; if Add a person says "Could not save that", that folder needs write permission.
+
+**Territories** (admin tile): assign neighbourhoods to people (person, town, tick several), by person with progress,
+x to unassign. Moved off the Leaderboard. The crew see nothing of it until `TERRITORIES_OPEN = true` in rounds.php
+(Matthew: crews may not always have territories); then each person sees theirs marked Yours, with Only mine.
+
 ## ✅ LIVE 2026-10-04 — the new layout for everyone, search, Pipeline (verified 14/14)
 
 | Step | File (from `sixfold/site/`) | Goes to |

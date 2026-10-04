@@ -560,6 +560,57 @@
   .bassign .save{min-height:42px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:var(--go);color:var(--on-go)}
   .chips .mine{background:var(--go-tint);color:var(--go)}
   .chips .all3{background:var(--ink);color:var(--card)}
+  /* territories (2026-10-04) */
+  .tassign select{min-width:0;flex:1;font:600 16px var(--sans);padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .tassign .trow{display:flex;gap:7px}
+  .tassign .tfree{font-size:13px;color:var(--soft);display:flex;align-items:center;gap:6px}
+  .tassign .tlist{display:flex;flex-direction:column;gap:4px;max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:6px;background:var(--bg)}
+  .tassign .titem{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:10px;background:var(--card);cursor:pointer}
+  .tassign .titem input{width:20px;height:20px;margin-top:2px;flex:none}
+  .tassign .titem b{display:block;font:400 15px var(--serif)}
+  .tassign .titem small{color:var(--soft);font-size:12px}
+  .tassign .titem.taken small{color:var(--later)}
+  .tassign .save{min-height:46px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14.5px var(--sans);cursor:pointer;margin-top:4px}
+  .tassign .save:disabled{opacity:.5;cursor:default}
+  .door.tperson{padding-left:16px}
+  .door.tperson::before{display:none}
+  .door.tperson .tpct{font:700 20px var(--sans);color:var(--go)}
+  .door.tperson .btr{height:7px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 2px}
+  .door.tperson .bfl{height:100%;background:var(--go);border-radius:99px}
+  .door.tperson .tareas{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .door.tperson .tchip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 4px 4px 11px;background:var(--sunk);font-size:12.5px;font-weight:700}
+  .door.tperson .tchip button{width:24px;height:24px;border-radius:50%;border:0;background:var(--card);color:var(--soft);cursor:pointer;font-size:15px;line-height:1}
+  .yours{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:10px 12px;border-radius:14px;background:var(--go-tint);color:var(--go);font-weight:700;font-size:14px}
+  .yours button{border:0;border-radius:999px;padding:7px 13px;background:var(--go);color:var(--on-go);font:700 13px var(--sans);cursor:pointer}
+  .pinbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px;font-size:13px;color:var(--soft)}
+  .pinbar input{width:130px;font:600 16px var(--mono);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .pinbar .save{min-height:38px;border:0;border-radius:10px;padding:0 14px;background:var(--ink);color:var(--card);font:700 13.5px var(--sans);cursor:pointer}
+  .pinbar .lnk{background:none;border:0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;padding:4px 0}
+  .pinbar .err{flex-basis:100%;color:var(--fire-h);font-weight:700}
+  .pinbar .err:empty{display:none}
+  .door.acct .pin{margin-top:6px;font:700 20px var(--mono);letter-spacing:.1em;color:var(--ember-ink)}
+  /* accounts (2026-10-04) */
+  .codecard{border-radius:18px;padding:16px;margin:0 0 12px;color:var(--bar-ink);background:var(--topo) center/560px 360px,linear-gradient(150deg,#2B3B34 0%,var(--bar) 75%)}
+  .codecard .cl{font-size:13px;color:var(--bar-soft);font-weight:700}
+  .codecard .cc{font:700 40px/1.1 var(--mono);letter-spacing:.12em;margin:6px 0;color:var(--ember)}
+  .codecard .cs{font-size:13px;color:var(--bar-soft)}
+  .codecard .ca{display:flex;gap:16px;margin-top:10px}
+  .codecard .ca .lnk{background:none;border:0;padding:0;color:var(--bar-ink);font:700 14px var(--sans);text-decoration:underline;cursor:pointer}
+  .acf .aseg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+  .acf .aseg button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}
+  .acf .aseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .acf .lsub{font-size:12.5px;color:var(--soft);margin-top:4px}
+  .acf .err{color:var(--fire-h);font-weight:700;font-size:13px}
+  .acf .err:empty{display:none}
+  .door.acct{padding-left:16px}
+  .door.acct::before{display:none}
+  .door.acct.off{opacity:.65}
+  .door.acct .tag.you{background:var(--ink);color:var(--card)}
+  .door.acct .tag.role-admin{background:var(--later-tint);color:var(--later)}
+  .door.acct .tag.role-crew{background:var(--go-tint);color:var(--go)}
+  .door.acct .aacts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px}
+  .door.acct .aacts .lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
+  .door.acct .aacts .lnk.danger{color:var(--fire-h)}
   /* pipeline (2026-10-04) */
   .pipetop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
   .pipetop .addlead{margin:0}
@@ -1593,6 +1644,10 @@
       'How your days went: doors knocked, people talked to, quotes booked. Today next to your recent days.', null, function () { statsView(S.me, chooseView); }));
     if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Team stats',
       'Everyone' + "'" + 's doors, conversations and quotes, today and over the last week and month.', 'Admin only', teamView));
+    if (S.role === 'admin') box.appendChild(tile('button', 'route', 'Territories',
+      'Neighbourhoods assigned to each person, and how far through them they are.', 'Admin only', territoriesView));
+    if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Accounts',
+      'Add people, change who is an admin, give someone a new code, or remove a sign-in.', 'Admin only', accountsView));
     if (S.role === 'admin') box.appendChild(tile('button', 'award', 'Leaderboard',
       'Who booked the most this week, a daily goal for everyone, and neighbourhoods assigned to each person. No location tracking.', 'Admin only · in testing', boardView));
     if (S.ui2) {
@@ -1602,7 +1657,7 @@
       var SHORT = { 'Door rounds': 'Knock a neighbourhood. Works with no signal.', 'My stats': 'Your doors, conversations and quotes.',
         'Quote builder': 'Price a job from the walk.', 'Pipeline': 'Door bookings and enquiries, call to won.',
         'Communities': 'HOAs and Firewise sites to pitch as one job.', 'Results': 'Which doors turn into jobs.', 'Team stats': "Everyone's numbers.",
-        'Leaderboard': 'Rankings, daily goal, neighbourhoods by person.' };
+        'Leaderboard': 'Rankings and the daily goal.', 'Accounts': 'Add, change, sign out and remove sign-ins.', 'Territories': 'Assign neighbourhoods to people.' };
       var tiles = [].slice.call(box.querySelectorAll('.tile')), byName = {};
       tiles.forEach(function (t) {
         var nm = t.querySelector('b').textContent; byName[nm] = t;
@@ -1638,7 +1693,7 @@
           var tg = pt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' · Admin only';
         }).catch(function () {});
       }
-      grp('Office', ['Pipeline', 'Quote builder', 'Communities', 'Results', 'Team stats', 'Leaderboard']);
+      grp('Office', ['Pipeline', 'Territories', 'Quote builder', 'Communities', 'Results', 'Team stats', 'Leaderboard', 'Accounts']);
       [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     }
     var out = q('div', 'out');
@@ -1796,6 +1851,16 @@
 
     if (mode === 'odds' && od && !od.ready) view.appendChild(q('div', 'msg', 'Odds sorts by the rate our own doors book at, by fire hazard and lawn size. It needs ' + od.min + ' conversations across the team first; there are ' + od.talked + ' so far. Until then this list is biggest lots first.'));
     var list = r.areas.slice();
+    /* territories (2026-10-04): the neighbourhoods assigned to you, and a switch to show only those */
+    var mine = r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
+    if (mine) {
+      var ym = q('div', 'yours');
+      ym.appendChild(q('span', null, mine + (mine === 1 ? ' neighbourhood here is yours' : ' neighbourhoods here are yours')));
+      var om = q('button', null, S.onlyMine ? 'Show all' : 'Only mine'); om.type = 'button'; om.setAttribute('aria-pressed', String(!!S.onlyMine));
+      om.addEventListener('click', function () { S.onlyMine = !S.onlyMine; renderAreas(); });
+      ym.appendChild(om); view.appendChild(ym);
+      if (S.onlyMine) list = list.filter(function (a) { return a.who === S.me; });
+    }
     /* most doors still to knock first (2026-10-04); a no-answer still needs a knock */
     if (mode === 'doors') {
       list.sort(function (x, y) {
@@ -2438,7 +2503,8 @@
       holder.appendChild(row);
     });
     holder.appendChild(q('div', 'sub2', 'Talked to = doors knocked minus no-answers and no-soliciting. Rate = quotes per person talked to. Test sign-ins are left out.'));
-    holder.appendChild(territoryCard(holder));
+    var tl = q('button', 'tolink', 'Neighbourhoods by person live on the Territories screen →'); tl.type = 'button';
+    tl.addEventListener('click', territoriesView); holder.appendChild(tl);
   }
   function goalCard(holder) {
     var g = S.board.goals || {}, box = q('div', 'bcard');
@@ -3124,6 +3190,245 @@
       bar.appendChild(b);
     });
     return bar;
+  }
+  /* ---- territories (2026-10-04) ----
+     Matthew: territories as their own thing; admins assign neighbourhoods to people (later a team
+     manager will, for their own reps). By person: what they have and how far through it they are.
+     Assign: a person, a town, tick the neighbourhoods, assign them all at once. */
+  function territoriesView() {
+    hideToast(); S.signin = null; S.screen = 'territories';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Territories', sub: 'Neighbourhoods by person', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('territories').then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the territories.')); return; }
+      S.terr = j; S.regions = []; drawTerritories(holder);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Territories need signal.')); });
+  }
+  function drawTerritories(holder) {
+    var j = S.terr; holder.textContent = '';
+    /* assign */
+    var box = q('div', 'bcard tassign');
+    box.appendChild(q('div', 'wl', 'Assign neighbourhoods'));
+    var ps = q('select'), ts = q('select');
+    ps.setAttribute('aria-label', 'Person'); ts.setAttribute('aria-label', 'Town');
+    j.names.forEach(function (n) { var o = q('option', null, n); o.value = n; ps.appendChild(o); });
+    if (S.terrWho && j.names.indexOf(S.terrWho) >= 0) ps.value = S.terrWho;
+    j.towns.forEach(function (t) { var o = q('option', null, t.label); o.value = t.key; ts.appendChild(o); });
+    ts.value = S.terrTown || S.region || j.towns[0].key;
+    var row = q('div', 'trow'); row.appendChild(ps); row.appendChild(ts); box.appendChild(row);
+    var free = q('label', 'tfree'); var fc = q('input'); fc.type = 'checkbox'; fc.checked = !!S.terrFree; free.appendChild(fc); free.appendChild(document.createTextNode(' Only unassigned')); box.appendChild(free);
+    var listBox = q('div', 'tlist'); box.appendChild(listBox);
+    var go = q('button', 'save'); go.type = 'button'; box.appendChild(go);
+    var picked = {};
+    function count() { var n = Object.keys(picked).length; go.textContent = n ? 'Assign ' + n + (n === 1 ? ' neighbourhood' : ' neighbourhoods') + ' to ' + ps.value : 'Tick neighbourhoods to assign'; go.disabled = !n; }
+    function fill() {
+      listBox.textContent = ''; picked = {};
+      var t = j.towns.filter(function (x) { return x.key === ts.value; })[0];
+      (t ? t.areas : []).filter(function (a) { return !fc.checked || !a.who; }).forEach(function (a) {
+        var l = q('label', 'titem' + (a.who ? ' taken' : ''));
+        var cb = q('input'); cb.type = 'checkbox'; cb.value = a.name;
+        cb.addEventListener('change', function () { if (cb.checked) picked[a.name] = 1; else delete picked[a.name]; count(); });
+        l.appendChild(cb);
+        var tx = q('span'); tx.appendChild(q('b', null, a.name)); tx.appendChild(q('small', null, a.total + ' doors · ' + a.knocked + ' knocked · ' + (a.who ? a.who : 'unassigned'))); l.appendChild(tx);
+        listBox.appendChild(l);
+      });
+      if (!listBox.children.length) listBox.appendChild(q('div', 'msg soft', 'Every neighbourhood in this town is assigned.'));
+      count();
+    }
+    ps.addEventListener('change', function () { S.terrWho = ps.value; count(); });
+    ts.addEventListener('change', function () { S.terrTown = ts.value; fill(); });
+    fc.addEventListener('change', function () { S.terrFree = fc.checked; fill(); });
+    go.addEventListener('click', function () {
+      var areas = Object.keys(picked); if (!areas.length) return;
+      api('assignmany', { body: { region: ts.value, areas: areas, who: ps.value } }).then(function (r) {
+        if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
+        S.terrWho = ps.value; S.terrTown = ts.value; toast('Assigned ' + r.n, 'to ' + ps.value, null); territoriesView();
+      }).catch(function () { toast('No signal', 'Try again when you have signal.', null); });
+    });
+    fill();
+    holder.appendChild(box);
+    /* by person */
+    var by = {};
+    j.towns.forEach(function (t) { t.areas.forEach(function (a) { if (a.who) (by[a.who] = by[a.who] || []).push({ town: t, a: a }); }); });
+    var names = Object.keys(by).sort();
+    holder.appendChild(q('h2', null, 'By person'));
+    if (!names.length) holder.appendChild(q('div', 'msg', 'Nobody has a territory yet. Assign neighbourhoods above; each person sees theirs marked Yours on the neighbourhood list.'));
+    names.forEach(function (n) {
+      var items = by[n], tot = 0, kn = 0; items.forEach(function (x) { tot += x.a.total; kn += x.a.knocked; });
+      var c = q('div', 'door tperson');
+      var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', n)); top.appendChild(q('span', 'tpct', (tot ? Math.round(100 * kn / tot) : 0) + '%')); c.appendChild(top);
+      c.appendChild(q('div', 'meta', items.length + (items.length === 1 ? ' neighbourhood' : ' neighbourhoods') + ' · ' + kn + ' of ' + tot + ' doors knocked'));
+      var bar = q('div', 'btr'); var fl = q('div', 'bfl'); fl.style.width = (tot ? Math.round(100 * kn / tot) : 0) + '%'; bar.appendChild(fl); c.appendChild(bar);
+      var ul = q('div', 'tareas');
+      items.forEach(function (x) {
+        var ch = q('span', 'tchip'); ch.appendChild(document.createTextNode(x.a.name + ' · ' + x.town.label + ' · ' + x.a.knocked + '/' + x.a.total));
+        var rm = q('button', null, '×'); rm.type = 'button'; rm.setAttribute('aria-label', 'Unassign ' + x.a.name);
+        rm.addEventListener('click', function () {
+          api('assignmany', { body: { region: x.town.key, areas: [x.a.name], who: '' } }).then(function (r) {
+            if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
+            toast('Unassigned', x.a.name, null); territoriesView();
+          }).catch(function () { toast('No signal', 'Try again when you have signal.', null); });
+        });
+        ch.appendChild(rm); ul.appendChild(ch);
+      });
+      c.appendChild(ul);
+      holder.appendChild(c);
+    });
+  }
+  /* ---- accounts (2026-10-04) ----
+     Matthew: add, change and remove sign-ins from the app. A new code is shown once, to hand over;
+     nobody can look a code up later (a forgotten code gets a new one). Removing someone signs
+     their phone out on its next tap; what they recorded stays. The server refuses removing or
+     demoting yourself and removing the last admin. */
+  function accountsView() {
+    if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; }   /* PINs hide whenever you leave the screen */
+    hideToast(); S.signin = null; S.screen = 'accounts';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Accounts', sub: 'Who can sign in to the field tools', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('accounts').then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      holder.textContent = '';
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the accounts.')); return; }
+      S.accts = j.accounts; drawAccounts(holder);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
+  }
+  function drawAccounts(holder) {
+    holder.textContent = '';
+    if (S.newCode) holder.appendChild(codeCard(S.newCode));
+    var add = q('button', 'addlead', S.acctAdd ? 'Close the form' : '+ Add a person'); add.type = 'button';
+    add.addEventListener('click', function () { S.acctAdd = !S.acctAdd; S.newCode = null; drawAccounts(holder); });
+    holder.appendChild(add);
+    if (S.acctAdd) holder.appendChild(accountForm(holder));
+    /* every PIN, after you type your own code again; shown until you leave this screen */
+    var pb = q('div', 'pinbar');
+    if (S.pins) {
+      pb.appendChild(q('span', null, 'PINs are showing. They hide when you leave this screen.'));
+      var hd = q('button', 'lnk', 'Hide PINs'); hd.type = 'button'; hd.addEventListener('click', function () { S.pins = null; drawAccounts(holder); }); pb.appendChild(hd);
+    } else if (S.pinAsk) {
+      var pi = q('input'); pi.type = 'password'; pi.inputMode = 'numeric'; pi.maxLength = 6; pi.placeholder = 'Your own code'; pi.autocomplete = 'off'; pi.setAttribute('aria-label', 'Your own code');
+      var go = q('button', 'save', 'Show PINs'); go.type = 'button';
+      var pe = q('div', 'err');
+      go.addEventListener('click', function () {
+        api('accountpins', { body: { code: pi.value } }).then(function (j) {
+          if (!j.ok) { pe.textContent = j.error || 'That did not work.'; return; }
+          S.pins = j.pins; S.pinAsk = false; drawAccounts(holder);
+        }).catch(function () { pe.textContent = 'No signal. Try again.'; });
+      });
+      var cx = q('button', 'lnk', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.pinAsk = false; drawAccounts(holder); });
+      pb.appendChild(q('span', null, 'Type your own code to show everyone’s PIN.'));
+      pb.appendChild(pi); pb.appendChild(go); pb.appendChild(cx); pb.appendChild(pe);
+      setTimeout(function () { try { pi.focus(); } catch (e) {} }, 50);
+    } else {
+      var sp = q('button', 'lnk', 'Show PINs'); sp.type = 'button'; sp.addEventListener('click', function () { S.pinAsk = true; drawAccounts(holder); }); pb.appendChild(sp);
+    }
+    holder.appendChild(pb);
+    var on = S.accts.filter(function (a) { return !a.off; }), off = S.accts.filter(function (a) { return a.off; });
+    holder.appendChild(q('div', 'sub2', on.length + (on.length === 1 ? ' person signs in' : ' people sign in') + ' · ' + on.filter(function (a) { return a.role === 'admin'; }).length + ' admin'));
+    on.forEach(function (a) { holder.appendChild(accountRow(a, holder)); });
+    if (off.length) {
+      holder.appendChild(q('h2', null, 'Turned off · ' + off.length));
+      off.forEach(function (a) { holder.appendChild(accountRow(a, holder)); });
+    }
+  }
+  function codeCard(nc) {
+    var c = q('div', 'codecard');
+    c.appendChild(q('div', 'cl', (nc.fresh ? 'New sign-in for ' : 'New code for ') + nc.name + (nc.role === 'admin' ? ' (admin)' : '')));
+    c.appendChild(q('div', 'cc', nc.code.slice(0, 3) + ' ' + nc.code.slice(3)));
+    c.appendChild(q('div', 'cs', 'Give them this code now. It is shown once; if it is lost, give them a new one.' + (nc.fresh ? '' : ' Their old code no longer works.')));
+    var row = q('div', 'ca');
+    var tx = q('a', 'lnk', 'Text it'); tx.href = 'sms:?&body=' + encodeURIComponent('Your sign-in code for the Sixfold door app is ' + nc.code + '. Keep it private.'); row.appendChild(tx);
+    var cp = q('button', 'lnk', 'Copy'); cp.type = 'button';
+    cp.addEventListener('click', function () { try { navigator.clipboard.writeText(nc.code).then(function () { toast('Copied', nc.name, null); }); } catch (e) {} });
+    row.appendChild(cp);
+    var dn = q('button', 'lnk', 'Done'); dn.type = 'button'; dn.addEventListener('click', function () { S.newCode = null; c.remove(); });
+    row.appendChild(dn);
+    c.appendChild(row);
+    return c;
+  }
+  function roleSeg(cur, onPick) {
+    var seg = q('div', 'aseg');
+    [['crew', 'Crew'], ['admin', 'Admin']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0]));
+      b.addEventListener('click', function () { onPick(o[0]); [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
+      seg.appendChild(b);
+    });
+    return seg;
+  }
+  function accountForm(holder) {
+    var fm = q('div', 'phf acf'), r = 'crew';
+    var lb = q('label', null, 'Name'); var nm = q('input'); nm.maxLength = 40; nm.placeholder = 'First name and last initial'; nm.autocomplete = 'off'; lb.appendChild(nm); fm.appendChild(lb);
+    fm.appendChild(q('div', 'lsub', 'Crew mark doors. Admins also see the office tools, the export and these accounts.'));
+    fm.appendChild(roleSeg('crew', function (v) { r = v; }));
+    var err = q('div', 'err'); fm.appendChild(err);
+    var sv = q('button', 'save', 'Make the sign-in'); sv.type = 'button';
+    sv.addEventListener('click', function () {
+      err.textContent = '';
+      api('accountadd', { body: { name: nm.value, role: r } }).then(function (j) {
+        if (!j.ok) { err.textContent = j.error || 'Could not make that.'; return; }
+        S.acctAdd = false; S.newCode = { name: j.name, role: j.role, code: j.code, fresh: true }; accountsView();
+      }).catch(function () { err.textContent = 'No signal. Try again.'; });
+    });
+    fm.appendChild(sv);
+    setTimeout(function () { try { nm.focus(); } catch (e) {} }, 50);
+    return fm;
+  }
+  function acctCall(action, body, done) {
+    api(action, { body: body }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not done', j.error || 'Try again.', null); return; }
+      if (done) done(j); accountsView();
+    }).catch(function () { toast('No signal', 'Try again when you have signal.', null); });
+  }
+  function accountRow(a, holder) {
+    var c = q('div', 'door acct' + (a.off ? ' off' : ''));
+    var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', a.name));
+    if (a.you) top.appendChild(q('span', 'tag you', 'You'));
+    c.appendChild(top);
+    if (S.pins && S.pins[a.id]) c.appendChild(q('div', 'pin', 'PIN ' + S.pins[a.id].slice(0, 3) + ' ' + S.pins[a.id].slice(3)));
+    var meta = q('div', 'meta');
+    meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'admin' ? 'Admin' : 'Crew'));
+    meta.appendChild(q('span', null, a.off ? 'Turned off · cannot sign in' : a.source === 'app' ? 'Added' + (a.by ? ' by ' + a.by : '') + (a.at ? ' · ' + fmtDay(a.at) : '') : 'Set up on the server'));
+    c.appendChild(meta);
+    if (S.acctEdit === a.id) {
+      var fm = q('div', 'phf acf');
+      var lb = q('label', null, 'Name'); var nm = q('input'); nm.maxLength = 40; nm.value = a.name; lb.appendChild(nm); fm.appendChild(lb);
+      var r = a.role; fm.appendChild(roleSeg(a.role, function (v) { r = v; }));
+      var row2 = q('div', 'row2');
+      var sv = q('button', 'save', 'Save'); sv.type = 'button';
+      sv.addEventListener('click', function () { acctCall('accountedit', { id: a.id, name: nm.value, role: r }, function () { S.acctEdit = null; toast('Saved', nm.value, null); }); });
+      var cx = q('button', null, 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.acctEdit = null; drawAccounts(holder); });
+      row2.appendChild(sv); row2.appendChild(cx); fm.appendChild(row2);
+      c.appendChild(fm);
+      return c;
+    }
+    var acts = q('div', 'aacts');
+    var btn = function (label, cls, fn) { var b = q('button', 'lnk' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.addEventListener('click', fn); acts.appendChild(b); };
+    if (a.off) {
+      btn('Turn back on', null, function () { acctCall('accountrestore', { id: a.id }, function () { toast('Back on', a.name, null); }); });
+    } else {
+      btn('Change', null, function () { S.acctEdit = a.id; drawAccounts(holder); });
+      if (!a.you) {
+        btn('New code', null, function () {
+          if (!window.confirm('Give ' + a.name + ' a new code? Their old code stops working at once.')) return;
+          acctCall('accountcode', { id: a.id }, function (j) { S.newCode = { name: j.name, role: j.role, code: j.code, fresh: false }; });
+        });
+        btn('Sign out', null, function () {
+          if (!window.confirm('Sign ' + a.name + ' out of the app? Their code still works; they sign in again with it.')) return;
+          acctCall('accountsignout', { id: a.id }, function () { toast('Signed out', a.name, null); });
+        });
+        btn('Remove', 'danger', function () {
+          if (!window.confirm('Remove ' + a.name + '? Their phone is signed out on its next tap. Everything they recorded stays.')) return;
+          acctCall('accountremove', { id: a.id }, function () { toast('Removed', a.name, null); });
+        });
+      }
+    }
+    c.appendChild(acts);
+    return c;
   }
   /* ---- pipeline (2026-10-04) ----
      Matthew: should Quotes to build and Leads be put together? Yes: they are one pipeline that

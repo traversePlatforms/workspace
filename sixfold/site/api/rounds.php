@@ -99,6 +99,46 @@ if ($sessionKey === '' || $sessionKey === 'REPLACE-WITH-64-RANDOM-HEX-CHARACTERS
     fail('Rounds is not configured on this server.', 503);
 }
 
+/* ---- accounts managed from the app (2026-10-04) ------------------------------------------
+ * Matthew: add, change and remove sign-ins from an admin screen. The server's codes file stays
+ * the base list; the app keeps its own file beside it (sixfold-private, never in public_html):
+ *   people: code => [name, role, by, at]   sign-ins added in the app
+ *   off:    id => {by, at}                  lines of the codes file turned off
+ *   over:   id => [name, role]              lines of the codes file renamed or re-roled
+ * id = codeId(code), a keyed hash: the page and the log never see a code. A code is shown once,
+ * when it is made. Every request reads the merged list, so a change works at once (a removed
+ * person's phone is signed out on its next request; see the session check below). */
+function accountsFile(): string {
+    $priv = dirname(__DIR__, 2) . '/sixfold-private';
+    return (is_dir($priv) ? $priv : dirname(DATA_DIR)) . '/rounds-accounts.json';
+}
+function loadAccounts(): array {
+    $a = json_decode((string) @file_get_contents(accountsFile()), true);
+    $a = is_array($a) ? $a : [];
+    foreach (['people', 'off', 'over'] as $k) if (!isset($a[$k]) || !is_array($a[$k])) $a[$k] = [];
+    return $a;
+}
+function saveAccounts(array $a): bool {
+    $f = accountsFile(); $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp';
+    if (@file_put_contents($tmp, json_encode($a, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) return false;
+    @chmod($tmp, 0600);
+    if (!@rename($tmp, $f)) { @unlink($tmp); return false; }
+    return true;
+}
+function accountLog(array $row): void {
+    @file_put_contents(dirname(accountsFile()) . '/rounds-accounts.log', json_encode($row + ['at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+$basePeople = $people;
+$acct = loadAccounts();
+foreach ($basePeople as $c => $who) {
+    $id = codeId((string) $c, $sessionKey);
+    if (isset($acct['off'][$id])) { unset($people[$c]); continue; }
+    if (isset($acct['over'][$id]) && is_array($acct['over'][$id])) $people[$c] = [(string) $acct['over'][$id][0], (string) $acct['over'][$id][1]];
+}
+foreach ($acct['people'] as $c => $p) {
+    if (is_array($p) && !isset($basePeople[$c])) $people[(string) $c] = [(string) ($p[0] ?? ''), (string) ($p[1] ?? 'crew')];
+}
+
 /* ---- sessions ---------------------------------------------------------- */
 function b64u(string $s): string { return rtrim(strtr(base64_encode($s), '+/', '-_'), '='); }
 function b64u_dec(string $s): string {
@@ -136,6 +176,9 @@ if ($session) {
     foreach ($people as $c => $who) {
         if (is_array($who) && hash_equals(codeId((string) $c, $sessionKey), (string) ($session['c'] ?? ''))) $line = $who;
     }
+    /* signed out by an admin (2026-10-04): a session that began before the sign-out is refused; the code still works */
+    $kick = (int) ($acct['kick'][(string) ($session['c'] ?? '')] ?? 0);
+    if ($line !== null && $kick && ((int) ($session['exp'] ?? 0) - $sessionDays * 86400) < $kick) $line = null;
     if ($line === null) $session = null;
     else { $session['n'] = (string) ($line[0] ?? ''); $session['r'] = (string) ($line[1] ?? 'crew'); }
 }
@@ -456,6 +499,9 @@ function appendResult(string $key, array $row): bool {
  * Goals: one daily target per person for the whole team, in goals.json.
  * The test sign-ins (any name starting Claude or Fable, e.g. "Claude Check") never appear on the board. */
 const BOARD_OPEN = false;
+/* Matthew 2026-10-04: crews may not always have territories; for now they see every neighbourhood and nothing
+   of the assignments. Admins can assign and plan already. true = each person sees theirs marked Yours, with Only mine. */
+const TERRITORIES_OPEN = false;
 const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
 function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin'; }
 function boardHidden(string $name): bool { return (bool) preg_match('/^(claude|fable)\b/i', $name); }
@@ -786,7 +832,7 @@ if ($action === 'regions') {
         $marks = loadMarks($r['key']);
         $aflags = loadAreaFlags($r['key']);
         $lfix = loadLawnFix($r['key']);
-        $assign = boardOpen($role) ? loadAssign($r['key']) : [];
+        $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -1552,6 +1598,127 @@ if ($action === 'work') {
     out(['ok' => true]);
 }
 
+/* ---- the accounts screen (admin) ---------------------------------------------------------- */
+function acctName(string $n): string { return trim((string) preg_replace('/\s+/u', ' ', $n)); }
+function acctNameOk(string $n): bool { return (bool) preg_match("/^\\p{L}[\\p{L} .'\\-]{1,39}$/uD", $n); }
+/** every account, active or turned off, without its code */
+function acctRows(array $basePeople, array $acct, string $key): array {
+    $rows = [];
+    foreach ($basePeople as $c => $who) {
+        $id = codeId((string) $c, $key);
+        $o = $acct['over'][$id] ?? null;
+        $rows[$id] = ['id' => $id, 'name' => (string) ($o[0] ?? $who[0] ?? ''), 'role' => (string) ($o[1] ?? $who[1] ?? 'crew'),
+                      'source' => 'server', 'off' => isset($acct['off'][$id]), 'code' => (string) $c];
+    }
+    foreach ($acct['people'] as $c => $p) {
+        if (isset($basePeople[$c]) || !is_array($p)) continue;
+        $id = codeId((string) $c, $key);
+        $rows[$id] = ['id' => $id, 'name' => (string) ($p[0] ?? ''), 'role' => (string) ($p[1] ?? 'crew'), 'source' => 'app',
+                      'off' => false, 'by' => (string) ($p[2] ?? ''), 'at' => (int) ($p[3] ?? 0), 'code' => (string) $c];
+    }
+    return $rows;
+}
+function acctNewCode(array $basePeople, array $acct): string {
+    for ($i = 0; $i < 200; $i++) {
+        $c = (string) random_int(100000, 999999);
+        if (!isset($basePeople[$c]) && !isset($acct['people'][$c])) return $c;
+    }
+    fail('Could not make a new code. Try again.', 500);
+}
+function acctTaken(array $rows, string $name, string $except = ''): bool {
+    foreach ($rows as $r) if (!$r['off'] && $r['id'] !== $except && mb_strtolower($r['name']) === mb_strtolower($name)) return true;
+    return false;
+}
+function acctAdmins(array $rows): int { $n = 0; foreach ($rows as $r) if (!$r['off'] && $r['role'] === 'admin') $n++; return $n; }
+if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins'], true)) {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $rows = acctRows($basePeople, $acct, $sessionKey);
+    $myId = (string) ($session['c'] ?? '');
+    if ($action === 'accounts') {
+        $list = array_map(fn($r) => array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId], array_values($rows));
+        usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
+        out(['ok' => true, 'accounts' => $list]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    /* every PIN, for an admin who types their own code again (Matthew 2026-10-04). Wrong codes count
+       against the same limit as the sign-in screen; every reveal is logged. */
+    if ($action === 'accountpins') {
+        $addrFile = rateFile(clientKey());
+        if (!throttleTake($addrFile, MAX_TRIES, TRY_WINDOW)) fail('Too many wrong codes from here. Wait fifteen minutes.', 429);
+        $mine = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
+        if ($mine === '' || !hash_equals($myId, codeId($mine, $sessionKey)) || !isset($people[$mine])) fail('That is not your code.', 401);
+        throttleGiveBack($addrFile);
+        $pins = []; foreach ($rows as $r) if (!$r['off']) $pins[$r['id']] = $r['code'];
+        accountLog(['by' => $me, 'what' => 'showed pins', 'n' => count($pins)]);
+        out(['ok' => true, 'pins' => $pins]);
+    }
+    if ($action === 'accountadd') {
+        $name = acctName((string) ($body['name'] ?? '')); $r = (string) ($body['role'] ?? 'crew');
+        if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
+        if (!in_array($r, ['crew', 'admin'], true)) fail('Pick crew or admin.');
+        if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
+        $code = acctNewCode($basePeople, $acct);
+        $acct['people'][$code] = [$name, $r, $me, time()];
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'add', 'name' => $name, 'role' => $r, 'id' => codeId($code, $sessionKey)]);
+        out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $name, 'role' => $r, 'code' => $code]);
+    }
+    $id = (string) ($body['id'] ?? '');
+    if (!isset($rows[$id])) fail('No such account.', 404);
+    $t = $rows[$id];
+    if ($action === 'accountedit') {
+        $name = array_key_exists('name', $body) ? acctName((string) $body['name']) : $t['name'];
+        $r = array_key_exists('role', $body) ? (string) $body['role'] : $t['role'];
+        if ($t['off']) fail('Turn the account back on first.');
+        if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
+        if (!in_array($r, ['crew', 'admin'], true)) fail('Pick crew or admin.');
+        if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
+        if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
+        if ($t['role'] === 'admin' && $r !== 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin. Make someone else an admin first.');
+        if ($t['source'] === 'app') { $p = $acct['people'][$t['code']]; $p[0] = $name; $p[1] = $r; $acct['people'][$t['code']] = $p; }
+        else $acct['over'][$id] = [$name, $r];
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'edit', 'name' => $name, 'role' => $r, 'was' => $t['name'] . '/' . $t['role'], 'id' => $id]);
+        out(['ok' => true]);
+    }
+    if ($action === 'accountcode') {
+        if ($t['off']) fail('Turn the account back on first.');
+        if ($id === $myId) fail('Your own code changes from another admin\'s phone (a new code signs this phone out).');
+        $code = acctNewCode($basePeople, $acct);
+        if ($t['source'] === 'app') { $p = $acct['people'][$t['code']]; unset($acct['people'][$t['code']]); $acct['people'][$code] = $p; }
+        else { $acct['off'][$id] = ['by' => $me, 'at' => time(), 'why' => 'new code']; $acct['people'][$code] = [$t['name'], $t['role'], $me, time()]; }
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
+        out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $t['name'], 'role' => $t['role'], 'code' => $code]);
+    }
+    if ($action === 'accountsignout') {
+        if ($t['off']) fail('That account is off already.');
+        if ($id === $myId) fail('Use Sign out on the tools screen to sign yourself out.');
+        $acct['kick'][$id] = time();
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'signed out', 'name' => $t['name'], 'id' => $id]);
+        out(['ok' => true]);
+    }
+    if ($action === 'accountremove') {
+        if ($t['off']) fail('That account is already off.');
+        if ($id === $myId) fail('You cannot remove yourself. Ask another admin.');
+        if ($t['role'] === 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin.');
+        if ($t['source'] === 'app') unset($acct['people'][$t['code']]);
+        else $acct['off'][$id] = ['by' => $me, 'at' => time()];
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'remove', 'name' => $t['name'], 'id' => $id]);
+        out(['ok' => true]);
+    }
+    if ($action === 'accountrestore') {
+        if (!$t['off']) fail('That account is already on.');
+        if (acctTaken($rows, $t['name'], $id)) fail('Someone else signs in as ' . $t['name'] . ' now. Rename one of them first.');
+        unset($acct['off'][$id]);
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'restore', 'name' => $t['name'], 'id' => $id]);
+        out(['ok' => true]);
+    }
+}
+
 /* the board: per person, today / 7 days / 30 days. Talked to = doors minus no-answers and
    no-soliciting. Won = jobs won on doors that person booked, credited when the job was won. */
 if ($action === 'board') {
@@ -1611,6 +1778,47 @@ if ($action === 'goals') {
     }
     if (!@file_put_contents(DATA_DIR . '/goals.json', json_encode($g, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'goals' => $g]);
+}
+
+/* ---- territories (2026-10-04) ---------------------------------------------------------------
+ * Matthew: territories get their own screen; admins assign neighbourhoods to people. Later a team
+ * manager role will assign within their own team: the assignment rows already say who assigned
+ * ('by'), so that role only needs a team list and a check here. */
+if ($action === 'territories') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $towns = [];
+    foreach (($idx['regions'] ?? []) as $rg) {
+        $data = loadRegion($rg['key']); if (!$data) continue;
+        $marks = loadMarks($rg['key']); $assign = loadAssign($rg['key']);
+        $areas = [];
+        foreach ($data['areas'] as $a) {
+            $k = 0; foreach ($a['doors'] as $d) if (freshMark($d, $marks[$d['id']] ?? null)) $k++;
+            $areas[] = ['name' => $a['name'], 'total' => count($a['doors']), 'knocked' => $k, 'who' => $assign[$a['name']] ?? null];
+        }
+        $towns[] = ['key' => $rg['key'], 'label' => $rg['label'], 'areas' => $areas];
+    }
+    $names = [];
+    foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }
+    ksort($names);
+    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names)]);
+}
+if ($action === 'assignmany') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
+    $areas = is_array($body['areas'] ?? null) ? array_values(array_unique(array_map('strval', $body['areas']))) : [];
+    $data = loadRegion($key);
+    if (!$data) fail('No such region.', 404);
+    if (!$areas || count($areas) > 200) fail('Pick the neighbourhoods to assign.');
+    $have = array_column($data['areas'], 'name');
+    foreach ($areas as $a) if (!in_array($a, $have, true)) fail('No such neighbourhood: ' . $a, 404);
+    if ($who !== '') {
+        $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
+        if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
+    }
+    foreach ($areas as $a) if (!appendAssign($key, ['area' => $a, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'n' => count($areas)]);
 }
 
 if ($action === 'assign') {
