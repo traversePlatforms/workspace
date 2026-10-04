@@ -20,11 +20,18 @@ by **the towns we actually work**, not by which agency wrote the rule.
 
 ## The one thing that shapes everything else
 
-**Aeration does not need water. Overseeding does.**
+**Aeration needs a watered lawn. Overseeding needs far more.**
 
-That single line is the whole document. Core aeration is a machine pass — it works on moist
-ground, and a customer under the tightest restrictions in our territory can still legally water
-enough to soften a lawn before we arrive. **Our lead service is not threatened by any of this.**
+> **⚑ Corrected 2026-10-04.** This section first said *"Aeration does not need water"* and that our
+> lead service was not threatened. **That was wrong.** Colorado State University Extension: water
+> thoroughly the day before so deep plugs can be pulled; water soon after; regular watering should
+> follow, because the holes need water to heal; and **core aeration should not be performed on lawns
+> that are totally brown or dormant as the result of water restrictions** (PlantTalk 1505, 1534).
+
+Core aeration is a machine pass, and on a green lawn it still works under every provider's rules in
+our territory: two or three allowed days a week covers the watering before and after. **What it
+needs is a green, watered lawn** — which rules out lawns that are dormant, including many on
+household-use-only wells (see Wells; what to sell there is Brandon's call, not settled here).
 
 Overseeding is the exposed half. Seed needs light, frequent watering to germinate — more often
 than most providers now allow by sprinkler. **A customer who is allowed to water two or three days
@@ -166,7 +173,9 @@ contractor file exemptions for a client are all unconfirmed.** Castle Rock Water
 
 **Say:**
 
-- *"Aeration works fine under the current restrictions."* True everywhere in our territory.
+- *"Aeration still works on your watering days: water the day before and soon after."* True on a
+  green lawn everywhere in our territory. (Corrected 2026-10-04; it first said "works fine under the
+  current restrictions" with no mention of watering.)
 - *"Which water provider are you on?"* Ask it on every lawn walk. It is a one-line question that
   changes what we should sell.
 - *"If you're on Colorado Springs Utilities, there's a permit that lets you water more often while
@@ -205,6 +214,9 @@ Named here rather than quietly filled in.
    late-summer job. If mid-October is past the window, that is a bigger problem for the Kara job
    than the watering rules are, and **dormant seeding** — seed down late, germinates in spring —
    may be the honest version. Not researched.
+7. **What to sell on a household-use-only well where the lawn is brown.** CSU says don't aerate a
+   dormant lawn, and this file still tells the crew to "sell aeration, mowing or cleanup" there. **A
+   sales decision for Brandon**; the app's well-town sheets say the same until he decides.
 6. **Our live Meta ad says nothing about water.** "Fall Aeration 2026" is running at $50/day and
    is aeration-led, which is the safe half. Worth a read-through now that this is known.
 
@@ -233,6 +245,9 @@ inferred or secondary, treat as unconfirmed.
 | Town of Monument: odd/even, no Sunday, extended 7 Apr – 30 Oct for 2026 only | **A** | townofmonument.org newsflash |
 | Woodmoor: odd/even, no Monday, 1 June – 30 Sept, no drought stage declared | **A** | woodmoorwater.com; Q3 newsletter asks only that customers "be mindful" |
 | Castle Rock: Stage 2 in July, back to Stage 1 on 1 September | **B** | Colorado Politics, 22 July 2026; Castle Rock drought management page |
+| Water thoroughly the day before aerating; water soon after; regular watering should follow; holes need water to heal | **A** | Colorado State University Extension, PlantTalk 1505 and 1534, read 4 Oct 2026 |
+| Don't core-aerate a lawn that is totally brown or dormant from water restrictions | **A** | CSU Extension, PlantTalk 1534 *Lawn Aeration: During Drought*, read 4 Oct 2026 |
+| ~~Aeration does not need water~~ — **wrong, corrected 2026-10-04** | **—** | Was an inference, never sourced. Replaced by the two CSU rows above |
 | Wells under 35 acres permitted since 8 May 1972 are commonly household-use-only and **may not irrigate a lawn** | **A** | Colorado DWR, *Guideline 2023-1, Uses of Water From Exempt and Small Capacity Wells* |
 | 35+ acre parcels may irrigate up to one acre of lawn and garden | **A** | Same guideline, citing C.R.S. 37-92-602(3)(b)(II)(A) |
 | Colorado Springs adjusted expected water yield to 41% of average, lowest on record; ~3 years in storage | **B** | KKTV / Axios, spring 2026 |
@@ -264,5 +279,7 @@ it does not go in a quote.**
 - Castle Rock Water — <https://www.crgov.com/2979/Drought-Management>
 - Colorado DWR, well permitting — <https://dwr.colorado.gov/services/well-permitting>
 - Colorado DWR, Guideline 2023-1 — <https://dnrweblink.state.co.us/dwr/ElectronicFile.aspx?docid=4187690&dbid=0>
+- CSU Extension, Lawn Aeration — <https://planttalk.colostate.edu/topics/lawns/1505-lawn-aeration/>
+- CSU Extension, Lawn Aeration: During Drought — <https://planttalk.colostate.edu/topics/lawns/1514-insects-2/>
 - CPR, restrictions roundup — <https://www.cpr.org/2026/04/14/colorado-water-restrictions-drought/>
 - Colorado Politics, Castle Rock Stage 2 — <https://www.coloradopolitics.com/2026/07/22/castle-rock-implements-mandatory-stage-2-water-restrictions/>

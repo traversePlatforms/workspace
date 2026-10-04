@@ -17,12 +17,19 @@ so a fact can be corrected by uploading the JSON alone, with no new page upload.
   That is why Grants is county-aware.
 
 **Water (added 2026-10-04).** money.json also carries a `water` block: the Water line on each door card
-(aeration needs no water; the town's provider rule; in the six mostly-well towns, the well rule for a lot
+(aeration: water before and after; the town's provider rule; in the six mostly-well towns, the well rule for a lot
 of that size) and a four-tab sheet (This town · Wells · Permits · Say). Every line comes from
 [../../../../research/water-restrictions-2026.md](../../../../research/water-restrictions-2026.md), checked
 **2026-09-30**, and its fact-check log covers it. Providers that were not checked (Donala, Triview, Palmer
 Lake, Cripple Creek, every scheme outside Colorado Springs and Castle Rock) say "not checked" in the app
 rather than guessing. Re-check the provider pages before the 2027 season; drought stages move without warning.
+
+**Corrected 2026-10-04:** the card said "Aeration needs no watering", from the research's headline "Aeration does
+not need water". Colorado State University Extension says water thoroughly the day before, water soon after, keep
+watering regularly, and don't core-aerate a lawn that is brown or dormant from water restrictions (PlantTalk
+[1505](https://planttalk.colostate.edu/topics/lawns/1505-lawn-aeration/) and [1534](https://planttalk.colostate.edu/topics/lawns/1514-insects-2/)). The card now says "Aeration: water before and after", and the sheet
+explains why. **Not changed, Brandon's call:** the well-town sheets still say "sell aeration, mowing or cleanup"
+for a household-only well, where the lawn often can't legally be watered and may be dormant.
 
 **Derived from:** [../../../../tax-credit-notebook/README.md](../../../../tax-credit-notebook/README.md) and
 [../../../../research/mitigation-funding-directory.md](../../../../research/mitigation-funding-directory.md),

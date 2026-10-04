@@ -161,7 +161,7 @@
   },
   "water": {
     "checked": "2026-09-30",
-    "footer": "Checked 30 Sep 2026 against each provider's own page. Drought stages change without warning: Denver went from normal rules to a total ban in about five weeks. Check the provider's page that week before telling anyone a watering schedule. Sources and the fact-check log: sixfold/research/water-restrictions-2026.md.",
+    "footer": "Aeration and water: Colorado State University Extension (PlantTalk 1505 and 1534), checked 4 Oct 2026. Watering rules checked 30 Sep 2026 against each provider's own page. Drought stages change without warning: Denver went from normal rules to a total ban in about five weeks. Check the provider's page that week before telling anyone a watering schedule. Sources and the fact-check log: sixfold/research/water-restrictions-2026.md.",
     "wellTowns": [
       "black-forest",
       "franktown",
@@ -172,7 +172,7 @@
     ],
     "cards": {
       "_note": "One short line each for the door card. Keep them in step with the sheets below.",
-      "aeration": "Aeration needs no watering",
+      "aeration": "Aeration: water before and after",
       "towns": {
         "woodland-park": "Woodland Park: 2 days a week",
         "castle-rock": "Castle Rock: every third day",
@@ -189,7 +189,7 @@
       "wellSmall": "Under 35 acres: a well may not water a lawn",
       "wellBig": "35 acres or more: a well may water up to 1 acre"
     },
-    "lead": "Aeration does not need water. Overseeding does. Every rule here is about seed.",
+    "lead": "Aeration needs a watered lawn: water the day before and soon after. Seed needs far more.",
     "topics": {
       "town": {
         "byTown": {
@@ -480,6 +480,14 @@
         "title": "What to say",
         "blocks": [
           {
+            "h": "Aeration and water",
+            "p": [
+              "Water the lawn thoroughly the day before, so the machine pulls deep plugs. On hard, dry ground the plugs come out short, or the machine bounces.",
+              "Water soon after, and keep watering regularly: the holes need water to heal over.",
+              "Colorado State University Extension: don't core-aerate a lawn that is totally brown or dormant from water restrictions."
+            ]
+          },
+          {
             "h": "If they ask about Denver",
             "p": [
               "Denver Water banned all lawn watering from 1 October. It doesn't reach any town we work."
@@ -487,7 +495,7 @@
           }
         ],
         "say": [
-          "Aeration works fine under the current restrictions.",
+          "Aeration still works on the allowed days: water the lawn the day before and soon after.",
           "Which water provider are you on?",
           "If you're on Colorado Springs Utilities, there's a permit that lets you water more often while new seed comes in. I can show you how to get it.",
           "Water the lawn a day or two before we come out."
@@ -495,6 +503,7 @@
         "dont": [
           "Anything that sounds like a promise the seed will come up. We don't water and we don't guarantee germination.",
           "A watering schedule for a provider, unless you checked its page this week.",
+          "Aerating a lawn that's brown or dormant.",
           "\"You're on a well, so the restrictions don't apply.\" Often the opposite."
         ]
       }

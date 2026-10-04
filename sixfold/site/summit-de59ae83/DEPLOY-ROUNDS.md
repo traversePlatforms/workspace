@@ -7,6 +7,14 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — corrected aeration wording (money.json only)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `data/rounds/docs/money.json` | `sixfold-data/rounds/docs/` |
+
+No flush needed (it is read after sign-in, not cached). The card said "Aeration needs no watering"; CSU Extension says water the day before and soon after, and don't aerate a lawn brown or dormant from restrictions. Now: "Aeration: water before and after", a new opening line on the water sheet, an "Aeration and water" block and a Don't-say line on the Say tab. The well-town "sell aeration, mowing or cleanup" lines are unchanged: Brandon's call.
+
 ## ✅ LIVE 2026-10-04 (verified 15/15) — cleanup + water rules + nightly backups. cron job SET UP 2026-10-04 by Matthew (Once Per Day, 0 0 * * *, server clock); ⏳ confirm the first nightly copy appears
 
 Verified: page identical at all four addresses, money.json carries the water rules, backups list answers, the job is not reachable from the web, the Water line and sheet work on a Woodland Park door, Keep a copy shows the nightly section ("none yet"). Whether nightly-backup.php sits in the right folder can only be confirmed by the first nightly copy appearing.
