@@ -826,6 +826,8 @@ if ($action === 'regions') {
     $regions = [];
     $today = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d');
     $segT = []; $segB = [];                  /* SX-54: conversations and quotes per kind of door, across every town */
+    /* the county each town is in, from the funding sheet (one list to keep up to date) */
+    $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         if (!$data) continue;
@@ -886,7 +888,7 @@ if ($action === 'regions') {
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
                         '_seg' => $aseg];
         }
-        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
+        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? null, 'areas' => $areas];
     }
     /* ---- our own odds (SX-54, 2026-10-04) ----
        Expected quotes from the doors still to knock: each door counts at the rate doors like it

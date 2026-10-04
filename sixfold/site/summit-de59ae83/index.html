@@ -135,6 +135,7 @@
   .ui2 .dock::-webkit-scrollbar{display:none}
   .ui2 .dock.more{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}
   .ui2 .dock button{flex:1 0 auto;min-width:58px;white-space:nowrap}
+  .ui2 .dock .dback{flex:0 0 68px}
   @media (max-width:899px){ .ui2 .dock .dback{position:sticky;left:0;z-index:1;box-shadow:-12px 0 0 var(--bar),6px 0 10px -6px rgba(0,0,0,.6);background:#2E3B35} }
   @media (min-width:900px){ .dock .dback{position:absolute;left:14px;top:7px;bottom:calc(7px + env(safe-area-inset-bottom,0px));width:84px} }   /* wide iPad: under the left thumb */
 
@@ -1725,6 +1726,7 @@
     var sel = document.createElement('select');
     sel.id = 'region';
     sel.setAttribute('aria-label', 'Town');
+    var all = document.createElement('option'); all.value = ''; all.textContent = 'Colorado · all towns'; if (!S.region) all.selected = true; sel.appendChild(all);
     S.regions.forEach(function (r) {
       var o = document.createElement('option');
       o.value = r.key;
@@ -1735,8 +1737,8 @@
       sel.appendChild(o);
     });
     sel.addEventListener('change', function () {
-      if (S.region === sel.value) return;
-      S.region = sel.value; S.area = null; renderAreas();
+      if ((S.region || '') === sel.value) return;
+      S.region = sel.value || null; S.area = null; renderAreas();
     });
     regionBar.appendChild(sel);
   }
@@ -1745,8 +1747,9 @@
     S.returnTo = null; S.backFirst = false;       /* the neighbourhood list is home again */
     S.ringAnim = !!S.ui2 && S.animRegion !== S.region; if (S.ringAnim) S.animRegion = S.region;
     if (S.ringAnim) setTimeout(function () { S.ringAnim = false; }, 0);
+    if (!S.region) return stateView();
     var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
-    if (!r) return;
+    if (!r) return stateView();
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'areas';
     setBar('town'); renderRegions();
@@ -1817,7 +1820,7 @@
       if (v === 'near') { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
       renderAreas();
       window.scrollTo(0, 0);
-    }, chooseView);   /* Back to the tools: this screen had no visible Back (review) */
+    }, function () { S.region = null; S.area = null; stateView(); });   /* Back to Colorado (2026-10-04); from there, Back to the tools */
 
     /* ---- nearest NEIGHBOURHOOD (2026-10-02) ----
        Inside a neighbourhood the doors are all a few hundred feet apart; the useful
@@ -3190,6 +3193,71 @@
       bar.appendChild(b);
     });
     return bar;
+  }
+  /* ---- Colorado: every county and town (2026-10-04) ----
+     Matthew: Door rounds opens on the state, not on Monument. Each county with its towns: doors
+     still to knock, how far through, high-risk doors left, quotes booked. Tap a town for its
+     neighbourhoods; the town picker at the top still switches, and lists Colorado first. */
+  var COUNTY_NAME = { elpaso: 'El Paso County', douglas: 'Douglas County', teller: 'Teller County' };
+  function townSum(r) {
+    return r.areas.reduce(function (t, a) {
+      t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
+      t.hot += a.hot || 0; t.booked += a.booked || 0; t.all3 += a.all3 || 0; return t;
+    }, { total: 0, done: 0, left: 0, hot: 0, booked: 0, all3: 0 });
+  }
+  function stateView() {
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'state'; S.region = null; S.area = null;
+    setBar('town'); renderRegions();
+    /* Nearest town: find where you are and open the closest town, sorted by distance */
+    setDock([['near', 'Nearest town', 'near']], null, function () {
+      try { localStorage.setItem('sixfold.rounds.sort', 'near'); } catch (e) {}
+      S.region = S.regions[0].key; S.pickTown = true; S.townNote = null;
+      locate(function () { if (S.screen === 'areas') renderAreas(); });
+      renderAreas();
+    }, chooseView);
+    foot.hidden = true;
+    view.textContent = '';
+    var all = S.regions.map(function (r) { return { r: r, t: townSum(r) }; });
+    var T = all.reduce(function (s, x) { s.total += x.t.total; s.done += x.t.done; s.left += x.t.left; s.booked += x.t.booked; return s; }, { total: 0, done: 0, left: 0, booked: 0 });
+    /* the state card */
+    var pc = q('div', 'prog');
+    var pct = T.total ? T.done / T.total : 0;
+    var centre = q('span'); centre.appendChild(document.createTextNode(pctText(pct))); centre.appendChild(q('small', null, 'VISITED'));
+    pc.appendChild(ring(84, 7, pct, centre, false));
+    var pi = q('div', 'pi'); pi.appendChild(q('h3', null, 'Colorado'));
+    pi.appendChild(q('div', 'pt', T.done.toLocaleString('en-US') + ' of ' + T.total.toLocaleString('en-US') + ' doors visited · ' + S.regions.length + ' towns'));
+    if (T.booked) { var sc = q('div', 'chips'); sc.appendChild(chipEl('bk', 'check', T.booked + (T.booked === 1 ? ' quote' : ' quotes') + ' booked')); pi.appendChild(sc); }
+    pc.appendChild(pi); view.appendChild(pc);
+    view.appendChild(alertStrip(null));
+    /* counties, in the order the towns are listed */
+    var order = [];
+    all.forEach(function (x) { var k = x.r.county || 'other'; if (order.indexOf(k) < 0) order.push(k); });
+    order.forEach(function (k, gi) {
+      var towns = all.filter(function (x) { return (x.r.county || 'other') === k; });
+      var cs = towns.reduce(function (s, x) { s.left += x.t.left; s.total += x.t.total; return s; }, { left: 0, total: 0 });
+      var sect = q('div', 'sect'); sect.appendChild(q('h2', null, COUNTY_NAME[k] || 'Other towns'));
+      sect.appendChild(q('span', null, cs.left.toLocaleString('en-US') + ' doors to knock')); view.appendChild(sect);
+      towns.forEach(function (x, i) {
+        var b = q('button', 'area town'); b.type = 'button'; b.setAttribute('data-town', x.r.key);
+        var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
+        b.appendChild(ring(48, 5, p, fin ? ico('check', 3) : pctText(p), fin));
+        var mid = q('div', 'mid'); mid.appendChild(q('div', 'nm', x.r.label));
+        mid.appendChild(q('div', 'sub', x.r.areas.length + ' neighbourhoods · ' + x.t.total.toLocaleString('en-US') + ' doors'));
+        var chips = q('div', 'chips');
+        if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString('en-US') + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
+        if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
+        if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
+        if (chips.children.length) mid.appendChild(chips);
+        b.appendChild(mid);
+        var cnt = q('div', 'left'); cnt.appendChild(q('b', null, fin ? 'Done' : x.t.left.toLocaleString('en-US'))); if (!fin) cnt.appendChild(q('small', null, 'to knock'));
+        b.appendChild(cnt);
+        b.addEventListener('click', function () { S.region = x.r.key; S.area = null; renderAreas(); window.scrollTo(0, 0); });
+        if (S.ui2 && !reduced()) { var n = view.querySelectorAll('button.town').length; if (n < 14) { b.style.animationDelay = (n * 35) + 'ms'; b.classList.add('enter'); } }
+        view.appendChild(b);
+      });
+    });
+    window.scrollTo(0, 0);
   }
   /* ---- territories (2026-10-04) ----
      Matthew: territories as their own thing; admins assign neighbourhoods to people (later a team
@@ -5237,12 +5305,11 @@
     return api('regions').then(function (j) {
       if (!j.ok) { if (j._status === 401) return signinView(); return; }
       S.regions = j.regions;
-      if (!S.region && S.regions.length) S.region = S.regions[0].key;
-      renderAreas();
+      renderAreas();   /* no town picked: the Colorado overview */
     });
   }
 
-  function start() { countPhotos(); flush().then(refresh); }
+  function start() { countPhotos(); S.region = null; flush().then(refresh); }   /* Matthew 2026-10-04: Door rounds opens on Colorado, every county and town */
   setInterval(function () { if (S.me && (queue().length || S.photoPending)) flush(); }, 60000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && S.me) flush(); });
 

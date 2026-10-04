@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — Accounts, Territories, sign a person out, show PINs (2 files)
+## ⚑ NEXT UPLOAD — Accounts, Territories, sign a person out, show PINs, Door rounds opens on Colorado (2 files)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
@@ -15,7 +15,7 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 | 2 | `api/rounds.php` | `public_html/api/` |
 | 3 | — | Flush the cache. |
 
-Sizes: `index.html` **384,530**, `rounds.php` **142,530**.
+Sizes: `index.html` **389,654**, `rounds.php` **142,784**.
 
 **Accounts** (admin tile): add a person (name, crew or admin; the code is shown once, with Text it and Copy), Change
 (rename, crew/admin), New code, Sign out (their phone is signed out, the code still works), Remove (signed out at
@@ -23,6 +23,8 @@ once, everything they recorded stays), Turn back on. Show PINs asks for your own
 the screen, and is logged. The codes file is never edited: app-made sign-ins and changes are kept in
 `sixfold-private/rounds-accounts.json` (+ `rounds-accounts.log`), beside it, outside public_html. **PHP must be able to
 write to `sixfold-private/`**; if Add a person says "Could not save that", that folder needs write permission.
+
+**Door rounds opens on Colorado**: the three counties with their towns (doors to knock, progress, high-risk doors, quotes), tap a town for its neighbourhoods; the town picker lists "Colorado · all towns" first; Back from a town goes to Colorado; Nearest town finds the closest. Counties come from money.json.
 
 **Territories** (admin tile): assign neighbourhoods to people (person, town, tick several), by person with progress,
 x to unassign. Moved off the Leaderboard. The crew see nothing of it until `TERRITORIES_OPEN = true` in rounds.php
