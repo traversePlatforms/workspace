@@ -252,9 +252,10 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <ul>
     <li><strong>Download customers (spreadsheet):</strong> every customer with plan, price, next due, visits done and spend, as a CSV that opens in Excel or Google Sheets.</li>
     <li><strong>Download a full backup:</strong> one file holding every log the app keeps: door outcomes, phones, emails, notes, photo records, extra work, fire checks, walks, quotes sent, results, territories, goals, leads, customers and visits. Each log is included exactly as it sits on the server, with the path it came from.</li>
+    <li><strong>Nightly copies on the server:</strong> a job on the server saves the same backup automatically every night and keeps the last 30, listed under Keep a copy. Any of them downloads as the same file as a fresh backup, so a mistake from last Tuesday can be undone from last Monday's copy.</li>
   </ul>
   <p><strong>Rebuilding from a backup:</strong> each entry goes back to its path beside the website (<code>sixfold-data/...</code>) as its own file. The app reads those logs every time it opens, so putting them back puts everything back. The door lists themselves are rebuilt from the build files on the computer. The sign-in codes and photos are not in the backup: the codes stay in the private folder, and the photos are listed by name so you can see what is missing. People added in Accounts are not in it either; if the private folder were lost, add them again there.</p>
-  <div class="note"><p><strong>Save a backup every week, and keep it somewhere private.</strong> It holds customer names, addresses and phone numbers. Until now the field data has existed only on SiteGround; this download is the copy that survives losing the server.</p></div>
+  <div class="note"><p><strong>Download a backup to a device every week, and keep it somewhere private.</strong> The nightly copies sit on the same server as the app, so they don't survive losing the server; a copy on a computer or in Drive does. When nobody has downloaded one for 7 days, admins see a reminder at the top of the tools screen. Backups hold customer names, addresses and phone numbers.</p></div>
 </section>
 
 <section id="quote">
@@ -307,7 +308,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Photos</strong> are shrunk on the phone before sending and stored outside the website folder.</li>
     <li><strong>Search</strong> reads a small address index the server builds for itself, and rebuilds whenever the door lists change.</li>
     <li><strong>Customers and visits</strong> work the same way: every change is a new line in the customer log, and the newest value of each field is what shows. An edit to a phone number leaves the earlier number on record.</li>
-    <li><strong>Backups</strong> are a download from the Customers screen. See <a href="#customers">Customers and backups</a>.</li>
+    <li><strong>Backups</strong> save themselves every night on the server (the last 30 are kept), and download from the Customers screen. See <a href="#customers">Customers and backups</a>.</li>
   </ul>
 </section>
 
@@ -352,7 +353,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Printing the homeowner report from the home-screen app on an iPad</strong> hasn't been tested yet. It works in a browser tab.</li>
     <li><strong>Meta ad leads</strong> arrive in Meta's own Leads Center, not in the app; add them through + Add a lead.</li>
     <li><strong>Customers are not billing.</strong> There are no invoices, payments or contracts in the app. Prices and visits are a record of the work; the signed agreement stays in DocuSign or Drive and is linked.</li>
-    <li><strong>Backups are by hand.</strong> Nothing reminds anyone to take one, and putting one back is a File Manager upload, not a button.</li>
+    <li><strong>Getting a backup off the server is by hand.</strong> The nightly copies stay on SiteGround; the reminder asks an admin to download one weekly. Putting one back is a File Manager upload, not a button.</li>
     <li><strong>Removing a visit</strong> hides it; the log keeps the original line. It does not move the next due date back, so fix that with Edit. There is no delete for a whole customer: set them to Ended.</li>
     <li><strong>Downloading the backup from the home-screen app on an iPad or iPhone</strong> hasn't been tested. iOS may open the file instead of saving it; a browser tab, or a computer, is the sure way.</li>
     <li><strong>Add a person</strong> needs the server to be able to write to its private folder. It hasn't been tried on the live site yet.</li>

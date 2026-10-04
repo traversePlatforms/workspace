@@ -1635,7 +1635,7 @@ if ($action === 'leadstatus') {
     out(['ok' => true]);
 }
 
-if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'customersexport', 'backup'], true)) {
+if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $tz = new DateTimeZone('America/Denver');
     $today = (new DateTime('today', $tz))->format('Y-m-d');
@@ -1662,6 +1662,32 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
     /* every log the app keeps, in one file the admin saves somewhere safe. Rebuilding is putting each
        file back where it came from: the app reads the logs, so the logs are the data. Sign-in codes and
        photos are left out (codes stay in sixfold-private; photos are listed, not copied). */
+    /* the nightly copies (sixfold-tools/nightly-backup.php, run by cron) and when anyone last saved a copy
+       to a device: a copy on this server doesn't survive losing the server, so the tools screen reminds an
+       admin after a week. Every download, of either kind, is a 'backup' line in the accounts log. */
+    if ($action === 'backups') {
+        $copies = [];
+        foreach (array_reverse(glob(dirname(DATA_DIR) . '/backups/sixfold-backup-*.json.gz') ?: []) as $p)
+            $copies[] = ['name' => basename($p), 'date' => substr(basename($p), 15, 10), 'bytes' => (int) @filesize($p)];
+        $last = 0; $lf = dirname(accountsFile()) . '/rounds-accounts.log';
+        $fh = is_readable($lf) ? @fopen($lf, 'r') : false;
+        if ($fh) { while (($line = fgets($fh)) !== false) { $r = json_decode($line, true); if (is_array($r) && ($r['what'] ?? '') === 'backup') $last = max($last, (int) ($r['at'] ?? 0)); } fclose($fh); }
+        out(['ok' => true, 'copies' => $copies, 'lastDownload' => $last ?: null, 'now' => time()]);
+    }
+    if ($action === 'backupget') {
+        $n = (string) ($_GET['name'] ?? '');
+        if (!preg_match('/^sixfold-backup-\d{4}-\d{2}-\d{2}\.json\.gz$/D', $n)) fail('No such copy.', 404);
+        $p = dirname(DATA_DIR) . '/backups/' . $n;
+        $raw = is_file($p) ? @file_get_contents($p) : false;
+        $json = $raw === false ? false : @gzdecode($raw);
+        if ($json === false) fail('No such copy.', 404);
+        accountLog(['by' => $me, 'what' => 'backup', 'copy' => $n]);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . substr($n, 0, -3) . '"');   /* the same JSON as a fresh download */
+        header('Cache-Control: no-store');
+        echo $json;
+        exit;
+    }
     if ($action === 'backup') {
         $files = [];
         $add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };

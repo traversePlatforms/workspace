@@ -596,6 +596,13 @@
   .door.cvisit .lnk{background:none;border:0;padding:6px 0 0;font:700 13px var(--sans);cursor:pointer}
   .door.cvisit .lnk.danger{color:var(--fire-h)}
   .addlead.mkcust{margin-top:8px;background:var(--go);color:var(--on-go)}
+  .cnight{margin-top:12px;display:flex;flex-direction:column;gap:2px}
+  .cnight .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .cnight .adminlink{margin:2px 0 0}
+  .bkrem{display:flex;gap:12px;align-items:center;margin:0 0 14px;padding:13px 15px;border-radius:16px;background:var(--later-tint);color:var(--later);text-decoration:none;border:1.5px solid currentColor}
+  .bkrem > .ic{width:22px;height:22px;flex:none}
+  .bkrem b{display:block;font-size:15px}
+  .bkrem span span{display:block;font-size:13px;color:var(--ink);margin-top:1px}
   /* territories (2026-10-04) */
   .tassign select{min-width:0;flex:1;font:600 16px var(--sans);padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
   .tassign .trow{display:flex;gap:7px}
@@ -1653,6 +1660,22 @@
       if (j && j.ok) { cells.doors.textContent = String(dd); cells.talked.textContent = String(tk); cells.booked.textContent = String(bk); }
     }).catch(function () {});
     box.appendChild(alertStrip(null));
+    /* admins: nobody has saved a backup to a device for a week. The nightly copies sit on this server, and
+       a copy on the server doesn't survive losing the server. */
+    if (S.role === 'admin' && !S.offline) {
+      var bs = q('div'); box.appendChild(bs);
+      api('backups').then(function (j) {
+        if (!j || !j.ok || !bs.isConnected) return;
+        var days = j.lastDownload ? Math.floor((j.now - j.lastDownload) / 86400) : null;
+        if (days !== null && days < 7) return;
+        var a = q('a', 'bkrem'); a.href = API + '?action=backup'; a.setAttribute('download', '');
+        a.appendChild(ico('clip', 2.2));
+        var tx = q('span'); tx.appendChild(q('b', null, days === null ? 'No backup saved to a device yet' : 'Last backup saved ' + days + ' days ago'));
+        tx.appendChild(q('span', null, 'Tap to download one now, and keep it somewhere safe.')); a.appendChild(tx);
+        a.addEventListener('click', function () { setTimeout(function () { if (a.isConnected) a.remove(); }, 400); });
+        bs.appendChild(a);
+      }).catch(function () {});
+    }
     var fs0 = q('button', 'findbox'); fs0.type = 'button';
     fs0.appendChild(ico('search', 2.4)); fs0.appendChild(q('span', null, 'Find an address'));
     fs0.addEventListener('click', function () { searchView(chooseView); });
@@ -3529,6 +3552,24 @@
     var a1 = q('a', 'adminlink', 'Download customers (spreadsheet)'); a1.href = API + '?action=customersexport'; a1.setAttribute('download', ''); ex.appendChild(a1);
     var a2 = q('a', 'adminlink', 'Download a full backup'); a2.href = API + '?action=backup'; a2.setAttribute('download', ''); ex.appendChild(a2);
     ex.appendChild(q('div', 'sub2', 'The backup is every log the app keeps (doors, numbers, notes, walks, results, leads, customers and visits) in one file. Save one somewhere safe each week. To rebuild, each log goes back where it came from on the server. Sign-in codes and photos are not in it.'));
+    /* the nightly copies on the server: any of the last 30 nights can be downloaded */
+    var nl = q('div', 'cnight'); ex.appendChild(nl);
+    api('backups').then(function (j) {
+      if (!j || !j.ok || !nl.isConnected) return;
+      nl.appendChild(q('div', 'wl', 'Nightly copies on the server'));
+      if (!j.copies.length) { nl.appendChild(q('div', 'sub2', 'None yet. The nightly backup job is not running on the server; see DEPLOY-ROUNDS.md.')); return; }
+      nl.appendChild(q('div', 'sub2', 'Saved automatically every night; the last ' + j.copies.length + ' are kept here. Last night’s: ' + fmtD(j.copies[0].date) + '.'));
+      j.copies.slice(0, S.nightAll ? 30 : 5).forEach(function (c) {
+        var a = q('a', 'adminlink', fmtD(c.date) + ' · ' + Math.max(1, Math.round(c.bytes / 1024)) + ' KB');
+        a.href = API + '?action=backupget&name=' + encodeURIComponent(c.name); a.setAttribute('download', '');
+        nl.appendChild(a);
+      });
+      if (j.copies.length > 5 && !S.nightAll) {
+        var mo = q('button', 'tolink', 'Show all ' + j.copies.length); mo.type = 'button';
+        mo.addEventListener('click', function () { S.nightAll = true; drawCustomers(holder); });
+        nl.appendChild(mo);
+      }
+    }).catch(function () {});
     holder.appendChild(ex);
   }
   function customerForm(c, done) {

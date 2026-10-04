@@ -32,7 +32,8 @@ const ALLOW_EXT = new Set([
 const ALLOW_DOTFILES = new Set(['.htaccess']);
 
 /* never, whatever the extension says */
-const DENY_DIRS = new Set(['_tabled', 'dist', 'node_modules']);
+/* tools/ holds jobs that run on the server outside public_html (the nightly backup), never on the website */
+const DENY_DIRS = new Set(['_tabled', 'dist', 'node_modules', 'tools']);
 const DENY_FILES = new Set([
   'build-photos.mjs', 'make-bundle.mjs', 'serve.mjs',
   'audit-links.mjs', 'audit-runtime.mjs',

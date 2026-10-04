@@ -7,7 +7,29 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — water rules on the door card, plus the cleanup below (one upload covers both)
+## ⏳ TO UPLOAD + ONE SITEGROUND SETTING — automatic nightly backups (same upload as the water rules and cleanup below)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| A | `tools/nightly-backup.php` | a NEW folder `sixfold-tools/` beside public_html (the same level as `sixfold-data` and `sixfold-private`), NOT inside public_html |
+| B | — | SiteGround Site Tools → Devs → Cron Jobs → add a job (below) |
+
+The cron job, once a night:
+
+    php /home/customer/www/sixfoldcolorado.com/sixfold-tools/nightly-backup.php
+
+That path is SiteGround's usual layout; check it against the folder path File Manager shows for the folder that
+holds public_html, and change the middle if it differs. Interval: once a day (any night-time hour). After the first
+run, Customers → Keep a copy lists "Nightly copies on the server"; until then it says the job isn't running.
+
+What it does: every night it writes `sixfold-data/backups/sixfold-backup-YYYY-MM-DD.json.gz` (the same contents as
+Download a full backup, compressed) and keeps the newest 30; each run adds a line to `backups.log` there. It refuses
+to run from a browser. The app lists the copies under Keep a copy (any can be downloaded, as the same JSON as a
+fresh backup) and, when nobody has saved a copy to a device for 7 days, shows admins a reminder at the top of the
+tools screen ("Last backup saved N days ago", tap to download). make-bundle.mjs leaves `tools/` out of the
+website bundle.
+
+## ⏳ (same upload) — water rules on the door card, plus the cleanup below
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
@@ -15,7 +37,7 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 | 2 | `api/rounds.php` | `public_html/api/` |
 | 3 | `data/rounds/docs/money.json` | `sixfold-data/rounds/docs/` (beside public_html, NOT inside it) |
 
-Sizes: `index.html` **400,131**, `rounds.php` **161,059**, `money.json` **23,956**. Flush after step 2.
+Sizes: `index.html` **403,073**, `rounds.php` **162,892**, `money.json` **23,956**, `nightly-backup.php` **3,837**. Flush after step 2.
 quote.html unchanged.
 
 **Water** (Matthew 2026-10-04): a Water line under the Money line on every door card: "Aeration needs no
