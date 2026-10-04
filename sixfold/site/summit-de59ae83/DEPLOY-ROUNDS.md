@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ READY TO UPLOAD (optional) — the new layout, switched off by default (2026-10-04)
+## ✅ LIVE 2026-10-04 — the new layout (off by default), phone no-zoom, Fable fixes, every town's lawn outlines (verified 16/16)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
