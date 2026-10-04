@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Customers (the CRM) and the full backup
+## ✅ LIVE 2026-10-04 — Customers (the CRM) and the full backup (verified 25/25: page identical at all four addresses, every action answering, backup downloads with 9 logs and no codes, Customers screen opens on a phone)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
