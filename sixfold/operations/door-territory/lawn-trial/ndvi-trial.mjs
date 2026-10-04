@@ -58,6 +58,10 @@ const save = () => writeFileSync(CACHE, JSON.stringify(cache));
 const MASKS = join(HERE, 'lawnmask-cache.json');
 const maskCache = existsSync(MASKS) ? JSON.parse(readFileSync(MASKS, 'utf8')) : {};
 const MIN_SHARE = 0.3;   /* a 10 m pixel counts if at least 30% of it is lawn */
+/* 2026-10-03: a photo download that times out inside the image library rejects a promise
+   nobody awaits, and that killed the whole run (Castle Rock's outlines lost). Log and go on:
+   the door it belonged to is simply measured again next run. */
+process.on('unhandledRejection', (e) => { console.log('  (a download failed and was skipped: ' + String(e && e.message || e).slice(0, 90) + ')'); });
 
 /* ---- the doors ---- */
 const towns = {};
@@ -95,7 +99,7 @@ for (const [town, doors] of Object.entries(towns)) {
     const parcels = await townParcels(bbox);
     const st = await json(NAIP_STAC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['naip'], bbox, query: { 'naip:year': { eq: '2023' } }, limit: 250 }) });
     const photos = (st.features || []).map((f) => ({ id: f.id, href: f.assets.image.href, date: f.properties.datetime.slice(0, 10), bb: f.bbox, gsd: f.properties.gsd }));
-    let i = 0;
+    let i = 0, doneMasks = 0;
     async function maskWorker() {
       for (;;) {
         const d = missing[i++]; if (!d) return;
@@ -105,7 +109,8 @@ for (const [town, doors] of Object.entries(towns)) {
         if (!pc) { maskCache[k] = { err: 'no parcel' }; continue; }
         if (!ph) { maskCache[k] = { err: 'no 2023 photo' }; continue; }
         try { const m = await measureLawn({ la: d.lat, lo: d.lon }, pc.rings, ph); maskCache[k] = m.err ? { err: m.err } : { s: m.s, px10: m.px10 }; }
-        catch (e) { maskCache[k] = { err: 'photo read failed' }; }
+        catch (e) { if (!/fetch failed|timeout|ECONN/i.test(String(e && e.message))) maskCache[k] = { err: 'photo read failed' }; }   /* a network blip is retried next run, not recorded as a failure */
+        if (++doneMasks % 25 === 0) writeFileSync(MASKS, JSON.stringify(maskCache));   /* saved as it goes, not only per town */
       }
     }
     await Promise.all(Array.from({ length: 4 }, maskWorker));
