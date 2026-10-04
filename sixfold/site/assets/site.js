@@ -32,6 +32,13 @@
       }
     }
   } catch (e) { /* no URLSearchParams: the default radio is a fine outcome */ }
+  /* Where the enquiry came from (2026-10-04): Linktree links here as /contact/?via=linktree, so the
+     lead lands in the door app's Pipeline as Linktree, not Website. Only known words are kept; the
+     server checks the same list. */
+  try {
+    var via = new URLSearchParams(window.location.search).get('via'), vf = document.getElementById('c-via');
+    if (vf && via && /^(linktree|nextdoor|meta)$/.test(via)) vf.value = via;
+  } catch (e) {}
   function applyPrompt() {
     if (!label) return;
     var picked = document.querySelector('input[name="need"]:checked');

@@ -149,6 +149,11 @@ $email   = $field('email', 320);
 $phone   = $field('phone', 60);
 $town    = $field('town', 200);
 $message = $field('message', 6000);
+/* where it came from (2026-10-04): /contact/?via=linktree puts a hidden "via" on the form. Only these words
+   are kept, so the door app's Pipeline shows the channel; anything else is a plain website enquiry. */
+$via     = $field('via', 20);
+$src     = in_array($via, ['linktree', 'nextdoor', 'meta'], true) ? $via : 'website';
+$srcLabel = ['website' => 'Website form', 'linktree' => 'Linktree', 'nextdoor' => 'Nextdoor', 'meta' => 'Meta ad'][$src];
 
 // Keys must match the radio values in contact/index.html AND the ?need= values the
 // home page's three service cards link with. 'clearing' was added 2026-09-21: the
@@ -196,6 +201,7 @@ $lines = [
     'New enquiry: ' . $title,
     str_repeat('-', 40),
     'Need:    ' . $needLabel,
+    'Via:     ' . $srcLabel,
     'Name:    ' . $name,
     'Phone:   ' . $phone,
     'Email:   ' . $email,
@@ -216,7 +222,7 @@ $body = implode("\n", $lines);
 $leadsHome = dirname(__DIR__, 2) . '/sixfold-data';
 if (is_dir($leadsHome) && (is_dir($leadsHome . '/leads') || @mkdir($leadsHome . '/leads', 0750))) {
     @file_put_contents($leadsHome . '/leads/leads.log', json_encode([
-        'id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'website', 'at' => time(),
+        'id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => time(),
         'need' => $needLabel, 'name' => $name, 'phone' => $phone, 'email' => $email, 'town' => $town, 'msg' => $message,
     ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }

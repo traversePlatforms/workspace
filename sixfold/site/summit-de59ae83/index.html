@@ -596,6 +596,13 @@
   .door.cvisit .lnk{background:none;border:0;padding:6px 0 0;font:700 13px var(--sans);cursor:pointer}
   .door.cvisit .lnk.danger{color:var(--fire-h)}
   .addlead.mkcust{margin-top:8px;background:var(--go);color:var(--on-go)}
+  .addlead.metaimp{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+  .metaprev{display:grid;gap:8px;margin:0 0 12px}
+  .metaprev .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .metaprev .metalist{display:grid;gap:2px;font-size:14px}
+  .metaprev .trow{display:flex;gap:12px;align-items:center}
+  .metaprev .save{flex:1;min-height:44px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14px var(--sans);cursor:pointer}
+  .metaprev .lnk{background:none;border:0;font:700 14px var(--sans);color:var(--soft);cursor:pointer}
   .cnight{margin-top:12px;display:flex;flex-direction:column;gap:2px}
   .cnight .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .cnight .adminlink{margin:2px 0 0}
@@ -3758,6 +3765,94 @@
       drawPipe();
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
+  /* ---- Meta leads (2026-10-04) ----
+     Instant Form leads sit in Meta's Leads Center and never reach email. The admin downloads them there
+     (Leads Center, select, Download, CSV) and picks the file here. Meta's files vary: comma or tab
+     separated, UTF-8 or UTF-16, machine column names (full_name, phone_number "p:+1...") or readable ones
+     (Full name). The rows are read here, previewed, and sent only when the admin taps Add. */
+  function decodeLeadFile(buf) {
+    var b = new Uint8Array(buf);
+    if (b[0] === 0x50 && b[1] === 0x4B) return null;                                   /* PK: an Excel file */
+    if (b[0] === 0xFF && b[1] === 0xFE) return new TextDecoder('utf-16le').decode(b.subarray(2));
+    if (b[0] === 0xFE && b[1] === 0xFF) return new TextDecoder('utf-16be').decode(b.subarray(2));
+    var z = 0; for (var i = 1; i < Math.min(b.length, 400); i += 2) if (b[i] === 0) z++;
+    if (z > 40) return new TextDecoder('utf-16le').decode(b);
+    return new TextDecoder('utf-8').decode(b).replace(/^\uFEFF/, '');
+  }
+  function parseDelimited(text) {
+    var first = text.split(/\r?\n/)[0] || '', sep = (first.split('\t').length > first.split(',').length) ? '\t' : ',';
+    var rows = [], row = [], cell = '', inQ = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (inQ) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else inQ = false; } else cell += ch; continue; }
+      if (ch === '"' && cell === '') { inQ = true; continue; }
+      if (ch === sep) { row.push(cell); cell = ''; continue; }
+      if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(function (c) { return c.trim() !== ''; })) rows.push(row); row = []; continue; }
+      cell += ch;
+    }
+    row.push(cell); if (row.some(function (c) { return c.trim() !== ''; })) rows.push(row);
+    return rows;
+  }
+  var META_COL = { ext: ['id', 'lead_id', 'leadgen_id'], at: ['created_time', 'created', 'created_at', 'date', 'submitted', 'time_created'],
+    name: ['full_name', 'name'], first: ['first_name'], last: ['last_name'], phone: ['phone_number', 'phone', 'mobile_phone', 'phone_number_1'],
+    email: ['email', 'email_address', 'work_email'], town: ['city', 'town'], zip: ['zip_code', 'zip', 'post_code', 'postal_code', 'zip_or_postal_code'],
+    campaign: ['campaign_name', 'campaign'], form: ['form_name', 'form'], organic: ['is_organic', 'organic'] };
+  var META_SKIP = ['ad_id', 'ad_name', 'adset_id', 'adset_name', 'campaign_id', 'form_id', 'platform', 'lead_status', 'inbox_url', 'retailer_item_id', 'source', 'status', 'stage', 'owner', 'labels'];
+  function metaRows(table) {
+    if (table.length < 2) return [];
+    var head = table[0].map(function (h) { return String(h).replace(/^\uFEFF/, '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); });
+    var raw = table[0].map(function (h) { return String(h).replace(/^\uFEFF/, '').trim(); });
+    var col = {}; Object.keys(META_COL).forEach(function (k) { col[k] = -1; META_COL[k].some(function (n) { var i = head.indexOf(n); if (i >= 0) { col[k] = i; return true; } return false; }); });
+    var used = {}; Object.keys(col).forEach(function (k) { if (col[k] >= 0) used[col[k]] = true; });
+    return table.slice(1).map(function (r) {
+      var g = function (k) { return col[k] >= 0 ? String(r[col[k]] || '').trim() : ''; };
+      var name = g('name') || (g('first') + ' ' + g('last')).trim();
+      var organic = /^(true|yes|1)$/i.test(g('organic'));
+      var extra = [];
+      if (organic) extra.push('Came from the Page, not the ad (organic).');
+      if (g('zip')) extra.push('Zip: ' + g('zip'));
+      head.forEach(function (h, i) { if (used[i] || META_SKIP.indexOf(h) >= 0) return; var v = String(r[i] || '').trim(); if (v) extra.push(raw[i].replace(/_/g, ' ') + ': ' + v); });
+      return { ext: g('ext'), at: g('at'), name: name, phone: g('phone').replace(/^p:/i, ''), email: g('email'), town: g('town'),
+        need: (g('campaign') || g('form') || 'Meta lead').slice(0, 60), msg: extra.join('\n').slice(0, 2000), organic: organic };
+    }).filter(function (x) { return x.name || x.phone || x.email; });
+  }
+  function readMetaFile(file) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var text = decodeLeadFile(fr.result);
+      if (text === null) { toast('That is an Excel file', 'In Leads Center, download as CSV instead.', null); return; }
+      var rows = metaRows(parseDelimited(text));
+      if (!rows.length) { toast('No leads found', 'That file has no names, phones or emails Meta-style. Download the CSV from Leads Center.', null); return; }
+      S.metaPrev = { rows: rows, file: file.name }; drawPipe();
+    };
+    fr.onerror = function () { toast('Could not read that file', 'Try downloading it again.', null); };
+    fr.readAsArrayBuffer(file);
+  }
+  function metaPreview() {
+    var P = S.metaPrev, box = q('div', 'phf metaprev');
+    box.appendChild(q('div', 'wl', 'From ' + P.file));
+    var org = P.rows.filter(function (r) { return r.organic; }).length;
+    box.appendChild(q('div', null, P.rows.length + (P.rows.length === 1 ? ' lead' : ' leads') + ' in the file' + (org ? ', ' + org + ' from the Page rather than the ad' : '') + '. Anyone already in the Pipeline is left out.'));
+    var ul = q('div', 'metalist');
+    P.rows.slice(0, 8).forEach(function (r) { ul.appendChild(q('div', null, (r.name || r.phone || r.email) + (r.town ? ' \u00b7 ' + r.town : ''))); });
+    if (P.rows.length > 8) ul.appendChild(q('div', 'sub2', 'and ' + (P.rows.length - 8) + ' more'));
+    box.appendChild(ul);
+    var row = q('div', 'trow');
+    var go = q('button', 'save', 'Add them to the Pipeline'); go.type = 'button';
+    go.addEventListener('click', function () {
+      if (go.disabled) return; go.disabled = true;
+      api('leadimport', { body: { rows: P.rows } }).then(function (j) {
+        go.disabled = false;
+        if (!j.ok) { toast('Not imported', j.error || 'Try again.', null); return; }
+        S.metaPrev = null; S.pipeStage = 'call';
+        toast(j.added + (j.added === 1 ? ' lead added' : ' leads added'), (j.already ? j.already + ' already in the Pipeline' : 'From Meta') + (j.skipped ? ' \u00b7 ' + j.skipped + ' without a name, phone or email' : ''), null);
+        pipelineView();
+      }).catch(function () { go.disabled = false; toast('No signal', 'Nothing imported. Try again when you have signal.', null); });
+    });
+    var cx = q('button', 'lnk', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.metaPrev = null; drawPipe(); });
+    row.appendChild(go); row.appendChild(cx); box.appendChild(row);
+    return box;
+  }
   function drawPipe() {
     var holder = S.qholder; if (!holder) return;
     var y = window.scrollY;
@@ -3771,10 +3866,16 @@
     var add = q('button', 'addlead', S.leadAdd ? 'Close the form' : '+ Add a lead'); add.type = 'button';
     add.addEventListener('click', function () { S.leadAdd = !S.leadAdd; drawPipe(); });
     top.appendChild(add);
+    var imp = q('button', 'addlead metaimp', 'Import leads from Meta'); imp.type = 'button';
+    var fileIn = q('input'); fileIn.type = 'file'; fileIn.accept = '.csv,.tsv,.txt,text/csv,text/tab-separated-values'; fileIn.hidden = true; fileIn.id = 'metafile';
+    imp.addEventListener('click', function () { fileIn.value = ''; fileIn.click(); });
+    fileIn.addEventListener('change', function () { if (fileIn.files && fileIn.files[0]) readMetaFile(fileIn.files[0]); });
+    top.appendChild(imp); top.appendChild(fileIn);
     var jb = q('a', 'adminlink', 'Door bookings for Jobber (CSV)'); jb.href = API + '?action=jobber'; jb.setAttribute('download', '');
     top.appendChild(jb);
     holder.appendChild(top);
     if (S.leadAdd) holder.appendChild(leadForm());
+    if (S.metaPrev) holder.appendChild(metaPreview());
     holder.appendChild(walksUp(S.qlist || []));
     /* stages */
     var seg = q('div', 'pipeseg');

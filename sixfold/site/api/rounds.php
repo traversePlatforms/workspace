@@ -1620,6 +1620,45 @@ if ($action === 'leadadd') {
     out(['ok' => true, 'id' => $row['id']]);
 }
 
+/* Meta Instant Form leads (2026-10-04). They land in Meta's Leads Center and never reach email, so an admin
+   downloads them there as a file and the page reads it and sends the rows here. Each keeps Meta's own lead
+   id ('ext'), so importing the same file twice adds nothing; someone already in the Pipeline by phone or email
+   (a website form, a lead typed in) is counted, not added again. Same row shape as + Add a lead. */
+if ($action === 'leadimport') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $rows = $body['rows'] ?? null;
+    if (!is_array($rows) || !$rows) fail('No leads in that file.');
+    if (count($rows) > 500) fail('That is more than 500 leads at once. Download a shorter date range.');
+    $digits = fn($p) => substr(preg_replace('/\D/', '', (string) $p), -10);
+    $seenExt = []; $seenWho = [];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) {
+        if (!empty($l['ext'])) $seenExt[(string) $l['ext']] = true;
+        $d = $digits($l['phone'] ?? ''); if (strlen($d) === 10) $seenWho['p' . $d] = true;
+        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
+    }
+    $added = 0; $already = 0; $skipped = 0;
+    foreach ($rows as $r) {
+        if (!is_array($r)) { $skipped++; continue; }
+        $ext = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', (string) ($r['ext'] ?? '')), 0, 64);
+        $phone = $clean(preg_replace('/^p:/i', '', (string) ($r['phone'] ?? '')), 40);
+        $email = $clean($r['email'] ?? '', 160); if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $email = '';
+        $name = $clean($r['name'] ?? '', 120);
+        if ($name === '' && $phone === '' && $email === '') { $skipped++; continue; }
+        $d = $digits($phone); $who = strlen($d) === 10 ? 'p' . $d : ($email !== '' ? 'e' . strtolower($email) : '');
+        if (($ext !== '' && isset($seenExt[$ext])) || ($who !== '' && isset($seenWho[$who]))) { $already++; continue; }
+        $at = strtotime((string) ($r['at'] ?? '')); if (!$at || $at < 1704067200 || $at > time() + 86400) $at = time();
+        $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'meta', 'at' => $at,
+                'need' => $clean($r['need'] ?? '', 60), 'name' => $name, 'phone' => $phone, 'email' => $email,
+                'town' => $clean($r['town'] ?? '', 160), 'msg' => $clean($r['msg'] ?? '', 2000), 'by' => $me];
+        if ($ext !== '') $row['ext'] = $ext;
+        if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
+        if ($ext !== '') $seenExt[$ext] = true; if ($who !== '') $seenWho[$who] = true;
+        $added++;
+    }
+    out(['ok' => true, 'added' => $added, 'already' => $already, 'skipped' => $skipped]);
+}
+
 if ($action === 'leadstatus') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);

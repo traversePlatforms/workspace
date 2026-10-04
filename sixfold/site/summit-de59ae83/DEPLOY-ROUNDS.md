@@ -7,7 +7,34 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — corrected aeration wording (money.json only)
+## ⏳ TO UPLOAD — every lead into the Pipeline: Linktree tagged, Meta import (plus the money.json below)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | `api/submit.php` | `public_html/api/` |
+| 4 | `contact/index.html` | `public_html/contact/` |
+| 5 | `assets/site.js` | `public_html/assets/` |
+| 6 | — | Flush the cache (the contact page and site.js are cached like any page) |
+
+Sizes: `index.html` **410,988**, `rounds.php` **165,714**, `submit.php` **14,563**, `contact/index.html` **11,394**,
+`site.js` **4,140**.
+
+**Linktree:** the contact form has a hidden `via` field that site.js fills from the link, and submit.php files the
+lead under that source (only linktree, nextdoor or meta; anything else stays Website). The email to Contact@ gains a
+"Via:" line. Linktree's quote button should point at
+`https://sixfoldcolorado.com/contact/?need=lawn&via=linktree` (Matthew changes it in Linktree).
+
+**Meta:** Pipeline → "Import leads from Meta" reads the file downloaded from Leads Center (CSV, comma or tab, UTF-8 or
+UTF-16; an Excel file is turned away with a message), previews it, and adds the leads on a tap via the new
+`leadimport` action (admin): source Meta ad, dated when they filled the form, campaign as the need, their answers in
+the message, organic leads marked. Meta's lead id is kept, so the same file twice adds nothing; someone already in
+the Pipeline by phone or email is counted, not added. Up to 500 at once.
+
+Tested: leadimport-test 25/25; leads, pipeline, customers, security, fable2, backup suites pass.
+
+## ⏳ (same upload) — corrected aeration wording (money.json only)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
