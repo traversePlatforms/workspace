@@ -12,12 +12,15 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
 | 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 1b | `summit-de59ae83/quote.html` (no double-tap zoom on phones) | `public_html/summit-de59ae83/` |
 | 2 | `api/rounds.php` | `public_html/api/` |
 | 3 | `data/rounds/docs/money.json` (adds the one-line "cards") | `sixfold-data/rounds/docs/` |
 | 4 | `data/rounds/lawnmask-castle-rock.json` (finished) | `sixfold-data/rounds/` |
 | 5 | — | Flush the cache. |
 
-Sizes: `index.html` **312,299**, `rounds.php` **125,144**, `money.json` **10,238**.
+Sizes: `index.html` **312,592**, `quote.html` **110,290**, `rounds.php` **125,144**, `money.json` **10,238**.
+
+**Phones (both layouts):** two quick taps on a key no longer zoom the page, and text boxes are 16px on touch screens so iPhones stop zooming into them.
 
 Nothing changes for anyone until they pick **Layout: New** at the bottom of the tools screen (remembered per phone).
 The new layout: one door open at a time (the next to knock), the rest one line each with their chips; "Add info"

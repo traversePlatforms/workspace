@@ -49,6 +49,9 @@
 }
 
 *{box-sizing:border-box}
+/* phones (2026-10-04, Matthew): two quick taps on a key zoomed the page in; and iOS zooms into any text box under 16px */
+button,a,input,select,textarea,label,summary,[role="button"]{touch-action:manipulation}
+@media (pointer:coarse){ input,select,textarea{font-size:16px !important} }
 body{
   background:var(--ground); color:var(--ink);
   font-family:var(--f-body); font-size:15px; line-height:1.5;
