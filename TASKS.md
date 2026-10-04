@@ -666,6 +666,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Quotes to build; won and lost move to their own section. New admin **Results** screen: knocked →
       booked → won by fire hazard, lawn, trees, county value, town and extra work, with rows under 10 doors
       greyed. Matthew: "over time this proves the app works and makes the scoring smarter." 23 checks.
+- [ ] **SX-38 lawn on the photo, SX-39 stats tips, SX-40 Communities, SX-41 alerts: ✅ BUILT AND TESTED 2026-10-03,
+      awaiting the batched upload** (Matthew: one upload, before Monday's meeting). See DEPLOY-ROUNDS.md.
+      SX-38's outline packs are still building in the background (about 0.45 lawns/s on the hotel connection).
+      SX-41 has no fire-season countdown on purpose (year-round season; warnings are the trigger) and no email yet (needs a cron).
 - [ ] **SX-38..47 — the rest of Matthew's 2026-10-03 upgrade list, in his agreed order after SX-36/37:**
       **SX-38** lawn photo in the lawn chip (2023 aerial with the counted lawn shaded; greenness + image
       dates for Large) · **SX-39** tips on the stats page from each person's numbers · **SX-40** HOA /

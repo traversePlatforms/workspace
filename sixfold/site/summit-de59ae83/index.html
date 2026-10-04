@@ -434,6 +434,10 @@
   .aerial .amap{flex:1;min-height:0;position:relative;isolation:isolate;z-index:0;background:#2a332e}
   .aerial .afoot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;flex-wrap:wrap;
     background:var(--card);border-top:1px solid var(--line)}
+  .aerial .alegend{padding:10px 14px 0;font-size:13px;line-height:1.45;color:var(--ink);display:flex;flex-direction:column;gap:5px}
+  .aerial .alegend .k{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+  .aerial .alegend .soft{color:var(--soft);font-size:12px}
+  .lawnfix .lphoto{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;border:0;border-radius:11px;padding:9px 12px;background:var(--card);color:var(--go);font:700 13.5px var(--sans);cursor:pointer}
   .aerial .afoot span{flex:1;min-width:190px;font-size:12.5px;line-height:1.4;color:var(--soft)}
   .aerial .afoot a{display:inline-flex;align-items:center;gap:6px;background:var(--ember-ink);color:var(--on-ember);border-radius:12px;
     padding:11px 15px;font-weight:700;font-size:14px;text-decoration:none;flex:none}
@@ -592,6 +596,23 @@
   table.rt th:first-child,table.rt td:first-child{text-align:left}
   table.rt td{text-align:right;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
   table.rt tr.few td{color:var(--soft);opacity:.7}
+  .tips{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0}
+  .tips h3{margin:0 0 6px;font:400 19px/1.2 var(--serif)}
+  .tips ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.45}
+  .tips b{font-weight:700}
+  .tips .soft{margin:8px 0 0;font-size:12.5px;color:var(--soft)}
+  .comm .lnk{background:none;border:0;padding:8px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
+  .comm .calist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .comm .calist .back{text-align:left}
+  .cseg{display:flex;gap:6px;margin:4px 0 10px}
+  .cseg button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
+  .cseg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+  .alrt{display:block;width:100%;text-align:left;border:0;border-radius:14px;margin:0 0 12px;padding:11px 14px;background:var(--fire-h);color:var(--fire-on);font:700 14px/1.35 var(--sans);cursor:pointer}
+  .alrt.calm{background:var(--sunk);color:var(--ink);font-weight:600}
+  .alrt .more{display:block;font-weight:600;font-size:12.5px;opacity:.9;margin-top:2px}
+  .alist{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.4}
+  .alist a{color:var(--accent);font-weight:700}
+  .alist .soft{font-size:12.5px;color:var(--soft)}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -1083,6 +1104,55 @@
     if (fn) t.addEventListener('click', fn);
     return t;
   }
+  /* ---- alerts (SX-41, 2026-10-03): red flag warnings, fire weather, heat, smoke and nearby
+     wildfires, from the National Weather Service and the national interagency fire feed ---- */
+  var TOWN_NAME = { monument: 'Monument', 'palmer-lake': 'Palmer Lake', 'black-forest': 'Black Forest', 'castle-rock': 'Castle Rock',
+    larkspur: 'Larkspur', sedalia: 'Sedalia', franktown: 'Franktown', 'woodland-park': 'Woodland Park', divide: 'Divide', florissant: 'Florissant', 'cripple-creek': 'Cripple Creek' };
+  function untilText(iso) {
+    if (!iso) return '';
+    var d = new Date(iso); if (isNaN(d)) return '';
+    return ' until ' + d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' });
+  }
+  function alertStrip(townKey) {
+    var holder = q('div');
+    api('alerts').then(function (j) {
+      if (!j || !j.ok) return;
+      var w = (j.weather || []).filter(function (a) { return !townKey || a.towns.indexOf(townKey) >= 0; });
+      var fires = (j.fires || []).filter(function (f) { return !townKey || (f.dist ? f.dist[townKey] <= 30 : f.near === townKey); });
+      if (!w.length && !fires.length) return;
+      var fk = townKey && fires[0] && fires[0].dist ? townKey : fires[0] && fires[0].near, fm = fires[0] ? (fires[0].dist && fk ? fires[0].dist[fk] : fires[0].miles) : 0;
+      var top = w.length ? w[0].event + (townKey ? '' : ' · ' + w[0].towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ')) + untilText(w[0].ends)
+                         : 'Wildfire ' + fm + ' mi from ' + (TOWN_NAME[fk] || fk) + ': ' + fires[0].name;
+      var count = w.length + fires.length;
+      var b = q('button', 'alrt'); b.type = 'button';
+      b.appendChild(document.createTextNode('\u26a0 ' + top));
+      b.appendChild(q('span', 'more', (count > 1 ? count - 1 + ' more · ' : '') + 'Tap for details'));
+      b.addEventListener('click', function () { holder.replaceChild(alertList(j, w, fires), b); });
+      holder.appendChild(b);
+    }).catch(function () {});
+    return holder;
+  }
+  function alertList(j, w, fires) {
+    var box = q('div', 'alist');
+    w.forEach(function (a) {
+      var row = q('div');
+      row.appendChild(q('b', null, a.event + untilText(a.ends)));
+      row.appendChild(document.createTextNode(' · ' + a.towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ') + '. '));
+      var l = q('a', null, 'National Weather Service'); l.href = a.url; l.target = '_blank'; l.rel = 'noopener noreferrer'; row.appendChild(l);
+      box.appendChild(row);
+    });
+    fires.forEach(function (f) {
+      var row = q('div');
+      row.appendChild(q('b', null, 'Wildfire: ' + f.name));
+      row.appendChild(document.createTextNode(' · ' + f.miles + ' mi from ' + (TOWN_NAME[f.near] || f.near) + (f.county ? ' (' + f.county + ')' : '') +
+        (f.acres ? ' · ' + Math.round(f.acres).toLocaleString('en-US') + ' acres' : '') + (f.contained !== null && f.contained !== undefined ? ' · ' + Math.round(f.contained) + '% contained' : '') + '.'));
+      box.appendChild(row);
+    });
+    box.appendChild(q('div', null, 'Never knock inside an evacuation area or near an active fire. After a scare, lead with help: a free look at the property, the tax credit, what insurers now have to count.'));
+    box.appendChild(q('div', 'soft', 'Weather: National Weather Service. Fires: national interagency incident feed (prescribed burns left out). Checked ' +
+      new Date(j.at * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' }) + (j.stale ? '; one feed did not answer, so part of this is older' : '') + '.'));
+    return box;
+  }
   function chooseView() {
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools';
@@ -1091,6 +1161,7 @@
     view.textContent = '';
     var box = q('div', 'choose');
     box.appendChild(q('p', 'who', 'Signed in as ' + (S.me || 'crew') + '.'));
+    box.appendChild(alertStrip(null));
     box.appendChild(tile('button', 'door', 'Door rounds',
       'Walk a neighbourhood and mark every door, including the misses. Works offline and syncs when you have signal.', null, start));
     if (S.role === 'admin') {
@@ -1107,6 +1178,8 @@
       box.appendChild(tile('button', 'clip', 'Quotes to build',
         'Every door marked Quote booked, newest first, with the number, the note, the fire hazard and a satellite link. Tick each one off when the quote goes out.', 'Admin only', quotesView));
     }
+    if (S.role === 'admin') box.appendChild(tile('button', 'map', 'Communities',
+      'Subdivisions, HOAs and Firewise sites with their high-risk doors, lawns and county values, to pitch a whole community as one job.', 'Admin only', communitiesView));
     if (S.role === 'admin') box.appendChild(tile('button', 'table', 'Results',
       'Which doors turn into jobs: knocked, booked and won, by fire hazard, lawn, trees, county value, town and extra work.', 'Admin only', resultsView));
     box.appendChild(tile('button', 'chart', 'My stats',
@@ -1248,6 +1321,7 @@
         view.appendChild(rf);
       }
     }
+    view.appendChild(alertStrip(S.region));          /* this town's fire weather and nearby fires (SX-41) */
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
     sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
@@ -1386,6 +1460,33 @@
   function rate(b, t) { return t ? Math.round(b / t * 100) + '%' : '—'; }
   function dayName(iso) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]; }
   function sumDays(rows) { var t = {}; Object.keys(ZERO).forEach(function (k) { t[k] = 0; }); rows.forEach(function (r) { Object.keys(ZERO).forEach(function (k) { t[k] += r[k] || 0; }); }); return t; }
+  /* ---- tips from the numbers (SX-39, 2026-10-03) ----
+     Plain rules of thumb from the last 30 days, at most three, the most useful first. The
+     thresholds are judgement, not targets, and the card says which number each tip came from. */
+  function tipsCard(days, self) {
+    var D = sumDays(days), knocked = D.doors - (D.nosolicit || 0), talked = D.booked + D.later;
+    var you = self ? 'you' : 'they', your = self ? 'your' : 'their';
+    var card = q('div', 'tips');
+    card.appendChild(q('h3', null, 'Tips from ' + your + ' numbers'));
+    if (D.doors < 20) { card.appendChild(q('p', 'soft', 'Tips show up after 20 doors. ' + D.doors + ' so far in the last 30 days.')); return card; }
+    var tips = [], pc = function (a, b) { return Math.round(100 * a / b) + '%'; };
+    if (knocked && D.miss / knocked >= 0.5)
+      tips.push([pc(D.miss, knocked) + ' of ' + your + ' knocks got no answer.', 'People are usually home on weekday evenings and Saturday mornings. Daytime is good for going back to no-answers and Not-now dates.']);
+    if (talked >= 10 && D.booked / talked < 0.2)
+      tips.push(['Most conversations end in Not now (' + pc(D.booked, talked) + ' booked).', 'Ask for a time to walk the property instead of a yes on the job: "Can we stop by Thursday and give you a number?"']);
+    if (talked >= 10 && (D.phones || 0) + (D.emails || 0) < talked / 2)
+      tips.push(['A number or email on ' + ((D.phones || 0) + (D.emails || 0)) + ' of ' + talked + ' conversations.', 'Ask at every Not now. A maybe with a phone number becomes a follow-up call instead of another knock.']);
+    if (D.booked >= 5 && (D.photos || 0) < D.booked)
+      tips.push(['Photos on fewer doors than quotes booked (' + (D.photos || 0) + ' photos, ' + D.booked + ' booked).', 'Two or three yard photos at the booking, with the owner' + "'" + 's OK, make the quote faster and closer.']);
+    if (!tips.length && talked >= 10 && D.booked / talked >= 0.35)
+      tips.push([pc(D.booked, talked) + ' of ' + your + ' conversations became a booked quote.', 'That is strong. Keep the same opener, and help a teammate with theirs.']);
+    if (!tips.length) tips.push(['Nothing stands out.', 'The numbers look steady. Keep going.']);
+    var ul = q('ul');
+    tips.slice(0, 3).forEach(function (tp) { var li = q('li'); li.appendChild(q('b', null, tp[0])); li.appendChild(document.createTextNode(' ' + tp[1])); ul.appendChild(li); });
+    card.appendChild(ul);
+    card.appendChild(q('p', 'soft', 'Last 30 days. Rules of thumb, not targets.'));
+    return card;
+  }
   function statsView(name, back) {
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
@@ -1426,6 +1527,7 @@
       }
       card.appendChild(cmp);
       holder.appendChild(card);
+      holder.appendChild(tipsCard(p.days, name === S.me));
       /* last 14 days, drawn to one scale */
       holder.appendChild(q('h2', null, 'Last 14 days'));
       var days = []; for (var k2 = 13; k2 >= 0; k2--) { var iso = isoMinus(j.today, k2); days.push({ iso: iso, r: by[iso] || ZERO }); }
@@ -2737,6 +2839,77 @@
       });
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
+  /* ---- Communities (SX-40, 2026-10-03): pitch a whole HOA or Firewise site as one job ---- */
+  var COMM_KIND = { sub: 'Subdivision', metro: 'Metro district', fw: 'Near a Firewise site' };
+  function communitiesView() {
+    hideToast(); S.signin = null; S.screen = 'communities'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Communities', sub: 'Ranked by high-risk doors still to knock', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    var go = S.communities ? Promise.resolve({ ok: true, communities: S.communities }) : api('communities');
+    go.then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the communities.')); return; }
+      S.communities = j.communities; drawCommunities(holder);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
+  function drawCommunities(holder) {
+    holder.textContent = '';
+    var f = S.commFilter || 'all';
+    var seg = q('div', 'seg cseg');
+    [['all', 'All'], ['hoa', 'With an HOA'], ['fw', 'Firewise']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(f === o[0]));
+      b.addEventListener('click', function () { S.commFilter = o[0]; S.commMore = 0; drawCommunities(holder); });
+      seg.appendChild(b);
+    });
+    holder.appendChild(seg);
+    var list = S.communities.filter(function (c) { return f === 'all' || (f === 'hoa' ? c.hoa : c.kind === 'fw'); });
+    holder.appendChild(q('div', 'sub2', list.length + ' communities · subdivision names from county parcel records, HOAs matched by name from the state roster, Firewise sites within 600 m'));
+    var shown = 30 + (S.commMore || 0);
+    list.slice(0, shown).forEach(function (c) { holder.appendChild(communityCard(c)); });
+    if (list.length > shown) {
+      var more = q('button', 'back', 'Show ' + Math.min(30, list.length - shown) + ' more'); more.type = 'button';
+      more.addEventListener('click', function () { S.commMore = (S.commMore || 0) + 30; drawCommunities(holder); });
+      holder.appendChild(more);
+    }
+  }
+  function communityCard(c) {
+    var card = q('div', 'door comm');
+    card.appendChild(q('div', 'addr', c.name));
+    card.appendChild(q('div', 'meta', COMM_KIND[c.kind] + ' · ' + c.towns.join(', ') + ' · ' + c.doors.toLocaleString('en-US') + ' doors in ' + c.areas.length + (c.areas.length === 1 ? ' neighbourhood' : ' neighbourhoods')));
+    var chips = q('div', 'chips');
+    if (c.hot) chips.appendChild(chipEl('hot' + (c.vhot ? ' v' : ''), 'flame', c.hot + ' high-risk to knock' + (c.vhot ? ' (' + c.vhot + ' very high)' : '')));
+    if (c.lawnL || c.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (c.lawnL ? c.lawnL + ' large' : '') + (c.lawnL && c.lawnM ? ' · ' : '') + (c.lawnM ? c.lawnM + (c.lawnM === 1 && !c.lawnL ? ' medium lawn' : ' medium lawns') : '')));
+    if (c.treeA) chips.appendChild(chipEl('treec', 'tree', c.treeA + (c.treeA === 1 ? ' door' : ' doors') + ' with trees against the house'));
+    card.appendChild(chips);
+    var facts = [];
+    if (c.valMed) facts.push('Typical county value ' + fmtVal(c.valMed));
+    facts.push(c.knocked + ' knocked · ' + c.booked + ' booked');
+    card.appendChild(q('div', 'meta', facts.join(' · ')));
+    (c.hoa || []).slice(0, 3).forEach(function (h) {
+      card.appendChild(q('div', 'meta st', 'HOA: ' + h.hoa + (h.units ? ' · ' + h.units.toLocaleString('en-US') + ' units' : '') + (h.mgmt ? ' · managed by ' + h.mgmt : (h.managed ? ' · ' + h.managed.toLowerCase() : ''))));
+    });
+    if (c.hoa && c.hoa.length > 3) card.appendChild(q('div', 'meta', '+ ' + (c.hoa.length - 3) + ' more HOAs'));
+    var open = S.commOpen === c.kind + '|' + c.name;
+    var tg = q('button', 'lnk', (open ? 'Hide' : 'Show') + ' the ' + c.areas.length + (c.areas.length === 1 ? ' neighbourhood' : ' neighbourhoods')); tg.type = 'button';
+    tg.addEventListener('click', function () { S.commOpen = open ? null : c.kind + '|' + c.name; drawCommunities(card.parentNode); });
+    card.appendChild(tg);
+    if (open) {
+      var al = q('div', 'calist');
+      c.areas.forEach(function (a) {
+        var b = q('button', 'back', a.name + ' · ' + a.doors + ' doors' + (a.hot ? ' · ' + a.hot + ' high-risk' : '')); b.type = 'button';
+        b.addEventListener('click', function () { openFromCommunity(a); });
+        al.appendChild(b);
+      });
+      card.appendChild(al);
+    }
+    return card;
+  }
+  function openFromCommunity(a) {
+    var go = function () { S.region = a.region; S.returnTo = communitiesView; openArea(a.name); };
+    if (S.regions) return go();
+    api('regions').then(function (j) { if (j.ok) { S.regions = j.regions; go(); } });
+  }
   function quotesView() {
     hideToast();
     S.signin = null; S.screen = 'quotes';
@@ -2838,6 +3011,12 @@
   }
   function lawnChooser(d) {
     var box = q('div', 'lawnfix');
+    if (typeof d.lat === 'number') {
+      var ph = q('button', 'lphoto'); ph.type = 'button';
+      ph.appendChild(ico('globe', 2.2)); ph.appendChild(document.createTextNode('See the lawn on the photo'));
+      ph.addEventListener('click', function () { aerialView(d, { lawn: true }); });
+      box.appendChild(ph);
+    }
     box.appendChild(q('div', 'lq', 'What lawn is really here?'));
     box.appendChild(q('div', 'lsub', d.lawn ? 'The ' + d.lawn.yr + ' aerial photo says: ' + LAWN[d.lawn.lv] + '. Your answer replaces it for everyone.'
                                              : 'No photo estimate for this door. Your answer helps tune the map.'));
@@ -2960,7 +3139,8 @@
     if (a) { a.parentNode.removeChild(a); document.body.style.overflow = ''; }
   }
   window.addEventListener('popstate', function () { if (document.getElementById('aerial')) closeAerial(); });
-  function aerialView(d) {
+  function aerialView(d, opts) {
+    opts = opts || {};
     closeAerial();
     var box = q('div', 'aerial'); box.id = 'aerial';
     var head = q('div', 'ahead');
@@ -2969,6 +3149,8 @@
     head.appendChild(x); head.appendChild(q('b', null, d.address || 'This lot'));
     box.appendChild(head);
     var mapEl = q('div', 'amap'); box.appendChild(mapEl);
+    var legend = null;
+    if (opts.lawn) { legend = q('div', 'alegend'); legend.appendChild(q('span', 'soft', 'Loading the lawn outline…')); box.appendChild(legend); }
     var foot = q('div', 'afoot'), cap = q('span', null, 'Loading the photo and the property line…');
     var g = q('a'); g.href = googleSat(d.lat, d.lon, zoomFor(d.acres)); g.target = '_blank'; g.rel = 'noopener noreferrer';
     g.appendChild(ico('globe', 2.2)); g.appendChild(document.createTextNode('Google Maps'));
@@ -2995,6 +3177,7 @@
         var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null;
         if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
       }, true);
+      if (opts.lawn) lawnOverlay(d, map, legend);
       fetch(PC_API + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ collections: ['naip'], intersects: { type: 'Point', coordinates: [d.lon, d.lat] }, query: { 'naip:year': { eq: '2023' } }, limit: 4 }) })
         .then(function (r) { return r.json(); })
@@ -3029,6 +3212,50 @@
     });
   }
 
+  /* ---- the lawn on the photo (SX-38, 2026-10-03) ----
+     Green: the lawn the size counts (patches of 400 sq ft or more within 30 m of the house).
+     Blue: grass left out, far from the house or in small patches (yellow is the property line). Same 2023 photo as the size. */
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function shortDate(iso) { var p = String(iso).split('-'); return MON[+p[1] - 1] + ' ' + (+p[2]); }
+  function lawnOverlay(d, map, legend) {
+    var say = function (nodes) { legend.textContent = ''; nodes.forEach(function (n) { legend.appendChild(n); }); };
+    api('lawnmask', { params: { region: S.region, id: d.id } }).then(function (j) {
+      var m = j && j.ok ? j.mask : null;
+      if (!m) {
+        say([q('span', 'soft', lawnLevelOf(d) === 'L' || lawnLevelOf(d) === 'M'
+          ? 'No outline for this lawn yet. The size is still the 2023 photo estimate.'
+          : 'Outlines are kept for Medium and Large lawns. This one reads ' + (LAWN[lawnLevelOf(d)] || 'unknown').toLowerCase() + '.')]);
+        return;
+      }
+      /* run-length mask to a canvas, one cell per photo pixel */
+      var cv = document.createElement('canvas'); cv.width = m.w; cv.height = m.h;
+      var cx = cv.getContext('2d'), img = cx.createImageData(m.w, m.h), px = 0;
+      m.r.split(',').forEach(function (run) {
+        var vn = run.split(':'), v = +vn[0], n = +vn[1];
+        for (var k = 0; k < n; k++, px++) {
+          if (!v) continue;
+          var o = px * 4;
+          if (v === 1) { img.data[o] = 46; img.data[o + 1] = 204; img.data[o + 2] = 64; img.data[o + 3] = 150; }
+          else { img.data[o] = 70; img.data[o + 1] = 160; img.data[o + 2] = 255; img.data[o + 3] = 135; }   /* blue: the property line is already yellow */
+        }
+      });
+      cx.putImageData(img, 0, 0);
+      L.imageOverlay(cv.toDataURL(), [[m.b[0], m.b[1]], [m.b[2], m.b[3]]], { interactive: false }).addTo(map);
+      var nodes = [];
+      var l1 = q('span'); var k1 = q('span', 'k'); k1.style.background = 'rgb(46,204,64)'; l1.appendChild(k1);
+      l1.appendChild(document.createTextNode('Lawn we counted: about ' + m.sq.toLocaleString('en-US') + ' sq ft' + (m.hs ? ', near the house' : '') + ' (' + shortDate(m.d) + ' ' + String(m.d).slice(0, 4) + ' photo)'));
+      nodes.push(l1);
+      var l2 = q('span'); var k2 = q('span', 'k'); k2.style.background = 'rgb(70,160,255)'; l2.appendChild(k2);
+      l2.appendChild(document.createTextNode('Grass left out: ' + (m.hs ? 'far from the house or in small patches' : 'small patches')));
+      nodes.push(l2);
+      if (m.g) {
+        var rel = m.g.rel, verdict = rel === null ? '' : rel <= -0.05 ? 'browned more than the large lawns around it' : rel >= 0.05 ? 'stayed greener than the large lawns around it' : 'about the same as the large lawns around it';
+        nodes.push(q('span', null, 'Summer greenness (satellite, July–August): ' + m.g.y25.toFixed(2) + ' in 2025, ' + m.g.y26.toFixed(2) + ' in 2026' + (verdict ? '; ' + verdict + '.' : '.')));
+        if (j.ndvi) nodes.push(q('span', 'soft', 'Clear images used: ' + ['2025', '2026'].map(function (y) { return y + ' ' + (j.ndvi[y] || []).map(shortDate).join(', '); }).join(' · ') + '. About 10 m per pixel, so a rough read of a big lawn, not a diagnosis.'));
+      }
+      say(nodes);
+    }).catch(function () { say([q('span', 'soft', 'The lawn outline needs signal.')]); });
+  }
   function satLink(d, small) {
     if (typeof d.lat !== 'number' || typeof d.lon !== 'number') return null;
     var zoom = d.acres >= 3 ? 18 : d.acres >= 1 ? 19 : 20;

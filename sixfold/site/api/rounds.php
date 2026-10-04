@@ -1026,6 +1026,188 @@ if ($action === 'mydoors') {
  * Short internal sheets on the tax credit, insurance and grants, opened from a door card.
  * Kept in the private data folder, not the page: they sit behind the sign-in like the
  * doors, and a fact can be corrected by uploading the JSON alone. */
+/* ---- the lawn behind a door's size (SX-38, 2026-10-03) -------------------------------
+ * build-lawn-outlines.mjs writes one pack per town: for each Medium and Large lawn, which grass
+ * was counted and which was left out, on the 2023 photo's grid. The app shades it on the aerial. */
+if ($action === 'lawnmask') {
+    $key = (string) ($_GET['region'] ?? '');
+    $id  = (string) ($_GET['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $home = doorHome($key, $id);
+    $f = DATA_DIR . '/lawnmask-' . $home . '.json';
+    $p = is_readable($f) ? json_decode((string) file_get_contents($f), true) : null;
+    $e = is_array($p) ? ($p['doors'][$id] ?? null) : null;
+    out(['ok' => true, 'mask' => $e, 'ndvi' => $e && isset($e['g']) ? ($p['ndvi'] ?? null) : null]);
+}
+
+/* ---- communities (SX-40, 2026-10-03) -------------------------------------------------
+ * Neighbourhoods grouped by the community they sit in — subdivision or metro district (the
+ * parcel records' name) and nearby Firewise sites — with what is still to knock, so a whole
+ * HOA or Firewise community can be pitched as one job. HOAs matched by name from the state
+ * roster (hoa-communities.json). Admin only. */
+if ($action === 'communities') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $hoa = json_decode((string) @file_get_contents(DATA_DIR . '/hoa-communities.json'), true)['places'] ?? [];
+    $g = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $data = loadRegion($r['key']);
+        if (!$data) continue;
+        $marks = loadMarks($r['key']); $lfix = loadLawnFix($r['key']);
+        foreach ($data['areas'] as $a) {
+            $keys = [];
+            if (!empty($a['place']['n'])) $keys[] = [($a['place']['k'] ?? 'sub') === 'metro' ? 'metro' : 'sub', (string) $a['place']['n']];
+            foreach ((array) ($a['fw'] ?? []) as $fw) if (!empty($fw['n'])) $keys[] = ['fw', (string) $fw['n']];
+            if (!$keys) continue;
+            $st = ['doors' => 0, 'hot' => 0, 'vhot' => 0, 'lawnL' => 0, 'lawnM' => 0, 'treeA' => 0, 'knocked' => 0, 'booked' => 0];
+            $vals = [];
+            foreach ($a['doors'] as $d) {
+                $st['doors']++;
+                $m = freshMark($d, $marks[$d['id']] ?? null);
+                if ($m) { $st['knocked']++; if ($m['outcome'] === 'booked') $st['booked']++; }
+                $open = !$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'));
+                if (!$open) continue;
+                $f = (int) ($d['fire'] ?? 0);
+                if ($f === 4 || $f === 5) { $st['hot']++; if ($f === 5) $st['vhot']++; }
+                $lv = lawnLevel($d, $lfix); if ($lv === 'L') $st['lawnL']++; elseif ($lv === 'M') $st['lawnM']++;
+                if (treeLevel($d) === 'against') $st['treeA']++;
+                if (!empty($d['val'])) $vals[] = (int) $d['val'];
+            }
+            foreach ($keys as [$kind, $name]) {
+                $k = $kind . '|' . strtolower($name);
+                $c = $g[$k] ?? ['kind' => $kind, 'name' => $name, 'towns' => [], 'areas' => [], 'vals' => [],
+                                'doors' => 0, 'hot' => 0, 'vhot' => 0, 'lawnL' => 0, 'lawnM' => 0, 'treeA' => 0, 'knocked' => 0, 'booked' => 0];
+                foreach ($st as $f2 => $v) $c[$f2] += $v;
+                $c['towns'][$r['label'] ?? $r['key']] = 1;
+                $c['areas'][] = ['region' => $r['key'], 'name' => $a['name'], 'doors' => $st['doors'], 'hot' => $st['hot']];
+                $c['vals'] = array_merge($c['vals'], $vals);
+                $g[$k] = $c;
+            }
+        }
+    }
+    $list = [];
+    foreach ($g as $c) {
+        sort($c['vals']); $n = count($c['vals']);
+        $c['valMed'] = $n ? $c['vals'][intdiv($n, 2)] : null; unset($c['vals']);
+        $c['towns'] = array_keys($c['towns']);
+        usort($c['areas'], fn($x, $y) => $y['hot'] <=> $x['hot'] ?: $y['doors'] <=> $x['doors']);
+        $c['hoa'] = $c['kind'] !== 'fw' ? ($hoa[strtolower($c['name'])] ?? null) : null;
+        $list[] = $c;
+    }
+    usort($list, fn($x, $y) => $y['hot'] <=> $x['hot'] ?: $y['doors'] <=> $x['doors']);
+    out(['ok' => true, 'communities' => $list]);
+}
+
+/* ---- alerts (SX-41, 2026-10-03) ------------------------------------------------------
+ * Fire weather and wildfires near the towns, from two public feeds, fetched at most every
+ * 10 minutes and kept in sixfold-data/rounds/alerts-cache.json:
+ *   - National Weather Service active alerts at each town's centre (api.weather.gov), kept
+ *     when they bear on the work: red flag, fire weather, fire, heat, air quality, smoke, wind;
+ *   - wildfires (not prescribed burns) within 60 miles that are not fully contained, from the
+ *     national interagency incident feed (NIFC WFIGS current incident locations).
+ * Homeowners listen after a scare; the app also says never to knock inside an evacuation area.
+ * A feed that fails keeps the last good answer and says how old it is. Any signed-in user. */
+const ALERT_TOWNS = [
+    'monument' => [39.0917, -104.8722], 'palmer-lake' => [39.1222, -104.9169], 'black-forest' => [39.0138, -104.7025],
+    'castle-rock' => [39.3722, -104.8561], 'larkspur' => [39.2311, -104.8747], 'sedalia' => [39.4386, -104.9614],
+    'franktown' => [39.3894, -104.7519], 'woodland-park' => [39.0000, -105.0569], 'divide' => [38.9469, -105.1636],
+    'florissant' => [38.9469, -105.2911], 'cripple-creek' => [38.7466, -105.1783]];
+const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
+    'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch'];
+function httpJson(string $url, array $headers = []): ?array {
+    $hdr = array_merge(['User-Agent: SixfoldRounds/1.0 (contact@sixfoldcolorado.com)', 'Accept: application/geo+json, application/json'], $headers);
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => $hdr, CURLOPT_FOLLOWLOCATION => true]);
+        $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
+        if ($body !== false && $code === 200) { $j = json_decode((string) $body, true); if (is_array($j)) return $j; }
+    }
+    return httpJsonPlain($url, $hdr);   /* curl missing or failing (e.g. no certificate list): the plain way */
+}
+function httpJsonPlain(string $url, array $hdr): ?array {
+    $body = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 8, 'header' => implode("\r\n", $hdr)]]));
+    if ($body === false) return null;
+    $j = json_decode((string) $body, true);
+    return is_array($j) ? $j : null;
+}
+/** several GETs at once (curl_multi); null for any that failed. Falls back to one at a time. */
+function httpJsonMany(array $urls): array {
+    if (!function_exists('curl_multi_init')) return array_map(fn($u) => httpJson($u), $urls);
+    $hdr = ['User-Agent: SixfoldRounds/1.0 (contact@sixfoldcolorado.com)', 'Accept: application/geo+json, application/json'];
+    $mh = curl_multi_init(); $hs = [];
+    foreach ($urls as $k => $u) {
+        $c = curl_init($u);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => $hdr, CURLOPT_FOLLOWLOCATION => true]);
+        curl_multi_add_handle($mh, $c); $hs[$k] = $c;
+    }
+    do { $st = curl_multi_exec($mh, $running); if ($running) curl_multi_select($mh, 1.0); } while ($running && $st === CURLM_OK);
+    $out = [];
+    foreach ($hs as $k => $c) {
+        $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); $body = curl_multi_getcontent($c);
+        $j = ($code === 200 && $body) ? json_decode((string) $body, true) : null;
+        $out[$k] = is_array($j) ? $j : httpJsonPlain($urls[$k], $hdr);   /* a failed one gets one plain retry */
+        curl_multi_remove_handle($mh, $c); curl_close($c);
+    }
+    curl_multi_close($mh);
+    return $out;
+}
+function milesBetween(float $la1, float $lo1, float $la2, float $lo2): float {
+    return hypot(($la1 - $la2) * 69.0, ($lo1 - $lo2) * 69.0 * cos(deg2rad($la1)));
+}
+function freshAlerts(): array {
+    $f = DATA_DIR . '/alerts-cache.json';
+    $cache = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
+    if (($cache['at'] ?? 0) > time() - 600) return $cache;
+    $fp = @fopen($f . '.lock', 'c');                        /* one refresh at a time */
+    if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) return $cache ?: ['at' => 0, 'weather' => [], 'fires' => [], 'stale' => true];
+    $weather = []; $wOk = true;
+    $answers = httpJsonMany(array_map(fn($p) => 'https://api.weather.gov/alerts/active?point=' . $p[0] . ',' . $p[1], ALERT_TOWNS));
+    foreach (ALERT_TOWNS as $town => [$la, $lo]) {
+        $j = $answers[$town] ?? null;
+        if ($j === null) { $wOk = false; continue; }
+        foreach (($j['features'] ?? []) as $ft) {
+            $p = $ft['properties'] ?? [];
+            if (!in_array($p['event'] ?? '', ALERT_EVENTS, true)) continue;
+            $id = (string) ($p['id'] ?? $ft['id'] ?? '');
+            if (!isset($weather[$id])) $weather[$id] = ['event' => $p['event'], 'headline' => (string) ($p['headline'] ?? ''),
+                'ends' => (string) ($p['ends'] ?? $p['expires'] ?? ''), 'severity' => (string) ($p['severity'] ?? ''),
+                'url' => 'https://alerts.weather.gov/search?id=' . rawurlencode($id), 'towns' => []];
+            $weather[$id]['towns'][] = $town;
+        }
+    }
+    $fires = []; $fOk = true;
+    $q = http_build_query(['where' => "IncidentTypeCategory='WF'", 'geometry' => '-104.95,39.1', 'geometryType' => 'esriGeometryPoint', 'inSR' => '4326',
+        'distance' => '60', 'units' => 'esriSRUnit_StatuteMile', 'outFields' => 'IncidentName,IncidentSize,PercentContained,FireDiscoveryDateTime,POOCounty,POOState',
+        'returnGeometry' => 'true', 'outSR' => '4326', 'f' => 'json']);
+    $j = httpJson('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?' . $q);
+    if ($j === null || isset($j['error'])) $fOk = false;
+    else foreach (($j['features'] ?? []) as $ft) {
+        $a = $ft['attributes'] ?? []; $g = $ft['geometry'] ?? [];
+        if (!isset($g['x'], $g['y'])) continue;
+        if (($a['PercentContained'] ?? null) !== null && (float) $a['PercentContained'] >= 100) continue;
+        $best = null; $dist = [];
+        foreach (ALERT_TOWNS as $town => [$la, $lo]) { $mi = milesBetween($la, $lo, (float) $g['y'], (float) $g['x']); $dist[$town] = (int) round($mi); if (!$best || $mi < $best[1]) $best = [$town, $mi]; }
+        $fires[] = ['name' => (string) ($a['IncidentName'] ?? 'Unnamed fire'), 'acres' => isset($a['IncidentSize']) ? (float) $a['IncidentSize'] : null,
+            'contained' => isset($a['PercentContained']) ? (float) $a['PercentContained'] : null,
+            'found' => isset($a['FireDiscoveryDateTime']) ? (int) ($a['FireDiscoveryDateTime'] / 1000) : null,
+            'county' => trim((string) ($a['POOCounty'] ?? '') . ', ' . (string) ($a['POOState'] ?? ''), ', '),
+            'near' => $best[0], 'miles' => (int) round($best[1]), 'dist' => $dist, 'lat' => (float) $g['y'], 'lon' => (float) $g['x']];
+    }
+    usort($fires, fn($x, $y) => $x['miles'] <=> $y['miles']);
+    $out = ['at' => time(),
+            'weather' => $wOk || !$cache ? array_values($weather) : ($cache['weather'] ?? []),
+            'fires' => $fOk || !$cache ? $fires : ($cache['fires'] ?? []),
+            'stale' => !$wOk || !$fOk];
+    @file_put_contents($f, json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    flock($fp, LOCK_UN); fclose($fp);
+    return $out;
+}
+if ($action === 'alerts') {
+    $a = freshAlerts();
+    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $a['weather'] ?? [], 'fires' => $a['fires'] ?? [], 'stale' => !empty($a['stale'])]);
+}
+
 if ($action === 'money') {
     $f = DATA_DIR . '/docs/money.json';
     $j = is_readable($f) ? json_decode((string) file_get_contents($f), true) : null;

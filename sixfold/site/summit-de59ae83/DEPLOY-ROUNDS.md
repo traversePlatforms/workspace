@@ -5,7 +5,43 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — Fable's live-review fixes + extra work + results (2 files)
+## ⚑ NEXT UPLOAD — Fable's live-review fixes, extra work, results, lawn photos, tips, communities, alerts
+
+Matthew 2026-10-03: batch the updates into one upload rather than one per feature; do it before
+Monday's team meeting with whatever is finished.
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | `data/rounds/hoa-communities.json` and the 11 `data/rounds/lawnmask-<town>.json` | `sixfold-data/rounds/` (beside the door files; never empty that folder) |
+| 4 | — | Flush the cache. No one needs to sign in again. |
+
+**Lawn on the photo (SX-38).** Tapping a lawn size now offers "See the lawn on the photo": the 2023
+aerial with the lawn the size counted shaded green and the grass left out shaded blue, with the
+square footage and the photo date. Large lawns also show their summer greenness (2025 vs 2026) and
+the clear satellite dates used. Built by `lawn-trial/build-lawn-outlines.mjs` for every Medium and
+Large lawn; the packs are gitignored (regenerable, about an hour).
+
+**Tips on the stats page (SX-39).** Up to three tips from the person's last 30 days, each with the
+number it came from (no-answer share, booking rate, contact details, photos). Thresholds are
+rules of thumb chosen 2026-10-03, not measured targets; shown after 20 doors.
+
+**Communities (SX-40, admin).** Subdivisions, metro districts and Firewise sites ranked by
+high-risk doors still to knock, with lawns, trees, typical county value, knocked/booked, and the
+HOAs matched by name from the state roster (name, units, management company — no agents or
+addresses). Each opens its neighbourhoods.
+
+**Alerts (SX-41).** A strip on the tools screen and on each town's neighbourhood list: red flag
+warnings, fire weather watches, heat, air quality, smoke and high wind from the National Weather
+Service, and wildfires (not prescribed burns) within 60 miles that are not fully contained, from
+the national interagency incident feed; a fire shows on a town's list within 30 miles of it. The
+server checks at most every 10 minutes (`sixfold-data/rounds/alerts-cache.json`, made by itself).
+Tap for details and the standing line: never knock inside an evacuation area; after a scare, lead
+with help. No fire-season countdown: on the Front Range the season is effectively year-round, and
+the warnings are the real trigger. Email alerts would need a SiteGround cron job — not set up.
+
+**Also in this upload:**
 
 **Extra work at the door (SX-36).** "+ Extra work" on every card: tap what you saw (branches over the
 roof, gutters, brush against the house, dead trees, irrigation, bare lawn, overgrown beds). One door,
