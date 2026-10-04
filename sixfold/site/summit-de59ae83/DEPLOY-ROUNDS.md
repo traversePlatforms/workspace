@@ -14,7 +14,7 @@ Monday's team meeting with whatever is finished.
 |---|---|---|
 | 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
 | 2 | `api/rounds.php` | `public_html/api/` |
-| 3 | `data/rounds/hoa-communities.json` and the 11 `data/rounds/lawnmask-<town>.json` | `sixfold-data/rounds/` (beside the door files; never empty that folder) |
+| 3 | `data/rounds/hoa-communities.json`, `data/rounds/cwpp.json` and the 11 `data/rounds/lawnmask-<town>.json` | `sixfold-data/rounds/` (beside the door files; never empty that folder) |
 | 4 | — | Flush the cache. No one needs to sign in again. |
 
 **Lawn on the photo (SX-38).** Tapping a lawn size now offers "See the lawn on the photo": the 2023
@@ -40,6 +40,13 @@ server checks at most every 10 minutes (`sixfold-data/rounds/alerts-cache.json`,
 Tap for details and the standing line: never knock inside an evacuation area; after a scare, lead
 with help. No fire-season countdown: on the Front Range the season is effectively year-round, and
 the warnings are the real trigger. Email alerts would need a SiteGround cron job — not set up.
+
+**County plan ratings (SX-47).** 62 Teller neighbourhoods (28 communities) carry their rating from
+the Teller County CWPP 2025 (Colorado State Forest Service, Tables 7-11): a "County plan: Extreme /
+Severe / High" chip on the neighbourhood card, and in Communities the plan's own community name and
+fire district, so the match can be checked. Matched by name; a partial match needs two words.
+El Paso and Douglas are not in: Douglas's county plan is from 2011 and El Paso's current plan was
+not found yet.
 
 **Route (SX-44).** A Route button in each neighbourhood orders the doors still to knock into a short walking loop from where you stand (nearest-next, then uncrossed), with the distance and an "Open the first 10 stops in Google Maps" walking link (Google takes about ten stops per link). Straight-line distances: a guide to the order.
 

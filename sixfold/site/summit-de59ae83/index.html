@@ -1382,6 +1382,7 @@
       var chips = q('div', 'chips');
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
+      if (a.cwpp) chips.appendChild(chipEl('hot' + (a.cwpp.rating === 'Extreme' ? ' v' : ''), 'flame', 'County plan: ' + a.cwpp.rating));
       if (mode === 'trees' && (a.treeA || a.treeH)) chips.appendChild(chipEl('treec', 'tree', (a.treeA ? a.treeA + (a.treeA === 1 ? ' door' : ' doors') + ' with trees against the house' : '') + (a.treeA && a.treeH ? ' · ' : '') + (a.treeH ? a.treeH + ' with heavy trees' : '')));
       if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ((a.lawnL || 0) + (a.lawnM || 0) === 1 ? ' lawn' : ' lawns')));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high-risk ' + (a.hot === 1 ? 'door' : 'doors') + (a.vhot ? ' (' + a.vhot + ' very high)' : '')));
@@ -2932,6 +2933,7 @@
     if (c.valMed) facts.push('Typical county value ' + fmtVal(c.valMed));
     facts.push(c.knocked + ' knocked · ' + c.booked + ' booked');
     card.appendChild(q('div', 'meta', facts.join(' · ')));
+    if (c.cwpp) card.appendChild(q('div', 'meta st', c.cwpp.plan + ' rates "' + c.cwpp.community + '" ' + c.cwpp.rating + (c.cwpp.district ? ' (' + c.cwpp.district + ')' : '') + '.'));
     (c.hoa || []).slice(0, 3).forEach(function (h) {
       card.appendChild(q('div', 'meta st', 'HOA: ' + h.hoa + (h.units ? ' · ' + h.units.toLocaleString('en-US') + ' units' : '') + (h.mgmt ? ' · managed by ' + h.mgmt : (h.managed ? ' · ' + h.managed.toLowerCase() : ''))));
     });
@@ -3295,9 +3297,11 @@
       l2.appendChild(document.createTextNode('Grass left out: ' + (m.hs ? 'far from the house or in small patches' : 'small patches')));
       nodes.push(l2);
       if (m.g) {
-        var rel = m.g.rel, verdict = rel === null ? '' : rel <= -0.05 ? 'browned more than the large lawns around it' : rel >= 0.05 ? 'stayed greener than the large lawns around it' : 'about the same as the large lawns around it';
-        nodes.push(q('span', null, 'Summer greenness (satellite, July–August): ' + m.g.y25.toFixed(2) + ' in 2025, ' + m.g.y26.toFixed(2) + ' in 2026' + (verdict ? '; ' + verdict + '.' : '.')));
-        if (j.ndvi) nodes.push(q('span', 'soft', 'Clear images used: ' + ['2025', '2026'].map(function (y) { return y + ' ' + (j.ndvi[y] || []).map(shortDate).join(', '); }).join(' · ') + '. About 10 m per pixel, so a rough read of a big lawn, not a diagnosis.'));
+        var g = m.g, ya = g.ya || 2025, yb = g.yb || 2026, a = g.a !== undefined ? g.a : g.y25, bb = g.b !== undefined ? g.b : g.y26;
+        var months = (g.m || [7, 8]).map(function (k) { return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][k - 1]; }).join('–');
+        var rel = g.rel, verdict = rel === null || rel === undefined ? '' : rel <= -0.05 ? 'browned more than the large lawns around it' : rel >= 0.05 ? 'stayed greener than the large lawns around it' : 'about the same as the large lawns around it';
+        nodes.push(q('span', null, 'Greenness (satellite, ' + months + '): ' + a.toFixed(2) + ' in ' + ya + ', ' + bb.toFixed(2) + ' in ' + yb + (verdict ? '; ' + verdict + '.' : '.')));
+        if (j.ndvi) nodes.push(q('span', 'soft', 'Clear images used: ' + [String(ya), String(yb)].map(function (y) { return y + ' ' + (j.ndvi[y] || []).map(shortDate).join(', '); }).join(' · ') + '. About 10 m per pixel, so a rough read of a big lawn, not a diagnosis.'));
       }
       say(nodes);
     }).catch(function () { say([q('span', 'soft', 'The lawn outline needs signal.')]); });

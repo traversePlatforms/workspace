@@ -657,6 +657,12 @@ if ($action === 'diag') {
     ]);
 }
 
+/** county wildfire protection plan ratings by place name (SX-47; cwppPlaces() reads cwpp.json once) */
+function cwppPlaces(): array {
+    static $p = null;
+    if ($p === null) $p = json_decode((string) @file_get_contents(DATA_DIR . '/cwpp.json'), true)['places'] ?? [];
+    return $p;
+}
 if ($action === 'regions') {
     if (!is_readable(DATA_DIR . '/index.json')) {
         fail('The door lists are not on this server yet. Sign in as admin and open ?action=diag to see where it looked.', 503);
@@ -713,7 +719,8 @@ if ($action === 'regions') {
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
-                        'st' => topStreets($streets, 4), 'ns' => count($streets)];
+                        'st' => topStreets($streets, 4), 'ns' => count($streets),
+                        'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }
@@ -1050,6 +1057,7 @@ if ($action === 'communities') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $hoa = json_decode((string) @file_get_contents(DATA_DIR . '/hoa-communities.json'), true)['places'] ?? [];
+    $cwpp = cwppPlaces();
     $g = [];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1093,6 +1101,7 @@ if ($action === 'communities') {
         $c['towns'] = array_keys($c['towns']);
         usort($c['areas'], fn($x, $y) => $y['hot'] <=> $x['hot'] ?: $y['doors'] <=> $x['doors']);
         $c['hoa'] = $c['kind'] !== 'fw' ? ($hoa[strtolower($c['name'])] ?? null) : null;
+        $c['cwpp'] = $c['kind'] !== 'fw' ? ($cwpp[strtolower($c['name'])] ?? null) : null;
         $list[] = $c;
     }
     usort($list, fn($x, $y) => $y['hot'] <=> $x['hot'] ?: $y['doors'] <=> $x['doors']);

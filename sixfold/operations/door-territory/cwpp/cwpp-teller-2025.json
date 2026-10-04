@@ -1,0 +1,1140 @@
+{
+ "source": "Teller County CWPP 2025 (Colorado State Forest Service), Tables 7-11",
+ "url": "https://csfs.colostate.edu/wp-content/uploads/2026/05/Teller-County-CWPP_2025.pdf",
+ "rows": [
+  {
+   "name": "TRAIL CREEK RANCHES",
+   "structures": 12,
+   "acres": 525,
+   "rating": "Extreme",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "STUMP RANCH",
+   "structures": 23,
+   "acres": 135,
+   "rating": "Extreme",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "LOST VALLEY",
+   "structures": 22,
+   "acres": 226,
+   "rating": "Extreme",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "TURKEY ROCK",
+   "structures": 138,
+   "acres": 382,
+   "rating": "Extreme",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "THUNDER BUTTE AREA",
+   "structures": 22,
+   "acres": 240,
+   "rating": "Extreme",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "WASS",
+   "structures": 7,
+   "acres": 95,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "WESTCREEK RANCHES AREA",
+   "structures": 29,
+   "acres": 899,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "LUTHERAN VALLEY",
+   "structures": 118,
+   "acres": 967,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "9J-FOUR MILE AREA",
+   "structures": 16,
+   "acres": 147,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "WESTCREEK LAKES",
+   "structures": 175,
+   "acres": 834,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "CADILLAC RANCH AREA",
+   "structures": 15,
+   "acres": 144,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "RAINBOW FISHING CLUB",
+   "structures": 16,
+   "acres": 263,
+   "rating": "Severe",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "WILDHORN",
+   "structures": 43,
+   "acres": 330,
+   "rating": "High",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "TROUT CREEK RANCH",
+   "structures": 80,
+   "acres": 489,
+   "rating": "High",
+   "district": "Mountain Communities FPD"
+  },
+  {
+   "name": "QUINLIN GULCH",
+   "structures": 83,
+   "acres": 1205,
+   "rating": "Extreme",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "TRANQUIL ACRES",
+   "structures": 280,
+   "acres": 636,
+   "rating": "Extreme",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "CATAMOUNT AREA",
+   "structures": 22,
+   "acres": 684,
+   "rating": "Extreme",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "HOLIDAY HILLS AREA",
+   "structures": 82,
+   "acres": 347,
+   "rating": "Extreme",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "MANITOU PARK - HUGHES AREA",
+   "structures": 76,
+   "acres": 292,
+   "rating": "Extreme",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "RANCH ESTATES",
+   "structures": 118,
+   "acres": 155,
+   "rating": "Extreme",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "BOY SCOUT CAMP",
+   "structures": 14,
+   "acres": 157,
+   "rating": "Severe",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "HOMESTEAD AREA",
+   "structures": 25,
+   "acres": 491,
+   "rating": "Severe",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "DEER MEADOW - EAGLE POINT AREA",
+   "structures": 60,
+   "acres": 1203,
+   "rating": "Severe",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "ASPEN HILLS AREA",
+   "structures": 101,
+   "acres": 276,
+   "rating": "Severe",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "RIDGEWOOD AREA",
+   "structures": 191,
+   "acres": 1073,
+   "rating": "Severe",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "QUAKER RIDGE - GIRL SCOUTS",
+   "structures": 47,
+   "acres": 1532,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "RAMPART RANCHES",
+   "structures": 47,
+   "acres": 589,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "ROSEWOOD HILLS AREA",
+   "structures": 67,
+   "acres": 245,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "SUMMER HAVEN",
+   "structures": 49,
+   "acres": 135,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "CASEY LUMBER - GALUTH AREA",
+   "structures": 30,
+   "acres": 831,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "RED ROCKS AREA",
+   "structures": 65,
+   "acres": 387,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "DIAMOND CAMPGROUND",
+   "structures": 150,
+   "acres": 20,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "RAMPART - SOUTH",
+   "structures": 45,
+   "acres": 136,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "WESTWOOD LAKES",
+   "structures": 171,
+   "acres": 218,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "FLYING CLOUD",
+   "structures": 36,
+   "acres": 163,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "WOODLAND WEST",
+   "structures": 133,
+   "acres": 373,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "BROKEN WAGON -ASPEN VALLEY RANCH",
+   "structures": 52,
+   "acres": 256,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "MAJESTIC PARK",
+   "structures": 18,
+   "acres": 581,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "SOURDOUGH AREA",
+   "structures": 191,
+   "acres": 1492,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "GOLD HILL - STURMAN - TROUT CREEK AREA",
+   "structures": 49,
+   "acres": 605,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "COLUMBINE - BLUE BIRD HILL AREA",
+   "structures": 147,
+   "acres": 520,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "RAMPART - NORTH",
+   "structures": 146,
+   "acres": 205,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "SUNNYWOOD - TAMARAC AREA",
+   "structures": 378,
+   "acres": 356,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "HIGHLAND HILLS",
+   "structures": 106,
+   "acres": 43,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "TAMARAC WEST",
+   "structures": 24,
+   "acres": 52,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "WOODLAND VALLEY",
+   "structures": 146,
+   "acres": 79,
+   "rating": "High",
+   "district": "Northeast FPD"
+  },
+  {
+   "name": "PARADISE VALLEY -COUGAR CANYON",
+   "structures": 36,
+   "acres": 1206,
+   "rating": "Extreme",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "EVERGREEN",
+   "structures": 37,
+   "acres": 1197,
+   "rating": "Extreme",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "PIERSON'S",
+   "structures": 9,
+   "acres": 326,
+   "rating": "Extreme",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "FLYING DUTCHMAN",
+   "structures": 10,
+   "acres": 83,
+   "rating": "Extreme",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "FLORISSANT CANYON AREA",
+   "structures": 89,
+   "acres": 1884,
+   "rating": "Extreme",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "WILDHORN AREA",
+   "structures": 70,
+   "acres": 1659,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "J-D-K",
+   "structures": 27,
+   "acres": 161,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "INDIAN CREEK - ZONE 1",
+   "structures": 346,
+   "acres": 1859,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "VALLEY - HI",
+   "structures": 65,
+   "acres": 413,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "FLORISSANT HEIGHTS",
+   "structures": 178,
+   "acres": 706,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "INDIAN CREEK - ZONE 2",
+   "structures": 420,
+   "acres": 2081,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "FOREST GLEN",
+   "structures": 43,
+   "acres": 92,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "CRYSTAL PEAK",
+   "structures": 45,
+   "acres": 1086,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "COMMANCHE AREA",
+   "structures": 41,
+   "acres": 1080,
+   "rating": "Severe",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "LA MONTANA MESA AREA",
+   "structures": 260,
+   "acres": 454,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "BLUE MOUNTAIN AREA",
+   "structures": 62,
+   "acres": 727,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "CME - ZONE 3",
+   "structures": 133,
+   "acres": 684,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "LAS BRISAS",
+   "structures": 384,
+   "acres": 627,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "INDIAN CREEK - ZONE 3",
+   "structures": 235,
+   "acres": 1661,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "SANBORN CAMPS",
+   "structures": 63,
+   "acres": 2620,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "CRYSTAL SPRINGS",
+   "structures": 29,
+   "acres": 459,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "SNARE",
+   "structures": 13,
+   "acres": 349,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "PALMER VILLAGE - TWIN ROCKS",
+   "structures": 159,
+   "acres": 580,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "CME - ZONE 2",
+   "structures": 296,
+   "acres": 917,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "WILSON LAKES",
+   "structures": 122,
+   "acres": 256,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "DRUID HILLS - MOUNTAIN VIEW",
+   "structures": 184,
+   "acres": 883,
+   "rating": "High",
+   "district": "Florissant FPD"
+  },
+  {
+   "name": "ASPENWILDE",
+   "structures": 4,
+   "acres": 203,
+   "rating": "Extreme",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "PARADISE VALLEY - DIVIDE",
+   "structures": 29,
+   "acres": 909,
+   "rating": "Extreme",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "RASPBERRY MTN",
+   "structures": 14,
+   "acres": 151,
+   "rating": "Extreme",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "YUCCA CREEK AREA",
+   "structures": 20,
+   "acres": 477,
+   "rating": "Extreme",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "UTE LAKES",
+   "structures": 52,
+   "acres": 423,
+   "rating": "Extreme",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "BROKEN WHEEL",
+   "structures": 61,
+   "acres": 263,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "512 AREA",
+   "structures": 54,
+   "acres": 996,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "GOLDEN BELL",
+   "structures": 97,
+   "acres": 311,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "TROUT HAVEN - WHISPERING PINES",
+   "structures": 182,
+   "acres": 751,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "SPRING VALLEY",
+   "structures": 316,
+   "acres": 553,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "DIVIDE - METHODIST CAMP",
+   "structures": 64,
+   "acres": 124,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "WOODROCK",
+   "structures": 49,
+   "acres": 304,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "LOST DUTCHMAN",
+   "structures": 28,
+   "acres": 1071,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "ASPEN MOORS - SKY CREST",
+   "structures": 87,
+   "acres": 251,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "HIGHLAND LAKES",
+   "structures": 408,
+   "acres": 972,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "DIVIDE SOUTH",
+   "structures": 64,
+   "acres": 451,
+   "rating": "Severe",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "DIVIDE - CR 62",
+   "structures": 64,
+   "acres": 234,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "ELK VALLEY -RULE CREEK",
+   "structures": 41,
+   "acres": 1252,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "SHERWOOD FOREST",
+   "structures": 272,
+   "acres": 400,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "ARABIAN ACRES",
+   "structures": 156,
+   "acres": 391,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "RAINBOW VALLEY RANCH - WEST",
+   "structures": 20,
+   "acres": 581,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "PHANTOM CREEK AREA",
+   "structures": 3,
+   "acres": 95,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "RAINBOW VALLEY -EAST",
+   "structures": 146,
+   "acres": 691,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "DIVIDE CENTRAL",
+   "structures": 476,
+   "acres": 2693,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "SKYWAY RANCH AREA",
+   "structures": 28,
+   "acres": 644,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "ASPEN VILLAGE",
+   "structures": 54,
+   "acres": 267,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "ASPEN VILLAGE AREA EAST",
+   "structures": 66,
+   "acres": 719,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "DIVIDE NORTH",
+   "structures": 71,
+   "acres": 2232,
+   "rating": "High",
+   "district": "Divide FPD"
+  },
+  {
+   "name": "ALPINE VALE",
+   "structures": 13,
+   "acres": 107,
+   "rating": "Extreme",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "RED ROCK RANCHES AREA",
+   "structures": 14,
+   "acres": 493,
+   "rating": "Extreme",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "HIGHLAND MEADOWS",
+   "structures": 22,
+   "acres": 269,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "SUNRISE RIDGE RANCH AREA",
+   "structures": 14,
+   "acres": 540,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "OLSONS SLATER CREEK RANCH",
+   "structures": 13,
+   "acres": 704,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "CCME - ZONE 1",
+   "structures": 93,
+   "acres": 847,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "CCME - ZONE 2",
+   "structures": 159,
+   "acres": 1109,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "EAGLECREST",
+   "structures": 36,
+   "acres": 557,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "TIMBER MESA",
+   "structures": 10,
+   "acres": 371,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "CCME - ZONE 4",
+   "structures": 74,
+   "acres": 761,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "LIVING FOREST",
+   "structures": 7,
+   "acres": 320,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "NAVAJO MTN MESA",
+   "structures": 233,
+   "acres": 1426,
+   "rating": "Severe",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "FOUR MILE RANCH",
+   "structures": 113,
+   "acres": 3065,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "PINDEROSA RANCH",
+   "structures": 18,
+   "acres": 495,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "PIKE MEADOWS",
+   "structures": 51,
+   "acres": 632,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "DEER VIEW",
+   "structures": 15,
+   "acres": 102,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "B LAZY M RANCH - ZONE 1",
+   "structures": 23,
+   "acres": 640,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "ELK HORN NORTH",
+   "structures": 37,
+   "acres": 1646,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "SADDLE MOUNTAIN RANCH",
+   "structures": 83,
+   "acres": 1163,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "CHATEAU WEST",
+   "structures": 17,
+   "acres": 322,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "LOST CANYON RANCH 1",
+   "structures": 11,
+   "acres": 607,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "HIGHLAND MEADOWS 2",
+   "structures": 56,
+   "acres": 394,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "HIGH CHATEAU",
+   "structures": 139,
+   "acres": 959,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "PARK RIDGE RANCH",
+   "structures": 98,
+   "acres": 1501,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "LAKEMOOR WEST AREA",
+   "structures": 78,
+   "acres": 920,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "CREEKSIDE ESTATES",
+   "structures": 15,
+   "acres": 344,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "OLD CHAPARRAL",
+   "structures": 16,
+   "acres": 779,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "CCME - ZONE 3",
+   "structures": 103,
+   "acres": 913,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "RANCH RESORTS AREA",
+   "structures": 143,
+   "acres": 962,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "LAKEVIEW FOREST Zone 2",
+   "structures": 7,
+   "acres": 502,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "B LAZY M RANCH - ZONE 3",
+   "structures": 7,
+   "acres": 609,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "ANTELOPE PARK",
+   "structures": 15,
+   "acres": 1231,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "BEAR TRAP - ZONE 1",
+   "structures": 193,
+   "acres": 2986,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "BEAR TRAP - ZONE 2",
+   "structures": 194,
+   "acres": 2358,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "DEER MOUNTAIN",
+   "structures": 59,
+   "acres": 389,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "EAGLE PROPERTIES",
+   "structures": 7,
+   "acres": 309,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "B LAZY M RANCH - ZONE 2",
+   "structures": 11,
+   "acres": 378,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "RANCHES AT SLATER CREEK",
+   "structures": 28,
+   "acres": 961,
+   "rating": "High",
+   "district": "Four Mile FPD"
+  },
+  {
+   "name": "61 A",
+   "structures": 112,
+   "acres": 1012,
+   "rating": "Extreme",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "61 B",
+   "structures": 74,
+   "acres": 1541,
+   "rating": "Extreme",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "SPRING CANYON RANCH",
+   "structures": 13,
+   "acres": 629,
+   "rating": "Extreme",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "RHYOLITE AREA",
+   "structures": 144,
+   "acres": 2163,
+   "rating": "Extreme",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "CRIPPLE CREEK - SOUTH",
+   "structures": 77,
+   "acres": 1397,
+   "rating": "Severe",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "PISGAH PARK",
+   "structures": 43,
+   "acres": 899,
+   "rating": "Severe",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "CC RANCHES",
+   "structures": 83,
+   "acres": 1030,
+   "rating": "Severe",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "EAGLESNEST AREA",
+   "structures": 92,
+   "acres": 971,
+   "rating": "High",
+   "district": "Cripple Creek FD"
+  },
+  {
+   "name": "CRYSTOLA PINES AREA",
+   "structures": 106,
+   "acres": 531,
+   "rating": "Severe",
+   "district": "Green Mountain Falls FPD"
+  },
+  {
+   "name": "HIGH MARK AREA",
+   "structures": 29,
+   "acres": 293,
+   "rating": "High",
+   "district": "Green Mountain Falls FPD"
+  },
+  {
+   "name": "GREEN MTN FALLS TOWN 2",
+   "structures": 246,
+   "acres": 233,
+   "rating": "High",
+   "district": "Green Mountain Falls FPD"
+  },
+  {
+   "name": "CHIPITA PARK",
+   "structures": 489,
+   "acres": 552,
+   "rating": "High",
+   "district": "Green Mountain Falls FPD"
+  },
+  {
+   "name": "GREEN MTN FALLS TOWN 1",
+   "structures": 222,
+   "acres": 212,
+   "rating": "High",
+   "district": "Green Mountain Falls FPD"
+  },
+  {
+   "name": "GREEN MTN FALLS EAST",
+   "structures": 161,
+   "acres": 1200,
+   "rating": "High",
+   "district": "Green Mountain Falls FPD"
+  },
+  {
+   "name": "TOM'S RANCH",
+   "structures": 150,
+   "acres": 679,
+   "rating": "Extreme",
+   "district": "Lake George"
+  },
+  {
+   "name": "SPORTSMAN'S PARADISE",
+   "structures": 407,
+   "acres": 308,
+   "rating": "Extreme",
+   "district": "Lake George"
+  },
+  {
+   "name": "WAGON TONGUE",
+   "structures": 142,
+   "acres": 303,
+   "rating": "Severe",
+   "district": "Lake George"
+  },
+  {
+   "name": "ECHO VALLEY",
+   "structures": 26,
+   "acres": 151,
+   "rating": "Severe",
+   "district": "Lake George"
+  },
+  {
+   "name": "ECHO VALLET ESTATES",
+   "structures": 13,
+   "acres": 80,
+   "rating": "Severe",
+   "district": "Lake George"
+  },
+  {
+   "name": "SYLVANHURST",
+   "structures": 5,
+   "acres": 37,
+   "rating": "High",
+   "district": "Lake George"
+  },
+  {
+   "name": "PIKE FOREST ESTATES",
+   "structures": 27,
+   "acres": 161,
+   "rating": "High",
+   "district": "Lake George"
+  },
+  {
+   "name": "DOS LOMOS",
+   "structures": 6,
+   "acres": 119,
+   "rating": "High",
+   "district": "Lake George"
+  },
+  {
+   "name": "BEAVER VALLET ESTATES",
+   "structures": 22,
+   "acres": 102,
+   "rating": "High",
+   "district": "Lake George"
+  },
+  {
+   "name": "LAKE GEORGE",
+   "structures": 119,
+   "acres": 264,
+   "rating": "High",
+   "district": "Lake George"
+  }
+ ]
+}

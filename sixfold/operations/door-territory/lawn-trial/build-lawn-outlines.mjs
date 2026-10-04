@@ -13,7 +13,7 @@
    Incremental: doors already in a pack are skipped. Saved every 50.
    Run:  node build-lawn-outlines.mjs [--town=castle-rock] [--conc=6]                         */
 import proj4 from 'proj4';
-import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, renameSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { measure, STAC, json, COMPACT } from './lawn-mask.mjs';
@@ -27,25 +27,37 @@ const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=
 const ONLY = arg('town', null), CONC = +arg('conc', 6);
 process.on('unhandledRejection', (e) => { console.log('  (a download failed and was skipped: ' + String(e && e.message || e).slice(0, 80) + ')'); });
 
-/* summer greenness per door from the NDVI trial (Large lawns), and the image dates it used */
+/* greenness per door from the NEWEST lawn-health comparison (ndvi-results-YYYY-MM.csv from a
+   monthly run, else the first trial's ndvi-results.csv), with its years, months and image dates */
 const green = new Map();
-const ndviCsv = join(HERE, 'ndvi-results.csv');
+const newest = readdirSync(HERE).filter((f) => /^ndvi-results-\d{4}-\d{2}\.csv$/.test(f)).sort().pop() || 'ndvi-results.csv';
+const ndviCsv = join(HERE, newest);
+const sumFile = join(HERE, newest.replace('results', 'summary').replace('.csv', '.json'));
+const greenMeta = existsSync(sumFile) ? JSON.parse(readFileSync(sumFile, 'utf8')) : {};
 if (existsSync(ndviCsv)) {
   const rows = readFileSync(ndviCsv, 'utf8').trim().split(/\r?\n/);
   const head = rows.shift().split(',');
   const col = (n) => head.indexOf(n);
-  const [ci, c25, c26, crel] = [col('id'), col('peak_2025'), col('peak_2026'), col('relative_change')];
+  const peaks = head.filter((h) => /^peak_\d{4}$/.test(h));
+  const [ya, yb] = peaks.map((h) => +h.slice(5));
+  const [ci, ca, cb, crel] = [col('id'), col(peaks[0]), col(peaks[1]), col('relative_change')];
   for (const line of rows) {
     const cells = line.match(/"([^"]*)"/g)?.map((c) => c.slice(1, -1)) || [];
-    const p25 = parseFloat(cells[c25]), p26 = parseFloat(cells[c26]), rel = parseFloat(cells[crel]);
-    if (cells[ci] && Number.isFinite(p25) && Number.isFinite(p26)) green.set(cells[ci], { y25: p25, y26: p26, rel: Number.isFinite(rel) ? rel : null });
+    const a = parseFloat(cells[ca]), b = parseFloat(cells[cb]), rel = parseFloat(cells[crel]);
+    if (cells[ci] && Number.isFinite(a) && Number.isFinite(b)) green.set(cells[ci], { ya, yb, a, b, rel: Number.isFinite(rel) ? rel : null, m: greenMeta.months || [7, 8] });
   }
 }
+const GREEN_ONLY = process.argv.includes('--green-only');
 const ndviDates = { 2025: [], 2026: [] };
 const ndviLog = join(HERE, 'ndvi-full.log');
 if (existsSync(ndviLog)) for (const m of readFileSync(ndviLog, 'utf8').matchAll(/^\s+(20(25|26)-\d\d-\d\d)\s+\d+\/\d+ clear/gm)) ndviDates[m[1].slice(0, 4)].push(m[1]);
 /* only July and August feed the comparison; each date once */
 for (const y of [2025, 2026]) ndviDates[y] = [...new Set(ndviDates[y])].filter((x) => /-0[78]-/.test(x)).sort();
+/* a monthly run's summary lists its own image dates */
+if (Array.isArray(greenMeta.images) && Array.isArray(greenMeta.years)) {
+  for (const k of Object.keys(ndviDates)) delete ndviDates[k];
+  for (const y of greenMeta.years) ndviDates[y] = greenMeta.images.filter((x) => x.startsWith(y + '-'));
+}
 
 /* the patch rule, as lawn-mask.mjs patches(), but keeping each patch's pixels so they can be drawn */
 function labelPatches(D, houseLocal) {
@@ -86,6 +98,11 @@ for (const town of TOWNS) {
   const pack = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : { built: null, ndvi: ndviDates, doors: {} };
   pack.ndvi = ndviDates;
   const save = () => { pack.built = new Date().toISOString().slice(0, 10); writeFileSync(OUT + '.tmp', JSON.stringify(pack)); renameSync(OUT + '.tmp', OUT); };
+  if (GREEN_ONLY) {   /* refresh greenness on the outlines already built; measure nothing */
+    let n = 0;
+    for (const [id, e] of Object.entries(pack.doors)) { if (green.has(id)) { e.g = green.get(id); n++; } }
+    save(); console.log(`${town}: greenness refreshed on ${n} lawns from ${newest}`); continue;
+  }
   const todo = JSON.parse(readFileSync(src, 'utf8')).areas.flatMap((a) => a.doors)
     .filter((d) => typeof d.lat === 'number' && d.lawn && (d.lawn.lv === 'L' || d.lawn.lv === 'M') && !pack.doors[d.id]);
   if (!todo.length) { console.log(`${town}: nothing to do`); save(); continue; }
@@ -114,7 +131,7 @@ for (const town of TOWNS) {
         const corner = (a, b) => proj4(D.epsg, 'EPSG:4326', [D.origin[0] + (D.x0 + a) * D.res[0], D.origin[1] + (D.y0 + b) * D.res[1]]);
         const [w0, n0] = corner(0, 0), [e0, s0] = corner(D.w, D.h);
         const entry = { b: [+s0.toFixed(7), +w0.toFixed(7), +n0.toFixed(7), +e0.toFixed(7)], w: D.w, h: D.h, r: rle(mask), d: ph.date, sq: counted, hs: !!houseLocal };
-        if (d.lawn.lv === 'L' && green.has(d.id)) entry.g = green.get(d.id);
+        if (green.has(d.id)) entry.g = green.get(d.id);
         pack.doors[d.id] = entry;
       } catch (e) { errs++; if (errs <= 3) console.log('   ', d.address, String(e.message).slice(0, 90)); continue; }
       if (++done % 50 === 0) { save(); console.log(`   ${done} outlined · ${(done / ((Date.now() - started) / 1000)).toFixed(2)}/s · ${town} ${i}/${todo.length}`); }

@@ -97,3 +97,6 @@ sixfold/operations/door-territory/owner-history.json
 
 # Lawn outlines for the door app (SX-38): regenerable with lawn-trial/build-lawn-outlines.mjs, ~18 MB
 sixfold/site/data/rounds/lawnmask-*.json
+
+# Monthly lawn-health results (SX-42) carry addresses, like ndvi-results.csv
+sixfold/operations/door-territory/lawn-trial/ndvi-results-*.csv

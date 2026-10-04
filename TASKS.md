@@ -671,6 +671,22 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       SX-38's outline packs are still building in the background (about 0.45 lawns/s on the hotel connection).
       SX-41 has no fire-season countdown on purpose (year-round season; warnings are the trigger) and no email yet (needs a cron).
 - [ ] **SX-44 route + SX-45 Jobber CSV: ✅ BUILT AND TESTED 2026-10-03, in the batched upload.** Route: nearest-next + 2-opt from your position, Google Maps walking link for the next 10 stops. Jobber: booked doors in Jobber's import headings (checked against help.getjobber.com 2026-10-03); no ZIP yet.
+- [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`
+      compares a month with the same month a year earlier (May-Sept only; winter refused; clouds, shadow
+      and snow masked per pixel), writes ndvi-results-YYYY-MM.csv; `node build-lawn-outlines.mjs --green-only`
+      then refreshes the app's lawn photos. Nothing to run until the growing season.
+- [ ] **SX-46 Do Not Call — facts checked 2026-10-03, still Sixfold's to register.** Federal registry: first five area
+      codes free for every telemarketer (FTC, FY2027 fees from 1 Oct 2026: $85 per extra area code); Sixfold's
+      towns are 719 and 303/720 (983 overlay), so free. Colorado no-call list: sliding-scale fee, **no fee under
+      five employees** (C.R.S. 6-1-905(3)(b)(II)). **Matthew 2026-10-03: Sixfold has fewer than five employees (most crew are
+      contractors or gig hires), so the state list should cost nothing** — registration is still needed to download it. Separate: the Colorado AG's telemarketer registration ($200,
+      coag.gov) — **whether Sixfold's calls need it is a legal question for Brandon's attorney**. Only looked-up
+      numbers matter; numbers given at the door are consent. Once the lists are downloaded, the app can check
+      looked-up numbers against them.
+- [ ] **SX-47 county wildfire plans: ✅ Teller BUILT 2026-10-03, in the batched upload.** `cwpp/build-cwpp.mjs` reads the
+      Teller County CWPP 2025 tables (162 rated communities) and matches 28 to our neighbourhood names (62
+      neighbourhoods). **Still open: El Paso (current plan not found) and Douglas (county plan is from 2011;
+      Perry Park MD has a 2023 local plan).**
 - [ ] **SX-38..47 — the rest of Matthew's 2026-10-03 upgrade list, in his agreed order after SX-36/37:**
       **SX-38** lawn photo in the lawn chip (2023 aerial with the counted lawn shaded; greenness + image
       dates for Large) · **SX-39** tips on the stats page from each person's numbers · **SX-40** HOA /

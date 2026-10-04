@@ -34,7 +34,15 @@
         that drops more than its neighbours is the signal.
 
    Output: ndvi-results.csv, ndvi-summary.json (cache: ndvi-cache.json, safe to delete).
-   Run:    node ndvi-trial.mjs [--town=monument]                                             */
+   Run:    node ndvi-trial.mjs [--town=monument]
+
+   ON A SCHEDULE (SX-42, Matthew 2026-10-03): every month or two in the growing season, always
+   against the SAME month a year earlier, because lawns go dormant in summer heat and in winter.
+     node ndvi-trial.mjs --month=2027-06     (June 2027 vs June 2026)
+   Only May to September; winter and snow-covered images are skipped (the SCL mask also drops
+   snow pixel by pixel). Writes ndvi-results-2027-06.csv and ndvi-summary-2027-06.json, then
+     node build-lawn-outlines.mjs --green-only
+   puts the newest comparison, with its image dates, on the app's lawn photos.                */
 import { fromUrl } from 'geotiff';
 import proj4 from 'proj4';
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
@@ -47,7 +55,17 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROUNDS = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
 const CACHE = join(HERE, 'ndvi-cache.json');
 const STAC = 'https://earth-search.aws.element84.com/v1/search';
-const YEARS = [2025, 2026], MONTHS = [6, 7, 8, 9], PER_MONTH = { 6: 1, 7: 3, 8: 3, 9: 1 };   /* July-August carry the comparison */
+let YEARS = [2025, 2026], MONTHS = [6, 7, 8, 9], PER_MONTH = { 6: 1, 7: 3, 8: 3, 9: 1 };   /* July-August carry the comparison */
+const MONTH_ARG = (process.argv.find((a) => a.startsWith('--month=')) || '').split('=')[1] || null;
+let PEAK = [7, 8], TAG = '';
+if (MONTH_ARG) {
+  const mm = /^(\d{4})-(\d{2})$/.exec(MONTH_ARG);
+  if (!mm) { console.log('Use --month=YYYY-MM, e.g. --month=2027-06'); process.exit(1); }
+  const y = +mm[1], m = +mm[2];
+  if (m < 5 || m > 9) { console.log('Lawn health is compared May to September only: the rest of the year lawns are dormant or under snow.'); process.exit(1); }
+  YEARS = [y - 1, y]; MONTHS = [m]; PER_MONTH = { [m]: 3 }; PEAK = [m]; TAG = '-' + MONTH_ARG;
+}
+const [Y0, Y1] = YEARS;
 const CLEAR_SCL = new Set([4, 5, 7]);   /* vegetation, bare soil, unclassified */
 const ONLY = (process.argv.find((a) => a.startsWith('--town=')) || '').split('=')[1];
 proj4.defs('EPSG:32613', '+proj=utm +zone=13 +datum=WGS84 +units=m +no_defs');
@@ -74,7 +92,8 @@ for (const f of readdirSync(ROUNDS).filter((x) => x.endsWith('.json') && !['inde
 
 async function stac(bbox, year) {
   const out = []; let next = null;
-  const body = { collections: ['sentinel-2-l2a'], bbox, datetime: `${year}-06-01T00:00:00Z/${year}-09-30T23:59:59Z`, query: { 'eo:cloud_cover': { lt: 20 } }, limit: 100 };
+  const pad = (n) => String(n).padStart(2, '0'), m0 = Math.min(...MONTHS), m1 = Math.max(...MONTHS), last = new Date(Date.UTC(year, m1, 0)).getUTCDate();
+  const body = { collections: ['sentinel-2-l2a'], bbox, datetime: `${year}-${pad(m0)}-01T00:00:00Z/${year}-${pad(m1)}-${last}T23:59:59Z`, query: { 'eo:cloud_cover': { lt: 20 } }, limit: 100 };
   for (let page = 0; page < 5; page++) {
     const r = await fetch(STAC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next || body) });
     const j = await r.json(); out.push(...(j.features || []));
@@ -206,8 +225,8 @@ for (const doors of Object.values(towns)) for (const d of doors) {
     const v = scenes.filter((s) => s.date.startsWith(`${y}-${String(m).padStart(2, '0')}`) && s.vals[d.key] !== undefined).map((s) => s.vals[d.key]);
     row[`${y}-${m}`] = med(v); row[`n${y}-${m}`] = v.length;
   }
-  for (const y of YEARS) { const p = [row[`${y}-7`], row[`${y}-8`]].filter((v) => v !== null); row[`peak${y}`] = p.length ? p.reduce((s, v) => s + v, 0) / p.length : null; }
-  row.change = row.peak2025 !== null && row.peak2026 !== null ? row.peak2026 - row.peak2025 : null;
+  for (const y of YEARS) { const p = PEAK.map((m) => row[`${y}-${m}`]).filter((v) => v !== null && v !== undefined); row[`peak${y}`] = p.length ? p.reduce((s, v) => s + v, 0) / p.length : null; }
+  row.change = row[`peak${Y0}`] !== null && row[`peak${Y1}`] !== null ? row[`peak${Y1}`] - row[`peak${Y0}`] : null;
   results.push(row);
 }
 
@@ -220,28 +239,30 @@ for (const r of results) {
   r.base = sameArea.length >= 3 ? 'neighbourhood' : 'town';
   r.baseChange = med(pool.map((o) => o.change));
   r.relative = r.change - r.baseChange;
-  r.basePeak2026 = med(pool.map((o) => o.peak2026).filter((v) => v !== null));
+  r.basePeakNew = med(pool.map((o) => o[`peak${Y1}`]).filter((v) => v !== null));
 }
 const f2 = (v) => (v === null || v === undefined ? '' : (+v).toFixed(3));
 const head = ['id', 'town', 'neighbourhood', 'address', 'lawn_sq_ft_2023', 'yard_pixels', 'note',
-  ...YEARS.flatMap((y) => MONTHS.map((m) => `ndvi_${y}_${String(m).padStart(2, '0')}`)), 'peak_2025', 'peak_2026', 'change', 'baseline', 'baseline_change', 'relative_change', 'baseline_peak_2026'];
+  ...YEARS.flatMap((y) => MONTHS.map((m) => `ndvi_${y}_${String(m).padStart(2, '0')}`)), `peak_${Y0}`, `peak_${Y1}`, 'change', 'baseline', 'baseline_change', 'relative_change', `baseline_peak_${Y1}`];
 const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-writeFileSync(join(HERE, 'ndvi-results.csv'), [head.join(','), ...results.sort((a, b) => (a.relative ?? 9) - (b.relative ?? 9)).map((r) => [r.id, r.town, r.area, r.address, r.lawnSq, r.px, r.err,
-  ...YEARS.flatMap((y) => MONTHS.map((m) => f2(r[`${y}-${m}`]))), f2(r.peak2025), f2(r.peak2026), f2(r.change), r.base || '', f2(r.baseChange), f2(r.relative), f2(r.basePeak2026)].map(esc).join(','))].join('\n') + '\n');
+writeFileSync(join(HERE, `ndvi-results${TAG}.csv`), [head.join(','), ...results.sort((a, b) => (a.relative ?? 9) - (b.relative ?? 9)).map((r) => [r.id, r.town, r.area, r.address, r.lawnSq, r.px, r.err,
+  ...YEARS.flatMap((y) => MONTHS.map((m) => f2(r[`${y}-${m}`]))), f2(r[`peak${Y0}`]), f2(r[`peak${Y1}`]), f2(r.change), r.base || '', f2(r.baseChange), f2(r.relative), f2(r.basePeakNew)].map(esc).join(','))].join('\n') + '\n');
 
 const valid = results.filter((r) => r.change !== null);
 const q = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? +s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(3) : null; };
 const byTown = {};
 for (const t of Object.keys(towns)) { const v = valid.filter((r) => r.town === t); if (!v.length) continue;
-  byTown[t] = { doors: v.length, peak2025: q(v.map((r) => r.peak2025), 0.5), peak2026: q(v.map((r) => r.peak2026), 0.5), change: q(v.map((r) => r.change), 0.5) }; }
+  byTown[t] = { doors: v.length, ['peak' + Y0]: q(v.map((r) => r['peak' + Y0]), 0.5), ['peak' + Y1]: q(v.map((r) => r['peak' + Y1]), 0.5), change: q(v.map((r) => r.change), 0.5) }; }
 const summary = {
-  built: new Date().toISOString().slice(0, 10), doors: results.length, measured: valid.length,
+  built: new Date().toISOString().slice(0, 10), compared: MONTH_ARG ? `${Y0} vs ${Y1}, month ${MONTHS[0]}` : `${Y0} vs ${Y1}, July-August`, months: PEAK, years: YEARS,
+  images: [...new Set(Object.values(cache).map((s) => s.date))].filter((dd) => YEARS.some((y) => PEAK.some((m) => dd.startsWith(`${y}-${String(m).padStart(2, '0')}`)))).sort(),
+  doors: results.length, measured: valid.length,
   skipped: results.filter((r) => r.change === null).reduce((o, r) => { const k = r.err || 'not enough clear images'; o[k] = (o[k] || 0) + 1; return o; }, {}),
-  peak2026: { p10: q(valid.map((r) => r.peak2026), 0.1), median: q(valid.map((r) => r.peak2026), 0.5), p90: q(valid.map((r) => r.peak2026), 0.9) },
+  peakNew: { p10: q(valid.map((r) => r['peak' + Y1]), 0.1), median: q(valid.map((r) => r['peak' + Y1]), 0.5), p90: q(valid.map((r) => r['peak' + Y1]), 0.9) },
   change: { p10: q(valid.map((r) => r.change), 0.1), median: q(valid.map((r) => r.change), 0.5), p90: q(valid.map((r) => r.change), 0.9) },
   relative: { p10: q(valid.map((r) => r.relative), 0.1), median: q(valid.map((r) => r.relative), 0.5), p90: q(valid.map((r) => r.relative), 0.9) },
   browningVsNeighbours: valid.filter((r) => r.relative <= -0.05).length, greeningVsNeighbours: valid.filter((r) => r.relative >= 0.05).length,
   byTown,
 };
-writeFileSync(join(HERE, 'ndvi-summary.json'), JSON.stringify(summary, null, 2));
+writeFileSync(join(HERE, `ndvi-summary${TAG}.json`), JSON.stringify(summary, null, 2));
 console.log('\n' + JSON.stringify(summary, null, 2));
