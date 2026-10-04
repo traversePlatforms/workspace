@@ -923,7 +923,7 @@
 
   var S = { me: null, role: 'crew', regions: [], region: null, area: null, doors: [], busy: false };
   /* the new layout (2026-10-04), switched on the tools screen and remembered on this phone */
-  try { S.ui2 = localStorage.getItem('sixfold.rounds.ui') === '2'; } catch (e) { S.ui2 = false; }
+  S.ui2 = true;   /* Matthew 2026-10-04: the new layout is the layout; the switch is gone (S.ui2 marks its code paths) */
   if (S.ui2) document.documentElement.classList.add('ui2');
 
   function q(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t !== undefined) e.textContent = t; return e; }
@@ -1512,7 +1512,7 @@
       var b = q('button', 'back'); b.type = 'button';
       b.appendChild(document.createTextNode(d.address + ' · ' + distText(d.m) + (d.fire >= 4 ? ' · high fire hazard' : '') + (d.lawn === 'L' ? ' · large lawn' : d.lawn === 'M' ? ' · medium lawn' : '')));
       b.addEventListener('click', function () {
-        S.region = d.region; S.flash = d.id; S.returnTo = function () { aroundView(townKey, focusId); };
+        S.region = d.region; S.flash = d.id; S.openDoor = d.id; S.returnTo = function () { aroundView(townKey, focusId); };
         var go = function () { openArea(d.area); };
         if (S.regions) go(); else api('regions').then(function (j) { if (j.ok) { S.regions = j.regions; go(); } });
       });
@@ -1641,19 +1641,6 @@
       grp('Office', ['Pipeline', 'Quote builder', 'Communities', 'Results', 'Team stats', 'Leaderboard']);
       [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     }
-    /* the layout switch (2026-10-04) */
-    var lay = q('div', 'layout');
-    lay.appendChild(q('span', 'ml', 'Layout'));
-    [['1', 'Current'], ['2', 'New']].forEach(function (o) {
-      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String((S.ui2 ? '2' : '1') === o[0]));
-      b.addEventListener('click', function () {
-        try { localStorage.setItem('sixfold.rounds.ui', o[0]); } catch (e) {}
-        S.ui2 = o[0] === '2'; document.documentElement.classList.toggle('ui2', S.ui2); S.openDoor = null; S.capture = null; S.walkPrompt = null; clearEdits();
-        chooseView();
-      });
-      lay.appendChild(b);
-    });
-    box.appendChild(lay);
     var out = q('div', 'out');
     var so = q('button', null, 'Sign out');
     so.type = 'button';
@@ -2079,7 +2066,7 @@
   }
   function openDoorFrom(r, name, back) {
     var go = function () {
-      S.region = r.region; S.area = null; S.flash = r.id;
+      S.region = r.region; S.area = null; S.flash = r.id; S.openDoor = r.id;   /* new layout: that door opens as the full card */
       S.returnTo = function () { statsView(name, back); };
       openArea(r.area);
     };
@@ -3030,6 +3017,7 @@
     var lc = lawnChip(d, false); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) { tc.disabled = true; tc.tabIndex = -1; meta.appendChild(tc); }
     if (d.mark && backOn(d)) meta.appendChild(q('span', 'tag again', d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
+    if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }   /* worth knowing before the knock */
     if (meta.children.length) row.appendChild(meta);
     var open = function () {
       S.openDoor = d.id; S.capture = null; clearEdits(); S.justOpened = d.id; renderDoors();

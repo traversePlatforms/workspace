@@ -7,6 +7,22 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⚑ NEXT UPLOAD — the new layout for everyone, search, Pipeline (3 files)
+
+| Step | File (from ) | Goes to |
+|---|---|---|
+| 1 |  |  |
+| 2 |  (now "Quote builder") |  |
+| 3 |  (address search) |  |
+| 4 | — | Flush the cache. |
+
+Sizes:  **361,989**,  **110,298**,  **128,891**.
+
+What changes for the crew: the new layout is the only layout (the switch is gone): one door open at a time, Add info,
+a yes opens everything, the money line as pills, the three-driver filter, motion, the contour look. Address search on
+the tools screen and in the town bar. Default sort Lawn (Odds once it is on), plus a Doors sort. Admins: one Pipeline
+tile instead of Quotes to build and Leads. The search index () builds itself in on the first search; nothing to upload for it.
+
 ## ✅ LIVE 2026-10-04 — the new layout (off by default), phone no-zoom, Fable fixes, every town's lawn outlines (verified 16/16)
 
 | Step | File (from `sixfold/site/`) | Goes to |
