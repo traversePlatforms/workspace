@@ -64,7 +64,7 @@
       --bar:#16201B;
       --ember-ink:#F08A57; --on-ember:#0E1512; --moss-ink:#A9C196;
       --go:#7FC195; --on-go:#0A1A10; --go-tint:#1B3323;
-      --later:#E2AA5C; --later-tint:#2D2416; --miss:#B4BEB7; --miss-tint:#222C27; --bad:#E0715C;
+      --later:#E2AA5C; --later-tint:#3B2C12; --miss:#B4BEB7; --miss-tint:#222C27; --bad:#E0715C;
       --booked:#7FC195; --accent:#A9C196;
       --fire-vh:#F0806A; --fire-h:#F2A35E; --fire-m:#E0B85E; --fire-low:#9AA79E; --fire-on:#0E1512;
       --toast:#EDE7DC; --toast-ink:#16201C;
@@ -211,8 +211,8 @@
   .lcontact{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
   .lcontact a{display:inline-flex;align-items:center;gap:5px;border-radius:11px;padding:8px 12px;font:700 13.5px var(--sans);text-decoration:none;background:var(--sunk);color:var(--ink)}
   .lcontact a .ic{width:16px;height:16px}
-  .lstat{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .lstat button{border:1.5px solid var(--line);background:transparent;color:var(--soft);border-radius:999px;padding:5px 10px;font:700 12.5px var(--sans);cursor:pointer}
+  .lstat{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .lstat button{border:1.5px solid var(--line);background:transparent;color:var(--soft);border-radius:999px;padding:0 15px;min-height:40px;font:700 13.5px var(--sans);cursor:pointer}
   .lstat button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
   .lnote{display:flex;gap:7px;margin-top:9px}
   .lnote input{flex:1;min-width:0;font:15px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
@@ -275,8 +275,9 @@
   .acts button:active{transform:scale(.95)}
   .acts button .ic{width:22px;height:22px}
   .acts button[data-k="booked"]{background:var(--ember-ink);color:var(--on-ember)}
+  #view .leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:22px!important}   /* review: thumb-sized */
   .acts button[data-k="later"]{background:var(--later-tint);color:var(--later)}
-  .acts button[data-k="miss"]{background:var(--miss-tint);color:var(--miss)}
+  .acts button[data-k="miss"]{background:var(--miss-tint);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--miss)}   /* review: read as disabled in sun */
   .stamp{position:absolute;inset:0;display:grid;place-items:center;opacity:0;pointer-events:none;font-weight:700;font-size:17px;
     background:color-mix(in srgb,var(--go) 93%,transparent);color:var(--on-go)}
   .stamp.later{background:color-mix(in srgb,var(--later-tint) 95%,transparent);color:var(--later)}
@@ -310,8 +311,8 @@
   .xt{margin-top:2px}
   .adds{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
   .adds a.sat,.adds .lnk{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--moss-ink);text-decoration:none;
-    background:var(--sunk);border:0;border-radius:10px;padding:6px 10px;cursor:pointer;white-space:nowrap}
-  .adds .ic{width:15px;height:15px}
+    background:var(--sunk);border:0;border-radius:10px;padding:0 12px;min-height:44px;cursor:pointer;white-space:nowrap}   /* 44 px: thumb or glove (review) */
+  .adds .ic{width:17px;height:17px}
   .ph{margin-top:10px;font-size:13px}
   .ph a.num{display:inline-flex;align-items:center;gap:7px;font-size:17px;font-weight:700;color:var(--ink);text-decoration:none}
   .ph a.num .ic{width:17px;height:17px;color:var(--go)}
@@ -398,7 +399,7 @@
   .lawnfix .lrow2 button{flex:1;border:0;border-radius:11px;padding:9px;background:transparent;color:var(--soft);font-size:13px;font-weight:700;cursor:pointer}
   /* aerial view: the lot, its line, the photo */
   .aerial{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
-  .money{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:9px}
+  .money{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 6px}   /* a gap so a tap for Quote booked can't open a sheet (review) */
   .tree{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font:700 12px var(--sans);line-height:1.35;white-space:nowrap;cursor:pointer;border:1.5px solid currentColor;background:transparent}
   .tree .ic{width:13px;height:13px}
   .tree em{font-style:normal;font-weight:400;opacity:.8}
@@ -409,7 +410,7 @@
   .treedet{margin-top:6px;font-size:12.5px;line-height:1.45;color:var(--soft)}
   .treedet b{color:var(--ink)}
   .money .ml{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-right:2px}
-  .money button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:5px 9px;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}
+  .money button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:0 13px;min-height:40px;font:700 13px var(--sans);cursor:pointer;white-space:nowrap}
   .mbody{flex:1;min-height:0;overflow:auto;padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px))}
   .mbody .seg{position:sticky;top:0;z-index:1}
   .mbody .mlead{font:400 18px/1.35 var(--serif);margin:4px 2px 14px}
@@ -611,7 +612,7 @@
   function setQueue(a) { try { localStorage.setItem(QKEY, JSON.stringify(a)); return true; } catch (e) { return false; } }
   /* every queued item remembers WHO made it (2026-10-03 review): the queue belongs to the phone,
      and without this a mark left by one person was sent under the next person to sign in */
-  function enqueue(item) { var a = queue(); var it = {}; for (var k in item) it[k] = item[k]; it.who = S.me; a.push(it); return setQueue(a); }
+  function enqueue(item) { var a = queue(); var it = {}; for (var k in item) it[k] = item[k]; it.who = S.me; if (!it.t) it.t = Math.floor(Date.now() / 1000); a.push(it); return setQueue(a); }   /* t: when it was tapped (review) */
   /* A save that reached the server supersedes anything older still waiting for the same door and
      kind (2026-10-03 review): otherwise the queued older one was sent later and landed on top. */
   function dropQueued(kind, region, id) {
@@ -624,7 +625,7 @@
      the phone and sent later. A newer one for the same door replaces an unsent older one. */
   function enqueueSave(kind, body, why) {
     var a = queue().filter(function (x) { return !(x.kind === kind && x.id === body.id && x.region === body.region); });
-    var it = { kind: kind, who: S.me }; for (var k in body) it[k] = body[k];
+    var it = { kind: kind, who: S.me, t: Math.floor(Date.now() / 1000) }; for (var k in body) it[k] = body[k];
     a.push(it);
     if (!setQueue(a)) { toast('Not saved', 'This phone could not store it. Keep this screen open and try again when you have signal.', null); return false; }
     if (why !== 'signin') toast('Saved on this phone', 'No signal right now. It sends by itself when you have signal.', null);
@@ -674,7 +675,7 @@
       if (skip >= a.length) return flushPhotos();
       var item = a[skip], body = {};
       if (item.kind && !QACTION[item.kind]) { var c0 = queue(), s0 = JSON.stringify(item); setQueue(c0.filter(function (x) { return JSON.stringify(x) !== s0; })); return step(); }   /* unknown kind: never guess it is a mark */
-      for (var k in item) if (k !== 'kind' && k !== 'who') body[k] = item[k];
+      for (var k in item) if (k !== 'kind' && k !== 'who') body[k] = item[k];   /* 't' goes: the server dates the save by it */
       return api(QACTION[item.kind || 'mark'], { body: body }).then(function (j) {
         if (j._status === 401) { var n0 = queue().filter(mine).length; signinView('Signed out. Enter your code again to send ' + n0 + (n0 === 1 ? ' waiting change.' : ' waiting changes.')); return; }
         if (!letGo(j)) { skip++; return step(); }          /* kept: try the rest, this one again next time */
@@ -738,6 +739,7 @@
      server is ever put through innerHTML. */
   var ICON = {
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    chat: '<path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     knock: '<path d="M7 21V4.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V21M4.5 21h15"/><circle cx="13.8" cy="12.5" r=".9" fill="currentColor"/>',
     globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.6 5.4 3.6 8.5s-1 6.1-3.6 8.5c-2.6-2.4-3.6-5.4-3.6-8.5s1-6.1 3.6-8.5z"/>',
@@ -833,7 +835,7 @@
     b.appendChild(t);
     if (typeof o.count === 'number') {
       var c = q('div', 'count'); c.id = 'barCount';
-      c.appendChild(q('b', null, String(o.count)));
+      c.appendChild(q('b', null, o.count.toLocaleString('en-US')));
       c.appendChild(q('span', null, 'to knock'));
       b.appendChild(c);
     }
@@ -1041,7 +1043,7 @@
       var o = document.createElement('option');
       o.value = r.key;
       var doors = r.areas.reduce(function (n, a) { return n + (a.total - a.done - (a.noanswer || 0)); }, 0);
-      o.textContent = r.label + ' — ' + doors + ' to knock';
+      o.textContent = r.label + ' — ' + doors.toLocaleString('en-US') + ' to knock';
       if (r.key === S.region) o.selected = true;
       sel.appendChild(o);
     });
@@ -1199,8 +1201,8 @@
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
       if (mode === 'trees' && (a.treeA || a.treeH)) chips.appendChild(chipEl('treec', 'tree', (a.treeA ? a.treeA + ' trees against house' : '') + (a.treeA && a.treeH ? ' · ' : '') + (a.treeH ? a.treeH + ' heavy' : '')));
-      if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ' lawns'));
-      if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high fire hazard' + (a.vhot ? ' · ' + a.vhot + ' very high' : '')));
+      if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ((a.lawnL || 0) + (a.lawnM || 0) === 1 ? ' lawn' : ' lawns')));
+      if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high-risk ' + (a.hot === 1 ? 'door' : 'doors') + (a.vhot ? ' (' + a.vhot + ' very high)' : '')));
       if (a.due) chips.appendChild(chipEl('duep', null, a.due + ' due back'));
       if (a.retry) chips.appendChild(chipEl('again', null, a.retry + ' to try again'));
       if (na) chips.appendChild(chipEl('chip wait', null, na + ' no answer · waiting'));
@@ -1208,7 +1210,7 @@
       btn.appendChild(mid);
       var cnt = q('div', 'left');
       if (fin) cnt.appendChild(q('b', null, 'Done'));
-      else { cnt.appendChild(q('b', null, String(left))); cnt.appendChild(q('small', null, 'to knock')); }
+      else { cnt.appendChild(q('b', null, left.toLocaleString('en-US'))); cnt.appendChild(q('small', null, 'to knock')); }
       btn.appendChild(cnt);
       btn.addEventListener('click', function () { openArea(a.name); });
       view.appendChild(btn);
@@ -1295,7 +1297,7 @@
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the stats.')); return; }
       var p = (j.people || []).filter(function (x) { return x.name === name; })[0] || { days: [] };
       var by = {}; p.days.forEach(function (r) { by[r.date] = r; });
-      var T = by[j.today] || ZERO, talked = T.doors - T.miss;
+      var T = by[j.today] || ZERO, talked = T.doors - T.miss - (T.nosolicit || 0);   /* a no-soliciting sign is not a conversation (review) */
       var card = q('div', 'stoday');
       card.appendChild(q('h3', null, 'Today'));
       var g = q('div', 'stgrid');
@@ -1348,7 +1350,7 @@
         var row = q('div', 'stday');
         row.appendChild(q('b', null, dayName(r.date)));
         var extra = []; if (r.phones) extra.push(r.phones + ' phone'); if (r.emails) extra.push(r.emails + ' email'); if (r.photos) extra.push(r.photos + ' photo');
-        row.appendChild(q('span', null, r.doors + ' doors · ' + (r.doors - r.miss) + ' talked' + (extra.length ? ' · ' + extra.join(', ') : '')));
+        row.appendChild(q('span', null, r.doors + ' doors · ' + (r.doors - r.miss - (r.nosolicit || 0)) + ' talked' + (extra.length ? ' · ' + extra.join(', ') : '')));
         row.appendChild(q('em', null, r.booked + ' booked'));
         holder.appendChild(row);
       });
@@ -1439,6 +1441,7 @@
         if (o === null && !quiet && r.now && r.now.outcome === 'nosolicit' &&
             !window.confirm('Undo the no-soliciting flag? Only if the sign was a mistake — otherwise this door gets knocked again.')) return;
         var prev = r.now ? { outcome: r.now.outcome, revisit: r.now.revisit || '' } : null, prevMine = r.mine;
+        r.now0 = r.now ? Object.assign({}, r.now) : null; r.gone0 = r.gone;
         var item = { region: r.region, id: r.id, outcome: o };
         if (o === 'later' && rv) item.revisit = rv;
         var at = Math.floor(Date.now() / 1000);
@@ -1452,7 +1455,17 @@
           if (j2.ok) { dropQueued('mark', item.region, item.id); if (r.now) r.now.pending = false; } else enqueue(item);
           draw();
         }).catch(function () { enqueue(item); draw(); });
-        if (!quiet) toast(o === null ? 'Back on the list' : OUT[o], r.address, function () { setMark(r, prev ? prev.outcome : null, prev ? prev.revisit : '', true); if (who !== S.me) { r.mine = prevMine; draw(); } });
+        var prevNow = r.now0, prevGone = r.gone0;
+        if (!quiet) toast(o === null ? 'Back on the list' : OUT[o], r.address, function () {
+          if (o === null) { setMark(r, prev ? prev.outcome : null, prev ? prev.revisit : '', true); if (who !== S.me) { r.mine = prevMine; draw(); } return; }   /* undoing a put-back re-marks */
+          /* undoing a change: put it back, so the server shows the mark before it (review 2026-10-03) */
+          var undo = { region: r.region, id: r.id, outcome: null };
+          api('mark', { body: undo }).then(function (j3) {
+            if (j3._status === 401) return keepAndSignIn('mark', undo);
+            if (j3.ok) dropQueued('mark', undo.region, undo.id); else enqueue(undo);
+          }).catch(function () { enqueue(undo); });
+          r.now = prevNow; r.mine = prevMine; r.gone = prevGone; draw();
+        });
       }
       function laterRow(r) {
         var w = q('div', 'mdlater');
@@ -1579,7 +1592,7 @@
     var tel = digits(l.phone);
     if (tel.length >= 10) {
       var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
-      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('note', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
+      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
     }
     if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
@@ -1597,7 +1610,7 @@
     });
     c.appendChild(sb);
     var nr = q('div', 'lnote');
-    var inp = q('input'); inp.type = 'text'; inp.maxLength = 500; inp.placeholder = 'Add a note: left a voicemail, walk on Tuesday\u2026';
+    var inp = q('input'); inp.type = 'text'; inp.maxLength = 500; inp.placeholder = 'Add a note\u2026';
     var sv = q('button', null, 'Save'); sv.type = 'button';
     sv.addEventListener('click', function () { var v = inp.value.trim(); if (v) saveLead(l, { note: v }); });
     nr.appendChild(inp); nr.appendChild(sv); c.appendChild(nr);
@@ -1667,8 +1680,8 @@
         b.appendChild(q('div', 'tn', r.name));
         var v1 = q('div', 'tv'); v1.appendChild(q('b', null, String(r.w.doors))); v1.appendChild(q('small', null, 'doors 7d')); b.appendChild(v1);
         var v2 = q('div', 'tv'); v2.appendChild(q('b', null, String(r.w.booked))); v2.appendChild(q('small', null, 'quotes 7d')); b.appendChild(v2);
-        b.appendChild(q('div', 'ts', 'Today ' + r.t.doors + ' doors, ' + r.t.booked + ' booked · 7 days rate ' + rate(r.w.booked, r.w.doors - r.w.miss) +
-          ' · 30 days ' + r.m.doors + ' doors, ' + r.m.booked + ' booked (' + rate(r.m.booked, r.m.doors - r.m.miss) + ')'));
+        b.appendChild(q('div', 'ts', 'Today ' + r.t.doors + ' doors, ' + r.t.booked + ' booked · 7 days rate ' + rate(r.w.booked, r.w.doors - r.w.miss - (r.w.nosolicit || 0)) +
+          ' · 30 days ' + r.m.doors + ' doors, ' + r.m.booked + ' booked (' + rate(r.m.booked, r.m.doors - r.m.miss - (r.m.nosolicit || 0)) + ')'));
         b.addEventListener('click', function () { statsView(r.name, teamView); });
         holder.appendChild(b);
       });
@@ -1728,7 +1741,7 @@
   function markDoor(d, kind, revisit) {
     var item = { region: S.region, id: d.id, outcome: kind };
     if (kind === 'later' && revisit) item.revisit = revisit;      /* travels in the offline queue too */
-    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '' };
+    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -2) : '' };
     renderDoors();
     api('mark', { body: item }).then(function (j) {
       if (j.ok) { dropQueued('mark', item.region, item.id); if (d.mark) d.mark.pending = false; }
@@ -2214,7 +2227,11 @@
     var m = d.mark, t = todayISO();
     return !!m && ((m.outcome === 'later' && !!m.revisit && m.revisit <= t) || (m.outcome === 'miss' && !!m.retry && m.retry <= t));
   }
-  function fmtDay(s) { return fmtDate(s).replace(/ \d{4}$/, ''); }
+  /* a 'YYYY-MM-DD' string without the year. ⚑ Was ALSO named fmtDay (2026-10-02), and the later
+     declaration silently replaced the timestamp one above for the whole page: every note, email,
+     photo, "Booked by" and "Quote sent" date read "NaN undefined 1791…" (found by Fable's
+     screenshot review, 2026-10-03). Two names now, never one. */
+  function fmtDayStr(s) { return fmtDate(s).replace(/ \d{4}$/, ''); }
   function statusOf(d) {
     if (!d.mark) return 'k';
     if (backOn(d)) return 'd';
@@ -2281,7 +2298,7 @@
         maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
       var pts = [], markers = {};
-      function base(d) { return statusOf(d) === 'x' ? 7 : 10; }
+      function base(d) { return statusOf(d) === 'x' ? 9 : 13; }   /* bigger to tap (review) */
       function select(d) {
         if (S.mapSel !== d.id) S.sheetMin = false;
         S.mapSel = d.id;
@@ -2332,7 +2349,7 @@
     c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
     var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
-    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres · ' + x.owner)); c.appendChild(meta);
+    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres · Owner: ' + x.owner)); c.appendChild(meta);
     if (x.phone) {
       var ph = q('div', 'ph'); var a = q('a', 'num', fmtPhone(x.phone.phone)); a.href = 'tel:' + digits(x.phone.phone);
       a.insertBefore(ico('phone', 2.2), a.firstChild);
@@ -2430,7 +2447,7 @@
        against  trees at the walls AND dense beyond: >= 25% cover in 0-5 ft and in 5-30 ft
                 (zone 1 alone is too narrow for 1 m LiDAR plus outline error to trust)
        heavy    >= 35% cover within 5-30 ft     some >= 10%     clear otherwise */
-  var TREE_LV = { against: 'Trees against house', heavy: 'Heavy trees, 30 ft', some: 'Some trees, 30 ft', clear: 'Clear, 30 ft' };
+  var TREE_LV = { against: 'Trees against house', heavy: 'Heavy trees within 30 ft', some: 'Some trees within 30 ft', clear: 'No trees within 30 ft' };
   function treeLevel(d) {
     var t = d.trees; if (!t) return null;
     if ((t.z1 || 0) >= 0.25 && t.z2 >= 0.25) return 'against';
@@ -2471,7 +2488,7 @@
     el.appendChild(ico('leaf', 2.2));
     el.appendChild(document.createTextNode(lv ? LAWN[lv] : 'Lawn?'));
     if (d.lawnfix) el.appendChild(q('em', null, ' ' + DOT + ' crew'));
-    else if (d.lawn && lv) el.appendChild(q('em', null, ' ' + DOT + ' ' + d.lawn.yr));
+    else if (d.lawn && lv) el.appendChild(q('em', null, ' ' + DOT + ' ' + d.lawn.yr + ' photo'));
     return el;
   }
   function lawnChooser(d) {
@@ -2757,14 +2774,14 @@
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
-    meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · ' + d.owner));
+    meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · Owner: ' + d.owner));
     card.appendChild(meta);
     if (S.treeOpen === d.id && d.trees) card.appendChild(treeDetail(d));
     if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
     if (d.mark && d.mark.outcome === 'miss') {
       var was = q('div', 'meta st');
       var ready = backOn(d);
-      was.appendChild(q('span', null, (ready ? 'No answer last time · try again' : 'No answer' + (d.mark.retry ? ' · back on the list ' + fmtDay(d.mark.retry) : '')) + (d.mark.by ? ' · ' + d.mark.by : '')));
+      was.appendChild(q('span', null, (ready ? 'No answer last time · try again' : 'No answer' + (d.mark.retry ? ' · back on the list ' + fmtDayStr(d.mark.retry) : '')) + (d.mark.by ? ' · ' + d.mark.by : '')));
       was.style.color = ready ? 'var(--go)' : 'var(--miss)';
       /* a mistake fix, not a retry: waiting no-answers come back by themselves. It takes the
          mark off the knocker's stats too. */

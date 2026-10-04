@@ -65,6 +65,7 @@ function dataDir(): string {
     exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
 define('DATA_DIR', dataDir());
+date_default_timezone_set('America/Denver');   /* review 2026-10-03: the export's date() used the host's zone */
 const COOKIE     = 'sfr';
 const MAX_TRIES  = 8;      // wrong codes per address per window
 const TRY_WINDOW = 900;    // 15 minutes
@@ -251,8 +252,7 @@ function logRows(string $kind, string $key): array {
     };
     $own = $read(DATA_DIR . '/' . $kind . '-' . $key . '.log');
     $partners = sharedWith($key);
-    if (!$partners) return $own;
-    $mine = doorIds($key);
+    $mine = $partners ? doorIds($key) : [];
     $all = []; $seq = 0;
     foreach ($own as $r) $all[] = [(int) ($r['at'] ?? 0), $seq++, $r];
     foreach ($partners as $p) foreach ($read(DATA_DIR . '/' . $kind . '-' . $p . '.log') as $r) {
@@ -274,13 +274,17 @@ function marksFile(string $key): string { return DATA_DIR . '/marks-' . $key . '
 
 /** Replay the append-only log: last line per door wins. */
 function loadMarks(string $key): array {
-    $out = [];
+    /* review 2026-10-03: a put-back removes only the mark it undid, so the door shows the mark
+       before it (someone's Not now and its date survive a mistaken Quote booked + Undo). It used
+       to wipe the door, while the stats (liveMarks) removed only one mark: the two disagreed. */
+    $stack = [];
     foreach (logRows('marks', $key) as $m) {
         if (!is_array($m) || !isset($m['id'])) continue;
-        if (($m['outcome'] ?? null) === null) unset($out[$m['id']]);   // an undo
-        else $out[$m['id']] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0,
-                               'revisit' => $m['revisit'] ?? ''];
+        if (($m['outcome'] ?? null) === null) { if (!empty($stack[$m['id']])) array_pop($stack[$m['id']]); continue; }
+        $stack[$m['id']][] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0, 'revisit' => $m['revisit'] ?? ''];
     }
+    $out = [];
+    foreach ($stack as $id => $s) if ($s) $out[$id] = end($s);
     return $out;
 }
 function appendMark(string $key, array $row): bool {
@@ -490,6 +494,14 @@ function appendNote(string $key, array $row): bool {
     return (bool) @file_put_contents(notesFile($key), json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
 
+/* When a save happened. A phone with no signal sends its queue later, and the time it was TAPPED
+   rides along as 't': used if it is within the last 7 days and not in the future, so a dead-zone
+   Friday evening counts on Friday and its no-answers come back on time (review 2026-10-03). */
+function tapTime(array $body): int {
+    $now = time(); $t = (int) ($body['t'] ?? 0);
+    return ($t > $now - 7 * 86400 && $t <= $now + 60) ? min($t, $now) : $now;
+}
+
 /* ---- routing ----------------------------------------------------------- */
 $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
@@ -593,6 +605,7 @@ if ($action === 'regions') {
                 $f = (int) ($d['fire'] ?? 0);
                 if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
                 $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
+                /* a no-answer still counts as needing a knock (SX-9b rule), even during its 2-day rest */
                 $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
@@ -668,7 +681,7 @@ if ($action === 'mark') {
     if ($out !== null && !in_array($out, ['booked', 'later', 'miss', 'nosolicit'], true)) fail('Bad outcome.');
     /* "Come back when" rides on the Not-now mark itself, so it travels through the
        offline queue with the mark: a date picked in a dead zone is not lost. */
-    $row = ['id' => $id, 'outcome' => $out, 'by' => $me, 'at' => time()];
+    $row = ['id' => $id, 'outcome' => $out, 'by' => $me, 'at' => tapTime($body)];
     $rv = (string) ($body['revisit'] ?? '');
     if ($rv !== '') {
         if ($out !== 'later') fail('A come-back date only goes with Not now.');
@@ -797,23 +810,21 @@ if ($action === 'stats') {
         if (!isset($people[$name][$date])) $people[$name][$date] = ['doors' => 0, 'booked' => 0, 'later' => 0, 'miss' => 0, 'nosolicit' => 0, 'phones' => 0, 'emails' => 0, 'photos' => 0, 'notes' => 0];
         $people[$name][$date][$k]++;
     };
-    $lines = function (string $file) use ($since) {
-        $out = [];
-        if (!is_readable($file)) return $out;
-        $fh = @fopen($file, 'r');
-        if (!$fh) return $out;
-        while (($line = fgets($fh)) !== false) {
-            $r = json_decode(trim($line), true);
-            if (is_array($r) && isset($r['id']) && (int) ($r['at'] ?? 0) >= $since) $out[] = $r;
-        }
-        fclose($fh);
-        return $out;
+    /* review 2026-10-03: through logRows(), so a door's rows from its old town and its new town are
+       read together (a put-back filed under the new town used to leave the old mark counted).
+       Rows for a door that moved AWAY to a partner town are left for that town to count. */
+    $rowsOf = function (string $kind, string $k) use ($since) {
+        $away = [];
+        foreach (sharedWith($k) as $pk) foreach (doorIds($pk) as $id => $_) $away[$id] = true;
+        $mine = doorIds($k);
+        return array_values(array_filter(logRows($kind, $k), fn($r) => isset($r['id']) && (int) ($r['at'] ?? 0) >= $since
+            && (isset($r['_from']) || !isset($away[$r['id']]) || isset($mine[$r['id']]))));
     };
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     foreach (($idx['regions'] ?? []) as $rg) {
         $k = $rg['key'];
         $last = [];
-        foreach (liveMarks($lines(marksFile($k))) as $m) $last[($m['by'] ?? '') . '|' . $dayOf($m['at']) . '|' . $m['id']] = $m['outcome'] ?? null;
+        foreach (liveMarks($rowsOf('marks', $k)) as $m) $last[($m['by'] ?? '') . '|' . $dayOf($m['at']) . '|' . $m['id']] = $m['outcome'] ?? null;
         foreach ($last as $kk => $o) {
             if ($o === null) continue;
             [$n, $dt] = explode('|', $kk);
@@ -821,9 +832,9 @@ if ($action === 'stats') {
             $bump($n, $dt, 'doors');
             if (in_array($o, ['booked', 'later', 'miss', 'nosolicit'], true)) $bump($n, $dt, $o);
         }
-        foreach ([['phones', phonesFile($k), 'phone'], ['emails', emailsFile($k), 'email'], ['notes', notesFile($k), 'note']] as [$what, $file, $field]) {
+        foreach ([['phones', 'phones', 'phone'], ['emails', 'emails', 'email'], ['notes', 'notes', 'note']] as [$what, $kind, $field]) {
             $seen = [];
-            foreach ($lines($file) as $r) {
+            foreach ($rowsOf($kind, $k) as $r) {
                 if (($r[$field] ?? null) === null) continue;
                 if ($what === 'phones' && ($r['source'] ?? '') !== 'door') continue;     /* only numbers GIVEN at the door count */
                 $n = $r['by'] ?? ''; $dt = $dayOf($r['at']);
@@ -833,7 +844,7 @@ if ($action === 'stats') {
                 $bump($n, $dt, $what);
             }
         }
-        foreach ($lines(photosFile($k)) as $r) {
+        foreach ($rowsOf('photos', $k) as $r) {
             if (!empty($r['del'])) continue;
             $n = $r['by'] ?? '';
             if ($who !== '' && $n !== $who) continue;
@@ -901,7 +912,7 @@ if ($action === 'mydoors') {
                 $now = $marks[$d['id']] ?? null;
                 $rows[] = [
                     'region' => $k, 'town' => $data['label'] ?? $k, 'area' => $a['name'],
-                    'id' => $d['id'], 'address' => $d['address'], 'at' => $h['at'],
+                    'id' => $d['id'], 'address' => $d['address'], 'at' => $h['mine']['at'] ?? $h['at'],   /* the mark's day (review 2026-10-03) */
                     'mine' => $h['mine'] ?? null, 'did' => array_keys($h['did']),
                     'now' => $now ? ['outcome' => $now['outcome'], 'by' => $now['by'], 'at' => $now['at'], 'revisit' => $now['revisit'] ?? ''] : null,
                 ];
