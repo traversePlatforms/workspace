@@ -263,6 +263,20 @@ function logRows(string $kind, string $key): array {
     usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: $a[1] <=> $b[1]);
     return array_column($all, 2);
 }
+/* ---- when a house sells (2026-10-03) ---------------------------------------
+ * The door lists are rebuilt from county records every quarter. When the owner on the record
+ * changes (build-rounds-data.mjs compares names; a spouse added or a move into a family trust
+ * is not a change), the door carries 'os', the date the new owner was first seen. Anything
+ * recorded before that date belonged to the previous owner: the door is back on the list, an
+ * old Quote booked leaves Quotes to build, and the old phone, email and note are shown as the
+ * previous owner's. Nothing is deleted; the export keeps it all, with the date. */
+function ownerSinceTs(array $d): int {
+    if (empty($d['os']) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D', (string) $d['os'])) return 0;
+    return (new DateTime($d['os'] . ' 00:00', new DateTimeZone('America/Denver')))->getTimestamp();
+}
+/** the mark, unless it was made for the previous owner */
+function freshMark(array $d, ?array $m): ?array { return ($m && (int) ($m['at'] ?? 0) >= ownerSinceTs($d)) ? $m : null; }
+
 /** The town a door belongs to now, given the town the phone asked for. 409 when no town has it:
  *  a phone holding an old list must not save onto nothing (or, worse, onto another door). */
 function doorHome(string $key, string $id): string {
@@ -601,7 +615,7 @@ if ($action === 'regions') {
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
             foreach ($a['doors'] as $d) {
-                $m = $marks[$d['id']] ?? null;
+                $m = freshMark($d, $marks[$d['id']] ?? null);
                 $f = (int) ($d['fire'] ?? 0);
                 if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
                 $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
@@ -643,9 +657,12 @@ if ($action === 'area') {
         if ($a['name'] !== $name) continue;
         $doors = [];
         foreach ($a['doors'] as $d) {
-            $m = $marks[$d['id']] ?? null;
+            $m0 = $marks[$d['id']] ?? null; $m = freshMark($d, $m0);
             $p = $phones[$d['id']] ?? null;
             $n = $notes[$d['id']] ?? null;
+            $em = $emails[$d['id']] ?? null;
+            $os = ownerSinceTs($d);
+            $old = fn($r) => $os && $r && (int) ($r['at'] ?? 0) < $os;   /* recorded for the previous owner */
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
@@ -653,12 +670,14 @@ if ($action === 'area') {
                 'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? '',
                                'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
-                                 'by' => $p['by'], 'at' => $p['at']] : null,
-                'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] : null,
+                                 'by' => $p['by'], 'at' => $p['at']] + ($old($p) ? ['prev' => true] : []) : null,
+                'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ($old($n) ? ['prev' => true] : []) : null,
+                'os' => $d['os'] ?? null,
+                'prevMark' => ($m0 && !$m) ? ['outcome' => $m0['outcome'], 'by' => $m0['by'], 'at' => $m0['at']] : null,
                 'lawn' => $d['lawn'] ?? null,
                 'lawnfix' => $lfix[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
-                'email' => $emails[$d['id']] ?? null,
+                'email' => $em ? $em + ($old($em) ? ['prev' => true] : []) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
         }
@@ -704,7 +723,7 @@ if ($action === 'phone') {
     $key = doorHome($key, $id);
     $raw = $body['phone'] ?? null;
     if ($raw === null || trim((string) $raw) === '') {             // remove the number
-        if (!appendPhone($key, ['id' => $id, 'phone' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        if (!appendPhone($key, ['id' => $id, 'phone' => null, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
         out(['ok' => true]);
     }
     $digits = preg_replace('/\D/', '', (string) $raw);
@@ -716,7 +735,7 @@ if ($action === 'phone') {
     $seen = (string) ($body['seen'] ?? '');
     if ($seen !== '' && !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/D', $seen)) fail('Last seen must be a month, like 2026-08.');
     if ($source === 'door') $seen = '';                             // given in person: the date given is `at`
-    if (!appendPhone($key, ['id' => $id, 'phone' => $digits, 'source' => $source, 'seen' => $seen, 'by' => $me, 'at' => time()])) {
+    if (!appendPhone($key, ['id' => $id, 'phone' => $digits, 'source' => $source, 'seen' => $seen, 'by' => $me, 'at' => tapTime($body)])) {
         fail('Could not save that. Try again.', 500);
     }
     out(['ok' => true]);
@@ -731,11 +750,11 @@ if ($action === 'email') {
     $key = doorHome($key, $id);
     $e = trim((string) ($body['email'] ?? ''));
     if ($e === '') {
-        if (!appendEmail($key, ['id' => $id, 'email' => null, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        if (!appendEmail($key, ['id' => $id, 'email' => null, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
         out(['ok' => true]);
     }
     if (strlen($e) > 120 || !filter_var($e, FILTER_VALIDATE_EMAIL)) fail('That does not look like an email address.');
-    if (!appendEmail($key, ['id' => $id, 'email' => strtolower($e), 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    if (!appendEmail($key, ['id' => $id, 'email' => strtolower($e), 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
 
@@ -909,7 +928,7 @@ if ($action === 'mydoors') {
             foreach ($a['doors'] as $d) {
                 if (!isset($hit[$d['id']])) continue;
                 $h = $hit[$d['id']];
-                $now = $marks[$d['id']] ?? null;
+                $now = freshMark($d, $marks[$d['id']] ?? null);
                 $rows[] = [
                     'region' => $k, 'town' => $data['label'] ?? $k, 'area' => $a['name'],
                     'id' => $d['id'], 'address' => $d['address'], 'at' => $h['mine']['at'] ?? $h['at'],   /* the mark's day (review 2026-10-03) */
@@ -1016,7 +1035,7 @@ if ($action === 'lawnfix') {
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     if ($lv !== null && !in_array($lv, ['N', 'S', 'M', 'L'], true)) fail('Bad lawn size.');
-    if (!appendLawnFix($key, ['id' => $id, 'lv' => $lv, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    if (!appendLawnFix($key, ['id' => $id, 'lv' => $lv, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
 
@@ -1034,7 +1053,7 @@ if ($action === 'note') {
     $t = trim($t);
     $len = function_exists('mb_strlen') ? mb_strlen($t, 'UTF-8') : strlen($t);
     if ($len > NOTE_MAX) fail('Keep notes under ' . NOTE_MAX . ' characters.');
-    $row = ['id' => $id, 'note' => $t === '' ? null : $t, 'by' => $me, 'at' => time()];
+    $row = ['id' => $id, 'note' => $t === '' ? null : $t, 'by' => $me, 'at' => tapTime($body)];
     if (!appendNote($key, $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
@@ -1086,7 +1105,7 @@ if ($action === 'quotes') {
         $photos = loadPhotos($r['key']);
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
-                $m = $marks[$d['id']] ?? null;
+                $m = freshMark($d, $marks[$d['id']] ?? null);
                 if (!$m || $m['outcome'] !== 'booked') continue;
                 $p = $phones[$d['id']] ?? null;
                 $n = $notes[$d['id']] ?? null;
@@ -1183,7 +1202,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos'], ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1196,7 +1215,7 @@ if ($action === 'report' || $action === 'export') {
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
-                $m = $marks[$d['id']] ?? null;
+                $m = $marks[$d['id']] ?? null;   /* the export keeps everything, previous owners' marks too */
                 $p = $phones[$d['id']] ?? null;
                 $n = $notes[$d['id']] ?? null;
                 $lf = $lfix[$d['id']] ?? null;
@@ -1211,7 +1230,7 @@ if ($action === 'report' || $action === 'export') {
                               $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
                               $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
-                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '']), ',', '"', '');
+                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '']), ',', '"', '');
             }
         }
     }

@@ -169,6 +169,31 @@ for (const k of Object.keys(shared)) shared[k].sort();
 writeFileSync(SHARED_FILE, JSON.stringify(shared, null, 2) + '\n', 'utf8');
 if (owner.size) console.log(`${owner.size} doors were listed by two towns: each kept by the nearest town (${moved} copies dropped)`);
 
+/* ---- when a house sells (2026-10-03) ---------------------------------------
+ * owner-history.json remembers each door's owner across rebuilds. When the county record names
+ * a different owner, the door gets 'os' (the date this build first saw them) and the server
+ * treats everything recorded before that date as the previous owner's. A change only counts
+ * when the old and new names share NO name at all, so a spouse added, a move into a family
+ * trust, or a record written differently is not a sale. The first build only records owners. */
+const OWNERS = join(HERE, 'owner-history.json');
+const hist = existsSync(OWNERS) ? JSON.parse(readFileSync(OWNERS, 'utf8')) : {};
+const firstOwnerBuild = !existsSync(OWNERS);
+const buildDay = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+const NOT_A_NAME = new Set(['AND', 'THE', 'TRUST', 'TRUSTS', 'TRUSTEE', 'TRUSTEES', 'LIVING', 'REVOCABLE', 'REV', 'IRREVOCABLE', 'FAMILY', 'ESTATE',
+  'OF', 'LLC', 'INC', 'CO', 'JT', 'TEN', 'ET', 'AL', 'UX', 'JR', 'SR', 'II', 'III', 'IV', 'LP', 'TR', 'DTD', 'DATED', 'AGREEMENT', 'MR', 'MRS', 'MS', 'DR']);
+const names = (o) => new Set(String(o || '').toUpperCase().replace(/[^A-Z ]/g, ' ').split(/s+/).filter((t) => t.length > 1 && !NOT_A_NAME.has(t)));
+let newOwners = 0;
+for (const b of built) for (const ar of b.areas) for (const d of ar.doors) {
+  const h = hist[d.id];
+  if (!h) { hist[d.id] = { o: d.owner, since: null }; continue; }
+  const was = names(h.o), now = names(d.owner);
+  if (was.size && now.size && ![...now].some((t) => was.has(t))) { (h.prev ||= []).push({ o: h.o, until: buildDay }); h.since = buildDay; newOwners++; }
+  h.o = d.owner;
+  if (h.since) d.os = h.since;
+}
+writeFileSync(OWNERS, JSON.stringify(hist), 'utf8');
+console.log(firstOwnerBuild ? `owner history started: ${Object.keys(hist).length} doors recorded (changes are detected from the next rebuild)` : `${newOwners} doors have a new owner since the last rebuild`);
+
 const index = [];
 for (const { key, label, j, areas: raw } of built) {
   const areas = raw.filter((a) => a.doors.length).map((a) => ({ name: a.name, avg: a.avg, place: placeOf(a.src), fw: firewiseOf(a.src), doors: a.doors }));

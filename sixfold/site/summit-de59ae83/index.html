@@ -558,6 +558,10 @@
   td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 
   /* ---- toast + burst ---- */
+  .tag.newown{background:var(--ember-ink);color:var(--on-ember);font-weight:700}
+  .old{opacity:.72}
+  .old .oldl{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-bottom:3px}
+  .prevm{font-style:italic}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -1955,6 +1959,7 @@
       setTimeout(function () { try { ta.focus(); } catch (e) {} }, 0);
       return box;
     }
+    if (d.note.prev) { box.classList.add('old'); box.appendChild(q('span', 'oldl', 'Note from before the new owner')); }
     box.appendChild(q('div', 'ntxt', d.note.note));
     box.appendChild(q('span', 'src', 'Note' + (d.note.by ? ' · ' + d.note.by : '') + (d.note.at ? ' · ' + fmtDay(d.note.at) : '')));
     var ed = q('button', 'lnk', 'Edit note'); ed.type = 'button';
@@ -2007,7 +2012,8 @@
       setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
       return box;
     }
-    var a = q('a', 'num'); a.href = 'mailto:' + d.email.email;
+    if (d.email.prev) { box.classList.add('old'); box.appendChild(q('span', 'oldl', "Previous owner's email")); }
+    var a = q(d.email.prev ? 'span' : 'a', 'num'); if (!d.email.prev) a.href = 'mailto:' + d.email.email;
     a.appendChild(ico('mail', 2.2)); a.appendChild(document.createTextNode(d.email.email));
     box.appendChild(a);
     box.appendChild(q('span', 'src', 'Given at the door' + (d.email.at ? ' · ' + fmtDay(d.email.at) : '') + (d.email.by ? ' · ' + d.email.by : '')));
@@ -2773,7 +2779,15 @@
       setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
       return box;
     }
-    if (d.phone) {
+    if (d.phone && d.phone.prev) {
+      /* given by the previous owner: kept for the record, no Call button */
+      box.classList.add('old');
+      box.appendChild(q('span', 'oldl', "Previous owner's number, probably not the new owner's"));
+      box.appendChild(q('span', 'num', fmtPhone(d.phone.phone)));
+      var ed0 = q('button', 'lnk', 'Replace with the new number'); ed0.type = 'button';
+      ed0.addEventListener('click', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
+      box.appendChild(ed0);
+    } else if (d.phone) {
       var a = q('a', 'num', fmtPhone(d.phone.phone));
       a.href = 'tel:' + digits(d.phone.phone);
       a.insertBefore(ico('phone', 2.2), a.firstChild);
@@ -2804,7 +2818,11 @@
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
     meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres · Owner: ' + d.owner));
+    /* a new owner since the last county pull (2026-10-03): what was recorded before is the
+       previous owner's, shown below as such; the door is back on the list */
+    if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
     card.appendChild(meta);
+    if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + (OUT[d.prevMark.outcome] || d.prevMark.outcome) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
     if (S.treeOpen === d.id && d.trees) card.appendChild(treeDetail(d));
     if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
     if (d.mark && d.mark.outcome === 'miss') {
