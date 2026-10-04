@@ -158,6 +158,7 @@
   .signin .say{min-height:44px;margin-top:12px;font-size:14px;font-weight:700;text-align:center;color:var(--moss)}
   .signin .say.bad{color:#F0806A}
   .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-top:auto}
+  @media (min-height:1000px){ .signin .in{flex:0 1 auto;margin-block:auto} .keys{margin-top:40px} }   /* tall tablet: no gap that looks like a failed load (review) */
   .keys button{height:60px;border-radius:16px;border:0;background:var(--key);color:var(--signin-ink);font-size:25px;font-weight:700;cursor:pointer;
     transition:transform .08s,background .15s;display:grid;place-items:center}
   .keys button:active{transform:scale(.94);background:var(--key-down)}
@@ -168,6 +169,7 @@
 
   /* ---- field tools ---- */
   .choose{max-width:460px;margin:8px auto 0}
+  @media (min-width:740px){ .choose{max-width:680px} }   /* tablet: line up with the app bar (review) */
   .choose .who{color:var(--soft);font-size:14.5px;margin:6px 4px 16px}
   .choose .tile{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;cursor:pointer;margin-bottom:11px;padding:16px;
     border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:var(--shadow);text-decoration:none;
@@ -259,6 +261,7 @@
   .d-top{display:flex;align-items:baseline;gap:8px}
   .door .addr{flex:1;min-width:0;font:400 20px/1.18 var(--serif);letter-spacing:-.01em}
   .door .meta{font-size:13.5px;color:var(--soft);margin-top:6px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .door .meta .own{flex-basis:100%}   /* its own line, so cards look even (review) */
   .door .meta.st{margin-top:5px;font-weight:700}
   .dist{flex:none;font-size:13px;font-weight:700;color:var(--ember-ink);font-variant-numeric:tabular-nums}
   .fire{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap;
@@ -338,6 +341,7 @@
   .later{margin-top:11px;border-radius:16px;padding:12px;background:var(--later-tint);animation:rise .25s ease both}
   .later .lq{font-size:14px;font-weight:700;color:var(--later);margin-bottom:9px}
   .later .chips{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  @media (min-width:740px){ .later .chips{grid-template-columns:repeat(4,1fr)} }   /* tablet: one row (review) */
   .later .chip{display:block;text-align:left;padding:10px 12px;border-radius:12px;border:0;background:var(--card);color:var(--ink);
     cursor:pointer;font-size:14px;font-weight:700;white-space:normal;line-height:1.3}
   .later .chip .cd{display:block;font-weight:400;font-size:12.5px;color:var(--soft);margin-top:2px}
@@ -1284,7 +1288,7 @@
   function statsView(name, back) {
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
-    setBar('back', { title: name === S.me ? 'My stats' : name, sub: 'Last 30 days', back: back || chooseView, backLabel: 'Back' });
+    setBar('back', { title: name === S.me ? 'My stats' : name, sub: S.statTab === 'doors' ? 'Doors you worked, last 30 days' : 'Last 30 days · chart: last 14', back: back || chooseView, backLabel: 'Back' });
     view.textContent = '';
     view.appendChild(statTabs(name, back));
     if (S.statTab === 'doors') return myDoors(name, back);
@@ -1326,13 +1330,13 @@
       var days = []; for (var k2 = 13; k2 >= 0; k2--) { var iso = isoMinus(j.today, k2); days.push({ iso: iso, r: by[iso] || ZERO }); }
       var max = Math.max(5, Math.max.apply(null, days.map(function (x) { return x.r.doors; })));
       var W = 340, H = 150, padL = 26, padB = 26, bw = (W - padL) / 14;
-      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Doors and quotes per day, last 14 days">';
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Doors and quotes per day, last 14 days" style="max-height:260px">';
       [0, max / 2, max].forEach(function (v) { var y = H - padB - (v / max) * (H - padB - 10);
         svg += '<line x1="' + padL + '" x2="' + W + '" y1="' + y + '" y2="' + y + '" stroke="var(--line)" stroke-width="1"/>' +
                '<text x="' + (padL - 5) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="var(--soft)">' + Math.round(v) + '</text>'; });
       days.forEach(function (x, idx) {
         var h = (x.r.doors / max) * (H - padB - 10), hb = (x.r.booked / max) * (H - padB - 10), bx = padL + idx * bw + 3, y0 = H - padB;
-        svg += '<rect x="' + bx + '" y="' + (y0 - h) + '" width="' + (bw - 6) + '" height="' + h + '" rx="2" fill="var(--sunk)" stroke="var(--line)"/>';
+        svg += '<rect x="' + bx + '" y="' + (y0 - h) + '" width="' + (bw - 6) + '" height="' + h + '" rx="2" fill="var(--miss-tint)" stroke="var(--miss)"/>';
         if (hb) svg += '<rect x="' + bx + '" y="' + (y0 - hb) + '" width="' + (bw - 6) + '" height="' + hb + '" rx="2" fill="var(--ember-ink)"/>';
         var p2 = x.iso.split('-');
         svg += '<text x="' + (bx + (bw - 6) / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="var(--soft)"' + (idx === 13 ? ' font-weight="700"' : '') + '>' + (+p2[2]) + '</text>';
@@ -2774,7 +2778,7 @@
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
-    meta.appendChild(q('span', null, d.acres.toFixed(2) + ' acres · Owner: ' + d.owner));
+    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres · Owner: ' + d.owner));
     card.appendChild(meta);
     if (S.treeOpen === d.id && d.trees) card.appendChild(treeDetail(d));
     if (S.editLawn === d.id) card.appendChild(lawnChooser(d));
