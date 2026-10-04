@@ -9,19 +9,20 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 
 ## ⚑ NEXT UPLOAD — the new layout for everyone, search, Pipeline (3 files)
 
-| Step | File (from ) | Goes to |
+| Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
-| 1 |  |  |
-| 2 |  (now "Quote builder") |  |
-| 3 |  (address search) |  |
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `summit-de59ae83/quote.html` (now "Quote builder") | `public_html/summit-de59ae83/` |
+| 3 | `api/rounds.php` (address search) | `public_html/api/` |
 | 4 | — | Flush the cache. |
 
-Sizes:  **361,989**,  **110,298**,  **128,891**.
+Sizes: `index.html` **361,989**, `quote.html` **110,298**, `rounds.php` **128,891**.
 
 What changes for the crew: the new layout is the only layout (the switch is gone): one door open at a time, Add info,
 a yes opens everything, the money line as pills, the three-driver filter, motion, the contour look. Address search on
 the tools screen and in the town bar. Default sort Lawn (Odds once it is on), plus a Doors sort. Admins: one Pipeline
-tile instead of Quotes to build and Leads. The search index () builds itself in on the first search; nothing to upload for it.
+tile instead of Quotes to build and Leads. The search index (`search-index.txt`) builds itself in `sixfold-data/rounds/`
+on the first search; nothing to upload for it.
 
 ## ✅ LIVE 2026-10-04 — the new layout (off by default), phone no-zoom, Fable fixes, every town's lawn outlines (verified 16/16)
 
