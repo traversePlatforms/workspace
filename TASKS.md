@@ -675,27 +675,27 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Every job won in the last 60 days lists the 40 nearest doors still to knock within half a mile, a route
       from the job (Google Maps; driving when the loop is over 2 mi) and an opener naming the street, never the
       house or customer. Strip on the town list; "Knock around this job" on won quotes. From the competitor audit.
-- [ ] **SX-49 Fire-weather call list (after HailTrace): ✅ BUILT AND TESTED 2026-10-03, next upload.** When a weather alert
+- [ ] **SX-49 Fire-weather call list (after HailTrace): ✅ LIVE 2026-10-03 (verified).** When a weather alert
       covers a town or a wildfire is within 30 mi, admins get a call list from the alert details: customers won,
       quotes sent, booked doors there, with numbers given at the door and a check-in script (not a pitch).
-- [ ] **SX-50 Homeowner fire check + report (after Firemaps / Fire Aside): ✅ BUILT AND TESTED 2026-10-03, next upload.**
+- [ ] **SX-50 Homeowner fire check + report (after Firemaps / Fire Aside): ✅ LIVE 2026-10-03 (verified).**
       17-item visual check per door from the CSFS Home Ignition Zone guide (2021): Done / Needs work / Couldn't
       check + note; every check kept, so after-the-job sits beside before. Printable homeowner report: what to do
       first (Zone 0 first), full check with Before/Now, photos, HB25-1182 insurance + DR 0104CR credit, "not an
       inspection" disclaimer. Export column `fire_check`. Not a certification, and must never be sold as one.
-- [ ] **SX-51 Book the walk at the door: ✅ BUILT AND TESTED 2026-10-03, next upload.** Quote booked opens "Book the walk"
+- [ ] **SX-51 Book the walk at the door: ✅ LIVE 2026-10-03 (verified).** Quote booked opens "Book the walk"
       at the top of the list: day (Tomorrow + 2 more, or a date), time or "time to agree", and the walks already
       booked that day. Calendar file (reminders a day and an hour before) and a confirmation text the crew send
       from their own phone, only to a number given at the door. Quotes to build lists the walks coming up.
-- [ ] **SX-52 Measure from the lawn outline: ✅ BUILT AND TESTED 2026-10-03, next upload (quote.html too).** Build quote
+- [ ] **SX-52 Measure from the lawn outline: ✅ LIVE 2026-10-03 (verified).** Build quote
       on a booked door opens Quote build with the door: the outline measured (counted near the house, and all
       the grass) in sq ft and acres, Use fills aeration or the lawn lines already counted. Offered, never filled
       in on its own; the scope draft says where the area came from. Redrawing the outline by hand: not built.
-- [ ] **SX-53 Leaderboard, daily goals, territories: ✅ BUILT AND TESTED 2026-10-03, admins only.** Matthew 2026-10-03:
+- [ ] **SX-53 Leaderboard, daily goals, territories: ✅ LIVE 2026-10-03 (verified), admins only.** Matthew 2026-10-03:
       permission to run it, admins only while tested. `BOARD_OPEN` in rounds.php opens it to the crew. Ranked by
       quotes booked, then talked to; won is credited to whoever booked the door; one daily goal per person; a
       neighbourhood assigned to a person shows on the list. No location tracking. Test sign-ins left out.
-- [ ] **SX-54 Odds sort: ✅ BUILT AND TESTED 2026-10-03, switches on at 150 conversations.** Neighbourhoods by quotes expected
+- [ ] **SX-54 Odds sort: ✅ LIVE 2026-10-03 (verified), switches on at 150 conversations.** Neighbourhoods by quotes expected
       from the doors still to knock, at the rate doors like them (fire hazard x lawn size) have booked, across
       every town (k = 10 toward the overall rate). Admins see it now with the count so far; crew once ready.
 - [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`

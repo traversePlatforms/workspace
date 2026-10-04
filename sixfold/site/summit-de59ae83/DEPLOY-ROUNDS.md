@@ -1,11 +1,13 @@
 # Door rounds — what to upload, and the one check that matters
 
-**Live = the 2026-10-03 batch (commit `808f91b` door files + `e9b2350` code), uploaded by Matthew and
+**Live = the competitor-audit batch (commit `d917514`), uploaded by Matthew and verified 2026-10-03: index.html
+and quote.html byte-identical plain and cache-busted, every new action answering, Black Forest outlines 12/12.**
+Before that: **the 2026-10-03 batch (commit `808f91b` door files + `e9b2350` code), uploaded by Matthew and
 verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 checks, plus a test
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — the whole competitor-audit list (SX-48..54): 3 files + the remaining lawn outlines
+## ✅ LIVE 2026-10-03 — the whole competitor-audit list (SX-48..54), verified 19/19 (still to upload: the lawn outlines as they finish)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
