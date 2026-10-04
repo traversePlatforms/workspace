@@ -7,6 +7,21 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ (same upload) — the morning email: one new file and a second cron job
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| A | `tools/morning-email.php` | `sixfold-tools/` (beside `nightly-backup.php`) |
+| B | — | SiteGround → Devs → Cron Jobs → a second job, interval **Once Per Hour**: `php /home/customer/www/sixfoldcolorado.com/sixfold-tools/morning-email.php` |
+
+It runs every hour and sends once a day, at the first run at or after 6 am Colorado time (so the server's clock
+doesn't matter), to Contact@ through the website form's own Gmail login (api/config.php + smtp.php; it never sees
+the password). Contents: leads still New, walks today and tomorrow, customers due within 7 days (overdue first),
+yesterday per person. The figures come from rounds.php's new `digest` action, asked from the command line only
+(a web request is never 'cli'; crew get 403, no sign-in 401). State in `sixfold-data/digest/` (last-sent.txt,
+digest.log with the send stage). To test it straight away: `... morning-email.php --now` as a one-off command, or
+`--dry-run` to print it without sending. Tested: digest-test 17/17.
+
 ## ⏳ TO UPLOAD — every lead into the Pipeline: Linktree tagged, Meta import (plus the money.json below)
 
 | Step | File (from `sixfold/site/`) | Goes to |

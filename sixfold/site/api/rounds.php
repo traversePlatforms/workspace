@@ -80,6 +80,7 @@ header('X-Robots-Tag: noindex, nofollow');
 header('Referrer-Policy: no-referrer');
 
 function out(array $body, int $status = 200): never {
+    if (defined('SIXFOLD_CLI')) throw new SixfoldOut($body);    /* the morning email (sixfold-tools/morning-email.php), command line only */
     http_response_code($status);
     echo json_encode($body, JSON_UNESCAPED_SLASHES);
     exit;
@@ -847,6 +848,11 @@ if ($action === 'signout') {
     setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $secure]);
     out(['ok' => true]);
 }
+
+/* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
+   started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
+   reached from a browser. */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'digest') $session = ['n' => 'Morning email', 'r' => 'admin', 'c' => ''];
 
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
@@ -2190,6 +2196,9 @@ if ($action === 'walks') {
     if (!$ok($from)) $from = (new DateTime('today', $tz))->format('Y-m-d');
     if (!$ok($to) || $to < $from) $to = (new DateTime($from . ' 00:00', $tz))->modify('+14 days')->format('Y-m-d');
     if ((new DateTime($to . ' 00:00', $tz))->getTimestamp() - (new DateTime($from . ' 00:00', $tz))->getTimestamp() > 62 * 86400) fail('Ask for two months at most.');
+    out(['ok' => true, 'from' => $from, 'to' => $to, 'walks' => walksBetween($from, $to)]);
+}
+function walksBetween(string $from, string $to): array {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $list = [];
     foreach (($idx['regions'] ?? []) as $r) {
@@ -2206,7 +2215,45 @@ if ($action === 'walks') {
         }
     }
     usort($list, fn($x, $y) => [$x['date'], $x['time'] === '' ? '99' : $x['time']] <=> [$y['date'], $y['time'] === '' ? '99' : $y['time']]);
-    out(['ok' => true, 'from' => $from, 'to' => $to, 'walks' => $list]);
+    return $list;
+}
+
+/* ---- the morning digest (2026-10-04) --------------------------------------------------
+ * What an admin needs at 6 am without opening the app: leads still to call, today's and tomorrow's
+ * walks, customers due this week, and yesterday at the doors. Sent by sixfold-tools/morning-email.php;
+ * an admin can also ask for it from the app. */
+if ($action === 'digest') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $tz = new DateTimeZone('America/Denver');
+    $today = (new DateTime('today', $tz))->format('Y-m-d');
+    $yday = (new DateTime('today', $tz))->modify('-1 day')->format('Y-m-d');
+    $tom = (new DateTime('today', $tz))->modify('+1 day')->format('Y-m-d');
+    $week = (new DateTime('today', $tz))->modify('+7 days')->format('Y-m-d');
+    /* leads still New, newest first (the same merge as the leads action) */
+    $leads = []; foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new'];
+    foreach (readLines(leadsDir() . '/leadst.log') as $u) if (isset($leads[$u['id']]) && !empty($u['status'])) $leads[$u['id']]['status'] = $u['status'];
+    $new = array_values(array_filter($leads, fn($l) => $l['status'] === 'new'));
+    usort($new, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
+    $newOut = array_map(fn($l) => ['name' => (string) ($l['name'] ?? ''), 'src' => (string) ($l['src'] ?? ''), 'need' => (string) ($l['need'] ?? ''),
+        'phone' => (string) ($l['phone'] ?? ''), 'town' => (string) ($l['town'] ?? ''), 'at' => (int) ($l['at'] ?? 0)], array_slice($new, 0, 25));
+    $walks = walksBetween($today, $tom);
+    /* customers due within a week, overdue first */
+    $due = [];
+    foreach (loadCustomers() as $c) {
+        if (($c['status'] ?? 'active') !== 'active' || empty($c['next']) || $c['next'] > $week) continue;
+        $due[] = ['name' => (string) ($c['name'] ?? ''), 'next' => (string) $c['next'], 'overdue' => $c['next'] < $today, 'plan' => (string) ($c['plan'] ?? ''),
+                  'service' => (string) ($c['service'] ?? ''), 'price' => $c['price'] ?? null, 'town' => (string) ($c['town'] ?? '')];
+    }
+    usort($due, fn($a, $b) => strcmp($a['next'], $b['next']));
+    /* yesterday at the doors, per person */
+    $team = [];
+    foreach (teamDays(2, '') as $p) foreach ($p['days'] as $d) {
+        if ($d['date'] !== $yday || !$d['doors']) continue;
+        $team[] = ['name' => $p['name'], 'doors' => $d['doors'], 'talked' => $d['doors'] - $d['miss'] - ($d['nosolicit'] ?? 0), 'booked' => $d['booked']];
+    }
+    usort($team, fn($a, $b) => $b['doors'] <=> $a['doors']);
+    out(['ok' => true, 'today' => $today, 'yesterday' => $yday, 'tomorrow' => $tom, 'leadsNew' => count($new), 'leads' => $newOut,
+         'walks' => $walks, 'due' => $due, 'team' => $team]);
 }
 
 /* a calendar file for one walk, with reminders the day before and an hour before. Opens in
