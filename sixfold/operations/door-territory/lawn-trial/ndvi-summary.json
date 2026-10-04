@@ -1,0 +1,83 @@
+{
+  "built": "2026-10-04",
+  "doors": 740,
+  "measured": 734,
+  "skipped": {
+    "photo read failed": 2,
+    "lawn too broken up for 10 m pixels (2 pixels at 30%+)": 1,
+    "lawn too broken up for 10 m pixels (1 pixels at 30%+)": 3
+  },
+  "peak2026": {
+    "p10": 0.402,
+    "median": 0.514,
+    "p90": 0.637
+  },
+  "change": {
+    "p10": -0.114,
+    "median": -0.04,
+    "p90": 0.012
+  },
+  "relative": {
+    "p10": -0.057,
+    "median": 0,
+    "p90": 0.053
+  },
+  "browningVsNeighbours": 95,
+  "greeningVsNeighbours": 80,
+  "byTown": {
+    "black-forest": {
+      "doors": 174,
+      "peak2025": 0.592,
+      "peak2026": 0.562,
+      "change": -0.03
+    },
+    "castle-rock": {
+      "doors": 312,
+      "peak2025": 0.549,
+      "peak2026": 0.492,
+      "change": -0.048
+    },
+    "divide": {
+      "doors": 1,
+      "peak2025": 0.366,
+      "peak2026": 0.334,
+      "change": -0.033
+    },
+    "franktown": {
+      "doors": 146,
+      "peak2025": 0.551,
+      "peak2026": 0.504,
+      "change": -0.039
+    },
+    "larkspur": {
+      "doors": 9,
+      "peak2025": 0.606,
+      "peak2026": 0.537,
+      "change": -0.037
+    },
+    "monument": {
+      "doors": 68,
+      "peak2025": 0.584,
+      "peak2026": 0.542,
+      "change": -0.042
+    },
+    "palmer-lake": {
+      "doors": 1,
+      "peak2025": 0.555,
+      "peak2026": 0.543,
+      "change": -0.012
+    },
+    "sedalia": {
+      "doors": 21,
+      "peak2025": 0.564,
+      "peak2026": 0.516,
+      "change": -0.03
+    },
+    "woodland-park": {
+      "doors": 2,
+      "peak2025": 0.61,
+      "peak2026": 0.567,
+      "change": -0.029
+    }
+  }
+}

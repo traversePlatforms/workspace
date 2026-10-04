@@ -641,7 +641,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Estate's free roster, cut to our counties: 97 HOAs matched to our neighbourhoods (32,087
       units); RowCal runs 166 in scope. The roster has no phone or email; a narrowed request for
       those is drafted, NOT sent. `door-territory/hoa-registry/HOA-LIST.md`.
-- [ ] **SX-31 — Lawn health (NDVI) trial on the 2,053 large lawns: RUNNING 2026-10-03.** Sentinel-2,
+- [x] **SX-31 — Lawn health (NDVI) trial: ✅ FINISHED 2026-10-04 on the 740 Large lawns** (the compact-lawn rule cut Large
+      from 2,053). **734 measured.** Every town greened less in summer 2026 than 2025 (median change −0.04 in
+      July–August greenness), the same everywhere, which is what a drier year or watering rules look like. Against
+      their own neighbours: **95 doors browned noticeably more than the street (≤ −0.05), 80 greened more.** Each
+      lawn is only ~5 satellite pixels at 10 m, so this is a trial: good enough to say which large lawns stand out
+      from their street, not to diagnose one lawn. Results: `lawn-trial/ndvi-results.csv` (gitignored, has names)
+      and `ndvi-summary.json`. Not in the app; Matthew decides whether it goes on the cards.
+      *Original:* Sentinel-2,
       summer 2025 vs 2026, weighted by the door app's own lawn outline. Early finding: at 10 m only
       about a third of Palmer Lake's large lawns are compact enough to read. The image metadata's
       offset turned out to be wrong for these files and was dropped (measured on lake water).

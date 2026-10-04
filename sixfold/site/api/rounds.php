@@ -297,6 +297,10 @@ function ownerAge(array $d, ?array $r): string {
     $oa = dayTs($d, 'oa');
     return ($oa && $at >= $oa) ? 'maybe' : 'prev';
 }
+/** "1063 CLARKE CT" -> "CLARKE CT" — the same rule the walk-list builder groups by */
+function streetName(string $address): string { return trim((string) preg_replace('/^\s*\d+\s+/', '', $address)); }
+/** the biggest streets first (Fable, live review 2026-10-03: 62% of doors are on a street other than the name) */
+function topStreets(array $counts, int $n): array { arsort($counts); return array_slice(array_keys($counts), 0, $n); }
 /** the mark, unless it was surely made for the previous owner */
 function freshMark(array $d, ?array $m): ?array { return ($m && ownerAge($d, $m) !== 'prev') ? $m : null; }
 /** the flag a record carries in the app: ['prev' => true], ['maybe' => true] or nothing */
@@ -647,7 +651,10 @@ if ($action === 'regions') {
             $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
+            $streets = [];                           /* doors per street: a neighbourhood is named after its biggest street only */
             foreach ($a['doors'] as $d) {
+                $sn = streetName((string) ($d['address'] ?? ''));
+                if ($sn !== '') $streets[$sn] = ($streets[$sn] ?? 0) + 1;
                 $m = freshMark($d, $marks[$d['id']] ?? null);
                 $f = (int) ($d['fire'] ?? 0);
                 if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
@@ -668,7 +675,8 @@ if ($action === 'regions') {
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
-                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null];
+                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
+                        'st' => topStreets($streets, 4), 'ns' => count($streets)];
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'areas' => $areas];
     }

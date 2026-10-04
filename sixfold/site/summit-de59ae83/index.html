@@ -563,6 +563,9 @@
   .old .oldl{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-bottom:3px}
   .oldl.maybe{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-top:3px}
   .prevm{font-style:italic}
+  .area .sub.also{margin-top:1px;font-size:12.5px}
+  .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
+  .strh:first-of-type{margin-top:6px}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -1065,8 +1068,10 @@
     box.appendChild(tile('button', 'door', 'Door rounds',
       'Walk a neighbourhood and mark every door, including the misses. Works offline and syncs when you have signal.', null, start));
     if (S.role === 'admin') {
-      box.appendChild(tile('a', 'calc', 'Quote build',
-        'Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.', 'Admin only · in testing', null, 'quote.html'));
+      var qt = tile('a', 'calc', 'Quote build',
+        'Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html');
+      if (S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
+      box.appendChild(qt);
       var lt = tile('button', 'users', 'Leads',
         'Every enquiry in one list: website form leads arrive by themselves; add Meta, Nextdoor, phone and referral leads by hand. Status and notes on each.', 'Admin only', leadsView);
       box.appendChild(lt);
@@ -1181,7 +1186,7 @@
     if (mode === 'lawn' && !hasLawn) mode = 'map';
     var hasTrees = r.areas.some(function (a) { return (a.treeA || 0) + (a.treeH || 0) > 0; });
     if (mode === 'trees' && !hasTrees) mode = 'map';
-    var opts = [['map', 'Map order', 'route'], ['near', 'Nearest', 'near']];
+    var opts = [['map', 'Big lots', 'route'], ['near', 'Nearest', 'near']];   /* was "Map order": the list is biggest lots first, not a route (Fable, live review) */
     if (hasFire) opts.push(['fire', 'Fire', 'flame']);
     if (hasLawn) opts.push(['lawn', 'Lawn', 'leaf']);
     if (hasTrees) opts.push(['trees', 'Trees', 'tree']);
@@ -1217,7 +1222,7 @@
     }
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Map order'));
+    sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
     view.appendChild(sect);
 
     var list = r.areas.slice();
@@ -1267,10 +1272,12 @@
       if (hd !== null) { sub.appendChild(q('span', 'dist', distText(hd))); sub.appendChild(document.createTextNode(' \u00b7 ')); }
       sub.appendChild(document.createTextNode((a.place ? a.place.n + ' \u00b7 ' : '') + a.total + (a.total === 1 ? ' door' : ' doors') + (a.avg ? ' \u00b7 average lot ' + a.avg.toFixed(2) + ' acres' : '')));
       mid.appendChild(sub);
+      var also = alsoStreets(a);
+      if (also) mid.appendChild(q('div', 'sub also', also));
       var chips = q('div', 'chips');
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
-      if (mode === 'trees' && (a.treeA || a.treeH)) chips.appendChild(chipEl('treec', 'tree', (a.treeA ? a.treeA + ' trees against house' : '') + (a.treeA && a.treeH ? ' · ' : '') + (a.treeH ? a.treeH + ' heavy' : '')));
+      if (mode === 'trees' && (a.treeA || a.treeH)) chips.appendChild(chipEl('treec', 'tree', (a.treeA ? a.treeA + (a.treeA === 1 ? ' door' : ' doors') + ' with trees against the house' : '') + (a.treeA && a.treeH ? ' · ' : '') + (a.treeH ? a.treeH + ' with heavy trees' : '')));
       if (a.lawnL || a.lawnM) chips.appendChild(chipEl('lawnc', 'leaf', (a.lawnL ? a.lawnL + ' large' : '') + (a.lawnL && a.lawnM ? ' · ' : '') + (a.lawnM ? a.lawnM + ' medium' : '') + ((a.lawnL || 0) + (a.lawnM || 0) === 1 ? ' lawn' : ' lawns')));
       if (a.hot) chips.appendChild(chipEl('hot' + (a.vhot ? ' v' : ''), 'flame', a.hot + ' high-risk ' + (a.hot === 1 ? 'door' : 'doors') + (a.vhot ? ' (' + a.vhot + ' very high)' : '')));
       if (a.due) chips.appendChild(chipEl('duep', null, a.due + ' due back'));
@@ -1394,7 +1401,8 @@
       /* last 14 days, drawn to one scale */
       holder.appendChild(q('h2', null, 'Last 14 days'));
       var days = []; for (var k2 = 13; k2 >= 0; k2--) { var iso = isoMinus(j.today, k2); days.push({ iso: iso, r: by[iso] || ZERO }); }
-      var max = Math.max(5, Math.max.apply(null, days.map(function (x) { return x.r.doors; })));
+      var max = Math.max(4, Math.max.apply(null, days.map(function (x) { return x.r.doors; })));
+      max = Math.ceil(max / 2) * 2;                 /* an even top, so the middle line is a whole number (was 0 / 3 / 5) */
       var W = 340, H = 150, padL = 26, padB = 26, bw = (W - padL) / 14;
       var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Doors and quotes per day, last 14 days" style="max-height:260px">';
       [0, max / 2, max].forEach(function (v) { var y = H - padB - (v / max) * (H - padB - 10);
@@ -1676,7 +1684,7 @@
     var sb = q('div', 'lstat');
     LEAD_ST.forEach(function (x) {
       var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === x[0]));
-      b.addEventListener('click', function () { if (l.status !== x[0]) saveLead(l, { status: x[0] }); });
+      b.addEventListener('click', function () { if (l.status !== x[0]) saveLead(l, { status: x[0] }, l.status || 'new'); });
       sb.appendChild(b);
     });
     c.appendChild(sb);
@@ -1687,12 +1695,13 @@
     nr.appendChild(inp); nr.appendChild(sv); c.appendChild(nr);
     return c;
   }
-  function saveLead(l, change) {
+  function saveLead(l, change, undoTo) {
     var body = { id: l.id }; for (var k in change) body[k] = change[k];
     api('leadstatus', { body: body }).then(function (j) {
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
-      toast(change.status ? 'Marked ' + (LEAD_ST.filter(function (x) { return x[0] === change.status; })[0] || ['', change.status])[1] : 'Note saved', l.name || '', null);
+      toast(change.status ? 'Marked ' + (LEAD_ST.filter(function (x) { return x[0] === change.status; })[0] || ['', change.status])[1] : 'Note saved', l.name || '',
+        change.status && undoTo ? function () { saveLead(l, { status: undoTo }); } : null);   /* one tap saves, so one tap undoes (Fable) */
       leadsView();
     }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
   }
@@ -1788,7 +1797,33 @@
   }
 
   /* back out of a neighbourhood: to My stats if the door was opened from there, else the neighbourhood list */
-  function areaBack() { S.area = null; S.mapSel = null; var f = S.returnTo; S.returnTo = null; if (f) f(); else refresh(); }
+  /* Neighbourhoods are named after their biggest street, but most of their doors are on others
+     (Fable, live review: 62%). Say which, in plain case: "Also Astrion Ct, Comet Ct and 7 more streets". */
+  function streetCase(s) { return String(s).toLowerCase().replace(/(^|[\s-])([a-z])/g, function (m, p, c) { return p + c.toUpperCase(); }); }
+  function streetOfAddr(a) { return String(a || '').replace(/^\s*\d+\s+/, '').trim(); }
+  function mainStreetOf(name) { return String(name || '').replace(/\s+·\s+\d+$/, '').replace(/\s+\d+(–\d+)?$/, ''); }
+  function alsoStreets(a) {
+    if (!a.st || !a.ns || a.ns < 2) return '';
+    var main = mainStreetOf(a.name);
+    var others = a.st.filter(function (s) { return s !== main; }).slice(0, 2);
+    var more = a.ns - 1 - others.length;
+    if (!others.length) return '';
+    return 'Also ' + others.map(streetCase).join(', ') + (more > 0 ? ' and ' + more + ' more street' + (more === 1 ? '' : 's') : '');
+  }
+  function areaBack() {
+    S.area = null; S.mapSel = null; var f = S.returnTo; S.returnTo = null;
+    if (f) return f();
+    if (!S.regions) return refresh();
+    /* the town list used to wait 2-3 s for every town's counts, with the old door cards still
+       tappable underneath (Fable, live review). Draw it now; update the counts when they land. */
+    renderAreas();
+    api('regions').then(function (j) {
+      if (!j.ok) { if (j._status === 401) signinView(); return; }
+      S.regions = j.regions;
+      if (S.screen !== 'areas') return;
+      var y = window.scrollY; renderAreas(); window.scrollTo(0, y);
+    }).catch(function () {});
+  }
   function openArea(name) {
     setBar('area', { title: name, sub: townLabel(), back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighbourhoods' });
     setDock(null); foot.hidden = true;
@@ -2440,6 +2475,7 @@
      new one: it could be either owner's (review 2026-10-03), so it stays live with a warning */
   function maybeNote(box, r) { if (r && r.maybe) box.appendChild(q('span', 'oldl maybe', "Recorded around the time the house sold: check it's the new owner's")); }
   /* the assessor's total value for the parcel, Douglas and Teller only (2026-10-03) */
+  function ownerText(o) { return /^unavailable$/i.test(String(o || '').trim()) ? 'not on the public record' : o; }
   function fmtVal(v) { return !v ? '' : v >= 999500 ? '$' + (v / 1e6).toFixed(2).replace(/0$/, '') + 'M' : '$' + Math.round(v / 1000) + 'k'; }
   function quoteCard(x) {
     var c = q('div', 'door qc ' + fireClass(x.fire) + (x.quoted ? ' sent' : ''));
@@ -2447,7 +2483,7 @@
     c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
     var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
-    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres' + (x.val ? ' · County value ' + fmtVal(x.val) : '') + ' · Owner: ' + x.owner)); c.appendChild(meta);
+    meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres' + (x.val ? ' · County value ' + fmtVal(x.val) : '') + ' · Owner: ' + ownerText(x.owner))); c.appendChild(meta);
     if (x.maybe) { var mb = q('div', 'meta st'); mb.appendChild(q('span', 'oldl maybe', "Booked around the time the house sold: check it was the new owner who booked")); c.appendChild(mb); }
     if (x.phone && x.phone.prev) {
       /* the previous owner's number: no Call button (review 2026-10-03) */
@@ -2570,7 +2606,8 @@
     var el = q('button', 'tree tl-' + lv); el.type = 'button';
     el.setAttribute('aria-label', TREE_LV[lv] + ' ' + DOT + ' tap for the numbers');
     el.appendChild(ico('tree', 2.2));
-    el.appendChild(document.createTextNode(TREE_LV[lv]));
+    var few = lv === 'clear' && ((d.trees.z2 || 0) > 0 || (d.trees.h || 0) > 0);   /* under 10% cover is not none (Fable) */
+    el.appendChild(document.createTextNode(few ? 'A few trees within 30 ft' : TREE_LV[lv]));
     if (d.trees.src !== 'lidar') el.appendChild(q('em', null, ' ' + DOT + ' map'));
     el.addEventListener('click', function () { S.treeOpen = S.treeOpen === d.id ? null : d.id; renderDoors(); });
     return el;
@@ -2893,7 +2930,7 @@
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
-    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + d.owner));
+    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
@@ -3026,7 +3063,35 @@
     if (S.dview === 'map') { renderMap(); return; }
 
 
-    todo.forEach(function (d) { view.appendChild(doorCardFor(d)); });
+    /* Street order: grouped under a heading per street, the street the neighbourhood is named
+       after first, then the others by size (Fable, live review: "HALFMOON DR" opened on Astrion Ct).
+       Within a street the walking order is kept. Nearest-first stays one list. */
+    /* opened from "Doors to come back to": those doors lead, under their own heading, and
+       the rest of the street grouping follows (the follow-ups promise them first) */
+    var lead = [];
+    if (S.backFirst && S.dview !== 'near') {
+      lead = todo.filter(backOn); todo = todo.filter(function (d) { return !backOn(d); });
+      if (lead.length) {
+        view.appendChild(q('h3', 'strh', 'Come back to \u00b7 ' + lead.length));
+        lead.forEach(function (d) { view.appendChild(doorCardFor(d)); });
+      }
+    }
+    var streetsHere = {};
+    todo.forEach(function (d) { var s = streetOfAddr(d.address); streetsHere[s] = (streetsHere[s] || 0) + 1; });
+    var nStreets = Object.keys(streetsHere).length;
+    if (S.dview !== 'near' && (nStreets > 1 || (lead.length && nStreets === 1))) {
+      var main = mainStreetOf(S.area);
+      var rank = Object.keys(streetsHere).sort(function (x, y) { return (y === main) - (x === main) || streetsHere[y] - streetsHere[x] || x.localeCompare(y); });
+      var pos = {}; rank.forEach(function (s, i) { pos[s] = i; });
+      var orig = new Map(); todo.forEach(function (d, i) { orig.set(d, i); });
+      todo.sort(function (x, y) { return pos[streetOfAddr(x.address)] - pos[streetOfAddr(y.address)] || orig.get(x) - orig.get(y); });
+      var lastSt = null;
+      todo.forEach(function (d) {
+        var s = streetOfAddr(d.address);
+        if (s !== lastSt) { view.appendChild(q('h3', 'strh', streetCase(s) + ' \u00b7 ' + streetsHere[s])); lastSt = s; }
+        view.appendChild(doorCardFor(d));
+      });
+    } else todo.forEach(function (d) { view.appendChild(doorCardFor(d)); });
 
     if (again.length) {
       var ah = q('h2', null, 'No answer — back on the list soon · ' + again.length); ah.id = 'againHead';

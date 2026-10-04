@@ -1,10 +1,37 @@
 # Door rounds — what to upload, and the one check that matters
 
-**Live = commit `406236b` (verified 2026-10-03).** Everything since is in the batch below. The
-dated sections further down explain each change; the checklist is what to follow. Phase 1 of
-[ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
+**Live = the 2026-10-03 batch (commit `808f91b` door files + `e9b2350` code), uploaded by Matthew and
+verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 checks, plus a test
+enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
+each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑⚑ NEXT UPLOAD — the 2026-10-03 batch, in this order
+## ⚑ NEXT UPLOAD — Fable's live-review fixes (2 files)
+
+From Fable's read-only review of the LIVE site, 2026-10-03 (nothing broken; these are clarity):
+- **Neighbourhoods name their other streets.** 62% of doors are on a street other than the one in
+  the neighbourhood's name. Each neighbourhood now says "Also Astrion Ct, Comet Ct and 7 more
+  streets", and inside it the doors sit under a heading per street, the named street first.
+  The names themselves are unchanged.
+- "Map order" is now **"Big lots"** — it always listed biggest lots first, never a route.
+- Back from a neighbourhood shows the list at once (was ~3 s with old cards still tappable).
+- Trees count reads "22 doors with trees against the house"; "A few trees within 30 ft" where
+  the cover is under 10% but not zero (was "No trees" beside a 26 ft tree).
+- "Owner: Unavailable" (about 100 Douglas doors) reads "Owner: not on the public record".
+- A lead's status change offers Undo; Quote build says "Needs signal" when offline; the empty
+  stats chart counts in whole numbers.
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | — | Flush the cache. No one needs to sign in again. |
+
+Either order works (the page ignores the new street list until the server sends it).
+Sizes to check after upload: `index.html` **209,164** bytes, `rounds.php` **73,688** bytes.
+
+---
+
+## ✅ DONE — the 2026-10-03 batch (kept for the record)
 
 Built from a review of the whole batch (Fable, 2026-10-03). **Do it in the evening, when no crew
 are out. Tell the crew beforehand: everyone types their code once after this.**
