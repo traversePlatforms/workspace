@@ -1217,6 +1217,86 @@ if ($action === 'alerts') {
     out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $a['weather'] ?? [], 'fires' => $a['fires'] ?? [], 'stale' => !empty($a['stale'])]);
 }
 
+/* ---- around our jobs (2026-10-03, after GlassHouse) ------------------------------------
+ * Neighbours notice the trucks. For every job won in the last 60 days, the nearest doors still
+ * to knock within half a mile (40 at most), for a short walk with "we're working on a home on
+ * your street this week". The job is given by street and number to the crew only; the opener
+ * names the street, never the house. Any signed-in user. */
+const AROUND_DAYS = 60, AROUND_MAX = 40, AROUND_M = 800;
+function metresBetween(float $la1, float $lo1, float $la2, float $lo2): float {
+    return hypot(($la1 - $la2) * 111320.0, ($lo1 - $lo2) * 111320.0 * cos(deg2rad($la1)));
+}
+if ($action === 'aroundjobs') {
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $since = time() - AROUND_DAYS * 86400;
+    $jobs = []; $all = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $data = loadRegion($r['key']);
+        if (!$data) continue;
+        $marks = loadMarks($r['key']); $res = loadResults($r['key']);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            if (!isset($d['lat'], $d['lon']) || !is_numeric($d['lat'])) continue;
+            $m = freshMark($d, $marks[$d['id']] ?? null);
+            $rs = $res[$d['id']] ?? null;
+            if ($rs && $rs['result'] === 'won' && (int) $rs['at'] >= $since) {
+                $jobs[] = ['region' => $r['key'], 'town' => $r['label'] ?? $r['key'], 'area' => $a['name'], 'id' => $d['id'],
+                           'address' => $d['address'], 'street' => streetName((string) $d['address']), 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'], 'won' => (int) $rs['at']];
+            }
+            $open = !$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'));
+            if ($open) $all[] = ['region' => $r['key'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'],
+                                 'fire' => $d['fire'] ?? null, 'lawn' => $d['lawn']['lv'] ?? null];
+        }
+    }
+    usort($jobs, fn($x, $y) => $y['won'] <=> $x['won']);
+    $jobs = array_slice($jobs, 0, 20);
+    foreach ($jobs as &$j) {
+        $near = [];
+        foreach ($all as $d) {
+            if ($d['id'] === $j['id']) continue;
+            $dm = metresBetween($j['lat'], $j['lon'], $d['lat'], $d['lon']);
+            if ($dm <= AROUND_M) $near[] = $d + ['m' => (int) round($dm)];
+        }
+        usort($near, fn($x, $y) => $x['m'] <=> $y['m']);
+        $j['doors'] = array_slice($near, 0, AROUND_MAX);
+    }
+    unset($j);
+    out(['ok' => true, 'days' => AROUND_DAYS, 'jobs' => $jobs]);
+}
+
+/* ---- call list when fire weather hits (2026-10-03, after HailTrace) ---------------------
+ * When a weather alert covers a town, or a wildfire is within 30 miles of it, the people to
+ * check on there: customers won, quotes sent, quotes booked — with the number they gave at the
+ * door. A check-in, not a pitch. Admin only (names and numbers). */
+if ($action === 'alertcalls') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $al = freshAlerts();
+    $towns = [];
+    foreach (($al['weather'] ?? []) as $w) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
+    foreach (($al['fires'] ?? []) as $fi) foreach ((array) ($fi['dist'] ?? []) as $t => $mi) if ($mi <= 30) $towns[$t][] = 'Wildfire ' . $mi . ' mi away (' . $fi['name'] . ')';
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $people = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        if (!isset($towns[$r['key']])) continue;
+        $data = loadRegion($r['key']);
+        if (!$data) continue;
+        $marks = loadMarks($r['key']); $res = loadResults($r['key']); $quoted = loadQuoted($r['key']); $phones = loadPhones($r['key']);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            $m = freshMark($d, $marks[$d['id']] ?? null);
+            $rs = $res[$d['id']] ?? null;
+            $status = ($rs && $rs['result'] === 'won') ? 'won' : (($m && $m['outcome'] === 'booked') ? (isset($quoted[$d['id']]) ? 'sent' : 'booked') : null);
+            if (!$status) continue;
+            $p = $phones[$d['id']] ?? null;
+            if ($p && (ownerAge($d, $p) === 'prev' || ($p['source'] ?? '') !== 'door')) $p = null;   /* only numbers given at the door */
+            $people[] = ['region' => $r['key'], 'town' => $r['label'] ?? $r['key'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'],
+                         'owner' => preg_match('/^unavailable$/i', (string) $d['owner']) ? '' : (string) $d['owner'], 'status' => $status,
+                         'phone' => $p['phone'] ?? null, 'why' => array_values(array_unique($towns[$r['key']]))];
+        }
+    }
+    $rank = ['won' => 0, 'sent' => 1, 'booked' => 2];
+    usort($people, fn($x, $y) => $rank[$x['status']] <=> $rank[$y['status']] ?: strcmp($x['town'], $y['town']));
+    out(['ok' => true, 'towns' => array_keys($towns), 'people' => $people]);
+}
+
 if ($action === 'money') {
     $f = DATA_DIR . '/docs/money.json';
     $j = is_readable($f) ? json_decode((string) file_get_contents($f), true) : null;

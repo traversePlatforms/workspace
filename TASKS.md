@@ -671,6 +671,18 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       SX-38's outline packs are still building in the background (about 0.45 lawns/s on the hotel connection).
       SX-41 has no fire-season countdown on purpose (year-round season; warnings are the trigger) and no email yet (needs a cron).
 - [x] **SX-44 route + SX-45 Jobber CSV: ✅ LIVE 2026-10-03, verified.** Route: nearest-next + 2-opt from your position, Google Maps walking link for the next 10 stops. Jobber: booked doors in Jobber's import headings (checked against help.getjobber.com 2026-10-03); no ZIP yet.
+- [ ] **SX-48 Around our jobs (after GlassHouse): ✅ BUILT AND TESTED 2026-10-03, next upload (index.html + rounds.php).**
+      Every job won in the last 60 days lists the 40 nearest doors still to knock within half a mile, a route
+      from the job (Google Maps; driving when the loop is over 2 mi) and an opener naming the street, never the
+      house or customer. Strip on the town list; "Knock around this job" on won quotes. From the competitor audit.
+- [ ] **SX-49 Fire-weather call list (after HailTrace): ✅ BUILT AND TESTED 2026-10-03, next upload.** When a weather alert
+      covers a town or a wildfire is within 30 mi, admins get a call list from the alert details: customers won,
+      quotes sent, booked doors there, with numbers given at the door and a check-in script (not a pitch).
+- [ ] **SX-50..54 — the rest of the competitor audit (sixfold/research/door-app-competitor-audit.md), in its order:**
+      **SX-50** defensible-space report for the homeowner (Zone 0 checklist + photos, the evidence insurers must
+      now count) · **SX-51** book the walk at the door (date, time, reminder) · **SX-52** measure from the lawn
+      outline into Quote Build · **SX-53** territories per person, daily goals, team leaderboard, no live
+      location tracking (Brandon to decide) · **SX-54** sort neighbourhoods by our own booking rate, after a season.
 - [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`
       compares a month with the same month a year earlier (May-Sept only; winter refused; clouds, shadow
       and snow masked per pixel), writes ndvi-results-YYYY-MM.csv; `node build-lawn-outlines.mjs --green-only`

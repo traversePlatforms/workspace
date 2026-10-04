@@ -616,6 +616,11 @@
   .route{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:8px;font-size:14px}
   .route a.sat{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:12px;background:var(--sunk);color:var(--moss-ink);font-weight:700;text-decoration:none}
   .route .soft{font-size:12.5px;color:var(--soft)}
+  .opener{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--go);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px;line-height:1.45;display:flex;flex-direction:column;gap:4px}
+  .opener b{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .opener .soft{font-size:12.5px;color:var(--soft)}
+  .alist2{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .alist2 .back{text-align:left}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -1152,9 +1157,120 @@
       box.appendChild(row);
     });
     box.appendChild(q('div', null, 'Never knock inside an evacuation area or near an active fire. After a scare, lead with help: a free look at the property, the tax credit, what insurers now have to count.'));
+    if (S.role === 'admin') {
+      var cl = q('button', 'back', 'Call list: check in with our customers in these towns'); cl.type = 'button';
+      cl.addEventListener('click', callListView);
+      box.appendChild(cl);
+    }
     box.appendChild(q('div', 'soft', 'Weather: National Weather Service. Fires: national interagency incident feed (prescribed burns left out). Checked ' +
       new Date(j.at * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' }) + (j.stale ? '; one feed did not answer, so part of this is older' : '') + '.'));
     return box;
+  }
+  /* ---- around our jobs (2026-10-03, after GlassHouse) ----
+     Neighbours notice the trucks. Jobs won in the last 60 days, each with the nearest doors still
+     to knock within half a mile, a walking route from the job, and an opener that names the street,
+     never the house. */
+  function aroundData() {
+    if (S.around && Date.now() - S.around.t < 300000) return Promise.resolve(S.around.j);
+    return api('aroundjobs').then(function (j) { if (j && j.ok) S.around = { t: Date.now(), j: j }; return j; });
+  }
+  function aroundStrip(townKey) {
+    var holder = q('div');
+    aroundData().then(function (j) {
+      if (!j || !j.ok) return;
+      var here = j.jobs.filter(function (x) { return x.region === townKey && x.doors.length; });
+      if (!here.length) return;
+      var n = here.reduce(function (t, x) { return t + x.doors.length; }, 0);
+      var b = q('button', 'alrt calm aroundb'); b.type = 'button';
+      b.appendChild(document.createTextNode('Around our jobs: ' + here.length + (here.length === 1 ? ' job' : ' jobs') + ' won here'));
+      b.appendChild(q('span', 'more', n + ' doors nearby still to knock · Tap to see them'));
+      b.addEventListener('click', function () { aroundView(townKey, null); });
+      holder.appendChild(b);
+    }).catch(function () {});
+    return holder;
+  }
+  function aroundView(townKey, focusId) {
+    hideToast(); S.signin = null; S.screen = 'around'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Around our jobs', sub: 'Neighbours of jobs won in the last 60 days', back: focusId ? quotesView : (townKey ? refresh : chooseView), backLabel: 'Back' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    S.around = null;
+    aroundData().then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the jobs.')); return; }
+      var jobs = j.jobs.filter(function (x) { return focusId ? x.id === focusId : (!townKey || x.region === townKey); });
+      if (!jobs.length) { holder.appendChild(q('div', 'msg', 'No jobs won in the last ' + j.days + ' days' + (townKey ? ' in this town' : '') + '. Jobs appear here once a quote is marked Won in Quotes to build.')); return; }
+      jobs.forEach(function (x) { holder.appendChild(aroundCard(x, townKey, focusId)); });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
+  function aroundCard(x, townKey, focusId) {
+    var c = q('div', 'door around');
+    c.appendChild(q('div', 'addr', x.address));
+    var won = new Date(x.won * 1000);
+    c.appendChild(q('div', 'meta', 'Won ' + won.getDate() + ' ' + MONTHS[won.getMonth()] + ' · ' + x.town + ' · ' + x.area));
+    var op = q('div', 'opener');
+    op.appendChild(q('b', null, 'Opener'));
+    op.appendChild(document.createTextNode('"We\u2019re working on a home on ' + streetCase(x.street) + ' this week, so we\u2019re already in the neighbourhood. Can we take a quick look at your yard while we\u2019re here?"'));
+    op.appendChild(q('span', 'soft', 'Name the street, never the house or the customer.'));
+    c.appendChild(op);
+    if (!x.doors.length) { c.appendChild(q('div', 'meta', 'Every door within half a mile has been knocked.')); return c; }
+    var rt = walkRoute(x.doors.slice(), { lat: x.lat, lon: x.lon });
+    var stops = rt.order.filter(function (d) { return typeof d.lat === 'number'; }).slice(0, 10);
+    var head = q('div', 'meta', x.doors.length + ' doors still to knock within half a mile · a route of about ' + (rt.metres / 1609.34).toFixed(1) + ' mi from the job');
+    c.appendChild(head);
+    var drive = rt.metres > 3200;   /* big lots: over 2 miles is a drive */
+    var gm = q('a', 'sat'); gm.appendChild(ico('route', 2.2)); gm.appendChild(document.createTextNode((drive ? 'Drive' : 'Walk') + ' the first ' + stops.length + ' in Google Maps'));
+    gm.href = mapsRoute(stops, { lat: x.lat, lon: x.lon }, drive ? 'driving' : 'walking'); gm.target = '_blank'; gm.rel = 'noopener noreferrer';
+    var tools = q('div', 'adds'); tools.appendChild(gm); c.appendChild(tools);
+    var list = q('div', 'alist2');
+    rt.order.forEach(function (d) {
+      var b = q('button', 'back'); b.type = 'button';
+      b.appendChild(document.createTextNode(d.address + ' · ' + distText(d.m) + (d.fire >= 4 ? ' · high fire hazard' : '') + (d.lawn === 'L' ? ' · large lawn' : d.lawn === 'M' ? ' · medium lawn' : '')));
+      b.addEventListener('click', function () {
+        S.region = d.region; S.flash = d.id; S.returnTo = function () { aroundView(townKey, focusId); };
+        var go = function () { openArea(d.area); };
+        if (S.regions) go(); else api('regions').then(function (j) { if (j.ok) { S.regions = j.regions; go(); } });
+      });
+      list.appendChild(b);
+    });
+    c.appendChild(list);
+    return c;
+  }
+
+  /* ---- call list when fire weather hits (2026-10-03, after HailTrace) ---- */
+  function callListView() {
+    hideToast(); S.signin = null; S.screen = 'calls'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Check in with customers', sub: 'Towns under a fire-weather alert or near a wildfire', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('alertcalls').then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the list.')); return; }
+      if (!j.towns.length) { holder.appendChild(q('div', 'msg', 'No town is under a fire-weather alert or near a wildfire right now.')); return; }
+      var tip = q('div', 'opener');
+      tip.appendChild(q('b', null, 'What to say'));
+      tip.appendChild(document.createTextNode('"Checking in because of the fire weather today. Is there anything you need, or anything you\u2019d like us to look at once it passes?"'));
+      tip.appendChild(q('span', 'soft', 'A check-in, not a pitch. If they ask for help, book it. Never send a crew into an evacuation area.'));
+      holder.appendChild(tip);
+      if (!j.people.length) { holder.appendChild(q('div', 'msg', 'No customers or booked doors in ' + j.towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ') + ' yet.')); return; }
+      var lab = { won: 'Customer', sent: 'Quote sent', booked: 'Quote booked' };
+      j.people.forEach(function (p) {
+        var c = q('div', 'door calls');
+        c.appendChild(q('div', 'addr', p.address));
+        var meta = q('div', 'meta');
+        meta.appendChild(q('span', 'tag ' + (p.status === 'won' ? 'booked' : 'later'), lab[p.status]));
+        meta.appendChild(document.createTextNode(' ' + p.town + (p.owner ? ' · ' + p.owner : '')));
+        c.appendChild(meta);
+        c.appendChild(q('div', 'meta st', p.why.join(' · ')));
+        if (p.phone) {
+          var a = q('a', 'num', fmtPhone(p.phone)); a.href = 'tel:' + digits(p.phone); a.insertBefore(ico('phone', 2.2), a.firstChild);
+          var ph = q('div', 'ph'); ph.appendChild(a); c.appendChild(ph);
+        } else c.appendChild(q('div', 'meta', 'No number given at the door.'));
+        holder.appendChild(c);
+      });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
   function chooseView() {
     hideSplash(); hideToast();
@@ -1325,6 +1441,7 @@
       }
     }
     view.appendChild(alertStrip(S.region));          /* this town's fire weather and nearby fires (SX-41) */
+    view.appendChild(aroundStrip(S.region));         /* neighbours of jobs won here (2026-10-03) */
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
     sect.appendChild(q('span', null, mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
@@ -2518,10 +2635,10 @@
     return { order: (near ? path.slice(1) : path).concat(rest), metres: metres, fromHere: !!near };
   }
   /* Google Maps walking directions through the next stops (its links take about ten at a time) */
-  function mapsRoute(stops, here) {
+  function mapsRoute(stops, here, mode) {
     var ll = function (d) { return d.lat.toFixed(6) + ',' + d.lon.toFixed(6); };
     var dest = stops[stops.length - 1], via = stops.slice(0, -1);
-    return 'https://www.google.com/maps/dir/?api=1&travelmode=walking' + (here ? '&origin=' + ll(here) : '') + '&destination=' + ll(dest) +
+    return 'https://www.google.com/maps/dir/?api=1&travelmode=' + (mode || 'walking') + (here ? '&origin=' + ll(here) : '') + '&destination=' + ll(dest) +
       (via.length ? '&waypoints=' + via.map(ll).join('%7C') : '');
   }
   function metresTo(d) {
@@ -2777,6 +2894,11 @@
       var ch = q('button', 'lnk', 'Change'); ch.type = 'button';
       ch.addEventListener('click', function () { saveResult(x, { result: null }); });
       box.appendChild(ch);
+      if (won) {
+        var ar = q('button', 'rb won', 'Knock around this job'); ar.type = 'button';
+        ar.addEventListener('click', function () { S.around = null; aroundView(null, x.id); });
+        box.appendChild(ar);
+      }
       return box;
     }
     if (S.resEdit === x.id && S.resKind === 'won') {

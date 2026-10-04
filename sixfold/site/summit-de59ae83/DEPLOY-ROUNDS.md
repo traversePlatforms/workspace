@@ -5,7 +5,28 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — Fable's live-review fixes, extra work, results, lawn photos, tips, communities, alerts
+## ⚑ NEXT UPLOAD — around our jobs + fire-weather call list (2 files) + the remaining lawn outlines
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | the `data/rounds/lawnmask-<town>.json` files finished since the last upload | `sixfold-data/rounds/` |
+| 4 | — | Flush the cache. No one signs in again. |
+
+Sizes to check after upload: `index.html` **254,528** bytes, `rounds.php` **104,282** bytes.
+
+**Around our jobs (SX-48, after GlassHouse).** A strip on each town's list: jobs won there in the last
+60 days, each with the 40 nearest doors still to knock within half a mile, a route from the job, and
+an opener that names the street, never the house or the customer. Won quotes get "Knock around this job".
+
+**Fire-weather call list (SX-49, after HailTrace, admin).** When an alert covers a town or a wildfire
+is within 30 miles, the alert details offer a call list: customers won, quotes sent and booked doors
+there, with the number given at the door and a check-in script. A check-in, not a pitch.
+
+---
+
+## ✅ DONE 2026-10-03 (second batch) — Fable's live-review fixes, extra work, results, lawn photos, tips, communities, alerts
 
 Matthew 2026-10-03: batch the updates into one upload rather than one per feature; do it before
 Monday's team meeting with whatever is finished.

@@ -6,7 +6,7 @@
 
 - Nothing on the market puts **fire hazard, trees, lawn size and wildfire funding on the same door** the way our app does. The door-knocking apps sell homeowner contact data and storm maps; the measuring tools are desk tools for quoting, not knocking.
 - The others are ahead on **homeowner phone numbers and emails**, **manager tools** (territories per rep, leaderboards, contracts) and **precise measuring for bids**.
-- We are taking the best of what works for them. The first two (a route around every won job, and a call list when fire weather hits) are being built now.
+- We are taking the best of what works for them. The first two (a route around every won job, and a call list when fire weather hits) are built and go live with the next update.
 
 ## What our app is
 
@@ -62,8 +62,8 @@ SalesRabbit Pro with its homeowner-data and storm-data add-ons comes to $87–13
 
 | | Idea | Borrowed from | Status |
 |---|---|---|---|
-| 1 | A route around every won job, with a "we're doing your neighbour's yard" opener | GlassHouse | Being built |
-| 2 | When fire weather or a nearby fire hits, a call list of our customers and booked doors there | HailTrace | Being built |
+| 1 | A route around every won job, with a "we're doing your neighbour's yard" opener | GlassHouse | Built, goes live with the next update |
+| 2 | When fire weather or a nearby fire hits, a call list of our customers and booked doors there | HailTrace | Built, goes live with the next update |
 | 3 | A defensible-space report for the homeowner: Zone 0 checklist and photos, the evidence insurers now have to count | Firemaps, Fire Aside | Next |
 | 4 | Book the walk at the door: date, time, reminder | KnockBase, Knockio | Next |
 | 5 | Measure from the lawn outline the app already draws, straight into Quote Build | SiteRecon, Beam AI | Next |
