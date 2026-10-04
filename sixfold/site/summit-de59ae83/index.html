@@ -124,6 +124,8 @@
     display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12.5px;font-weight:700;transition:background .2s,color .2s}
   .dock button .ic{width:22px;height:22px}
   .dock button[aria-pressed="true"]{background:var(--ember-ink);color:var(--on-ember)}
+  .dock .dback{flex:0 0 68px;color:var(--bar-ink);background:var(--bar-lift)}
+  @media (min-width:900px){ .dock .dback{position:absolute;left:14px;top:7px;bottom:calc(7px + env(safe-area-inset-bottom,0px));width:84px} }   /* wide iPad: under the left thumb */
 
   /* ---- messages ---- */
   .msg{margin:12px 0 0;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:14px;line-height:1.5;color:var(--soft)}
@@ -846,10 +848,19 @@
   }
 
   /* the dock: the view switch, at the bottom where a thumb reaches */
-  function setDock(items, current, onPick) {
+  /* back (2026-10-03): a Back button at the left end of the bar, where both thumbs are. On a big
+     iPad the top-left Back sits inside the centred column, near the hard-to-reach top centre
+     (Fable's tablet review); on a wide screen this one pins to the screen's left edge. */
+  function setDock(items, current, onPick, back) {
     if (!items) { dock.hidden = true; dock.textContent = ''; document.body.classList.remove('has-dock'); return; }
     dock.hidden = false; document.body.classList.add('has-dock');
     dock.textContent = '';
+    if (back) {
+      var bb = q('button', 'dback'); bb.type = 'button'; bb.setAttribute('aria-label', 'Back');
+      bb.appendChild(ico('back')); bb.appendChild(document.createTextNode('Back'));
+      bb.addEventListener('click', back);
+      dock.appendChild(bb);
+    }
     items.forEach(function (m) {
       var b = q('button'); b.type = 'button';
       b.appendChild(ico(m[2]));
@@ -1124,7 +1135,7 @@
       if (v === 'near') { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
       renderAreas();
       window.scrollTo(0, 0);
-    });
+    }, chooseView);   /* Back to the tools: this screen had no visible Back (review) */
 
     /* ---- nearest NEIGHBOURHOOD (2026-10-02) ----
        Inside a neighbourhood the doors are all a few hundred feet apart; the useful
@@ -2186,13 +2197,14 @@
   }
   function hoodDist(a) { return typeof a.la === 'number' && typeof a.lo === 'number' ? metresTo({ lat: a.la, lon: a.lo }) : null; }
   function doorDock() {
+    var topBack = function () { var b = document.querySelector('.appbar .back'); if (b) b.click(); };
     setDock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['map', 'Map', 'map']], S.dview, function (v) {
       S.dview = v;
       if (v !== 'map') { try { localStorage.setItem('sixfold.rounds.doorview', v); } catch (e) {} }
       if (v === 'near') locate(function () { if (S.area) renderDoors(); });
       renderDoors();
       window.scrollTo(0, 0);
-    });
+    }, topBack);
   }
 
   function flashCard() {
