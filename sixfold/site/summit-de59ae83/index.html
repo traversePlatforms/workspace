@@ -99,6 +99,8 @@
     padding:calc(10px + env(safe-area-inset-top,0px)) 14px 12px;box-shadow:0 6px 18px -12px rgba(0,0,0,.5)}
   .barin{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:10px;min-height:42px}
   .appbar .mk{width:32px;height:31px;color:var(--ember);flex:none}
+  .mkbtn{flex:none;display:grid;place-items:center;border:0;background:none;padding:5px;margin:-5px;border-radius:12px;cursor:pointer;transition:transform .1s,background .15s}
+  .mkbtn:active{transform:scale(.9);background:var(--bar-lift)}
   .appbar .ttl{flex:1;min-width:0}
   .appbar .ttl b{display:block;font:400 20px/1.15 var(--serif);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .appbar .ttl span{display:block;font-size:12.5px;color:var(--bar-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -592,11 +594,81 @@
   .ui2 .choose .tile .ti{width:40px;height:40px;border-radius:12px}
   .ui2 .choose .tile .ti .ic{width:22px;height:22px}
   .ui2 .choose .tile b{font-size:18px;margin:1px 0 2px}
-  .ui2 .choose .tile .tag{margin-top:4px}
+  .ui2 .choose .tile .tag{margin-top:7px;padding:3px 9px;font-size:10px;background:var(--sunk);border-radius:999px}
   .choose .layout{display:flex;align-items:center;gap:7px;margin:18px 4px 4px}
   .choose .layout .ml{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-right:4px}
   .choose .layout button{min-height:38px;border:1px solid var(--line);border-radius:999px;padding:6px 16px;background:var(--card);color:var(--ink);font:700 13.5px var(--sans);cursor:pointer}
   .choose .layout button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  /* ---- new layout: look and motion (2026-10-04) ----
+     A contour-map texture on the dark surfaces; soft-filled chips; the open door tinted by its
+     fire hazard; bigger outcome buttons; motion that says what happened (rows arrive, a door opens,
+     the panel slides in, a saved item ticks). Nothing moves for anyone who asked the phone for less motion. */
+  :root{--topo:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='360' viewBox='0 0 560 360'%3E%3Cg fill='none' stroke='%23EDE7DC' stroke-opacity='.075' stroke-width='1.1'%3E%3Cpath d='M143 110C144 111 145 113 145 114C145 115 144 117 143 118C142 119 140 120 138 120C136 121 134 121 133 121C131 121 130 121 129 122C127 122 126 122 125 123C124 123 123 124 122 124C121 124 119 124 118 124C117 124 116 124 114 123C113 123 112 123 110 123C109 123 107 123 106 122C104 122 102 122 101 121C100 120 99 119 98 118C98 116 98 115 99 114C99 112 101 111 101 110C102 109 103 108 104 107C104 106 104 106 105 105C105 104 104 102 104 101C105 100 105 98 105 97C106 96 107 95 109 95C110 94 112 94 113 94C115 94 116 94 118 94C119 94 121 94 122 94C123 95 125 95 126 95C127 96 129 96 130 97C130 98 131 99 132 100C132 101 132 102 133 103C134 103 134 104 135 105C136 105 138 106 139 107C140 108 142 109 143 110Z'/%3E%3Cpath d='M160 110C161 112 163 115 162 117C162 119 160 122 158 123C156 125 152 126 149 126C146 127 142 127 140 127C137 127 135 127 133 128C131 129 130 130 128 130C127 131 125 133 123 133C121 134 119 135 117 135C114 135 112 135 110 135C107 135 105 134 102 134C100 133 97 133 95 132C92 131 89 130 87 129C85 127 84 125 83 123C82 121 83 118 84 116C85 114 87 112 89 110C90 108 92 107 93 106C94 104 95 103 95 101C95 100 94 97 94 95C94 93 94 91 95 89C97 87 99 85 101 84C103 83 106 83 109 82C111 82 114 83 116 83C119 84 121 84 123 84C126 85 128 85 130 86C132 86 134 87 136 88C138 89 140 91 141 92C142 93 143 95 144 96C145 98 146 99 148 100C150 102 152 103 154 104C156 106 159 108 160 110Z'/%3E%3Cpath d='M175 110C177 113 178 117 177 119C176 122 174 126 171 128C168 130 162 131 158 132C154 133 150 132 146 133C143 133 140 133 138 134C136 135 134 137 132 139C130 140 128 143 125 145C122 146 118 148 115 149C111 149 107 149 104 149C100 148 97 147 93 146C90 145 87 143 83 142C80 140 77 138 75 136C72 133 70 130 70 127C69 124 70 121 72 118C73 115 76 112 78 110C80 108 83 106 84 104C86 102 86 101 86 98C86 96 84 93 84 90C84 87 84 83 85 80C86 77 89 74 92 72C95 71 100 70 103 70C107 70 111 71 115 72C118 72 122 73 125 74C128 75 131 75 134 76C137 77 141 77 143 79C146 80 149 81 151 83C153 85 154 87 156 90C158 92 159 94 161 96C163 98 166 100 168 102C170 104 173 107 175 110Z'/%3E%3Cpath d='M188 110C190 114 191 118 190 122C190 125 187 129 183 132C179 135 173 136 168 137C164 139 158 138 154 139C150 140 146 140 144 142C141 143 139 146 136 149C133 152 130 156 126 158C123 161 118 163 113 164C108 165 102 165 98 164C93 163 89 160 85 158C81 156 77 153 74 150C71 147 67 144 65 141C63 138 61 134 60 131C60 127 61 123 62 120C64 116 67 113 69 110C71 107 74 105 75 103C76 100 76 98 75 95C75 91 73 87 72 83C72 79 71 73 73 69C75 65 78 61 82 59C86 57 92 56 97 56C103 56 108 58 113 59C118 60 122 62 126 64C130 65 134 66 138 67C142 68 146 69 150 70C153 71 157 73 160 75C163 78 165 80 167 83C170 86 171 89 174 91C176 94 178 97 181 100C183 103 187 106 188 110Z'/%3E%3Cpath d='M202 110C204 114 206 120 205 124C204 129 201 133 197 137C193 140 186 143 180 144C175 146 168 146 163 147C158 148 154 149 150 151C147 153 144 156 141 160C137 163 133 168 128 172C123 175 117 178 111 179C105 180 98 179 92 177C87 175 81 171 77 168C73 164 70 160 67 156C64 152 61 148 59 145C57 141 54 137 53 133C52 129 52 125 53 121C54 117 56 113 57 110C59 107 61 104 62 100C62 97 62 94 61 90C61 85 58 80 58 75C57 69 57 62 59 57C62 52 66 47 72 45C77 42 85 41 92 42C98 42 106 46 112 48C118 50 122 54 127 56C132 58 136 60 140 61C145 62 150 62 154 64C159 65 164 66 168 69C172 71 175 74 178 77C182 80 184 83 186 87C189 90 192 94 194 98C197 102 200 106 202 110Z'/%3E%3Cpath d='M219 110C220 115 222 121 221 127C220 132 217 138 212 142C207 146 200 149 193 151C186 154 178 154 172 155C166 157 161 157 157 159C152 162 149 165 145 169C140 173 136 179 130 183C124 187 116 190 109 191C102 192 94 191 87 188C81 186 75 181 71 176C67 171 64 166 61 161C58 156 56 152 53 148C51 144 48 140 45 136C43 132 41 127 41 123C40 119 41 114 41 110C42 106 43 102 44 97C44 93 44 89 43 83C43 78 41 72 41 65C42 59 42 51 46 46C49 40 55 34 62 32C69 29 79 29 87 31C95 32 104 37 111 40C117 43 123 48 128 51C133 54 137 56 142 57C147 58 152 58 158 59C164 59 170 60 176 62C182 63 187 66 191 69C196 73 199 77 202 81C206 86 208 90 211 95C214 100 217 105 219 110Z'/%3E%3Cpath d='M236 110C237 116 238 123 236 129C234 135 230 142 225 146C219 151 211 155 203 157C196 160 187 160 180 162C173 163 167 163 161 166C156 169 153 172 148 177C143 181 138 188 131 192C124 197 116 202 107 203C99 204 90 203 82 200C75 197 69 191 64 185C59 180 57 173 54 167C50 162 48 157 45 152C42 148 38 144 35 140C31 135 27 131 25 126C23 121 22 115 21 110C21 105 22 99 23 94C24 88 24 83 25 77C26 71 25 64 27 57C29 51 31 43 36 37C40 31 48 26 56 23C64 21 75 21 84 23C93 25 102 31 110 35C117 39 123 45 128 48C134 51 138 53 144 53C149 54 156 52 163 52C170 52 179 51 187 52C195 53 203 56 209 60C215 63 220 69 223 74C227 79 229 86 231 92C234 98 236 104 236 110Z'/%3E%3Cpath d='M250 110C249 117 248 124 245 131C242 137 237 144 231 149C226 154 217 158 209 161C202 164 192 165 185 166C178 168 172 169 166 172C160 175 157 180 151 185C146 190 140 198 133 203C125 208 115 215 106 216C96 218 85 217 77 214C68 211 61 204 55 197C50 191 47 183 44 176C40 169 39 164 35 158C31 153 27 149 23 144C18 139 13 134 9 128C6 123 3 116 2 110C1 104 3 97 4 91C5 84 8 78 10 72C12 65 14 58 17 52C20 45 23 37 29 31C35 26 43 20 52 18C60 15 72 16 81 17C91 19 101 25 109 29C117 33 123 39 129 42C135 45 140 46 147 45C154 45 162 42 171 41C180 40 192 38 202 39C212 40 223 43 230 48C238 52 243 59 246 66C250 73 251 81 251 88C252 96 251 103 250 110Z'/%3E%3Cpath d='M257 110C254 118 251 124 247 131C243 138 239 144 234 150C228 155 221 160 214 163C207 167 199 169 192 172C185 175 179 177 173 181C167 185 163 191 156 197C150 203 143 212 135 218C126 224 114 231 103 233C93 236 79 235 70 231C60 227 51 219 45 211C39 203 37 193 34 185C31 177 30 169 26 163C23 157 19 152 14 147C9 141 2 136 -3 130C-7 124 -11 117 -13 110C-14 103 -13 95 -11 88C-10 81 -6 74 -3 67C1 61 4 54 9 47C13 40 17 32 24 27C30 21 38 15 47 12C56 9 68 8 78 10C88 11 99 16 108 20C117 23 123 29 131 31C138 33 144 34 152 33C160 33 170 29 181 27C192 26 207 24 218 25C230 26 243 30 251 36C259 42 264 51 266 59C269 67 267 77 265 86C264 94 260 102 257 110Z'/%3E%3Cpath d='M444 240C443 241 442 242 441 243C440 244 439 245 438 246C437 247 436 248 435 249C434 249 434 250 433 251C432 252 430 252 429 252C428 253 427 253 426 253C424 253 423 254 422 254C421 254 419 255 418 255C416 256 415 256 413 256C412 257 410 256 408 256C407 255 406 254 405 253C404 252 404 250 404 249C404 248 405 246 405 245C405 244 405 243 404 243C404 242 403 241 402 240C401 239 400 238 400 237C399 235 399 234 399 233C400 232 401 231 402 230C403 229 404 228 405 227C406 226 408 226 409 225C411 225 412 224 413 224C415 224 416 224 418 224C419 224 421 225 422 226C423 226 424 228 425 228C426 229 426 230 427 230C428 230 429 230 431 231C432 231 434 230 436 231C438 231 440 232 442 233C443 233 444 235 444 236C445 237 444 239 444 240Z'/%3E%3Cpath d='M460 240C459 242 456 244 454 246C452 247 449 248 448 250C446 251 445 252 443 253C442 255 441 256 440 257C439 259 437 260 435 261C434 262 432 262 430 263C428 264 426 264 423 265C421 265 419 266 416 267C414 267 411 268 408 268C405 268 402 268 400 267C397 266 395 264 394 262C393 260 393 258 393 256C393 253 393 251 393 249C394 247 394 246 393 244C392 243 391 242 389 240C388 238 386 236 385 234C384 232 384 230 385 228C385 226 387 224 389 222C391 221 393 220 396 219C398 218 400 217 403 217C405 216 407 215 410 215C412 215 414 214 417 215C419 215 421 215 423 216C425 217 427 218 429 219C430 220 432 221 434 222C436 222 438 222 440 222C443 223 446 223 449 223C453 224 456 225 458 227C461 228 462 231 463 233C463 235 462 238 460 240Z'/%3E%3Cpath d='M475 240C472 243 468 245 464 247C461 249 458 251 455 252C453 254 452 255 450 257C449 259 449 261 447 264C446 266 444 268 442 270C440 272 437 274 435 275C432 276 428 277 425 278C422 279 418 279 415 280C411 280 407 281 403 281C399 281 395 280 391 279C388 277 385 274 383 272C382 269 382 265 382 262C381 259 383 255 383 253C383 250 384 248 383 246C382 244 380 242 378 240C376 238 373 235 372 232C370 229 370 226 370 223C371 220 373 217 376 215C379 213 383 212 386 211C390 210 393 209 397 208C400 208 403 207 406 206C409 206 412 205 415 205C418 205 422 205 425 205C428 206 431 207 433 208C436 209 438 210 441 211C444 212 447 213 451 213C454 214 459 214 463 216C467 217 472 219 474 221C477 224 479 227 479 230C479 233 477 237 475 240Z'/%3E%3Cpath d='M486 240C483 243 478 246 474 249C470 251 465 253 463 255C460 257 459 259 458 262C457 264 457 268 456 271C455 275 454 279 451 282C449 285 445 288 441 290C437 292 432 293 427 293C423 294 418 294 413 294C408 294 403 294 398 293C393 292 388 291 384 288C380 286 377 283 375 279C373 275 373 271 373 267C373 263 374 259 375 256C375 253 375 250 374 248C373 245 370 243 367 240C364 237 360 233 358 230C356 226 354 221 355 217C356 214 359 210 362 207C365 204 371 203 375 201C380 200 385 200 390 199C394 198 398 198 402 197C406 196 410 195 414 194C418 194 422 193 426 194C430 194 434 195 438 196C442 197 445 199 449 201C453 202 457 203 461 205C465 206 470 207 475 209C479 211 485 213 488 216C491 220 493 224 493 228C492 232 490 237 486 240Z'/%3E%3Cpath d='M499 240C495 244 489 248 485 251C480 254 476 256 473 258C470 261 469 264 468 267C467 271 468 276 467 281C466 286 464 291 461 296C458 300 453 304 447 306C442 308 435 309 429 309C423 309 417 307 411 306C405 305 400 304 394 302C389 300 384 298 379 295C375 292 371 288 369 284C367 280 366 275 366 271C365 267 367 262 366 259C366 255 366 252 364 249C362 246 358 244 354 240C350 236 345 232 342 227C339 222 336 216 337 211C338 206 341 201 346 198C350 194 357 192 363 191C370 190 377 190 382 189C388 189 393 189 398 188C403 187 408 186 413 185C417 184 423 183 428 183C433 183 438 184 443 185C448 187 452 189 456 191C461 193 465 195 470 197C475 199 480 201 485 203C490 206 496 209 499 213C503 216 505 221 505 226C505 230 502 236 499 240Z'/%3E%3Cpath d='M514 240C510 245 504 249 499 253C494 257 489 259 486 263C483 266 481 270 480 274C479 279 480 285 478 291C477 296 475 304 471 309C467 314 460 318 454 320C447 323 438 323 431 322C424 321 416 318 410 315C403 313 398 310 392 307C387 304 381 302 377 299C372 296 367 292 364 288C361 284 359 280 357 275C356 271 356 267 354 263C353 259 352 256 349 252C346 248 341 245 336 240C332 235 325 230 322 224C318 218 316 210 317 204C318 198 323 192 329 188C334 184 344 182 352 181C360 180 369 181 377 181C384 181 390 182 396 182C402 181 406 180 412 179C417 178 423 176 429 175C435 175 441 175 447 176C453 177 458 179 463 181C469 183 474 186 479 189C485 191 490 194 496 197C501 200 508 204 511 208C515 213 519 218 519 224C520 229 517 235 514 240Z'/%3E%3Cpath d='M530 240C526 246 519 251 514 256C509 260 502 263 498 267C495 271 493 275 491 280C489 285 490 292 488 299C486 305 484 314 479 319C474 325 466 330 458 332C451 335 441 334 432 332C424 331 416 326 409 323C402 319 396 315 390 312C384 308 379 306 373 303C368 300 362 297 358 294C353 291 349 286 345 282C342 278 340 273 337 269C334 264 332 260 329 255C325 250 320 246 315 240C311 234 304 227 301 220C299 213 297 205 299 198C301 191 307 184 315 180C322 177 334 175 344 174C354 174 365 176 373 177C381 177 388 179 394 179C401 178 405 177 411 175C417 173 423 169 430 168C436 166 444 165 451 165C458 165 466 167 472 169C479 171 485 175 491 178C497 182 504 185 509 189C515 194 522 198 526 203C530 208 534 215 535 221C536 227 533 234 530 240Z'/%3E%3Cpath d='M543 240C539 246 532 252 526 258C520 263 513 266 508 271C504 275 501 279 499 285C497 291 498 298 495 305C493 312 491 322 485 328C480 335 472 341 463 343C455 346 443 345 434 343C425 341 415 336 408 332C400 328 394 322 387 319C381 315 375 312 368 310C362 307 355 305 348 302C342 299 335 295 330 291C325 287 320 281 317 276C313 271 310 265 307 259C303 253 299 247 295 240C292 233 287 225 285 218C284 210 283 201 287 194C290 187 298 180 306 176C315 172 329 170 339 170C350 170 362 173 371 174C380 175 387 177 393 176C400 175 404 173 410 169C417 166 423 160 431 157C439 154 449 150 458 150C466 149 476 151 484 153C492 156 500 160 507 165C513 170 519 175 525 181C531 186 537 192 541 198C544 205 548 212 549 219C549 226 547 234 543 240Z'/%3E%3Cpath d='M350 60C350 61 350 62 349 63C349 64 348 65 348 66C347 67 346 68 345 69C345 69 343 70 342 71C341 71 340 72 339 72C338 73 337 73 336 74C335 75 334 76 332 77C331 77 329 78 328 78C326 78 324 78 323 77C322 76 321 75 320 74C319 73 319 71 319 70C318 69 318 68 317 67C317 66 316 66 315 65C314 65 312 64 311 63C310 62 309 61 309 60C308 59 308 58 308 56C308 55 309 54 310 53C310 52 311 51 312 50C313 49 314 48 315 47C316 46 317 45 319 45C320 45 322 45 324 45C325 45 327 46 328 47C330 47 330 48 332 49C333 49 333 49 335 49C336 49 337 48 339 48C341 48 343 47 344 47C346 48 348 48 349 49C351 50 351 51 352 52C352 54 352 55 351 56C351 58 351 59 350 60Z'/%3E%3Cpath d='M363 60C362 62 361 63 360 65C359 67 359 68 358 70C357 71 357 73 355 74C354 76 352 77 351 78C349 79 347 80 345 81C344 82 342 83 340 84C338 85 336 87 334 88C331 89 329 90 326 91C323 91 320 90 318 89C316 88 314 86 312 84C311 82 311 79 310 77C309 75 309 74 308 73C307 71 305 70 303 69C302 68 299 67 297 65C295 64 293 62 292 60C291 58 291 56 292 54C292 52 294 50 295 48C297 46 299 45 301 43C302 42 304 41 306 40C308 38 311 37 313 37C315 36 318 36 320 36C322 36 325 37 327 38C329 39 331 40 333 40C335 40 336 40 338 40C341 40 343 39 346 38C349 38 353 37 356 37C359 38 363 39 365 40C367 42 368 44 368 47C369 49 368 52 367 54C366 56 364 58 363 60Z'/%3E%3Cpath d='M373 60C371 62 370 64 368 66C367 69 367 71 367 73C366 75 366 78 365 80C364 82 362 84 360 86C358 88 355 89 353 91C350 93 348 94 345 96C342 97 339 99 335 101C332 102 328 104 324 104C320 104 316 103 313 102C309 100 307 97 305 94C303 91 302 88 301 85C300 82 300 80 299 78C297 76 295 75 292 73C290 71 286 70 283 68C281 66 278 63 276 60C275 57 275 54 276 51C277 48 280 46 282 43C284 41 288 39 291 38C293 36 296 35 299 33C302 32 304 30 307 29C310 28 313 27 316 27C319 27 323 27 326 28C329 28 331 29 334 29C337 29 340 29 343 29C346 28 350 27 355 27C359 26 364 26 369 27C373 27 377 29 380 32C383 34 384 38 384 41C384 45 382 49 380 52C378 55 375 58 373 60Z'/%3E%3Cpath d='M381 60C378 63 376 65 376 68C375 70 376 73 376 76C376 79 377 83 376 86C375 89 374 93 372 96C369 99 366 102 362 104C359 106 355 108 351 110C346 111 342 113 337 114C333 115 327 117 322 117C317 116 312 115 308 113C304 111 300 107 298 103C296 100 295 95 294 92C292 88 292 85 291 82C289 80 286 78 283 76C280 74 275 72 271 70C268 67 263 64 261 60C259 56 259 52 260 48C261 45 265 41 268 39C271 36 276 34 280 32C284 30 288 28 291 26C295 24 297 22 301 21C304 19 308 17 312 16C316 16 320 15 324 15C328 15 332 16 336 16C340 16 344 17 348 16C353 16 358 16 363 16C368 16 375 16 380 17C385 19 390 21 393 24C396 28 397 33 396 37C396 41 393 46 390 50C387 54 383 57 381 60Z'/%3E%3Cpath d='M389 60C387 63 385 66 385 69C385 72 387 76 388 80C389 84 391 90 391 94C390 99 389 104 386 108C383 113 378 116 373 118C368 121 362 123 357 124C351 125 345 126 339 127C333 127 327 127 321 127C315 126 309 124 304 121C300 119 296 114 293 110C290 106 289 101 288 97C286 93 286 89 284 86C281 83 278 82 274 79C270 77 263 75 258 72C253 69 247 64 244 60C242 56 241 50 242 45C243 41 248 36 252 33C256 29 263 27 268 25C273 22 278 21 282 19C287 17 290 14 295 12C299 10 303 7 307 6C312 4 317 3 322 3C327 2 333 3 338 3C343 4 348 5 353 5C358 6 364 6 370 6C376 7 383 7 388 9C394 12 400 15 403 19C406 23 408 28 407 33C406 38 403 44 400 48C397 53 392 57 389 60Z'/%3E%3Cpath d='M79 320C79 321 79 322 78 323C78 324 77 325 76 326C76 327 76 328 75 329C75 330 75 331 74 333C74 334 73 335 72 336C71 337 69 338 68 338C66 338 64 338 62 337C61 336 59 335 58 334C57 333 56 332 55 332C54 331 53 331 52 330C51 330 50 330 48 330C47 330 46 329 44 329C43 328 42 327 41 327C40 326 40 325 39 323C39 322 38 321 38 320C37 319 37 317 37 316C37 315 37 313 38 312C39 311 40 310 42 310C43 309 45 309 47 309C49 309 51 309 52 309C53 309 54 309 55 309C56 309 57 308 58 307C59 306 61 305 62 305C64 304 65 303 67 303C68 303 70 304 71 305C73 305 74 307 74 308C75 309 76 310 76 311C77 312 78 313 78 314C79 315 79 316 79 317C80 318 80 319 79 320Z'/%3E%3Cpath d='M93 320C93 322 92 324 91 325C90 327 89 328 88 330C87 331 87 333 86 335C85 337 85 339 84 341C83 343 82 345 80 347C78 348 75 349 72 350C70 350 66 349 64 348C61 347 59 345 57 344C55 342 54 340 52 340C50 339 49 338 47 338C44 338 42 338 39 338C37 338 34 337 31 336C29 335 27 334 25 332C24 330 23 328 22 326C22 324 22 322 22 320C22 318 22 316 22 314C23 312 24 310 25 308C27 306 29 305 31 304C34 303 37 302 40 302C42 302 45 303 47 302C49 302 51 302 52 302C54 301 55 299 57 298C59 296 61 294 64 293C66 292 70 290 72 290C75 290 78 291 80 292C83 294 84 296 85 298C87 300 87 302 88 304C89 306 89 308 90 310C91 311 92 313 92 315C93 316 93 318 93 320Z'/%3E%3Cpath d='M104 320C105 322 104 325 104 327C103 330 101 332 100 334C99 336 98 338 97 341C96 343 95 346 93 349C92 351 90 355 87 357C85 359 81 361 77 361C74 362 69 361 65 360C62 359 58 356 55 354C53 352 51 350 48 349C46 347 43 347 40 347C37 346 33 347 29 347C26 346 21 346 17 344C14 343 11 340 9 338C7 335 6 332 6 329C6 326 7 323 8 320C9 317 10 314 11 312C12 309 13 307 15 305C17 302 20 300 23 299C25 297 29 297 32 296C35 295 39 295 41 295C44 294 46 294 49 292C51 291 53 289 55 287C58 284 62 281 65 279C69 277 74 276 78 276C83 276 87 277 90 279C93 281 95 285 97 288C98 291 98 295 99 298C99 301 100 304 100 306C101 309 102 311 103 313C103 315 104 318 104 320Z'/%3E%3Cpath d='M115 320C116 323 117 326 117 329C117 333 115 336 114 339C113 342 111 345 110 348C108 351 106 355 104 358C102 361 99 365 95 368C92 371 87 373 82 374C78 374 72 374 67 372C62 371 58 367 54 365C50 363 48 360 44 358C41 356 38 355 34 355C30 354 25 355 20 354C15 354 9 353 5 351C0 349 -4 346 -6 343C-8 340 -9 335 -8 331C-8 328 -6 324 -4 320C-3 316 -1 313 1 310C3 307 4 304 7 301C9 299 11 296 14 294C16 291 20 290 23 288C27 287 31 286 34 285C37 284 40 283 44 281C47 279 50 276 54 273C58 270 62 267 67 265C73 263 79 261 84 261C90 262 95 264 99 267C103 270 105 276 106 280C108 284 107 289 107 293C107 297 106 301 107 304C108 307 109 309 110 312C112 314 114 317 115 320Z'/%3E%3Cpath d='M127 320C130 324 133 328 133 332C134 336 134 341 132 345C131 349 128 353 126 357C123 361 120 365 116 369C113 372 109 376 104 379C99 382 93 385 87 385C81 386 74 385 69 383C63 381 57 377 53 374C48 372 45 368 41 365C37 363 34 362 29 362C25 361 19 362 13 361C7 360 -1 360 -7 358C-12 356 -18 352 -21 348C-23 344 -24 338 -23 334C-23 329 -20 324 -17 320C-15 316 -12 312 -10 308C-7 305 -6 301 -4 298C-2 294 -0 291 3 288C5 284 9 281 13 279C16 276 21 275 25 273C29 271 34 269 38 267C42 265 47 262 52 259C57 257 63 253 69 251C76 250 83 248 89 249C96 250 102 254 106 258C110 262 112 268 113 274C114 279 113 285 113 290C113 295 111 298 112 302C113 305 115 307 118 310C121 313 125 316 127 320Z'/%3E%3Cpath d='M547 20C548 21 548 22 548 23C549 24 550 26 550 27C550 28 550 30 550 31C549 33 548 34 547 35C545 35 543 35 541 35C540 35 538 35 536 34C534 34 533 33 532 33C530 32 530 32 528 32C527 32 526 33 525 33C524 33 522 33 521 32C520 32 518 32 517 31C516 31 515 30 514 29C513 28 512 28 510 27C509 26 508 25 507 24C506 23 506 21 506 20C506 19 506 17 507 16C508 15 510 14 512 14C513 13 515 13 516 12C518 12 519 12 519 11C520 10 521 9 521 8C522 7 523 6 524 5C525 4 526 3 528 3C529 2 531 2 532 3C534 3 535 4 537 4C538 5 539 6 540 7C541 7 542 8 543 9C544 9 545 10 546 11C547 12 547 13 547 14C548 15 547 16 547 17C547 18 547 19 547 20Z'/%3E%3Cpath d='M561 20C561 22 562 23 562 25C562 27 563 29 563 32C564 34 564 37 563 39C562 41 560 43 557 44C555 45 551 45 548 45C545 45 542 43 539 43C537 42 535 41 533 40C531 40 529 40 527 40C525 41 523 42 521 42C519 42 516 43 513 43C511 42 508 42 506 41C504 40 502 38 500 37C498 36 497 34 495 32C494 30 492 28 491 26C490 24 490 22 490 20C490 18 491 16 493 14C495 12 498 11 500 10C503 9 506 8 508 8C510 7 512 6 513 5C514 4 515 3 516 1C517 -1 518 -3 519 -5C521 -7 524 -9 526 -10C528 -11 532 -11 534 -10C537 -10 539 -8 541 -7C544 -6 545 -4 547 -3C549 -2 550 -0 552 1C554 2 556 3 557 5C558 6 559 8 560 10C561 11 561 13 561 15C561 17 561 18 561 20Z'/%3E%3Cpath d='M574 20C574 22 575 25 575 27C575 30 576 33 576 36C576 39 576 42 574 45C573 48 570 51 567 52C564 54 559 54 555 54C551 54 547 53 543 52C540 51 537 49 534 49C531 49 529 49 526 50C523 50 520 52 516 53C513 54 508 55 504 55C501 54 496 53 493 52C490 50 488 48 485 45C483 43 482 40 481 37C480 34 478 31 478 29C477 26 477 23 478 20C478 17 480 14 482 12C484 10 488 8 491 6C494 5 498 4 500 3C503 2 505 1 506 -1C508 -2 508 -5 510 -8C511 -10 512 -14 515 -17C517 -20 520 -23 524 -24C528 -26 532 -26 536 -25C540 -24 544 -22 547 -20C550 -18 552 -15 554 -13C557 -11 558 -8 561 -6C563 -5 565 -3 567 -1C569 1 571 3 572 5C573 8 574 10 574 13C575 15 574 18 574 20Z'/%3E%3Cpath d='M588 20C588 23 588 26 588 30C588 33 589 37 589 40C588 44 588 49 587 52C585 56 582 59 578 61C574 63 568 64 563 65C558 65 552 63 548 62C543 61 539 59 535 59C531 58 529 59 525 60C521 61 516 63 512 64C507 65 501 67 496 66C491 66 485 65 481 62C477 60 474 56 472 53C470 49 470 45 469 41C468 37 468 34 468 30C468 27 468 23 469 20C469 17 471 13 473 11C475 8 478 5 481 3C484 1 488 -0 490 -2C493 -4 495 -6 497 -8C499 -11 500 -15 502 -18C504 -22 505 -27 509 -31C512 -35 517 -39 522 -40C527 -42 533 -42 538 -41C543 -39 548 -36 552 -32C556 -29 558 -25 561 -21C563 -18 565 -15 567 -12C569 -9 572 -8 574 -5C577 -3 580 -1 582 2C584 5 586 8 587 11C588 14 588 17 588 20Z'/%3E%3C/g%3E%3C/svg%3E")}
+  .ui2 .appbar{background:var(--topo) right -80px top -60px/560px 360px repeat,linear-gradient(180deg,#26342D,var(--bar))}
+  .ui2 .fire.f3,.ui2 .fire.f2,.ui2 .fire.f1{box-shadow:none;background:var(--sunk);background:color-mix(in srgb,currentColor 13%,transparent)}
+  .ui2 .lawn.lv-S,.ui2 .lawn.lv-T{box-shadow:none;background:var(--sunk);background:color-mix(in srgb,currentColor 12%,transparent)}
+  .ui2 .tree{border:0;background:var(--sunk);background:color-mix(in srgb,currentColor 12%,transparent)}
+  .ui2 .door{border-radius:20px}
+  .ui2 .door.open{border:0;padding-top:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--edge,var(--line)) 13%,var(--card)) 0,var(--card) 120px);
+    box-shadow:0 1px 0 var(--line),0 24px 46px -24px rgba(22,32,28,.5)}
+  .ui2 .door.open::before{left:0;right:0;top:0;bottom:auto;width:auto;height:6px}
+  .ui2 .door.open .addr{font-size:23px}
+  .ui2 .door.drow{border-radius:16px;padding:11px 14px 10px 31px;border-color:transparent;box-shadow:0 1px 0 var(--line);transition:transform .12s,box-shadow .2s}
+  .ui2 .door.drow::before{top:19px;left:13px;bottom:auto;width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 3px color-mix(in srgb,var(--edge,var(--line)) 24%,transparent)}
+  .ui2 .door.drow:active{transform:scale(.985)}
+  .ui2 .door.drow .meta{gap:5px}
+  .ui2 .door.drow .fire,.ui2 .door.drow .lawn,.ui2 .door.drow .tree{font-size:11.5px;padding:2px 8px}
+  .ui2 .acts{gap:8px;margin-top:14px}
+  .ui2 .acts button{border-radius:16px;padding:12px 4px 11px;font-size:13.5px;gap:6px;transition:transform .1s,box-shadow .2s}
+  .ui2 .acts button .ic{width:36px;height:36px;padding:7px;border-radius:50%;background:rgba(255,255,255,.2)}
+  .ui2 .acts button[data-k="booked"]{background:linear-gradient(160deg,var(--ember) 0%,var(--ember-ink) 100%);box-shadow:0 12px 22px -14px var(--ember-ink)}
+  .ui2 .acts button[data-k="later"] .ic{background:rgba(143,92,14,.14);background:color-mix(in srgb,var(--later) 15%,transparent)}
+  .ui2 .acts button[data-k="miss"]{background:var(--card)}
+  .ui2 .acts button[data-k="miss"] .ic{background:var(--sunk)}
+  .ui2 .moneyl{background:var(--sunk);border:0;border-radius:13px;padding:10px 12px;margin-top:12px}
+  .ui2 .adds .addinfo{background:linear-gradient(160deg,#2E3F37,var(--ink));box-shadow:0 8px 16px -12px rgba(22,32,28,.6)}
+  .ui2 .cap{background:linear-gradient(180deg,var(--sunk),color-mix(in srgb,var(--sunk) 35%,var(--card)))}
+  .ui2 .cap .capg button{min-height:56px;border-radius:14px;border-color:transparent;box-shadow:0 1px 0 var(--line),0 6px 14px -12px rgba(22,32,28,.35);transition:transform .1s}
+  .ui2 .cap .capg button:active{transform:scale(.96)}
+  .ui2 .cap .capg button .ic{width:32px;height:32px;padding:7px;border-radius:10px;background:var(--sunk);color:var(--accent)}
+  .ui2 .cap .capg button.on{background:var(--card);color:var(--go);border-color:transparent}
+  .ui2 .cap .capg button.on .ic{background:var(--go);color:var(--on-go)}
+  .ui2 .walkp{border-radius:22px;box-shadow:0 24px 46px -26px rgba(22,32,28,.5)}
+  .ui2 .matchb button{transition:background .15s,color .15s}
+  .ui2 .matchb button .ic{width:24px;height:24px;padding:4px;border-radius:50%}
+  .ui2 .matchb button[data-m="fire"] .ic{background:var(--sunk);background:color-mix(in srgb,var(--fire-h) 16%,transparent);color:var(--fire-h)}
+  .ui2 .matchb button[data-m="lawn"] .ic{background:var(--go-tint);color:var(--go)}
+  .ui2 .matchb button[data-m="trees"] .ic{background:var(--later-tint);color:var(--later)}
+  .ui2 .matchb button[aria-pressed="true"] .ic{background:rgba(255,255,255,.18);color:inherit}
+  .ui2 .matchn{display:inline-block;margin:0 0 12px;background:var(--ink);color:var(--card);border-radius:999px;padding:6px 13px;font-weight:700;font-size:13px}
+  .ui2 .prog{border:0;color:var(--bar-ink);background:var(--topo) right -40px center/560px 360px,linear-gradient(150deg,#2B3B34 0%,var(--bar) 75%);box-shadow:0 22px 40px -26px rgba(14,21,18,.7)}
+  .ui2 .prog .pt,.ui2 .prog .ring em small{color:var(--bar-soft)}
+  .ui2 .prog .ring .trk{stroke:var(--bar-lift)}
+  .ui2 .prog .bk{background:var(--bar-lift);color:#9FD6AE}
+  .ui2 .cap .capg{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .ui2 .cap .capg button span{white-space:nowrap}
+  .ui2 .area{border-radius:20px;border-color:transparent;box-shadow:0 1px 0 var(--line),0 12px 26px -20px rgba(22,32,28,.4)}
+  .ui2 .choose .hero{border-radius:22px;padding:20px 20px 18px;margin:2px 0 4px;color:var(--bar-ink);
+    background:var(--topo) center/560px 360px,linear-gradient(150deg,#2B3B34 0%,var(--bar) 75%);box-shadow:0 22px 40px -26px rgba(14,21,18,.7)}
+  .ui2 .choose .hero .hi{font:400 27px/1.15 var(--serif);letter-spacing:-.01em}
+  .ui2 .choose .hero .dt{font-size:13px;color:var(--bar-soft);margin-top:3px}
+  .ui2 .choose .hero .hs{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+  .ui2 .choose .hero .hs div{background:var(--bar-lift);border:1px solid var(--bar-edge);border-radius:14px;padding:10px 12px}
+  .ui2 .choose .hero .hs b{display:block;font-size:26px;line-height:1.05;color:var(--ember);font-variant-numeric:tabular-nums}
+  .ui2 .choose .hero .hs span{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--bar-soft);margin-top:3px}
+  .ui2 .choose .tile{border-radius:18px;transition:transform .12s}
+  .ui2 .choose .tile .ti{background:var(--topo) center/280px 180px,linear-gradient(150deg,#33463D,var(--bar))}
+  @keyframes rowIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes grow{from{opacity:.55;transform:scale(.985);clip-path:inset(0 0 55% 0 round 20px)}to{opacity:1;transform:none;clip-path:inset(0 0 0 0 round 20px)}}
+  @keyframes capIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{transform:scale(.55)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .ui2 .door.enter,.ui2 .area.enter,.ui2 .choose .enter{animation:rowIn .42s cubic-bezier(.2,.8,.2,1) backwards}
+  .ui2 .door.grow{animation:grow .4s cubic-bezier(.2,.8,.2,1) backwards}
+  .ui2 .cap.enter,.ui2 .walkp.enter{animation:capIn .32s cubic-bezier(.2,.8,.2,1) backwards}
+  .ui2 .cap .capg button.pop .ic,.ui2 .matchn{animation:pop .42s cubic-bezier(.3,1.5,.5,1) backwards}
+  @media (prefers-reduced-motion: reduce){
+    .ui2 .door.enter,.ui2 .area.enter,.ui2 .choose .enter,.ui2 .door.grow,.ui2 .cap.enter,.ui2 .walkp.enter,.ui2 .cap .capg button.pop .ic,.ui2 .matchn{animation:none}
+  }
   .chips .oddc{background:var(--go-tint);color:var(--go);white-space:normal}
   .chips .mine.me{background:var(--go);color:var(--on-go)}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
@@ -1063,6 +1135,11 @@
     w.innerHTML = '<svg width="' + size + '" height="' + size + '" aria-hidden="true"><circle class="trk" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r +
       '" fill="none" stroke-width="' + stroke + '"/><circle class="val" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke-width="' + stroke +
       '" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - Math.max(0, Math.min(1, pct)))).toFixed(1) + '"/></svg>';
+    if (S.ringAnim && pct > 0 && !reduced()) {   /* new layout: the ring fills as the town opens */
+      var vc = w.querySelector('.val'), to = vc.getAttribute('stroke-dashoffset');
+      vc.setAttribute('stroke-dashoffset', C.toFixed(1));
+      requestAnimationFrame(function () { requestAnimationFrame(function () { vc.setAttribute('stroke-dashoffset', to); }); });
+    }
     var em = q('em');
     if (typeof centre === 'string') em.textContent = centre; else if (centre) em.appendChild(centre);
     w.appendChild(em);
@@ -1071,6 +1148,13 @@
   function pctText(p) { return p > 0 && p < 0.01 ? '<1%' : Math.round(p * 100) + '%'; }
 
   /* the app bar: 'town' (mark, town picker, you), or a titled bar with a back button */
+  /* the logo goes home, the way people expect a logo to (Matthew, 2026-10-04); on the tools screen it goes to the top */
+  function homeMark() {
+    var h = q('button', 'mkbtn'); h.type = 'button'; h.setAttribute('aria-label', 'Home: field tools');
+    h.appendChild(ridge('mk'));
+    h.addEventListener('click', function () { if (S.screen === 'tools') window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); else chooseView(); });
+    return h;
+  }
   function setBar(mode, o) {
     o = o || {};
     hdr.hidden = false;
@@ -1078,7 +1162,7 @@
     var b = document.getElementById('barin');
     b.textContent = '';
     if (mode === 'town') {
-      b.appendChild(ridge('mk'));
+      b.appendChild(homeMark());
       regionBar = q('div', 'regions'); regionBar.id = 'regions';
       b.appendChild(regionBar);
       var av = q('button', 'avatar', initials(S.me)); av.type = 'button';
@@ -1093,7 +1177,7 @@
       bk.appendChild(q('span', 'vh', o.backLabel || 'Back'));
       bk.addEventListener('click', o.back);
       b.appendChild(bk);
-    } else b.appendChild(ridge('mk'));
+    } else b.appendChild(homeMark());
     var t = q('div', 'ttl');
     t.appendChild(q('b', null, o.title || ''));
     if (o.sub) t.appendChild(q('span', null, o.sub));
@@ -1457,6 +1541,8 @@
     if (S.role === 'admin') box.appendChild(tile('button', 'award', 'Leaderboard',
       'Who booked the most this week, a daily goal for everyone, and neighbourhoods assigned to each person. No location tracking.', 'Admin only · in testing', boardView));
     if (S.ui2) {
+      /* the money sheet, loaded now so the door cards can say what each door qualifies for without a redraw */
+      if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
       /* new layout: In the field first, then Office; one line each */
       var SHORT = { 'Door rounds': 'Knock a neighbourhood. Works with no signal.', 'My stats': 'Your doors, conversations and quotes.',
         'Quote build': 'Price a job from the walk.', 'Leads': 'Every enquiry, with status and notes.', 'Quotes to build': 'Booked doors and walks.',
@@ -1473,8 +1559,25 @@
         box.appendChild(q('h2', 'tgrp', title));
         var g = q('div', 'tgrid'); have.forEach(function (n) { g.appendChild(byName[n]); }); box.appendChild(g);
       };
+      var whoP = box.querySelector('.who');
+      if (whoP) {
+        var hero = q('div', 'hero'), hr = new Date().getHours();
+        hero.appendChild(q('div', 'hi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
+        hero.appendChild(q('div', 'dt', new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })));
+        var hs = q('div', 'hs'), cells = {};
+        [['doors', 'Doors today'], ['talked', 'Talked to'], ['booked', 'Quotes']].forEach(function (k) { var c = q('div'); cells[k[0]] = q('b', null, '–'); c.appendChild(cells[k[0]]); c.appendChild(q('span', null, k[1])); hs.appendChild(c); });
+        hero.appendChild(hs);
+        whoP.parentNode.replaceChild(hero, whoP);
+        api('stats', { params: { days: 1, who: S.me || '' } }).then(function (j) {
+          var p = j && j.ok ? (j.people || []).filter(function (x) { return x.name === S.me; })[0] : null;
+          var t = p ? (p.days || []).filter(function (x) { return x.date === j.today; })[0] : null;
+          var dd = t ? t.doors : 0, tk = t ? t.doors - t.miss - (t.nosolicit || 0) : 0, bk = t ? t.booked : 0;
+          if (j && j.ok) { cells.doors.textContent = String(dd); cells.talked.textContent = String(tk); cells.booked.textContent = String(bk); }
+        }).catch(function () {});
+      }
       grp('In the field', ['Door rounds', 'My stats']);
       grp('Office', ['Quotes to build', 'Leads', 'Quote build', 'Communities', 'Results', 'Team stats', 'Leaderboard']);
+      [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     }
     /* the layout switch (2026-10-04) */
     var lay = q('div', 'layout');
@@ -1535,6 +1638,8 @@
 
   function renderAreas() {
     S.returnTo = null; S.backFirst = false;       /* the neighbourhood list is home again */
+    S.ringAnim = !!S.ui2 && S.animRegion !== S.region; if (S.ringAnim) S.animRegion = S.region;
+    if (S.ringAnim) setTimeout(function () { S.ringAnim = false; }, 0);
     var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
     if (!r) return;
     hideSplash(); hideToast();
@@ -1711,6 +1816,7 @@
       else { cnt.appendChild(q('b', null, left.toLocaleString('en-US'))); cnt.appendChild(q('small', null, 'to knock')); }
       btn.appendChild(cnt);
       btn.addEventListener('click', function () { openArea(a.name); });
+      if (S.ringAnim) { var ai = view.querySelectorAll('button.area').length; if (ai < 14) { btn.style.animationDelay = (ai * 35) + 'ms'; btn.classList.add('enter'); } }
       view.appendChild(btn);
     });
     if (S.role === 'admin') {
@@ -2451,8 +2557,9 @@
     var item = { region: S.region, id: d.id, outcome: kind };
     if (kind === 'later' && revisit) item.revisit = revisit;      /* travels in the offline queue too */
     d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -2) : '' };
-    if (kind === 'booked' && !d.walk) { S.walkPrompt = d.id; S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; }   /* SX-51: book the walk while still at the door */
+    if (kind === 'booked' && !d.walk) { S.walkPrompt = d.id; S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; S.capAnim = 'prompt'; }   /* SX-51: book the walk while still at the door */
     else if (kind !== 'booked' && (S.walkPrompt === d.id || S.editWalk === d.id)) { S.walkPrompt = null; S.editWalk = null; }   /* an undone booking takes its walk form with it (Fable 2026-10-04) */
+    if (S.ui2 && kind !== null && S.openDoor === d.id) { S.openDoor = null; S.growNext = true; }   /* new layout: the next door opens, and grows into place */
     renderDoors();
     api('mark', { body: item }).then(function (j) {
       if (j.ok) { dropQueued('mark', item.region, item.id); if (d.mark) d.mark.pending = false; }
@@ -2669,7 +2776,7 @@
         var ai = q('button', 'addinfo'); ai.type = 'button';
         ai.appendChild(ico('note', 2.2)); ai.appendChild(document.createTextNode('Add info'));
         ai.setAttribute('aria-label', 'Add a phone, email, photo, note, extra work or a fire check');
-        ai.addEventListener('click', function () { clearEdits(); S.capture = d.id; renderDoors(); });
+        ai.addEventListener('click', function () { clearEdits(); S.capture = d.id; S.capAnim = d.id; renderDoors(); });
         row.appendChild(ai); n++;
       }
     } else if (!editing) {
@@ -2851,13 +2958,24 @@
     if (d.mark && backOn(d)) meta.appendChild(q('span', 'tag again', d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
     if (meta.children.length) row.appendChild(meta);
     var open = function () {
-      S.openDoor = d.id; S.capture = null; clearEdits(); renderDoors();
+      S.openDoor = d.id; S.capture = null; clearEdits(); S.justOpened = d.id; renderDoors();
       var c = document.querySelector('#view .door.open[data-id="' + d.id + '"]');
       if (c) try { c.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {}
     };
     row.addEventListener('click', open);
     row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     return row;
+  }
+  /* an animation that a redraw interrupts carries on from where it was: the server's answer to a
+     save redraws the list a moment later, and would otherwise cut every animation short */
+  function keepAnim(key, el, cls, start, delayEl) {
+    S.anims = S.anims || {};
+    if (start) S.anims[key] = Date.now();
+    var t0 = S.anims[key]; if (!t0) return;
+    var e = Date.now() - t0;
+    if (e > 480) { delete S.anims[key]; return; }
+    el.classList.add(cls);
+    if (e > 16 && delayEl) delayEl.style.animationDelay = (-e) + 'ms';
   }
   function clearEdits() { S.editPhone = null; S.editEmail = null; S.editNote = null; S.editWork = null; S.editFc = null; S.editWalk = null; }
   function capOpen(d) { return S.capture === d.id || [S.editPhone, S.editEmail, S.editNote, S.editWork, S.editFc, S.editWalk].indexOf(d.id) >= 0; }
@@ -2866,6 +2984,9 @@
   /* everything a person might tell you, one tap each; a tick on what is already saved */
   function capturePanel(d, ctx, inPrompt) {
     var box = q('div', 'cap');
+    var startCap = !inPrompt && S.capAnim === d.id; if (startCap) S.capAnim = null;
+    if (!inPrompt) keepAnim('cap:' + d.id, box, 'enter', startCap, box);
+    S.capHas = S.capHas || {}; var was = S.capHas[d.id] || null, now = {};
     if (!inPrompt) box.appendChild(q('div', 'capt', 'Add what they tell you'));
     var form = S.editPhone === d.id ? phoneBlock(d) : S.editEmail === d.id ? emailBlock(d) : S.editNote === d.id ? noteBlock(d)
       : S.editWork === d.id ? workBlock(d) : S.editFc === d.id ? fireCheckBlock(d) : (!inPrompt && S.editWalk === d.id) ? walkForm(d, ctx) : null;
@@ -2874,8 +2995,10 @@
     CAP.forEach(function (c) {
       if (c[0] === 'walk' && (inPrompt || !booked)) return;
       var has = { walk: !!d.walk, phone: !!d.phone, email: !!d.email, photo: !!(d.photos && d.photos.length), note: !!d.note, work: !!d.work, fc: !!(d.fc && d.fc.length) }[c[0]];
+      now[c[0]] = has;
       var b = q('button', has ? 'on' : null); b.type = 'button'; b.setAttribute('data-cap', c[0]);
       b.appendChild(ico(has ? 'check' : c[1], 2.2)); b.appendChild(q('span', null, c[2]));
+      if (has) keepAnim('pop:' + d.id + ':' + c[0], b, 'pop', !!(was && !was[c[0]]), b.querySelector('.ic'));
       b.addEventListener('click', function () {
         if (c[0] === 'photo') { pickPhotos(d, ctx.region, ctx.redraw); return; }
         clearEdits(); S.capture = d.id;
@@ -2890,6 +3013,7 @@
       grid.appendChild(b);
     });
     box.appendChild(grid);
+    S.capHas[d.id] = now;
     if (!inPrompt) {
       var dn = q('button', 'capdone', 'Done'); dn.type = 'button';
       dn.addEventListener('click', function () { clearEdits(); S.capture = null; ctx.redraw(); });
@@ -2932,7 +3056,7 @@
     bar.appendChild(q('span', 'ml', 'Show doors with'));
     MATCH.forEach(function (m) {
       var on = !!(S.match && S.match[m[0]]);
-      var b = q('button', null); b.type = 'button'; b.setAttribute('aria-pressed', String(on));
+      var b = q('button', null); b.type = 'button'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('data-m', m[0]);
       b.appendChild(ico(m[1], 2.2)); b.appendChild(document.createTextNode(m[2]));
       b.addEventListener('click', function () { S.match = S.match || {}; S.match[m[0]] = !on; S.openDoor = null; renderDoors(); });
       bar.appendChild(b);
@@ -3044,6 +3168,8 @@
   }
   function walkPromptBox(d) {
     var box = q('div', 'walkp');
+    var startP = S.capAnim === 'prompt'; if (startP) S.capAnim = null;
+    keepAnim('prompt:' + d.id, box, 'enter', startP, box);
     box.appendChild(q('div', 'wpt', 'Quote booked · ' + d.address));
     var ctx = { region: S.region, redraw: renderDoors, phone: d.phone };
     if (!S.ui2) { box.appendChild(walkForm(d, ctx)); return box; }
@@ -4266,8 +4392,14 @@
 
   /* the door card, shared by the list and the map (2026-10-02) */
   function doorCardFor(d, full) {
-    if (S.ui2 && !full) { if (!S.openDoor) S.openDoor = d.id; if (S.openDoor !== d.id) return doorRow(d); }
+    var auto = false;
+    if (S.ui2 && !full) { if (!S.openDoor) { S.openDoor = d.id; auto = true; } if (S.openDoor !== d.id) return doorRow(d); }
     var card = q('div', 'door ' + fireClass(d.fire) + (S.ui2 ? ' open' : '')); card.setAttribute('data-id', d.id);
+    if (S.ui2 && !full) {
+      var startGrow = S.justOpened === d.id || (auto && S.growNext);
+      if (startGrow) { S.growNext = false; S.justOpened = null; }
+      keepAnim('grow:' + d.id, card, 'grow', startGrow, card);
+    }
     var top = q('div', 'd-top');
     top.appendChild(q('div', 'addr', d.address));
     var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
@@ -4514,6 +4646,10 @@
         setAreaFlag(true);
       });
       view.appendChild(fl);
+    }
+    if (S.ui2 && S.animArea !== S.region + '|' + S.area + '|' + S.dview) {
+      S.animArea = S.region + '|' + S.area + '|' + S.dview;
+      [].forEach.call(view.querySelectorAll('.door'), function (el, i) { if (i > 14) return; el.style.animationDelay = (i * 32) + 'ms'; el.classList.add('enter'); });
     }
     flashCard();
   }
