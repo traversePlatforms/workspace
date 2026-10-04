@@ -200,8 +200,9 @@
   .prog .ring em small{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--soft);margin-top:3px}
   .ring.done em .ic{width:18px;height:18px;color:var(--go)}
   .chips{display:flex;gap:5px;flex-wrap:wrap}
-  .chip,.again,.duep,.nsp,.hot,.bk,.lawnc,.mine,.oddc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap}
-  .chip .ic,.again .ic,.duep .ic,.nsp .ic,.hot .ic,.bk .ic,.lawnc .ic,.mine .ic,.oddc .ic{width:13px;height:13px}
+  .chip,.again,.duep,.nsp,.hot,.bk,.lawnc,.mine,.oddc,.all3{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap}
+  .chip .ic,.again .ic,.duep .ic,.nsp .ic,.hot .ic,.bk .ic,.lawnc .ic,.mine .ic,.oddc .ic,.all3 .ic{width:13px;height:13px}
+  .ui2 .area .sub.also{display:none}   /* new layout: the other streets show when the neighbourhood opens */
   .bk{background:var(--go-tint);color:var(--go)}
   .duep{background:var(--later-tint);color:var(--later)}
   .again{background:var(--miss-tint);color:var(--miss)}
@@ -547,6 +548,52 @@
   .bassign{display:grid;grid-template-columns:1fr 1fr;gap:7px}
   .bassign .save{min-height:42px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:var(--go);color:var(--on-go)}
   .chips .mine{background:var(--go-tint);color:var(--go)}
+  .chips .all3{background:var(--ink);color:var(--card)}
+  /* ---- the new layout (2026-10-04) ---- */
+  .door.drow{padding:11px 14px 10px 19px;cursor:pointer;margin-bottom:7px;box-shadow:none}
+  .door.drow .addr{font-size:17px}
+  .door.drow .d-top > .ic{width:16px;height:16px;color:var(--soft);flex:none;align-self:center}
+  .door.drow .meta{margin-top:5px}
+  .door.drow .tree{pointer-events:none}
+  .door.drow .tag.again{background:var(--go-tint);color:var(--go);border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}
+  .door.open{border:2px solid var(--ink);box-shadow:var(--shadow)}
+  .adds .addinfo{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:12px;padding:9px 13px;background:var(--ink);color:var(--card);font:700 13.5px var(--sans);cursor:pointer}
+  .adds .addinfo .ic{width:16px;height:16px}
+  .cap{margin-top:10px;border-radius:14px;padding:12px;background:var(--sunk);display:flex;flex-direction:column;gap:9px}
+  .cap .capt{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .cap .capg{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:7px}
+  .cap .capg button{display:flex;align-items:center;gap:7px;min-height:48px;border:1px solid var(--line);border-radius:12px;padding:8px 11px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;text-align:left}
+  .cap .capg button .ic{width:18px;height:18px;flex:none;color:var(--accent)}
+  .cap .capg button.on{border-color:var(--go);background:var(--go-tint);color:var(--go)}
+  .cap .capg button.on .ic{color:var(--go)}
+  .cap .wkf,.cap .ph,.cap .nt{margin-top:0}
+  .capdone{min-height:44px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14px var(--sans);cursor:pointer;margin-top:4px}
+  .walkp .cap{background:transparent;padding:0;margin-top:10px}
+  .walkp .capdone{width:100%;margin-top:10px}
+  .moneyl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;width:100%;margin-top:10px;border:0;border-top:1px solid var(--line);padding:10px 0 2px;background:none;color:var(--ink);font:600 13px var(--sans);text-align:left;cursor:pointer}
+  .moneyl .ml{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .moneyl span:not(.ml){color:var(--go)}
+  .moneyl span:not(.ml) + span:not(.ml)::before{content:"·";color:var(--soft);margin-right:10px}
+  .moneyl span.warn{color:var(--fire-h)}
+  .moneyl > .ic{margin-left:auto;width:15px;height:15px;color:var(--soft)}
+  .matchb{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:4px 0 10px}
+  .matchb .ml{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-right:2px}
+  .matchb button{display:inline-flex;align-items:center;gap:6px;min-height:40px;border:1px solid var(--line);border-radius:999px;padding:7px 13px;background:var(--card);color:var(--ink);font:700 13.5px var(--sans);cursor:pointer}
+  .matchb button .ic{width:15px;height:15px}
+  .matchb button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .matchn{margin-top:-4px}
+  .ui2 .choose{max-width:720px}
+  .choose .tgrp{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin:18px 4px 8px}
+  .choose .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 11px}
+  .ui2 .choose .tile{padding:13px 14px}
+  .ui2 .choose .tile .ti{width:40px;height:40px;border-radius:12px}
+  .ui2 .choose .tile .ti .ic{width:22px;height:22px}
+  .ui2 .choose .tile b{font-size:18px;margin:1px 0 2px}
+  .ui2 .choose .tile .tag{margin-top:4px}
+  .choose .layout{display:flex;align-items:center;gap:7px;margin:18px 4px 4px}
+  .choose .layout .ml{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-right:4px}
+  .choose .layout button{min-height:38px;border:1px solid var(--line);border-radius:999px;padding:6px 16px;background:var(--card);color:var(--ink);font:700 13.5px var(--sans);cursor:pointer}
+  .choose .layout button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
   .chips .oddc{background:var(--go-tint);color:var(--go);white-space:normal}
   .chips .mine.me{background:var(--go);color:var(--on-go)}
   .nsflag{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:22px 0 4px;padding:13px;border-radius:14px;
@@ -763,6 +810,9 @@
   var dock = document.getElementById('dock');
 
   var S = { me: null, role: 'crew', regions: [], region: null, area: null, doors: [], busy: false };
+  /* the new layout (2026-10-04), switched on the tools screen and remembered on this phone */
+  try { S.ui2 = localStorage.getItem('sixfold.rounds.ui') === '2'; } catch (e) { S.ui2 = false; }
+  if (S.ui2) document.documentElement.classList.add('ui2');
 
   function q(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t !== undefined) e.textContent = t; return e; }
 
@@ -1403,6 +1453,39 @@
       'Everyone' + "'" + 's doors, conversations and quotes, today and over the last week and month.', 'Admin only', teamView));
     if (S.role === 'admin') box.appendChild(tile('button', 'award', 'Leaderboard',
       'Who booked the most this week, a daily goal for everyone, and neighbourhoods assigned to each person. No location tracking.', 'Admin only · in testing', boardView));
+    if (S.ui2) {
+      /* new layout: In the field first, then Office; one line each */
+      var SHORT = { 'Door rounds': 'Knock a neighbourhood. Works with no signal.', 'My stats': 'Your doors, conversations and quotes.',
+        'Quote build': 'Price a job from the walk.', 'Leads': 'Every enquiry, with status and notes.', 'Quotes to build': 'Booked doors and walks.',
+        'Communities': 'HOAs and Firewise sites to pitch as one job.', 'Results': 'Which doors turn into jobs.', 'Team stats': "Everyone's numbers.",
+        'Leaderboard': 'Rankings, daily goal, neighbourhoods by person.' };
+      var tiles = [].slice.call(box.querySelectorAll('.tile')), byName = {};
+      tiles.forEach(function (t) {
+        var nm = t.querySelector('b').textContent; byName[nm] = t;
+        var tx = t.querySelector('.tt > span:not(.tag)'); if (tx && SHORT[nm]) tx.textContent = SHORT[nm];
+        t.parentNode.removeChild(t);
+      });
+      var grp = function (title, names) {
+        var have = names.filter(function (n) { return byName[n]; }); if (!have.length) return;
+        box.appendChild(q('h2', 'tgrp', title));
+        var g = q('div', 'tgrid'); have.forEach(function (n) { g.appendChild(byName[n]); }); box.appendChild(g);
+      };
+      grp('In the field', ['Door rounds', 'My stats']);
+      grp('Office', ['Quotes to build', 'Leads', 'Quote build', 'Communities', 'Results', 'Team stats', 'Leaderboard']);
+    }
+    /* the layout switch (2026-10-04) */
+    var lay = q('div', 'layout');
+    lay.appendChild(q('span', 'ml', 'Layout'));
+    [['1', 'Current'], ['2', 'New']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String((S.ui2 ? '2' : '1') === o[0]));
+      b.addEventListener('click', function () {
+        try { localStorage.setItem('sixfold.rounds.ui', o[0]); } catch (e) {}
+        S.ui2 = o[0] === '2'; document.documentElement.classList.toggle('ui2', S.ui2); S.openDoor = null; S.capture = null;
+        chooseView();
+      });
+      lay.appendChild(b);
+    });
+    box.appendChild(lay);
     var out = q('div', 'out');
     var so = q('button', null, 'Sign out');
     so.type = 'button';
@@ -1607,6 +1690,7 @@
       if (also) mid.appendChild(q('div', 'sub also', also));
       var chips = q('div', 'chips');
       if (a.who) chips.appendChild(chipEl('mine' + (a.who === S.me ? ' me' : ''), 'users', a.who === S.me ? 'Yours' : 'Assigned to ' + a.who));
+      if (a.all3) chips.appendChild(chipEl('all3', 'check', a.all3 + (a.all3 === 1 ? ' door' : ' doors') + ' with fire, lawn and trees'));
       if (mode === 'odds' && a.odds && a.odds.open) chips.appendChild(chipEl('oddc', 'chart', 'About ' + a.odds.exp + (a.odds.exp === 1 ? ' quote' : ' quotes') + ' expected from ' + a.odds.open + ' to knock'));
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
@@ -2563,19 +2647,28 @@
      are empty — which is most doors — so an untouched card stays short. */
   function extras(d) {
     var wrap = q('div', 'xt');
-    if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
-    if (S.editPhone === d.id || d.phone) wrap.appendChild(phoneBlock(d));
-    if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
-    if (S.editEmail === d.id || d.email) wrap.appendChild(emailBlock(d));
-    if (S.editWork === d.id || d.work) wrap.appendChild(workBlock(d));
-    if (S.editFc === d.id || (d.fc && d.fc.length)) wrap.appendChild(fireCheckBlock(d));
+    var u2 = S.ui2;   /* new layout: blocks show what is saved; their forms open in the info panel */
+    if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id && !(u2 && S.editWalk === d.id)) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
+    if (u2 ? (d.phone && S.editPhone !== d.id) : (S.editPhone === d.id || d.phone)) wrap.appendChild(phoneBlock(d));
+    if (u2 ? (d.note && S.editNote !== d.id) : (S.editNote === d.id || d.note)) wrap.appendChild(noteBlock(d));
+    if (u2 ? (d.email && S.editEmail !== d.id) : (S.editEmail === d.id || d.email)) wrap.appendChild(emailBlock(d));
+    if (u2 ? (d.work && S.editWork !== d.id) : (S.editWork === d.id || d.work)) wrap.appendChild(workBlock(d));
+    if (u2 ? (d.fc && d.fc.length && S.editFc !== d.id) : (S.editFc === d.id || (d.fc && d.fc.length))) wrap.appendChild(fireCheckBlock(d));
     if (d.photos && d.photos.length) wrap.appendChild(photoStrip(d, S.region));
     /* slimmer card: satellite and the add buttons share one row of small chips */
     var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id || S.editWork === d.id || S.editFc === d.id || S.editWalk === d.id;      /* one form at a time */
     var row = q('div', 'adds'), n = 0;
     var sat = satLink(d, true);
     if (sat) { row.appendChild(sat); n++; }
-    if (!editing) {
+    if (u2) {
+      if (!capOpen(d) && S.walkPrompt !== d.id) {
+        var ai = q('button', 'addinfo'); ai.type = 'button';
+        ai.appendChild(ico('note', 2.2)); ai.appendChild(document.createTextNode('Add info'));
+        ai.setAttribute('aria-label', 'Add a phone, email, photo, note, extra work or a fire check');
+        ai.addEventListener('click', function () { clearEdits(); S.capture = d.id; renderDoors(); });
+        row.appendChild(ai); n++;
+      }
+    } else if (!editing) {
       if (!d.phone) { addLink(row, 'phone', '+ Phone', 'Add a phone number', function () { S.editPhone = d.id; S.editNote = null; S.editEmail = null; renderDoors(); }); n++; }
       if (!d.email) { addLink(row, 'mail', '+ Email', 'Add an email address', function () { S.editEmail = d.id; S.editPhone = null; S.editNote = null; renderDoors(); }); n++; }
       if (!d.note) { addLink(row, 'note', '+ Note', 'Add a note', function () { S.editNote = d.id; S.editPhone = null; S.editEmail = null; renderDoors(); }); n++; }
@@ -2735,6 +2828,113 @@
       after(false); toast('Fire check saved', d.address, null);
     }).catch(function () { if (enqueueSave('firecheck', body)) after(true); });
   }
+  /* ---- the new layout (2026-10-04) ----
+     Matthew: "you see one score card and it's got 100 things on it." One door open at a time (the
+     next to knock), the rest one line each; a yes opens everything in one panel; the money buttons
+     become one line saying what this door qualifies for; a filter for the three drivers. Switched
+     on the tools screen, so both layouts can be compared on the same doors. */
+  function doorRow(d) {
+    var row = q('div', 'door drow ' + fireClass(d.fire)); row.setAttribute('data-id', d.id);
+    row.setAttribute('role', 'button'); row.tabIndex = 0;
+    var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', d.address));
+    var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
+    top.appendChild(ico('chev', 2.4));
+    row.appendChild(top);
+    var meta = q('div', 'meta');
+    var fb = fireBadge(d); if (fb) meta.appendChild(fb);
+    var lc = lawnChip(d, false); if (lc) meta.appendChild(lc);
+    var tc = treeChip(d); if (tc) { tc.disabled = true; tc.tabIndex = -1; meta.appendChild(tc); }
+    if (d.mark && backOn(d)) meta.appendChild(q('span', 'tag again', d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
+    if (meta.children.length) row.appendChild(meta);
+    var open = function () {
+      S.openDoor = d.id; S.capture = null; clearEdits(); renderDoors();
+      var c = document.querySelector('#view .door.open[data-id="' + d.id + '"]');
+      if (c) try { c.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {}
+    };
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    return row;
+  }
+  function clearEdits() { S.editPhone = null; S.editEmail = null; S.editNote = null; S.editWork = null; S.editFc = null; S.editWalk = null; }
+  function capOpen(d) { return S.capture === d.id || [S.editPhone, S.editEmail, S.editNote, S.editWork, S.editFc, S.editWalk].indexOf(d.id) >= 0; }
+  var CAP = [['walk', 'cal', 'Book the walk'], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'],
+             ['note', 'note', 'Note'], ['work', 'list', 'Extra work'], ['fc', 'flame', 'Fire check']];
+  /* everything a person might tell you, one tap each; a tick on what is already saved */
+  function capturePanel(d, ctx, inPrompt) {
+    var box = q('div', 'cap');
+    if (!inPrompt) box.appendChild(q('div', 'capt', 'Add what they tell you'));
+    var form = S.editPhone === d.id ? phoneBlock(d) : S.editEmail === d.id ? emailBlock(d) : S.editNote === d.id ? noteBlock(d)
+      : S.editWork === d.id ? workBlock(d) : S.editFc === d.id ? fireCheckBlock(d) : (!inPrompt && S.editWalk === d.id) ? walkForm(d, ctx) : null;
+    if (form) box.appendChild(form);
+    var grid = q('div', 'capg'), booked = !!(d.mark && d.mark.outcome === 'booked');
+    CAP.forEach(function (c) {
+      if (c[0] === 'walk' && (inPrompt || !booked)) return;
+      var has = { walk: !!d.walk, phone: !!d.phone, email: !!d.email, photo: !!(d.photos && d.photos.length), note: !!d.note, work: !!d.work, fc: !!(d.fc && d.fc.length) }[c[0]];
+      var b = q('button', has ? 'on' : null); b.type = 'button'; b.setAttribute('data-cap', c[0]);
+      b.appendChild(ico(has ? 'check' : c[1], 2.2)); b.appendChild(q('span', null, c[2]));
+      b.addEventListener('click', function () {
+        if (c[0] === 'photo') { pickPhotos(d, ctx.region, ctx.redraw); return; }
+        clearEdits(); S.capture = d.id;
+        if (c[0] === 'phone') S.editPhone = d.id;
+        else if (c[0] === 'email') S.editEmail = d.id;
+        else if (c[0] === 'note') S.editNote = d.id;
+        else if (c[0] === 'work') { S.editWork = d.id; S.workPick = d.work ? d.work.tags.slice() : []; }
+        else if (c[0] === 'fc') { S.editFc = d.id; S.fcPick = d.fc && d.fc.length ? Object.assign({}, d.fc[d.fc.length - 1].items) : {}; S.fcNote = ''; }
+        else if (c[0] === 'walk') { S.editWalk = d.id; S.walkDate = d.walk ? d.walk.date : ''; S.walkTime = d.walk ? d.walk.time || '' : ''; }
+        ctx.redraw();
+      });
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
+    if (!inPrompt) {
+      var dn = q('button', 'capdone', 'Done'); dn.type = 'button';
+      dn.addEventListener('click', function () { clearEdits(); S.capture = null; ctx.redraw(); });
+      box.appendChild(dn);
+    }
+    return box;
+  }
+  /* what this door qualifies for, in one line; tap for the full sheets */
+  var COMPANY_RE = /\b(LLC|L\.?L\.?C|INC|CORP|CORPORATION|COMPANY|LP|LLP|LTD|HOLDINGS)\b/i;
+  function moneyLine(d) {
+    var b = q('button', 'moneyl'); b.type = 'button';
+    b.appendChild(q('span', 'ml', 'Money'));
+    var C = S.money && S.money.cards, county = S.money && S.money.counties ? S.money.counties[S.region] : null;
+    if (!C) {
+      b.appendChild(q('span', null, 'Tax credit · Insurance · Grants'));
+      if (!S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) { S.money = j; if (S.screen === 'doors') renderDoors(); } }).catch(function () {}); }
+    } else {
+      var co = COMPANY_RE.test(String(d.owner || ''));
+      [co ? C.taxCompany : C.tax, C.insurance, (C.grants || {})[county]].forEach(function (t, i) {
+        if (!t) return; b.appendChild(q('span', i === 0 && co ? 'warn' : null, t));
+      });
+    }
+    b.appendChild(ico('chev', 2.4));
+    b.addEventListener('click', function () { moneyView('tax'); });
+    return b;
+  }
+  /* the three drivers: show only doors that have every one picked */
+  var MATCH = [['fire', 'flame', 'High fire'], ['lawn', 'leaf', 'Large or medium lawn'], ['trees', 'tree', 'Trees close']];
+  function matchOn() { var m = S.match || {}; return !!(m.fire || m.lawn || m.trees); }
+  function matchWords() { var m = S.match || {}, w = []; if (m.fire) w.push('high fire'); if (m.lawn) w.push('a large or medium lawn'); if (m.trees) w.push('trees close'); return w.join(' and '); }
+  function doorMatches(d) {
+    var m = S.match || {};
+    if (m.fire && !(d.fire === 4 || d.fire === 5)) return false;
+    if (m.lawn) { var lv = lawnLevelOf(d); if (lv !== 'L' && lv !== 'M') return false; }
+    if (m.trees) { var tl = treeLevel(d); if (tl !== 'against' && tl !== 'heavy') return false; }
+    return true;
+  }
+  function matchBar() {
+    var bar = q('div', 'matchb');
+    bar.appendChild(q('span', 'ml', 'Show doors with'));
+    MATCH.forEach(function (m) {
+      var on = !!(S.match && S.match[m[0]]);
+      var b = q('button', null); b.type = 'button'; b.setAttribute('aria-pressed', String(on));
+      b.appendChild(ico(m[1], 2.2)); b.appendChild(document.createTextNode(m[2]));
+      b.addEventListener('click', function () { S.match = S.match || {}; S.match[m[0]] = !on; S.openDoor = null; renderDoors(); });
+      bar.appendChild(b);
+    });
+    return bar;
+  }
   /* ---- the walk (SX-51, 2026-10-04) ----
      Sixfold quotes from a walk of the property, so booking the quote means booking the walk.
      Picked at the door: a day, and a time if one was agreed. The day's other walks show under
@@ -2828,7 +3028,7 @@
       saveWalk(d, ctx, di.value, ts.value);
     });
     var cx = q('button', null, S.walkPrompt === d.id ? 'Later' : 'Cancel'); cx.type = 'button';
-    cx.addEventListener('click', function () { S.editWalk = null; if (S.walkPrompt === d.id) S.walkPrompt = null; ctx.redraw(); });
+    cx.addEventListener('click', function () { S.editWalk = null; if (S.walkPrompt === d.id && !S.ui2) S.walkPrompt = null; ctx.redraw(); });
     r2.appendChild(sv); r2.appendChild(cx);
     if (d.walk) {
       var rm = q('button', null, 'No walk'); rm.type = 'button';
@@ -2841,14 +3041,21 @@
   function walkPromptBox(d) {
     var box = q('div', 'walkp');
     box.appendChild(q('div', 'wpt', 'Quote booked · ' + d.address));
-    box.appendChild(walkForm(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
+    var ctx = { region: S.region, redraw: renderDoors, phone: d.phone };
+    if (!S.ui2) { box.appendChild(walkForm(d, ctx)); return box; }
+    /* new layout: the walk, then everything else they might tell you, all in one place */
+    box.appendChild(walkBlock(d, ctx));
+    box.appendChild(capturePanel(d, ctx, true));
+    var dn = q('button', 'capdone', 'Done with this door'); dn.type = 'button';
+    dn.addEventListener('click', function () { clearEdits(); S.capture = null; S.walkPrompt = null; renderDoors(); });
+    box.appendChild(dn);
     return box;
   }
   function saveWalk(d, ctx, date, time) {
     var body = { region: ctx.region, id: d.id, date: date, time: date ? (time || '') : '' };
     var after = function (pending) {
       d.walk = date ? { date: date, time: body.time, by: S.me, at: Math.floor(Date.now() / 1000), pending: !!pending } : null;
-      S.editWalk = null; if (S.walkPrompt === d.id) S.walkPrompt = null; ctx.redraw();
+      S.editWalk = null; if (S.walkPrompt === d.id && !S.ui2) S.walkPrompt = null; ctx.redraw();
     };
     api('walk', { body: body }).then(function (j) {
       if (j._status === 401) return keepAndSignIn('walk', body);
@@ -4055,7 +4262,8 @@
 
   /* the door card, shared by the list and the map (2026-10-02) */
   function doorCardFor(d) {
-    var card = q('div', 'door ' + fireClass(d.fire)); card.setAttribute('data-id', d.id);
+    if (S.ui2) { if (!S.openDoor) S.openDoor = d.id; if (S.openDoor !== d.id) return doorRow(d); }
+    var card = q('div', 'door ' + fireClass(d.fire) + (S.ui2 ? ' open' : '')); card.setAttribute('data-id', d.id);
     var top = q('div', 'd-top');
     top.appendChild(q('div', 'addr', d.address));
     var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
@@ -4101,7 +4309,8 @@
     }
     card.appendChild(extras(d));
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
-    card.appendChild(moneyRow());
+    card.appendChild(S.ui2 ? moneyLine(d) : moneyRow());
+    if (S.ui2 && capOpen(d)) card.appendChild(capturePanel(d, { region: S.region, redraw: renderDoors, phone: d.phone }, false));
     if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
     var acts = q('div', 'acts');
     [['booked', 'check'], ['later', 'clock'], ['miss', 'knock']].forEach(function (k) {
@@ -4153,7 +4362,7 @@
     S.liveMap = null;
     view.textContent = '';
     var wp = S.walkPrompt ? S.doors.filter(function (x) { return x.id === S.walkPrompt; })[0] : null;
-    if (wp && wp.mark && wp.mark.outcome === 'booked' && !wp.walk) view.appendChild(walkPromptBox(wp)); else S.walkPrompt = null;
+    if (wp && wp.mark && wp.mark.outcome === 'booked' && (S.ui2 || !wp.walk)) view.appendChild(walkPromptBox(wp)); else S.walkPrompt = null;
 
     var finished = S.doors.length > 0 && !todo.length && !again.length;
     if (finished) {
@@ -4184,6 +4393,14 @@
     if (S.areaNosol) view.appendChild(nosolBanner());
     if (S.areaPlace || S.areaFw) view.appendChild(placeLine());
 
+    /* new layout: show only doors with the drivers picked; one door open at a time */
+    if (S.ui2 && S.dview !== 'map') {
+      var nAll = todo.length;
+      view.appendChild(matchBar());
+      todo = todo.filter(doorMatches);
+      if (matchOn()) view.appendChild(q('div', 'sub2 matchn', todo.length + ' of ' + nAll + ' doors to knock have ' + matchWords() + '.'));
+      if (S.openDoor && !todo.concat(again).some(function (x) { return x.id === S.openDoor; })) S.openDoor = null;
+    }
     /* ---- street order, nearest to me, or a map (2026-10-01) ---- */
     if (S.dview === 'near') {
       if (S.locating) view.appendChild(q('div', 'msg', 'Finding where you are…'));
@@ -4280,6 +4497,7 @@
         row.appendChild(lhs); row.appendChild(rhs);
         if (S.editLawn === d.id) row.appendChild(lawnChooser(d));
         row.appendChild(extras(d));
+        if (S.ui2 && capOpen(d) && S.walkPrompt !== d.id) row.appendChild(capturePanel(d, { region: S.region, redraw: renderDoors, phone: d.phone }, false));
         view.appendChild(row);
       });
     }

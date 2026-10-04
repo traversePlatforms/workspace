@@ -6,6 +6,13 @@
     "black-forest": "elpaso", "monument": "elpaso", "palmer-lake": "elpaso",
     "woodland-park": "teller", "divide": "teller", "florissant": "teller", "cripple-creek": "teller"
   },
+  "cards": {
+    "_note": "One short line each for the door card (new layout). Keep them in step with the sheets below.",
+    "tax": "Tax credit up to $1,000",
+    "taxCompany": "Company owner: credit unsettled, accountant",
+    "insurance": "Insurance must count the work",
+    "grants": { "douglas": "County cost-share: round closed", "elpaso": "No county grant", "teller": "No county grant" }
+  },
   "topics": {
     "tax": {
       "title": "Colorado wildfire tax credit",

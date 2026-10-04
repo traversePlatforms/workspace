@@ -7,6 +7,26 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⚑ READY TO UPLOAD (optional) — the new layout, switched off by default (2026-10-04)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+| 3 | `data/rounds/docs/money.json` (adds the one-line "cards") | `sixfold-data/rounds/docs/` |
+| 4 | `data/rounds/lawnmask-castle-rock.json` (finished) | `sixfold-data/rounds/` |
+| 5 | — | Flush the cache. |
+
+Sizes: `index.html` **312,299**, `rounds.php` **125,144**, `money.json` **10,238**.
+
+Nothing changes for anyone until they pick **Layout: New** at the bottom of the tools screen (remembered per phone).
+The new layout: one door open at a time (the next to knock), the rest one line each with their chips; "Add info"
+opens phone, email, photos, note, extra work and fire check in one panel; Quote booked opens the walk plus all of
+those and stays until "Done with this door"; a money line saying what the door qualifies for (tax credit, insurance,
+the county's grant; a company owner is sent to an accountant); "Show doors with" High fire / Large or medium lawn /
+Trees close, all picked = only doors with every one; the tools screen grouped In the field / Office. In either
+layout, neighbourhoods now show how many doors have all three drivers.
+
 ## ✅ LIVE 2026-10-03 — the whole competitor-audit list (SX-48..54), verified 19/19 (still to upload: the lawn outlines as they finish)
 
 | Step | File (from `sixfold/site/`) | Goes to |
