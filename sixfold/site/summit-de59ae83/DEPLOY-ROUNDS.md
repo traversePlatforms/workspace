@@ -7,6 +7,38 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Customers (the CRM) and the full backup
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+
+Sizes: `index.html` **413,028**, `rounds.php` **158,030**. No flush needed for step 1 (the folder skips the Dynamic
+Cache); flush after step 2 to be safe. quote.html is unchanged.
+
+Also in this upload: a save made on the Pipeline (a lead's status or note) refreshes the list in place instead of
+blanking it while the door bookings reload, and the Undo toast stays up.
+
+**Customers** (admin tile, Office): every customer with contact, service, plan (one-off, monthly, yearly, custom),
+price, customer since, next visit due, status (active, paused, ended), an agreement link (https only) and notes.
+Due this week at the top, overdue marked. Each customer has a visit history (date, service, price, done or booked,
+note, who) with Log a visit; a done visit on a monthly or yearly plan moves next due on by itself. **Make customer**
+on a won door booking or a won lead in the Pipeline carries the name, address, town, won price and a door-given
+phone or email across; a second tap opens the same customer. A door that belongs to an active customer shows a dark
+**Customer** tag, for crew too. Stored in `sixfold-data/customers/` (`customers.log`, `visits.log`), beside
+public_html, created by the server on the first save: the same parent folder as `sixfold-data/leads/`, which already
+works live.
+
+**Keep a copy** (bottom of Customers): **Download customers** (CSV) and **Download a full backup**: one JSON file with
+every log in `sixfold-data/rounds/`, `leads/` and `customers/` plus goals.json, each under the path it came from,
+photos listed by name, no sign-in codes. Rebuilding is putting each file back at its path. Each backup is logged in
+`rounds-accounts.log` with who took it.
+
+Tested: all 54 suites, 965 checks; customers-test 57/57 (API, refusals, visits, due dates, from a door, from a lead, the door tag, CSV, backup
+contents, no codes in the backup, the page). Live check after upload: tile, list loads, backup downloads; adding a
+real customer is Matthew's call.
+
 ## ✅ LIVE 2026-10-04 — Accounts, Territories, sign a person out, show PINs, Door rounds opens on Colorado (verified 16/16 at the folder address the phones open; summit-de59ae83/.htaccess keeps the folder out of SiteGround's Dynamic Cache, so uploads there need no flush; Quote builder is linked as quote.html?v=<fingerprint>)
 
 | Step | File (from `sixfold/site/`) | Goes to |

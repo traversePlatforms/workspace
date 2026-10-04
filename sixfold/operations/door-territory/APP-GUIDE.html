@@ -80,6 +80,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <li><a href="#rounds">Door rounds, screen by screen</a></li>
   <li><a href="#card">The door card</a></li>
   <li><a href="#office">The office tools</a></li>
+  <li><a href="#customers">Customers and backups</a></li>
   <li><a href="#quote">Quote builder</a></li>
   <li><a href="#data">Where the data comes from</a></li>
   <li><a href="#saving">How it saves, online and off</a></li>
@@ -97,7 +98,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <ul>
     <li><strong>Tells the crew which doors are worth knocking and why</strong>: every owner-occupied home in Sixfold's 11 towns, scored for fire hazard, lawn size and trees close to the house, with the money each homeowner can get for fire work.</li>
     <li><strong>Records what happens at every door</strong>: quote booked, not now, no answer, no soliciting, plus phone numbers, emails, photos, notes, extra work spotted, fire checks and walk appointments. All of it saves with no signal.</li>
-    <li><strong>Runs the follow-up in the office</strong>: the pipeline from first call to won or lost, quote pricing, results, team numbers, territories and sign-ins.</li>
+    <li><strong>Runs the follow-up in the office</strong>: the pipeline from first call to won or lost, quote pricing, customers and their visits, results, team numbers, territories and sign-ins.</li>
   </ul>
   <div class="tw"><table>
     <thead><tr><th>County</th><th>Town</th><th class="num">Doors</th><th class="num">Neighbourhoods</th></tr></thead>
@@ -126,7 +127,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <thead><tr><th>Role</th><th>Sees and does</th></tr></thead>
     <tbody>
       <tr><td><span class="chip all">Crew</span></td><td>Door rounds, search, their own stats and doors. Marks doors and records everything at the door. Sees every neighbourhood and every door's chips and money line.</td></tr>
-      <tr><td><span class="chip adm">Admin</span></td><td>Everything crew can, plus the office tools: Pipeline, Quote builder, Territories, Communities, Results, Team stats, Leaderboard, Accounts, the fire-weather call list, and the exports.</td></tr>
+      <tr><td><span class="chip adm">Admin</span></td><td>Everything crew can, plus the office tools: Pipeline, Customers, Quote builder, Territories, Communities, Results, Team stats, Leaderboard, Accounts, the fire-weather call list, and the exports.</td></tr>
     </tbody>
   </table></div>
   <p>A team manager role is planned for later, to assign territories to their own reps. The territory records already note who assigned each one, so it can be added without rebuilding.</p>
@@ -141,6 +142,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <div><b>Mark the outcome</b>Quote booked, Not now (with a come-back date) or No answer (back on the list in two days).</div>
     <div><b>On a yes</b>One panel: book the walk, phone, email, photos, note, extra work, fire check.</div>
     <div><b>Office follows up</b>The booking appears in the Pipeline under To call, or Walk booked if the walk was set.</div>
+    <div><b>Won becomes a customer</b>Make customer on the won job carries the name, address and price into Customers, where the visits and the next one due are kept.</div>
   </div>
 </section>
 
@@ -202,7 +204,8 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <thead><tr><th>Tool</th><th>What it's for</th></tr></thead>
     <tbody>
       <tr><td class="k">Pipeline</td><td>Every prospect in one place: door bookings and enquiries (website form, Meta ad, Nextdoor, phone, referral), by stage: To call, Walk booked, Quote sent, Won, Lost, with a chip per source. Door bookings keep their card (the door's chips, walk, Build quote, Mark quote sent, Won with the job value or Lost with a reason); enquiries keep theirs (call, text, email, status, notes). Walks coming up at the top, + Add a lead, and a Jobber-ready export of door bookings.</td></tr>
-      <tr><td class="k">Quote builder</td><td>Cost-up pricing for a job. See the next section.</td></tr>
+      <tr><td class="k">Customers</td><td>Everyone Sixfold works for, with plans, visits and what is due. See <a href="#customers">Customers and backups</a>.</td></tr>
+      <tr><td class="k">Quote builder</td><td>Cost-up pricing for a job. See <a href="#quote">Quote builder</a>.</td></tr>
       <tr><td class="k">Territories</td><td>Assign neighbourhoods to people (pick a person and a town, tick several), see each person's progress, and unassign. The crew see nothing of it until the switch is turned on.</td></tr>
       <tr><td class="k">Communities</td><td>Subdivisions, metro districts, HOAs and Firewise communities, ranked by high-risk doors still to knock, to pitch a whole community as one job.</td></tr>
       <tr><td class="k">Results</td><td>Which doors turn into jobs: knocked, talked to, booked and won, broken down by fire hazard, lawn, trees, county value, town and extra work. It fills up as quotes are marked won or lost.</td></tr>
@@ -213,6 +216,44 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
       <tr><td class="k">Exports</td><td>A full CSV of every door with anything recorded (admins only), a Jobber client import of door bookings, and a "who marked what" report.</td></tr>
     </tbody>
   </table></div>
+</section>
+
+<section id="customers">
+  <h2>Customers and backups</h2>
+  <p>The customer list is the part of the app that remembers people after the sale. Admins only, on the tools screen under Office.</p>
+  <h3>Getting someone onto the list</h3>
+  <ul>
+    <li><strong>From a won door:</strong> in the Pipeline, a door marked Won has <strong>Make customer</strong>. It carries over the owner's name, the address, the town, the won price, and a phone number or email if one was given at the door. A number recorded under a previous owner is left behind.</li>
+    <li><strong>From a won enquiry:</strong> a website, Meta, Nextdoor or phone lead marked Won has the same button. It carries the name, phone, email and town, and picks aeration or fire from what they asked about.</li>
+    <li><strong>By hand:</strong> <strong>+ Add a customer</strong> for anyone who came another way.</li>
+  </ul>
+  <p>Tapping Make customer twice opens the same customer rather than making a second one.</p>
+  <h3>What is kept for each customer</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Field</th><th>What it holds</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Contact</td><td>Name, phone, email, address, town. Call, Text and Email buttons on the customer's page.</td></tr>
+      <tr><td class="k">Service</td><td>Lawn care, aeration, fire mitigation, landscaping or other.</td></tr>
+      <tr><td class="k">Plan</td><td>One-off job, monthly plan, yearly plan or a custom schedule, with the price per visit or per plan.</td></tr>
+      <tr><td class="k">Dates</td><td>Customer since, and the next visit due.</td></tr>
+      <tr><td class="k">Status</td><td>Active, paused or ended. Paused and ended customers stay on file but drop off the due list.</td></tr>
+      <tr><td class="k">Agreement</td><td>A link to the signed copy in DocuSign or Google Drive. The document itself stays there.</td></tr>
+      <tr><td class="k">Notes</td><td>Anything the crew should know: gate codes, dogs, the best day.</td></tr>
+      <tr><td class="k">Their door</td><td>For customers who came from door rounds, a button that opens the door card with everything recorded there.</td></tr>
+      <tr><td class="k">Visits</td><td>Each visit's date, service, price, done or booked, a note, and who logged it. The page adds up what the customer has spent.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>What is due</h3>
+  <p><strong>Due this week</strong> sits at the top of the list: active customers whose next visit falls in the next seven days, with overdue ones marked. Logging a done visit on a monthly plan moves the next due date on a month; on a yearly plan, a year. One-off and custom customers keep whatever date you set.</p>
+  <h3>On the doors</h3>
+  <p>A door that belongs to an active customer shows a dark <strong>Customer</strong> tag on its card, for crew as well as admins, so nobody knocks it cold or pitches a job Sixfold already does there.</p>
+  <h3>Keeping a copy</h3>
+  <ul>
+    <li><strong>Download customers (spreadsheet):</strong> every customer with plan, price, next due, visits done and spend, as a CSV that opens in Excel or Google Sheets.</li>
+    <li><strong>Download a full backup:</strong> one file holding every log the app keeps: door outcomes, phones, emails, notes, photo records, extra work, fire checks, walks, quotes sent, results, territories, goals, leads, customers and visits. Each log is included exactly as it sits on the server, with the path it came from.</li>
+  </ul>
+  <p><strong>Rebuilding from a backup:</strong> each entry goes back to its path beside the website (<code>sixfold-data/...</code>) as its own file. The app reads those logs every time it opens, so putting them back puts everything back. The door lists themselves are rebuilt from the build files on the computer. The sign-in codes and photos are not in the backup: the codes stay in the private folder, and the photos are listed by name so you can see what is missing.</p>
+  <div class="note"><p><strong>Save a backup every week, and keep it somewhere private.</strong> It holds customer names, addresses and phone numbers. Until now the field data has existed only on SiteGround; this download is the copy that survives losing the server.</p></div>
 </section>
 
 <section id="quote">
@@ -263,6 +304,8 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Each door belongs to one town</strong>, even where towns overlap, so a mark made under one town never shows the door as still open under another.</li>
     <li><strong>Photos</strong> are shrunk on the phone before sending and stored outside the website folder.</li>
     <li><strong>Search</strong> reads a small address index the server builds for itself, and rebuilds whenever the door lists change.</li>
+    <li><strong>Customers and visits</strong> work the same way: every change is a new line in the customer log, and the newest value of each field is what shows. An edit to a phone number leaves the earlier number on record.</li>
+    <li><strong>Backups</strong> are a download from the Customers screen. See <a href="#customers">Customers and backups</a>.</li>
   </ul>
 </section>
 
@@ -272,7 +315,8 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Codes:</strong> six digits, one per person. Eight wrong tries from one place lock that place out for 15 minutes, and a flood of wrong codes from many places pauses new sign-ins for up to an hour. Phones already signed in keep working.</li>
     <li><strong>Staying signed in:</strong> a sign-in lasts 45 days, but every tap re-checks the person against the current list. Removing someone, giving them a new code, demoting them or signing them out takes effect on their next tap.</li>
     <li><strong>Where codes live:</strong> the server's codes file and the app's accounts file, both in a private folder beside the website, never inside it. The ordinary accounts list never carries codes; Show PINs needs your own code again and is logged.</li>
-    <li><strong>What each role sees:</strong> the full export (every door with names and addresses) is admins only. Crew see the doors they knock and their own numbers.</li>
+    <li><strong>What each role sees:</strong> the full export (every door with names and addresses), the customer list, the customer spreadsheet and the full backup are admins only. Crew see the doors they knock, their own numbers, and the Customer tag on a door.</li>
+    <li><strong>Backups:</strong> each download is logged with who took it. The file never contains a sign-in code.</li>
     <li><strong>Phone numbers:</strong> each number records whether it was given at the door or looked up. Only door-given numbers get Call and Text buttons without a warning; looked-up numbers must clear the national and Colorado Do Not Call lists first.</li>
     <li><strong>Photos:</strong> only with the owner's OK, of the property, not people.</li>
     <li><strong>Search engines:</strong> the app's pages are marked not to be indexed.</li>
@@ -303,6 +347,9 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Search and the office tools need signal.</strong> Knocking, marking and recording don't.</li>
     <li><strong>Printing the homeowner report from the home-screen app on an iPad</strong> hasn't been tested yet. It works in a browser tab.</li>
     <li><strong>Meta ad leads</strong> arrive in Meta's own Leads Center, not in the app; add them through + Add a lead.</li>
+    <li><strong>Customers are not billing.</strong> There are no invoices, payments or contracts in the app. Prices and visits are a record of the work; the signed agreement stays in DocuSign or Drive and is linked.</li>
+    <li><strong>Backups are by hand.</strong> Nothing reminds anyone to take one, and putting one back is a File Manager upload, not a button.</li>
+    <li><strong>Removing a visit</strong> hides it; the log keeps the original line. There is no delete for a whole customer: set them to Ended.</li>
     <li><strong>Add a person</strong> needs the server to be able to write to its private folder. It hasn't been tried on the live site yet.</li>
     <li><strong>Overgrowth year over year</strong> waits for late-spring photos, in 2027.</li>
   </ul>
@@ -320,6 +367,6 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <p>The exact files and sizes for each upload are kept in <code>DEPLOY-ROUNDS.md</code>, and every upload is checked on the live site afterwards.</p>
 </section>
 
-<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 4 Oct 2026 · source: sixfold/operations/door-territory/APP-GUIDE.html</footer>
+<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 4 Oct 2026, customers included · source: sixfold/operations/door-territory/APP-GUIDE.html</footer>
 </main>
 </div>

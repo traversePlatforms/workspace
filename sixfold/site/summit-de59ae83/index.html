@@ -561,6 +561,51 @@
   .bassign .save{min-height:42px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:var(--go);color:var(--on-go)}
   .chips .mine{background:var(--go-tint);color:var(--go)}
   .chips .all3{background:var(--ink);color:var(--card)}
+  /* customers (2026-10-04) */
+  .tag.custtag{background:var(--ink);color:var(--card)}
+  .door.crow{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;padding-left:16px;border:0}
+  .door.crow::before,.door.cvisit::before{display:none}
+  .door.crow .d-top > .ic{width:16px;height:16px;color:var(--soft);flex:none;align-self:center}
+  .door.crow .swhere{font-size:12.5px;color:var(--soft);margin-top:2px}
+  .tag.cplan{background:var(--go-tint);color:var(--go)}
+  .tag.cdue{background:var(--later-tint);color:var(--later)}
+  .tag.cover{background:var(--fire-h);color:var(--fire-on)}
+  .tag.cstat{background:var(--sunk);color:var(--soft)}
+  .tag.cstat.active{background:var(--go);color:var(--on-go)}
+  .cbar{display:flex;gap:8px;align-items:center;margin:4px 0 8px}
+  .cbar input{flex:1;min-width:0;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .cbar .aseg,.vform .aseg{display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:none}
+  .cbar .aseg button,.vform .aseg button{min-height:40px;border:1px solid var(--line);border-radius:11px;padding:0 12px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  .cbar .aseg button[aria-pressed="true"],.vform .aseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .cexp{margin-top:18px;display:flex;flex-direction:column;gap:2px}
+  .cexp .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .cexp .adminlink{margin:4px 0 0}
+  .cform label,.vform label{display:grid;gap:4px}
+  .cform .err,.vform .err{color:var(--fire-h);font-weight:700}
+  .cform .err:empty,.vform .err:empty{display:none}
+  .vform{display:grid;gap:8px;margin:0 0 12px}
+  .vform .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .vform .trow{display:flex;gap:7px}
+  .vform .trow > *{flex:1;min-width:0}
+  .vform input,.vform select{font:600 16px var(--sans);padding:9px 10px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-width:0}
+  .vform .save{min-height:44px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14px var(--sans);cursor:pointer}
+  .chead{border-radius:20px;padding:16px;color:var(--bar-ink);background:var(--topo) center/560px 360px,linear-gradient(150deg,#2B3B34 0%,var(--bar) 75%);margin-bottom:12px}
+  .chead .cname{font:400 24px/1.15 var(--serif)}
+  .chead .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+  .chead .cfigs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+  .chead .cfigs div{background:var(--bar-lift);border-radius:12px;padding:8px 9px;min-width:0}
+  .chead .cfigs b{display:block;font-size:16px;color:var(--ember);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chead .cfigs span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--bar-soft)}
+  .cct button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--accent);font:700 14px var(--sans);cursor:pointer;padding:0}
+  .cacts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 4px}
+  .cacts .lnk{background:none;border:0;padding:6px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
+  .cacts .lnk.danger{color:var(--fire-h)}
+  .door.cvisit{padding-left:16px}
+  .door.cvisit.booked{border:1.5px dashed var(--later)}
+  .door.cvisit .vprice{font-weight:700;color:var(--go)}
+  .door.cvisit .lnk{background:none;border:0;padding:6px 0 0;font:700 13px var(--sans);cursor:pointer}
+  .door.cvisit .lnk.danger{color:var(--fire-h)}
+  .addlead.mkcust{margin-top:8px;background:var(--go);color:var(--on-go)}
   /* territories (2026-10-04) */
   .tassign select{min-width:0;flex:1;font:600 16px var(--sans);padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
   .tassign .trow{display:flex;gap:7px}
@@ -1649,6 +1694,8 @@
       'How your days went: doors knocked, people talked to, quotes booked. Today next to your recent days.', null, function () { statsView(S.me, chooseView); }));
     if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Team stats',
       'Everyone' + "'" + 's doors, conversations and quotes, today and over the last week and month.', 'Admin only', teamView));
+    if (S.role === 'admin') box.appendChild(tile('button', 'card', 'Customers',
+      'Every customer: contact, plan, visits, what they have spent and when they are due next. Backups live here too.', 'Admin only', customersView));
     if (S.role === 'admin') box.appendChild(tile('button', 'route', 'Territories',
       'Neighbourhoods assigned to each person, and how far through them they are.', 'Admin only', territoriesView));
     if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Accounts',
@@ -1662,7 +1709,7 @@
       var SHORT = { 'Door rounds': 'Knock a neighbourhood. Works with no signal.', 'My stats': 'Your doors, conversations and quotes.',
         'Quote builder': 'Price a job from the walk.', 'Pipeline': 'Door bookings and enquiries, call to won.',
         'Communities': 'HOAs and Firewise sites to pitch as one job.', 'Results': 'Which doors turn into jobs.', 'Team stats': "Everyone's numbers.",
-        'Leaderboard': 'Rankings and the daily goal.', 'Accounts': 'Add, change, sign out and remove sign-ins.', 'Territories': 'Assign neighbourhoods to people.' };
+        'Leaderboard': 'Rankings and the daily goal.', 'Accounts': 'Add, change, sign out and remove sign-ins.', 'Territories': 'Assign neighbourhoods to people.', 'Customers': 'Plans, visits, what is due. Backups.' };
       var tiles = [].slice.call(box.querySelectorAll('.tile')), byName = {};
       tiles.forEach(function (t) {
         var nm = t.querySelector('b').textContent; byName[nm] = t;
@@ -1698,7 +1745,7 @@
           var tg = pt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' · Admin only';
         }).catch(function () {});
       }
-      grp('Office', ['Pipeline', 'Territories', 'Quote builder', 'Communities', 'Results', 'Team stats', 'Leaderboard', 'Accounts']);
+      grp('Office', ['Pipeline', 'Customers', 'Territories', 'Quote builder', 'Communities', 'Results', 'Team stats', 'Leaderboard', 'Accounts']);
       [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     }
     var out = q('div', 'out');
@@ -2376,6 +2423,11 @@
       sb.appendChild(b);
     });
     c.appendChild(sb);
+    if (l.status === 'won') {
+      var mcl = q('button', 'addlead mkcust', 'Make customer'); mcl.type = 'button';
+      mcl.addEventListener('click', function () { makeCustomer({ lead: l.id }); });
+      c.appendChild(mcl);
+    }
     var nr = q('div', 'lnote');
     var inp = q('input'); inp.type = 'text'; inp.maxLength = 500; inp.placeholder = 'Add a note\u2026';
     var sv = q('button', null, 'Save'); sv.type = 'button';
@@ -3091,6 +3143,7 @@
     var tc = treeChip(d); if (tc) { tc.disabled = true; tc.tabIndex = -1; meta.appendChild(tc); }
     if (d.mark && backOn(d)) meta.appendChild(q('span', 'tag again', d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }   /* worth knowing before the knock */
+    if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (meta.children.length) row.appendChild(meta);
     var open = function () {
       S.openDoor = d.id; S.capture = null; clearEdits(); S.justOpened = d.id; renderDoors();
@@ -3502,6 +3555,233 @@
     c.appendChild(acts);
     return c;
   }
+  /* ---- customers (2026-10-04) ----
+     Matthew: a CRM inside the app. Every customer with contact, plan, visits, spend and the next visit
+     due; Due this week at the top. A won job or a won lead becomes a customer in one tap. Each change is
+     added to a log (never overwritten), and "Download a full backup" saves every log the app keeps. */
+  var SERVICE_L = { lawn: 'Lawn care', aeration: 'Aeration', fire: 'Fire mitigation', landscaping: 'Landscaping', other: 'Other' };
+  var PLAN_L = { oneoff: 'One-off job', monthly: 'Monthly plan', yearly: 'Yearly plan', custom: 'Custom schedule' };
+  var STATUS_L = { active: 'Active', paused: 'Paused', ended: 'Ended' };
+  function custTagText(c) { return 'Customer · ' + (c.plan === 'monthly' ? 'monthly ' : c.plan === 'yearly' ? 'yearly ' : '') + (SERVICE_L[c.service] || 'job').toLowerCase(); }
+  function money(n) { return '$' + Math.round(+n || 0).toLocaleString('en-US'); }
+  function fmtD(iso) { if (!iso) return ''; var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + (p[0] !== String(new Date().getFullYear()) ? ' ' + p[0] : ''); }
+  function makeCustomer(from) {
+    api('customerfrom', { body: from }).then(function (j) {
+      if (!j.ok) { toast('Not done', j.error || 'Try again.', null); return; }
+      toast(j.existing ? 'Already a customer' : 'Customer added', 'Check the plan and the next visit', null);
+      customerView(j.id);
+    }).catch(function () { toast('No signal', 'Try again when you have signal.', null); });
+  }
+  function customersView() {
+    hideToast(); S.signin = null; S.screen = 'customers';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Customers', sub: 'Plans, visits and what is due', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('customers').then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the customers.')); return; }
+      S.custs = j.customers; S.custToday = j.today; drawCustomers(holder);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Customers need signal.')); });
+  }
+  function custRow(c) {
+    var b = q('button', 'door crow'); b.type = 'button';
+    var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', c.name || 'Customer')); top.appendChild(ico('chev', 2.4)); b.appendChild(top);
+    b.appendChild(q('div', 'swhere', [c.address, c.town].filter(Boolean).join(' · ')));
+    var m = q('div', 'meta');
+    m.appendChild(q('span', 'tag cplan', (PLAN_L[c.plan] || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
+    if (c.status && c.status !== 'active') m.appendChild(q('span', 'tag cstat', STATUS_L[c.status]));
+    if (c.overdue) m.appendChild(q('span', 'tag cover', 'Overdue · ' + fmtD(c.next)));
+    else if (c.due) m.appendChild(q('span', 'tag cdue', 'Due ' + fmtD(c.next)));
+    else if (c.next && c.status === 'active') m.appendChild(q('span', null, 'Next ' + fmtD(c.next)));
+    if (c.spent) m.appendChild(q('span', null, money(c.spent) + ' so far'));
+    b.appendChild(m);
+    b.addEventListener('click', function () { customerView(c.id); });
+    return b;
+  }
+  function drawCustomers(holder) {
+    holder.textContent = '';
+    var add = q('button', 'addlead', S.custAdd ? 'Close the form' : '+ Add a customer'); add.type = 'button';
+    add.addEventListener('click', function () { S.custAdd = !S.custAdd; drawCustomers(holder); });
+    holder.appendChild(add);
+    if (S.custAdd) holder.appendChild(customerForm(null, function (id) { S.custAdd = false; customerView(id); }));
+    var all = S.custs || [];
+    var due = all.filter(function (c) { return c.due; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
+    if (due.length) {
+      var dbox = q('div', 'walkup');
+      dbox.appendChild(q('div', 'wl', 'Due this week'));
+      due.forEach(function (c) { var r = q('div', 'wur'); r.appendChild(q('b', null, (c.overdue ? 'Overdue · ' : '') + fmtD(c.next))); r.appendChild(q('span', null, c.name + ' · ' + (PLAN_L[c.plan] || '') + (c.price ? ' · ' + money(c.price) : ''))); dbox.appendChild(r); });
+      holder.appendChild(dbox);
+    }
+    var bar = q('div', 'cbar');
+    var find = q('input'); find.type = 'search'; find.placeholder = 'Find a customer'; find.id = 'custfind'; find.setAttribute('aria-label', 'Find a customer'); find.value = S.custFind || '';
+    bar.appendChild(find);
+    var seg = q('div', 'aseg');
+    [['active', 'Active'], ['all', 'Everyone']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String((S.custShow || 'active') === o[0])); b.addEventListener('click', function () { S.custShow = o[0]; drawCustomers(holder); }); seg.appendChild(b); });
+    bar.appendChild(seg);
+    holder.appendChild(bar);
+    var listBox = q('div'); holder.appendChild(listBox);
+    var fill = function () {
+      listBox.textContent = '';
+      var t = (find.value || '').toLowerCase(); S.custFind = find.value;
+      var shown = all.filter(function (c) { return ((S.custShow || 'active') === 'all' || (c.status || 'active') === 'active') && (!t || ((c.name || '') + ' ' + (c.address || '') + ' ' + (c.town || '') + ' ' + (c.phone || '')).toLowerCase().indexOf(t) >= 0); });
+      listBox.appendChild(q('div', 'sub2', shown.length + (shown.length === 1 ? ' customer' : ' customers') + ' · ' + money(shown.reduce(function (n, c) { return n + (c.spent || 0); }, 0)) + ' in visits logged'));
+      if (!shown.length) listBox.appendChild(q('div', 'msg', all.length ? 'No customer matches.' : 'No customers yet. Add one with the button above, or tap Make customer on a won job in the Pipeline.'));
+      shown.forEach(function (c) { listBox.appendChild(custRow(c)); });
+    };
+    find.addEventListener('input', fill); fill();
+    /* exports and the backup */
+    var ex = q('div', 'cexp');
+    ex.appendChild(q('div', 'wl', 'Keep a copy'));
+    var a1 = q('a', 'adminlink', 'Download customers (spreadsheet)'); a1.href = API + '?action=customersexport'; a1.setAttribute('download', ''); ex.appendChild(a1);
+    var a2 = q('a', 'adminlink', 'Download a full backup'); a2.href = API + '?action=backup'; a2.setAttribute('download', ''); ex.appendChild(a2);
+    ex.appendChild(q('div', 'sub2', 'The backup is every log the app keeps (doors, numbers, notes, walks, results, leads, customers and visits) in one file. Save one somewhere safe each week. To rebuild, each log goes back where it came from on the server. Sign-in codes and photos are not in it.'));
+    holder.appendChild(ex);
+  }
+  function customerForm(c, done) {
+    var fm = q('div', 'phf cform'), v = c || {};
+    var inputs = {};
+    var field = function (key, label, type, val, attrs) {
+      var lb = q('label', null, label); var el = type === 'textarea' ? q('textarea') : q('input');
+      if (type !== 'textarea') el.type = type; el.id = 'cf-' + key; el.value = val == null ? '' : val; if (attrs) for (var k in attrs) el[k] = attrs[k];
+      lb.appendChild(el); fm.appendChild(lb); inputs[key] = el; return el;
+    };
+    var pick = function (key, label, opts, val) {
+      var lb = q('label', null, label); var el = q('select'); el.id = 'cf-' + key;
+      Object.keys(opts).forEach(function (k) { var o = q('option', null, opts[k]); o.value = k; el.appendChild(o); }); el.value = val;
+      lb.appendChild(el); fm.appendChild(lb); inputs[key] = el; return el;
+    };
+    field('name', 'Name', 'text', v.name, { maxLength: 120 });
+    field('phone', 'Phone', 'tel', v.phone, { maxLength: 40 });
+    field('email', 'Email', 'email', v.email, { maxLength: 160 });
+    field('address', 'Address', 'text', v.address, { maxLength: 160 });
+    field('town', 'Town', 'text', v.town, { maxLength: 60 });
+    pick('service', 'Service', SERVICE_L, v.service || 'lawn');
+    pick('plan', 'Plan', PLAN_L, v.plan || 'oneoff');
+    field('price', 'Price per visit or plan ($)', 'number', v.price, { min: 0, step: 1, inputMode: 'decimal' });
+    field('start', 'Customer since', 'date', v.start || '');
+    field('next', 'Next visit due', 'date', v.next || '');
+    field('agreement', 'Agreement link (DocuSign or Drive)', 'url', v.agreement, { placeholder: 'https://' });
+    if (c) pick('status', 'Status', STATUS_L, v.status || 'active');
+    field('notes', 'Notes', 'textarea', v.notes, { rows: 3, maxLength: 2000 });
+    var err = q('div', 'err'); fm.appendChild(err);
+    var sv = q('button', 'save', c ? 'Save changes' : 'Add the customer'); sv.type = 'button';
+    sv.addEventListener('click', function () {
+      err.textContent = '';
+      var body = c ? { id: c.id } : {};
+      Object.keys(inputs).forEach(function (k) { body[k] = inputs[k].value; });
+      api('customersave', { body: body }).then(function (j) {
+        if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
+        toast(c ? 'Saved' : 'Customer added', body.name || '', null); done(j.id);
+      }).catch(function () { err.textContent = 'No signal. Try again.'; });
+    });
+    fm.appendChild(sv);
+    return fm;
+  }
+  function customerView(id) {
+    hideToast(); S.signin = null; S.screen = 'customer';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Customer', sub: 'Plan, visits and contact', back: customersView, backLabel: 'Customers' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('customers').then(function (j) {
+      if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the customer.')); return; }
+      S.custs = j.customers; S.custToday = j.today;
+      var c = j.customers.filter(function (x) { return x.id === id; })[0];
+      if (!c) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'That customer is not on the list.')); return; }
+      drawCustomer(holder, c);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Customers need signal.')); });
+  }
+  function drawCustomer(holder, c) {
+    holder.textContent = '';
+    setBar('back', { title: c.name || 'Customer', sub: [c.address, c.town].filter(Boolean).join(' · '), back: customersView, backLabel: 'Customers' });
+    if (S.custEdit === c.id) { holder.appendChild(customerForm(c, function () { S.custEdit = null; customerView(c.id); })); var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custEdit = null; drawCustomer(holder, c); }); holder.appendChild(cx); return; }
+    var head = q('div', 'chead');
+    head.appendChild(q('div', 'cname', c.name || 'Customer'));
+    var tags = q('div', 'meta');
+    tags.appendChild(q('span', 'tag cplan', (PLAN_L[c.plan] || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
+    tags.appendChild(q('span', 'tag cstat ' + (c.status || 'active'), STATUS_L[c.status || 'active']));
+    if (c.overdue) tags.appendChild(q('span', 'tag cover', 'Overdue'));
+    head.appendChild(tags);
+    var figs = q('div', 'cfigs');
+    [[c.price ? money(c.price) : '–', c.plan === 'monthly' ? 'a month' : c.plan === 'yearly' ? 'a year' : 'price'], [money(c.spent), 'logged'], [c.next ? fmtD(c.next) : '–', 'next due'], [c.last ? fmtD(c.last) : 'none yet', 'last visit']].forEach(function (x) {
+      var d = q('div'); d.appendChild(q('b', null, x[0])); d.appendChild(q('span', null, x[1])); figs.appendChild(d);
+    });
+    head.appendChild(figs);
+    holder.appendChild(head);
+    /* contact */
+    var ct = q('div', 'lcontact cct');
+    var tel = digits(c.phone);
+    if (tel.length >= 10) {
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
+    }
+    if (c.email) { var a3 = q('a'); a3.href = 'mailto:' + c.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(c.email)); ct.appendChild(a3); }
+    if (c.agreement) { var a4 = q('a'); a4.href = c.agreement; a4.target = '_blank'; a4.rel = 'noopener noreferrer'; a4.appendChild(ico('clip', 2.2)); a4.appendChild(document.createTextNode('Agreement')); ct.appendChild(a4); }
+    if (c.door) {
+      var a5 = q('button'); a5.type = 'button'; a5.appendChild(ico('door', 2.2)); a5.appendChild(document.createTextNode('Their door'));
+      a5.addEventListener('click', function () { openCustomerDoor(c); }); ct.appendChild(a5);
+    }
+    if (ct.children.length) holder.appendChild(ct);
+    if (c.notes) holder.appendChild(q('div', 'lmsg', c.notes));
+    var ed = q('div', 'aacts cacts');
+    var eb = q('button', 'lnk', 'Edit'); eb.type = 'button'; eb.addEventListener('click', function () { S.custEdit = c.id; drawCustomer(holder, c); }); ed.appendChild(eb);
+    var st = c.status || 'active';
+    [['active', 'Make active'], ['paused', 'Pause'], ['ended', 'End']].forEach(function (o) {
+      if (o[0] === st) return;
+      var b = q('button', 'lnk' + (o[0] === 'ended' ? ' danger' : ''), o[1]); b.type = 'button';
+      b.addEventListener('click', function () { api('customersave', { body: { id: c.id, status: o[0] } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } toast(STATUS_L[o[0]], c.name, null); customerView(c.id); }); });
+      ed.appendChild(b);
+    });
+    holder.appendChild(ed);
+    /* visits */
+    holder.appendChild(q('h2', null, 'Visits · ' + (c.visits || []).length));
+    holder.appendChild(visitForm(c));
+    (c.visits || []).forEach(function (v) {
+      var r = q('div', 'door cvisit' + (v.status === 'booked' ? ' booked' : ''));
+      var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', fmtD(v.date) + ' · ' + (SERVICE_L[v.service] || v.service))); if (v.price != null) top.appendChild(q('span', 'vprice', money(v.price))); r.appendChild(top);
+      r.appendChild(q('div', 'meta', (v.status === 'booked' ? 'Booked' : 'Done') + (v.by ? ' · ' + v.by : '') + (v.note ? ' · ' + v.note : '')));
+      var del = q('button', 'lnk danger', 'Remove'); del.type = 'button';
+      del.addEventListener('click', function () { if (!window.confirm('Remove this visit from ' + c.name + '’s history?')) return; api('visitsave', { body: { cid: c.id, vid: v.vid, del: true } }).then(function () { customerView(c.id); }); });
+      r.appendChild(del);
+      holder.appendChild(r);
+    });
+  }
+  function visitForm(c) {
+    var fm = q('div', 'phf vform');
+    fm.appendChild(q('div', 'wl', 'Log a visit'));
+    var row = q('div', 'trow');
+    var dt = q('input'); dt.type = 'date'; dt.id = 'vf-date'; dt.value = S.custToday || todayISO(); dt.setAttribute('aria-label', 'Date');
+    var sv = q('select'); sv.id = 'vf-service'; sv.setAttribute('aria-label', 'Service'); Object.keys(SERVICE_L).forEach(function (k) { var o = q('option', null, SERVICE_L[k]); o.value = k; sv.appendChild(o); }); sv.value = c.service || 'lawn';
+    row.appendChild(dt); row.appendChild(sv); fm.appendChild(row);
+    var row2 = q('div', 'trow');
+    var pr = q('input'); pr.type = 'number'; pr.id = 'vf-price'; pr.min = '0'; pr.step = '1'; pr.inputMode = 'decimal'; pr.placeholder = 'Price $'; pr.value = c.price != null ? c.price : ''; pr.setAttribute('aria-label', 'Price');
+    var stv = 'done'; var seg = q('div', 'aseg');
+    [['done', 'Done'], ['booked', 'Booked']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(o[0] === 'done')); b.addEventListener('click', function () { stv = o[0]; [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); }); seg.appendChild(b); });
+    row2.appendChild(pr); row2.appendChild(seg); fm.appendChild(row2);
+    var nt = q('input'); nt.type = 'text'; nt.id = 'vf-note'; nt.maxLength = 600; nt.placeholder = 'Note (optional)'; nt.setAttribute('aria-label', 'Note'); fm.appendChild(nt);
+    var err = q('div', 'err'); fm.appendChild(err);
+    var go = q('button', 'save', 'Save the visit'); go.type = 'button';
+    go.addEventListener('click', function () {
+      err.textContent = '';
+      api('visitsave', { body: { cid: c.id, date: dt.value, service: sv.value, price: pr.value, status: stv, note: nt.value } }).then(function (j) {
+        if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
+        toast(stv === 'done' ? 'Visit logged' : 'Visit booked', j.next ? 'Next due ' + fmtD(j.next) : c.name, null); customerView(c.id);
+      }).catch(function () { err.textContent = 'No signal. Try again.'; });
+    });
+    fm.appendChild(go);
+    return fm;
+  }
+  /* their door: found by address, then opened as the full card */
+  function openCustomerDoor(c) {
+    var did = String(c.door || '').split('/')[1] || '';
+    api('search', { params: { q: c.address || '' } }).then(function (j) {
+      var r = j && j.ok ? (j.results || []).filter(function (x) { return x.id === did; })[0] : null;
+      if (!r) { toast('Door not found', 'Search for the address instead', null); return; }
+      var go = function () { S.region = r.region; S.area = null; S.flash = r.id; S.openDoor = r.id; S.capture = null; S.returnTo = function () { customerView(c.id); }; openArea(r.area); };
+      if (S.regions.length) go(); else api('regions').then(function (k) { if (k.ok) S.regions = k.regions; go(); });
+    }).catch(function () { toast('No signal', 'Try again when you have signal.', null); });
+  }
   /* ---- pipeline (2026-10-04) ----
      Matthew: should Quotes to build and Leads be put together? Yes: they are one pipeline that
      starts in different places. Door bookings and enquiries (website, Meta, Nextdoor, phone,
@@ -3516,13 +3796,20 @@
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
   function pipelineView() {
-    hideToast(); S.signin = null; S.screen = 'pipeline';
+    /* a save made on the pipeline refreshes it in place: the list stays up until the new one arrives,
+       rather than blanking for the half-second the door bookings take to load */
+    var again = S.screen === 'pipeline' && S.qholder && S.qholder.isConnected;
+    if (!again) hideToast();
+    S.signin = null; S.screen = 'pipeline';
     foot.hidden = true; setDock(null);
     setBar('back', { title: 'Pipeline', sub: 'Door bookings and enquiries, call to won', back: chooseView, backLabel: 'Field tools' });
-    view.textContent = '';
-    var holder = q('div'); holder.appendChild(q('div', 'skel')); holder.appendChild(q('div', 'skel'));
-    view.appendChild(holder);
-    S.qholder = holder;
+    var holder = S.qholder;
+    if (!again) {
+      view.textContent = '';
+      holder = q('div'); holder.appendChild(q('div', 'skel')); holder.appendChild(q('div', 'skel'));
+      view.appendChild(holder);
+      S.qholder = holder;
+    }
     Promise.all([api('quotes'), api('leads')]).then(function (rs) {
       if (rs[0]._status === 401 || rs[1]._status === 401) return signinView('Signed out. Enter your code again.');
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
@@ -4347,6 +4634,9 @@
       ch.addEventListener('click', function () { saveResult(x, { result: null }); });
       box.appendChild(ch);
       if (won) {
+        var mc = q('button', 'rb won', 'Make customer'); mc.type = 'button';
+        mc.addEventListener('click', function () { makeCustomer({ region: x.region, id: x.id }); });
+        box.appendChild(mc);
         var ar = q('button', 'rb won', 'Knock around this job'); ar.type = 'button';
         ar.addEventListener('click', function () { S.around = null; aroundView(null, x.id); });
         box.appendChild(ar);
@@ -4993,6 +5283,7 @@
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
+    if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     card.appendChild(meta);
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + (OUT[d.prevMark.outcome] || d.prevMark.outcome) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
     if (d.mark && d.mark.maybe) { var mb = q('div', 'meta st'); maybeNote(mb, d.mark); card.appendChild(mb); }
@@ -5196,6 +5487,7 @@
         lhs.appendChild(q('div', 'addr', d.address));
         var fb2 = fireBadge(d); if (fb2) lhs.appendChild(fb2);
         var lc2 = lawnChip(d, true); if (lc2) { if (fb2) lhs.appendChild(document.createTextNode(' ')); lhs.appendChild(lc2); }
+        if (d.cust) { lhs.appendChild(document.createTextNode(' ')); lhs.appendChild(q('span', 'tag custtag', custTagText(d.cust))); }
         if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
         var rhs = q('div');
         rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';

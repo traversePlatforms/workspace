@@ -547,6 +547,51 @@ function searchIndex(): array {
     }
     return explode("\n", rtrim((string) file_get_contents($f), "\n"));
 }
+/* ---- customers (2026-10-04) ------------------------------------------------------------------
+ * Matthew: "we need a CRM ... something that can store this info and be used to rebuild data."
+ * Customers and their visits live beside the leads, outside public_html, as append-only logs:
+ *   customers/customers.log  one line per change   { id, by, at, f: {field: value, ...} }   later lines win, field by field
+ *   customers/visits.log     one line per change   { vid, cid, by, at, date, service, price, note, status, del? }
+ * Nothing is ever overwritten, so the whole history can be replayed (and rebuilt from a backup).
+ * A customer may be tied to a door ('door' = "<town>/<door id>"), which keeps the door's fire, lawn,
+ * trees and photos with them and tags the door "Customer" for the crew. Payments, cards and invoices
+ * are deliberately not kept here; agreements are linked, not stored. Admin only. */
+const CUST_SERVICES = ['lawn', 'aeration', 'fire', 'landscaping', 'other'];
+const CUST_PLANS = ['oneoff', 'monthly', 'yearly', 'custom'];
+const CUST_STATUS = ['active', 'paused', 'ended'];
+function custDir(): string { return dirname(DATA_DIR) . '/customers'; }
+function custLines(string $name): array {
+    $f = custDir() . '/' . $name; $out = [];
+    if (!is_readable($f)) return $out;
+    foreach (explode("\n", (string) file_get_contents($f)) as $ln) { $j = json_decode($ln, true); if (is_array($j)) $out[] = $j; }
+    return $out;
+}
+function loadCustomers(): array {
+    $c = [];
+    foreach (custLines('customers.log') as $r) {
+        $id = (string) ($r['id'] ?? ''); if ($id === '' || !is_array($r['f'] ?? null)) continue;
+        if (!isset($c[$id])) $c[$id] = ['id' => $id, 'created' => (int) ($r['at'] ?? 0), 'createdBy' => (string) ($r['by'] ?? '')];
+        foreach ($r['f'] as $k => $v) $c[$id][$k] = $v;
+        $c[$id]['updated'] = (int) ($r['at'] ?? 0); $c[$id]['updatedBy'] = (string) ($r['by'] ?? '');
+    }
+    return $c;
+}
+function loadVisits(): array {
+    $v = [];
+    foreach (custLines('visits.log') as $r) {
+        $vid = (string) ($r['vid'] ?? ''); if ($vid === '') continue;
+        if (!empty($r['del'])) { unset($v[$vid]); continue; }
+        $v[$vid] = $r;
+    }
+    return $v;
+}
+/** door key => [plan, service, since] for active customers: the crew see "Customer" on that door */
+function customerDoors(): array {
+    $out = [];
+    foreach (loadCustomers() as $c) if (($c['status'] ?? 'active') === 'active' && !empty($c['door'])) $out[(string) $c['door']] = ['plan' => $c['plan'] ?? 'oneoff', 'service' => $c['service'] ?? '', 'since' => $c['start'] ?? ''];
+    return $out;
+}
+function dateOk(string $d): bool { return (bool) preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $d, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]); }
 /* ---- the walk (SX-51, 2026-10-04) ------------------------------------------------------
  * Sixfold quotes from a walk of the property, so a booked quote is a booked walk. The crew picks
  * the date and, if agreed, the time at the door; an admin can set or change it after a call. The
@@ -927,6 +972,7 @@ if ($action === 'area') {
     $work = loadWork($key);
     $fchk = loadFireChecks($key);
     $walks = loadWalks($key);
+    $custDoors = customerDoors();   /* the crew see the tag on the door (plan and start date only, no contact details) */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -953,6 +999,7 @@ if ($action === 'area') {
                 'work' => $work[$d['id']] ?? null,
                 'fc' => isset($fchk[$d['id']]) ? lastChecks($fchk[$d['id']]) : null,
                 'walk' => walkFor($m, $walks[$d['id']] ?? null),
+                'cust' => $custDoors[$key . '/' . $d['id']] ?? null,
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
@@ -1570,6 +1617,154 @@ if ($action === 'leadstatus') {
     $row = ['id' => $id, 'by' => $me, 'at' => time()]; if ($status !== '') $row['status'] = $status; if ($note !== '') $row['note'] = $note;
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+
+if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'customersexport', 'backup'], true)) {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $tz = new DateTimeZone('America/Denver');
+    $today = (new DateTime('today', $tz))->format('Y-m-d');
+    /* the whole list, with each customer's visits and what is due */
+    if ($action === 'customers') {
+        $cs = loadCustomers(); $vs = loadVisits();
+        $byC = []; foreach ($vs as $v) $byC[(string) $v['cid']][] = $v;
+        $soon = (new DateTime('today', $tz))->modify('+7 days')->format('Y-m-d');
+        $list = [];
+        foreach ($cs as $c) {
+            $mine = $byC[$c['id']] ?? [];
+            usort($mine, fn($a, $b) => [$b['date'] ?? '', $b['at'] ?? 0] <=> [$a['date'] ?? '', $a['at'] ?? 0]);
+            $done = array_values(array_filter($mine, fn($v) => ($v['status'] ?? 'done') === 'done'));
+            $c['visits'] = $mine;
+            $c['spent'] = array_sum(array_map(fn($v) => (float) ($v['price'] ?? 0), $done));
+            $c['last'] = $done[0]['date'] ?? null;
+            $c['due'] = ($c['status'] ?? 'active') === 'active' && !empty($c['next']) && $c['next'] <= $soon;
+            $c['overdue'] = $c['due'] && $c['next'] < $today;
+            $list[] = $c;
+        }
+        usort($list, fn($a, $b) => strcmp(mb_strtolower((string) ($a['name'] ?? '')), mb_strtolower((string) ($b['name'] ?? ''))));
+        out(['ok' => true, 'today' => $today, 'customers' => $list]);
+    }
+    /* every log the app keeps, in one file the admin saves somewhere safe. Rebuilding is putting each
+       file back where it came from: the app reads the logs, so the logs are the data. Sign-in codes and
+       photos are left out (codes stay in sixfold-private; photos are listed, not copied). */
+    if ($action === 'backup') {
+        $files = [];
+        $add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };
+        foreach ((glob(DATA_DIR . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/rounds/' . basename($p));
+        foreach (['goals.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
+        foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
+        foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
+        $photos = [];
+        foreach ((glob(DATA_DIR . '/photos/*/*/*') ?: []) as $p) $photos[] = 'sixfold-data/rounds/photos/' . substr($p, strlen(DATA_DIR . '/photos/'));
+        $doc = ['backup' => 'Sixfold field tools', 'made' => date('c'), 'by' => $me,
+                'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes are not included; photos are listed, not copied.',
+                'files' => $files, 'photos' => $photos];
+        accountLog(['by' => $me, 'what' => 'backup', 'n' => count($files)]);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="sixfold-backup-' . date('Y-m-d-His') . '.json"');
+        header('Cache-Control: no-store');
+        echo json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($action === 'customersexport') {
+        $cs = loadCustomers(); $vs = loadVisits();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="sixfold-customers-' . date('Y-m-d') . '.csv"');
+        $fh = fopen('php://output', 'w');
+        fputcsv($fh, ['Name', 'Phone', 'Email', 'Address', 'Town', 'Service', 'Plan', 'Price', 'Customer since', 'Next due', 'Status', 'Visits done', 'Spent', 'Agreement', 'Notes', 'Door', 'Customer ID'], ',', '"', '');
+        foreach ($cs as $c) {
+            $done = array_filter($vs, fn($v) => (string) $v['cid'] === $c['id'] && ($v['status'] ?? 'done') === 'done');
+            fputcsv($fh, array_map('csvSafe', [$c['name'] ?? '', $c['phone'] ?? '', $c['email'] ?? '', $c['address'] ?? '', $c['town'] ?? '', $c['service'] ?? '', $c['plan'] ?? '',
+                $c['price'] ?? '', $c['start'] ?? '', $c['next'] ?? '', $c['status'] ?? 'active', count($done), array_sum(array_map(fn($v) => (float) ($v['price'] ?? 0), $done)),
+                $c['agreement'] ?? '', $c['notes'] ?? '', $c['door'] ?? '', $c['id']]), ',', '"', '');
+        }
+        fclose($fh); exit;
+    }
+    if (!$isPost) fail('POST required', 405);
+    $cs = loadCustomers();
+    /* check and tidy the fields that came in; only the ones sent are changed */
+    $fields = function (array $in, bool $isNew) use ($clean) {
+        $f = [];
+        if ($isNew || array_key_exists('name', $in)) { $f['name'] = $clean($in['name'] ?? '', 120); if (mb_strlen($f['name']) < 2) fail('Add the customer\'s name.'); }
+        if (array_key_exists('phone', $in)) { $f['phone'] = $clean($in['phone'], 40); $dg = preg_replace('/\D/', '', $f['phone']); if ($f['phone'] !== '' && (strlen($dg) < 10 || strlen($dg) > 11)) fail('That phone number does not look right.'); }
+        if (array_key_exists('email', $in)) { $f['email'] = $clean($in['email'], 160); if ($f['email'] !== '' && !filter_var($f['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.'); }
+        foreach (['address' => 160, 'town' => 60, 'notes' => 2000] as $k => $max) if (array_key_exists($k, $in)) $f[$k] = $clean($in[$k], $max);
+        if (array_key_exists('service', $in)) { $f['service'] = (string) $in['service']; if (!in_array($f['service'], CUST_SERVICES, true)) fail('Pick the service.'); }
+        if (array_key_exists('plan', $in)) { $f['plan'] = (string) $in['plan']; if (!in_array($f['plan'], CUST_PLANS, true)) fail('Pick the plan.'); }
+        if (array_key_exists('status', $in)) { $f['status'] = (string) $in['status']; if (!in_array($f['status'], CUST_STATUS, true)) fail('Pick active, paused or ended.'); }
+        if (array_key_exists('price', $in)) { $p = $in['price']; if ($p === '' || $p === null) $f['price'] = null; elseif (!is_numeric($p) || $p < 0 || $p > 1000000) fail('The price should be a number of dollars.'); else $f['price'] = round((float) $p, 2); }
+        foreach (['start', 'next'] as $k) if (array_key_exists($k, $in)) { $d = (string) $in[$k]; if ($d !== '' && !dateOk($d)) fail('That is not a real date.'); $f[$k] = $d; }
+        if (array_key_exists('agreement', $in)) { $u = trim((string) $in['agreement']); if ($u !== '' && !preg_match('#^https://[^\s<>"]{4,500}$#D', $u)) fail('The agreement link should start with https://'); $f['agreement'] = $u; }
+        if ($isNew) $f += ['status' => 'active', 'plan' => 'oneoff', 'service' => 'lawn'];
+        return $f;
+    };
+    $write = function (string $id, array $f) use ($me) {
+        if (!appendLine(custDir() . '/customers.log', ['id' => $id, 'by' => $me, 'at' => time(), 'f' => $f])) fail('Could not save that. Try again.', 500);
+    };
+    if ($action === 'customersave') {
+        $id = (string) ($body['id'] ?? '');
+        if ($id !== '' && !isset($cs[$id])) fail('No such customer.', 404);
+        $isNew = $id === '';
+        $f = $fields($body, $isNew);
+        if (!$f) fail('Nothing to save.');
+        if ($isNew) $id = 'c' . date('YmdHis') . bin2hex(random_bytes(3));
+        $write($id, $f);
+        out(['ok' => true, 'id' => $id]);
+    }
+    /* a won door booking or a won lead becomes a customer, carrying what we already know */
+    if ($action === 'customerfrom') {
+        $f = ['status' => 'active', 'plan' => 'oneoff', 'service' => 'lawn', 'start' => $today];
+        if (!empty($body['lead'])) {
+            $lid = (string) $body['lead']; $L = null;
+            foreach (readLines(leadsDir() . '/leads.log') as $l) if (($l['id'] ?? '') === $lid) $L = $l;
+            if (!$L) fail('No such lead.', 404);
+            foreach ($cs as $c) if (($c['lead'] ?? '') === $lid) out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
+            $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($L['town'] ?? '', 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
+            if (preg_match('/aerat/i', (string) ($L['need'] ?? ''))) $f['service'] = 'aeration'; elseif (preg_match('/fire/i', (string) ($L['need'] ?? ''))) $f['service'] = 'fire';
+        } else {
+            $key = (string) ($body['region'] ?? ''); $did = (string) ($body['id'] ?? '');
+            $data = loadRegion($key); if (!$data) fail('No such region.', 404);
+            if (!preg_match('/^[a-z0-9-]{1,80}$/D', $did)) fail('Bad door id.');
+            $key = doorHome($key, $did); $data = loadRegion($key);
+            $door = null; foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) if ($d['id'] === $did) $door = $d;
+            if (!$door) fail('No such door.', 404);
+            $dk = $key . '/' . $did;
+            foreach ($cs as $c) if (($c['door'] ?? '') === $dk) out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
+            $p = loadPhones($key)[$did] ?? null; $p = ($p && ($p['source'] ?? '') === 'door' && empty(ownerFlag($door, $p)['prev'])) ? $p : null;
+            $em = loadEmails($key)[$did] ?? null; $em = ($em && empty(ownerFlag($door, $em)['prev'])) ? $em : null;
+            $res = loadResults($key)[$did] ?? null;
+            $f += ['name' => $clean((string) ($door['owner'] ?? ''), 120) ?: 'Customer', 'phone' => $p['phone'] ?? '', 'email' => $em['email'] ?? '', 'address' => (string) $door['address'],
+                   'town' => regionLabel($key), 'door' => $dk, 'source' => 'door'];
+            if ($res && ($res['result'] ?? '') === 'won' && $res['value']) $f['price'] = (float) $res['value'];
+        }
+        $id = 'c' . date('YmdHis') . bin2hex(random_bytes(3));
+        $write($id, $f);
+        out(['ok' => true, 'id' => $id]);
+    }
+    /* a visit: done or booked. A done visit on a monthly or yearly plan moves "next due" on. */
+    if ($action === 'visitsave') {
+        $cid = (string) ($body['cid'] ?? ''); if (!isset($cs[$cid])) fail('No such customer.', 404);
+        $vid = (string) ($body['vid'] ?? '');
+        if (!empty($body['del'])) {
+            if (!preg_match('/^v\d{14}[0-9a-f]{6}$/D', $vid)) fail('No such visit.', 404);
+            if (!appendLine(custDir() . '/visits.log', ['vid' => $vid, 'cid' => $cid, 'del' => true, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+            out(['ok' => true]);
+        }
+        $date = (string) ($body['date'] ?? ''); if (!dateOk($date)) fail('Pick the date of the visit.');
+        $service = (string) ($body['service'] ?? ($cs[$cid]['service'] ?? 'lawn')); if (!in_array($service, CUST_SERVICES, true)) fail('Pick the service.');
+        $status = (string) ($body['status'] ?? 'done'); if (!in_array($status, ['done', 'booked'], true)) fail('Done or booked?');
+        $price = $body['price'] ?? null; if ($price !== null && $price !== '' && (!is_numeric($price) || $price < 0 || $price > 1000000)) fail('The price should be a number of dollars.');
+        if ($vid === '') $vid = 'v' . date('YmdHis') . bin2hex(random_bytes(3));
+        elseif (!preg_match('/^v\d{14}[0-9a-f]{6}$/D', $vid)) fail('No such visit.', 404);
+        $row = ['vid' => $vid, 'cid' => $cid, 'date' => $date, 'service' => $service, 'status' => $status, 'price' => ($price === null || $price === '') ? null : round((float) $price, 2),
+                'note' => $clean($body['note'] ?? '', 600), 'by' => $me, 'at' => time()];
+        if (!appendLine(custDir() . '/visits.log', $row)) fail('Could not save that. Try again.', 500);
+        $c = $cs[$cid]; $next = null;
+        if ($status === 'done' && in_array($c['plan'] ?? '', ['monthly', 'yearly'], true) && (empty($c['next']) || $date >= $c['next'])) {
+            $next = (new DateTime($date . ' 00:00', $tz))->modify(($c['plan'] === 'monthly') ? '+1 month' : '+1 year')->format('Y-m-d');
+            $write($cid, ['next' => $next]);
+        }
+        out(['ok' => true, 'vid' => $vid, 'next' => $next]);
+    }
 }
 
 if ($action === 'lawnfix') {
