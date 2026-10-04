@@ -621,6 +621,41 @@
   .opener .soft{font-size:12.5px;color:var(--soft)}
   .alist2{display:flex;flex-direction:column;gap:6px;margin-top:8px}
   .alist2 .back{text-align:left}
+  .wk .wt.ok{background:var(--go-tint);color:var(--go)}
+  .wk .wt.fix{background:var(--fire-h);color:var(--fire-on)}
+  .fcf .fcg{margin:12px 0 4px;font:700 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .fcf .fcrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:7px 0;border-top:1px solid var(--line)}
+  .fcf .fct{flex:1 1 240px;min-width:0;font-size:14px;line-height:1.35}
+  .fcf .fcseg{display:flex;gap:4px}
+  .fcf .fcseg button{min-height:40px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 12.5px var(--sans);cursor:pointer}
+  .fcf .fcseg .fc-ok[aria-pressed="true"]{background:var(--go);border-color:var(--go);color:var(--on-go)}
+  .fcf .fcseg .fc-fix[aria-pressed="true"]{background:var(--fire-h);border-color:var(--fire-h);color:var(--fire-on)}
+  .fcf .fcseg .fc-na[aria-pressed="true"]{background:var(--soft);border-color:var(--soft);color:var(--card)}
+  .fcf textarea{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px;font:15px var(--sans);background:var(--card);color:var(--ink)}
+  .freport{position:fixed;inset:0;z-index:50;background:#fff;color:#1b211e;overflow:auto;-webkit-overflow-scrolling:touch}
+  .freport .frbar{position:sticky;top:0;display:flex;gap:10px;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:#f3efe6;border-bottom:1px solid #d8d0be}
+  .freport .frbar button{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid #c9c1ae;background:#fff;color:#1b211e;font:700 15px var(--sans);cursor:pointer}
+  .freport .frbar button.save{background:#B6480F;border-color:#B6480F;color:#fff}
+  .freport .frpage{max-width:760px;margin:0 auto;padding:22px 20px 40px;font:15px/1.5 var(--sans)}
+  .freport .frbrand{font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#4F6644}
+  .freport h1{font:400 32px/1.15 var(--serif);margin:6px 0 2px;color:#1b211e}
+  .freport .fraddr{font:700 18px var(--sans)}
+  .freport .frmeta{color:#5E6B60;font-size:14px;margin-top:2px}
+  .freport h2{font:400 20px/1.2 var(--serif);margin:22px 0 8px;color:#1b211e}
+  .freport .frsum{display:flex;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+  .freport .frk{flex:1 1 120px;border-radius:12px;padding:10px 12px;background:#f4efe4}
+  .freport .frk b{display:block;font:700 26px/1 var(--sans)} .freport .frk span{font-size:13px;color:#5E6B60}
+  .freport .frk.ok b{color:#3d6b2f} .freport .frk.fix b{color:#B6480F}
+  .freport .frtodo{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px}
+  .freport .frtab{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:14px;table-layout:fixed}
+  .freport .frtab th + th,.freport .frtab td + td{width:128px}
+  .freport .frtab th{text-align:left;font:700 11.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:#5E6B60;padding:6px 6px;border-bottom:1px solid #d8d0be}
+  .freport .frtab td{padding:7px 6px;border-bottom:1px solid #ebe5d8;vertical-align:top}
+  .freport .frtab td.st-ok{color:#3d6b2f;font-weight:700;white-space:nowrap} .freport .frtab td.st-fix{color:#B6480F;font-weight:700;white-space:nowrap} .freport .frtab td.st-na{color:#7a847c;white-space:nowrap}
+  .freport .frphotos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px} .freport .frphotos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
+  .freport .fruse{padding-left:20px;display:flex;flex-direction:column;gap:6px}
+  .freport .frfoot{margin-top:22px;font-size:12.5px;color:#5E6B60;border-top:1px solid #d8d0be;padding-top:10px}
+  @media print { html,body.printing{background:#fff !important} body.printing > *:not(.freport){display:none !important} .freport{position:static;overflow:visible} .freport .frbar{display:none} .freport .frpage{padding:0;max-width:none} .freport .frtab tr,.freport .frphotos{break-inside:avoid} }
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -773,7 +808,7 @@
      (5xx) or a signed-out session (401). Dropped: anything sent, or refused as invalid (other
      4xx), so one bad item can never block the rest. (Fixed 2026-10-03: this used to drop on a
      server error and stall for ever on a refused item.) Photos go after. */
-  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix', work: 'work' };
+  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix', work: 'work', firecheck: 'firecheck' };
   /* An item is let go only when OUR server answered: sent (ok), or refused as invalid (400/404/
      413, a JSON reply). Anything else is kept (2026-10-03 review): a Wi-Fi sign-in page or a
      firewall page answers with HTML, and the old rule read that as "refused" and emptied the
@@ -2318,9 +2353,10 @@
     if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
     if (S.editEmail === d.id || d.email) wrap.appendChild(emailBlock(d));
     if (S.editWork === d.id || d.work) wrap.appendChild(workBlock(d));
+    if (S.editFc === d.id || (d.fc && d.fc.length)) wrap.appendChild(fireCheckBlock(d));
     if (d.photos && d.photos.length) wrap.appendChild(photoStrip(d, S.region));
     /* slimmer card: satellite and the add buttons share one row of small chips */
-    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id || S.editWork === d.id;      /* one form at a time */
+    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id || S.editWork === d.id || S.editFc === d.id;      /* one form at a time */
     var row = q('div', 'adds'), n = 0;
     var sat = satLink(d, true);
     if (sat) { row.appendChild(sat); n++; }
@@ -2330,6 +2366,7 @@
       if (!d.note) { addLink(row, 'note', '+ Note', 'Add a note', function () { S.editNote = d.id; S.editPhone = null; S.editEmail = null; renderDoors(); }); n++; }
       if (!d.photos || d.photos.length < 20) { addLink(row, 'camera', '+ Photo', 'Add photos of the property', function () { pickPhotos(d, S.region, renderDoors); }); n++; }
       if (!d.work) { addLink(row, 'list', '+ Extra work', 'Note other work this property needs', function () { S.editWork = d.id; S.workPick = []; S.editPhone = null; S.editNote = null; S.editEmail = null; renderDoors(); }); n++; }
+      if (!d.fc || !d.fc.length) { addLink(row, 'flame', '+ Fire check', 'Check the home ignition zone for a homeowner report', function () { S.editFc = d.id; S.fcPick = {}; S.fcNote = ''; S.editWork = null; S.editPhone = null; S.editNote = null; S.editEmail = null; renderDoors(); }); n++; }
     }
     if (n) wrap.appendChild(row);
     return wrap;
@@ -2389,6 +2426,151 @@
       after(false);
       toast(tags.length ? tags.length + (tags.length === 1 ? ' job' : ' jobs') + ' noted' : 'Extra work cleared', d.address, null);
     }).catch(function () { if (enqueueSave('work', body)) after(true); });
+  }
+  /* ---- fire check + homeowner report (SX-50, 2026-10-03) ----
+     A visual check of the home ignition zone, from the Colorado State Forest Service's Home
+     Ignition Zone guide (2021): the house itself, 0-5 ft, 5-30 ft and around the property. Each
+     item: done, needs work, or couldn't check. A second check after the job shows beside the first.
+     The report is for the homeowner: what to do first, photos, and how to use it with their insurer
+     and the tax credit. A visual check, never an inspection or a certification. */
+  var FC_GROUPS = [
+    ['The house', [['roof', 'Roof has a Class A fire rating (asphalt shingle, metal or tile; not wood shake)', 'Plan for a Class A roof when the roof is next replaced'],
+                   ['debris', 'Roof, deck and gutters clear of needles and leaves', 'Clear pine needles and leaves from the roof, deck and gutters'],
+                   ['vents', 'Attic, eave and foundation vents screened with 1/8-inch metal mesh', 'Screen attic, eave and foundation vents with 1/8-inch metal mesh'],
+                   ['deck', 'Under the deck screened or closed in, and nothing stored there', 'Screen or close in under the deck, and move anything stored there'],
+                   ['windows', 'Windows tempered or with two or more panes', 'Choose tempered or multi-pane glass when windows are replaced'],
+                   ['siding', '6 inches of clearance between the ground and the siding', 'Keep 6 inches of bare ground or gravel below the siding'],
+                   ['fence', 'No wood fence or gate within 5 ft of the house', 'Replace wood fencing or gates within 5 ft of the house']]],
+    ['0 to 5 ft from the house', [['z1plants', 'No plants, mulch or woody debris within 5 ft', 'Clear plants, mulch and woody debris within 5 ft; use rock or gravel'],
+                   ['z1store', 'No firewood or other things that burn within 5 ft', 'Move firewood and anything else that burns out of the first 5 ft'],
+                   ['overhang', 'No branches over the roof, nothing within 10 ft of the chimney', 'Trim branches over the roof and within 10 ft of the chimney']]],
+    ['5 to 30 ft from the house', [['grass', 'Grass mowed to 4 inches or less', 'Mow grass to 4 inches or less'],
+                   ['crowns', 'At least 10 ft between tree crowns', 'Thin trees to leave at least 10 ft between crowns'],
+                   ['ladder', 'No ladder fuels; branches pruned 6 to 10 ft up (or a third of the tree\u2019s height)', 'Remove ladder fuels and prune branches 6 to 10 ft up'],
+                   ['dead', 'No dead, dying or diseased trees and shrubs', 'Remove dead, dying and diseased trees and shrubs']]],
+    ['Around the property', [['firewood', 'Firewood at least 30 ft from the house, not on or under the deck', 'Move the firewood at least 30 ft from the house'],
+                   ['propane', 'Propane tank at least 30 ft away, with 10 ft cleared around it', 'Clear 10 ft around the propane tank'],
+                   ['address', 'Reflective, noncombustible address sign at the driveway', 'Put up a reflective, noncombustible address sign at the driveway']]]];
+  var FC_ITEM = {}; FC_GROUPS.forEach(function (g) { g[1].forEach(function (it) { FC_ITEM[it[0]] = { label: it[1], todo: it[2], group: g[0] }; }); });
+  /* what to do first: the first 5 ft and the house's easy fixes, then outwards; costly fixes last */
+  var FC_ORDER = ['z1plants', 'z1store', 'debris', 'overhang', 'vents', 'deck', 'fence', 'siding', 'firewood', 'propane', 'grass', 'ladder', 'dead', 'crowns', 'address', 'windows', 'roof'];
+  var FC_WORD = { ok: 'Done', fix: 'Needs work', na: 'Couldn\u2019t check' };
+  function fcCount(c) { var n = { ok: 0, fix: 0, na: 0 }; FC_ORDER.forEach(function (k) { var v = c.items[k]; n[v === 'ok' || v === 'fix' ? v : 'na']++; }); return n; }   /* an item never marked counts as not checked */
+  function fireCheckBlock(d) {
+    if (S.editFc !== d.id) {
+      var last = d.fc[d.fc.length - 1], n = fcCount(last);
+      var box = q('div', 'wk fcl');
+      box.appendChild(q('span', 'wl', 'Fire check'));
+      box.appendChild(q('span', 'wt ok', n.ok + ' done'));
+      if (n.fix) box.appendChild(q('span', 'wt fix', n.fix + ' need work'));
+      if (n.na) box.appendChild(q('span', 'wt', n.na + ' not checked'));
+      box.appendChild(q('span', 'src', (d.fc.length > 1 ? 'Latest of 2 checks · ' : '') + (last.by ? last.by + ' · ' : '') + fmtDay(last.at) + (last.pending ? ' · not sent yet' : '')));
+      var rp = q('button', 'lnk', 'Homeowner report'); rp.type = 'button';
+      rp.addEventListener('click', function () { fireReport(d); });
+      var nw = q('button', 'lnk', 'New check (after the work)'); nw.type = 'button';
+      nw.addEventListener('click', function () { S.editFc = d.id; S.fcPick = Object.assign({}, last.items); S.fcNote = ''; renderDoors(); });
+      box.appendChild(rp); box.appendChild(nw);
+      return box;
+    }
+    var fm = q('div', 'wkf fcf');
+    fm.appendChild(q('div', 'lq', 'Fire check'));
+    fm.appendChild(q('div', 'lsub', 'From the Colorado State Forest Service\u2019s Home Ignition Zone guide. Mark what you can see; leave the rest as Couldn\u2019t check.'));
+    FC_GROUPS.forEach(function (g) {
+      fm.appendChild(q('div', 'fcg', g[0]));
+      g[1].forEach(function (it) {
+        var row = q('div', 'fcrow');
+        row.appendChild(q('span', 'fct', it[1]));
+        var seg = q('div', 'fcseg');
+        ['ok', 'fix', 'na'].forEach(function (v) {
+          var b = q('button', 'fc-' + v, FC_WORD[v]); b.type = 'button';
+          b.setAttribute('aria-pressed', String(S.fcPick[it[0]] === v));
+          b.addEventListener('click', function () {
+            S.fcPick[it[0]] = v;
+            [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+          });
+          seg.appendChild(b);
+        });
+        row.appendChild(seg); fm.appendChild(row);
+      });
+    });
+    var ta = q('textarea'); ta.rows = 2; ta.maxLength = 600; ta.placeholder = 'Note for the report (optional)'; ta.value = S.fcNote || '';
+    ta.addEventListener('input', function () { S.fcNote = ta.value; });
+    fm.appendChild(ta);
+    var row2 = q('div', 'row2');
+    var sv = q('button', 'save', 'Save the check'); sv.type = 'button';
+    sv.addEventListener('click', function () {
+      var items = {}; FC_ORDER.forEach(function (k) { items[k] = S.fcPick[k] || 'na'; });
+      saveFireCheck(d, items, (S.fcNote || '').trim());
+    });
+    var cx = q('button', null, 'Cancel'); cx.type = 'button';
+    cx.addEventListener('click', function () { S.editFc = null; renderDoors(); });
+    row2.appendChild(sv); row2.appendChild(cx); fm.appendChild(row2);
+    return fm;
+  }
+  function saveFireCheck(d, items, note) {
+    var body = { region: S.region, id: d.id, items: items, note: note };
+    var after = function (pending) {
+      d.fc = (d.fc || []).concat([{ items: items, note: note, by: S.me, at: Math.floor(Date.now() / 1000), pending: !!pending }]).slice(-2);
+      S.editFc = null; renderDoors();
+    };
+    api('firecheck', { body: body }).then(function (j) {
+      if (j._status === 401) return keepAndSignIn('firecheck', body);
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      dropQueued('firecheck', S.region, d.id);
+      after(false); toast('Fire check saved', d.address, null);
+    }).catch(function () { if (enqueueSave('firecheck', body)) after(true); });
+  }
+  function fireReport(d) {
+    var last = d.fc[d.fc.length - 1], prev = d.fc.length > 1 ? d.fc[0] : null, n = fcCount(last);
+    var ov = q('div', 'freport'); ov.id = 'freport';
+    var bar = q('div', 'frbar');
+    var cl = q('button', null, 'Close'); cl.type = 'button'; cl.addEventListener('click', function () { document.body.classList.remove('printing'); ov.remove(); });
+    var pr = q('button', 'save', 'Print or save as PDF'); pr.type = 'button'; pr.addEventListener('click', function () { window.print(); });
+    bar.appendChild(cl); bar.appendChild(pr); ov.appendChild(bar);
+    var pg = q('div', 'frpage');
+    var hd = q('div', 'frhead');
+    hd.appendChild(q('div', 'frbrand', 'Sixfold Colorado \u00b7 Lawn, Land & Fire'));
+    hd.appendChild(q('h1', null, 'Home fire check'));
+    hd.appendChild(q('div', 'fraddr', d.address));
+    var dt = new Date(last.at * 1000);
+    hd.appendChild(q('div', 'frmeta', 'Checked ' + dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + (last.by ? ' by ' + String(last.by).split(' ')[0] : '') +
+      (prev ? ' \u00b7 compared with the check on ' + new Date(prev.at * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '')));
+    pg.appendChild(hd);
+    var sm = q('div', 'frsum');
+    [['ok', n.ok, 'done'], ['fix', n.fix, 'need work'], ['na', n.na, 'not checked']].forEach(function (x) { var c = q('div', 'frk ' + x[0]); c.appendChild(q('b', null, String(x[1]))); c.appendChild(q('span', null, x[2])); sm.appendChild(c); });
+    pg.appendChild(sm);
+    var todo = FC_ORDER.filter(function (k) { return last.items[k] === 'fix'; });
+    if (todo.length) {
+      pg.appendChild(q('h2', null, 'What to do first'));
+      var ol = q('ol', 'frtodo'); todo.forEach(function (k) { ol.appendChild(q('li', null, FC_ITEM[k].todo)); }); pg.appendChild(ol);
+    }
+    pg.appendChild(q('h2', null, 'The full check'));
+    FC_GROUPS.forEach(function (g) {
+      var tb = q('table', 'frtab');
+      var hr = q('tr'); hr.appendChild(q('th', null, g[0])); if (prev) hr.appendChild(q('th', null, 'Before')); hr.appendChild(q('th', null, prev ? 'Now' : 'Status')); tb.appendChild(hr);
+      g[1].forEach(function (it) {
+        var tr = q('tr'); tr.appendChild(q('td', null, it[1]));
+        if (prev) tr.appendChild(q('td', 'st-' + (prev.items[it[0]] || 'na'), FC_WORD[prev.items[it[0]] || 'na']));
+        tr.appendChild(q('td', 'st-' + (last.items[it[0]] || 'na'), FC_WORD[last.items[it[0]] || 'na']));
+        tb.appendChild(tr);
+      });
+      pg.appendChild(tb);
+    });
+    if (last.note) { pg.appendChild(q('h2', null, 'Note')); pg.appendChild(q('p', null, last.note)); }
+    if (d.photos && d.photos.length) {
+      pg.appendChild(q('h2', null, 'Photos'));
+      var ph = q('div', 'frphotos');
+      d.photos.slice(-6).forEach(function (p) { var im = q('img'); im.alt = ''; im.src = photoUrl(S.region, d.id, p.f); ph.appendChild(im); });
+      pg.appendChild(ph);
+    }
+    pg.appendChild(q('h2', null, 'Using this report'));
+    var us = q('ul', 'fruse');
+    us.appendChild(q('li', null, 'Insurance: since 1 July 2026, Colorado law (HB25-1182) requires insurers that use wildfire risk scores to tell you your score, give credit for documented mitigation, and let you appeal. Send them this report with photos and receipts and ask for your score to be reviewed. Discounts vary by insurer; the law sets no percentage.'));
+    us.appendChild(q('li', null, 'Tax credit: Colorado\u2019s wildfire mitigation credit covers what you pay a contractor for qualifying work, up to $1,000 for tax years 2025 and 2026 and up to $2,000 from 2027, depending on your income and tax. You claim it on form DR 0104CR with the receipts. Your accountant can confirm how it applies to you.'));
+    pg.appendChild(us);
+    pg.appendChild(q('p', 'frfoot', 'A visual check by Sixfold Colorado against the Colorado State Forest Service Home Ignition Zone guide (2021). It is not an inspection, a certification or a guarantee. Questions: (303) 915-1045 \u00b7 Contact@SixfoldColorado.com'));
+    ov.appendChild(pg);
+    document.body.appendChild(ov); document.body.classList.add('printing');
   }
   /* ---- email (2026-10-02): for people who'd rather not give a number ---- */
   function emailBlock(d) {

@@ -448,6 +448,28 @@ function loadResults(string $key): array {
 function appendResult(string $key, array $row): bool {
     return (bool) @file_put_contents(DATA_DIR . '/result-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- fire check (SX-50, 2026-10-03) ------------------------------------------------------
+ * A visual check of the home ignition zone, item by item, from the Colorado State Forest
+ * Service's Home Ignition Zone guide (2021). Each item is 'ok' (done), 'fix' (needs work) or 'na'
+ * (couldn't check). Every check is kept, so a check after the job sits beside the one before it
+ * (before and after, the evidence insurers now have to count). About the property, so a house
+ * sale does not hide it. The keys are fixed here and in the page. */
+const FIRE_ITEMS = ['roof', 'debris', 'vents', 'deck', 'windows', 'siding', 'fence',
+    'z1plants', 'z1store', 'overhang', 'grass', 'crowns', 'ladder', 'dead', 'firewood', 'propane', 'address'];
+function loadFireChecks(string $key): array {
+    $out = [];
+    foreach (logRows('firecheck', $key) as $r) {
+        if (!is_array($r) || !isset($r['id']) || !is_array($r['items'] ?? null)) continue;
+        $items = array_intersect_key($r['items'], array_flip(FIRE_ITEMS));
+        $out[$r['id']][] = ['items' => $items, 'note' => (string) ($r['note'] ?? ''), 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    return $out;
+}
+function appendFireCheck(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/firecheck-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+/** the newest check and the one before it (before and after); older ones stay in the log */
+function lastChecks(array $checks): array { return array_slice($checks, -2); }
 /* ---- emails (2026-10-02) ------------------------------------------------
  * For people who'd rather not give a number. Given at the door only: nothing looks
  * emails up. Last line per door wins; null removes it. */
@@ -739,6 +761,7 @@ if ($action === 'area') {
     $emails = loadEmails($key);
     $photos = loadPhotos($key);
     $work = loadWork($key);
+    $fchk = loadFireChecks($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -763,6 +786,7 @@ if ($action === 'area') {
                 'trees' => $d['trees'] ?? null,
                 'val' => $d['val'] ?? null,
                 'work' => $work[$d['id']] ?? null,
+                'fc' => isset($fchk[$d['id']]) ? lastChecks($fchk[$d['id']]) : null,
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
@@ -1404,6 +1428,26 @@ if ($action === 'work') {
     out(['ok' => true]);
 }
 
+if ($action === 'firecheck') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    $items = $body['items'] ?? null;
+    if (!is_array($items) || !$items) fail('Nothing was checked.');
+    foreach ($items as $k => $v) {
+        if (!in_array($k, FIRE_ITEMS, true)) fail('Unknown check item.');
+        if (!in_array($v, ['ok', 'fix', 'na'], true)) fail('Each item is done, needs work, or could not check.');
+    }
+    $note = trim((string) ($body['note'] ?? ''));
+    $note = (string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $note);
+    if (mb_strlen($note) > 600) fail('Keep the note under 600 characters.');
+    if (!appendFireCheck($key, ['id' => $id, 'items' => $items, 'note' => $note, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
 if ($action === 'result') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
@@ -1696,7 +1740,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason'], ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason', 'fire_check'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1708,6 +1752,7 @@ if ($action === 'report' || $action === 'export') {
         $photos = loadPhotos($r['key']);
         $work = loadWork($r['key']);
         $res = loadResults($r['key']);
+        $fchk = loadFireChecks($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
@@ -1719,7 +1764,8 @@ if ($action === 'report' || $action === 'export') {
                 $ph = count($photos[$d['id']] ?? []);
                 $wk = $work[$d['id']] ?? null;
                 $rs = $res[$d['id']] ?? null;
-                if (!$m && !$p && !$n && !$lf && !$em && !$ph && !$wk && !$rs) continue;   // anything collected at a door is worth exporting
+                $fc = isset($fchk[$d['id']]) ? end($fchk[$d['id']]) : null;
+                if (!$m && !$p && !$n && !$lf && !$em && !$ph && !$wk && !$rs && !$fc) continue;   // anything collected at a door is worth exporting
                 fputcsv($fh, array_map('csvSafe', [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
                               $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '', $m['revisit'] ?? '',
                               $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
@@ -1730,7 +1776,8 @@ if ($action === 'report' || $action === 'export') {
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
                               $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '', $d['val'] ?? '',
                               $wk ? implode('; ', array_map(fn($t) => WORK_LABEL[$t] ?? $t, $wk['tags'])) : '',
-                              $rs['result'] ?? '', $rs['value'] ?? '', $rs ? (LOST_LABEL[$rs['why']] ?? '') : '']), ',', '"', '');
+                              $rs['result'] ?? '', $rs['value'] ?? '', $rs ? (LOST_LABEL[$rs['why']] ?? '') : '',
+                              $fc ? (count(array_filter($fc['items'], fn($v) => $v === 'ok')) . ' done, ' . count(array_filter($fc['items'], fn($v) => $v === 'fix')) . ' to fix (' . date('Y-m-d', (int) $fc['at']) . ')') : '']), ',', '"', '');
             }
         }
     }

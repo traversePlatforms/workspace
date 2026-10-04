@@ -5,7 +5,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — around our jobs + fire-weather call list (2 files) + the remaining lawn outlines
+## ⚑ NEXT UPLOAD — around our jobs + fire-weather call list + homeowner fire check (2 files) + the remaining lawn outlines
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
@@ -14,7 +14,7 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 | 3 | the `data/rounds/lawnmask-<town>.json` files finished since the last upload | `sixfold-data/rounds/` |
 | 4 | — | Flush the cache. No one signs in again. |
 
-Sizes to check after upload: `index.html` **254,528** bytes, `rounds.php` **104,282** bytes.
+Sizes to check after upload: `index.html` **270,525** bytes, `rounds.php` **107,427** bytes.
 
 **Around our jobs (SX-48, after GlassHouse).** A strip on each town's list: jobs won there in the last
 60 days, each with the 40 nearest doors still to knock within half a mile, a route from the job, and
@@ -23,6 +23,15 @@ an opener that names the street, never the house or the customer. Won quotes get
 **Fire-weather call list (SX-49, after HailTrace, admin).** When an alert covers a town or a wildfire
 is within 30 miles, the alert details offer a call list: customers won, quotes sent and booked doors
 there, with the number given at the door and a check-in script. A check-in, not a pitch.
+
+**Homeowner fire check (SX-50, after Firemaps / Fire Aside).** "+ Fire check" on any door card: 17 items
+from the Colorado State Forest Service Home Ignition Zone guide (2021), each Done / Needs work / Couldn't
+check, plus a note. Every check is kept; a second check after the job shows Before and Now side by side.
+"Homeowner report" opens a one-page report (what to do first, in the guide's order, the first 5 ft
+before the house itself; the full check; the door's photos; how to use it with an insurer under
+HB25-1182 and for the DR 0104CR tax credit) with Print or save as PDF. It says plainly it is a visual
+check, not an inspection, certification or guarantee. Saves with no signal like everything else; the
+export gains a `fire_check` column.
 
 ---
 

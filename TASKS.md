@@ -678,9 +678,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **SX-49 Fire-weather call list (after HailTrace): ✅ BUILT AND TESTED 2026-10-03, next upload.** When a weather alert
       covers a town or a wildfire is within 30 mi, admins get a call list from the alert details: customers won,
       quotes sent, booked doors there, with numbers given at the door and a check-in script (not a pitch).
-- [ ] **SX-50..54 — the rest of the competitor audit (sixfold/research/door-app-competitor-audit.md), in its order:**
-      **SX-50** defensible-space report for the homeowner (Zone 0 checklist + photos, the evidence insurers must
-      now count) · **SX-51** book the walk at the door (date, time, reminder) · **SX-52** measure from the lawn
+- [ ] **SX-50 Homeowner fire check + report (after Firemaps / Fire Aside): ✅ BUILT AND TESTED 2026-10-03, next upload.**
+      17-item visual check per door from the CSFS Home Ignition Zone guide (2021): Done / Needs work / Couldn't
+      check + note; every check kept, so after-the-job sits beside before. Printable homeowner report: what to do
+      first (Zone 0 first), full check with Before/Now, photos, HB25-1182 insurance + DR 0104CR credit, "not an
+      inspection" disclaimer. Export column `fire_check`. Not a certification, and must never be sold as one.
+- [ ] **SX-51..54 — the rest of the competitor audit (sixfold/research/door-app-competitor-audit.md), in its order:**
+      **SX-51** book the walk at the door (date, time, reminder) · **SX-52** measure from the lawn
       outline into Quote Build · **SX-53** territories per person, daily goals, team leaderboard, no live
       location tracking (Brandon to decide) · **SX-54** sort neighbourhoods by our own booking rate, after a season.
 - [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`
