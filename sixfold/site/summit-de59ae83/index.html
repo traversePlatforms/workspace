@@ -323,7 +323,7 @@
   .ph a.num .ic{width:17px;height:17px;color:var(--go)}
   .ph .src,.nt .src{display:block;font-size:12px;color:var(--soft);margin-top:2px}
   .ph .dnc{display:block;font-size:12px;color:var(--later);margin-top:3px;font-weight:700}
-  .ph button.lnk,.nt button.lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer}
+  .ph button.lnk,.nt button.lnk,.wk button.lnk,.res button.lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer}
   .phf{margin-top:6px;display:grid;gap:10px;background:var(--sunk);border-radius:14px;padding:12px}
   .phf label{font-size:12.5px;font-weight:700;color:var(--soft);display:grid;gap:5px}
   .phf input,.phf select,.phf textarea{font:16px var(--sans);padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;
@@ -566,6 +566,32 @@
   .area .sub.also{margin-top:1px;font-size:12.5px}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
   .strh:first-of-type{margin-top:6px}
+  .wk{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+  .wk .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-right:2px}
+  .wk .wt{border-radius:999px;padding:5px 11px;background:var(--later-tint);color:var(--later);font:700 13px var(--sans)}
+  .wk .src{flex-basis:100%;font-size:12px;color:var(--soft)}
+  .wkf{margin-top:10px;border-radius:14px;padding:12px;background:var(--later-tint);flex-basis:100%}
+  .wkf .lq{font-size:14px;font-weight:700;color:var(--later)}
+  .wkf .lsub{font-size:12.5px;color:var(--soft);margin:2px 0 9px}
+  .wkf .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
+  .wkf .grid button{border:1px solid var(--line);border-radius:12px;min-height:46px;padding:8px 10px;background:var(--card);color:var(--ink);font:700 13.5px var(--sans);text-align:left;cursor:pointer}
+  .wkf .grid button[aria-pressed="true"]{background:var(--later);border-color:var(--later);color:var(--card)}
+  .wkf .row2{display:flex;gap:8px;margin-top:10px}
+  .wkf .row2 button{flex:1;min-height:44px;border-radius:12px;border:0;font:700 14px var(--sans);cursor:pointer;background:transparent;color:var(--soft)}
+  .wkf .row2 button.save{background:var(--later);color:var(--card)}
+  .res{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+  .res .rb{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
+  .res .rb.won{border-color:var(--go);color:var(--go)}
+  .res .rb.lost{border-color:var(--miss);color:var(--miss)}
+  .res .src{font-size:12px;color:var(--soft)}
+  .resf{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .resf input{min-height:44px;width:140px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:700 16px var(--sans);background:var(--card);color:var(--ink)}
+  .rtw{overflow-x:auto;margin:6px 0 18px}
+  table.rt{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+  table.rt th{text-align:right;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.rt th:first-child,table.rt td:first-child{text-align:left}
+  table.rt td{text-align:right;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.rt tr.few td{color:var(--soft);opacity:.7}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -718,7 +744,7 @@
      (5xx) or a signed-out session (401). Dropped: anything sent, or refused as invalid (other
      4xx), so one bad item can never block the rest. (Fixed 2026-10-03: this used to drop on a
      server error and stall for ever on a refused item.) Photos go after. */
-  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix' };
+  var QACTION = { mark: 'mark', note: 'note', phone: 'phone', email: 'email', lawnfix: 'lawnfix', work: 'work' };
   /* An item is let go only when OUR server answered: sent (ok), or refused as invalid (400/404/
      413, a JSON reply). Anything else is kept (2026-10-03 review): a Wi-Fi sign-in page or a
      firewall page answers with HTML, and the old rule read that as "refused" and emptied the
@@ -1081,6 +1107,8 @@
       box.appendChild(tile('button', 'clip', 'Quotes to build',
         'Every door marked Quote booked, newest first, with the number, the note, the fire hazard and a satellite link. Tick each one off when the quote goes out.', 'Admin only', quotesView));
     }
+    if (S.role === 'admin') box.appendChild(tile('button', 'table', 'Results',
+      'Which doors turn into jobs: knocked, booked and won, by fire hazard, lawn, trees, county value, town and extra work.', 'Admin only', resultsView));
     box.appendChild(tile('button', 'chart', 'My stats',
       'How your days went: doors knocked, people talked to, quotes booked. Today next to your recent days.', null, function () { statsView(S.me, chooseView); }));
     if (S.role === 'admin') box.appendChild(tile('button', 'users', 'Team stats',
@@ -1574,7 +1602,7 @@
         if (now && now.prev) bits.push('before the house sold');
         if (now && now.by && now.by !== who) bits.push('changed since by ' + now.by);
         else if (!now && r.mine && r.mine.outcome) bits.push('put back on the list since');
-        if (r.did.length) bits.push('added ' + r.did.join(', '));
+        if (r.did.length) bits.push('added ' + r.did.map(function (x) { return x === 'work' ? 'extra work' : x; }).join(', '));
         if (bits.length) st.appendChild(q('span', null, bits.join(' · ')));
         c.appendChild(st);
         if (S.mdLater === r.id) { c.appendChild(laterRow(r)); return c; }
@@ -2066,9 +2094,10 @@
     if (S.editPhone === d.id || d.phone) wrap.appendChild(phoneBlock(d));
     if (S.editNote === d.id || d.note) wrap.appendChild(noteBlock(d));
     if (S.editEmail === d.id || d.email) wrap.appendChild(emailBlock(d));
+    if (S.editWork === d.id || d.work) wrap.appendChild(workBlock(d));
     if (d.photos && d.photos.length) wrap.appendChild(photoStrip(d, S.region));
     /* slimmer card: satellite and the add buttons share one row of small chips */
-    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id;      /* one form at a time */
+    var editing = S.editPhone === d.id || S.editNote === d.id || S.editEmail === d.id || S.editWork === d.id;      /* one form at a time */
     var row = q('div', 'adds'), n = 0;
     var sat = satLink(d, true);
     if (sat) { row.appendChild(sat); n++; }
@@ -2077,9 +2106,66 @@
       if (!d.email) { addLink(row, 'mail', '+ Email', 'Add an email address', function () { S.editEmail = d.id; S.editPhone = null; S.editNote = null; renderDoors(); }); n++; }
       if (!d.note) { addLink(row, 'note', '+ Note', 'Add a note', function () { S.editNote = d.id; S.editPhone = null; S.editEmail = null; renderDoors(); }); n++; }
       if (!d.photos || d.photos.length < 20) { addLink(row, 'camera', '+ Photo', 'Add photos of the property', function () { pickPhotos(d, S.region, renderDoors); }); n++; }
+      if (!d.work) { addLink(row, 'list', '+ Extra work', 'Note other work this property needs', function () { S.editWork = d.id; S.workPick = []; S.editPhone = null; S.editNote = null; S.editEmail = null; renderDoors(); }); n++; }
     }
     if (n) wrap.appendChild(row);
     return wrap;
+  }
+  /* ---- extra work spotted at the door (2026-10-03) ----
+     One door, several jobs: tap what you saw. Saved with no signal too, like a lawn answer. */
+  var WORK = [['roof', 'Branches over the roof'], ['gutters', 'Gutters full of debris'], ['brush', 'Brush or junk against the house'],
+              ['deadtree', 'Dead or dying trees'], ['irrigation', 'Irrigation problem'], ['bare', 'Bare or patchy lawn'], ['beds', 'Overgrown beds or weeds']];
+  var WORK_LABEL = {}; WORK.forEach(function (w) { WORK_LABEL[w[0]] = w[1]; });
+  function workChips(w, withSrc) {
+    var box = q('div', 'wk');
+    box.appendChild(q('span', 'wl', 'Extra work'));
+    w.tags.forEach(function (t) { box.appendChild(q('span', 'wt', WORK_LABEL[t] || t)); });
+    if (withSrc) box.appendChild(q('span', 'src', 'Seen' + (w.by ? ' by ' + w.by : '') + (w.at ? ' · ' + fmtDay(w.at) : '') + (w.pending ? ' · not sent yet' : '')));
+    return box;
+  }
+  function workBlock(d) {
+    if (S.editWork !== d.id) {
+      var box = workChips(d.work, true);
+      var ed = q('button', 'lnk', 'Change'); ed.type = 'button';
+      ed.addEventListener('click', function () { S.editWork = d.id; S.workPick = d.work.tags.slice(); renderDoors(); });
+      box.appendChild(ed);
+      return box;
+    }
+    var f = q('div', 'wkf');
+    f.appendChild(q('div', 'lq', 'What else needs doing here?'));
+    f.appendChild(q('div', 'lsub', 'Tap everything you saw. Each one can be its own job.'));
+    var grid = q('div', 'grid');
+    WORK.forEach(function (w) {
+      var b = q('button', null, w[1]); b.type = 'button';
+      b.setAttribute('aria-pressed', String(S.workPick.indexOf(w[0]) >= 0));
+      b.addEventListener('click', function () {
+        var i = S.workPick.indexOf(w[0]); if (i >= 0) S.workPick.splice(i, 1); else S.workPick.push(w[0]);
+        b.setAttribute('aria-pressed', String(i < 0));
+      });
+      grid.appendChild(b);
+    });
+    f.appendChild(grid);
+    var row = q('div', 'row2');
+    var sv = q('button', 'save', 'Save'); sv.type = 'button';
+    sv.addEventListener('click', function () { saveWork(d, S.workPick.slice()); });
+    var cx = q('button', null, 'Cancel'); cx.type = 'button';
+    cx.addEventListener('click', function () { S.editWork = null; renderDoors(); });
+    row.appendChild(sv); row.appendChild(cx); f.appendChild(row);
+    return f;
+  }
+  function saveWork(d, tags) {
+    var body = { region: S.region, id: d.id, work: tags };
+    var after = function (pending) {
+      d.work = tags.length ? { tags: tags, by: S.me, at: Math.floor(Date.now() / 1000), pending: !!pending } : null;
+      S.editWork = null; renderDoors();
+    };
+    api('work', { body: body }).then(function (j) {
+      if (j._status === 401) return keepAndSignIn('work', body);
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      dropQueued('work', S.region, d.id);
+      after(false);
+      toast(tags.length ? tags.length + (tags.length === 1 ? ' job' : ' jobs') + ' noted' : 'Extra work cleared', d.address, null);
+    }).catch(function () { if (enqueueSave('work', body)) after(true); });
   }
   /* ---- email (2026-10-02): for people who'd rather not give a number ---- */
   function emailBlock(d) {
@@ -2509,6 +2595,7 @@
       nt.appendChild(q('div', 'ntxt', x.note.note)); maybeNote(nt, x.note);
       nt.appendChild(q('span', 'src', 'Note · ' + (x.note.by || 'crew') + ' · ' + fmtDay(x.note.at))); c.appendChild(nt);
     }
+    if (x.work) c.appendChild(workChips(x.work, false));
     c.appendChild(q('div', 'meta', 'Booked by ' + (x.by || 'crew') + ' · ' + fmtDay(x.at)));
     var tools = q('div', 'adds'); var sat = satLink(x, true); if (sat) tools.appendChild(sat);
     /* straight into Quote build with the address as the job name and the county's funding picked (SX-3) */
@@ -2527,7 +2614,128 @@
       }).catch(function () { b.disabled = false; window.alert('No connection. Try again when you have signal.'); });
     });
     c.appendChild(b);
+    c.appendChild(resultBox(x));
     return c;
+  }
+  /* ---- what became of it (2026-10-03): won with the job's value, or lost with a reason.
+     The Results screen reads these to show which doors actually turn into jobs. ---- */
+  var LOST = [['price', 'Price'], ['other', 'Went with someone else'], ['later', 'Not now, maybe later'], ['silent', 'Stopped answering'], ['diy', 'Doing it themselves']];
+  var LOST_LABEL = {}; LOST.forEach(function (w) { LOST_LABEL[w[0]] = w[1]; });
+  function dollars(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function resultBox(x) {
+    var box = q('div', 'res');
+    if (x.result) {
+      var won = x.result.result === 'won';
+      box.appendChild(q('span', 'tag ' + (won ? 'booked' : 'miss'), won ? 'Won' + (x.result.value ? ' · ' + dollars(x.result.value) : '') : 'Lost' + (x.result.why ? ' · ' + (LOST_LABEL[x.result.why] || x.result.why) : '')));
+      box.appendChild(q('span', 'src', (x.result.by || '') + ' · ' + fmtDay(x.result.at)));
+      var ch = q('button', 'lnk', 'Change'); ch.type = 'button';
+      ch.addEventListener('click', function () { saveResult(x, { result: null }); });
+      box.appendChild(ch);
+      return box;
+    }
+    if (S.resEdit === x.id && S.resKind === 'won') {
+      var fw = q('div', 'resf');
+      var lb = q('label', null, 'Job value $ ');
+      var inp = q('input'); inp.type = 'number'; inp.inputMode = 'numeric'; inp.min = '0'; inp.step = '50'; inp.id = 'won-' + x.id;
+      lb.appendChild(inp); fw.appendChild(lb);
+      var sv = q('button', 'rb won', 'Save as won'); sv.type = 'button';
+      sv.addEventListener('click', function () { saveResult(x, { result: 'won', value: inp.value === '' ? null : inp.value }); });
+      var cx = q('button', 'lnk', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.resEdit = null; drawQuotes(); });
+      fw.appendChild(sv); fw.appendChild(cx); box.appendChild(fw);
+      setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
+      return box;
+    }
+    if (S.resEdit === x.id && S.resKind === 'lost') {
+      var fl = q('div', 'resf'); fl.appendChild(q('span', 'src', 'Why?'));
+      LOST.forEach(function (w) {
+        var rb = q('button', 'rb lost', w[1]); rb.type = 'button';
+        rb.addEventListener('click', function () { saveResult(x, { result: 'lost', why: w[0] }); });
+        fl.appendChild(rb);
+      });
+      var cl = q('button', 'lnk', 'Cancel'); cl.type = 'button'; cl.addEventListener('click', function () { S.resEdit = null; drawQuotes(); });
+      fl.appendChild(cl); box.appendChild(fl);
+      return box;
+    }
+    [['won', 'Won'], ['lost', 'Lost']].forEach(function (k) {
+      var rb = q('button', 'rb ' + k[0], k[1]); rb.type = 'button';
+      rb.addEventListener('click', function () { S.resEdit = x.id; S.resKind = k[0]; drawQuotes(); });
+      box.appendChild(rb);
+    });
+    return box;
+  }
+  function saveResult(x, change) {
+    var body = { region: x.region, id: x.id }; for (var k in change) body[k] = change[k];
+    api('result', { body: body }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      S.resEdit = null;
+      toast(change.result === 'won' ? 'Won' : change.result === 'lost' ? 'Lost' : 'Back to open', x.address, null);
+      quotesView();
+    }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+  }
+  /* drawn from the list already loaded, so opening a Won or Lost form keeps the page where it is */
+  function drawQuotes() {
+    var holder = S.qholder, list = S.qlist || [];
+    if (!holder) return;
+    var y = window.scrollY;
+    holder.textContent = '';
+    if (!list.length) { holder.appendChild(q('div', 'msg', 'No quotes booked yet. They appear here the moment a crew member taps Quote booked.')); return; }
+    var closed = list.filter(function (x) { return x.result; });
+    var open = list.filter(function (x) { return !x.result && !x.quoted; });
+    var sent = list.filter(function (x) { return !x.result && x.quoted; });
+    holder.appendChild(q('div', 'sub2', open.length + ' to build · ' + sent.length + ' sent' + (closed.length ? ' · ' + closed.length + ' won or lost' : '')));
+    open.forEach(function (x) { holder.appendChild(quoteCard(x)); });
+    [['sent', 'Sent', sent, 'showSent'], ['closed', 'Won or lost', closed, 'showClosed']].forEach(function (g) {
+      if (!g[2].length) return;
+      holder.appendChild(q('h2', null, g[1] + ' · ' + g[2].length));
+      var tg = q('button', 'back', (S[g[3]] ? '↓ Hide' : '→ Show') + ' these ' + g[2].length); tg.type = 'button';
+      tg.addEventListener('click', function () { S[g[3]] = !S[g[3]]; drawQuotes(); });
+      holder.appendChild(tg);
+      if (S[g[3]]) g[2].forEach(function (x) { holder.appendChild(quoteCard(x)); });
+    });
+    window.scrollTo(0, y);
+  }
+  /* ---- Results (2026-10-03): which scores actually convert. Fills up as quotes are marked
+     won or lost in Quotes to build. ---- */
+  var RES_DIMS = [
+    ['fire', 'Fire hazard', [['5', 'Very high'], ['4', 'High'], ['3', 'Moderate'], ['2', 'Low'], ['1', 'Very low'], ['x', 'Not rated']]],
+    ['lawn', 'Lawn', [['L', 'Large'], ['M', 'Medium'], ['S', 'Small'], ['N', 'Little or none'], ['T', 'Mostly trees'], ['x', 'No estimate']]],
+    ['trees', 'Trees near the house', [['against', 'Against the house'], ['heavy', 'Heavy within 30 ft'], ['some', 'Some within 30 ft'], ['clear', 'Few or none'], ['x', 'No tree data']]],
+    ['value', 'County value', [['a', 'Under $400k'], ['b', '$400k–600k'], ['c', '$600k–800k'], ['d', '$800k–1M'], ['e', '$1M and up'], ['x', 'No value (El Paso)']]],
+    ['work', 'Extra work spotted', null],
+    ['town', 'Town', null]];
+  function pct(a, b) { return b ? Math.round(100 * a / b) + '%' : '—'; }
+  function resultsView() {
+    hideToast(); S.signin = null; S.screen = 'results'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Results', sub: 'Which doors turn into jobs', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('results').then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the results.')); return; }
+      var t = j.total;
+      holder.appendChild(q('div', 'msg', 'Every door anyone has marked, and what became of it. Booked means Quote booked at the door; won and lost are set in Quotes to build. Grey rows have fewer than 10 doors knocked, which is too few to read anything into.'));
+      holder.appendChild(q('div', 'sub2', t.knocked + ' knocked · ' + t.booked + ' booked (' + pct(t.booked, t.knocked) + ') · ' + t.won + ' won · ' + t.lost + ' lost' + (t.won ? ' · ' + dollars(t.value) + ' won' : '')));
+      RES_DIMS.forEach(function (dm) {
+        var rows = j.dims[dm[0]] || {};
+        var order = dm[2] || (dm[0] === 'work' ? WORK.map(function (w) { return [w[0], w[1]]; }).concat([['none', 'Nothing extra spotted']])
+                                               : Object.keys(rows).sort().map(function (k) { return [k, k]; }));
+        order = order.filter(function (o) { return rows[o[0]]; });
+        if (!order.length) return;
+        holder.appendChild(q('h2', null, dm[1]));
+        var wrap = q('div', 'rtw'), tb = q('table', 'rt');
+        var hr = q('tr'); ['', 'Knocked', 'Booked', 'Rate', 'Won', 'Lost', 'Win rate', 'Avg job'].forEach(function (h) { hr.appendChild(q('th', null, h)); });
+        tb.appendChild(hr);
+        order.forEach(function (o) {
+          var r = rows[o[0]], tr = q('tr', r.knocked < 10 ? 'few' : null);
+          [o[1], r.knocked, r.booked, pct(r.booked, r.knocked), r.won, r.lost, pct(r.won, r.won + r.lost), r.won ? dollars(r.value / r.won) : '—']
+            .forEach(function (v) { tr.appendChild(q('td', null, String(v))); });
+          tb.appendChild(tr);
+        });
+        wrap.appendChild(tb); holder.appendChild(wrap);
+      });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
   function quotesView() {
     hideToast();
@@ -2542,18 +2750,8 @@
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the list.')); return; }
-      if (!j.quotes.length) { holder.appendChild(q('div', 'msg', 'No quotes booked yet. They appear here the moment a crew member taps Quote booked.')); return; }
-      var open = j.quotes.filter(function (x) { return !x.quoted; });
-      var sent = j.quotes.filter(function (x) { return x.quoted; });
-      holder.appendChild(q('div', 'sub2', open.length + ' to build · ' + sent.length + ' sent'));
-      open.forEach(function (x) { holder.appendChild(quoteCard(x)); });
-      if (sent.length) {
-        holder.appendChild(q('h2', null, 'Sent · ' + sent.length));
-        var tg = q('button', 'back', (S.showSent ? '↓ Hide' : '→ Show') + ' sent quotes'); tg.type = 'button';
-        tg.addEventListener('click', function () { S.showSent = !S.showSent; quotesView(); });
-        holder.appendChild(tg);
-        if (S.showSent) sent.forEach(function (x) { holder.appendChild(quoteCard(x)); });
-      }
+      S.qlist = j.quotes; S.qholder = holder;
+      drawQuotes();
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
 

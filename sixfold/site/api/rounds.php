@@ -411,6 +411,43 @@ function loadLawnFix(string $key): array {
 function appendLawnFix(string $key, array $row): bool {
     return (bool) @file_put_contents(lawnfixFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- extra work spotted at the door (2026-10-03) ----------------------------
+ * One door can be several jobs: branches over the roof, gutters full, an irrigation problem.
+ * The crew taps what they saw; the whole set is saved each time, last line per door wins, an
+ * empty set clears it. About the property, not the owner, so a house sale does not hide it. */
+const WORK_TAGS = ['roof', 'gutters', 'brush', 'deadtree', 'irrigation', 'bare', 'beds'];
+const WORK_LABEL = ['roof' => 'Branches over the roof', 'gutters' => 'Gutters full of debris', 'brush' => 'Brush or junk against the house',
+    'deadtree' => 'Dead or dying trees', 'irrigation' => 'Irrigation problem', 'bare' => 'Bare or patchy lawn', 'beds' => 'Overgrown beds or weeds'];
+function loadWork(string $key): array {
+    $out = [];
+    foreach (logRows('work', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'])) continue;
+        $t = array_values(array_intersect((array) ($r['work'] ?? []), WORK_TAGS));
+        if (!$t) unset($out[$r['id']]);
+        else $out[$r['id']] = ['tags' => $t, 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    return $out;
+}
+function appendWork(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/work-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+/* ---- what became of a booked quote (2026-10-03) ------------------------------
+ * Won (with the job's value) or lost (with a reason), set from Quotes to build. Over time this
+ * says which doors actually turn into jobs — the results report reads it. Last line wins. */
+const LOST_WHY = ['price', 'other', 'later', 'silent', 'diy'];
+const LOST_LABEL = ['price' => 'Price', 'other' => 'Went with someone else', 'later' => 'Not now, maybe later', 'silent' => 'Stopped answering', 'diy' => 'Doing it themselves'];
+function loadResults(string $key): array {
+    $out = [];
+    foreach (logRows('result', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (($r['result'] ?? null) !== 'won' && ($r['result'] ?? null) !== 'lost') unset($out[$r['id']]);
+        else $out[$r['id']] = ['result' => $r['result'], 'value' => $r['value'] ?? null, 'why' => $r['why'] ?? '', 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    return $out;
+}
+function appendResult(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/result-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
 /* ---- emails (2026-10-02) ------------------------------------------------
  * For people who'd rather not give a number. Given at the door only: nothing looks
  * emails up. Last line per door wins; null removes it. */
@@ -694,6 +731,7 @@ if ($action === 'area') {
     $lfix = loadLawnFix($key);
     $emails = loadEmails($key);
     $photos = loadPhotos($key);
+    $work = loadWork($key);
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -717,6 +755,7 @@ if ($action === 'area') {
                 'lawnfix' => $lfix[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
                 'val' => $d['val'] ?? null,
+                'work' => $work[$d['id']] ?? null,
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
@@ -950,7 +989,7 @@ if ($action === 'mydoors') {
             $h['at'] = max($h['at'], (int) $m['at']);
             $hit[$m['id']] = $h;
         }
-        foreach ([['phone', 'phones'], ['email', 'emails'], ['note', 'notes'], ['photo', 'photos']] as [$what, $kind]) {
+        foreach ([['phone', 'phones'], ['email', 'emails'], ['note', 'notes'], ['photo', 'photos'], ['work', 'work']] as [$what, $kind]) {
             foreach ($read(logRows($kind, $k), true) as $r) {
                 if ($what === 'photo' && !empty($r['del'])) continue;
                 if ($what !== 'photo' && ($r[$what] ?? null) === null) continue;
@@ -1079,6 +1118,87 @@ if ($action === 'lawnfix') {
     out(['ok' => true]);
 }
 
+if ($action === 'work') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    $tags = $body['work'] ?? [];
+    if (!is_array($tags) || count($tags) > count(WORK_TAGS)) fail('Bad list of work.');
+    foreach ($tags as $t) if (!in_array($t, WORK_TAGS, true)) fail('Unknown kind of work.');
+    $tags = array_values(array_unique($tags));
+    if (!appendWork($key, ['id' => $id, 'work' => $tags ?: null, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+if ($action === 'result') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    $result = $body['result'] ?? null;
+    if ($result !== null && $result !== 'won' && $result !== 'lost') fail('Won or lost only.');
+    $value = null;
+    if ($result === 'won' && ($body['value'] ?? '') !== '' && $body['value'] !== null) {
+        if (!is_numeric($body['value']) || $body['value'] < 0 || $body['value'] > 1000000) fail('The job value has to be a dollar amount.');
+        $value = (int) round((float) $body['value']);
+    }
+    $why = $result === 'lost' ? (string) ($body['why'] ?? '') : '';
+    if ($why !== '' && !in_array($why, LOST_WHY, true)) fail('Unknown reason.');
+    if (!appendResult($key, ['id' => $id, 'result' => $result, 'value' => $value, 'why' => $why, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+/* ---- results: which doors turn into jobs (2026-10-03) ---------------------------
+ * Every door anyone has marked, bucketed by what the app knew about it — fire hazard, lawn,
+ * trees, county value, town, extra work — and what became of it: talked to, booked, quote
+ * sent, won, lost. No-soliciting doors are left out (nobody could knock). Admin only. */
+if ($action === 'results') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $blank = ['knocked' => 0, 'talked' => 0, 'booked' => 0, 'quoted' => 0, 'won' => 0, 'lost' => 0, 'value' => 0];
+    $dims = ['fire' => [], 'lawn' => [], 'trees' => [], 'value' => [], 'town' => [], 'work' => []];
+    $total = $blank;
+    $add = function (string $dim, string $k, array $row) use (&$dims, $blank) {
+        $cur = $dims[$dim][$k] ?? $blank;
+        foreach ($row as $f => $v) $cur[$f] += $v;
+        $dims[$dim][$k] = $cur;
+    };
+    foreach (($idx['regions'] ?? []) as $r) {
+        $data = loadRegion($r['key']);
+        if (!$data) continue;
+        $marks = loadMarks($r['key']); $quoted = loadQuoted($r['key']); $res = loadResults($r['key']);
+        $lfix = loadLawnFix($r['key']); $work = loadWork($r['key']);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            $m = $marks[$d['id']] ?? null;
+            if (!$m || $m['outcome'] === 'nosolicit') continue;
+            $booked = $m['outcome'] === 'booked';
+            $rs = $booked ? ($res[$d['id']] ?? null) : null;
+            $row = ['knocked' => 1, 'talked' => ($booked || $m['outcome'] === 'later') ? 1 : 0, 'booked' => $booked ? 1 : 0,
+                    'quoted' => ($booked && isset($quoted[$d['id']])) ? 1 : 0,
+                    'won' => ($rs && $rs['result'] === 'won') ? 1 : 0, 'lost' => ($rs && $rs['result'] === 'lost') ? 1 : 0,
+                    'value' => ($rs && $rs['result'] === 'won') ? (int) ($rs['value'] ?? 0) : 0];
+            foreach ($row as $f => $v) $total[$f] += $v;
+            $f = (int) ($d['fire'] ?? 0);
+            $add('fire', ($f >= 1 && $f <= 5) ? (string) $f : 'x', $row);
+            $add('lawn', lawnLevel($d, $lfix) ?? 'x', $row);
+            $add('trees', treeLevel($d) ?? 'x', $row);
+            $v = (int) ($d['val'] ?? 0);
+            $add('value', !$v ? 'x' : ($v < 400000 ? 'a' : ($v < 600000 ? 'b' : ($v < 800000 ? 'c' : ($v < 1000000 ? 'd' : 'e')))), $row);
+            $add('town', (string) ($r['label'] ?? $r['key']), $row);
+            $wk = $work[$d['id']]['tags'] ?? [];
+            if (!$wk) $add('work', 'none', $row);
+            foreach ($wk as $t) $add('work', $t, $row);
+        }
+    }
+    out(['ok' => true, 'total' => $total, 'dims' => $dims]);
+}
+
 if ($action === 'note') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
@@ -1143,6 +1263,8 @@ if ($action === 'quotes') {
         $lfix = loadLawnFix($r['key']);
         $emails = loadEmails($r['key']);
         $photos = loadPhotos($r['key']);
+        $work = loadWork($r['key']);
+        $res = loadResults($r['key']);
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = freshMark($d, $marks[$d['id']] ?? null);
@@ -1162,6 +1284,9 @@ if ($action === 'quotes') {
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                     'quoted' => $qd,
                     'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null,
+                    'work' => $work[$d['id']] ?? null,
+                    /* a result from before this booking belongs to an earlier one */
+                    'result' => (($res[$d['id']] ?? null) && (int) $res[$d['id']]['at'] >= (int) $m['at']) ? $res[$d['id']] : null,
                     'email' => $em ? $em + ownerFlag($d, $em) : null, 'photos' => $photos[$d['id']] ?? [],
                 ];
             }
@@ -1245,7 +1370,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value'], ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason'], ',', '"', '');
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -1255,6 +1380,8 @@ if ($action === 'report' || $action === 'export') {
         $lfix = loadLawnFix($r['key']);
         $emails = loadEmails($r['key']);
         $photos = loadPhotos($r['key']);
+        $work = loadWork($r['key']);
+        $res = loadResults($r['key']);
         if (!$data) continue;
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
@@ -1264,7 +1391,9 @@ if ($action === 'report' || $action === 'export') {
                 $lf = $lfix[$d['id']] ?? null;
                 $em = $emails[$d['id']] ?? null;
                 $ph = count($photos[$d['id']] ?? []);
-                if (!$m && !$p && !$n && !$lf && !$em && !$ph) continue;   // anything collected at a door is worth exporting
+                $wk = $work[$d['id']] ?? null;
+                $rs = $res[$d['id']] ?? null;
+                if (!$m && !$p && !$n && !$lf && !$em && !$ph && !$wk && !$rs) continue;   // anything collected at a door is worth exporting
                 fputcsv($fh, array_map('csvSafe', [$r['label'], $a['name'], $d['address'], $d['acres'], $d['owner'],
                               $m['outcome'] ?? '', $m['by'] ?? '', $m ? date('Y-m-d H:i', (int) $m['at']) : '', $m['revisit'] ?? '',
                               $p['phone'] ?? '', $p ? ($srcName[$p['source']] ?? $p['source']) : '', $p['seen'] ?? '',
@@ -1273,7 +1402,9 @@ if ($action === 'report' || $action === 'export') {
                               $d['lawn']['lv'] ?? '', $d['lawn']['sq'] ?? '', $d['lawn']['yr'] ?? '', $lf['lv'] ?? '', $lf['by'] ?? '',
                               $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
-                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '', $d['val'] ?? '']), ',', '"', '');
+                              $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '', $d['val'] ?? '',
+                              $wk ? implode('; ', array_map(fn($t) => WORK_LABEL[$t] ?? $t, $wk['tags'])) : '',
+                              $rs['result'] ?? '', $rs['value'] ?? '', $rs ? (LOST_LABEL[$rs['why']] ?? '') : '']), ',', '"', '');
             }
         }
     }

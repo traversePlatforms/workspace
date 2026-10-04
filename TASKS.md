@@ -656,6 +656,29 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Network-first service worker: with signal nothing changes; with none, the last copy of the page,
       sign-in, towns and recent neighbourhoods open with a strip. Sign-out wipes it. 12 checks with the
       server really off.
+- [ ] **SX-36 — Extra work spotted at the door: ✅ BUILT AND TESTED 2026-10-03, awaiting upload (`index.html` + `rounds.php`).**
+      Matthew's list: one door can lead to several jobs. "+ Extra work" on every card: branches over the
+      roof, gutters full of debris, brush or junk against the house, dead or dying trees, irrigation
+      problem, bare or patchy lawn, overgrown beds or weeds. Saves with no signal; shows on the card, in
+      Quotes to build and the export (`extra_work`). About the property, so a sale does not hide it.
+- [ ] **SX-37 — Results tracking: ✅ BUILT AND TESTED 2026-10-03, awaiting upload.** Booked doors get Won (job
+      value) or Lost (reason: price, someone else, maybe later, stopped answering, doing it themselves) in
+      Quotes to build; won and lost move to their own section. New admin **Results** screen: knocked →
+      booked → won by fire hazard, lawn, trees, county value, town and extra work, with rows under 10 doors
+      greyed. Matthew: "over time this proves the app works and makes the scoring smarter." 23 checks.
+- [ ] **SX-38..47 — the rest of Matthew's 2026-10-03 upgrade list, in his agreed order after SX-36/37:**
+      **SX-38** lawn photo in the lawn chip (2023 aerial with the counted lawn shaded; greenness + image
+      dates for Large) · **SX-39** tips on the stats page from each person's numbers · **SX-40** HOA /
+      Firewise view to pitch a whole community · **SX-41** alerts: NWS red flag / fire weather / heat / air
+      quality, nearby fires (national incident feed), fire-season countdown; banner + email to Contact@ via
+      a SiteGround cron; never knock inside an active fire or evacuation · **SX-42** scheduled lawn health:
+      every 1-2 months May-Sept, same month last year, skip winter/snow/cloud, show image dates ·
+      **SX-43** fuel overgrowth yearly in late spring; the 2-yearly USDA aerial (0.6 m) is the real signal,
+      10 m mostly noise; crew Before/After photo tags for homeowners · **SX-44** route planning (walking
+      order + open in Maps) · **SX-45** Jobber-format CSV (only if Jobber is adopted; the CRM decision was
+      no purchase) · **SX-46** Do Not Call scrubbing, gated on Sixfold registering (federal list free for
+      5 area codes; Colorado's list believed paid, unconfirmed); door-given numbers are consent ·
+      **SX-47** county wildfire protection plans (El Paso, Douglas, Teller): tag the neighbourhoods they name.
 - [x] **SX-35 — When a house sells: ✅ LIVE 2026-10-03, verified signed in (Claude Check code), rides with the upload.** Owner history
       across rebuilds; a real change (no shared name) sets "new owner since". Records surely from before
       the sale are set aside and labelled; ones from the window around the sale stay live with "check

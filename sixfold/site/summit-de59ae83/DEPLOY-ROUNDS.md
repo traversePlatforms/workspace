@@ -5,7 +5,20 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⚑ NEXT UPLOAD — Fable's live-review fixes (2 files)
+## ⚑ NEXT UPLOAD — Fable's live-review fixes + extra work + results (2 files)
+
+**Extra work at the door (SX-36).** "+ Extra work" on every card: tap what you saw (branches over the
+roof, gutters, brush against the house, dead trees, irrigation, bare lawn, overgrown beds). One door,
+several jobs. Saves with no signal; shows in Quotes to build and the export.
+
+**Results (SX-37).** In Quotes to build, each booked door gets **Won** (with the job value) or **Lost**
+(with a reason); they move to a "Won or lost" section. A new admin **Results** tile shows knocked →
+booked → won by fire hazard, lawn, trees, county value, town and extra work. It fills up as quotes are
+closed; rows with under 10 doors are greyed.
+
+New logs `work-<town>.log` and `result-<town>.log` appear in `sixfold-data/rounds/` by themselves.
+
+**Also in this upload, from Fable's live review:**
 
 From Fable's read-only review of the LIVE site, 2026-10-03 (nothing broken; these are clarity):
 - **Neighbourhoods name their other streets.** 62% of doors are on a street other than the one in
@@ -27,7 +40,7 @@ From Fable's read-only review of the LIVE site, 2026-10-03 (nothing broken; thes
 | 3 | — | Flush the cache. No one needs to sign in again. |
 
 Either order works (the page ignores the new street list until the server sends it).
-Sizes to check after upload: `index.html` **209,164** bytes, `rounds.php` **73,688** bytes.
+Sizes to check after upload: `index.html` **222,992** bytes, `rounds.php` **81,839** bytes.
 
 ---
 
