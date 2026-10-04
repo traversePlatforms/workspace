@@ -1,0 +1,9 @@
+# The field tools are a signed-in app that must always load fresh (2026-10-04).
+# SiteGround's Dynamic Cache kept serving the OLD app at /summit-de59ae83/ after an upload and a
+# flush, while /summit-de59ae83/index.html was fresh, so phones opened yesterday's version.
+# SiteGround's documented way to keep a non-WordPress folder out of the Dynamic Cache is
+# Cache-Control "private" (siteground.com/kb/disable-dynamic-caching-website). After uploading
+# this file, flush the Dynamic Cache once; uploads after that need no flush.
+<IfModule mod_headers.c>
+Header set Cache-Control "private, no-cache"
+</IfModule>
