@@ -1,0 +1,325 @@
+<title>Sixfold Field Tools Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Sixfold house register: pine, timber, bone, ember, moss. One reading column with a contents rail on wide screens;
+   each section answers one question about the app. */
+:root {
+  --ground: #F4F0E8; --surface: #FFFDF9; --sunk: #ECE6DA; --ink: #16201C; --soft: #55635B; --rule: #DCD3C3;
+  --pine: #1F2A25; --ember: #B84C15; --ember-2: #E4703A; --moss: #4E6142; --moss-tint: #DDEBE1; --amber: #8F5C0E; --amber-tint: #F5E7CF;
+  --f-display: "Bitter", Georgia, serif; --f-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif; --f-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --measure: 70ch;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #0E1512; --surface: #18221D; --sunk: #131C18; --ink: #EDE7DC; --soft: #A3AEA6; --rule: #2B3731;
+  --pine: #16201B; --ember: #F08A57; --ember-2: #E4703A; --moss: #A9C196; --moss-tint: #1B3323; --amber: #E2AA5C; --amber-tint: #3B2C12; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --ground: #0E1512; --surface: #18221D; --sunk: #131C18; --ink: #EDE7DC; --soft: #A3AEA6; --rule: #2B3731;
+  --pine: #16201B; --ember: #F08A57; --ember-2: #E4703A; --moss: #A9C196; --moss-tint: #1B3323; --amber: #E2AA5C; --amber-tint: #3B2C12; color-scheme: dark }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.6 var(--f-body); -webkit-font-smoothing: antialiased }
+.wrap { max-width: 74rem; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); padding-block: 0 72px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 48px }
+@media (min-width: 1080px) { .wrap { grid-template-columns: 15rem minmax(0, 1fr) } }
+header.mast { grid-column: 1 / -1; padding-block: clamp(28px, 6vw, 56px) 28px; border-bottom: 2px solid var(--rule); margin-bottom: 8px; display: grid; gap: 10px }
+.eyebrow { font: 500 12px/1.4 var(--f-data); letter-spacing: .16em; text-transform: uppercase; color: var(--moss) }
+h1 { font: 700 clamp(2rem, 5.5vw, 3.1rem)/1.1 var(--f-display); margin: 0; letter-spacing: -.01em; text-wrap: balance }
+.lede { font-size: clamp(1.05rem, 2.4vw, 1.2rem); color: var(--soft); max-width: 60ch; margin: 0 }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font: 500 13px var(--f-data); color: var(--soft); margin-top: 6px }
+.facts b { color: var(--ink); font-weight: 600 }
+nav.toc { display: none }
+@media (min-width: 1080px) { nav.toc { display: block; position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; padding-top: 28px; font-size: 14px } }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: s }
+nav.toc li { counter-increment: s }
+nav.toc a { color: var(--soft); text-decoration: none; display: flex; gap: 8px; padding: 3px 0 }
+nav.toc a::before { content: counter(s, decimal-leading-zero); font: 500 12px var(--f-data); color: var(--ember); padding-top: 2px }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--ink) }
+main { min-width: 0 }
+section { padding-top: 34px; scroll-margin-top: 16px }
+h2 { font: 600 clamp(1.4rem, 3.4vw, 1.85rem)/1.2 var(--f-display); margin: 0 0 12px; text-wrap: balance }
+h3 { font: 600 1.12rem/1.3 var(--f-display); margin: 26px 0 8px }
+p, li { max-width: var(--measure) }
+p { margin: 0 0 12px }
+ul, ol { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 5px }
+a { color: var(--ember) }
+a:focus-visible { outline: 3px solid var(--ember-2); outline-offset: 2px; border-radius: 2px }
+strong { font-weight: 700 }
+code { font: 500 .88em var(--f-data); background: var(--sunk); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere }
+.box { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 18px; margin: 14px 0 }
+.box > :last-child { margin-bottom: 0 }
+.note { border-left: 4px solid var(--amber); background: var(--amber-tint); border-radius: 0 12px 12px 0; padding: 12px 16px; margin: 14px 0 }
+.note > :last-child { margin-bottom: 0 }
+.tw { overflow-x: auto; margin: 12px 0 16px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 15px }
+th { text-align: left; font: 600 11.5px/1.3 var(--f-data); letter-spacing: .1em; text-transform: uppercase; color: var(--soft); background: var(--sunk); padding: 9px 12px; border-bottom: 1px solid var(--rule) }
+td { padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top }
+tr:last-child td { border-bottom: 0 }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap }
+td.k { font-weight: 700; white-space: nowrap }
+.chip { display: inline-block; font: 600 11.5px/1.5 var(--f-data); letter-spacing: .04em; border-radius: 999px; padding: 1px 9px; white-space: nowrap }
+.chip.all { background: var(--moss-tint); color: var(--moss) }
+.chip.adm { background: var(--amber-tint); color: var(--amber) }
+.flow { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); margin: 12px 0 16px; counter-reset: f }
+.flow div { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; counter-increment: f; font-size: 15px }
+.flow div::before { content: counter(f); display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--pine); color: #EDE7DC; font: 600 12px var(--f-data); margin-bottom: 6px }
+.flow b { display: block; font-family: var(--f-display); font-weight: 600 }
+footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule); font: 500 12.5px/1.6 var(--f-data); color: var(--soft) }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth } }
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <div class="eyebrow">Sixfold Colorado · internal · how the app works</div>
+  <h1>Sixfold Field Tools Guide</h1>
+  <p class="lede">What the door app does, every screen in it, where each piece of information comes from, how it saves and stays safe, and what it can't do yet.</p>
+  <div class="facts"><span><b>Address</b> sixfoldcolorado.com/summit-de59ae83/</span><span><b>Coverage</b> 30,464 doors · 11 towns · 3 counties</span><span><b>Written</b> 4 Oct 2026</span></div>
+</header>
+
+<nav class="toc" aria-label="Contents"><ol>
+  <li><a href="#what">What it is</a></li>
+  <li><a href="#people">Who uses it</a></li>
+  <li><a href="#day">A day at the doors</a></li>
+  <li><a href="#rounds">Door rounds, screen by screen</a></li>
+  <li><a href="#card">The door card</a></li>
+  <li><a href="#office">The office tools</a></li>
+  <li><a href="#quote">Quote builder</a></li>
+  <li><a href="#data">Where the data comes from</a></li>
+  <li><a href="#saving">How it saves, online and off</a></li>
+  <li><a href="#safety">Sign-in, privacy and security</a></li>
+  <li><a href="#switches">Switches you control</a></li>
+  <li><a href="#limits">Limits and known gaps</a></li>
+  <li><a href="#uploads">Updating the app</a></li>
+</ol></nav>
+
+<main>
+<section id="what">
+  <h2>What it is</h2>
+  <p>The field tools are Sixfold's own web app for door-to-door sales and the office work that follows. It runs on the Sixfold website, so there's nothing to install from an app store. Added to a phone's or iPad's home screen, it opens full screen with the Sixfold icon, like any other app.</p>
+  <p>It does three jobs:</p>
+  <ul>
+    <li><strong>Tells the crew which doors are worth knocking and why</strong>: every owner-occupied home in Sixfold's 11 towns, scored for fire hazard, lawn size and trees close to the house, with the money each homeowner can get for fire work.</li>
+    <li><strong>Records what happens at every door</strong>: quote booked, not now, no answer, no soliciting, plus phone numbers, emails, photos, notes, extra work spotted, fire checks and walk appointments. All of it saves with no signal.</li>
+    <li><strong>Runs the follow-up in the office</strong>: the pipeline from first call to won or lost, quote pricing, results, team numbers, territories and sign-ins.</li>
+  </ul>
+  <div class="tw"><table>
+    <thead><tr><th>County</th><th>Town</th><th class="num">Doors</th><th class="num">Neighbourhoods</th></tr></thead>
+    <tbody>
+      <tr><td class="k">El Paso</td><td>Black Forest</td><td class="num">9,286</td><td class="num">315</td></tr>
+      <tr><td></td><td>Monument</td><td class="num">7,071</td><td class="num">233</td></tr>
+      <tr><td></td><td>Palmer Lake</td><td class="num">444</td><td class="num">14</td></tr>
+      <tr><td class="k">Douglas</td><td>Castle Rock</td><td class="num">7,082</td><td class="num">260</td></tr>
+      <tr><td></td><td>Franktown</td><td class="num">1,545</td><td class="num">66</td></tr>
+      <tr><td></td><td>Larkspur</td><td class="num">671</td><td class="num">28</td></tr>
+      <tr><td></td><td>Sedalia</td><td class="num">575</td><td class="num">49</td></tr>
+      <tr><td class="k">Teller</td><td>Woodland Park</td><td class="num">2,751</td><td class="num">92</td></tr>
+      <tr><td></td><td>Divide</td><td class="num">575</td><td class="num">33</td></tr>
+      <tr><td></td><td>Florissant</td><td class="num">409</td><td class="num">35</td></tr>
+      <tr><td></td><td>Cripple Creek</td><td class="num">55</td><td class="num">25</td></tr>
+      <tr><td class="k">Total</td><td></td><td class="num"><strong>30,464</strong></td><td class="num"><strong>1,150</strong></td></tr>
+    </tbody>
+  </table></div>
+  <p>A neighbourhood is a cluster of nearby doors, named after its biggest street, sized for one session of knocking.</p>
+</section>
+
+<section id="people">
+  <h2>Who uses it</h2>
+  <p>Everyone signs in with a personal 6-digit code. There are two roles.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Role</th><th>Sees and does</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip all">Crew</span></td><td>Door rounds, search, their own stats and doors. Marks doors and records everything at the door. Sees every neighbourhood and every door's chips and money line.</td></tr>
+      <tr><td><span class="chip adm">Admin</span></td><td>Everything crew can, plus the office tools: Pipeline, Quote builder, Territories, Communities, Results, Team stats, Leaderboard, Accounts, the fire-weather call list, and the exports.</td></tr>
+    </tbody>
+  </table></div>
+  <p>A team manager role is planned for later, to assign territories to their own reps. The territory records already note who assigned each one, so it can be added without rebuilding.</p>
+</section>
+
+<section id="day">
+  <h2>A day at the doors</h2>
+  <div class="flow">
+    <div><b>Pick a town</b>Door rounds opens on Colorado: three counties and their towns, with doors left and high-risk doors. Or tap Nearest town.</div>
+    <div><b>Pick a neighbourhood</b>Sort by lawn, fire, trees, doors left, nearest or (later) our own booking odds.</div>
+    <div><b>Knock in street order</b>The next door is open; the rest are one line each with their chips. A filter shows only doors with fire, lawn and trees.</div>
+    <div><b>Mark the outcome</b>Quote booked, Not now (with a come-back date) or No answer (back on the list in two days).</div>
+    <div><b>On a yes</b>One panel: book the walk, phone, email, photos, note, extra work, fire check.</div>
+    <div><b>Office follows up</b>The booking appears in the Pipeline under To call, or Walk booked if the walk was set.</div>
+  </div>
+</section>
+
+<section id="rounds">
+  <h2>Door rounds, screen by screen</h2>
+  <h3>Colorado overview</h3>
+  <p>The first screen. A Colorado card shows doors visited across all towns, then El Paso, Douglas and Teller counties, each listing its towns with a progress ring, doors still to knock, high-risk doors left, doors that have all three drivers (fire, lawn, trees), and quotes booked. Tap a town to open it. <strong>Nearest town</strong> finds where you are and opens the closest town, sorted by distance. The town picker at the top switches towns anywhere and lists "Colorado · all towns" first.</p>
+  <h3>A town's neighbourhoods</h3>
+  <p>A town card at the top (doors visited, quotes booked), the fire-weather alert strip, and <strong>Around our jobs</strong>: jobs won in this town in the last 60 days, each with the nearest doors still to knock within half a mile and an opener that names the street, never the customer. Then the neighbourhoods, each with a progress ring, doors to knock and chips: high-risk doors, large and medium lawns, trees against the house, doors with all three drivers, a county wildfire-plan rating where one exists, a nearby Firewise community, due-back doors, no-answers to try again, and a "no soliciting" flag.</p>
+  <p>The bottom bar sorts the list:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Sort</th><th>Puts first</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Lawn</td><td>The most large and medium lawns still to knock. <strong>The default</strong> for a phone that hasn't picked a sort, because aeration leads.</td></tr>
+      <tr><td class="k">Big lots</td><td>The biggest average lot size.</td></tr>
+      <tr><td class="k">Nearest</td><td>The closest neighbourhoods, by distance from you.</td></tr>
+      <tr><td class="k">Fire</td><td>The most high and very high fire-hazard doors still to knock.</td></tr>
+      <tr><td class="k">Trees</td><td>The most doors with trees against the house or heavy within 30 ft.</td></tr>
+      <tr><td class="k">Doors</td><td>The most doors still to knock: a long session in one place.</td></tr>
+      <tr><td class="k">Odds</td><td>The most quotes expected, from the rate Sixfold's own doors book at, by fire hazard and lawn size. Admins see it now; it switches on for everyone after 150 conversations and becomes the default then.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Each phone remembers its own choice. A neighbourhood flagged "no soliciting" sinks to the bottom of every sort.</p>
+  <h3>A neighbourhood's doors</h3>
+  <p>Opens in <strong>street order</strong>: grouped by street, the street the neighbourhood is named after first, in walking order. One door is open as a full card (the next to knock); every other door is one line with its chips and distance. Tapping a line opens it. Other views: <strong>Nearest</strong> (by distance from you), <strong>Route</strong> (a walking order through every door, with the first stops opened in Google Maps), and <strong>Map</strong> (every door on a street map, coloured by fire hazard; tap a pin for its full card).</p>
+  <p>The <strong>Show doors with</strong> filter (High fire · Large or medium lawn · Trees close) narrows the list to doors with every driver picked, and says how many match. No-answer doors wait in their own section and come back on the list after two days; not-now doors come back on their date; finished doors sit under Done, with Undo.</p>
+  <h3>Search</h3>
+  <p><strong>Find an address</strong> on the tools screen, or the magnifying glass in the top bar. Type part of an address (words in any order; "drive", "road", "north" match DR, RD, N) and pick the result. It opens that door's full card in its neighbourhood, from any town. It needs signal.</p>
+  <h3>Your own numbers</h3>
+  <p><strong>My stats</strong>: today next to recent days (doors, people talked to, quotes booked, numbers given, photos), with tips drawn from your own figures. <strong>My doors</strong>: every door you acted on, what you did and what it shows now, with a jump straight to its card and a way to change a come-back date.</p>
+</section>
+
+<section id="card">
+  <h2>The door card</h2>
+  <p>Everything about one door, top to bottom.</p>
+  <h3>What it tells the crew before they knock</h3>
+  <ul>
+    <li><strong>Fire hazard</strong>: very high, high, moderate, low, very low, or "fire map: not rated" (town or farmland cells).</li>
+    <li><strong>Lawn</strong>: large, medium, small, little or none, or mostly trees, with the photo year. Tap it to see the lawn outlined on the aerial photo (green is counted, blue is grass left out) and to correct it from what you can see.</li>
+    <li><strong>Trees</strong>: against the house, heavy within 30 ft, some, a few, or none. Tap for the figures by distance band.</li>
+    <li><strong>Acres, county value</strong> (Douglas and Teller) and <strong>owner of record</strong>, plus "New owner since …" when the house has sold since the last county pull.</li>
+    <li><strong>Money</strong>: what this door qualifies for, in pills: the state tax credit (or "company owner, see an accountant"), the insurance law, and the county's grant situation. Tap for the full sheets, with what to say and what not to say.</li>
+    <li><strong>Satellite</strong>: an aerial view with the property line drawn on.</li>
+  </ul>
+  <h3>Recording what happens</h3>
+  <ul>
+    <li><strong>Quote booked</strong>, <strong>Not now</strong> (pick when to come back: a month, three months, spring, fall, a date, or no date; or flag a no-soliciting sign) and <strong>No answer</strong>. A toast offers Undo.</li>
+    <li><strong>Add info</strong> opens one panel: phone (saying whether it was given at the door or looked up, since a looked-up number has to clear the Do Not Call lists), email, photos (only with the owner's OK, the property not people), note, extra work (gutters, branches over the roof, dead trees, irrigation, bare lawn, beds and others), and fire check. Saved items get a tick.</li>
+    <li>After <strong>Quote booked</strong>, the same panel opens at the top with <strong>Book the walk</strong> first: a day, a time or "time to agree", and the walks already booked that day so they don't collide. Then Add to calendar (reminders a day and an hour before) and Text a confirmation, sent from the crew member's phone, only to a number given at the door.</li>
+  </ul>
+  <h3>The homeowner fire check and report</h3>
+  <p>A 17-item visual check of the home ignition zone from the Colorado State Forest Service guide (the house, 0–5 ft, 5–30 ft and around the property), each marked done, needs work or couldn't check. A second check after the job shows Before and Now side by side. <strong>Homeowner report</strong> turns it into a one-page report: what to do first, the full check, the door's photos, and how to use it with an insurer and for the tax credit. It states plainly that it is a visual check, not an inspection, certification or guarantee.</p>
+</section>
+
+<section id="office">
+  <h2>The office tools</h2>
+  <p>Admins only, on the tools screen under Office.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Tool</th><th>What it's for</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Pipeline</td><td>Every prospect in one place: door bookings and enquiries (website form, Meta ad, Nextdoor, phone, referral), by stage: To call, Walk booked, Quote sent, Won, Lost, with a chip per source. Door bookings keep their card (the door's chips, walk, Build quote, Mark quote sent, Won with the job value or Lost with a reason); enquiries keep theirs (call, text, email, status, notes). Walks coming up at the top, + Add a lead, and a Jobber-ready export of door bookings.</td></tr>
+      <tr><td class="k">Quote builder</td><td>Cost-up pricing for a job. See the next section.</td></tr>
+      <tr><td class="k">Territories</td><td>Assign neighbourhoods to people (pick a person and a town, tick several), see each person's progress, and unassign. The crew see nothing of it until the switch is turned on.</td></tr>
+      <tr><td class="k">Communities</td><td>Subdivisions, metro districts, HOAs and Firewise communities, ranked by high-risk doors still to knock, to pitch a whole community as one job.</td></tr>
+      <tr><td class="k">Results</td><td>Which doors turn into jobs: knocked, talked to, booked and won, broken down by fire hazard, lawn, trees, county value, town and extra work. It fills up as quotes are marked won or lost.</td></tr>
+      <tr><td class="k">Team stats</td><td>Everyone's doors, conversations and quotes today, over 7 days and over 30 days, with a day-by-day view per person.</td></tr>
+      <tr><td class="k">Leaderboard</td><td>Rankings by quotes booked and one daily goal per person. No location tracking. Admins only while it is tested.</td></tr>
+      <tr><td class="k">Accounts</td><td>Add a person (the code is shown once, with Text it and Copy), rename them, switch crew or admin, give a new code, sign them out, remove them, or turn a server account back on. Show PINs reveals everyone's code after you type your own, until you leave the screen. Every change is logged.</td></tr>
+      <tr><td class="k">Fire-weather call list</td><td>When a red-flag or fire-weather alert covers a town, or a wildfire is within 30 miles, the alert offers a list of customers won, quotes sent and booked doors there, with a check-in script. A check-in, not a pitch.</td></tr>
+      <tr><td class="k">Exports</td><td>A full CSV of every door with anything recorded (admins only), a Jobber client import of door bookings, and a "who marked what" report.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="quote">
+  <h2>Quote builder</h2>
+  <p>Prices a job from what the walk counts, by building up labour and costs rather than guessing a number. Pick the job type (Lawn, Land or Fire) and the sheet shows only the lines that job uses: mobilisation, haul-off, trees by height, limbing, slash, mowing, edging, aeration and others. Each rate says whose number it is (priced, allocated, competitor or unbacked) and why. It shows man-hours, break-even, margin, a market check and anything given away free.</p>
+  <ul>
+    <li><strong>Opened from a booked door</strong> (Build quote), it fills the job name with the address, picks the county's funding, and offers the lawn measured from the door's outline: the lawn counted near the house and all the grass, in square feet and acres. Nothing fills in until you tap Use.</li>
+    <li><strong>Fire jobs</strong> show what the customer can claim: the tax credit, the county's grant and the insurance rules.</li>
+    <li><strong>Aeration has no Sixfold rate yet</strong>, by decision: it shows the two market anchors and flags the line instead of pricing it.</li>
+    <li>It never shows a price on the property; the scope draft it exports says so.</li>
+  </ul>
+</section>
+
+<section id="data">
+  <h2>Where the data comes from</h2>
+  <p>Every figure comes from a free public source or from what the crew record. Nothing is scraped from people-search sites and nothing is bought. The door data is built on a computer from these sources, then uploaded; it doesn't change on its own.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Information</th><th>Source</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Doors, lot sizes, owners</td><td>County parcel records: El Paso County's public GIS services, and Colorado's statewide public parcel and address layers (gis.colorado.gov) for Douglas and Teller</td><td>Lot size is computed from the parcel shape. The name is the <em>owner of record</em>, not necessarily who answers the door.</td></tr>
+      <tr><td class="k">Who lives there</td><td>The owner's mailing address compared with the property (El Paso's address locator)</td><td>Only owner-occupied homes are on the door lists. Absentee owners went to a separate mailing list instead.</td></tr>
+      <tr><td class="k">House sales</td><td>Owner names compared between county pulls</td><td>Shows "New owner since …"; what was recorded under the previous owner is labelled as theirs.</td></tr>
+      <tr><td class="k">Fire hazard</td><td>USDA Forest Service, Wildfire Hazard Potential 2023 (270 m cells)</td><td>Rates the neighbourhood around a door, not the house itself.</td></tr>
+      <tr><td class="k">Lawn size and outline</td><td>USDA NAIP aerial photos, 2023 (about 30 cm per pixel), via Microsoft Planetary Computer; Meta and WRI's global canopy-height map; Microsoft's building footprints</td><td>Green and under 1 m tall counts as lawn. The size counts patches of 400 sq ft or more within 30 m of the house. Outlines are kept for medium and large lawns.</td></tr>
+      <tr><td class="k">Lawn health</td><td>ESA Sentinel-2 satellite (10 m), the same months a year apart, May to September</td><td>A rough read of a big lawn, not a diagnosis. Winter, snow and clouds are skipped.</td></tr>
+      <tr><td class="k">Trees near the house</td><td>USGS 3DEP lidar (El Paso 2018, Douglas 2020); the canopy-height map in Teller</td><td>Shares of tree cover within 0–5 ft, 5–30 ft and 30–100 ft, and the tallest tree.</td></tr>
+      <tr><td class="k">County value</td><td>Assessor values in Colorado's statewide parcel layer</td><td>Douglas and Teller only; El Paso's records there carry no value.</td></tr>
+      <tr><td class="k">Subdivisions, metro districts</td><td>Parcel records; El Paso's metro-district layer; Douglas County's subdivisions layer</td><td>Used for neighbourhood tags and Communities.</td></tr>
+      <tr><td class="k">HOAs</td><td>The Colorado Division of Real Estate's active-HOA roster</td><td>Matched to communities by name.</td></tr>
+      <tr><td class="k">Firewise communities</td><td>The national list of Firewise USA sites in good standing (2024)</td><td>Shown as "Firewise nearby".</td></tr>
+      <tr><td class="k">County wildfire-plan ratings</td><td>Teller County's Community Wildfire Protection Plan, 2025 (Colorado State Forest Service)</td><td>Teller only; El Paso and Douglas have no usable current plan yet.</td></tr>
+      <tr><td class="k">Weather alerts</td><td>National Weather Service active alerts (red flag, fire weather, heat, air quality)</td><td>Live, refreshed every 10 minutes.</td></tr>
+      <tr><td class="k">Nearby wildfires</td><td>National Interagency Fire Center current incident locations</td><td>Live, within 60 miles.</td></tr>
+      <tr><td class="k">Money sheets</td><td>State and county sources, checked 2 Oct 2026, kept in one file with its fact-check log</td><td>The tax credit (form DR 0104CR), the 2025 insurance law (HB25-1182) and each county's grants.</td></tr>
+      <tr><td class="k">Street map</td><td>OpenStreetMap</td><td>The Map view.</td></tr>
+      <tr><td class="k">Satellite</td><td>A link to Google Maps for looking at a property</td><td>For viewing only; Google imagery is never used for measuring.</td></tr>
+      <tr><td class="k">Everything recorded</td><td>The crew and admins, through the app</td><td>Outcomes, numbers, emails, photos, notes, extra work, fire checks, walks, results, leads.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="saving">
+  <h2>How it saves, online and off</h2>
+  <p>The app is a single web page talking to one program on Sixfold's SiteGround server. The door lists sit in a data folder beside the website, never inside it, so they can't be downloaded by address.</p>
+  <ul>
+    <li><strong>Every save is added to a log, never overwritten.</strong> Each town has its own log for each kind of record (outcomes, phones, notes, photos, walks and so on). The newest entry for a door is what shows, and nothing is lost if two people save at once.</li>
+    <li><strong>No signal is fine.</strong> Anything saved without signal waits on the phone, marked "not sent yet", and sends by itself when signal returns, dated by when it was tapped. The app opens with no signal too, from the copy saved on the phone, along with neighbourhoods already opened there.</li>
+    <li><strong>Each door belongs to one town</strong>, even where towns overlap, so a mark made under one town never shows the door as still open under another.</li>
+    <li><strong>Photos</strong> are shrunk on the phone before sending and stored outside the website folder.</li>
+    <li><strong>Search</strong> reads a small address index the server builds for itself, and rebuilds whenever the door lists change.</li>
+  </ul>
+</section>
+
+<section id="safety">
+  <h2>Sign-in, privacy and security</h2>
+  <ul>
+    <li><strong>Codes:</strong> six digits, one per person. Eight wrong tries from one place lock that place out for 15 minutes, and a flood of wrong codes from many places pauses new sign-ins for up to an hour. Phones already signed in keep working.</li>
+    <li><strong>Staying signed in:</strong> a sign-in lasts 45 days, but every tap re-checks the person against the current list. Removing someone, giving them a new code, demoting them or signing them out takes effect on their next tap.</li>
+    <li><strong>Where codes live:</strong> the server's codes file and the app's accounts file, both in a private folder beside the website, never inside it. The ordinary accounts list never carries codes; Show PINs needs your own code again and is logged.</li>
+    <li><strong>What each role sees:</strong> the full export (every door with names and addresses) is admins only. Crew see the doors they knock and their own numbers.</li>
+    <li><strong>Phone numbers:</strong> each number records whether it was given at the door or looked up. Only door-given numbers get Call and Text buttons without a warning; looked-up numbers must clear the national and Colorado Do Not Call lists first.</li>
+    <li><strong>Photos:</strong> only with the owner's OK, of the property, not people.</li>
+    <li><strong>Search engines:</strong> the app's pages are marked not to be indexed.</li>
+  </ul>
+</section>
+
+<section id="switches">
+  <h2>Switches you control</h2>
+  <p>A few features are built but held back on purpose. Each is one line in the server program (<code>api/rounds.php</code>) and one upload.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Switch</th><th>Now</th><th>When on</th></tr></thead>
+    <tbody>
+      <tr><td class="k"><code>TERRITORIES_OPEN</code></td><td>Off: crew see every neighbourhood and nothing of territories</td><td>Each person sees their neighbourhoods marked Yours, with an Only mine button.</td></tr>
+      <tr><td class="k"><code>BOARD_OPEN</code></td><td>Off: the Leaderboard is admins only</td><td>The crew see the Leaderboard and the daily goal.</td></tr>
+      <tr><td class="k"><code>ODDS_MIN</code></td><td>150 conversations</td><td>Odds switches on for everyone once the team passes this many conversations (quotes booked plus not now).</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="limits">
+  <h2>Limits and known gaps</h2>
+  <ul>
+    <li><strong>The data is a snapshot.</strong> Aerial photos are from 2023, the lidar from 2018 (El Paso) and 2020 (Douglas), the fire map from 2023. Owners and sales are as of the last county pull. Updating means re-running the build on a computer and uploading.</li>
+    <li><strong>The fire rating is for the area</strong>, in cells about 270 m across. The satellite view and the fire check are the per-house look.</li>
+    <li><strong>Lawn sizes are estimates</strong> from a photo. Shade, garden beds and dead grass can read wrong; the crew can correct any door. Six Black Forest lawns couldn't be outlined.</li>
+    <li><strong>The owner of record may not be who answers.</strong> Trusts, rentals and recent sales all happen.</li>
+    <li><strong>County values</strong> are only for Douglas and Teller; <strong>wildfire-plan ratings</strong> only for Teller.</li>
+    <li><strong>Search and the office tools need signal.</strong> Knocking, marking and recording don't.</li>
+    <li><strong>Printing the homeowner report from the home-screen app on an iPad</strong> hasn't been tested yet. It works in a browser tab.</li>
+    <li><strong>Meta ad leads</strong> arrive in Meta's own Leads Center, not in the app; add them through + Add a lead.</li>
+    <li><strong>Add a person</strong> needs the server to be able to write to its private folder. It hasn't been tried on the live site yet.</li>
+    <li><strong>Overgrowth year over year</strong> waits for late-spring photos, in 2027.</li>
+  </ul>
+</section>
+
+<section id="uploads">
+  <h2>Updating the app</h2>
+  <p>Changes are built and tested on a computer first, against a full copy of the app (over 50 automatic test suites, run before every upload), then uploaded through SiteGround's File Manager.</p>
+  <ul>
+    <li><strong>The app:</strong> <code>summit-de59ae83/index.html</code> into <code>public_html/summit-de59ae83/</code>. That folder skips SiteGround's cache, so a new version shows up straight away.</li>
+    <li><strong>The server program:</strong> <code>api/rounds.php</code> into <code>public_html/api/</code>.</li>
+    <li><strong>Quote builder:</strong> <code>summit-de59ae83/quote.html</code>, generated from its source file. The app links to it with a version stamp, so phones never keep an old copy.</li>
+    <li><strong>Door data, lawn outlines, money sheets:</strong> into <code>sixfold-data/rounds/</code>, beside the website, never inside it.</li>
+  </ul>
+  <p>The exact files and sizes for each upload are kept in <code>DEPLOY-ROUNDS.md</code>, and every upload is checked on the live site afterwards.</p>
+</section>
+
+<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 4 Oct 2026 · source: sixfold/operations/door-territory/APP-GUIDE.html</footer>
+</main>
+</div>
