@@ -558,6 +558,7 @@
   td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 
   /* ---- toast + burst ---- */
+  .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
     font-size:14px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);transform:translate(-50%,24px);opacity:0;pointer-events:none;
@@ -581,6 +582,7 @@
 </svg>
 <div class="splash" id="splash" aria-hidden="true"><svg viewBox="0 0 100 96"><use href="#ridge"/></svg><b>Sixfold</b></div>
 <header class="appbar" id="hdr" hidden><div class="barin" id="barin"></div></header>
+<div class="offbar" id="offbar" hidden role="status">No signal. Showing what this device saved; marks and notes save here and send when signal is back.</div>
 <div class="wrap">
   <div id="view"></div>
   <footer id="foot" hidden>
@@ -644,6 +646,15 @@
     signinView('Signed out. Enter your code again — what you just saved is kept and sends after.');
   }
 
+  /* "opens with no signal" (2026-10-03): sw.js answers from the saved copy only when the network
+     fails, and marks it; the strip says so, and goes the moment a live answer arrives */
+  function warmSaved() { try { if (S.me && navigator.serviceWorker && navigator.serviceWorker.controller) fetch(API + '?action=me', { credentials: 'same-origin' }).catch(function () {}); } catch (e) {} }
+  function showOffline(on) { var b = document.getElementById('offbar'); if (b) b.hidden = !on; S.offline = !!on; }
+  function clearSaved() {
+    try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage('clear-api'); } catch (e) {}
+    try { if (window.caches) return caches.delete('rounds-api').catch(function () {}); } catch (e) {}
+    return Promise.resolve();
+  }
   function api(action, opts) {
     opts = opts || {};
     var url = API + '?action=' + encodeURIComponent(action);
@@ -654,8 +665,10 @@
       body: opts.body ? JSON.stringify(opts.body) : undefined,
       credentials: 'same-origin'
     }).then(function (r) {
+      var fromSaved = r.headers.get('X-Sixfold-Offline') === '1';
+      showOffline(fromSaved);
       return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.', _notOurs: true }; })
-        .then(function (j) { j._status = r.status; return j; });
+        .then(function (j) { j._status = r.status; if (fromSaved) j._saved = true; return j; });
     });
   }
 
@@ -950,7 +963,7 @@
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         S.me = j.name; S.role = j.role; S.signin = null;
-        flush();                                    /* anything this person left waiting goes now (2026-10-03) */
+        flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         boxes.className = 'boxes ok';
         say.textContent = 'Welcome back, ' + String(j.name || '').split(' ')[0];
         setTimeout(chooseView, reduced() ? 0 : 650);
@@ -1035,7 +1048,7 @@
          here again (2026-10-03 review). Say so before they go. */
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
-      api('signout').then(function () { S.me = null; S.role = 'crew'; signinView(); });
+      api('signout').then(function () { S.me = null; S.role = 'crew'; return clearSaved(); }).then(function () { signinView(); }, function () { signinView(); });
     });
     out.appendChild(so);
     box.appendChild(out);
@@ -3066,9 +3079,16 @@
   api('me').then(function (j) {
     if (j.ok) { S.me = j.name; S.role = j.role; chooseView(); }
     else signinView();
-  }).catch(function () { signinView('No connection.'); });
+  }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
 
   window.addEventListener('online', function () { flush().then(function () { if (S.screen === 'areas') refresh(); }); });
+  /* network first: with signal nothing changes; with none, the last saved copy opens (sw.js) */
+  if ('serviceWorker' in navigator) {
+    try { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {}); } catch (e) {}
+    /* the first 'who am I' runs before the worker is in control, so it is never kept; ask again
+       once it takes over (and after each sign-in) so the app can open signed in with no signal */
+    try { navigator.serviceWorker.addEventListener('controllerchange', warmSaved); } catch (e) {}
+  }
 })();
 </script>
 </body>
