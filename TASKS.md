@@ -656,21 +656,21 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       Network-first service worker: with signal nothing changes; with none, the last copy of the page,
       sign-in, towns and recent neighbourhoods open with a strip. Sign-out wipes it. 12 checks with the
       server really off.
-- [ ] **SX-36 — Extra work spotted at the door: ✅ BUILT AND TESTED 2026-10-03, awaiting upload (`index.html` + `rounds.php`).**
+- [x] **SX-36 — Extra work spotted at the door: ✅ LIVE 2026-10-03, verified signed in (Claude Check).**
       Matthew's list: one door can lead to several jobs. "+ Extra work" on every card: branches over the
       roof, gutters full of debris, brush or junk against the house, dead or dying trees, irrigation
       problem, bare or patchy lawn, overgrown beds or weeds. Saves with no signal; shows on the card, in
       Quotes to build and the export (`extra_work`). About the property, so a sale does not hide it.
-- [ ] **SX-37 — Results tracking: ✅ BUILT AND TESTED 2026-10-03, awaiting upload.** Booked doors get Won (job
+- [x] **SX-37 — Results tracking: ✅ LIVE 2026-10-03, verified signed in (Claude Check).** Booked doors get Won (job
       value) or Lost (reason: price, someone else, maybe later, stopped answering, doing it themselves) in
       Quotes to build; won and lost move to their own section. New admin **Results** screen: knocked →
       booked → won by fire hazard, lawn, trees, county value, town and extra work, with rows under 10 doors
       greyed. Matthew: "over time this proves the app works and makes the scoring smarter." 23 checks.
-- [ ] **SX-38 lawn on the photo, SX-39 stats tips, SX-40 Communities, SX-41 alerts: ✅ BUILT AND TESTED 2026-10-03,
-      awaiting the batched upload** (Matthew: one upload, before Monday's meeting). See DEPLOY-ROUNDS.md.
+- [x] **SX-38 lawn on the photo, SX-39 stats tips, SX-40 Communities, SX-41 alerts: ✅ LIVE 2026-10-03, verified
+      signed in (outlines live for Monument, Palmer Lake and part of Black Forest; the rest upload when built)** (Matthew: one upload, before Monday's meeting). See DEPLOY-ROUNDS.md.
       SX-38's outline packs are still building in the background (about 0.45 lawns/s on the hotel connection).
       SX-41 has no fire-season countdown on purpose (year-round season; warnings are the trigger) and no email yet (needs a cron).
-- [ ] **SX-44 route + SX-45 Jobber CSV: ✅ BUILT AND TESTED 2026-10-03, in the batched upload.** Route: nearest-next + 2-opt from your position, Google Maps walking link for the next 10 stops. Jobber: booked doors in Jobber's import headings (checked against help.getjobber.com 2026-10-03); no ZIP yet.
+- [x] **SX-44 route + SX-45 Jobber CSV: ✅ LIVE 2026-10-03, verified.** Route: nearest-next + 2-opt from your position, Google Maps walking link for the next 10 stops. Jobber: booked doors in Jobber's import headings (checked against help.getjobber.com 2026-10-03); no ZIP yet.
 - [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`
       compares a month with the same month a year earlier (May-Sept only; winter refused; clouds, shadow
       and snow masked per pixel), writes ndvi-results-YYYY-MM.csv; `node build-lawn-outlines.mjs --green-only`
@@ -683,7 +683,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       coag.gov) — **whether Sixfold's calls need it is a legal question for Brandon's attorney**. Only looked-up
       numbers matter; numbers given at the door are consent. Once the lists are downloaded, the app can check
       looked-up numbers against them.
-- [ ] **SX-47 county wildfire plans: ✅ Teller BUILT 2026-10-03, in the batched upload.** `cwpp/build-cwpp.mjs` reads the
+- [ ] **SX-47 county wildfire plans: ✅ Teller LIVE 2026-10-03 (62 neighbourhoods verified).** `cwpp/build-cwpp.mjs` reads the
       Teller County CWPP 2025 tables (162 rated communities) and matches 28 to our neighbourhood names (62
       neighbourhoods). **Still open: El Paso (current plan not found) and Douglas (county plan is from 2011;
       Perry Park MD has a 2023 local plan).**
