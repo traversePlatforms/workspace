@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ✅ LIVE 2026-10-04 — Accounts, Territories, sign a person out, show PINs, Door rounds opens on Colorado (verified 14/14; Add a person not yet tried live)
+## ✅ LIVE 2026-10-04 — Accounts, Territories, sign a person out, show PINs, Door rounds opens on Colorado (files verified; ⚑ the folder address /summit-de59ae83/ was still served OLD from SiteGround's cache: flush again, and exclude /summit-de59ae83/ from Dynamic Cache)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
