@@ -454,7 +454,7 @@ function appendResult(string $key, array $row): bool {
  * the board, the goals and each person's neighbourhoods to the crew as well.
  * Territories: a neighbourhood assigned to one person (newest row wins; who '' clears it).
  * Goals: one daily target per person for the whole team, in goals.json.
- * Test sign-ins (Claude Check, Fable, the harness's Test people) never appear on the board. */
+ * The test sign-ins (any name starting Claude or Fable, e.g. "Claude Check") never appear on the board. */
 const BOARD_OPEN = false;
 const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
 function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin'; }
@@ -504,7 +504,8 @@ function regionLabel(string $key): string {
 /* iCalendar text: escape, then fold at 75 octets (RFC 5545 3.1, 3.3.11) */
 function icsEsc(string $v): string { return str_replace(["\\", ';', ',', "\r\n", "\n", "\r"], ["\\\\", '\;', '\,', '\n', '\n', ''], $v); }
 function icsLine(string $l): string {
-    $out = ''; while (strlen($l) > 75) { $cut = 75; while ($cut > 0 && (ord($l[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($l, 0, $cut) . "\r\n "; $l = substr($l, $cut); }
+    $out = ''; $max = 75;                                    /* continuation lines start with a space, so they carry 74 (Fable 2026-10-04) */
+    while (strlen($l) > $max) { $cut = $max; while ($cut > 0 && (ord($l[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($l, 0, $cut) . "\r\n "; $l = substr($l, $cut); $max = 74; }
     return $out . $l . "\r\n";
 }
 /* ---- fire check (SX-50, 2026-10-03) ------------------------------------------------------

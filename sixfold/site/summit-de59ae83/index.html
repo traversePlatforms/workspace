@@ -1483,7 +1483,7 @@
       var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String((S.ui2 ? '2' : '1') === o[0]));
       b.addEventListener('click', function () {
         try { localStorage.setItem('sixfold.rounds.ui', o[0]); } catch (e) {}
-        S.ui2 = o[0] === '2'; document.documentElement.classList.toggle('ui2', S.ui2); S.openDoor = null; S.capture = null;
+        S.ui2 = o[0] === '2'; document.documentElement.classList.toggle('ui2', S.ui2); S.openDoor = null; S.capture = null; S.walkPrompt = null; clearEdits();
         chooseView();
       });
       lay.appendChild(b);
@@ -2452,6 +2452,7 @@
     if (kind === 'later' && revisit) item.revisit = revisit;      /* travels in the offline queue too */
     d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -2) : '' };
     if (kind === 'booked' && !d.walk) { S.walkPrompt = d.id; S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; }   /* SX-51: book the walk while still at the door */
+    else if (kind !== 'booked' && (S.walkPrompt === d.id || S.editWalk === d.id)) { S.walkPrompt = null; S.editWalk = null; }   /* an undone booking takes its walk form with it (Fable 2026-10-04) */
     renderDoors();
     api('mark', { body: item }).then(function (j) {
       if (j.ok) { dropQueued('mark', item.region, item.id); if (d.mark) d.mark.pending = false; }
@@ -2970,7 +2971,7 @@
     var ch = q('button', 'lnk', 'Change'); ch.type = 'button';
     ch.addEventListener('click', function () { S.editWalk = d.id; S.walkDate = d.walk.date; S.walkTime = d.walk.time || ''; ctx.redraw(); });
     box.appendChild(ch);
-    if (!d.walk.pending) {
+    if (!d.walk.pending && !S.offline) {   /* offline it would open the browser's error page (Fable 2026-10-04) */
       var ca = q('a', 'lnk', 'Add to calendar');
       ca.href = API + '?action=walkics&region=' + encodeURIComponent(ctx.region) + '&id=' + encodeURIComponent(d.id);
       box.appendChild(ca);
@@ -3485,7 +3486,7 @@
     });
     bar.appendChild(mn); bar.appendChild(cl);
     s.appendChild(bar);
-    if (!S.sheetMin) s.appendChild(doorCardFor(d));
+    if (!S.sheetMin) s.appendChild(doorCardFor(d, true));   /* the map's card is never a one-line row (Fable 2026-10-04) */
     box.appendChild(s);
     box.style.setProperty('--sheet-h', (Math.min(s.offsetHeight, box.offsetHeight * 0.72) + 16) + 'px');
     box.classList.add('has-sheet');
@@ -4264,8 +4265,8 @@
   }
 
   /* the door card, shared by the list and the map (2026-10-02) */
-  function doorCardFor(d) {
-    if (S.ui2) { if (!S.openDoor) S.openDoor = d.id; if (S.openDoor !== d.id) return doorRow(d); }
+  function doorCardFor(d, full) {
+    if (S.ui2 && !full) { if (!S.openDoor) S.openDoor = d.id; if (S.openDoor !== d.id) return doorRow(d); }
     var card = q('div', 'door ' + fireClass(d.fire) + (S.ui2 ? ' open' : '')); card.setAttribute('data-id', d.id);
     var top = q('div', 'd-top');
     top.appendChild(q('div', 'addr', d.address));
