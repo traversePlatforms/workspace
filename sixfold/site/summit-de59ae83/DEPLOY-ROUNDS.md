@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — fixes from Fable's review of everything since e5c51f8
+## ✅ LIVE 2026-10-04 — fixes from Fable's review of everything since e5c51f8 (verified 19/19: page identical at all four addresses, search asks for a street name, accounts file reads cleanly, the account lock was created in sixfold-private so that folder is writable, Customers and Door rounds open on a phone)
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
