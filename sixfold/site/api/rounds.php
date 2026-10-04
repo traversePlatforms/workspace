@@ -1502,6 +1502,63 @@ if ($action === 'quoted') {
  * with names and home addresses — and handing a downloadable copy of that to
  * every code is a different decision from showing a scoreboard.
  */
+/* 2026-10-03 (review): crew-typed text goes into a file an admin opens in Excel or Sheets.
+   A note starting "=" (or + - @, tab, CR) would run as a formula; a leading ' stops that.
+   Top level, so both exports have it (it used to live inside the export block only). */
+function csvSafe($v) { return is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v; }
+
+/* ---- booked doors for Jobber (SX-45, 2026-10-03) ----------------------------------------
+ * A CSV in the layout of Jobber's client import (help.getjobber.com "Import clients", checked
+ * 2026-10-03): Full name, Is Company?, Main Phone, Email, Street, City, State, Country, Note,
+ * Tags, Lead Source. Jobber maps any heading it does not recognise. Booked doors only — the
+ * people who asked for a quote. City is the town; the door data has no ZIP code. Lead Source
+ * "Other": Jobber's list has no door knocking. A previous owner's phone or email is left out.
+ * Only matters if Sixfold adopts Jobber (the CRM decision was no purchase). Admin only. */
+if ($action === 'jobber') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="sixfold-booked-for-jobber-' . date('Y-m-d') . '.csv"');
+    $fh = fopen('php://output', 'w');
+    fputcsv($fh, ['Full name', 'Is Company?', 'Main Phone', 'Email', 'Street', 'City', 'State', 'Country', 'Note', 'Tags', 'Lead Source'], ',', '"', '');
+    $fireName = [5 => 'very high', 4 => 'high', 3 => 'moderate', 2 => 'low', 1 => 'very low'];
+    $lawnName = ['L' => 'large', 'M' => 'medium', 'S' => 'small', 'N' => 'little or none', 'T' => 'mostly trees'];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $data = loadRegion($r['key']);
+        if (!$data) continue;
+        $marks = loadMarks($r['key']); $phones = loadPhones($r['key']); $emails = loadEmails($r['key']);
+        $notes = loadNotes($r['key']); $lfix = loadLawnFix($r['key']); $work = loadWork($r['key']); $res = loadResults($r['key']);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            $m = freshMark($d, $marks[$d['id']] ?? null);
+            if (!$m || $m['outcome'] !== 'booked') continue;
+            $p = $phones[$d['id']] ?? null; if ($p && ownerAge($d, $p) === 'prev') $p = null;
+            $em = $emails[$d['id']] ?? null; if ($em && ownerAge($d, $em) === 'prev') $em = null;
+            $n = $notes[$d['id']] ?? null; if ($n && ownerAge($d, $n) === 'prev') $n = null;
+            $f = (int) ($d['fire'] ?? 0); $lv = lawnLevel($d, $lfix); $wk = $work[$d['id']]['tags'] ?? [];
+            $rs = $res[$d['id']] ?? null;
+            $owner = trim((string) ($d['owner'] ?? ''));
+            if (preg_match('/^unavailable$/i', $owner)) $owner = '';
+            $isCo = (bool) preg_match('/\b(LLC|L\.L\.C|INC|CORP|CORPORATION|COMPANY|LTD|LLLP|LP|PARTNERSHIP)\b/i', $owner);
+            $noteBits = ['Booked at the door by ' . ($m['by'] ?: 'crew') . ' on ' . date('M j, Y', (int) $m['at']) . ' (Sixfold door app).'];
+            if (isset($fireName[$f])) $noteBits[] = 'Fire hazard: ' . $fireName[$f] . ' (USFS 2023, neighbourhood scale).';
+            if ($lv && isset($lawnName[$lv])) $noteBits[] = 'Lawn: ' . $lawnName[$lv] . '.';
+            if ($wk) $noteBits[] = 'Extra work seen: ' . implode('; ', array_map(fn($t) => WORK_LABEL[$t] ?? $t, $wk)) . '.';
+            if (!empty($d['val'])) $noteBits[] = 'County value: $' . number_format((int) $d['val']) . '.';
+            if ($p && ($p['source'] ?? '') !== 'door') $noteBits[] = 'Phone was looked up, not given: check the Do Not Call lists before calling.';
+            if ($n) $noteBits[] = 'Door note: ' . $n['note'];
+            if ($rs) $noteBits[] = $rs['result'] === 'won' ? 'Won' . (!empty($rs['value']) ? ' at $' . number_format((int) $rs['value']) : '') . '.' : 'Lost' . (!empty($rs['why']) ? ': ' . (LOST_LABEL[$rs['why']] ?? $rs['why']) : '') . '.';
+            $tags = ['Sixfold door app', (string) ($r['label'] ?? $r['key'])];
+            if (isset($fireName[$f])) $tags[] = 'Fire ' . $fireName[$f];
+            if ($lv === 'L' || $lv === 'M') $tags[] = ucfirst($lawnName[$lv]) . ' lawn';
+            foreach ($wk as $t) $tags[] = WORK_LABEL[$t] ?? $t;
+            fputcsv($fh, array_map('csvSafe', [$owner, $isCo ? 'TRUE' : 'FALSE', $p['phone'] ?? '', $em['email'] ?? '',
+                (string) $d['address'], (string) ($r['label'] ?? ''), 'CO', 'United States', implode(' ', $noteBits), implode(', ', $tags), 'Other']), ',', '"', '');
+        }
+    }
+    fclose($fh);
+    exit;
+}
+
 if ($action === 'report' || $action === 'export') {
     if ($action === 'export' && $role !== 'admin') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
@@ -1539,9 +1596,7 @@ if ($action === 'report' || $action === 'export') {
         out(['ok' => true, 'byPerson' => $byPerson, 'byRegion' => $byRegion]);
     }
 
-    /* 2026-10-03 (review): crew-typed text goes into a file an admin opens in Excel or Sheets.
-       A note starting "=" (or + - @, tab, CR) would run as a formula; a leading ' stops that. */
-    function csvSafe($v) { return is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v; }
+    /* csvSafe(): see above the Jobber export — it is shared */
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sixfold-rounds.csv"');
     $fh = fopen('php://output', 'w');

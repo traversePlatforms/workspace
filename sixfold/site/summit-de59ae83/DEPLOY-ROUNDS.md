@@ -41,6 +41,10 @@ Tap for details and the standing line: never knock inside an evacuation area; af
 with help. No fire-season countdown: on the Front Range the season is effectively year-round, and
 the warnings are the real trigger. Email alerts would need a SiteGround cron job — not set up.
 
+**Route (SX-44).** A Route button in each neighbourhood orders the doors still to knock into a short walking loop from where you stand (nearest-next, then uncrossed), with the distance and an "Open the first 10 stops in Google Maps" walking link (Google takes about ten stops per link). Straight-line distances: a guide to the order.
+
+**Jobber export (SX-45, admin).** "Download for Jobber (CSV)" in Quotes to build: the booked doors in Jobber's client-import layout (Full name, phone, email, street, town, CO, note, tags, Lead Source Other). No ZIP codes yet (the door data has none). Only matters if Jobber is adopted.
+
 **Also in this upload:**
 
 **Extra work at the door (SX-36).** "+ Extra work" on every card: tap what you saw (branches over the

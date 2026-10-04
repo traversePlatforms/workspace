@@ -613,6 +613,9 @@
   .alist{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.4}
   .alist a{color:var(--accent);font-weight:700}
   .alist .soft{font-size:12.5px;color:var(--soft)}
+  .route{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .route a.sat{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:12px;background:var(--sunk);color:var(--moss-ink);font-weight:700;text-decoration:none}
+  .route .soft{font-size:12.5px;color:var(--soft)}
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -2480,6 +2483,46 @@
     box.appendChild(b);
     return box;
   }
+  /* ---- walking route (SX-44, 2026-10-03) ----
+     Nearest-next from where you are (or from one end of the neighbourhood), then tidied by
+     swapping crossing legs (2-opt). Straight-line distances: a guide to the order, not a map. */
+  function legM(a, b) {
+    var R = 6371000, la = (a.lat + b.lat) / 2 * Math.PI / 180;
+    var dx = (a.lon - b.lon) * Math.PI / 180 * Math.cos(la) * R, dy = (a.lat - b.lat) * Math.PI / 180 * R;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function walkRoute(doors, here) {
+    var pts = doors.filter(function (d) { return typeof d.lat === 'number' && typeof d.lon === 'number'; });
+    var rest = doors.filter(function (d) { return pts.indexOf(d) < 0; });
+    if (pts.length < 2) return { order: doors, metres: 0, fromHere: false };
+    var near = here && pts.some(function (d) { return legM(here, d) < 3000; }) ? here : null;   /* only start from you when you are close */
+    var start = near || pts.slice().sort(function (a, b) { return (a.lat + a.lon) - (b.lat + b.lon); })[0];
+    var left = pts.slice(), order = [], cur = start;
+    if (!near) { order.push(start); left.splice(left.indexOf(start), 1); }
+    while (left.length) {
+      var bi = 0, bd = Infinity;
+      for (var i = 0; i < left.length; i++) { var dd = legM(cur, left[i]); if (dd < bd) { bd = dd; bi = i; } }
+      cur = left.splice(bi, 1)[0]; order.push(cur);
+    }
+    var path = near ? [near].concat(order) : order, improved = true, guard = 0;
+    while (improved && guard++ < 50) {
+      improved = false;
+      for (var a = near ? 1 : 0; a < path.length - 2; a++) for (var b = a + 2; b < path.length - 1; b++) {
+        if (legM(path[a], path[a + 1]) + legM(path[b], path[b + 1]) > legM(path[a], path[b]) + legM(path[a + 1], path[b + 1]) + 0.5) {
+          var mid = path.slice(a + 1, b + 1).reverse(); Array.prototype.splice.apply(path, [a + 1, mid.length].concat(mid)); improved = true;
+        }
+      }
+    }
+    var metres = 0; for (var k = 1; k < path.length; k++) metres += legM(path[k - 1], path[k]);
+    return { order: (near ? path.slice(1) : path).concat(rest), metres: metres, fromHere: !!near };
+  }
+  /* Google Maps walking directions through the next stops (its links take about ten at a time) */
+  function mapsRoute(stops, here) {
+    var ll = function (d) { return d.lat.toFixed(6) + ',' + d.lon.toFixed(6); };
+    var dest = stops[stops.length - 1], via = stops.slice(0, -1);
+    return 'https://www.google.com/maps/dir/?api=1&travelmode=walking' + (here ? '&origin=' + ll(here) : '') + '&destination=' + ll(dest) +
+      (via.length ? '&waypoints=' + via.map(ll).join('%7C') : '');
+  }
   function metresTo(d) {
     if (!S.here || typeof d.lat !== 'number') return null;
     var R = 6371000, la = (d.lat + S.here.lat) / 2 * Math.PI / 180;
@@ -2498,10 +2541,10 @@
   function hoodDist(a) { return typeof a.la === 'number' && typeof a.lo === 'number' ? metresTo({ lat: a.la, lon: a.lo }) : null; }
   function doorDock() {
     var topBack = function () { var b = document.querySelector('.appbar .back'); if (b) b.click(); };
-    setDock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['map', 'Map', 'map']], S.dview, function (v) {
+    setDock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['route', 'Route', 'route'], ['map', 'Map', 'map']], S.dview, function (v) {
       S.dview = v;
       if (v !== 'map') { try { localStorage.setItem('sixfold.rounds.doorview', v); } catch (e) {} }
-      if (v === 'near') locate(function () { if (S.area) renderDoors(); });
+      if (v === 'near' || v === 'route') locate(function () { if (S.area) renderDoors(); });
       renderDoors();
       window.scrollTo(0, 0);
     }, topBack);
@@ -2786,6 +2829,9 @@
     var open = list.filter(function (x) { return !x.result && !x.quoted; });
     var sent = list.filter(function (x) { return !x.result && x.quoted; });
     holder.appendChild(q('div', 'sub2', open.length + ' to build · ' + sent.length + ' sent' + (closed.length ? ' · ' + closed.length + ' won or lost' : '')));
+    /* SX-45: the booked doors as a Jobber client import (only matters if Jobber is adopted) */
+    var jb = q('a', 'adminlink', 'Download for Jobber (CSV)'); jb.href = API + '?action=jobber'; jb.setAttribute('download', '');
+    holder.appendChild(jb);
     open.forEach(function (x) { holder.appendChild(quoteCard(x)); });
     [['sent', 'Sent', sent, 'showSent'], ['closed', 'Won or lost', closed, 'showClosed']].forEach(function (g) {
       if (!g[2].length) return;
@@ -3485,6 +3531,20 @@
         view.appendChild(rf);
       }
     }
+    if (S.dview === 'route' && todo.length > 1) {
+      var rt = walkRoute(todo, S.here);
+      todo = rt.order;
+      var rbox = q('div', 'route');
+      rbox.appendChild(q('div', null, 'Walking route through ' + todo.length + ' doors, about ' + (rt.metres / 1609.34).toFixed(1) + ' mi' + (rt.fromHere ? ' from where you are' : '') + '.'));
+      var stops = todo.filter(function (d) { return typeof d.lat === 'number'; }).slice(0, 10);
+      if (stops.length) {
+        var gm = q('a', 'sat'); gm.appendChild(ico('route', 2.2)); gm.appendChild(document.createTextNode('Open the first ' + stops.length + ' stops in Google Maps'));
+        gm.href = mapsRoute(stops, S.here); gm.target = '_blank'; gm.rel = 'noopener noreferrer';
+        rbox.appendChild(gm);
+      }
+      if (!S.here && !S.locating) rbox.appendChild(q('div', 'soft', 'Location is off, so the route starts at one end of the neighbourhood.'));
+      view.appendChild(rbox);
+    }
     if (S.dview === 'map') { renderMap(); return; }
 
 
@@ -3494,7 +3554,7 @@
     /* opened from "Doors to come back to": those doors lead, under their own heading, and
        the rest of the street grouping follows (the follow-ups promise them first) */
     var lead = [];
-    if (S.backFirst && S.dview !== 'near') {
+    if (S.backFirst && S.dview !== 'near' && S.dview !== 'route') {
       lead = todo.filter(backOn); todo = todo.filter(function (d) { return !backOn(d); });
       if (lead.length) {
         view.appendChild(q('h3', 'strh', 'Come back to \u00b7 ' + lead.length));
@@ -3504,7 +3564,7 @@
     var streetsHere = {};
     todo.forEach(function (d) { var s = streetOfAddr(d.address); streetsHere[s] = (streetsHere[s] || 0) + 1; });
     var nStreets = Object.keys(streetsHere).length;
-    if (S.dview !== 'near' && (nStreets > 1 || (lead.length && nStreets === 1))) {
+    if (S.dview !== 'near' && S.dview !== 'route' && (nStreets > 1 || (lead.length && nStreets === 1))) {
       var main = mainStreetOf(S.area);
       var rank = Object.keys(streetsHere).sort(function (x, y) { return (y === main) - (x === main) || streetsHere[y] - streetsHere[x] || x.localeCompare(y); });
       var pos = {}; rank.forEach(function (s, i) { pos[s] = i; });
