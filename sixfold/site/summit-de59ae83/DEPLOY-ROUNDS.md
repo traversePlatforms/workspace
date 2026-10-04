@@ -7,6 +7,27 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — tighter code (Fable's cleanup; nothing the app does changes)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 2 | `api/rounds.php` | `public_html/api/` |
+
+Sizes: `index.html` **396,493** (was 414,896), `rounds.php` **161,059** (comments only). Flush after step 2.
+quote.html unchanged.
+
+Removed from the page: every old-layout branch (the `S.ui2` flag is gone; `html.ui2` is set in the markup and the
+`.ui2` CSS prefix stays because the cascade was tuned with it), the retired Leads and Quotes-to-build screens
+(`leadsView`, `quotesView`, `drawQuotes`; the Pipeline replaced them), the Leaderboard's old assign card
+(`territoryCard`, `assignArea`; Territories replaced it), `moneyRow`, `addLink`, `alsoStreets`, duplicate helpers
+(`dollars` → `money`, `MON` → `MONTHS`, `metresTo` → `legM`, `satLink` → `googleSat`), unused CSS and stale
+comments. The tools screen is built directly in its final order instead of built twice and regrouped (one leads
+count request instead of two). Two Back targets that pointed at the retired Quotes screen now go to the Pipeline.
+The server's `assign` action stays (a write action) though nothing in the app calls it now.
+
+Tested: all 55 suites, 985 checks, same as before the cleanup.
+
 ## ✅ LIVE 2026-10-04 — fixes from Fable's review of everything since e5c51f8 (verified 19/19: page identical at all four addresses, search asks for a street name, accounts file reads cleanly, the account lock was created in sixfold-private so that folder is writable, Customers and Door rounds open on a phone)
 
 | Step | File (from `sixfold/site/`) | Goes to |

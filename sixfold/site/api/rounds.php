@@ -329,8 +329,8 @@ function logRows(string $kind, string $key): array {
  * is not a change), the door carries 'os', the date the new owner was first seen, and 'oa'.
  * County records carry no sale date, so the sale fell somewhere before 'os':
  *   - recorded before 'oa': surely the previous owner's. The door is back on the list, an old
- *     Quote booked leaves Quotes to build, and the old phone, email and note are shown as the
- *     previous owner's, with no Call or Email button;
+ *     Quote booked leaves the booked-quote list, and the old phone, email and note are shown as
+ *     the previous owner's, with no Call or Email button;
  *   - recorded between 'oa' and 'os': could be either. It stays live, marked "check it's the
  *     new owner's" (review 2026-10-03: a Quote booked by the new owner between the sale and
  *     the re-pull must not vanish).
@@ -483,7 +483,7 @@ function appendWork(string $key, array $row): bool {
     return (bool) @file_put_contents(DATA_DIR . '/work-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
 /* ---- what became of a booked quote (2026-10-03) ------------------------------
- * Won (with the job's value) or lost (with a reason), set from Quotes to build. Over time this
+ * Won (with the job's value) or lost (with a reason), set on the Pipeline. Over time this
  * says which doors actually turn into jobs — the results report reads it. Last line wins. */
 const LOST_WHY = ['price', 'other', 'later', 'silent', 'diy'];
 const LOST_LABEL = ['price' => 'Price', 'other' => 'Went with someone else', 'later' => 'Not now, maybe later', 'silent' => 'Stopped answering', 'diy' => 'Doing it themselves'];
@@ -761,8 +761,8 @@ function flagSummary(array $hit): ?array {
 }
 
 /* ---- quote sent (2026-10-01) -------------------------------------------
- * The admin "Quotes to build" list shows every door marked Quote booked. Ticking
- * "quote sent" moves it to the Sent section. Same append-only shape as the rest. */
+ * The Pipeline shows every door marked Quote booked. Ticking "quote sent" moves it to
+ * the Quote sent stage. Same append-only shape as the rest. */
 function quotedFile(string $key): string { return DATA_DIR . '/quoted-' . $key . '.log'; }
 function loadQuoted(string $key): array {
     $out = [];
@@ -1566,8 +1566,8 @@ if ($action === 'money') {
 /* ---- leads (2026-10-03) ---------------------------------------------------
  * One list for every way an enquiry arrives. The website form files its leads here itself
  * (api/submit.php, beside the email it already sends). Meta ad leads, Nextdoor messages,
- * phone calls and referrals are added by hand from the app. Door bookings stay in Quotes to
- * build. Admin only: these are customers' names and numbers. Append-only, like the marks:
+ * phone calls and referrals are added by hand from the app; the Pipeline shows them beside the
+ * door bookings. Admin only: these are customers' names and numbers. Append-only, like the marks:
  *   leads/leads.log   one line per lead        { id, src, at, need, name, phone, email, town, msg, by? }
  *   leads/leadst.log  one line per update      { id, status?, note?, by, at }   last status wins */
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other'];
@@ -2324,12 +2324,10 @@ if ($action === 'areaflag') {
     out(['ok' => true]);
 }
 
-/* ---- quotes to build (admin) ---------------------------------------------
+/* ---- booked quotes, the door bookings on the Pipeline (admin) ---------------
  * The knock-to-quote handoff. Every door marked Quote booked, across every town,
  * newest first, with everything the person building the quote needs: address,
- * owner, acres, fire hazard, coordinates, the number and its source, the note.
- * Kept inside the door app on purpose — the Quote Build tool already exists in
- * three copies that must be kept in step (SX-2b); this adds no fourth. */
+ * owner, acres, fire hazard, coordinates, the number and its source, the note. */
 if ($action === 'quotes') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
@@ -2405,7 +2403,7 @@ if ($action === 'quoted') {
  */
 /* 2026-10-03 (review): crew-typed text goes into a file an admin opens in Excel or Sheets.
    A note starting "=" (or + - @, tab, CR) would run as a formula; a leading ' stops that.
-   Top level, so both exports have it (it used to live inside the export block only). */
+   Top level, so every export has it. */
 function csvSafe($v) { return is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v; }
 
 /* ---- booked doors for Jobber (SX-45, 2026-10-03) ----------------------------------------
