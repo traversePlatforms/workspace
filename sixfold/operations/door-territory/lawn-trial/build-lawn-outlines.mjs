@@ -97,7 +97,17 @@ for (const town of TOWNS) {
   const OUT = join(SITE, `lawnmask-${town}.json`);
   const pack = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : { built: null, ndvi: ndviDates, doors: {} };
   pack.ndvi = ndviDates;
-  const save = () => { pack.built = new Date().toISOString().slice(0, 10); writeFileSync(OUT + '.tmp', JSON.stringify(pack)); renameSync(OUT + '.tmp', OUT); };
+  /* Windows: OneDrive or the virus scanner can hold the file for a moment, and the rename then
+     fails with EPERM (it stopped a run on 2026-10-03). Retry, then write in place; never die. */
+  const save = () => {
+    pack.built = new Date().toISOString().slice(0, 10);
+    const body = JSON.stringify(pack);
+    writeFileSync(OUT + '.tmp', body);
+    for (let k = 0; k < 8; k++) {
+      try { renameSync(OUT + '.tmp', OUT); return; } catch (e) { if (e.code !== 'EPERM' && e.code !== 'EBUSY' && e.code !== 'EACCES') throw e; const t = Date.now() + 250 * (k + 1); while (Date.now() < t) { /* wait */ } }
+    }
+    try { writeFileSync(OUT, body); } catch (e) { console.log('   (could not save ' + town + ' this time: ' + e.code + '; the .tmp file holds it)'); }
+  };
   if (GREEN_ONLY) {   /* refresh greenness on the outlines already built; measure nothing */
     let n = 0;
     for (const [id, e] of Object.entries(pack.doors)) { if (green.has(id)) { e.g = green.get(id); n++; } }
