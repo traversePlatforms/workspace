@@ -1,0 +1,662 @@
+<title>Sixfold Door App Showcase</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a working copy of the app on the left (phone-sized, live and tappable), the "why it matters" notes on the
+   right; one column on a phone. The app half uses the app's own pine / ember / moss palette and contour texture. */
+:root {
+  --bg: #F4F0E8; --card: #FFFDF9; --sunk: #ECE6DA; --ink: #16201C; --soft: #55635B; --line: #DCD3C3;
+  --bar: #1F2A25; --bar-ink: #EDE7DC; --bar-soft: #A9B5AC; --bar-lift: rgba(237,231,220,.09);
+  --ember: #E4703A; --ember-ink: #B84C15; --go: #2F7A4F; --go-tint: #DDEBE1; --on-go: #FFFFFF;
+  --later: #8F5C0E; --later-tint: #F5E7CF; --miss: #4C5A53; --miss-tint: #E7E3DA;
+  --fvh: #9E2A1C; --fh: #A8460F; --fm: #85600F; --flow: #5F6B63; --fon: #FFFFFF; --bad: #A33A2A;
+  --display: "Bitter", Georgia, serif; --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --shadow: 0 1px 2px rgba(22,32,28,.05), 0 10px 24px -14px rgba(22,32,28,.28);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1512; --card: #18221D; --sunk: #131C18; --ink: #EDE7DC; --soft: #A3AEA6; --line: #2B3731; --bar: #16201B;
+  --ember-ink: #F08A57; --go: #7FC195; --go-tint: #1B3323; --on-go: #0A1A10; --later: #E2AA5C; --later-tint: #3B2C12; --miss: #B4BEB7; --miss-tint: #222C27;
+  --fvh: #F0806A; --fh: #F2A35E; --fm: #E0B85E; --flow: #9AA79E; --fon: #0E1512; --bad: #E0715C; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1512; --card: #18221D; --sunk: #131C18; --ink: #EDE7DC; --soft: #A3AEA6; --line: #2B3731; --bar: #16201B;
+  --ember-ink: #F08A57; --go: #7FC195; --go-tint: #1B3323; --on-go: #0A1A10; --later: #E2AA5C; --later-tint: #3B2C12; --miss: #B4BEB7; --miss-tint: #222C27;
+  --fvh: #F0806A; --fh: #F2A35E; --fm: #E0B85E; --flow: #9AA79E; --fon: #0E1512; --bad: #E0715C; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6); color-scheme: dark }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); -webkit-font-smoothing: antialiased }
+button { font: inherit; color: inherit }
+:focus-visible { outline: 3px solid var(--ember); outline-offset: 2px }
+.topo { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='260' viewBox='0 0 420 260'%3E%3Cg fill='none' stroke='%23EDE7DC' stroke-opacity='.08' stroke-width='1.1'%3E%3Cpath d='M60 130c30-60 120-70 160-30s100 20 120 70-80 90-150 70S30 190 60 130z'/%3E%3Cpath d='M90 132c22-40 90-48 120-20s76 14 90 48-60 62-112 48S68 172 90 132z'/%3E%3Cpath d='M120 134c14-22 60-28 80-12s50 8 60 28-40 36-74 28-80-20-66-44z'/%3E%3Cpath d='M150 136c8-10 32-14 44-6s28 4 32 14-22 18-40 14-44-10-36-22z'/%3E%3Cpath d='M300 40c30-20 90-10 100 20s-30 60-70 50-60-50-30-70z'/%3E%3Cpath d='M318 52c18-12 54-6 60 12s-18 36-42 30-36-30-18-42z'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(150deg, #2B3B34 0%, var(--bar) 75%); background-size: 420px 260px, cover }
+.page { max-width: 76rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px }
+/* hero */
+.hero { color: var(--bar-ink); border-radius: 0 0 26px 26px; padding: 34px clamp(18px, 4vw, 40px) 30px; margin: 0 -16px 22px; display: grid; gap: 12px }
+.hero .eyebrow { font: 600 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--bar-soft) }
+.hero h1 { font: 700 clamp(1.9rem, 5vw, 3rem)/1.08 var(--display); margin: 0; text-wrap: balance; max-width: 22ch }
+.hero p { margin: 0; max-width: 62ch; color: var(--bar-soft); font-size: 1.05rem }
+.hero .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 10px; margin-top: 8px; max-width: 46rem }
+.hero .stats div { background: var(--bar-lift); border: 1px solid rgba(237,231,220,.16); border-radius: 14px; padding: 10px 14px }
+.hero .stats b { display: block; font: 700 24px var(--sans); color: var(--ember); font-variant-numeric: tabular-nums }
+.hero .stats span { font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--bar-soft) }
+.banner { display: inline-flex; gap: 8px; align-items: center; font: 600 12.5px var(--mono); color: var(--later); background: var(--later-tint); border-radius: 999px; padding: 5px 12px; margin-bottom: 12px }
+/* two columns */
+.split { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr) }
+@media (min-width: 980px) { .split { grid-template-columns: 430px minmax(0, 1fr); align-items: start } .device { position: sticky; top: calc(14px + env(safe-area-inset-top, 0px)) } }
+/* the device */
+.device { background: var(--bg); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; box-shadow: 0 30px 60px -36px rgba(22,32,28,.6); display: flex; flex-direction: column; height: min(860px, 88vh); min-width: 0 }
+.abar { color: var(--bar-ink); padding: 12px 14px; display: flex; align-items: center; gap: 10px; flex: none }
+.abar .back { width: 38px; height: 38px; border-radius: 12px; border: 0; background: var(--bar-lift); color: var(--bar-ink); display: grid; place-items: center; cursor: pointer; flex: none }
+.abar .mk { width: 30px; height: 30px; flex: none; color: var(--ember) }
+.abar .ttl { flex: 1; min-width: 0 }
+.abar .ttl b { display: block; font: 400 18px/1.15 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.abar .ttl span { display: block; font-size: 12px; color: var(--bar-soft) }
+.abar .cnt { text-align: right; line-height: 1 } .abar .cnt b { display: block; font-size: 24px; color: var(--ember); font-variant-numeric: tabular-nums } .abar .cnt span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--bar-soft) }
+.screen { flex: 1; overflow: auto; padding: 12px 12px 18px; -webkit-overflow-scrolling: touch }
+.dock { flex: none; display: flex; gap: 6px; background: var(--bar); padding: 7px 8px; overflow-x: auto; scrollbar-width: none }
+.dock::-webkit-scrollbar { display: none }
+.dock button { flex: 1 0 auto; min-width: 54px; border: 0; background: transparent; color: var(--bar-soft); padding: 7px 6px 6px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font: 700 11.5px var(--sans); white-space: nowrap }
+.dock button[aria-pressed="true"] { background: var(--ember-ink); color: #fff }
+.dock .ic { width: 19px; height: 19px }
+.ic { width: 18px; height: 18px; flex: none }
+/* overview + lists */
+.prog { color: var(--bar-ink); border-radius: 18px; padding: 14px; display: flex; gap: 14px; align-items: center; margin-bottom: 12px }
+.prog h3 { margin: 0; font: 400 20px/1.15 var(--display) } .prog .pt { font-size: 13px; color: var(--bar-soft) }
+.ring { flex: none; position: relative; display: grid; place-items: center }
+.ring svg { transform: rotate(-90deg); display: block } .ring .trk { stroke: var(--sunk) } .ring .val { stroke: var(--ember); transition: stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1) }
+.prog .ring .trk { stroke: var(--bar-lift) }
+.ring em { position: absolute; font-style: normal; font-weight: 700; font-size: 11.5px }
+.sect { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 8px; font-size: 12px; color: var(--soft) }
+.sect h2 { margin: 0; font: 700 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--soft) }
+.area { width: 100%; text-align: left; display: flex; gap: 11px; align-items: center; background: var(--card); border: 0; border-radius: 18px; padding: 11px 12px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 1px 0 var(--line), 0 10px 22px -18px rgba(22,32,28,.4); transition: transform .12s }
+.area:active { transform: scale(.985) }
+.area .mid { flex: 1; min-width: 0 } .area .nm { font: 400 16px/1.2 var(--display) } .area .sub { font-size: 12px; color: var(--soft); margin: 2px 0 5px }
+.area .left { text-align: right; line-height: 1 } .area .left b { display: block; font-size: 21px; font-variant-numeric: tabular-nums } .area .left small { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--soft) }
+.chips { display: flex; flex-wrap: wrap; gap: 5px }
+.chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; line-height: 1.4 }
+.chip .ic { width: 12px; height: 12px }
+.c-hot { background: var(--fh); color: var(--fon) } .c-hot.v { background: var(--fvh) }
+.c-lawn { background: var(--go-tint); color: var(--go) } .c-tree { background: rgba(163,58,42,.1); color: var(--bad) } .c-all3 { background: var(--ink); color: var(--card) }
+.c-due { background: var(--later-tint); color: var(--later) } .c-fw { background: var(--go-tint); color: var(--go) }
+/* filter */
+.matchb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 2px 0 10px }
+.matchb .ml { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
+.matchb button { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; background: var(--card); font: 700 12.5px var(--sans); cursor: pointer }
+.matchb button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card) }
+.matchn { display: inline-block; margin: 0 0 10px; background: var(--ink); color: var(--card); border-radius: 999px; padding: 4px 11px; font-weight: 700; font-size: 12.5px }
+.strh { font: 700 11px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--soft); margin: 12px 2px 6px }
+/* door rows + card */
+.door { position: relative; background: var(--card); border-radius: 18px; padding: 11px 12px 10px 28px; margin-bottom: 7px; box-shadow: 0 1px 0 var(--line); overflow: hidden }
+.door::before { content: ""; position: absolute; left: 11px; top: 17px; width: 9px; height: 9px; border-radius: 50%; background: var(--edge, var(--line)) }
+.door.f5 { --edge: var(--fvh) } .door.f4 { --edge: var(--fh) } .door.f3 { --edge: var(--fm) } .door.f2, .door.f1, .door.fx { --edge: var(--flow) }
+.door.row { cursor: pointer }
+.door .top { display: flex; align-items: baseline; gap: 8px } .door .addr { flex: 1; min-width: 0; font: 400 16px/1.2 var(--display) }
+.door .dist { font-size: 12px; font-weight: 700; color: var(--ember-ink) }
+.door .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; font-size: 12.5px; color: var(--soft); align-items: center }
+.door .own { flex-basis: 100% }
+.fire { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 11.5px; font-weight: 700 }
+.fire.f5 { background: var(--fvh); color: var(--fon) } .fire.f4 { background: var(--fh); color: var(--fon) } .fire.f3 { background: rgba(133,96,15,.13); color: var(--fm) } .fire.fx { box-shadow: inset 0 0 0 1.5px var(--flow); color: var(--flow); border: 1px dashed transparent }
+.lawn { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; background: var(--go-tint); color: var(--go) }
+.lawn.L { background: var(--go); color: var(--on-go) } .lawn.S, .lawn.N, .lawn.T { background: var(--sunk); color: var(--soft) }
+.tree { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 11.5px; font-weight: 700; background: var(--sunk) }
+.tree.against { color: var(--bad); background: rgba(163,58,42,.1) } .tree.heavy { color: var(--ember-ink); background: rgba(184,76,21,.1) } .tree.some { color: var(--later); background: var(--later-tint) } .tree.clear { color: var(--soft) }
+.tag { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 700 }
+.tag.new { background: var(--later-tint); color: var(--later) } .tag.back { background: var(--go-tint); color: var(--go) }
+.door.open { padding: 18px 14px 14px; border-radius: 22px; background: var(--card); background: linear-gradient(180deg, color-mix(in srgb, var(--edge) 12%, var(--card)) 0, var(--card) 120px); box-shadow: 0 1px 0 var(--line), 0 24px 46px -26px rgba(22,32,28,.5); animation: grow .38s cubic-bezier(.2,.8,.2,1) backwards }
+.door.open::before { left: 0; right: 0; top: 0; width: auto; height: 6px; border-radius: 0 }
+.door.open .addr { font-size: 21px }
+.adds { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px }
+.adds button { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 12px; padding: 8px 12px; font: 700 13px var(--sans); cursor: pointer; background: var(--sunk); color: var(--go) }
+.adds .addinfo { background: linear-gradient(160deg, #2E3F37, var(--ink)); color: var(--card) }
+.moneyl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; margin-top: 10px; border: 0; border-radius: 13px; padding: 9px 11px; background: var(--sunk); text-align: left; cursor: pointer }
+.moneyl .ml { flex: 1 1 calc(100% - 24px); font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
+.moneyl > .ic { color: var(--soft); width: 14px; height: 14px }
+.moneyl span:not(.ml) { order: 2; border-radius: 999px; padding: 3px 9px; background: var(--card); color: var(--go); font: 700 12px var(--sans) }
+.moneyl span.warn { color: var(--fh); background: var(--later-tint) }
+.acts { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 7px; margin-top: 12px }
+.acts button { border: 0; border-radius: 15px; padding: 10px 4px 9px; display: flex; flex-direction: column; align-items: center; gap: 5px; font: 700 13px var(--sans); cursor: pointer; transition: transform .1s }
+.acts button:active { transform: scale(.95) }
+.acts button .ic { width: 32px; height: 32px; padding: 6px; border-radius: 50%; background: rgba(255,255,255,.2) }
+.acts .bk { background: linear-gradient(160deg, var(--ember), var(--ember-ink)); color: #fff; box-shadow: 0 12px 22px -14px var(--ember-ink) }
+.acts .lt { background: var(--later-tint); color: var(--later) } .acts .lt .ic { background: rgba(143,92,14,.14) }
+.acts .ms { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--miss) } .acts .ms .ic { background: var(--sunk) }
+/* panels */
+.cap { margin-top: 10px; border-radius: 14px; padding: 11px; background: var(--sunk); display: grid; gap: 8px; animation: capIn .3s cubic-bezier(.2,.8,.2,1) backwards }
+.cap .capt { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
+.capg { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px }
+.capg button { display: flex; align-items: center; gap: 7px; min-height: 48px; border: 0; border-radius: 12px; padding: 7px 9px; background: var(--card); font: 700 13px var(--sans); cursor: pointer; text-align: left; box-shadow: 0 1px 0 var(--line) }
+.capg button .ic { width: 28px; height: 28px; padding: 6px; border-radius: 9px; background: var(--sunk); color: var(--go) }
+.capg button.on { color: var(--go) } .capg button.on .ic { background: var(--go); color: var(--on-go); animation: pop .4s cubic-bezier(.3,1.5,.5,1) }
+.form { border-radius: 12px; padding: 10px; background: var(--later-tint); display: grid; gap: 8px }
+.form .lq { font-weight: 700; color: var(--later) }
+.form input, .form select, .form textarea { font: 600 15px var(--sans); padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); width: 100%; min-width: 0 }
+.form .row { display: flex; gap: 6px } .form .row > * { flex: 1 }
+.form .chipsel { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px }
+.form .chipsel button { border: 1px solid var(--line); border-radius: 10px; min-height: 40px; padding: 6px 8px; background: var(--card); font: 700 12.5px var(--sans); cursor: pointer; text-align: left }
+.form .chipsel button[aria-pressed="true"] { background: var(--later); border-color: var(--later); color: var(--card) }
+.form .save { border: 0; border-radius: 10px; min-height: 42px; background: var(--later); color: var(--card); font: 700 14px var(--sans); cursor: pointer }
+.form .day { font-size: 12.5px; color: var(--soft) }
+.done-btn { border: 0; border-radius: 12px; min-height: 42px; background: var(--go); color: var(--on-go); font: 700 14px var(--sans); cursor: pointer }
+.saved { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 9px }
+.saved .wl { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
+.saved .v { border-radius: 999px; padding: 3px 10px; background: var(--go-tint); color: var(--go); font: 700 12px var(--sans) }
+.walkp { border: 2px solid var(--go); border-radius: 20px; padding: 12px; margin-bottom: 12px; background: var(--card); animation: capIn .3s backwards }
+.walkp .wpt { font-weight: 700; color: var(--go); font-size: 13px }
+.donel { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 9px 12px; margin-bottom: 6px; border: 1px dashed var(--line); font-size: 13px }
+.donel .a { flex: 1; font: 400 14.5px var(--display) }
+.donel .tag { background: var(--go-tint); color: var(--go) } .donel .tag.l { background: var(--later-tint); color: var(--later) } .donel .tag.m { background: var(--miss-tint); color: var(--miss) }
+.donel button { border: 0; background: var(--sunk); border-radius: 9px; padding: 5px 10px; font: 700 12px var(--sans); cursor: pointer }
+.toast { position: absolute; left: 12px; right: 12px; bottom: 70px; background: var(--ink); color: var(--card); border-radius: 14px; padding: 11px 14px; display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; box-shadow: var(--shadow); animation: capIn .25s backwards }
+.toast button { background: none; border: 0; color: var(--ember); font-weight: 700; cursor: pointer }
+.devwrap { position: relative }
+/* sheets (money, report) */
+.sheet { position: absolute; inset: 0; background: var(--bg); z-index: 5; display: flex; flex-direction: column; animation: capIn .25s backwards }
+.sheet .sh { display: flex; gap: 10px; align-items: center; padding: 12px 14px; color: var(--bar-ink) }
+.sheet .sh button { width: 36px; height: 36px; border-radius: 11px; border: 0; background: var(--bar-lift); color: var(--bar-ink); cursor: pointer; display: grid; place-items: center }
+.sheet .sb { overflow: auto; padding: 14px; display: grid; gap: 10px }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px }
+.seg button { border: 1px solid var(--line); border-radius: 10px; min-height: 36px; background: var(--card); font: 700 12.5px var(--sans); cursor: pointer }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink) }
+.mcard { background: var(--card); border-radius: 14px; padding: 12px; box-shadow: 0 1px 0 var(--line) }
+.mcard h4 { margin: 0 0 6px; font: 600 15px var(--display) } .mcard p { margin: 0 0 6px; font-size: 13.5px } .mcard .say { color: var(--go); font-weight: 700 } .mcard .dont { color: var(--bad); font-weight: 700 }
+.rep { background: #fff; color: #16201C; border-radius: 12px; padding: 16px; font-size: 13px }
+.rep h5 { margin: 0; font: 400 21px var(--display) } .rep .rb { font: 700 10.5px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #4E6142 }
+.rep .sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 } .rep .sum div { background: #F4F0E8; border-radius: 10px; padding: 8px } .rep .sum b { display: block; font-size: 20px }
+.rep ol { margin: 6px 0; padding-left: 18px } .rep table { width: 100%; border-collapse: collapse; font-size: 12px } .rep td { padding: 5px 4px; border-bottom: 1px solid #E8E2D6 } .rep .ok { color: #2F7A4F; font-weight: 700 } .rep .fx { color: #A8460F; font-weight: 700 } .rep .na { color: #8A948E }
+.rep .disc { font-size: 11px; color: #55635B; margin-top: 8px }
+.fcrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13px }
+.fcseg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px } .fcseg button { border: 1px solid var(--line); border-radius: 8px; min-height: 32px; background: var(--card); font: 700 11.5px var(--sans); cursor: pointer }
+.fcseg button[aria-pressed="true"].ok { background: var(--go); color: var(--on-go); border-color: var(--go) } .fcseg button[aria-pressed="true"].fx { background: var(--fh); color: var(--fon); border-color: var(--fh) } .fcseg button[aria-pressed="true"].na { background: var(--soft); color: var(--card); border-color: var(--soft) }
+/* notes column */
+.notes { min-width: 0; display: grid; gap: 14px }
+.notes h2 { font: 600 clamp(1.35rem, 3vw, 1.7rem)/1.2 var(--display); margin: 6px 0 2px; text-wrap: balance }
+.tour { display: grid; gap: 8px }
+.tour button { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; cursor: pointer; box-shadow: var(--shadow); transition: border-color .15s, transform .12s }
+.tour button:hover { border-color: var(--ember) } .tour button:active { transform: scale(.99) }
+.tour button[aria-current="step"] { border-color: var(--ember); box-shadow: 0 0 0 2px var(--ember) inset, var(--shadow) }
+.tour .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--bar); color: var(--bar-ink); font: 600 13px var(--mono) }
+.tour b { display: block; font: 600 16px var(--display); margin-bottom: 2px } .tour span { color: var(--soft); font-size: 14px }
+.why { background: var(--card); border-radius: 18px; padding: 16px 18px; box-shadow: var(--shadow) }
+.why h3 { margin: 0 0 8px; font: 600 17px var(--display) }
+.why ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14.5px }
+.why li b { color: var(--ember-ink) }
+.grid2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)) }
+.foot { margin-top: 22px; font: 500 12px var(--mono); color: var(--soft) }
+@keyframes grow { from { opacity: .5; transform: scale(.985); clip-path: inset(0 0 55% 0 round 22px) } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0 round 22px) } }
+@keyframes capIn { from { opacity: 0; transform: translateY(-8px) } to { opacity: 1; transform: none } }
+@keyframes pop { 0% { transform: scale(.55) } 70% { transform: scale(1.12) } 100% { transform: scale(1) } }
+@keyframes rowIn { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+.enter { animation: rowIn .4s cubic-bezier(.2,.8,.2,1) backwards }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important } }
+</style>
+
+<div class="page">
+  <header class="hero topo">
+    <div class="eyebrow">Sixfold Colorado · the door app</div>
+    <h1>Knock the doors that are worth it, and catch every yes.</h1>
+    <p>Every owner-occupied home in our three counties, scored before anyone knocks: fire hazard, lawn size, trees at the house, and the money each homeowner can get. Tap through the working copy below.</p>
+    <div class="stats">
+      <div><b>30,464</b><span>doors scored</span></div>
+      <div><b>11</b><span>towns</span></div>
+      <div><b>3</b><span>counties</span></div>
+      <div><b>0</b><span>paid data</span></div>
+    </div>
+  </header>
+
+  <div class="banner">Demo data: the towns and their door counts are real; every property, owner, progress figure and high-risk count below is invented</div>
+
+  <div class="split">
+    <div class="devwrap">
+      <div class="device" id="device">
+        <div class="abar topo" id="abar"></div>
+        <div class="screen" id="screen"></div>
+        <nav class="dock" id="dock" aria-label="View"></nav>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Walk through it</h2>
+      <div class="tour" id="tour"></div>
+
+      <h2>How it makes every hour at the doors count</h2>
+      <div class="grid2">
+        <div class="why"><h3>The right doors first</h3><ul>
+          <li><b>Scored before the knock:</b> fire hazard, lawn size and trees on every door, from public records.</li>
+          <li><b>One filter</b> shows only the doors with all three drivers.</li>
+          <li><b>Sorts by what sells:</b> lawn, fire, trees, doors left, and our own booking odds as results build.</li>
+          <li><b>Around our jobs:</b> the doors nearest every job we win, with a "we're doing your neighbour's yard" opener.</li>
+        </ul></div>
+        <div class="why"><h3>No wasted trips</h3><ul>
+          <li><b>Nearest town and nearest door</b> from where you stand.</li>
+          <li><b>Walking routes</b> through a neighbourhood, opened in Google Maps.</li>
+          <li><b>Come-back dates:</b> not-now doors return on the day they asked for; no-answers return after two days.</li>
+          <li><b>No-soliciting flags</b> for a door or a whole neighbourhood, so nobody knocks there twice.</li>
+        </ul></div>
+        <div class="why"><h3>Every yes captured</h3><ul>
+          <li><b>One tap opens everything:</b> walk, phone, email, photos, note, extra work, fire check.</li>
+          <li><b>The walk is booked at the door,</b> with the day's other walks shown so they don't collide, a calendar reminder, and a confirmation text.</li>
+          <li><b>Works with no signal:</b> saves wait on the phone and send themselves later.</li>
+          <li><b>Extra work spotted</b> (gutters, branches over the roof, dead trees) turns one door into several jobs.</li>
+        </ul></div>
+        <div class="why"><h3>A sale the homeowner can afford</h3><ul>
+          <li><b>The money line</b> on every door: the state tax credit, the insurance law, and the county's grant situation.</li>
+          <li><b>What to say and what not to say,</b> one tap away.</li>
+          <li><b>The homeowner fire report:</b> a before-and-after check they can send their insurer.</li>
+        </ul></div>
+        <div class="why"><h3>The office picks it up instantly</h3><ul>
+          <li><b>One pipeline</b> for door bookings and website, Meta, Nextdoor and phone enquiries: to call, walk booked, quote sent, won, lost.</li>
+          <li><b>Quote builder</b> prices the job from the walk, with the lawn measured from the aerial photo.</li>
+          <li><b>Fire-weather call list</b> when an alert or a wildfire hits a town we work.</li>
+        </ul></div>
+        <div class="why"><h3>We learn what works</h3><ul>
+          <li><b>Results:</b> which kinds of doors turn into jobs, by fire, lawn, trees, value and town.</li>
+          <li><b>Team stats and a leaderboard,</b> without location tracking.</li>
+          <li><b>Territories</b> ready for when the team grows.</li>
+        </ul></div>
+      </div>
+      <div class="foot">The real app runs on the Sixfold website for signed-in crew. Door data comes from county parcel records, the USDA Forest Service wildfire hazard map, USDA aerial photos, USGS lidar and state and county funding sources. This page uses invented properties.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  /* ---------- icons ---------- */
+  var ICON = {
+    back: '<path d="M14.5 5l-7 7 7 7"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    knock: '<rect x="6" y="3.5" width="12" height="17" rx="1.2"/><circle cx="14.6" cy="12" r="1"/>', flame: '<path d="M12 21c-3.6 0-6-2.4-6-5.6 0-3 2.2-4.6 3.2-7 .6 1.5 1.5 2.4 2.6 2.8C12 8 12.6 5.3 14.6 3c.4 3.6 3.4 5.8 3.4 9.9 0 4.4-2.6 8.1-6 8.1z"/>',
+    leaf: '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19l7-7"/>', tree: '<path d="M12 3l5 7h-3l4 6H6l4-6H7l5-7z"/><path d="M12 16v5"/>',
+    globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.7 2.5 14.3 0 17M12 3.5c-2.5 2.7-2.5 14.3 0 17"/>', note: '<path d="M6 3.5h9l3 3v14H6z"/><path d="M15 3.5v3h3"/>',
+    phone: '<path d="M6.5 3.5h3l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5v3c0 1-.8 1.8-1.8 1.8C10.6 19.3 4.7 13.4 4.7 5.3c0-1 .8-1.8 1.8-1.8z"/>',
+    mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/><path d="M4 7l8 6 8-6"/>', camera: '<path d="M4 8h3l1.6-2.5h6.8L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.3"/>',
+    list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/>',
+    cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', chev: '<path d="M9.5 6l6 6-6 6"/>',
+    near: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>', route: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
+    chart: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>', door: '<rect x="6" y="3.5" width="12" height="17" rx="1"/><circle cx="14.5" cy="12" r=".9"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>'
+  };
+  function ico(n, sw) { var s = document.createElement('span'); s.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[n] + '</svg>'; return s.firstChild; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  var RIDGE = '<svg class="mk" viewBox="0 0 100 92" aria-hidden="true"><g fill="currentColor"><path d="M18 84 L36 48 L54 84 Z" fill-opacity="0.42"/><path d="M30 84 L50 38 L70 84 Z" fill-opacity="0.55"/><path d="M44 84 L66 26 L88 84 Z" fill-opacity="0.7"/><path d="M60 84 L79 14 L98 84 Z" fill-opacity="0.85"/><rect x="4" y="86" width="92" height="5"/></g></svg>';
+
+  /* ---------- example data (invented) ---------- */
+  var TOWNS = [
+    { c: 'El Paso County', t: [['Black Forest', 9286, 2310, 61], ['Monument', 7071, 2022, 44], ['Palmer Lake', 444, 190, 3]] },
+    { c: 'Douglas County', t: [['Castle Rock', 7082, 960, 18], ['Franktown', 1545, 410, 9], ['Larkspur', 671, 260, 4], ['Sedalia', 575, 140, 2]] },
+    { c: 'Teller County', t: [['Woodland Park', 2751, 1380, 41], ['Divide', 575, 330, 7], ['Florissant', 409, 240, 5], ['Cripple Creek', 55, 20, 0]] }
+  ];
+  var HOODS = [
+    { n: 'PONDEROSA RIDGE DR', sub: 'Example Estates · 24 doors · average lot 1.40 acres', left: 24, hot: 19, vh: 11, lawn: '3 large · 6 medium lawns', all3: 4, fw: 'Firewise nearby' },
+    { n: 'ASPEN HOLLOW RD', sub: 'Sample Hills · 31 doors · average lot 0.90 acres', left: 31, hot: 12, vh: 3, lawn: '8 medium lawns', all3: 2 },
+    { n: 'MEADOWLARK LN', sub: 'Demo Park · 18 doors · average lot 0.60 acres', left: 18, hot: 4, vh: 0, lawn: '5 large lawns', all3: 0, due: 2 }
+  ];
+  var DOORS0 = [
+    { id: 1, a: '1840 PONDEROSA RIDGE DR', st: 'PONDEROSA RIDGE DR', f: 5, lv: 'L', tl: 'against', acres: 1.62, val: '$742k', owner: 'EXAMPLE FAMILY TRUST', county: 'teller', dist: '120 ft' },
+    { id: 2, a: '1862 PONDEROSA RIDGE DR', st: 'PONDEROSA RIDGE DR', f: 4, lv: 'M', tl: 'heavy', acres: 1.18, val: '$655k', owner: 'SAMPLE, JORDAN & CASEY', county: 'teller', dist: '310 ft', newown: 'Jun 2026' },
+    { id: 3, a: '1901 PONDEROSA RIDGE DR', st: 'PONDEROSA RIDGE DR', f: 3, lv: 'M', tl: 'some', acres: 0.94, val: '$588k', owner: 'DEMO, ALEX', county: 'teller', dist: '0.1 mi' },
+    { id: 4, a: '214 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 5, lv: 'S', tl: 'against', acres: 2.30, val: '$910k', owner: 'RIDGELINE HOLDINGS LLC', county: 'teller', dist: '0.2 mi' },
+    { id: 5, a: '230 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 4, lv: 'L', tl: 'clear', acres: 1.05, val: '$612k', owner: 'EXAMPLE, MORGAN', county: 'teller', dist: '0.2 mi' },
+    { id: 6, a: '255 TIMBER VIEW CT', st: 'TIMBER VIEW CT', f: 0, lv: 'T', tl: 'heavy', acres: 0.71, val: '$498k', owner: 'SAMPLE, RILEY', county: 'teller', dist: '0.3 mi' }
+  ];
+  var FIRE = { 5: 'Very high fire hazard', 4: 'High fire hazard', 3: 'Moderate fire hazard', 0: 'Fire map: not rated' };
+  var LAWN = { L: 'Large lawn', M: 'Medium lawn', S: 'Small lawn', N: 'Little or no lawn', T: 'Mostly trees' };
+  var TREE = { against: 'Trees against house', heavy: 'Heavy trees within 30 ft', some: 'Some trees within 30 ft', clear: 'No trees within 30 ft' };
+  var CAP = [['walk', 'cal', 'Book the walk'], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'], ['note', 'note', 'Note'], ['work', 'list', 'Extra work'], ['fc', 'flame', 'Fire check']];
+  var WORK = ['Branches over the roof', 'Gutters full of debris', 'Brush against the house', 'Dead or dying trees', 'Irrigation problem', 'Bare or patchy lawn'];
+  var FC = [['debris', 'Roof, deck and gutters clear of needles and leaves'], ['z1plants', 'No plants, mulch or woody debris within 5 ft'], ['vents', 'Vents screened with 1/8-inch metal mesh'], ['overhang', 'No branches over the roof'], ['grass', 'Grass mowed to 4 inches or less'], ['ladder', 'Branches pruned 6 to 10 ft up'], ['firewood', 'Firewood at least 30 ft from the house']];
+  var FCTODO = { debris: 'Clear needles and leaves from the roof, deck and gutters', z1plants: 'Clear plants and mulch within 5 ft; use rock or gravel', vents: 'Screen vents with 1/8-inch metal mesh', overhang: 'Trim branches over the roof', grass: 'Mow grass to 4 inches or less', ladder: 'Prune branches 6 to 10 ft up', firewood: 'Move firewood 30 ft from the house' };
+
+  /* ---------- state ---------- */
+  var S;
+  function reset() {
+    S = { screen: 'state', doors: DOORS0.map(function (d) { return Object.assign({}, d, { mark: null, saved: {} }); }), open: 1, cap: null, form: null, match: {}, sort: 'lawn', yes: null, sheet: null, walk: { day: null, time: '' }, work: [], fc: {}, toast: null, anim: true };
+  }
+  reset();
+  var $abar = document.getElementById('abar'), $screen = document.getElementById('screen'), $dock = document.getElementById('dock'), $device = document.getElementById('device');
+
+  function ring(size, stroke, pct, label) {
+    var r = (size - stroke) / 2, C = 2 * Math.PI * r, w = el('div', 'ring'); w.style.width = size + 'px'; w.style.height = size + 'px';
+    w.innerHTML = '<svg width="' + size + '" height="' + size + '"><circle class="trk" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke-width="' + stroke + '"/><circle class="val" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke-width="' + stroke + '" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + C.toFixed(1) + '"/></svg>';
+    var em = el('em', null, label); w.appendChild(em);
+    var v = w.querySelector('.val'); requestAnimationFrame(function () { requestAnimationFrame(function () { v.setAttribute('stroke-dashoffset', (C * (1 - pct)).toFixed(1)); }); });
+    return w;
+  }
+  function chip(cls, icon, text) { var c = el('span', 'chip ' + cls); if (icon) c.appendChild(ico(icon, 2.4)); c.appendChild(document.createTextNode(text)); return c; }
+  function bar(o) {
+    $abar.textContent = '';
+    if (o.back) { var b = el('button', 'back'); b.type = 'button'; b.setAttribute('aria-label', 'Back'); b.appendChild(ico('back', 2.4)); b.addEventListener('click', o.back); $abar.appendChild(b); }
+    else { var m = el('span'); m.innerHTML = RIDGE; $abar.appendChild(m.firstChild); }
+    var t = el('div', 'ttl'); t.appendChild(el('b', null, o.title)); if (o.sub) t.appendChild(el('span', null, o.sub)); $abar.appendChild(t);
+    if (o.count != null) { var c = el('div', 'cnt'); c.appendChild(el('b', null, String(o.count))); c.appendChild(el('span', null, 'to knock')); $abar.appendChild(c); }
+  }
+  function dock(items, cur, pick) {
+    $dock.textContent = '';
+    items.forEach(function (it) {
+      var b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === it[0]));
+      b.appendChild(ico(it[2])); b.appendChild(document.createTextNode(it[1]));
+      b.addEventListener('click', function () { pick(it[0]); }); $dock.appendChild(b);
+    });
+  }
+  function stagger(root) { if (!S.anim) return; [].forEach.call(root.children, function (c, i) { if (i < 12) { c.style.animationDelay = (i * 35) + 'ms'; c.classList.add('enter'); } }); S.anim = false; }
+  function render() {
+    if (S.screen === 'state') stateView(); else if (S.screen === 'town') townView(); else doorsView();
+    renderSheet(); renderToast(); syncTour();
+  }
+  function go(screen) { S.screen = screen; S.anim = true; S.cap = null; S.form = null; S.sheet = null; render(); $screen.scrollTop = 0; }
+
+  /* ---------- screens ---------- */
+  function stateView() {
+    bar({ title: 'Colorado · all towns', sub: 'Door rounds' });
+    dock([['near', 'Nearest town', 'near']], null, function () { toastMsg('Nearest town', 'Opening Woodland Park, the closest town to you'); go('town'); });
+    $screen.textContent = '';
+    var p = el('div', 'prog topo'); p.appendChild(ring(70, 6, .04, '4%'));
+    var pi = el('div'); pi.appendChild(el('h3', null, 'Colorado')); pi.appendChild(el('div', 'pt', '1,184 of 30,464 doors visited · 11 towns')); p.appendChild(pi); $screen.appendChild(p);
+    var list = el('div');
+    TOWNS.forEach(function (g) {
+      var s = el('div', 'sect'); s.appendChild(el('h2', null, g.c)); list.appendChild(s);
+      g.t.forEach(function (t) {
+        var b = el('button', 'area'); b.type = 'button';
+        b.appendChild(ring(44, 5, 0.04, '4%'));
+        var mid = el('div', 'mid'); mid.appendChild(el('div', 'nm', t[0])); mid.appendChild(el('div', 'sub', t[1].toLocaleString('en-US') + ' doors'));
+        var ch = el('div', 'chips'); if (t[2]) ch.appendChild(chip('c-hot', 'flame', t[2].toLocaleString('en-US') + ' high-risk left')); if (t[3]) ch.appendChild(chip('c-all3', 'check', t[3] + ' with fire, lawn and trees')); mid.appendChild(ch);
+        b.appendChild(mid);
+        var l = el('div', 'left'); l.appendChild(el('b', null, t[1].toLocaleString('en-US'))); l.appendChild(el('small', null, 'to knock')); b.appendChild(l);
+        b.addEventListener('click', function () { go('town'); });
+        list.appendChild(b);
+      });
+    });
+    $screen.appendChild(list); stagger(list);
+  }
+  var SORTS = [['lawn', 'Lawn', 'leaf'], ['near', 'Nearest', 'near'], ['fire', 'Fire', 'flame'], ['trees', 'Trees', 'tree'], ['doors', 'Doors', 'door'], ['odds', 'Odds', 'chart']];
+  var SORTTXT = { lawn: 'Most lawn first', near: 'Nearest first', fire: 'Most fire hazard first', trees: 'Most trees at the house first', doors: 'Most doors to knock first', odds: 'Most quotes expected first' };
+  function townView() {
+    bar({ title: 'Woodland Park', sub: 'Teller County · example neighbourhoods', back: function () { go('state'); } });
+    dock(SORTS, S.sort, function (v) { S.sort = v; S.anim = true; render(); });
+    $screen.textContent = '';
+    var p = el('div', 'prog topo'); p.appendChild(ring(70, 6, .1, '10%'));
+    var pi = el('div'); pi.appendChild(el('h3', null, 'Woodland Park')); pi.appendChild(el('div', 'pt', '276 of 2,751 doors visited · 9 quotes booked')); p.appendChild(pi); $screen.appendChild(p);
+    var aj = el('div', 'mcard'); aj.innerHTML = '<b>Around our jobs:</b> 1 job won here · 16 doors nearby still to knock'; aj.style.marginBottom = '10px'; $screen.appendChild(aj);
+    var s = el('div', 'sect'); s.appendChild(el('h2', null, 'Neighbourhoods')); s.appendChild(el('span', null, SORTTXT[S.sort])); $screen.appendChild(s);
+    var order = HOODS.slice();
+    if (S.sort === 'fire') order.sort(function (a, b) { return b.hot - a.hot; });
+    else if (S.sort === 'doors') order.sort(function (a, b) { return b.left - a.left; });
+    else if (S.sort === 'lawn') order = [HOODS[0], HOODS[2], HOODS[1]];
+    var list = el('div');
+    order.forEach(function (h, i) {
+      var b = el('button', 'area'); b.type = 'button';
+      b.appendChild(ring(44, 5, 0, '0%'));
+      var mid = el('div', 'mid'); mid.appendChild(el('div', 'nm', h.n)); mid.appendChild(el('div', 'sub', h.sub));
+      var ch = el('div', 'chips');
+      if (h.all3) ch.appendChild(chip('c-all3', 'check', h.all3 + ' doors with fire, lawn and trees'));
+      if (S.sort === 'odds') ch.appendChild(chip('c-lawn', 'chart', 'About ' + (h.all3 * 1.9 + 2).toFixed(1) + ' quotes expected'));
+      if (h.fw) ch.appendChild(chip('c-fw', 'check', h.fw));
+      ch.appendChild(chip('c-lawn', 'leaf', h.lawn));
+      if (h.hot) ch.appendChild(chip('c-hot' + (h.vh ? ' v' : ''), 'flame', h.hot + ' high-risk doors' + (h.vh ? ' (' + h.vh + ' very high)' : '')));
+      if (h.due) ch.appendChild(chip('c-due', 'clock', h.due + ' due back'));
+      mid.appendChild(ch); b.appendChild(mid);
+      var l = el('div', 'left'); l.appendChild(el('b', null, String(h.left))); l.appendChild(el('small', null, 'to knock')); b.appendChild(l);
+      b.addEventListener('click', function () { go('doors'); });
+      list.appendChild(b);
+    });
+    $screen.appendChild(list); stagger(list);
+  }
+  function matches(d) {
+    var m = S.match;
+    if (m.fire && !(d.f >= 4)) return false;
+    if (m.lawn && !(d.lv === 'L' || d.lv === 'M')) return false;
+    if (m.trees && !(d.tl === 'against' || d.tl === 'heavy')) return false;
+    return true;
+  }
+  function doorsView() {
+    var todo = S.doors.filter(function (d) { return !d.mark; });
+    bar({ title: 'PONDEROSA RIDGE DR', sub: 'Woodland Park · 6 example doors', back: function () { go('town'); }, count: todo.length });
+    dock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['route', 'Route', 'route']], 'street', function (v) { if (v !== 'street') toastMsg(v === 'near' ? 'Nearest' : 'Route', v === 'near' ? 'Sorted by distance from you' : 'A walking route through every door, opened in Google Maps'); });
+    $screen.textContent = '';
+    if (S.yes) $screen.appendChild(yesPanel(S.doors.filter(function (d) { return d.id === S.yes; })[0]));
+    /* the filter */
+    var mb = el('div', 'matchb'); mb.appendChild(el('span', 'ml', 'Show doors with'));
+    [['fire', 'flame', 'High fire'], ['lawn', 'leaf', 'Large or medium lawn'], ['trees', 'tree', 'Trees close']].forEach(function (m) {
+      var b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(!!S.match[m[0]])); b.appendChild(ico(m[1], 2.2)); b.appendChild(document.createTextNode(m[2]));
+      b.addEventListener('click', function () { S.match[m[0]] = !S.match[m[0]]; S.open = null; render(); }); mb.appendChild(b);
+    });
+    $screen.appendChild(mb);
+    var shown = todo.filter(matches);
+    if (S.match.fire || S.match.lawn || S.match.trees) $screen.appendChild(el('div', 'matchn', shown.length + ' of ' + todo.length + ' doors match'));
+    if (S.open && !shown.some(function (d) { return d.id === S.open; })) S.open = null;
+    if (!S.open && shown.length) S.open = shown[0].id;
+    var lastSt = null, list = el('div');
+    shown.forEach(function (d) {
+      if (d.st !== lastSt) { list.appendChild(el('div', 'strh', d.st + ' · ' + shown.filter(function (x) { return x.st === d.st; }).length)); lastSt = d.st; }
+      list.appendChild(d.id === S.open ? card(d) : row(d));
+    });
+    if (!shown.length) list.appendChild(el('div', 'mcard', todo.length ? 'No door here has every driver picked.' : 'Every door is knocked. Tap Start over below to try again.'));
+    $screen.appendChild(list);
+    var done = S.doors.filter(function (d) { return d.mark; });
+    if (done.length) {
+      var s = el('div', 'sect'); s.appendChild(el('h2', null, 'Done · ' + done.length)); $screen.appendChild(s);
+      done.forEach(function (d) {
+        var r = el('div', 'donel'); r.appendChild(el('span', 'a', d.a));
+        r.appendChild(el('span', 'tag' + (d.mark === 'later' ? ' l' : d.mark === 'miss' ? ' m' : ''), d.mark === 'booked' ? 'Quote booked' + (d.walkText ? ' · walk ' + d.walkText : '') : d.mark === 'later' ? 'Not now · back ' + (d.back || 'later') : 'No answer · back in 2 days'));
+        var u = el('button', null, 'Undo'); u.type = 'button'; u.addEventListener('click', function () { d.mark = null; S.open = d.id; if (S.yes === d.id) S.yes = null; render(); });
+        r.appendChild(u); $screen.appendChild(r);
+      });
+    }
+    var rs = el('button', 'done-btn', 'Start over'); rs.type = 'button'; rs.style.width = '100%'; rs.style.marginTop = '12px';
+    rs.addEventListener('click', function () { reset(); S.screen = 'doors'; render(); }); $screen.appendChild(rs);
+  }
+  function chipsFor(d, wrap) {
+    var f = el('span', 'fire f' + (d.f || 'x')); f.appendChild(ico('flame', 2.4)); f.appendChild(document.createTextNode(FIRE[d.f])); wrap.appendChild(f);
+    var l = el('span', 'lawn ' + d.lv); l.appendChild(ico('leaf', 2.2)); l.appendChild(document.createTextNode(LAWN[d.lv])); wrap.appendChild(l);
+    var t = el('span', 'tree ' + d.tl); t.appendChild(ico('tree', 2.2)); t.appendChild(document.createTextNode(TREE[d.tl])); wrap.appendChild(t);
+  }
+  function row(d) {
+    var r = el('div', 'door row f' + (d.f || 'x')); r.tabIndex = 0; r.setAttribute('role', 'button');
+    var top = el('div', 'top'); top.appendChild(el('div', 'addr', d.a)); top.appendChild(el('span', 'dist', d.dist)); top.appendChild(ico('chev', 2.4)); r.appendChild(top);
+    var m = el('div', 'meta'); chipsFor(d, m); if (d.newown) m.appendChild(el('span', 'tag new', 'New owner since ' + d.newown)); r.appendChild(m);
+    var open = function () { S.open = d.id; S.cap = null; S.form = null; render(); };
+    r.addEventListener('click', open); r.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    return r;
+  }
+  function moneyLine(d) {
+    var b = el('button', 'moneyl'); b.type = 'button'; b.appendChild(el('span', 'ml', 'Money')); b.appendChild(ico('chev', 2.4));
+    var co = /\bLLC\b/.test(d.owner);
+    b.appendChild(el('span', co ? 'warn' : null, co ? 'Company owner: credit unsettled, accountant' : 'Tax credit up to $1,000'));
+    b.appendChild(el('span', null, 'Insurance must count the work'));
+    b.appendChild(el('span', null, d.county === 'douglas' ? 'County cost-share: round closed' : 'No county grant'));
+    b.addEventListener('click', function () { S.sheet = 'money'; render(); });
+    return b;
+  }
+  function card(d) {
+    var c = el('div', 'door open f' + (d.f || 'x'));
+    var top = el('div', 'top'); top.appendChild(el('div', 'addr', d.a)); top.appendChild(el('span', 'dist', d.dist)); c.appendChild(top);
+    var m = el('div', 'meta'); chipsFor(d, m);
+    m.appendChild(el('span', 'own', d.acres.toFixed(2) + ' acres · County value ' + d.val + ' · Owner: ' + d.owner));
+    if (d.newown) m.appendChild(el('span', 'tag new', 'New owner since ' + d.newown));
+    c.appendChild(m);
+    savedLine(d, c);
+    var adds = el('div', 'adds');
+    var sat = el('button'); sat.type = 'button'; sat.appendChild(ico('globe', 2.2)); sat.appendChild(document.createTextNode('Satellite'));
+    sat.addEventListener('click', function () { toastMsg('Satellite', 'The aerial photo with the property line and the lawn outline'); }); adds.appendChild(sat);
+    if (S.cap !== d.id) { var ai = el('button', 'addinfo'); ai.type = 'button'; ai.appendChild(ico('note', 2.2)); ai.appendChild(document.createTextNode('Add info')); ai.addEventListener('click', function () { S.cap = d.id; S.form = null; render(); }); adds.appendChild(ai); }
+    c.appendChild(adds);
+    c.appendChild(moneyLine(d));
+    if (S.cap === d.id) c.appendChild(capPanel(d, false));
+    var acts = el('div', 'acts');
+    [['bk', 'check', 'Quote booked', 'booked'], ['lt', 'clock', 'Not now', 'later'], ['ms', 'knock', 'No answer', 'miss']].forEach(function (a) {
+      var b = el('button', a[0]); b.type = 'button'; b.appendChild(ico(a[1], 2.4)); b.appendChild(document.createTextNode(a[2]));
+      b.addEventListener('click', function () { mark(d, a[3]); }); acts.appendChild(b);
+    });
+    c.appendChild(acts);
+    if (S.form === 'later:' + d.id) c.appendChild(laterForm(d));
+    return c;
+  }
+  function savedLine(d, into) {
+    var keys = Object.keys(d.saved); if (!keys.length) return;
+    var s = el('div', 'saved'); s.appendChild(el('span', 'wl', 'Saved'));
+    keys.forEach(function (k) { s.appendChild(el('span', 'v', d.saved[k])); }); into.appendChild(s);
+  }
+  function capPanel(d, inYes) {
+    var p = el('div', 'cap'); if (!inYes) p.appendChild(el('div', 'capt', 'Add what they tell you'));
+    if (S.form && S.form.indexOf(':' + d.id) > 0 && S.form.indexOf('later') !== 0 && !(inYes && S.form.indexOf('walk') === 0)) p.appendChild(formFor(d, S.form.split(':')[0]));
+    var g = el('div', 'capg');
+    CAP.forEach(function (cp) {
+      if (cp[0] === 'walk' && (inYes || d.mark !== 'booked')) return;
+      var has = !!d.saved[cp[0]];
+      var b = el('button', has ? 'on' : null); b.type = 'button'; b.appendChild(ico(has ? 'check' : cp[1], 2.2)); b.appendChild(el('span', null, cp[2]));
+      b.addEventListener('click', function () {
+        if (cp[0] === 'photo') { d.saved.photo = '2 photos'; toastMsg('Photos', 'Shrunk on the phone and saved, only with the owner’s OK'); render(); return; }
+        S.form = cp[0] + ':' + d.id; render();
+      });
+      g.appendChild(b);
+    });
+    p.appendChild(g);
+    if (!inYes) { var dn = el('button', 'done-btn', 'Done'); dn.type = 'button'; dn.addEventListener('click', function () { S.cap = null; S.form = null; render(); }); p.appendChild(dn); }
+    return p;
+  }
+  function formFor(d, kind) {
+    var f = el('div', 'form');
+    var save = function (label, val) { d.saved[kind] = val; S.form = null; toastMsg(label + ' saved', d.a); render(); };
+    if (kind === 'phone') {
+      f.appendChild(el('div', 'lq', 'Phone number'));
+      var i = el('input'); i.type = 'tel'; i.value = '(719) 555-0148'; i.id = 'f-phone'; i.setAttribute('aria-label', 'Phone number'); f.appendChild(i);
+      f.appendChild(el('div', 'day', 'Given at the door: Call and Text without a Do Not Call check. A looked-up number has to clear the lists first.'));
+      var b = el('button', 'save', 'Save'); b.type = 'button'; b.addEventListener('click', function () { save('Phone', i.value); }); f.appendChild(b);
+    } else if (kind === 'email') {
+      f.appendChild(el('div', 'lq', 'Email'));
+      var e = el('input'); e.type = 'email'; e.value = 'homeowner@example.com'; e.id = 'f-email'; e.setAttribute('aria-label', 'Email'); f.appendChild(e);
+      var be = el('button', 'save', 'Save'); be.type = 'button'; be.addEventListener('click', function () { save('Email', e.value); }); f.appendChild(be);
+    } else if (kind === 'note') {
+      f.appendChild(el('div', 'lq', 'Note'));
+      var t = el('textarea'); t.rows = 2; t.id = 'f-note'; t.value = 'Wants a call after 5. Dog in the yard.'; t.setAttribute('aria-label', 'Note'); f.appendChild(t);
+      var bn = el('button', 'save', 'Save'); bn.type = 'button'; bn.addEventListener('click', function () { save('Note', 'Note'); }); f.appendChild(bn);
+    } else if (kind === 'work') {
+      f.appendChild(el('div', 'lq', 'What else needs doing here?'));
+      var g = el('div', 'chipsel');
+      WORK.forEach(function (w) { var b2 = el('button', null, w); b2.type = 'button'; b2.setAttribute('aria-pressed', String(S.work.indexOf(w) >= 0)); b2.addEventListener('click', function () { var k = S.work.indexOf(w); if (k >= 0) S.work.splice(k, 1); else S.work.push(w); b2.setAttribute('aria-pressed', String(k < 0)); }); g.appendChild(b2); });
+      f.appendChild(g);
+      var bw = el('button', 'save', 'Save'); bw.type = 'button'; bw.addEventListener('click', function () { save('Extra work', (S.work.length || 1) + ' extra jobs'); }); f.appendChild(bw);
+    } else if (kind === 'walk') {
+      f.appendChild(el('div', 'lq', 'Book the walk'));
+      var days = el('div', 'chipsel');
+      ['Tomorrow', 'Thu 8 Oct', 'Fri 9 Oct'].forEach(function (dy) { var bd = el('button', null, dy); bd.type = 'button'; bd.setAttribute('aria-pressed', String(S.walk.day === dy)); bd.addEventListener('click', function () { S.walk.day = dy; render(); }); days.appendChild(bd); });
+      f.appendChild(days);
+      var sel = el('select'); sel.id = 'f-time'; sel.setAttribute('aria-label', 'Time'); ['Time to agree', '9:00 am', '10:30 am', '1:00 pm', '3:30 pm'].forEach(function (o) { var op = el('option', null, o); sel.appendChild(op); }); sel.value = S.walk.time || 'Time to agree';
+      sel.addEventListener('change', function () { S.walk.time = sel.value; }); f.appendChild(sel);
+      if (S.walk.day) f.appendChild(el('div', 'day', 'Already booked ' + S.walk.day + ': 10:00 am · Woodland Park · 2201 Example Rd. Pick another time so they don’t collide.'));
+      var bwk = el('button', 'save', 'Save the walk'); bwk.type = 'button';
+      bwk.addEventListener('click', function () { if (!S.walk.day) { toastMsg('Pick a day', 'Then a time, or leave it to agree'); return; } d.walkText = S.walk.day + (S.walk.time && S.walk.time !== 'Time to agree' ? ' ' + S.walk.time : ''); d.saved.walk = 'Walk ' + d.walkText; S.form = null; toastMsg('Walk booked', 'Add to calendar · Text a confirmation'); render(); });
+      f.appendChild(bwk);
+    } else if (kind === 'fc') {
+      f.appendChild(el('div', 'lq', 'Fire check (7 of the 17 items, for the demo)'));
+      FC.forEach(function (it) {
+        var r = el('div', 'fcrow'); r.appendChild(el('span', null, it[1]));
+        var seg = el('div', 'fcseg');
+        [['ok', 'Done'], ['fx', 'Needs work'], ['na', 'Couldn’t check']].forEach(function (o) {
+          var b3 = el('button', o[0], o[1]); b3.type = 'button'; b3.setAttribute('aria-pressed', String(S.fc[it[0]] === o[0]));
+          b3.addEventListener('click', function () { S.fc[it[0]] = o[0]; [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b3)); }); });
+          seg.appendChild(b3);
+        });
+        r.appendChild(seg); f.appendChild(r);
+      });
+      var bf = el('button', 'save', 'Save and see the homeowner report'); bf.type = 'button';
+      bf.addEventListener('click', function () { if (!Object.keys(S.fc).length) { S.fc = { debris: 'fx', z1plants: 'fx', vents: 'fx', overhang: 'ok', grass: 'ok', ladder: 'fx', firewood: 'na' }; } d.saved.fc = 'Fire check'; S.form = null; S.sheet = 'report:' + d.id; render(); });
+      f.appendChild(bf);
+    }
+    return f;
+  }
+  function laterForm(d) {
+    var f = el('div', 'form'); f.appendChild(el('div', 'lq', 'When should we come back?'));
+    var g = el('div', 'chipsel');
+    [['In a month', 'Nov 2026'], ['In 3 months', 'Jan 2027'], ['Spring', 'Apr 2027'], ['Fall', 'Sep 2027']].forEach(function (o) {
+      var b = el('button', null, o[0] + ' · ' + o[1]); b.type = 'button';
+      b.addEventListener('click', function () { d.mark = 'later'; d.back = o[1]; S.form = null; S.open = null; toastMsg('Not now', d.a + ' · back ' + o[1], function () { d.mark = null; S.open = d.id; render(); }); render(); });
+      g.appendChild(b);
+    });
+    f.appendChild(g);
+    var ns = el('button', 'save', 'No-soliciting sign at this door'); ns.type = 'button'; ns.style.background = 'transparent'; ns.style.color = 'var(--later)'; ns.style.border = '1.5px dashed var(--later)';
+    ns.addEventListener('click', function () { toastMsg('No soliciting', 'Flagged so nobody knocks here again'); S.form = null; render(); });
+    f.appendChild(ns);
+    return f;
+  }
+  function yesPanel(d) {
+    var p = el('div', 'walkp'); p.appendChild(el('div', 'wpt', 'Quote booked · ' + d.a));
+    if (!d.saved.walk && S.form !== 'walk:' + d.id) S.form = 'walk:' + d.id;
+    if (S.form === 'walk:' + d.id) p.appendChild(formFor(d, 'walk'));
+    else if (d.saved.walk) { var s = el('div', 'saved'); s.appendChild(el('span', 'wl', 'Walk')); s.appendChild(el('span', 'v', d.walkText)); p.appendChild(s); }
+    p.appendChild(capPanel(d, true));
+    var dn = el('button', 'done-btn', 'Done with this door'); dn.type = 'button'; dn.style.width = '100%'; dn.style.marginTop = '8px';
+    dn.addEventListener('click', function () { S.yes = null; S.form = null; render(); }); p.appendChild(dn);
+    return p;
+  }
+  function mark(d, kind) {
+    if (kind === 'later') { S.form = 'later:' + d.id; render(); return; }
+    d.mark = kind; S.cap = null; S.form = null; S.open = null;
+    if (kind === 'booked') { S.yes = d.id; S.walk = { day: null, time: '' }; }
+    toastMsg(kind === 'booked' ? 'Quote booked' : 'No answer', d.a + (kind === 'miss' ? ' · back on the list in 2 days' : ''), function () { d.mark = null; if (S.yes === d.id) S.yes = null; S.open = d.id; render(); });
+    render(); $screen.scrollTop = 0;
+  }
+  /* ---------- sheets ---------- */
+  function renderSheet() {
+    var old = $device.querySelector('.sheet'); if (old) old.remove();
+    if (!S.sheet) return;
+    var sh = el('div', 'sheet'); var hd = el('div', 'sh topo');
+    var x = el('button'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(ico('back', 2.4)); x.addEventListener('click', function () { S.sheet = null; render(); }); hd.appendChild(x);
+    var body = el('div', 'sb');
+    if (S.sheet === 'money' || S.sheet.indexOf('money:') === 0) {
+      var topic = S.sheet.split(':')[1] || 'tax';
+      hd.appendChild(el('b', null, 'Fire-work money'));
+      var seg = el('div', 'seg');
+      [['tax', 'Tax credit'], ['ins', 'Insurance'], ['grant', 'Grants']].forEach(function (t) { var b = el('button', null, t[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(topic === t[0])); b.addEventListener('click', function () { S.sheet = 'money:' + t[0]; render(); }); seg.appendChild(b); });
+      body.appendChild(seg);
+      var M = {
+        tax: ['Colorado wildfire tax credit', 'The state gives back what a homeowner pays a contractor for wildfire mitigation on their own land: up to $1,000 for 2025 and 2026, up to $2,000 from 2027. Claimed on form DR 0104CR.', 'Ask your accountant how it applies to you.', 'Promise anyone the full credit.'],
+        ins: ['Insurance and mitigation', 'Since 1 July 2026, insurers that use wildfire risk scores must tell homeowners their score, credit documented mitigation, and let them appeal (HB25-1182).', 'Send your insurer the report and receipts and ask for a review.', 'Quote a discount: the law sets no percentage.'],
+        grant: ['Teller County', 'No county cost-share for homeowners has been found here. The state tax credit and the insurance law both apply.', 'Talk about the tax credit and insurance.', 'Mention the Woodland Park fuel-buffer grant as money for homeowners: it isn’t.']
+      }[topic];
+      var mc = el('div', 'mcard'); mc.appendChild(el('h4', null, M[0])); mc.appendChild(el('p', null, M[1]));
+      var say = el('p'); say.appendChild(el('span', 'say', 'Say: ')); say.appendChild(document.createTextNode(M[2])); mc.appendChild(say);
+      var dont = el('p'); dont.appendChild(el('span', 'dont', 'Don’t say: ')); dont.appendChild(document.createTextNode(M[3])); mc.appendChild(dont);
+      body.appendChild(mc);
+      body.appendChild(el('div', 'day', 'Checked 2 Oct 2026 against state and county sources. Shortened for the demo.'));
+    } else {
+      var d = S.doors.filter(function (z) { return 'report:' + z.id === S.sheet; })[0];
+      hd.appendChild(el('b', null, 'Homeowner report'));
+      var r = el('div', 'rep'); r.appendChild(el('div', 'rb', 'Sixfold Colorado · Lawn, Land & Fire')); r.appendChild(el('h5', null, 'Home fire check'));
+      r.appendChild(el('div', null, d.a));
+      var n = { ok: 0, fx: 0, na: 0 }; FC.forEach(function (it) { n[S.fc[it[0]] || 'na']++; });
+      var sum = el('div', 'sum'); [['ok', 'done'], ['fx', 'need work'], ['na', 'not checked']].forEach(function (k) { var c = el('div'); c.appendChild(el('b', null, String(n[k[0]]))); c.appendChild(document.createTextNode(k[1])); sum.appendChild(c); }); r.appendChild(sum);
+      var fix = FC.filter(function (it) { return S.fc[it[0]] === 'fx'; });
+      if (fix.length) { r.appendChild(el('b', null, 'What to do first')); var ol = el('ol'); fix.forEach(function (it) { ol.appendChild(el('li', null, FCTODO[it[0]])); }); r.appendChild(ol); }
+      var tb = el('table'); FC.forEach(function (it) { var tr = el('tr'); tr.appendChild(el('td', null, it[1])); var v = S.fc[it[0]] || 'na'; tr.appendChild(el('td', v, v === 'ok' ? 'Done' : v === 'fx' ? 'Needs work' : 'Couldn’t check')); tb.appendChild(tr); }); r.appendChild(tb);
+      r.appendChild(el('div', 'disc', 'A visual check against the Colorado State Forest Service Home Ignition Zone guide. Not an inspection, a certification or a guarantee. In the app this prints or saves as a PDF, with the door’s photos and how to use it with an insurer and for the tax credit.'));
+      body.appendChild(r);
+    }
+    sh.appendChild(hd); sh.appendChild(body); $device.appendChild(sh);
+  }
+  /* ---------- toast ---------- */
+  var toastT = null;
+  function toastMsg(a, b, undo) { S.toast = { a: a, b: b, undo: undo || null }; clearTimeout(toastT); toastT = setTimeout(function () { S.toast = null; renderToast(); }, 4200); renderToast(); }
+  function renderToast() {
+    var old = $device.parentNode.querySelector('.toast'); if (old) old.remove();
+    if (!S.toast) return;
+    var t = el('div', 'toast'); var m = el('span'); m.appendChild(el('b', null, S.toast.a)); m.appendChild(document.createTextNode(' · ' + S.toast.b)); t.appendChild(m);
+    if (S.toast.undo) { var u = el('button', null, 'Undo'); u.type = 'button'; var f = S.toast.undo; u.addEventListener('click', function () { S.toast = null; f(); }); t.appendChild(u); }
+    $device.parentNode.appendChild(t);
+  }
+  /* ---------- the tour ---------- */
+  var TOUR = [
+    ['Colorado overview', 'Every county and town, with doors left and high-risk doors. Where the day starts.', function () { reset(); go('state'); }],
+    ['Sort the neighbourhoods', 'Lawn, fire, trees, doors left, nearest, and our own booking odds.', function () { reset(); S.sort = 'odds'; go('town'); }],
+    ['Knock in street order', 'The next door is open; the rest are one line each, chips and all.', function () { reset(); go('doors'); }],
+    ['Only the best doors', 'High fire, a real lawn and trees close: the filter keeps only doors with all three.', function () { reset(); S.match = { fire: true, lawn: true, trees: true }; go('doors'); }],
+    ['The money at the door', 'What this homeowner qualifies for, and what to say about it.', function () { reset(); go('doors'); S.sheet = 'money'; render(); }],
+    ['A yes, captured', 'Quote booked opens the walk booking and everything else in one panel.', function () { reset(); S.screen = 'doors'; S.anim = true; var d = S.doors[0]; d.mark = 'booked'; S.yes = d.id; S.open = null; render(); }],
+    ['The homeowner fire report', 'A quick visual check turned into a report they can send their insurer.', function () { reset(); S.screen = 'doors'; S.fc = { debris: 'fx', z1plants: 'fx', vents: 'fx', overhang: 'ok', grass: 'ok', ladder: 'fx', firewood: 'na' }; S.doors[0].saved.fc = 'Fire check'; S.sheet = 'report:1'; render(); }]
+  ];
+  var $tour = document.getElementById('tour'), tourAt = -1;
+  TOUR.forEach(function (t, i) {
+    var b = el('button'); b.type = 'button'; b.appendChild(el('span', 'n', String(i + 1)));
+    var tx = el('span'); tx.appendChild(el('b', null, t[0])); tx.appendChild(el('span', null, t[1])); b.appendChild(tx);
+    b.addEventListener('click', function () { tourAt = i; t[2](); syncTour(); if (window.innerWidth < 980) $device.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    $tour.appendChild(b);
+  });
+  function syncTour() { [].forEach.call($tour.children, function (b, i) { if (i === tourAt) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); }
+  render();
+})();
+</script>
