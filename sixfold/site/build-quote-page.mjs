@@ -85,7 +85,7 @@ rep(`  try { downloads = await claude.use("downloads"); } catch(e){ downloads = 
       '<div class="notice warn" style="margin-top:40px"><span class="mk">' +
       (gate._status === 403 ? "NOT ALLOWED" : "SIGN IN") + '</span><div>' +
       (gate._status === 403
-        ? "Your code opens door rounds but not the quote build. This tool is admin-only while it is being tested."
+        ? "Your code opens door rounds but not the Quote builder. This tool is admin-only while it is being tested."
         : 'Your session has expired. <a href="./">Sign in again</a>, then come back.') +
       "</div></div>";
     return;

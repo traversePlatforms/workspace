@@ -474,6 +474,33 @@ function loadGoals(): array {
     $g = json_decode((string) @file_get_contents(DATA_DIR . '/goals.json'), true);
     return is_array($g) ? $g : ['doors' => null, 'talked' => null, 'booked' => null];
 }
+/* ---- address search (2026-10-04) ------------------------------------------------------
+ * Matthew: someone driving past a property that needs us can type the address and get its card.
+ * Every door in every town, from a small text index (one line per door) rebuilt whenever a door
+ * file is newer than it, so a search reads one file, not 8 MB of door lists. Words match the start
+ * of a word in the address, in any order; "drive", "road", "north" match DR, RD, N. */
+const SEARCH_SYN = ['DRIVE' => 'DR', 'ROAD' => 'RD', 'STREET' => 'ST', 'LANE' => 'LN', 'COURT' => 'CT', 'CIRCLE' => 'CIR',
+    'AVENUE' => 'AVE', 'PLACE' => 'PL', 'TRAIL' => 'TRL', 'BOULEVARD' => 'BLVD', 'PARKWAY' => 'PKWY', 'TERRACE' => 'TER',
+    'POINT' => 'PT', 'HEIGHTS' => 'HTS', 'HIGHWAY' => 'HWY', 'NORTH' => 'N', 'SOUTH' => 'S', 'EAST' => 'E', 'WEST' => 'W'];
+function searchIndex(): array {
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $f = DATA_DIR . '/search-index.txt';
+    $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); }
+    if (!is_readable($f) || (int) @filemtime($f) < $newest) {
+        $out = '';
+        foreach (($idx['regions'] ?? []) as $r) {
+            $data = loadRegion($r['key']); if (!$data) continue;
+            foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+                $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
+                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '']) . "\n";
+            }
+        }
+        $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp';
+        if (@file_put_contents($tmp, $out, LOCK_EX) !== false) { if (!@rename($tmp, $f)) { @unlink($tmp); } }
+        return explode("\n", rtrim($out, "\n"));
+    }
+    return explode("\n", rtrim((string) file_get_contents($f), "\n"));
+}
 /* ---- the walk (SX-51, 2026-10-04) ------------------------------------------------------
  * Sixfold quotes from a walk of the property, so a booked quote is a booked walk. The crew picks
  * the date and, if agreed, the time at the door; an admin can set or change it after a call. The
@@ -1599,6 +1626,32 @@ if ($action === 'assign') {
     }
     if (!appendAssign($key, ['area' => $area, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+
+if ($action === 'search') {
+    $q = strtoupper(trim((string) ($_GET['q'] ?? '')));
+    $q = (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $q);
+    $words = array_values(array_filter(explode(' ', $q), fn($w) => $w !== ''));
+    if (strlen(implode('', $words)) < 3) out(['ok' => true, 'q' => $q, 'results' => []]);
+    $words = array_slice(array_map(fn($w) => SEARCH_SYN[$w] ?? $w, $words), 0, 6);
+    $hits = [];
+    foreach (searchIndex() as $line) {
+        $p = explode("\t", $line); if (count($p) < 9) continue;
+        $aw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $p[4]));
+        $ok = true; $exactNo = false;
+        foreach ($words as $w) {
+            $m = false; foreach ($aw as $i => $x) { if ($x !== '' && strncmp($x, $w, strlen($w)) === 0) { $m = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
+            if (!$m) { $ok = false; break; }
+        }
+        if (!$ok) continue;
+        $hits[] = ['rank' => ($exactNo ? 0 : 1), 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
+                   'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null];
+        if (count($hits) > 400) break;
+    }
+    usort($hits, fn($x, $y) => [$x['rank'], $x['address']] <=> [$y['rank'], $y['address']]);
+    $more = count($hits) > 25;
+    $hits = array_map(function ($h) { unset($h['rank']); return $h; }, array_slice($hits, 0, 25));
+    out(['ok' => true, 'q' => $q, 'results' => $hits, 'more' => $more]);
 }
 
 if ($action === 'walk') {
