@@ -964,6 +964,10 @@
 <script>
 (function () {
   var API = '../api/rounds.php';
+  /* the Quote builder link carries the page's version (2026-10-04): SiteGround gives .html files a 180-day
+     browser cache, so a phone could keep an old quote.html, old prices included, for months. A new version
+     is a new address. build-quote-page.mjs writes this line whenever it rebuilds quote.html. */
+  var QUOTE_V = '325176b7c8';
   var OUT = { booked: 'Quote booked', later: 'Not now', miss: 'No answer', nosolicit: 'No soliciting' };
   var QKEY = 'sixfold.rounds.queue';
 
@@ -1625,7 +1629,7 @@
       'Walk a neighbourhood and mark every door, including the misses. Works offline and syncs when you have signal.', null, start));
     if (S.role === 'admin') {
       var qt = tile('a', 'calc', 'Quote builder',
-        'Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html');
+        'Cost-up pricing from walk-sheet counts. Pick a job type and the sheet shows only the lines that job uses.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html?v=' + QUOTE_V);
       if (S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
       box.appendChild(qt);
       var lt = tile('button', 'users', 'Leads',
@@ -4310,7 +4314,7 @@
     /* straight into Quote builder with the address as the job name and the county's funding picked (SX-3) */
     var bq = q('a', 'sat'); bq.appendChild(ico('calc', 2.2)); bq.appendChild(document.createTextNode('Build quote'));
     /* SX-52: the door and its lawn go along, so Quote builder can measure from the outline */
-    bq.href = 'quote.html?region=' + encodeURIComponent(x.region) + '&name=' + encodeURIComponent(x.address) + '&id=' + encodeURIComponent(x.id) +
+    bq.href = 'quote.html?v=' + QUOTE_V + '&region=' + encodeURIComponent(x.region) + '&name=' + encodeURIComponent(x.address) + '&id=' + encodeURIComponent(x.id) +
       (x.lawn && x.lawn.sq ? '&lawn=' + x.lawn.sq + '&yr=' + (x.lawn.yr || '') : '') + (x.lawnfix && x.lawnfix.lv ? '&crew=' + x.lawnfix.lv : '');
     tools.appendChild(bq); c.appendChild(tools);
     var b = q('button', x.quoted ? 'qsent on' : 'qsent',

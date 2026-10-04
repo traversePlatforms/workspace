@@ -28,6 +28,7 @@
   Run:  node sixfold/site/build-quote-page.mjs
 */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -209,13 +210,22 @@ const head = [
 ].join('\n');
 s = head + s + '\n</body>\n</html>\n';
 
-/* --check: say whether quote.html is what the source makes now, and change nothing.
-   make-bundle.mjs runs this and refuses to build an upload from a stale page (SX-2b). */
+/* the app links to quote.html?v=<version> (2026-10-04): SiteGround gives .html a 180-day browser cache,
+   so the version is how a phone knows there is a new page. It is the page's own fingerprint. */
+const IDX = join(here, 'summit-de59ae83/index.html');
+const V = createHash('sha256').update(s).digest('hex').slice(0, 10);
+const VLINE = /var QUOTE_V = '[^']*';/;
+let idx = readFileSync(IDX, 'utf8');
+if (!VLINE.test(idx)) throw new Error('index.html has no QUOTE_V line');
+
+/* --check: say whether quote.html is what the source makes now, and whether index.html links to it,
+   and change nothing. make-bundle.mjs runs this and refuses to build an upload from a stale page (SX-2b). */
 if (process.argv.includes('--check')) {
   let cur = ''; try { cur = readFileSync(OUT, 'utf8'); } catch {}
-  if (cur === s) { console.log('quote.html is up to date with the source'); process.exit(0); }
-  console.error('quote.html is OUT OF DATE with quotes/quote-engine.artifact.html. Run: node sixfold/site/build-quote-page.mjs');
-  process.exit(1);
+  if (cur !== s) { console.error('quote.html is OUT OF DATE with quotes/quote-engine.artifact.html. Run: node sixfold/site/build-quote-page.mjs'); process.exit(1); }
+  if (!idx.includes(`var QUOTE_V = '${V}';`)) { console.error('index.html links to an old quote.html version. Run: node sixfold/site/build-quote-page.mjs'); process.exit(1); }
+  console.log('quote.html is up to date with the source, and index.html links to it (v ' + V + ')'); process.exit(0);
 }
 writeFileSync(OUT, s, 'utf8');
-console.log('wrote summit-de59ae83/quote.html  ' + (s.length / 1024).toFixed(1) + ' KB');
+writeFileSync(IDX, idx.replace(VLINE, `var QUOTE_V = '${V}';`), 'utf8');
+console.log('wrote summit-de59ae83/quote.html  ' + (s.length / 1024).toFixed(1) + ' KB, and pointed index.html at it (v ' + V + '). Upload both.');
