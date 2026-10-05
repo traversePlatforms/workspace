@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — the Sample door (admin tool), the hail strip and the storm call list
+## ✅ LIVE 2026-10-05 (verified 21/21: page identical plain and busted, sample-door.json 404/403 from the web, sample answers only signed in and matches local, alerts and both call lists answer, the sample door draws every part with both strips and its roof photo, a mark on it sends nothing) — the Sample door (admin tool), the hail strip and the storm call list
 
 Matthew 2026-10-05:
 - **Sample door.** An admin tile opens one door with every part of the card filled in, to try things on: fire, lawn, trees, value, owner, new owner, customer tag, phone, skip trace, hail, roof size and year built, a roof photo, note, email, extra work, two fire checks (homeowner report), photos, money and water, and made-up alerts drawn as the real ones are (Red Flag Warning, Fire Warning, Air Quality Alert, High Wind Warning, a severe thunderstorm warning with hail, and a wildfire 8 mi away) with their call lists. The address is a real one (Matthew's choice; it is only in the private file and its generator, both untracked); every figure is made up; the two pictures are the real 2023 USDA aerial of the house. The door lives in a private file beside the website, never in the page and never in a town. Nothing done on it is sent: the page answers its saves itself. Money and water show Castle Rock's sheets.
