@@ -43,7 +43,8 @@
     "communities": false,
     "firecheck": false,
     "skiptrace": true,
-    "hail": true
+    "hail": true,
+    "roof": true
   },
   "card": {
     "lawn": false,

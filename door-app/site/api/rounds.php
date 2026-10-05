@@ -73,14 +73,15 @@ define('DATA_DIR', dataDir());
  * written into the code. Each install has a company.json beside its door files (DATA_DIR) with
  * its name, contact details, services, extra-work list, mark, colours and which tools it uses.
  * Missing keys fall back to the neutral defaults below. Nothing in it is secret: the page asks
- * for it before anyone signs in (action=company), so it never holds a key, a code or a price. */
+ * for it before anyone signs in (action=company, minus appUrl), so it never holds a key, a code or a price.
+ * Nothing in it is trusted either: the page draws every value as text and sanitises the logo and colours. */
 function company(): array {
     static $c = null;
     if ($c !== null) return $c;
     $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
             'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
-            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false],
+            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false],
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
             'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
@@ -96,15 +97,25 @@ function feature(string $k): bool { return !empty(company()['features'][$k]); }
    Admin only, and only where the company turns it on (features.hail). Matthew is evaluating it for roofing. */
 function hailOn(string $role): bool { return $role === 'admin' && feature('hail'); }
 function loadHail(string $key): array {
-    $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $key . '.json'), true);
-    return is_array($j['doors'] ?? null) ? $j['doors'] : [];
+    static $memo = [];
+    if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $key . '.json'), true); $memo[$key] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
+    return $memo[$key];
+}
+/* roof size and pitch (laser scan) and year built / roof material (county files), per door, built offline
+   (operations/door-territory/roofs/sample-roofs.mjs, assessor/build-year.mjs). Admins only, features.roof. */
+function roofDataOn(string $role): bool { return $role === 'admin' && feature('roof'); }
+function loadSide(string $kind, string $key): array {
+    static $memo = [];
+    $k = $kind . '-' . $key;
+    if (!isset($memo[$k])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $k . '.json'), true); $memo[$k] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
+    return $memo[$k];
 }
 /** service keys, and the label for each */
 function custServices(): array { return array_map(fn($p) => (string) $p[0], company()['services']); }
 function workLabels(): array { $o = []; foreach (company()['extraWork'] as $p) $o[(string) $p[0]] = (string) $p[1]; return $o; }
 function workTags(): array { return array_keys(workLabels()); }
 /** who the app says it is when it asks a public service for data (the weather service wants a contact) */
-function agentHeader(): string { $c = company(); return 'User-Agent: DoorApp/1.0 (' . ($c['email'] ?: ($c['site'] ?: 'no contact set')) . ')'; }
+function agentHeader(): string { $c = company(); return 'User-Agent: DoorApp/1.0 (' . preg_replace('/[\r\n]+/', ' ', (string) ($c['email'] ?: ($c['site'] ?: 'no contact set'))) . ')'; }
 date_default_timezone_set('America/Denver');   /* review 2026-10-03: the export's date() used the host's zone */
 const COOKIE     = 'sfr';
 const MAX_TRIES  = 8;      // wrong codes per address per window
@@ -916,7 +927,8 @@ if ($action === 'hail') {
 }
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
-if ($action === 'company') out(['ok' => true, 'company' => company()]);
+/* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
+if ($action === 'company') out(['ok' => true, 'company' => array_diff_key(company(), ['appUrl' => 1])]);
 
 if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
@@ -1127,6 +1139,7 @@ if ($action === 'area') {
     $placeOf = skipMail($key);   /* id => {c: city, z: ZIP, m: mailing}; only c and z are sent */
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
     $hailOf = hailOn($role) ? loadHail($key) : [];   /* admins only: storms near the house, newest first */
+    $roofOf = roofDataOn($role) ? loadSide('roof', $key) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key) : [];
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1145,6 +1158,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

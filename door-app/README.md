@@ -42,6 +42,15 @@ Nothing about one company is written into the code any more. Each install has a 
 
 The first roofing piece, switched on by `features.hail`. NOAA's radar estimate of the largest hail within about 1 km of each house, per day, April to September since 2020 (MRMS MESH, archived by Iowa State). Built offline with `operations/door-territory/hail/build-hail.mjs` (`fetch`, then `build`); it writes `hail-<town>.json` and `hail-storms.json` beside the door files. The app shows them only to admins: a **Hail** screen (storm days, newest first, and the neighbourhoods each one hit) and a hail line on the door card. It is an estimate that runs smaller than ground reports for big stones; see [research/ROOFING-DATA-CHECK-2026-10.md](research/ROOFING-DATA-CHECK-2026-10.md). Not updated automatically yet: re-run fetch and build, then upload the hail files.
 
+## Roof size, pitch and year built (2026-10-04, admins only)
+
+Switched on by `features.roof`. Two offline builders write files beside the door files (gitignored, regenerable):
+
+- **`operations/door-territory/roofs/sample-roofs.mjs`** measures each house's roof from the USGS laser scans already on this computer (El Paso 2018, Douglas 2020): footprint from the building outline slid onto the roof, pitch from a small plane fitted across the roof cells, area = footprint / cos(pitch), and squares (100 sq ft). Then `--build` writes `roof-<town>.json`. 21,530 of 26,674 doors measured; 98% of the houses with no roof in the scan were built in or after the scan year. Teller has no laser scan.
+- **`operations/door-territory/assessor/build-year.mjs`** matches the free county files (downloaded into `assessor/raw/`, gitignored: owners' names) to the doors by parcel: year built for El Paso and Douglas, plus year remodeled, roof shape and roof material for Douglas. Writes `year-<town>.json`. 98.6% of doors matched.
+
+Checks against Douglas County's own roof records: 0.2% of gable and hip roofs read as flat; median pitch 5/12; footprints match county building sizes (median ratio 1.04). Both are estimates and the card says so.
+
 ## What else inside this app is Sixfold's
 
 - `site/data/rounds/company.json`: Sixfold's settings.

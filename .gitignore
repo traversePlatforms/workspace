@@ -118,3 +118,11 @@ door-app/operations/door-territory/lawn-trial/*.bak
 door-app/operations/door-territory/hail/days/
 door-app/operations/door-territory/hail/fetch.log
 door-app/site/data/rounds/hail-*.json
+
+# County assessor downloads (2026-10-04): owners names and addresses, regenerable from the county sites
+door-app/operations/door-territory/assessor/raw/
+# Roof measurements (2026-10-04): cache and the built files, regenerable with roofs/sample-roofs.mjs
+door-app/operations/door-territory/roofs/roof-cache.json*
+door-app/operations/door-territory/roofs/sample.log
+door-app/site/data/rounds/roof-*.json
+door-app/site/data/rounds/year-*.json

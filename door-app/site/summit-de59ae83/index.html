@@ -1233,7 +1233,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var ROOF_HIDE = { lawn: 1, trees: 1, fire: 1, money: 1, water: 1, fc: 1 };
   function roofOn() { return !!S.roofView && S.role === 'admin'; }
   function cardOn(k) { if (roofOn() && ROOF_HIDE[k]) return false; return !(CO && CO.card && CO.card[k] === false); }
-  var TRIM_DOOR = { fire: ['fire'], lawn: ['lawn', 'lawnfix'], trees: ['trees'], fc: ['fc'] };            /* door fields: set to null */
+  var TRIM_DOOR = { fire: ['fire'], lawn: ['lawn', 'lawnfix'], trees: ['trees', 'tl'], fc: ['fc'] };      /* door fields: set to null (tl: the search answer's tree level) */
   var TRIM_COUNT = { fire: ['hot', 'vhot'], lawn: ['lawnL', 'lawnM'], trees: ['treeA', 'treeH'] };       /* summary counts: removed */
   var TRIM_ACTIONS = { area: 1, regions: 1, search: 1, nearest: 1, mydoors: 1, communities: 1 };
   function trimCard(j) {
@@ -1393,6 +1393,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
+    roof: '<path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
     hail: '<path d="M7 15.5a4 4 0 0 1-.6-7.95 5.5 5.5 0 0 1 10.6 1A3.5 3.5 0 0 1 17 15.5z"/><circle cx="8.5" cy="19.5" r="1"/><circle cx="12.5" cy="18" r="1"/><circle cx="16" cy="20" r="1"/>',
     tree: '<path d="M12 3l-5 7h3l-4 6h12l-4-6h3z"/><path d="M12 16v5"/>',
     list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/>',
@@ -3086,6 +3087,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else if (!d.phone && !capOpen(d)) wrap.appendChild(lookupButton(d));   /* Look up number (2026-10-04) */
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
+    if (d.roof || d.bld) wrap.appendChild(roofBlock(d));                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
@@ -4266,7 +4268,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     fm.appendChild(q('div', 'wl', 'Log a visit'));
     var row = q('div', 'trow');
     var dt = q('input'); dt.type = 'date'; dt.id = 'vf-date'; dt.value = S.custToday || todayISO(); dt.setAttribute('aria-label', 'Date');
-    var sv = q('select'); sv.id = 'vf-service'; sv.setAttribute('aria-label', 'Service'); Object.keys(SERVICE_L).forEach(function (k) { var o = q('option', null, SERVICE_L[k]); o.value = k; sv.appendChild(o); }); sv.value = c.service || 'lawn';
+    var sv = q('select'); sv.id = 'vf-service'; sv.setAttribute('aria-label', 'Service'); Object.keys(SERVICE_L).forEach(function (k) { var o = q('option', null, SERVICE_L[k]); o.value = k; sv.appendChild(o); }); sv.value = c.service || CO.services[0][0];
     row.appendChild(dt); row.appendChild(sv); fm.appendChild(row);
     var row2 = q('div', 'trow');
     var pr = q('input'); pr.type = 'number'; pr.id = 'vf-price'; pr.min = '0'; pr.step = '1'; pr.inputMode = 'decimal'; pr.placeholder = 'Price $'; pr.value = c.price != null ? c.price : ''; pr.setAttribute('aria-label', 'Price');
@@ -5409,6 +5411,31 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.appendChild(line); b.appendChild(t);
     return b;
   }
+  /* roof and house (2026-10-04, admin only): the laser-scan roof measurement and the county's year built */
+  function roofBlock(d) {
+    var b = q('div', 'hailx roofx'); b.appendChild(ico('roof', 2.2));
+    var t = q('span');
+    if (d.roof) {
+      var r = d.roof;
+      t.appendChild(q('small', null, 'Roof (laser scan ' + (r.yr || '') + ', estimate)'));
+      var l1 = q('span', 'hl');
+      l1.appendChild(q('b', null, 'about ' + Number(r.sq).toLocaleString('en-US') + ' sq ft'));
+      l1.appendChild(document.createTextNode(' \u00b7 ' + r.sqs + ' squares \u00b7 ' + (r.flat ? 'flat or low slope' : r.pitch + '/12 pitch')));
+      t.appendChild(l1);
+    }
+    if (d.bld) {
+      var y = d.bld, bits = ['Built ' + y.yb];
+      if (y.rm) bits.push('remodeled ' + y.rm);
+      if (y.shape) bits.push(y.shape);
+      if (y.mat) bits.push(y.mat.charAt(0) + y.mat.slice(1).toLowerCase());
+      if (!d.roof) t.appendChild(q('small', null, 'County records'));
+      /* 98% of houses the scan shows no roof for were built in or after the scan year (checked 2026-10-04) */
+      if (!d.roof && y.yb >= 2018) bits.push('no roof measurement: newer than the laser scan');
+      t.appendChild(q('span', 'hl', bits.join(' \u00b7 ')));
+    }
+    b.appendChild(t);
+    return b;
+  }
   function hailView() {
     hideToast(); S.signin = null; S.screen = 'hail'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Hail', sub: 'Storms since 2020 · radar estimate', back: chooseView, backLabel: 'Field tools' });
@@ -5473,7 +5500,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function openFromCommunity(a, back) {
     var go = function () { S.region = a.region; S.area = null; S.returnTo = back || communitiesView; openArea(a.name); };
-    if (S.regions) return go();
+    if (S.regions && S.regions.length) return go();
     api('regions').then(function (j) { if (j.ok) { S.regions = j.regions; go(); } });
   }
 
@@ -6286,7 +6313,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     try { localStorage.setItem('doorapp.company', now); } catch (e) {}
     setCompany(j.company);
     /* the saved copy was older (Matthew 2026-10-04: the Hail tile did not show): the tools screen was drawn from it, so draw it again */
-    if (CO_SAVED && was !== now && S.screen === 'tools') chooseView();
+    if (was !== now && S.screen === 'tools') chooseView();
   }).catch(function () {});
   function boot() {
     if (isOut()) { signinView(); tellServerOut(); }

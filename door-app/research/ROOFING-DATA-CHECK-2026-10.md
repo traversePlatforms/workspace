@@ -52,7 +52,11 @@ Per door: the storms in the last few years where the radar estimate within about
 
 ## 3. Roof size and pitch
 
-The USGS laser-scan data already used for trees near the house covers El Paso (2018) and Douglas (2020); Teller has only the canopy map. The same points measure roofs: a footprint plus a pitch gives a rough roof area. Not tested in this round. It's the next thing to try once hail is in.
+The USGS laser-scan data already used for trees near the house covers El Paso (2018) and Douglas (2020); Teller has only the canopy map. The same points measure roofs: a footprint plus a pitch gives a rough roof area.
+
+**Tested overnight 2026-10-04 (addendum):** measured for every door in the seven El Paso and Douglas towns with `roofs/sample-roofs.mjs`. 21,530 of 26,674 doors got a roof size and pitch (81%). Of the rest, 3,075 show no roof in the scan, and 98% of those were built in or after the scan year (checked against the county year built); 1,359 have no building outline; 449 have the roof hidden by trees. Against Douglas County's own records: 0.2% of the 7,729 gable and hip roofs read as flat, their median pitch is 5/12, and 10 of the 20 roofs the county lists as flat read as flat or low slope (several of the others measure 20–37°, so some county "flat" records look like sloped houses). Footprints match the county's building sizes (median ratio 1.04). The two measuring methods tried agree within 1/12 on 98% of houses. Median roof: about 30 squares. Still an estimate: eaves outside the outline are missed, and a re-roofed or rebuilt house since 2018/2020 may differ.
+
+**Year built and roof material** (addendum): the free county files matched 98.6% of doors (`assessor/build-year.mjs`). Douglas adds roof shape and material: in Castle Rock, 6,382 composition shingle, 544 concrete tile, 37 wood shake, 23 clay tile.
 
 ## 4. Colorado's residential roofing law (C.R.S. 6-22-101 to 105)
 

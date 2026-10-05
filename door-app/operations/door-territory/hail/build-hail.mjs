@@ -64,7 +64,8 @@ async function fetchDay(day, box) {
   const files = [...new Set([...html.matchAll(/href="([^"]+?_(\d{8})-(\d{6})\.grib2\.gz)"/g)].map((m) => m[1] + '|' + m[3]))].map((s) => s.split('|'));
   if (!files.length) return { d: day, missing: 'no files' };
   /* nearest 12:00 first; a file stored another way (one day in 2021) falls through to the next nearest */
-  const want = 120000, order = files.sort((a, b) => Math.abs(+a[1] - want) - Math.abs(+b[1] - want)).slice(0, 4);
+  const want = 120000, order = files.filter((f) => Math.abs(+f[1] - want) <= 10000).sort((a, b) => Math.abs(+a[1] - want) - Math.abs(+b[1] - want)).slice(0, 4);
+  if (!order.length) return { d: day, missing: 'no file within an hour of 12:00 UTC' };
   let m = null, pick = null, why = 'file gone';
   for (const f of order) {
     const gz = await get(dir + f[0], true); if (!gz) continue;
@@ -90,7 +91,12 @@ async function fetchAll(from, to) {
   const worker = async () => {
     while (todo.length) {
       const d = todo.shift();
-      try { const r = await fetchDay(d, box); writeFileSync(join(DAYS, d + '.json'), JSON.stringify(r)); if (r.missing) miss++; }
+      try {
+        const r = await fetchDay(d, box);
+        const old = (Date.now() - Date.parse(d + 'T00:00:00Z')) / 86400000 > 30;
+        if (!r.missing || old) writeFileSync(join(DAYS, d + '.json'), JSON.stringify(r));   /* a recent gap may fill in: try again next run */
+        if (r.missing) miss++;
+      }
       catch (e) { fail++; console.log(`  ${d}: ${e.message} (will retry next run)`); }
       if (++done % 50 === 0) console.log(`  ${done} done, ${miss} missing, ${fail} failed`);
     }

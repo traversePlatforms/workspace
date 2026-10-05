@@ -9,6 +9,20 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — overnight 2026-10-04: roof size and pitch, year built, review fixes
+
+Run while Matthew slept, all local; nothing uploaded. **Roof** (laser scan, El Paso 2018 / Douglas 2020): about N sq ft, squares and pitch on 21,530 of 26,674 doors; **year built** (county files) on 98.6%, plus remodeled year, roof shape and material for Douglas. Admins only, behind `features.roof`; a house built after the scan says so. Checks against Douglas County's records in [research/ROOFING-DATA-CHECK-2026-10.md](../../research/ROOFING-DATA-CHECK-2026-10.md). **Review fixes** (second review of everything since 851ede3; nothing severe): the public settings answer no longer carries the app's address; the Roofing preview also hides the trees chip in Find an address; the tools screen redraws on a first visit when the settings arrive late; the visit form's default service; opening a neighbourhood from Hail right after switching the preview; no line breaks into the weather-service header; hail files decoded once per request; hail days more than an hour from 6 am are not filed (3 April 2022 days were; no storms on them, so nothing visible changed). Tested: roof-test 6/6; all 69 suites pass (lookinstall needed a re-run: its known install-prompt timing flake, 3/3 alone).
+
+| Step | File (from `door-app/site/`) | Goes to |
+|---|---|---|
+| 1 | the 7 `data/rounds/roof-<town>.json` (**2.2 MB**) and 7 `data/rounds/year-<town>.json` (**1.6 MB**), gitignored, on this computer | `sixfold-data/rounds/`, beside monument.json, never inside public_html |
+| 2 | `data/rounds/company.json` (**1,864** bytes: roof switched on) | `sixfold-data/rounds/` (replace) |
+| 3 | `api/rounds.php` (**193,355** bytes) | `public_html/api/` |
+| 4 | `summit-de59ae83/index.html` (**466,127** bytes) | `public_html/summit-de59ae83/` |
+| 5 | — | Flush the cache |
+
+Optional: `data/rounds/hail-storms.json` again (only its days-read count changed).
+
 ## ✅ LIVE 2026-10-04 (verified 15/15) — door-card sections as settings + Roofing preview (admins), and the tools-screen redraw. Page identical at three addresses; the card block is on the server, all on; a Black Forest door (Shoup Rd) shows fire, lawn, trees, money, water, the Show doors with row and hail as Sixfold; in Roofing preview the same door shows only the basics and hail, and the Fire/Lawn/Trees sorts are gone; switching back restores everything; no page errors
 
 Matthew 2026-10-04: a roofer's card should not carry Sixfold's lawn and fire. company.json now has a `card` block (lawn, trees, fire, money, water; missing = shown; Sixfold: all on, so the crew see no change). Admins get a **Door card: Sixfold | Roofing preview** switch on the tools screen, under Look: on that device only, cards show the basics and hail, and lawn, trees, fire, money, water, the fire check, the Show doors with row and the Fire / Lawn / Trees sorts are hidden. It stays on for that device until switched back. Also: the tools screen draws itself again when fresher company settings arrive (the missing Hail tile, 2026-10-04). Tested: card-test 15/15; all 68 suites pass alone (lookinstall's check now reads the first switch row).

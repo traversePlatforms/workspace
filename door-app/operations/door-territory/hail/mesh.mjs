@@ -5,16 +5,18 @@
 import { inflateSync } from 'node:zlib';
 
 export function decodeMesh(b) {
+  const sm16 = (o) => { const v = b.readUInt16BE(o); return v & 0x8000 ? -(v & 0x7fff) : v; };
+  const sm32 = (o) => { const v = b.readUInt32BE(o); return v & 0x80000000 ? -(v & 0x7fffffff) : v; };
   if (b.toString('ascii', 0, 4) !== 'GRIB' || b[7] !== 2) throw new Error('not a GRIB2 file');
   let p = 16, g = {}, png = null;
   while (p < b.length - 4 && b.toString('ascii', p, p + 4) !== '7777') {
     const len = b.readUInt32BE(p), sec = b[p + 4];
     if (sec === 3) {
       if (b.readUInt16BE(p + 12) !== 0) throw new Error('not a lat/lon grid');
-      g = { nx: b.readUInt32BE(p + 30), ny: b.readUInt32BE(p + 34), lat1: b.readInt32BE(p + 46) / 1e6, lon1: b.readUInt32BE(p + 50) / 1e6,
+      g = { nx: b.readUInt32BE(p + 30), ny: b.readUInt32BE(p + 34), lat1: sm32(p + 46) / 1e6, lon1: b.readUInt32BE(p + 50) / 1e6,
             dx: b.readUInt32BE(p + 63) / 1e6, dy: b.readUInt32BE(p + 67) / 1e6 };
     }
-    if (sec === 5) { if (b.readUInt16BE(p + 9) !== 41) throw new Error('not PNG packing'); g.R = b.readFloatBE(p + 11); g.E = b.readInt16BE(p + 15); g.D = b.readInt16BE(p + 17); }
+    if (sec === 5) { if (b.readUInt16BE(p + 9) !== 41) throw new Error('not PNG packing'); g.R = b.readFloatBE(p + 11); g.E = sm16(p + 15); g.D = sm16(p + 17); }
     if (sec === 7) png = b.subarray(p + 5, p + len);
     p += len;
   }
