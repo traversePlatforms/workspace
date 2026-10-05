@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Look up number on the door card (and the skip-trace code, switched off until a key is added)
+## ✅ LIVE 2026-10-04 (10/14) — Look up number + skip-trace code. ⏳ Step 4 (the 11 mail-*.json) NOT yet on the server: doors have no city/ZIP, so the searches use the town name with no ZIP
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
