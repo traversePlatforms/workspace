@@ -7,6 +7,32 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — skip tracing (owner phone numbers from BatchData), admin only, DNC-gated. NOT COMMITTED YET
+
+Built 2026-10-04 on Matthew's request. Nothing runs until the provider key is on the host, and nothing is bought
+without a dry run first. **Every number a provider returns is looked up, not given:** hidden from call lists and
+the export until the provider says it is not on the Do Not Call list; one manual Call link per cleared number;
+nothing dials or texts. The 2026-10-01 line in rounds.php ("nothing here fetches from a people-search site") now
+reads "nothing fetches on its own".
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `api/skiptrace.php` (**new**: the provider seam, the BatchData adapter, the batch runner, the rule) | `public_html/api/` |
+| 2 | `api/rounds.php` | `public_html/api/` (requires skiptrace.php; four new admin actions: `skiptrace`, `skiplist`, `skipexport`, `skippick`) |
+| 3 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` (Skip trace tile and screen; the door card's result block; a `trace` phone source) |
+| 4 | `tools/skip-trace.php` (**new**, the command-line run) | **`sixfold-tools/`** beside nightly-backup.php, NOT inside public_html |
+| 5 | `data/rounds/mail-<town>.json` × 11 (**new**, built by `operations/door-territory/build-mail-sidecar.mjs`: owner mailing address + property city/ZIP per door; gitignored like the CSVs) | **`sixfold-data/rounds/`** beside the door files |
+| 6 | `api/skiptrace-config.example.php` → fill in → save as **`sixfold-private/skiptrace-config.php`** | **`sixfold-private/`** (the key never goes in public_html, never in git; the bundle refuses both files) |
+
+Flush after step 3. **A 500-door test:** sign in as admin → Field tools → Skip trace → pick the town → **Dry run**
+(nothing sent; counts the people, flags companies / trusts / HOAs / government, says the cost at the price in the
+config) → **Look up N doors** (a chunk of 100 per request, the page loops) → the list shows cleared numbers only
+by default; **Download CSV (cleared numbers only)**. Or on the server: `php sixfold-tools/skip-trace.php
+--town=monument --limit=500` (dry), add `--go` to send, `--export > cleared.csv`. Results: `sixfold-data/rounds/
+skiptrace-<town>.log` (append-only, newest line per door wins; a door is never bought twice without `force` / `--force`);
+errors in `skiptrace-errors.log`. Tested: skiptrace-test (API, CLI, page) + skiptrace-unit.php (adapter, mocked
+responses); see the report of 2026-10-04.
+
 ## ✅ LIVE 2026-10-04 (verified 16/16) — Look switch, install button, Your territories, territories ON, Unassign all
 
 Verified read-only: app identical at all four addresses; Unassign all answers; Territories carries the active list; 1 neighbourhood assigned; nightly backups 1 copy; on an iPhone browser the sign-in shows Add Sixfold to your Home Screen with the four steps; Look switch turns the app dark; Territories screen shows Unassign all; no page errors. The crew-side view of an assignment needs a crew sign-in to see.

@@ -88,6 +88,11 @@ sixfold/operations/door-territory/walklist-print.html
 
 # Live sign-in codes for /rounds/ — every code opens 2,656 home addresses.
 sixfold/site/api/rounds-codes.php
+# Skip-trace provider key (2026-10-04). Shape tracked as sixfold/site/api/skiptrace-config.example.php.
+sixfold/site/api/skiptrace-config.php
+# Owners' mailing addresses + ZIPs per door (skip-trace sidecar): from the gitignored county CSVs,
+# rebuildable with operations/door-territory/build-mail-sidecar.mjs
+sixfold/site/data/rounds/mail-*.json
 # The marks log written beside the door lists.
 sixfold/site/data/rounds/*.log
 

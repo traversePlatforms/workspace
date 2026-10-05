@@ -39,7 +39,7 @@ const DENY_FILES = new Set([
   'audit-links.mjs', 'audit-runtime.mjs',
   'submissions.log',
   /* SX-9e: credentials live in sixfold-private/ above public_html, never in a bundle */
-  'secrets.php', 'rounds-codes.php',
+  'secrets.php', 'rounds-codes.php', 'skiptrace-config.php', 'skiptrace-config.example.php',
   /* review 2026-10-03: the shapes of those files have no business on the live site either */
   'secrets.example.php', 'rounds-codes.example.php', 'build-quote-page.mjs', 'DEPLOY-ROUNDS.md',
 ]);

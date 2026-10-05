@@ -431,14 +431,25 @@ function loadPhones(string $key): array {
         if (!is_array($p) || !isset($p['id'])) continue;
         if (($p['phone'] ?? null) === null) unset($out[$p['id']]);   // removed
         else $out[$p['id']] = ['phone' => $p['phone'], 'source' => $p['source'] ?? 'other',
-                                'seen' => $p['seen'] ?? '', 'by' => $p['by'] ?? '', 'at' => $p['at'] ?? 0];
+                                'seen' => $p['seen'] ?? '', 'by' => $p['by'] ?? '', 'at' => $p['at'] ?? 0]
+                                + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []);   /* 'clear' on a number a skip trace put here (2026-10-04) */
     }
     return $out;
 }
 function appendPhone(string $key, array $row): bool {
     return (bool) @file_put_contents(phonesFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* what a PERSON may pick in the form. 'trace' (a skip-trace result an admin put on the door, api/skiptrace.php)
+   is written only by action=skippick, and only for a number the provider returned as not on the DNC list. */
 const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
+
+/* ---- skip tracing (2026-10-04) ------------------------------------------
+ * Matthew asked for provider lookups (BatchData first). The 2026-10-01 line above — "nothing here
+ * fetches from a people-search site" — now reads: nothing here fetches on its own. An admin starts a
+ * run, pays for it knowingly (dry run first), and every number that comes back is treated as
+ * looked-up: no Call link until the provider says it is not on the Do Not Call list. The provider,
+ * the batching, the results log and the rule live in api/skiptrace.php; the actions are below. */
+require_once __DIR__ . '/skiptrace.php';
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -853,7 +864,10 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'digest') $session = ['n' => 'Morning email', 'r' => 'admin', 'c' => ''];
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport'], true)) {
+    /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
+    $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
+}
 
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
@@ -996,6 +1010,8 @@ if ($action === 'area') {
     $fchk = loadFireChecks($key);
     $walks = loadWalks($key);
     $custDoors = customerDoors();   /* the crew see the tag on the door (plan and start date only, no contact details) */
+    /* skip-trace results ride along for admins only (crew too if the config says crew_see); every number carries its DNC answer */
+    $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1011,7 +1027,8 @@ if ($action === 'area') {
                 'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? '',
                                'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] + ownerFlag($d, $m) : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
-                                 'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) : null,
+                                 'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
+                'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
                 'prevMark' => ($m0 && !$m) ? ['outcome' => $m0['outcome'], 'by' => $m0['by'], 'at' => $m0['at']] : null,
@@ -2499,7 +2516,7 @@ if ($action === 'quotes') {
                     'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                     'fire' => $d['fire'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                     'by' => $m['by'], 'at' => $m['at'], 'os' => $d['os'] ?? null, 'maybe' => ownerAge($d, $m) === 'maybe',
-                    'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] + ownerFlag($d, $p) : null,
+                    'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                     'quoted' => $qd,
                     'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null,
@@ -2544,6 +2561,135 @@ if ($action === 'quoted') {
    A note starting "=" (or + - @, tab, CR) would run as a formula; a leading ' stops that.
    Top level, so every export has it. */
 function csvSafe($v) { return is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v; }
+
+/* ---- skip tracing (2026-10-04) ----------------------------------------------------------------
+ * Owner phone numbers from a provider (api/skiptrace.php; BatchData is the first adapter). Admin
+ * only, start to finish: the run, the results, the export and putting a number on a door. Results
+ * are kept in skiptrace-<town>.log (append-only, newest line per door wins) and a door is never
+ * bought twice unless force=1. Every number is LOOKED-UP: hidden from call lists and the export
+ * until the provider says dnc=false (skipCleared). Nothing here dials or texts.
+ *
+ *   skiptrace   POST {region, area?, limit=500, dry=1|0, force=0|1, chunk?}  dry: counts and cost, nothing sent;
+ *                                                                           live: ONE chunk (a provider batch), then remaining
+ *   skiplist    GET  region, area?                                          every traced door in the town, numbers flagged
+ *   skipexport  GET  region?, all=0|1                                       CSV; cleared numbers only unless all=1 (then flagged)
+ *   skippick    POST {region, id, phone}                                    a CLEARED number onto the door, source 'trace'
+ *
+ * The web run goes a chunk at a time (SiteGround ends a request after a couple of minutes); the page
+ * loops until remaining is 0. tools/skip-trace.php runs the same action from the command line with
+ * chunk=all, where there is no such limit. */
+if ($action === 'skiptrace') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost && !defined('SIXFOLD_CLI')) fail('POST required', 405);
+    $in = defined('SIXFOLD_CLI') ? $_REQUEST : $body;
+    $key = (string) ($in['region'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    $area = (string) ($in['area'] ?? '');
+    $limit = max(1, min(5000, (int) ($in['limit'] ?? 500)));
+    $dry = !isset($in['dry']) || (string) $in['dry'] !== '0';          /* a dry run unless told otherwise */
+    $force = (string) ($in['force'] ?? '0') === '1';
+    $cfg = skipConfig(__DIR__);
+    $since = max(0, (int) ($in['since'] ?? 0));   /* the page's forced run, a chunk at a time: doors done since then are not done again */
+    $cand = skipCandidates($key, $area, $limit, $force, regionLabel($key), $since);
+    if ($area !== '' && $cand['total'] === 0) fail('No such neighbourhood.', 404);
+    $n = count($cand['send']);
+    $cost = $cfg['price_per_record'] !== null ? round($n * $cfg['price_per_record'], 2) : null;
+    $base = ['ok' => true, 'region' => $key, 'area' => $area, 'limit' => $limit, 'force' => $force, 'provider' => (string) $cfg['provider'], 'configured' => skipConfigured($cfg),
+             'total' => $cand['total'], 'wouldSend' => $n, 'withMail' => $cand['withMail'], 'skipped' => $cand['skipped'], 'skippedTotal' => array_sum($cand['skipped']),
+             'cached' => $cand['cached'], 'errorsRetried' => $cand['errorsRetried'], 'pricePerRecord' => $cfg['price_per_record'], 'cost' => $cost,
+             'costNote' => $cfg['price_per_record'] === null ? 'Price per record is not set in sixfold-private/skiptrace-config.php, so no cost is estimated.'
+                                                            : 'Assumes the provider charges for every record sent, matched or not.'];
+    if ($dry) out($base + ['dry' => true]);
+    if (!skipConfigured($cfg)) fail('Skip trace is not set up: put the provider key in sixfold-private/skiptrace-config.php (the shape is api/skiptrace-config.example.php).', 503);
+    /* the owners that are not people are written once, so the flag shows on the door and they are not counted again next run */
+    foreach ($cand['skipRows'] as $r) skipAppend($key, $r + ['by' => $me]);
+    $chunk = (string) ($in['chunk'] ?? '');
+    $take = ($chunk === 'all' && defined('SIXFOLD_CLI')) ? $n : max(1, min(max(1, $n), (int) ($chunk !== '' ? $chunk : $cfg['batch_size'])));
+    $send = array_slice($cand['send'], 0, $take);
+    $lines = [];
+    try { $prov = skipProvider($cfg); } catch (Throwable $e) { fail($e->getMessage(), 503); }
+    $rows = $send ? skipRun($send, $prov, $cfg, function (string $l) use (&$lines, $key) {
+        $lines[] = $l;
+        if (str_contains($l, 'failed') || str_starts_with($l, 'retry')) skipErr($key, $l);
+        if (defined('SIXFOLD_CLI')) fwrite(STDERR, "  $l\n");
+    }, null, $me) : [];
+    $tally = ['matched' => 0, 'nomatch' => 0, 'error' => 0]; $phones = 0; $clear = 0;
+    foreach ($rows as $r) {
+        if (!skipAppend($key, $r)) fail('Could not write the results log.', 500);
+        $tally[$r['status']] = ($tally[$r['status']] ?? 0) + 1;
+        $phones += count($r['phones']); foreach ($r['phones'] as $p) if (skipCleared($p)) $clear++;
+    }
+    out($base + ['dry' => false, 'sent' => count($send), 'remaining' => $n - count($send), 'matched' => $tally['matched'], 'nomatch' => $tally['nomatch'],
+                 'errors' => $tally['error'], 'phones' => $phones, 'cleared' => $clear, 'log' => $lines]);
+}
+
+if ($action === 'skiplist') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $key = (string) ($_REQUEST['region'] ?? ''); $area = (string) ($_REQUEST['area'] ?? '');
+    $data = loadRegion($key); if (!$data) fail('No such region.', 404);
+    $tr = skipLoad($key); $onDoor = loadPhones($key);
+    $rows = []; $sum = ['doors' => 0, 'matched' => 0, 'nomatch' => 0, 'error' => 0, 'skipped' => 0, 'phones' => 0, 'clear' => 0, 'listed' => 0, 'unchecked' => 0, 'emails' => 0];
+    foreach ($data['areas'] as $a) {
+        if ($area !== '' && $a['name'] !== $area) continue;
+        foreach ($a['doors'] as $d) {
+            $r = $tr[$d['id']] ?? null; if (!$r) continue;
+            $pub = skipPublic($r);
+            $sum['doors']++; $sum[$pub['status']] = ($sum[$pub['status']] ?? 0) + 1;
+            $sum['phones'] += count($pub['phones']); $sum['clear'] += $pub['clear']; $sum['listed'] += $pub['listed']; $sum['unchecked'] += $pub['unchecked']; $sum['emails'] += count($pub['emails']);
+            $od = $onDoor[$d['id']] ?? null;
+            $rows[] = ['id' => $d['id'], 'address' => $d['address'], 'owner' => $d['owner'], 'area' => $a['name'], 'onDoor' => $od ? $od['phone'] : null] + $pub;
+        }
+    }
+    $errs = []; $ef = skipErrFile();
+    if (is_readable($ef)) foreach (array_slice(file($ef, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [], -40) as $l) { $e = json_decode($l, true); if (is_array($e) && ($e['town'] ?? '') === $key) $errs[] = $e; }
+    out(['ok' => true, 'region' => $key, 'label' => regionLabel($key), 'area' => $area, 'rows' => $rows, 'sum' => $sum, 'lastErrors' => array_slice($errs, -5), 'crewSee' => !empty(skipConfig(__DIR__)['crew_see'])]);
+}
+
+if ($action === 'skipexport') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $all = (string) ($_REQUEST['all'] ?? '0') === '1';
+    $only = (string) ($_REQUEST['region'] ?? '');
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="sixfold-skiptrace-' . ($only !== '' ? $only . '-' : '') . ($all ? 'all-flagged-' : 'cleared-') . date('Y-m-d') . '.csv"');
+    $fh = fopen('php://output', 'w');
+    fputcsv($fh, ['town', 'neighbourhood', 'address', 'owner', 'phone', 'phone_type', 'dnc', 'call_ok', 'emails', 'match', 'confidence', 'provider', 'looked_up', 'owner_mailing_address'], ',', '"', '');
+    $dncWord = ['clear' => 'not on DNC list', 'listed' => 'ON DO NOT CALL LIST', 'unchecked' => 'DNC not checked'];
+    foreach (($idx['regions'] ?? []) as $r) {
+        if ($only !== '' && $r['key'] !== $only) continue;
+        $data = loadRegion($r['key']); if (!$data) continue;
+        $tr = skipLoad($r['key']); if (!$tr) continue;
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            $x = $tr[$d['id']] ?? null; if (!$x) continue;
+            $keep = $all ? ($x['phones'] ?? []) : array_values(array_filter($x['phones'] ?? [], 'skipCleared'));
+            /* cleared-only: a door with no cleared number still has a row if it brought an email; otherwise it is not in this file */
+            if (!$keep) { if (!$all && !($x['emails'] ?? [])) continue; $keep = [null]; }
+            foreach ($keep as $p) fputcsv($fh, array_map('csvSafe', [$r['label'], $a['name'], $d['address'], $d['owner'],
+                $p['n'] ?? '', $p['type'] ?? '', $p ? $dncWord[skipDncLabel($p)] : '', $p ? (skipCleared($p) ? 'yes' : 'NO') : '',
+                implode('; ', $x['emails'] ?? []), $x['status'] . (!empty($x['why']) ? ' (' . (SKIP_KIND_LABEL[$x['why']] ?? $x['why']) . ')' : ''),
+                $x['conf'] ?? '', $x['prov'] ?? '', date('Y-m-d', (int) ($x['at'] ?? 0)), $x['in']['mail'] ?? '']), ',', '"', '');
+        }
+    }
+    fclose($fh);
+    exit;
+}
+
+if ($action === 'skippick') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    $n = skipDigits((string) ($body['phone'] ?? ''));
+    $row = skipLoad($key)[$id] ?? null;
+    $hit = null; foreach (($row['phones'] ?? []) as $p) if (($p['n'] ?? '') === $n) $hit = $p;
+    if (!$hit) fail('That number is not in the skip trace result for this door.', 404);
+    if (!skipCleared($hit)) fail(skipDncLabel($hit) === 'listed' ? 'That number is on the Do Not Call list. It cannot go on the door.'
+                                                                 : 'That number has not been checked against the Do Not Call list. It cannot go on the door until it is.', 409);
+    if (!appendPhone($key, ['id' => $id, 'phone' => $n, 'source' => 'trace', 'seen' => date('Y-m'), 'dnc' => 'clear', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'phone' => $n]);
+}
 
 /* ---- booked doors for Jobber (SX-45, 2026-10-03) ----------------------------------------
  * A CSV in the layout of Jobber's client import (help.getjobber.com "Import clients", checked
@@ -2646,7 +2792,7 @@ if ($action === 'report' || $action === 'export') {
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
                   'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason', 'fire_check', 'walk'], ',', '"', '');
-    $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other'];
+    $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other', 'trace' => 'skip trace (not on DNC list)'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         $marks = loadMarks($r['key']);

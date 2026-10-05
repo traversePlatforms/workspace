@@ -362,6 +362,27 @@
   .ph a.num .ic{width:17px;height:17px;color:var(--go)}
   .ph .src,.nt .src{display:block;font-size:12px;color:var(--soft);margin-top:2px}
   .ph .dnc{display:block;font-size:12px;color:var(--later);margin-top:3px;font-weight:700}
+  .ph .dnc.ok{color:var(--go)}
+  /* skip tracing (2026-10-04): a number that is not cleared is text, never a link */
+  .ph span.num.dim{display:inline-flex;align-items:center;font-size:16px;font-weight:700;color:var(--soft)}
+  .ph.tr .tn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .ph.tr .tn .meta,.skrow .tn .meta{font-size:12px;color:var(--soft)}
+  .ph.tr button.lnk,.skrow button.lnk{padding:0}
+  .dncp{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.02em;padding:2px 8px;border-radius:999px;border:1px solid;line-height:1.5}
+  .dncp.ok{color:var(--go);border-color:var(--go);background:var(--go-tint)}
+  .dncp.no{color:var(--bad);border-color:var(--bad)}
+  .dncp.un{color:var(--later);border-color:var(--later);background:var(--later-tint)}
+  .skipf label.chk{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--ink)}
+  .skipf label.chk input{width:20px;height:20px;padding:0;margin:0;flex:none}
+  .skipf .row button[disabled]{opacity:.5;cursor:default}
+  .skipres h2{margin:18px 4px 4px}
+  .skrow{padding:10px 4px;border-top:1px solid var(--line);font-size:13px}
+  .skrow .addr{font-weight:700;font-size:15px}
+  .skrow .meta{font-size:12.5px;color:var(--soft);margin-top:2px}
+  .skrow .tn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .skrow .tn a.num{display:inline-flex;align-items:center;gap:7px;font-size:16px;font-weight:700;color:var(--ink);text-decoration:none}
+  .skrow .tn a.num .ic{width:17px;height:17px;color:var(--go)}
+  .skrow .tn span.num.dim{font-size:16px;font-weight:700;color:var(--soft)}
   .ph button.lnk,.nt button.lnk,.wk button.lnk,.res button.lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer}
   .phf{margin-top:6px;display:grid;gap:10px;background:var(--sunk);border-radius:14px;padding:12px}
   .phf label{font-size:12.5px;font-weight:700;color:var(--soft);display:grid;gap:5px}
@@ -1815,7 +1836,8 @@
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         tile('button', 'users', 'Team stats', "Everyone's numbers.", 'Admin only', teamView),
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
-        tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView)]);
+        tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
+        tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     /* the look, kept on this device */
@@ -2748,7 +2770,8 @@
      With no signal a phone save is kept on the phone and sent later (2026-10-03): the
      queue items carry a kind, and pendingFor() looks at marks only. */
   var SRC = { door: 'Given at the door', tps: 'Found on True People Search',
-              fps: 'Found on Fast People Search', other: 'From another source' };
+              fps: 'Found on Fast People Search', other: 'From another source',
+              trace: 'From a skip trace' };   /* put on the door by an admin (2026-10-04); only a cleared number can be, and the line under it says so */
   var SRC_PICK = { door: 'They gave it to me at the door', tps: 'True People Search',
                    fps: 'Fast People Search', other: 'Somewhere else' };
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2765,7 +2788,7 @@
       if (ph.at) { var d = new Date(ph.at * 1000); s += ' · ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
     } else if (ph.seen) {
       var m = /^(\d{4})-(\d{2})$/.exec(ph.seen);
-      if (m) s += ' · last seen ' + MONTHS[+m[2] - 1] + ' ' + m[1];
+      if (m) s += (ph.source === 'trace' ? ' · looked up ' : ' · last seen ') + MONTHS[+m[2] - 1] + ' ' + m[1];
     }
     return s;
   }
@@ -2930,6 +2953,7 @@
     var wrap = q('div', 'xt');
     if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id && S.editWalk !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
+    if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
@@ -3447,6 +3471,231 @@
       c.appendChild(ua);
       holder.appendChild(c);
     });
+  }
+  /* ---- skip tracing (2026-10-04) ----
+     Owner phone numbers from a provider (api/skiptrace.php; BatchData first), admin only. Every number
+     that comes back is looked up, not given: it stays hidden from call lists and the export until the
+     provider says it is not on the Do Not Call list. A number the provider marks DNC, or does not check,
+     is shown flagged and never gets a Call link. One manual Call link per cleared number; nothing here
+     dials or texts. The run goes a chunk at a time, because the server ends a web request after a
+     couple of minutes; tools/skip-trace.php does the same from the command line in one go. */
+  var KIND = { noowner: 'no owner on the record', company: 'a company or LLC', government: 'government', community: 'an HOA or district',
+               nonprofit: 'a church or nonprofit', trust: 'a trust or estate' };
+  /* the number on a door: a tel: link, except a skip-traced number that is not cleared (the server refuses to put one on a
+     door, so this is belt and braces) */
+  function phoneCallable(ph) { return ph.source !== 'trace' || ph.dnc === 'clear'; }
+  function phoneLink(ph) {
+    if (!phoneCallable(ph)) return q('span', 'num dim', fmtPhone(ph.phone));
+    var a = q('a', 'num', fmtPhone(ph.phone)); a.href = 'tel:' + digits(ph.phone); a.insertBefore(ico('phone', 2.2), a.firstChild); return a;
+  }
+  function dncMark(ph) {
+    if (ph.source === 'door') return null;
+    if (ph.source === 'trace') return phoneCallable(ph) ? q('span', 'dnc ok', 'Looked up · the provider says it is not on the Do Not Call list')
+                                                        : q('span', 'dnc', 'Looked up · Do Not Call not cleared — no calls.');
+    return q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.');
+  }
+  function dncPill(p) {
+    var k = p.dnc === 'clear' ? 'ok' : p.dnc === 'listed' ? 'no' : 'un';
+    return q('span', 'dncp ' + k, k === 'ok' ? 'Not on the DNC list' : k === 'no' ? 'ON THE DO NOT CALL LIST' : 'DNC not checked');
+  }
+  /* one looked-up number: a Call link only when cleared; otherwise the digits as text and the reason */
+  function traceRow(p, d, region, onPicked) {
+    var row = q('div', 'tn');
+    if (p.clear) { var a = q('a', 'num', fmtPhone(p.n)); a.href = 'tel:' + p.n; a.insertBefore(ico('phone', 2.2), a.firstChild); row.appendChild(a); }
+    else row.appendChild(q('span', 'num dim', fmtPhone(p.n)));
+    if (p.type) row.appendChild(q('span', 'meta', p.type));
+    row.appendChild(dncPill(p));
+    if (p.tcpa) row.appendChild(q('span', 'dncp no', 'TCPA litigator'));
+    if (p.clear && d && onPicked && !(d.phone && d.phone.phone === p.n)) {
+      var use = q('button', 'lnk', 'Put on the door'); use.type = 'button';
+      use.addEventListener('click', function () {
+        use.disabled = true;
+        api('skippick', { body: { region: region, id: d.id, phone: p.n } }).then(function (j) {
+          if (!j.ok) { use.disabled = false; toast('Not saved', j.error || 'Could not put that number on the door.', null); return; }
+          onPicked(p.n);
+        }).catch(function () { use.disabled = false; toast('No signal', 'Try again with signal.', null); });
+      });
+      row.appendChild(use);
+    }
+    return row;
+  }
+  function traceSummary(t) {
+    return t.phones.length + (t.phones.length === 1 ? ' number' : ' numbers') + ', ' + t.clear + ' not on the DNC list' + (t.listed ? ', ' + t.listed + ' on it' : '')
+      + (t.unchecked ? ', ' + t.unchecked + ' not checked' : '') + (t.emails.length ? ' · ' + t.emails.length + (t.emails.length === 1 ? ' email' : ' emails') : '');
+  }
+  /* the door card's view of a result (admins; the server sends it to nobody else unless the config says crew_see) */
+  function traceBlock(d) {
+    var t = d.trace, box = q('div', 'ph tr');
+    var head = 'Skip trace' + (t.prov ? ' (' + t.prov + ')' : '') + (t.at ? ' · ' + fmtDay(t.at) : '');
+    if (t.status === 'skipped') { box.appendChild(q('span', 'src', head + ' · not sent: the owner is ' + (KIND[t.why] || 'not a person'))); return box; }
+    if (t.status === 'error') { box.appendChild(q('span', 'src', head + ' · failed: ' + (t.err || 'error') + '. It goes again on the next run.')); return box; }
+    if (t.status === 'nomatch') { box.appendChild(q('span', 'src', head + ' · no match')); return box; }
+    box.appendChild(q('span', 'src', head + ' · ' + traceSummary(t)));
+    var hidden = 0;
+    t.phones.forEach(function (p) {
+      if (!p.clear && !S.traceAll) { hidden++; return; }
+      if (p.clear && d.phone && d.phone.phone === p.n) return;   /* already on the door, with its one Call link above */
+      box.appendChild(traceRow(p, d, S.region, function (n) {
+        d.phone = { phone: n, source: 'trace', seen: '', dnc: 'clear', by: S.me, at: Math.floor(Date.now() / 1000) };
+        toast('On the door', fmtPhone(n), null); renderDoors();
+      }));
+    });
+    if (hidden) {
+      var sh = q('button', 'lnk', hidden + ' hidden: ' + (t.listed ? t.listed + ' on the Do Not Call list' : '') + (t.listed && t.unchecked ? ', ' : '') + (t.unchecked ? t.unchecked + ' not checked' : '') + ' · show');
+      sh.type = 'button'; sh.addEventListener('click', function () { S.traceAll = true; renderDoors(); }); box.appendChild(sh);
+    } else if (S.traceAll && (t.listed || t.unchecked)) {
+      var hd = q('button', 'lnk', 'Hide the numbers that are not cleared'); hd.type = 'button';
+      hd.addEventListener('click', function () { S.traceAll = false; renderDoors(); }); box.appendChild(hd);
+    }
+    if (t.emails.length) box.appendChild(q('span', 'src', 'Email: ' + t.emails.join(', ')));
+    return box;
+  }
+  function skipView() {
+    hideToast(); S.signin = null; S.screen = 'skip';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Skip trace', sub: 'Owner phone numbers from a provider', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    S.skip = S.skip || { region: '', area: '', limit: 500, force: false, dry: null, list: null, listErr: null, showAll: false, run: null };
+    function go() {
+      if (S.screen !== 'skip') return;
+      if (!S.skip.region && S.regions && S.regions.length) S.skip.region = S.regions[0].key;
+      drawSkip(holder); loadSkipList(holder);
+    }
+    if (S.regions && S.regions.length) go();
+    else api('regions').then(function (j) { if (j._status === 401) return signinView('Signed out. Enter your code again.'); if (j.ok) S.regions = j.regions; go(); })
+      .catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Skip trace needs signal.')); });
+  }
+  function loadSkipList(holder) {
+    var st = S.skip; st.list = null; st.listErr = null;
+    var want = st.region + '|' + st.area;
+    api('skiplist', { params: { region: st.region, area: st.area } }).then(function (j) {
+      if (S.screen !== 'skip' || want !== st.region + '|' + st.area) return;
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) st.listErr = j.error || 'Could not load the results.'; else st.list = j;
+      drawSkip(holder);
+    }).catch(function () { if (S.screen !== 'skip') return; st.listErr = 'The results need signal.'; drawSkip(holder); });
+  }
+  function drawSkip(holder) {
+    holder.textContent = '';
+    var st = S.skip;
+    holder.appendChild(q('div', 'msg', 'Every number a provider returns is looked up, not given. It stays hidden from call lists and the export until the provider says it is not on the Do Not Call list; a number it marks DNC, or does not check, is shown flagged and never gets a Call link. Nothing here dials or texts.'));
+    var f = q('div', 'phf skipf');
+    var lt = q('label', null, 'Town'); var ts = q('select');
+    (S.regions || []).forEach(function (r) { var o = q('option', null, r.label); o.value = r.key; ts.appendChild(o); });
+    ts.value = st.region; lt.appendChild(ts); f.appendChild(lt);
+    var la = q('label', null, 'Neighbourhood'); var as = q('select');
+    var o0 = q('option', null, 'Whole town'); o0.value = ''; as.appendChild(o0);
+    var reg = (S.regions || []).filter(function (r) { return r.key === st.region; })[0];
+    ((reg && reg.areas) || []).forEach(function (a) { var o = q('option', null, a.name + ' · ' + a.total + ' doors'); o.value = a.name; as.appendChild(o); });
+    as.value = st.area; la.appendChild(as); f.appendChild(la);
+    var ll = q('label', null, 'Doors to look up, at most'); var li = q('input'); li.type = 'number'; li.min = '1'; li.max = '5000'; li.inputMode = 'numeric'; li.value = String(st.limit); ll.appendChild(li); f.appendChild(ll);
+    var lf = q('label', 'chk'); var fc = q('input'); fc.type = 'checkbox'; fc.checked = !!st.force; lf.appendChild(fc);
+    lf.appendChild(document.createTextNode('Look doors up again even if they were looked up before (costs again)')); f.appendChild(lf);
+    function readForm() { st.limit = Math.max(1, Math.min(5000, parseInt(li.value, 10) || 500)); st.force = fc.checked; }
+    function changed() { readForm(); st.dry = null; st.run = null; }
+    ts.addEventListener('change', function () { changed(); st.region = ts.value; st.area = ''; drawSkip(holder); loadSkipList(holder); });
+    as.addEventListener('change', function () { changed(); st.area = as.value; drawSkip(holder); loadSkipList(holder); });
+    li.addEventListener('change', function () { changed(); drawSkip(holder); }); fc.addEventListener('change', function () { changed(); drawSkip(holder); });
+    var err = q('div', 'err'); f.appendChild(err);
+    var row = q('div', 'row');
+    var dr = q('button', 'save', 'Dry run: count and cost'); dr.type = 'button'; dr.setAttribute('data-skip', 'dry');
+    dr.addEventListener('click', function () {
+      readForm(); err.textContent = ''; dr.disabled = true;
+      api('skiptrace', { body: { region: st.region, area: st.area, limit: st.limit, dry: 1, force: st.force ? 1 : 0 } }).then(function (j) {
+        dr.disabled = false;
+        if (!j.ok) { err.textContent = j.error || 'The dry run did not work.'; return; }
+        st.dry = j; st.run = null; drawSkip(holder);
+      }).catch(function () { dr.disabled = false; err.textContent = 'No signal.'; });
+    });
+    row.appendChild(dr);
+    var can = !!(st.dry && st.dry.wouldSend > 0 && st.dry.configured) && !(st.run && st.run.busy);
+    var go = q('button', null, st.dry && st.dry.wouldSend ? 'Look up ' + st.dry.wouldSend + (st.dry.wouldSend === 1 ? ' door' : ' doors') : 'Look up'); go.type = 'button'; go.setAttribute('data-skip', 'go');
+    go.disabled = !can;
+    go.addEventListener('click', function () {
+      if (!st.dry) return;
+      var ask = 'Send ' + st.dry.wouldSend + ' doors to ' + st.dry.provider + (st.dry.cost !== null ? ' for about $' + st.dry.cost.toFixed(2) : ' (cost not estimated: no price is set)') + '? The provider bills for this.';
+      if (!window.confirm(ask)) return;
+      runSkip(holder);
+    });
+    row.appendChild(go);
+    f.appendChild(row);
+    holder.appendChild(f);
+    if (st.dry) holder.appendChild(dryCard(st.dry));
+    if (st.run) holder.appendChild(runCard(st.run));
+    holder.appendChild(skipResults(holder));
+  }
+  function dryCard(j) {
+    var c = q('div', 'msg skipdry');
+    var parts = [];
+    for (var k in j.skipped) parts.push(j.skipped[k] + ' ' + (KIND[k] || k).replace(/^(a|an) /, ''));
+    c.appendChild(q('b', null, 'Dry run, nothing sent. '));
+    c.appendChild(document.createTextNode(j.total + ' doors here. Would send ' + j.wouldSend + ' (limit ' + j.limit + '), ' + j.withMail + " with the owner's mailing address. Already looked up: " + j.cached
+      + (j.errorsRetried ? ' (' + j.errorsRetried + ' earlier errors would go again)' : '') + '. Not people, flagged instead of sent: ' + j.skippedTotal + (parts.length ? ' (' + parts.join(', ') + ')' : '') + '.'));
+    c.appendChild(q('div', null, 'Provider: ' + j.provider + (j.configured ? '' : ' — NOT SET UP: the key goes in sixfold-private/skiptrace-config.php') + '. Estimated cost: '
+      + (j.cost === null ? 'not estimated' : '$' + j.cost.toFixed(2) + ' at $' + j.pricePerRecord + ' a record') + '. ' + j.costNote));
+    return c;
+  }
+  function runCard(r) {
+    var c = q('div', 'msg skiprun');
+    c.appendChild(q('b', null, r.busy ? 'Looking up… ' : r.err ? 'Stopped. ' : 'Done. '));
+    c.appendChild(document.createTextNode(r.sent + ' sent: ' + r.matched + ' matched, ' + r.nomatch + ' no match, ' + r.errors + ' errors · ' + r.phones + ' numbers, ' + r.cleared + ' not on the DNC list'
+      + (r.remaining ? ' · ' + r.remaining + ' to go' : '') + (r.err ? ' · ' + r.err : '')));
+    return c;
+  }
+  /* a chunk at a time until nothing is left or the limit is met. The limit shrinks by what was sent; 'since' tells a forced
+     run which doors it already did this time, so a chunked forced run cannot buy the same door twice. */
+  function runSkip(holder) {
+    var st = S.skip;
+    st.run = { busy: true, sent: 0, matched: 0, nomatch: 0, errors: 0, phones: 0, cleared: 0, remaining: st.dry.wouldSend, err: null, since: Math.floor(Date.now() / 1000) - 5 };
+    drawSkip(holder);
+    function finish() { st.run.busy = false; st.dry = null; drawSkip(holder); loadSkipList(holder); }
+    function step() {
+      var left = st.limit - st.run.sent;
+      if (left <= 0 || st.run.remaining <= 0) { st.run.remaining = 0; finish(); return; }
+      api('skiptrace', { body: { region: st.region, area: st.area, limit: left, dry: 0, force: st.force ? 1 : 0, since: st.run.since } }).then(function (j) {
+        if (S.screen !== 'skip') return;
+        if (!j.ok) { st.run.err = j.error || 'The server did not answer.'; finish(); return; }
+        st.run.sent += j.sent; st.run.matched += j.matched; st.run.nomatch += j.nomatch; st.run.errors += j.errors; st.run.phones += j.phones; st.run.cleared += j.cleared; st.run.remaining = j.remaining;
+        if (j.remaining > 0 && j.sent > 0) { drawSkip(holder); step(); } else finish();
+      }).catch(function () { st.run.err = 'No signal. What was sent is saved; a dry run shows what is left.'; finish(); });
+    }
+    step();
+  }
+  function skipResults(holder) {
+    var st = S.skip, box = q('div', 'skipres');
+    if (st.listErr) { box.appendChild(q('div', 'msg bad', st.listErr)); return box; }
+    if (!st.list) { box.appendChild(q('div', 'skel')); return box; }
+    var L = st.list, s = L.sum;
+    box.appendChild(q('h2', null, 'On file · ' + L.label + (L.area ? ' · ' + L.area : '')));
+    if (!s.doors) { box.appendChild(q('div', 'sub2', 'Nothing looked up here yet.')); return box; }
+    box.appendChild(q('div', 'sub2', s.doors + ' doors: ' + s.matched + ' matched, ' + s.nomatch + ' no match, ' + s.error + ' errors, ' + s.skipped + ' not people · ' + s.phones + ' numbers: '
+      + s.clear + ' not on the DNC list, ' + s.listed + ' on it, ' + s.unchecked + ' not checked · ' + s.emails + ' emails'));
+    var bar = q('div', 'pinbar');
+    if (s.listed + s.unchecked) {
+      var tg = q('button', 'lnk', st.showAll ? 'Hide the numbers that are not cleared' : 'Show the ' + (s.listed + s.unchecked) + ' numbers that are not cleared'); tg.type = 'button'; tg.setAttribute('data-skip', 'showall');
+      tg.addEventListener('click', function () { st.showAll = !st.showAll; drawSkip(holder); });
+      bar.appendChild(tg);
+    }
+    var ex = q('a', 'lnk', 'Download CSV (cleared numbers only)'); ex.href = API + '?action=skipexport&region=' + encodeURIComponent(st.region); ex.setAttribute('download', ''); bar.appendChild(ex);
+    var ex2 = q('a', 'lnk', 'CSV with every number, flagged'); ex2.href = API + '?action=skipexport&all=1&region=' + encodeURIComponent(st.region); ex2.setAttribute('download', ''); bar.appendChild(ex2);
+    box.appendChild(bar);
+    if (L.lastErrors && L.lastErrors.length) box.appendChild(q('div', 'msg bad', 'Last errors: ' + L.lastErrors.map(function (e) { return fmtDay(e.at) + ' ' + e.error; }).join(' · ')));
+    L.rows.forEach(function (r) {
+      var row = q('div', 'skrow'); row.setAttribute('data-id', r.id);
+      row.appendChild(q('div', 'addr', r.address));
+      row.appendChild(q('div', 'meta', r.area + ' · Owner: ' + ownerText(r.owner) + ' · ' + (r.status === 'skipped' ? 'not sent: the owner is ' + (KIND[r.why] || 'not a person')
+        : r.status === 'error' ? 'failed: ' + (r.err || '') : r.status === 'nomatch' ? 'no match' : traceSummary(r)) + (r.at ? ' · ' + fmtDay(r.at) : '')));
+      var d = { id: r.id, phone: r.onDoor ? { phone: r.onDoor } : null };
+      r.phones.forEach(function (p) {
+        if (!p.clear && !st.showAll) return;
+        row.appendChild(traceRow(p, d, st.region, function (n) { r.onDoor = n; toast('On the door', fmtPhone(n), null); drawSkip(holder); }));
+      });
+      if (r.onDoor) row.appendChild(q('div', 'meta', 'On the door: ' + fmtPhone(r.onDoor)));
+      if (r.emails.length) row.appendChild(q('div', 'meta', 'Email: ' + r.emails.join(', ')));
+      box.appendChild(row);
+    });
+    return box;
   }
   /* ---- accounts (2026-10-04) ----
      Matthew: add, change and remove sign-ins from the app. A new code is shown once, to hand over;
@@ -4781,10 +5030,9 @@
       var ph0 = q('div', 'ph old'); ph0.appendChild(q('span', 'oldl', "Previous owner's number, probably not the new owner's"));
       ph0.appendChild(q('span', 'num', fmtPhone(x.phone.phone))); c.appendChild(ph0);
     } else if (x.phone) {
-      var ph = q('div', 'ph'); var a = q('a', 'num', fmtPhone(x.phone.phone)); a.href = 'tel:' + digits(x.phone.phone);
-      a.insertBefore(ico('phone', 2.2), a.firstChild);
-      ph.appendChild(a); ph.appendChild(q('span', 'src', phoneStatement(x.phone))); maybeNote(ph, x.phone);
-      if (x.phone.source !== 'door') ph.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
+      var ph = q('div', 'ph');
+      ph.appendChild(phoneLink(x.phone)); ph.appendChild(q('span', 'src', phoneStatement(x.phone))); maybeNote(ph, x.phone);
+      var dm0 = dncMark(x.phone); if (dm0) ph.appendChild(dm0);
       c.appendChild(ph);
     } else c.appendChild(q('div', 'meta', 'No phone number on file.'));
     if (x.email) {
@@ -5388,13 +5636,10 @@
       ed0.addEventListener('click', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
       box.appendChild(ed0);
     } else if (d.phone) {
-      var a = q('a', 'num', fmtPhone(d.phone.phone));
-      a.href = 'tel:' + digits(d.phone.phone);
-      a.insertBefore(ico('phone', 2.2), a.firstChild);
-      box.appendChild(a);
+      box.appendChild(phoneLink(d.phone));
       box.appendChild(q('span', 'src', phoneStatement(d.phone)));
       maybeNote(box, d.phone);
-      if (d.phone.source !== 'door') box.appendChild(q('span', 'dnc', 'Looked up, not given — check the Do Not Call lists before calling.'));
+      var dm = dncMark(d.phone); if (dm) box.appendChild(dm);
       var ed = q('button', 'lnk', 'Edit number'); ed.type = 'button';
       ed.addEventListener('click', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
       box.appendChild(ed);
