@@ -55,3 +55,11 @@ The lot is in the door data (Castle Rock, Starflower Rd area): **0.35 acres**, c
 | Materials supplied by Sixfold; water-in; blow-down | Carried from Kara's job | **Flagged** (1, 2) |
 | Clause citations (4, 7, 9, 10, 11) | Checked against the rendered pages | Correct |
 | Page counts: quote 1, agreement 5, packet 6; agreement at scale 1 (10.5pt notice type) | Rendered 2026-10-05 | Correct |
+
+## Revision, 2026-10-05 (Matthew)
+
+- Watering in: now "Sixfold **can** water the ground in on the day, using the owner's own watering system" (quote line and terms; agreement sections 2 and 3).
+- Trees: "tree," dropped from the section 3 exclusions; nothing about trees remains in the printed packet. Excavation (Colorado 811) kept.
+- Castle Rock Water exemption removed from the quote: it goes in the in-person packet instead.
+- Seed and fertilizer amounts stay out; blow-down stays in.
+- Settles flags 1 and 2 above: Sixfold supplies the seed and fertilizer, blows the hard surfaces clear, and can water in with the owner's system.
