@@ -25,7 +25,7 @@ h1 { font: 700 clamp(2rem, 5.5vw, 3.1rem)/1.1 var(--f-display); margin: 0; lette
 .lede { font-size: clamp(1.05rem, 2.4vw, 1.2rem); color: var(--soft); max-width: 60ch; margin: 0 }
 .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font: 500 13px var(--f-data); color: var(--soft); margin-top: 6px }
 .facts b { color: var(--ink); font-weight: 600 }
-nav.toc { display: none }
+nav.toc { display: block; margin: 0 0 22px }   /* grouped fold-outs at every width (2026-10-05); a sticky side column on wide screens */
 @media (min-width: 1080px) { nav.toc { display: block; position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; padding-top: 28px; font-size: 14px } }
 nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: s }
 nav.toc li { counter-increment: s }
@@ -61,6 +61,14 @@ td.k { font-weight: 700; white-space: nowrap }
 .flow div { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; counter-increment: f; font-size: 15px }
 .flow div::before { content: counter(f); display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--pine); color: #EDE7DC; font: 600 12px var(--f-data); margin-bottom: 6px }
 .flow b { display: block; font-family: var(--f-display); font-weight: 600 }
+.toc details { border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); margin: 0 0 8px; padding: 0 14px }
+.toc summary { cursor: pointer; list-style: none; padding: 11px 0; font: 600 15px var(--f-display); display: flex; justify-content: space-between; align-items: center; gap: 10px }
+.toc summary::-webkit-details-marker { display: none }
+.toc summary::after { content: "+"; font: 600 18px var(--f-data); color: var(--soft) }
+.toc details[open] summary::after { content: "\2212" }
+.toc summary small { font: 500 12.5px var(--f-data); color: var(--soft); margin-left: auto }
+.toc details ol { margin: 0 0 12px; padding-left: 22px }
+.toc details li { margin: 3px 0 }
 footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule); font: 500 12.5px/1.6 var(--f-data); color: var(--soft) }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth } }
 </style>
@@ -70,25 +78,36 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <div class="eyebrow">Sixfold Colorado · internal · how the app works</div>
   <h1>Sixfold Field Tools Guide</h1>
   <p class="lede">What the door app does, every screen in it, where each piece of information comes from, how it saves and stays safe, and what it can't do yet.</p>
-  <div class="facts"><span><b>Address</b> sixfoldcolorado.com/summit-de59ae83/</span><span><b>Coverage</b> 30,464 doors · 11 towns · 3 counties</span><span><b>Written</b> 4 Oct 2026</span></div>
+  <div class="facts"><span><b>Address</b> sixfoldcolorado.com/summit-de59ae83/</span><span><b>Coverage</b> 30,464 doors · 11 towns · 3 counties</span><span><b>Written</b> 5 Oct 2026</span></div>
 </header>
 
-<nav class="toc" aria-label="Contents"><ol>
-  <li><a href="#what">What it is</a></li>
-  <li><a href="#people">Who uses it</a></li>
-  <li><a href="#day">A day at the doors</a></li>
-  <li><a href="#rounds">Door rounds, screen by screen</a></li>
-  <li><a href="#card">The door card</a></li>
-  <li><a href="#office">The office tools</a></li>
-  <li><a href="#customers">Customers and backups</a></li>
-  <li><a href="#quote">Quote builder</a></li>
-  <li><a href="#data">Where the data comes from</a></li>
-  <li><a href="#saving">How it saves, online and off</a></li>
-  <li><a href="#safety">Sign-in, privacy and security</a></li>
-  <li><a href="#switches">Switches you control</a></li>
-  <li><a href="#limits">Limits and known gaps</a></li>
-  <li><a href="#uploads">Updating the app</a></li>
-</ol></nav>
+<nav class="toc" aria-label="Contents">
+  <details><summary>1 · At the doors <small>5 sections</small></summary><ol>
+    <li><a href="#what">What it is</a></li>
+    <li><a href="#people">Who uses it</a></li>
+    <li><a href="#day">A day at the doors</a></li>
+    <li><a href="#rounds">Door rounds, screen by screen</a></li>
+    <li><a href="#card">The door card</a></li>
+  </ol></details>
+  <details><summary>2 · The office <small>3 sections</small></summary><ol>
+    <li><a href="#office">The office tools</a></li>
+    <li><a href="#customers">Customers and backups</a></li>
+    <li><a href="#quote">Quote builder</a></li>
+  </ol></details>
+  <details><summary>3 · Roofing preview <small>hail, roofs, photos</small></summary><ol>
+    <li><a href="#roofing">Roofing preview: hail, roof size, year built, roof photos</a></li>
+  </ol></details>
+  <details><summary>4 · How it works <small>3 sections</small></summary><ol>
+    <li><a href="#data">Where the data comes from</a></li>
+    <li><a href="#saving">How it saves, online and off</a></li>
+    <li><a href="#safety">Sign-in, privacy and security</a></li>
+  </ol></details>
+  <details><summary>5 · Running it <small>3 sections</small></summary><ol>
+    <li><a href="#switches">Settings and switches</a></li>
+    <li><a href="#limits">Limits and known gaps</a></li>
+    <li><a href="#uploads">Updating the app</a></li>
+  </ol></details>
+</nav>
 
 <main>
 <section id="what">
@@ -120,6 +139,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     </tbody>
   </table></div>
   <p>A neighbourhood is a cluster of nearby doors, named after its biggest street, sized for one session of knocking.</p>
+  <p><strong>Built to be any company's app.</strong> The company's name, logo, colours, services, extra-work list and which tools it uses come from one settings file, not the code, so a roofing company can run the same app with its own card. See <a href="#roofing">Roofing preview</a> and <a href="#switches">Settings and switches</a>.</p>
 </section>
 
 <section id="people">
@@ -129,7 +149,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <thead><tr><th>Role</th><th>Sees and does</th></tr></thead>
     <tbody>
       <tr><td><span class="chip all">Crew</span></td><td>Door rounds, search, their own stats and doors. Marks doors and records everything at the door. Sees every neighbourhood and every door's chips and money line.</td></tr>
-      <tr><td><span class="chip adm">Admin</span></td><td>Everything crew can, plus the office tools: Pipeline, Customers, Quote builder, Territories, Communities, Results, Team stats, Leaderboard, Accounts, the fire-weather call list, and the exports.</td></tr>
+      <tr><td><span class="chip adm">Admin</span></td><td>Everything crew can, plus the office tools: Pipeline, Customers, Quote builder, Territories, Communities, Results, Team stats, Leaderboard, Accounts, the fire-weather call list, and the exports. In Roofing preview, also Hail, roof size and year built, and roof photos.</td></tr>
     </tbody>
   </table></div>
   <p>A team manager role is planned for later, to assign territories to their own reps. The territory records already note who assigned each one, so it can be added without rebuilding.</p>
@@ -215,7 +235,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
       <tr><td class="k">Results</td><td>Which doors turn into jobs: knocked, talked to, booked and won, broken down by fire hazard, lawn, trees, county value, town and extra work. It fills up as quotes are marked won or lost.</td></tr>
       <tr><td class="k">Team stats</td><td>Everyone's doors, conversations and quotes today, over 7 days and over 30 days, with a day-by-day view per person.</td></tr>
       <tr><td class="k">Leaderboard</td><td>Rankings by quotes booked and one daily goal per person. No location tracking. Admins only while it is tested.</td></tr>
-      <tr><td class="k">Accounts</td><td>Add a person (the code is shown once, with Text it and Copy), rename them, switch crew or admin, give a new code, sign them out, remove them, or turn a server account back on. Show PINs reveals everyone's code after you type your own, until you leave the screen. Every change is logged.</td></tr>
+      <tr><td class="k">Accounts</td><td>Add a person (the code is shown once, with Text it and Copy), rename them, switch crew or admin, give a new code, sign them out, remove them, or turn a server account back on. Show PINs reveals everyone's code after you type your own, until you leave the screen. Every change is logged. <strong>Who is signed in:</strong> each person shows a green dot with the device and when it was last used ("Signed in on iPhone · used 5 min ago", several devices listed), or a grey dot ("Signed out · just now", "Not signed in"), and the top line counts who is signed in now. A Sign out shows straight away.</td></tr>
       <tr><td class="k">Fire-weather call list</td><td>When a red-flag or fire-weather alert covers a town, or a wildfire is within 30 miles, the alert offers a list of customers won, quotes sent and booked doors there, with a check-in script. A check-in, not a pitch.</td></tr>
       <tr><td class="k">Morning email</td><td>Every morning at 6 am Colorado time, an email to Contact@: leads still to call (with source, phone and town), today's and tomorrow's walks, customers due this week (overdue marked), and yesterday's doors, conversations and quotes per person. Nothing to open; the figures come from the app itself, so they match.</td></tr>
       <tr><td class="k">Exports</td><td>A full CSV of every door with anything recorded (admins only), a Jobber client import of door bookings, a "who marked what" report, the customer spreadsheet, and the full backup with the last 30 nightly copies (see <a href="#customers">Customers and backups</a>).</td></tr>
@@ -277,6 +297,20 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   </ul>
 </section>
 
+<section id="roofing">
+  <h2>Roofing preview: hail, roof size, year built, roof photos</h2>
+  <p>The first pieces of a roofing version, for admins to try. On the tools screen, under Look, <strong>Door card: Sixfold | Roofing preview</strong> switches that device only; the crew never see any of it. In Roofing preview the card hides lawn, trees, fire, money, water, the fire check, the Show doors with buttons and the Fire, Lawn and Trees sorts, and shows the roofing parts instead. Tap Sixfold to switch back; it stays on for that device until you do.</p>
+  <h3>Hail</h3>
+  <p>A <strong>Hail</strong> tile appears in the office tools. It lists every storm day since 2020 (April to September), newest first, with how many of our doors had hail of 1 inch or more within about 1 km, the largest size and the towns (or ¾ inch or more). <strong>Show the neighbourhoods hit</strong> lists them, worst first; tapping one opens those doors. On the door card, <strong>Hail near the house (radar estimate)</strong> lists its storms, for example "1.07 in on 5 Aug 2023". 54 storm days reached 1 inch at our doors; the largest estimate was 2.74 inches on 22 June 2023.</p>
+  <h3>Hail map and live radar</h3>
+  <p><strong>Show on the map</strong> on a storm draws that day's hail path over the street map, in squares about 1 km across coloured by size (¾–1 inch, 1–1.5, 1.5–2, over 2). <strong>Live radar map</strong>, at the top of the Hail screen, shows NOAA's current radar over our area, refreshed every 5 minutes, with an on/off button under the map. It shows what is happening now only; past storms are on their own maps.</p>
+  <h3>Roof size, pitch and year built</h3>
+  <p>The card's roof line: <strong>about 3,410 sq ft · 34.1 squares · 6/12 pitch</strong>, measured from the USGS laser scans (El Paso 2018, Douglas 2020), then <strong>Built 2006 · remodeled 2015 · Gable · Composition shingle</strong> from the county records (shape and material in Douglas only). 21,530 of the 26,674 doors in El Paso and Douglas have a measurement; almost every house without one was built after the scan, and the card says so.</p>
+  <h3>Roof photo</h3>
+  <p><strong>See the roof (aerial photo, 2020)</strong> on the roof line loads a 3-inch photo of the house, centred on it, sharp enough to see roof planes and vents. It comes straight from the State of Colorado's public storage (1–2 MB), nothing kept on Sixfold's server. Castle Rock, and most of Franktown and Sedalia: 8,503 doors. Not Larkspur, El Paso or Teller (El Paso's own 2024 photos are licensed per tile: 199 tiles cover our El Paso doors, about $9,950 at 1-foot or $19,900 at 6-inch for three years).</p>
+  <div class="note"><p><strong>All of it is an estimate.</strong> The radar reads smaller than ground reports for big hail, so use it to rank streets, not to promise a hail size on a roof. Roof sizes come from the building outline and miss eaves beyond it. The photos are from 2020: a roof replaced since won't show.</p></div>
+</section>
+
 <section id="data">
   <h2>Where the data comes from</h2>
   <p>Every figure comes from a free public source or from what the crew record. Nothing is scraped from people-search sites and nothing is bought. The door data is built on a computer from these sources, then uploaded; it doesn't change on its own.</p>
@@ -302,6 +336,11 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
       <tr><td class="k">Street map</td><td>OpenStreetMap</td><td>The Map view.</td></tr>
       <tr><td class="k">Satellite</td><td>A link to Google Maps for looking at a property</td><td>For viewing only; Google imagery is never used for measuring.</td></tr>
       <tr><td class="k">City, ZIP and owners' mailing addresses</td><td>The county walk-list files, matched to doors (98.9%) by build-mail-sidecar.mjs into a private file per town (mail-&lt;town&gt;.json, beside the website)</td><td>Doors get their city and ZIP for Look up number. The mailing address never leaves the server; it is only for the BatchData lookup.</td></tr>
+      <tr><td class="k">Hail per door and storm maps</td><td>NOAA/NSSL MRMS "maximum estimated size of hail", the 24-hour maximum, archived by Iowa State University; April to September, 2020 to 30 Sep 2026 (1,272 days read, 9 not in the archive)</td><td>The largest value within about 1 km of each house. Built on a computer; not updated by itself yet.</td></tr>
+      <tr><td class="k">Live radar</td><td>NOAA NEXRAD national radar, through the Iowa Environmental Mesonet's public map tiles</td><td>Every 5 minutes; current weather only.</td></tr>
+      <tr><td class="k">Roof size and pitch</td><td>USGS 3DEP laser scans (El Paso 2018, Douglas 2020) and Microsoft's building footprints</td><td>Checked against Douglas County's roof records: 0.2% of gable and hip roofs read as flat; median pitch 5/12.</td></tr>
+      <tr><td class="k">Year built, roof shape and material</td><td>El Paso and Douglas County assessor download files, free</td><td>Matched to 98.6% of doors by parcel. Shape, material and remodeled year are Douglas only.</td></tr>
+      <tr><td class="k">Roof photos</td><td>Denver Regional Aerial Photography Project 2020, 3 inches a pixel, published by the State of Colorado (OIT) on AWS Open Data, public domain</td><td>Read in the browser, only the part over the house. Douglas County only.</td></tr>
       <tr><td class="k">Everything recorded</td><td>The crew and admins, through the app</td><td>Outcomes, numbers, emails, photos, notes, extra work, fire checks, walks, results, leads.</td></tr>
     </tbody>
   </table></div>
@@ -324,21 +363,25 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
 <section id="safety">
   <h2>Sign-in, privacy and security</h2>
   <ul>
-    <li><strong>Codes:</strong> six digits, one per person. Eight wrong tries from one place lock that place out for 15 minutes, and a flood of wrong codes from many places pauses new sign-ins for up to an hour. Phones already signed in keep working.</li>
+    <li><strong>Codes:</strong> six digits, one per person. Eight wrong tries from one place lock that place out for 15 minutes. A flood of wrong codes (60 in an hour) from at least five different places pauses new sign-ins for up to an hour; one or two phones guessing can't lock everyone out. Phones already signed in keep working.</li>
+    <li><strong>Signing out:</strong> only the app's own Sign out (or an admin's) ends a session; a link someone taps can't. The Accounts screen shows who is signed in, on what kind of device and when it was last used; nothing about where they are.</li>
     <li><strong>Staying signed in:</strong> a sign-in lasts 45 days, but every tap re-checks the person against the current list. Removing someone, giving them a new code, demoting them or signing them out takes effect on their next tap.</li>
     <li><strong>Where codes live:</strong> the server's codes file and the app's accounts file, both in a private folder beside the website, never inside it. The ordinary accounts list never carries codes; Show PINs needs your own code again and is logged.</li>
     <li><strong>What each role sees:</strong> the full export (every door with names and addresses), the customer list, the customer spreadsheet and the full backup are admins only. Crew see the doors they knock, their own numbers, and the Customer tag on a door.</li>
     <li><strong>Backups:</strong> each download is logged with who took it. The file never contains a sign-in code.</li>
     <li><strong>Phone numbers:</strong> each number records whether it was given at the door or looked up. Only door-given numbers get Call and Text buttons without a warning; looked-up numbers must clear the national and Colorado Do Not Call lists first. Numbers found with Look up number are looked up, so they carry the warning too.</li>
     <li><strong>BatchData lookups (built, switched off):</strong> an admin-only Skip trace screen can look owners' numbers up through BatchData, a licensed data service: dry run first (how many doors and what it would cost), batches of 100, never paying for the same door twice, companies, trusts and government owners skipped. A number counts as cleared only if BatchData says it is not on the federal Do Not Call list; listed or unchecked numbers are hidden from call lists and the export. It does nothing until a key is put in <code>sixfold-private/skiptrace-config.php</code>. Before it is used: BatchData checks the federal list only, so Colorado's no-call list needs its own check.</li>
-    <li><strong>Photos:</strong> only with the owner's OK, of the property, not people.</li>
-    <li><strong>Search:</strong> up to 25 addresses a time, a street name required, and 60 searches per person in ten minutes, so a stolen phone can't pull the whole list. Results carry no owner names.</li>
+    <li><strong>Photos:</strong> only with the owner's OK, of the property, not people. Up to 120 per person an hour, and a photo viewed on a shared iPad isn't kept in its browser after sign-out.</li>
+    <li><strong>Search:</strong> up to 25 addresses a time, a street name required, and 150 searches per person in ten minutes, so a stolen phone can't pull the whole list. Results carry no owner names.</li>
     <li><strong>Search engines:</strong> the app's pages are marked not to be indexed.</li>
+    <li><strong>Hail, roof data and roof photos:</strong> admins only, and only where the company's settings turn them on. The public settings answer (name, colours, lists) carries nothing secret and not the app's address.</li>
   </ul>
 </section>
 
 <section id="switches">
-  <h2>Switches you control</h2>
+  <h2>Settings and switches</h2>
+  <p><strong>The company settings</strong> (one file, <code>company.json</code>, in <code>sixfold-data/rounds/</code>): the name, phone, email, logo, colours, what the visit is called ("yard walk" for Sixfold, "roof inspection" for a roofer), the services, the enquiry list, the extra-work list, which tools are on (Quote builder, Communities, fire check, skip trace, hail, roof data) and which parts of the door card show (lawn, trees, fire, money, water, hail, roof). Sixfold's keeps hail and roof off the normal card. Changing it is an upload of that one file; nothing in it is secret.</p>
+  <p><strong>Roofing preview</strong> is a switch on each admin's own device (tools screen, under Look). See <a href="#roofing">Roofing preview</a>.</p>
   <p>A few features are built but held back on purpose. Each is one line in the server program (<code>api/rounds.php</code>) and one upload.</p>
   <div class="tw"><table>
     <thead><tr><th>Switch</th><th>Now</th><th>When on</th></tr></thead>
@@ -369,12 +412,15 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>Downloading the backup from the home-screen app on an iPad or iPhone</strong> hasn't been tested. iOS may open the file instead of saving it; a browser tab, or a computer, is the sure way.</li>
     <li><strong>Add a person</strong> needs the server to be able to write to its private folder. It hasn't been tried on the live site yet.</li>
     <li><strong>Overgrowth year over year</strong> waits for late-spring photos, in 2027.</li>
+    <li><strong>Hail data stops at 30 Sep 2026</strong> until the download is run again on a computer and the files uploaded; new storms don't appear by themselves yet. The live radar shows only current weather.</li>
+    <li><strong>Hail and roof figures are estimates</strong> (see <a href="#roofing">Roofing preview</a>). Roof photos cover Castle Rock, Franktown and Sedalia only, and are from 2020.</li>
+    <li><strong>The app still assumes Colorado</strong> in places (the state on exports, Denver time, the towns used for weather alerts, folder names): to fix before a second company goes live.</li>
   </ul>
 </section>
 
 <section id="uploads">
   <h2>Updating the app</h2>
-  <p>Changes are built and tested on a computer first, against a full copy of the app (57 automatic test suites, over 1,000 checks, run before every upload), then uploaded through SiteGround's File Manager.</p>
+  <p>Changes are built and tested on a computer first, against a full copy of the app (70 automatic test suites, run before every upload), then uploaded through SiteGround's File Manager.</p>
   <ul>
     <li><strong>The app:</strong> <code>summit-de59ae83/index.html</code> into <code>public_html/summit-de59ae83/</code>. That folder skips SiteGround's cache, so a new version shows up straight away.</li>
     <li><strong>The server program:</strong> <code>api/rounds.php</code> into <code>public_html/api/</code>.</li>
@@ -383,11 +429,13 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
     <li><strong>The morning email:</strong> <code>tools/morning-email.php</code> into <code>sixfold-tools/</code>, run by a second cron job <strong>every hour</strong>: <code>php /home/customer/www/sixfoldcolorado.com/sixfold-tools/morning-email.php</code>. It sends once a day, at the first run after 6 am Colorado time, whatever clock the server keeps, through the same Gmail login as the website form.</li>
     <li><strong>The skip-trace code:</strong> <code>api/skiptrace.php</code> goes into <code>public_html/api/</code> <strong>with every upload of rounds.php</strong>: the server program loads it, and without it the app stops.</li>
     <li><strong>City and ZIP files:</strong> the 11 <code>mail-*.json</code> go into <code>sixfold-data/rounds/</code>, next to the door files, <strong>beside the website, never inside it</strong>: they hold owners' mailing addresses.</li>
+    <li><strong>Company settings:</strong> <code>company.json</code> into <code>sixfold-data/rounds/</code>. A phone keeps a copy and picks up a change the next time it opens.</li>
+    <li><strong>Hail, roof and photo data</strong> (built on the computer): <code>hail-storms.json</code>, <code>hail-paths.json</code> and the <code>hail-&lt;town&gt;.json</code>, <code>roof-&lt;town&gt;.json</code>, <code>year-&lt;town&gt;.json</code> and <code>photo-&lt;town&gt;.json</code> files, into <code>sixfold-data/rounds/</code>, beside the website, never inside it.</li>
     <li><strong>The nightly backup job:</strong> <code>tools/nightly-backup.php</code> into <code>sixfold-tools/</code>, beside the website, never inside it. A SiteGround cron job (Site Tools → Devs → Cron Jobs) runs it once a day: <code>php /home/customer/www/sixfoldcolorado.com/sixfold-tools/nightly-backup.php</code>. It refuses to run from a browser.</li>
   </ul>
   <p>The exact files and sizes for each upload are kept in <code>DEPLOY-ROUNDS.md</code>, and every upload is checked on the live site afterwards.</p>
 </section>
 
-<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 4 Oct 2026: customers, water rules and nightly backups included · source: sixfold/operations/door-territory/APP-GUIDE.html</footer>
+<footer>Sixfold Colorado · internal · not for distribution · describes the app as of 5 Oct 2026: who is signed in, company settings, and the Roofing preview (hail, roof size and year built, roof photos, live radar) included · source: door-app/operations/door-territory/APP-GUIDE.html</footer>
 </main>
 </div>
