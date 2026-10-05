@@ -202,6 +202,50 @@ button { font: inherit; color: inherit }
 .vrow.bk { box-shadow: none; border: 1.5px dashed var(--later) }
 .vrow .top { display: flex; gap: 8px; align-items: baseline } .vrow .top b { flex: 1; font: 400 15px var(--display) } .vrow .top span { font-weight: 700; color: var(--go) }
 .vrow .m { font-size: 12.5px; color: var(--soft) }
+/* the office side */
+.hero2 { color: var(--bar-ink); border-radius: 18px; padding: 14px; margin-bottom: 10px }
+.hero2 .hi { font: 400 21px/1.15 var(--display) } .hero2 .dt { font-size: 12px; color: var(--bar-soft); margin-top: 2px }
+.hero2 .hs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px }
+.hero2 .hs div { background: var(--bar-lift); border-radius: 11px; padding: 7px 9px } .hero2 .hs b { display: block; font-size: 18px; color: var(--ember) } .hero2 .hs span { font: 600 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--bar-soft) }
+.bkrem { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; border: 1.5px solid var(--later); background: var(--later-tint); color: var(--later); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; cursor: pointer; font-size: 13px }
+.bkrem b { display: block; font-size: 14px }
+.tgrid { display: grid; gap: 7px; margin-bottom: 6px }
+.tile { display: flex; gap: 11px; align-items: center; width: 100%; text-align: left; background: var(--card); border: 0; border-radius: 16px; padding: 10px 12px; cursor: pointer; box-shadow: 0 1px 0 var(--line) }
+.tile .ti { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(160deg, #2E3F37, var(--ink)); color: var(--ember); flex: none }
+.tile .ti .ic { width: 19px; height: 19px } .tile b { display: block; font: 400 15.5px/1.2 var(--display) } .tile span.tx { font-size: 12px; color: var(--soft) }
+.tile .badge { margin-left: auto; flex: none; font: 700 10.5px var(--sans); background: var(--later-tint); color: var(--later); border-radius: 999px; padding: 2px 8px }
+.toptools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
+.toptools button { flex: 1 1 auto; border: 0; border-radius: 12px; min-height: 40px; padding: 0 12px; font: 700 13px var(--sans); cursor: pointer; background: var(--ember-ink); color: var(--on-ember) }
+.toptools button.alt { background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line) }
+.pseg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 8px }
+.pseg button { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 6px 2px; cursor: pointer; font: 700 10.5px var(--sans); line-height: 1.2 }
+.pseg button b { display: block; font-size: 17px } .pseg button[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink) }
+.pcard { background: var(--card); border-radius: 16px; padding: 11px 12px; margin-bottom: 7px; box-shadow: 0 1px 0 var(--line); font-size: 13px }
+.pcard .top { display: flex; gap: 8px; align-items: baseline } .pcard .nm { flex: 1; font: 400 16px/1.2 var(--display) } .pcard .ago { font-size: 11.5px; color: var(--soft) }
+.pcard .src { display: inline-block; font: 700 10.5px var(--sans); letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 2px 8px; background: var(--go-tint); color: var(--go); margin-bottom: 4px }
+.pcard .src.d { background: var(--sunk); color: var(--soft) }
+.pcard .m { color: var(--soft); margin-top: 3px } .pcard .msg { margin-top: 6px; background: var(--sunk); border-radius: 10px; padding: 7px 9px }
+.pcard .acts2 { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px }
+.pcard .acts2 button { border: 0; border-radius: 10px; padding: 7px 10px; font: 700 12.5px var(--sans); cursor: pointer; background: var(--sunk); color: var(--ink) }
+.pcard .acts2 button.go { background: var(--go); color: var(--on-go) }
+.metaprev { background: var(--sunk); border-radius: 14px; padding: 11px; margin-bottom: 10px; font-size: 13px; display: grid; gap: 6px }
+.metaprev .wl, .tab .wl { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
+.metaprev button { border: 0; border-radius: 10px; min-height: 40px; background: var(--go); color: var(--on-go); font: 700 13.5px var(--sans); cursor: pointer }
+.tab { background: var(--card); border-radius: 14px; padding: 10px 12px; box-shadow: 0 1px 0 var(--line); margin-bottom: 8px }
+.tab table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px } .tab th { text-align: right; font: 700 10px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--soft); padding: 4px 2px }
+.tab th:first-child, .tab td:first-child { text-align: left } .tab td { text-align: right; padding: 6px 2px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums } .tab td.hi { font-weight: 700; color: var(--go) }
+.prow { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 14px; padding: 9px 12px; margin-bottom: 6px; box-shadow: 0 1px 0 var(--line); font-size: 12.5px }
+.prow .rk { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--sunk); font: 700 12px var(--sans); flex: none } .prow .rk.r1 { background: #D9A93B; color: #2A1F05 } .prow .rk.r2 { background: #B9C0C4; color: #1D2226 } .prow .rk.r3 { background: #B87333; color: #1A0E04 }
+.prow .who { flex: 1; min-width: 0 } .prow .who b { display: block; font: 400 15px var(--display) } .prow .big { text-align: right } .prow .big b { display: block; font-size: 18px; color: var(--ember-ink) }
+.terrp { background: var(--card); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 0 var(--line); font-size: 12.5px }
+.terrp b.nm { font: 400 15.5px var(--display) } .terrp .ar { margin-top: 7px } .terrp .bar2 { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 3px; overflow: hidden } .terrp .bar2 i { display: block; height: 100%; background: var(--go) }
+.acrow { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 14px; padding: 9px 12px; margin-bottom: 6px; box-shadow: 0 1px 0 var(--line); font-size: 12.5px; flex-wrap: wrap }
+.acrow .who { flex: 1; min-width: 0 } .acrow .who b { display: block; font: 400 15px var(--display) } .acrow .role { font: 700 10.5px var(--sans); border-radius: 999px; padding: 2px 8px; background: var(--sunk); color: var(--soft) } .acrow .role.ad { background: var(--later-tint); color: var(--later) }
+.acrow .lnks { flex-basis: 100%; display: flex; gap: 14px } .acrow .lnks button { border: 0; background: none; padding: 2px 0; font: 700 12.5px var(--sans); color: var(--go); cursor: pointer } .acrow .lnks button.dg { color: var(--bad) }
+.codec { background: var(--ink); color: var(--card); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; animation: capIn .3s backwards }
+.codec .cc { font: 600 30px var(--mono); letter-spacing: .12em; margin: 4px 0 } .codec .cs { font-size: 12px; opacity: .8 }
+.mailp { background: #fff; color: #16201C; border-radius: 14px; padding: 12px 14px; font: 12.5px/1.5 var(--sans); white-space: pre-wrap; box-shadow: 0 1px 0 var(--line) }
+.mailp .subj { font-weight: 700; margin-bottom: 8px; display: block; white-space: normal }
 /* notes column */
 .notes { min-width: 0; display: grid; gap: 14px }
 .notes h2 { font: 600 clamp(1.35rem, 3vw, 1.7rem)/1.2 var(--display); margin: 6px 0 2px; text-wrap: balance }
@@ -238,7 +282,7 @@ button { font: inherit; color: inherit }
     </div>
   </header>
 
-  <div class="banner">Demo data: the towns and their door counts are real; every property, owner, customer, price, progress figure and high-risk count below is invented</div>
+  <div class="banner">Demo data: the towns and their door counts are real; every property, owner, customer, lead, crew name, price, progress figure and result below is invented</div>
 
   <div class="split">
     <div class="devwrap">
@@ -250,8 +294,11 @@ button { font: inherit; color: inherit }
     </div>
 
     <div class="notes">
-      <h2>Walk through it</h2>
+      <h2>Walk through it: at the doors</h2>
       <div class="tour" id="tour"></div>
+
+      <h2>Walk through it: the office side</h2>
+      <div class="tour" id="tour2"></div>
 
       <h2>How it makes every hour at the doors count</h2>
       <div class="grid2">
@@ -285,6 +332,7 @@ button { font: inherit; color: inherit }
           <li><b>Fire-weather call list</b> when an alert or a wildfire hits a town we work.</li>
           <li><b>A morning email at 6 am:</b> leads to call, today's walks, customers due and yesterday's numbers, without opening the app.</li>
           <li><b>Every lead in one place:</b> website and Linktree enquiries arrive by themselves; Meta leads import from one downloaded file.</li>
+          <li><b>The office controls who signs in:</b> add a person and their code is shown once; change, sign out or remove anyone, and every change is logged.</li>
         </ul></div>
         <div class="why"><h3>We learn what works</h3><ul>
           <li><b>Results:</b> which kinds of doors turn into jobs, by fire, lawn, trees, value and town.</li>
@@ -319,6 +367,7 @@ button { font: inherit; color: inherit }
     cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', chev: '<path d="M9.5 6l6 6-6 6"/>',
     near: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>', route: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
     chart: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>', door: '<rect x="6" y="3.5" width="12" height="17" rx="1"/><circle cx="14.5" cy="12" r=".9"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    award: '<circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/>', calc: '<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8 8h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2"/>', key: '<circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H20M17 12v3M20 12v2"/>', send: '<path d="M4 12l16-7-5 15-3-6-8-2z"/>',
     user: '<circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.8-3.8 3.6-5.8 7.2-5.8s6.4 2 7.2 5.8"/>', chat: '<path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>',
     clip: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>'
   };
@@ -377,10 +426,24 @@ button { font: inherit; color: inherit }
   function isDue(c) { return c.status === 'active' && c.next && c.next <= WEEK; }
   function isOver(c) { return isDue(c) && c.next < TODAY; }
 
+  /* the office side's starting data (invented) */
+  var PIPE0 = [
+    { id: 'p1', k: 'lead', st: 'call', src: 'Meta ad', name: 'Dana Example', need: 'Fall Aeration 2026', town: 'Monument', phone: '(719) 555-0161', ago: '2 hours ago', msg: 'Lawn size: about half an acre, front and back.' },
+    { id: 'p2', k: 'lead', st: 'call', src: 'Linktree', name: 'Chris Sample', need: 'Lawn & turf care', town: 'Woodland Park', phone: '(719) 555-0162', ago: 'Yesterday' },
+    { id: 'p3', k: 'door', st: 'call', src: 'Door', name: '1901 Ponderosa Ridge Dr', town: 'Woodland Park', chips: 'Moderate fire · Medium lawn', by: 'Riley P.', ago: 'Today' },
+    { id: 'p4', k: 'door', st: 'walk', src: 'Door', name: '1840 Ponderosa Ridge Dr', town: 'Woodland Park', chips: 'Very high fire · Large lawn · Trees against house', walk: 'Thu 8 Oct, 9:00 am', by: 'Riley P.', ago: 'Sat' },
+    { id: 'p5', k: 'lead', st: 'walk', src: 'Website form', name: 'Pat Demo', need: 'Fire mitigation', town: 'Black Forest', phone: '(719) 555-0163', walk: 'Fri 9 Oct, 1:00 pm', ago: 'Fri' },
+    { id: 'p6', k: 'door', st: 'quoted', src: 'Door', name: '230 Timber View Ct', town: 'Woodland Park', chips: 'High fire · Large lawn', quote: 'Quote sent Mon 5 Oct', by: 'Morgan D.', ago: 'Thu' },
+    { id: 'p7', k: 'door', st: 'won', src: 'Door', name: '77 Demo Trail', town: 'Black Forest', chips: 'Very high fire · Heavy trees', value: '$2,250', by: 'Taylor S.', ago: 'Wed' },
+    { id: 'p8', k: 'lead', st: 'won', src: 'Nextdoor', name: 'Jamie Placeholder', need: 'Lawn & turf care', town: 'Monument', phone: '(719) 555-0164', value: '$240 a month', ago: 'Tue' },
+    { id: 'p9', k: 'lead', st: 'lost', src: 'Phone call', name: 'Lee Example', need: 'Aeration', town: 'Castle Rock', why: 'Price', ago: 'Mon' }
+  ];
+  var PSTAGES = [['call', 'To call'], ['walk', 'Walk booked'], ['quoted', 'Quote sent'], ['won', 'Won'], ['lost', 'Lost']];
+  var PEOPLE0 = [['Matthew S.', 'admin', 'Today'], ['Brandon L.', 'admin', 'Yesterday'], ['Riley P.', 'crew', 'Today'], ['Morgan D.', 'crew', 'Today'], ['Taylor S.', 'crew', 'Sat'], ['Avery J.', 'crew', 'Thu']];
   /* ---------- state ---------- */
   var S;
   function reset() {
-    S = { screen: 'state', doors: DOORS0.map(function (d) { return Object.assign({}, d, { mark: null, saved: {} }); }), open: 1, cap: null, form: null, match: {}, sort: 'lawn', yes: null, sheet: null, walk: { day: null, time: '' }, work: [], fc: {}, toast: null, anim: true,
+    S = { screen: 'tools', pipe: PIPE0.map(function (p) { return Object.assign({}, p); }), pstage: 'call', psrc: 'all', meta: null, team: 'week', res: 'fire', newcode: null, people: PEOPLE0.map(function (p) { return p.slice(); }), doors: DOORS0.map(function (d) { return Object.assign({}, d, { mark: null, saved: {} }); }), open: 1, cap: null, form: null, match: {}, sort: 'lawn', yes: null, sheet: null, walk: { day: null, time: '' }, work: [], fc: {}, toast: null, anim: true,
       custs: CUST0.map(function (c) { return Object.assign({}, c, { visits: c.visits.map(function (v) { return v.slice(); }) }); }), cust: null, custShow: 'active', custFind: '', custBack: 'state', vf: { day: TODAY, status: 'done' } };
   }
   reset();
@@ -402,7 +465,7 @@ button { font: inherit; color: inherit }
     if (o.count != null) { var c = el('div', 'cnt'); c.appendChild(el('b', null, String(o.count))); c.appendChild(el('span', null, 'to knock')); $abar.appendChild(c); }
   }
   function dock(items, cur, pick) {
-    $dock.textContent = '';
+    $dock.textContent = ''; $dock.style.display = items.length ? '' : 'none';
     items.forEach(function (it) {
       var b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === it[0]));
       b.appendChild(ico(it[2])); b.appendChild(document.createTextNode(it[1]));
@@ -411,14 +474,15 @@ button { font: inherit; color: inherit }
   }
   function stagger(root) { if (!S.anim) return; [].forEach.call(root.children, function (c, i) { if (i < 12) { c.style.animationDelay = (i * 35) + 'ms'; c.classList.add('enter'); } }); S.anim = false; }
   function render() {
-    if (S.screen === 'state') stateView(); else if (S.screen === 'town') townView(); else if (S.screen === 'customers') customersView(); else if (S.screen === 'customer') customerView(); else doorsView();
+    var OFFICE = { tools: toolsView, pipe: pipeView, results: resultsView, team: teamView, terr: terrView, accounts: accountsView, email: emailView };
+    if (OFFICE[S.screen]) OFFICE[S.screen](); else if (S.screen === 'state') stateView(); else if (S.screen === 'town') townView(); else if (S.screen === 'customers') customersView(); else if (S.screen === 'customer') customerView(); else doorsView();
     renderSheet(); renderToast(); syncTour();
   }
   function go(screen) { S.screen = screen; S.anim = true; S.cap = null; S.form = null; S.sheet = null; render(); $screen.scrollTop = 0; }
 
   /* ---------- screens ---------- */
   function stateView() {
-    bar({ title: 'Colorado · all towns', sub: 'Door rounds' });
+    bar({ title: 'Colorado · all towns', sub: 'Door rounds', back: function () { go('tools'); } });
     dock([['near', 'Nearest town', 'near'], ['cust', 'Customers', 'user']], null, function (v) {
       if (v === 'cust') { S.custBack = 'state'; go('customers'); return; }
       toastMsg('Nearest town', 'Opening Woodland Park, the closest town to you'); go('town');
@@ -793,6 +857,192 @@ button { font: inherit; color: inherit }
     });
     if (!c.visits.length) $screen.appendChild(el('div', 'mcard', 'No visits yet. Book the job above, or log it once it is done.'));
   }
+  /* ---------- the office side (invented people, leads and figures) ---------- */
+  function toolsView() {
+    bar({ title: 'Sixfold', sub: 'Field tools' });
+    dock([], null, function () {});
+    $screen.textContent = '';
+    var h = el('div', 'hero2 topo'); h.appendChild(el('div', 'hi', 'Good morning, Matthew')); h.appendChild(el('div', 'dt', 'Monday, October 5'));
+    var hs = el('div', 'hs'); [['38', 'Doors today'], ['14', 'Talked to'], ['3', 'Quotes']].forEach(function (x) { var c = el('div'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); hs.appendChild(c); }); h.appendChild(hs);
+    $screen.appendChild(h);
+    var bk = el('button', 'bkrem'); bk.type = 'button'; bk.appendChild(ico('clip', 2.2)); var bt = el('span'); bt.appendChild(el('b', null, 'Last backup saved 9 days ago')); bt.appendChild(document.createTextNode('Tap to download one now, and keep it somewhere safe.')); bk.appendChild(bt);
+    bk.addEventListener('click', function () { toastMsg('Full backup', 'Downloaded. The server also saves one every night and keeps 30'); bk.remove(); }); $screen.appendChild(bk);
+    var grp = function (title, tiles) {
+      var sct = el('div', 'sect'); sct.appendChild(el('h2', null, title)); $screen.appendChild(sct);
+      var g = el('div', 'tgrid');
+      tiles.forEach(function (t) {
+        var b = el('button', 'tile'); b.type = 'button'; var ti = el('span', 'ti'); ti.appendChild(ico(t[0], 2)); b.appendChild(ti);
+        var tx = el('span'); tx.appendChild(el('b', null, t[1])); tx.appendChild(el('span', 'tx', t[2])); b.appendChild(tx);
+        if (t[4]) b.appendChild(el('span', 'badge', t[4]));
+        b.addEventListener('click', t[3]); g.appendChild(b);
+      });
+      $screen.appendChild(g); stagger(g);
+    };
+    grp('In the field', [['door', 'Door rounds', 'Knock a neighbourhood. Works with no signal.', function () { go('state'); }],
+      ['chart', 'My stats', 'Your doors, conversations and quotes.', function () { S.team = 'today'; go('team'); }]]);
+    grp('Office', [['list', 'Pipeline', 'Door bookings and enquiries, call to won.', function () { go('pipe'); }, '2 new leads'],
+      ['user', 'Customers', 'Plans, visits, what is due. Backups.', function () { S.custBack = 'tools'; go('customers'); }],
+      ['route', 'Territories', 'Assign neighbourhoods to people.', function () { go('terr'); }],
+      ['calc', 'Quote builder', 'Price a job from the walk.', function () { toastMsg('Quote builder', 'Cost-up pricing from the walk, with the lawn measured from the aerial photo'); }],
+      ['chart', 'Results', 'Which doors turn into jobs.', function () { go('results'); }],
+      ['award', 'Team stats', 'Everyone’s numbers, and the leaderboard.', function () { S.team = 'week'; go('team'); }],
+      ['key', 'Accounts', 'Add, change, sign out and remove sign-ins.', function () { go('accounts'); }],
+      ['send', 'Morning email', 'What lands in the inbox at 6 am.', function () { go('email'); }]]);
+  }
+  function pipeView() {
+    bar({ title: 'Pipeline', sub: 'Door bookings and enquiries, call to won', back: function () { go('tools'); } });
+    dock([], null, function () {});
+    $screen.textContent = '';
+    var tt = el('div', 'toptools');
+    var ad = el('button', null, '+ Add a lead'); ad.type = 'button'; ad.addEventListener('click', function () { toastMsg('Add a lead', 'A phone call, a referral or a Nextdoor message, typed in'); }); tt.appendChild(ad);
+    var im = el('button', 'alt', 'Import leads from Meta'); im.type = 'button';
+    im.addEventListener('click', function () { S.meta = true; render(); }); tt.appendChild(im);
+    $screen.appendChild(tt);
+    if (S.meta) {
+      var mp = el('div', 'metaprev'); mp.appendChild(el('div', 'wl', 'From the Leads Center download'));
+      mp.appendChild(el('div', null, '3 leads in the file, 1 from the Page rather than the ad. Anyone already in the Pipeline is left out.'));
+      ['Robin Sample · Monument', 'Drew Example · Castle Rock', 'Quinn Demo · Woodland Park'].forEach(function (n) { mp.appendChild(el('div', null, n)); });
+      var go2 = el('button', null, 'Add them to the Pipeline'); go2.type = 'button';
+      go2.addEventListener('click', function () {
+        ['Robin Sample|Monument', 'Drew Example|Castle Rock', 'Quinn Demo|Woodland Park'].forEach(function (x, i) { var p = x.split('|'); S.pipe.unshift({ id: 'm' + i, k: 'lead', st: 'call', src: 'Meta ad', name: p[0], need: 'Fall Aeration 2026', town: p[1], phone: '(719) 555-01' + (70 + i), ago: 'Just now' }); });
+        S.meta = null; S.pstage = 'call'; toastMsg('3 leads added', 'From Meta, dated when they filled the form'); render();
+      });
+      mp.appendChild(go2); $screen.appendChild(mp);
+    }
+    var seg = el('div', 'pseg');
+    PSTAGES.forEach(function (st) {
+      var n = S.pipe.filter(function (p) { return p.st === st[0] && (S.psrc === 'all' || p.src === S.psrc); }).length;
+      var b = el('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(S.pstage === st[0])); b.appendChild(el('b', null, String(n))); b.appendChild(document.createTextNode(st[1]));
+      b.addEventListener('click', function () { S.pstage = st[0]; render(); }); seg.appendChild(b);
+    });
+    $screen.appendChild(seg);
+    var mb = el('div', 'matchb'); mb.appendChild(el('span', 'ml', 'From'));
+    ['all', 'Door', 'Website form', 'Linktree', 'Meta ad', 'Nextdoor', 'Phone call'].forEach(function (k) {
+      if (k !== 'all' && !S.pipe.some(function (p) { return p.src === k; })) return;
+      var b = el('button', null, k === 'all' ? 'Everyone' : k); b.type = 'button'; b.setAttribute('aria-pressed', String(S.psrc === k));
+      b.addEventListener('click', function () { S.psrc = k; render(); }); mb.appendChild(b);
+    });
+    $screen.appendChild(mb);
+    var list = el('div');
+    var shown = S.pipe.filter(function (p) { return p.st === S.pstage && (S.psrc === 'all' || p.src === S.psrc); });
+    shown.forEach(function (p) {
+      var c = el('div', 'pcard'); c.appendChild(el('span', 'src' + (p.k === 'door' ? ' d' : ''), p.k === 'door' ? 'Booked at the door' : p.src));
+      var top = el('div', 'top'); top.appendChild(el('span', 'nm', p.name)); top.appendChild(el('span', 'ago', p.ago)); c.appendChild(top);
+      c.appendChild(el('div', 'm', [p.need || p.chips, p.town, p.by ? 'booked by ' + p.by : ''].filter(Boolean).join(' · ')));
+      if (p.walk) c.appendChild(el('div', 'm', 'Walk: ' + p.walk));
+      if (p.quote) c.appendChild(el('div', 'm', p.quote));
+      if (p.value) c.appendChild(el('div', 'm', 'Won · ' + p.value));
+      if (p.why) c.appendChild(el('div', 'm', 'Lost · ' + p.why));
+      if (p.msg) c.appendChild(el('div', 'msg', p.msg));
+      var a = el('div', 'acts2');
+      var btn = function (label, fn, cls) { var b = el('button', cls || null, label); b.type = 'button'; b.addEventListener('click', fn); a.appendChild(b); };
+      if (p.phone && p.st !== 'won' && p.st !== 'lost') { btn('Call', function () { toastMsg('Call', p.phone); }); btn('Text', function () { toastMsg('Text', 'Opens Messages with ' + p.phone); }); }
+      if (p.k === 'door' && (p.st === 'call' || p.st === 'walk')) btn('Build quote', function () { toastMsg('Build quote', 'Opens the Quote builder with the address and the lawn measured'); });
+      if (p.st === 'call') btn('Walk booked', function () { p.st = 'walk'; p.walk = 'Fri 9 Oct, time to agree'; toastMsg('Walk booked', p.name); render(); });
+      if (p.st === 'walk') btn('Quote sent', function () { p.st = 'quoted'; p.quote = 'Quote sent today'; toastMsg('Quote sent', p.name); render(); });
+      if (p.st === 'quoted') { btn('Won', function () { p.st = 'won'; p.value = '$1,450'; toastMsg('Won', p.name + ' · $1,450'); render(); }, 'go'); btn('Lost', function () { p.st = 'lost'; p.why = 'Went with someone else'; render(); }); }
+      if (p.st === 'won') btn('Make customer', function () {
+        var c2 = { id: 'x' + p.id, name: p.k === 'door' ? 'Homeowner at ' + p.name : p.name, addr: p.k === 'door' ? p.name : '', town: p.town, phone: p.phone || '', plan: 'oneoff', svc: /aerat|lawn/i.test(p.need || '') ? 'Lawn care' : 'Fire mitigation', price: parseInt(String(p.value).replace(/\D/g, ''), 10) || 0, next: '', status: 'active', since: 'Oct 2026', notes: 'From the Pipeline.', visits: [] };
+        S.custs.unshift(c2); S.cust = c2.id; S.custBack = 'pipe'; toastMsg('Customer added', 'Name, address and price carried over'); go('customer');
+      }, 'go');
+      c.appendChild(a); list.appendChild(c);
+    });
+    if (!shown.length) list.appendChild(el('div', 'mcard', 'Nothing at this stage.'));
+    $screen.appendChild(list); stagger(list);
+  }
+  var RES = { fire: [['Very high', 412, 41, 12], ['High', 655, 52, 13], ['Moderate', 980, 49, 9], ['Low or not rated', 520, 11, 2]],
+    lawn: [['Large lawn', 310, 37, 11], ['Medium lawn', 840, 71, 17], ['Small or none', 1417, 45, 8]],
+    town: [['Woodland Park', 640, 48, 13], ['Monument', 910, 52, 12], ['Black Forest', 702, 38, 8], ['Castle Rock', 315, 15, 3]] };
+  function resultsView() {
+    bar({ title: 'Results', sub: 'Which doors turn into jobs', back: function () { go('tools'); } });
+    dock([['fire', 'Fire', 'flame'], ['lawn', 'Lawn', 'leaf'], ['town', 'Town', 'route']], S.res, function (v) { S.res = v; render(); });
+    $screen.textContent = '';
+    var rows = RES[S.res], tot = rows.reduce(function (t, r) { return [t[0] + r[1], t[1] + r[2], t[2] + r[3]]; }, [0, 0, 0]);
+    $screen.appendChild(el('div', 'mcard', tot[0].toLocaleString('en-US') + ' doors knocked · ' + tot[1] + ' quotes booked (' + Math.round(100 * tot[1] / tot[0]) + '%) · ' + tot[2] + ' won'));
+    var tb = el('div', 'tab'); tb.appendChild(el('div', 'wl', 'By ' + ({ fire: 'fire hazard', lawn: 'lawn size', town: 'town' })[S.res]));
+    var t = el('table'), hr = el('tr'); ['', 'Knocked', 'Booked', 'Rate', 'Won'].forEach(function (h) { hr.appendChild(el('th', null, h)); }); t.appendChild(hr);
+    var best = Math.max.apply(null, rows.map(function (r) { return r[2] / r[1]; }));
+    rows.forEach(function (r) { var tr = el('tr'); [r[0], r[1].toLocaleString('en-US'), r[2], Math.round(100 * r[2] / r[1]) + '%', r[3]].forEach(function (v, i) { tr.appendChild(el('td', i === 3 && r[2] / r[1] === best ? 'hi' : null, String(v))); }); t.appendChild(tr); });
+    tb.appendChild(t); $screen.appendChild(tb);
+    $screen.appendChild(el('div', 'day', 'Example figures. In the app this fills up by itself as quotes are marked won or lost, so the crew knock the kinds of doors that actually turn into jobs.'));
+  }
+  var TEAM = { today: [['Riley P.', 18, 7, 2], ['Morgan D.', 12, 5, 1], ['Taylor S.', 8, 2, 0]],
+    week: [['Riley P.', 142, 51, 9], ['Morgan D.', 118, 44, 7], ['Taylor S.', 96, 30, 4], ['Avery J.', 61, 19, 2]],
+    month: [['Riley P.', 588, 204, 31], ['Morgan D.', 471, 170, 24], ['Taylor S.', 402, 121, 15], ['Avery J.', 266, 80, 9]] };
+  function teamView() {
+    bar({ title: 'Team stats', sub: 'Doors, conversations and quotes · no location tracking', back: function () { go('tools'); } });
+    dock([['today', 'Today', 'clock'], ['week', '7 days', 'cal'], ['month', '30 days', 'chart']], S.team, function (v) { S.team = v; render(); });
+    $screen.textContent = '';
+    var rows = TEAM[S.team].slice().sort(function (a, b) { return b[3] - a[3] || b[1] - a[1]; });
+    var list = el('div');
+    rows.forEach(function (r, i) {
+      var p = el('div', 'prow'); p.appendChild(el('span', 'rk' + (i < 3 ? ' r' + (i + 1) : ''), String(i + 1)));
+      var w = el('div', 'who'); w.appendChild(el('b', null, r[0])); w.appendChild(document.createTextNode(r[1] + ' doors · ' + r[2] + ' talked to')); p.appendChild(w);
+      var bg = el('div', 'big'); bg.appendChild(el('b', null, String(r[3]))); bg.appendChild(document.createTextNode(r[3] === 1 ? 'quote' : 'quotes')); p.appendChild(bg);
+      list.appendChild(p);
+    });
+    $screen.appendChild(list); stagger(list);
+    $screen.appendChild(el('div', 'day', 'Ranked by quotes booked. Each person can have a daily goal. Example figures; the crew see only their own until the leaderboard is switched on for everyone.'));
+  }
+  var TERR = [['Riley P.', [['PONDEROSA RIDGE DR', 'Woodland Park', 18, 24], ['ASPEN HOLLOW RD', 'Woodland Park', 9, 31]]],
+    ['Morgan D.', [['SAMPLE MEADOW LN', 'Woodland Park', 14, 18], ['GLEN EXAMPLE CT', 'Monument', 3, 27]]],
+    ['Taylor S.', [['DEMO PINES DR', 'Black Forest', 22, 40]]]];
+  function terrView() {
+    bar({ title: 'Territories', sub: 'Neighbourhoods by person', back: function () { go('tools'); } });
+    dock([], null, function () {});
+    $screen.textContent = '';
+    var tt = el('div', 'toptools'); var as = el('button', null, 'Assign neighbourhoods'); as.type = 'button';
+    as.addEventListener('click', function () { toastMsg('Assign', 'Pick a person and a town, tick the neighbourhoods, assign them all at once'); }); tt.appendChild(as); $screen.appendChild(tt);
+    TERR.forEach(function (p) {
+      var b = el('div', 'terrp'); var k = p[1].reduce(function (t, a) { return [t[0] + a[2], t[1] + a[3]]; }, [0, 0]);
+      b.appendChild(el('b', 'nm', p[0])); b.appendChild(document.createTextNode(' · ' + k[0] + ' of ' + k[1] + ' doors knocked'));
+      p[1].forEach(function (a) { var ar = el('div', 'ar'); ar.appendChild(document.createTextNode(a[0] + ' · ' + a[1] + ' · ' + a[2] + ' of ' + a[3])); var br = el('div', 'bar2'); var fi = el('i'); fi.style.width = Math.round(100 * a[2] / a[3]) + '%'; br.appendChild(fi); ar.appendChild(br); b.appendChild(ar); });
+      $screen.appendChild(b);
+    });
+    var cr = el('div', 'mcard'); cr.appendChild(el('h4', null, 'What Riley sees'));
+    cr.appendChild(el('p', null, 'In Door rounds, each town tells Riley how many of its neighbourhoods are theirs, with an Only mine button, and those are marked Yours. It is switched off until territories start; for now everyone sees every neighbourhood. Later, a team manager can assign their own reps.'));
+    $screen.appendChild(cr);
+  }
+  function accountsView() {
+    bar({ title: 'Accounts', sub: 'Who can sign in', back: function () { S.newcode = null; go('tools'); } });
+    dock([], null, function () {});
+    $screen.textContent = '';
+    var tt = el('div', 'toptools');
+    var ad = el('button', null, '+ Add a person'); ad.type = 'button';
+    ad.addEventListener('click', function () { S.people.push(['Jordan K.', 'crew', 'Not yet']); S.newcode = 'Jordan K.'; toastMsg('Sign-in made', 'Jordan K. · crew'); render(); }); tt.appendChild(ad);
+    var sp = el('button', 'alt', 'Show PINs'); sp.type = 'button'; sp.addEventListener('click', function () { toastMsg('Show PINs', 'Asks for your own code first; every reveal is logged'); }); tt.appendChild(sp);
+    $screen.appendChild(tt);
+    if (S.newcode) {
+      var cc = el('div', 'codec'); cc.appendChild(el('div', null, 'New sign-in for ' + S.newcode));
+      cc.appendChild(el('div', 'cc', '482 913')); cc.appendChild(el('div', 'cs', 'Give them this code now. It is shown once; if it is lost, give them a new one. (Example code.)'));
+      $screen.appendChild(cc);
+    }
+    S.people.forEach(function (p) {
+      var r = el('div', 'acrow'); var w = el('div', 'who'); w.appendChild(el('b', null, p[0])); w.appendChild(document.createTextNode('Last in: ' + p[2])); r.appendChild(w);
+      r.appendChild(el('span', 'role' + (p[1] === 'admin' ? ' ad' : ''), p[1] === 'admin' ? 'Admin' : 'Crew'));
+      var l = el('div', 'lnks');
+      [['Change', 'Rename, or switch between crew and admin'], ['New code', 'Their old code stops working at once'], ['Sign out', 'Their phone is signed out on its next tap'], ['Remove', 'Everything they recorded stays']].forEach(function (x) {
+        var b = el('button', x[0] === 'Remove' ? 'dg' : null, x[0]); b.type = 'button'; b.addEventListener('click', function () { toastMsg(x[0], x[1]); }); l.appendChild(b);
+      });
+      r.appendChild(l); $screen.appendChild(r);
+    });
+  }
+  function emailView() {
+    bar({ title: 'Morning email', sub: 'In the office inbox at 6 am, every day', back: function () { go('tools'); } });
+    dock([], null, function () {});
+    $screen.textContent = '';
+    var m = el('div', 'mailp');
+    m.appendChild(el('span', 'subj', '[Sixfold app] Morning, Mon 5 Oct: 3 leads to call · 1 walk today · 2 due'));
+    m.appendChild(document.createTextNode([
+      'Good morning. Here is where things stand, Mon 5 Oct.', '',
+      'LEADS TO CALL (3)', '- Dana Example · Meta ad · Fall Aeration 2026 · (719) 555-0161 · Monument', '- Chris Sample · Linktree · Lawn & turf care · (719) 555-0162 · Woodland Park', '- 1901 Ponderosa Ridge Dr · booked at the door by Riley P.', '',
+      'WALKS TODAY (1)', '- 9:00 am · 1840 Ponderosa Ridge Dr, Woodland Park · booked by Riley P.', '',
+      'CUSTOMERS DUE THIS WEEK (2)', '- OVERDUE since Fri 2 Oct · Avery Sample · monthly lawn · $95', '- Tue 6 Oct · Jordan Example · monthly lawn · $240', '',
+      'YESTERDAY AT THE DOORS (Sun 4 Oct)', '- Riley P.: 18 doors, 7 talked to, 2 quotes booked', '- Morgan D.: 12 doors, 5 talked to, 1 quote booked', '',
+      'Open the app: sixfoldcolorado.com'].join('\n')));
+    $screen.appendChild(m);
+    $screen.appendChild(el('div', 'day', 'Example. The real one is built from the app’s own figures each morning, so it always matches what the app shows.'));
+  }
   /* ---------- sheets ---------- */
   function renderSheet() {
     var old = $device.querySelector('.sheet'); if (old) old.remove();
@@ -869,6 +1119,17 @@ button { font: inherit; color: inherit }
     ['Customers and what is due', 'Every customer with plan, visits and spend. Due this week on top, overdue flagged. Backups save themselves every night.', function () { reset(); go('customers'); }],
     ['One customer, every visit', 'Contact, agreement, the visit history, and Log a visit that moves the next due date on by itself.', function () { reset(); S.cust = 'c1'; S.custBack = 'state'; go('customer'); }]
   ];
+  var TOUR2 = [
+    ['The tools screen', 'Today’s numbers at the top, the field tools, then the office. A reminder appears when nobody has saved a backup for a week.', function () { reset(); go('tools'); }],
+    ['One pipeline for every lead', 'Door bookings and enquiries from the website, Linktree, Meta, Nextdoor and the phone, by stage from To call to Won.', function () { reset(); go('pipe'); }],
+    ['Meta leads in one tap', 'Download the leads from Meta, pick the file, and they land under To call with their answers.', function () { reset(); S.meta = true; go('pipe'); }],
+    ['Won, and a customer', 'A won job becomes a customer with one tap: plan, visits and what is due from then on.', function () { reset(); S.pstage = 'won'; go('pipe'); }],
+    ['Which doors turn into jobs', 'Booking and win rates by fire hazard, lawn size and town, so the crew knock where it pays.', function () { reset(); go('results'); }],
+    ['The team, and the leaderboard', 'Doors, conversations and quotes per person, today, this week and this month. No location tracking.', function () { reset(); go('team'); }],
+    ['Territories', 'Neighbourhoods assigned to people, with progress, and what each person sees.', function () { reset(); go('terr'); }],
+    ['Who can sign in', 'Add a person and their code is shown once; change, re-code, sign out or remove anyone.', function () { reset(); go('accounts'); }],
+    ['The morning email', 'Leads to call, today’s walks, customers due and yesterday’s numbers, in the inbox at 6 am.', function () { reset(); go('email'); }]
+  ];
   var $tour = document.getElementById('tour'), tourAt = -1;
   TOUR.forEach(function (t, i) {
     var b = el('button'); b.type = 'button'; b.appendChild(el('span', 'n', String(i + 1)));
@@ -876,7 +1137,16 @@ button { font: inherit; color: inherit }
     b.addEventListener('click', function () { tourAt = i; t[2](); syncTour(); if (window.innerWidth < 980) $device.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     $tour.appendChild(b);
   });
-  function syncTour() { [].forEach.call($tour.children, function (b, i) { if (i === tourAt) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); }
+  var $tour2 = document.getElementById('tour2');
+  TOUR2.forEach(function (t, i) {
+    var n = TOUR.length + i;
+    var b = el('button'); b.type = 'button'; b.appendChild(el('span', 'n', String(n + 1)));
+    var tx = el('span'); tx.appendChild(el('b', null, t[0])); tx.appendChild(el('span', null, t[1])); b.appendChild(tx);
+    b.addEventListener('click', function () { tourAt = n; t[2](); syncTour(); if (window.innerWidth < 980) $device.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    $tour2.appendChild(b);
+  });
+  function syncTour() { [].forEach.call($tour.children, function (b, i) { if (i === tourAt) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+    [].forEach.call($tour2.children, function (b, i) { if (TOUR.length + i === tourAt) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); }
   render();
 })();
 </script>

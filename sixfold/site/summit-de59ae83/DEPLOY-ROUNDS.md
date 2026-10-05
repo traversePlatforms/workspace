@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ✅ LIVE 2026-10-04 (verified 27/27) — leads, morning email, sign-out fix, aeration wording, smaller jobs. ⏳ Still to confirm: the hourly morning-email cron job (step 10) and the first nightly backup copy; submit.php's Linktree tagging is confirmed only by a real enquiry through the button
+## ✅ LIVE 2026-10-04 (verified 27/27) — leads, morning email, sign-out fix, aeration wording, smaller jobs. ✅ First nightly backup made 2026-10-05 00:04 UTC (sixfold-backup-2026-10-04.json.gz, 2,219 bytes): the server clock is UTC and the cron path is right. Morning-email cron added by Matthew (hourly); first email expected that evening. ⏳ Still to confirm: submit.php's Linktree tagging is confirmed only by a real enquiry through the button
 
 Verified read-only: every public file identical plain and cache-busted (app at both addresses, sw.js, contact page, site.js; quote.html unchanged); Meta import and the digest answer; money.json has the review link and the corrected aeration wording; the contact page carries via=linktree; Pipeline shows Import leads from Meta; the Water line reads "Aeration: water before and after"; morning-email.php not reachable from the web; no page errors. The contact form was not submitted.
 
