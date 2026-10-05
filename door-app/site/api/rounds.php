@@ -1,6 +1,6 @@
 <?php
 /**
- * Sixfold Colorado — door rounds API.  2026-09-29.
+ * Door rounds API (the door app; first install Sixfold Colorado).  2026-09-29.
  *
  * The only thing that serves door data, and the only thing that writes marks.
  * Everything under data/rounds/ is denied by its own .htaccess: this file reads
@@ -67,6 +67,34 @@ function dataDir(): string {
     exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
 define('DATA_DIR', dataDir());
+
+/* ---- the company this install is for (2026-10-04) ----------------------------------------
+ * Matthew: the app is his product and Sixfold is its first user, so nothing about one company is
+ * written into the code. Each install has a company.json beside its door files (DATA_DIR) with
+ * its name, contact details, services, extra-work list, mark, colours and which tools it uses.
+ * Missing keys fall back to the neutral defaults below. Nothing in it is secret: the page asks
+ * for it before anyone signs in (action=company), so it never holds a key, a code or a price. */
+function company(): array {
+    static $c = null;
+    if ($c !== null) return $c;
+    $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
+            'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
+            'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
+            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true], 'links' => []];
+    $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
+    $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
+    $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
+    foreach (['services', 'extraWork'] as $k) $c[$k] = array_values(array_filter((array) $c[$k], fn($p) => is_array($p) && count($p) >= 2 && preg_match('/^[a-z0-9_-]{1,30}$/D', (string) $p[0])));
+    if (!$c['services']) $c['services'] = $def['services'];
+    return $c;
+}
+function feature(string $k): bool { return !empty(company()['features'][$k]); }
+/** service keys, and the label for each */
+function custServices(): array { return array_map(fn($p) => (string) $p[0], company()['services']); }
+function workLabels(): array { $o = []; foreach (company()['extraWork'] as $p) $o[(string) $p[0]] = (string) $p[1]; return $o; }
+function workTags(): array { return array_keys(workLabels()); }
+/** who the app says it is when it asks a public service for data (the weather service wants a contact) */
+function agentHeader(): string { $c = company(); return 'User-Agent: DoorApp/1.0 (' . ($c['email'] ?: ($c['site'] ?: 'no contact set')) . ')'; }
 date_default_timezone_set('America/Denver');   /* review 2026-10-03: the export's date() used the host's zone */
 const COOKIE     = 'sfr';
 const MAX_TRIES  = 8;      // wrong codes per address per window
@@ -529,14 +557,12 @@ function appendLawnFix(string $key, array $row): bool {
  * One door can be several jobs: branches over the roof, gutters full, an irrigation problem.
  * The crew taps what they saw; the whole set is saved each time, last line per door wins, an
  * empty set clears it. About the property, not the owner, so a house sale does not hide it. */
-const WORK_TAGS = ['roof', 'gutters', 'brush', 'deadtree', 'irrigation', 'bare', 'beds'];
-const WORK_LABEL = ['roof' => 'Branches over the roof', 'gutters' => 'Gutters full of debris', 'brush' => 'Brush or junk against the house',
-    'deadtree' => 'Dead or dying trees', 'irrigation' => 'Irrigation problem', 'bare' => 'Bare or patchy lawn', 'beds' => 'Overgrown beds or weeds'];
+/* the list itself is the company's (company.json extraWork): workTags() / workLabels() */
 function loadWork(string $key): array {
     $out = [];
     foreach (logRows('work', $key) as $r) {
         if (!is_array($r) || !isset($r['id'])) continue;
-        $t = array_values(array_intersect((array) ($r['work'] ?? []), WORK_TAGS));
+        $t = array_values(array_intersect((array) ($r['work'] ?? []), workTags()));
         if (!$t) unset($out[$r['id']]);
         else $out[$r['id']] = ['tags' => $t, 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
     }
@@ -628,7 +654,7 @@ function searchIndex(): array {
  * A customer may be tied to a door ('door' = "<town>/<door id>"), which keeps the door's fire, lawn,
  * trees and photos with them and tags the door "Customer" for the crew. Payments, cards and invoices
  * are deliberately not kept here; agreements are linked, not stored. Admin only. */
-const CUST_SERVICES = ['lawn', 'aeration', 'fire', 'landscaping', 'other'];
+/* services are the company's (company.json services): custServices() */
 const CUST_PLANS = ['oneoff', 'monthly', 'yearly', 'custom'];
 const CUST_STATUS = ['active', 'paused', 'ended'];
 function custDir(): string { return dirname(DATA_DIR) . '/customers'; }
@@ -870,6 +896,9 @@ if ($isPost) {
     $raw = file_get_contents('php://input') ?: '';
     $body = (array) (json_decode($raw, true) ?? []);
 }
+
+/* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
+if ($action === 'company') out(['ok' => true, 'company' => company()]);
 
 if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
@@ -1476,7 +1505,7 @@ const ALERT_TOWNS = [
 const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
     'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch'];
 function httpJson(string $url, array $headers = []): ?array {
-    $hdr = array_merge(['User-Agent: SixfoldRounds/1.0 (contact@sixfoldcolorado.com)', 'Accept: application/geo+json, application/json'], $headers);
+    $hdr = array_merge([agentHeader(), 'Accept: application/geo+json, application/json'], $headers);
     if (function_exists('curl_init')) {
         $c = curl_init($url);
         curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => $hdr, CURLOPT_FOLLOWLOCATION => true]);
@@ -1494,7 +1523,7 @@ function httpJsonPlain(string $url, array $hdr): ?array {
 /** several GETs at once (curl_multi); null for any that failed. Falls back to one at a time. */
 function httpJsonMany(array $urls): array {
     if (!function_exists('curl_multi_init')) return array_map(fn($u) => httpJson($u), $urls);
-    $hdr = ['User-Agent: SixfoldRounds/1.0 (contact@sixfoldcolorado.com)', 'Accept: application/geo+json, application/json'];
+    $hdr = [agentHeader(), 'Accept: application/geo+json, application/json'];
     $mh = curl_multi_init(); $hs = [];
     foreach ($urls as $k => $u) {
         $c = curl_init($u);
@@ -1836,7 +1865,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
         foreach ((glob(DATA_DIR . '/photos/*/*/*') ?: []) as $p) $photos[] = 'sixfold-data/rounds/photos/' . substr($p, strlen(DATA_DIR . '/photos/'));
-        $doc = ['backup' => 'Sixfold field tools', 'made' => date('c'), 'by' => $me,
+        $doc = ['backup' => company()['name'] . ' field tools', 'made' => date('c'), 'by' => $me,
                 'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
                 'files' => $files, 'photos' => $photos];
         accountLog(['by' => $me, 'what' => 'backup', 'n' => count($files)]);
@@ -1869,13 +1898,13 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
         if (array_key_exists('phone', $in)) { $f['phone'] = $clean($in['phone'], 40); $dg = preg_replace('/\D/', '', $f['phone']); if ($f['phone'] !== '' && (strlen($dg) < 10 || strlen($dg) > 11)) fail('That phone number does not look right.'); }
         if (array_key_exists('email', $in)) { $f['email'] = $clean($in['email'], 160); if ($f['email'] !== '' && !filter_var($f['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.'); }
         foreach (['address' => 160, 'town' => 60, 'notes' => 2000] as $k => $max) if (array_key_exists($k, $in)) $f[$k] = $clean($in[$k], $max);
-        if (array_key_exists('service', $in)) { $f['service'] = (string) $in['service']; if (!in_array($f['service'], CUST_SERVICES, true)) fail('Pick the service.'); }
+        if (array_key_exists('service', $in)) { $f['service'] = (string) $in['service']; if (!in_array($f['service'], custServices(), true)) fail('Pick the service.'); }
         if (array_key_exists('plan', $in)) { $f['plan'] = (string) $in['plan']; if (!in_array($f['plan'], CUST_PLANS, true)) fail('Pick the plan.'); }
         if (array_key_exists('status', $in)) { $f['status'] = (string) $in['status']; if (!in_array($f['status'], CUST_STATUS, true)) fail('Pick active, paused or ended.'); }
         if (array_key_exists('price', $in)) { $p = $in['price']; if ($p === '' || $p === null) $f['price'] = null; elseif (!is_numeric($p) || $p < 0 || $p > 1000000) fail('The price should be a number of dollars.'); else $f['price'] = round((float) $p, 2); }
         foreach (['start', 'next'] as $k) if (array_key_exists($k, $in)) { $d = (string) $in[$k]; if ($d !== '' && !dateOk($d)) fail('That is not a real date.'); $f[$k] = $d; }
         if (array_key_exists('agreement', $in)) { $u = trim((string) $in['agreement']); if ($u !== '' && !preg_match('#^https://[^\s<>"]{4,500}$#D', $u)) fail('The agreement link should start with https://'); $f['agreement'] = $u; }
-        if ($isNew) $f += ['status' => 'active', 'plan' => 'oneoff', 'service' => 'lawn'];
+        if ($isNew) $f += ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0]];
         return $f;
     };
     $write = function (string $id, array $f) use ($me) {
@@ -1893,14 +1922,20 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
     }
     /* a won door booking or a won lead becomes a customer, carrying what we already know */
     if ($action === 'customerfrom') {
-        $f = ['status' => 'active', 'plan' => 'oneoff', 'service' => 'lawn', 'start' => $today];
+        $f = ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0], 'start' => $today];
         if (!empty($body['lead'])) {
             $lid = (string) $body['lead']; $L = null;
             foreach (readLines(leadsDir() . '/leads.log') as $l) if (($l['id'] ?? '') === $lid) $L = $l;
             if (!$L) fail('No such lead.', 404);
             foreach ($cs as $c) if (($c['lead'] ?? '') === $lid && ($c['status'] ?? 'active') !== 'ended') out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
             $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($L['town'] ?? '', 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
-            if (preg_match('/aerat/i', (string) ($L['need'] ?? ''))) $f['service'] = 'aeration'; elseif (preg_match('/fire/i', (string) ($L['need'] ?? ''))) $f['service'] = 'fire';
+            /* the service whose name the enquiry mentions ("Fire mitigation" -> fire), the most specific if several
+               ("Lawn aeration" -> aeration, as before); else the first one */
+            $bestLen = 0;
+            foreach (company()['services'] as $sv) {
+                $word = substr(strtolower(strtok((string) $sv[1], ' &')), 0, 5);
+                if ($sv[0] !== 'other' && strlen($word) > 3 && strlen($word) > $bestLen && stripos((string) ($L['need'] ?? ''), $word) !== false) { $f['service'] = (string) $sv[0]; $bestLen = strlen($word); }
+            }
         } else {
             $key = (string) ($body['region'] ?? ''); $did = (string) ($body['id'] ?? '');
             $data = loadRegion($key); if (!$data) fail('No such region.', 404);
@@ -1931,7 +1966,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
             out(['ok' => true]);
         }
         $date = (string) ($body['date'] ?? ''); if (!dateOk($date)) fail('Pick the date of the visit.');
-        $service = (string) ($body['service'] ?? ($cs[$cid]['service'] ?? 'lawn')); if (!in_array($service, CUST_SERVICES, true)) fail('Pick the service.');
+        $service = (string) ($body['service'] ?? ($cs[$cid]['service'] ?? custServices()[0])); if (!in_array($service, custServices(), true)) fail('Pick the service.');
         $status = (string) ($body['status'] ?? 'done'); if (!in_array($status, ['done', 'booked'], true)) fail('Done or booked?');
         $price = $body['price'] ?? null; if ($price !== null && $price !== '' && (!is_numeric($price) || $price < 0 || $price > 1000000)) fail('The price should be a number of dollars.');
         if ($vid === '') $vid = 'v' . date('YmdHis') . bin2hex(random_bytes(3));
@@ -1971,8 +2006,8 @@ if ($action === 'work') {
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $tags = $body['work'] ?? [];
-    if (!is_array($tags) || count($tags) > count(WORK_TAGS)) fail('Bad list of work.');
-    foreach ($tags as $t) if (!in_array($t, WORK_TAGS, true)) fail('Unknown kind of work.');
+    if (!is_array($tags) || count($tags) > count(workTags())) fail('Bad list of work.');
+    foreach ($tags as $t) if (!in_array($t, workTags(), true)) fail('Unknown kind of work.');
     $tags = array_values(array_unique($tags));
     if (!appendWork($key, ['id' => $id, 'work' => $tags ?: null, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
@@ -2377,7 +2412,7 @@ if ($action === 'digest') {
         $team[] = ['name' => $p['name'], 'doors' => $d['doors'], 'talked' => $d['doors'] - $d['miss'] - ($d['nosolicit'] ?? 0), 'booked' => $d['booked']];
     }
     usort($team, fn($a, $b) => $b['doors'] <=> $a['doors']);
-    out(['ok' => true, 'today' => $today, 'yesterday' => $yday, 'tomorrow' => $tom, 'leadsNew' => count($new), 'leads' => $newOut,
+    out(['ok' => true, 'company' => company(), 'today' => $today, 'yesterday' => $yday, 'tomorrow' => $tom, 'leadsNew' => count($new), 'leads' => $newOut,
          'walks' => $walks, 'due' => $due, 'team' => $team]);
 }
 
@@ -2403,8 +2438,8 @@ if ($action === 'walkics') {
     $desc = 'Yard walk for a quote. Booked at the door by ' . ($w['by'] ?: 'the crew') . '.';
     if ($p) $desc .= "\nPhone (given at the door): " . $p['phone'];
     if ($n) $desc .= "\nNote: " . mb_substr((string) $n['note'], 0, 300);
-    $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sixfold Colorado//Door rounds//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
-          'UID:walk-' . $key . '-' . $id . '-' . $w['at'] . '@sixfoldcolorado.com',
+    $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//' . str_replace(['/', "\n"], '', company()['name']) . '//Door rounds//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+          'UID:walk-' . $key . '-' . $id . '-' . $w['at'] . '@' . (company()['site'] ?: 'door-app.invalid'),
           'DTSTAMP:' . (new DateTime('now', $utc))->format('Ymd\THis\Z')];
     if ($w['time'] !== '') {
         $st = new DateTime($w['date'] . ' ' . $w['time'], $tz);
@@ -2804,18 +2839,18 @@ if ($action === 'jobber') {
             $owner = trim((string) ($d['owner'] ?? ''));
             if (preg_match('/^unavailable$/i', $owner)) $owner = '';
             $isCo = (bool) preg_match('/\b(LLC|L\.L\.C|INC|CORP|CORPORATION|COMPANY|LTD|LLLP|LP|PARTNERSHIP)\b/i', $owner);
-            $noteBits = ['Booked at the door by ' . ($m['by'] ?: 'crew') . ' on ' . date('M j, Y', (int) $m['at']) . ' (Sixfold door app).'];
+            $noteBits = ['Booked at the door by ' . ($m['by'] ?: 'crew') . ' on ' . date('M j, Y', (int) $m['at']) . ' (' . company()['short'] . ' door app).'];
             if (isset($fireName[$f])) $noteBits[] = 'Fire hazard: ' . $fireName[$f] . ' (USFS 2023, neighbourhood scale).';
             if ($lv && isset($lawnName[$lv])) $noteBits[] = 'Lawn: ' . $lawnName[$lv] . '.';
-            if ($wk) $noteBits[] = 'Extra work seen: ' . implode('; ', array_map(fn($t) => WORK_LABEL[$t] ?? $t, $wk)) . '.';
+            if ($wk) $noteBits[] = 'Extra work seen: ' . implode('; ', array_map(fn($t) => (workLabels()[$t] ?? $t), $wk)) . '.';
             if (!empty($d['val'])) $noteBits[] = 'County value: $' . number_format((int) $d['val']) . '.';
             if ($p && ($p['source'] ?? '') !== 'door') $noteBits[] = 'Phone was looked up, not given: check the Do Not Call lists before calling.';
             if ($n) $noteBits[] = 'Door note: ' . $n['note'];
             if ($rs) $noteBits[] = $rs['result'] === 'won' ? 'Won' . (!empty($rs['value']) ? ' at $' . number_format((int) $rs['value']) : '') . '.' : 'Lost' . (!empty($rs['why']) ? ': ' . (LOST_LABEL[$rs['why']] ?? $rs['why']) : '') . '.';
-            $tags = ['Sixfold door app', (string) ($r['label'] ?? $r['key'])];
+            $tags = [company()['short'] . ' door app', (string) ($r['label'] ?? $r['key'])];
             if (isset($fireName[$f])) $tags[] = 'Fire ' . $fireName[$f];
             if ($lv === 'L' || $lv === 'M') $tags[] = ucfirst($lawnName[$lv]) . ' lawn';
-            foreach ($wk as $t) $tags[] = WORK_LABEL[$t] ?? $t;
+            foreach ($wk as $t) $tags[] = (workLabels()[$t] ?? $t);
             fputcsv($fh, array_map('csvSafe', [$owner, $isCo ? 'TRUE' : 'FALSE', $p['phone'] ?? '', $em['email'] ?? '',
                 (string) $d['address'], (string) ($r['label'] ?? ''), 'CO', 'United States', implode(' ', $noteBits), implode(', ', $tags), 'Other']), ',', '"', '');
         }
@@ -2908,7 +2943,7 @@ if ($action === 'report' || $action === 'export') {
                               $d['trees']['z1'] ?? '', $d['trees']['z2'] ?? '', $d['trees']['z3'] ?? '', $d['trees']['h'] ?? '',
                               isset($d['trees']) ? ($d['trees']['src'] === 'lidar' ? 'LiDAR ' . ($d['trees']['yr'] ?? '') : 'canopy map') : '',
                               $em['email'] ?? '', $em['by'] ?? '', $em ? date('Y-m-d', (int) $em['at']) : '', $ph ?: '', $d['os'] ?? '', $d['oa'] ?? '', $d['val'] ?? '',
-                              $wk ? implode('; ', array_map(fn($t) => WORK_LABEL[$t] ?? $t, $wk['tags'])) : '',
+                              $wk ? implode('; ', array_map(fn($t) => (workLabels()[$t] ?? $t), $wk['tags'])) : '',
                               $rs['result'] ?? '', $rs['value'] ?? '', $rs ? (LOST_LABEL[$rs['why']] ?? '') : '',
                               $fc ? (count(array_filter($fc['items'], fn($v) => $v === 'ok')) . ' done, ' . count(array_filter($fc['items'], fn($v) => $v === 'fix')) . ' to fix (' . date('Y-m-d', (int) $fc['at']) . ')') : '',
                               ($wk2 = walkFor($m, $walks[$d['id']] ?? null)) ? trim($wk2['date'] . ' ' . $wk2['time']) : '']), ',', '"', '');

@@ -36,7 +36,8 @@ foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, 'sixfold-data/lead
 foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
 $photos = [];
 foreach ((glob($rounds . '/photos/*/*/*') ?: []) as $p) $photos[] = 'sixfold-data/rounds/photos/' . substr($p, strlen($rounds . '/photos/'));
-$doc = ['backup' => 'Sixfold field tools', 'made' => date('c'), 'by' => 'nightly',
+$coName = (string) ((json_decode((string) @file_get_contents($rounds . '/company.json'), true) ?: [])['name'] ?? 'Door app');
+$doc = ['backup' => $coName . ' field tools', 'made' => date('c'), 'by' => 'nightly',
         'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
         'files' => $files, 'photos' => $photos];
 $json = json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);

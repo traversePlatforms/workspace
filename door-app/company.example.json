@@ -1,0 +1,22 @@
+{
+  "_about": "An EXAMPLE install's settings (a made-up roofing company). Copy to company.json beside the door files (on the host: sixfold-data/rounds/company.json for Sixfold) and fill in. Nothing here is secret: the page reads it before sign-in, so never put a key, a code or a price in it. Leave a key out to use the default. Sixfold's real one: site/data/rounds/company.json.",
+  "name": "Example Roofing Co",
+  "short": "Example Roofing",
+  "tagline": "Roofs and storm repair",
+  "phone": "(555) 010-0000",
+  "email": "office@example.com",
+  "site": "example.com",
+  "appUrl": "https://example.com/app/",
+  "visit": "roof inspection",
+  "visitShort": "Inspection",
+  "logo": null,
+  "colors": {
+    "light": { "--ember": "#1E5AA8", "--ember-ink": "#174A8C", "--accent": "#1E5AA8" },
+    "dark": { "--ember": "#6FA3E8", "--ember-ink": "#8DB6EE", "--accent": "#8DB6EE" }
+  },
+  "services": [["replacement", "Roof replacement"], ["repair", "Roof repair"], ["gutters", "Gutters"], ["inspection", "Inspection only"], ["other", "Other"]],
+  "leadNeeds": ["Hail or storm damage", "Roof replacement", "Leak or repair", "Gutters", "Question"],
+  "extraWork": [["hail", "Hail damage visible"], ["shingles", "Missing or lifted shingles"], ["gutters", "Dented or loose gutters"], ["vents", "Damaged vents or flashing"], ["siding", "Damaged siding or windows"], ["age", "Roof looks near the end of its life"]],
+  "features": { "quote": false, "communities": false, "firecheck": false, "skiptrace": true },
+  "links": { "googleReview": "" }
+}

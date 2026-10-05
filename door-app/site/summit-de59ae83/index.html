@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Door rounds — Sixfold Colorado</title>
+<title>Door rounds</title>
 <!-- home-screen app (2026-10-02): add it once from the browser's share menu and it
-     opens full screen with the Sixfold icon. No service worker: the page always
+     opens full screen with the company's icon (manifest.json and the icons are each install's own). No service worker: the page always
      loads fresh, so an upload is never hidden behind a stale offline copy. -->
 <meta name="theme-color" content="#1F2A25">
 <meta name="mobile-web-app-capable" content="yes">
@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" media="print" onload="this.media='all'">
 <!--
-  Sixfold Colorado — door rounds, crew page. 2026-09-29.
+  Door rounds, crew page (the door app; first install Sixfold Colorado). 2026-09-29.
 
   Read on a phone, in a driveway, often in sun, sometimes with gloves on. So:
   big addresses, big tap targets, light ground by default, and nothing that
@@ -1055,10 +1055,43 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <!-- the Ridge mark, flat, as used in the public site's header -->
-  <symbol id="ridge" viewBox="0 0 100 96"><path fill="currentColor" fill-rule="evenodd" d="M18 84L18.3 83.4L18.3 84L18 84ZM25.7 83.1L28.65 83.1L28.26 84L25.7 84L25.7 83.1ZM28.73 62.53L36 48L40.23 56.46L33.11 72.83L29.17 68.1L32.53 68.1L28.73 62.53ZM30.86 75.6L31.91 75.6L31.59 76.33L30.86 75.6ZM30 84L30.39 83.1L38.36 83.1L32.81 77.54L33.65 75.6L35.42 75.6L34.26 74.21L50 38L55.2 49.96L42.29 84L30 84ZM44 84L66 26L70.71 38.42L58.34 84L44 84ZM60 84L79 14L98 84L60 84ZM9.5 81.5L17 74L12 74L18.25 66.5L14.5 66.5L22 55.5L29.5 66.5L25.75 66.5L32 74L27 74L34.5 81.5L24.1 81.5L24.1 84.5L19.9 84.5L19.9 81.5L9.5 81.5ZM4 86L96 86L96 91L4 91Z"/></symbol>
+  <!-- the company's mark (company.json logo), drawn by paintCompany below; a monogram if it has none -->
+  <symbol id="mark" viewBox="0 0 100 100"></symbol>
 </svg>
-<div class="splash" id="splash" aria-hidden="true"><svg viewBox="0 0 100 96"><use href="#ridge"/></svg><b>Sixfold</b></div>
+<div class="splash" id="splash" aria-hidden="true"><svg viewBox="0 0 100 96"><use href="#mark"/></svg><b id="splashName"></b></div>
+<script>
+/* ---- the company (2026-10-04) ----
+   Matthew: the app is his product and Sixfold is its first user, so the name, mark and colours are
+   the install's (company.json, from action=company), never the code's. Painted here, before the app
+   starts, from this device's last copy, so the splash is right with no signal; the app paints again
+   when a fresh copy arrives. Colours are optional overrides of the tokens above. */
+function paintCompany(c) {
+  c = c || {};
+  var sym = document.getElementById('mark'), lg = c.logo;
+  if (sym) {
+    if (lg && lg.path && lg.viewBox) {
+      sym.setAttribute('viewBox', String(lg.viewBox).replace(/[^0-9 .\-]/g, ''));
+      sym.innerHTML = '<path fill="currentColor" fill-rule="evenodd" d="' + String(lg.path).replace(/[^0-9A-Za-z .,\-]/g, '') + '"/>';
+    } else {
+      sym.setAttribute('viewBox', '0 0 100 100');
+      sym.innerHTML = '<circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><text x="50" y="67" text-anchor="middle" font-size="50" font-weight="700" font-family="system-ui,sans-serif" fill="currentColor"></text>';
+      sym.querySelector('text').textContent = (String(c.short || 'D').trim().charAt(0) || 'D').toUpperCase();
+    }
+  }
+  var n = document.getElementById('splashName'); if (n) n.textContent = c.short || '';
+  document.title = c.name ? 'Door rounds — ' + c.name : 'Door rounds';
+  var st = document.getElementById('coColors');
+  if (!st) { st = document.createElement('style'); st.id = 'coColors'; document.head.appendChild(st); }
+  var col = c.colors || {};
+  var block = function (sel, o) {
+    var t = ''; for (var k in o) if (/^--[a-z0-9-]{1,30}$/.test(k) && /^[#a-zA-Z0-9(),.% -]{1,60}$/.test(String(o[k]))) t += k + ':' + o[k] + ';';
+    return t ? sel + '{' + t + '}' : '';
+  };
+  var dk = block(':root:not([data-theme="light"])', col.dark || {});
+  st.textContent = block(':root', col.light || {}) + (dk ? '@media (prefers-color-scheme: dark){' + dk + '}' + block(':root[data-theme="dark"]', col.dark || {}) : '');
+}
+try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')); } catch (e) { paintCompany(null); }
+</script>
 <header class="appbar" id="hdr" hidden><div class="barin" id="barin"></div></header>
 <div class="offbar" id="offbar" hidden role="status">Slow or no signal. Showing what this device saved; marks and notes save here and send when signal is back.</div>
 <div class="wrap">
@@ -1176,6 +1209,30 @@
     try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage('clear-api'); } catch (e) {}
     try { if (window.caches) return caches.delete('rounds-api').catch(function () {}); } catch (e) {}
     return Promise.resolve();
+  }
+  /* ---- the company this install is for (company.json; see paintCompany at the top) ---- */
+  var CO_DEFAULT = { name: 'Door App', short: 'Door App', tagline: '', phone: '', email: '', site: '', appUrl: '', visit: 'visit', visitShort: 'Visit',
+                     logo: null, colors: {}, services: [['job', 'Job'], ['other', 'Other']], leadNeeds: ['A quote', 'Question'], extraWork: [], features: {}, links: {} };
+  var CO = null, CO_SAVED = false;
+  try { CO = JSON.parse(localStorage.getItem('doorapp.company') || 'null'); CO_SAVED = !!(CO && CO.name); } catch (e) {}
+  function feat(k) { return !!(CO && CO.features && CO.features[k]); }
+  function VW() { return (CO && CO.visitShort) || 'Visit'; }            /* "Walk", "Inspection" */
+  function vw() { return VW().toLowerCase(); }
+  function setCompany(c) {
+    CO = Object.assign({}, CO_DEFAULT, c || {});
+    if (!Array.isArray(CO.services) || !CO.services.length) CO.services = CO_DEFAULT.services;
+    if (!Array.isArray(CO.extraWork)) CO.extraWork = [];
+    if (!Array.isArray(CO.leadNeeds)) CO.leadNeeds = CO_DEFAULT.leadNeeds;
+    CO.features = CO.features || {}; CO.links = CO.links || {};
+    SERVICE_L = {}; CO.services.forEach(function (p) { SERVICE_L[p[0]] = p[1]; });
+    LEAD_NEED = CO.leadNeeds.slice();
+    WORK = CO.extraWork.map(function (p) { return [p[0], p[1]]; }); WORK_LABEL = {}; WORK.forEach(function (w) { WORK_LABEL[w[0]] = w[1]; });
+    LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', VW() + ' booked'], ['quoted', 'Quoted'], ['won', 'Won'], ['lost', 'Lost']];
+    PIPE_ST = [['call', 'To call'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent'], ['won', 'Won'], ['lost', 'Lost']];
+    CAP = [['walk', 'cal', 'Book the ' + vw()], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'], ['note', 'note', 'Note']];
+    if (WORK.length) CAP.push(['work', 'list', 'Extra work']);
+    if (feat('firecheck')) CAP.push(['fc', 'flame', 'Fire check']);
+    paintCompany(CO);
   }
   function api(action, opts) {
     opts = opts || {};
@@ -1325,7 +1382,7 @@
   }
   function ridge(cls) {
     var w = document.createElement('span');
-    w.innerHTML = '<svg class="' + cls + '" viewBox="0 0 100 96" aria-hidden="true" focusable="false"><use href="#ridge"/></svg>';
+    w.innerHTML = '<svg class="' + cls + '" viewBox="0 0 100 96" aria-hidden="true" focusable="false"><use href="#mark"/></svg>';
     return w.firstChild;
   }
   function reduced() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
@@ -1487,7 +1544,7 @@
     var box = q('div', 'signin'), inn = q('div', 'in');
     box.appendChild(inn);
     inn.appendChild(ridge('mk'));
-    inn.appendChild(q('h1', null, 'Sixfold'));
+    inn.appendChild(q('h1', null, CO.short));
     inn.appendChild(q('div', 'sub', 'Door rounds'));
     inn.appendChild(q('div', 'prompt', 'Enter your six-digit code'));
     var boxes = q('div', 'boxes');
@@ -1560,13 +1617,13 @@
       return;
     }
     var b = q('button', 'instbtn'); b.type = 'button'; b.appendChild(ico('mobile'));
-    b.appendChild(q('span', null, kind === 'ios' ? 'Add Sixfold to your Home Screen' : 'Install the Sixfold app'));
+    b.appendChild(q('span', null, kind === 'ios' ? 'Add ' + CO.short + ' to your Home Screen' : 'Install the ' + CO.short + ' app'));
     var steps = null;
     var STEPS = kind === 'ios'
-      ? ['Open this page in Safari.', 'Tap Share: the square with an arrow, at the bottom of the screen (top right on an iPad).', 'Scroll down and tap Add to Home Screen, then Add.', 'Open Sixfold from the new icon and enter your code once more.']
+      ? ['Open this page in Safari.', 'Tap Share: the square with an arrow, at the bottom of the screen (top right on an iPad).', 'Scroll down and tap Add to Home Screen, then Add.', 'Open ' + CO.short + ' from the new icon and enter your code once more.']
       : kind === 'android'
-        ? ['In Chrome, tap ⋮ at the top right.', 'Tap Install app (or Add to Home screen), then Install.', 'Open Sixfold from the new icon.']
-        : ['In Chrome or Edge, click the install button at the right of the address bar.', 'Click Install.', 'Open Sixfold from the new icon or your Start menu.'];
+        ? ['In Chrome, tap ⋮ at the top right.', 'Tap Install app (or Add to Home screen), then Install.', 'Open ' + CO.short + ' from the new icon.']
+        : ['In Chrome or Edge, click the install button at the right of the address bar.', 'Click Install.', 'Open ' + CO.short + ' from the new icon or your Start menu.'];
     var showSteps = function () {
       if (steps) { steps.remove(); steps = null; return; }
       steps = q('ol', 'insteps'); STEPS.forEach(function (t) { steps.appendChild(q('li', null, t)); }); host.appendChild(steps);
@@ -1789,7 +1846,7 @@
     S.signin = null; S.screen = 'tools';
     S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
     foot.hidden = true; setDock(null);
-    setBar('tools', { title: 'Sixfold', sub: 'Field tools' });
+    setBar('tools', { title: CO.short, sub: 'Field tools' });
     view.textContent = '';
     var box = q('div', 'choose');
     /* the greeting, with today's numbers filled in when they land */
@@ -1845,18 +1902,18 @@
       api('leads', { params: { count: 1 } }).then(function (j) {
         var tg = pt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' · Admin only';
       }).catch(function () {});
-      var qt = tile('a', 'calc', 'Quote builder', 'Price a job from the walk.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html?v=' + QUOTE_V);
-      if (S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
+      var qt = feat('quote') ? tile('a', 'calc', 'Quote builder', 'Price a job from the ' + vw() + '.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html?v=' + QUOTE_V) : null;
+      if (qt && S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
       grp('Office', [pt,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView),
         qt,
-        tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView),
+        feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null,
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         tile('button', 'users', 'Team stats', "Everyone's numbers.", 'Admin only', teamView),
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
-        tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView)]);
+        feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null].filter(Boolean));
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     /* the look, kept on this device */
@@ -2469,8 +2526,8 @@
      them); everything else is added by hand. Shown on the Pipeline beside the door bookings.
      Admin only. Names, numbers and messages are drawn with textContent. */
   var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other' };
-  var LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', 'Walk booked'], ['quoted', 'Quoted'], ['won', 'Won'], ['lost', 'Lost']];
-  var LEAD_NEED = ['Lawn & turf care', 'Fire mitigation', 'Land clearing', 'Landscaping', 'More than one service', 'Question'];
+  var LEAD_ST = [];     /* setCompany(): the 'walk' step is named after the company's visit */
+  var LEAD_NEED = [];   /* setCompany(): company.json leadNeeds */
   function ago(ts) {
     var m = Math.max(0, Math.round((Date.now() / 1000 - ts) / 60));
     if (m < 60) return m <= 1 ? 'just now' : m + ' min ago';
@@ -2995,9 +3052,7 @@
   }
   /* ---- extra work spotted at the door (2026-10-03) ----
      One door, several jobs: tap what you saw. Saved with no signal too, like a lawn answer. */
-  var WORK = [['roof', 'Branches over the roof'], ['gutters', 'Gutters full of debris'], ['brush', 'Brush or junk against the house'],
-              ['deadtree', 'Dead or dying trees'], ['irrigation', 'Irrigation problem'], ['bare', 'Bare or patchy lawn'], ['beds', 'Overgrown beds or weeds']];
-  var WORK_LABEL = {}; WORK.forEach(function (w) { WORK_LABEL[w[0]] = w[1]; });
+  var WORK = [], WORK_LABEL = {};   /* setCompany(): company.json extraWork */
   function workChips(w, withSrc) {
     var box = q('div', 'wk');
     box.appendChild(q('span', 'wl', 'Extra work'));
@@ -3183,8 +3238,7 @@
   }
   function clearEdits() { S.editPhone = null; S.editEmail = null; S.editNote = null; S.editWork = null; S.editFc = null; S.editWalk = null; }
   function capOpen(d) { return S.capture === d.id || [S.editPhone, S.editEmail, S.editNote, S.editWork, S.editFc, S.editWalk].indexOf(d.id) >= 0; }
-  var CAP = [['walk', 'cal', 'Book the walk'], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'],
-             ['note', 'note', 'Note'], ['work', 'list', 'Extra work'], ['fc', 'flame', 'Fire check']];
+  var CAP = [];   /* setCompany(): Extra work only with a list, Fire check only where the company uses it */
   /* everything a person might tell you, one tap each; a tick on what is already saved */
   function capturePanel(d, ctx, inPrompt) {
     var box = q('div', 'cap');
@@ -3783,7 +3837,7 @@
     c.appendChild(q('div', 'cc', nc.code.slice(0, 3) + ' ' + nc.code.slice(3)));
     c.appendChild(q('div', 'cs', 'Give them this code now. It is shown once; if it is lost, give them a new one.' + (nc.fresh ? '' : ' Their old code no longer works.')));
     var row = q('div', 'ca');
-    var tx = q('a', 'lnk', 'Text it'); tx.href = 'sms:?&body=' + encodeURIComponent('Your sign-in code for the Sixfold door app is ' + nc.code + '. Keep it private.'); row.appendChild(tx);
+    var tx = q('a', 'lnk', 'Text it'); tx.href = 'sms:?&body=' + encodeURIComponent('Your sign-in code for the ' + CO.short + ' door app is ' + nc.code + '. Keep it private.'); row.appendChild(tx);
     var cp = q('button', 'lnk', 'Copy'); cp.type = 'button';
     cp.addEventListener('click', function () { try { navigator.clipboard.writeText(nc.code).then(function () { toast('Copied', nc.name, null); }); } catch (e) {} });
     row.appendChild(cp);
@@ -3889,7 +3943,7 @@
      Matthew: a CRM inside the app. Every customer with contact, plan, visits, spend and the next visit
      due; Due this week at the top. A won job or a won lead becomes a customer in one tap. Each change is
      added to a log (never overwritten), and "Download a full backup" saves every log the app keeps. */
-  var SERVICE_L = { lawn: 'Lawn care', aeration: 'Aeration', fire: 'Fire mitigation', landscaping: 'Landscaping', other: 'Other' };
+  var SERVICE_L = {};   /* setCompany(): company.json services */
   var PLAN_L = { oneoff: 'One-off job', monthly: 'Monthly plan', yearly: 'Yearly plan', custom: 'Custom schedule' };
   var STATUS_L = { active: 'Active', paused: 'Paused', ended: 'Ended' };
   function custTagText(c) { return 'Customer · ' + (c.plan === 'monthly' ? 'monthly ' : c.plan === 'yearly' ? 'yearly ' : '') + (SERVICE_L[c.service] || 'job').toLowerCase(); }
@@ -4047,7 +4101,7 @@
     field('email', 'Email', 'email', v.email, { maxLength: 160 });
     field('address', 'Address', 'text', v.address, { maxLength: 160 });
     field('town', 'Town', 'text', v.town, { maxLength: 60 });
-    pick('service', 'Service', SERVICE_L, v.service || 'lawn');
+    pick('service', 'Service', SERVICE_L, v.service || CO.services[0][0]);
     pick('plan', 'Plan', PLAN_L, v.plan || 'oneoff');
     field('price', 'Price per visit or plan ($)', 'number', v.price, { min: 0, step: 1, inputMode: 'decimal' });
     field('start', 'Customer since', 'date', v.start || '');
@@ -4115,9 +4169,9 @@
     if (c.email) { var a3 = q('a'); a3.href = 'mailto:' + c.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(c.email)); ct.appendChild(a3); }
     /* ask for a Google review (2026-10-04): the same words to every customer, sent from the admin's own phone.
        Shown once the review link is in money.json (links.googleReview); asked of everyone, never only the happy ones. */
-    var rv = S.money && S.money.links && S.money.links.googleReview;
+    var rv = (CO.links && CO.links.googleReview) || (S.money && S.money.links && S.money.links.googleReview);
     if (rv && /^https:\/\//.test(rv) && tel.length >= 10) {
-      var a6 = q('a'); a6.href = 'sms:' + tel + '?&body=' + encodeURIComponent('Hi ' + greetName(c.name) + ', thanks for having Sixfold Colorado out. If you have a minute, a Google review helps others find us: ' + rv);
+      var a6 = q('a'); a6.href = 'sms:' + tel + '?&body=' + encodeURIComponent('Hi ' + greetName(c.name) + ', thanks for having ' + CO.name + ' out. If you have a minute, a Google review helps others find us: ' + rv);
       a6.appendChild(ico('chat', 2.2)); a6.appendChild(document.createTextNode('Ask for a review')); ct.appendChild(a6);
     }
     if (c.agreement) { var a4 = q('a'); a4.href = c.agreement; a4.target = '_blank'; a4.rel = 'noopener noreferrer'; a4.appendChild(ico('clip', 2.2)); a4.appendChild(document.createTextNode('Agreement')); ct.appendChild(a4); }
@@ -4193,7 +4247,7 @@
      referral) on one screen, by stage: To call, Walk booked, Quote sent, Won, Lost; a chip per
      source. The data stays where it is: a door booking keeps its door (fire, lawn, trees, walk),
      a lead keeps its contact details. Each keeps its own card. Admin only, like both screens. */
-  var PIPE_ST = [['call', 'To call'], ['walk', 'Walk booked'], ['quoted', 'Quote sent'], ['won', 'Won'], ['lost', 'Lost']];
+  var PIPE_ST = [];   /* setCompany() */
   function pipeStage(it) {
     if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
     var st = it.x.status || 'new'; return st === 'new' || st === 'contacted' ? 'call' : st;
@@ -4442,19 +4496,19 @@
   function titleAddr(a) { return String(a || '').toLowerCase().replace(/\b([a-z])/g, function (c) { return c.toUpperCase(); }); }
   function walkText(d) {
     var first = String(S.me || '').split(' ')[0] || 'the crew';
-    return 'Hi, this is ' + first + ' with Sixfold Colorado. Your yard walk at ' + titleAddr(d.address) + ' is booked for ' + longDay(d.walk.date) +
-      (d.walk.time ? ' at ' + t12(d.walk.time) : '; we will call to agree a time') + '. To change it, call (303) 915-1045.';
+    return 'Hi, this is ' + first + ' with ' + CO.name + '. Your ' + CO.visit + ' at ' + titleAddr(d.address) + ' is booked for ' + longDay(d.walk.date) +
+      (d.walk.time ? ' at ' + t12(d.walk.time) : '; we will call to agree a time') + '. To change it, ' + (CO.phone ? 'call ' + CO.phone : 'reply to this text') + '.';
   }
   function walkBlock(d, ctx) {
     if (S.editWalk === d.id) return walkForm(d, ctx);
     if (!d.walk) {
       var bb = q('button', 'walkb'); bb.type = 'button';
-      bb.appendChild(ico('cal', 2.2)); bb.appendChild(document.createTextNode('Book the walk'));
+      bb.appendChild(ico('cal', 2.2)); bb.appendChild(document.createTextNode('Book the ' + vw()));
       bb.addEventListener('click', function () { S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; S.editPhone = null; S.editNote = null; S.editEmail = null; S.editWork = null; S.editFc = null; ctx.redraw(); });
       return bb;
     }
     var box = q('div', 'wk walkl');
-    box.appendChild(q('span', 'wl', 'Walk'));
+    box.appendChild(q('span', 'wl', VW()));
     box.appendChild(q('span', 'wt walkt', fmtWalk(d.walk)));
     box.appendChild(q('span', 'src', 'Booked by ' + (d.walk.by || 'crew') + (d.walk.pending ? ' · not sent yet' : '')));
     var ch = q('button', 'lnk', 'Change'); ch.type = 'button';
@@ -4475,10 +4529,10 @@
   }
   function walkForm(d, ctx) {
     var f = q('div', 'wkf walkf');
-    f.appendChild(q('div', 'lq', d.walk ? 'Change the walk' : 'Book the walk'));
+    f.appendChild(q('div', 'lq', (d.walk ? 'Change the ' : 'Book the ') + vw()));
     f.appendChild(q('div', 'lsub', 'When can we walk the property? Pick a day, and a time if you agreed one.'));
     var chips = q('div', 'wchips');
-    var di = q('input'); di.type = 'date'; di.min = todayISO(); di.max = isoMinus(todayISO(), -180); di.value = S.walkDate || ''; di.setAttribute('aria-label', 'Day of the walk');
+    var di = q('input'); di.type = 'date'; di.min = todayISO(); di.max = isoMinus(todayISO(), -180); di.value = S.walkDate || ''; di.setAttribute('aria-label', 'Day of the ' + vw());
     [1, 2, 3].forEach(function (n) {
       var iso = isoMinus(todayISO(), -n);
       var b = q('button', null, n === 1 ? 'Tomorrow' : dayName(iso)); b.type = 'button';
@@ -4488,7 +4542,7 @@
     });
     f.appendChild(chips);
     var row = q('div', 'wrow');
-    var ts = q('select'); ts.setAttribute('aria-label', 'Time of the walk');
+    var ts = q('select'); ts.setAttribute('aria-label', 'Time of the ' + vw());
     var opts = [['', 'Time to agree']];
     for (var h = 7; h <= 19; h++) ['00', '30'].forEach(function (mm) { var v = (h < 10 ? '0' : '') + h + ':' + mm; opts.push([v, t12(v)]); });
     if (S.walkTime && !opts.some(function (o) { return o[0] === S.walkTime; })) opts.push([S.walkTime, t12(S.walkTime)]);
@@ -4507,7 +4561,7 @@
         day.textContent = '';
         var others = (j && j.ok ? j.walks : []).filter(function (w) { return w.id !== d.id; });
         if (!j || !j.ok) { day.textContent = 'Could not check the other walks that day.'; return; }
-        if (!others.length) { day.textContent = 'No other walks booked ' + dayName(v) + '.'; return; }
+        if (!others.length) { day.textContent = 'No other ' + vw() + 's booked ' + dayName(v) + '.'; return; }
         day.appendChild(q('b', null, 'Already booked ' + dayName(v) + ':'));
         others.forEach(function (w) { day.appendChild(q('span', null, (w.time ? t12(w.time) : 'Time to agree') + ' · ' + w.town + ' · ' + w.address)); });
       }).catch(function () { if (di.value === v) day.textContent = 'The other walks that day show when there is signal.'; });
@@ -4515,7 +4569,7 @@
     di.addEventListener('change', function () { S.walkDate = di.value; [].forEach.call(chips.children, function (x) { x.setAttribute('aria-pressed', 'false'); }); showDay(); });
     if (di.value) showDay();
     var r2 = q('div', 'row2');
-    var sv = q('button', 'save', 'Save the walk'); sv.type = 'button';
+    var sv = q('button', 'save', 'Save the ' + vw()); sv.type = 'button';
     sv.addEventListener('click', function () {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(di.value)) { err.textContent = 'Pick a day.'; di.focus(); return; }
       saveWalk(d, ctx, di.value, ts.value);
@@ -4524,7 +4578,7 @@
     cx.addEventListener('click', function () { S.editWalk = null; ctx.redraw(); });
     r2.appendChild(sv); r2.appendChild(cx);
     if (d.walk) {
-      var rm = q('button', null, 'No walk'); rm.type = 'button';
+      var rm = q('button', null, 'No ' + vw()); rm.type = 'button';
       rm.addEventListener('click', function () { saveWalk(d, ctx, null, ''); });
       r2.appendChild(rm);
     }
@@ -4556,7 +4610,7 @@
       if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
       dropQueued('walk', ctx.region, d.id);
       after(false);
-      toast(date ? 'Walk booked' : 'Walk taken off', date ? d.address + ' · ' + fmtWalk(d.walk) : d.address, null);
+      toast(date ? VW() + ' booked' : VW() + ' taken off', date ? d.address + ' · ' + fmtWalk(d.walk) : d.address, null);
     }).catch(function () { if (enqueueSave('walk', body)) after(true); });
   }
   /* the walks coming up, so the week can be planned by town */
@@ -4565,7 +4619,7 @@
     var up = list.filter(function (x) { return !x.result && x.walk && x.walk.date >= today; })
       .sort(function (a, b) { return (a.walk.date + (a.walk.time || '99')) < (b.walk.date + (b.walk.time || '99')) ? -1 : 1; });
     var none = list.filter(function (x) { return !x.result && !x.walk; }).length;
-    box.appendChild(q('div', 'wl', 'Walks coming up'));
+    box.appendChild(q('div', 'wl', VW() + 's coming up'));
     if (!up.length) box.appendChild(q('div', 'wur soft', 'None booked yet.'));
     up.forEach(function (x) {
       var r = q('div', 'wur'); r.appendChild(q('b', null, fmtWalk(x.walk))); r.appendChild(q('span', null, x.address + ' · ' + x.town)); box.appendChild(r);
@@ -4582,7 +4636,7 @@
     bar.appendChild(cl); bar.appendChild(pr); ov.appendChild(bar);
     var pg = q('div', 'frpage');
     var hd = q('div', 'frhead');
-    hd.appendChild(q('div', 'frbrand', 'Sixfold Colorado \u00b7 Lawn, Land & Fire'));
+    hd.appendChild(q('div', 'frbrand', CO.name + (CO.tagline ? ' \u00b7 ' + CO.tagline : '')));
     hd.appendChild(q('h1', null, 'Home fire check'));
     hd.appendChild(q('div', 'fraddr', d.address));
     var dt = new Date(last.at * 1000);
@@ -4621,7 +4675,7 @@
     us.appendChild(q('li', null, 'Insurance: since 1 July 2026, Colorado law (HB25-1182) requires insurers that use wildfire risk scores to tell you your score, give credit for documented mitigation, and let you appeal. Send them this report with photos and receipts and ask for your score to be reviewed. Discounts vary by insurer; the law sets no percentage.'));
     us.appendChild(q('li', null, 'Tax credit: Colorado\u2019s wildfire mitigation credit covers what you pay a contractor for qualifying work, up to $1,000 for tax years 2025 and 2026 and up to $2,000 from 2027, depending on your income and tax. You claim it on form DR 0104CR with the receipts. Your accountant can confirm how it applies to you.'));
     pg.appendChild(us);
-    pg.appendChild(q('p', 'frfoot', 'A visual check by Sixfold Colorado against the Colorado State Forest Service Home Ignition Zone guide (2021). It is not an inspection, a certification or a guarantee. Questions: (303) 915-1045 \u00b7 Contact@SixfoldColorado.com'));
+    pg.appendChild(q('p', 'frfoot', 'A visual check by ' + CO.name + ' against the Colorado State Forest Service Home Ignition Zone guide (2021). It is not an inspection, a certification or a guarantee.' + ([CO.phone, CO.email].filter(Boolean).length ? ' Questions: ' + [CO.phone, CO.email].filter(Boolean).join(' \u00b7 ') : '')));
     ov.appendChild(pg);
     document.body.appendChild(ov); document.body.classList.add('printing');
   }
@@ -4812,11 +4866,11 @@
     else if (kind === 'android') steps = [
       'Phone Settings → Location: turn it On.',
       'Settings → Apps → Chrome → Permissions → Location: Allow only while using the app.',
-      'In Chrome: … menu → Settings → Site settings → Location → sixfoldcolorado.com → Allow (take it off the Blocked list).',
+      'In Chrome: … menu → Settings → Site settings → Location → ' + location.hostname + ' → Allow (take it off the Blocked list).',
       app ? 'Using the home-screen icon? Long-press it → App info → Permissions → Location → Allow.'
           : 'Then come back and tap Try again.'
     ];
-    else steps = ['Allow location for sixfoldcolorado.com in your browser\'s site settings, and make sure the computer or phone has location turned on.'];
+    else steps = ['Allow location for ' + location.hostname + ' in your browser\'s site settings, and make sure the computer or phone has location turned on.'];
     var ol = q('ol');
     steps.forEach(function (t) { ol.appendChild(q('li', null, t)); });
     box.appendChild(ol);
@@ -6084,11 +6138,19 @@
     else if (e.key === 'Backspace') { e.preventDefault(); S.signin('del'); }
   });
 
-  if (isOut()) { signinView(); tellServerOut(); }
-  else api('me').then(function (j) {
-    if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; chooseView(); }
-    else signinView();
-  }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
+  /* the company: this device's last copy at once, a fresh one from the server; the first visit waits for it (up to 3 s) */
+  setCompany(CO);
+  var coFresh = api('company').then(function (j) {
+    if (j && j.ok && j.company) { try { localStorage.setItem('doorapp.company', JSON.stringify(j.company)); } catch (e) {} setCompany(j.company); }
+  }).catch(function () {});
+  function boot() {
+    if (isOut()) { signinView(); tellServerOut(); }
+    else api('me').then(function (j) {
+      if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; chooseView(); }
+      else signinView();
+    }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
+  }
+  (CO_SAVED ? Promise.resolve() : Promise.race([coFresh, new Promise(function (r) { setTimeout(r, 3000); })])).then(boot);
 
   window.addEventListener('online', function () {
     if (isOut()) tellServerOut();

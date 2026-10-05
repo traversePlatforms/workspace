@@ -71,9 +71,10 @@ $tot = ['doors' => 0, 'talked' => 0, 'booked' => 0];
 foreach ($mxD['team'] as $p) { $L[] = '- ' . $p['name'] . ': ' . $p['doors'] . ' doors, ' . $p['talked'] . ' talked to, ' . $p['booked'] . ($p['booked'] === 1 ? ' quote' : ' quotes') . ' booked'; foreach ($tot as $k => $_) $tot[$k] += $p[$k]; }
 if (count($mxD['team']) > 1) $L[] = '- Everyone: ' . $tot['doors'] . ' doors, ' . $tot['talked'] . ' talked to, ' . $tot['booked'] . ($tot['booked'] === 1 ? ' quote' : ' quotes') . ' booked';
 $L[] = '';
-$L[] = 'Open the app: https://sixfoldcolorado.com/summit-de59ae83/';
+$mxCo = (array) ($mxD['company'] ?? []);
+if (!empty($mxCo['appUrl'])) $L[] = 'Open the app: ' . $mxCo['appUrl'];
 $L[] = '';
-$L[] = '-- Sent every morning by the door app. Names and numbers here are customers\' details: keep this email inside Sixfold.';
+$L[] = '-- Sent every morning by the door app. Names and numbers here are customers\' details: keep this email inside ' . ($mxCo['short'] ?? 'the company') . '.';
 $mxBody = implode("\n", $L);
 $bits = [$mxD['leadsNew'] . ($mxD['leadsNew'] === 1 ? ' lead' : ' leads') . ' to call', count($walksToday) . (count($walksToday) === 1 ? ' walk' : ' walks') . ' today'];
 if ($mxD['due']) $bits[] = count($mxD['due']) . ' due';
@@ -84,7 +85,7 @@ if ($mxDry) { echo "Subject: $mxSubject\n\n$mxBody\n"; exit(0); }
 /* send through the website form's own mail setup */
 $mxCfg = require $mxApi . '/config.php';
 require_once $mxApi . '/smtp.php';
-$mxRes = smtp_send((array) ($mxCfg['smtp'] ?? []), (string) $mxCfg['to'], '[Sixfold app] ' . $mxSubject, $mxBody, ['X-Mailer: sixfold-app']);
+$mxRes = smtp_send((array) ($mxCfg['smtp'] ?? []), (string) $mxCfg['to'], '[' . ($mxCo['short'] ?? 'Door') . ' app] ' . $mxSubject, $mxBody, ['X-Mailer: sixfold-app']);
 $mxOk = !empty($mxRes['ok']);
 @file_put_contents($mxState . '/digest.log', json_encode(['at' => time(), 'ok' => $mxOk, 'stage' => $mxRes['stage'] ?? null, 'subject' => $mxSubject]) . "\n", FILE_APPEND | LOCK_EX);
 if (!$mxOk) { fwrite(STDERR, 'sixfold morning: not sent (' . ($mxRes['stage'] ?? '?') . ': ' . ($mxRes['error'] ?? '') . ")\n"); exit(1); }

@@ -18,17 +18,33 @@ The folders mirror the old `sixfold/` layout on purpose, so every script and lin
 | `site/data/rounds/` | The built door files per town (owners' names: never inside public_html) | `sixfold-data/rounds/` (beside public_html) |
 | `operations/door-territory/` | The data pipeline: county records to door files, lawn size, trees, wildfire, HOAs, the mailing list; plus the scope docs, the demo (APP-SHOWCASE.html), the guide (APP-GUIDE.html) and the Yardbook comparison | Not uploaded |
 
-## What inside this app is Sixfold's
+## Company settings: one file per install (2026-10-04)
 
-The app is one company's install today. These parts are Sixfold's install, not the product:
+Nothing about one company is written into the code any more. Each install has a **`company.json`** beside its door files (on the host: `sixfold-data/rounds/company.json`; Sixfold's copy is `site/data/rounds/company.json`). It holds:
 
+| Setting | What it changes |
+|---|---|
+| `name`, `short`, `tagline` | The sign-in screen, the bar, the install button, the tab title, texts sent to homeowners, the fire report, the morning email, backups, calendar files |
+| `phone`, `email`, `site`, `appUrl` | "To change it, call …" in the booking text, the report footer, the morning email's link, who the app says it is to the weather service |
+| `visit`, `visitShort` | What booking the quote books: "yard walk" / "Walk" for Sixfold, "roof inspection" / "Inspection" for a roofer. Renames Book the walk, Walk booked, Walks coming up |
+| `logo` | The mark (an SVG path). None: a monogram of the first letter |
+| `colors` | Optional overrides of the colour tokens, light and dark |
+| `services`, `leadNeeds`, `extraWork` | The customer services, the enquiry "what do they want" list, the extra-work chips at the door. The server checks against the same lists |
+| `features` | Tools switched on: `quote` (Quote builder), `communities` (HOA / Firewise screen), `firecheck` (fire check + report), `skiptrace` |
+| `links.googleReview` | The Ask for a review link |
+
+**Nothing in it is secret**: the page reads it before anyone signs in. Never put a key, a code or a price in it. [company.example.json](company.example.json) is a made-up roofing company, and the template for the next install.
+
+**What the settings do not cover yet:** the door data itself (lawn size, trees, wildfire come from the data pipeline, so a roofer's door files are simply built without them, and those parts of the card disappear on their own); `manifest.json` and the icons (each install uploads its own); the morning email's wording ("walks"); and the code comments, which still tell the app's history with Sixfold and can be read by anyone who opens the page source. Stripping comments is a build step to add before a second company goes live.
+
+## What else inside this app is Sixfold's
+
+- `site/data/rounds/company.json`: Sixfold's settings.
 - `site/data/rounds/docs/money.json` and `MONEY-SHEETS.md`: Sixfold's prices, funding and water notes.
 - The crew codes file, which **stays** at `sixfold/site/api/rounds-codes.php` (on the server, in `sixfold-private/`).
 - The Quote builder, which **stays** in Sixfold: `sixfold/site/summit-de59ae83/quote.html`, built from `sixfold/quotes/`. `sixfold/site/build-quote-page.mjs` still stamps its version into this app's `index.html`.
 - The website contact form (`sixfold/site/api/submit.php`) files Sixfold's enquiries into the app's leads.
-- Sixfold's name and look in the page, the walk-list PDFs (printed with Sixfold's style and PDF tool) and the leads, customers and logs on the server.
-
-Turning those into per-company settings is the first product step.
+- `manifest.json` and the four icons in `site/summit-de59ae83/`, the walk-list PDFs (printed with Sixfold's style and PDF tool) and the leads, customers and logs on the server.
 
 ## Uploading
 
