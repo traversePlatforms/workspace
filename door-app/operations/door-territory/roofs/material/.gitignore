@@ -1,0 +1,5 @@
+cache/
+*.png
+*.npy
+*.npy.gz
+__pycache__/

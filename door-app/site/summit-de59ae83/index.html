@@ -3376,7 +3376,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(windBlock(d));             /* wind reported near the house (2026-10-05): rides with hail */
-    if ((d.roof || d.bld) && cardOn('roof')) wrap.appendChild(roofBlock(d));                     /* roof size, pitch, year built: admins only too */
+    if ((d.roof || d.bld || d.mat) && cardOn('roof')) wrap.appendChild(roofBlock(d));                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
@@ -6099,6 +6099,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!d.roof && y.yb >= 2018) bits.push('no roof measurement: newer than the laser scan');
       t.appendChild(q('span', 'hl', bits.join(' \u00b7 ')));
     }
+    /* material from the 2023 photo where the county has none (2026-10-05): asphalt or tile only, labelled only where the classifier tested 96%+ right */
+    if (d.mat && d.mat.src === 'imagery' && !(d.bld && d.bld.mat)) t.appendChild(q('span', 'hl', (MAT_NAME[d.mat.m] || d.mat.m) + ' (from the 2023 aerial photo)'));
     if (d.photo) {
       var open = S.photoOpen === d.id;
       var pb = q('button', 'lnk', open ? 'Hide the roof photo' : 'See the roof (aerial photo, ' + (d.photoYear || 2020) + ')'); pb.type = 'button';

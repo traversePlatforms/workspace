@@ -157,3 +157,4 @@ door-app/operations/door-territory/sample/
 door-app/site/data/rounds/alerts-cache.json*
 door-app/site/data/rounds/storms-recent.json
 door-app/site/data/rounds/wind-*.json
+door-app/site/data/rounds/material-*.json

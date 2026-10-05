@@ -1,0 +1,2893 @@
+{
+ "classes": [
+  "asphalt",
+  "tile",
+  "shake",
+  "metal",
+  "flat"
+ ],
+ "class_of": {
+  "Composition Shingle": "asphalt",
+  "Composition Roll": "asphalt",
+  "Concrete Tile": "tile",
+  "Clay Tile": "tile",
+  "Wood Shake": "shake",
+  "Preformed Metal": "metal",
+  "Formed Seam Metal": "metal",
+  "Copper Metal": "metal",
+  "Built Up Rock": "flat",
+  "Elastomeric Sgl Ply": "flat"
+ },
+ "label_counts": {
+  "asphalt": 8514,
+  "tile": 1094,
+  "shake": 156,
+  "metal": 31,
+  "flat": 17
+ },
+ "label_counts_all": {
+  "asphalt": 8514,
+  "tile": 1094,
+  "shake": 156,
+  "metal": 31,
+  "flat": 17
+ },
+ "per_town_counts": {
+  "castle-rock": {
+   "asphalt": 6404,
+   "tile": 567,
+   "shake": 37,
+   "metal": 9,
+   "flat": 8
+  },
+  "franktown": {
+   "asphalt": 1151,
+   "tile": 326,
+   "shake": 62,
+   "flat": 3,
+   "metal": 2
+  },
+  "sedalia": {
+   "asphalt": 354,
+   "tile": 159,
+   "shake": 51,
+   "metal": 10,
+   "flat": 1
+  },
+  "larkspur": {
+   "asphalt": 605,
+   "tile": 42,
+   "metal": 10,
+   "shake": 6,
+   "flat": 5
+  }
+ },
+ "min_px": 40,
+ "target_precision": 0.9,
+ "min_support": 30,
+ "towns": [
+  "castle-rock",
+  "franktown",
+  "sedalia",
+  "larkspur"
+ ],
+ "runs": {
+  "all_features": {
+   "features": [
+    "L_mean",
+    "L_p10",
+    "L_p50",
+    "L_p90",
+    "L_std",
+    "a_mean",
+    "a_p10",
+    "a_p50",
+    "a_p90",
+    "a_std",
+    "b_mean",
+    "b_p10",
+    "b_p50",
+    "b_p90",
+    "b_std",
+    "bsf",
+    "coherence",
+    "deg",
+    "fft_fine",
+    "fft_ring",
+    "flat",
+    "fp",
+    "fp_px",
+    "g_b",
+    "g_mean",
+    "g_p10",
+    "g_p50",
+    "g_p90",
+    "g_std",
+    "grad2_mean",
+    "grad_mean",
+    "grad_p90",
+    "hue_conc",
+    "hue_cos",
+    "hue_mean",
+    "hue_sin",
+    "lap_std",
+    "local2_std",
+    "local_std5",
+    "local_std9",
+    "ndvi_mean",
+    "ndvi_p10",
+    "ndvi_p50",
+    "ndvi_p90",
+    "ndvi_std",
+    "nir_mean",
+    "nir_p10",
+    "nir_p50",
+    "nir_p90",
+    "nir_r",
+    "nir_std",
+    "nir_vis",
+    "nofp",
+    "pitch",
+    "r_b",
+    "r_g",
+    "r_mean",
+    "r_p10",
+    "r_p50",
+    "r_p90",
+    "r_std",
+    "rh",
+    "rm",
+    "roof_px",
+    "sat_lap",
+    "sat_mean",
+    "sat_p10",
+    "sat_p50",
+    "sat_p90",
+    "sat_std",
+    "shadow_frac",
+    "sq",
+    "sun_L",
+    "sun_L_std",
+    "sun_a",
+    "sun_a_std",
+    "sun_b",
+    "sun_b_",
+    "sun_g",
+    "sun_nir",
+    "sun_nir_r",
+    "sun_r",
+    "sun_sat",
+    "v_hi",
+    "v_lo",
+    "v_split",
+    "val_mean",
+    "val_p10",
+    "val_p50",
+    "val_p90",
+    "val_std",
+    "veg_frac",
+    "yb"
+   ],
+   "balanced": false,
+   "leave_one_town_out": {
+    "name": "all_features: leave-one-town-out, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9342,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.9454,
+      "recall": 0.983,
+      "f1": 0.9638,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.8423,
+      "recall": 0.7276,
+      "f1": 0.7808,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.0714,
+      "recall": 0.0064,
+      "f1": 0.0118,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8369,
+       132,
+       12,
+       1,
+       0
+      ],
+      [
+       297,
+       796,
+       1,
+       0,
+       0
+      ],
+      [
+       145,
+       10,
+       1,
+       0,
+       0
+      ],
+      [
+       28,
+       3,
+       0,
+       0,
+       0
+      ],
+      [
+       13,
+       4,
+       0,
+       0,
+       0
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.375,
+      "n": 8852,
+      "precision": 0.9454,
+      "recall_at_t": 0.983
+     },
+     "tile": {
+      "t": 0.918,
+      "n": 690,
+      "precision": 0.9,
+      "recall_at_t": 0.5676
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8852,
+       "right": 8369,
+       "precision": 0.9454,
+       "recall": 0.983,
+       "support": 8514
+      },
+      "tile": {
+       "called": 691,
+       "right": 621,
+       "precision": 0.8987,
+       "recall": 0.5676,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9726,
+      "precision": 0.9421,
+      "kept": 9543
+     }
+    },
+    "thresholds_every_town": {
+     "asphalt": null,
+     "tile": {
+      "t": 0.994,
+      "n": 319,
+      "precision": 0.9436,
+      "recall_at_t": 0.2751,
+      "per_town": {
+       "castle-rock": {
+        "called": 219,
+        "precision": 0.9452
+       },
+       "franktown": {
+        "called": 32,
+        "precision": 0.9688
+       },
+       "sedalia": {
+        "called": 48,
+        "precision": 0.9375
+       },
+       "larkspur": {
+        "called": 20,
+        "precision": 0.9
+       }
+      }
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "at_thresholds_every_town": {
+     "per_class": {
+      "asphalt": null,
+      "tile": {
+       "called": 319,
+       "right": 301,
+       "precision": 0.9436,
+       "recall": 0.2751,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.0325,
+      "precision": 0.9436,
+      "kept": 319
+     }
+    },
+    "per_town": {
+     "castle-rock": {
+      "n": 7025,
+      "accuracy": 0.9697,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 6405,
+         "right": 6301,
+         "precision": 0.9838,
+         "recall": 0.9839,
+         "support": 6404
+        },
+        "tile": {
+         "called": 480,
+         "right": 437,
+         "precision": 0.9104,
+         "recall": 0.7707,
+         "support": 567
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9801,
+        "precision": 0.9786,
+        "kept": 6885
+       }
+      }
+     },
+     "franktown": {
+      "n": 1544,
+      "accuracy": 0.8303,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 1388,
+         "right": 1140,
+         "precision": 0.8213,
+         "recall": 0.9904,
+         "support": 1151
+        },
+        "tile": {
+         "called": 81,
+         "right": 75,
+         "precision": 0.9259,
+         "recall": 0.2301,
+         "support": 326
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9514,
+        "precision": 0.8271,
+        "kept": 1469
+       }
+      }
+     },
+     "sedalia": {
+      "n": 575,
+      "accuracy": 0.7948,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 445,
+         "right": 343,
+         "precision": 0.7708,
+         "recall": 0.9689,
+         "support": 354
+        },
+        "tile": {
+         "called": 94,
+         "right": 84,
+         "precision": 0.8936,
+         "recall": 0.5283,
+         "support": 159
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9374,
+        "precision": 0.7922,
+        "kept": 539
+       }
+      }
+     },
+     "larkspur": {
+      "n": 668,
+      "accuracy": 0.9207,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 614,
+         "right": 585,
+         "precision": 0.9528,
+         "recall": 0.9669,
+         "support": 605
+        },
+        "tile": {
+         "called": 36,
+         "right": 25,
+         "precision": 0.6944,
+         "recall": 0.5952,
+         "support": 42
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9731,
+        "precision": 0.9385,
+        "kept": 650
+       }
+      }
+     }
+    }
+   },
+   "castle_rock_to_others": {
+    "name": "all_features: trained on Castle Rock, tested on Franktown + Sedalia + Larkspur (thresholds from Castle Rock CV)",
+    "n": 2787,
+    "accuracy": 0.8403,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.8381,
+      "recall": 0.9839,
+      "f1": 0.9052,
+      "support": 2110
+     },
+     "tile": {
+      "precision": 0.8636,
+      "recall": 0.5047,
+      "f1": 0.6371,
+      "support": 527
+     },
+     "shake": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 119
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 22
+     },
+     "flat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 9
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       2076,
+       34,
+       0,
+       0,
+       0
+      ],
+      [
+       259,
+       266,
+       2,
+       0,
+       0
+      ],
+      [
+       114,
+       5,
+       0,
+       0,
+       0
+      ],
+      [
+       20,
+       2,
+       0,
+       0,
+       0
+      ],
+      [
+       8,
+       1,
+       0,
+       0,
+       0
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.479,
+      "n": 6475,
+      "precision": 0.9827,
+      "recall_at_t": 0.9936
+     },
+     "tile": {
+      "t": 0.529,
+      "n": 545,
+      "precision": 0.9266,
+      "recall_at_t": 0.8907
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "given",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 2476,
+       "right": 2075,
+       "precision": 0.838,
+       "recall": 0.9834,
+       "support": 2110
+      },
+      "tile": {
+       "called": 304,
+       "right": 263,
+       "precision": 0.8651,
+       "recall": 0.4991,
+       "support": 527
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9975,
+      "precision": 0.841,
+      "kept": 2780
+     }
+    }
+   },
+   "random_cv": {
+    "name": "all_features: random 5-fold CV, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9552,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.9641,
+      "recall": 0.9881,
+      "f1": 0.976,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.8981,
+      "recall": 0.8702,
+      "f1": 0.8839,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.3333,
+      "recall": 0.0449,
+      "f1": 0.0791,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8413,
+       88,
+       9,
+       2,
+       2
+      ],
+      [
+       138,
+       952,
+       4,
+       0,
+       0
+      ],
+      [
+       135,
+       13,
+       7,
+       0,
+       1
+      ],
+      [
+       28,
+       3,
+       0,
+       0,
+       0
+      ],
+      [
+       12,
+       4,
+       1,
+       0,
+       0
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.484,
+      "n": 8726,
+      "precision": 0.9641,
+      "recall_at_t": 0.9881
+     },
+     "tile": {
+      "t": 0.518,
+      "n": 1053,
+      "precision": 0.9003,
+      "recall_at_t": 0.8665
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8725,
+       "right": 8413,
+       "precision": 0.9642,
+       "recall": 0.9881,
+       "support": 8514
+      },
+      "tile": {
+       "called": 1053,
+       "right": 948,
+       "precision": 0.9003,
+       "recall": 0.8665,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9965,
+      "precision": 0.9574,
+      "kept": 9778
+     }
+    }
+   }
+  },
+  "all_features_balanced": {
+   "features": [
+    "L_mean",
+    "L_p10",
+    "L_p50",
+    "L_p90",
+    "L_std",
+    "a_mean",
+    "a_p10",
+    "a_p50",
+    "a_p90",
+    "a_std",
+    "b_mean",
+    "b_p10",
+    "b_p50",
+    "b_p90",
+    "b_std",
+    "bsf",
+    "coherence",
+    "deg",
+    "fft_fine",
+    "fft_ring",
+    "flat",
+    "fp",
+    "fp_px",
+    "g_b",
+    "g_mean",
+    "g_p10",
+    "g_p50",
+    "g_p90",
+    "g_std",
+    "grad2_mean",
+    "grad_mean",
+    "grad_p90",
+    "hue_conc",
+    "hue_cos",
+    "hue_mean",
+    "hue_sin",
+    "lap_std",
+    "local2_std",
+    "local_std5",
+    "local_std9",
+    "ndvi_mean",
+    "ndvi_p10",
+    "ndvi_p50",
+    "ndvi_p90",
+    "ndvi_std",
+    "nir_mean",
+    "nir_p10",
+    "nir_p50",
+    "nir_p90",
+    "nir_r",
+    "nir_std",
+    "nir_vis",
+    "nofp",
+    "pitch",
+    "r_b",
+    "r_g",
+    "r_mean",
+    "r_p10",
+    "r_p50",
+    "r_p90",
+    "r_std",
+    "rh",
+    "rm",
+    "roof_px",
+    "sat_lap",
+    "sat_mean",
+    "sat_p10",
+    "sat_p50",
+    "sat_p90",
+    "sat_std",
+    "shadow_frac",
+    "sq",
+    "sun_L",
+    "sun_L_std",
+    "sun_a",
+    "sun_a_std",
+    "sun_b",
+    "sun_b_",
+    "sun_g",
+    "sun_nir",
+    "sun_nir_r",
+    "sun_r",
+    "sun_sat",
+    "v_hi",
+    "v_lo",
+    "v_split",
+    "val_mean",
+    "val_p10",
+    "val_p50",
+    "val_p90",
+    "val_std",
+    "veg_frac",
+    "yb"
+   ],
+   "balanced": true,
+   "leave_one_town_out": {
+    "name": "all_features_balanced: leave-one-town-out, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9292,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.952,
+      "recall": 0.9708,
+      "f1": 0.9613,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.8009,
+      "recall": 0.7724,
+      "f1": 0.7864,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.098,
+      "recall": 0.0321,
+      "f1": 0.0483,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.0833,
+      "recall": 0.0323,
+      "f1": 0.0465,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.0833,
+      "recall": 0.0588,
+      "f1": 0.069,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8265,
+       188,
+       43,
+       9,
+       9
+      ],
+      [
+       244,
+       845,
+       3,
+       2,
+       0
+      ],
+      [
+       133,
+       16,
+       5,
+       0,
+       2
+      ],
+      [
+       27,
+       3,
+       0,
+       1,
+       0
+      ],
+      [
+       13,
+       3,
+       0,
+       0,
+       1
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.338,
+      "n": 8682,
+      "precision": 0.952,
+      "recall_at_t": 0.9708
+     },
+     "tile": {
+      "t": 0.939,
+      "n": 720,
+      "precision": 0.9,
+      "recall_at_t": 0.5923
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8682,
+       "right": 8265,
+       "precision": 0.952,
+       "recall": 0.9708,
+       "support": 8514
+      },
+      "tile": {
+       "called": 720,
+       "right": 648,
+       "precision": 0.9,
+       "recall": 0.5923,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9582,
+      "precision": 0.948,
+      "kept": 9402
+     }
+    },
+    "thresholds_every_town": {
+     "asphalt": {
+      "t": 0.999,
+      "n": 4433,
+      "precision": 0.9883,
+      "recall_at_t": 0.5146,
+      "per_town": {
+       "castle-rock": {
+        "called": 3219,
+        "precision": 0.9969
+       },
+       "franktown": {
+        "called": 875,
+        "precision": 0.9737
+       },
+       "sedalia": {
+        "called": 164,
+        "precision": 0.9085
+       },
+       "larkspur": {
+        "called": 175,
+        "precision": 0.9771
+       }
+      }
+     },
+     "tile": {
+      "t": 0.999,
+      "n": 152,
+      "precision": 0.9605,
+      "recall_at_t": 0.1335,
+      "per_town": {
+       "castle-rock": {
+        "called": 95,
+        "precision": 0.9684
+       },
+       "franktown": {
+        "called": 21,
+        "precision": 0.9524
+       },
+       "sedalia": {
+        "called": 19,
+        "precision": 0.9474
+       },
+       "larkspur": {
+        "called": 17,
+        "precision": 0.9412
+       }
+      }
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "at_thresholds_every_town": {
+     "per_class": {
+      "asphalt": {
+       "called": 4433,
+       "right": 4381,
+       "precision": 0.9883,
+       "recall": 0.5146,
+       "support": 8514
+      },
+      "tile": {
+       "called": 152,
+       "right": 146,
+       "precision": 0.9605,
+       "recall": 0.1335,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.4673,
+      "precision": 0.9874,
+      "kept": 4585
+     }
+    },
+    "per_town": {
+     "castle-rock": {
+      "n": 7025,
+      "accuracy": 0.96,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 6312,
+         "right": 6223,
+         "precision": 0.9859,
+         "recall": 0.9717,
+         "support": 6404
+        },
+        "tile": {
+         "called": 480,
+         "right": 437,
+         "precision": 0.9104,
+         "recall": 0.7707,
+         "support": 567
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9668,
+        "precision": 0.9806,
+        "kept": 6792
+       }
+      }
+     },
+     "franktown": {
+      "n": 1544,
+      "accuracy": 0.8504,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 1328,
+         "right": 1129,
+         "precision": 0.8502,
+         "recall": 0.9809,
+         "support": 1151
+        },
+        "tile": {
+         "called": 102,
+         "right": 95,
+         "precision": 0.9314,
+         "recall": 0.2914,
+         "support": 326
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9262,
+        "precision": 0.8559,
+        "kept": 1430
+       }
+      }
+     },
+     "sedalia": {
+      "n": 575,
+      "accuracy": 0.7983,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 439,
+         "right": 341,
+         "precision": 0.7768,
+         "recall": 0.9633,
+         "support": 354
+        },
+        "tile": {
+         "called": 101,
+         "right": 91,
+         "precision": 0.901,
+         "recall": 0.5723,
+         "support": 159
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9391,
+        "precision": 0.8,
+        "kept": 540
+       }
+      }
+     },
+     "larkspur": {
+      "n": 668,
+      "accuracy": 0.8997,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 603,
+         "right": 572,
+         "precision": 0.9486,
+         "recall": 0.9455,
+         "support": 605
+        },
+        "tile": {
+         "called": 37,
+         "right": 25,
+         "precision": 0.6757,
+         "recall": 0.5952,
+         "support": 42
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9581,
+        "precision": 0.9328,
+        "kept": 640
+       }
+      }
+     }
+    }
+   },
+   "castle_rock_to_others": {
+    "name": "all_features_balanced: trained on Castle Rock, tested on Franktown + Sedalia + Larkspur (thresholds from Castle Rock CV)",
+    "n": 2787,
+    "accuracy": 0.8507,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.8565,
+      "recall": 0.973,
+      "f1": 0.911,
+      "support": 2110
+     },
+     "tile": {
+      "precision": 0.8329,
+      "recall": 0.5958,
+      "f1": 0.6947,
+      "support": 527
+     },
+     "shake": {
+      "precision": 0.375,
+      "recall": 0.0252,
+      "f1": 0.0472,
+      "support": 119
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 22
+     },
+     "flat": {
+      "precision": 0.5,
+      "recall": 0.1111,
+      "f1": 0.1818,
+      "support": 9
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       2053,
+       50,
+       3,
+       3,
+       1
+      ],
+      [
+       211,
+       314,
+       2,
+       0,
+       0
+      ],
+      [
+       108,
+       8,
+       3,
+       0,
+       0
+      ],
+      [
+       18,
+       4,
+       0,
+       0,
+       0
+      ],
+      [
+       7,
+       1,
+       0,
+       0,
+       1
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.461,
+      "n": 6441,
+      "precision": 0.9856,
+      "recall_at_t": 0.9913
+     },
+     "tile": {
+      "t": 0.481,
+      "n": 568,
+      "precision": 0.912,
+      "recall_at_t": 0.9136
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "given",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 2397,
+       "right": 2053,
+       "precision": 0.8565,
+       "recall": 0.973,
+       "support": 2110
+      },
+      "tile": {
+       "called": 374,
+       "right": 314,
+       "precision": 0.8396,
+       "recall": 0.5958,
+       "support": 527
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9943,
+      "precision": 0.8542,
+      "kept": 2771
+     }
+    }
+   },
+   "random_cv": {
+    "name": "all_features_balanced: random 5-fold CV, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9539,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.9683,
+      "recall": 0.9827,
+      "f1": 0.9755,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.8877,
+      "recall": 0.8885,
+      "f1": 0.8881,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.2833,
+      "recall": 0.109,
+      "f1": 0.1574,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.2857,
+      "recall": 0.0645,
+      "f1": 0.1053,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.2222,
+      "recall": 0.1176,
+      "f1": 0.1538,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8367,
+       103,
+       34,
+       4,
+       6
+      ],
+      [
+       113,
+       972,
+       8,
+       1,
+       0
+      ],
+      [
+       125,
+       13,
+       17,
+       0,
+       1
+      ],
+      [
+       25,
+       4,
+       0,
+       2,
+       0
+      ],
+      [
+       11,
+       3,
+       1,
+       0,
+       2
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.347,
+      "n": 8641,
+      "precision": 0.9683,
+      "recall_at_t": 0.9827
+     },
+     "tile": {
+      "t": 0.687,
+      "n": 1055,
+      "precision": 0.9005,
+      "recall_at_t": 0.8684
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8640,
+       "right": 8366,
+       "precision": 0.9683,
+       "recall": 0.9826,
+       "support": 8514
+      },
+      "tile": {
+       "called": 1055,
+       "right": 950,
+       "precision": 0.9005,
+       "recall": 0.8684,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9881,
+      "precision": 0.9609,
+      "kept": 9695
+     }
+    }
+   }
+  },
+  "imagery_only": {
+   "features": [
+    "L_mean",
+    "L_p10",
+    "L_p50",
+    "L_p90",
+    "L_std",
+    "a_mean",
+    "a_p10",
+    "a_p50",
+    "a_p90",
+    "a_std",
+    "b_mean",
+    "b_p10",
+    "b_p50",
+    "b_p90",
+    "b_std",
+    "coherence",
+    "fft_fine",
+    "fft_ring",
+    "fp_px",
+    "g_b",
+    "g_mean",
+    "g_p10",
+    "g_p50",
+    "g_p90",
+    "g_std",
+    "grad2_mean",
+    "grad_mean",
+    "grad_p90",
+    "hue_conc",
+    "hue_cos",
+    "hue_mean",
+    "hue_sin",
+    "lap_std",
+    "local2_std",
+    "local_std5",
+    "local_std9",
+    "ndvi_mean",
+    "ndvi_p10",
+    "ndvi_p50",
+    "ndvi_p90",
+    "ndvi_std",
+    "nir_mean",
+    "nir_p10",
+    "nir_p50",
+    "nir_p90",
+    "nir_r",
+    "nir_std",
+    "nir_vis",
+    "nofp",
+    "r_b",
+    "r_g",
+    "r_mean",
+    "r_p10",
+    "r_p50",
+    "r_p90",
+    "r_std",
+    "roof_px",
+    "sat_lap",
+    "sat_mean",
+    "sat_p10",
+    "sat_p50",
+    "sat_p90",
+    "sat_std",
+    "shadow_frac",
+    "sun_L",
+    "sun_L_std",
+    "sun_a",
+    "sun_a_std",
+    "sun_b",
+    "sun_b_",
+    "sun_g",
+    "sun_nir",
+    "sun_nir_r",
+    "sun_r",
+    "sun_sat",
+    "v_hi",
+    "v_lo",
+    "v_split",
+    "val_mean",
+    "val_p10",
+    "val_p50",
+    "val_p90",
+    "val_std",
+    "veg_frac"
+   ],
+   "balanced": false,
+   "leave_one_town_out": {
+    "name": "imagery_only: leave-one-town-out, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9261,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.94,
+      "recall": 0.9809,
+      "f1": 0.96,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.8035,
+      "recall": 0.6728,
+      "f1": 0.7323,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8351,
+       153,
+       8,
+       2,
+       0
+      ],
+      [
+       356,
+       736,
+       1,
+       1,
+       0
+      ],
+      [
+       139,
+       17,
+       0,
+       0,
+       0
+      ],
+      [
+       26,
+       5,
+       0,
+       0,
+       0
+      ],
+      [
+       12,
+       5,
+       0,
+       0,
+       0
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.392,
+      "n": 8884,
+      "precision": 0.94,
+      "recall_at_t": 0.9809
+     },
+     "tile": {
+      "t": 0.982,
+      "n": 370,
+      "precision": 0.9,
+      "recall_at_t": 0.3044
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8883,
+       "right": 8350,
+       "precision": 0.94,
+       "recall": 0.9807,
+       "support": 8514
+      },
+      "tile": {
+       "called": 369,
+       "right": 332,
+       "precision": 0.8997,
+       "recall": 0.3035,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9429,
+      "precision": 0.9384,
+      "kept": 9252
+     }
+    },
+    "thresholds_every_town": {
+     "asphalt": null,
+     "tile": null,
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "at_thresholds_every_town": {
+     "per_class": {
+      "asphalt": null,
+      "tile": null,
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.0,
+      "precision": 0.0,
+      "kept": 0
+     }
+    },
+    "per_town": {
+     "castle-rock": {
+      "n": 7025,
+      "accuracy": 0.9663,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 6421,
+         "right": 6299,
+         "precision": 0.981,
+         "recall": 0.9836,
+         "support": 6404
+        },
+        "tile": {
+         "called": 206,
+         "right": 192,
+         "precision": 0.932,
+         "recall": 0.3386,
+         "support": 567
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9433,
+        "precision": 0.9795,
+        "kept": 6627
+       }
+      }
+     },
+     "franktown": {
+      "n": 1544,
+      "accuracy": 0.8025,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 1424,
+         "right": 1139,
+         "precision": 0.7999,
+         "recall": 0.9896,
+         "support": 1151
+        },
+        "tile": {
+         "called": 53,
+         "right": 46,
+         "precision": 0.8679,
+         "recall": 0.1411,
+         "support": 326
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9566,
+        "precision": 0.8023,
+        "kept": 1477
+       }
+      }
+     },
+     "sedalia": {
+      "n": 575,
+      "accuracy": 0.7983,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 436,
+         "right": 340,
+         "precision": 0.7798,
+         "recall": 0.9605,
+         "support": 354
+        },
+        "tile": {
+         "called": 80,
+         "right": 72,
+         "precision": 0.9,
+         "recall": 0.4528,
+         "support": 159
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.8974,
+        "precision": 0.7984,
+        "kept": 516
+       }
+      }
+     },
+     "larkspur": {
+      "n": 668,
+      "accuracy": 0.8997,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 602,
+         "right": 572,
+         "precision": 0.9502,
+         "recall": 0.9455,
+         "support": 605
+        },
+        "tile": {
+         "called": 30,
+         "right": 22,
+         "precision": 0.7333,
+         "recall": 0.5238,
+         "support": 42
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9461,
+        "precision": 0.9399,
+        "kept": 632
+       }
+      }
+     }
+    }
+   },
+   "castle_rock_to_others": {
+    "name": "imagery_only: trained on Castle Rock, tested on Franktown + Sedalia + Larkspur (thresholds from Castle Rock CV)",
+    "n": 2787,
+    "accuracy": 0.8299,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.8308,
+      "recall": 0.982,
+      "f1": 0.9001,
+      "support": 2110
+     },
+     "tile": {
+      "precision": 0.8225,
+      "recall": 0.4573,
+      "f1": 0.5878,
+      "support": 527
+     },
+     "shake": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 119
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 22
+     },
+     "flat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 9
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       2072,
+       38,
+       0,
+       0,
+       0
+      ],
+      [
+       286,
+       241,
+       0,
+       0,
+       0
+      ],
+      [
+       108,
+       11,
+       0,
+       0,
+       0
+      ],
+      [
+       20,
+       2,
+       0,
+       0,
+       0
+      ],
+      [
+       8,
+       1,
+       0,
+       0,
+       0
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.53,
+      "n": 6463,
+      "precision": 0.9838,
+      "recall_at_t": 0.9928
+     },
+     "tile": {
+      "t": 0.516,
+      "n": 556,
+      "precision": 0.9191,
+      "recall_at_t": 0.9012
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "given",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 2490,
+       "right": 2071,
+       "precision": 0.8317,
+       "recall": 0.9815,
+       "support": 2110
+      },
+      "tile": {
+       "called": 290,
+       "right": 238,
+       "precision": 0.8207,
+       "recall": 0.4516,
+       "support": 527
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9975,
+      "precision": 0.8306,
+      "kept": 2780
+     }
+    }
+   },
+   "random_cv": {
+    "name": "imagery_only: random 5-fold CV, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9534,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.9621,
+      "recall": 0.9881,
+      "f1": 0.975,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.892,
+      "recall": 0.8611,
+      "f1": 0.8763,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8413,
+       91,
+       5,
+       2,
+       3
+      ],
+      [
+       152,
+       942,
+       0,
+       0,
+       0
+      ],
+      [
+       140,
+       15,
+       0,
+       0,
+       1
+      ],
+      [
+       27,
+       4,
+       0,
+       0,
+       0
+      ],
+      [
+       12,
+       4,
+       1,
+       0,
+       0
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.505,
+      "n": 8744,
+      "precision": 0.9621,
+      "recall_at_t": 0.9881
+     },
+     "tile": {
+      "t": 0.625,
+      "n": 1036,
+      "precision": 0.9006,
+      "recall_at_t": 0.8528
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8743,
+       "right": 8413,
+       "precision": 0.9623,
+       "recall": 0.9881,
+       "support": 8514
+      },
+      "tile": {
+       "called": 1036,
+       "right": 933,
+       "precision": 0.9006,
+       "recall": 0.8528,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9966,
+      "precision": 0.9557,
+      "kept": 9779
+     }
+    }
+   }
+  },
+  "imagery_only_balanced": {
+   "features": [
+    "L_mean",
+    "L_p10",
+    "L_p50",
+    "L_p90",
+    "L_std",
+    "a_mean",
+    "a_p10",
+    "a_p50",
+    "a_p90",
+    "a_std",
+    "b_mean",
+    "b_p10",
+    "b_p50",
+    "b_p90",
+    "b_std",
+    "coherence",
+    "fft_fine",
+    "fft_ring",
+    "fp_px",
+    "g_b",
+    "g_mean",
+    "g_p10",
+    "g_p50",
+    "g_p90",
+    "g_std",
+    "grad2_mean",
+    "grad_mean",
+    "grad_p90",
+    "hue_conc",
+    "hue_cos",
+    "hue_mean",
+    "hue_sin",
+    "lap_std",
+    "local2_std",
+    "local_std5",
+    "local_std9",
+    "ndvi_mean",
+    "ndvi_p10",
+    "ndvi_p50",
+    "ndvi_p90",
+    "ndvi_std",
+    "nir_mean",
+    "nir_p10",
+    "nir_p50",
+    "nir_p90",
+    "nir_r",
+    "nir_std",
+    "nir_vis",
+    "nofp",
+    "r_b",
+    "r_g",
+    "r_mean",
+    "r_p10",
+    "r_p50",
+    "r_p90",
+    "r_std",
+    "roof_px",
+    "sat_lap",
+    "sat_mean",
+    "sat_p10",
+    "sat_p50",
+    "sat_p90",
+    "sat_std",
+    "shadow_frac",
+    "sun_L",
+    "sun_L_std",
+    "sun_a",
+    "sun_a_std",
+    "sun_b",
+    "sun_b_",
+    "sun_g",
+    "sun_nir",
+    "sun_nir_r",
+    "sun_r",
+    "sun_sat",
+    "v_hi",
+    "v_lo",
+    "v_split",
+    "val_mean",
+    "val_p10",
+    "val_p50",
+    "val_p90",
+    "val_std",
+    "veg_frac"
+   ],
+   "balanced": true,
+   "leave_one_town_out": {
+    "name": "imagery_only_balanced: leave-one-town-out, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9192,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.9448,
+      "recall": 0.9677,
+      "f1": 0.9561,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.76,
+      "recall": 0.7093,
+      "f1": 0.7338,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.1429,
+      "recall": 0.0645,
+      "f1": 0.0889,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.25,
+      "recall": 0.1176,
+      "f1": 0.16,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8239,
+       215,
+       46,
+       10,
+       4
+      ],
+      [
+       312,
+       776,
+       2,
+       2,
+       2
+      ],
+      [
+       136,
+       20,
+       0,
+       0,
+       0
+      ],
+      [
+       22,
+       6,
+       1,
+       2,
+       0
+      ],
+      [
+       11,
+       4,
+       0,
+       0,
+       2
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.409,
+      "n": 8720,
+      "precision": 0.9448,
+      "recall_at_t": 0.9677
+     },
+     "tile": {
+      "t": 0.995,
+      "n": 251,
+      "precision": 0.9004,
+      "recall_at_t": 0.2066
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8720,
+       "right": 8239,
+       "precision": 0.9448,
+       "recall": 0.9677,
+       "support": 8514
+      },
+      "tile": {
+       "called": 252,
+       "right": 226,
+       "precision": 0.8968,
+       "recall": 0.2066,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9144,
+      "precision": 0.9435,
+      "kept": 8972
+     }
+    },
+    "thresholds_every_town": {
+     "asphalt": null,
+     "tile": null,
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "at_thresholds_every_town": {
+     "per_class": {
+      "asphalt": null,
+      "tile": null,
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.0,
+      "precision": 0.0,
+      "kept": 0
+     }
+    },
+    "per_town": {
+     "castle-rock": {
+      "n": 7025,
+      "accuracy": 0.9601,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 6345,
+         "right": 6242,
+         "precision": 0.9838,
+         "recall": 0.9747,
+         "support": 6404
+        },
+        "tile": {
+         "called": 124,
+         "right": 116,
+         "precision": 0.9355,
+         "recall": 0.2046,
+         "support": 567
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9209,
+        "precision": 0.9828,
+        "kept": 6469
+       }
+      }
+     },
+     "franktown": {
+      "n": 1544,
+      "accuracy": 0.8102,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 1390,
+         "right": 1128,
+         "precision": 0.8115,
+         "recall": 0.98,
+         "support": 1151
+        },
+        "tile": {
+         "called": 41,
+         "right": 35,
+         "precision": 0.8537,
+         "recall": 0.1074,
+         "support": 326
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.9268,
+        "precision": 0.8127,
+        "kept": 1431
+       }
+      }
+     },
+     "sedalia": {
+      "n": 575,
+      "accuracy": 0.7913,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 420,
+         "right": 332,
+         "precision": 0.7905,
+         "recall": 0.9379,
+         "support": 354
+        },
+        "tile": {
+         "called": 65,
+         "right": 58,
+         "precision": 0.8923,
+         "recall": 0.3648,
+         "support": 159
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.8435,
+        "precision": 0.8041,
+        "kept": 485
+       }
+      }
+     },
+     "larkspur": {
+      "n": 668,
+      "accuracy": 0.8503,
+      "at_thresholds": {
+       "per_class": {
+        "asphalt": {
+         "called": 565,
+         "right": 537,
+         "precision": 0.9504,
+         "recall": 0.8876,
+         "support": 605
+        },
+        "tile": {
+         "called": 22,
+         "right": 17,
+         "precision": 0.7727,
+         "recall": 0.4048,
+         "support": 42
+        },
+        "shake": null,
+        "metal": null,
+        "flat": null
+       },
+       "overall": {
+        "kept_share": 0.8787,
+        "precision": 0.9438,
+        "kept": 587
+       }
+      }
+     }
+    }
+   },
+   "castle_rock_to_others": {
+    "name": "imagery_only_balanced: trained on Castle Rock, tested on Franktown + Sedalia + Larkspur (thresholds from Castle Rock CV)",
+    "n": 2787,
+    "accuracy": 0.8332,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.8425,
+      "recall": 0.9706,
+      "f1": 0.902,
+      "support": 2110
+     },
+     "tile": {
+      "precision": 0.7734,
+      "recall": 0.518,
+      "f1": 0.6205,
+      "support": 527
+     },
+     "shake": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 119
+     },
+     "metal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 22
+     },
+     "flat": {
+      "precision": 0.5,
+      "recall": 0.1111,
+      "f1": 0.1818,
+      "support": 9
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       2048,
+       60,
+       0,
+       1,
+       1
+      ],
+      [
+       254,
+       273,
+       0,
+       0,
+       0
+      ],
+      [
+       106,
+       13,
+       0,
+       0,
+       0
+      ],
+      [
+       17,
+       5,
+       0,
+       0,
+       0
+      ],
+      [
+       6,
+       2,
+       0,
+       0,
+       1
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.486,
+      "n": 6432,
+      "precision": 0.9854,
+      "recall_at_t": 0.9897
+     },
+     "tile": {
+      "t": 0.622,
+      "n": 574,
+      "precision": 0.9007,
+      "recall_at_t": 0.9118
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "given",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 2431,
+       "right": 2048,
+       "precision": 0.8425,
+       "recall": 0.9706,
+       "support": 2110
+      },
+      "tile": {
+       "called": 319,
+       "right": 256,
+       "precision": 0.8025,
+       "recall": 0.4858,
+       "support": 527
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9867,
+      "precision": 0.8378,
+      "kept": 2750
+     }
+    }
+   },
+   "random_cv": {
+    "name": "imagery_only_balanced: random 5-fold CV, all Douglas towns",
+    "n": 9812,
+    "accuracy": 0.9541,
+    "per_class": {
+     "asphalt": {
+      "precision": 0.9673,
+      "recall": 0.9845,
+      "f1": 0.9758,
+      "support": 8514
+     },
+     "tile": {
+      "precision": 0.875,
+      "recall": 0.8894,
+      "f1": 0.8821,
+      "support": 1094
+     },
+     "shake": {
+      "precision": 0.2,
+      "recall": 0.0192,
+      "f1": 0.0351,
+      "support": 156
+     },
+     "metal": {
+      "precision": 0.2727,
+      "recall": 0.0968,
+      "f1": 0.1429,
+      "support": 31
+     },
+     "flat": {
+      "precision": 0.1111,
+      "recall": 0.0588,
+      "f1": 0.0769,
+      "support": 17
+     }
+    },
+    "confusion": {
+     "rows_true_cols_pred": [
+      "asphalt",
+      "tile",
+      "shake",
+      "metal",
+      "flat"
+     ],
+     "matrix": [
+      [
+       8382,
+       112,
+       8,
+       5,
+       7
+      ],
+      [
+       116,
+       973,
+       2,
+       3,
+       0
+      ],
+      [
+       132,
+       20,
+       3,
+       0,
+       1
+      ],
+      [
+       23,
+       4,
+       1,
+       3,
+       0
+      ],
+      [
+       12,
+       3,
+       1,
+       0,
+       1
+      ]
+     ]
+    },
+    "thresholds": {
+     "asphalt": {
+      "t": 0.396,
+      "n": 8665,
+      "precision": 0.9673,
+      "recall_at_t": 0.9845
+     },
+     "tile": {
+      "t": 0.78,
+      "n": 1040,
+      "precision": 0.9,
+      "recall_at_t": 0.8556
+     },
+     "shake": null,
+     "metal": null,
+     "flat": null
+    },
+    "thresholds_from": "this held-out set",
+    "at_thresholds": {
+     "per_class": {
+      "asphalt": {
+       "called": 8664,
+       "right": 8381,
+       "precision": 0.9673,
+       "recall": 0.9844,
+       "support": 8514
+      },
+      "tile": {
+       "called": 1039,
+       "right": 935,
+       "precision": 0.8999,
+       "recall": 0.8547,
+       "support": 1094
+      },
+      "shake": null,
+      "metal": null,
+      "flat": null
+     },
+     "overall": {
+      "kept_share": 0.9889,
+      "precision": 0.9601,
+      "kept": 9703
+     }
+    }
+   }
+  }
+ },
+ "final": {
+  "variant": "all_features_balanced",
+  "features": [
+   "L_mean",
+   "L_p10",
+   "L_p50",
+   "L_p90",
+   "L_std",
+   "a_mean",
+   "a_p10",
+   "a_p50",
+   "a_p90",
+   "a_std",
+   "b_mean",
+   "b_p10",
+   "b_p50",
+   "b_p90",
+   "b_std",
+   "bsf",
+   "coherence",
+   "deg",
+   "fft_fine",
+   "fft_ring",
+   "flat",
+   "fp",
+   "fp_px",
+   "g_b",
+   "g_mean",
+   "g_p10",
+   "g_p50",
+   "g_p90",
+   "g_std",
+   "grad2_mean",
+   "grad_mean",
+   "grad_p90",
+   "hue_conc",
+   "hue_cos",
+   "hue_mean",
+   "hue_sin",
+   "lap_std",
+   "local2_std",
+   "local_std5",
+   "local_std9",
+   "ndvi_mean",
+   "ndvi_p10",
+   "ndvi_p50",
+   "ndvi_p90",
+   "ndvi_std",
+   "nir_mean",
+   "nir_p10",
+   "nir_p50",
+   "nir_p90",
+   "nir_r",
+   "nir_std",
+   "nir_vis",
+   "nofp",
+   "pitch",
+   "r_b",
+   "r_g",
+   "r_mean",
+   "r_p10",
+   "r_p50",
+   "r_p90",
+   "r_std",
+   "rh",
+   "rm",
+   "roof_px",
+   "sat_lap",
+   "sat_mean",
+   "sat_p10",
+   "sat_p50",
+   "sat_p90",
+   "sat_std",
+   "shadow_frac",
+   "sq",
+   "sun_L",
+   "sun_L_std",
+   "sun_a",
+   "sun_a_std",
+   "sun_b",
+   "sun_b_",
+   "sun_g",
+   "sun_nir",
+   "sun_nir_r",
+   "sun_r",
+   "sun_sat",
+   "v_hi",
+   "v_lo",
+   "v_split",
+   "val_mean",
+   "val_p10",
+   "val_p50",
+   "val_p90",
+   "val_std",
+   "veg_frac",
+   "yb"
+  ],
+  "balanced": true,
+  "thresholds": {
+   "asphalt": {
+    "t": 0.999,
+    "n": 4433,
+    "precision": 0.9883,
+    "recall_at_t": 0.5146,
+    "per_town": {
+     "castle-rock": {
+      "called": 3219,
+      "precision": 0.9969
+     },
+     "franktown": {
+      "called": 875,
+      "precision": 0.9737
+     },
+     "sedalia": {
+      "called": 164,
+      "precision": 0.9085
+     },
+     "larkspur": {
+      "called": 175,
+      "precision": 0.9771
+     }
+    }
+   },
+   "tile": {
+    "t": 0.999,
+    "n": 152,
+    "precision": 0.9605,
+    "recall_at_t": 0.1335,
+    "per_town": {
+     "castle-rock": {
+      "called": 95,
+      "precision": 0.9684
+     },
+     "franktown": {
+      "called": 21,
+      "precision": 0.9524
+     },
+     "sedalia": {
+      "called": 19,
+      "precision": 0.9474
+     },
+     "larkspur": {
+      "called": 17,
+      "precision": 0.9412
+     }
+    }
+   },
+   "shake": null,
+   "metal": null,
+   "flat": null
+  },
+  "thresholds_pooled": {
+   "asphalt": {
+    "t": 0.338,
+    "n": 8682,
+    "precision": 0.952,
+    "recall_at_t": 0.9708
+   },
+   "tile": {
+    "t": 0.939,
+    "n": 720,
+    "precision": 0.9,
+    "recall_at_t": 0.5923
+   },
+   "shake": null,
+   "metal": null,
+   "flat": null
+  },
+  "thresholds_from": "leave-one-town-out, >= 90% precision in every held-out town",
+  "top_features": [
+   [
+    "yb",
+    0.0248
+   ],
+   [
+    "bsf",
+    0.0023
+   ],
+   [
+    "deg",
+    0.001
+   ],
+   [
+    "b_std",
+    0.0007
+   ],
+   [
+    "fft_ring",
+    0.0003
+   ],
+   [
+    "rh",
+    0.0003
+   ],
+   [
+    "a_std",
+    0.0002
+   ],
+   [
+    "g_b",
+    0.0002
+   ],
+   [
+    "hue_sin",
+    0.0002
+   ],
+   [
+    "ndvi_p10",
+    0.0002
+   ],
+   [
+    "veg_frac",
+    0.0002
+   ],
+   [
+    "L_mean",
+    0.0
+   ],
+   [
+    "L_p10",
+    0.0
+   ],
+   [
+    "L_p50",
+    0.0
+   ],
+   [
+    "L_p90",
+    0.0
+   ],
+   [
+    "L_std",
+    0.0
+   ],
+   [
+    "a_mean",
+    0.0
+   ],
+   [
+    "a_p10",
+    0.0
+   ],
+   [
+    "a_p50",
+    0.0
+   ],
+   [
+    "a_p90",
+    0.0
+   ]
+  ],
+  "trained_on": 9812,
+  "classes_in_model": [
+   "asphalt",
+   "tile",
+   "shake",
+   "metal",
+   "flat"
+  ]
+ }
+}
