@@ -2,7 +2,7 @@
 
 **Customer:** Brian Skelton · (303) 396-9050 · bskelton@pauleyc.com · 5171 Starflower Ct, Castle Rock, CO
 **Job:** full core aeration, overseeding, fertilizing. **$400.00 fixed**, first payment $200.00 on or before the first day of work, $200.00 on completion.
-**Date:** not yet agreed. Section 6 of the agreement is left blank for it.
+**Date:** **Thursday 15 October 2026** (Matthew, 2026-10-05). **Last safe signing day: Friday 9 October 2026.** DocuSign setup: [brian-docusign-setup.md](brian-docusign-setup.md).
 **Monthly:** he is also to be a **$100/month** client. **On hold until Matthew has more information** (Matthew, 2026-10-05). Not in this packet.
 
 ## Files
@@ -37,7 +37,7 @@ python tools/merge-pdf.py quotes/Sixfold-Quote-and-Agreement-Aeration-Brian-Skel
 1. **Who supplies the seed and fertilizer.** Carried from Kara's job: Sixfold supplies them, inside the $400. If Brian is supplying them, sections 2 and 5 and the quote change.
 2. **Watering in on the day and blowing the hard surfaces** are carried from Kara's job as Sixfold's standard aeration visit. Not stated for this job.
 3. **The 50/50 split** follows the packet rule; $200 / $200.
-4. **When a date is agreed:** fill section 6, and sign at least three business days before work starts (Sundays and federal holidays do not count; Saturday does). Work done inside the cancellation window earns nothing if he cancels.
+4. **Dated 2026-10-05: Thursday 15 October.** Section 6, clause 10, the agreement page-1 line and the quote are filled. Sign by **Friday 9 October** (Sunday 11th and Columbus Day, Monday 12th, do not count). Work done inside the cancellation window earns nothing if he cancels.
 5. **Brandon fills the Notice of Cancellation dates** on both copies at signing (the division of labour from 2026-09-14). Blank dates are the legal risk. In DocuSign, **do not put signature tags on the Notice of Cancellation pages** (the Kara envelope had optional ones).
 
 ## From the door app (internal only, not on any customer document)
@@ -63,3 +63,8 @@ The lot is in the door data (Castle Rock, Starflower Rd area): **0.35 acres**, c
 - Castle Rock Water exemption removed from the quote: it goes in the in-person packet instead.
 - Seed and fertilizer amounts stay out; blow-down stays in.
 - Settles flags 1 and 2 above: Sixfold supplies the seed and fertilizer, blows the hard surfaces clear, and can water in with the owner's system.
+
+## Dated, 2026-10-05 (Matthew)
+
+- Job **Thursday 15 October 2026**. Filled into the quote ("Scheduled for"), agreement page 1 line, section 6 (start and completion, the Columbus Day note, the sign-by line) and clause 10. Packet rebuilt: still 6 pages, agreement at scale 1.
+- **Sign by Friday 9 October.** Deadline table and tag map in [brian-docusign-setup.md](brian-docusign-setup.md).
