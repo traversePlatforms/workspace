@@ -43,7 +43,9 @@
     "trees": true,
     "fire": true,
     "money": true,
-    "water": true
+    "water": true,
+    "hail": false,
+    "roof": false
   },
   "links": {
     "googleReview": "https://g.page/r/CdxyzSzq9tvEEBM/review"

@@ -51,7 +51,9 @@
     "trees": false,
     "fire": false,
     "money": false,
-    "water": false
+    "water": false,
+    "hail": true,
+    "roof": true
   },
   "links": {
     "googleReview": ""

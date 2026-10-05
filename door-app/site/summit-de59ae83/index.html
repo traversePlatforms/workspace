@@ -1232,7 +1232,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      of the answers as they arrive, so every place that would show them (badges, sorts, chips, map) has nothing to show. */
   var ROOF_HIDE = { lawn: 1, trees: 1, fire: 1, money: 1, water: 1, fc: 1 };
   function roofOn() { return !!S.roofView && S.role === 'admin'; }
-  function cardOn(k) { if (roofOn() && ROOF_HIDE[k]) return false; return !(CO && CO.card && CO.card[k] === false); }
+  /* hail and roof are the roofing parts (Matthew 2026-10-05: irrelevant to the lawn crew): a company turns them off in its card
+     settings (Sixfold does), and the Roofing preview always shows them */
+  var ROOF_SHOW = { hail: 1, roof: 1 };
+  function cardOn(k) {
+    if (roofOn()) { if (ROOF_HIDE[k]) return false; if (ROOF_SHOW[k]) return true; }
+    return !(CO && CO.card && CO.card[k] === false);
+  }
   var TRIM_DOOR = { fire: ['fire'], lawn: ['lawn', 'lawnfix'], trees: ['trees', 'tl'], fc: ['fc'] };      /* door fields: set to null (tl: the search answer's tree level) */
   var TRIM_COUNT = { fire: ['hot', 'vhot'], lawn: ['lawnL', 'lawnM'], trees: ['treeA', 'treeH'] };       /* summary counts: removed */
   var TRIM_ACTIONS = { area: 1, regions: 1, search: 1, nearest: 1, mydoors: 1, communities: 1 };
@@ -1946,7 +1952,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView),
         qt,
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null,
-        feat('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
+        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         tile('button', 'users', 'Team stats', "Everyone's numbers.", 'Admin only', teamView),
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
@@ -3086,8 +3092,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
     else if (!d.phone && !capOpen(d)) wrap.appendChild(lookupButton(d));   /* Look up number (2026-10-04) */
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
-    if (d.hail && d.hail.length) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
-    if (d.roof || d.bld) wrap.appendChild(roofBlock(d));                     /* roof size, pitch, year built: admins only too */
+    if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
+    if ((d.roof || d.bld) && cardOn('roof')) wrap.appendChild(roofBlock(d));                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
