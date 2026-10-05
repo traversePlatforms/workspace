@@ -565,6 +565,7 @@ const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
  * looked-up: no Call link until the provider says it is not on the Do Not Call list. The provider,
  * the batching, the results log and the rule live in api/skiptrace.php; the actions are below. */
 require_once __DIR__ . '/skiptrace.php';
+require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push, no secrets in it */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -637,7 +638,7 @@ const BOARD_OPEN = false;
    assigned, everyone still sees every neighbourhood as before. false hides the assignments from the crew again. */
 const TERRITORIES_OPEN = true;
 const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
-function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin'; }
+function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin' || $role === 'manager'; }
 function boardHidden(string $name): bool { return (bool) preg_match('/^(claude|fable)\b/i', $name); }
 function loadAssign(string $key): array {
     $out = [];
@@ -1009,7 +1010,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -1031,6 +1032,11 @@ if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' =
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
+/* teams (2026-10-05): who is on whose team, worked out once per request; the functions and actions are further down */
+const ROLES = ['crew', 'manager', 'admin'];
+$TEAM = teamInfo($basePeople, $acct, $sessionKey);
+$myTeam = (string) ($TEAM['byName'][$me]['team'] ?? '');
+
 if ($action === 'sample') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/sample-door.json'), true);
@@ -1177,7 +1183,8 @@ if ($action === 'area') {
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
     $hailOf = hailOn($role) ? loadHail($key) : [];   /* admins only: storms near the house, newest first */
     $roofOf = roofDataOn($role) ? loadSide('roof', $key) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key) : [];
-    $photoOf = roofDataOn($role) ? loadSide('photo', $key) : [];   /* [file, x, y, half-window] in the 2020 3-inch photos */
+    $photoOf = roofDataOn($role) ? loadSide('photo', $key) : [];
+    $windOf = hailOn($role) ? loadSide('wind', $key) : [];   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1195,7 +1202,7 @@ if ($action === 'area') {
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
-                'hail' => $hailOf[$d['id']] ?? null,
+                'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
                 'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
@@ -1417,9 +1424,12 @@ function teamDays(int $days, string $who): array {
 }
 if ($action === 'stats') {
     $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
-    $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
+    $who = whoFor((string) ($_REQUEST['who'] ?? ''));
+    /* a manager's Team stats: their team, all at once (team=1) */
+    if ($role === 'manager' && !empty($_REQUEST['team']) && trim((string) ($_REQUEST['who'] ?? '')) === '') $who = '';
     $list = teamDays($days, $who);
-    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'who' => $who, 'people' => $list]);
+    if ($role === 'manager' && $who === '') $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || sameTeam($p['name'])));
+    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => loadGoals()]);
 }
 
 /* ---- my doors (2026-10-02) ------------------------------------------------
@@ -1429,7 +1439,7 @@ if ($action === 'stats') {
  * Crew see their own; an admin may ask for anyone's (who=). Newest first. */
 if ($action === 'mydoors') {
     $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
-    $who = $role === 'admin' ? trim((string) ($_REQUEST['who'] ?? '')) : $me;
+    $who = whoFor((string) ($_REQUEST['who'] ?? ''));
     if ($who === '') $who = $me;
     $since = (new DateTime('today', new DateTimeZone('America/Denver')))->modify('-' . ($days - 1) . ' days')->getTimestamp();
     /* rows come through logRows(), so a door that now belongs to another town keeps its history
@@ -1578,7 +1588,7 @@ const ALERT_TOWNS = [
     'florissant' => [38.9469, -105.2911], 'cripple-creek' => [38.7466, -105.1783]];
 const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
     'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch',
-    'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch'];
+    'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning'];
 /* hail (Matthew 2026-10-05): the storm alerts go only where hail is on (admins of a company with features.hail); a warning
    carries the NWS's own hail size and wind gust. Each one seen is remembered for STORM_KEEP so the storm call list still
    works the day after, when the warning has left the live feed. */
@@ -1635,10 +1645,10 @@ function httpJsonMany(array $urls): array {
 function milesBetween(float $la1, float $lo1, float $la2, float $lo2): float {
     return hypot(($la1 - $la2) * 69.0, ($lo1 - $lo2) * 69.0 * cos(deg2rad($la1)));
 }
-function freshAlerts(): array {
+function freshAlerts(int $maxAge = 600): array {
     $f = DATA_DIR . '/alerts-cache.json';
     $cache = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
-    if (($cache['at'] ?? 0) > time() - 600) return $cache;
+    if (($cache['at'] ?? 0) > time() - $maxAge) return $cache;
     $fp = @fopen($f . '.lock', 'c');                        /* one refresh at a time */
     if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) return $cache ?: ['at' => 0, 'weather' => [], 'fires' => [], 'stale' => true];
     $weather = []; $wOk = true;
@@ -1652,7 +1662,7 @@ function freshAlerts(): array {
             $id = (string) ($p['id'] ?? $ft['id'] ?? '');
             if (!isset($weather[$id])) $weather[$id] = ['event' => $p['event'], 'headline' => (string) ($p['headline'] ?? ''),
                 'ends' => (string) ($p['ends'] ?? $p['expires'] ?? ''), 'severity' => (string) ($p['severity'] ?? ''),
-                'url' => 'https://alerts.weather.gov/search?id=' . rawurlencode($id), 'towns' => [],
+                'id' => $id, 'url' => 'https://alerts.weather.gov/search?id=' . rawurlencode($id), 'towns' => [],
                 'hail' => is_numeric($p['parameters']['maxHailSize'][0] ?? null) ? (float) $p['parameters']['maxHailSize'][0] : null,
                 'wind' => (string) ($p['parameters']['maxWindGust'][0] ?? ''), 'sent' => (string) ($p['sent'] ?? '')];
             $weather[$id]['towns'][] = $town;
@@ -1820,14 +1830,535 @@ $clean = function ($v, int $max): string {
     return function_exists('mb_substr') ? mb_substr($t, 0, $max, 'UTF-8') : substr($t, 0, $max);
 };
 
-if ($action === 'leads') {
+
+/* ---- teams, the manager role, calendars, lead owners, personal goals, training (Matthew 2026-10-05) ----------
+ * Roles: crew, manager, admin. A manager is crew plus their own team: they see the team's calendars and stats, set
+ * its goals, and assign its territories and leads. Teams live in the accounts file:
+ *   teams:  tid => [name, by, at]
+ *   member: account id => tid            (one team per person)
+ * Crew on a team may LOOK at their teammates' calendars; crew on no team see only their own (Matthew 2026-10-05).
+ * An admin sees anyone's. Everything below keys people by their sign-in name, as the logs do. */
+function teamInfo(array $basePeople, array $acct, string $key): array {
+    $byName = []; $members = [];
+    foreach (acctRows($basePeople, $acct, $key) as $r) {
+        if ($r['off']) continue;
+        $tid = (string) ($acct['member'][$r['id']] ?? '');
+        if ($tid !== '' && !isset($acct['teams'][$tid])) $tid = '';
+        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid];
+        if ($tid !== '') $members[$tid][] = $r['name'];
+    }
+    return ['byName' => $byName, 'members' => $members];
+}
+function sameTeam(string $who): bool { global $TEAM, $myTeam; return $myTeam !== '' && ($TEAM['byName'][$who]['team'] ?? '') === $myTeam; }
+/** may the signed-in person manage who's things (stats, calendar entries, goals, leads)? */
+function canManage(string $who): bool { global $role, $me; return $who === $me || $role === 'admin' || ($role === 'manager' && sameTeam($who)); }
+/** may they look at who's calendar? */
+function canViewCal(string $who): bool { global $role; return canManage($who) || ($role === 'crew' && sameTeam($who)); }
+function activeName(string $who): bool { global $TEAM; return $who !== '' && isset($TEAM['byName'][$who]); }
+/** whose figures a stats-style request is about: admins anyone (or everyone with ''), the rest themselves or someone they manage */
+function whoFor(string $req): string { global $role, $me; $req = trim($req); if ($role === 'admin') return $req; return ($req !== '' && canManage($req)) ? $req : $me; }
+/** may this person move a neighbourhood from $cur to $new? Managers only within their team (and unassigned ones). */
+function mayAssign(string $cur, string $new): bool {
+    global $role, $me;
+    if ($role === 'admin') return true;
+    if ($role !== 'manager') return false;
+    $ours = fn($n) => $n === '' || $n === $me || sameTeam($n);
+    return $ours($cur) && $ours($new);
+}
+
+if ($action === 'teams') {
+    $list = [];
+    foreach ((array) ($acct['teams'] ?? []) as $tid => $t) {
+        if ($role !== 'admin' && (string) $tid !== $myTeam) continue;
+        $mem = array_map(fn($n) => ['name' => $n, 'role' => $TEAM['byName'][$n]['role'] ?? 'crew'], $TEAM['members'][$tid] ?? []);
+        usort($mem, fn($x, $y) => [$x['role'] !== 'manager', mb_strtolower($x['name'])] <=> [$y['role'] !== 'manager', mb_strtolower($y['name'])]);
+        $list[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? ''), 'members' => $mem];
+    }
+    usort($list, fn($x, $y) => strcmp(mb_strtolower($x['name']), mb_strtolower($y['name'])));
+    out(['ok' => true, 'teams' => $list, 'mine' => $myTeam]);
+}
+if ($action === 'teamsave' || $action === 'teammember') {
     if ($role !== 'admin') fail('Not allowed.', 403);
-    $leads = []; foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null];
+    if (!$isPost) fail('POST required', 405);
+    $tlock = @fopen(accountsFile() . '.lock', 'c');
+    if (!$tlock || !flock($tlock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts(); $acct['teams'] = (array) ($acct['teams'] ?? []); $acct['member'] = (array) ($acct['member'] ?? []);
+    $tid = (string) ($body['id'] ?? ($body['team'] ?? ''));
+    if ($action === 'teamsave') {
+        if (!empty($body['del'])) {
+            if (!isset($acct['teams'][$tid])) fail('No such team.', 404);
+            unset($acct['teams'][$tid]);
+            foreach ($acct['member'] as $pid => $t) if ($t === $tid) unset($acct['member'][$pid]);
+        } else {
+            $name = trim(preg_replace('/\s+/', ' ', (string) ($body['name'] ?? '')));
+            if (mb_strlen($name) < 2 || mb_strlen($name) > 40) fail('Give the team a name of 2 to 40 characters.');
+            foreach ($acct['teams'] as $k => $t) if ((string) $k !== $tid && mb_strtolower((string) ($t[0] ?? '')) === mb_strtolower($name)) fail('There is already a team called ' . $name . '.');
+            if ($tid === '') $tid = 't' . bin2hex(random_bytes(4));
+            elseif (!isset($acct['teams'][$tid])) fail('No such team.', 404);
+            $acct['teams'][$tid] = [$name, $me, time()];
+        }
+    } else {
+        $pid = (string) ($body['person'] ?? '');
+        $rows = acctRows($basePeople, $acct, $sessionKey);
+        if (!isset($rows[$pid]) || $rows[$pid]['off']) fail('No such account.', 404);
+        if ($tid === '') unset($acct['member'][$pid]);
+        elseif (!isset($acct['teams'][$tid])) fail('No such team.', 404);
+        else $acct['member'][$pid] = $tid;
+    }
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => $action, 'team' => $tid, 'person' => (string) ($body['person'] ?? ''), 'del' => !empty($body['del'])]);
+    out(['ok' => true, 'id' => $tid]);
+}
+
+/* ---- leads with an owner (2026-10-05) ----
+ * Website and Meta leads are nobody's until an admin or a manager assigns them (Matthew); then they are that person's,
+ * on their calendar with a follow-up date they set. A door booking stays with whoever knocked. All in leadst.log rows:
+ * {id, owner} and {id, follow: [date, time] | null}, alongside the existing status and note rows. */
+function leadsAll(): array {
+    $leads = [];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
+        if (array_key_exists('owner', $u)) { $leads[$u['id']]['owner'] = (string) $u['owner']; $leads[$u['id']]['ownerBy'] = $u['by'] ?? null; }
+        if (array_key_exists('follow', $u)) $leads[$u['id']]['follow'] = is_array($u['follow']) ? ['date' => (string) $u['follow'][0], 'time' => (string) ($u['follow'][1] ?? '')] : null;
     }
+    return $leads;
+}
+function leadOk(string $id): bool { return (bool) preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id); }
+if ($action === 'myleads') {
+    $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
+    $list = array_values(array_filter(leadsAll(), fn($l) => $l['owner'] === $who));
+    usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
+    out(['ok' => true, 'who' => $who, 'leads' => $list]);
+}
+if ($action === 'leadassign') {
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $owner = trim((string) ($body['owner'] ?? ''));
+    $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    if ($owner !== '' && (!activeName($owner) || boardHidden($owner))) fail('Pick someone with a sign-in code.');
+    if (!mayAssign($all[$id]['owner'], $owner)) fail('A manager assigns leads within their own team.', 403);
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'owner' => $owner, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+if ($action === 'leadfollow') {
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $own = $all[$id]['owner'];
+    if (!($role === 'admin' || ($own !== '' && canManage($own)))) fail('Not allowed.', 403);
+    $date = (string) ($body['date'] ?? ''); $time = (string) ($body['time'] ?? '');
+    if ($date !== '' && (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1]))) fail('That is not a real date.');
+    if ($time !== '' && !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', $time)) fail('That is not a real time.');
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'follow' => $date === '' ? null : [$date, $time], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+/* ---- calendars (2026-10-05) ----
+ * One per person, built from what the app already knows (walks they booked, doors that said "come back", leads they
+ * own with a follow-up date) plus their own entries in calendar.log. Never one merged calendar: an admin picks a person. */
+function calEntries(): array {
+    $o = [];
+    foreach (readLines(DATA_DIR . '/calendar.log') as $r) {
+        if (!isset($r['id'])) continue;
+        if (!empty($r['del'])) unset($o[$r['id']]); else $o[$r['id']] = $r;
+    }
+    return $o;
+}
+function calRange(): array {
+    $tz = new DateTimeZone('America/Denver');
+    $ok = fn($d) => (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/D', $d);
+    $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
+    if (!$ok($from)) $from = (new DateTime('today', $tz))->format('Y-m-d');
+    if (!$ok($to) || $to < $from) $to = (new DateTime($from . ' 00:00', $tz))->modify('+30 days')->format('Y-m-d');
+    if ((new DateTime($to . ' 00:00', $tz))->getTimestamp() - (new DateTime($from . ' 00:00', $tz))->getTimestamp() > 62 * 86400) fail('Ask for two months at most.');
+    return [$from, $to];
+}
+if ($action === 'calpeople') {
+    $list = [];
+    foreach ($TEAM['byName'] as $n => $x) {
+        if ($n !== $me && boardHidden($n)) continue;
+        if (!canViewCal((string) $n)) continue;
+        $list[] = ['name' => (string) $n, 'role' => $x['role'], 'team' => $x['team'], 'edit' => canManage((string) $n), 'me' => $n === $me];
+    }
+    usort($list, fn($a, $b) => [!$a['me'], mb_strtolower($a['name'])] <=> [!$b['me'], mb_strtolower($b['name'])]);
+    $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[(string) $tid] = (string) ($t[0] ?? '');
+    out(['ok' => true, 'people' => $list, 'teams' => $tn, 'me' => $me]);
+}
+if ($action === 'calendar') {
+    $who = trim((string) ($_GET['who'] ?? '')) ?: $me;
+    if (!canViewCal($who)) fail('Not allowed.', 403);
+    [$from, $to] = calRange();
+    $ev = [];
+    foreach (walksBetween($from, $to) as $w) if ($w['by'] === $who)
+        $ev[] = ['kind' => 'walk', 'date' => $w['date'], 'time' => $w['time'], 'title' => $w['address'], 'town' => $w['town'], 'region' => $w['region'], 'area' => $w['area'], 'id' => $w['id']];
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $marks = loadMarks($r['key']); $hit = false;
+        foreach ($marks as $m) if (($m['by'] ?? '') === $who && ($m['outcome'] ?? '') === 'later' && ($m['revisit'] ?? '') !== '') { $hit = true; break; }
+        if (!$hit) continue;
+        $data = loadRegion($r['key']); if (!$data) continue;
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            $m = freshMark($d, $marks[$d['id']] ?? null);
+            if (!$m || ($m['by'] ?? '') !== $who || $m['outcome'] !== 'later') continue;
+            $rv = (string) ($m['revisit'] ?? '');
+            if ($rv === '' || $rv < $from || $rv > $to) continue;
+            $ev[] = ['kind' => 'revisit', 'date' => $rv, 'time' => '', 'title' => $d['address'], 'town' => $r['label'], 'region' => $r['key'], 'area' => $a['name'], 'id' => $d['id']];
+        }
+    }
+    foreach (leadsAll() as $l) {
+        if ($l['owner'] !== $who || !$l['follow'] || in_array($l['status'], ['won', 'lost'], true)) continue;
+        $dt = $l['follow']['date']; if ($dt < $from || $dt > $to) continue;
+        $ev[] = ['kind' => 'lead', 'date' => $dt, 'time' => $l['follow']['time'], 'title' => trim(($l['name'] ?? '') ?: ($l['phone'] ?? '') ?: 'Lead'), 'need' => (string) ($l['need'] ?? ''),
+                 'town' => (string) ($l['town'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'lead' => $l['id'], 'status' => $l['status']];
+    }
+    foreach (calEntries() as $c) {
+        if (($c['who'] ?? '') !== $who || $c['date'] < $from || $c['date'] > $to) continue;
+        $ev[] = ['kind' => 'own', 'date' => $c['date'], 'time' => (string) ($c['time'] ?? ''), 'title' => (string) $c['title'], 'note' => (string) ($c['note'] ?? ''), 'cid' => $c['id'], 'by' => (string) ($c['by'] ?? '')];
+    }
+    usort($ev, fn($x, $y) => [$x['date'], $x['time'] === '' ? '99' : $x['time']] <=> [$y['date'], $y['time'] === '' ? '99' : $y['time']]);
+    out(['ok' => true, 'who' => $who, 'from' => $from, 'to' => $to, 'edit' => canManage($who), 'events' => $ev]);
+}
+if ($action === 'calsave') {
+    if (!$isPost) fail('POST required', 405);
+    $who = trim((string) ($body['who'] ?? '')) ?: $me;
+    if (!canManage($who)) fail('Not allowed.', 403);
+    $cid = (string) ($body['id'] ?? '');
+    if ($cid !== '' && !preg_match('/^c[0-9a-f]{12}$/D', $cid)) fail('No such entry.', 404);
+    $have = $cid !== '' ? (calEntries()[$cid] ?? null) : null;
+    if ($cid !== '' && (!$have || ($have['who'] ?? '') !== $who)) fail('No such entry.', 404);
+    if (!empty($body['del'])) {
+        if (!$have) fail('No such entry.', 404);
+        if (!appendLine(DATA_DIR . '/calendar.log', ['id' => $cid, 'del' => 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    $date = (string) ($body['date'] ?? ''); $time = (string) ($body['time'] ?? '');
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1])) fail('That is not a real date.');
+    if ($time !== '' && !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', $time)) fail('That is not a real time.');
+    $title = $clean($body['title'] ?? '', 80); $note = $clean($body['note'] ?? '', 500);
+    if ($title === '') fail('Give it a title.');
+    $row = ['id' => $cid ?: 'c' . bin2hex(random_bytes(6)), 'who' => $who, 'date' => $date, 'time' => $time, 'title' => $title, 'note' => $note, 'by' => $me, 'at' => time()];
+    if (!appendLine(DATA_DIR . '/calendar.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'id' => $row['id']]);
+}
+
+/* ---- personal goals (2026-10-05) ----
+ * Each person can set their own daily goal (doors, people talked to, quotes booked); a manager or an admin can set one
+ * for someone they manage. With none set, the company goal on the Leaderboard applies. */
+function loadPGoals(): array { $g = json_decode((string) @file_get_contents(DATA_DIR . '/goals-people.json'), true); return is_array($g) ? $g : []; }
+if ($action === 'mygoal') {
+    if (!$isPost) fail('POST required', 405);
+    $who = trim((string) ($body['who'] ?? '')) ?: $me;
+    if (!canManage($who)) fail('Not allowed.', 403);
+    $g = ['by' => $me, 'at' => time()]; $any = false;
+    foreach (['doors', 'talked', 'booked'] as $k) {
+        $v = $body[$k] ?? null;
+        if ($v === null || $v === '') { $g[$k] = null; continue; }
+        if (!is_numeric($v) || (int) $v != $v || (int) $v < 0 || (int) $v > 300) fail('Goals are whole numbers from 0 to 300.');
+        $g[$k] = (int) $v; $any = true;
+    }
+    $gf = DATA_DIR . '/goals-people.json';
+    $glock = @fopen($gf . '.lock', 'c');
+    if (!$glock || !flock($glock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = loadPGoals();
+    if ($any) $all[$who] = $g; else unset($all[$who]);
+    if (@file_put_contents($gf, json_encode($all, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'goal' => $any ? $g : null]);
+}
+
+/* ---- training (2026-10-05) ----
+ * Each company's own lessons, in its data folder (training.json), never in the page: the product carries the section,
+ * the company carries the content (Matthew). Everyone signed in reads it; admins edit it. */
+if ($action === 'training') {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/training.json'), true);
+    out(['ok' => true, 'training' => is_array($j) && is_array($j['lessons'] ?? null) ? $j : ['lessons' => []], 'edit' => $role === 'admin']);
+}
+if ($action === 'trainingsave') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $in = $body['lessons'] ?? null;
+    if (!is_array($in) || count($in) > 200) fail('Up to 200 lessons.');
+    $out = [];
+    foreach ($in as $l) {
+        if (!is_array($l)) fail('Bad lesson.');
+        $title = $clean($l['title'] ?? '', 120); $text = trim(str_replace("\r", '', (string) ($l['text'] ?? '')));
+        $kind = (string) ($l['kind'] ?? 'other'); if (!in_array($kind, ['door', 'phone', 'other'], true)) $kind = 'other';
+        if ($title === '') fail('Every lesson needs a title.');
+        if (mb_strlen($text) > 20000) fail('A lesson can be up to 20,000 characters.');
+        $lid = (string) ($l['id'] ?? ''); if (!preg_match('/^l[0-9a-f]{8}$/D', $lid)) $lid = 'l' . bin2hex(random_bytes(4));
+        $out[] = ['id' => $lid, 'title' => $title, 'kind' => $kind, 'text' => $text];
+    }
+    $j = ['lessons' => $out, 'by' => $me, 'at' => time()];
+    if (@file_put_contents(DATA_DIR . '/training.json', json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+
+/* ---- the storm list (2026-10-05) ------------------------------------------------------------------------------
+ * Matthew: roofers use five or six tabs to get from a storm to a phone call (a storm map, the properties, a satellite
+ * measure, the material by eye, an owner search, a number search). This is that path in one place: pick a storm day, see
+ * every door the hail or wind reached with its roof, material, age, owner and any number we may call, then open the card.
+ * Admins where hail is on. Prices per square and damage thresholds are each company's own (roof-settings.json); the app
+ * suggests no price. */
+const MAT_CLASS = ['asphalt' => 'Asphalt shingle', 'tile' => 'Tile', 'shake' => 'Wood shake', 'metal' => 'Metal', 'flat' => 'Flat or built-up', 'slate' => 'Slate or stone'];
+const STORM_MAX_ROWS = 1500;
+function matClass(string $county): string {
+    $c = strtolower($county);
+    if ($c === '') return '';
+    if (str_contains($c, 'composition') || str_contains($c, 'asphalt')) return 'asphalt';
+    if (str_contains($c, 'tile')) return 'tile';
+    if (str_contains($c, 'shake') || str_contains($c, 'wood')) return 'shake';
+    if (str_contains($c, 'metal')) return 'metal';
+    if (str_contains($c, 'slate') || str_contains($c, 'stone')) return 'slate';
+    if (str_contains($c, 'built up') || str_contains($c, 'elastomeric') || str_contains($c, 'ply') || str_contains($c, 'rock')) return 'flat';
+    return '';
+}
+function roofSettings(): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/roof-settings.json'), true);
+    $d = json_decode((string) @file_get_contents(DATA_DIR . '/roof-damage-defaults.json'), true);   /* suggested thresholds, from research; editable */
+    $out = ['price' => [], 'damage' => [], 'custom' => [], 'defaults' => is_array($d) ? $d : null];
+    foreach (MAT_CLASS as $k => $_) {
+        $out['price'][$k] = $j['price'][$k] ?? null;
+        $out['custom'][$k] = ($j['damage'][$k]['hail'] ?? null) !== null;   /* the company set its own hail figure: no age rule */
+        $out['damage'][$k] = ['hail' => $j['damage'][$k]['hail'] ?? ($d['damage'][$k]['hail'] ?? null), 'wind' => $j['damage'][$k]['wind'] ?? ($d['damage'][$k]['wind'] ?? null)];
+    }
+    $out['by'] = $j['by'] ?? null; $out['at'] = $j['at'] ?? null;
+    return $out;
+}
+if ($action === 'roofsettings') {
+    if (!hailOn($role)) fail('Not allowed.', 403);
+    if (!$isPost) out(['ok' => true, 'settings' => roofSettings(), 'classes' => MAT_CLASS]);
+    $cur = roofSettings();
+    $num = function ($v, $max) { if ($v === null || $v === '') return null; if (!is_numeric($v) || (float) $v < 0 || (float) $v > $max) fail('Use numbers from 0 to ' . $max . '.'); return round((float) $v, 2); };
+    $save = ['price' => [], 'damage' => [], 'by' => $me, 'at' => time()];
+    foreach (MAT_CLASS as $k => $_) {
+        $save['price'][$k] = array_key_exists($k, (array) ($body['price'] ?? [])) ? $num($body['price'][$k], 10000) : $cur['price'][$k];
+        $dm = (array) ($body['damage'][$k] ?? []);
+        $df = (array) ($cur['defaults']['damage'][$k] ?? []);
+        $hv = array_key_exists('hail', $dm) ? $num($dm['hail'], 6) : $cur['damage'][$k]['hail']; $wv = array_key_exists('wind', $dm) ? $num($dm['wind'], 250) : $cur['damage'][$k]['wind'];
+        /* a figure equal to the suggested one is stored as 'not set', so the suggestion (and the asphalt age rule) still applies */
+        $save['damage'][$k] = ['hail' => ($hv !== null && $hv == ($df['hail'] ?? null)) ? null : $hv, 'wind' => ($wv !== null && $wv == ($df['wind'] ?? null)) ? null : $wv];
+    }
+    if (@file_put_contents(DATA_DIR . '/roof-settings.json', json_encode($save, JSON_UNESCAPED_SLASHES), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'settings' => roofSettings()]);
+}
+if ($action === 'stormdays') {
+    if (!hailOn($role)) fail('Not allowed.', 403);
+    $h = json_decode((string) @file_get_contents(DATA_DIR . '/hail-storms.json'), true) ?: [];
+    $w = json_decode((string) @file_get_contents(DATA_DIR . '/wind-storms.json'), true) ?: [];
+    $days = [];
+    foreach (($h['storms'] ?? []) as $s) $days[$s['date']] = ['date' => $s['date'], 'hail' => $s['max'] ?? null, 'hailDoors' => (int) ($s['n34'] ?? 0),
+        'towns' => array_values(array_map(fn($t) => (string) $t['label'], (array) ($s['towns'] ?? []))), 'wind' => null, 'windKind' => '', 'windDoors' => 0];
+    foreach (($w['storms'] ?? []) as $s) {
+        $d = $days[$s['date']] ?? ['date' => $s['date'], 'hail' => null, 'hailDoors' => 0, 'towns' => [], 'wind' => null, 'windKind' => '', 'windDoors' => 0];
+        $d['wind'] = $s['max'] ?? null; $d['windKind'] = (string) ($s['kind'] ?? ''); $d['windDoors'] = (int) ($s['n'] ?? 0);
+        foreach ((array) ($s['towns'] ?? []) as $t) if (!in_array($t['label'], $d['towns'], true)) $d['towns'][] = (string) $t['label'];
+        $days[$s['date']] = $d;
+    }
+    krsort($days);
+    out(['ok' => true, 'days' => array_values($days), 'hailThrough' => $h['through'] ?? null, 'windThrough' => $w['through'] ?? null]);
+}
+if ($action === 'stormdoors') {
+    if (!hailOn($role)) fail('Not allowed.', 403);
+    $day = (string) ($_GET['day'] ?? ''); $only = (string) ($_GET['town'] ?? '');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day)) fail('Pick a storm day.');
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    /* first pass: which doors, per town, the hail or the wind reached that day */
+    $hits = []; $towns = []; $total = 0;
+    /* read one town's file at a time and let it go: the loaders' caches hold every town at once, too much for the wind files */
+    $side = function (string $kind, string $k) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $kind . '-' . $k . '.json'), true); return is_array($j['doors'] ?? null) ? $j['doors'] : []; };
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = $r['key']; $hit = [];
+        $hl = $side('hail', $k); foreach ($hl as $id => $rows) foreach ($rows as $x) if ($x[0] === $day) { $hit[$id]['hail'] = (float) $x[1]; break; }
+        unset($hl);
+        $wl = $side('wind', $k); foreach ($wl as $id => $rows) foreach ($rows as $x) if ($x[0] === $day) { $hit[$id]['wind'] = [$x[1], $x[2], $x[3]]; break; }
+        unset($wl);
+        if (!$hit) continue;
+        $nh = 0; foreach ($hit as $h) if (isset($h['hail'])) $nh++;
+        $towns[] = ['key' => $k, 'label' => $r['label'], 'n' => count($hit), 'hail' => $nh];
+        $hits[$k] = $hit; $total += count($hit);
+    }
+    /* a big wind day can reach most of the map (one station covers 10 miles), so past STORM_MAX_ROWS the page picks a town */
+    if ($only === '' && $total > STORM_MAX_ROWS) out(['ok' => true, 'day' => $day, 'pick' => true, 'total' => $total, 'towns' => $towns, 'doors' => [], 'settings' => roofSettings(), 'classes' => MAT_CLASS]);
+    $list = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = $r['key'];
+        if (!isset($hits[$k]) || ($only !== '' && $only !== $k)) continue;
+        $hit = $hits[$k];
+        $data = loadRegion($k); if (!$data) continue;
+        $roof = $side('roof', $k); $year = $side('year', $k); $mat = $side('material', $k);
+        $marks = loadMarks($k); $phones = loadPhones($k); $traces = skipLoad($k);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            if (!isset($hit[$d['id']])) continue;
+            $h = $hit[$d['id']]; $y = $year[$d['id']] ?? null; $m = $mat[$d['id']] ?? null;
+            $cls = (string) ($m['m'] ?? matClass((string) ($y['mat'] ?? '')));
+            $src = $m ? (string) ($m['src'] ?? 'imagery') : (($y['mat'] ?? '') !== '' ? 'county' : '');
+            $mk = freshMark($d, $marks[$d['id']] ?? null);
+            /* a number that may be dialled: given at the door, or looked up or skip traced and cleared against the Do Not Call list */
+            $ph = null; $p = $phones[$d['id']] ?? null;
+            if ($p && !empty($p['phone']) && ownerAge($d, $p) !== 'prev' && (($p['source'] ?? '') === 'door' || ($p['dnc'] ?? '') === 'clear')) $ph = ['n' => (string) $p['phone'], 'src' => (string) $p['source']];
+            elseif (isset($traces[$d['id']])) { foreach ((skipPublic($traces[$d['id']])['phones'] ?? []) as $tp) if (!empty($tp['clear'])) { $ph = ['n' => (string) $tp['n'], 'src' => 'trace']; break; } }
+            $list[] = ['region' => $k, 'town' => $r['label'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'owner' => (string) ($d['owner'] ?? ''),
+                       'hail' => $h['hail'] ?? null, 'wind' => $h['wind'] ?? null, 'roof' => $roof[$d['id']] ?? null, 'yb' => $y['yb'] ?? null, 'rm' => $y['rm'] ?? null,
+                       'mat' => $cls, 'matSrc' => $src, 'matP' => $m['p'] ?? null, 'mark' => $mk ? $mk['outcome'] : null, 'phone' => $ph, 'traced' => isset($traces[$d['id']])];
+        }
+    }
+    usort($list, fn($x, $y) => [($y['hail'] ?? 0), ($y['wind'][0] ?? 0)] <=> [($x['hail'] ?? 0), ($x['wind'][0] ?? 0)]);
+    out(['ok' => true, 'day' => $day, 'pick' => false, 'town' => $only, 'total' => $total, 'towns' => $towns, 'doors' => $list, 'settings' => roofSettings(), 'classes' => MAT_CLASS]);
+}
+
+/* ---- phone alerts (Matthew 2026-10-05) ---------------------------------------------------------------------------
+ * Web Push to the installed app (iPhone and iPad need iOS 16.4+ and the app on the Home Screen; Android Chrome works
+ * in the browser too). Design, tests and sources: door-app/research/push/. The library is api/webpush.php (no secrets).
+ *   storm warnings (severe thunderstorm, tornado, high wind): everyone, where the company shows hail on its cards;
+ *                             admins only where hail is on but hidden from the cards (Sixfold's lawn crews)
+ *   fire warnings (red flag, fire): everyone who turned alerts on
+ * Someone with neighbourhoods assigned gets only the towns they hold; everyone else gets every town.
+ * Private files (never in public_html, never in git): sixfold-private/push-vapid.json (the server makes its key the
+ * first time it is needed and NEVER replaces it: a new key would silently cut off every phone) and
+ * push-subscriptions.json. The cron job (sixfold-tools/push-alerts.php, every 5 minutes) runs action=pushcron. */
+const PUSH_STORM = ['Severe Thunderstorm Warning', 'Tornado Warning', 'High Wind Warning'];
+const PUSH_FIRE = ['Red Flag Warning', 'Fire Warning'];
+const PUSH_MAX_DEVICES = 4;
+function pushPrivDir(): string { $p = dirname(__DIR__, 2) . '/sixfold-private'; return is_dir($p) ? $p : dirname(DATA_DIR); }
+function pushVapid(bool $make = false): ?array {
+    $f = pushPrivDir() . '/push-vapid.json';
+    $j = json_decode((string) @file_get_contents($f), true);
+    if (is_array($j) && !empty($j['publicKey']) && !empty($j['privateKey'])) return $j;
+    if (!$make || file_exists($f)) return null;
+    $lk = @fopen($f . '.lock', 'c');
+    if (!$lk || !flock($lk, LOCK_EX)) return null;
+    clearstatcache();
+    if (file_exists($f)) { $j = json_decode((string) @file_get_contents($f), true); return is_array($j) ? $j : null; }
+    try { $k = vapidKeysGenerate(); } catch (Throwable $e) { error_log('rounds push: no key made: ' . $e->getMessage()); return null; }
+    $mail = trim((string) (company()['email'] ?? ''));
+    $j = ['publicKey' => $k['publicKey'], 'privateKey' => $k['privateKey'], 'subject' => 'mailto:' . ($mail !== '' ? $mail : 'office@example.com'), 'made' => time()];
+    if (@file_put_contents($f, json_encode($j, JSON_UNESCAPED_SLASHES), LOCK_EX) === false) return null;
+    @chmod($f, 0600);
+    return $j;
+}
+function pushSubs(): array { $j = json_decode((string) @file_get_contents(pushPrivDir() . '/push-subscriptions.json'), true); return is_array($j) ? $j : []; }
+function pushSave(array $a): bool {
+    $f = pushPrivDir() . '/push-subscriptions.json'; $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp';
+    if (@file_put_contents($tmp, json_encode($a, JSON_UNESCAPED_SLASHES), LOCK_EX) === false) return false;
+    @chmod($tmp, 0600);
+    if (!@rename($tmp, $f)) { @unlink($tmp); return false; }
+    return true;
+}
+function pushLock() { $lk = @fopen(pushPrivDir() . '/push-subscriptions.json.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500); return $lk; }
+function pushHash(string $endpoint): string { return substr(hash('sha256', $endpoint), 0, 16); }
+
+if ($action === 'pushkey') {
+    $v = pushVapid(true);
+    if (!$v) fail('Alerts are not set up on this server yet.', 503);
+    out(['ok' => true, 'publicKey' => $v['publicKey']]);
+}
+if ($action === 'pushsubscribe' || $action === 'pushunsubscribe') {
+    if (!$isPost) fail('POST required', 405);
+    $pid = (string) ($session['c'] ?? ''); if ($pid === '') fail('Sign in first.', 401);
+    $lk = pushLock(); $subs = pushSubs();
+    if ($action === 'pushsubscribe') {
+        $sub = $body['subscription'] ?? null;
+        if (!is_array($sub) || ($err = webpushSubscriptionError($sub)) !== null) fail('That subscription is not usable: ' . ($err ?? 'missing') . '.');
+        $h = pushHash((string) $sub['endpoint']);
+        foreach ($subs as $p => $devs) { unset($subs[$p][$h]); if (!$subs[$p]) unset($subs[$p]); }   /* a shared iPad: the phone follows whoever signed in */
+        $old = (string) ($body['replaces'] ?? ''); if ($old !== '') foreach ($subs as $p => $devs) unset($subs[$p][pushHash($old)]);
+        if (count($subs[$pid] ?? []) >= PUSH_MAX_DEVICES) {   /* full: the phone seen longest ago makes room (never the one being added) */
+            uasort($subs[$pid], fn($x, $y) => $x['seen'] <=> $y['seen']); unset($subs[$pid][array_key_first($subs[$pid])]);
+        }
+        $subs[$pid][$h] = ['sub' => ['endpoint' => (string) $sub['endpoint'], 'keys' => ['p256dh' => (string) $sub['keys']['p256dh'], 'auth' => (string) $sub['keys']['auth']]],
+                           'device' => substr(preg_replace('/[^A-Za-z0-9 .\'-]/', '', (string) ($body['device'] ?? 'device')), 0, 30), 'name' => $me, 'at' => time(), 'seen' => time()];
+        if (!pushSave($subs)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'devices' => count($subs[$pid])]);
+    }
+    $h = pushHash((string) ($body['endpoint'] ?? ''));
+    foreach ($subs as $p => $devs) { unset($subs[$p][$h]); if (!$subs[$p]) unset($subs[$p]); }
+    if (!pushSave($subs)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+if ($action === 'pushtest') {
+    if (!$isPost) fail('POST required', 405);
+    $v = pushVapid(false); if (!$v) fail('Alerts are not set up on this server yet.', 503);
+    $devs = pushSubs()[(string) ($session['c'] ?? '')] ?? [];
+    if (!$devs) fail('This sign-in has no phone with alerts on yet.');
+    $ok = 0; $msgs = [];
+    foreach ($devs as $d) {
+        $r = webpushSend($d['sub'], json_encode(['title' => 'Test alert', 'body' => 'Alerts work on this ' . $d['device'] . '. Storm and fire warnings will look like this.', 'url' => './', 'tag' => 'test', 'at' => time()]), $v, 300, ['urgency' => 'high']);
+        if ($r['ok']) $ok++; else $msgs[] = $r['error'] ?: ('status ' . $r['status']);
+    }
+    out(['ok' => true, 'sent' => $ok, 'of' => count($devs), 'errors' => $msgs]);
+}
+if ($action === 'pushlatest') {
+    $sent = json_decode((string) @file_get_contents(DATA_DIR . '/push-sent.json'), true) ?: [];
+    $best = null; foreach ($sent as $id => $s) if (($s['at'] ?? 0) > time() - 3 * 3600 && (!$best || $s['at'] > $best[1]['at'])) $best = [$id, $s];
+    out(['ok' => true, 'alert' => $best ? ['title' => $best[1]['title'], 'body' => $best[1]['body'], 'url' => './', 'tag' => (string) $best[0], 'id' => (string) $best[0]] : null]);
+}
+if ($action === 'pushcron') {
+    if (!defined('SIXFOLD_CLI')) fail('Not here.', 404);
+    $dry = !empty($_REQUEST['dry']);
+    $sf = DATA_DIR . '/push-sent.json';
+    $clk = @fopen($sf . '.lock', 'c');
+    if (!$clk || !flock($clk, LOCK_EX | LOCK_NB)) out(['ok' => true, 'busy' => true]);
+    $v = pushVapid(false);
+    if (!$v) out(['ok' => true, 'note' => 'No key yet: nobody has turned alerts on.', 'pushed' => []]);
+    $al = freshAlerts(240);
+    $sent = json_decode((string) @file_get_contents($sf), true) ?: [];
+    foreach ($sent as $id => $s) if (($s['at'] ?? 0) < time() - 7 * 86400) unset($sent[$id]);
+    $subs = pushSubs(); $changed = false;
+    /* who is who now: removed people's phones are dropped; roles decide storm alerts */
+    $byId = []; foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off']) $byId[$r['id']] = $r;
+    $townsOf = []; $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $label = [];
+    foreach (($idx['regions'] ?? []) as $rg) { $label[$rg['key']] = $rg['label']; foreach (loadAssign($rg['key']) as $who) $townsOf[$who][$rg['key']] = true; }
+    $co = company(); $stormAll = feature('hail') && (($co['card']['hail'] ?? true) !== false); $stormAdmins = feature('hail');
+    $pushed = [];
+    foreach (($al['weather'] ?? []) as $w) {
+        $id = (string) ($w['id'] ?? ''); $ev = (string) ($w['event'] ?? '');
+        $storm = in_array($ev, PUSH_STORM, true); $fire = in_array($ev, PUSH_FIRE, true);
+        if ($id === '' || (!$storm && !$fire) || isset($sent[$id])) continue;
+        $ends = strtotime((string) ($w['ends'] ?? '')) ?: time() + 3600;
+        if ($ends < time()) continue;
+        $towns = array_values((array) ($w['towns'] ?? []));
+        $until = (new DateTime('@' . $ends))->setTimezone(new DateTimeZone('America/Denver'))->format('g:i a');
+        $bodyTxt = implode(', ', array_map(fn($t) => $label[$t] ?? $t, $towns)) . ' · until ' . $until
+                 . (!empty($w['hail']) ? ' · hail up to ' . rtrim(rtrim(number_format((float) $w['hail'], 2), '0'), '.') . ' in' : '') . (!empty($w['wind']) ? ' · gusts ' . strtolower((string) $w['wind']) : '');
+        $payload = json_encode(['title' => $ev, 'body' => $bodyTxt, 'url' => './', 'tag' => substr(sha1($id), 0, 16), 'id' => $id, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $ttl = max(60, min(6 * 3600, $ends - time()));
+        $to = 0; $ok = 0; $gone = 0;
+        foreach ($subs as $pid => $devs) {
+            $p = $byId[$pid] ?? null;
+            if (!$p) { unset($subs[$pid]); $changed = true; continue; }
+            if ($storm && !($stormAll || ($stormAdmins && $p['role'] === 'admin'))) continue;
+            $mine = array_keys($townsOf[$p['name']] ?? []);
+            if ($mine && !array_intersect($mine, $towns)) continue;
+            foreach ($devs as $h => $dv) {
+                $to++;
+                if ($dry) continue;
+                $r = webpushSend($dv['sub'], $payload, $v, $ttl, ['urgency' => 'high', 'topic' => substr(sha1($id), 0, 32)]);
+                if ($r['ok']) $ok++;
+                elseif ($r['gone'] && time() - (int) ($dv['at'] ?? 0) > 120) { unset($subs[$pid][$h]); $changed = true; $gone++; }   /* a brand-new subscription can answer 410 for a minute (tested) */
+                if (($r['status'] ?? 0) === 429) break 3;
+            }
+        }
+        if (!$dry) $sent[$id] = ['at' => time(), 'event' => $ev, 'towns' => $towns, 'title' => $ev, 'body' => $bodyTxt, 'to' => $to, 'ok' => $ok, 'gone' => $gone];
+        $pushed[] = ['event' => $ev, 'towns' => $towns, 'to' => $to, 'ok' => $ok, 'gone' => $gone];
+    }
+    if (!$dry) {
+        foreach ($subs as $p => $d) if (!$d) unset($subs[$p]);
+        if ($changed) { $lk = pushLock(); pushSave($subs); }
+        @file_put_contents($sf, json_encode($sent, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
+        if ($pushed) @file_put_contents(DATA_DIR . '/push.log', json_encode(['at' => time(), 'pushed' => $pushed]) . "\n", FILE_APPEND | LOCK_EX);
+    }
+    out(['ok' => true, 'dry' => $dry, 'pushed' => $pushed, 'phones' => array_sum(array_map('count', $subs))]);
+}
+
+if ($action === 'leads') {
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    $leads = leadsAll();
+    /* a manager sees the leads nobody owns yet and their own team's */
+    if ($role !== 'admin') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
@@ -1889,10 +2420,11 @@ if ($action === 'leadimport') {
 }
 
 if ($action === 'leadstatus') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? '');
     if (!preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id)) fail('No such lead.', 404);
+    $own = (string) (leadsAll()[$id]['owner'] ?? '');
+    if ($role !== 'admin' && !($own !== '' && canManage($own))) fail('Not allowed.', 403);
     $known = false; foreach (readLines(leadsDir() . '/leads.log') as $l) if ($l['id'] === $id) { $known = true; break; }
     if (!$known) fail('No such lead.', 404);
     $status = (string) ($body['status'] ?? ''); $note = $clean($body['note'] ?? '', 500);
@@ -2165,12 +2697,14 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
             $live[$lid][] = ['device' => (string) ($l[3] ?? ''), 'seen' => (int) ($l[2] ?? 0), 'since' => (int) $l[1] - $sessionDays * 86400];
         }
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
-        $list = array_map(function ($r) use ($myId, $live, $outAt) {
+        $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id'])];
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? '')];
         }, array_values($rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
-        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0)]);
+        $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
+        usort($tn, fn($x, $y) => strcmp(mb_strtolower($x['name']), mb_strtolower($y['name'])));
+        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn]);
     }
     if (!$isPost) fail('POST required', 405);
     /* every change works on a fresh copy under a lock (Fable 2026-10-04): the file is rewritten whole, so
@@ -2196,7 +2730,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     if ($action === 'accountadd') {
         $name = acctName((string) ($body['name'] ?? '')); $r = (string) ($body['role'] ?? 'crew');
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
-        if (!in_array($r, ['crew', 'admin'], true)) fail('Pick crew or admin.');
+        if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
@@ -2212,7 +2746,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $r = array_key_exists('role', $body) ? (string) $body['role'] : $t['role'];
         if ($t['off']) fail('Turn the account back on first.');
         if (array_key_exists('name', $body) && !acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
-        if (!in_array($r, ['crew', 'admin'], true)) fail('Pick crew or admin.');
+        if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
         if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
         if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
         if ($t['role'] === 'admin' && $r !== 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin. Make someone else an admin first.');
@@ -2306,8 +2840,12 @@ if ($action === 'board') {
     $names = [];
     foreach ($people as $code => $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }   /* names only, never codes */
     ksort($names);
-    out(['ok' => true, 'today' => $from['today'], 'open' => BOARD_OPEN, 'goals' => loadGoals(), 'people' => array_values($rows),
-         'territories' => $terr, 'names' => $role === 'admin' ? array_keys($names) : []]);
+    if ($role === 'manager' && !BOARD_OPEN) {   /* a manager's board is their team's (2026-10-05) */
+        $rows = array_filter($rows, fn($r) => $r['name'] === $me || sameTeam($r['name']));
+        $terr = array_values(array_filter($terr, fn($t) => $t['who'] === $me || sameTeam($t['who'])));
+    }
+    out(['ok' => true, 'today' => $from['today'], 'open' => BOARD_OPEN, 'goals' => loadGoals(), 'pgoals' => loadPGoals(), 'people' => array_values($rows),
+         'territories' => $terr, 'names' => $role === 'admin' ? array_keys($names) : ($role === 'manager' ? array_values(array_filter(array_keys($names), fn($n) => $n === $me || sameTeam($n))) : [])]);
 }
 
 if ($action === 'goals') {
@@ -2329,7 +2867,7 @@ if ($action === 'goals') {
  * manager role will assign within their own team: the assignment rows already say who assigned
  * ('by'), so that role only needs a team list and a check here. */
 if ($action === 'territories') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $towns = [];
     foreach (($idx['regions'] ?? []) as $rg) {
@@ -2343,19 +2881,20 @@ if ($action === 'territories') {
         $towns[] = ['key' => $rg['key'], 'label' => $rg['label'], 'areas' => $areas];
     }
     $names = [];
-    foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }
+    foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n) && ($role === 'admin' || $n === $me || sameTeam($n))) $names[$n] = true; }
     ksort($names);
     /* everyone who can sign in now, hidden ones included: an assignment to anyone else belongs to someone removed */
     $active = []; foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '') $active[$n] = true; }
-    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names), 'active' => array_keys($active)]);
+    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names), 'active' => array_keys($active), 'manager' => $role === 'manager']);
 }
 /* every neighbourhood one person holds, in every town, back to unassigned in one go (2026-10-04): when someone leaves,
    or their area changes. Works for people already removed from Accounts too. */
 if ($action === 'unassignall') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $who = trim((string) ($body['who'] ?? ''));
     if ($who === '') fail('Whose neighbourhoods?');
+    if (!mayAssign($who, '')) fail('A manager changes territories within their own team.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $n = 0;
     foreach (($idx['regions'] ?? []) as $rg) foreach (loadAssign($rg['key']) as $area => $w) {
@@ -2366,7 +2905,7 @@ if ($action === 'unassignall') {
     out(['ok' => true, 'n' => $n]);
 }
 if ($action === 'assignmany') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $areas = is_array($body['areas'] ?? null) ? array_values(array_unique(array_map('strval', $body['areas']))) : [];
@@ -2379,12 +2918,14 @@ if ($action === 'assignmany') {
         $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
         if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
     }
+    $cur = loadAssign($key);
+    foreach ($areas as $a) if (!mayAssign((string) ($cur[$a] ?? ''), $who)) fail('A manager changes territories within their own team: ' . $a . ' is someone else\'s.', 403);
     foreach ($areas as $a) if (!appendAssign($key, ['area' => $a, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'n' => count($areas)]);
 }
 
 if ($action === 'assign') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $area = (string) ($body['area'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $data = loadRegion($key);
@@ -2394,6 +2935,7 @@ if ($action === 'assign') {
         $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
         if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
     }
+    if (!mayAssign((string) (loadAssign($key)[$area] ?? ''), $who)) fail('A manager changes territories within their own team.', 403);
     if (!appendAssign($key, ['area' => $area, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }

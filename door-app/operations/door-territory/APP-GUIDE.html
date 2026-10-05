@@ -82,20 +82,22 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
 </header>
 
 <nav class="toc" aria-label="Contents">
-  <details><summary>1 · At the doors <small>5 sections</small></summary><ol>
+  <details><summary>1 · At the doors <small>6 sections</small></summary><ol>
     <li><a href="#what">What it is</a></li>
-    <li><a href="#people">Who uses it</a></li>
+    <li><a href="#people">Who uses it: crew, managers, admins, teams</a></li>
     <li><a href="#day">A day at the doors</a></li>
     <li><a href="#rounds">Door rounds, screen by screen</a></li>
     <li><a href="#card">The door card</a></li>
+    <li><a href="#calendar">Calendar, leads, goals and training</a></li>
   </ol></details>
   <details><summary>2 · The office <small>3 sections</small></summary><ol>
     <li><a href="#office">The office tools</a></li>
     <li><a href="#customers">Customers and backups</a></li>
     <li><a href="#quote">Quote builder</a></li>
   </ol></details>
-  <details><summary>3 · Roofing preview <small>hail, roofs, photos</small></summary><ol>
-    <li><a href="#roofing">Roofing preview: hail, roof size, year built, roof photos</a></li>
+  <details><summary>3 · Roofing <small>storm list, hail, wind, roofs</small></summary><ol>
+    <li><a href="#roofing">Roofing preview: the storm list, hail, wind, roofs, photos</a></li>
+    <li><a href="#alerts">Phone alerts for storms and fire</a></li>
   </ol></details>
   <details><summary>4 · How it works <small>3 sections</small></summary><ol>
     <li><a href="#data">Where the data comes from</a></li>
@@ -144,15 +146,16 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
 
 <section id="people">
   <h2>Who uses it</h2>
-  <p>Everyone signs in with a personal 6-digit code. There are two roles.</p>
+  <p>Everyone signs in with a personal 6-digit code. There are three roles.</p>
   <div class="tw"><table>
     <thead><tr><th>Role</th><th>Sees and does</th></tr></thead>
     <tbody>
       <tr><td><span class="chip all">Crew</span></td><td>Door rounds, search, their own stats and doors. Marks doors and records everything at the door. Sees every neighbourhood and every door's chips and money line.</td></tr>
+      <tr><td><span class="chip all">Manager</span></td><td>Everything crew can, plus their own team: a <strong>Your team</strong> group on the tools screen with Leads (hand new enquiries to people on the team), Team stats, the Leaderboard and Territories, all for their team only. They can open a teammate's stats and calendar, add to it, and set a teammate's daily goal.</td></tr>
       <tr><td><span class="chip adm">Admin</span></td><td>Everything crew can, plus the office tools: Pipeline, Customers, Quote builder, Territories, Communities, Results, Team stats, Leaderboard, Accounts, the fire-weather call list, and the exports. In Roofing preview, also Hail, roof size and year built, and roof photos.</td></tr>
     </tbody>
   </table></div>
-  <p>A team manager role is planned for later, to assign territories to their own reps. The territory records already note who assigned each one, so it can be added without rebuilding.</p>
+  <p><strong>Teams</strong> are made on the Accounts screen (<strong>+ Add a team</strong>); each person's team and role are set with <strong>Change</strong> on their row. One team per person. A manager runs the team they are on. Crew on a team can look at their teammates' calendars (not change them); crew on no team see only their own. An admin sees everyone's.</p>
 </section>
 
 <section id="day">
@@ -219,6 +222,18 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   </ul>
   <h3>The homeowner fire check and report</h3>
   <p>A 17-item visual check of the home ignition zone from the Colorado State Forest Service guide (the house, 0–5 ft, 5–30 ft and around the property), each marked done, needs work or couldn't check. A second check after the job shows Before and Now side by side. To do one: open the door, tap <strong>Add info</strong>, then <strong>Fire check</strong>, mark each item, and Save. The card then shows the check with a <strong>Homeowner report</strong> link, which turns it into a one-page report, printed or saved as a PDF with <strong>Print or save as PDF</strong>: what to do first, the full check, the door's photos, and how to use it with an insurer and for the tax credit. It states plainly that it is a visual check, not an inspection, certification or guarantee.</p>
+</section>
+
+<section id="calendar">
+  <h2>Calendar, leads, goals and training</h2>
+  <h3>Calendar</h3>
+  <p>The <strong>Calendar</strong> tile shows one person's next 30 days (Earlier, Today and Later move it), built from what the app already knows: <strong>walks they booked</strong>, <strong>doors that said "not now, come back"</strong> on the day the homeowner asked for, <strong>leads they own</strong> with a follow-up date, and <strong>their own entries</strong> (+ Add to my calendar: what, the day, a time, a note). Tapping a walk or a come-back opens that door; tapping a lead opens My leads. An admin picks anyone from the list at the top; a manager picks their team; crew on a team can look at teammates'. It is never one calendar for everyone.</p>
+  <h3>Leads that belong to someone</h3>
+  <p>A website or Meta enquiry belongs to nobody until an admin (in the Pipeline) or a manager (in Leads) picks an <strong>Owner</strong>. It then shows in that person's <strong>My leads</strong>, where they call or text it, move its status and set a <strong>follow-up</strong> date that puts it on their calendar. A door someone booked stays theirs, as before.</p>
+  <h3>Daily goal</h3>
+  <p>On My stats, <strong>Daily goal</strong> shows today against a goal for doors, people talked to and quotes booked, with a bar for each. Anyone can set their own (<strong>Set a goal</strong>); a manager or an admin can set a teammate's. With none set, the team goal from the Leaderboard shows.</p>
+  <h3>Training</h3>
+  <p>The <strong>Training</strong> tile holds the company's own lessons, grouped Door to door, Phone calls and Other. Each company's lessons live in its own data on the server, not in the app, so they are its own. Admins add, edit and delete them there (a line starting "# " is a heading, "- " a bullet). It starts empty.</p>
 </section>
 
 <section id="office">
@@ -302,6 +317,12 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
 <section id="roofing">
   <h2>Roofing preview: hail, roof size, year built, roof photos</h2>
   <p>The first pieces of a roofing version, for admins to try. On the tools screen, under Look, <strong>Door card: Sixfold | Roofing preview</strong> switches that device only; the crew never see any of it. In Roofing preview the card hides lawn, trees, fire, money, water, the fire check, the Show doors with buttons and the Fire, Lawn and Trees sorts, and shows the roofing parts instead. Tap Sixfold to switch back; it stays on for that device until you do.</p>
+  <h3>Storm list: from a storm to a phone call</h3>
+  <p>Roofers usually go through five or six websites to get from a storm to a call. The <strong>Storm list</strong> tile does it in one place. Pick a storm day (hail and wind since 2020, merged by day). The list shows every door the hail or the wind reached, each with the hail at the house, the strongest wind reported within 10 miles and how far away, the roof size, pitch and squares, the material (the county's record, or from the photo where that is reliable), the year built and remodeled, the owner of record, whether it has been knocked, and a number that may be dialled (given at the door, or looked up or skip traced and cleared against the Do Not Call list). <strong>Open the card</strong> goes to the door for the photo, a skip trace, notes and the booking; Back returns to the list.</p>
+  <p>Each door gets a verdict: <strong>Likely</strong> when the hail at the house is at or over the damage threshold for its roof material (and, for asphalt, its age), or the wind is; <strong>Possible</strong> when the hail is within a quarter inch under it. A day that reached more than 1,500 doors (a big wind day) asks for a town first.</p>
+  <p><strong>Prices and damage thresholds</strong> (from the Storm list) hold the company's own price per square for each material, which the app never suggests, and the damage thresholds, which start at sourced figures: asphalt 1¼ in (1½ under 6 years old, 1 in over 10), wood shake 1½, tile 1¾, metal and flat roofs 2 (metal: denting), wind 58 mph (65 wood, 72 flat, 74 metal). With prices set, each door shows <strong>About $…</strong> (price × measured squares) and the list can sort by Biggest job.</p>
+  <h3>Wind</h3>
+  <p>The card's wind line (with hail, admins) shows the strongest reports within 10 miles of the house on each storm day since 2020: measured gusts from weather stations and NWS damage reports, from the National Weather Service's Local Storm Reports. A report is the wind at that station, not at this house, so the distance is shown. Cripple Creek has no station near enough and shows none.</p>
   <h3>Hail</h3>
   <p>A <strong>Hail</strong> tile appears in the office tools. It lists every storm day since 2020 (April to September), newest first, with how many of our doors had hail of 1 inch or more within about 1 km, the largest size and the towns (or ¾ inch or more). <strong>Show the neighbourhoods hit</strong> lists them, worst first; tapping one opens those doors. On the door card, <strong>Hail near the house (radar estimate)</strong> lists its storms, for example "1.07 in on 5 Aug 2023". 54 storm days reached 1 inch at our doors; the largest estimate was 2.74 inches on 22 June 2023.</p>
   <h3>Hail map and live radar</h3>
@@ -311,6 +332,18 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <h3>Roof photo</h3>
   <p><strong>See the roof (aerial photo, 2020)</strong> on the roof line loads a 3-inch photo of the house, centred on it, sharp enough to see roof planes and vents. It comes straight from the State of Colorado's public storage (1–2 MB), nothing kept on Sixfold's server. Castle Rock, and most of Franktown and Sedalia: 8,503 doors. Not Larkspur, El Paso or Teller (El Paso's own 2024 photos are licensed per tile: 199 tiles cover our El Paso doors, about $9,950 at 1-foot or $19,900 at 6-inch for three years).</p>
   <div class="note"><p><strong>All of it is an estimate.</strong> The radar reads smaller than ground reports for big hail, so use it to rank streets, not to promise a hail size on a roof. Roof sizes come from the building outline and miss eaves beyond it. The photos are from 2020: a roof replaced since won't show.</p></div>
+</section>
+
+<section id="alerts">
+  <h2>Phone alerts for storms and fire</h2>
+  <p>On the tools screen, <strong>Alerts: Turn on storm and fire alerts</strong> sends this phone a notification when the National Weather Service issues a warning for one of our towns, each warning once:</p>
+  <ul>
+    <li><strong>Storm warnings</strong> (severe thunderstorm, tornado, high wind), with the hail size and gusts: to everyone at a company that shows hail on its cards; at Sixfold, to admins only.</li>
+    <li><strong>Fire warnings</strong> (red flag, fire): to everyone who turned alerts on.</li>
+    <li>Someone with neighbourhoods assigned gets only the towns they hold; everyone else gets every town. Watches are not pushed, only warnings.</li>
+  </ul>
+  <p><strong>iPhone and iPad:</strong> iOS 16.4 or later, and the app added to the Home Screen (Safari: Share, Add to Home Screen), then opened from its icon and turned on there. That is Apple's rule; in a Safari tab the row says so. <strong>Android:</strong> Chrome, in the browser or installed. <strong>Send me a test</strong> checks a phone without waiting for weather. A phone follows whoever signs in on it, and stops at sign-out.</p>
+  <p>The server checks for new warnings every 5 minutes with a cron job (<code>sixfold-tools/push-alerts.php</code>), and makes its own private key the first time someone turns alerts on; it never replaces it, because a new key would cut off every phone. It is not a safety system: a phone can miss a notification, and the Weather Service's own alerts come first.</p>
 </section>
 
 <section id="data">

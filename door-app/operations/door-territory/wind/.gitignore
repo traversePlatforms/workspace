@@ -1,0 +1,3 @@
+# raw IEM downloads, regenerable with build-wind.mjs fetch
+cache/
+*.log

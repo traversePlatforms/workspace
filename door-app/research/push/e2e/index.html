@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Push test</title>
+<link rel="manifest" href="manifest.json">
+<style>body{font:15px/1.4 system-ui,sans-serif;margin:16px;max-width:640px}pre{white-space:pre-wrap;background:#f3f3f3;padding:8px}</style>
+</head>
+<body>
+<h1>Web Push test page</h1>
+<p>Served by <code>php -S 127.0.0.1:8790</code>. On a real phone this page would need https and, on iPhone, to be installed first; 127.0.0.1 counts as a secure context so it works here.</p>
+<p><button id="enable">Turn alerts on</button> <button id="send">Send me a test push</button> <button id="bare">Send a push with no payload</button></p>
+<pre id="log"></pre>
+<script>
+/* The same flow as client-snippet.js, with PUSH_API pointed at e2e.php. Headless Chrome, with the permission granted
+   over the DevTools protocol, runs it automatically on load (?auto=1); a person runs it with the buttons. */
+var PUSH_API = 'e2e.php';
+var pushKey = null;
+function log(s) { document.getElementById('log').textContent += s + '\n'; }
+function pushKeyBytes(b64u) {
+  var s = (b64u + '==='.slice((b64u.length + 3) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  var raw = atob(s), out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function post(action, body) {
+  return fetch(PUSH_API + '?action=' + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+}
+function prepare() {
+  return fetch(PUSH_API + '?action=key').then(function (r) { return r.json(); }).then(function (j) { pushKey = j.publicKey; log('VAPID public key: ' + pushKey.slice(0, 20) + '...'); });
+}
+function enable() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) { log('no push support here'); return Promise.resolve('unsupported'); }
+  return Notification.requestPermission().then(function (perm) {
+    log('permission: ' + perm);
+    if (perm !== 'granted') return perm;
+    return navigator.serviceWorker.ready
+      .then(function (reg) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pushKeyBytes(pushKey) }); })
+      .then(function (sub) { var j = sub.toJSON(); log('subscribed: ' + j.endpoint.slice(0, 60) + '...'); return post('subscribe', { subscription: j, device: 'test page' }); })
+      .then(function (j) { log('server stored it: ' + JSON.stringify(j)); return 'on'; })
+      .catch(function (e) { log('subscribe failed: ' + e); return 'failed'; });
+  });
+}
+navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function () { log('service worker registered'); });
+navigator.serviceWorker.addEventListener('message', function (e) { log('from worker: ' + JSON.stringify(e.data)); });
+document.getElementById('enable').onclick = function () { enable(); };
+document.getElementById('send').onclick = function () { fetch(PUSH_API + '?action=send').then(function (r) { return r.json(); }).then(function (j) { log('send: ' + JSON.stringify(j)); }); };
+document.getElementById('bare').onclick = function () { fetch(PUSH_API + '?action=send&bare=1').then(function (r) { return r.json(); }).then(function (j) { log('send (bare): ' + JSON.stringify(j)); }); };
+prepare().then(function () { if (/[?&]auto=1/.test(location.search)) return enable(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "Push test",
+  "short_name": "Push test",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1F2A25",
+  "icons": []
+}
