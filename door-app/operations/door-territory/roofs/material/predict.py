@@ -14,6 +14,10 @@ import pandas as pd
 from features import MIN_PX, CLASS_OF, TOWNS
 
 HERE = Path(__file__).parent
+# less-certain calls, written as src 'guess' (2026-10-05): only the two classes the model can tell apart, and only when it
+# leans clearly one way. The page shows them as 'probably ...' and the storm list treats them as unknown.
+GUESS_CLASSES = ('asphalt', 'tile')
+GUESS_MIN = 0.6
 CACHE = HERE / 'cache'
 DATA = HERE.parents[3] / 'site' / 'data' / 'rounds'
 
@@ -54,16 +58,19 @@ def main(towns):
                 c = classes[pred[i]]; p = float(P[i, pred[i]])
                 if c in usable and p >= usable[c]:
                     doors[id_] = {'m': c, 'p': round(p, 2), 'src': 'imagery'}
+                elif c in GUESS_CLASSES and p >= GUESS_MIN:
+                    # the photo's best guess (Matthew 2026-10-05): shown as 'probably', never used for a storm verdict
+                    doors[id_] = {'m': c, 'p': round(p, 2), 'src': 'guess'}
         n_doors = sum(len(a['doors']) for a in json.loads((DATA / f'{town}.json').read_text())['areas'])
-        n_county = sum(1 for d in doors.values() if d['src'] == 'county'); n_img = len(doors) - n_county
+        n_county = sum(1 for d in doors.values() if d['src'] == 'county'); n_guess = sum(1 for d in doors.values() if d['src'] == 'guess'); n_img = len(doors) - n_county - n_guess
         by_cls = {}
         for d in doors.values(): by_cls[d['m']] = by_cls.get(d['m'], 0) + 1
-        out = {'source': 'Douglas County assessor roof material (county) + USDA NAIP 2023 0.3 m imagery classifier (imagery); see operations/door-territory/roofs/material/README.md',
+        out = {'source': 'Douglas County assessor roof material (county) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
                'built': built, 'classes': {'asphalt': 'composition shingle or roll', 'tile': 'concrete or clay tile', 'shake': 'wood shake', 'metal': 'metal', 'flat': 'built-up or membrane'},
                'thresholds': usable, 'doors': doors}
         (DATA / f'material-{town}.json').write_text(json.dumps(out, separators=(',', ':')))
-        summary[town] = {'doors': n_doors, 'structural_data': has_struct, 'crops': int(len(df)), 'usable_crops': int(len(ok)), 'county': n_county, 'imagery': n_img, 'labelled': len(doors), 'share': round(len(doors) / max(n_doors, 1), 3), 'by_class': by_cls}
-        print(f'{town}: {n_doors} doors, {len(ok)} usable crops, county {n_county}, imagery {n_img}, total {len(doors)} ({summary[town]["share"]:.0%}) {by_cls}')
+        summary[town] = {'doors': n_doors, 'structural_data': has_struct, 'crops': int(len(df)), 'usable_crops': int(len(ok)), 'county': n_county, 'imagery': n_img, 'guess': n_guess, 'labelled': len(doors) - n_guess, 'share': round(len(doors) / max(n_doors, 1), 3), 'by_class': by_cls}
+        print(f'{town}: {n_doors} doors, {len(ok)} usable crops, county {n_county}, imagery {n_img}, guess {n_guess}, total {len(doors)} ({summary[town]["share"]:.0%}) {by_cls}')
     (HERE / 'coverage.json').write_text(json.dumps(summary, indent=1))
     return summary
 

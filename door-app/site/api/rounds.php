@@ -590,6 +590,22 @@ function loadLawnFix(string $key): array {
 function appendLawnFix(string $key, array $row): bool {
     return (bool) @file_put_contents(lawnfixFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- roof material seen at the door (Matthew 2026-10-05) ----
+ * Whoever is at the house can say what the roof is. It beats the county record and the photo (a person looking at it),
+ * shows on the card under their name, and is the training data for teaching the photo model metal and shake. */
+const MAT_KEYS = ['asphalt', 'tile', 'shake', 'metal', 'flat', 'slate'];
+function loadMatFix(string $key): array {
+    $out = [];
+    foreach (logRows('matfix', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (empty($r['m'])) unset($out[$r['id']]);
+        else $out[$r['id']] = ['m' => (string) $r['m'], 'by' => $r['by'] ?? '', 'at' => $r['at'] ?? 0];
+    }
+    return $out;
+}
+function appendMatFix(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/matfix-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
 /* ---- extra work spotted at the door (2026-10-03) ----------------------------
  * One door can be several jobs: branches over the roof, gutters full, an irrigation problem.
  * The crew taps what they saw; the whole set is saved each time, last line per door wins, an
@@ -1218,7 +1234,8 @@ if ($action === 'area') {
     $roofOf = roofDataOn($role) ? loadSide('roof', $key) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key) : [];
     $photoOf = roofDataOn($role) ? loadSide('photo', $key) : [];
     $windOf = hailOn($role) ? loadSide('wind', $key) : [];
-    $matOf = roofDataOn($role) ? loadSide('material', $key) : [];   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
+    $matOf = roofDataOn($role) ? loadSide('material', $key) : [];
+    $mfxOf = loadMatFix($key);   /* what someone at the house said the roof is (everyone sees it) */   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1237,7 +1254,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
@@ -2223,10 +2240,11 @@ if ($action === 'stormdoors') {
         $hit = $hits[$k];
         $data = loadRegion($k); if (!$data) continue;
         $roof = $side('roof', $k); $year = $side('year', $k); $mat = $side('material', $k);
-        $marks = loadMarks($k); $phones = loadPhones($k); $traces = skipLoad($k);
+        $marks = loadMarks($k); $phones = loadPhones($k); $traces = skipLoad($k); $mfx = loadMatFix($k);
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
             if (!isset($hit[$d['id']])) continue;
             $h = $hit[$d['id']]; $y = $year[$d['id']] ?? null; $m = $mat[$d['id']] ?? null;
+            if (isset($mfx[$d['id']])) $m = ['m' => $mfx[$d['id']]['m'], 'p' => 1, 'src' => 'crew'];   /* seen at the house: beats the record and the photo */
             $cls = (string) ($m['m'] ?? matClass((string) ($y['mat'] ?? '')));
             $src = $m ? (string) ($m['src'] ?? 'imagery') : (($y['mat'] ?? '') !== '' ? 'county' : '');
             $mk = freshMark($d, $marks[$d['id']] ?? null);
@@ -2659,6 +2677,16 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
     }
 }
 
+if ($action === 'matfix') {
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? ''); $m = (string) ($body['m'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    if ($m !== '' && !in_array($m, MAT_KEYS, true)) fail('Pick a roof material.');
+    if (!appendMatFix($key, ['id' => $id, 'm' => $m === '' ? null : $m, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 if ($action === 'lawnfix') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');

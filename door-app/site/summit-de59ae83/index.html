@@ -761,6 +761,11 @@
   .profile .pfacts{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}
   .profile .pfacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .profile .pfacts button.lnk.bad{color:var(--fire-h)}
+  .matl{display:block}
+  .matl button.lnk{background:none;border:0;padding:0 0 0 2px;color:var(--accent);font:700 13px var(--sans);cursor:pointer}
+  .matpick{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+  .matpick button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 11px;font:600 13px var(--sans);cursor:pointer}
+  .matpick button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
   .teamsbox button.lnk,.goalbox button.lnk,.caldet button.lnk,.lesson ~ .aacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .teamsbox button.lnk.bad,.caldet button.lnk.bad,.lesson ~ .aacts button.lnk.bad{color:var(--fire-h)}
   .teamsbox .trow button.lnk{flex:none}
@@ -1384,7 +1389,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the Sample door (Matthew 2026-10-05): anything sent for its region is answered here and never reaches the server.
      Saves say ok (so the card behaves as it would), the door comes from the sample, anything else is refused. */
   var SAMPLE_KEY = '__sample';
-  var SAMPLE_OK = { mark: 1, note: 1, phone: 1, email: 1, lawnfix: 1, work: 1, firecheck: 1, walk: 1, photodel: 1, quoted: 1 };
+  var SAMPLE_OK = { mark: 1, note: 1, phone: 1, email: 1, lawnfix: 1, matfix: 1, work: 1, firecheck: 1, walk: 1, photodel: 1, quoted: 1 };
   function sampleAnswer(action, opts) {
     var r = (opts.body && opts.body.region) || (opts.params && opts.params.region);
     if (r !== SAMPLE_KEY) return null;
@@ -3464,7 +3469,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(windBlock(d));             /* wind reported near the house (2026-10-05): rides with hail */
-    if ((d.roof || d.bld || d.mat) && cardOn('roof')) wrap.appendChild(roofBlock(d));                     /* roof size, pitch, year built: admins only too */
+    if (cardOn('roof')) wrap.appendChild(roofBlock(d));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
@@ -6166,6 +6171,38 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return b;
   }
   /* roof and house (2026-10-04, admin only): the laser-scan roof measurement and the county's year built */
+  /* the roof material line (2026-10-05): what someone at the house said, else the county's record (shown with Built above),
+     else the photo (tested 96%+ right), else the photo's best guess ("probably"); Set or Change opens the choice */
+  function matLine(d) {
+    var w = q('span', 'hl matl');
+    var f = d.matfix, c = d.bld && d.bld.mat, m = d.mat;
+    var txt = f ? (MAT_NAME[f.m] || f.m) + ' (seen at the house' + (f.by ? ' by ' + f.by : '') + ')'
+      : c ? '' : m && m.src === 'imagery' ? (MAT_NAME[m.m] || m.m) + ' (from the 2023 aerial photo)'
+      : m && m.src === 'guess' ? 'Probably ' + (MAT_NAME[m.m] || m.m).toLowerCase() + ' (the photo\u2019s best guess)'
+      : 'Roof material not known';
+    if (txt) w.appendChild(document.createTextNode(txt + ' '));
+    var b = q('button', 'lnk', f || c || (m && m.src === 'imagery') ? (S.editMat === d.id ? 'Close' : (c && !f ? 'Correct the material' : 'Change')) : (S.editMat === d.id ? 'Close' : 'Set it')); b.type = 'button';
+    b.addEventListener('click', function () { S.editMat = S.editMat === d.id ? null : d.id; renderDoors(); });
+    w.appendChild(b);
+    if (S.editMat === d.id) {
+      var ch = q('div', 'matpick');
+      Object.keys(MAT_NAME).forEach(function (k) {
+        var o = q('button', null, MAT_NAME[k]); o.type = 'button'; o.setAttribute('aria-pressed', String(!!f && f.m === k));
+        o.addEventListener('click', function () { saveMat(d, k); }); ch.appendChild(o);
+      });
+      if (f) { var cl = q('button', null, 'Not sure'); cl.type = 'button'; cl.addEventListener('click', function () { saveMat(d, ''); }); ch.appendChild(cl); }
+      w.appendChild(ch);
+    }
+    return w;
+  }
+  function saveMat(d, m) {
+    api('matfix', { body: { region: S.region, id: d.id, m: m } }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      d.matfix = m ? { m: m, by: S.me, at: Math.floor(Date.now() / 1000) } : null; S.editMat = null;
+      toast(m ? 'Roof material saved' : 'Material cleared', m ? MAT_NAME[m] + ' \u00b7 ' + d.address : d.address, null); renderDoors();
+    }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+  }
   function roofBlock(d) {
     var b = q('div', 'hailx roofx'); b.appendChild(ico('roof', 2.2));
     var t = q('span');
@@ -6187,8 +6224,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!d.roof && y.yb >= 2018) bits.push('no roof measurement: newer than the laser scan');
       t.appendChild(q('span', 'hl', bits.join(' \u00b7 ')));
     }
-    /* material from the 2023 photo where the county has none (2026-10-05): asphalt or tile only, labelled only where the classifier tested 96%+ right */
-    if (d.mat && d.mat.src === 'imagery' && !(d.bld && d.bld.mat)) t.appendChild(q('span', 'hl', (MAT_NAME[d.mat.m] || d.mat.m) + ' (from the 2023 aerial photo)'));
+    t.appendChild(matLine(d));
     if (d.photo) {
       var open = S.photoOpen === d.id;
       var pb = q('button', 'lnk', open ? 'Hide the roof photo' : 'See the roof (aerial photo, ' + (d.photoYear || 2020) + ')'); pb.type = 'button';
@@ -6314,7 +6350,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the hail threshold for one roof: its material's, and for asphalt its age's (shingles weather: research note 2026-10-05) */
   function hailTh(x, rs) {
-    var m = x.mat || 'asphalt', th = (rs.damage[m] || {}).hail;
+    var m = (x.matSrc !== 'guess' && x.mat) || 'asphalt', th = (rs.damage[m] || {}).hail;   /* a guess is judged as unknown (asphalt, the commonest) */
     var age = x.rm || x.yb ? new Date().getFullYear() - (x.rm || x.yb) : null;
     if (m === 'asphalt' && age !== null && rs.defaults && rs.defaults.asphaltAge && !(rs.custom && rs.custom.asphalt)) {
       for (var i = 0; i < rs.defaults.asphaltAge.length; i++) if (age < rs.defaults.asphaltAge[i][0]) { th = rs.defaults.asphaltAge[i][1]; break; }
@@ -6322,7 +6358,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return th;
   }
   function stormVerdict(x, rs) {
-    var th = hailTh(x, rs), wt = (rs.damage[x.mat || 'asphalt'] || {}).wind, w = x.wind && x.wind[0];
+    var th = hailTh(x, rs), wt = (rs.damage[(x.matSrc !== 'guess' && x.mat) || 'asphalt'] || {}).wind, w = x.wind && x.wind[0];
     if ((th != null && x.hail != null && x.hail >= th) || (wt != null && w && w >= wt)) return 'likely';
     if (th != null && x.hail != null && x.hail >= th - 0.25) return 'possible';
     return 'below';
@@ -6385,7 +6421,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(q('div', 'meta st', m1.join(' \u00b7 ') + ' \u00b7 ' + x.town));
     var m2 = [];
     if (x.roof) m2.push((x.roof.flat ? 'Flat roof' : x.roof.pitch + '/12') + ', about ' + Number(x.roof.sq).toLocaleString('en-US') + ' sq ft (' + x.roof.sqs + ' squares)');
-    m2.push(x.mat ? MAT_NAME[x.mat] + (x.matSrc === 'county' ? ' (county record)' : x.matSrc === 'imagery' ? ' (from the photo)' : '') : 'Material unknown');
+    m2.push(!x.mat ? 'Material unknown' : x.matSrc === 'guess' ? 'Probably ' + MAT_NAME[x.mat].toLowerCase() + ' (photo\u2019s guess)' : MAT_NAME[x.mat] + (x.matSrc === 'county' ? ' (county record)' : x.matSrc === 'imagery' ? ' (from the photo)' : x.matSrc === 'crew' ? ' (seen at the house)' : ''));
     if (x.yb) { var age = new Date().getFullYear() - (x.rm || x.yb); m2.push('Built ' + x.yb + (x.rm ? ', remodeled ' + x.rm : '') + ' (roof up to ' + age + ' yrs)'); }
     c.appendChild(q('div', 'meta', m2.join(' \u00b7 ')));
     var m3 = q('div', 'meta');

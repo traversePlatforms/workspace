@@ -6,14 +6,15 @@
   "usable_crops": 6797,
   "county": 7025,
   "imagery": 40,
+  "guess": 11,
   "labelled": 7065,
-  "share": 0.998,
+  "share": 0.999,
   "by_class": {
-   "asphalt": 6444,
+   "asphalt": 6454,
    "flat": 8,
    "shake": 37,
    "metal": 9,
-   "tile": 567
+   "tile": 568
   }
  },
  "franktown": {
@@ -23,6 +24,7 @@
   "usable_crops": 1507,
   "county": 1544,
   "imagery": 0,
+  "guess": 0,
   "labelled": 1544,
   "share": 0.999,
   "by_class": {
@@ -40,6 +42,7 @@
   "usable_crops": 561,
   "county": 575,
   "imagery": 0,
+  "guess": 0,
   "labelled": 575,
   "share": 1.0,
   "by_class": {
@@ -57,11 +60,12 @@
   "usable_crops": 647,
   "county": 668,
   "imagery": 0,
+  "guess": 1,
   "labelled": 668,
-  "share": 0.996,
+  "share": 0.997,
   "by_class": {
    "tile": 42,
-   "asphalt": 605,
+   "asphalt": 606,
    "shake": 6,
    "metal": 10,
    "flat": 5
@@ -74,11 +78,12 @@
   "usable_crops": 8888,
   "county": 0,
   "imagery": 5409,
+  "guess": 3212,
   "labelled": 5409,
-  "share": 0.582,
+  "share": 0.928,
   "by_class": {
-   "asphalt": 5275,
-   "tile": 134
+   "asphalt": 7992,
+   "tile": 629
   }
  },
  "monument": {
@@ -88,11 +93,12 @@
   "usable_crops": 6909,
   "county": 0,
   "imagery": 2117,
+  "guess": 4088,
   "labelled": 2117,
-  "share": 0.299,
+  "share": 0.878,
   "by_class": {
-   "asphalt": 2068,
-   "tile": 49
+   "asphalt": 5720,
+   "tile": 485
   }
  },
  "palmer-lake": {
@@ -102,10 +108,12 @@
   "usable_crops": 440,
   "county": 0,
   "imagery": 183,
+  "guess": 237,
   "labelled": 183,
-  "share": 0.412,
+  "share": 0.946,
   "by_class": {
-   "asphalt": 183
+   "asphalt": 393,
+   "tile": 27
   }
  },
  "woodland-park": {
@@ -115,6 +123,7 @@
   "usable_crops": 0,
   "county": 0,
   "imagery": 0,
+  "guess": 0,
   "labelled": 0,
   "share": 0.0,
   "by_class": {}
@@ -126,6 +135,7 @@
   "usable_crops": 0,
   "county": 0,
   "imagery": 0,
+  "guess": 0,
   "labelled": 0,
   "share": 0.0,
   "by_class": {}
@@ -137,6 +147,7 @@
   "usable_crops": 0,
   "county": 0,
   "imagery": 0,
+  "guess": 0,
   "labelled": 0,
   "share": 0.0,
   "by_class": {}
@@ -148,6 +159,7 @@
   "usable_crops": 0,
   "county": 0,
   "imagery": 0,
+  "guess": 0,
   "labelled": 0,
   "share": 0.0,
   "by_class": {}
