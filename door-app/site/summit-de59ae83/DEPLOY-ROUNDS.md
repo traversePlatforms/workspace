@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — door-card sections as settings + Roofing preview (admins), and the tools-screen redraw
+## ✅ LIVE 2026-10-04 (verified 15/15) — door-card sections as settings + Roofing preview (admins), and the tools-screen redraw. Page identical at three addresses; the card block is on the server, all on; a Black Forest door (Shoup Rd) shows fire, lawn, trees, money, water, the Show doors with row and hail as Sixfold; in Roofing preview the same door shows only the basics and hail, and the Fire/Lawn/Trees sorts are gone; switching back restores everything; no page errors
 
 Matthew 2026-10-04: a roofer's card should not carry Sixfold's lawn and fire. company.json now has a `card` block (lawn, trees, fire, money, water; missing = shown; Sixfold: all on, so the crew see no change). Admins get a **Door card: Sixfold | Roofing preview** switch on the tools screen, under Look: on that device only, cards show the basics and hail, and lawn, trees, fire, money, water, the fire check, the Show doors with row and the Fire / Lawn / Trees sorts are hidden. It stays on for that device until switched back. Also: the tools screen draws itself again when fresher company settings arrive (the missing Hail tile, 2026-10-04). Tested: card-test 15/15; all 68 suites pass alone (lookinstall's check now reads the first switch row).
 
