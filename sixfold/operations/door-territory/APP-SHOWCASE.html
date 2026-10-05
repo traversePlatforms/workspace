@@ -241,7 +241,7 @@ button { font: inherit; color: inherit }
 .prow .rk { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--sunk); font: 700 12px var(--sans); flex: none } .prow .rk.r1 { background: #D9A93B; color: #2A1F05 } .prow .rk.r2 { background: #B9C0C4; color: #1D2226 } .prow .rk.r3 { background: #B87333; color: #1A0E04 }
 .prow .who { flex: 1; min-width: 0 } .prow .who b { display: block; font: 400 15px var(--display) } .prow .big { text-align: right } .prow .big b { display: block; font-size: 18px; color: var(--ember-ink) }
 .terrp { background: var(--card); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 0 var(--line); font-size: 12.5px }
-.terrp b.nm { font: 400 15.5px var(--display) } .terrp .ar { margin-top: 7px } .terrp .bar2 { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 3px; overflow: hidden } .terrp .bar2 i { display: block; height: 100%; background: var(--go) }
+.terrp b.nm { font: 400 15.5px var(--display) } .terrp .unall { display: block; margin-top: 8px; border: 0; background: none; padding: 0; color: var(--bad); font: 700 12.5px var(--sans); cursor: pointer } .terrp .ar { margin-top: 7px } .terrp .bar2 { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 3px; overflow: hidden } .terrp .bar2 i { display: block; height: 100%; background: var(--go) }
 .acrow { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 14px; padding: 9px 12px; margin-bottom: 6px; box-shadow: 0 1px 0 var(--line); font-size: 12.5px; flex-wrap: wrap }
 .acrow .who { flex: 1; min-width: 0 } .acrow .who b { display: block; font: 400 15px var(--display) } .acrow .role { font: 700 10.5px var(--sans); border-radius: 999px; padding: 2px 8px; background: var(--sunk); color: var(--soft) } .acrow .role.ad { background: var(--later-tint); color: var(--later) }
 .acrow .lnks { flex-basis: 100%; display: flex; gap: 14px } .acrow .lnks button { border: 0; background: none; padding: 2px 0; font: 700 12.5px var(--sans); color: var(--go); cursor: pointer } .acrow .lnks button.dg { color: var(--bad) }
@@ -1010,8 +1010,9 @@ button { font: inherit; color: inherit }
     TERR.forEach(function (p) {
       var b = el('div', 'terrp'); var k = p[1].reduce(function (t, a) { return [t[0] + a[2], t[1] + a[3]]; }, [0, 0]);
       b.appendChild(el('b', 'nm', p[0])); b.appendChild(document.createTextNode(' · ' + k[0] + ' of ' + k[1] + ' doors knocked'));
+      var una = el('button', 'unall', 'Unassign all ' + p[1].length); una.type = 'button'; una.addEventListener('click', function () { toastMsg('Unassign all', 'Every neighbourhood ' + p[0] + ' holds goes back to unassigned; what they knocked stays'); });
       p[1].forEach(function (a) { var ar = el('div', 'ar'); ar.appendChild(document.createTextNode(a[0] + ' · ' + a[1] + ' · ' + a[2] + ' of ' + a[3])); var br = el('div', 'bar2'); var fi = el('i'); fi.style.width = Math.round(100 * a[2] / a[3]) + '%'; br.appendChild(fi); ar.appendChild(br); b.appendChild(ar); });
-      $screen.appendChild(b);
+      b.appendChild(una); $screen.appendChild(b);
     });
     var cr = el('div', 'mcard'); cr.appendChild(el('h4', null, 'What Riley sees'));
     cr.appendChild(el('p', null, 'Riley’s tools screen lists Your territories: each neighbourhood, its town and how far through it they are; one tap opens it. In Door rounds, each town says how many of its neighbourhoods are theirs, with an Only mine button. It is switched on: anyone with nothing assigned still sees every neighbourhood. Later, a team manager can assign their own reps.'));

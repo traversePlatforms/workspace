@@ -2104,7 +2104,25 @@ if ($action === 'territories') {
     $names = [];
     foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }
     ksort($names);
-    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names)]);
+    /* everyone who can sign in now, hidden ones included: an assignment to anyone else belongs to someone removed */
+    $active = []; foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '') $active[$n] = true; }
+    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names), 'active' => array_keys($active)]);
+}
+/* every neighbourhood one person holds, in every town, back to unassigned in one go (2026-10-04): when someone leaves,
+   or their area changes. Works for people already removed from Accounts too. */
+if ($action === 'unassignall') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $who = trim((string) ($body['who'] ?? ''));
+    if ($who === '') fail('Whose neighbourhoods?');
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $n = 0;
+    foreach (($idx['regions'] ?? []) as $rg) foreach (loadAssign($rg['key']) as $area => $w) {
+        if ($w !== $who) continue;
+        if (!appendAssign($rg['key'], ['area' => (string) $area, 'who' => '', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        $n++;
+    }
+    out(['ok' => true, 'n' => $n]);
 }
 if ($action === 'assignmany') {
     if ($role !== 'admin') fail('Not allowed.', 403);

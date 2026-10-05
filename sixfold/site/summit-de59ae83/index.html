@@ -208,6 +208,9 @@
   .choose .tile span{display:block;font-size:14px;color:var(--soft);line-height:1.45}
   .choose .tile .tag{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--moss-ink)}
   .choose .out{margin:18px 4px 0;font-size:14px}
+  .door.tperson.gone{border:1.5px dashed var(--later)}
+  .tag.tgone{display:inline-block;margin-top:4px;background:var(--later-tint);color:var(--later)}
+  .tunall{background:none;border:0;padding:8px 0 0;font:700 13.5px var(--sans);color:var(--fire-h);cursor:pointer}
   .lookrow{display:flex;align-items:center;gap:10px;margin:18px 4px 0}
   .lookrow > span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .lookrow .aseg{display:flex;gap:5px}
@@ -3411,7 +3414,10 @@
     names.forEach(function (n) {
       var items = by[n], tot = 0, kn = 0; items.forEach(function (x) { tot += x.a.total; kn += x.a.knocked; });
       var c = q('div', 'door tperson');
+      var gone = j.active && j.active.indexOf(n) < 0;   /* removed in Accounts: their neighbourhoods need handing on */
+      if (gone) c.classList.add('gone');
       var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', n)); top.appendChild(q('span', 'tpct', (tot ? Math.round(100 * kn / tot) : 0) + '%')); c.appendChild(top);
+      if (gone) c.appendChild(q('span', 'tag tgone', 'No longer signs in'));
       c.appendChild(q('div', 'meta', items.length + (items.length === 1 ? ' neighbourhood' : ' neighbourhoods') + ' · ' + kn + ' of ' + tot + ' doors knocked'));
       var bar = q('div', 'btr'); var fl = q('div', 'bfl'); fl.style.width = (tot ? Math.round(100 * kn / tot) : 0) + '%'; bar.appendChild(fl); c.appendChild(bar);
       var ul = q('div', 'tareas');
@@ -3427,6 +3433,18 @@
         ch.appendChild(rm); ul.appendChild(ch);
       });
       c.appendChild(ul);
+      var ua = q('button', 'lnk tunall', 'Unassign all ' + items.length); ua.type = 'button';
+      ua.addEventListener('click', function () {
+        if (ua.disabled) return;
+        if (!window.confirm('Take all ' + items.length + (items.length === 1 ? ' neighbourhood' : ' neighbourhoods') + ' off ' + n + '? They go back to unassigned; everything knocked stays.')) return;
+        ua.disabled = true;
+        api('unassignall', { body: { who: n } }).then(function (r) {
+          ua.disabled = false;
+          if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
+          toast('Unassigned ' + r.n, n, null); territoriesView();
+        }).catch(function () { ua.disabled = false; toast('No signal', 'Try again when you have signal.', null); });
+      });
+      c.appendChild(ua);
       holder.appendChild(c);
     });
   }
