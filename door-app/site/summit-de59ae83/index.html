@@ -720,6 +720,14 @@
   .door.acct::before{display:none}
   .door.acct.off{opacity:.65}
   .anote{margin:-4px 0 10px;font-size:12.5px;color:var(--soft)}
+  .cty{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:var(--card);color:var(--ink);border-radius:16px;padding:12px 14px;margin:12px 0 6px;cursor:pointer;box-shadow:var(--shadow);font:inherit}
+  .cty .ct{flex:1;min-width:0;display:grid;gap:2px}
+  .cty b{font:400 19px/1.2 var(--serif)}
+  .cty small{font-size:12.5px;color:var(--soft)}
+  .cty .ic{width:18px;height:18px;flex:none;color:var(--soft);transition:transform .2s}
+  .cty[aria-expanded="true"] .ic{transform:rotate(90deg)}
+  .ctyb{display:grid;gap:0}
+  .brow.tap{cursor:pointer}
   .door.acct .alive{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:13px;font-weight:600;color:var(--soft)}
   .door.acct .alive .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
   .door.acct .alive.on{color:var(--go)}
@@ -2754,6 +2762,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var c = r[per], key = c.booked + '|' + c.talked + '|' + c.doors;
       if (key !== last) { rank = i + 1; last = key; }   /* a tie shares the place */
       var row = q('div', 'brow' + (rank <= 3 ? ' top r' + rank : ''));
+      /* Matthew 2026-10-05: tap a name for that person's stats (admins; a team manager later, for their own reps) */
+      if (S.role === 'admin') { row.classList.add('tap'); row.setAttribute('role', 'button'); row.tabIndex = 0;
+        var openStats = function () { statsView(r.name, boardView); };
+        row.addEventListener('click', openStats); row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openStats(); } }); }
       row.appendChild(q('div', 'brk', String(rank)));
       var mid = q('div', 'bmid');
       mid.appendChild(q('div', 'bnm', r.name));
@@ -3485,14 +3497,27 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (T.booked) { var sc = q('div', 'chips'); sc.appendChild(chipEl('bk', 'check', T.booked + (T.booked === 1 ? ' quote' : ' quotes') + ' booked')); pi.appendChild(sc); }
     pc.appendChild(pi); view.appendChild(pc);
     view.appendChild(alertStrip(null));
-    /* counties, in the order the towns are listed */
+    /* counties, in the order the towns are listed. Each folds up (Matthew 2026-10-05: more counties would clutter
+       the screen); the bar carries the county's totals, and each phone remembers which are open. One county: open. */
     var order = [];
     all.forEach(function (x) { var k = x.r.county || 'other'; if (order.indexOf(k) < 0) order.push(k); });
+    var openC = []; try { openC = JSON.parse(localStorage.getItem('sixfold.rounds.counties') || '[]') || []; } catch (e) {}
     order.forEach(function (k, gi) {
       var towns = all.filter(function (x) { return (x.r.county || 'other') === k; });
-      var cs = towns.reduce(function (s, x) { s.left += x.t.left; s.total += x.t.total; return s; }, { left: 0, total: 0 });
-      var sect = q('div', 'sect'); sect.appendChild(q('h2', null, COUNTY_NAME[k] || 'Other towns'));
-      sect.appendChild(q('span', null, cs.left.toLocaleString('en-US') + ' doors to knock')); view.appendChild(sect);
+      var cs = towns.reduce(function (s, x) { s.left += x.t.left; s.total += x.t.total; s.hot += x.t.hot || 0; s.booked += x.t.booked || 0; return s; }, { left: 0, total: 0, hot: 0, booked: 0 });
+      var open = order.length === 1 || openC.indexOf(k) >= 0;
+      var hd = q('button', 'cty'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open)); hd.setAttribute('data-county', k);
+      var ht = q('span', 'ct'); ht.appendChild(q('b', null, COUNTY_NAME[k] || 'Other towns'));
+      ht.appendChild(q('small', null, towns.length + (towns.length === 1 ? ' town · ' : ' towns · ') + cs.left.toLocaleString('en-US') + ' doors to knock' +
+        (cs.hot ? ' · ' + cs.hot.toLocaleString('en-US') + ' high-risk' : '') + (cs.booked ? ' · ' + cs.booked + ' booked' : '')));
+      hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+      var box = q('div', 'ctyb'); box.hidden = !open;
+      hd.addEventListener('click', function () {
+        open = !open; box.hidden = !open; hd.setAttribute('aria-expanded', String(open));
+        var at = openC.indexOf(k); if (open && at < 0) openC.push(k); if (!open && at >= 0) openC.splice(at, 1);
+        try { localStorage.setItem('sixfold.rounds.counties', JSON.stringify(openC)); } catch (e) {}
+      });
+      view.appendChild(hd); view.appendChild(box);
       towns.forEach(function (x, i) {
         var b = q('button', 'area town'); b.type = 'button'; b.setAttribute('data-town', x.r.key);
         var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
@@ -3511,7 +3536,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.appendChild(cnt);
         b.addEventListener('click', function () { S.region = x.r.key; S.area = null; renderAreas(); window.scrollTo(0, 0); });
         if (!reduced()) { var n = view.querySelectorAll('button.town').length; if (n < 14) { b.style.animationDelay = (n * 35) + 'ms'; b.classList.add('enter'); } }
-        view.appendChild(b);
+        box.appendChild(b);
       });
     });
     window.scrollTo(0, 0);

@@ -9,13 +9,13 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Add info button in dark mode (index.html only)
+## ⏳ TO UPLOAD — county bars on Colorado, tap a Leaderboard name, and the Add info button in dark mode (index.html only)
 
-Matthew 2026-10-05 (seen in the demo): the Add info button's gradient ran into the text colour, which turns cream in dark mode, so it faded to cream with dark text. Now dark pine with cream text in both looks. ui2-test 23/23, card-test 18/18.
+Matthew 2026-10-05: (1) on the Colorado screen each county is now a fold-out bar with its towns, doors to knock, high-risk doors and quotes booked; tap to show its towns, tap again to fold. Each phone remembers which are open; with one county it is always open. (2) On the Leaderboard an admin can tap a name to open that person's stats (Back returns to the board); Team stats already did this. (3) Seen in the demo: the Add info button's gradient ran into the text colour, which turns cream in dark mode. Now dark pine with cream text in both looks. state-test 14/14, board-test 28/28, all 70 suites pass.
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/summit-de59ae83/index.html` (**475,416** bytes) | `public_html/summit-de59ae83/` (no flush needed for this folder) |
+| 1 | `door-app/site/summit-de59ae83/index.html` (**477,745** bytes) | `public_html/summit-de59ae83/` (no flush needed for this folder) |
 
 ## ✅ LIVE 2026-10-05 (verified 13/13) — fixes from the full code review. Page identical; a bare sign-out link signs nobody out and the page's POST does; the skip export refuses a made-up town; tools, Door rounds and Find an address work on a phone; Sign out in the page really ends the session (me 401); no page errors. The sign-in pause was not exercised live (that would mean sending wrong codes)
 

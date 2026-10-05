@@ -316,6 +316,12 @@ button { font: inherit; color: inherit }
 .sub2 { font-size: 12.5px; color: var(--soft); margin: 6px 2px }
 .hmapw { border-radius: 14px; overflow: hidden; border: 1px solid var(--line) } .hmap { width: 100%; height: auto; display: block }
 .hleg { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 8px 2px; font-size: 12px; color: var(--soft) } .hleg i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px }
+.cty { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: var(--card); color: var(--ink); border-radius: 16px; padding: 11px 13px; margin: 10px 0 6px; cursor: pointer; box-shadow: 0 1px 0 var(--line) }
+.cty .ct { flex: 1; min-width: 0; display: grid; gap: 2px } .cty b { font: 400 17px/1.2 var(--display) } .cty small { font-size: 12px; color: var(--soft) }
+.cty .ic { width: 17px; height: 17px; flex: none; color: var(--soft); transition: transform .2s } .cty[aria-expanded="true"] .ic { transform: rotate(90deg) }
+.prow.tap { cursor: pointer } .prow.tap .chv { width: 16px; height: 16px; color: var(--soft); flex: none }
+.pstat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 10px } .pstat div { background: var(--card); border-radius: 12px; padding: 8px 10px; box-shadow: 0 1px 0 var(--line) }
+.pstat b { display: block; font: 700 20px var(--sans); color: var(--ember-ink) } .pstat span { font: 600 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--soft) }
 .acrow .live { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--soft) } .acrow .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none } .acrow .live.on { color: var(--go) } .acrow .live.on i { background: var(--go) }
 </style>
 
@@ -557,7 +563,7 @@ button { font: inherit; color: inherit }
   }
   function stagger(root) { if (!S.anim) return; [].forEach.call(root.children, function (c, i) { if (i < 12) { c.style.animationDelay = (i * 35) + 'ms'; c.classList.add('enter'); } }); S.anim = false; }
   function render() {
-    var OFFICE = { tools: toolsView, pipe: pipeView, results: resultsView, team: teamView, terr: terrView, accounts: accountsView, email: emailView, hail: hailView, hailmap: hailMapView };
+    var OFFICE = { tools: toolsView, pipe: pipeView, results: resultsView, team: teamView, person: personView, terr: terrView, accounts: accountsView, email: emailView, hail: hailView, hailmap: hailMapView };
     if (OFFICE[S.screen]) OFFICE[S.screen](); else if (S.screen === 'state') stateView(); else if (S.screen === 'town') townView(); else if (S.screen === 'customers') customersView(); else if (S.screen === 'customer') customerView(); else doorsView();
     renderSheet(); renderToast(); syncTour();
   }
@@ -574,8 +580,17 @@ button { font: inherit; color: inherit }
     var p = el('div', 'prog topo'); p.appendChild(ring(70, 6, .04, '4%'));
     var pi = el('div'); pi.appendChild(el('h3', null, 'Colorado')); pi.appendChild(el('div', 'pt', '1,184 of 30,464 doors visited · 11 towns')); p.appendChild(pi); $screen.appendChild(p);
     var list = el('div');
+    /* each county folds up (2026-10-05): the bar carries its totals; the phone remembers which are open */
+    S.cOpen = S.cOpen || {};
     TOWNS.forEach(function (g) {
-      var s = el('div', 'sect'); s.appendChild(el('h2', null, g.c)); list.appendChild(s);
+      var left = 0, hot = 0; g.t.forEach(function (t) { left += Math.round(t[1] * 0.961); hot += t[2]; });
+      var open = !!S.cOpen[g.c];
+      var hd = el('button', 'cty'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open));
+      var ht = el('span', 'ct'); ht.appendChild(el('b', null, g.c)); ht.appendChild(el('small', null, g.t.length + ' towns · ' + left.toLocaleString('en-US') + ' doors to knock · ' + hot.toLocaleString('en-US') + ' high-risk'));
+      hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+      hd.addEventListener('click', function () { S.cOpen[g.c] = !open; render(); });
+      list.appendChild(hd);
+      if (!open) return;
       g.t.forEach(function (t) {
         var b = el('button', 'area'); b.type = 'button';
         b.appendChild(ring(44, 5, 0.04, '4%'));
@@ -631,7 +646,8 @@ button { font: inherit; color: inherit }
   }
   function doorsView() {
     var todo = S.doors.filter(function (d) { return !d.mark; });
-    bar({ title: 'PONDEROSA RIDGE DR', sub: 'Woodland Park · 6 example doors', back: function () { go('town'); }, count: todo.length });
+    bar(S.grant ? { title: 'SAMPLE CREEK DR', sub: 'Castle Rock · an open county cost-share (example)', back: function () { go('town'); }, count: todo.length }
+      : { title: 'PONDEROSA RIDGE DR', sub: 'Woodland Park · 6 example doors', back: function () { go('town'); }, count: todo.length });
     dock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['route', 'Route', 'route']], 'street', function (v) { if (v !== 'street') toastMsg(v === 'near' ? 'Nearest' : 'Route', v === 'near' ? 'Sorted by distance from you' : 'A walking route through every door, opened in Google Maps'); });
     $screen.textContent = '';
     if (S.yes) $screen.appendChild(yesPanel(S.doors.filter(function (d) { return d.id === S.yes; })[0]));
@@ -687,7 +703,7 @@ button { font: inherit; color: inherit }
     var co = /\bLLC\b/.test(d.owner);
     b.appendChild(el('span', co ? 'warn' : null, co ? 'Company owner: credit unsettled, accountant' : 'Tax credit up to $1,000'));
     b.appendChild(el('span', null, 'Insurance must count the work'));
-    b.appendChild(el('span', null, d.county === 'douglas' ? 'County cost-share: round closed' : 'No county grant'));
+    b.appendChild(el('span', null, d.county === 'douglas' ? (S.grant ? 'County cost-share open: 50%, up to $25,000' : 'County cost-share: round closed') : 'No county grant'));
     b.addEventListener('click', function () { S.sheet = 'money'; render(); });
     return b;
   }
@@ -1096,10 +1112,28 @@ button { font: inherit; color: inherit }
       var p = el('div', 'prow'); p.appendChild(el('span', 'rk' + (i < 3 ? ' r' + (i + 1) : ''), String(i + 1)));
       var w = el('div', 'who'); w.appendChild(el('b', null, r[0])); w.appendChild(document.createTextNode(r[1] + ' doors · ' + r[2] + ' talked to')); p.appendChild(w);
       var bg = el('div', 'big'); bg.appendChild(el('b', null, String(r[3]))); bg.appendChild(document.createTextNode(r[3] === 1 ? 'quote' : 'quotes')); p.appendChild(bg);
+      /* tap a name for that person's stats (admins; a team manager later, for their own reps) */
+      p.classList.add('tap'); p.appendChild(ico('chev', 2.4)); p.lastChild.classList.add('chv');
+      p.addEventListener('click', function () { S.person = r[0]; go('person'); });
       list.appendChild(p);
     });
     $screen.appendChild(list); stagger(list);
-    $screen.appendChild(el('div', 'day', 'Ranked by quotes booked. Each person can have a daily goal. Example figures; the crew see only their own until the leaderboard is switched on for everyone.'));
+    $screen.appendChild(el('div', 'day', 'Ranked by quotes booked. Tap a name for that person’s own stats (admins). Each person can have a daily goal. Example figures; the crew see only their own until the leaderboard is switched on for everyone.'));
+  }
+  function personView() {
+    var name = S.person;
+    bar({ title: name, sub: 'Their stats · admins', back: function () { go('team'); } });
+    dock([], null, function () {});
+    $screen.textContent = '';
+    var find = function (per) { return TEAM[per].filter(function (r) { return r[0] === name; })[0] || [name, 0, 0, 0]; };
+    [['today', 'Today'], ['week', 'Last 7 days'], ['month', 'Last 30 days']].forEach(function (p) {
+      var r = find(p[0]); $screen.appendChild(el('div', 'sub2', p[1]));
+      var g = el('div', 'pstat'); [[r[1], 'Doors'], [r[2], 'Talked to'], [r[3], r[3] === 1 ? 'Quote' : 'Quotes']].forEach(function (x) { var c = el('div'); c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[1])); g.appendChild(c); });
+      $screen.appendChild(g);
+    });
+    var w = find('week');
+    $screen.appendChild(el('div', 'mcard', w[2] ? 'Books ' + Math.round(100 * w[3] / w[2]) + '% of the people they talk to. The app turns each person’s own figures into tips, like the best time of day to knock.' : 'No conversations this week yet.'));
+    $screen.appendChild(el('div', 'day', 'Example figures. In the app this is the same screen the person sees as My stats, opened for them by an admin.'));
   }
   var TERR = [['Riley P.', [['PONDEROSA RIDGE DR', 'Woodland Park', 18, 24], ['ASPEN HOLLOW RD', 'Woodland Park', 9, 31]]],
     ['Morgan D.', [['SAMPLE MEADOW LN', 'Woodland Park', 14, 18], ['GLEN EXAMPLE CT', 'Monument', 3, 27]]],
@@ -1246,13 +1280,14 @@ button { font: inherit; color: inherit }
       var M = {
         tax: ['Colorado wildfire tax credit', 'The state gives back what a homeowner pays a contractor for wildfire mitigation on their own land: up to $1,000 for 2025 and 2026, up to $2,000 from 2027. Claimed on form DR 0104CR.', 'Ask your accountant how it applies to you.', 'Promise anyone the full credit.'],
         ins: ['Insurance and mitigation', 'Since 1 July 2026, insurers that use wildfire risk scores must tell homeowners their score, credit documented mitigation, and let them appeal (HB25-1182).', 'Send your insurer the report and receipts and ask for a review.', 'Quote a discount: the law sets no percentage.'],
-        grant: ['Teller County', 'No county cost-share for homeowners has been found here. The state tax credit and the insurance law both apply.', 'Talk about the tax credit and insurance.', 'Mention the Woodland Park fuel-buffer grant as money for homeowners: it isn’t.']
+        grant: S.grant ? ['Douglas County cost-share', 'Douglas County pays 50% of a homeowner’s wildfire mitigation project, up to $25,000, straight to the contractor after inspecting the finished work. The homeowner applies with two contractor bids, a scope of work and a site map; work starts only after the award is signed, and they then have 10 months to finish. Homeowners can use any qualified contractor; Sixfold is not on the county’s preferred list.', 'Douglas County pays half of this, up to $25,000, once your award is signed. Our bid can be one of the two the county asks for.', '“We’re on the county’s approved list.” “You’ll get the grant.” “Start now and the county will pay half.”']
+          : ['Teller County', 'No county cost-share for homeowners has been found here. The state tax credit and the insurance law both apply.', 'Talk about the tax credit and insurance.', 'Mention the Woodland Park fuel-buffer grant as money for homeowners: it isn’t.']
       }[topic];
       var mc = el('div', 'mcard'); mc.appendChild(el('h4', null, M[0])); mc.appendChild(el('p', null, M[1]));
       var say = el('p'); say.appendChild(el('span', 'say', 'Say: ')); say.appendChild(document.createTextNode(M[2])); mc.appendChild(say);
       var dont = el('p'); dont.appendChild(el('span', 'dont', 'Don’t say: ')); dont.appendChild(document.createTextNode(M[3])); mc.appendChild(dont);
       body.appendChild(mc);
-      body.appendChild(el('div', 'day', 'Checked 2 Oct 2026 against state and county sources. Shortened for the demo.'));
+      body.appendChild(el('div', 'day', S.grant && topic === 'grant' ? 'An example of how an open round shows. Today the 2026 round is closed (the card says so); the terms are from Douglas County’s program page, read 2 Oct 2026.' : 'Checked 2 Oct 2026 against state and county sources. Shortened for the demo.'));
     } else if (S.sheet === 'water' || S.sheet.indexOf('water:') === 0) {
       var wt = S.sheet.split(':')[1] || 'town';
       hd.appendChild(el('b', null, 'Woodland Park water'));
@@ -1295,14 +1330,14 @@ button { font: inherit; color: inherit }
   }
   /* ---------- the tour ---------- */
   var TOUR = [
-    ['Colorado overview', 'Every county and town, with doors left and high-risk doors. Where the day starts.', function () { reset(); go('state'); }],
+    ['Colorado overview', 'Each county is a bar with its totals: open it for its towns, with doors left and high-risk doors. Where the day starts.', function () { reset(); S.cOpen = { 'Teller County': true }; go('state'); }],
     ['Sort the neighbourhoods', 'Lawn, fire, trees, doors left, nearest, and our own booking odds.', function () { reset(); S.sort = 'odds'; go('town'); }],
     ['Knock in street order', 'The next door is open; the rest are one line each, chips and all.', function () { reset(); go('doors'); }],
     ['Only the best doors', 'High fire, a real lawn and trees close: the filter keeps only doors with all three.', function () { reset(); S.match = { fire: true, lawn: true, trees: true }; go('doors'); }],
-    ['The money at the door', 'What this homeowner qualifies for, and what to say about it.', function () { reset(); go('doors'); S.sheet = 'money'; render(); }],
+    ['The money at the door', 'A Castle Rock door where the county cost-share is open: what the homeowner qualifies for, and what to say and not say about it. (An example: today’s round is closed.)', function () { reset(); S.grant = true; var d = S.doors[0]; d.a = '612 SAMPLE CREEK DR'; d.st = 'SAMPLE CREEK DR'; d.county = 'douglas'; d.val = '$684k'; d.owner = 'EXAMPLE, TAYLOR & JAMIE'; d.dist = '90 ft'; S.doors = [d]; go('doors'); S.sheet = 'money:grant'; render(); }],
     ['A yes, captured', 'Quote booked opens the walk booking and everything else in one panel.', function () { reset(); S.screen = 'doors'; S.anim = true; var d = S.doors[0]; d.mark = 'booked'; S.yes = d.id; S.open = null; render(); }],
     ['The homeowner fire report', 'A quick visual check turned into a report they can send their insurer.', function () { reset(); S.screen = 'doors'; S.fc = { debris: 'fx', z1plants: 'fx', vents: 'fx', overhang: 'ok', grass: 'ok', ladder: 'fx', firewood: 'na' }; S.doors[0].saved.fc = 'Fire check'; S.sheet = 'report:1'; render(); }],
-    ['A won job becomes a customer', 'Tap Make customer on the won door: name, address and price carry over, and the door is tagged for the crew.', function () { reset(); S.screen = 'doors'; S.anim = true; var d = S.doors[0]; d.mark = 'booked'; d.walkText = 'Thu 8 Oct 9:00 am'; d.saved.walk = 'Walk Thu 8 Oct 9:00 am'; S.open = null; render(); var mk = $screen.querySelector('.mk2'); if (mk) mk.scrollIntoView({ block: 'center' }); }],
+    ['A won job becomes a customer', 'Won on a booked door: Make customer carries the name, address and price into Customers, and tags the door so nobody knocks it cold.', function () { reset(); S.screen = 'doors'; var d = S.doors[0]; d.mark = 'booked'; d.walkText = 'Thu 8 Oct 9:00 am'; d.saved.walk = 'Walk Thu 8 Oct 9:00 am'; makeCust(d); }],
     ['Customers and what is due', 'Every customer with plan, visits and spend. Due this week on top, overdue flagged. Backups save themselves every night.', function () { reset(); go('customers'); }],
     ['One customer, every visit', 'Contact, agreement, the visit history, and Log a visit that moves the next due date on by itself.', function () { reset(); S.cust = 'c1'; S.custBack = 'state'; go('customer'); }],
     ['Look up a number', 'The owner and the full address with Copy, and Fast People Search opened with the address filled in. A person reads it and types the number; it keeps the Do Not Call warning.', function () { reset(); S.screen = 'doors'; S.anim = true; S.cap = 1; S.form = 'phone:1'; render(); }]
@@ -1313,7 +1348,7 @@ button { font: inherit; color: inherit }
     ['Meta leads in one tap', 'Download the leads from Meta, pick the file, and they land under To call with their answers.', function () { reset(); S.meta = true; go('pipe'); }],
     ['Won, and a customer', 'A won job becomes a customer with one tap: plan, visits and what is due from then on.', function () { reset(); S.pstage = 'won'; go('pipe'); }],
     ['Which doors turn into jobs', 'Booking and win rates by fire hazard, lawn size and town, so the crew knock where it pays.', function () { reset(); go('results'); }],
-    ['The team, and the leaderboard', 'Doors, conversations and quotes per person, today, this week and this month. No location tracking.', function () { reset(); go('team'); }],
+    ['The team, and the leaderboard', 'Doors, conversations and quotes per person, today, this week and this month. Tap a name for that person’s stats. No location tracking.', function () { reset(); go('team'); }],
     ['Territories', 'Neighbourhoods assigned to people, with progress, and what each person sees.', function () { reset(); go('terr'); }],
     ['Who can sign in, and who is signed in', 'Add a person and their code is shown once; change, re-code, sign out or remove anyone. A green dot shows who is signed in, on what, and when they last used it.', function () { reset(); go('accounts'); }],
     ['The morning email', 'Leads to call, today’s walks, customers due and yesterday’s numbers, in the inbox at 6 am.', function () { reset(); go('email'); }]
