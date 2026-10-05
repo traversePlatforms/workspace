@@ -103,7 +103,7 @@ button { font: inherit; color: inherit }
 .door.open .addr { font-size: 21px }
 .adds { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px }
 .adds button { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 12px; padding: 8px 12px; font: 700 13px var(--sans); cursor: pointer; background: var(--sunk); color: var(--go) }
-.adds .addinfo { background: linear-gradient(160deg, #2E3F37, var(--ink)); color: var(--card) }
+.adds .addinfo { background: linear-gradient(160deg, #2E3F37, #16201C); color: #EDE7DC; box-shadow: inset 0 0 0 1px rgba(237,231,220,.12) }   /* fixed pine in both looks: var(--ink) turned cream in dark (2026-10-05) */
 .moneyl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; margin-top: 10px; border: 0; border-radius: 13px; padding: 9px 11px; background: var(--sunk); text-align: left; cursor: pointer }
 .moneyl .ml { flex: 1 1 calc(100% - 24px); font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
 .moneyl > .ic { color: var(--soft); width: 14px; height: 14px }
@@ -219,7 +219,7 @@ button { font: inherit; color: inherit }
 .bkrem b { display: block; font-size: 14px }
 .tgrid { display: grid; gap: 7px; margin-bottom: 6px }
 .tile { display: flex; gap: 11px; align-items: center; width: 100%; text-align: left; background: var(--card); border: 0; border-radius: 16px; padding: 10px 12px; cursor: pointer; box-shadow: 0 1px 0 var(--line) }
-.tile .ti { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(160deg, #2E3F37, var(--ink)); color: var(--ember); flex: none }
+.tile .ti { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(160deg, #2E3F37, #16201C); color: var(--ember); flex: none; box-shadow: inset 0 0 0 1px rgba(237,231,220,.1) }   /* pine in both looks */
 .tile .ti .ic { width: 19px; height: 19px } .tile b { display: block; font: 400 15.5px/1.2 var(--display) } .tile span.tx { font-size: 12px; color: var(--soft) }
 .tile .badge { margin-left: auto; flex: none; font: 700 10.5px var(--sans); background: var(--later-tint); color: var(--later); border-radius: 999px; padding: 2px 8px }
 .toptools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
