@@ -7,6 +7,10 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Fast People Search as the main search (index.html only, **448,590** bytes, to `public_html/summit-de59ae83/`, no flush)
+
+Matthew 2026-10-04: Fast People Search is the main green button, True People Search the backup link; a tip line says to tap View Free Details, not the name or a "full report" link (those went to BeenVerified / TruthFinder). Saved numbers default to Fast People Search as the source. lookup-test 13/13.
+
 ## ✅ LIVE 2026-10-04 (10/14) — Look up number + skip-trace code. ⏳ Step 4 (the 11 mail-*.json) NOT yet on the server: doors have no city/ZIP, so the searches use the town name with no ZIP
 
 | Step | File (from `sixfold/site/`) | Goes to |

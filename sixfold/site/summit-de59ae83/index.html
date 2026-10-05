@@ -224,6 +224,7 @@
   .lookup .lookgo .ic{width:16px;height:16px}
   .lookup .lkgo .lnk{font:700 13px var(--sans);color:var(--accent)}
   .lookup .lksub{font-size:12.5px;color:var(--soft)}
+  .lookup .lktip{font-size:13px;font-weight:700;color:var(--later)}
   .lookrow{display:flex;align-items:center;gap:10px;margin:18px 4px 0}
   .lookrow > span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .lookrow .aseg{display:flex;gap:5px}
@@ -5695,11 +5696,14 @@
     if (d.owner) row('Owner of record', ownerText(d.owner));
     row('Address', w.street + ', ' + w.town + ', CO' + (w.zip ? ' ' + w.zip : ''));
     var go = q('div', 'lkgo');
-    var a1 = q('a', 'lookgo'); a1.href = tpsUrl(w); a1.target = '_blank'; a1.rel = 'noopener noreferrer'; a1.appendChild(ico('search', 2.2)); a1.appendChild(document.createTextNode('Search True People Search'));
-    a1.addEventListener('click', function () { S.lookSite = 'tps'; picked('tps'); });
-    var a2 = q('a', 'lnk'); a2.href = fpsUrl(w); a2.target = '_blank'; a2.rel = 'noopener noreferrer'; a2.textContent = 'or Fast People Search';
-    a2.addEventListener('click', function () { S.lookSite = 'fps'; picked('fps'); });
+    /* Fast People Search first, True People Search as the backup (Matthew 2026-10-04) */
+    var a1 = q('a', 'lookgo'); a1.href = fpsUrl(w); a1.target = '_blank'; a1.rel = 'noopener noreferrer'; a1.appendChild(ico('search', 2.2)); a1.appendChild(document.createTextNode('Search Fast People Search'));
+    a1.addEventListener('click', function () { S.lookSite = 'fps'; picked('fps'); });
+    var a2 = q('a', 'lnk'); a2.href = tpsUrl(w); a2.target = '_blank'; a2.rel = 'noopener noreferrer'; a2.textContent = 'or True People Search';
+    a2.addEventListener('click', function () { S.lookSite = 'tps'; picked('tps'); });
     go.appendChild(a1); go.appendChild(a2); box.appendChild(go);
+    /* the free sites send name taps and "full report" buttons to paid sites (BeenVerified, TruthFinder) */
+    box.appendChild(q('div', 'lktip', 'On the site, tap View Free Details on the matching person. Not the name or any "full report" link: those go to paid sites.'));
     box.appendChild(q('div', 'lksub', 'Check the name matches the owner, then type the number below. A looked-up number has to clear the Do Not Call lists before anyone calls it.'));
     return box;
   }
