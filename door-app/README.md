@@ -51,6 +51,12 @@ Switched on by `features.roof`. Two offline builders write files beside the door
 
 Checks against Douglas County's own roof records: 0.2% of gable and hip roofs read as flat; median pitch 5/12; footprints match county building sizes (median ratio 1.04). Both are estimates and the card says so.
 
+## Hail map, live radar, roof photos (2026-10-05, admins, Roofing preview)
+
+- **Hail map:** each storm on the Hail screen has "Show on the map": the day's radar hail path as ~1 km squares coloured by size (from `hail-paths.json`, written by `build-hail.mjs build`). Opens with live radar off.
+- **Live radar:** "Live radar map" on the Hail screen: NOAA NEXRAD national composite through the Iowa Environmental Mesonet's public tile cache, refreshed every 5 minutes; an on/off button under the map.
+- **Roof photo:** "See the roof (aerial photo, 2020)" on the roof line. The Denver Regional Aerial Photography Project's 2020 photos at 3 inches a pixel, published by the State of Colorado on AWS Open Data, public domain (`s3://colorado-public-imagery/DRAPP/DRAPP2020/Imagery/`, 5,461 files). The files are stored in 128 px blocks, so the page reads only the blocks over the house (1-2 MB) straight from the bucket; nothing is stored on our server. Framed on the house (centre and size from `roofs/sample-roofs.mjs`). Coverage: all of Castle Rock, most of Franktown and Sedalia (8,503 doors); not Larkspur or El Paso. Built with `roofs/photo-index.mjs index` then `build`, which writes `photo-<town>.json`.
+
 ## What else inside this app is Sixfold's
 
 - `site/data/rounds/company.json`: Sixfold's settings.

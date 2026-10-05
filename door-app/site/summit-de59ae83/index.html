@@ -985,6 +985,13 @@
   .comm .calist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
   .comm .calist .back{text-align:left}
   .hailc .hmax{font-weight:700;font-size:13px;color:var(--soft);white-space:nowrap}
+  .roofpic{margin-top:8px;display:grid;gap:4px}
+  .roofpic img{width:100%;max-width:520px;border-radius:12px;border:1px solid var(--line);display:block}
+  .roofpic small{font-size:11.5px;color:var(--soft)}
+  .hailmap .legend{position:static;inset:auto;pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;padding:0;background:none;box-shadow:none;font-size:12.5px;color:var(--soft)}
+  .hailmap .legend span{background:none;box-shadow:none;padding:0}
+  .hailmap .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .hailmap .radarbtn{margin-left:auto}
   .hailc .hmax.big{color:var(--later)}
   .hailc .calist .lq{font-weight:700;font-size:13px;margin-top:4px}
   .hailx{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13.5px}
@@ -5439,8 +5446,55 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!d.roof && y.yb >= 2018) bits.push('no roof measurement: newer than the laser scan');
       t.appendChild(q('span', 'hl', bits.join(' \u00b7 ')));
     }
+    if (d.photo) {
+      var open = S.photoOpen === d.id;
+      var pb = q('button', 'lnk', open ? 'Hide the roof photo' : 'See the roof (aerial photo, 2020)'); pb.type = 'button';
+      pb.addEventListener('click', function () { S.photoOpen = open ? null : d.id; renderDoors(); });
+      t.appendChild(pb);
+      if (open) t.appendChild(roofPhoto(d));
+    }
     b.appendChild(t);
     return b;
+  }
+  /* ---- roof photo (2026-10-05) ----
+     The Denver Regional Aerial Photography Project's 2020 photos at 3 inches a pixel, published by the State of Colorado
+     (OIT GIS) on AWS Open Data, public domain. The files are stored in small blocks, so only the blocks over this house are
+     read (1-2 MB), straight from the state's bucket; nothing is stored on our server. Douglas County only (Castle Rock,
+     Franktown, Sedalia); the server sends d.photo = [file, x, y, half-window] for admins. Kept as a picture once drawn, so
+     the card redrawing does not fetch it again. */
+  var GEOTIFF = { js: 'https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js', sri: 'sha384-m5adk5PRgt3JjiYbYoG8oXxc3EgRFKc1aCBgKzyxqxnbYpdiAMlHkR0gVDp03Q/H' };
+  var PHOTO_BASE = 'https://colorado-public-imagery.s3.us-west-2.amazonaws.com/DRAPP/DRAPP2020/Imagery/';
+  function loadGeoTiff(cb) {
+    if (window.GeoTIFF) return cb();
+    S.gtQ = S.gtQ || []; S.gtQ.push(cb);
+    if (S.gtLoading) return;
+    S.gtLoading = true;
+    var sc = document.createElement('script'); sc.src = GEOTIFF.js; sc.integrity = GEOTIFF.sri; sc.crossOrigin = 'anonymous';
+    var done = function () { S.gtLoading = false; var qq = S.gtQ; S.gtQ = []; qq.forEach(function (f) { f(); }); };
+    sc.onload = done; sc.onerror = done;
+    document.head.appendChild(sc);
+  }
+  function roofPhoto(d) {
+    var box = q('div', 'roofpic');
+    S.photoImg = S.photoImg || {};
+    var cap = q('small', null, 'Aerial photo, 2020, 3 in a pixel (State of Colorado, public domain). A roof replaced since will not show.');
+    if (S.photoImg[d.id]) { var im0 = q('img'); im0.src = S.photoImg[d.id]; im0.alt = 'Aerial photo of the roof at ' + d.address; box.appendChild(im0); box.appendChild(cap); return box; }
+    var say = q('div', 'sub2', 'Loading the roof photo (1-2 MB)\u2026'); box.appendChild(say);
+    var p = d.photo, h = p[3] || 200, id = d.id;
+    loadGeoTiff(function () {
+      if (!window.GeoTIFF) { say.textContent = 'The photo reader could not load: no signal?'; return; }
+      window.GeoTIFF.fromUrl(PHOTO_BASE + p[0]).then(function (tif) { return tif.getImage(0); }).then(function (img) {
+        return img.readRasters({ window: [p[1] - h, p[2] - h, p[1] + h, p[2] + h], interleave: true });
+      }).then(function (px) {
+        var w = 2 * h, cv = document.createElement('canvas'); cv.width = w; cv.height = w;
+        var ctx = cv.getContext('2d'), out = ctx.createImageData(w, w);
+        for (var i = 0; i < w * w; i++) { out.data[i * 4] = px[i * 4]; out.data[i * 4 + 1] = px[i * 4 + 1]; out.data[i * 4 + 2] = px[i * 4 + 2]; out.data[i * 4 + 3] = 255; }   /* band 4 is infrared, not transparency */
+        ctx.putImageData(out, 0, 0);
+        S.photoImg[id] = cv.toDataURL('image/jpeg', 0.85);
+        if (S.photoOpen === id) renderDoors();
+      }).catch(function () { say.textContent = 'The roof photo could not load. Try again with better signal.'; });
+    });
+    return box;
   }
   function hailView() {
     hideToast(); S.signin = null; S.screen = 'hail'; foot.hidden = true; setDock(null);
@@ -5466,6 +5520,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       seg.appendChild(b);
     });
     holder.appendChild(seg);
+    var lr = q('button', 'back', 'Live radar map'); lr.type = 'button';
+    lr.addEventListener('click', function () { hailMapView(null); });
+    holder.appendChild(lr);
     var list = (H.storms || []).filter(function (s) { return big ? s.n1 > 0 : s.n34 > 0; });
     if (!list.length) { holder.appendChild(q('div', 'msg', H.none ? 'No hail file on the server yet.' : 'No storms at this size.')); return; }
     holder.appendChild(q('div', 'sub2', list.length + (list.length === 1 ? ' storm day' : ' storm days') + ' · newest first'));
@@ -5485,6 +5542,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tw = Object.keys(s.towns).map(function (k) { return { key: k, t: s.towns[k] }; }).filter(function (x) { return big ? x.t.n1 : x.t.n34; })
       .sort(function (a, b) { return (big ? b.t.n1 - a.t.n1 : b.t.n34 - a.t.n34); });
     card.appendChild(q('div', 'meta st', tw.map(function (x) { return x.t.label + ' ' + (big ? x.t.n1 : x.t.n34).toLocaleString('en-US'); }).join(' · ')));
+    var mp = q('button', 'lnk', 'Show on the map'); mp.type = 'button';
+    mp.addEventListener('click', function () { hailMapView(s.date); });
+    card.appendChild(mp);
     var open = S.hailOpen === s.date;
     if (big) {
       var tg = q('button', 'lnk', open ? 'Hide the neighbourhoods' : 'Show the neighbourhoods hit'); tg.type = 'button';
@@ -5503,6 +5563,57 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     }
     return card;
+  }
+  /* ---- the hail map (2026-10-05) ----
+     A storm day's path (NOAA MRMS radar estimate, squares of about 1 km at 0.75 in or more, coloured by size) over the
+     street map, and NOAA's live NEXRAD radar (the national composite, via the Iowa Environmental Mesonet's tile cache,
+     refreshed every 5 minutes) for watching a storm as it happens. */
+  var HAIL_BINS = [[2, '#7F1D1D', '2 in +'], [1.5, '#B91C1C', '1.5 to 2 in'], [1, '#EA580C', '1 to 1.5 in'], [0.75, '#F59E0B', '\u00be to 1 in']];
+  function hailColour(inch) { for (var i = 0; i < HAIL_BINS.length; i++) if (inch >= HAIL_BINS[i][0]) return HAIL_BINS[i][1]; return HAIL_BINS[HAIL_BINS.length - 1][1]; }
+  var RADAR_URL = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png';
+  function hailMapView(day) {
+    hideToast(); S.signin = null; S.screen = 'hailmap'; foot.hidden = true; setDock(null);
+    setBar('back', { title: day ? 'Hail ' + hailDay(day) : 'Live radar', sub: day ? 'Radar estimate of the hail path' : 'NOAA NEXRAD, every 5 minutes', back: hailView, backLabel: 'Hail' });
+    view.textContent = '';
+    var box = q('div', 'mapwrap hailmap'), el = q('div', 'map'); box.appendChild(el);
+    var lg = q('div', 'legend');
+    if (day) HAIL_BINS.forEach(function (b) { var sp = q('span'), i = q('i'); i.style.background = b[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(b[2])); lg.appendChild(sp); });
+    var rb = q('button', 'back radarbtn', 'Live radar: ' + (day ? 'off' : 'on')); rb.type = 'button';
+    lg.appendChild(rb);
+    box.appendChild(lg);
+    if (day) box.appendChild(q('div', 'sub2', 'Squares are about 1 km: the radar estimate of the largest hail there that day. It runs smaller than ground reports for big stones.'));
+    view.appendChild(box);
+    loadLeaflet(function () {
+      if (!document.body.contains(el)) return;
+      if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
+      var map = L.map(el, { zoomControl: true, preferCanvas: true });
+      el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      map.setView([39.2, -104.85], 9);   /* our corner of Colorado until a path is drawn */
+      var radar = null;
+      var setRadar = function (on) {
+        if (on && !radar) radar = L.tileLayer(RADAR_URL + '?_=' + Math.floor(Date.now() / 300000), { opacity: 0.6, maxZoom: 19, maxNativeZoom: 8,
+          attribution: 'Radar: NOAA NEXRAD via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>' }).addTo(map);
+        if (!on && radar) { map.removeLayer(radar); radar = null; }
+        rb.textContent = 'Live radar: ' + (on ? 'on' : 'off');
+      };
+      rb.addEventListener('click', function () { setRadar(!radar); });
+      setRadar(!day);   /* a past storm opens without today's radar on top of it; the live map opens with it */
+      if (!day) return;
+      api('hailmap', { params: { day: day } }).then(function (j) {
+        if (!document.body.contains(el)) return;
+        if (!j.ok || !j.cells || !j.cells.length) { box.appendChild(q('div', 'msg', j.error || 'No hail path saved for this day.')); return; }
+        var g = j.grid, bounds = null, half = 0.5;
+        j.cells.forEach(function (c) {
+          var r = c[0] + g.r0, col = c[1] + g.c0, lat = g.lat1 - r * g.dy, lon = g.lon1 - 360 + col * g.dx;
+          var b = [[lat - g.dy * half, lon - g.dx * half], [lat + g.dy * half, lon + g.dx * half]], inch = c[2] / 100;
+          L.rectangle(b, { stroke: false, fillColor: hailColour(inch), fillOpacity: 0.55, interactive: false }).addTo(map);
+          bounds = bounds ? bounds.extend(b) : L.latLngBounds(b);
+        });
+        if (bounds) map.fitBounds(bounds.pad(0.15));
+        map.attributionControl.addAttribution('Hail: NOAA MRMS MESH (estimate)');
+      }).catch(function () { box.appendChild(q('div', 'msg bad', 'The hail path needs signal.')); });
+    });
   }
   function openFromCommunity(a, back) {
     var go = function () { S.region = a.region; S.area = null; S.returnTo = back || communitiesView; openArea(a.name); };

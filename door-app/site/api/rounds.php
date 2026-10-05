@@ -926,6 +926,17 @@ if ($action === 'hail') {
     out(['ok' => true] + (is_array($j) ? $j : ['storms' => [], 'none' => true]));
 }
 
+/* the hail map (2026-10-05): one storm day's path, grid squares of 0.75 in or more */
+if ($action === 'hailmap') {
+    if (!$session) fail('Sign in first.', 401);
+    if (!hailOn((string) ($session['r'] ?? ''))) fail('Not allowed.', 403);
+    $day = (string) ($_GET['day'] ?? '');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day)) fail('Pick a storm day.');
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-paths.json'), true);
+    if (!is_array($j)) out(['ok' => true, 'none' => true, 'cells' => []]);
+    out(['ok' => true, 'day' => $day, 'grid' => array_intersect_key($j, array_flip(['lat1', 'lon1', 'dx', 'dy', 'r0', 'c0'])), 'cells' => $j['paths'][$day] ?? []]);
+}
+
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
 if ($action === 'company') out(['ok' => true, 'company' => array_diff_key(company(), ['appUrl' => 1])]);
@@ -1140,6 +1151,7 @@ if ($action === 'area') {
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
     $hailOf = hailOn($role) ? loadHail($key) : [];   /* admins only: storms near the house, newest first */
     $roofOf = roofDataOn($role) ? loadSide('roof', $key) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key) : [];
+    $photoOf = roofDataOn($role) ? loadSide('photo', $key) : [];   /* [file, x, y, half-window] in the 2020 3-inch photos */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1158,7 +1170,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

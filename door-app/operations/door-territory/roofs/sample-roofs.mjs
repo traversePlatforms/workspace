@@ -22,6 +22,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inRing, inRings, merc, loadBuildings, pickHouse, townParcels } from '../tree-zones/zones.mjs';
 import { heightGrid, PROJECT, PROJECT_YEAR, setMemoMax } from '../tree-zones/lidar.mjs';
+import proj4 from '../tree-zones/node_modules/proj4/dist/proj4-src.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..'), TZ = join(DT, 'tree-zones');
@@ -98,6 +99,9 @@ export async function measureRoof(lat, lon, house, project) {
     deg: Math.round(deg * 10) / 10, pitch: flat ? 0 : pitchOf(deg), flat,
     h: Math.round(median(roofCells.map((o) => G.hgt[o])) * 10) / 10,   /* roof height above ground, m (median) */
     cells: slopes.length, yr: PROJECT_YEAR[project] || null,
+    /* the house's centre (outline slid onto the roof) and its longest side, so the roof photo is framed on the house, not the lot */
+    c: (() => { const hx = (hb[0] + hb[2]) / 2 + best[0] * cell, hy = (hb[1] + hb[3]) / 2 + best[1] * cell; const [lo, la] = proj4('EPSG:3857', 'EPSG:4326', [hx, hy]); return [+la.toFixed(6), +lo.toFixed(6)]; })(),
+    ext: Math.round(Math.max(hb[2] - hb[0], hb[3] - hb[1]) * k),
   };
 }
 
@@ -111,7 +115,8 @@ async function sample() {
     const p = join(DT, `${town}-areas.json`);
     if (!existsSync(p)) continue;
     const all = JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.la === 'number');
-    const todo = all.filter((d) => !cache[`${d.la},${d.lo}`]).slice(0, LIMIT);
+    const REDO = process.argv.includes('--redo');   /* measure again even if cached (e.g. after adding a field) */
+    const todo = all.filter((d) => REDO || !cache[`${d.la},${d.lo}`]).slice(0, LIMIT);
     if (!todo.length) { console.log(`${town}: all ${all.length} measured`); continue; }
     const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);
     const bbox = [Math.min(...lons) - 0.003, Math.min(...lats) - 0.003, Math.max(...lons) + 0.003, Math.max(...lats) + 0.003];
@@ -156,13 +161,15 @@ function build() {
   let tot = 0, ok = 0;
   for (const town of Object.keys(TOWNS)) {
     const f = join(DATA, `${town}.json`); if (!existsSync(f)) continue;
-    const d = JSON.parse(readFileSync(f, 'utf8')), doors = {};
+    const d = JSON.parse(readFileSync(f, 'utf8')), doors = {}, houses = {};
     for (const a of d.areas) for (const x of a.doors) {
       tot++;
       const r = cache[`${x.lat},${x.lon}`];
       if (r && !r.err) { doors[x.id] = { sq: r.sq, sqs: r.sqs, pitch: r.pitch, deg: r.deg, flat: r.flat, fp: r.fp, h: r.h, yr: r.yr }; ok++; }
+      if (r && r.c) houses[x.id] = { c: r.c, ext: r.ext };
     }
     writeFileSync(join(DATA, `roof-${town}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), doors }));
+    writeFileSync(join(HERE, `houses-${town}.json`), JSON.stringify(houses));   /* for photo-index.mjs build: frame the photo on the house */
     console.log(`  roof-${town}.json: ${Object.keys(doors).length} doors`);
   }
   console.log(`${ok} of ${tot} doors have a roof measurement`);

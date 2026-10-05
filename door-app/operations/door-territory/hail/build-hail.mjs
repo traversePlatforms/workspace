@@ -13,6 +13,7 @@
  * build writes, beside the door files (site/data/rounds/):
  *   hail-<town>.json   { through, doors: { id: [[date, inches], ...newest first] } }   storms of 0.75 in or more
  *   hail-storms.json   { through, from, days, storms: [{ date, max, n1, n34, towns: {key: {n1, n34, max, areas: {name: n1}}}}] }
+ *   hail-paths.json    { lat1, lon1, dx, dy, r0, c0, paths: { date: [[row, col, inches x 100], ...] } }   for the hail map
  * "Near the house" = the largest value in the 3 x 3 squares around it (about 1 km each way).
  * It is a radar ESTIMATE: it runs smaller than ground reports for big stones (see research/ROOFING-DATA-CHECK). */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
@@ -138,6 +139,14 @@ function build() {
   }
   const list = Object.values(storms).sort((a, b) => (a.date < b.date ? 1 : -1));
   writeFileSync(join(DATA, 'hail-storms.json'), JSON.stringify({ through, from, days: have.length, missing: days.length - have.length, storms: list }));
+  /* the paths for the hail map (2026-10-05): per storm day, every grid square of 0.75 in or more, [row, col, inches x 100]
+     on the day file's grid; the map draws each as a ~1 km square */
+  const g0 = have[0], paths = {};
+  for (const s of list) {
+    const day = have.find((d) => d.d === s.date); if (!day) continue;
+    paths[s.date] = day.cells.filter((c) => c[2] / 10 >= MIN_STORE).map(([r, c, v]) => [r + day.r0 - g0.r0, c + day.c0 - g0.c0, Math.round(v / 10 / 25.4 * 100)]);
+  }
+  writeFileSync(join(DATA, 'hail-paths.json'), JSON.stringify({ lat1: g0.lat1, lon1: g0.lon1, dx: g0.dx, dy: g0.dy, r0: g0.r0, c0: g0.c0, paths }));
   console.log(`hail-storms.json: ${list.length} storm days (${list.filter((s) => s.n1).length} with a door at 1 in or more), ${have.length} days read, ${days.length - have.length} missing; ${total} doors`);
 }
 

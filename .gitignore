@@ -126,3 +126,9 @@ door-app/operations/door-territory/roofs/roof-cache*.json*
 door-app/operations/door-territory/roofs/sample.log
 door-app/site/data/rounds/roof-*.json
 door-app/site/data/rounds/year-*.json
+# Roof photos (2026-10-05): per-door photo windows, the photo file index, house centres and spot-check images; regenerable
+door-app/site/data/rounds/photo-*.json
+door-app/operations/door-territory/roofs/photo-index.json
+door-app/operations/door-territory/roofs/photo-index.log
+door-app/operations/door-territory/roofs/houses-*.json
+door-app/operations/door-territory/roofs/photo-check*.png

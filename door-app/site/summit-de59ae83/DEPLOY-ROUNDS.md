@@ -9,6 +9,17 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — hail map, live radar, roof photos (admins, Roofing preview)
+
+Matthew 2026-10-05. On the Hail screen: **Live radar map** (NOAA NEXRAD through the Iowa Environmental Mesonet tile cache, every 5 minutes) and, on each storm, **Show on the map** (the day's radar hail path, ~1 km squares coloured by size; opens with radar off). On the roof line: **See the roof (aerial photo, 2020)**, a 3-inch photo of the house read in the browser from the State of Colorado's public bucket (DRAPP 2020, public domain), only the blocks over the house (1-2 MB); 8,503 doors in Castle Rock, Franktown and Sedalia. Tested: mapphoto-test 10/10 (the photo really loads from the bucket in Chrome); all 70 suites pass. Includes the hail-and-roof-only-in-preview change below if that has not gone up yet.
+
+| Step | File (from `door-app/site/`) | Goes to |
+|---|---|---|
+| 1 | `data/rounds/hail-paths.json` (**139,970** bytes) and `data/rounds/photo-castle-rock.json`, `photo-franktown.json`, `photo-sedalia.json` (**424 KB** together), gitignored, on this computer | `sixfold-data/rounds/`, beside monument.json |
+| 2 | `api/rounds.php` (**194,212** bytes) | `public_html/api/` |
+| 3 | `summit-de59ae83/index.html` (**475,102** bytes) | `public_html/summit-de59ae83/` |
+| 4 | — | Flush the cache |
+
 ## ⏳ TO UPLOAD — hail and roof only in Roofing preview (Sixfold)
 
 Matthew 2026-10-05: hail is irrelevant to the lawn crew. Sixfold's company.json now has `card.hail` and `card.roof` off, so the normal card shows neither, and the Hail tile shows only in Roofing preview, which always shows both (a roofing company's install leaves them on). card-test 18/18, hail-test, roof-test, settings-test pass.
