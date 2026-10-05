@@ -175,6 +175,12 @@ const JOBS = [
   { src: 'quotes/kara-maintenance.html', out: 'quotes/Sixfold-Quote-Maintenance-Kara-Rosenstrauch.pdf', mode: 'light', scale: 0.84,
     css: '.ifpacket { display: none; }' },
 
+  /* Brian Skelton, aeration job, 2026-10-05. Same two-render arrangement as Kara's. */
+  { src: 'quotes/brian-aeration.html', out: 'quotes/_part-quote-brian.pdf', mode: 'light', scale: 0.84,
+    css: '.ifsolo { display: none; }' },
+  { src: 'quotes/brian-aeration.html', out: 'quotes/Sixfold-Quote-Aeration-Brian-Skelton.pdf', mode: 'light', scale: 0.84,
+    css: '.ifpacket { display: none; }' },
+
   /* Field sheets. Internal, printed and written on with a pen, so they want the
      light print register like everything else in the binder. Four sheets, one
      printed page each — count them after any edit. */
@@ -278,6 +284,8 @@ const JOBS = [
      days. */
   { src: 'agreements/kara-aeration-agreement.html',   out: 'agreements/kara-aeration-agreement.pdf',   mode: 'light', scale: 1 },
   { src: 'agreements/kara-maintenance-agreement.html', out: 'agreements/kara-maintenance-agreement.pdf', mode: 'light', scale: 1 },
+  /* Brian Skelton, 2026-10-05. Same statutory reason for scale 1. FIVE pages. */
+  { src: 'agreements/brian-aeration-agreement.html', out: 'agreements/_part-agreement-brian.pdf', mode: 'light', scale: 1 },
   /* The short lawn forms, 2026-09-28. Same statutory reason for scale 1 as the two
      Kara documents above — both carry .legal10 and the duplicate .noticeform.
      THREE pages each and that is the floor: one side of agreement, then the Notice
