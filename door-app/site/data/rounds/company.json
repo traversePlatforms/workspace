@@ -37,6 +37,13 @@
     "skiptrace": true,
     "hail": true
   },
+  "card": {
+    "lawn": true,
+    "trees": true,
+    "fire": true,
+    "money": true,
+    "water": true
+  },
   "links": {
     "googleReview": "https://g.page/r/CdxyzSzq9tvEEBM/review"
   }

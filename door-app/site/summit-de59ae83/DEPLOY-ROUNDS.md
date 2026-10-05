@@ -9,6 +9,17 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — door-card sections as settings + Roofing preview (admins), and the tools-screen redraw
+
+Matthew 2026-10-04: a roofer's card should not carry Sixfold's lawn and fire. company.json now has a `card` block (lawn, trees, fire, money, water; missing = shown; Sixfold: all on, so the crew see no change). Admins get a **Door card: Sixfold | Roofing preview** switch on the tools screen, under Look: on that device only, cards show the basics and hail, and lawn, trees, fire, money, water, the fire check, the Show doors with row and the Fire / Lawn / Trees sorts are hidden. It stays on for that device until switched back. Also: the tools screen draws itself again when fresher company settings arrive (the missing Hail tile, 2026-10-04). Tested: card-test 15/15; all 68 suites pass alone (lookinstall's check now reads the first switch row).
+
+| Step | File (from `door-app/site/`) | Goes to |
+|---|---|---|
+| 1 | `data/rounds/company.json` (**1,846** bytes) | `sixfold-data/rounds/` (replace) |
+| 2 | `api/rounds.php` (**192,106** bytes) | `public_html/api/` |
+| 3 | `summit-de59ae83/index.html` (**464,568** bytes) | `public_html/summit-de59ae83/` |
+| 4 | — | Flush the cache |
+
 ## ✅ LIVE 2026-10-04 (verified 17/17) — Hail (admins only): storms since 2020 and the streets they hit. Page identical at three addresses; hail files not reachable on the website; hail on in company.json; the Hail list needs a sign-in and matches this computer (96 storm days, 1,275 days read); a Castle Rock neighbourhood's 42 doors carry their storms; the screen, the storm, the neighbourhood and the door's hail line all work on a phone; no page errors. Crew refusal is tested locally only (no throwaway crew code on the live site)
 
 Matthew 2026-10-04: the first roofing piece, for him to evaluate. NOAA's radar estimate of the largest hail within about 1 km of each house, per day, April–September 2020 to 30 Sep 2026 (1,275 days read; 6 not in the archive). 96 storm days at ¾ in or more near our doors, 54 at 1 in or more; the largest 2.74 in on 22 June 2023. **Admins only**: a Hail tile (storm days newest first; tap one for the neighbourhoods it hit, tap a neighbourhood to open it) and a hail line on each door card, labelled a radar estimate. Crew get neither (the server leaves it out of their answers). Switched on by `features.hail` in company.json. Tested: hail-test 14/14 (crew refused, admins get it, off in company.json means off for everyone).

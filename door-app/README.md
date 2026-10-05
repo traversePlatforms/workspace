@@ -30,6 +30,7 @@ Nothing about one company is written into the code any more. Each install has a 
 | `logo` | The mark (an SVG path). None: a monogram of the first letter |
 | `colors` | Optional overrides of the colour tokens, light and dark |
 | `services`, `leadNeeds`, `extraWork` | The customer services, the enquiry "what do they want" list, the extra-work chips at the door. The server checks against the same lists |
+| `card` | Which parts of the door card show: `lawn`, `trees`, `fire`, `money`, `water` (missing = shown; a part with no data never shows). Admins can also switch one device to **Roofing preview** on the tools screen |
 | `features` | Tools switched on: `quote` (Quote builder), `communities` (HOA / Firewise screen), `firecheck` (fire check + report), `skiptrace` |
 | `links.googleReview` | The Ask for a review link |
 

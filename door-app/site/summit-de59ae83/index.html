@@ -1129,6 +1129,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dock = document.getElementById('dock');
 
   var S = { me: null, role: 'crew', regions: [], region: null, area: null, doors: [], busy: false };
+  try { S.roofView = localStorage.getItem('doorapp.roofview') === '1'; } catch (e) {}   /* an admin's Roofing preview, this device only */
   /* the look (2026-10-04): Auto follows the device's own light or dark setting; Light or Dark is kept on this device */
   function theme() { try { var t = localStorage.getItem('sixfold.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } }
   function applyTheme() { var t = theme(); if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); }
@@ -1220,10 +1221,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the company this install is for (company.json; see paintCompany at the top) ---- */
   var CO_DEFAULT = { name: 'Door App', short: 'Door App', tagline: '', phone: '', email: '', site: '', appUrl: '', visit: 'visit', visitShort: 'Visit',
-                     logo: null, colors: {}, services: [['job', 'Job'], ['other', 'Other']], leadNeeds: ['A quote', 'Question'], extraWork: [], features: {}, links: {} };
+                     logo: null, colors: {}, services: [['job', 'Job'], ['other', 'Other']], leadNeeds: ['A quote', 'Question'], extraWork: [], features: {}, card: {}, links: {} };
   var CO = null, CO_SAVED = false;
   try { CO = JSON.parse(localStorage.getItem('doorapp.company') || 'null'); CO_SAVED = !!(CO && CO.name); } catch (e) {}
   function feat(k) { return !!(CO && CO.features && CO.features[k]); }
+  /* ---- door-card sections (2026-10-04) ----
+     Matthew: a roofer's card should not carry Sixfold's lawn and fire. Each part is a company setting
+     (company.json "card"; missing = shown), and an admin can preview the roofing card on their own device
+     (Roofing preview on the tools screen) without changing anything for the crew. Hidden parts are taken out
+     of the answers as they arrive, so every place that would show them (badges, sorts, chips, map) has nothing to show. */
+  var ROOF_HIDE = { lawn: 1, trees: 1, fire: 1, money: 1, water: 1, fc: 1 };
+  function roofOn() { return !!S.roofView && S.role === 'admin'; }
+  function cardOn(k) { if (roofOn() && ROOF_HIDE[k]) return false; return !(CO && CO.card && CO.card[k] === false); }
+  var TRIM_DOOR = { fire: ['fire'], lawn: ['lawn', 'lawnfix'], trees: ['trees'], fc: ['fc'] };            /* door fields: set to null */
+  var TRIM_COUNT = { fire: ['hot', 'vhot'], lawn: ['lawnL', 'lawnM'], trees: ['treeA', 'treeH'] };       /* summary counts: removed */
+  var TRIM_ACTIONS = { area: 1, regions: 1, search: 1, nearest: 1, mydoors: 1, communities: 1 };
+  function trimCard(j) {
+    var nul = [], del = [];
+    Object.keys(TRIM_DOOR).forEach(function (k) { if (!cardOn(k)) { nul = nul.concat(TRIM_DOOR[k]); del = del.concat(TRIM_COUNT[k] || []); } });
+    if (!nul.length) return j;
+    del.push('all3');
+    (function walk(o, depth) {
+      if (!o || typeof o !== 'object' || depth > 6) return;
+      if (Array.isArray(o)) { o.forEach(function (x) { walk(x, depth + 1); }); return; }
+      nul.forEach(function (k) { if (k in o) o[k] = null; });
+      del.forEach(function (k) { if (k in o) delete o[k]; });
+      for (var k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], depth + 1);
+    })(j, 0);
+    return j;
+  }
   function VW() { return (CO && CO.visitShort) || 'Visit'; }            /* "Walk", "Inspection" */
   function vw() { return VW().toLowerCase(); }
   function setCompany(c) {
@@ -1257,6 +1283,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.', _notOurs: true }; })
         .then(function (j) {
           j._status = r.status; if (fromSaved) j._saved = true;
+          if (TRIM_ACTIONS[action]) trimCard(j);
           if (j.ok && opts.body && action !== 'signin') warmArea();
           return j;
         });
@@ -1935,6 +1962,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       lseg.appendChild(b);
     });
     lk.appendChild(lseg); box.appendChild(lk);
+    if (S.role === 'admin') {
+      var rv = q('div', 'lookrow'); rv.appendChild(q('span', null, 'Door card'));
+      var rseg = q('div', 'aseg');
+      [[false, CO.short], [true, 'Roofing preview']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!S.roofView === o[0]));
+        b.addEventListener('click', function () {
+          if (!!S.roofView === o[0]) return;
+          S.roofView = o[0];
+          try { if (o[0]) localStorage.setItem('doorapp.roofview', '1'); else localStorage.removeItem('doorapp.roofview'); } catch (e) {}
+          S.regions = []; S.doors = []; S.area = null; S.communities = null;   /* fetched again, with or without the hidden parts */
+          chooseView();
+          toast(o[0] ? 'Roofing preview on' : 'Back to ' + CO.short, o[0] ? 'This device only: cards show the basics and hail; lawn, trees, fire, money and water are hidden' : 'Door cards as the crew see them', null);
+        });
+        rseg.appendChild(b);
+      });
+      rv.appendChild(rseg); box.appendChild(rv);
+    }
     var out = q('div', 'out');
     var so = q('button', null, 'Sign out');
     so.type = 'button';
@@ -3261,7 +3305,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       : S.editWork === d.id ? workBlock(d) : S.editFc === d.id ? fireCheckBlock(d) : (!inPrompt && S.editWalk === d.id) ? walkForm(d, ctx) : null;
     if (form) box.appendChild(form);
     var grid = q('div', 'capg'), booked = !!(d.mark && d.mark.outcome === 'booked');
-    CAP.forEach(function (c) {
+    CAP.filter(function (c) { return c[0] !== 'fc' || cardOn('fc'); }).forEach(function (c) {
       if (c[0] === 'walk' && (inPrompt || !booked)) return;
       var has = { walk: !!d.walk, phone: !!d.phone, email: !!d.email, photo: !!(d.photos && d.photos.length), note: !!d.note, work: !!d.work, fc: !!(d.fc && d.fc.length) }[c[0]];
       now[c[0]] = has;
@@ -3365,10 +3409,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the three drivers: show only doors that have every one picked */
   var MATCH = [['fire', 'flame', 'High fire'], ['lawn', 'leaf', 'Large or medium lawn'], ['trees', 'tree', 'Trees close']];
-  function matchOn() { var m = S.match || {}; return !!(m.fire || m.lawn || m.trees); }
-  function matchWords() { var m = S.match || {}, w = []; if (m.fire) w.push('high fire'); if (m.lawn) w.push('a large or medium lawn'); if (m.trees) w.push('trees close'); return w.join(' and '); }
+  /* a pick for a hidden part counts as not picked (Roofing preview, or the company has it off) */
+  function picks() { var m = S.match || {}, o = {}; MATCH.forEach(function (x) { if (m[x[0]] && cardOn(x[0])) o[x[0]] = true; }); return o; }
+  function matchOn() { var m = picks(); return !!(m.fire || m.lawn || m.trees); }
+  function matchWords() { var m = picks(), w = []; if (m.fire) w.push('high fire'); if (m.lawn) w.push('a large or medium lawn'); if (m.trees) w.push('trees close'); return w.join(' and '); }
   function doorMatches(d) {
-    var m = S.match || {};
+    var m = picks();
     if (m.fire && !(d.fire === 4 || d.fire === 5)) return false;
     if (m.lawn) { var lv = lawnLevelOf(d); if (lv !== 'L' && lv !== 'M') return false; }
     if (m.trees) { var tl = treeLevel(d); if (tl !== 'against' && tl !== 'heavy') return false; }
@@ -3377,7 +3423,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function matchBar() {
     var bar = q('div', 'matchb');
     bar.appendChild(q('span', 'ml', 'Show doors with'));
-    MATCH.forEach(function (m) {
+    MATCH.filter(function (m) { return cardOn(m[0]); }).forEach(function (m) {
       var on = !!(S.match && S.match[m[0]]);
       var b = q('button', null); b.type = 'button'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('data-m', m[0]);
       b.appendChild(ico(m[1], 2.2)); b.appendChild(document.createTextNode(m[2]));
@@ -5497,6 +5543,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return box;
   }
   function lawnChip(d, tappable) {
+    if (!cardOn('lawn')) return null;   /* lawn hidden for this company or in the Roofing preview: no Lawn? prompt either */
     var lv = lawnLevelOf(d);
     if (!lv && !tappable) return null;
     var el = q(tappable ? 'button' : 'span', 'lawn lv-' + (lv || 'x'));
@@ -5929,8 +5976,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     card.appendChild(extras(d));
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
-    card.appendChild(moneyLine(d));
-    var wl = waterLine(d); if (wl) card.appendChild(wl);
+    if (cardOn('money')) card.appendChild(moneyLine(d));
+    var wl = cardOn('water') ? waterLine(d) : null; if (wl) card.appendChild(wl);
     if (capOpen(d)) card.appendChild(capturePanel(d, { region: S.region, redraw: renderDoors, phone: d.phone }, false));
     if (S.pickLater === d.id) { card.appendChild(laterChooser(d)); return card; }
     var acts = q('div', 'acts');
@@ -6017,7 +6064,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* show only doors with the drivers picked; one door open at a time */
     if (S.dview !== 'map') {
       var nAll = todo.length;
-      view.appendChild(matchBar());
+      if (MATCH.some(function (m) { return cardOn(m[0]); })) view.appendChild(matchBar());
       todo = todo.filter(doorMatches);
       if (matchOn()) view.appendChild(q('div', 'sub2 matchn', todo.length + ' of ' + nAll + ' doors to knock have ' + matchWords() + '.'));
       if (S.openDoor && !todo.concat(again).some(function (x) { return x.id === S.openDoor; })) S.openDoor = null;
