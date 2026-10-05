@@ -9,6 +9,35 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ✅ LIVE 2026-10-05 (verified 29/29: page and sw.js identical, webpush.php silent, private files 404, every new action answering, wind and thresholds and sample up, the alerts key made on first ask and kept, calendar and storm list open; cron */5 push-alerts.php added by Matthew) — teams and managers, calendars, lead owners, goals, Training, the Storm list, wind, phone alerts
+
+Matthew 2026-10-05 (the big list). Built and tested on the test copy; nothing here is live yet.
+- **Teams and a Manager role** (Accounts: + Add a team; Change on a row sets role and team). A manager gets a Your team group: Leads to hand out, Team stats, Leaderboard, Territories, all for their team.
+- **Calendar** for everyone (walks booked, "come back" doors on the day asked, lead follow-ups, own entries); admins pick anyone, managers their team, crew on a team can look at teammates'.
+- **Lead owners**: website and Meta leads are nobody's until an admin or manager assigns them; the owner sees them in My leads and sets follow-ups.
+- **Daily goal** on My stats, set by the person, their manager or an admin.
+- **Training**: each company's own lessons (empty until an admin adds them).
+- **Storm list** (admins, where hail shows): storm day, then the doors hit with hail, wind, roof size, material, age, owner, a price estimate from the company's own prices, and a callable number; Prices and damage thresholds (sourced defaults).
+- **Wind** on the door card (with hail).
+- **Phone alerts**: storm and fire warnings to phones that turn them on (iPhone: installed app, iOS 16.4+).
+
+teams-test 53/53, stormlist 20/20, push 18/18, storm 16/16, sample 19/19, plus the rest of the suites.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/data/rounds/wind-*.json` (11 towns) and `wind-storms.json` | `sixfold-data/rounds/` (beside public_html) |
+| 2 | `door-app/site/data/rounds/roof-damage-defaults.json` (1,758 bytes) | `sixfold-data/rounds/` |
+| 3 | `door-app/site/data/rounds/sample-door.json` (120,006 bytes; adds wind) | `sixfold-data/rounds/` |
+| 4 | `door-app/site/api/webpush.php` (20,988 bytes, **new**) | `public_html/api/` |
+| 5 | `door-app/site/api/rounds.php` (238,985 bytes) | `public_html/api/` |
+| 6 | `door-app/site/tools/push-alerts.php` (2,198 bytes, **new**) | `sixfold-tools/` (beside public_html, where morning-email.php is) |
+| 7 | `door-app/site/summit-de59ae83/sw.js` (9,943 bytes) | `public_html/summit-de59ae83/` |
+| 8 | `door-app/site/summit-de59ae83/index.html` (544,944 bytes) | `public_html/summit-de59ae83/` |
+| 9 | **Flush the cache** (sw.js changed) | SiteGround |
+| 10 | **New cron job**, every 5 minutes: the morning email's command with `push-alerts.php` in place of `morning-email.php` | SiteGround > Cron Jobs |
+
+The server writes these itself, beside the website, the first time they're used: `sixfold-private/push-vapid.json` (the alerts key: never delete it, it would cut off every phone), `push-subscriptions.json`, and in `sixfold-data/rounds/` `calendar.log`, `goals-people.json`, `training.json`, `roof-settings.json`, `storms-recent.json`, `push-sent.json`.
+
 ## ✅ LIVE 2026-10-05 (verified 21/21: page identical plain and busted, sample-door.json 404/403 from the web, sample answers only signed in and matches local, alerts and both call lists answer, the sample door draws every part with both strips and its roof photo, a mark on it sends nothing) — the Sample door (admin tool), the hail strip and the storm call list
 
 Matthew 2026-10-05:
