@@ -37,6 +37,10 @@ Nothing about one company is written into the code any more. Each install has a 
 
 **What the settings do not cover yet:** the door data itself (lawn size, trees, wildfire come from the data pipeline, so a roofer's door files are simply built without them, and those parts of the card disappear on their own); `manifest.json` and the icons (each install uploads its own); the morning email's wording ("walks"); and the code comments, which still tell the app's history with Sixfold and can be read by anyone who opens the page source. Stripping comments is a build step to add before a second company goes live.
 
+## Hail per door (2026-10-04, admins only)
+
+The first roofing piece, switched on by `features.hail`. NOAA's radar estimate of the largest hail within about 1 km of each house, per day, April to September since 2020 (MRMS MESH, archived by Iowa State). Built offline with `operations/door-territory/hail/build-hail.mjs` (`fetch`, then `build`); it writes `hail-<town>.json` and `hail-storms.json` beside the door files. The app shows them only to admins: a **Hail** screen (storm days, newest first, and the neighbourhoods each one hit) and a hail line on the door card. It is an estimate that runs smaller than ground reports for big stones; see [research/ROOFING-DATA-CHECK-2026-10.md](research/ROOFING-DATA-CHECK-2026-10.md). Not updated automatically yet: re-run fetch and build, then upload the hail files.
+
 ## What else inside this app is Sixfold's
 
 - `site/data/rounds/company.json`: Sixfold's settings.

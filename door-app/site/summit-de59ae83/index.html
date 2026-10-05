@@ -984,6 +984,14 @@
   .comm .lnk{background:none;border:0;padding:8px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
   .comm .calist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
   .comm .calist .back{text-align:left}
+  .hailc .hmax{font-weight:700;font-size:13px;color:var(--soft);white-space:nowrap}
+  .hailc .hmax.big{color:var(--later)}
+  .hailc .calist .lq{font-weight:700;font-size:13px;margin-top:4px}
+  .hailx{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13.5px}
+  .hailx .ic{width:18px;height:18px;flex:none;color:var(--accent);margin-top:2px}
+  .hailx > span{display:grid;gap:1px}
+  .hailx small{font-size:11.5px;color:var(--soft)}
+  .hailx b{color:var(--later)}
   .cseg{display:flex;gap:6px;margin:4px 0 10px}
   .cseg button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .cseg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
@@ -1358,6 +1366,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
+    hail: '<path d="M7 15.5a4 4 0 0 1-.6-7.95 5.5 5.5 0 0 1 10.6 1A3.5 3.5 0 0 1 17 15.5z"/><circle cx="8.5" cy="19.5" r="1"/><circle cx="12.5" cy="18" r="1"/><circle cx="16" cy="20" r="1"/>',
     tree: '<path d="M12 3l-5 7h3l-4 6h12l-4-6h3z"/><path d="M12 16v5"/>',
     list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1" fill="currentColor"/>',
     near: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>',
@@ -1909,6 +1918,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView),
         qt,
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null,
+        feat('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         tile('button', 'users', 'Team stats', "Everyone's numbers.", 'Admin only', teamView),
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
@@ -3031,6 +3041,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
     else if (!d.phone && !capOpen(d)) wrap.appendChild(lookupButton(d));   /* Look up number (2026-10-04) */
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
+    if (d.hail && d.hail.length) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
@@ -5333,8 +5344,89 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     return card;
   }
-  function openFromCommunity(a) {
-    var go = function () { S.region = a.region; S.returnTo = communitiesView; openArea(a.name); };
+  /* ---- hail (2026-10-04, admin only) ----
+     Matthew is weighing a roofing version. The largest hail the weather radar estimated within about 1 km
+     of each house, for the 24 hours to 6 am, April to September since 2020 (NOAA MRMS MESH, built offline).
+     A radar ESTIMATE: it runs smaller than ground reports for big stones, so it ranks streets; it does not
+     promise a size on a roof. */
+  function hailDay(iso) { var p = iso.split('-'); return +p[2] + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0]; }
+  function inch(v) { return (Math.round(v * 100) / 100).toFixed(2).replace(/0$/, '') + ' in'; }
+  function hailBlock(d) {
+    var b = q('div', 'hailx'); b.appendChild(ico('hail', 2.2));
+    var t = q('span'); t.appendChild(q('small', null, 'Hail near the house (radar estimate)'));
+    var line = q('span', 'hl');
+    d.hail.slice(0, 3).forEach(function (h, i) {
+      if (i) line.appendChild(document.createTextNode(' · '));
+      line.appendChild(q(h[1] >= 1 ? 'b' : 'span', null, inch(h[1]))); line.appendChild(document.createTextNode(' on ' + hailDay(h[0])));
+    });
+    if (d.hail.length > 3) line.appendChild(document.createTextNode(' · ' + (d.hail.length - 3) + ' more'));
+    t.appendChild(line); b.appendChild(t);
+    return b;
+  }
+  function hailView() {
+    hideToast(); S.signin = null; S.screen = 'hail'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Hail', sub: 'Storms since 2020 · radar estimate', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    var go = S.hail ? Promise.resolve(S.hail) : api('hail');
+    go.then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the hail.')); return; }
+      S.hail = j; drawHail(holder);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Hail needs signal.')); });
+  }
+  function drawHail(holder) {
+    holder.textContent = '';
+    var H = S.hail, big = S.hailBig !== false;
+    holder.appendChild(q('div', 'msg', 'The largest hail the weather radar estimated within about 1 km of each house, for the 24 hours to 6 am. It runs smaller than what people report for big stones: use it to rank streets, not to promise a size on a roof.' +
+      (H.from ? ' April to September, ' + hailDay(H.from) + ' to ' + hailDay(H.through) + '.' : '')));
+    var seg = q('div', 'seg cseg');
+    [[true, '1 inch or more'], [false, '¾ inch or more']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(big === o[0]));
+      b.addEventListener('click', function () { S.hailBig = o[0]; S.hailMore = 0; drawHail(holder); });
+      seg.appendChild(b);
+    });
+    holder.appendChild(seg);
+    var list = (H.storms || []).filter(function (s) { return big ? s.n1 > 0 : s.n34 > 0; });
+    if (!list.length) { holder.appendChild(q('div', 'msg', H.none ? 'No hail file on the server yet.' : 'No storms at this size.')); return; }
+    holder.appendChild(q('div', 'sub2', list.length + (list.length === 1 ? ' storm day' : ' storm days') + ' · newest first'));
+    var shown = 30 + (S.hailMore || 0);
+    list.slice(0, shown).forEach(function (s) { holder.appendChild(stormCard(s, big, holder)); });
+    if (list.length > shown) {
+      var more = q('button', 'back', 'Show ' + Math.min(30, list.length - shown) + ' more'); more.type = 'button';
+      more.addEventListener('click', function () { S.hailMore = (S.hailMore || 0) + 30; drawHail(holder); });
+      holder.appendChild(more);
+    }
+  }
+  function stormCard(s, big, holder) {
+    var card = q('div', 'door comm hailc');
+    var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', hailDay(s.date))); top.appendChild(q('span', 'hmax' + (s.max >= 1 ? ' big' : ''), 'up to ' + inch(s.max))); card.appendChild(top);
+    var n = big ? s.n1 : s.n34;
+    card.appendChild(q('div', 'meta', n.toLocaleString('en-US') + (n === 1 ? ' door' : ' doors') + ' at ' + (big ? '1 in' : '¾ in') + ' or more'));
+    var tw = Object.keys(s.towns).map(function (k) { return { key: k, t: s.towns[k] }; }).filter(function (x) { return big ? x.t.n1 : x.t.n34; })
+      .sort(function (a, b) { return (big ? b.t.n1 - a.t.n1 : b.t.n34 - a.t.n34); });
+    card.appendChild(q('div', 'meta st', tw.map(function (x) { return x.t.label + ' ' + (big ? x.t.n1 : x.t.n34).toLocaleString('en-US'); }).join(' · ')));
+    var open = S.hailOpen === s.date;
+    if (big) {
+      var tg = q('button', 'lnk', open ? 'Hide the neighbourhoods' : 'Show the neighbourhoods hit'); tg.type = 'button';
+      tg.addEventListener('click', function () { S.hailOpen = open ? null : s.date; drawHail(holder); });
+      card.appendChild(tg);
+    }
+    if (open) {
+      tw.forEach(function (x) {
+        var al = q('div', 'calist'); al.appendChild(q('div', 'lq', x.t.label));
+        Object.keys(x.t.areas).map(function (a) { return [a, x.t.areas[a]]; }).sort(function (a, b) { return b[1] - a[1]; }).forEach(function (a) {
+          var b = q('button', 'back', streetCase(a[0]) + ' · ' + a[1] + (a[1] === 1 ? ' door' : ' doors')); b.type = 'button';
+          b.addEventListener('click', function () { openFromCommunity({ region: x.key, name: a[0] }, hailView); });
+          al.appendChild(b);
+        });
+        card.appendChild(al);
+      });
+    }
+    return card;
+  }
+  function openFromCommunity(a, back) {
+    var go = function () { S.region = a.region; S.area = null; S.returnTo = back || communitiesView; openArea(a.name); };
     if (S.regions) return go();
     api('regions').then(function (j) { if (j.ok) { S.regions = j.regions; go(); } });
   }

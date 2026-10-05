@@ -9,6 +9,20 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Hail (admins only): storms since 2020 and the streets they hit
+
+Matthew 2026-10-04: the first roofing piece, for him to evaluate. NOAA's radar estimate of the largest hail within about 1 km of each house, per day, April–September 2020 to 30 Sep 2026 (1,275 days read; 6 not in the archive). 96 storm days at ¾ in or more near our doors, 54 at 1 in or more; the largest 2.74 in on 22 June 2023. **Admins only**: a Hail tile (storm days newest first; tap one for the neighbourhoods it hit, tap a neighbourhood to open it) and a hail line on each door card, labelled a radar estimate. Crew get neither (the server leaves it out of their answers). Switched on by `features.hail` in company.json. Tested: hail-test 14/14 (crew refused, admins get it, off in company.json means off for everyone).
+
+| Step | File (from `door-app/site/`) | Goes to |
+|---|---|---|
+| 1 | `data/rounds/hail-storms.json` and the 11 `data/rounds/hail-<town>.json` (**3.6 MB** together; gitignored, on this computer) | `sixfold-data/rounds/` — beside monument.json, never inside public_html |
+| 2 | `data/rounds/company.json` (**1,737** bytes: hail switched on) | `sixfold-data/rounds/` (replace) |
+| 3 | `api/rounds.php` (**191,808** bytes) | `public_html/api/` |
+| 4 | `summit-de59ae83/index.html` (**460,599** bytes) | `public_html/summit-de59ae83/` |
+| 5 | — | Flush the cache |
+
+Not automatic yet: new storms need `node door-app/operations/door-territory/hail/build-hail.mjs fetch` then `build`, and the hail files uploaded again.
+
 ## ✅ LIVE 2026-10-04 (verified 17/18) — company settings (company.json): nothing about Sixfold in the code any more. index.html and sw.js identical; action=company answers with Sixfold's file from beside the door files (not reachable on the website); a fresh phone shows Sixfold and the Ridge mark; Quote builder, Communities, Skip trace, Extra work (Sixfold's list) and Fire check all present; no page errors. The 1 fail was the check looking for Book the walk on a door that was not booked (that button only shows after Quote booked): not checkable read-only. ⏳ The next morning email should still end with the app link
 
 Matthew 2026-10-04: the app is his product, so the company it runs for is a settings file, not code. Sixfold's name, phone, email, Ridge mark, services, enquiry list, extra-work list, "yard walk", review link and which tools it uses (Quote builder, Communities, fire check, skip trace) now come from `company.json` beside the door files. **For Sixfold nothing should look different.** See [../../README.md](../../README.md) for every setting. Tested: settings-test 21/21 (runs as Sixfold, then as the made-up roofer in `door-app/company.example.json`, then Sixfold again); all 67 suites pass alone.

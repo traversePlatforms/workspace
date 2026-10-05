@@ -80,7 +80,7 @@ function company(): array {
     $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
             'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
-            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true], 'links' => []];
+            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false], 'links' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
@@ -89,6 +89,13 @@ function company(): array {
     return $c;
 }
 function feature(string $k): bool { return !empty(company()['features'][$k]); }
+/* ---- hail (2026-10-04): the radar estimate per door, built offline by operations/door-territory/hail/build-hail.mjs.
+   Admin only, and only where the company turns it on (features.hail). Matthew is evaluating it for roofing. */
+function hailOn(string $role): bool { return $role === 'admin' && feature('hail'); }
+function loadHail(string $key): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $key . '.json'), true);
+    return is_array($j['doors'] ?? null) ? $j['doors'] : [];
+}
 /** service keys, and the label for each */
 function custServices(): array { return array_map(fn($p) => (string) $p[0], company()['services']); }
 function workLabels(): array { $o = []; foreach (company()['extraWork'] as $p) $o[(string) $p[0]] = (string) $p[1]; return $o; }
@@ -897,6 +904,14 @@ if ($isPost) {
     $body = (array) (json_decode($raw, true) ?? []);
 }
 
+/* the Hail screen: every storm day, the towns and neighbourhoods it hit (admins, where the company has it on) */
+if ($action === 'hail') {
+    if (!$session) fail('Sign in first.', 401);
+    if (!hailOn((string) ($session['r'] ?? ''))) fail('Not allowed.', 403);
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-storms.json'), true);
+    out(['ok' => true] + (is_array($j) ? $j : ['storms' => [], 'none' => true]));
+}
+
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 if ($action === 'company') out(['ok' => true, 'company' => company()]);
 
@@ -1108,6 +1123,7 @@ if ($action === 'area') {
     /* skip-trace results ride along for admins only (crew too if the config says crew_see); every number carries its DNC answer */
     $placeOf = skipMail($key);   /* id => {c: city, z: ZIP, m: mailing}; only c and z are sent */
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
+    $hailOf = hailOn($role) ? loadHail($key) : [];   /* admins only: storms near the house, newest first */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1125,6 +1141,7 @@ if ($action === 'area') {
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
+                'hail' => $hailOf[$d['id']] ?? null,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

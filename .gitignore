@@ -112,3 +112,9 @@ door-app/operations/door-territory/lawn-trial/ndvi-results-*.csv
 # lawn-trial working files (per-door outlines cache and a pre-compact backup), never tracked
 door-app/operations/door-territory/lawn-trial/lawnmask-cache.json
 door-app/operations/door-territory/lawn-trial/*.bak
+
+# Hail per door (2026-10-04): daily radar cut-outs and the built files, regenerable with
+# door-app/operations/door-territory/hail/build-hail.mjs (fetch, then build)
+door-app/operations/door-territory/hail/days/
+door-app/operations/door-territory/hail/fetch.log
+door-app/site/data/rounds/hail-*.json

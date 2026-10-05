@@ -14,70 +14,28 @@
   },
   "colors": {},
   "services": [
-    [
-      "lawn",
-      "Lawn care"
-    ],
-    [
-      "aeration",
-      "Aeration"
-    ],
-    [
-      "fire",
-      "Fire mitigation"
-    ],
-    [
-      "landscaping",
-      "Landscaping"
-    ],
-    [
-      "other",
-      "Other"
-    ]
+    ["lawn", "Lawn care"],
+    ["aeration", "Aeration"],
+    ["fire", "Fire mitigation"],
+    ["landscaping", "Landscaping"],
+    ["other", "Other"]
   ],
-  "leadNeeds": [
-    "Lawn & turf care",
-    "Fire mitigation",
-    "Land clearing",
-    "Landscaping",
-    "More than one service",
-    "Question"
-  ],
+  "leadNeeds": ["Lawn & turf care", "Fire mitigation", "Land clearing", "Landscaping", "More than one service", "Question"],
   "extraWork": [
-    [
-      "roof",
-      "Branches over the roof"
-    ],
-    [
-      "gutters",
-      "Gutters full of debris"
-    ],
-    [
-      "brush",
-      "Brush or junk against the house"
-    ],
-    [
-      "deadtree",
-      "Dead or dying trees"
-    ],
-    [
-      "irrigation",
-      "Irrigation problem"
-    ],
-    [
-      "bare",
-      "Bare or patchy lawn"
-    ],
-    [
-      "beds",
-      "Overgrown beds or weeds"
-    ]
+    ["roof", "Branches over the roof"],
+    ["gutters", "Gutters full of debris"],
+    ["brush", "Brush or junk against the house"],
+    ["deadtree", "Dead or dying trees"],
+    ["irrigation", "Irrigation problem"],
+    ["bare", "Bare or patchy lawn"],
+    ["beds", "Overgrown beds or weeds"]
   ],
   "features": {
     "quote": true,
     "communities": true,
     "firecheck": true,
-    "skiptrace": true
+    "skiptrace": true,
+    "hail": true
   },
   "links": {
     "googleReview": "https://g.page/r/CdxyzSzq9tvEEBM/review"
