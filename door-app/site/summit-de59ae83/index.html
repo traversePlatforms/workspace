@@ -6233,7 +6233,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the company: this device's last copy at once, a fresh one from the server; the first visit waits for it (up to 3 s) */
   setCompany(CO);
   var coFresh = api('company').then(function (j) {
-    if (j && j.ok && j.company) { try { localStorage.setItem('doorapp.company', JSON.stringify(j.company)); } catch (e) {} setCompany(j.company); }
+    if (!j || !j.ok || !j.company) return;
+    var was = null; try { was = localStorage.getItem('doorapp.company'); } catch (e) {}
+    var now = JSON.stringify(j.company);
+    try { localStorage.setItem('doorapp.company', now); } catch (e) {}
+    setCompany(j.company);
+    /* the saved copy was older (Matthew 2026-10-04: the Hail tile did not show): the tools screen was drawn from it, so draw it again */
+    if (CO_SAVED && was !== now && S.screen === 'tools') chooseView();
   }).catch(function () {});
   function boot() {
     if (isOut()) { signinView(); tellServerOut(); }
