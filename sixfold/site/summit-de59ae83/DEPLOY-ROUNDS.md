@@ -12,8 +12,8 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 Built 2026-10-04 on Matthew's request. Nothing runs until the provider key is on the host, and nothing is bought
 without a dry run first. **Every number a provider returns is looked up, not given:** hidden from call lists and
 the export until the provider says it is not on the Do Not Call list; one manual Call link per cleared number;
-nothing dials or texts. The 2026-10-01 line in rounds.php ("nothing here fetches from a people-search site") now
-reads "nothing fetches on its own".
+nothing dials or texts. BatchData is a licensed, paid data service; this is not the people-search scraping Claude
+declined to build on 2026-10-01 (that stays declined, and the rounds.php comment now says whose call it was).
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|

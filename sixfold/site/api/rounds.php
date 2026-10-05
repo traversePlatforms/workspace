@@ -420,8 +420,10 @@ function liveMarks(array $rows): array {
  * must be scrubbed against the national DNC registry and Colorado's no-call
  * list first. Keeping the two distinguishable is the whole point of the field.
  *
- * Numbers are entered BY A PERSON. Nothing here fetches from a people-search
- * site -- automated pulling was declined on 2026-10-01 and stays declined. */
+ * Numbers from people-search sites are typed in BY A PERSON. The app does not
+ * scrape those sites: Claude declined to build that on 2026-10-01 (it would mean
+ * defeating their anti-bot protection to harvest personal data, against their
+ * terms). Licensed provider lookups are a different thing: see skip tracing below. */
 function phonesFile(string $key): string { return DATA_DIR . '/phones-' . $key . '.log'; }
 
 /** Replay the append-only log: last line per door wins; a null phone removes it. */
@@ -444,8 +446,8 @@ function appendPhone(string $key, array $row): bool {
 const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
 
 /* ---- skip tracing (2026-10-04) ------------------------------------------
- * Matthew asked for provider lookups (BatchData first). The 2026-10-01 line above — "nothing here
- * fetches from a people-search site" — now reads: nothing here fetches on its own. An admin starts a
+ * Matthew asked for provider lookups (BatchData first): a licensed, paid data service with an API
+ * built for this, not the people-search scraping above. Nothing fetches on its own: an admin starts a
  * run, pays for it knowingly (dry run first), and every number that comes back is treated as
  * looked-up: no Call link until the provider says it is not on the Do Not Call list. The provider,
  * the batching, the results log and the rule live in api/skiptrace.php; the actions are below. */
