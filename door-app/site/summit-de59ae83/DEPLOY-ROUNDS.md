@@ -9,7 +9,22 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — county bars on Colorado, tap a Leaderboard name, and the Add info button in dark mode (index.html only)
+## ⏳ TO UPLOAD — the Sample door (admin tool), the hail strip and the storm call list
+
+Matthew 2026-10-05:
+- **Sample door.** An admin tile opens one door with every part of the card filled in, to try things on: fire, lawn, trees, value, owner, new owner, customer tag, phone, skip trace, hail, roof size and year built, a roof photo, note, email, extra work, two fire checks (homeowner report), photos, money and water, and made-up alerts drawn as the real ones are (Red Flag Warning, Fire Warning, Air Quality Alert, High Wind Warning, a severe thunderstorm warning with hail, and a wildfire 8 mi away) with their call lists. The address is a real one (Matthew's choice; it is only in the private file and its generator, both untracked); every figure is made up; the two pictures are the real 2023 USDA aerial of the house. The door lives in a private file beside the website, never in the page and never in a town. Nothing done on it is sent: the page answers its saves itself. Money and water show Castle Rock's sheets.
+- **Hail strip.** Severe Thunderstorm Warnings and Watches from the National Weather Service, with the warning's own hail size and gusts, as a blue strip above the fire one. Sent only to admins of a company with hail on, and drawn only where the hail card is on (so for Sixfold: Roofing preview only). Tap for details, Live radar, and the storm call list.
+- **Storm call list.** Customers, quotes sent and quotes booked in towns under a severe thunderstorm warning in the last 3 days (the server now remembers warnings after they leave the live feed, in `storms-recent.json`), with the number given at the door and its own words. From the hail strip, or the Hail screen.
+
+sample-test 19/19, storm-test 16/16, alerts-test 10/10, hail-test 15/15.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/data/rounds/sample-door.json` (**119,872** bytes; not in git) | `sixfold-data/rounds/` (beside public_html, **not inside it**) |
+| 2 | `door-app/site/api/rounds.php` (**199,165** bytes) | `public_html/api/` |
+| 3 | `door-app/site/summit-de59ae83/index.html` (**487,631** bytes) | `public_html/summit-de59ae83/` |
+
+## ✅ LIVE 2026-10-05 (verified 8/8; the Leaderboard tap could not be tried live: no one has knocked in 30 days) — county bars on Colorado, tap a Leaderboard name, and the Add info button in dark mode (index.html only)
 
 Matthew 2026-10-05: (1) on the Colorado screen each county is now a fold-out bar with its towns, doors to knock, high-risk doors and quotes booked; tap to show its towns, tap again to fold. Each phone remembers which are open; with one county it is always open. (2) On the Leaderboard an admin can tap a name to open that person's stats (Back returns to the board); Team stats already did this. (3) Seen in the demo: the Add info button's gradient ran into the text colour, which turns cream in dark mode. Now dark pine with cream text in both looks. state-test 14/14, board-test 28/28, all 70 suites pass.
 

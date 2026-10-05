@@ -1029,6 +1029,15 @@ if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) 
 
 if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? ''))]);
 
+/* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
+   private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
+if ($action === 'sample') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/sample-door.json'), true);
+    if (!is_array($j) || !is_array($j['door'] ?? null)) fail('No sample door on the server yet.', 404);
+    out(['ok' => true] + $j);
+}
+
 if ($action === 'diag') {
     /* ⚑ Added after the first live deploy returned an empty list with no reason.
        Silence is the worst diagnostic: say which directory was looked in and what
@@ -1568,7 +1577,24 @@ const ALERT_TOWNS = [
     'franktown' => [39.3894, -104.7519], 'woodland-park' => [39.0000, -105.0569], 'divide' => [38.9469, -105.1636],
     'florissant' => [38.9469, -105.2911], 'cripple-creek' => [38.7466, -105.1783]];
 const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
-    'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch'];
+    'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch',
+    'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch'];
+/* hail (Matthew 2026-10-05): the storm alerts go only where hail is on (admins of a company with features.hail); a warning
+   carries the NWS's own hail size and wind gust. Each one seen is remembered for STORM_KEEP so the storm call list still
+   works the day after, when the warning has left the live feed. */
+const STORM_EVENTS = ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch'];
+const STORM_KEEP = 3 * 86400;
+function isStorm(array $w): bool { return in_array((string) ($w['event'] ?? ''), STORM_EVENTS, true); }
+function recentStorms(array $active = []): array {
+    $f = DATA_DIR . '/storms-recent.json';
+    $all = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
+    if ($active) {
+        foreach ($active as $id => $w) if (isStorm($w)) $all[$id] = $w + ['seen' => time()];
+        $all = array_filter($all, fn($w) => (int) ($w['seen'] ?? 0) > time() - STORM_KEEP);
+        @file_put_contents($f, json_encode($all, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    }
+    return array_filter($all, fn($w) => (int) ($w['seen'] ?? 0) > time() - STORM_KEEP);
+}
 function httpJson(string $url, array $headers = []): ?array {
     $hdr = array_merge([agentHeader(), 'Accept: application/geo+json, application/json'], $headers);
     if (function_exists('curl_init')) {
@@ -1626,7 +1652,9 @@ function freshAlerts(): array {
             $id = (string) ($p['id'] ?? $ft['id'] ?? '');
             if (!isset($weather[$id])) $weather[$id] = ['event' => $p['event'], 'headline' => (string) ($p['headline'] ?? ''),
                 'ends' => (string) ($p['ends'] ?? $p['expires'] ?? ''), 'severity' => (string) ($p['severity'] ?? ''),
-                'url' => 'https://alerts.weather.gov/search?id=' . rawurlencode($id), 'towns' => []];
+                'url' => 'https://alerts.weather.gov/search?id=' . rawurlencode($id), 'towns' => [],
+                'hail' => is_numeric($p['parameters']['maxHailSize'][0] ?? null) ? (float) $p['parameters']['maxHailSize'][0] : null,
+                'wind' => (string) ($p['parameters']['maxWindGust'][0] ?? ''), 'sent' => (string) ($p['sent'] ?? '')];
             $weather[$id]['towns'][] = $town;
         }
     }
@@ -1649,6 +1677,7 @@ function freshAlerts(): array {
             'near' => $best[0], 'miles' => (int) round($best[1]), 'dist' => $dist, 'lat' => (float) $g['y'], 'lon' => (float) $g['x']];
     }
     usort($fires, fn($x, $y) => $x['miles'] <=> $y['miles']);
+    if ($wOk) recentStorms($weather ?: ['_' => ['event' => '']]);   /* remember storm warnings (the dummy only prunes) */
     $out = ['at' => time(),
             'weather' => $wOk || !$cache ? array_values($weather) : ($cache['weather'] ?? []),
             'fires' => $fOk || !$cache ? $fires : ($cache['fires'] ?? []),
@@ -1659,7 +1688,8 @@ function freshAlerts(): array {
 }
 if ($action === 'alerts') {
     $a = freshAlerts();
-    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $a['weather'] ?? [], 'fires' => $a['fires'] ?? [], 'stale' => !empty($a['stale'])]);
+    $w = array_values(array_filter($a['weather'] ?? [], fn($x) => !isStorm($x) || hailOn($role)));   /* storms: where hail is on only */
+    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $w, 'fires' => $a['fires'] ?? [], 'stale' => !empty($a['stale'])]);
 }
 
 /* ---- around our jobs (2026-10-03, after GlassHouse) ------------------------------------
@@ -1714,10 +1744,23 @@ if ($action === 'aroundjobs') {
  * door. A check-in, not a pitch. Admin only (names and numbers). */
 if ($action === 'alertcalls') {
     if ($role !== 'admin') fail('Not allowed.', 403);
+    $kind = (string) ($_GET['kind'] ?? 'fire') === 'storm' ? 'storm' : 'fire';
+    if ($kind === 'storm' && !hailOn($role)) fail('Not allowed.', 403);
     $al = freshAlerts();
     $towns = [];
-    foreach (($al['weather'] ?? []) as $w) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
-    foreach (($al['fires'] ?? []) as $fi) foreach ((array) ($fi['dist'] ?? []) as $t => $mi) if ($mi <= 30) $towns[$t][] = 'Wildfire ' . $mi . ' mi away (' . $fi['name'] . ')';
+    if ($kind === 'storm') {
+        /* warnings only (a watch hit nothing yet), active or in the last 3 days, newest first */
+        $st = array_filter(recentStorms(), fn($w) => ($w['event'] ?? '') === 'Severe Thunderstorm Warning');
+        uasort($st, fn($x, $y) => strcmp((string) ($y['sent'] ?? ''), (string) ($x['sent'] ?? '')));
+        foreach ($st as $w) {
+            $when = strtotime((string) ($w['sent'] ?? '')) ?: (int) ($w['seen'] ?? time());
+            $why = 'Severe thunderstorm warning ' . (new DateTime('@' . $when))->setTimezone(new DateTimeZone('America/Denver'))->format('D j M') . ($w['hail'] ? ', hail up to ' . rtrim(rtrim(number_format((float) $w['hail'], 2), '0'), '.') . ' in' : '');
+            foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = $why;
+        }
+    } else {
+        foreach (($al['weather'] ?? []) as $w) if (!isStorm($w)) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
+        foreach (($al['fires'] ?? []) as $fi) foreach ((array) ($fi['dist'] ?? []) as $t => $mi) if ($mi <= 30) $towns[$t][] = 'Wildfire ' . $mi . ' mi away (' . $fi['name'] . ')';
+    }
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $people = [];
     foreach (($idx['regions'] ?? []) as $r) {
@@ -1739,7 +1782,7 @@ if ($action === 'alertcalls') {
     }
     $rank = ['won' => 0, 'sent' => 1, 'booked' => 2];
     usort($people, fn($x, $y) => $rank[$x['status']] <=> $rank[$y['status']] ?: strcmp($x['town'], $y['town']));
-    out(['ok' => true, 'towns' => array_keys($towns), 'people' => $people]);
+    out(['ok' => true, 'kind' => $kind, 'towns' => array_keys($towns), 'people' => $people]);
 }
 
 if ($action === 'money') {

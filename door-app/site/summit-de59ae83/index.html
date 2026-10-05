@@ -720,6 +720,7 @@
   .door.acct::before{display:none}
   .door.acct.off{opacity:.65}
   .anote{margin:-4px 0 10px;font-size:12.5px;color:var(--soft)}
+  .samplebar{background:color-mix(in srgb,var(--ember) 14%,var(--card));color:var(--ink);border-radius:14px;padding:10px 13px;margin:4px 0 12px;font-size:13.5px;line-height:1.4;border:1px dashed var(--ember)}
   .cty{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:var(--card);color:var(--ink);border-radius:16px;padding:12px 14px;margin:12px 0 6px;cursor:pointer;box-shadow:var(--shadow);font:inherit}
   .cty .ct{flex:1;min-width:0;display:grid;gap:2px}
   .cty b{font:400 19px/1.2 var(--serif)}
@@ -1011,6 +1012,8 @@
   .cseg button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .cseg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
   .alrt{display:block;width:100%;text-align:left;border:0;border-radius:14px;margin:0 0 12px;padding:11px 14px;background:var(--fire-h);color:var(--fire-on);font:700 14px/1.35 var(--sans);cursor:pointer}
+  .alrt.storm{background:#34506F;color:#F4F7FB}
+  .alrt.storm .ic{width:18px;height:18px;vertical-align:-3px;margin-right:6px}
   .alrt.calm{background:var(--sunk);color:var(--ink);font-weight:600}
   .alrt .more{display:block;font-weight:600;font-size:12.5px;opacity:.9;margin-top:2px}
   .alist{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.4}
@@ -1251,6 +1254,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      settings (Sixfold does), and the Roofing preview always shows them */
   var ROOF_SHOW = { hail: 1, roof: 1 };
   function cardOn(k) {
+    if (S.region === SAMPLE_KEY) return true;      /* the Sample door shows every part, whatever the switches say */
     if (roofOn()) { if (ROOF_HIDE[k]) return false; if (ROOF_SHOW[k]) return true; }
     return !(CO && CO.card && CO.card[k] === false);
   }
@@ -1289,8 +1293,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (feat('firecheck')) CAP.push(['fc', 'flame', 'Fire check']);
     paintCompany(CO);
   }
+  /* the Sample door (Matthew 2026-10-05): anything sent for its region is answered here and never reaches the server.
+     Saves say ok (so the card behaves as it would), the door comes from the sample, anything else is refused. */
+  var SAMPLE_KEY = '__sample';
+  var SAMPLE_OK = { mark: 1, note: 1, phone: 1, email: 1, lawnfix: 1, work: 1, firecheck: 1, walk: 1, photodel: 1, quoted: 1 };
+  function sampleAnswer(action, opts) {
+    var r = (opts.body && opts.body.region) || (opts.params && opts.params.region);
+    if (r !== SAMPLE_KEY) return null;
+    if (action === 'area') return { ok: true, _status: 200, area: 'Sample door', avg: null, doors: S.sampleDoor ? [S.sampleDoor] : [], rest: 2, place: null, fw: null, nosol: null };
+    if (SAMPLE_OK[action]) return { ok: true, _status: 200, sample: true };
+    return { ok: false, _status: 400, error: 'Not on the sample door: it saves nothing.' };
+  }
+  function moneyKey() { return S.region === SAMPLE_KEY && S.sampleData ? S.sampleData.as : S.region; }   /* the sample borrows a town's money and water sheets */
   function api(action, opts) {
     opts = opts || {};
+    var fake = sampleAnswer(action, opts); if (fake) return Promise.resolve(fake);
     var url = API + '?action=' + encodeURIComponent(action);
     if (opts.params) for (var k in opts.params) url += '&' + k + '=' + encodeURIComponent(opts.params[k]);
     return fetch(url, {
@@ -1451,7 +1468,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = String(name || '').trim().split(/\s+/).filter(Boolean);
     return p.length ? (p[0].charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase() : '·';
   }
-  function townLabel() { var r = S.regions.filter(function (x) { return x.key === S.region; })[0]; return r ? r.label : ''; }
+  function townLabel() { if (S.region === SAMPLE_KEY) return (S.sampleData || {}).town || 'Sample'; var r = S.regions.filter(function (x) { return x.key === S.region; })[0]; return r ? r.label : ''; }
   function chipEl(cls, icn, text) { var c = q('span', cls); if (icn) c.appendChild(ico(icn, 2.4)); c.appendChild(document.createTextNode(text)); return c; }
 
   /* a progress ring: pct 0..1, centre is text or a node */
@@ -1749,11 +1766,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var d = new Date(iso); if (isNaN(d)) return '';
     return ' until ' + d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' });
   }
+  function isStormA(a) { return /^Severe Thunderstorm/.test(a.event || ''); }
   function alertStrip(townKey) {
     var holder = q('div');
-    api('alerts').then(function (j) {
+    var src = townKey === SAMPLE_KEY ? Promise.resolve((S.sampleData || {}).alerts || null) : api('alerts');
+    src.then(function (j) {
       if (!j || !j.ok) return;
-      var w = (j.weather || []).filter(function (a) { return !townKey || a.towns.indexOf(townKey) >= 0; });
+      var here = (j.weather || []).filter(function (a) { return !townKey || a.towns.indexOf(townKey) >= 0; });
+      var storms = cardOn('hail') ? here.filter(isStormA) : [];      /* the server sends storms only where hail is on; the card switch decides here */
+      if (storms.length) holder.appendChild(stormStrip(j, storms, townKey));
+      var w = here.filter(function (a) { return !isStormA(a); });
       var fires = (j.fires || []).filter(function (f) { return !townKey || (f.dist ? f.dist[townKey] <= 30 : f.near === townKey); });
       if (!w.length && !fires.length) return;
       var fk = townKey && fires[0] && fires[0].dist ? townKey : fires[0] && fires[0].near, fm = fires[0] ? (fires[0].dist && fk ? fires[0].dist[fk] : fires[0].miles) : 0;
@@ -1774,7 +1796,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var row = q('div');
       row.appendChild(q('b', null, a.event + untilText(a.ends)));
       row.appendChild(document.createTextNode(' · ' + a.towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ') + '. '));
-      var l = q('a', null, 'National Weather Service'); l.href = a.url; l.target = '_blank'; l.rel = 'noopener noreferrer'; row.appendChild(l);
+      if (a.url) { var l = q('a', null, 'National Weather Service'); l.href = a.url; l.target = '_blank'; l.rel = 'noopener noreferrer'; row.appendChild(l); }   /* the sample's made-up alerts have none */
       box.appendChild(row);
     });
     fires.forEach(function (f) {
@@ -1790,8 +1812,46 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       cl.addEventListener('click', callListView);
       box.appendChild(cl);
     }
+    if (j.sample) { box.appendChild(q('div', 'soft', 'Made-up alerts for the sample door. Real ones come from the National Weather Service and the national wildfire feed.')); return box; }
     box.appendChild(q('div', 'soft', 'Weather: National Weather Service. Fires: national interagency incident feed (prescribed burns left out). Checked ' +
       new Date(j.at * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' }) + (j.stale ? '; one feed did not answer, so part of this is older' : '') + '.'));
+    return box;
+  }
+  /* ---- the hail strip (Matthew 2026-10-05) ----
+     A severe thunderstorm warning or watch from the National Weather Service, with the warning's own hail size and wind gust.
+     Only where the hail card is on (a roofing company, or Roofing preview): the lawn crew never see it. */
+  function hailInch(x) { return x ? (Math.round(x * 100) / 100) + ' in' : ''; }
+  function stormStrip(j, storms, townKey) {
+    var holder = q('div'), a = storms[0];
+    var b = q('button', 'alrt storm'); b.type = 'button';
+    b.appendChild(ico('hail', 2.2));
+    b.appendChild(document.createTextNode(a.event + (a.hail ? ' \u00b7 hail up to ' + hailInch(a.hail) : '') +
+      (townKey ? '' : ' \u00b7 ' + a.towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ')) + untilText(a.ends)));
+    b.appendChild(q('span', 'more', (storms.length > 1 ? storms.length - 1 + ' more \u00b7 ' : '') + 'Tap for details'));
+    b.addEventListener('click', function () { holder.replaceChild(stormList(j, storms), b); });
+    holder.appendChild(b);
+    return holder;
+  }
+  function stormList(j, storms) {
+    var box = q('div', 'alist');
+    storms.forEach(function (a) {
+      var row = q('div');
+      row.appendChild(q('b', null, a.event + untilText(a.ends)));
+      row.appendChild(document.createTextNode(' \u00b7 ' + a.towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ') +
+        (a.hail ? ' \u00b7 hail up to ' + hailInch(a.hail) : '') + (a.wind ? ' \u00b7 gusts to ' + String(a.wind).toLowerCase() : '') + '. '));
+      if (!j.sample) { var l = q('a', null, 'National Weather Service'); l.href = a.url; l.target = '_blank'; l.rel = 'noopener noreferrer'; row.appendChild(l); }
+      box.appendChild(row);
+    });
+    box.appendChild(q('div', null, 'Nobody on a ladder or a roof until it has passed. Afterwards, the streets it crossed are where to knock; the Hail screen shows the radar path once the hail files are updated.'));
+    var lr = q('button', 'back', 'Live radar map'); lr.type = 'button';
+    lr.addEventListener('click', function () { hailMapView(null); });
+    box.appendChild(lr);
+    if (S.role === 'admin') {
+      var cl = q('button', 'back', 'Storm call list: customers and quotes in these towns'); cl.type = 'button';
+      cl.addEventListener('click', function () { callListView('storm'); });
+      box.appendChild(cl);
+    }
+    box.appendChild(q('div', 'soft', j.sample ? 'Made-up alerts for the sample door.' : 'National Weather Service. The hail size and gusts are the warning\u2019s own estimate.'));
     return box;
   }
   /* ---- around our jobs (2026-10-03, after GlassHouse) ----
@@ -1867,20 +1927,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
 
   /* ---- call list when fire weather hits (2026-10-03, after HailTrace) ---- */
-  function callListView() {
+  function callListView(kind) {
+    kind = kind === 'storm' ? 'storm' : 'fire';      /* also called straight from a click, with the event */
+    var storm = kind === 'storm', sample = S.region === SAMPLE_KEY;
     hideToast(); S.signin = null; S.screen = 'calls'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Check in with customers', sub: 'Towns under a fire-weather alert or near a wildfire', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', { title: storm ? 'After the storm' : 'Check in with customers', sub: storm ? 'Towns under a severe thunderstorm warning in the last 3 days' : 'Towns under a fire-weather alert or near a wildfire',
+      back: sample ? function () { openArea('Sample door'); } : storm ? hailView : chooseView, backLabel: sample ? 'Sample door' : storm ? 'Hail' : 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
-    api('alertcalls').then(function (j) {
+    (sample ? Promise.resolve(sampleCalls(kind)) : api('alertcalls', { params: { kind: kind } })).then(function (j) {
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the list.')); return; }
-      if (!j.towns.length) { holder.appendChild(q('div', 'msg', 'No town is under a fire-weather alert or near a wildfire right now.')); return; }
+      if (!j.towns.length) { holder.appendChild(q('div', 'msg', storm ? 'No severe thunderstorm warning has covered our towns in the last 3 days.' : 'No town is under a fire-weather alert or near a wildfire right now.')); return; }
       var tip = q('div', 'opener');
       tip.appendChild(q('b', null, 'What to say'));
-      tip.appendChild(document.createTextNode('"Checking in because of the fire weather today. Is there anything you need, or anything you\u2019d like us to look at once it passes?"'));
-      tip.appendChild(q('span', 'soft', 'A check-in, not a pitch. If they ask for help, book it. Never send a crew into an evacuation area.'));
+      tip.appendChild(document.createTextNode(storm ? '"Checking in after the storm. Did the hail do any damage? We can come and take a free look at the roof and gutters."'
+        : '"Checking in because of the fire weather today. Is there anything you need, or anything you\u2019d like us to look at once it passes?"'));
+      tip.appendChild(q('span', 'soft', storm ? 'Customers first, then quotes. Book the look; don\u2019t judge damage over the phone, and never promise what insurance will pay.'
+        : 'A check-in, not a pitch. If they ask for help, book it. Never send a crew into an evacuation area.'));
       holder.appendChild(tip);
       if (!j.people.length) { holder.appendChild(q('div', 'msg', 'No customers or booked doors in ' + j.towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ') + ' yet.')); return; }
       var lab = { won: 'Customer', sent: 'Quote sent', booked: 'Quote booked' };
@@ -1903,6 +1968,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function chooseView() {
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools';
+    if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
     S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
     foot.hidden = true; setDock(null);
     setBar('tools', { title: CO.short, sub: 'Field tools' });
@@ -1969,6 +2035,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         qt,
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
+        tile('button', 'door', 'Sample door', 'One made-up door with every part of the card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView),
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         tile('button', 'users', 'Team stats', "Everyone's numbers.", 'Admin only', teamView),
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
@@ -3367,7 +3434,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function moneyLine(d) {
     var b = q('button', 'moneyl'); b.type = 'button';
     b.appendChild(q('span', 'ml', 'Money'));
-    var C = S.money && S.money.cards, county = S.money && S.money.counties ? S.money.counties[S.region] : null;
+    var C = S.money && S.money.cards, county = S.money && S.money.counties ? S.money.counties[moneyKey()] : null;
     if (!C) {
       b.appendChild(q('span', null, 'Tax credit · Insurance · Grants'));
       if (!S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) { S.money = j; if (S.screen === 'doors') renderDoors(); } }).catch(function () {}); }
@@ -3391,8 +3458,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var C = W.cards, b = q('button', 'moneyl waterl'); b.type = 'button';
     b.appendChild(q('span', 'ml', 'Water'));
     b.appendChild(q('span', null, C.aeration));
-    var t = (C.towns || {})[S.region]; if (t) b.appendChild(q('span', 'warn', t));
-    if ((W.wellTowns || []).indexOf(S.region) >= 0 && typeof d.acres === 'number') b.appendChild(q('span', 'warn', d.acres >= 35 ? C.wellBig : C.wellSmall));
+    var t = (C.towns || {})[moneyKey()]; if (t) b.appendChild(q('span', 'warn', t));
+    if ((W.wellTowns || []).indexOf(moneyKey()) >= 0 && typeof d.acres === 'number') b.appendChild(q('span', 'warn', d.acres >= 35 ? C.wellBig : C.wellSmall));
     b.appendChild(ico('chev', 2.4));
     b.addEventListener('click', function () { waterView('town'); });
     return b;
@@ -3419,7 +3486,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       body.appendChild(seg);
       var T = W.topics[tab];
-      if (tab === 'town') T = (T.byTown || {})[S.region];
+      if (tab === 'town') T = (T.byTown || {})[moneyKey()];
       if (!T) { body.appendChild(q('p', 'mlead', W.lead)); body.appendChild(q('div', 'msg', 'Pick a town first: the rules depend on who supplies the water.')); return; }
       ttl.textContent = T.title;
       body.appendChild(q('p', 'mlead', W.lead));
@@ -4833,7 +4900,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- photos (2026-10-02): walk-through photos for whoever builds the quote ----
      Shrunk on the phone to 1600 px before sending (fast on poor signal), and
      re-encoding as JPEG drops the phone's GPS tag. Stored off the public site. */
-  function photoUrl(region, id, f) { return API + '?action=photoget&region=' + encodeURIComponent(region) + '&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(f); }
+  function photoUrl(region, id, f) { if (region === SAMPLE_KEY) return ((S.sampleData || {}).images || {})[f] || ''; return API + '?action=photoget&region=' + encodeURIComponent(region) + '&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(f); }
   function photoStrip(d, region) {
     var wrap = q('div');
     var strip = q('div', 'photos');
@@ -4866,6 +4933,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     inp.click();
   }
   function uploadPhotos(d, region, files, after) {
+    if (region === SAMPLE_KEY) { toast('Not kept', 'The sample door saves nothing, photos included.', null); if (after) after(); return; }
     if (!files.length) return;
     files = files.slice(0, Math.max(0, 20 - (d.photos || []).length));
     var done = 0, failed = 0, held = 0, k = 0;
@@ -5474,7 +5542,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (d.photo) {
       var open = S.photoOpen === d.id;
-      var pb = q('button', 'lnk', open ? 'Hide the roof photo' : 'See the roof (aerial photo, 2020)'); pb.type = 'button';
+      var pb = q('button', 'lnk', open ? 'Hide the roof photo' : 'See the roof (aerial photo, ' + (d.photoYear || 2020) + ')'); pb.type = 'button';
       pb.addEventListener('click', function () { S.photoOpen = open ? null : d.id; renderDoors(); });
       t.appendChild(pb);
       if (open) t.appendChild(roofPhoto(d));
@@ -5503,7 +5571,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function roofPhoto(d) {
     var box = q('div', 'roofpic');
     S.photoImg = S.photoImg || {};
-    var cap = q('small', null, 'Aerial photo, 2020, 3 in a pixel (State of Colorado, public domain). A roof replaced since will not show.');
+    var cap = q('small', null, d.photoCap || 'Aerial photo, 2020, 3 in a pixel (State of Colorado, public domain). A roof replaced since will not show.');
     if (S.photoImg[d.id]) { var im0 = q('img'); im0.src = S.photoImg[d.id]; im0.alt = 'Aerial photo of the roof at ' + d.address; box.appendChild(im0); box.appendChild(cap); return box; }
     var say = q('div', 'sub2', 'Loading the roof photo (1-2 MB)\u2026'); box.appendChild(say);
     var p = d.photo, h = p[3] || 200, id = d.id;
@@ -5521,6 +5589,41 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }).catch(function () { say.textContent = 'The roof photo could not load. Try again with better signal.'; });
     });
     return box;
+  }
+  /* ---- the Sample door (Matthew 2026-10-05) ----
+     Fetched from the private data folder (admins only), then opened through the ordinary door screen, so every part of the
+     card is the real thing. Fresh each time it is opened: what you did last time is gone. */
+  function sampleView() {
+    hideToast(); S.signin = null; S.screen = 'sample'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Sample door', sub: 'Loading\u2026', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; view.appendChild(q('div', 'skel'));
+    api('sample').then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (S.screen !== 'sample') return;
+      if (!j.ok) { view.textContent = ''; view.appendChild(q('div', 'msg', j.error || 'Could not load the sample door.')); return; }
+      S.sampleData = j; S.sampleDoor = JSON.parse(JSON.stringify(j.door));
+      S.photoImg = S.photoImg || {}; if (j.images && j.images.roof) S.photoImg[j.door.id] = j.images.roof;
+      if (S.region !== SAMPLE_KEY) S.sampleWas = S.region;
+      TOWN_NAME[SAMPLE_KEY] = j.town || 'Sample';
+      if (j.alerts) {          /* made-up alerts, as if going on now: times are set from the moment it opens */
+        j.alerts.at = Math.floor(Date.now() / 1000);
+        (j.alerts.weather || []).forEach(function (a) { a.ends = new Date(Date.now() + (a.endsIn || 6) * 3600000).toISOString(); a.towns = [SAMPLE_KEY]; });
+        (j.alerts.fires || []).forEach(function (f) { f.near = SAMPLE_KEY; f.dist = {}; f.dist[SAMPLE_KEY] = f.miles; });
+      }
+      S.region = SAMPLE_KEY; S.openDoor = j.door.id;
+      S.returnTo = chooseView;
+      openArea('Sample door');
+    }).catch(function () { view.textContent = ''; view.appendChild(q('div', 'msg', 'No signal. The sample door needs signal to open.')); });
+  }
+  /* the sample door's call lists: the door itself, as a customer, under the made-up alerts */
+  function sampleCalls(kind) {
+    var d = S.sampleDoor, A = (S.sampleData || {}).alerts || {};
+    if (!d) return { ok: true, towns: [], people: [] };
+    var why = kind === 'storm' ? (A.weather || []).filter(isStormA).filter(function (a) { return /Warning/.test(a.event); }).map(function (a) { return 'Severe thunderstorm warning today' + (a.hail ? ', hail up to ' + hailInch(a.hail) : ''); })
+      : (A.weather || []).filter(function (a) { return !isStormA(a); }).map(function (a) { return a.event; }).concat((A.fires || []).map(function (f) { return 'Wildfire ' + f.miles + ' mi away (' + f.name + ')'; }));
+    if (!why.length) return { ok: true, towns: [], people: [] };
+    return { ok: true, sample: true, kind: kind, towns: [SAMPLE_KEY], people: [{ region: SAMPLE_KEY, town: TOWN_NAME[SAMPLE_KEY], area: 'Sample door', id: d.id, address: d.address,
+      owner: d.owner, status: 'won', phone: d.phone && d.phone.source === 'door' ? d.phone.phone : null, why: why }] };
   }
   function hailView() {
     hideToast(); S.signin = null; S.screen = 'hail'; foot.hidden = true; setDock(null);
@@ -5549,6 +5652,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var lr = q('button', 'back', 'Live radar map'); lr.type = 'button';
     lr.addEventListener('click', function () { hailMapView(null); });
     holder.appendChild(lr);
+    var scl = q('button', 'back', 'Storm call list: customers and quotes after a warning'); scl.type = 'button';
+    scl.addEventListener('click', function () { callListView('storm'); });
+    holder.appendChild(scl);
     var list = (H.storms || []).filter(function (s) { return big ? s.n1 > 0 : s.n34 > 0; });
     if (!list.length) { holder.appendChild(q('div', 'msg', H.none ? 'No hail file on the server yet.' : 'No storms at this size.')); return; }
     holder.appendChild(q('div', 'sub2', list.length + (list.length === 1 ? ' storm day' : ' storm days') + ' · newest first'));
@@ -5818,7 +5924,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       body.appendChild(seg);
       var T = M.topics[topic], lead = T.lead;
       if (topic === 'grants') {
-        var county = (M.counties || {})[S.region];
+        var county = (M.counties || {})[moneyKey()];
         lead = T.lead; T = (T.byCounty || {})[county];
         if (!T) { body.appendChild(q('p', 'mlead', lead)); body.appendChild(q('div', 'msg', 'No grant sheet for this town yet. Talk about the tax credit and insurance.')); return; }
       }
@@ -6199,6 +6305,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.dview === 'map' && S.liveMap && S.liveMap.area === S.area && document.body.contains(S.liveMap.el)) { S.liveMap.refresh(); return; }
     S.liveMap = null;
     view.textContent = '';
+    if (S.region === SAMPLE_KEY) view.appendChild(q('div', 'samplebar', 'Sample door. The address is real; every figure on it is made up. Nothing you do here is saved, sent or counted, and it never shows in a town. Money and Water show Castle Rock\u2019s sheets.'));
+    if (S.region === SAMPLE_KEY) view.appendChild(alertStrip(SAMPLE_KEY));   /* its made-up alerts, drawn as the real ones are */
     var wp = S.walkPrompt ? S.doors.filter(function (x) { return x.id === S.walkPrompt; })[0] : null;
     if (wp && wp.mark && wp.mark.outcome === 'booked') view.appendChild(walkPromptBox(wp)); else S.walkPrompt = null;
 

@@ -150,3 +150,9 @@ door-app/site/data/rounds/sedalia.json
 door-app/site/data/rounds/woodland-park.json
 door-app/operations/door-territory/*-areas.json
 door-app/operations/door-territory/walk-tool.html
+# the Sample door: Matthew's parents' address (2026-10-05); built by a script, kept off git
+door-app/site/data/rounds/sample-door.json
+door-app/operations/door-territory/sample/
+# alert caches the server writes for itself (2026-10-05)
+door-app/site/data/rounds/alerts-cache.json*
+door-app/site/data/rounds/storms-recent.json
