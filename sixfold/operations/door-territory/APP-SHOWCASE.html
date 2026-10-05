@@ -132,6 +132,11 @@ button { font: inherit; color: inherit }
 .form .chipsel button[aria-pressed="true"] { background: var(--later); border-color: var(--later); color: var(--card) }
 .form .save { border: 0; border-radius: 10px; min-height: 42px; background: var(--later); color: var(--card); font: 700 14px var(--sans); cursor: pointer }
 .form .day { font-size: 12.5px; color: var(--soft) }
+.lkdemo { display: grid; gap: 6px; padding: 9px; border-radius: 10px; background: var(--card) }
+.lkdemo .lkr { display: flex; align-items: center; gap: 8px } .lkdemo .lkr span { flex: 1; min-width: 0; display: grid } .lkdemo .lkr small { font-size: 10.5px; color: var(--soft) } .lkdemo .lkr b { font-size: 13px }
+.lkdemo .lkr button, .lkdemo .lkalt { border: 0; background: none; color: var(--go); font: 700 12.5px var(--sans); cursor: pointer; padding: 2px 0 }
+.lkdemo .lkg { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px } .lkdemo .lkgo { border: 0; border-radius: 10px; min-height: 38px; padding: 0 12px; background: var(--go); color: var(--on-go); font: 700 13px var(--sans); cursor: pointer }
+.lkdemo .lktip { font-size: 12px; font-weight: 700; color: var(--later) }
 .done-btn { border: 0; border-radius: 12px; min-height: 42px; background: var(--go); color: var(--on-go); font: 700 14px var(--sans); cursor: pointer }
 .saved { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 9px }
 .saved .wl { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
@@ -321,6 +326,7 @@ button { font: inherit; color: inherit }
           <li><b>One tap opens everything:</b> walk, phone, email, photos, note, extra work, fire check.</li>
           <li><b>The walk is booked at the door,</b> with the day's other walks shown so they don't collide, a calendar reminder, and a confirmation text.</li>
           <li><b>Works with no signal:</b> saves wait on the phone and send themselves later.</li>
+          <li><b>Look up a number from the phone:</b> the owner and full address with Copy, and Fast People Search opened with the address filled in.</li>
           <li><b>Extra work spotted</b> (gutters, branches over the roof, dead trees) turns one door into several jobs.</li>
         </ul></div>
         <div class="why"><h3>A sale the homeowner can afford</h3><ul>
@@ -664,6 +670,19 @@ button { font: inherit; color: inherit }
     var f = el('div', 'form');
     var save = function (label, val) { d.saved[kind] = val; S.form = null; toastMsg(label + ' saved', d.a); render(); };
     if (kind === 'phone') {
+      /* Look up number: who and where with Copy, the search opens in a new tab, the person types what they find */
+      var lkb = el('div', 'lkdemo');
+      lkb.appendChild(el('div', 'lq', 'Look up the number'));
+      [['Owner of record', d.owner], ['Address', d.a.replace(/\b([A-Z])([A-Z]+)\b/g, function (m, a2, b2) { return a2 + b2.toLowerCase(); }) + ', Woodland Park, CO 80863']].forEach(function (x) {
+        var r = el('div', 'lkr'); var tx = el('span'); tx.appendChild(el('small', null, x[0])); tx.appendChild(el('b', null, x[1])); r.appendChild(tx);
+        var cp = el('button', null, 'Copy'); cp.type = 'button'; cp.addEventListener('click', function () { toastMsg('Copied', x[0]); }); r.appendChild(cp); lkb.appendChild(r);
+      });
+      var lg = el('div', 'lkg');
+      var fpsb = el('button', 'lkgo', 'Search Fast People Search'); fpsb.type = 'button'; fpsb.addEventListener('click', function () { toastMsg('Fast People Search', 'Opens in a new tab with the address filled in'); }); lg.appendChild(fpsb);
+      var tpsb = el('button', 'lkalt', 'or True People Search'); tpsb.type = 'button'; tpsb.addEventListener('click', function () { toastMsg('True People Search', 'The backup, also filled in'); }); lg.appendChild(tpsb);
+      lkb.appendChild(lg);
+      lkb.appendChild(el('div', 'lktip', 'Tap View Free Details on the matching person, not the name or a “full report” link: those go to paid sites.'));
+      f.appendChild(lkb);
       f.appendChild(el('div', 'lq', 'Phone number'));
       var i = el('input'); i.type = 'tel'; i.value = '(719) 555-0148'; i.id = 'f-phone'; i.setAttribute('aria-label', 'Phone number'); f.appendChild(i);
       f.appendChild(el('div', 'day', 'Given at the door: Call and Text without a Do Not Call check. A looked-up number has to clear the lists first.'));
@@ -1132,7 +1151,8 @@ button { font: inherit; color: inherit }
     ['The homeowner fire report', 'A quick visual check turned into a report they can send their insurer.', function () { reset(); S.screen = 'doors'; S.fc = { debris: 'fx', z1plants: 'fx', vents: 'fx', overhang: 'ok', grass: 'ok', ladder: 'fx', firewood: 'na' }; S.doors[0].saved.fc = 'Fire check'; S.sheet = 'report:1'; render(); }],
     ['A won job becomes a customer', 'Tap Make customer on the won door: name, address and price carry over, and the door is tagged for the crew.', function () { reset(); S.screen = 'doors'; S.anim = true; var d = S.doors[0]; d.mark = 'booked'; d.walkText = 'Thu 8 Oct 9:00 am'; d.saved.walk = 'Walk Thu 8 Oct 9:00 am'; S.open = null; render(); var mk = $screen.querySelector('.mk2'); if (mk) mk.scrollIntoView({ block: 'center' }); }],
     ['Customers and what is due', 'Every customer with plan, visits and spend. Due this week on top, overdue flagged. Backups save themselves every night.', function () { reset(); go('customers'); }],
-    ['One customer, every visit', 'Contact, agreement, the visit history, and Log a visit that moves the next due date on by itself.', function () { reset(); S.cust = 'c1'; S.custBack = 'state'; go('customer'); }]
+    ['One customer, every visit', 'Contact, agreement, the visit history, and Log a visit that moves the next due date on by itself.', function () { reset(); S.cust = 'c1'; S.custBack = 'state'; go('customer'); }],
+    ['Look up a number', 'The owner and the full address with Copy, and Fast People Search opened with the address filled in. A person reads it and types the number; it keeps the Do Not Call warning.', function () { reset(); S.screen = 'doors'; S.anim = true; S.cap = 1; S.form = 'phone:1'; render(); }]
   ];
   var TOUR2 = [
     ['The tools screen', 'Today’s numbers at the top, the field tools, then the office. A reminder appears when nobody has saved a backup for a week.', function () { reset(); go('tools'); }],
