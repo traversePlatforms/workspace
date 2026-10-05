@@ -766,6 +766,9 @@
   .matpick{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
   .matpick button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 11px;font:600 13px var(--sans);cursor:pointer}
   .matpick button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+  .choose .ogrp{margin:8px 0 8px}
+  .choose .ogbox{margin-bottom:6px}
+  .roofx > span > button.lnk{display:block;background:none;border:0;padding:5px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;text-align:left}
   .teamsbox button.lnk,.goalbox button.lnk,.caldet button.lnk,.lesson ~ .aacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .teamsbox button.lnk.bad,.caldet button.lnk.bad,.lesson ~ .aacts button.lnk.bad{color:var(--fire-h)}
   .teamsbox .trow button.lnk{flex:none}
@@ -2283,6 +2286,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       im.src = url;
     });
   }
+  /* one fold-out group of office tiles (2026-10-05), the same bar as the counties on the Colorado screen */
+  function officeGroup(box, key, title, tiles) {
+    tiles = tiles.filter(Boolean); if (!tiles.length) return;
+    var openL = null; try { openL = JSON.parse(localStorage.getItem('doorapp.office') || 'null'); } catch (e) {}
+    var open = Array.isArray(openL) ? openL.indexOf(key) >= 0 : key === 'sales';
+    var hd = q('button', 'cty ogrp'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open)); hd.setAttribute('data-group', key);
+    var ht = q('span', 'ct'); ht.appendChild(q('b', null, title));
+    ht.appendChild(q('small', null, tiles.map(function (t) { var b = t.querySelector('.tt b'); return b ? b.textContent : ''; }).filter(Boolean).join(' \u00b7 ')));
+    hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+    var g = q('div', 'tgrid ogbox'); g.hidden = !open; tiles.forEach(function (t) { g.appendChild(t); });
+    hd.addEventListener('click', function () {
+      open = !open; g.hidden = !open; hd.setAttribute('aria-expanded', String(open));
+      var l = null; try { l = JSON.parse(localStorage.getItem('doorapp.office') || 'null'); } catch (e) {}
+      if (!Array.isArray(l)) l = ['sales'];
+      var at = l.indexOf(key); if (open && at < 0) l.push(key); if (!open && at >= 0) l.splice(at, 1);
+      try { localStorage.setItem('doorapp.office', JSON.stringify(l)); } catch (e) {}
+    });
+    box.appendChild(hd); box.appendChild(g);
+  }
   function chooseView() {
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools';
@@ -2355,19 +2377,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }).catch(function () {});
       var qt = feat('quote') ? tile('a', 'calc', 'Quote builder', 'Price a job from the ' + vw() + '.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html?v=' + QUOTE_V) : null;
       if (qt && S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
-      grp('Office', [pt,
+      /* Office in four fold-out groups (Matthew 2026-10-05: thirteen tiles in a row ran long). Each bar names what is
+         inside; the phone remembers which are open (Sales open the first time). The tiles stay in the page when folded. */
+      box.appendChild(q('h2', 'tgrp', 'Office'));
+      officeGroup(box, 'sales', 'Sales', [pt,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
-        tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView),
         qt,
-        feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null,
-        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', 'From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.', 'Admin only · in testing', stormView) : null,
-        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
-        tile('button', 'door', 'Sample door', 'One made-up door with every part of the card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView),
-        tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
+        feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null]);
+      officeGroup(box, 'team', 'Team', [
         tile('button', 'users', 'Team stats', "Everyone's numbers.", 'Admin only', teamView),
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
+        tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView)]);
+      officeGroup(box, 'storms', 'Storms and data', [
+        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', 'From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.', 'Admin only · in testing', stormView) : null,
+        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
+        tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
+        feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
+      officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
-        feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null].filter(Boolean));
+        tile('button', 'door', 'Sample door', 'One made-up door with every part of the card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     view.appendChild(box);
@@ -6231,6 +6259,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       pb.addEventListener('click', function () { S.photoOpen = open ? null : d.id; renderDoors(); });
       t.appendChild(pb);
       if (open) t.appendChild(roofPhoto(d));
+    } else if (d.naip) {      /* every other house (2026-10-05): the 2023 USDA photo, about 1 ft a pixel */
+      var openN = S.photoOpen === d.id;
+      var nb = q('button', 'lnk', openN ? 'Hide the roof photo' : 'See the roof (aerial photo, 2023)'); nb.type = 'button';
+      nb.addEventListener('click', function () { S.photoOpen = openN ? null : d.id; renderDoors(); });
+      t.appendChild(nb);
+      if (openN) t.appendChild(naipPhoto(d));
     }
     b.appendChild(t);
     return b;
@@ -6252,6 +6286,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var done = function () { S.gtLoading = false; var qq = S.gtQ; S.gtQ = []; qq.forEach(function (f) { f(); }); };
     sc.onload = done; sc.onerror = done;
     document.head.appendChild(sc);
+  }
+  /* the 2023 close-up (2026-10-05): USDA NAIP, 0.3 m in Colorado, public domain, cut to the house by Microsoft Planetary Computer's
+     public data API when the button is tapped; nothing is stored on our server. d.naip = [item, minLon, minLat, maxLon, maxLat]. */
+  function naipPhoto(d) {
+    var box = q('div', 'roofpic'), n = d.naip;
+    var im = q('img'); im.alt = 'Aerial photo of the roof at ' + d.address;
+    im.src = 'https://planetarycomputer.microsoft.com/api/data/v1/item/bbox/' + n.slice(1).join(',') + '/640x640.png?collection=naip&item=co_m_' + encodeURIComponent(n[0]) + '&assets=image&asset_bidx=image%7C1%2C2%2C3';
+    var cap = q('small', null, 'Aerial photo, 2023, about 1 ft a pixel (USDA, public domain). A roof replaced since will not show.');
+    im.addEventListener('error', function () { cap.textContent = 'The photo could not load. Try again with better signal.'; });
+    box.appendChild(im); box.appendChild(cap);
+    return box;
   }
   function roofPhoto(d) {
     var box = q('div', 'roofpic');

@@ -9,6 +9,24 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — roof material set at the door, the photo's best guesses, a 2023 roof close-up for every house, Office in groups
+
+Matthew 2026-10-05:
+- **Roof material on the card, set at the door.** A line on the roof part of the card says what the roof is (seen at the house, the county's record, the photo, or "probably …" for the photo's best guess) with **Set it / Change**: asphalt, tile, wood shake, metal, flat, slate. What a person sets beats the record and the photo, shows under their name, and is the training data for teaching the photo metal and shake.
+- **Best guesses** from the photo for the rest of El Paso: Black Forest 58% → 93%, Monument 30% → 88%, Palmer Lake 41% → 95%. Shown as "probably"; the storm list judges them as unknown.
+- **See the roof (aerial photo, 2023)** on every house without a Douglas 3-inch photo (all 30,464 have a window): the USDA 2023 photo, about 1 ft a pixel, cut to the house by Microsoft Planetary Computer when tapped.
+- **Office in four fold-out groups**: Sales, Team, Storms and data, Setup (the phone remembers which are open).
+
+matfix-test 9/9, naip-test 4/4, plus the full suite.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/data/rounds/naip-*.json` (11 towns, **new**, 3.1 MB) | `sixfold-data/rounds/` |
+| 2 | `door-app/site/data/rounds/material-*.json` (11 towns, replaces the ones there, 1.5 MB; **check black-forest and castle-rock land**) | `sixfold-data/rounds/` |
+| 3 | `door-app/site/api/rounds.php` (243,436 bytes) | `public_html/api/` |
+| 4 | `door-app/site/summit-de59ae83/index.html` (557,796 bytes) | `public_html/summit-de59ae83/` |
+| 5 | Flush the cache | SiteGround |
+
 ## ✅ LIVE 2026-10-05 (verified: page identical, photo actions answer, Profile opens with every row and signs out, materials live in every town file; black-forest and castle-rock went up on a second pass) — Profile (photo, alerts, look, sign out) and roof materials
 
 Matthew 2026-10-05:
