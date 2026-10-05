@@ -175,11 +175,9 @@ const JOBS = [
   { src: 'quotes/kara-maintenance.html', out: 'quotes/Sixfold-Quote-Maintenance-Kara-Rosenstrauch.pdf', mode: 'light', scale: 0.84,
     css: '.ifpacket { display: none; }' },
 
-  /* Brian Skelton, aeration job, 2026-10-05. Same two-render arrangement as Kara's. */
+  /* Brian Skelton, aeration job, 2026-10-05. Packet only: no standalone quote (Matthew opened the standalone and found no agreement). */
   { src: 'quotes/brian-aeration.html', out: 'quotes/_part-quote-brian.pdf', mode: 'light', scale: 0.84,
     css: '.ifsolo { display: none; }' },
-  { src: 'quotes/brian-aeration.html', out: 'quotes/Sixfold-Quote-Aeration-Brian-Skelton.pdf', mode: 'light', scale: 0.84,
-    css: '.ifpacket { display: none; }' },
 
   /* Field sheets. Internal, printed and written on with a pen, so they want the
      light print register like everything else in the binder. Four sheets, one

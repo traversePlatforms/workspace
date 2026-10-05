@@ -10,14 +10,14 @@
 | File | Pages | For |
 |---|---|---|
 | `quotes/Sixfold-Quote-and-Agreement-Aeration-Brian-Skelton.pdf` | 6 | **The one to send** and to upload to DocuSign: quote in front, then the agreement |
-| `quotes/Sixfold-Quote-Aeration-Brian-Skelton.pdf` | 1 | The quote alone, if wanted |
+| (no standalone quote) | | Removed 2026-10-05: Matthew opened it looking for the agreement. Packet only. |
 | `quotes/_part-quote-brian.pdf`, `agreements/_part-agreement-brian.pdf` | 1, 5 | Intermediate. **Never send.** |
 
 Sources: `quotes/brian-aeration.src.html`, `agreements/brian-aeration-agreement.src.html`. Rebuild:
 
 ```
 node quotes/build.mjs && node agreements/build.mjs
-node tools/html-to-pdf.mjs brian && node tools/html-to-pdf.mjs Brian-Skelton
+node tools/html-to-pdf.mjs brian
 python tools/merge-pdf.py quotes/Sixfold-Quote-and-Agreement-Aeration-Brian-Skelton.pdf quotes/_part-quote-brian.pdf agreements/_part-agreement-brian.pdf
 ```
 
