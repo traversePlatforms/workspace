@@ -137,6 +137,55 @@ function saveAccounts(array $a): bool {
 function accountLog(array $row): void {
     @file_put_contents(dirname(accountsFile()) . '/rounds-accounts.log', json_encode($row + ['at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- who is signed in (2026-10-04) ----
+ * Matthew: the Accounts screen could not say who was signed in, so a Sign out had nothing to show it
+ * worked. The cookie is the session and the server kept no list; now it keeps one, beside the accounts:
+ *   s:     tag => [id, exp, seen, device]   one line per sign-in (a phone, an iPad); tag = sessionTag(cookie),
+ *                                           so the file never holds a cookie or a code
+ *   o:     id => when they were last signed out
+ *   since: when the list was started
+ * A sign-in adds a line, using the app moves 'seen' on (written at most every 5 minutes), Sign out on the
+ * phone removes its line, and an admin's Sign out, New code or Remove removes all of that person's lines.
+ * Phones signed in before this was uploaded join the list the next time they are used. */
+const SEEN_EVERY = 300;
+function sessFile(): string { return dirname(accountsFile()) . '/rounds-sessions.json'; }
+function sessLoad(): array { $a = json_decode((string) @file_get_contents(sessFile()), true); return is_array($a) ? $a : []; }
+function sessEdit(callable $fn): void {
+    $fh = @fopen(sessFile(), 'c+');
+    if (!$fh) return;
+    @flock($fh, LOCK_EX);
+    $a = json_decode(stream_get_contents($fh) ?: '[]', true);
+    if (!is_array($a)) $a = [];
+    if (!isset($a['s']) || !is_array($a['s'])) $a['s'] = [];
+    if (!isset($a['o']) || !is_array($a['o'])) $a['o'] = [];
+    if (empty($a['since'])) $a['since'] = time();
+    $a = $fn($a);
+    $now = time();
+    foreach ($a['s'] as $t => $l) if ((int) ($l[1] ?? 0) < $now) unset($a['s'][$t]);   // expired sign-ins drop off
+    ftruncate($fh, 0); rewind($fh);
+    @fwrite($fh, json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    @flock($fh, LOCK_UN); @fclose($fh);
+    @chmod(sessFile(), 0600);
+}
+/** every sign-in of one person ends (admin Sign out, New code, Remove) */
+function sessEnd(string $id): void {
+    sessEdit(function ($a) use ($id) {
+        foreach ($a['s'] as $t => $l) if (($l[0] ?? '') === $id) unset($a['s'][$t]);
+        $a['o'][$id] = time();
+        return $a;
+    });
+}
+/** what kind of device, from the browser's own description; an iPad on Safari says it is a Mac */
+function deviceName(): string {
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (stripos($ua, 'iPad') !== false) return 'iPad';
+    if (stripos($ua, 'iPhone') !== false) return 'iPhone';
+    if (stripos($ua, 'Android') !== false) return stripos($ua, 'Mobile') !== false ? 'Android phone' : 'Android tablet';
+    if (stripos($ua, 'CrOS') !== false) return 'Chromebook';
+    if (stripos($ua, 'Macintosh') !== false) return 'Mac or iPad';
+    if (stripos($ua, 'Windows') !== false) return 'Windows computer';
+    return 'Computer';
+}
 $basePeople = $people;
 $acct = loadAccounts();
 foreach ($basePeople as $c => $who) {
@@ -187,7 +236,7 @@ if ($session) {
     }
     /* signed out by an admin (2026-10-04): a session that began before the sign-out is refused; the code still works */
     $kick = (int) ($acct['kick'][(string) ($session['c'] ?? '')] ?? 0);
-    if ($line !== null && $kick && ((int) ($session['exp'] ?? 0) - $sessionDays * 86400) < $kick) $line = null;
+    if ($line !== null && $kick && ((int) ($session['exp'] ?? 0) - $sessionDays * 86400) <= $kick) $line = null;   // <=: a sign-in in the same second as the sign-out ends too
     if ($line === null) $session = null;
     else { $session['n'] = (string) ($line[0] ?? ''); $session['r'] = (string) ($line[1] ?? 'crew'); }
 }
@@ -840,13 +889,16 @@ if ($action === 'signin') {
     }
     if (!$hit) fail('That code was not recognised.', 401);      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
-    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400];
+    /* 'j': two sign-ins in the same second used to get the same cookie, so the signed-in list saw one phone (2026-10-04) */
+    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400, 'j' => bin2hex(random_bytes(4))];
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
     $tok = sign($payload, $sessionKey);
     setcookie(COOKIE, $tok, [
         'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
         'samesite' => 'Lax', 'secure' => $secure,
     ]);
+    $line = [$payload['c'], $payload['exp'], time(), deviceName()];
+    sessEdit(function ($a) use ($tok, $line) { $a['s'][sessionTag($tok)] = $line; return $a; });
     out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'], 'sid' => sessionTag($tok)]);
 }
 
@@ -858,6 +910,10 @@ if ($action === 'signout') {
     $sid = (string) ($_GET['sid'] ?? '');
     $cur = (string) ($_COOKIE[COOKIE] ?? '');
     if ($sid !== '' && $cur !== '' && !hash_equals(sessionTag($cur), $sid)) out(['ok' => true, 'kept' => true]);
+    if ($cur !== '') {
+        $gone = sessionTag($cur); $who = (string) ($session['c'] ?? '');
+        sessEdit(function ($a) use ($gone, $who) { unset($a['s'][$gone]); if ($who !== '') $a['o'][$who] = time(); return $a; });
+    }
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
     setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $secure]);
     out(['ok' => true]);
@@ -875,6 +931,14 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
+if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
+    $tagNow = sessionTag($cookieNow);
+    $lineNow = sessLoad()['s'][$tagNow] ?? null;
+    if (!is_array($lineNow) || (int) ($lineNow[2] ?? 0) < time() - SEEN_EVERY) {
+        $fresh = [(string) ($session['c'] ?? ''), (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName()];
+        sessEdit(function ($a) use ($tagNow, $fresh) { $a['s'][$tagNow] = $fresh; return $a; });
+    }
+}
 
 if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? ''))]);
 
@@ -1951,9 +2015,19 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     $rows = acctRows($basePeople, $acct, $sessionKey);
     $myId = (string) ($session['c'] ?? '');
     if ($action === 'accounts') {
-        $list = array_map(fn($r) => array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId], array_values($rows));
+        $sess = sessLoad(); $live = [];
+        foreach ((array) ($sess['s'] ?? []) as $l) {
+            $lid = (string) ($l[0] ?? ''); $kick = (int) ($acct['kick'][$lid] ?? 0);
+            if ((int) ($l[1] ?? 0) < time() || ($kick && (int) $l[1] - $sessionDays * 86400 <= $kick)) continue;
+            $live[$lid][] = ['device' => (string) ($l[3] ?? ''), 'seen' => (int) ($l[2] ?? 0), 'since' => (int) $l[1] - $sessionDays * 86400];
+        }
+        $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
+        $list = array_map(function ($r) use ($myId, $live, $outAt) {
+            $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id'])];
+        }, array_values($rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
-        out(['ok' => true, 'accounts' => $list]);
+        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0)]);
     }
     if (!$isPost) fail('POST required', 405);
     /* every change works on a fresh copy under a lock (Fable 2026-10-04): the file is rewritten whole, so
@@ -2012,6 +2086,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['source'] === 'app') { $p = $acct['people'][$t['code']]; unset($acct['people'][$t['code']]); $acct['people'][$code] = $p; }
         else { $acct['off'][$id] = ['by' => $me, 'at' => time(), 'why' => 'new code']; $acct['people'][$code] = [$t['name'], $t['role'], $me, time()]; }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
         out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $t['name'], 'role' => $t['role'], 'code' => $code]);
     }
@@ -2020,6 +2095,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($id === $myId) fail('Use Sign out on the tools screen to sign yourself out.');
         $acct['kick'][$id] = time();
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        sessEnd($id);
         accountLog(['by' => $me, 'what' => 'signed out', 'name' => $t['name'], 'id' => $id]);
         out(['ok' => true]);
     }
@@ -2030,6 +2106,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['source'] === 'app') unset($acct['people'][$t['code']]);
         else $acct['off'][$id] = ['by' => $me, 'at' => time()];
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        sessEnd($id);
         accountLog(['by' => $me, 'what' => 'remove', 'name' => $t['name'], 'id' => $id]);
         out(['ok' => true]);
     }

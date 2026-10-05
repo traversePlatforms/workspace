@@ -719,6 +719,11 @@
   .door.acct{padding-left:16px}
   .door.acct::before{display:none}
   .door.acct.off{opacity:.65}
+  .anote{margin:-4px 0 10px;font-size:12.5px;color:var(--soft)}
+  .door.acct .alive{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:13px;font-weight:600;color:var(--soft)}
+  .door.acct .alive .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
+  .door.acct .alive.on{color:var(--go)}
+  .door.acct .alive.on .dot{background:var(--go)}
   .door.acct .tag.you{background:var(--ink);color:var(--card)}
   .door.acct .tag.role-admin{background:var(--later-tint);color:var(--later)}
   .door.acct .tag.role-crew{background:var(--go-tint);color:var(--go)}
@@ -3728,7 +3733,7 @@
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       holder.textContent = '';
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the accounts.')); return; }
-      S.accts = j.accounts; drawAccounts(holder);
+      S.accts = j.accounts; S.acctTracking = j.tracking || 0; drawAccounts(holder);
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
   }
   function drawAccounts(holder) {
@@ -3762,7 +3767,10 @@
     }
     holder.appendChild(pb);
     var on = S.accts.filter(function (a) { return !a.off; }), off = S.accts.filter(function (a) { return a.off; });
-    holder.appendChild(q('div', 'sub2', on.length + (on.length === 1 ? ' person signs in' : ' people sign in') + ' · ' + on.filter(function (a) { return a.role === 'admin'; }).length + ' admin'));
+    var nowIn = on.filter(function (a) { return a.live && a.live.length; }).length;
+    holder.appendChild(q('div', 'sub2', on.length + (on.length === 1 ? ' person signs in' : ' people sign in') + ' · ' + on.filter(function (a) { return a.role === 'admin'; }).length + ' admin · ' + nowIn + ' signed in now'));
+    /* phones signed in before the list started show up the next time they are used (sessions last 45 days) */
+    if (S.acctTracking && Date.now() / 1000 - S.acctTracking < 45 * 86400) holder.appendChild(q('div', 'anote', 'Anyone who signed in before ' + fmtDay(S.acctTracking) + ' shows as signed in the next time they open the app.'));
     on.forEach(function (a) { holder.appendChild(accountRow(a, holder)); });
     if (off.length) {
       holder.appendChild(q('h2', null, 'Turned off · ' + off.length));
@@ -3813,6 +3821,16 @@
     setTimeout(function () { try { nm.focus(); } catch (e) {} }, 50);
     return fm;
   }
+  /* who is signed in: one line per phone or iPad, with when it was last used */
+  function liveLine(a) {
+    var l = a.live || [], st = q('div', 'alive' + (l.length ? ' on' : ''));
+    st.appendChild(q('span', 'dot'));
+    if (l.length) {
+      var devs = l.map(function (x) { return x.device; }).filter(function (d, i, all) { return all.indexOf(d) === i; });
+      st.appendChild(q('span', null, 'Signed in on ' + devs.join(' and ') + (l.length > devs.length ? ' (' + l.length + ' sign-ins)' : '') + ' · used ' + ago(l[0].seen)));
+    } else st.appendChild(q('span', null, a.out ? 'Signed out · ' + ago(a.out) : 'Not signed in'));
+    return st;
+  }
   function acctCall(action, body, done) {
     api(action, { body: body }).then(function (j) {
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
@@ -3830,6 +3848,7 @@
     meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'admin' ? 'Admin' : 'Crew'));
     meta.appendChild(q('span', null, a.off ? 'Turned off · cannot sign in' : a.source === 'app' ? 'Added' + (a.by ? ' by ' + a.by : '') + (a.at ? ' · ' + fmtDay(a.at) : '') : 'Set up on the server'));
     c.appendChild(meta);
+    if (!a.off) c.appendChild(liveLine(a));
     if (S.acctEdit === a.id) {
       var fm = q('div', 'phf acf');
       var lb = q('label', null, 'Name'); var nm = q('input'); nm.maxLength = 40; nm.value = a.name; lb.appendChild(nm); fm.appendChild(lb);
