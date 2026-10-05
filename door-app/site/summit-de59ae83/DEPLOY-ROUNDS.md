@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Profile (photo, alerts, look, sign out) and roof materials
+## ✅ LIVE 2026-10-05 (verified: page identical, photo actions answer, Profile opens with every row and signs out, materials live in every town file; black-forest and castle-rock went up on a second pass) — Profile (photo, alerts, look, sign out) and roof materials
 
 Matthew 2026-10-05:
 - **Profile**: the circle in the top right of the tools screen opens it. Name and role, **Add a photo** (cropped to a 256 px square on the phone; it replaces the initials in the corner, on the tools screen and in Door rounds), and this phone's settings moved off the tools screen: Alerts, Look, the Door card switch (admins), Sign out. Photos are kept beside the website in `sixfold-data/rounds/avatars/`, filed by account, shown only to people signed in.
