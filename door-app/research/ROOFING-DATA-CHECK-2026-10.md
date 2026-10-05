@@ -109,3 +109,18 @@ From the statute text (2024 edition, current through fall 2025). Passed as SB12-
 - PPRBD's roofing-licence requirement (from a permit-guide site, permitmint.com) and town solicitation permits: not checked at the source.
 - Whether 6-22 has been amended since 2012: none found, history not fully traced.
 - **Corrected along the way:** a search summary said Douglas County's assessor data was last updated 7/1/2026; the county's own page says 10/1/2026. The first-party page is used.
+
+## Addendum 2026-10-05: sharper roof photos, and what El Paso's would cost
+
+**In the app now (free):** the Denver Regional Aerial Photography Project's 2020 photos at 3 inches a pixel, published by the State of Colorado on AWS Open Data (public domain), read in the browser straight from the state's bucket. Covers all of Castle Rock and most of Franktown and Sedalia (8,503 doors). Not Larkspur, not El Paso, not Teller. The 2022 photos are in the same bucket but stored one pixel row at a time, too slow to read on a phone. The rest of the bucket is the statewide farm photos (NAIP, 60 cm) and a 2015 Trinidad set. Colorado's statewide 6-inch Vexcel photos are licensed to state and local governments only.
+
+**El Paso County's 2024 photos** (6-inch and 1-foot, licensed per 4,000 ft tile for three years: 6-inch $100, 1-foot $50, per the county's licensed-data page). Counted with `operations/door-territory/elpaso-imagery/count-tiles.mjs` against the county's open "Aerial Delivery Tiles" grid (3,900 tiles): our 16,801 El Paso doors fall in **199 tiles** (Monument 61, Palmer Lake 14, Black Forest 130; some shared).
+
+| Coverage | Tiles | At 6-inch | At 1-foot |
+|---|---|---|---|
+| Every El Paso door | 199 | $19,900 | $9,950 |
+| 90% of doors | 99 | $9,900 | $4,950 |
+| 75% of doors | 53 | $5,300 | $2,650 |
+| 50% of doors | 24 | $2,400 | $1,200 |
+
+Open before buying: the grid's RESOLUTION field reads the same for every tile, so which tiles come at 6-inch is unconfirmed; the county page does not say whether the licence allows showing the photos to field staff in a web app, or use by a product sold to other companies (the licence would be in whose name?); and the photos arrive as files, so we would have to cut and host map tiles ourselves. 1-foot shows roof shapes but not shingle detail; the Douglas photos in the app are 3-inch.
