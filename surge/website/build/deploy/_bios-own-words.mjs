@@ -24,12 +24,6 @@ const BIOS = {
   'brandon-long': P(
     'If you could invent a holiday, what would it be and how is it celebrated?',
     '“The Off Grid Day. When a new phone comes out, the following day there would be no way of getting technology or internet… a technology detox.”'),
-  'ryan-conger': P(
-    'I bring clarity and direction. I take what feels chaotic and simplify it into something the team can actually execute on. Progress and ownership drive me, and I want to build enough that my wife gets to choose whether she works out of want, not necessity.',
-    'Beneath the numbers focus, I think deeply about psychology, behavior, and human potential. I also love ancient alien conspiracy theories.'),
-  'jon-wallace': P(
-    'I know when to keep things light and when to lock in — and I bring solid dad jokes either way. I’m driven by watching people grow and helping them take control of their skills and income.',
-    'Fair warning: I can freestyle rap, and most people don’t see that coming.'),
   'nneka-smith': P(
     'Connecting with people is genuinely my superpower and honestly my favorite part of the job! I’m driven by being a positive influence and leaving people better than I found them. Being remembered for kindness is something I truly care about.',
     'On the financial side, I’m all about making my money work for me and not the other way around.',

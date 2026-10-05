@@ -32,7 +32,7 @@ const BLOCKED = /\.(md|log|sh|mjs|map|php|phps|inc)$|(^|\/)\./;  // php is execu
 // The .htaccess 301s for pages retired 2026-09-07. Host redirects are not tested
 // by a static serve, so they live here too — a dead nav link should 301, not 404.
 const REDIRECTS = [
-  [/^\/how-it-works\/?$/,   '/what-we-do/#how-an-engagement-runs'],
+  [/^\/how-it-works\/?$/,   '/what-we-do/#the-stages'],
   [/^\/training\/?$/,       '/careers/#how-you-are-trained'],
   [/^\/careers\/apply\/?$/, '/careers/#apply'],
   [/^\/sectors(\/.*)?$/,    '/what-we-do/'],

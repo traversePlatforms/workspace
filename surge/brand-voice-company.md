@@ -41,7 +41,9 @@ Nobody has to believe the idea is new. They have to believe you can teach it. Sh
 **Cannot claim:**
 
 - **Customer names in prose** — no sentence, heading, caption or alt text calls an organisation a client. Sector alone. The reason is consent, not roster size: no client hired Surge in order to become marketing material. "Our roofing client in Indiana" is out for the same reason a name is.
-  > **Client logos and branding are cleared** — updated 2026-09-14. A client mark may be used *as a logo* (client wall, deck, social graphic), and client merch in photos and video is fine. Matthew confirmed 2026-09-14 that the clients have notified him and it is cleared currently. The earlier "explicit written permission" bar is lifted; the permission is verbal and relayed through him, which is a recorded risk, not a blocker. The prose rule above is unchanged and is the standing mitigation. See the 2026-09-11 revision in [brand/notes/RESTRICTED.md](brand/notes/RESTRICTED.md), which governs.
+  > **⚑ Reversed 2026-10-05: no client logos and no client-branded gear in photos or video, anywhere.** The office's staging review (2026-09-29) set it as a rule for every page, and Matthew confirmed it applies. See the 2026-10-05 revision in [brand/notes/RESTRICTED.md](brand/notes/RESTRICTED.md), which governs. The note below is the superseded 2026-09-14 position, kept as the record.
+  >
+  > ~~**Client logos and branding are cleared** — updated 2026-09-14.~~ A client mark may be used *as a logo* (client wall, deck, social graphic), and client merch in photos and video is fine. Matthew confirmed 2026-09-14 that the clients have notified him and it is cleared currently. The earlier "explicit written permission" bar is lifted; the permission is verbal and relayed through him, which is a recorded risk, not a blocker. The prose rule above is unchanged and is the standing mitigation. See the 2026-09-11 revision in [brand/notes/RESTRICTED.md](brand/notes/RESTRICTED.md), which governs.
 - **Security or compliance claims** — no certifications, audit status, or security posture claims about Surge.
 - **A unique or proprietary sales method** — see §1.
 

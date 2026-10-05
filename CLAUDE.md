@@ -70,11 +70,9 @@ Both registers: sparing emoji, no formatting gimmicks (no emoji bullets, no sing
 
 Outsourced sales and marketing — hiring, onboarding, training, and managing sales teams for companies that lack the infrastructure. Field channels: door-to-door, cold calling, events, booths.
 
-**Clients — two rules, and they are different (revised 2026-09-11):**
+**Clients (revised 2026-10-05):**
 - **In text: never named, sector only.** No sentence, heading or caption calls an organisation a client. The reason is consent, not how short the list is.
-- **Logos and branding: cleared for use.** A client mark may be used *as a logo* (a client wall, a deck, a social graphic), and client merch in photos and video is fine. Matthew's call — see the 2026-09-11 revision in [surge/brand/notes/RESTRICTED.md](surge/brand/notes/RESTRICTED.md), which governs.
-
-A mark on the page, a name in the copy — never the second.
+- **No client logos and no client-branded gear in photos or video, anywhere.** The office's staging review (2026-09-29) set it for every page and Matthew confirmed it; this reverses the 2026-09-11 logo clearance. See the 2026-10-05 revision in [surge/brand/notes/RESTRICTED.md](surge/brand/notes/RESTRICTED.md), which governs.
 
 **Roster corrected 2026-08-15** — see [surge/brand/notes/clients.md](surge/brand/notes/clients.md), restricted, context only. Six active clients plus one prospect, not three; four are nonprofit. **Surge does not work in air/HVAC and never did** — that was a mis-transcription of **aeration** that survived months as a confirmed fact. Which kind of aeration is still open; don't write sector specifics for it.
 

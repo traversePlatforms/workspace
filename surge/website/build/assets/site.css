@@ -718,36 +718,11 @@ img[data-person="matthew-sharpe"]{object-position:50% 34% !important}
   font-family:ui-monospace,Menlo,monospace;letter-spacing:.02em;text-transform:uppercase}
 .person-bio p{max-width:60ch}
 
-/* ---- client wall — added 2026-09-11 -------------------------------------------
-   Two logos, so this deliberately is not a 6-up grid with four empty cells.
-   The marks sit inline on one hairline rail, left-aligned with the copy, at a
-   size that reads as "these are the accounts we run" rather than a trophy case.
-   Adding a third or fourth mark needs no change — the rail just wraps.
-   Cells sit on the dark ground behind a hairline, NOT on white plates: the
-   InstaBuzz mark is drawn white-and-yellow with a black keyline, so it is
-   already built for a dark surface. If a client supplies a mark that only
-   works on white, give that one cell `.cw-plate` rather than switching the
-   whole row. ---------------------------------------------------------------- */
-.client-wall{margin-top:1.9rem}
-.client-wall ul{
-  list-style:none;margin:0;padding:0;
-  display:flex;flex-wrap:wrap;align-items:stretch;gap:1rem
-}
-/* No hover state on these cells — deliberate. They are not links, and the
-   green border-on-hover (copied in from the .card convention) promised a click
-   that does not exist. If client logos ever link out, add it back with the
-   <a> doing the work. */
-.client-wall li{
-  border:1px solid var(--line);padding:1.15rem 1.6rem;
-  display:grid;place-items:center;min-width:13rem;min-height:5.4rem
-}
-.client-wall li.cw-plate{background:var(--white)}
-/* a banner-shaped mark (wide, with its own baked-in background) needs more room
-   than a wordmark or it scales down to illegible — see the VAA note in /about/ */
-.client-wall li.cw-wide{min-width:19rem;padding:.9rem 1.1rem}
-.client-wall li.cw-wide img{max-height:4rem}
-.client-wall img{max-height:2.6rem;width:auto}
-.client-wall .cw-note{margin-top:1.4rem;color:var(--faint);font-size:.85rem;max-width:64ch}
+/* ---- industries (/about/) — replaced the client wall 2026-10-05. Text only: no
+   client logos or names anywhere on the site (RESTRICTED.md, 2026-10-05 revision). ------- */
+.ind-list{list-style:none;margin:1.8rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.75rem}
+.ind-list li{border:1px solid var(--line);padding:.85rem 1.3rem;font-weight:700;
+  font-size:1rem;color:var(--white)}
 
 /* ---- footer -------------------------------------------------------------- */
 footer{background:var(--black);color:var(--faint);font-size:.86rem;padding-block:2.8rem 3.6rem;border-top:3px solid var(--brand-green)}
