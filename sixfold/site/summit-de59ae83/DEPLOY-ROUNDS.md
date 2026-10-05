@@ -9,12 +9,12 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 
 ## ⏳ TO UPLOAD — who is signed in (Accounts screen)
 
-Matthew 2026-10-04: signing someone out gave no sign it worked, and nothing said who was signed in. Each account row now shows a green dot and **Signed in on iPhone · used 5 min ago** (several devices are listed), or a grey dot and **Signed out · just now** / **Not signed in**; the top line counts who is signed in now. The server keeps one line per sign-in in  (made by itself; it holds no code and no cookie, only a hash tag, the device kind and when it was last used, written at most every 5 minutes). Sign out on the phone removes its line; an admin's Sign out, New code or Remove removes all of that person's. **Phones signed in before the upload show up the next time they are used**; the screen says so for the first 45 days. Also fixed: two sign-ins in the same second got the same cookie, and a sign-out in the same second as the sign-in did not take. Tested: whosin-test 17/17, accounts 34/34, all 65 suites pass alone (aerial needed one re-run: a timing flake, 9/9 alone).
+Matthew 2026-10-04: signing someone out gave no sign it worked, and nothing said who was signed in. Each account row now shows a green dot and **Signed in on iPhone · used 5 min ago** (several devices are listed), or a grey dot and **Signed out · just now** / **Not signed in**; the top line counts who is signed in now. The server keeps one line per sign-in in `sixfold-private/rounds-sessions.json` (made by itself; it holds no code and no cookie, only a hash tag, the device kind and when it was last used, written at most every 5 minutes). Sign out on the phone removes its line; an admin's Sign out, New code or Remove removes all of that person's. **Phones signed in before the upload show up the next time they are used**; the screen says so for the first 45 days. Also fixed: two sign-ins in the same second got the same cookie, and a sign-out in the same second as the sign-in did not take. Tested: whosin-test 17/17, accounts 34/34, all 65 suites pass alone (aerial needed one re-run: a timing flake, 9/9 alone).
 
-| Step | File (from ) | Goes to |
+| Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
-| 1 |  |  (**187,927** bytes) |
-| 2 |  |  (**450,153** bytes) |
+| 1 | `api/rounds.php` | `public_html/api/` (**187,927** bytes) |
+| 2 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` (**450,153** bytes) |
 | 3 | — | Flush the cache |
 
 ## ✅ LIVE — Fast People Search as the main search (index.html only, **448,590** bytes, to `public_html/summit-de59ae83/`, no flush)
