@@ -94,6 +94,8 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
 <section id="what">
   <h2>What it is</h2>
   <p>The field tools are Sixfold's own web app for door-to-door sales and the office work that follows. It runs on the Sixfold website, so there's nothing to install from an app store. Added to a phone's or iPad's home screen, it opens full screen with the Sixfold icon, like any other app.</p>
+  <p><strong>Putting it on the home screen:</strong> the sign-in screen, and the tools screen until it's done, offer it. On Android, and in Chrome or Edge on a computer, <strong>Install the Sixfold app</strong> opens the browser's own install box: one tap. iPhones and iPads don't let any website install itself, so there <strong>Add Sixfold to your Home Screen</strong> shows the four taps (Safari, Share, Add to Home Screen, sign in once more). It disappears once the app is installed; Not now hides it on the tools screen for two weeks.</p>
+  <p><strong>Light or dark:</strong> the app follows each device's own setting, so a phone in dark mode is dark and a computer in light mode is light. The tools screen has <strong>Look: Auto, Light, Dark</strong>, kept on that device. Light reads better outdoors in sun; dark is easier at night.</p>
   <p>It does three jobs:</p>
   <ul>
     <li><strong>Tells the crew which doors are worth knocking and why</strong>: every owner-occupied home in Sixfold's 11 towns, scored for fire hazard, lawn size and trees close to the house, with the money each homeowner can get for fire work.</li>
@@ -207,7 +209,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
       <tr><td class="k">Pipeline</td><td>Every prospect in one place: door bookings and enquiries (website form, Linktree, Meta ad, Nextdoor, phone, referral; Linktree enquiries are labelled by themselves), by stage: To call, Walk booked, Quote sent, Won, Lost, with a chip per source. Door bookings keep their card (the door's chips, walk, Build quote, Mark quote sent, Won with the job value or Lost with a reason); enquiries keep theirs (call, text, email, status, notes). Walks coming up at the top, + Add a lead, <strong>Import leads from Meta</strong> (pick the file downloaded from Meta's Leads Center; it previews, then adds them under To call, dated when they filled the form, with their answers, and skips anyone already in), and a Jobber-ready export of door bookings.</td></tr>
       <tr><td class="k">Customers</td><td>Everyone Sixfold works for, with plans, visits and what is due. See <a href="#customers">Customers and backups</a>.</td></tr>
       <tr><td class="k">Quote builder</td><td>Cost-up pricing for a job. See <a href="#quote">Quote builder</a>.</td></tr>
-      <tr><td class="k">Territories</td><td>Assign neighbourhoods to people (pick a person and a town, tick several), see each person's progress, and unassign. The crew see nothing of it until the switch is turned on.</td></tr>
+      <tr><td class="k">Territories</td><td>Assign neighbourhoods to people (pick a person and a town, tick several), see each person's progress, and unassign. Each person sees their own on their tools screen and on the neighbourhood lists (switched on 4 Oct 2026).</td></tr>
       <tr><td class="k">Communities</td><td>Subdivisions, metro districts, HOAs and Firewise communities, ranked by high-risk doors still to knock, to pitch a whole community as one job.</td></tr>
       <tr><td class="k">Results</td><td>Which doors turn into jobs: knocked, talked to, booked and won, broken down by fire hazard, lawn, trees, county value, town and extra work. It fills up as quotes are marked won or lost.</td></tr>
       <tr><td class="k">Team stats</td><td>Everyone's doors, conversations and quotes today, over 7 days and over 30 days, with a day-by-day view per person.</td></tr>
@@ -338,7 +340,7 @@ footer { margin-top: 42px; padding-top: 16px; border-top: 1px solid var(--rule);
   <div class="tw"><table>
     <thead><tr><th>Switch</th><th>Now</th><th>When on</th></tr></thead>
     <tbody>
-      <tr><td class="k"><code>TERRITORIES_OPEN</code></td><td>Off: crew see every neighbourhood and nothing of territories</td><td>Each person sees their neighbourhoods marked Yours, with an Only mine button.</td></tr>
+      <tr><td class="k"><code>TERRITORIES_OPEN</code></td><td><strong>On</strong> since 4 Oct 2026. With nobody assigned, everyone still sees every neighbourhood as before</td><td>Each person sees <strong>Your territories</strong> on the tools screen (every neighbourhood assigned to them, across towns, with how far through it they are; tap one to open it), a count on each town in the Colorado overview, and their neighbourhoods marked Yours with an Only mine button. Admins see their own now.</td></tr>
       <tr><td class="k"><code>BOARD_OPEN</code></td><td>Off: the Leaderboard is admins only</td><td>The crew see the Leaderboard and the daily goal.</td></tr>
       <tr><td class="k"><code>ODDS_MIN</code></td><td>150 conversations</td><td>Odds switches on for everyone once the team passes this many conversations (quotes booked plus not now).</td></tr>
     </tbody>

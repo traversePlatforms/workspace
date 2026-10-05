@@ -204,6 +204,9 @@ button { font: inherit; color: inherit }
 .vrow .m { font-size: 12.5px; color: var(--soft) }
 /* the office side */
 .hero2 { color: var(--bar-ink); border-radius: 18px; padding: 14px; margin-bottom: 10px }
+.instb { display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 12px; min-height: 40px; padding: 0 14px; background: var(--ember-ink); color: var(--on-ember); font: 700 13px var(--sans); cursor: pointer; margin-bottom: 4px }
+.lookd { display: flex; align-items: center; gap: 6px; margin: 14px 2px 4px } .lookd span { font: 700 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--soft); margin-right: 4px }
+.lookd button { border: 1px solid var(--line); border-radius: 10px; min-height: 34px; padding: 0 12px; background: var(--card); color: var(--ink); font: 700 12.5px var(--sans); cursor: pointer } .lookd button[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink) }
 .hero2 .hi { font: 400 21px/1.15 var(--display) } .hero2 .dt { font-size: 12px; color: var(--bar-soft); margin-top: 2px }
 .hero2 .hs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px }
 .hero2 .hs div { background: var(--bar-lift); border-radius: 11px; padding: 7px 9px } .hero2 .hs b { display: block; font-size: 18px; color: var(--ember) } .hero2 .hs span { font: 600 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--bar-soft) }
@@ -337,7 +340,7 @@ button { font: inherit; color: inherit }
         <div class="why"><h3>We learn what works</h3><ul>
           <li><b>Results:</b> which kinds of doors turn into jobs, by fire, lawn, trees, value and town.</li>
           <li><b>Team stats and a leaderboard,</b> without location tracking.</li>
-          <li><b>Territories</b> ready for when the team grows.</li>
+          <li><b>Territories:</b> neighbourhoods assigned to people, and each person sees theirs on their tools screen.</li>
         </ul></div>
         <div class="why"><h3>Customers kept, work repeats</h3><ul>
           <li><b>Every customer in one list:</b> contact, plan, price, every visit, what they have spent and when they are due next.</li>
@@ -878,6 +881,8 @@ button { font: inherit; color: inherit }
       });
       $screen.appendChild(g); stagger(g);
     };
+    var ib = el('button', 'instb'); ib.type = 'button'; ib.appendChild(ico('door', 2.2)); ib.appendChild(document.createTextNode('Install the Sixfold app'));
+    ib.addEventListener('click', function () { toastMsg('Install', 'Android and computers: one tap opens the install box. iPhone: the three taps are shown'); }); $screen.appendChild(ib);
     grp('In the field', [['door', 'Door rounds', 'Knock a neighbourhood. Works with no signal.', function () { go('state'); }],
       ['chart', 'My stats', 'Your doors, conversations and quotes.', function () { S.team = 'today'; go('team'); }]]);
     grp('Office', [['list', 'Pipeline', 'Door bookings and enquiries, call to won.', function () { go('pipe'); }, '2 new leads'],
@@ -888,6 +893,15 @@ button { font: inherit; color: inherit }
       ['award', 'Team stats', 'Everyone’s numbers, and the leaderboard.', function () { S.team = 'week'; go('team'); }],
       ['key', 'Accounts', 'Add, change, sign out and remove sign-ins.', function () { go('accounts'); }],
       ['send', 'Morning email', 'What lands in the inbox at 6 am.', function () { go('email'); }]]);
+    /* the look: this one really changes the demo */
+    var lk = el('div', 'lookd'); lk.appendChild(el('span', null, 'Look'));
+    var cur = document.documentElement.getAttribute('data-theme') || 'auto';
+    [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
+      var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0]));
+      b.addEventListener('click', function () { if (o[0] === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', o[0]); render(); });
+      lk.appendChild(b);
+    });
+    $screen.appendChild(lk);
   }
   function pipeView() {
     bar({ title: 'Pipeline', sub: 'Door bookings and enquiries, call to won', back: function () { go('tools'); } });
@@ -1000,7 +1014,7 @@ button { font: inherit; color: inherit }
       $screen.appendChild(b);
     });
     var cr = el('div', 'mcard'); cr.appendChild(el('h4', null, 'What Riley sees'));
-    cr.appendChild(el('p', null, 'In Door rounds, each town tells Riley how many of its neighbourhoods are theirs, with an Only mine button, and those are marked Yours. It is switched off until territories start; for now everyone sees every neighbourhood. Later, a team manager can assign their own reps.'));
+    cr.appendChild(el('p', null, 'Riley’s tools screen lists Your territories: each neighbourhood, its town and how far through it they are; one tap opens it. In Door rounds, each town says how many of its neighbourhoods are theirs, with an Only mine button. It is switched on: anyone with nothing assigned still sees every neighbourhood. Later, a team manager can assign their own reps.'));
     $screen.appendChild(cr);
   }
   function accountsView() {

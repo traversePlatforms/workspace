@@ -508,9 +508,10 @@ function appendResult(string $key, array $row): bool {
  * Goals: one daily target per person for the whole team, in goals.json.
  * The test sign-ins (any name starting Claude or Fable, e.g. "Claude Check") never appear on the board. */
 const BOARD_OPEN = false;
-/* Matthew 2026-10-04: crews may not always have territories; for now they see every neighbourhood and nothing
-   of the assignments. Admins can assign and plan already. true = each person sees theirs marked Yours, with Only mine. */
-const TERRITORIES_OPEN = false;
+/* Matthew 2026-10-04: switched ON ("it won't matter if I don't assign territories yet, but I want it on"). Each person
+   sees theirs: Your territories on the tools screen, a count per town, Yours on the list and Only mine. With nobody
+   assigned, everyone still sees every neighbourhood as before. false hides the assignments from the crew again. */
+const TERRITORIES_OPEN = true;
 const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
 function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin'; }
 function boardHidden(string $name): bool { return (bool) preg_match('/^(claude|fable)\b/i', $name); }

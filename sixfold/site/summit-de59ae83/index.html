@@ -57,8 +57,9 @@
     --sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
   }
+  /* dark when the device is dark (Auto), or when this device chose Dark on the tools screen (2026-10-04) */
   @media (prefers-color-scheme: dark){
-    :root{
+    :root:not([data-theme="light"]){
       color-scheme: dark;
       --bg:#0E1512; --card:#18221D; --ink:#EDE7DC; --soft:#A3AEA6; --line:#2B3731; --sunk:#131C18;
       --bar:#16201B;
@@ -71,6 +72,18 @@
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
     }
   }
+  :root[data-theme="dark"]{
+      color-scheme: dark;
+      --bg:#0E1512; --card:#18221D; --ink:#EDE7DC; --soft:#A3AEA6; --line:#2B3731; --sunk:#131C18;
+      --bar:#16201B;
+      --ember-ink:#F08A57; --on-ember:#0E1512; --moss-ink:#A9C196;
+      --go:#7FC195; --on-go:#0A1A10; --go-tint:#1B3323;
+      --later:#E2AA5C; --later-tint:#3B2C12; --miss:#B4BEB7; --miss-tint:#222C27; --bad:#E0715C;
+      --booked:#7FC195; --accent:#A9C196;
+      --fire-vh:#F0806A; --fire-h:#F2A35E; --fire-m:#E0B85E; --fire-low:#9AA79E; --fire-on:#0E1512;
+      --toast:#EDE7DC; --toast-ink:#16201C;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
+    }
   *{box-sizing:border-box}
   /* phones (2026-10-04, Matthew): two quick taps on a key zoomed the page in; and iOS zooms into any text box under 16px */
   button,a,input,select,textarea,label,summary,[role="button"]{touch-action:manipulation}
@@ -195,6 +208,18 @@
   .choose .tile span{display:block;font-size:14px;color:var(--soft);line-height:1.45}
   .choose .tile .tag{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--moss-ink)}
   .choose .out{margin:18px 4px 0;font-size:14px}
+  .lookrow{display:flex;align-items:center;gap:10px;margin:18px 4px 0}
+  .lookrow > span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .lookrow .aseg{display:flex;gap:5px}
+  .lookrow .aseg button{min-height:38px;border:1px solid var(--line);border-radius:11px;padding:0 13px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  .lookrow .aseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .insthost.ontools:not(:empty){display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0 0 14px}
+  .insthost.onsign:not(:empty){margin-top:16px}
+  .instbtn{display:inline-flex;align-items:center;gap:8px;min-height:46px;border:0;border-radius:14px;padding:0 16px;background:var(--ember-ink);color:var(--on-ember);font:700 14.5px var(--sans);cursor:pointer}
+  .instbtn .ic{width:19px;height:19px}
+  .instno{background:none;border:0;font:700 13.5px var(--sans);color:var(--soft);cursor:pointer;padding:6px 0}
+  .insteps{flex-basis:100%;margin:6px 0 0;padding-left:22px;display:grid;gap:4px;font-size:14px;text-align:left}
+  .insthost.onsign .insteps{color:var(--signin-soft)}
   .choose .out button{background:none;border:0;color:var(--soft);text-decoration:underline;cursor:pointer;padding:0}
 
   /* ---- town summary + neighbourhoods ---- */
@@ -1020,6 +1045,16 @@
   var dock = document.getElementById('dock');
 
   var S = { me: null, role: 'crew', regions: [], region: null, area: null, doors: [], busy: false };
+  /* the look (2026-10-04): Auto follows the device's own light or dark setting; Light or Dark is kept on this device */
+  function theme() { try { var t = localStorage.getItem('sixfold.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } }
+  function applyTheme() { var t = theme(); if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); }
+  applyTheme();
+  /* install (2026-10-04, Matthew: "not everyone is very techy"). Android and Chrome or Edge on a computer offer their own
+     install box, which the app can open from a button. iPhones and iPads don't let a page do that, so the button shows
+     the three taps. Nothing shows once it is installed. */
+  var installEv = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEv = e; [].forEach.call(document.querySelectorAll('.insthost'), fillInstall); });
+  window.addEventListener('appinstalled', function () { installEv = null; try { localStorage.setItem('sixfold.installed', '1'); } catch (e) {} [].forEach.call(document.querySelectorAll('.insthost'), function (h) { h.textContent = ''; }); });
 
   function q(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t !== undefined) e.textContent = t; return e; }
 
@@ -1462,17 +1497,77 @@
       keys.appendChild(b);
     });
     inn.appendChild(keys);
-    if (!standalone()) {
-      var h = q('div', 'hint'); h.appendChild(ico('mobile'));
-      h.appendChild(document.createTextNode('Add this page to your Home Screen and it opens like an app'));
-      inn.appendChild(h);
-    }
+    if (!standalone()) { var ih = q('div', 'insthost onsign'); inn.appendChild(ih); fillInstall(ih); }
     S.signin = press;
     view.appendChild(box);
     paint();
   }
 
   /* Signing in lands on the tools screen, not straight on doors: there is more than one tool behind one code. */
+  function fillInstall(host) {
+    host.textContent = '';
+    var onTools = host.classList.contains('ontools'), kind = phoneKind();
+    try {
+      if (localStorage.getItem('sixfold.installed') === '1') return;
+      if (onTools && +(localStorage.getItem('sixfold.installNo') || 0) > Date.now()) return;
+    } catch (e) {}
+    if (!installEv && kind !== 'ios') {
+      /* nothing the app can open here; the sign-in screen keeps a line saying how */
+      if (!onTools) { var h = q('div', 'hint'); h.appendChild(ico('mobile')); h.appendChild(document.createTextNode(kind === 'android' ? 'Tip: in Chrome, tap ⋮ then Install app, and it opens like an app' : 'Tip: in Chrome or Edge, the install button at the right of the address bar makes this an app')); host.appendChild(h); }
+      return;
+    }
+    var b = q('button', 'instbtn'); b.type = 'button'; b.appendChild(ico('mobile'));
+    b.appendChild(q('span', null, kind === 'ios' ? 'Add Sixfold to your Home Screen' : 'Install the Sixfold app'));
+    var steps = null;
+    var STEPS = kind === 'ios'
+      ? ['Open this page in Safari.', 'Tap Share: the square with an arrow, at the bottom of the screen (top right on an iPad).', 'Scroll down and tap Add to Home Screen, then Add.', 'Open Sixfold from the new icon and enter your code once more.']
+      : kind === 'android'
+        ? ['In Chrome, tap ⋮ at the top right.', 'Tap Install app (or Add to Home screen), then Install.', 'Open Sixfold from the new icon.']
+        : ['In Chrome or Edge, click the install button at the right of the address bar.', 'Click Install.', 'Open Sixfold from the new icon or your Start menu.'];
+    var showSteps = function () {
+      if (steps) { steps.remove(); steps = null; return; }
+      steps = q('ol', 'insteps'); STEPS.forEach(function (t) { steps.appendChild(q('li', null, t)); }); host.appendChild(steps);
+    };
+    b.addEventListener('click', function () {
+      /* an iPhone or iPad always gets the steps: no browser there can install for you */
+      if (installEv && kind !== 'ios') {
+        var ev = installEv;
+        try {
+          ev.prompt(); installEv = null;
+          ev.userChoice.then(function (c) { if (c && c.outcome === 'accepted') host.textContent = ''; }).catch(function () {});
+          return;
+        } catch (e) { installEv = null; }   /* the browser said no (it must come straight from a tap): show the steps instead */
+      }
+      showSteps();
+    });
+    host.appendChild(b);
+    if (onTools) {
+      var no = q('button', 'lnk instno', 'Not now'); no.type = 'button';
+      no.addEventListener('click', function () { try { localStorage.setItem('sixfold.installNo', String(Date.now() + 14 * 86400000)); } catch (e) {} host.textContent = ''; });
+      host.appendChild(no);
+    }
+  }
+  /* Your territories (2026-10-04): every neighbourhood assigned to you, across towns, with how far through it you are.
+     Shown once territories are switched on for the crew (TERRITORIES_OPEN in rounds.php); admins see their own now. */
+  function territoryList(host) {
+    var draw = function () {
+      host.textContent = '';
+      var mine = [];
+      (S.regions || []).forEach(function (r) { (r.areas || []).forEach(function (a) { if (a.who && a.who === S.me) mine.push({ r: r, a: a }); }); });
+      if (!mine.length) return;
+      host.appendChild(q('h2', 'tgrp', 'Your territories'));
+      var g = q('div', 'tgrid');
+      mine.forEach(function (m) {
+        var left = Math.max(0, m.a.total - m.a.done - (m.a.noanswer || 0));
+        g.appendChild(tile('button', 'route', streetCase(m.a.name), m.r.label + ' · ' + m.a.done + ' of ' + m.a.total + ' knocked', left ? left + ' to knock' : 'Done', function () {
+          S.region = m.r.key; S.area = null; S.returnTo = chooseView; openArea(m.a.name);
+        }));
+      });
+      host.appendChild(g);
+    };
+    if (S.regions && S.regions.length) draw();
+    else if (!S.offline) api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; if (host.isConnected) draw(); } }).catch(function () {});
+  }
   function tile(tag, icn, title, text, tagText, fn, href) {
     var t = q(tag, 'tile');
     if (tag === 'button') t.type = 'button';
@@ -1697,6 +1792,8 @@
       box.appendChild(q('h2', 'tgrp', title));
       var g = q('div', 'tgrid'); tiles.forEach(function (t) { g.appendChild(t); }); box.appendChild(g);
     };
+    if (!standalone()) { var ih2 = q('div', 'insthost ontools'); box.appendChild(ih2); fillInstall(ih2); }
+    var th = q('div', 'terrhost'); box.appendChild(th); territoryList(th);
     grp('In the field', [
       tile('button', 'door', 'Door rounds', 'Knock a neighbourhood. Works with no signal.', null, start),
       tile('button', 'chart', 'My stats', 'Your doors, conversations and quotes.', null, function () { statsView(S.me, chooseView); })]);
@@ -1718,6 +1815,15 @@
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
+    /* the look, kept on this device */
+    var lk = q('div', 'lookrow'); lk.appendChild(q('span', null, 'Look'));
+    var lseg = q('div', 'aseg');
+    [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(theme() === o[0]));
+      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('sixfold.theme'); else localStorage.setItem('sixfold.theme', o[0]); } catch (e) {} applyTheme(); [].forEach.call(lseg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
+      lseg.appendChild(b);
+    });
+    lk.appendChild(lseg); box.appendChild(lk);
     var out = q('div', 'out');
     var so = q('button', null, 'Sign out');
     so.type = 'button';
@@ -3223,6 +3329,8 @@
         if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString('en-US') + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
         if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
         if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
+        var yours = x.r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
+        if (yours) chips.appendChild(chipEl('mine me', 'users', yours + (yours === 1 ? ' neighbourhood is yours' : ' neighbourhoods are yours')));
         if (chips.children.length) mid.appendChild(chips);
         b.appendChild(mid);
         var cnt = q('div', 'left'); cnt.appendChild(q('b', null, fin ? 'Done' : x.t.left.toLocaleString('en-US'))); if (!fin) cnt.appendChild(q('small', null, 'to knock'));
