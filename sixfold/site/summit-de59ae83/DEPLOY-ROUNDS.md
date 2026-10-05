@@ -7,7 +7,9 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Look switch, install button, Your territories, and territories switched ON
+## ✅ LIVE 2026-10-04 (verified 16/16) — Look switch, install button, Your territories, territories ON, Unassign all
+
+Verified read-only: app identical at all four addresses; Unassign all answers; Territories carries the active list; 1 neighbourhood assigned; nightly backups 1 copy; on an iPhone browser the sign-in shows Add Sixfold to your Home Screen with the four steps; Look switch turns the app dark; Territories screen shows Unassign all; no page errors. The crew-side view of an assignment needs a crew sign-in to see.
 
 | Step | File (from `sixfold/site/`) | Goes to |
 |---|---|---|
