@@ -7,6 +7,18 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Look up number on the door card (and the skip-trace code, switched off until a key is added)
+
+| Step | File (from `sixfold/site/`) | Goes to |
+|---|---|---|
+| 1 | `summit-de59ae83/index.html` | `public_html/summit-de59ae83/` (**448,158** bytes) |
+| 2 | `api/rounds.php` | `public_html/api/` (**183,141** bytes) |
+| 3 | `api/skiptrace.php` | `public_html/api/` (**33,762** bytes) — **must go up with step 2: rounds.php now loads it, and without it the app stops** |
+| 4 | `data/rounds/mail-*.json` (11 files, gitignored, on this computer) | `sixfold-data/rounds/` — the city and ZIP for each door, so the search is filled in exactly. Without them the search uses the town name and no ZIP |
+| 5 | — | Flush the cache |
+
+**Look up number** (Matthew 2026-10-04): a door with no number shows **Look up number**; it opens the phone form with the owner of record and the full address (city and ZIP), each with Copy, and **Search True People Search** / or **Fast People Search**, opening in a new tab with the address filled in. Tapping a search sets the source to that site and last seen to this month; the person types the number and saves. It shows on the card for everyone, as looked up, with the Do Not Call warning. **The app never reads the sites**: one door at a time, a person reads and types. The two link formats could not be checked from here (both sites block automated requests); the first live tap confirms them. Tested: lookup-test 12/12; skiptrace, ui2, batch, crew, offline, security, owner suites pass. **Skip tracing (BatchData)** goes up in the same files but does nothing until sixfold-private/skiptrace-config.php has a key; admins see its screen saying so.
+
 ## ⏳ TO UPLOAD — skip tracing (owner phone numbers from BatchData), admin only, DNC-gated. NOT COMMITTED YET
 
 Built 2026-10-04 on Matthew's request. Nothing runs until the provider key is on the host, and nothing is bought

@@ -211,6 +211,19 @@
   .door.tperson.gone{border:1.5px dashed var(--later)}
   .tag.tgone{display:inline-block;margin-top:4px;background:var(--later-tint);color:var(--later)}
   .tunall{background:none;border:0;padding:8px 0 0;font:700 13.5px var(--sans);color:var(--fire-h);cursor:pointer}
+  .lookbtn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:11px;padding:8px 12px;background:var(--sunk);color:var(--ink);font:700 13.5px var(--sans);cursor:pointer}
+  .lookbtn .ic{width:16px;height:16px}
+  .lookup{display:grid;gap:7px;padding:10px 11px;border-radius:12px;background:var(--sunk);margin-bottom:6px}
+  .lookup .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .lookup .lkrow{display:flex;align-items:center;gap:10px}
+  .lookup .lkrow span{flex:1;min-width:0;display:grid}
+  .lookup .lkrow small{font-size:11px;color:var(--soft)} .lookup .lkrow b{font-size:14.5px;overflow-wrap:anywhere}
+  .lookup .lkrow .lnk{background:none;border:0;font:700 13px var(--sans);color:var(--accent);cursor:pointer;flex:none}
+  .lookup .lkgo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+  .lookup .lookgo{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 13px;border-radius:11px;background:var(--go);color:var(--on-go);font:700 13.5px var(--sans);text-decoration:none}
+  .lookup .lookgo .ic{width:16px;height:16px}
+  .lookup .lkgo .lnk{font:700 13px var(--sans);color:var(--accent)}
+  .lookup .lksub{font-size:12.5px;color:var(--soft)}
   .lookrow{display:flex;align-items:center;gap:10px;margin:18px 4px 0}
   .lookrow > span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .lookrow .aseg{display:flex;gap:5px}
@@ -2953,6 +2966,7 @@
     var wrap = q('div', 'xt');
     if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id && S.editWalk !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
+    else if (!d.phone && !capOpen(d)) wrap.appendChild(lookupButton(d));   /* Look up number (2026-10-04) */
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
@@ -5586,6 +5600,7 @@
     var box = q('div', 'ph');
     if (S.editPhone === d.id) {
       var f = q('div', 'phf');
+      f.appendChild(lookupBox(d, function (site) { sel.value = site; if (!mon.value) mon.value = todayISO().slice(0, 7); sync(); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0); }));
       var li = q('label', null, 'Phone number');
       var inp = q('input');
       inp.type = 'tel'; inp.inputMode = 'tel'; inp.autocomplete = 'off'; inp.placeholder = '(719) 555-0123';
@@ -5602,6 +5617,7 @@
       var mon = q('input');
       mon.type = 'month'; mon.value = d.phone && d.phone.seen ? d.phone.seen : '';
       lm.appendChild(mon); f.appendChild(lm);
+      if (!d.phone && S.lookSite) { sel.value = S.lookSite; if (!mon.value) mon.value = todayISO().slice(0, 7); }
       function sync() { lm.style.display = sel.value === 'door' ? 'none' : ''; }
       sel.addEventListener('change', sync); sync();
       var err = q('div', 'err'); f.appendChild(err);
@@ -5644,6 +5660,47 @@
       ed.addEventListener('click', function () { S.editPhone = d.id; S.editNote = null; renderDoors(); });
       box.appendChild(ed);
     }
+    return box;
+  }
+  /* opens the Add info panel straight on the phone form, with the look-up box on top */
+  function lookupButton(d) {
+    var lk = q('button', 'lookbtn'); lk.type = 'button'; lk.appendChild(ico('search', 2.2)); lk.appendChild(document.createTextNode('Look up number'));
+    lk.addEventListener('click', function () { clearEdits(); S.capture = d.id; S.capAnim = d.id; S.editPhone = d.id; renderDoors(); });
+    return lk;
+  }
+  /* ---- Look up number (Matthew 2026-10-04) ----
+     A person looks up one door at a time: the site opens in a new tab with the address filled in, they read it
+     and type the number here. The app never reads the site. The number is saved as looked up (True or Fast People
+     Search), so it keeps the Do Not Call warning until it is cleared, and everyone who opens the door sees it. */
+  function lookupWhere(d) {
+    var town = d.city || (S.regions.filter(function (r) { return r.key === S.region; })[0] || {}).label || '';
+    return { street: streetCase(d.address || ''), town: town, zip: d.zip || '' };
+  }
+  function tpsUrl(w) { return 'https://www.truepeoplesearch.com/resultaddress?streetaddress=' + encodeURIComponent(w.street) + '&citystatezip=' + encodeURIComponent(w.town + ', CO' + (w.zip ? ' ' + w.zip : '')); }
+  function fpsUrl(w) { var slug = function (t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }; return 'https://www.fastpeoplesearch.com/address/' + slug(w.street) + '_' + slug(w.town + ' co' + (w.zip ? ' ' + w.zip : '')); }
+  function copyText(t, btn) {
+    var done = function () { var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = o; }, 1200); };
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, function () {}); return; } } catch (e) {}
+    var ta = q('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {} ta.remove();
+  }
+  function lookupBox(d, picked) {
+    var w = lookupWhere(d), box = q('div', 'lookup');
+    box.appendChild(q('div', 'wl', 'Look up the number'));
+    var row = function (label, value) {
+      var r = q('div', 'lkrow'); var t = q('span'); t.appendChild(q('small', null, label)); t.appendChild(q('b', null, value)); r.appendChild(t);
+      var c = q('button', 'lnk', 'Copy'); c.type = 'button'; c.addEventListener('click', function () { copyText(value, c); }); r.appendChild(c);
+      box.appendChild(r);
+    };
+    if (d.owner) row('Owner of record', ownerText(d.owner));
+    row('Address', w.street + ', ' + w.town + ', CO' + (w.zip ? ' ' + w.zip : ''));
+    var go = q('div', 'lkgo');
+    var a1 = q('a', 'lookgo'); a1.href = tpsUrl(w); a1.target = '_blank'; a1.rel = 'noopener noreferrer'; a1.appendChild(ico('search', 2.2)); a1.appendChild(document.createTextNode('Search True People Search'));
+    a1.addEventListener('click', function () { S.lookSite = 'tps'; picked('tps'); });
+    var a2 = q('a', 'lnk'); a2.href = fpsUrl(w); a2.target = '_blank'; a2.rel = 'noopener noreferrer'; a2.textContent = 'or Fast People Search';
+    a2.addEventListener('click', function () { S.lookSite = 'fps'; picked('fps'); });
+    go.appendChild(a1); go.appendChild(a2); box.appendChild(go);
+    box.appendChild(q('div', 'lksub', 'Check the name matches the owner, then type the number below. A looked-up number has to clear the Do Not Call lists before anyone calls it.'));
     return box;
   }
 
