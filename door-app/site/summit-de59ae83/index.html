@@ -745,6 +745,22 @@
   .pushrow .pushr small{flex-basis:100%;color:var(--soft);font-size:12.5px;line-height:1.35}
   .pushrow .pushr .pon{color:var(--go)}
   .pushrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
+  .profile{max-width:460px;margin:8px auto 0}
+  @media (min-width:740px){ .profile{max-width:680px} }
+  .profile .tgrp{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin:22px 4px 8px}
+  .profile .out{margin:26px 0 0}
+  .profile .out button{width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--fire-h);font:700 15px var(--sans);cursor:pointer}
+  .avatar{overflow:hidden}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .profile .pfhead{display:flex;gap:16px;align-items:center;background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:6px}
+  .profile .pfpic{width:88px;height:88px;border-radius:50%;background:var(--moss);color:#0E1512;display:grid;place-items:center;font:700 30px var(--sans);overflow:hidden;flex:none}
+  .profile .pfpic img{width:100%;height:100%;object-fit:cover}
+  .profile .pfwho{display:grid;gap:3px;min-width:0}
+  .profile .pfwho b{font:400 24px/1.15 var(--serif)}
+  .profile .pfwho span{color:var(--soft);font-size:13.5px}
+  .profile .pfacts{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}
+  .profile .pfacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
+  .profile .pfacts button.lnk.bad{color:var(--fire-h)}
   .teamsbox button.lnk,.goalbox button.lnk,.caldet button.lnk,.lesson ~ .aacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .teamsbox button.lnk.bad,.caldet button.lnk.bad,.lesson ~ .aacts button.lnk.bad{color:var(--fire-h)}
   .teamsbox .trow button.lnk{flex:none}
@@ -1537,6 +1553,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function standalone() {
     return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone);
   }
+  /* the corner circle (2026-10-05): your photo when you have put one up, your initials until then */
+  function avatarBtn(onClick, label) {
+    var av = q('button', 'avatar'); av.type = 'button'; av.setAttribute('aria-label', label);
+    if (S.avatar) {
+      var im = q('img'); im.alt = ''; im.src = API + '?action=avatarget&v=' + S.avatar;
+      im.addEventListener('error', function () { av.textContent = initials(S.me); });
+      av.appendChild(im);
+    } else av.textContent = initials(S.me);
+    av.addEventListener('click', onClick);
+    return av;
+  }
   function initials(name) {
     var p = String(name || '').trim().split(/\s+/).filter(Boolean);
     return p.length ? (p[0].charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase() : '·';
@@ -1584,10 +1611,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var sb = q('button', 'srchbtn'); sb.type = 'button'; sb.setAttribute('aria-label', 'Find an address');
       sb.appendChild(ico('search', 2.4)); sb.addEventListener('click', function () { searchView(renderAreas); });
       b.appendChild(sb);
-      var av = q('button', 'avatar', initials(S.me)); av.type = 'button';
-      av.setAttribute('aria-label', 'Field tools and sign out' + (S.me ? ' — signed in as ' + S.me : ''));
-      av.addEventListener('click', chooseView);
-      b.appendChild(av);
+      b.appendChild(avatarBtn(chooseView, 'Field tools' + (S.me ? ' — signed in as ' + S.me : '')));
       return;
     }
     if (o.back) {
@@ -1601,6 +1625,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.appendChild(q('b', null, o.title || ''));
     if (o.sub) t.appendChild(q('span', null, o.sub));
     b.appendChild(t);
+    if (o.avatar) b.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
     if (typeof o.count === 'number') {
       var c = q('div', 'count'); c.id = 'barCount';
       c.appendChild(q('b', null, o.count.toLocaleString('en-US')));
@@ -1721,7 +1746,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.role = j.role; S.sid = j.sid || null; S.signin = null;
+        S.me = j.name; S.role = j.role; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -2113,6 +2138,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return Promise.race([go, new Promise(function (r) { setTimeout(r, 3000); })]);
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open' && S.me) chooseView(); });
+  /* the number an alert puts on the app icon goes when the app is opened, not only when the notification is tapped (Matthew 2026-10-05: a test alert left a 1 on his iPhone) */
+  function clearBadge() { try { if (navigator.clearAppBadge) navigator.clearAppBadge().catch(function () {}); } catch (e) {} }
+  clearBadge();
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') clearBadge(); });
   function pushRow() {
     var row = q('div', 'lookrow pushrow'); row.appendChild(q('span', null, 'Alerts'));
     var right = q('div', 'pushr'); row.appendChild(right);
@@ -2148,13 +2177,114 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     draw('off'); pushPrepare(); pushStatus().then(function (st) { if (row.isConnected || true) draw(st); });
     return row;
   }
+  /* ---- Profile (Matthew 2026-10-05) ----
+     Behind the corner circle on the tools screen: your photo, alerts on this phone, the look, the Door card switch for
+     admins, and Sign out. Off the tools screen, so the tools are just the tools. */
+  function profileView() {
+    hideToast(); S.signin = null; S.screen = 'profile'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Profile', sub: S.me || '', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var box = q('div', 'profile');   /* not .choose: that class means the tools screen (and the tests look for it) */
+    var me = q('div', 'pfhead');
+    var big = q('div', 'pfpic');
+    if (S.avatar) { var im = q('img'); im.alt = 'Your photo'; im.src = API + '?action=avatarget&v=' + S.avatar; im.addEventListener('error', function () { big.textContent = initials(S.me); }); big.appendChild(im); }
+    else big.textContent = initials(S.me);
+    me.appendChild(big);
+    var who = q('div', 'pfwho'); who.appendChild(q('b', null, S.me || ''));
+    who.appendChild(q('span', null, S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : 'Crew'));
+    var pa = q('div', 'pfacts');
+    var pick = q('input'); pick.type = 'file'; pick.accept = 'image/*'; pick.hidden = true;
+    var up = q('button', 'lnk', S.avatar ? 'Change photo' : 'Add a photo'); up.type = 'button';
+    up.addEventListener('click', function () { pick.click(); });
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0]; if (!f) return;
+      toast('Saving your photo', '', null);
+      squarePhoto(f, 256).then(function (blob) {
+        return fetch(API + '?action=avatar', { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, credentials: 'same-origin' }).then(function (r) { return r.json(); });
+      }).then(function (j) {
+        if (!j || !j.ok) { toast('Not saved', (j && j.error) || 'Try again.', null); return; }
+        S.avatar = j.avatar; toast('Photo saved', 'It shows in the corner now', null); profileView();
+      }).catch(function (e) { toast('Not saved', e && e.message ? e.message : 'No signal. Try again.', null); });
+    });
+    pa.appendChild(up); pa.appendChild(pick);
+    if (S.avatar) {
+      var rm = q('button', 'lnk bad', 'Remove photo'); rm.type = 'button';
+      rm.addEventListener('click', function () {
+        api('avatardel', { body: {} }).then(function (j) { if (j.ok) { S.avatar = 0; toast('Photo removed', 'Your initials show again', null); profileView(); } else toast('Not done', j.error || 'Try again.', null); }).catch(function () { toast('No signal', 'Try again.', null); });
+      });
+      pa.appendChild(rm);
+    }
+    who.appendChild(pa); me.appendChild(who); box.appendChild(me);
+    /* the look, kept on this device */
+    var lk = q('div', 'lookrow'); lk.appendChild(q('span', null, 'Look'));
+    var lseg = q('div', 'aseg');
+    [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(theme() === o[0]));
+      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('sixfold.theme'); else localStorage.setItem('sixfold.theme', o[0]); } catch (e) {} applyTheme(); [].forEach.call(lseg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
+      lseg.appendChild(b);
+    });
+    lk.appendChild(lseg);
+    box.appendChild(q('h2', 'tgrp', 'This phone'));
+    box.appendChild(pushRow());
+    box.appendChild(lk);
+    if (S.role === 'admin') {
+      var rv = q('div', 'lookrow'); rv.appendChild(q('span', null, 'Door card'));
+      var rseg = q('div', 'aseg');
+      [[false, CO.short], [true, 'Roofing preview']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!S.roofView === o[0]));
+        b.addEventListener('click', function () {
+          if (!!S.roofView === o[0]) return;
+          S.roofView = o[0];
+          try { if (o[0]) localStorage.setItem('doorapp.roofview', '1'); else localStorage.removeItem('doorapp.roofview'); } catch (e) {}
+          S.regions = []; S.doors = []; S.area = null; S.communities = null;   /* fetched again, with or without the hidden parts */
+          profileView();
+          toast(o[0] ? 'Roofing preview on' : 'Back to ' + CO.short, o[0] ? 'This device only: cards show the basics and hail; lawn, trees, fire, money and water are hidden' : 'Door cards as the crew see them', null);
+        });
+        rseg.appendChild(b);
+      });
+      rv.appendChild(rseg); box.appendChild(rv);
+    }
+    var out = q('div', 'out');
+    var so = q('button', null, 'Sign out');
+    so.type = 'button';
+    so.addEventListener('click', function () {
+      /* unsent work stays on this phone under this person's name and sends when they sign in
+         here again (2026-10-03 review). Say so before they go. */
+      var waiting = queue().filter(mine).length + (S.photoPending || 0);
+      if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
+      var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
+      markOut(true); S.me = null; S.role = 'crew'; S.sid = null; clearTimeout(warmT);
+      clearSaved().then(function () { signinView(); });
+      forget.then(tellServerOut);
+    });
+    out.appendChild(so);
+    box.appendChild(out);
+
+    view.appendChild(box);
+    window.scrollTo(0, 0);
+  }
+  /* a square photo, cropped to the middle and shrunk on the phone, so what is sent is small */
+  function squarePhoto(file, size) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () {
+        var w = im.naturalWidth, h = im.naturalHeight, side = Math.min(w, h);
+        var c = document.createElement('canvas'); c.width = size; c.height = size;
+        c.getContext('2d').drawImage(im, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { if (b) res(b); else rej(new Error('That photo could not be saved.')); }, 'image/jpeg', 0.85);
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('That file is not a photo this phone can open.')); };
+      im.src = url;
+    });
+  }
   function chooseView() {
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools';
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
     S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
     foot.hidden = true; setDock(null);
-    setBar('tools', { title: CO.short, sub: 'Field tools' });
+    setBar('tools', { title: CO.short, sub: 'Field tools', avatar: true });
     view.textContent = '';
     var box = q('div', 'choose');
     /* the greeting, with today's numbers filled in when they land */
@@ -2235,48 +2365,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null].filter(Boolean));
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
-    /* the look, kept on this device */
-    var lk = q('div', 'lookrow'); lk.appendChild(q('span', null, 'Look'));
-    var lseg = q('div', 'aseg');
-    [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
-      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(theme() === o[0]));
-      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('sixfold.theme'); else localStorage.setItem('sixfold.theme', o[0]); } catch (e) {} applyTheme(); [].forEach.call(lseg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
-      lseg.appendChild(b);
-    });
-    lk.appendChild(lseg); box.appendChild(lk);
-    box.appendChild(pushRow());
-    if (S.role === 'admin') {
-      var rv = q('div', 'lookrow'); rv.appendChild(q('span', null, 'Door card'));
-      var rseg = q('div', 'aseg');
-      [[false, CO.short], [true, 'Roofing preview']].forEach(function (o) {
-        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!S.roofView === o[0]));
-        b.addEventListener('click', function () {
-          if (!!S.roofView === o[0]) return;
-          S.roofView = o[0];
-          try { if (o[0]) localStorage.setItem('doorapp.roofview', '1'); else localStorage.removeItem('doorapp.roofview'); } catch (e) {}
-          S.regions = []; S.doors = []; S.area = null; S.communities = null;   /* fetched again, with or without the hidden parts */
-          chooseView();
-          toast(o[0] ? 'Roofing preview on' : 'Back to ' + CO.short, o[0] ? 'This device only: cards show the basics and hail; lawn, trees, fire, money and water are hidden' : 'Door cards as the crew see them', null);
-        });
-        rseg.appendChild(b);
-      });
-      rv.appendChild(rseg); box.appendChild(rv);
-    }
-    var out = q('div', 'out');
-    var so = q('button', null, 'Sign out');
-    so.type = 'button';
-    so.addEventListener('click', function () {
-      /* unsent work stays on this phone under this person's name and sends when they sign in
-         here again (2026-10-03 review). Say so before they go. */
-      var waiting = queue().filter(mine).length + (S.photoPending || 0);
-      if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
-      var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.sid = null; clearTimeout(warmT);
-      clearSaved().then(function () { signinView(); });
-      forget.then(tellServerOut);
-    });
-    out.appendChild(so);
-    box.appendChild(out);
     view.appendChild(box);
     window.scrollTo(0, 0);
   }
@@ -7296,7 +7384,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function boot() {
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; chooseView(); }
+      if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; S.avatar = j.avatar || 0; chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

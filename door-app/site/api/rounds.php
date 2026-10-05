@@ -985,7 +985,7 @@ if ($action === 'signin') {
     ]);
     $line = [$payload['c'], $payload['exp'], time(), deviceName()];
     sessEdit(function ($a) use ($tok, $line) { $a['s'][sessionTag($tok)] = $line; return $a; });
-    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'], 'sid' => sessionTag($tok)]);
+    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'], 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])]);
 }
 
 /* A sign-out names the session it is for (Fable, 2026-10-03). A phone that signed out with no
@@ -1028,7 +1028,7 @@ if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) 
     }
 }
 
-if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -1036,6 +1036,39 @@ if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' =
 const ROLES = ['crew', 'manager', 'admin'];
 $TEAM = teamInfo($basePeople, $acct, $sessionKey);
 $myTeam = (string) ($TEAM['byName'][$me]['team'] ?? '');
+
+/* ---- profile photos (Matthew 2026-10-05) ----
+ * Each person may put up a photo of themselves; it takes the place of their initials in the corner. The phone makes it a
+ * 256 px square JPEG first. Kept beside the website (sixfold-data/rounds/avatars/<account id>.jpg), filed by account so a
+ * rename keeps it, and served only to people signed in. */
+function avatarDir(): string { return DATA_DIR . '/avatars'; }
+function avatarVer(string $id): int { $f = avatarDir() . '/' . $id . '.jpg'; return (preg_match('/^[0-9a-f]{20}$/D', $id) && is_file($f)) ? (int) filemtime($f) : 0; }
+if ($action === 'avatar' || $action === 'avatardel') {
+    if (!$isPost) fail('POST required', 405);
+    $pid = (string) ($session['c'] ?? '');
+    if (!preg_match('/^[0-9a-f]{20}$/D', $pid)) fail('Sign in first.', 401);
+    $af = avatarDir() . '/' . $pid . '.jpg';
+    if ($action === 'avatardel') { @unlink($af); out(['ok' => true, 'avatar' => 0]); }
+    $raw = (string) file_get_contents('php://input');
+    if (strlen($raw) < 300 || strlen($raw) > 400000) fail('Use a photo under 400 KB (the app shrinks it first).');
+    $info = @getimagesizefromstring($raw);
+    if (!$info || $info[2] !== IMAGETYPE_JPEG || $info[0] > 1024 || $info[1] > 1024) fail('That is not a photo the app can use.');
+    if (!is_dir(avatarDir()) && !@mkdir(avatarDir(), 0755, true)) fail('Could not save that. Try again.', 500);
+    if (@file_put_contents($af, $raw, LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    clearstatcache();
+    out(['ok' => true, 'avatar' => avatarVer($pid)]);
+}
+if ($action === 'avatarget') {
+    $who = trim((string) ($_GET['who'] ?? ''));
+    $pid = $who === '' ? (string) ($session['c'] ?? '') : (string) ($TEAM['byName'][$who]['id'] ?? '');
+    $af = avatarDir() . '/' . $pid . '.jpg';
+    if (!preg_match('/^[0-9a-f]{20}$/D', $pid) || !is_file($af)) fail('No photo.', 404);
+    header('Content-Type: image/jpeg');
+    header('Cache-Control: private, max-age=86400');   /* the page asks with ?v=<when it changed>, so a new photo shows at once */
+    header('Content-Length: ' . filesize($af));
+    readfile($af);
+    exit;
+}
 
 if ($action === 'sample') {
     if ($role !== 'admin') fail('Not allowed.', 403);

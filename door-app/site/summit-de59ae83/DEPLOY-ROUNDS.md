@@ -9,6 +9,21 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Profile (photo, alerts, look, sign out) and roof materials
+
+Matthew 2026-10-05:
+- **Profile**: the circle in the top right of the tools screen opens it. Name and role, **Add a photo** (cropped to a 256 px square on the phone; it replaces the initials in the corner, on the tools screen and in Door rounds), and this phone's settings moved off the tools screen: Alerts, Look, the Door card switch (admins), Sign out. Photos are kept beside the website in `sixfold-data/rounds/avatars/`, filed by account, shown only to people signed in.
+- **Roof material** on the card (where it came from the photo) and in the storm list: the county's record in the Douglas towns, and the 2023 aerial photo classifier elsewhere (asphalt or tile only, labelled only where it tested 96%+ right in every town). 17,561 of 30,464 houses; Teller towns none (see `operations/door-territory/roofs/material/README.md`).
+
+profile-test 14/14, card 18/18, lookinstall 20/20, push 18/18, stormlist 20/20; full suite run.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/data/rounds/material-*.json` (11 towns, about 1 MB) | `sixfold-data/rounds/` (beside public_html) |
+| 2 | `door-app/site/api/rounds.php` | `public_html/api/` |
+| 3 | `door-app/site/summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 4 | Flush the cache | SiteGround |
+
 ## ✅ LIVE 2026-10-05 (verified 29/29: page and sw.js identical, webpush.php silent, private files 404, every new action answering, wind and thresholds and sample up, the alerts key made on first ask and kept, calendar and storm list open; cron */5 push-alerts.php added by Matthew) — teams and managers, calendars, lead owners, goals, Training, the Storm list, wind, phone alerts
 
 Matthew 2026-10-05 (the big list). Built and tested on the test copy; nothing here is live yet.
