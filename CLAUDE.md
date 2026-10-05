@@ -10,6 +10,7 @@ Folder map and "where does this go" → [README.md](README.md).
 | [surge/](surge/) | **Surge** — outsourced sales & marketing. Matthew's employer. | The two voice specs in `surge/` |
 | [sixfold/](sixfold/) | **Sixfold LLC** — fire mitigation. Different company, Brandon's. | [sixfold/README.md](sixfold/README.md) |
 | [matthew/](matthew/) | **Matthew's own** freelance websites & marketing offering. Brand name not chosen yet. | See §Matthew below |
+| [door-app/](door-app/) | **Matthew's door-knocking app** — his own product, working name only (moved out of `sixfold/` 2026-10-04). Sixfold is its first user, not its owner; roofing companies are the target. | [door-app/README.md](door-app/README.md) |
 
 **Never blend them.** Sixfold is not Surge; Surge's voice specs and RESTRICTED.md do not govern Sixfold or Matthew's own work. If a request doesn't say which entity, **ask** — don't infer from the topic.
 

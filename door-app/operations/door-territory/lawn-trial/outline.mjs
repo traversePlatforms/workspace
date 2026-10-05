@@ -7,7 +7,7 @@ import { PNG } from 'pngjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/sixfold/site/data/rounds';
+const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/door-app/site/data/rounds';
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
 const j = JSON.parse(readFileSync(`${DATA}/${process.env.TOWN}.json`, 'utf8'));

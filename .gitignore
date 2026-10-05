@@ -70,39 +70,45 @@ sixfold/site/api/secrets.php
 # Door-territory outputs — generated from public county records, but each file is
 # a list of named private individuals at their home addresses. Regenerable in
 # minutes; nothing is lost by keeping them out of git and the OneDrive mirror.
-sixfold/operations/door-territory/*.csv
-sixfold/operations/door-territory/.address-cache.json
+door-app/operations/door-territory/*.csv
+door-app/operations/door-territory/.address-cache.json
 # 2026-10-03, same reasoning: the mailing list (owners at their mailing addresses), the
 # property-address cache behind it, the state HOA roster (designated agents' names and
 # addresses), and the lawn-health trial's per-door results. All regenerable by script.
-sixfold/operations/door-territory/mail/*.csv
-sixfold/operations/door-territory/.situs-cache.json
-sixfold/operations/door-territory/hoa-registry/*.csv
-sixfold/operations/door-territory/lawn-trial/ndvi-results.csv
-sixfold/operations/door-territory/lawn-trial/ndvi-cache.json
-sixfold/operations/door-territory/**/*.log
-sixfold/operations/door-territory/*.log
+door-app/operations/door-territory/mail/*.csv
+door-app/operations/door-territory/.situs-cache.json
+door-app/operations/door-territory/hoa-registry/*.csv
+door-app/operations/door-territory/lawn-trial/ndvi-results.csv
+door-app/operations/door-territory/lawn-trial/ndvi-cache.json
+door-app/operations/door-territory/**/*.log
+door-app/operations/door-territory/*.log
 # and the printed versions of the same thing
-sixfold/operations/door-territory/*.pdf
-sixfold/operations/door-territory/walklist-print.html
+door-app/operations/door-territory/*.pdf
+door-app/operations/door-territory/walklist-print.html
 
 # Live sign-in codes for /rounds/ — every code opens 2,656 home addresses.
 sixfold/site/api/rounds-codes.php
+door-app/site/api/rounds-codes.php
+door-app/site/api/skiptrace-config.php
 # Skip-trace provider key (2026-10-04). Shape tracked as sixfold/site/api/skiptrace-config.example.php.
 sixfold/site/api/skiptrace-config.php
 # Owners' mailing addresses + ZIPs per door (skip-trace sidecar): from the gitignored county CSVs,
 # rebuildable with operations/door-territory/build-mail-sidecar.mjs
-sixfold/site/data/rounds/mail-*.json
+door-app/site/data/rounds/mail-*.json
 # The marks log written beside the door lists.
-sixfold/site/data/rounds/*.log
+door-app/site/data/rounds/*.log
 
 # Owner history across door-list rebuilds (SX-35): named owners and every previous owner.
 # Not rebuildable — the OneDrive mirror is its only backup.
-sixfold/operations/door-territory/owner-history.json
+door-app/operations/door-territory/owner-history.json
 
 # Lawn outlines for the door app (SX-38): regenerable with lawn-trial/build-lawn-outlines.mjs, ~18 MB
-sixfold/site/data/rounds/lawnmask-*.json
-sixfold/site/data/rounds/search-index.txt
+door-app/site/data/rounds/lawnmask-*.json
+door-app/site/data/rounds/search-index.txt
 
 # Monthly lawn-health results (SX-42) carry addresses, like ndvi-results.csv
-sixfold/operations/door-territory/lawn-trial/ndvi-results-*.csv
+door-app/operations/door-territory/lawn-trial/ndvi-results-*.csv
+
+# lawn-trial working files (per-door outlines cache and a pre-compact backup), never tracked
+door-app/operations/door-territory/lawn-trial/lawnmask-cache.json
+door-app/operations/door-territory/lawn-trial/*.bak

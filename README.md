@@ -12,6 +12,7 @@ claude test 2/
 ├─ surge/        780 files   3.8 GB   the sales company
 ├─ sixfold/      223 files    18 MB   the fire-mitigation company
 ├─ matthew/       11 files   1.1 MB   your own freelance offering
+├─ door-app/                         your door-knocking app (working name; moved out of sixfold/ 2026-10-04)
 ├─ shared/         6 files   0.1 MB   tools used by more than one
 └─ _archive/   1,943 files   139 MB   superseded / duplicate / not relevant
 ```
@@ -53,6 +54,10 @@ renaming twice is worse than renaming once. Rename to `stringline/` when clearan
 The old `rates-onesheet` files were branded "HORIZON" — **Donny's company**, not yours — so they sit in
 `_horizon-branded-superseded/` and get rebuilt under the new mark.
 
+## door-app/ — your door-knocking app
+
+The door-rounds app, its API, cron jobs, door data and data pipeline, moved out of `sixfold/` on 2026-10-04 because the app is yours and Sixfold is only its first user. "Door App" is a placeholder until the company name is picked. Start at [door-app/README.md](door-app/README.md), which also lists the parts that are still Sixfold's install (prices, crew codes, the Quote builder).
+
 ## shared/ — used by more than one entity
 
 - `shared/tools/` — `Extract-Docx.ps1`, `Build-Marks.py`, `Trace-Logo.py`, `Print-Pdf.mjs`, `Declient-Photo.py`
@@ -80,6 +85,7 @@ Nothing here is referenced by live work. Delete any pile you're confident about.
 - A training step `.docx` → `surge/training-source/`
 - Anything Sixfold → `sixfold/<existing subfolder>`
 - Your own rates, services, outreach → `matthew/`
+- The door-knocking app (code, data pipeline, its docs) → `door-app/`
 - A script used by two entities → `shared/tools/`
 
 ## Version control

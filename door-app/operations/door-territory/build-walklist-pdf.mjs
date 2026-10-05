@@ -23,7 +23,7 @@ import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SIXFOLD = join(HERE, '..', '..');
+const SIXFOLD = join(HERE, '..', '..', '..', 'sixfold');   // the walk list is printed with Sixfold's style and PDF tool (app moved out of sixfold/ 2026-10-04)
 
 const file = process.argv[2];
 if (!file) { console.error('usage: node build-walklist-pdf.mjs <walklist.csv> [--by-street]'); process.exit(1); }
@@ -361,7 +361,7 @@ const sheets = pages.map((p, i) => `
   sheet ${i + 1} of ${pages.length}</p>
 </div>`).join('\n');
 
-const css = readFileSync(join(HERE, '..', '_style.css'), 'utf8');
+const css = readFileSync(join(SIXFOLD, 'operations', '_style.css'), 'utf8');
 const html = `<!doctype html>
 <html lang="en">
 <head>

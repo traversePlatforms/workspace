@@ -5,7 +5,7 @@
    artifact use, so all three name the same pockets and use the same door ids.
    One clustering implementation, three consumers.
 
-   Writes into sixfold/site/data/rounds/, which the server reads and NEVER
+   Writes into door-app/site/data/rounds/, which the server reads and NEVER
    serves directly — see the .htaccess written beside it.
 
    Run:  node build-walklist-pdf.mjs <each csv>   # the sidecars

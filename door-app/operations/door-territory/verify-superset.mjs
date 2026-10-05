@@ -12,7 +12,7 @@
    that Monument and Black Forest had been truncated since they were first built.
 
    Usage:
-     1. BEFORE rebuilding:  cp -r sixfold/site/data/rounds  <somewhere>/rounds-before
+     1. BEFORE rebuilding:  cp -r door-app/site/data/rounds  <somewhere>/rounds-before
      2. rebuild (builders -> build-walklist-pdf.mjs -> build-rounds-data.mjs)
      3. node verify-superset.mjs <somewhere>/rounds-before
    Exits 1 if any existing door would corrupt its marks. Do not upload on a 1. */

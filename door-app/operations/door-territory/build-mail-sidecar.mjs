@@ -1,11 +1,11 @@
 /* Sixfold — the mailing-address sidecar for skip tracing. 2026-10-04.
 
-   The door files the app serves (sixfold/site/data/rounds/<town>.json) carry the owner's NAME and the
+   The door files the app serves (door-app/site/data/rounds/<town>.json) carry the owner's NAME and the
    property address, but not the owner's MAILING address or the property's city and ZIP: those stayed
    in the county walk-list CSVs (<town>.csv here, column owner_mailing / city / zip, gitignored).
    Skip tracing wants all three, so this writes one small file per town beside the door file:
 
-       sixfold/site/data/rounds/mail-<town>.json      { "<door id>": { "m": "mailing address", "c": "city", "z": "zip" } }
+       door-app/site/data/rounds/mail-<town>.json      { "<door id>": { "m": "mailing address", "c": "city", "z": "zip" } }
 
    read by api/skiptrace.php on the server (skipMail) and never sent to the page. A door id is the
    slug of its address (build-rounds-data.mjs); two CSV rows with the same slug (duplex units written

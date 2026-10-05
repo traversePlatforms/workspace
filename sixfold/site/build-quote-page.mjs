@@ -212,7 +212,8 @@ s = head + s + '\n</body>\n</html>\n';
 
 /* the app links to quote.html?v=<version> (2026-10-04): SiteGround gives .html a 180-day browser cache,
    so the version is how a phone knows there is a new page. It is the page's own fingerprint. */
-const IDX = join(here, 'summit-de59ae83/index.html');
+/* the app's page lives in door-app/ since 2026-10-04; quote.html stays here, it is Sixfold's */
+const IDX = join(here, '..', '..', 'door-app', 'site', 'summit-de59ae83', 'index.html');
 const V = createHash('sha256').update(s).digest('hex').slice(0, 10);
 const VLINE = /var QUOTE_V = '[^']*';/;
 let idx = readFileSync(IDX, 'utf8');

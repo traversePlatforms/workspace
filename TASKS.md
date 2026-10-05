@@ -108,7 +108,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **⚑ Decision (2), retire the artifact, was NOT taken — carried out to SX-2b.**
       **The cache bit on upload:** both files were correct and the chooser still did not appear,
       because the plain URL served the previous day’s `index.html`. Flush first, then compare
-      plain against busted — [DEPLOY-ROUNDS.md](sixfold/site/summit-de59ae83/DEPLOY-ROUNDS.md).
+      plain against busted — [DEPLOY-ROUNDS.md](door-app/site/summit-de59ae83/DEPLOY-ROUNDS.md).
       **The original line, kept because the reasoning is the record** — Matthew’s idea
       2026-09-30: `/summit-de59ae83/` asks for a code, then offers **Doors** or **Quote**.
       **The argument is already on record** — doors moved to the site because the Claude artifact
@@ -310,7 +310,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       entities, so it changes what gets built and under whose name.
       **2026-09-29: settled — Sixfold's own crew, nothing to do with Surge's field team.**
       Meeting piece: `sixfold/operations/Sixfold-Door-Territory.pdf`.
-      ✅ **The tool is built and working** — `sixfold/operations/door-territory/`. First run on
+      ✅ **The tool is built and working** — `door-app/operations/door-territory/`. First run on
       Monument at 0.7 mi returned **320 doors to knock across 68 streets**, averaging 0.35
       acres, with the non-resident owners separated out. Run it for any place and radius.
       (Those two meeting questions are now **SX-9f**.)
@@ -320,7 +320,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       record, so no geocoding. **⚑ El Paso cannot use that layer** — it contributes geometry
       only, which is why two scripts exist.
 - [x] **SX-9c — Door rounds on the website.** ✅ **LIVE 2026-09-29** at
-      `sixfoldcolorado.com/summit-de59ae83/`. Crew codes issued. See [DEPLOY-ROUNDS.md](sixfold/site/summit-de59ae83/DEPLOY-ROUNDS.md). **Roster corrected 2026-09-30 and reconciled
+      `sixfoldcolorado.com/summit-de59ae83/`. Crew codes issued. See [DEPLOY-ROUNDS.md](door-app/site/summit-de59ae83/DEPLOY-ROUNDS.md). **Roster corrected 2026-09-30 and reconciled
       here 2026-10-01: six codes, not three** — Matthew admin; Brandon, Brad, Nneka, Cai and
       Will D crew. **✅ Uploaded, and the curl checks were run against the live
       host 2026-09-30 — reconciled 2026-10-01.** Door JSON **404** (it is not under the document
@@ -328,7 +328,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       `submissions.log` **403** — which closes an assumption carried untested since the site
       went live: this host *does* honour a `.htaccess` deny for `.log`.
       **⚑ But two secret `.php` files returned 200** — see SX-9e. Original scope:
-      [ROUNDS-WEB-SCOPE.md](sixfold/operations/door-territory/ROUNDS-WEB-SCOPE.md). The Claude
+      [ROUNDS-WEB-SCOPE.md](door-app/operations/door-territory/ROUNDS-WEB-SCOPE.md). The Claude
       artifact works but needs a Claude seat per crew member, so it is your view, not theirs.
       The site version needs no accounts. **✅ The one open decision is settled by what was
       issued: a code per person**, not a shared crew link — six of them, with roles separating
@@ -380,7 +380,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       18 very high). 17/17 tests, light and dark checked, every colour ≥ 4.5:1. Ships in the
       same upload as the phone field and satellite link. **Ticks when live.**
       Pipeline step `sample-wildfire.mjs` (incremental, cached by coordinate). Write-up:
-      [WILDFIRE-HAZARD.md](sixfold/operations/door-territory/WILDFIRE-HAZARD.md).
+      [WILDFIRE-HAZARD.md](door-app/operations/door-territory/WILDFIRE-HAZARD.md).
       **The undocumented `TetraTechWUI` layer is replaced by the USDA Forest Service’s Wildfire
       Hazard Potential (2023, 270 m)** — open, documented, authoritative. Class mapping **proven on
       known places**, not assumed: 1 very low · 2 low · 3 moderate · 4 high · 5 very high ·
@@ -431,7 +431,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **stored against the door ids, not the name**, and a simulated rename-and-split rebuild left
       both halves flagged. The orphan risk below is answered: the marks log is never pruned, so the
       door flag is never deleted, and `verify-superset` keeps ids stable.
-      Original scope: [NO-SOLICIT-SCOPE.md](sixfold/operations/door-territory/NO-SOLICIT-SCOPE.md).
+      Original scope: [NO-SOLICIT-SCOPE.md](door-app/operations/door-territory/NO-SOLICIT-SCOPE.md).
       **Two levels, and the door-level one matters more than the ask.** A sign is **per house**,
       the crew sees it standing there, and ignoring one is trespass in some places. Door
       outcomes are `booked | later | miss` in an append-only log validated in exactly one
@@ -636,7 +636,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [x] **SX-29 — Mailing list of owners who live elsewhere: ✅ BUILT 2026-10-03.** 7,483 letters
       covering 10,207 properties, with fire hazard and trees near the house. El Paso property
       addresses come from state address points (96% right on 311 known doors). Nothing mailed.
-      `sixfold/operations/door-territory/mail/MAIL-LIST.md`. Lists stay out of git, as the walk lists do.
+      `door-app/operations/door-territory/mail/MAIL-LIST.md`. Lists stay out of git, as the walk lists do.
 - [x] **SX-30 — HOA list: ✅ BUILT 2026-10-03, no records request needed.** The Division of Real
       Estate's free roster, cut to our counties: 97 HOAs matched to our neighbourhoods (32,087
       units); RowCal runs 166 in scope. The roster has no phone or email; a narrowed request for
@@ -808,7 +808,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       reads as lawn; anything after 2023 isn't in the photo. **Next if he wants it:** add the 2021
       photo as a second look, show "mostly trees" on wooded lots, then a "Most lawn" sort and a
       per-door figure. **First true check: one lot Sixfold has measured on the ground.** Write-up:
-      [LAWN-SIZE.md](sixfold/operations/door-territory/LAWN-SIZE.md).
+      [LAWN-SIZE.md](door-app/operations/door-territory/LAWN-SIZE.md).
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
       re-bundle before anyone reviews anything.

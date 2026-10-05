@@ -1,5 +1,7 @@
 # Door rounds — what to upload, and the one check that matters
 
+**⚑ Moved 2026-10-04: the app now lives in `door-app/` (Matthew's own product, see [../../README.md](../../README.md)).** Every "from `sixfold/site/`" below now means **from `door-app/site/`**: same file names, same places on the server. The sections below are kept as written. Two files stay in Sixfold: `quote.html` (`sixfold/site/summit-de59ae83/`) and the crew codes file.
+
 **Live = the competitor-audit batch (commit `d917514`), uploaded by Matthew and verified 2026-10-03: index.html
 and quote.html byte-identical plain and cache-busted, every new action answering, Black Forest outlines 12/12.**
 Before that: **the 2026-10-03 batch (commit `808f91b` door files + `e9b2350` code), uploaded by Matthew and
