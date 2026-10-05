@@ -9,6 +9,14 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Add info button in dark mode (index.html only)
+
+Matthew 2026-10-05 (seen in the demo): the Add info button's gradient ran into the text colour, which turns cream in dark mode, so it faded to cream with dark text. Now dark pine with cream text in both looks. ui2-test 23/23, card-test 18/18.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/summit-de59ae83/index.html` (**475,416** bytes) | `public_html/summit-de59ae83/` (no flush needed for this folder) |
+
 ## ✅ LIVE 2026-10-05 (verified 13/13) — fixes from the full code review. Page identical; a bare sign-out link signs nobody out and the page's POST does; the skip export refuses a made-up town; tools, Door rounds and Find an address work on a phone; Sign out in the page really ends the session (me 401); no page errors. The sign-in pause was not exercised live (that would mean sending wrong codes)
 
 A full review of the app found no security hole in sessions, admin gating, paths, exports or the offline queue. Fixed: the site-wide sign-in pause now needs wrong codes from 5+ addresses (two phones could keep new sign-ins paused for everyone); the sign-in screen forgets who was signed in, so the once-a-minute send stops redrawing it while someone types; a bare sign-out link signs nobody out (the page posts); a photo ceiling of 120 per person per hour; viewed photos not kept in a shared iPad's cache; search allows 150 per 10 minutes and waits 400 ms; the skip-trace export refuses a made-up town; a stale signed-out neighbourhood goes to sign-in; the come-back day uses the server's rest days; "Quotes to build" now says Pipeline. Also: the 11 door files, 11 area lists and walk-tool.html (owners' names) are no longer tracked in git (still on disk). review2-test 6/6, all 70 suites pass.
