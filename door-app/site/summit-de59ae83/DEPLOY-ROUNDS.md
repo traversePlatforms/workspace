@@ -9,6 +9,16 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — fixes from the full code review (2026-10-05)
+
+A full review of the app found no security hole in sessions, admin gating, paths, exports or the offline queue. Fixed: the site-wide sign-in pause now needs wrong codes from 5+ addresses (two phones could keep new sign-ins paused for everyone); the sign-in screen forgets who was signed in, so the once-a-minute send stops redrawing it while someone types; a bare sign-out link signs nobody out (the page posts); a photo ceiling of 120 per person per hour; viewed photos not kept in a shared iPad's cache; search allows 150 per 10 minutes and waits 400 ms; the skip-trace export refuses a made-up town; a stale signed-out neighbourhood goes to sign-in; the come-back day uses the server's rest days; "Quotes to build" now says Pipeline. Also: the 11 door files, 11 area lists and walk-tool.html (owners' names) are no longer tracked in git (still on disk). review2-test 6/6, all 70 suites pass.
+
+| Step | File (from `door-app/site/`) | Goes to |
+|---|---|---|
+| 1 | `api/rounds.php` (**195,908** bytes) | `public_html/api/` |
+| 2 | `summit-de59ae83/index.html` (**475,294** bytes) | `public_html/summit-de59ae83/` |
+| 3 | — | Flush the cache |
+
 ## ✅ LIVE 2026-10-05 (verified 20/20) — hail map, live radar, roof photos (admins, Roofing preview). Page identical; data files not reachable on the website; the hail map answer and photo windows match the uploaded files; on a phone, the live radar loads, the 26 Jun 2020 path draws, and a Castle Rock roof photo loads from the state bucket; no page errors
 
 Matthew 2026-10-05. On the Hail screen: **Live radar map** (NOAA NEXRAD through the Iowa Environmental Mesonet tile cache, every 5 minutes) and, on each storm, **Show on the map** (the day's radar hail path, ~1 km squares coloured by size; opens with radar off). On the roof line: **See the roof (aerial photo, 2020)**, a 3-inch photo of the house read in the browser from the State of Colorado's public bucket (DRAPP 2020, public domain), only the blocks over the house (1-2 MB); 8,503 doors in Castle Rock, Franktown and Sedalia. Tested: mapphoto-test 10/10 (the photo really loads from the bucket in Chrome); all 70 suites pass. Includes the hail-and-roof-only-in-preview change below if that has not gone up yet.

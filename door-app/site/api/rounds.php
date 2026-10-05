@@ -122,6 +122,10 @@ const MAX_TRIES  = 8;      // wrong codes per address per window
 const TRY_WINDOW = 900;    // 15 minutes
 const SITE_TRIES = 60;     // wrong codes from ALL addresses per hour before new sign-ins pause
 const SITE_WINDOW = 3600;
+/* review 2026-10-05: the pause only starts once wrong codes have come from at least this many addresses in the
+   window. Two phones on one carrier could otherwise keep new sign-ins paused for the whole company; a lone guesser
+   is already held by the per-address limit. */
+const SITE_MIN_ADDRS = 5;
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -355,6 +359,17 @@ function throttleGiveBack(string $file): void {
     unset($throttleHeld[$file]);
 }
 $throttleHeld = [];
+/** how many different addresses sent wrong codes in the last SITE_WINDOW; $add records one more (hashed) */
+function siteAddrs(?string $add = null): int {
+    $fh = @fopen(rateFile('*site-addrs*'), 'c+');
+    if (!$fh) return SITE_MIN_ADDRS;   /* cannot tell: keep the pause able to work */
+    @flock($fh, LOCK_EX);
+    $rows = array_values(array_filter((array) json_decode(stream_get_contents($fh) ?: '[]', true), fn($r) => is_array($r) && (int) ($r[0] ?? 0) > time() - SITE_WINDOW));
+    if ($add !== null) $rows[] = [time(), substr(hash('sha256', $add), 0, 16)];
+    ftruncate($fh, 0); rewind($fh); @fwrite($fh, json_encode($rows));
+    @flock($fh, LOCK_UN); @fclose($fh);
+    return count(array_unique(array_column($rows, 1)));
+}
 
 
 /* ---- data -------------------------------------------------------------- */
@@ -945,7 +960,7 @@ if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
     $addrFile = rateFile(clientKey()); $siteFile = rateFile('*site*');
     if (!throttleTake($addrFile, MAX_TRIES, TRY_WINDOW)) fail('Too many wrong codes from here. Wait fifteen minutes.', 429);
-    if (!throttleTake($siteFile, SITE_TRIES, SITE_WINDOW)) {
+    if (!throttleTake($siteFile, SITE_TRIES, SITE_WINDOW) && siteAddrs() >= SITE_MIN_ADDRS) {
         throttleGiveBack($addrFile);
         /* written down so a pause is noticed (second review): one line per refused sign-in.
            To lift a pause early, delete sixfold-data/ratelimit/ entirely. */
@@ -957,7 +972,7 @@ if ($action === 'signin') {
     foreach ($people as $c => $who) {                            // constant-time-ish: check all
         if (hash_equals((string) $c, (string) $code)) { $hit = $who; $hitCode = (string) $c; }
     }
-    if (!$hit) fail('That code was not recognised.', 401);      // the attempt already counted stands
+    if (!$hit) { siteAddrs(clientKey()); fail('That code was not recognised.', 401); }      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
     /* 'j': two sign-ins in the same second used to get the same cookie, so the signed-in list saw one phone (2026-10-04) */
     $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400, 'j' => bin2hex(random_bytes(4))];
@@ -980,6 +995,8 @@ if ($action === 'signout') {
     $sid = (string) ($_GET['sid'] ?? '');
     $cur = (string) ($_COOKIE[COOKIE] ?? '');
     if ($sid !== '' && $cur !== '' && !hash_equals(sessionTag($cur), $sid)) out(['ok' => true, 'kept' => true]);
+    /* review 2026-10-05: a link someone taps (a GET without this session's tag) signs nobody out; the page posts */
+    if (!$isPost && $sid === '') out(['ok' => true, 'kept' => true]);
     if ($cur !== '') {
         $gone = sessionTag($cur); $who = (string) ($session['c'] ?? '');
         sessEdit(function ($a) use ($gone, $who) { unset($a['s'][$gone]); if ($who !== '') $a['o'][$who] = time(); return $a; });
@@ -1266,6 +1283,8 @@ if ($action === 'email') {
 
 if ($action === 'photo') {
     if (!$isPost) fail('POST required', 405);
+    /* review 2026-10-05: a ceiling per person, so one code cannot fill the host's disk */
+    if (!throttleTake(rateFile('photo|' . (string) ($session['c'] ?? $me)), 120, 3600)) fail('That is a lot of photos in an hour. Wait a little and try again.', 429);
     $key = (string) ($_GET['region'] ?? '');
     $id  = (string) ($_GET['id'] ?? '');
     if (!loadRegion($key)) fail('No such region.', 404);
@@ -1296,7 +1315,7 @@ if ($action === 'photoget') {
     $path = $hit ? photoPath($hit['k'], $id, $f) : '';
     if (!$hit || !is_readable($path)) fail('No such photo.', 404);
     header('Content-Type: image/jpeg');
-    header('Cache-Control: private, max-age=604800');
+    header('Cache-Control: no-store');   /* review 2026-10-05: not kept on a shared iPad after sign-out */
     header('Content-Length: ' . filesize($path));
     readfile($path);
     exit;
@@ -2349,7 +2368,7 @@ if ($action === 'search') {
        60 searches in 10 minutes is far past what a driver needs, and far short of the whole list. */
     $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
-    if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 60, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
+    if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $hits = [];
     foreach (searchIndex() as $line) {
         $p = explode("\t", $line); if (count($p) < 9) continue;
@@ -2811,6 +2830,7 @@ if ($action === 'skipexport') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $all = (string) ($_REQUEST['all'] ?? '0') === '1';
     $only = (string) ($_REQUEST['region'] ?? '');
+    if ($only !== '' && !preg_match('/^[a-z0-9-]{1,40}$/D', $only)) fail('No such region.', 404);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sixfold-skiptrace-' . ($only !== '' ? $only . '-' : '') . ($all ? 'all-flagged-' : 'cleared-') . date('Y-m-d') . '.csv"');

@@ -133,3 +133,20 @@ door-app/operations/door-territory/roofs/photo-index.log
 door-app/operations/door-territory/roofs/houses-*.json
 door-app/operations/door-territory/roofs/photo-check*.png
 door-app/operations/door-territory/elpaso-imagery/tiles.json
+
+# Door files and area lists carry owners' names and home addresses (review 2026-10-05: they were tracked, against
+# the rule that lists of named people stay out of git). Regenerable from the county CSVs with build-rounds-data.mjs;
+# kept on disk and in the OneDrive mirror. git history before 2026-10-05 still holds them: a copy for sale needs a fresh repo.
+door-app/site/data/rounds/black-forest.json
+door-app/site/data/rounds/castle-rock.json
+door-app/site/data/rounds/cripple-creek.json
+door-app/site/data/rounds/divide.json
+door-app/site/data/rounds/florissant.json
+door-app/site/data/rounds/franktown.json
+door-app/site/data/rounds/larkspur.json
+door-app/site/data/rounds/monument.json
+door-app/site/data/rounds/palmer-lake.json
+door-app/site/data/rounds/sedalia.json
+door-app/site/data/rounds/woodland-park.json
+door-app/operations/door-territory/*-areas.json
+door-app/operations/door-territory/walk-tool.html

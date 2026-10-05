@@ -1207,7 +1207,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tag = outTag(), ctl = window.AbortController ? new AbortController() : null;
     var timer = ctl ? setTimeout(function () { ctl.abort(); }, 8000) : null;
     S.outP = fetch(API + '?action=signout' + (tag && tag !== '1' ? '&sid=' + encodeURIComponent(tag) : ''),
-                   { credentials: 'same-origin', cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+                   { method: 'POST', credentials: 'same-origin', cache: 'no-store', signal: ctl ? ctl.signal : undefined })
       .then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.ok === true && outTag() === tag) markOut(false); }, function () {})
       .then(function () { clearTimeout(timer); S.outP = null; });
@@ -1320,7 +1320,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (flushing) return flushing;
     var skip = 0;
     flushing = (function step() {
-      if (!S.me) return;                                     /* nobody signed in: nothing can send */
+      if (!S.me) return Promise.resolve();                   /* nobody signed in: nothing can send */
       var a = queue().filter(mine);
       if (skip >= a.length) return flushPhotos();
       var item = a[skip], body = {};
@@ -1587,6 +1587,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Sign in: six boxes and a number pad, big enough for gloves. A keyboard works
      too (digits, Backspace). Six digits sends it; a wrong code shakes and clears. */
   function signinView(err) {
+    S.me = null; S.role = 'crew'; S.sid = null;   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -1819,7 +1820,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the jobs.')); return; }
       var jobs = j.jobs.filter(function (x) { return focusId ? x.id === focusId : (!townKey || x.region === townKey); });
-      if (!jobs.length) { holder.appendChild(q('div', 'msg', 'No jobs won in the last ' + j.days + ' days' + (townKey ? ' in this town' : '') + '. Jobs appear here once a quote is marked Won in Quotes to build.')); return; }
+      if (!jobs.length) { holder.appendChild(q('div', 'msg', 'No jobs won in the last ' + j.days + ' days' + (townKey ? ' in this town' : '') + '. Jobs appear here once a quote is marked Won in the Pipeline.')); return; }
       jobs.forEach(function (x) { holder.appendChild(aroundCard(x, townKey, focusId)); });
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
@@ -2841,7 +2842,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function areaBack() {
     S.area = null; S.mapSel = null; var f = S.returnTo; S.returnTo = null;
     if (f) return f();
-    if (!S.regions) return refresh();
     /* the town list used to wait 2-3 s for every town's counts, with the old door cards still
        tappable underneath (Fable, live review). Draw it now; update the counts when they land. */
     renderAreas();
@@ -2863,8 +2863,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return null;
     }).then(function (j) {
       if (!j) return;
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) return renderAreas();
-      S.area = j.area; S.doors = j.doors; S.avg = j.avg; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
+      S.area = j.area; S.doors = j.doors; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null; S.rest = j.rest || 2; S.areaPlace = j.place || null; S.areaFw = j.fw || null;
       if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss' && !backOn(fd)) S.showAgain = true; }
       if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
@@ -2892,7 +2893,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function markDoor(d, kind, revisit) {
     var item = { region: S.region, id: d.id, outcome: kind };
     if (kind === 'later' && revisit) item.revisit = revisit;      /* travels in the offline queue too */
-    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -2) : '' };
+    d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -(S.rest || 2)) : '' };
     if (kind === 'booked' && !d.walk) { S.walkPrompt = d.id; S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; S.capAnim = 'prompt'; }   /* SX-51: book the walk while still at the door */
     else if (kind !== 'booked' && (S.walkPrompt === d.id || S.editWalk === d.id)) { S.walkPrompt = null; S.editWalk = null; }   /* an undone booking takes its walk form with it (Fable 2026-10-04) */
     if (kind !== null && S.openDoor === d.id) { S.openDoor = null; S.growNext = true; }   /* the next door opens, and grows into place */
@@ -4528,7 +4529,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (j.more) res.appendChild(q('div', 'msg soft', 'More doors match. Add more of the address to narrow it down.'));
       }).catch(function () { if (my === seq) { res.textContent = ''; res.appendChild(q('div', 'msg', 'No signal. Search needs signal.')); } });
     }
-    inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 250); });
+    inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 400); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); try { inp.blur(); } catch (x) {} } });
     run();
     setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
@@ -5316,7 +5317,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the results.')); return; }
       var t = j.total;
-      holder.appendChild(q('div', 'msg', 'Every door anyone has marked, and what became of it. Booked means Quote booked at the door; won and lost are set in Quotes to build. Grey rows have fewer than 10 doors knocked, which is too few to read anything into.'));
+      holder.appendChild(q('div', 'msg', 'Every door anyone has marked, and what became of it. Booked means Quote booked at the door; won and lost are set in the Pipeline. Grey rows have fewer than 10 doors knocked, which is too few to read anything into.'));
       holder.appendChild(q('div', 'sub2', t.knocked + ' knocked · ' + t.booked + ' booked (' + pct(t.booked, t.knocked) + ') · ' + t.won + ' won · ' + t.lost + ' lost' + (t.won ? ' · ' + money(t.value) + ' won' : '')));
       RES_DIMS.forEach(function (dm) {
         var rows = j.dims[dm[0]] || {};
