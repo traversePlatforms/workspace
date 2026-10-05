@@ -7,7 +7,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — who is signed in (Accounts screen)
+## ✅ LIVE 2026-10-04 (verified 13/14) — who is signed in (Accounts screen). Page identical at all four addresses; accounts answer carries the list, no codes or tags; the list file 404s from the web; the screen shows the count, the note and a green Claude Check row. The one fail was the check script not signing its own browser out: a stray Claude Check iPhone line, cleared by Sign out on that row
 
 Matthew 2026-10-04: signing someone out gave no sign it worked, and nothing said who was signed in. Each account row now shows a green dot and **Signed in on iPhone · used 5 min ago** (several devices are listed), or a grey dot and **Signed out · just now** / **Not signed in**; the top line counts who is signed in now. The server keeps one line per sign-in in `sixfold-private/rounds-sessions.json` (made by itself; it holds no code and no cookie, only a hash tag, the device kind and when it was last used, written at most every 5 minutes). Sign out on the phone removes its line; an admin's Sign out, New code or Remove removes all of that person's. **Phones signed in before the upload show up the next time they are used**; the screen says so for the first 45 days. Also fixed: two sign-ins in the same second got the same cookie, and a sign-out in the same second as the sign-in did not take. Tested: whosin-test 17/17, accounts 34/34, all 65 suites pass alone (aerial needed one re-run: a timing flake, 9/9 alone).
 
