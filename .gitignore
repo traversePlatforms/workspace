@@ -70,101 +70,105 @@ sixfold/site/api/secrets.php
 # Door-territory outputs — generated from public county records, but each file is
 # a list of named private individuals at their home addresses. Regenerable in
 # minutes; nothing is lost by keeping them out of git and the OneDrive mirror.
-door-app/operations/door-territory/*.csv
-door-app/operations/door-territory/.address-cache.json
+traverse/data-pipeline/door-territory/*.csv
+traverse/data-pipeline/door-territory/.address-cache.json
 # 2026-10-03, same reasoning: the mailing list (owners at their mailing addresses), the
 # property-address cache behind it, the state HOA roster (designated agents' names and
 # addresses), and the lawn-health trial's per-door results. All regenerable by script.
-door-app/operations/door-territory/mail/*.csv
-door-app/operations/door-territory/.situs-cache.json
-door-app/operations/door-territory/hoa-registry/*.csv
-door-app/operations/door-territory/lawn-trial/ndvi-results.csv
-door-app/operations/door-territory/lawn-trial/ndvi-cache.json
-door-app/operations/door-territory/**/*.log
-door-app/operations/door-territory/*.log
+traverse/data-pipeline/door-territory/mail/*.csv
+traverse/data-pipeline/door-territory/.situs-cache.json
+traverse/data-pipeline/door-territory/hoa-registry/*.csv
+traverse/data-pipeline/door-territory/lawn-trial/ndvi-results.csv
+traverse/data-pipeline/door-territory/lawn-trial/ndvi-cache.json
+traverse/data-pipeline/door-territory/**/*.log
+traverse/data-pipeline/door-territory/*.log
 # and the printed versions of the same thing
-door-app/operations/door-territory/*.pdf
-door-app/operations/door-territory/walklist-print.html
+traverse/data-pipeline/door-territory/*.pdf
+traverse/data-pipeline/door-territory/walklist-print.html
 
 # Live sign-in codes for /rounds/ — every code opens 2,656 home addresses.
 sixfold/site/api/rounds-codes.php
-door-app/site/api/rounds-codes.php
-door-app/site/api/skiptrace-config.php
+traverse/app/api/rounds-codes.php
+traverse/app/api/skiptrace-config.php
 # Skip-trace provider key (2026-10-04). Shape tracked as sixfold/site/api/skiptrace-config.example.php.
 sixfold/site/api/skiptrace-config.php
 # Owners' mailing addresses + ZIPs per door (skip-trace sidecar): from the gitignored county CSVs,
 # rebuildable with operations/door-territory/build-mail-sidecar.mjs
-door-app/site/data/rounds/mail-*.json
+traverse/app/data/rounds/mail-*.json
 # The marks log written beside the door lists.
-door-app/site/data/rounds/*.log
+traverse/app/data/rounds/*.log
 
 # Owner history across door-list rebuilds (SX-35): named owners and every previous owner.
 # Not rebuildable — the OneDrive mirror is its only backup.
-door-app/operations/door-territory/owner-history.json
+traverse/data-pipeline/door-territory/owner-history.json
 
 # Lawn outlines for the door app (SX-38): regenerable with lawn-trial/build-lawn-outlines.mjs, ~18 MB
-door-app/site/data/rounds/lawnmask-*.json
-door-app/site/data/rounds/search-index.txt
+traverse/app/data/rounds/lawnmask-*.json
+traverse/app/data/rounds/search-index.txt
 
 # Monthly lawn-health results (SX-42) carry addresses, like ndvi-results.csv
-door-app/operations/door-territory/lawn-trial/ndvi-results-*.csv
+traverse/data-pipeline/door-territory/lawn-trial/ndvi-results-*.csv
 
 # lawn-trial working files (per-door outlines cache and a pre-compact backup), never tracked
-door-app/operations/door-territory/lawn-trial/lawnmask-cache.json
-door-app/operations/door-territory/lawn-trial/*.bak
+traverse/data-pipeline/door-territory/lawn-trial/lawnmask-cache.json
+traverse/data-pipeline/door-territory/lawn-trial/*.bak
 
 # Hail per door (2026-10-04): daily radar cut-outs and the built files, regenerable with
 # door-app/operations/door-territory/hail/build-hail.mjs (fetch, then build)
-door-app/operations/door-territory/hail/days/
-door-app/operations/door-territory/hail/fetch.log
-door-app/site/data/rounds/hail-*.json
+traverse/data-pipeline/door-territory/hail/days/
+traverse/data-pipeline/door-territory/hail/fetch.log
+traverse/app/data/rounds/hail-*.json
 
 # County assessor downloads (2026-10-04): owners names and addresses, regenerable from the county sites
-door-app/operations/door-territory/assessor/raw/
+traverse/data-pipeline/door-territory/assessor/raw/
 # Roof measurements (2026-10-04): cache and the built files, regenerable with roofs/sample-roofs.mjs
-door-app/operations/door-territory/roofs/roof-cache*.json*
-door-app/operations/door-territory/roofs/sample.log
-door-app/site/data/rounds/roof-*.json
-door-app/site/data/rounds/year-*.json
+traverse/data-pipeline/door-territory/roofs/roof-cache*.json*
+traverse/data-pipeline/door-territory/roofs/sample.log
+traverse/app/data/rounds/roof-*.json
+traverse/app/data/rounds/year-*.json
 # Roof photos (2026-10-05): per-door photo windows, the photo file index, house centres and spot-check images; regenerable
-door-app/site/data/rounds/photo-*.json
-door-app/operations/door-territory/roofs/photo-index.json
-door-app/operations/door-territory/roofs/photo-index.log
-door-app/operations/door-territory/roofs/houses-*.json
-door-app/operations/door-territory/roofs/photo-check*.png
-door-app/operations/door-territory/elpaso-imagery/tiles.json
+traverse/app/data/rounds/photo-*.json
+traverse/data-pipeline/door-territory/roofs/photo-index.json
+traverse/data-pipeline/door-territory/roofs/photo-index.log
+traverse/data-pipeline/door-territory/roofs/houses-*.json
+traverse/data-pipeline/door-territory/roofs/photo-check*.png
+traverse/data-pipeline/door-territory/elpaso-imagery/tiles.json
 
 # Door files and area lists carry owners' names and home addresses (review 2026-10-05: they were tracked, against
 # the rule that lists of named people stay out of git). Regenerable from the county CSVs with build-rounds-data.mjs;
 # kept on disk and in the OneDrive mirror. git history before 2026-10-05 still holds them: a copy for sale needs a fresh repo.
-door-app/site/data/rounds/black-forest.json
-door-app/site/data/rounds/castle-rock.json
-door-app/site/data/rounds/cripple-creek.json
-door-app/site/data/rounds/divide.json
-door-app/site/data/rounds/florissant.json
-door-app/site/data/rounds/franktown.json
-door-app/site/data/rounds/larkspur.json
-door-app/site/data/rounds/monument.json
-door-app/site/data/rounds/palmer-lake.json
-door-app/site/data/rounds/sedalia.json
-door-app/site/data/rounds/woodland-park.json
-door-app/operations/door-territory/*-areas.json
-door-app/operations/door-territory/walk-tool.html
+traverse/app/data/rounds/black-forest.json
+traverse/app/data/rounds/castle-rock.json
+traverse/app/data/rounds/cripple-creek.json
+traverse/app/data/rounds/divide.json
+traverse/app/data/rounds/florissant.json
+traverse/app/data/rounds/franktown.json
+traverse/app/data/rounds/larkspur.json
+traverse/app/data/rounds/monument.json
+traverse/app/data/rounds/palmer-lake.json
+traverse/app/data/rounds/sedalia.json
+traverse/app/data/rounds/woodland-park.json
+traverse/data-pipeline/door-territory/*-areas.json
+traverse/data-pipeline/door-territory/walk-tool.html
 # the Sample door: Matthew's parents' address (2026-10-05); built by a script, kept off git
-door-app/site/data/rounds/sample-door.json
-door-app/operations/door-territory/sample/
+traverse/app/data/rounds/sample-door.json
+traverse/data-pipeline/door-territory/sample/
 # alert caches the server writes for itself (2026-10-05)
-door-app/site/data/rounds/alerts-cache.json*
-door-app/site/data/rounds/storms-recent.json
-door-app/site/data/rounds/wind-*.json
-door-app/site/data/rounds/material-*.json
-door-app/site/data/rounds/naip-*.json
+traverse/app/data/rounds/alerts-cache.json*
+traverse/app/data/rounds/storms-recent.json
+traverse/app/data/rounds/wind-*.json
+traverse/app/data/rounds/material-*.json
+traverse/app/data/rounds/naip-*.json
 
 # Commercial test towns (2026-10-05): owner names and registered agents; regenerable with
 # door-app/operations/door-territory/commercial/build-app-data.mjs
-door-app/site/data/rounds/com-*.json
-door-app/site/data/rounds/wind-com-*.json
-door-app/site/data/rounds/naip-com-*.json
+traverse/app/data/rounds/com-*.json
+traverse/app/data/rounds/wind-com-*.json
+traverse/app/data/rounds/naip-com-*.json
 
 # Traverse copy of the door app: build output (50 MB of door data + a sign-in codes file). Rebuild with build-app.cjs.
-door-app/brand/traverse/app/dist/
+traverse/editions/dist/
+
+# 2026-10-06 reorganisation: door-app/ became traverse/. The old build output (door-app/brand/traverse/app/dist/)
+# was held open by a window and could not move; delete door-app/ once it is free, then remove this line.
+door-app/
