@@ -178,7 +178,7 @@ function page(E) {
   // the edition's tokens, after the app's own (same selectors, later wins); company.json colours still win over these
   const dark = `--bg:${c.dBg}; --card:${c.dCard}; --ink:#e8edf5; --soft:#9aa8bc; --line:${c.dLine}; --sunk:${c.dSunk};
       --bar:${c.dBar};
-      --ember:#ff7a45; --ember-ink:#ff7a45; --on-ember:#0b1220; --moss-ink:${c.dAccent};
+      --ember:${c.dEmber || '#ff7a45'}; --ember-ink:${c.dEmberInk || '#ff7a45'}; --on-ember:${c.dOnEmber || '#0b1220'}; --moss-ink:${c.dAccent};
       --go:#6fcf9b; --on-go:#06140c; --go-tint:#133324;
       --later:#e8b04f; --later-tint:#3a2c10; --miss:#a7b3c4; --miss-tint:#1c2638; --bad:#f0786a;
       --booked:#6fcf9b; --accent:${c.dAccent};
@@ -191,7 +191,7 @@ function page(E) {
   :root{
     --bg:${c.bg}; --card:${COMMON_BG['--card']}; --ink:${COMMON_BG['--ink']}; --soft:${COMMON_BG['--soft']}; --line:${c.line}; --sunk:${c.sunk};
     --bar:${c.bar}; --bar-ink:#ffffff; --bar-soft:${c.barSoft}; --bar-lift:rgba(255,255,255,.09); --bar-edge:rgba(255,255,255,.16);
-    --ember:#d6400c; --ember-ink:#b83608; --on-ember:#ffffff; --moss:${c.moss}; --moss-ink:${c.mossInk};
+    --ember:${c.ember || '#d6400c'}; --ember-ink:${c.emberInk || '#b83608'}; --on-ember:${c.onEmber || '#ffffff'}; --moss:${c.moss}; --moss-ink:${c.mossInk};
     --go:#1f7a4d; --on-go:#ffffff; --go-tint:#dcefe5;
     --later:#8a5a00; --later-tint:#f7ead0; --miss:#566476; --miss-tint:#e6eaf0; --bad:#b42318;
     --booked:#1f7a4d; --accent:${c.accent};
