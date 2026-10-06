@@ -1104,6 +1104,10 @@
   .hailx > span{display:grid;gap:1px}
   .hailx small{font-size:11.5px;color:var(--soft)}
   .hailx b{color:var(--later)}
+  .comx b{color:inherit}
+  .comx .lnk{justify-self:start;font-size:12.5px}
+  .comt{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;color:#fff;font-size:11.5px;font-weight:700;text-align:center}
+  .comt1{background:#2f7d4f}.comt2{background:#6aa84f}.comt3{background:#b8892a}.comt4{background:#8f8d86}.comt5{background:#6b6a64}
   .cseg{display:flex;gap:6px;margin:4px 0 10px}
   .cseg button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .cseg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
@@ -3491,6 +3495,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      hides while its form is open in the capture panel, so an untouched card stays short. */
   function extras(d) {
     var wrap = q('div', 'xt');
+    if (d.com) wrap.appendChild(comBlock(d));   /* commercial test buildings: what it is and who to ask for */
     if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id && S.editWalk !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
     else if (!d.phone && !capOpen(d)) wrap.appendChild(lookupButton(d));   /* Look up number (2026-10-04) */
@@ -3848,7 +3853,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Matthew: Door rounds opens on the state, not on Monument. Each county with its towns: doors
      still to knock, how far through, high-risk doors left, quotes booked. Tap a town for its
      neighbourhoods; the town picker at the top still switches, and lists Colorado first. */
-  var COUNTY_NAME = { elpaso: 'El Paso County', douglas: 'Douglas County', teller: 'Teller County' };
+  var COUNTY_NAME = { elpaso: 'El Paso County', douglas: 'Douglas County', teller: 'Teller County', comtest: 'Commercial test (admins only)' };
   function townSum(r) {
     return r.areas.reduce(function (t, a) {
       t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
@@ -6181,6 +6186,39 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     if (d.hail.length > 3) line.appendChild(document.createTextNode(' · ' + (d.hail.length - 3) + ' more'));
     t.appendChild(line); b.appendChild(t);
+    return b;
+  }
+  /* commercial test buildings (2026-10-05, admin-only towns): what the building is, how big the roof is, and the closest public
+     name behind the owner. Tier 1 = a person is the owner of record; 2 = probable owner (registered agent is a person acting for
+     few companies, or the tax bill goes care of a person); 3 = a company or trust to call; 4 = mailing address only; 5 = public. */
+  var COM_TIER = ['', 'Person on the deed', 'Probable owner', 'Company or trust to call', 'Mailing address only', 'Public owner'];
+  function comBlock(d) {
+    var c = d.com, b = q('div', 'hailx comx'); b.appendChild(ico('users', 2.2));
+    var t = q('span');
+    var head = [c.u ? c.u.charAt(0) + c.u.slice(1).toLowerCase() : c.k];
+    if (c.rf) head.push('roof ' + Number(c.rf).toLocaleString() + ' sq ft');
+    if (c.yb) head.push('built ' + c.yb);
+    if (c.units) head.push(c.units + ' units');
+    t.appendChild(q('small', null, head.join(' · ')));
+    var lead = q('span', 'hl');
+    lead.appendChild(q('span', 'comt comt' + c.t, String(c.t)));
+    lead.appendChild(document.createTextNode(' '));
+    lead.appendChild(q('b', null, c.lead || COM_TIER[c.t]));
+    t.appendChild(lead);
+    t.appendChild(q('small', null, c.why || COM_TIER[c.t]));
+    if (c.ag && c.ag !== c.lead) t.appendChild(q('small', null, 'Registered agent: ' + c.ag + (c.ak ? ' · ' + c.ak : '') + (c.an ? ', agent for ' + c.an + ' companies' : '')));
+    if (c.co && (c.lead || '').indexOf('c/o') !== 0) t.appendChild(q('small', null, 'Tax bill c/o ' + c.co + (c.cok ? ' (' + c.cok + ')' : '')));
+    if (c.o2) t.appendChild(q('small', null, 'Also on the deed: ' + c.o2));
+    if (c.st) t.appendChild(q('small', null, 'State register: ' + c.st + (c.fi && c.fi !== 'CO' ? ', formed in ' + c.fi : '')));
+    if (c.m) t.appendChild(q('small', null, 'Tax bill mailed to: ' + c.m));
+    if (c.pr && c.m && c.pr.toUpperCase() !== c.m.toUpperCase()) t.appendChild(q('small', null, 'Principal office: ' + c.pr));
+    if (c.pf || c.sh) t.appendChild(q('small', null, [c.pf ? 'This owner has ' + c.pf + ' buildings in this area' : '', c.sh > 1 ? 'tax bill address shared with ' + (c.sh - 1) + ' other owner' + (c.sh > 2 ? 's' : '') : ''].filter(Boolean).join(' · ')));
+    if (c.sale && c.sale[0]) t.appendChild(q('small', null, 'Last sale ' + fmtDay(c.sale[0]) + (c.sale[1] ? ' for $' + Number(c.sale[1]).toLocaleString() : '')));
+    if (c.sid) {
+      var a = q('a', 'lnk', 'Open in the state register'); a.href = 'https://www.coloradosos.gov/biz/BusinessEntityDetail.do?masterFileId=' + encodeURIComponent(c.sid);
+      a.target = '_blank'; a.rel = 'noopener'; t.appendChild(a);
+    }
+    b.appendChild(t);
     return b;
   }
   /* wind (2026-10-05): the strongest reports within 10 miles of the house, per day, from the NWS Local Storm Reports. A report is

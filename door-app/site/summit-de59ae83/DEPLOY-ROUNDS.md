@@ -9,7 +9,32 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — roof material set at the door, the photo's best guesses, a 2023 roof close-up for every house, Office in groups
+## ⏳ TO UPLOAD — Commercial test: three admin-only towns of apartments, commercial and industrial buildings
+
+Matthew 2026-10-05: try the commercial roofing test in the app. **5,082 buildings** in three storm spots (Colorado Springs east,
+South metro, West Denver / Lakewood; how and why in `operations/door-territory/commercial/README.md`), grouped on the Colorado
+screen as **"Commercial test (admins only)"**. Each card: what the building is, roof size, the owner-lead tier and the closest public
+name (registered agent or c/o), where the tax bill goes, a link to the state register, hail, wind and the 2023 roof photo.
+**Admins only, everywhere:** index.json marks the three towns `"admin": true` and `loadRegion` refuses them to anyone else, so they
+are on no crew screen and in no alert or morning email; address search leaves them out for everyone.
+
+com-test 11/11, plus the full suite.
+
+**⚑ ORDER MATTERS: `rounds.php` FIRST, `index.json` LAST.** The old rounds.php has no admin check, so if index.json went up before it
+the crew would see the test towns.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/api/rounds.php` (244,426 bytes) | `public_html/api/` |
+| 2 | `door-app/site/data/rounds/com-springs.json`, `com-south.json`, `com-west.json` (**new**, 2.6 MB) | `sixfold-data/rounds/` |
+| 3 | `door-app/site/data/rounds/hail-com-*.json`, `wind-com-*.json`, `naip-com-*.json` (9 files, **new**, 2.8 MB) | `sixfold-data/rounds/` |
+| 4 | `door-app/site/data/rounds/index.json` (1,272 bytes, replaces) | `sixfold-data/rounds/` |
+| 5 | `door-app/site/summit-de59ae83/index.html` (560,987 bytes) | `public_html/summit-de59ae83/` |
+| 6 | Flush the cache | SiteGround |
+
+To take it out again: delete the 12 `*com-*` files and put the previous index.json back (its regions without the three `com-` entries).
+
+## ✅ LIVE 2026-10-05 (verified after the sixfold-data restore) — roof material set at the door, the photo's best guesses, a 2023 roof close-up for every house, Office in groups
 
 Matthew 2026-10-05:
 - **Roof material on the card, set at the door.** A line on the roof part of the card says what the roof is (seen at the house, the county's record, the photo, or "probably …" for the photo's best guess) with **Set it / Change**: asphalt, tile, wood shake, metal, flat, slate. What a person sets beats the record and the photo, shows under their name, and is the training data for teaching the photo metal and shake.

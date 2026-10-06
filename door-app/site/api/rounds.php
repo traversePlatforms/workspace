@@ -378,7 +378,16 @@ function regionFile(string $key): ?string {
     $f = DATA_DIR . '/' . $key . '.json';
     return is_readable($f) ? $f : null;
 }
+/* admin-only towns (2026-10-05, the commercial test): index.json marks them "admin": true. Every town is read through
+   loadRegion, so refusing them here keeps them off crew phones on every screen, and out of the jobs that run with nobody
+   signed in (alerts, morning email), where there is no admin role. */
+function adminRegion(string $key): bool {
+    static $set = null;
+    if ($set === null) { $set = []; $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: []; foreach (($idx['regions'] ?? []) as $r) if (!empty($r['admin'])) $set[(string) $r['key']] = true; }
+    return isset($set[$key]);
+}
 function loadRegion(string $key): ?array {
+    if (adminRegion($key) && ($GLOBALS['role'] ?? '') !== 'admin') return null;
     $f = regionFile($key);
     return $f ? json_decode((string) file_get_contents($f), true) : null;
 }
@@ -686,6 +695,7 @@ function searchIndex(): array {
     if (!is_readable($f) || (int) @filemtime($f) < $newest) {
         $out = '';
         foreach (($idx['regions'] ?? []) as $r) {
+            if (!empty($r['admin'])) continue;   /* the cached index is shared by everyone, so admin-only towns stay out of search */
             $data = loadRegion($r['key']); if (!$data) continue;
             foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
                 $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
@@ -1187,7 +1197,7 @@ if ($action === 'regions') {
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
                         '_seg' => $aseg];
         }
-        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? null, 'areas' => $areas];
+        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
     }
     /* ---- our own odds (SX-54, 2026-10-04) ----
        Expected quotes from the doors still to knock: each door counts at the rate doors like it
@@ -1264,6 +1274,7 @@ if ($action === 'area') {
                 'lawnfix' => $lfix[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
                 'val' => $d['val'] ?? null,
+                'com' => $d['com'] ?? null,   /* commercial test buildings (admin-only towns): use, roof size, owner lead */
                 'work' => $work[$d['id']] ?? null,
                 'fc' => isset($fchk[$d['id']]) ? lastChecks($fchk[$d['id']]) : null,
                 'walk' => walkFor($m, $walks[$d['id']] ?? null),
