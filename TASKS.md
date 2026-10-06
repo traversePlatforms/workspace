@@ -203,6 +203,15 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       start. Later is not fatal,
       the job just moves. Download the certificate of completion, not just the signed PDF.
       Maintenance has no deadline pressure — first payment 1 Nov, first visit Thu 19 Nov.
+- [ ] **SX-3b — Brian Skelton, Castle Rock: $400 aeration + overseed + fertilize. Added in the 2026-10-06
+      tidy-up — the job was in the repo (commits `283e7b4`, `1928cd0`, `6f8ec2c`, all 2026-10-05) but not on
+      this list.** Packet `sixfold/quotes/Sixfold-Quote-and-Agreement-Aeration-Brian-Skelton.pdf` (6 pp, quote
+      in front), DocuSign sheet `sixfold/agreements/brian-docusign-setup.md`, notes
+      `sixfold/agreements/brian-skelton-2026-10-05.notes.md`. **Job Thursday 15 October; last safe signing day
+      Friday 9 October** (Sunday 11th and Columbus Day Monday 12th do not count). **Nothing sent.** The
+      $100/month maintenance is **ON HOLD** until Matthew has more information — not in the packet. Settled 2026-10-05 (notes, Revision): Sixfold supplies the seed and fertilizer, blows the hard
+      surfaces and can water in with the owner's system; the Castle Rock Water note went to the in-person packet. Same spoken-notice and certificate-of-completion rules as
+      SX-3a.
 - [ ] **SX-4 — Kara end-of-work email**, carrying the relevant packet material. **The only item
       on the list with a real customer waiting.** No template exists — what exists is the
       referral packet (customer-facing) and the job close-out sheet (crew-facing, internal).
@@ -405,8 +414,6 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       above `public_html` and include it by absolute path. **Not urgent, and it should be done
       before the code list grows.** Re-check by fetching the *body*, not the status:
       `curl -s .../api/rounds-codes.php | wc -c` must be 0.
-
-## Surge
 
 - [ ] **SX-9f — Two things the door programme still needs from the team meeting.** Split out
       of SX-9 2026-10-01 — they were holding a finished build open.
@@ -627,7 +634,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       2026-10-02.** Then **"Doors to come back to"** (every no-answer and due door, across all
       towns, one tap to the right neighbourhood): **live 2026-10-02, confirmed by Matthew.** Then
       **Nearest neighbourhood** on the town screen (sorts by distance, picks the closest town): built
-      and tested, awaiting upload, `rounds.php` + `index.html`. Built from the approved preview. **Upload is `index.html` plus five new
+      and tested 2026-10-02, `rounds.php` + `index.html` — live with the later uploads of both files
+      (every batch from 2026-10-03 on carried them). Built from the approved preview. **Upload is `index.html` plus five new
       files** (manifest + 4 icons) into `public_html/summit-de59ae83/`. The API and door data are
       unchanged. Includes the home-screen install, the splash, the keypad sign-in, motion with Undo,
       and the map card. **Fixed on the way:** the map's OpenStreetMap credit link could navigate the
@@ -671,33 +679,43 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       SX-38's outline packs are still building in the background (about 0.45 lawns/s on the hotel connection).
       SX-41 has no fire-season countdown on purpose (year-round season; warnings are the trigger) and no email yet (needs a cron).
 - [x] **SX-44 route + SX-45 Jobber CSV: ✅ LIVE 2026-10-03, verified.** Route: nearest-next + 2-opt from your position, Google Maps walking link for the next 10 stops. Jobber: booked doors in Jobber's import headings (checked against help.getjobber.com 2026-10-03); no ZIP yet.
-- [ ] **SX-48 Around our jobs (after GlassHouse): ✅ BUILT AND TESTED 2026-10-03, next upload (index.html + rounds.php).**
+- [x] **SX-48 Around our jobs (after GlassHouse): ✅ LIVE 2026-10-03 — went up in the competitor-audit batch (commit `d917514`), verified 19/19 per DEPLOY-ROUNDS.md; ticked in the 2026-10-06 tidy-up.** *Was:* BUILT AND TESTED 2026-10-03, next upload (index.html + rounds.php).
       Every job won in the last 60 days lists the 40 nearest doors still to knock within half a mile, a route
       from the job (Google Maps; driving when the loop is over 2 mi) and an opener naming the street, never the
       house or customer. Strip on the town list; "Knock around this job" on won quotes. From the competitor audit.
-- [ ] **SX-49 Fire-weather call list (after HailTrace): ✅ LIVE 2026-10-03 (verified).** When a weather alert
+- [x] **SX-49 Fire-weather call list (after HailTrace): ✅ LIVE 2026-10-03 (verified).** When a weather alert
       covers a town or a wildfire is within 30 mi, admins get a call list from the alert details: customers won,
       quotes sent, booked doors there, with numbers given at the door and a check-in script (not a pitch).
-- [ ] **SX-50 Homeowner fire check + report (after Firemaps / Fire Aside): ✅ LIVE 2026-10-03 (verified).**
+- [x] **SX-50 Homeowner fire check + report (after Firemaps / Fire Aside): ✅ LIVE 2026-10-03 (verified).**
       17-item visual check per door from the CSFS Home Ignition Zone guide (2021): Done / Needs work / Couldn't
       check + note; every check kept, so after-the-job sits beside before. Printable homeowner report: what to do
       first (Zone 0 first), full check with Before/Now, photos, HB25-1182 insurance + DR 0104CR credit, "not an
       inspection" disclaimer. Export column `fire_check`. Not a certification, and must never be sold as one.
-- [ ] **SX-51 Book the walk at the door: ✅ LIVE 2026-10-03 (verified).** Quote booked opens "Book the walk"
+- [x] **SX-51 Book the walk at the door: ✅ LIVE 2026-10-03 (verified).** Quote booked opens "Book the walk"
       at the top of the list: day (Tomorrow + 2 more, or a date), time or "time to agree", and the walks already
       booked that day. Calendar file (reminders a day and an hour before) and a confirmation text the crew send
       from their own phone, only to a number given at the door. Quotes to build lists the walks coming up.
-- [ ] **SX-52 Measure from the lawn outline: ✅ LIVE 2026-10-03 (verified).** Build quote
+- [x] **SX-52 Measure from the lawn outline: ✅ LIVE 2026-10-03 (verified).** Build quote
       on a booked door opens Quote build with the door: the outline measured (counted near the house, and all
       the grass) in sq ft and acres, Use fills aeration or the lawn lines already counted. Offered, never filled
       in on its own; the scope draft says where the area came from. Redrawing the outline by hand: not built.
-- [ ] **SX-53 Leaderboard, daily goals, territories: ✅ LIVE 2026-10-03 (verified), admins only.** Matthew 2026-10-03:
+- [x] **SX-53 Leaderboard, daily goals, territories: ✅ LIVE 2026-10-03 (verified), admins only.** *(Territories opened to the crew 2026-10-04, `TERRITORIES_OPEN = true`, Matthew's call — DEPLOY-ROUNDS.md.)* Matthew 2026-10-03:
       permission to run it, admins only while tested. `BOARD_OPEN` in rounds.php opens it to the crew. Ranked by
       quotes booked, then talked to; won is credited to whoever booked the door; one daily goal per person; a
       neighbourhood assigned to a person shows on the list. No location tracking. Test sign-ins left out.
-- [ ] **SX-54 Odds sort: ✅ LIVE 2026-10-03 (verified), switches on at 150 conversations.** Neighbourhoods by quotes expected
+- [x] **SX-54 Odds sort: ✅ LIVE 2026-10-03 (verified), switches on at 150 conversations.** Neighbourhoods by quotes expected
       from the doors still to knock, at the rate doors like them (fire hazard x lawn size) have booked, across
       every town (k = 10 toward the overall rate). Admins see it now with the count so far; crew once ready.
+- [ ] **SX-55 — Upload Training (31 Sixfold lessons, seven headings) + the month-grid calendar.** Added in the
+      2026-10-06 tidy-up: committed `a3d2c7f` (Training) and `7675ff2` (calendar) on 2026-10-05, **NOT uploaded**
+      — the only ⏳ batch left at the top of DEPLOY-ROUNDS.md. Four steps: `rounds.php`, `index.html`, then
+      `training.json` (new; the live list was empty on 2026-10-05, and **this upload replaces every live
+      lesson**), then flush. **Order matters: rounds.php and index.html BEFORE training.json.** Lessons live in
+      `sixfold/training/`; see `sixfold/training/README.md` for the changes from Surge's method that must not
+      be reverted. **Not on this list, all LIVE per DEPLOY-ROUNDS.md and never registered here:** the
+      2026-10-04/05 door-app batches — hail, roofs + year built, company.json settings, Roofing preview, maps +
+      radar + roof photos, sample door + hail strip, the big build (teams, calendars, lead owners, goals, storm
+      list, wind, phone alerts), Profile + roof materials, the commercial test towns + showcase.
 - [ ] **SX-42 scheduled lawn health: ✅ BUILT 2026-10-03, first run May 2027.** `node ndvi-trial.mjs --month=2027-06`
       compares a month with the same month a year earlier (May-Sept only; winter refused; clouds, shadow
       and snow masked per pixel), writes ndvi-results-YYYY-MM.csv; `node build-lawn-outlines.mjs --green-only`
@@ -809,9 +827,19 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       photo as a second look, show "mostly trees" on wooded lots, then a "Most lawn" sort and a
       per-door figure. **First true check: one lot Sixfold has measured on the ground.** Write-up:
       [LAWN-SIZE.md](door-app/operations/door-territory/LAWN-SIZE.md).
+
+## Surge
+
 - [ ] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **Blocked on you sending me
       their notes** — I don't have them. Also note staging is two commits behind local, so
       re-bundle before anyone reviews anything.
+      **Update 2026-10-06 (tidy-up):** the "two commits behind" line is stale — staging carries the
+      candidate-first rewrite (commit `550a0b2`, bundle `surge-site-2026-10-05.zip`, verified 60/60
+      on 2026-10-05), which applied the office's staging review document dated 2026-09-29. **Whether
+      that document IS "Brandon's and Lance's evaluations" is not on record** — if it is, this item is
+      done apart from Brandon's check of the out-the-mud wording and Matthew's own walkthrough; if
+      their notes are something else, it is still blocked on them. Live surgeftw.com is still the
+      WordPress placeholder.
 - [ ] **SG-2 — Finish the remaining social accounts** and level the branding across all of them.
       The cross-platform kit already exists for seven platforms, draft-only.
 - [ ] **SG-3 — Surge Linktree** — accuracy pass. Pairs with X-2.
@@ -846,6 +874,10 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **X-2a — Sixfold has no review QR.** Blocks X-3 at parity with Surge. **Needs Sixfold's
       Place ID or `g.page` review link from its Google Business Profile** — then the generator
       makes the family and Surge's review collateral can be reskinned.
+      **Unblocked 2026-10-04:** Matthew supplied the link, `https://g.page/r/CdxyzSzq9tvEEBM/review`,
+      and it is live in `door-app/site/data/rounds/docs/money.json` (`links.googleReview`) behind the
+      app's "Ask for a review" text. **The QR family itself is still to generate** — noted in the
+      2026-10-06 tidy-up.
 - [ ] **X-2b — Surge has no general/social QR**, only a review one. **⚑ Gated on SG-2 — the
       moment the Surge socials are all built, they need one scannable front door.** Linktree is
       the obvious route but not the only one: a page on the Surge site is the version Surge owns
@@ -942,7 +974,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 | **3 Oct** | **SX-1b(2)** — ask Matthew for the PPE counts and sizes back from Brandon and Brad |
 | **7 Oct** | **SX-3a** — last safe signing day for Kara to keep the 12 Oct start |
 | **8 Oct** | **SX-11** — Karen on Nextdoor, and **SG-5** — pull WhatsApp again |
+| **9 Oct** | **SX-3b** — last safe signing day for Brian Skelton to keep the 15 Oct job |
 | **12 Oct** | Kara's aeration job |
+| **15 Oct** | Brian Skelton's aeration job (SX-3b) |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
 | **1 Nov** | Kara's first monthly payment · **19 Nov** first monthly visit |
 | **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold shows "new owner since" and the old owner's phone, email and notes are set aside (SX-35, built 2026-10-03). Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists") |
@@ -951,6 +985,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 session — the register does, and it is read at the start of each one.
 
 ## Suggested order — refreshed 2026-10-01
+
+**⚑ Stale in places as of the 2026-10-06 tidy-up — the lines are kept as written.** Since 2026-10-01:
+SX-9e, SX-2b and SX-9d are done (see their lines), so "cheap, and they close gaps" and "partly done"
+below no longer apply to them; SX-3b (Brian, sign by 9 Oct) and SX-55 (Training + calendar upload) are
+new and belong in "this week".
 
 **This week, because they expire or someone is waiting:**
 
