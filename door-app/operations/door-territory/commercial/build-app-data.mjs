@@ -61,6 +61,16 @@ const idxF = join(DATA, 'index.json'), idx = JSON.parse(readFileSync(idxF, 'utf8
 idx.regions = idx.regions.filter((r) => !String(r.key).startsWith('com-'));
 const quarter = (c, b) => { const dy = b.lat - c[0], dx = (b.lon - c[1]) * Math.cos(c[0] * Math.PI / 180); return Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 'north' : 'south') : (dx > 0 ? 'east' : 'west'); };
 const KIND = { apartments: 'Apartments', commercial: 'Commercial', industrial: 'Industrial' };
+const byAddr = new Map();
+/* Matthew 2026-10-05: the picks that show what the app does, together in one small town so they are easy to find. Copies of the
+   doors in the three spots (same data, separate marks). One area per point being made. */
+const SHOWCASE = [
+  ['1 · One owner, eight buildings (Keriwest, Springs)', [['springs', '4140-4186 E BIJOU ST'], ['springs', '4060 E BIJOU ST']]],
+  ['2 · Fresh storm, 13 Aug 2026 (DTC Blvd)', [['south', '5690 DTC BLVD']]],
+  ['3 · Family LLC to the family (Wieland, Denver)', [['west', '2701 W 7TH AVE']]],
+  ['4 · 1965 apartments, repeat hail (Pine Crest, Springs)', [['springs', '3610 E LA SALLE ST']]],
+  ['5 · The limit: huge roof, no person (Citadel mall)', [['springs', '680 E CITADEL DR']]],
+];
 
 for (const [spot, label] of Object.entries(SPOTS)) {
   const J = JSON.parse(readFileSync(join(OUT, `commercial-${spot}.json`), 'utf8')), key = 'com-' + spot;
@@ -85,6 +95,8 @@ for (const [spot, label] of Object.entries(SPOTS)) {
     if (b.hail && b.hail.length) hail[id] = b.hail;
     const w = windFor(b, near); if (w.length) wind[id] = w;
     if (b.naip) naip[id] = b.naip;
+    const prev = byAddr.get(spot + '|' + b.addr);   /* several parcels can share an address: keep the one with the biggest roof */
+    if (!prev || (b.roofSqft || 0) > (prev.door.com.rf || 0)) byAddr.set(spot + '|' + b.addr, { door: a.doors[a.doors.length - 1], hail: hail[id], wind: wind[id], naip: naip[id] });
   }
   const list = [...areas.values()].sort((x, y) => x.name.localeCompare(y.name));
   for (const a of list) { const ac = a.doors.map((d) => d.acres).filter((v) => v > 0); a.avg = ac.length ? +(ac.reduce((s, v) => s + v, 0) / ac.length).toFixed(2) : 0; }
@@ -95,6 +107,25 @@ for (const [spot, label] of Object.entries(SPOTS)) {
   writeFileSync(join(DATA, `naip-${key}.json`), JSON.stringify({ source: 'USDA NAIP 2023, 0.3 m (Colorado), public domain, via Microsoft Planetary Computer; window = the largest roof outline on the parcel', built: new Date().toISOString().slice(0, 10), doors: naip }));
   idx.regions.push({ key, label, areas: list.length, doors: doorsN, admin: true, county: 'comtest' });
   console.log(`${key}: ${doorsN} buildings in ${list.length} areas; hail ${Object.keys(hail).length}, wind ${Object.keys(wind).length}, photo ${Object.keys(naip).length}`);
+}
+{
+  const key = 'com-showcase', label = 'Commercial showcase', hail = {}, wind = {}, naip = {}, areas = [];
+  for (const [name, picks] of SHOWCASE) {
+    const doors = [];
+    for (const [spot, addr] of picks) {
+      const x = byAddr.get(spot + '|' + addr); if (!x) throw new Error('showcase building not found: ' + spot + ' ' + addr);
+      const id = 'sc-' + x.door.id.slice(0, 76); doors.push({ ...x.door, id });
+      if (x.hail) hail[id] = x.hail; if (x.wind) wind[id] = x.wind; if (x.naip) naip[id] = x.naip;
+    }
+    areas.push({ name, avg: +(doors.reduce((s, d) => s + (d.acres || 0), 0) / doors.length).toFixed(2), place: null, fw: null, doors });
+  }
+  const n = areas.reduce((s, a) => s + a.doors.length, 0);
+  writeFileSync(join(DATA, `${key}.json`), JSON.stringify({ key, label, built: new Date().toISOString().slice(0, 10), admin: true, areas }));
+  writeFileSync(join(DATA, `hail-${key}.json`), JSON.stringify({ through: '2026-09-30', from: '2020-04-01', doors: hail }));
+  writeFileSync(join(DATA, `wind-${key}.json`), JSON.stringify({ source: 'NWS Local Storm Reports via Iowa Environmental Mesonet (mesonet.agron.iastate.edu/request/gis/lsrs.phtml)', radiusMi: RADIUS_MI, minMph: MIN_MPH, built: new Date().toISOString().slice(0, 10), from: FROM, through, cap: CAP, doors: wind }));
+  writeFileSync(join(DATA, `naip-${key}.json`), JSON.stringify({ source: 'USDA NAIP 2023, 0.3 m (Colorado), public domain, via Microsoft Planetary Computer; window = the largest roof outline on the parcel', built: new Date().toISOString().slice(0, 10), doors: naip }));
+  idx.regions.push({ key, label, areas: areas.length, doors: n, admin: true, county: 'comtest' });
+  console.log(`${key}: ${n} buildings in ${areas.length} areas`);
 }
 writeFileSync(idxF, JSON.stringify(idx));
 console.log('index.json:', idx.regions.map((r) => r.key + (r.admin ? '*' : '')).join(' '));

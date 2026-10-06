@@ -9,6 +9,26 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Commercial showcase town, and corrected commercial door files
+
+Matthew 2026-10-05: put the showcase picks in one town so they are easy to find (search leaves the test towns out). **"Commercial
+showcase"**, admin-only, under Commercial test: 6 buildings in 5 areas, one per point:
+1. One owner, eight buildings (Keriwest, Springs)
+2. Fresh storm, 13 Aug 2026 (DTC Blvd)
+3. Family LLC to the family (Wieland, Denver)
+4. 1965 apartments, repeat hail (Pine Crest, Springs)
+5. The limit: huge roof, no person (Citadel mall)
+
+The three `com-` door files are corrected too: blank owners are no longer "person on the deed", and company names without a
+business word now count as companies. No code changes. com-test 11/11, territory 31/31.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/data/rounds/com-springs.json`, `com-south.json`, `com-west.json` (replace) | `sixfold-data/rounds/` |
+| 2 | `door-app/site/data/rounds/com-showcase.json`, `hail-com-showcase.json`, `wind-com-showcase.json`, `naip-com-showcase.json` (**new**, 8 KB) | `sixfold-data/rounds/` |
+| 3 | `door-app/site/data/rounds/index.json` (replace, **last**) | `sixfold-data/rounds/` |
+| 4 | Flush the cache | SiteGround |
+
 ## ✅ LIVE 2026-10-05 (verified 13/13 signed in as the Claude Check admin: page identical plain and busted at the folder URL, 14 towns, 1,203 / 822 / 3,057 buildings, every commercial area check opens with leads, hail, wind and photo, an ordinary town unchanged, search leaves the test towns out; crew refusal tested in the harness only) — Commercial test: three admin-only towns of apartments, commercial and industrial buildings
 
 Matthew 2026-10-05: try the commercial roofing test in the app. **5,082 buildings** in three storm spots (Colorado Springs east,
