@@ -191,8 +191,19 @@ let copied = 0, bytes = 0;
 for (const f of fs.readdirSync(DATA)) {
   const p = path.join(DATA, f);
   if (!fs.statSync(p).isFile() || skip(f)) continue;
-  write(path.join('traverse-data', 'rounds', f), fs.readFileSync(p));
-  copied++; bytes += fs.statSync(p).size;
+  let buf = fs.readFileSync(p);
+  // The API takes each town's county from docs/money.json (Sixfold's price sheet), which stays out. Its
+  // town -> county list is public fact, so write it into the copy's own index; the API falls back to it.
+  if (f === 'index.json') {
+    const idx = JSON.parse(buf.toString('utf8'));
+    const counties = (JSON.parse(fs.readFileSync(path.join(DATA, 'docs', 'money.json'), 'utf8')).counties) || {};
+    for (const reg of idx.regions || []) if (!reg.county && counties[reg.key]) reg.county = counties[reg.key];
+    const missing = (idx.regions || []).filter((reg) => !reg.county).map((reg) => reg.key);
+    if (missing.length) throw new Error('towns with no county: ' + missing.join(' '));
+    buf = Buffer.from(JSON.stringify(idx));
+  }
+  write(path.join('traverse-data', 'rounds', f), buf);
+  copied++; bytes += buf.length;
 }
 const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'door-app', 'company.example.json'), 'utf8'));
 delete ex._about; delete ex.colors;        // the made-up client wears the product's colours
