@@ -72,34 +72,51 @@ h1,h2,h3{text-wrap:balance}
 </div>
 </section>
 
-<!-- the whole day -->
+<!-- the whole day: the app's own home screen in the middle, its four parts called out around it -->
 <section id="product" style="background: #ffffff; border-top: 1px solid #dce2ea; border-bottom: 1px solid #dce2ea;">
-<div style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-direction: column; gap: 36px;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-direction: column; gap: 44px;">
 <div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
 <h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.015em;">One app for the whole day</h2>
-<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">The knock, the call back, the appointment and the signed job sit in one place, so nobody keeps a second list.</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">The knock, the call back, the appointment and the signed job, in one place.</p>
 </div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
-<div style="background: #f4f6f9; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
-<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#13294b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"></path><circle cx="14.5" cy="13" r="1"></circle></svg>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px;">Doors</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #566476;">Every house in your territory, in street order, with what you need to know before you knock. Mark each door in one tap: quote booked, or not now with a come-back date. Add a photo or a note for the next visit.</p>
+<div class="dayrow" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 40px;">
+
+<div class="daycol daycol-l" style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 56px;">
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; text-align: right;">
+<div style="display: flex; align-items: center; gap: 12px;"><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Doors</h3><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"></path><circle cx="14.5" cy="13" r="1"></circle></svg></span></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Every house in your territory, in street order, with what you need to know before you knock. Mark each door in one tap: quote booked, or not now with a come-back date. Add a photo or a note for the next visit.</p>
 </div>
-<div style="background: #f4f6f9; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
-<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#13294b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px;">Phones</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #566476;">Call and text the leads handed to you, with follow-ups that land on your calendar. Every lead keeps its notes and next step in one place.</p>
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; text-align: right;">
+<div style="display: flex; align-items: center; gap: 12px;"><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Phones</h3><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Call and text the leads handed to you, with follow-ups that land on your calendar. Every lead keeps its notes and next step in one place.</p>
 </div>
-<div style="background: #f4f6f9; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
-<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#13294b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path></svg>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px;">Appointments</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #566476;">Book the walk or the estimate while you are standing at the door, see the day's bookings so nothing collides, and send the homeowner a confirmation.</p>
 </div>
-<div style="background: #f4f6f9; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
-<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#13294b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h6"></path><circle cx="18" cy="17" r="3"></circle></svg>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px;">Pipeline</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #566476;">Every lead from the doors, the website and your ads in one pipeline, each with an owner and a next step. A won job becomes a customer with their visits and what is due next.</p>
+
+<div class="dayphone" style="flex: 0 0 300px; width: 300px; max-width: 100%; border-radius: 40px; background: #0f1b2d; padding: 12px; box-shadow: 0 4px 10px rgba(15,27,45,0.15), 0 30px 60px -20px rgba(15,27,45,0.45);" aria-hidden="true">
+<div style="border-radius: 30px; overflow: hidden; background: #f4f6f9;">
+<div style="background: #13294b; color: #ffffff; padding: 18px 16px 14px; display: flex; align-items: center; gap: 10px;"><svg width="26" height="26" viewBox="0 0 64 64"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#d6400c"></circle></svg><span style="display: flex; flex-direction: column; line-height: 1.15;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 16px;">Your company</b><small style="font-size: 11px; color: #c9d6ea;">Field tools</small></span></div>
+<div style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+<div style="background: #13294b; color: #ffffff; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 18px;">Good morning</b><div style="display: flex; gap: 6px;"><span style="flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px; font-size: 10px; letter-spacing: 0.06em;"><b style="display: block; font-size: 18px; letter-spacing: 0;">38</b>DOORS</span><span style="flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px; font-size: 10px; letter-spacing: 0.06em;"><b style="display: block; font-size: 18px; letter-spacing: 0;">12</b>TALKED</span><span style="flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px; font-size: 10px; letter-spacing: 0.06em;"><b style="display: block; font-size: 18px; letter-spacing: 0; color: #ff7a45;">3</b>QUOTES</span></div></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Doors</b><small style="font-size: 11px; color: #566476;">Pine Ridge · 46 to knock</small></span></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Phones</b><small style="font-size: 11px; color: #566476;">5 call-backs today</small></span></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Calendar</b><small style="font-size: 11px; color: #566476;">2 walks this afternoon</small></span></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h6"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Pipeline</b><small style="font-size: 11px; color: #566476;">9 open leads</small></span></div>
+<div style="height: 6px;"></div>
 </div>
+</div>
+</div>
+
+<div class="daycol daycol-r" style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 56px;">
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; align-items: center; gap: 12px;"><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path></svg></span><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Appointments</h3></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Book the walk or the estimate while you are standing at the door, see the day's bookings, and send the homeowner a confirmation.</p>
+</div>
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; align-items: center; gap: 12px;"><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h6"></path><circle cx="18" cy="17" r="3"></circle></svg></span><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Pipeline</h3></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Every lead from the doors, the website and your ads in one pipeline, each with an owner and a next step. A won job becomes a customer with their visits and what is due next.</p>
+</div>
+</div>
+
 </div>
 </div>
 </section>
@@ -116,9 +133,9 @@ h1,h2,h3{text-wrap:balance}
 <div style="display: flex; align-items: center; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#4e6680"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#4e6680" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#4e6680" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#4e6680" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 20px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Roofing</span></span></div>
 <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 22px; color: #0f1b2d;">
 <li>A storm list: every door the hail or wind reached, by day</li>
-<li>Hail size at the house from NOAA radar, wind from weather-service reports</li>
-<li>Roof size, material and year built where the county records them</li>
-<li>A 2023 aerial close-up of every roof</li>
+<li>Hail size and wind at every house, storm by storm</li>
+<li>Roof size, material and age</li>
+<li>A close-up photo of every roof</li>
 </ul>
 <a href="/roofing" style="margin-top: auto; font-weight: 700; font-size: 15px;">See TraverseRoofing &rarr;</a>
 </div>
@@ -126,8 +143,8 @@ h1,h2,h3{text-wrap:balance}
 <div style="background: #ffffff; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
 <div style="display: flex; align-items: center; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2f7a3a"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 20px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Yards</span></span></div>
 <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 22px; color: #0f1b2d;">
-<li>Lawn size at every house, measured from 2023 aerial photographs</li>
-<li>Trees close to the house, from laser-scan elevation data</li>
+<li>Lawn size at every house</li>
+<li>Trees close to the house</li>
 <li>Wildfire risk by property, for fuel-reduction work</li>
 <li>Monthly plans and the visits that are due</li>
 </ul>
@@ -138,7 +155,7 @@ h1,h2,h3{text-wrap:balance}
 <div style="display: flex; align-items: center; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#f2a900"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#0f1b2d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#0f1b2d"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 20px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Solar</span></span></div>
 <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 22px; color: #0f1b2d;">
 <li>Every door, call and appointment, as in every edition</li>
-<li>Roof size from county records and aerial photographs</li>
+<li>Roof size at every house</li>
 <li style="color: #566476;">[Solar-specific features to confirm]</li>
 </ul>
 <a href="/solar" style="margin-top: auto; font-weight: 700; font-size: 15px;">See TraverseSolar &rarr;</a>
@@ -166,7 +183,7 @@ h1,h2,h3{text-wrap:balance}
 <div style="display: flex; align-items: center; gap: 10px;"><span style="width: 22px; height: 22px; border-radius: 50%; border: 5px solid #ffffff; box-sizing: border-box;"></span><span style="flex: 1; height: 5px; border-radius: 3px; background: #ffffff;"></span></div>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d6ea;">Station 1</span>
 <h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px; color: #ffffff;">Load your territory</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #dce6f5;">Every house in the towns you work, from public property records, grouped into neighbourhoods your crews can claim.</p>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: #dce6f5;">Every house in the towns you work, grouped into neighbourhoods your crews can claim.</p>
 </div>
 <div style="display: flex; flex-direction: column; gap: 10px;">
 <div style="display: flex; align-items: center; gap: 10px;"><span style="width: 22px; height: 22px; border-radius: 50%; border: 5px solid #ffffff; box-sizing: border-box;"></span><span style="flex: 1; height: 5px; border-radius: 3px; background: #ffffff;"></span></div>
@@ -222,7 +239,7 @@ h1,h2,h3{text-wrap:balance}
 <!-- closing call to action -->
 <section id="demo" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 20px;">
 <h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; max-width: 18ch;">See it on your own territory</h2>
-<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476; max-width: 52ch;">Tell us the towns you work and the trade you sell, and we will load them so you can walk through it with your own doors.</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476; max-width: 52ch;">Tell us the towns you work and the trade you sell, and we will load them for your demo.</p>
 <a href="#demo" style="display: inline-flex; align-items: center; height: 52px; padding: 0 26px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 17px; text-decoration: none;">Book a demo</a>
 </section>
 

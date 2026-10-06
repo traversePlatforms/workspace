@@ -51,6 +51,11 @@ html{scroll-behavior:smooth}
   section[style*="max-width: 1200px"],
   section > div[style*="max-width: 1200px"]{padding-top:48px !important;padding-bottom:48px !important}
   #top{gap:32px !important}
+  /* the whole-day section: the phone first, then the four parts, all reading left to right */
+  .dayphone{order:-1}
+  .daycol{gap:28px !important}
+  .dayitem{align-items:flex-start !important;text-align:left !important}
+  .daycol-l .dayitem > div:first-child{flex-direction:row-reverse}
 }
 @media (max-width:420px){
   h1{font-size:36px !important}
