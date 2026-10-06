@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Commercial showcase town, and corrected commercial door files
+## ✅ LIVE 2026-10-05 (verified 13/13: 15 towns, showcase 5 areas / 6 buildings each with roof, lead, hail, wind, photo; corrected com- files up, no blank owner in tier 1 across 5,082) — Commercial showcase town, and corrected commercial door files
 
 Matthew 2026-10-05: put the showcase picks in one town so they are easy to find (search leaves the test towns out). **"Commercial
 showcase"**, admin-only, under Commercial test: 6 buildings in 5 areas, one per point:
