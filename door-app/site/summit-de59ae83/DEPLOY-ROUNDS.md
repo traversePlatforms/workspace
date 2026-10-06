@@ -11,7 +11,7 @@ each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/RO
 
 ## ⏳ TO UPLOAD — overnight review fixes (2026-10-06)
 
-From the overnight review (reports in ). Small batch, any order except flush last.
+From the overnight review (reports in `reviews/2026-10-06/`). Small batch, any order except flush last.
 - **Calendar:** a malformed date in the request no longer crashes it (500 with no JSON); changing month now picks a day in the new month (today, or the 1st) instead of leaving the old day picked.
 - **Backups:** the Download and the nightly copy now include personal goals (goals-people.json), the lessons (training.json) and the roofing prices/thresholds (roof-settings.json).
 - **Managers:** opening a teammate's Doors tab now shows the teammate's doors, not your own.
@@ -21,10 +21,10 @@ review3-test 17/17, teams 55/55, backup 20/20.
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 |  (245,065 bytes) |  |
-| 2 |  (568,496 bytes) |  |
-| 3 |  (32,025 bytes, replaces) |  |
-| 4 |  (4,178 bytes, replaces) |  |
+| 1 | `door-app/site/api/rounds.php` (245,065 bytes) | `public_html/api/` |
+| 2 | `door-app/site/summit-de59ae83/index.html` (568,496 bytes) | `public_html/summit-de59ae83/` |
+| 3 | `door-app/site/data/rounds/training.json` (32,025 bytes, replaces) | `sixfold-data/rounds/` |
+| 4 | `door-app/site/tools/nightly-backup.php` (4,178 bytes, replaces) | `sixfold-tools/` |
 | 5 | Flush the cache | SiteGround |
 
 ## ✅ LIVE 2026-10-05 (uploaded by Matthew before bed; verified read-only 2026-10-06: page byte-identical to commit 7675ff2, 31 lessons under the seven headings) — Training: seven headings and Sixfold's 31 lessons; the calendar as a month grid
