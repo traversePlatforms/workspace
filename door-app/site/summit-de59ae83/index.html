@@ -2856,7 +2856,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function myDoors(name, back) {
     var who = name;
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
-    var params = { days: 30 }; if (S.role === 'admin') params.who = name;
+    /* whose doors: named whenever it is not your own page (review 2026-10-06: only admins named them, so a manager opening a
+       teammate's Doors tab got their own doors under the teammate's name). The server still answers with yours unless you
+       may see theirs. */
+    var params = { days: 30 }; if (name !== S.me) params.who = name;
     api('mydoors', { params: params }).then(function (j) {
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
@@ -4065,7 +4068,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var weeks = Math.ceil((first.getUTCDay() + new Date(Date.UTC(y, m, 0)).getUTCDate()) / 7);
     var stop = new Date(start.getTime()); stop.setUTCDate(start.getUTCDate() + weeks * 7 - 1);
     var from = isoD(start), to = isoD(stop);
-    var shift = function (n) { var d = new Date(Date.UTC(y, m - 1 + n, 1)); S.calMonth = isoD(d).slice(0, 7); S.calOpenId = null; calendarView(); };
+    /* changing month picks a day in it: today if it is this month, else the 1st (review 2026-10-06: the old day stayed picked
+       and the list said "Nothing on this day" for a day you could no longer see) */
+    var shift = function (n) { var d = new Date(Date.UTC(y, m - 1 + n, 1)), mm = isoD(d).slice(0, 7); S.calMonth = mm; S.calDay = mm === today.slice(0, 7) ? today : mm + '-01'; S.calOpenId = null; S.calAdd = false; calendarView(); };
     api('calendar', { params: { who: who, from: from, to: to } }).then(function (j) {
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');

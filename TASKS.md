@@ -706,7 +706,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [x] **SX-54 Odds sort: ✅ LIVE 2026-10-03 (verified), switches on at 150 conversations.** Neighbourhoods by quotes expected
       from the doors still to knock, at the rate doors like them (fire hazard x lawn size) have booked, across
       every town (k = 10 toward the overall rate). Admins see it now with the count so far; crew once ready.
-- [ ] **SX-55 — Upload Training (31 Sixfold lessons, seven headings) + the month-grid calendar.** Added in the
+- [x] **SX-55 — Upload Training (31 Sixfold lessons, seven headings) + the month-grid calendar.** Added in the
+      **DONE 2026-10-05 (late): Matthew uploaded it before bed; verified read-only 2026-10-06 (page = 7675ff2, 31 lessons live). The overnight fixes are a new small batch at the top of DEPLOY-ROUNDS.**
       2026-10-06 tidy-up: committed `a3d2c7f` (Training) and `7675ff2` (calendar) on 2026-10-05, **NOT uploaded**
       — the only ⏳ batch left at the top of DEPLOY-ROUNDS.md. Four steps: `rounds.php`, `index.html`, then
       `training.json` (new; the live list was empty on 2026-10-05, and **this upload replaces every live

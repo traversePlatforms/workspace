@@ -31,7 +31,8 @@ if (!is_dir($out) && !@mkdir($out, 0700, true)) { fwrite(STDERR, "sixfold backup
 $files = [];
 $add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };
 foreach ((glob($rounds . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/rounds/' . basename($p));
-$add($rounds . '/goals.json', 'sixfold-data/rounds/goals.json');
+/* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices were missing) */
+foreach (['goals.json', 'goals-people.json', 'training.json', 'roof-settings.json'] as $n) $add($rounds . '/' . $n, 'sixfold-data/rounds/' . $n);
 foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
 foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
 $photos = [];

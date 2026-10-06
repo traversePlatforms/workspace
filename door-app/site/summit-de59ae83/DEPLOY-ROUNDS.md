@@ -9,7 +9,25 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Training: seven headings and Sixfold's 31 lessons; the calendar as a month grid
+## ⏳ TO UPLOAD — overnight review fixes (2026-10-06)
+
+From the overnight review (reports in ). Small batch, any order except flush last.
+- **Calendar:** a malformed date in the request no longer crashes it (500 with no JSON); changing month now picks a day in the new month (today, or the 1st) instead of leaving the old day picked.
+- **Backups:** the Download and the nightly copy now include personal goals (goals-people.json), the lessons (training.json) and the roofing prices/thresholds (roof-settings.json).
+- **Managers:** opening a teammate's Doors tab now shows the teammate's doors, not your own.
+- **Training:** five fact fixes in the lessons (+ Add a lead is admin-only; the app warns about Do Not Call on looked-up numbers but does not check the lists; the 55/38/7 remnant; the deposit wording; first aid as a requirement).
+
+review3-test 17/17, teams 55/55, backup 20/20.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 |  (245,065 bytes) |  |
+| 2 |  (568,496 bytes) |  |
+| 3 |  (32,025 bytes, replaces) |  |
+| 4 |  (4,178 bytes, replaces) |  |
+| 5 | Flush the cache | SiteGround |
+
+## ✅ LIVE 2026-10-05 (uploaded by Matthew before bed; verified read-only 2026-10-06: page byte-identical to commit 7675ff2, 31 lessons under the seven headings) — Training: seven headings and Sixfold's 31 lessons; the calendar as a month grid
 
 Matthew 2026-10-05: build out the crew's Training section. Headings are now **Doors · Sales · Quotes · Phones ·
 Paperwork · Safety · Using the app** (plus Other, kept for any lesson filed under the old three). A row of chips at the

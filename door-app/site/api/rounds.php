@@ -2033,7 +2033,9 @@ function calEntries(): array {
 }
 function calRange(): array {
     $tz = new DateTimeZone('America/Denver');
-    $ok = fn($d) => (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/D', $d);
+    /* review 2026-10-06: a real date, not just the shape of one. "2026-13-01" passed the pattern and DateTime threw,
+       so the request ended with a 500 and no JSON; now a bad from or to falls back like a missing one */
+    $ok = fn($d) => dateOk((string) $d);
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!$ok($from)) $from = (new DateTime('today', $tz))->format('Y-m-d');
     if (!$ok($to) || $to < $from) $to = (new DateTime($from . ' 00:00', $tz))->modify('+30 days')->format('Y-m-d');
@@ -2564,7 +2566,9 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
         $files = [];
         $add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };
         foreach ((glob(DATA_DIR . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/rounds/' . basename($p));
-        foreach (['goals.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
+        /* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices
+           were not in the backup, so a lost server lost them). Keep in step with sixfold-tools/nightly-backup.php. */
+        foreach (['goals.json', 'goals-people.json', 'training.json', 'roof-settings.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
@@ -3076,7 +3080,7 @@ if ($action === 'walk') {
 if ($action === 'walks') {
     $tz = new DateTimeZone('America/Denver');
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
-    $ok = fn($d) => (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/D', $d);
+    $ok = fn($d) => dateOk($d);   /* review 2026-10-06: a 13th month used to reach DateTime and end in a 500 (see calRange) */
     if (!$ok($from)) $from = (new DateTime('today', $tz))->format('Y-m-d');
     if (!$ok($to) || $to < $from) $to = (new DateTime($from . ' 00:00', $tz))->modify('+14 days')->format('Y-m-d');
     if ((new DateTime($to . ' 00:00', $tz))->getTimestamp() - (new DateTime($from . ' 00:00', $tz))->getTimestamp() > 62 * 86400) fail('Ask for two months at most.');
