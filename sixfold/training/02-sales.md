@@ -94,7 +94,7 @@ Be the opposite of a pushy salesperson. Nobody wants to be sold. "It's up to you
 People hate losing something more than they like gaining it. Use what is real: the fall window for aeration closes when the ground freezes; this week's openings fill; seed down too late may not take this year. Never say "last day", "sold out" or "price goes up tomorrow" unless it's true. A made-up deadline or shortage can be a deceptive trade practice under Colorado law.
 
 ### T: tone
-It's not just what you say, it's how you say it. Your body and your voice carry most of the message. Calm, warm and sure beats fast and loud.
+It's not just what you say, it's how you say it. The same words land differently said calm, warm and sure than said fast and loud.
 
 ### S: sense of urgency
 Move with purpose. "Super quick." "Two seconds." Get the phone out and start booking while you're talking. Action beats hesitation.

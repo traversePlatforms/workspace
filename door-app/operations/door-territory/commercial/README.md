@@ -2,7 +2,7 @@
 
 Matthew asked: run the residential system on **apartments, commercial and industrial** buildings in the three Colorado
 spots with the most hail and wind damage, get as close as public records allow to **the person behind the owner**, add
-the roofing layers, and show what it turns up. Test only. Not in the app, nothing uploaded.
+the roofing layers, and show what it turns up. Test only. In the app since 2026-10-05 as admin-only towns (com-springs, com-south, com-west) plus a "Commercial showcase" town, built by build-app-data.mjs; see DEPLOY-ROUNDS.
 
 **The review page is `out/COMMERCIAL-TEST.html`.** `out/` is gitignored because it holds owner and agent names. Never
 publish it as an artifact and never upload it.
@@ -58,7 +58,7 @@ roofs has a name. Those need the next step (property manager, the register's fil
   not "owner".** Colorado does not require LLC members or managers in the register.
 - **A c/o line is split three ways**: a person (tier 2), a company, usually the manager (tier 3), or a corporate tax mailbox or
   tax consultant (ignored).
-- Register matches must agree word for word (abbreviations allowed: COLO ~ COLORADO) and on company type. A type mismatch is kept
+- Register matches must agree word by word, each county word the start of the register word (abbreviations allowed: COLO ~ COLORADO), and a county name of 30+ characters may stop early (cut short on the roll); company types must agree. A type mismatch is kept
   only as "possible" and not counted.
 - No people-search sites, no scraping. Every source is a government record or open data.
 

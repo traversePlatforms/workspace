@@ -70,8 +70,9 @@ the originals back.**
 3. **Greed: "everyone", "last person", "point at the receipt"** now carry "only when it's true" and "only if you really did
    that house". FFF's "the last person felt..." likewise.
 4. **Rehash step 1 changed from "secure the payment (card type?)" to "secure the first yes"** (the booked walk or the
-   signed agreement). Sixfold takes no payment at the door: the first payment is due on or before the first day of work,
-   and the agreement says no deposit is taken at signing.
+   signed agreement). Sixfold takes no payment at the door: the aeration agreements put the first payment on or before the
+   first day of work and never use the word "deposit". (The blank tree-job template, service-agreement.src.html, still
+   carries a "Deposit, if any, paid today" box; the crew rule follows the packet rule, not that template.)
 5. **"Work a full 8 hours" became "set your own goal; how long you work is your call".** Sixfold's crew are contractors,
    and setting a contractor's hours is a mark of employment.
 6. **"55% body language, 38% tone, 7% words" was dropped.** It is a misapplied reading of a 1960s study about feelings,
@@ -116,14 +117,25 @@ the called person's time) are from 47 CFR 64.1200(c)(1).
 
 | Claim | Source | Status |
 |---|---|---|
-| 30-second identification rule | C.R.S. 6-1-105(1)(p), as summarised in sixfold/agreements/field-instructions | Carried from the crib sheet |
-| Oral notice of the right to cancel; seller fills the forms; ten-day refund | 16 CFR 429.1; C.R.S. 5-3-401 to 5-3-405 (crib sheets) | Carried |
-| No compensation for work done before a cancellation | C.R.S. 5-3-405(3) (crib sheet) | Carried |
-| Emergency exception, all three conditions | 16 CFR 429.0(a)(3); C.R.S. 5-3-402(5) (crib sheet) | Carried |
-| 811: two business days before digging | C.R.S. 9-1.5-103(3)(b) (crib sheet) | Carried |
+| 30-second identification rule | C.R.S. 6-1-105(1)(p), as summarised in sixfold/agreements/field-instructions | Verified 2026-10-06 against the statute text (colorado.public.law): "within thirty seconds after beginning the conversation, identifies himself or herself, whom he or she represents, and the purpose of the call" |
+| Oral notice of the right to cancel; seller fills the forms; ten-day refund | 16 CFR 429.1(e) (oral), 429.1(c) (seller completes both forms), 429.1(g) (refund within 10 business days); C.R.S. 5-3-404(1) (refund within ten days) | Verified 2026-10-06 (LII, colorado.public.law). The lesson's "ten days" is Colorado's tighter figure |
+| Business day = any day except Sunday or a federal holiday; Saturday counts | 16 CFR 429.0 (definition of business day); OPM 2026 holiday list (Columbus Day = Monday 12 October 2026) | Verified 2026-10-06 |
+| Cancellation stays open three years if the paperwork is defective | C.R.S. 5-3-403 | Verified 2026-10-06 |
+| No compensation for work done before a cancellation | C.R.S. 5-3-405(3) | Verified 2026-10-06: "the seller is not entitled to compensation for any services the seller performed pursuant to it" |
+| Emergency exception, all three conditions | 16 CFR 429.0(a)(3); C.R.S. 5-3-402(5) | Verified 2026-10-06. The three conditions in the lesson are the federal ones; Colorado's version also requires the seller to have made a substantial beginning of performance before any cancellation arrives. Meeting both is the safe reading |
+| 811: two business days before digging | C.R.S. 9-1.5-103(3)(b) | Verified 2026-10-06 (colorado.public.law): "at least two business days prior thereto not including the day of actual notice". Note C.R.S. 9-1.5-102 excludes routine landscape maintenance no deeper than 4 inches by mechanical means from "excavation", so a core-aeration pass is probably not a locate-required dig; the agreements promise a locate anyway, so the lesson keeps it |
 | Water: aeration needs a green, watered lawn; overseed exposed; household-use-only wells | sixfold/research/water-restrictions-2026.md (CSU Extension, State Engineer), corrected 2026-10-04 | Carried; re-check each season |
 | Power lines 10 ft; no climbing; first aid; hearing; fuel; OSHA reporting | sixfold/research/crew-safety-and-compliance.md (29 CFR 1910) | Carried |
 | Colorado Springs licence for paid work on trees 15 ft+ | City Clerk's Tree Service License page (memory note, verified 2026-09-14) | Carried |
-| Calling hours 8 am-9 pm | 47 CFR 64.1200(c)(1) | From general knowledge of the rule; not re-read today |
-| Lead flow (website form, Meta import, + Add a lead, owners) | APP-GUIDE, DEPLOY-ROUNDS | Checked against the app |
-| "55/38/7" is a misreading of Mehrabian's study | Widely documented; Mehrabian has said his results don't generalise to communication | Dropped, not claimed |
+| Calling hours 8 am-9 pm | 47 CFR 64.1200(c)(1) | Verified 2026-10-06 (LII): "before the hour of 8 a.m. or after 9 p.m. (local time at the called party's location)". The rule's definition of telephone solicitation excludes calls the person invited (a form they filled in), so the hours are a Sixfold house rule for call-backs, not a legal limit on them |
+| Lead flow (website form, Meta import, + Add a lead, owners) | APP-GUIDE, DEPLOY-ROUNDS | Checked against the app 2026-10-06: + Add a lead and Import leads from Meta are in the Pipeline, which is admin-only; the Phones lessons now say so |
+| Looked-up numbers and Do Not Call | summit-de59ae83/index.html dncMark() | Checked 2026-10-06: for a number found with Look up number the app shows "Looked up, not given, check the Do Not Call lists before calling". It does not check the lists; only a skip-traced number (BatchData, switched off) carries a provider answer. The Phones lesson was corrected |
+| No answer comes back after two days; Not now offers a month, 3 months, spring, fall or a date; the no-soliciting flag sits inside Not now; any crew member can flag a neighbourhood, only an admin clears it | api/rounds.php MISS_REST_DAYS = 2; index.html | Checked 2026-10-06 |
+| "55/38/7" is a misreading of Mehrabian's study | Widely documented; Mehrabian has said his results don't generalise to communication | Dropped, not claimed. 2026-10-06: the GIFTS lesson still said "your body and your voice carry most of the message", the same claim in softer words; reworded |
+| First-aider and kit on every crew | crew-safety-and-compliance.md B1 and Part E item 4 | 2026-10-06: the source lists these as required and not yet in place, so the Safety lesson now says "must have", not "has" |
+
+## Review 2026-10-06 (overnight fact-check)
+
+Changed: 02-sales (GIFTS tone line), 04-phones (+ Add a lead is admin-only; looked-up numbers are not checked against Do
+Not Call by the app), 05-paperwork (what the agreements actually say about deposits), 06-safety (first-aider and kit as
+rules, not facts), this README (point 4 and the log above). Full report: reviews/2026-10-06/documents.md.

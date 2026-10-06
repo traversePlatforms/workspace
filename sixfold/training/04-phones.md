@@ -18,7 +18,7 @@ Source: new for Sixfold. Built from the five steps (Surge, rebuilt) and the rule
 - The best number and time to reach them.
 
 ### Then book the walk
-The phone close is the same as the door close: a booked walk. "I can have someone out Thursday afternoon or Saturday morning. Which works?" Add them in the app with + Add a lead, and the walk on the calendar.
+The phone close is the same as the door close: a booked walk. "I can have someone out Thursday afternoon or Saturday morning. Which works?" An admin adds them in the Pipeline with + Add a lead (the Pipeline is admin-only, so if that isn't you, pass the five things to the office the same day), and the walk goes on the calendar.
 
 ### What not to do on the phone
 - Don't give a price. "Every property's different, so we walk it and give you a fixed price. The quote's free."
@@ -31,7 +31,7 @@ Source: door-app APP-GUIDE (Leads that belong to someone; Pipeline); DEPLOY-ROUN
 ### The four ways in
 - The website form: lands in the app's Pipeline by itself and is emailed to Contact@.
 - Facebook / Instagram ad forms: land in Meta's Leads Center, not in email. An admin downloads them and uses Import leads from Meta in the Pipeline. Someone has to check Leads Center every day, or those people wait.
-- Phone calls, Nextdoor messages and referrals: add them by hand with + Add a lead.
+- Phone calls, Nextdoor messages and referrals: an admin adds them by hand in the Pipeline with + Add a lead.
 - Doors: a Quote booked at the door goes into the Pipeline by itself.
 
 ### Every lead needs an owner
@@ -54,7 +54,7 @@ Only between 8 am and 9 pm, their time.
 
 ### Do Not Call: whose number is it?
 - They gave us the number (a form, a call, at the door): call them.
-- We looked the number up ourselves: the app shows its Do Not Call answer. If it says do not call, don't. Knock or send a letter instead.
+- We looked the number up ourselves (Look up number): the app marks it "looked up" and warns that it has to clear the national and Colorado Do Not Call lists first. The app doesn't check those lists for you. Until the office has checked the number, don't call it: knock or send a letter instead.
 - Anyone who says "don't call me again": stop, and note it on the lead.
 
 ### Texts

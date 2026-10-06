@@ -74,7 +74,7 @@ Source: sixfold/agreements (clause 10 and section 5); the customer packet rules 
 - The rest: when the work is done.
 
 ### Words matter
-Call it the "first payment", never a "deposit". The agreement says no deposit is taken at signing, and an invoice that says "deposit" contradicts it.
+Call it the "first payment", never a "deposit". The aeration agreements never use the word: the first payment is due on or before the first day of work, and nothing is taken at signing. An invoice that says "deposit" contradicts them.
 
 ### What the money can and can't do
 The first payment holds the date. It doesn't change their right to cancel: if they cancel inside the window, it comes back in full.

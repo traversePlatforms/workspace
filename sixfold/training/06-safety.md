@@ -13,8 +13,8 @@ Source: sixfold/research/crew-safety-and-compliance.md B1, B4 and B7 (29 CFR 191
 Sixfold provides the protective gear. Ask if you don't have it.
 
 ### First aid
-- At least one person on every crew holds current first-aid training.
-- A stocked first-aid kit is on the truck, with trauma dressings and a tourniquet for saw work.
+- Every crew must have at least one person with current first-aid training. If yours doesn't, say so before the job starts.
+- A stocked first-aid kit must be on the truck, with trauma dressings and a tourniquet for saw work.
 - Gloves in the kit, and the first-aider uses them.
 
 ### Machines and fuel
