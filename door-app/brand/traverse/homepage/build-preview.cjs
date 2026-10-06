@@ -25,12 +25,13 @@ function between(s, a, b) {
 const head = between(src, '<helmet>', '</helmet>').trim();
 let body = between(src, '</helmet>', '</x-dc>').trim();
 
-// The edition pages and sign-in page don't exist yet, and Sixfold's ErrorDocument sends any
-// missing path to Sixfold's own homepage. Keep those links on this page; Sign in opens the Traverse
-// copy of the door app (tr-cb2e8587, build-app.cjs), on the same hosting.
-const links = { '/roofing': '#trades', '/yards': '#trades', '/solar': '#trades', '/pest': '#trades', '/sign-in': '/tr-cb2e8587/' };
+// The edition pages and sign-in page don't exist yet, and Sixfold's ErrorDocument sends any missing path to
+// Sixfold's own homepage. Roofing and Yards open their apps (build-app.cjs, on the same hosting); Solar and Pest
+// have none, so they stay on this page; Sign in goes to the editions so you pick which app.
+const APPS = ['tr-cb2e8587', 'ty-25604fff'];
+const links = { '/roofing': '/' + APPS[0] + '/', '/yards': '/' + APPS[1] + '/', '/solar': '#trades', '/pest': '#trades', '/sign-in': '#trades' };
 for (const [from, to] of Object.entries(links)) body = body.split('href="' + from + '"').join('href="' + to + '"');
-if (/href="\/(?!tr-cb2e8587\/")[^"]/.test(body)) throw new Error('a site-absolute link is left; it would land on Sixfold');
+if ((body.match(/href="\/[^"]*"/g) || []).some((h) => !APPS.some((a) => h === 'href="/' + a + '/"'))) throw new Error('a site-absolute link is left; it would land on Sixfold');
 
 // The mark, as the tab icon.
 const icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#13294b"/>'

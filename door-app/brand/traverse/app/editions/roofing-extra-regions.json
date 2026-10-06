@@ -1,0 +1,37 @@
+{
+  "_about": "The commercial test towns (admin-only), moved out of Sixfold's index.json on 2026-10-06 when Roofing became its own app. build-app.cjs adds them to the Roofing copy only. Their door files (com-*.json etc.) stay in door-app/site/data/rounds.",
+  "regions": [
+    {
+      "key": "com-springs",
+      "label": "Commercial test · Springs east",
+      "areas": 12,
+      "doors": 1203,
+      "admin": true,
+      "county": "comtest"
+    },
+    {
+      "key": "com-south",
+      "label": "Commercial test · South metro",
+      "areas": 12,
+      "doors": 822,
+      "admin": true,
+      "county": "comtest"
+    },
+    {
+      "key": "com-west",
+      "label": "Commercial test · West Denver / Lakewood",
+      "areas": 12,
+      "doors": 3057,
+      "admin": true,
+      "county": "comtest"
+    },
+    {
+      "key": "com-showcase",
+      "label": "Commercial showcase",
+      "areas": 5,
+      "doors": 6,
+      "admin": true,
+      "county": "comtest"
+    }
+  ]
+}

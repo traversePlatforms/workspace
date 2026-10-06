@@ -2379,10 +2379,11 @@ if ($action === 'pushcron') {
     $label = [];
     foreach (($idx['regions'] ?? []) as $rg) { $label[$rg['key']] = $rg['label']; foreach (loadAssign($rg['key']) as $who) $townsOf[$who][$rg['key']] = true; }
     $co = company(); $stormAll = feature('hail') && (($co['card']['hail'] ?? true) !== false); $stormAdmins = feature('hail');
+    $fireOn = ($co['card']['fire'] ?? true) !== false;   /* 2026-10-06: fire warnings only where the company shows fire (not a roofer's app) */
     $pushed = [];
     foreach (($al['weather'] ?? []) as $w) {
         $id = (string) ($w['id'] ?? ''); $ev = (string) ($w['event'] ?? '');
-        $storm = in_array($ev, PUSH_STORM, true); $fire = in_array($ev, PUSH_FIRE, true);
+        $storm = in_array($ev, PUSH_STORM, true); $fire = $fireOn && in_array($ev, PUSH_FIRE, true);
         if ($id === '' || (!$storm && !$fire) || isset($sent[$id])) continue;
         $ends = strtotime((string) ($w['ends'] ?? '')) ?: time() + 3600;
         if ($ends < time()) continue;

@@ -1373,7 +1373,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      (Roofing preview on the tools screen) without changing anything for the crew. Hidden parts are taken out
      of the answers as they arrive, so every place that would show them (badges, sorts, chips, map) has nothing to show. */
   var ROOF_HIDE = { lawn: 1, trees: 1, fire: 1, money: 1, water: 1, fc: 1 };
-  function roofOn() { return !!S.roofView && S.role === 'admin'; }
+  /* 2026-10-06: Roofing is its own app now (TraverseRoofing), so the preview is off unless a company asks for it (features.roofPreview) */
+  function roofOn() { return !!S.roofView && S.role === 'admin' && feat('roofPreview'); }
   /* hail and roof are the roofing parts (Matthew 2026-10-05: irrelevant to the lawn crew): a company turns them off in its card
      settings (Sixfold does), and the Roofing preview always shows them */
   var ROOF_SHOW = { hail: 1, roof: 1 };
@@ -1902,6 +1903,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return ' until ' + d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' });
   }
   function isStormA(a) { return /^Severe Thunderstorm/.test(a.event || ''); }
+  /* fire weather and wildfires belong with the fire card (2026-10-06): a roofer's app has no use for a red flag warning */
+  var FIRE_EV = { 'Red Flag Warning': 1, 'Fire Weather Watch': 1, 'Fire Warning': 1, 'Extreme Fire Danger': 1 };
   function alertStrip(townKey) {
     var holder = q('div');
     var src = townKey === SAMPLE_KEY ? Promise.resolve((S.sampleData || {}).alerts || null) : api('alerts');
@@ -1910,8 +1913,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var here = (j.weather || []).filter(function (a) { return !townKey || a.towns.indexOf(townKey) >= 0; });
       var storms = cardOn('hail') ? here.filter(isStormA) : [];      /* the server sends storms only where hail is on; the card switch decides here */
       if (storms.length) holder.appendChild(stormStrip(j, storms, townKey));
-      var w = here.filter(function (a) { return !isStormA(a); });
-      var fires = (j.fires || []).filter(function (f) { return !townKey || (f.dist ? f.dist[townKey] <= 30 : f.near === townKey); });
+      var fireOn = cardOn('fire');
+      var w = here.filter(function (a) { return !isStormA(a) && (fireOn || !FIRE_EV[a.event]); });
+      var fires = !fireOn ? [] : (j.fires || []).filter(function (f) { return !townKey || (f.dist ? f.dist[townKey] <= 30 : f.near === townKey); });
       if (!w.length && !fires.length) return;
       var fk = townKey && fires[0] && fires[0].dist ? townKey : fires[0] && fires[0].near, fm = fires[0] ? (fires[0].dist && fk ? fires[0].dist[fk] : fires[0].miles) : 0;
       var top = w.length ? w[0].event + (townKey ? '' : ' · ' + w[0].towns.map(function (t) { return TOWN_NAME[t] || t; }).join(', ')) + untilText(w[0].ends)
@@ -2263,7 +2267,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(q('h2', 'tgrp', 'This phone'));
     box.appendChild(pushRow());
     box.appendChild(lk);
-    if (S.role === 'admin') {
+    if (S.role === 'admin' && feat('roofPreview')) {
       var rv = q('div', 'lookrow'); rv.appendChild(q('span', null, 'Door card'));
       var rseg = q('div', 'aseg');
       [[false, CO.short], [true, 'Roofing preview']].forEach(function (o) {

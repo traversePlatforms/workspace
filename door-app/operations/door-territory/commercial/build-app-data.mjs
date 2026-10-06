@@ -59,6 +59,10 @@ for (const r of rep) (byDayAll.get(r.day) || byDayAll.set(r.day, []).get(r.day))
 const through = rep.reduce((m, r) => (r.day > m ? r.day : m), FROM);
 const idxF = join(DATA, 'index.json'), idx = JSON.parse(readFileSync(idxF, 'utf8'));
 idx.regions = idx.regions.filter((r) => !String(r.key).startsWith('com-'));
+/* 2026-10-06: the commercial towns belong to TraverseRoofing, not Sixfold. Sixfold's index keeps none; their entries go to
+   the Roofing edition's list, which door-app/brand/traverse/app/build-app.cjs adds to that edition only. */
+const com = [];
+const comF = join(DATA, '..', '..', '..', 'brand', 'traverse', 'app', 'editions', 'roofing-extra-regions.json');
 const quarter = (c, b) => { const dy = b.lat - c[0], dx = (b.lon - c[1]) * Math.cos(c[0] * Math.PI / 180); return Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 'north' : 'south') : (dx > 0 ? 'east' : 'west'); };
 const KIND = { apartments: 'Apartments', commercial: 'Commercial', industrial: 'Industrial' };
 const byAddr = new Map();
@@ -105,7 +109,7 @@ for (const [spot, label] of Object.entries(SPOTS)) {
   writeFileSync(join(DATA, `hail-${key}.json`), JSON.stringify({ through: J.hailThrough, from: '2020-04-01', doors: hail }));
   writeFileSync(join(DATA, `wind-${key}.json`), JSON.stringify({ source: 'NWS Local Storm Reports via Iowa Environmental Mesonet (mesonet.agron.iastate.edu/request/gis/lsrs.phtml)', radiusMi: RADIUS_MI, minMph: MIN_MPH, built: new Date().toISOString().slice(0, 10), from: FROM, through, cap: CAP, doors: wind }));
   writeFileSync(join(DATA, `naip-${key}.json`), JSON.stringify({ source: 'USDA NAIP 2023, 0.3 m (Colorado), public domain, via Microsoft Planetary Computer; window = the largest roof outline on the parcel', built: new Date().toISOString().slice(0, 10), doors: naip }));
-  idx.regions.push({ key, label, areas: list.length, doors: doorsN, admin: true, county: 'comtest' });
+  com.push({ key, label, areas: list.length, doors: doorsN, admin: true, county: 'comtest' });
   console.log(`${key}: ${doorsN} buildings in ${list.length} areas; hail ${Object.keys(hail).length}, wind ${Object.keys(wind).length}, photo ${Object.keys(naip).length}`);
 }
 {
@@ -124,8 +128,9 @@ for (const [spot, label] of Object.entries(SPOTS)) {
   writeFileSync(join(DATA, `hail-${key}.json`), JSON.stringify({ through: '2026-09-30', from: '2020-04-01', doors: hail }));
   writeFileSync(join(DATA, `wind-${key}.json`), JSON.stringify({ source: 'NWS Local Storm Reports via Iowa Environmental Mesonet (mesonet.agron.iastate.edu/request/gis/lsrs.phtml)', radiusMi: RADIUS_MI, minMph: MIN_MPH, built: new Date().toISOString().slice(0, 10), from: FROM, through, cap: CAP, doors: wind }));
   writeFileSync(join(DATA, `naip-${key}.json`), JSON.stringify({ source: 'USDA NAIP 2023, 0.3 m (Colorado), public domain, via Microsoft Planetary Computer; window = the largest roof outline on the parcel', built: new Date().toISOString().slice(0, 10), doors: naip }));
-  idx.regions.push({ key, label, areas: areas.length, doors: n, admin: true, county: 'comtest' });
+  com.push({ key, label, areas: areas.length, doors: n, admin: true, county: 'comtest' });
   console.log(`${key}: ${n} buildings in ${areas.length} areas`);
 }
 writeFileSync(idxF, JSON.stringify(idx));
-console.log('index.json:', idx.regions.map((r) => r.key + (r.admin ? '*' : '')).join(' '));
+writeFileSync(comF, JSON.stringify({ _about: JSON.parse(readFileSync(comF, 'utf8'))._about, regions: com }, null, 2) + '\n');
+console.log('index.json (Sixfold):', idx.regions.map((r) => r.key).join(' '), '| Roofing extra:', com.map((r) => r.key).join(' '));
