@@ -119,6 +119,8 @@ function page(E) {
 
   // the product's name (the client's name comes from company.json, as for every install)
   html = rep(html, '<title>Door rounds</title>', '<title>' + E.name + '</title>', 1, 'title');
+  // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
+  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Rounds">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
   html = rep(html, "document.title = c.name ? 'Door rounds — ' + c.name : 'Door rounds';",
     "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
   html = rep(html, "tile('button', 'door', 'Door rounds',", "tile('button', 'door', 'Doors',", 1, 'tile');
