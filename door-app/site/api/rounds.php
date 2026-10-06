@@ -2148,7 +2148,7 @@ if ($action === 'trainingsave') {
     foreach ($in as $l) {
         if (!is_array($l)) fail('Bad lesson.');
         $title = $clean($l['title'] ?? '', 120); $text = trim(str_replace("\r", '', (string) ($l['text'] ?? '')));
-        $kind = (string) ($l['kind'] ?? 'other'); if (!in_array($kind, ['door', 'phone', 'other'], true)) $kind = 'other';
+        $kind = (string) ($l['kind'] ?? 'other'); if (!in_array($kind, ['door', 'sales', 'quote', 'phone', 'paper', 'safety', 'app', 'other'], true)) $kind = 'other';   /* the seven headings (2026-10-05) */
         if ($title === '') fail('Every lesson needs a title.');
         if (mb_strlen($text) > 20000) fail('A lesson can be up to 20,000 characters.');
         $lid = (string) ($l['id'] ?? ''); if (!preg_match('/^l[0-9a-f]{8}$/D', $lid)) $lid = 'l' . bin2hex(random_bytes(4));

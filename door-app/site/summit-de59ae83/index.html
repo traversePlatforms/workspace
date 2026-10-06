@@ -814,6 +814,9 @@
   .lessonrow span{flex:1;display:grid;gap:2px;min-width:0}.lessonrow small{color:var(--soft);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .lessonrow .ic{width:20px;height:20px;flex:none;color:var(--soft)}
   .lesson{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);line-height:1.5}
+  .tkinds{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+  .tkinds button{border:0;background:var(--sunk);color:var(--soft);font:700 13.5px var(--sans);padding:8px 12px;border-radius:999px;cursor:pointer}
+  .tkinds button[aria-pressed="true"]{background:var(--accent);color:#fff}
   .lesson h1{font:400 24px/1.2 var(--serif);margin:2px 0 10px}
   .lesson .lkind{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft)}
   .lesson h3{margin:14px 0 4px}.lesson p{margin:0 0 10px}.lesson ul{margin:0 0 10px;padding-left:20px}
@@ -2367,7 +2370,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'door', 'Door rounds', 'Knock a neighbourhood. Works with no signal.', null, start),
       tile('button', 'chart', 'My stats', 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
-      tile('button', 'book', 'Training', 'Lessons for the doors and the phone.', null, trainingView)]);
+      tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView)]);
     /* a manager is crew plus their own team (Matthew 2026-10-05): leads to hand out, the team's numbers and territories */
     if (S.role === 'manager') grp('Your team', [
       tile('button', 'clip', 'Leads', 'New enquiries to hand out, and your team\u2019s.', 'Manager', teamLeadsView),
@@ -4180,10 +4183,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- training (2026-10-05) ----
      Each company's own lessons (training.json in its data folder): door to door, the phone, and anything else. The
      product carries the section; the company carries the content (Matthew). Admins add and edit lessons here. */
-  var TRAIN_KIND = [['door', 'Door to door'], ['phone', 'Phone calls'], ['other', 'Other']];
+  /* the seven headings (Matthew 2026-10-05); 'other' stays so a lesson filed before the split still shows */
+  var TRAIN_KIND = [['door', 'Doors'], ['sales', 'Sales'], ['quote', 'Quotes'], ['phone', 'Phones'], ['paper', 'Paperwork'], ['safety', 'Safety'], ['app', 'Using the app'], ['other', 'Other']];
+  function trainKindName(k) { return (TRAIN_KIND.filter(function (x) { return x[0] === k; })[0] || TRAIN_KIND[TRAIN_KIND.length - 1])[1]; }
   function trainingView(openId) {
     hideToast(); S.signin = null; S.screen = 'training'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Training', sub: 'Lessons for the doors and the phone', back: typeof openId === 'string' ? function () { trainingView(); } : chooseView, backLabel: typeof openId === 'string' ? 'Training' : 'Field tools' });
+    setBar('back', { title: 'Training', sub: 'Doors, sales, quotes, phones and more', back: typeof openId === 'string' ? function () { trainingView(); } : chooseView, backLabel: typeof openId === 'string' ? 'Training' : 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('training').then(function (j) {
@@ -4202,14 +4207,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       ad.addEventListener('click', function () { S.trainForm = S.trainForm === 'new' ? null : 'new'; drawTraining(holder); }); holder.appendChild(ad);
       if (S.trainForm === 'new') holder.appendChild(lessonForm(holder, null));
     }
-    if (!S.train.length) { holder.appendChild(q('div', 'msg', S.trainEdit ? 'No lessons yet. Add the first one: a title, what it is for (doors or the phone), and the text.' : 'No lessons yet. They appear here once the office adds them.')); return; }
+    if (!S.train.length) { holder.appendChild(q('div', 'msg', S.trainEdit ? 'No lessons yet. Add the first one: a title, which heading it goes under, and the text.' : 'No lessons yet. They appear here once the office adds them.')); return; }
+    /* one chip per heading that has lessons, so someone who only does phones can see just theirs; the phone remembers it */
+    var have = TRAIN_KIND.filter(function (k) { return S.train.some(function (x) { return x.kind === k[0]; }); });
+    var pick = ''; try { pick = localStorage.getItem('doorapp.trainkind') || ''; } catch (e) {}
+    if (!have.some(function (k) { return k[0] === pick; })) pick = '';
+    if (have.length > 1) {
+      var chips = q('div', 'tkinds');
+      [['', 'All']].concat(have).forEach(function (k) {
+        var c = q('button', null, k[1]); c.type = 'button'; c.setAttribute('aria-pressed', String(pick === k[0]));
+        c.addEventListener('click', function () { try { localStorage.setItem('doorapp.trainkind', k[0]); } catch (e) {} drawTraining(holder); });
+        chips.appendChild(c);
+      });
+      holder.appendChild(chips);
+    }
+    var plain = function (t) { return t.replace(/^\s*#{1,3}\s+(.*)$/gm, function (m, h) { return /[.:?!]$/.test(h) ? h : h + ':'; }).replace(/^\s*[-*\u2022]\s+/gm, '').replace(/\s+/g, ' ').trim(); };
     TRAIN_KIND.forEach(function (k) {
+      if (pick && k[0] !== pick) return;
       var ls = S.train.filter(function (x) { return x.kind === k[0]; });
       if (!ls.length) return;
       holder.appendChild(q('h2', null, k[1] + ' \u00b7 ' + ls.length));
       ls.forEach(function (l) {
         var b = q('button', 'lessonrow'); b.type = 'button'; b.appendChild(ico('book', 2.2));
-        var tx = q('span'); tx.appendChild(q('b', null, l.title)); tx.appendChild(q('small', null, l.text.replace(/\s+/g, ' ').slice(0, 90) + (l.text.length > 90 ? '\u2026' : ''))); b.appendChild(tx);
+        var pv = plain(l.text);
+        var tx = q('span'); tx.appendChild(q('b', null, l.title)); tx.appendChild(q('small', null, pv.slice(0, 90) + (pv.length > 90 ? '\u2026' : ''))); b.appendChild(tx);
         b.appendChild(ico('chev', 2.4));
         b.addEventListener('click', function () { trainingView(l.id); });
         holder.appendChild(b);
@@ -4219,7 +4240,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function lessonView(holder, l) {
     holder.textContent = '';
     var art = q('article', 'lesson');
-    art.appendChild(q('div', 'lkind', (TRAIN_KIND.filter(function (k) { return k[0] === l.kind; })[0] || TRAIN_KIND[2])[1]));
+    art.appendChild(q('div', 'lkind', trainKindName(l.kind)));
     art.appendChild(q('h1', null, l.title));
     /* plain text with a little structure: "# " a heading, "- " a bullet, a blank line a new paragraph. Drawn with textContent. */
     var ul = null;

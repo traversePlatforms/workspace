@@ -9,6 +9,26 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
+## ⏳ TO UPLOAD — Training: seven headings and Sixfold's 31 lessons
+
+Matthew 2026-10-05: build out the crew's Training section. Headings are now **Doors · Sales · Quotes · Phones ·
+Paperwork · Safety · Using the app** (plus Other, kept for any lesson filed under the old three). A row of chips at the
+top filters to one heading, and the phone remembers the choice. Lesson previews read as plain text. The lessons themselves
+are Sixfold's, written in `sixfold/training/` (Surge's door method rebuilt for Sixfold, plus Sixfold's own crib sheets,
+water, quote, safety and app material). See `sixfold/training/README.md`.
+
+train7-test 10/10, teams 53/53.
+
+**⚑ ORDER: rounds.php and index.html BEFORE training.json.** The old page only knows three headings, so it wouldn't show
+lessons filed under Sales, Quotes and the rest; and the old server would turn them into Other if anyone saved.
+
+| Step | File | Goes to |
+|---|---|---|
+| 1 | `door-app/site/api/rounds.php` | `public_html/api/` |
+| 2 | `door-app/site/summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 3 | `door-app/site/data/rounds/training.json` (**new**; the live list was empty on 2026-10-05) | `sixfold-data/rounds/` |
+| 4 | Flush the cache | SiteGround |
+
 ## ✅ LIVE 2026-10-05 (verified 13/13: 15 towns, showcase 5 areas / 6 buildings each with roof, lead, hail, wind, photo; corrected com- files up, no blank owner in tier 1 across 5,082) — Commercial showcase town, and corrected commercial door files
 
 Matthew 2026-10-05: put the showcase picks in one town so they are easy to find (search leaves the test towns out). **"Commercial
