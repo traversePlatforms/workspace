@@ -7,6 +7,7 @@
 <title>Traverse Platforms</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2313294b%22%2F%3E%3Cg%20transform%3D%22translate(8.5%208.5)%20scale(0.734)%22%3E%3Cpolyline%20points%3D%229%2C47%2024%2C31%2037%2C40%2053%2C17%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%2247%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2231%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2237%22%20cy%3D%2240%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2253%22%20cy%3D%2217%22%20r%3D%228%22%20fill%3D%22%23d6400c%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Familjen+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
 <style>
 body{margin:0;background:#f4f6f9;color:#0f1b2d;font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -16,6 +17,10 @@ h1,h2,h3{text-wrap:balance}
 <style>
 html{scroll-behavior:smooth}
 .navtoggle{display:none}
+/* a section the script has focused after a page link: no ring on a block of content */
+[tabindex="-1"]:focus{outline:none}
+/* the hero map: the board sets it with the inset shorthand; browsers without it (iOS 14.0 and under) get the longhands */
+#top > div:last-child > div:first-child{top:0;right:40px;bottom:50px;left:0}
 /* tablets held upright, and phones */
 @media (max-width:1000px){
   /* header: logo, Book a demo and a menu button on one row; the links open in a panel */
@@ -23,7 +28,7 @@ html{scroll-behavior:smooth}
   header > div{flex-wrap:nowrap !important}
   #mainnav{margin-left:auto;gap:0 !important}
   #mainnav a:not(:last-child){display:none !important}
-  .navtoggle{display:inline-grid;place-items:center;flex:none;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
+  .navtoggle{display:inline-grid;place-items:center;flex:none;order:1;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
   .navtoggle svg{width:22px;height:22px}
   #mainnav.open{position:absolute;top:100%;left:0;right:0;z-index:30;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:#ffffff;border-bottom:1px solid #dce2ea;padding:6px 24px 18px;box-shadow:0 12px 24px -12px rgba(15,27,45,0.25)}
   #mainnav.open a:not(:last-child){display:block !important;width:100%;text-align:left;padding:14px 2px;border-bottom:1px solid #eef1f5;font-size:17px}
@@ -74,7 +79,26 @@ html{scroll-behavior:smooth}
   h1{font-size:36px !important}
   #top > div:last-child{height:430px !important}
   header a[href="#top"] > span > span{display:none}
-  #mainnav a:last-child{height:40px !important;padding:0 14px !important;font-size:14px !important}
+  #mainnav a:last-child{height:40px !important;padding:0 14px !important;font-size:14px !important;white-space:nowrap}
+  /* the hero's door card is 290px on the board; under 338px wide it would hang off the left edge, so it narrows to fit */
+  #top > div:last-child > div:last-child{width:auto !important;max-width:290px;left:0;margin-left:auto}
+  /* the storm pill on the map may need two lines */
+  #top > div:last-child > div:first-child > div{height:auto !important;min-height:32px;padding:5px 12px !important;line-height:1.25}
+  /* the plans: one column, whatever the width (the board's 270px minimum would overflow a 300px screen) */
+  #pricing [style*="minmax(270px"]{grid-template-columns:1fr !important}
+}
+/* the smallest phones: the wordmark, Book a demo and the menu button need 378px between them, so under 390px
+   Book a demo leaves the header row (it is still the first thing in the hero, and in the open menu) */
+@media (max-width:389px){
+  #mainnav:not(.open) a:last-child{display:none !important}
+}
+/* on paper there is no scrolling to reveal anything: everything shows, the menu button goes */
+@media print{
+  html.anim .rv,html.anim .hero-door,html.anim .hero-stop{opacity:1 !important;transform:none !important;transition:none !important}
+  html.anim .hero-route{stroke-dashoffset:0 !important}
+  html.anim .hero-ping{display:none}
+  html.anim .trav-line{clip-path:none !important}
+  .navtoggle{display:none !important}
 }
 </style>
 <script>
@@ -104,8 +128,9 @@ html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
 .eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
 .eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
 html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
-a[href="#demo"],a[href="#trades"]{transition:translate .2s ease,filter .2s ease}
-a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness(1.06)}
+/* (the Find your edition button is the a[href="#trades"] with a border; the Sign in text links map to #trades too and stay still) */
+a[href="#demo"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
+a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>
 </head>
@@ -119,6 +144,7 @@ a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness
 <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#d6400c"></circle></g></svg>
 <span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 22px; letter-spacing: -0.02em;"><b style="font-weight: 700;">Traverse</b> <span style="font-weight: 500;">Platforms</span></span>
 </a>
+<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <nav id="mainnav" aria-label="Main" style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; font-weight: 700; font-size: 15px;">
 <a href="#product" style="text-decoration: none;">Product</a>
 <a href="#trades" style="text-decoration: none;">Trades</a>
@@ -127,7 +153,6 @@ a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness
 <a href="#trades" style="text-decoration: none;">Sign in</a>
 <a href="#demo" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 10px; background: #d6400c; color: #ffffff; text-decoration: none;">Book a demo</a>
 </nav>
-<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 </div>
 </header>
 
@@ -444,30 +469,48 @@ a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness
 <script>
 (function () {
   var b = document.querySelector('.navtoggle'), n = document.getElementById('mainnav'); if (!b || !n) return;
+  function isOpen() { return n.classList.contains('open'); }
   function set(open) { n.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }
-  b.addEventListener('click', function () { set(!n.classList.contains('open')); });
-  n.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+  b.addEventListener('click', function () { set(!isOpen()); });
+  n.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a')) set(false); });
+  // Escape closes it and puts the focus back on the button; a tap anywhere outside the header closes it
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) { set(false); b.focus(); } });
+  document.addEventListener('click', function (e) { if (isOpen() && !(e.target.closest && e.target.closest('header'))) set(false); });
 })();
 </script>
 <script>
 (function () {
   // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
   // to jump back to. A link that arrives with one from elsewhere still goes there, once.
-  var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
-  function top() { try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, 0); } }
-  if (location.hash && nav.type === 'navigate') window.addEventListener('load', function () { setTimeout(function () { history.replaceState(null, '', location.pathname + location.search); }, 0); });
-  else { if (location.hash) history.replaceState(null, '', location.pathname + location.search); top(); }
+  var root = document.documentElement;
+  var navType = (function () {
+    try { var en = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]; if (en && en.type) return en.type; } catch (e) {}
+    try { return ['navigate', 'reload', 'back_forward'][performance.navigation.type] || 'navigate'; } catch (e) { return 'navigate'; }
+  })();
+  // an instant jump whatever the browser makes of behavior:'instant': the smooth scrolling is switched off around it
+  function jump(fn) { var was = root.style.scrollBehavior; root.style.scrollBehavior = 'auto'; try { fn(); } finally { root.style.scrollBehavior = was; } }
+  function top() { jump(function () { window.scrollTo(0, 0); }); }
+  function untag() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  if (location.hash && navType === 'navigate') {
+    // arrived from elsewhere with a #section: go there once the page has its fonts and sizes, then tidy the address
+    window.addEventListener('load', function () { setTimeout(function () {
+      var t = document.getElementById(location.hash.slice(1)); if (t) jump(function () { t.scrollIntoView(true); });
+      untag();
+    }, 0); });
+  } else { if (location.hash) untag(); top(); }
   window.addEventListener('pageshow', function (e) { if (e.persisted) top(); });
   document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
     var id = a.getAttribute('href').slice(1), t = id && document.getElementById(id); if (!t) return;
     e.preventDefault();
-    var how = document.documentElement.classList.contains('anim') ? 'smooth' : 'auto';
+    var how = root.classList.contains('anim') ? 'smooth' : 'auto';
     if (id === 'top') window.scrollTo({ top: 0, behavior: how }); else t.scrollIntoView({ behavior: how, block: 'start' });
+    // the keyboard carries on from the section, not from the link
+    if (id !== 'top') { t.tabIndex = -1; try { t.focus({ preventScroll: true }); } catch (err) { t.focus(); } }
   });
 
-  var root = document.documentElement; if (!root.classList.contains('anim')) return;
+  if (!root.classList.contains('anim')) return;
   var all = [];
   function tag(list, cls, step, start) {
     Array.prototype.forEach.call(list, function (el, i) {
@@ -487,7 +530,7 @@ a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness
         var route = svg.querySelector('polyline');
         if (route && route.getTotalLength) { var len = route.getTotalLength(); route.classList.add('hero-route'); route.style.strokeDasharray = len; route.style.strokeDashoffset = len; }
         var stops = svg.querySelectorAll('circle:not([r="7"])');
-        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', [0.35, 0.95, 1.35, 1.85][i] + 's'); });
+        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', ([0.35, 0.95, 1.35, 1.85][i] || (0.35 + i * 0.5)) + 's'); });
         var last = stops[stops.length - 1];
         if (last) { var p = last.cloneNode(); p.setAttribute('class', 'hero-ping'); p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#d6400c'); p.setAttribute('stroke-width', '4'); p.removeAttribute('style'); last.parentNode.insertBefore(p, last); }
         map.classList.add('hero-map');
@@ -517,9 +560,15 @@ a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness
     if (el.classList.contains('hero-map')) el.classList.add('go');
   }
   if (!('IntersectionObserver' in window)) { all.forEach(show); return; }
+  // a part shows once 12% of it is in view, or once it fills a third of a short screen (a tall part on a phone held
+  // sideways might never reach 12%, and would stay hidden)
   var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) { if (en.isIntersecting) { show(en.target); io.unobserve(en.target); } });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var tall = en.intersectionRect && en.intersectionRect.height >= (window.innerHeight || 0) / 3;
+      if (en.intersectionRatio >= 0.12 || tall) { show(en.target); io.unobserve(en.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: [0, 0.12] });
   all.forEach(function (el) { io.observe(el); });
 })();
 </script>

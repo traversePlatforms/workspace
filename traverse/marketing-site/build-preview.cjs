@@ -22,7 +22,11 @@ function between(s, a, b) {
   return s.slice(i + a.length, j);
 }
 
-const head = between(src, '<helmet>', '</helmet>').trim();
+let head = between(src, '<helmet>', '</helmet>').trim();
+// the font files come from fonts.gstatic.com, so that connection is opened early too
+const PRECONNECT = '<link rel="preconnect" href="https://fonts.googleapis.com">';
+if (!head.includes(PRECONNECT)) throw new Error('the fonts preconnect moved');
+head = head.replace(PRECONNECT, () => PRECONNECT + '\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
 let body = between(src, '</helmet>', '</x-dc>').trim();
 
 // The edition pages and sign-in page don't exist yet, and Sixfold's ErrorDocument sends any missing path to
@@ -30,16 +34,22 @@ let body = between(src, '</helmet>', '</x-dc>').trim();
 const APPS = ['tr-cb2e8587', 'ty-25604fff', 'ts-016064fc', 'tq-9cf8d9de', 'tg-3b0b89e7'];
 const links = { '/roofing': '/' + APPS[0] + '/', '/yards': '/' + APPS[1] + '/', '/solar': '/' + APPS[2] + '/', '/pest': '/' + APPS[3] + '/', '/security': '/' + APPS[4] + '/', '/sign-in': '#trades' };
 for (const [from, to] of Object.entries(links)) body = body.split('href="' + from + '"').join('href="' + to + '"');
-// the phone and tablet menu (the canvas has none): a button after the nav that opens the links in a panel
-if (body.split('</nav>').length !== 2) throw new Error('expected one nav');
-body = body.replace('</nav>', '</nav>\n<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>');
+// the phone and tablet menu (the canvas has none): a button that opens the links in a panel. It sits BEFORE the
+// nav in the markup so the keyboard reaches the opened links with Tab (CSS `order` keeps it at the right end of the
+// header row); a function replacement so nothing in the markup is read as a $-pattern.
+const NAV_OPEN = '<nav id="mainnav"';
+if (body.split(NAV_OPEN).length !== 2 || body.split('</nav>').length !== 2) throw new Error('expected one nav');
+body = body.replace(NAV_OPEN, () => '<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>\n' + NAV_OPEN);
 const menuJs = `<script>
 (function () {
   var b = document.querySelector('.navtoggle'), n = document.getElementById('mainnav'); if (!b || !n) return;
+  function isOpen() { return n.classList.contains('open'); }
   function set(open) { n.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }
-  b.addEventListener('click', function () { set(!n.classList.contains('open')); });
-  n.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+  b.addEventListener('click', function () { set(!isOpen()); });
+  n.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a')) set(false); });
+  // Escape closes it and puts the focus back on the button; a tap anywhere outside the header closes it
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) { set(false); b.focus(); } });
+  document.addEventListener('click', function (e) { if (isOpen() && !(e.target.closest && e.target.closest('header'))) set(false); });
 })();
 </script>`;
 if ((body.match(/href="\/[^"]*"/g) || []).some((h) => !APPS.some((a) => h === 'href="/' + a + '/"'))) throw new Error('a site-absolute link is left; it would land on Sixfold');
@@ -55,6 +65,10 @@ const icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect 
 const phone = `<style>
 html{scroll-behavior:smooth}
 .navtoggle{display:none}
+/* a section the script has focused after a page link: no ring on a block of content */
+[tabindex="-1"]:focus{outline:none}
+/* the hero map: the board sets it with the inset shorthand; browsers without it (iOS 14.0 and under) get the longhands */
+#top > div:last-child > div:first-child{top:0;right:40px;bottom:50px;left:0}
 /* tablets held upright, and phones */
 @media (max-width:1000px){
   /* header: logo, Book a demo and a menu button on one row; the links open in a panel */
@@ -62,7 +76,7 @@ html{scroll-behavior:smooth}
   header > div{flex-wrap:nowrap !important}
   #mainnav{margin-left:auto;gap:0 !important}
   #mainnav a:not(:last-child){display:none !important}
-  .navtoggle{display:inline-grid;place-items:center;flex:none;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
+  .navtoggle{display:inline-grid;place-items:center;flex:none;order:1;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
   .navtoggle svg{width:22px;height:22px}
   #mainnav.open{position:absolute;top:100%;left:0;right:0;z-index:30;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:#ffffff;border-bottom:1px solid #dce2ea;padding:6px 24px 18px;box-shadow:0 12px 24px -12px rgba(15,27,45,0.25)}
   #mainnav.open a:not(:last-child){display:block !important;width:100%;text-align:left;padding:14px 2px;border-bottom:1px solid #eef1f5;font-size:17px}
@@ -113,7 +127,26 @@ html{scroll-behavior:smooth}
   h1{font-size:36px !important}
   #top > div:last-child{height:430px !important}
   header a[href="#top"] > span > span{display:none}
-  #mainnav a:last-child{height:40px !important;padding:0 14px !important;font-size:14px !important}
+  #mainnav a:last-child{height:40px !important;padding:0 14px !important;font-size:14px !important;white-space:nowrap}
+  /* the hero's door card is 290px on the board; under 338px wide it would hang off the left edge, so it narrows to fit */
+  #top > div:last-child > div:last-child{width:auto !important;max-width:290px;left:0;margin-left:auto}
+  /* the storm pill on the map may need two lines */
+  #top > div:last-child > div:first-child > div{height:auto !important;min-height:32px;padding:5px 12px !important;line-height:1.25}
+  /* the plans: one column, whatever the width (the board's 270px minimum would overflow a 300px screen) */
+  #pricing [style*="minmax(270px"]{grid-template-columns:1fr !important}
+}
+/* the smallest phones: the wordmark, Book a demo and the menu button need 378px between them, so under 390px
+   Book a demo leaves the header row (it is still the first thing in the hero, and in the open menu) */
+@media (max-width:389px){
+  #mainnav:not(.open) a:last-child{display:none !important}
+}
+/* on paper there is no scrolling to reveal anything: everything shows, the menu button goes */
+@media print{
+  html.anim .rv,html.anim .hero-door,html.anim .hero-stop{opacity:1 !important;transform:none !important;transition:none !important}
+  html.anim .hero-route{stroke-dashoffset:0 !important}
+  html.anim .hero-ping{display:none}
+  html.anim .trav-line{clip-path:none !important}
+  .navtoggle{display:none !important}
 }
 </style>`;
 
@@ -148,28 +181,44 @@ html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
 .eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
 .eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
 html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
-a[href="#demo"],a[href="#trades"]{transition:translate .2s ease,filter .2s ease}
-a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness(1.06)}
+/* (the Find your edition button is the a[href="#trades"] with a border; the Sign in text links map to #trades too and stay still) */
+a[href="#demo"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
+a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>`;
 const motionJs = `<script>
 (function () {
   // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
   // to jump back to. A link that arrives with one from elsewhere still goes there, once.
-  var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
-  function top() { try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, 0); } }
-  if (location.hash && nav.type === 'navigate') window.addEventListener('load', function () { setTimeout(function () { history.replaceState(null, '', location.pathname + location.search); }, 0); });
-  else { if (location.hash) history.replaceState(null, '', location.pathname + location.search); top(); }
+  var root = document.documentElement;
+  var navType = (function () {
+    try { var en = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]; if (en && en.type) return en.type; } catch (e) {}
+    try { return ['navigate', 'reload', 'back_forward'][performance.navigation.type] || 'navigate'; } catch (e) { return 'navigate'; }
+  })();
+  // an instant jump whatever the browser makes of behavior:'instant': the smooth scrolling is switched off around it
+  function jump(fn) { var was = root.style.scrollBehavior; root.style.scrollBehavior = 'auto'; try { fn(); } finally { root.style.scrollBehavior = was; } }
+  function top() { jump(function () { window.scrollTo(0, 0); }); }
+  function untag() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  if (location.hash && navType === 'navigate') {
+    // arrived from elsewhere with a #section: go there once the page has its fonts and sizes, then tidy the address
+    window.addEventListener('load', function () { setTimeout(function () {
+      var t = document.getElementById(location.hash.slice(1)); if (t) jump(function () { t.scrollIntoView(true); });
+      untag();
+    }, 0); });
+  } else { if (location.hash) untag(); top(); }
   window.addEventListener('pageshow', function (e) { if (e.persisted) top(); });
   document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
     var id = a.getAttribute('href').slice(1), t = id && document.getElementById(id); if (!t) return;
     e.preventDefault();
-    var how = document.documentElement.classList.contains('anim') ? 'smooth' : 'auto';
+    var how = root.classList.contains('anim') ? 'smooth' : 'auto';
     if (id === 'top') window.scrollTo({ top: 0, behavior: how }); else t.scrollIntoView({ behavior: how, block: 'start' });
+    // the keyboard carries on from the section, not from the link
+    if (id !== 'top') { t.tabIndex = -1; try { t.focus({ preventScroll: true }); } catch (err) { t.focus(); } }
   });
 
-  var root = document.documentElement; if (!root.classList.contains('anim')) return;
+  if (!root.classList.contains('anim')) return;
   var all = [];
   function tag(list, cls, step, start) {
     Array.prototype.forEach.call(list, function (el, i) {
@@ -189,7 +238,7 @@ const motionJs = `<script>
         var route = svg.querySelector('polyline');
         if (route && route.getTotalLength) { var len = route.getTotalLength(); route.classList.add('hero-route'); route.style.strokeDasharray = len; route.style.strokeDashoffset = len; }
         var stops = svg.querySelectorAll('circle:not([r="7"])');
-        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', [0.35, 0.95, 1.35, 1.85][i] + 's'); });
+        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', ([0.35, 0.95, 1.35, 1.85][i] || (0.35 + i * 0.5)) + 's'); });
         var last = stops[stops.length - 1];
         if (last) { var p = last.cloneNode(); p.setAttribute('class', 'hero-ping'); p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#d6400c'); p.setAttribute('stroke-width', '4'); p.removeAttribute('style'); last.parentNode.insertBefore(p, last); }
         map.classList.add('hero-map');
@@ -219,9 +268,15 @@ const motionJs = `<script>
     if (el.classList.contains('hero-map')) el.classList.add('go');
   }
   if (!('IntersectionObserver' in window)) { all.forEach(show); return; }
+  // a part shows once 12% of it is in view, or once it fills a third of a short screen (a tall part on a phone held
+  // sideways might never reach 12%, and would stay hidden)
   var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) { if (en.isIntersecting) { show(en.target); io.unobserve(en.target); } });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var tall = en.intersectionRect && en.intersectionRect.height >= (window.innerHeight || 0) / 3;
+      if (en.intersectionRatio >= 0.12 || tall) { show(en.target); io.unobserve(en.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: [0, 0.12] });
   all.forEach(function (el) { io.observe(el); });
 })();
 </script>`;
