@@ -19,8 +19,11 @@
 
    ⚑ Bump SHELL_V when this file changes. The browser re-checks this file on every visit
    (registered with updateViaCache: 'none'); flush SiteGround's cache after uploading it. */
-const SHELL_V = 'rounds-shell-2026-10-05a';
+const SHELL_V = 'rounds-shell-2026-10-06a';
 const API = 'rounds-api';
+/* every install on one domain shares Cache Storage (the Traverse editions sit beside this app on sixfoldcolorado.com): on
+   activate, only our own old copies go, never another install's (review 2026-10-06: this used to delete every other cache) */
+const OURS = 'rounds-';
 const TIMEOUT = 6000;
 const AREA_MAX = 40;
 const MAX_AGE = 7 * 86400 * 1000;
@@ -32,7 +35,7 @@ self.addEventListener('install', (e) => {
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys()
-    .then((ks) => Promise.all(ks.filter((k) => k !== SHELL_V && k !== API).map((k) => caches.delete(k))))
+    .then((ks) => Promise.all(ks.filter((k) => k.indexOf(OURS) === 0 && k !== SHELL_V && k !== API).map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 /* bumped on sign-out, so a copy still being saved when someone signs out is dropped (Fable) */

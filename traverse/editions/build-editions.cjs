@@ -192,6 +192,9 @@ function page(E) {
   html = html.replace(/'sixfold\.([a-zA-Z.]+)'/g, "'" + E.store + "$1'").replace(/'doorapp\.([a-zA-Z.]+)'/g, "'" + E.storeApp + "$1'");
   html = rep(html, "indexedDB.open('sixfold-rounds'", "indexedDB.open('" + E.idb + "'", 1, 'indexeddb');
   html = rep(html, "'X-Sixfold-Offline'", "'X-Traverse-Offline'", 1, 'offline header');
+  // the name sw.js keeps answers under: Cache Storage is shared by every install on the domain, so a sign-out here
+  // must wipe this edition's copy, never Sixfold's 'rounds-api' (review 2026-10-06)
+  html = rep(html, "var API_CACHE = 'rounds-api';", "var API_CACHE = '" + E.cache + "api';", 1, 'api cache name');
   if (/'(sixfold|doorapp)[.-]/.test(html)) throw new Error('a Sixfold storage key is left in the page');
 
   // the product's name (the client's name comes from company.json, as for every install)
@@ -275,7 +278,7 @@ function worker(E) {
   sw = sw.replace(/const SHELL_V = 'rounds-shell-([^']+)';/, (m, v) => "const SHELL_V = '" + E.cache + 'shell-' + v + "';");
   sw = rep(sw, "const API = 'rounds-api';", "const API = '" + E.cache + "api';", 1, 'sw api cache');
   // every install shares one origin's Cache Storage: only ever clear our own (the prefixes don't overlap)
-  sw = rep(sw, 'ks.filter((k) => k !== SHELL_V && k !== API)', "ks.filter((k) => k.indexOf('" + E.cache + "') === 0 && k !== SHELL_V && k !== API)", 1, 'sw cleanup');
+  sw = rep(sw, "const OURS = 'rounds-';", "const OURS = '" + E.cache + "';", 1, 'sw cleanup');
   sw = rep(sw, '\\/api\\/rounds\\.php', '\\/api\\/' + E.api.replace(/-/g, '\\-') + '-rounds\\.php', 1, 'sw keep');
   sw = rep(sw, '../api/rounds.php', '../api/' + E.api + '-rounds.php', 2, 'sw push');
   sw = sw.split('X-Sixfold-').join('X-Traverse-');
@@ -313,6 +316,10 @@ async function build(key) {
 
   let r = api(E, 'rounds.php');
   r = rep(r, "const COOKIE     = 'sfr';", "const COOKIE     = '" + E.cookie + "';", 1, 'cookie');
+  // the codes file's fallback beside the API (a local checkout) is named per install: public_html/api/rounds-codes.php is
+  // Sixfold's changeover copy, and an edition whose private folder was missing would otherwise sign Sixfold's codes in
+  // and share its session key (review 2026-10-06)
+  r = rep(r, "__DIR__ . '/rounds-codes.php'", "__DIR__ . '/" + E.api + "-rounds-codes.php'", 1, 'codes fallback');
   r = rep(r, "require_once __DIR__ . '/skiptrace.php';", "require_once __DIR__ . '/" + E.api + "-skiptrace.php';", 1, 'require skiptrace');
   r = rep(r, "require_once __DIR__ . '/webpush.php';", "require_once __DIR__ . '/" + E.api + "-webpush.php';", 1, 'require webpush');
   for (const bad of ['sixfold-data', 'sixfold-private', "'sfr'"]) if (r.indexOf(bad) >= 0) throw new Error('API still names ' + bad);
