@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — overnight review fixes (2026-10-06)
+## ✅ LIVE 2026-10-06 (verified: page identical plain and busted at the folder URL; a bad calendar date now answers JSON, not a 500; live lessons identical to training.json; 15 towns. nightly-backup.php sits outside public_html, so its new file list shows first in tonight's 18:00 copy) — overnight review fixes (2026-10-06)
 
 From the overnight review (reports in `reviews/2026-10-06/`). Small batch, any order except flush last.
 - **Calendar:** a malformed date in the request no longer crashes it (500 with no JSON); changing month now picks a day in the new month (today, or the 1st) instead of leaving the old day picked.
