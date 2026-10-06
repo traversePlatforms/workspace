@@ -1358,9 +1358,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var u = API + '?action=area&region=' + encodeURIComponent(S.region) + '&area=' + encodeURIComponent(S.area);
     warmT = setTimeout(function () { if (S.me) fetch(u, { credentials: 'same-origin' }).catch(function () {}); }, 3000);
   }
+  /* the name sw.js keeps the answers under (its API const). Every install on one domain shares Cache Storage, so each
+     edition has its own name (build-editions.cjs swaps this line); a sign-out must only ever wipe its own (review 2026-10-06) */
+  var API_CACHE = 'rounds-api';
   function clearSaved() {
     try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage('clear-api'); } catch (e) {}
-    try { if (window.caches) return caches.delete('rounds-api').catch(function () {}); } catch (e) {}
+    try { if (window.caches) return caches.delete(API_CACHE).catch(function () {}); } catch (e) {}
     return Promise.resolve();
   }
   /* ---- the company this install is for (company.json; see paintCompany at the top) ---- */
@@ -4969,6 +4972,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      town or city, phone, email, plan, next visit, start, price, notes); each address is matched to a door on the server. */
   function csvRows(text) {
     var rows = [], r = [], f = '', qt = false;
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);   /* Excel's UTF-8 files start with a byte-order mark, which hid the first heading (review 2026-10-06) */
     for (var i = 0; i < text.length; i++) {
       var ch = text[i];
       if (qt) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else qt = false; } else f += ch; }
@@ -6465,11 +6469,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (s.yb && !(s.yb >= now.getFullYear() - 5)) t.appendChild(q('span', 'hl', 'Built ' + s.yb));
     if (s.cr) {
       t.appendChild(q('small', 'sub', 'Reported within \u00bd mile (Colorado Springs police)'));
-      var any = false;
+      var any = false, hh = s.cr.h || {}, last = s.cr.last || {};
       CR_KIND.forEach(function (k) {
-        var c = s.cr.h[k[0]]; if (!c || !c[2]) return; any = true;
+        var c = hh[k[0]]; if (!c || !c[2]) return; any = true;
         var l = q('span', 'hl'); l.appendChild(q('b', null, k[1] + ': '));
-        l.appendChild(document.createTextNode(c[0] + ' in 30 days \u00b7 ' + c[1] + ' in 90 \u00b7 ' + c[2] + ' in the year' + (s.cr.last[k[0]] ? ' (latest ' + fmtD(s.cr.last[k[0]]) + ')' : '')));
+        l.appendChild(document.createTextNode(c[0] + ' in 30 days \u00b7 ' + c[1] + ' in 90 \u00b7 ' + c[2] + ' in the year' + (last[k[0]] ? ' (latest ' + fmtD(last[k[0]]) + ')' : '')));
         t.appendChild(l);
       });
       if (!any) t.appendChild(q('span', 'hl', 'No property crime reported within \u00bd mile in the last year.'));
@@ -6502,12 +6506,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the list.')); return; }
       holder.appendChild(q('div', 'sub2', 'Property crime reported within \u00bc mile of each neighbourhood\u2019s doors, last 90 days (30 days after the dot). Source: ' + j.source + (j.through ? ', through ' + fmtD(j.through) : '') + '. Only neighbourhoods those reports cover are listed.'));
       if (!j.areas.length) { holder.appendChild(q('div', 'msg', 'No neighbourhoods are covered by published police reports yet.')); return; }
-      var sum = function (c) { return (c.b || 0) + (c.v || 0) + (c.t || 0) + (c.d || 0); };
+      var sum = function (c) { c = c || {}; return (c.b || 0) + (c.v || 0) + (c.t || 0) + (c.d || 0); };
       j.areas.forEach(function (a) {
-        var r = q('button', 'srow'); r.type = 'button';
+        var r = q('button', 'srow'), d90 = a.d90 || {}; r.type = 'button';
         var head = q('span', 'hl'); head.appendChild(q('b', null, a.area)); head.appendChild(document.createTextNode(' \u00b7 ' + a.town + ' \u00b7 ' + a.doors + ' doors')); r.appendChild(head);
-        r.appendChild(q('span', 'hl', sum(a.d90) + ' reports: ' + a.d90.b + ' burglary, ' + a.d90.v + ' vehicle, ' + a.d90.t + ' theft, ' + a.d90.d + ' vandalism \u00b7 ' + sum(a.d30) + ' in 30 days'));
-        r.addEventListener('click', function () { S.region = a.region; S.area = null; S.returnTo = secListView; openArea(a.area); });
+        r.appendChild(q('span', 'hl', sum(d90) + ' reports: ' + (d90.b || 0) + ' burglary, ' + (d90.v || 0) + ' vehicle, ' + (d90.t || 0) + ' theft, ' + (d90.d || 0) + ' vandalism \u00b7 ' + sum(a.d30) + ' in 30 days'));
+        /* through openFromCommunity, so the town list is loaded first when this is the first screen opened (review 2026-10-06: the door
+           screen's title and the Back to the town list read from it) */
+        r.addEventListener('click', function () { openFromCommunity({ region: a.region, name: a.area }, secListView); });
         holder.appendChild(r);
       });
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'The list needs signal.')); });
