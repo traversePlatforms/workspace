@@ -1,7 +1,7 @@
 // Builds the Traverse editions of the door app: TraverseRoofing and TraverseYards, each with a made-up client.
 //
 //   node traverse/editions/build-editions.cjs            both
-//   node traverse/editions/build-editions.cjs yards      one (roofing, yards or solar)
+//   node traverse/editions/build-editions.cjs yards      one (roofing, yards, solar or pest)
 //
 // Matthew, 2026-10-06: rebrand the app as Traverse but leave Sixfold's app alone; then split Yards from Roofing,
 // each standing alone with its own colours ("hail, wind etc. don't play as much of an impact" for yards). So this is
@@ -47,7 +47,7 @@ const EDITIONS = {
          bg: '#f3f5f8', line: '#dbe1e8', sunk: '#e7ecf1', card1: '#2f4155', appbar: '#2a394b', tile: '#3a4e66',
          dBg: '#0d131b', dCard: '#161e29', dLine: '#2a3646', dSunk: '#111821', dBar: '#18222e', dAccent: '#a9bbd1' },
     // storm data and roofs; no lawn, trees, fire, funding or water
-    keep: (f) => !/^(lawnmask-|solar-|cwpp\.json$|hoa-communities\.json$)/.test(f),
+    keep: (f) => !/^(lawnmask-|solar-|pest-|cwpp\.json$|hoa-communities\.json$)/.test(f),
     money: false, extraRegions: 'roofing-commercial-towns.json',
     company: () => {
       const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'traverse', 'app', 'company.example.json'), 'utf8'));
@@ -70,7 +70,7 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|com-|solar-)/.test(f),
+    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|com-|solar-|pest-)/.test(f),
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -97,7 +97,7 @@ const EDITIONS = {
          bg: '#f7f5ef', line: '#e6e0d1', sunk: '#efeadf', card1: '#4d380c', appbar: '#45320a', tile: '#5c4410',
          dBg: '#120e05', dCard: '#1d170b', dLine: '#3a2f18', dSunk: '#17120a', dBar: '#211906', dAccent: '#f2c14e' },
     // the roof and the sun; none of the storm, lawn, fire or commercial layers
-    keep: (f) => !/^(hail-|wind-|com-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(hail-|wind-|com-|lawnmask-|pest-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Solar Co', short: 'Example Solar', tagline: 'Solar and battery installs',
@@ -109,6 +109,32 @@ const EDITIONS = {
                   ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
+      links: { googleReview: '' }
+    })
+  },
+  pest: {
+    name: 'TraversePest', short: 'Pest', folder: 'tq-9cf8d9de',
+    api: 'traverse-pest', data: 'traverse-pest-data', priv: 'traverse-pest-private', cookie: 'tvp',
+    store: 'tvpest.', storeApp: 'tvpest.app.', idb: 'tvpest-rounds', cache: 'tvpest-',
+    blurb: 'Doors, phones and appointments for pest control teams.',
+    icon: '#7a3fa3',                                   // the kit's pest edition fill
+    // dusk violet: the edition purple, deepened for the bar and sign-in
+    c: { bar: '#3a1f52', deep: '#26133a', key: '#4c2a6b', keyDown: '#5f3786', barSoft: '#e2d3f0', accent: '#6a3594', moss: '#9a7ab8', mossInk: '#3a1f52',
+         bg: '#f6f4f8', line: '#e2dce8', sunk: '#ede8f2', card1: '#4c2a6b', appbar: '#452664', tile: '#5f3786',
+         dBg: '#100b15', dCard: '#1b1424', dLine: '#33283f', dSunk: '#150f1b', dBar: '#1e1229', dAccent: '#c9a6ea' },
+    // the pest layers and trees near the house; none of the storm, roof, solar, lawn, fire or commercial layers
+    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|com-|solar-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    money: false, extraRegions: null,
+    company: () => ({
+      name: 'Example Pest Co', short: 'Example Pest', tagline: 'Pest control for homes',
+      phone: '(555) 010-0000', email: '', site: 'traverseplatforms.com', appUrl: '',
+      visit: 'inspection', visitShort: 'Inspection', logo: null,
+      services: [['quarterly', 'Quarterly pest plan'], ['onetime', 'One-time treatment'], ['mosquito', 'Mosquito service'], ['rodent', 'Rodent control'], ['termite', 'Termite inspection'], ['other', 'Other']],
+      leadNeeds: ['Pest plan', 'Ants or spiders', 'Wasps', 'Mice or rodents', 'Mosquitoes', 'Question'],
+      extraWork: [['wasps', 'Wasp nest seen'], ['ants', 'Ant trails'], ['spiders', 'Spiders or webs'], ['mice', 'Signs of mice'],
+                  ['firewood', 'Firewood against the house'], ['water', 'Standing water'], ['otherco', 'Already has a pest company']],
+      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true },
+      card: { lawn: false, trees: true, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: true },
       links: { googleReview: '' }
     })
   }
@@ -347,7 +373,7 @@ return [
 
 (async () => {
   const only = process.argv[2];
-  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar)');
+  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest)');
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build
   fs.rmSync(path.join(OUT, 'upload', '4-extract-in-public_html--app-tr-cb2e8587.zip'), { force: true });
   for (const k of only ? [only] : Object.keys(EDITIONS)) await build(k);

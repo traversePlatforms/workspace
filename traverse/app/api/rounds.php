@@ -81,7 +81,7 @@ function company(): array {
     $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
             'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
-            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false],
+            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false, 'pest' => false],
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
             'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
@@ -107,6 +107,10 @@ function roofDataOn(string $role): bool { return $role === 'admin' && feature('r
 /* solar (2026-10-06, TraverseSolar): sun-facing roof, shade, a system that fits, its yearly output and the power company, per door,
    built offline by data-pipeline/door-territory/solar/. Admins only, like the roof data, and only where the company turns it on. */
 function solarOn(string $role): bool { return $role === 'admin' && feature('solar'); }
+/* pest (2026-10-06, TraversePest): why a door is worth knocking. Open space or water beside the house, year built and El Paso's
+   last sale month (data-pipeline/door-territory/pest/), plus, from this install's own records, customers and bookings within
+   about 160 m and what neighbours told the team in the last 30 days. Admins only, where the company turns pest on. */
+function pestOn(string $role): bool { return $role === 'admin' && feature('pest'); }
 function loadSide(string $kind, string $key): array {
     static $memo = [];
     $k = $kind . '-' . $key;
@@ -721,7 +725,7 @@ function searchIndex(): array {
  * trees and photos with them and tags the door "Customer" for the crew. Payments, cards and invoices
  * are deliberately not kept here; agreements are linked, not stored. Admin only. */
 /* services are the company's (company.json services): custServices() */
-const CUST_PLANS = ['oneoff', 'monthly', 'yearly', 'custom'];
+const CUST_PLANS = ['oneoff', 'monthly', 'quarterly', 'yearly', 'custom'];   /* quarterly: 2026-10-06, the pest industry's plan */
 const CUST_STATUS = ['active', 'paused', 'ended'];
 function custDir(): string { return dirname(DATA_DIR) . '/customers'; }
 function custLines(string $name): array {
@@ -759,7 +763,7 @@ function customerDoors(): array {
    '+1 month' turns 31 Jan into 3 Mar and skips February; 29 Feb + a year becomes 28 Feb) */
 function nextDue(string $date, string $plan): string {
     [$y, $m, $d] = array_map('intval', explode('-', $date));
-    if ($plan === 'yearly') $y++; else { $m++; if ($m > 12) { $m = 1; $y++; } }
+    if ($plan === 'yearly') $y++; else { $m += $plan === 'quarterly' ? 3 : 1; while ($m > 12) { $m -= 12; $y++; } }
     $last = (int) (new DateTime(sprintf('%04d-%02d-01', $y, $m)))->format('t');
     return sprintf('%04d-%02d-%02d', $y, $m, min($d, $last));
 }
@@ -1250,6 +1254,16 @@ if ($action === 'area') {
     $matOf = roofDataOn($role) ? loadSide('material', $key) : [];
     $mfxOf = loadMatFix($key);
     $solarOf = solarOn($role) ? loadSide('solar', $key) : [];
+    $pestOf = []; $custPts = []; $bookPts = []; $notePts = []; $posOf = [];
+    if (pestOn($role)) {
+        $pestOf = loadSide('pest', $key);
+        foreach ($data['areas'] as $a0) foreach ($a0['doors'] as $d0) if (isset($d0['lat'], $d0['lon'])) $posOf[$d0['id']] = [(float) $d0['lat'], (float) $d0['lon']];
+        foreach (customerDoors() as $dk => $_) { $pp = explode('/', (string) $dk, 2); if (count($pp) === 2 && $pp[0] === $key && isset($posOf[$pp[1]])) $custPts[$pp[1]] = $posOf[$pp[1]]; }
+        $since = time() - 30 * 86400;
+        foreach ($marks as $mid => $mk) if (($mk['outcome'] ?? '') === 'booked' && (int) ($mk['at'] ?? 0) >= $since && isset($posOf[$mid])) $bookPts[$mid] = $posOf[$mid];
+        foreach ($work as $wid => $wk) if ((int) ($wk['at'] ?? 0) >= $since && isset($posOf[$wid])) $notePts[$wid] = [$posOf[$wid], $wk['tags']];
+    }
+    $nearby = function (array $a, array $b): bool { $dy = ($a[0] - $b[0]) * 111000; $dx = ($a[1] - $b[1]) * 111000 * cos(deg2rad($a[0])); return $dx * $dx + $dy * $dy <= 160 * 160; };
     $naipOf = roofDataOn($role) ? loadSide('naip', $key) : [];   /* the 2023 roof close-up window for every house (2026-10-05) */   /* what someone at the house said the roof is (everyone sees it) */   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
@@ -1259,6 +1273,16 @@ if ($action === 'area') {
             $p = $phones[$d['id']] ?? null;
             $n = $notes[$d['id']] ?? null;
             $em = $emails[$d['id']] ?? null;
+            $pestRow = null;
+            if (pestOn($role)) {
+                $pp = $posOf[$d['id']] ?? null; $nb = 0; $bk = 0; $tg = [];
+                if ($pp) {
+                    foreach ($custPts as $ci => $cp) if ($ci !== $d['id'] && $nearby($pp, $cp)) $nb++;
+                    foreach ($bookPts as $bi => $bp) if ($bi !== $d['id'] && $nearby($pp, $bp)) $bk++;
+                    foreach ($notePts as $ni => $nt) if ($ni !== $d['id'] && $nearby($pp, $nt[0])) foreach ($nt[1] as $t) $tg[$t] = ($tg[$t] ?? 0) + 1;
+                }
+                $pestRow = ($pestOf[$d['id']] ?? []) + ['nb' => $nb, 'bk' => $bk] + ($tg ? ['tg' => $tg] : []);
+            }
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
@@ -1269,7 +1293,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null, 'pest' => $pestRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
@@ -2506,7 +2530,16 @@ if ($action === 'leadstatus') {
     out(['ok' => true]);
 }
 
-if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget'], true)) {
+/* what is in season this month (pest edition): data/rounds/pest-season.json, each line from a named source */
+if ($action === 'pestseason') {
+    if (!pestOn($role)) fail('Not here.', 404);
+    $cal = json_decode((string) @file_get_contents(DATA_DIR . '/pest-season.json'), true) ?: [];
+    $mo = (int) (new DateTime('now', new DateTimeZone('America/Denver')))->format('n'); $now = [];
+    foreach (($cal['pests'] ?? []) as $k => $pz) if (in_array($mo, (array) ($pz['months'] ?? []), true)) $now[] = ['k' => (string) $k, 'name' => (string) ($pz['name'] ?? $k), 'line' => (string) ($pz['line'] ?? ''), 'src' => (string) ($pz['src'] ?? '')];
+    out(['ok' => true, 'month' => $mo, 'pests' => $now]);
+}
+
+if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $tz = new DateTimeZone('America/Denver');
     $today = (new DateTime('today', $tz))->format('Y-m-d');
@@ -2632,6 +2665,51 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave',
         if ($isNew) $id = 'c' . date('YmdHis') . bin2hex(random_bytes(3));
         $write($id, $f);
         out(['ok' => true, 'id' => $id]);
+    }
+    /* customer import (2026-10-06): a company's existing customers from its old software, matched to doors by address so the
+       pest card can say "3 neighbours on service" from day one. Up to 500 rows a call. A bad optional value is dropped, never
+       the row; a row with no name is skipped; a door that already has a customer is not doubled. */
+    if ($action === 'customerimport') {
+        $rows = $body['rows'] ?? null;
+        if (!is_array($rows) || !$rows) fail('Nothing to import.');
+        if (count($rows) > 500) fail('Import 500 at a time.');
+        $norm = function ($s): string {
+            $s = strtoupper((string) $s); $s = preg_replace('/\b(APT|UNIT|STE|SUITE|#)\b.*$/', '', $s); $s = preg_replace('/[.,#]/', ' ', $s);
+            $map = ['STREET' => 'ST', 'AVENUE' => 'AVE', 'DRIVE' => 'DR', 'ROAD' => 'RD', 'LANE' => 'LN', 'COURT' => 'CT', 'CIRCLE' => 'CIR', 'PLACE' => 'PL',
+                    'BOULEVARD' => 'BLVD', 'TERRACE' => 'TER', 'TRAIL' => 'TRL', 'PARKWAY' => 'PKWY', 'HIGHWAY' => 'HWY', 'POINT' => 'PT', 'NORTH' => 'N', 'SOUTH' => 'S', 'EAST' => 'E', 'WEST' => 'W'];
+            $w = preg_split('/\s+/', trim((string) $s)) ?: []; return implode(' ', array_map(fn($x) => $map[$x] ?? $x, $w));
+        };
+        $byAddr = []; $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+        foreach (($idx['regions'] ?? []) as $rg) {
+            if (!empty($rg['admin'])) continue;
+            $rd = loadRegion((string) $rg['key']); if (!$rd) continue;
+            foreach ($rd['areas'] as $a) foreach ($a['doors'] as $d) $byAddr[$norm($d['address'])] = [(string) $rg['key'], (string) $d['id'], (string) $d['address']];
+        }
+        $have = []; foreach ($cs as $c) if (!empty($c['door']) && ($c['status'] ?? 'active') !== 'ended') $have[(string) $c['door']] = true;
+        $made = 0; $matched = 0; $dupes = 0; $skipped = 0; $unmatched = [];
+        $toDate = function ($v): string { $v = trim((string) $v); if (dateOk($v)) return $v; if (preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $v, $m) && checkdate((int) $m[1], (int) $m[2], (int) $m[3])) return sprintf('%04d-%02d-%02d', $m[3], $m[1], $m[2]); return ''; };
+        foreach ($rows as $r) {
+            if (!is_array($r)) { $skipped++; continue; }
+            $f = ['name' => $clean($r['name'] ?? '', 120)];
+            if (mb_strlen($f['name']) < 2) { $skipped++; continue; }
+            $ph = $clean($r['phone'] ?? '', 40); $dg = preg_replace('/\D/', '', $ph); if ($ph !== '' && strlen($dg) >= 10 && strlen($dg) <= 11) $f['phone'] = $ph;
+            $em = $clean($r['email'] ?? '', 160); if ($em !== '' && filter_var($em, FILTER_VALIDATE_EMAIL)) $f['email'] = $em;
+            foreach (['address' => 160, 'town' => 60, 'notes' => 2000] as $k => $max) { $v = $clean($r[$k] ?? '', $max); if ($v !== '') $f[$k] = $v; }
+            $f['plan'] = in_array((string) ($r['plan'] ?? ''), CUST_PLANS, true) ? (string) $r['plan'] : 'oneoff';
+            $f['service'] = in_array((string) ($r['service'] ?? ''), custServices(), true) ? (string) $r['service'] : custServices()[0];
+            $f['status'] = 'active';
+            if (isset($r['price']) && is_numeric($r['price']) && $r['price'] >= 0 && $r['price'] <= 1000000) $f['price'] = (float) $r['price'];
+            foreach (['start', 'next'] as $k) { $dv = $toDate($r[$k] ?? ''); if ($dv !== '') $f[$k] = $dv; }
+            $hit = isset($f['address']) ? ($byAddr[$norm($f['address'])] ?? null) : null;
+            if ($hit) {
+                $dk = $hit[0] . '/' . $hit[1];
+                if (isset($have[$dk])) { $dupes++; continue; }
+                $f['door'] = $dk; $f['address'] = $hit[2]; $f['town'] = regionLabel($hit[0]); $have[$dk] = true; $matched++;
+            } elseif (count($unmatched) < 50) $unmatched[] = ($f['address'] ?? '(no address)');
+            $f['source'] = 'import';
+            $write('c' . date('YmdHis') . bin2hex(random_bytes(3)), $f); $made++;
+        }
+        out(['ok' => true, 'made' => $made, 'matched' => $matched, 'dupes' => $dupes, 'skipped' => $skipped, 'unmatched' => $unmatched]);
     }
     /* a won door booking or a won lead becomes a customer, carrying what we already know */
     if ($action === 'customerfrom') {

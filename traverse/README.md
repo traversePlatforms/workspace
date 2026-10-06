@@ -34,15 +34,15 @@ Sixfold. Never edit `editions/dist/` by hand.
 
 ## The installs on the server (all on sixfoldcolorado.com for now)
 
-| | Sixfold | TraverseRoofing | TraverseYards | TraverseSolar |
-|---|---|---|---|---|
-| App page | `public_html/summit-de59ae83/` | `public_html/tr-cb2e8587/` | `public_html/ty-25604fff/` | `public_html/ts-016064fc/` |
-| API | `public_html/api/rounds.php` (+ skiptrace, webpush) | `public_html/api/traverse-rounds.php` (+2) | `public_html/api/traverse-yards-rounds.php` (+2) | `public_html/api/traverse-solar-rounds.php` (+2) |
-| Door data | `sixfold-data/rounds/` | `traverse-data/rounds/` | `traverse-yards-data/rounds/` | `traverse-solar-data/rounds/` |
-| Codes | `sixfold-private/` | `traverse-private/` | `traverse-yards-private/` | `traverse-solar-private/` |
-| Comes from | `app/` as it is | `editions/dist/` | `editions/dist/` | `editions/dist/` |
-| Look | Sixfold's | storm slate | field green | late-sun amber |
-| On | lawn, trees, fire, quotes, communities | hail, wind, storm list, roofs, commercial towns | lawn, trees, fire, funding, water, communities | roofs, solar (sun-facing roof, shade, panels, output, power company) |
+| | Sixfold | TraverseRoofing | TraverseYards | TraverseSolar | TraversePest |
+|---|---|---|---|---|---|
+| App page | `public_html/summit-de59ae83/` | `public_html/tr-cb2e8587/` | `public_html/ty-25604fff/` | `public_html/ts-016064fc/` | `public_html/tq-9cf8d9de/` |
+| API | `public_html/api/rounds.php` (+ skiptrace, webpush) | `public_html/api/traverse-rounds.php` (+2) | `public_html/api/traverse-yards-rounds.php` (+2) | `public_html/api/traverse-solar-rounds.php` (+2) | `public_html/api/traverse-pest-rounds.php` (+2) |
+| Door data | `sixfold-data/rounds/` | `traverse-data/rounds/` | `traverse-yards-data/rounds/` | `traverse-solar-data/rounds/` | `traverse-pest-data/rounds/` |
+| Codes | `sixfold-private/` | `traverse-private/` | `traverse-yards-private/` | `traverse-solar-private/` | `traverse-pest-private/` |
+| Comes from | `app/` as it is | `editions/dist/` | `editions/dist/` | `editions/dist/` | `editions/dist/` |
+| Look | Sixfold's | storm slate | field green | late-sun amber | dusk violet |
+| On | lawn, trees, fire, quotes, communities | hail, wind, storm list, roofs, commercial towns | lawn, trees, fire, funding, water, communities | roofs, solar (sun-facing roof, shade, panels, output, power company) | pest (new owners, neighbours on service, open space and water nearby, season, team notes), trees, quarterly plans, customer import |
 
 Data and codes always go **beside** public_html, never inside it. The homepage is at `public_html/tp-5ea36a05/`. When
 Traverse has its own hosting, the editions and the homepage move there.

@@ -177,3 +177,7 @@ door-app/
 traverse/app/data/rounds/solar-*.json
 traverse/data-pipeline/door-territory/solar/solar-cache.json
 traverse/data-pipeline/door-territory/solar/*.log
+
+# TraversePest data (regenerable: data-pipeline/door-territory/pest/build-pest.mjs)
+traverse/app/data/rounds/pest-*.json
+traverse/data-pipeline/door-territory/pest/cache/

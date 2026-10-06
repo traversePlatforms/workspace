@@ -1,0 +1,12 @@
+{
+  "_about": "Colorado Front Range pest calendar for TraversePest (2026-10-06). One line per pest for the rep, each from a named source; months are when the line shows. Copied to app/data/rounds/pest-season.json by build-pest.mjs. Re-check the sources each spring.",
+  "pests": {
+    "miller": { "name": "Miller moths", "line": "Miller moth flights usually start between mid-May and early June and last five to six weeks.", "months": [5, 6], "src": "https://extension.colostate.edu/resource/miller-moths/" },
+    "elmseed": { "name": "Elm seed bugs", "line": "Elm seed bugs move into homes from mid-June through September.", "months": [6, 7, 8, 9], "src": "https://extension.colostate.edu/resource/elm-seed-bug-a-nuisance-pest-in-colorado-homes/" },
+    "mosquito": { "name": "Mosquitoes", "line": "Mosquito season runs from late June to the first frost; West Nile risk is highest in late summer.", "months": [6, 7, 8, 9], "src": "https://www.cpr.org/2026/06/01/colorado-mosquitoes-west-nile-look-ahead/" },
+    "wasps": { "name": "Wasps and yellowjackets", "line": "Yellowjackets are at their worst late in summer and into fall.", "months": [8, 9, 10], "src": "https://planttalk.colostate.edu/topics/insects-diseases/1400-1-nuisance-bees-wasps/" },
+    "boxelder": { "name": "Boxelder bugs", "line": "Boxelder bugs gather on warm walls in fall, looking for a place to spend the winter.", "months": [9, 10, 11], "src": "https://planttalk.colostate.edu/topics/insects-diseases/1405-boxelder-bugs/" },
+    "mice": { "name": "Mice", "line": "Mice look for a warm way indoors as the nights turn cold.", "months": [10, 11, 12, 1, 2], "src": "https://extension.illinois.edu/podcasts/good-growing/gardenbite-voles-landscape-mice-house-goodgrowing" },
+    "voles": { "name": "Voles", "line": "Voles tunnel through lawns under the snow; the damage shows when it melts.", "months": [12, 1, 2, 3, 4], "src": "https://extension.colostate.edu/resource/managing-voles-in-colorado" }
+  }
+}

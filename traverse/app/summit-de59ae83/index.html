@@ -1557,6 +1557,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
+    bug: '<path d="M9 9.5a3 3 0 0 1 6 0V15a3 3 0 0 1-6 0z"/><path d="M12 6.5V4.5M8.5 7.5L6.5 5.5M15.5 7.5l2-2M5 12.5h4M15 12.5h4M6 18.5l3-2M18 18.5l-3-2"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     roof: '<path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
     hail: '<path d="M7 15.5a4 4 0 0 1-.6-7.95 5.5 5.5 0 0 1 10.6 1A3.5 3.5 0 0 1 17 15.5z"/><circle cx="8.5" cy="19.5" r="1"/><circle cx="12.5" cy="18" r="1"/><circle cx="16" cy="20" r="1"/>',
@@ -3534,6 +3535,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(windBlock(d));             /* wind reported near the house (2026-10-05): rides with hail */
+    if (d.pest && cardOn('pest')) wrap.appendChild(pestBlock(d));      /* pest (2026-10-06): the server sends it to admins only, where the company has pest on */
     if (d.solar && cardOn('solar')) wrap.appendChild(solarBlock(d));   /* solar (2026-10-06): the server sends it to admins only, where the company has solar on */
     if (cardOn('roof')) wrap.appendChild(roofBlock(d));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
@@ -3919,6 +3921,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (T.booked) { var sc = q('div', 'chips'); sc.appendChild(chipEl('bk', 'check', T.booked + (T.booked === 1 ? ' quote' : ' quotes') + ' booked')); pi.appendChild(sc); }
     pc.appendChild(pi); view.appendChild(pc);
     view.appendChild(alertStrip(null));
+    if (feat('pest') && S.role === 'admin') view.appendChild(seasonStrip());   /* pest edition: what is in season (2026-10-06) */
     /* counties, in the order the towns are listed. Each folds up (Matthew 2026-10-05: more counties would clutter
        the screen); the bar carries the county's totals, and each phone remembers which are open. One county: open. */
     var order = [];
@@ -4876,9 +4879,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      due; Due this week at the top. A won job or a won lead becomes a customer in one tap. Each change is
      added to a log (never overwritten), and "Download a full backup" saves every log the app keeps. */
   var SERVICE_L = {};   /* setCompany(): company.json services */
-  var PLAN_L = { oneoff: 'One-off job', monthly: 'Monthly plan', yearly: 'Yearly plan', custom: 'Custom schedule' };
+  var PLAN_L = { oneoff: 'One-off job', monthly: 'Monthly plan', quarterly: 'Quarterly plan', yearly: 'Yearly plan', custom: 'Custom schedule' };
   var STATUS_L = { active: 'Active', paused: 'Paused', ended: 'Ended' };
-  function custTagText(c) { return 'Customer · ' + (c.plan === 'monthly' ? 'monthly ' : c.plan === 'yearly' ? 'yearly ' : '') + (SERVICE_L[c.service] || 'job').toLowerCase(); }
+  function custTagText(c) { return 'Customer · ' + (c.plan === 'monthly' ? 'monthly ' : c.plan === 'quarterly' ? 'quarterly ' : c.plan === 'yearly' ? 'yearly ' : '') + (SERVICE_L[c.service] || 'job').toLowerCase(); }
   function money(n) { return '$' + Math.round(+n || 0).toLocaleString('en-US'); }
   function fmtD(iso) { if (!iso) return ''; var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + (p[0] !== String(new Date().getFullYear()) ? ' ' + p[0] : ''); }
   function makeCustomer(from) {
@@ -4956,12 +4959,74 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     b.addEventListener('click', function () { customerView(c.id, customersView, 'Customers'); });
     return b;
   }
+  /* customer import (2026-10-06): a CSV from the company's old software. Columns are found by their headings (name, address,
+     town or city, phone, email, plan, next visit, start, price, notes); each address is matched to a door on the server. */
+  function csvRows(text) {
+    var rows = [], r = [], f = '', qt = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (qt) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else qt = false; } else f += ch; }
+      else if (ch === '"') qt = true; else if (ch === ',') { r.push(f); f = ''; }
+      else if (ch === '\n') { r.push(f); rows.push(r); r = []; f = ''; } else if (ch !== '\r') f += ch;
+    }
+    if (f || r.length) { r.push(f); rows.push(r); }
+    return rows.filter(function (x) { return x.some(function (v) { return String(v).trim(); }); });
+  }
+  function customerImport(done) {
+    var box = q('div', 'cform'), status = q('div', 'sub2', 'Pick a .csv file exported from your old software. The first row must be the column headings.');
+    var inp = q('input'); inp.type = 'file'; inp.accept = '.csv,text/csv'; inp.id = 'custImportFile';
+    box.appendChild(q('div', 'wl', 'Import customers')); box.appendChild(status); box.appendChild(inp);
+    var go = q('button', 'go', 'Import'); go.type = 'button'; go.disabled = true; box.appendChild(go);
+    var rows = [];
+    var COLS = { name: /^(name|customer|customer name|full name|client)$/, address: /^(address|street|service address|street address|property address)$/, town: /^(town|city)$/,
+                 phone: /^(phone|mobile|cell|phone number|telephone)$/, email: /^(email|e-mail|email address)$/, plan: /^(plan|frequency|program|service plan)$/,
+                 next: /^(next|next visit|next service|next due|next date)$/, start: /^(start|since|start date|customer since)$/, price: /^(price|amount|rate)$/, notes: /^(notes?|comments?)$/ };
+    var planOf = function (v) { v = String(v || '').toLowerCase(); return /quarter/.test(v) ? 'quarterly' : /month/.test(v) ? 'monthly' : /(year|annual)/.test(v) ? 'yearly' : 'oneoff'; };
+    inp.addEventListener('change', function () {
+      var file = inp.files && inp.files[0]; if (!file) return;
+      var rd = new FileReader();
+      rd.onload = function () {
+        var all = csvRows(String(rd.result || '')); if (all.length < 2) { status.textContent = 'That file has no rows under the headings.'; return; }
+        var head = all[0].map(function (x) { return String(x).trim().toLowerCase(); }), at = {};
+        Object.keys(COLS).forEach(function (k) { var i = head.findIndex(function (hh) { return COLS[k].test(hh); }); if (i >= 0) at[k] = i; });
+        if (at.name == null || at.address == null) { status.textContent = 'Could not find a name column and an address column in the headings.'; return; }
+        rows = all.slice(1).map(function (r) { var o = {}; Object.keys(at).forEach(function (k) { o[k] = String(r[at[k]] || '').trim(); }); o.plan = planOf(o.plan); if (o.price) o.price = o.price.replace(/[$,]/g, ''); return o; })
+                  .filter(function (o) { return o.name; });
+        status.textContent = rows.length + ' customers found. Columns used: ' + Object.keys(at).join(', ') + '.';
+        go.disabled = !rows.length;
+      };
+      rd.readAsText(file);
+    });
+    go.addEventListener('click', function () {
+      go.disabled = true; var tot = { made: 0, matched: 0, dupes: 0, skipped: 0, unmatched: [] }, i = 0;
+      var next = function () {
+        if (i >= rows.length) {
+          status.textContent = 'Imported ' + tot.made + ' customers: ' + tot.matched + ' matched to a door in your territory, ' + (tot.made - tot.matched) + ' kept without a door'
+            + (tot.dupes ? ', ' + tot.dupes + ' already customers (skipped)' : '') + (tot.skipped ? ', ' + tot.skipped + ' rows with no name (skipped)' : '') + '.';
+          if (tot.unmatched.length) box.appendChild(q('div', 'sub2', 'Not in your territory: ' + tot.unmatched.slice(0, 12).join('; ') + (tot.unmatched.length > 12 ? '\u2026' : '')));
+          var fin = q('button', 'go', 'See the customers'); fin.type = 'button'; fin.addEventListener('click', done); box.appendChild(fin);
+          return;
+        }
+        var chunk = rows.slice(i, i + 200); i += 200; status.textContent = 'Importing\u2026 ' + Math.min(i, rows.length) + ' of ' + rows.length;
+        api('customerimport', { body: { rows: chunk } }).then(function (j) {
+          if (!j.ok) { status.textContent = j.error || 'The import stopped.'; return; }
+          tot.made += j.made; tot.matched += j.matched; tot.dupes += j.dupes; tot.skipped += j.skipped; tot.unmatched = tot.unmatched.concat(j.unmatched || []); next();
+        }).catch(function () { status.textContent = 'The import needs signal. ' + tot.made + ' were imported before it stopped.'; });
+      };
+      next();
+    });
+    return box;
+  }
   function drawCustomers(holder) {
     holder.textContent = '';
     var add = q('button', 'addlead', S.custAdd ? 'Close the form' : '+ Add a customer'); add.type = 'button';
     add.addEventListener('click', function () { S.custAdd = !S.custAdd; drawCustomers(holder); });
     holder.appendChild(add);
     if (S.custAdd) holder.appendChild(customerForm(null, function (id) { S.custAdd = false; customerView(id); }));
+    var imp = q('button', 'addlead', S.custImport ? 'Close the import' : 'Import customers (spreadsheet)'); imp.type = 'button';
+    imp.addEventListener('click', function () { S.custImport = !S.custImport; drawCustomers(holder); });
+    holder.appendChild(imp);
+    if (S.custImport) holder.appendChild(customerImport(function () { S.custImport = false; customersView(); }));
     var all = S.custs || [];
     var due = all.filter(function (c) { return c.due; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
     if (due.length) {
@@ -5086,7 +5151,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (c.overdue) tags.appendChild(q('span', 'tag cover', 'Overdue'));
     head.appendChild(tags);
     var figs = q('div', 'cfigs');
-    [[c.price ? money(c.price) : '–', c.plan === 'monthly' ? 'a month' : c.plan === 'yearly' ? 'a year' : 'price'], [money(c.spent), 'logged'], [c.next ? fmtD(c.next) : '–', 'next due'], [c.last ? fmtD(c.last) : 'none yet', 'last visit']].forEach(function (x) {
+    [[c.price ? money(c.price) : '–', c.plan === 'monthly' ? 'a month' : c.plan === 'quarterly' ? 'a quarter' : c.plan === 'yearly' ? 'a year' : 'price'], [money(c.spent), 'logged'], [c.next ? fmtD(c.next) : '–', 'next due'], [c.last ? fmtD(c.last) : 'none yet', 'last visit']].forEach(function (x) {
       var d = q('div'); d.appendChild(q('b', null, x[0])); d.appendChild(q('span', null, x[1])); figs.appendChild(d);
     });
     head.appendChild(figs);
@@ -6341,6 +6406,51 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (s.u) { var l3 = q('span', 'hl'); l3.appendChild(document.createTextNode('Power company: ')); l3.appendChild(q('b', null, s.u)); t.appendChild(l3); }
     b.appendChild(t);
     return b;
+  }
+  /* pest (2026-10-06, TraversePest): the reasons to knock, as one line, then the details. Facts only: what is beside the house,
+     who bought it and when, and this company's own customers, bookings and door notes nearby. No made-up risk score. */
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function feetOf(m) { var f = Math.round(m * 3.281 / 10) * 10; return f < 30 ? 'right beside the house' : 'about ' + f + ' ft away'; }
+  function pestBlock(d) {
+    var p = d.pest, b = q('div', 'hailx pestx'); b.appendChild(ico('bug', 2.2));
+    var t = q('span'), why = [], more = [];
+    var now = new Date(), ago = function (ym) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7); return (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m); };
+    if (p.sold && ago(p.sold) <= 12) why.push('New owner (sold ' + MONTHS[+p.sold.slice(5, 7) - 1] + ' ' + p.sold.slice(0, 4) + ')');
+    else if (d.os) why.push('New owner since ' + String(d.os).slice(0, 7));
+    if (p.nb) why.push(p.nb + (p.nb === 1 ? ' neighbour' : ' neighbours') + ' on service nearby');
+    if (p.bk) why.push(p.bk + ' booked nearby this month');
+    var lv = typeof treeLevel === 'function' ? treeLevel(d) : null;
+    if (lv === 'against') why.push('Trees against the house'); else if (lv === 'heavy') why.push('Heavy trees around the house');
+    if (p.os) { why.push(p.os.n ? 'Backs onto ' + p.os.n : 'Next to ' + p.os.k); more.push((p.os.n ? p.os.n + ' (' + p.os.k + ')' : 'Open ' + p.os.k) + ', ' + feetOf(p.os.d)); }
+    if (p.wa) { why.push(p.wa.n ? p.wa.n + ' nearby' : 'A ' + p.wa.k + ' nearby'); more.push((p.wa.n || ('A ' + p.wa.k)) + ', ' + feetOf(p.wa.d)); }
+    if (p.yb) more.push('Built ' + p.yb);
+    if (p.tg) {
+      var L = {}; ((CO && CO.extraWork) || []).forEach(function (w) { L[w[0]] = w[1]; });
+      var said = Object.keys(p.tg).sort(function (a, c) { return p.tg[c] - p.tg[a]; }).map(function (k) { return (L[k] || k).toLowerCase() + ' (' + p.tg[k] + ')'; });
+      if (said.length) more.push('Neighbours told the team, last 30 days: ' + said.join(', '));
+    }
+    if (S.pestSeason && S.pestSeason.length) more.push('In season now: ' + S.pestSeason.map(function (x) { return x.name.toLowerCase(); }).join(', '));
+    t.appendChild(q('small', null, why.length ? 'Why knock' : 'This door'));
+    if (why.length) { var l1 = q('span', 'hl'); l1.appendChild(q('b', null, why.join(' \u00b7 '))); t.appendChild(l1); }
+    more.forEach(function (m) { t.appendChild(q('span', 'hl', m)); });
+    if (!why.length && !more.length) t.appendChild(q('span', 'hl', 'Nothing stands out here yet.'));
+    b.appendChild(t);
+    return b;
+  }
+  /* the season strip on the Colorado screen, and the line on each card: fetched once a session */
+  function seasonStrip() {
+    var holder = q('div');
+    var draw = function (list) {
+      holder.textContent = '';
+      if (!list || !list.length) return;
+      var b = q('div', 'hailx pestx season'); b.appendChild(ico('bug', 2.2));
+      var t = q('span'); t.appendChild(q('small', null, 'In season now'));
+      list.forEach(function (x) { var l = q('span', 'hl'); l.appendChild(q('b', null, x.name + ': ')); l.appendChild(document.createTextNode(x.line)); t.appendChild(l); });
+      b.appendChild(t); holder.appendChild(b);
+    };
+    if (S.pestSeason) draw(S.pestSeason);
+    else api('pestseason').then(function (j) { if (j && j.ok) { S.pestSeason = j.pests; draw(j.pests); } }).catch(function () {});
+    return holder;
   }
   function windBlock(d) {
     var b = q('div', 'hailx windx'); b.appendChild(ico('flag', 2.2));
