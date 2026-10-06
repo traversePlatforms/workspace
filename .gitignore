@@ -159,3 +159,9 @@ door-app/site/data/rounds/storms-recent.json
 door-app/site/data/rounds/wind-*.json
 door-app/site/data/rounds/material-*.json
 door-app/site/data/rounds/naip-*.json
+
+# Commercial test towns (2026-10-05): owner names and registered agents; regenerable with
+# door-app/operations/door-territory/commercial/build-app-data.mjs
+door-app/site/data/rounds/com-*.json
+door-app/site/data/rounds/wind-com-*.json
+door-app/site/data/rounds/naip-com-*.json
