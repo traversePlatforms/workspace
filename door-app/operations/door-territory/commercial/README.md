@@ -36,16 +36,19 @@ Sterling, Limon and Lamar rank high for hail but have little commercial stock, a
 | | Springs | South | West | All |
 |---|---:|---:|---:|---:|
 | Buildings | 1,203 | 822 | 3,057 | 5,082 |
-| Tier 1 · person on the deed | 219 | 20 | 634 | 873 |
-| Tier 2 · probable owner (person agent, or c/o a person) | 432 | 172 | 989 | 1,593 |
-| Tier 3 · a company or trust to call | 179 | 107 | 350 | 636 |
-| Tier 4 · mailing address only | 370 | 516 | 890 | 1,776 |
+| Tier 1 · person on the deed | 214 | 9 | 540 | 763 |
+| Tier 2 · probable owner (person agent, or c/o a person) | 433 | 175 | 998 | 1,606 |
+| Tier 3 · a company or trust to call | 181 | 110 | 356 | 647 |
+| Tier 4 · mailing address only | 372 | 521 | 969 | 1,862 |
 | Tier 5 · public owner | 3 | 7 | 194 | 204 |
 | Roof 20,000 sq ft+ and 1-inch-plus hail since 2023 | 203 | 290 | 297 | 790 |
-| ...of those with a tier 1-2 name | 65 | 32 | 84 | 181 |
+| ...of those with a tier 1-2 name | 64 | 29 | 67 | 160 |
+
+(Revised the same day: blank owners are tier 4, not tier 1, and long "person" names that match a registered company word for word, or
+carry a business word, are filed as companies.)
 
 **The finding:** about half of all buildings reach a named person with no manual searching, but the big roofs mostly don't.
-Large buildings sit behind registered-agent services and out-of-state owners, so only about 1 in 4 of the big, recently hailed
+Large buildings sit behind registered-agent services and out-of-state owners, so only about 1 in 5 of the big, recently hailed
 roofs has a name. Those need the next step (property manager, the register's filing history, or a call).
 
 ## Rules that matter
@@ -65,4 +68,5 @@ roofs has a name. Those need the next step (property manager, the register's fil
 - Year built for Springs only (El Paso's file); the statewide layer has none for the Denver counties.
 - The paging bug: both the statewide composite and El Paso's MapServer **repeat and skip records when paging by offset**. The pull uses
   small map tiles (statewide) and parcel-number batches (El Paso), and checks the totals. Don't go back to offsets.
+- **Roof size can include a parking structure** when the garage is the biggest outline on the parcel (737-745 Space Center Dr, Springs). The outline layers carry no building type; check the photo.
 - The Springs roof-outline layer is undated and misses some newer buildings (see out/footprints-README.md).

@@ -97,6 +97,7 @@ for (const spot of ['springs', 'south', 'west']) {
     else if (s && s.found && o.agentKind === 'company') { tier = 3; why = 'Registered agent is a company: often the parent or the property manager'; }
     else if (o.type === 'trust') { tier = 3; why = 'Held in a trust: the trustee is the decision maker'; }
     else if (o.type === 'public') { tier = 5; why = 'Public owner: bid process, not a door'; }
+    else if (o.type === 'none') { tier = 4; why = 'No owner name on the county record (often a condo master or common-area parcel)'; }
     else if (s && s.found) { tier = 4; why = o.agentKind === 'service' ? 'Behind a registered-agent service: mailing address only' : 'Agent acts for many companies (attorney or agent business): mailing address only'; }
     else { tier = 4; why = 'Not found in the Colorado register (often an out-of-state company): mailing address only'; }
     const lead = tier === 1 ? p.owner : /\(c\/o\)/.test(why) ? 'c/o ' + co : s && s.found && s.agent && (o.agentKind === 'person' || o.agentKind === 'company') ? (s.agent.person || s.agent.org) : '';

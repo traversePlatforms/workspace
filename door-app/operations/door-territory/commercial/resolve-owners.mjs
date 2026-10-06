@@ -27,13 +27,14 @@ const stripStatus = (s) => String(s || '').replace(/,\s*(Delinquent|Dissolved|Vo
 
 export function ownerType(name) {
   const u = norm(name);
+  if (!u) return 'none';   /* no owner name on the record (condo masters, some Denver parcels) */
   if (/\b(CITY|COUNTY|STATE OF|DISTRICT|AUTHORITY|SCHOOL|UNITED STATES|HOUSING AUTHORITY|REGENTS|BOARD OF|HIGHER EDUCATION|UNIVERSITY|REGIONAL TRANSPORTATION)\b/.test(u)) return 'public';
   if (/\bLLLP\b|\bLLP\b/.test(u)) return 'lllp';
   if (/\bLLC\b/.test(u) || /\sL{1,2}$/.test(u)) return 'llc';   /* "... L" = LLC cut off by the county roll */
   if (/\b(INC|CORP|LTD|NA)\b/.test(u) || /\bCO$/.test(u) || /\bCO OF\b/.test(u)) return 'corp';
   if (/\bLP\b|\bPARTNERSHIP\b|\bPARTNERS\b/.test(u)) return 'lp';
   if (/\bTRUST\b|\bTRUSTEE|\bREVOCABLE\b|\bLIVING TR\b|\bTR$/.test(u)) return 'trust';
-  if (/\b(ASSOCIATION|ASSN|CHURCH|FOUNDATION|MINISTR|HOLDINGS|PROPERTIES|INVESTMENTS|GROUP|ENTERPRISES|VENTURES|FUND|REIT|CENTER|PLAZA|MANAGEMENT|BANK|REAL ESTATE|MOTORS|ASSOCIATES|LEASING|BRANCH|DEVELOPMENT|CTR|PURVEYORS|AUTO|STORAGE|APARTMENTS|HOTEL|REALTY|SALES|SERVICES?|SUPPLY|DENTAL|MEDICAL|RENTALS?|BUILDING|INDUSTRIES|LODGE|POST|CLUB)\b/.test(u) || /\d/.test(u)) return 'org';
+  if (/\b(ASSOCIATION|ASSN|CHURCH|FOUNDATION|MINISTR|HOLDINGS|PROPERTIES|INVESTMENTS|GROUP|ENTERPRISES|VENTURES|FUND|REIT|CENTER|PLAZA|MANAGEMENT|BANK|REAL ESTATE|MOTORS|ASSOCIATES|LEASING|BRANCH|DEVELOPMENT|CTR|PURVEYORS|AUTO|STORAGE|APARTMENTS|HOTEL|REALTY|SALES|SERVICES?|SUPPLY|DENTAL|MEDICAL|RENTALS?|BUILDING|INDUSTRIES|LODGE|POST|CLUB|TAX|DEPT|ESTATES|PLACE|NATIONAL|DIGITAL|TELEVISION|SQUARE|VILLAGE|TOWER|COMMONS|CROSSING|POINTE|STATION|INDUSTRIAL|OFFICE|WAREHOUSE|INVESTORS|CAPITAL|EQUITIES|HOMES|RESIDENCES|MANOR|GARDENS|APTS|TOWNHOMES|CONDOMINIUM|COMMUNITY|CORPORATE|INTERNATIONAL|AMERICA|AMERICAN|COLORADO|DENVER|SPRINGS)\b/.test(u) || /\d/.test(u)) return 'org';
   return 'person';
 }
 const isEntity = (t) => ['llc', 'lllp', 'corp', 'lp', 'org'].includes(t);
@@ -104,6 +105,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const ents = [...owners.entries()].filter(([, o]) => isEntity(o.type) && !(o.name in cache.entity));
   console.log(`${owners.size} owners; ${[...owners.values()].filter((o) => isEntity(o.type)).length} entities, ${ents.length} to look up`);
   await pool(ents, 4, async ([, o]) => { try { cache.entity[o.name] = await findEntity(o.name); } catch (e) { cache.entity[o.name] = { error: e.message }; } });
+  /* a name with no business word can still be a company ("PORTERCARE ADVENTIST HEALTH SYSTEM"): any "person" of three or more
+     words whose name matches a registered entity word for word is a company after all */
+  const people = [...owners.values()].filter((o) => o.type === 'person' && norm(o.name).split(' ').length >= 3 && !/,|&|\bAND\b/.test(o.name));
+  const todoP = people.filter((o) => !(o.name in cache.entity));
+  console.log(`${people.length} long "person" names to check against the register, ${todoP.length} to look up`);
+  await pool(todoP, 4, async (o) => { try { cache.entity[o.name] = await findEntity(o.name); } catch (e) { cache.entity[o.name] = { error: e.message }; } });
+  let moved = 0;
+  for (const o of people) { const e = cache.entity[o.name]; if (e && e.found && e.quality === 'exact') { o.type = 'org'; moved++; } }
+  console.log(`  ${moved} of them are registered companies, refiled as such`);
   writeFileSync(CACHE, JSON.stringify(cache));
   const agents = new Map();
   for (const o of owners.values()) { const e = cache.entity[o.name]; if (e && e.agent) { const k = e.agent.org ? 'O:' + e.agent.org.toUpperCase() : 'P:' + `${e.agent.first}|${e.agent.last}`.toUpperCase(); agents.set(k, e.agent); } }
