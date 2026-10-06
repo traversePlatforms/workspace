@@ -1,7 +1,7 @@
 // Builds the Traverse editions of the door app: TraverseRoofing and TraverseYards, each with a made-up client.
 //
 //   node traverse/editions/build-editions.cjs            both
-//   node traverse/editions/build-editions.cjs yards      one
+//   node traverse/editions/build-editions.cjs yards      one (roofing, yards or solar)
 //
 // Matthew, 2026-10-06: rebrand the app as Traverse but leave Sixfold's app alone; then split Yards from Roofing,
 // each standing alone with its own colours ("hail, wind etc. don't play as much of an impact" for yards). So this is
@@ -47,7 +47,7 @@ const EDITIONS = {
          bg: '#f3f5f8', line: '#dbe1e8', sunk: '#e7ecf1', card1: '#2f4155', appbar: '#2a394b', tile: '#3a4e66',
          dBg: '#0d131b', dCard: '#161e29', dLine: '#2a3646', dSunk: '#111821', dBar: '#18222e', dAccent: '#a9bbd1' },
     // storm data and roofs; no lawn, trees, fire, funding or water
-    keep: (f) => !/^(lawnmask-|cwpp\.json$|hoa-communities\.json$)/.test(f),
+    keep: (f) => !/^(lawnmask-|solar-|cwpp\.json$|hoa-communities\.json$)/.test(f),
     money: false, extraRegions: 'roofing-commercial-towns.json',
     company: () => {
       const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'traverse', 'app', 'company.example.json'), 'utf8'));
@@ -70,7 +70,7 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|com-)/.test(f),
+    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|com-|solar-)/.test(f),
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -83,6 +83,32 @@ const EDITIONS = {
                   ['branches', 'Branches near the house'], ['fuel', 'Dry brush close to the house']],
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
+      links: { googleReview: '' }
+    })
+  },
+  solar: {
+    name: 'TraverseSolar', short: 'Solar', folder: 'ts-016064fc',
+    api: 'traverse-solar', data: 'traverse-solar-data', priv: 'traverse-solar-private', cookie: 'tvs',
+    store: 'tvsolar.', storeApp: 'tvsolar.app.', idb: 'tvsolar-rounds', cache: 'tvsolar-',
+    blurb: 'Doors, phones and appointments for solar sales teams.',
+    icon: '#f2a900', iconInk: '#0f1b2d',              // the kit's solar edition: ink on amber
+    // late sun: the edition amber, deepened to brown for the bar and sign-in
+    c: { bar: '#3b2a07', deep: '#271c04', key: '#4d380c', keyDown: '#634810', barSoft: '#ecd9a8', accent: '#8f5e00', moss: '#b08a3a', mossInk: '#3b2a07',
+         bg: '#f7f5ef', line: '#e6e0d1', sunk: '#efeadf', card1: '#4d380c', appbar: '#45320a', tile: '#5c4410',
+         dBg: '#120e05', dCard: '#1d170b', dLine: '#3a2f18', dSunk: '#17120a', dBar: '#211906', dAccent: '#f2c14e' },
+    // the roof and the sun; none of the storm, lawn, fire or commercial layers
+    keep: (f) => !/^(hail-|wind-|com-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    money: false, extraRegions: null,
+    company: () => ({
+      name: 'Example Solar Co', short: 'Example Solar', tagline: 'Solar and battery installs',
+      phone: '(555) 010-0000', email: '', site: 'traverseplatforms.com', appUrl: '',
+      visit: 'site survey', visitShort: 'Survey', logo: null,
+      services: [['solar', 'Solar install'], ['battery', 'Battery backup'], ['ev', 'EV charger'], ['roof', 'Roof work before solar'], ['other', 'Other']],
+      leadNeeds: ['Solar quote', 'Lower my bill', 'Battery backup', 'EV charger', 'Question'],
+      extraWork: [['south', 'Roof faces south'], ['shade', 'Shade from trees'], ['oldroof', 'Roof looks near the end of its life'],
+                  ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
+      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
+      card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
       links: { googleReview: '' }
     })
   }
@@ -302,7 +328,7 @@ return [
     const inner = bleed ? 'translate(13 13) scale(0.594)' : 'translate(8.5 8.5) scale(0.734)';
     return Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
       + '<rect width="64" height="64"' + (bleed ? '' : ' rx="14"') + ' fill="' + E.icon + '"/>'
-      + '<g transform="' + inner + '">' + mark('#ffffff', E.icon, '#ffffff').replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g></svg>');
+      + '<g transform="' + inner + '">' + mark(E.iconInk || '#ffffff', E.icon, E.iconInk || '#ffffff').replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g></svg>');
   };
   const dir = path.join(OUT, app);
   await sharp(icon(false), { density: 1200 }).resize(192, 192).png().toFile(path.join(dir, 'icon-192.png'));
@@ -321,7 +347,7 @@ return [
 
 (async () => {
   const only = process.argv[2];
-  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards)');
+  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar)');
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build
   fs.rmSync(path.join(OUT, 'upload', '4-extract-in-public_html--app-tr-cb2e8587.zip'), { force: true });
   for (const k of only ? [only] : Object.keys(EDITIONS)) await build(k);

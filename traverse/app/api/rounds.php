@@ -81,7 +81,7 @@ function company(): array {
     $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
             'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
-            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false],
+            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false],
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
             'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
@@ -104,6 +104,9 @@ function loadHail(string $key): array {
 /* roof size and pitch (laser scan) and year built / roof material (county files), per door, built offline
    (operations/door-territory/roofs/sample-roofs.mjs, assessor/build-year.mjs). Admins only, features.roof. */
 function roofDataOn(string $role): bool { return $role === 'admin' && feature('roof'); }
+/* solar (2026-10-06, TraverseSolar): sun-facing roof, shade, a system that fits, its yearly output and the power company, per door,
+   built offline by data-pipeline/door-territory/solar/. Admins only, like the roof data, and only where the company turns it on. */
+function solarOn(string $role): bool { return $role === 'admin' && feature('solar'); }
 function loadSide(string $kind, string $key): array {
     static $memo = [];
     $k = $kind . '-' . $key;
@@ -1246,6 +1249,7 @@ if ($action === 'area') {
     $windOf = hailOn($role) ? loadSide('wind', $key) : [];
     $matOf = roofDataOn($role) ? loadSide('material', $key) : [];
     $mfxOf = loadMatFix($key);
+    $solarOf = solarOn($role) ? loadSide('solar', $key) : [];
     $naipOf = roofDataOn($role) ? loadSide('naip', $key) : [];   /* the 2023 roof close-up window for every house (2026-10-05) */   /* what someone at the house said the roof is (everyone sees it) */   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
@@ -1265,7 +1269,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

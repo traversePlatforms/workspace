@@ -109,7 +109,7 @@ async function loadTile(p, key, cacheDir) {
 
 /* Height grid over box [xmin,ymin,xmax,ymax] in EPSG:3857, cell = `cell` 3857 units.
    Returns { x0, y1, cell, w, h, hgt: Float32Array (NaN = no data), multi: Uint8Array (1 =
-   split-pulse returns, i.e. vegetation) } — row 0 is the north edge. */
+   split-pulse returns, i.e. vegetation), top: Float32Array elevations } — row 0 is the north edge. */
 export async function heightGrid(p, box, cell, cacheDir) {
   const w = Math.ceil((box[2] - box[0]) / cell), h = Math.ceil((box[3] - box[1]) / cell);
   const top = new Float32Array(w * h).fill(-Infinity), gnd = new Float32Array(w * h).fill(Infinity), multi = new Uint8Array(w * h);
@@ -139,7 +139,9 @@ export async function heightGrid(p, box, cell, cacheDir) {
   }
   const hgt = new Float32Array(w * h);
   for (let o = 0; o < w * h; o++) hgt[o] = top[o] === -Infinity || g[o] === Infinity ? NaN : Math.max(0, top[o] - g[o]);
-  return { x0: box[0], y1: box[3], cell, w, h, hgt, multi };
+  /* top: the highest return per cell as an elevation (-Infinity = none). Added 2026-10-06 for solar facing: a roof plane fitted
+     to height above ground takes on the slope of the ground under the house, so on a hillside a low roof reads as facing downhill. */
+  return { x0: box[0], y1: box[3], cell, w, h, hgt, multi, top };
 }
 
 export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020' };

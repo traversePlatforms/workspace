@@ -1557,6 +1557,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     roof: '<path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
     hail: '<path d="M7 15.5a4 4 0 0 1-.6-7.95 5.5 5.5 0 0 1 10.6 1A3.5 3.5 0 0 1 17 15.5z"/><circle cx="8.5" cy="19.5" r="1"/><circle cx="12.5" cy="18" r="1"/><circle cx="16" cy="20" r="1"/>',
     tree: '<path d="M12 3l-5 7h3l-4 6h12l-4-6h3z"/><path d="M12 16v5"/>',
@@ -3533,6 +3534,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(windBlock(d));             /* wind reported near the house (2026-10-05): rides with hail */
+    if (d.solar && cardOn('solar')) wrap.appendChild(solarBlock(d));   /* solar (2026-10-06): the server sends it to admins only, where the company has solar on */
     if (cardOn('roof')) wrap.appendChild(roofBlock(d));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
@@ -6320,6 +6322,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* wind (2026-10-05): the strongest reports within 10 miles of the house, per day, from the NWS Local Storm Reports. A report is
      a weather station or a damage report, not the wind at this house, so the distance is shown. */
+  /* solar (2026-10-06, TraverseSolar): from the laser scan and NREL's PVWatts, built offline (data-pipeline/door-territory/solar/).
+     a: roof area by the way it faces (sq ft), sh: trees taller than the roof on the sunny side, pn/kw/kwh: a system that fits and
+     its year's output (60% of the sun-facing roof, or of a flat roof, with 400 W panels of about 20 sq ft), u: the power company. Estimates. */
+  function solarBlock(d) {
+    var s = d.solar, b = q('div', 'hailx solarx'); b.appendChild(ico('sun', 2.2));
+    var t = q('span');
+    var a = s.a || {}, sunny = (a.S || 0) + (a.SE || 0) + (a.SW || 0), side = (a.E || 0) + (a.W || 0);
+    if (s.a) {
+      t.appendChild(q('small', null, 'Solar (estimate from the laser scan' + (s.yr ? ', ' + s.yr : '') + ')'));
+      var l1 = q('span', 'hl'); l1.appendChild(q('b', null, (sunny + side).toLocaleString('en-US') + ' sq ft'));
+      l1.appendChild(document.createTextNode(' faces the sun (' + sunny.toLocaleString('en-US') + ' south, ' + side.toLocaleString('en-US') + ' east or west)' + (a.F ? ', ' + a.F.toLocaleString('en-US') + ' flat' : '')));
+      t.appendChild(l1);
+      if (s.pn) { var l2 = q('span', 'hl'); l2.appendChild(q('b', null, 'Room for about ' + s.pn + ' panels, ' + s.kw + ' kW')); l2.appendChild(document.createTextNode(' · up to about ' + s.kwh.toLocaleString('en-US') + ' kWh a year')); t.appendChild(l2); }
+      var SH = { open: 'Open: no tall trees on the sunny side', some: 'Some shade from tall trees on the sunny side', heavy: 'Heavy shade from tall trees on the sunny side' };
+      if (s.sh) t.appendChild(q('span', 'hl', SH[s.sh] || ''));
+    }
+    if (s.u) { var l3 = q('span', 'hl'); l3.appendChild(document.createTextNode('Power company: ')); l3.appendChild(q('b', null, s.u)); t.appendChild(l3); }
+    b.appendChild(t);
+    return b;
+  }
   function windBlock(d) {
     var b = q('div', 'hailx windx'); b.appendChild(ico('flag', 2.2));
     var t = q('span'); t.appendChild(q('small', null, 'Wind reported near the house (nearest station or report)'));
