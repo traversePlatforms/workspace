@@ -165,3 +165,6 @@ door-app/site/data/rounds/naip-*.json
 door-app/site/data/rounds/com-*.json
 door-app/site/data/rounds/wind-com-*.json
 door-app/site/data/rounds/naip-com-*.json
+
+# Traverse copy of the door app: build output (50 MB of door data + a sign-in codes file). Rebuild with build-app.cjs.
+door-app/brand/traverse/app/dist/
