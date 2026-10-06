@@ -27,8 +27,8 @@ let body = between(src, '</helmet>', '</x-dc>').trim();
 
 // The edition pages and sign-in page don't exist yet, and Sixfold's ErrorDocument sends any missing path to
 // Sixfold's own homepage. Every edition opens its app (build-editions.cjs, on the same hosting); Pest has none, so they stay on this page; Sign in goes to the editions so you pick which app.
-const APPS = ['tr-cb2e8587', 'ty-25604fff', 'ts-016064fc', 'tq-9cf8d9de'];
-const links = { '/roofing': '/' + APPS[0] + '/', '/yards': '/' + APPS[1] + '/', '/solar': '/' + APPS[2] + '/', '/pest': '/' + APPS[3] + '/', '/sign-in': '#trades' };
+const APPS = ['tr-cb2e8587', 'ty-25604fff', 'ts-016064fc', 'tq-9cf8d9de', 'tg-3b0b89e7'];
+const links = { '/roofing': '/' + APPS[0] + '/', '/yards': '/' + APPS[1] + '/', '/solar': '/' + APPS[2] + '/', '/pest': '/' + APPS[3] + '/', '/security': '/' + APPS[4] + '/', '/sign-in': '#trades' };
 for (const [from, to] of Object.entries(links)) body = body.split('href="' + from + '"').join('href="' + to + '"');
 if ((body.match(/href="\/[^"]*"/g) || []).some((h) => !APPS.some((a) => h === 'href="/' + a + '/"'))) throw new Error('a site-absolute link is left; it would land on Sixfold');
 

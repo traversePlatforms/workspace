@@ -883,6 +883,8 @@
   .search .sfield input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:600 17px var(--sans);padding:12px 0}
   .search .sres{margin-top:12px}
   .search .srow{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit}
+  .seclist .srow{display:grid;gap:3px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 8px;box-shadow:var(--shadow)}
+  .seclist .srow b{font-family:var(--serif);font-weight:600}
   .search .srow .d-top > .ic{width:16px;height:16px;color:var(--soft);flex:none;align-self:center}
   .search .swhere{font-size:12.5px;color:var(--soft);margin-top:2px}
   .search .msg.soft{color:var(--soft)}
@@ -1557,6 +1559,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="16.5" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.1 4.2 1.6 4.8 4.3"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     leaf: '<path d="M5 19.5c0-8.5 5.5-14 14.5-14.5 0 9-5.5 14.5-14 14.5z"/><path d="M5 19.5c3-4.5 6.5-7.5 10.5-9.5"/>',
+    shield: '<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
     bug: '<path d="M9 9.5a3 3 0 0 1 6 0V15a3 3 0 0 1-6 0z"/><path d="M12 6.5V4.5M8.5 7.5L6.5 5.5M15.5 7.5l2-2M5 12.5h4M15 12.5h4M6 18.5l3-2M18 18.5l-3-2"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     roof: '<path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
@@ -2423,6 +2426,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
         tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView)]);
       officeGroup(box, 'storms', 'Storms and data', [
+        feat('security') && S.role === 'admin' ? tile('button', 'shield', 'Crime by neighbourhood', 'Neighbourhoods ranked by property crime reported nearby, last 90 days.', 'Admin only', secListView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', 'From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.', 'Admin only · in testing', stormView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
@@ -3535,6 +3539,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(windBlock(d));             /* wind reported near the house (2026-10-05): rides with hail */
+    if (d.sec && cardOn('security')) wrap.appendChild(secBlock(d));     /* security (2026-10-06): admins only, where the company has security on */
     if (d.pest && cardOn('pest')) wrap.appendChild(pestBlock(d));      /* pest (2026-10-06): the server sends it to admins only, where the company has pest on */
     if (d.solar && cardOn('solar')) wrap.appendChild(solarBlock(d));   /* solar (2026-10-06): the server sends it to admins only, where the company has solar on */
     if (cardOn('roof')) wrap.appendChild(roofBlock(d));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
@@ -3921,7 +3926,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (T.booked) { var sc = q('div', 'chips'); sc.appendChild(chipEl('bk', 'check', T.booked + (T.booked === 1 ? ' quote' : ' quotes') + ' booked')); pi.appendChild(sc); }
     pc.appendChild(pi); view.appendChild(pc);
     view.appendChild(alertStrip(null));
-    if (feat('pest') && S.role === 'admin') view.appendChild(seasonStrip());   /* pest edition: what is in season (2026-10-06) */
+    if (feat('pest') && S.role === 'admin') view.appendChild(seasonStrip());
+    if (feat('security') && S.role === 'admin') secRates(function () {});   /* the town figures, ready for the cards */   /* pest edition: what is in season (2026-10-06) */
     /* counties, in the order the towns are listed. Each folds up (Matthew 2026-10-05: more counties would clutter
        the screen); the bar carries the county's totals, and each phone remembers which are open. One county: open. */
     var order = [];
@@ -6409,7 +6415,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* pest (2026-10-06, TraversePest): the reasons to knock, as one line, then the details. Facts only: what is beside the house,
      who bought it and when, and this company's own customers, bookings and door notes nearby. No made-up risk score. */
-  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function feetOf(m) { var f = Math.round(m * 3.281 / 10) * 10; return f < 30 ? 'right beside the house' : 'about ' + f + ' ft away'; }
   function pestBlock(d) {
     var p = d.pest, b = q('div', 'hailx pestx'); b.appendChild(ico('bug', 2.2));
@@ -6436,6 +6441,76 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!why.length && !more.length) t.appendChild(q('span', 'hl', 'Nothing stands out here yet.'));
     b.appendChild(t);
     return b;
+  }
+  /* security (2026-10-06, TraverseSecurity): why knock, then what police reported nearby. Inside Colorado Springs: its police
+     reports within half a mile (counts by kind, and the date of the latest; never where). Elsewhere: the town's police or
+     sheriff, last 12 reported months (FBI). */
+  var CR_KIND = [['b', 'Burglaries'], ['v', 'Vehicle thefts and break-ins'], ['t', 'Other thefts'], ['d', 'Vandalism']];
+  function monthName(ym) { var m = String(ym || ''); return m.length >= 7 ? MONTHS[+m.slice(m.indexOf('-') === 2 ? 0 : 5, m.indexOf('-') === 2 ? 2 : 7) - 1] + ' ' + (m.indexOf('-') === 2 ? m.slice(3) : m.slice(0, 4)) : m; }
+  function secRates(cb) { if (S.secRates) { cb(S.secRates); return; } api('secrates').then(function (j) { if (j && j.ok) { S.secRates = j; cb(j); } }).catch(function () {}); }
+  function secBlock(d) {
+    var s = d.sec, b = q('div', 'hailx secx'); b.appendChild(ico('shield', 2.2));
+    var t = q('span'), why = [], now = new Date();
+    var ago = function (ym) { return (now.getFullYear() - +ym.slice(0, 4)) * 12 + (now.getMonth() + 1 - +ym.slice(5, 7)); };
+    if (s.sold && ago(s.sold) <= 12) why.push('New owner (sold ' + MONTHS[+s.sold.slice(5, 7) - 1] + ' ' + s.sold.slice(0, 4) + ')');
+    else if (d.os) why.push('New owner since ' + String(d.os).slice(0, 7));
+    if (s.yb && s.yb >= now.getFullYear() - 5) why.push('Newer home (built ' + s.yb + ')');
+    if (s.ab) why.push('Owner lives elsewhere');
+    if (d.acres >= 1) why.push(Math.round(d.acres * 10) / 10 + '-acre lot');
+    if (s.os) why.push(s.os.n ? 'Backs onto ' + s.os.n : 'Next to ' + s.os.k);
+    if (s.nb) why.push(s.nb + (s.nb === 1 ? ' neighbour' : ' neighbours') + ' on service nearby');
+    if (s.bk) why.push(s.bk + ' booked nearby this month');
+    t.appendChild(q('small', null, why.length ? 'Why knock' : 'This door'));
+    if (why.length) { var l1 = q('span', 'hl'); l1.appendChild(q('b', null, why.join(' \u00b7 '))); t.appendChild(l1); }
+    if (s.yb && !(s.yb >= now.getFullYear() - 5)) t.appendChild(q('span', 'hl', 'Built ' + s.yb));
+    if (s.cr) {
+      t.appendChild(q('small', 'sub', 'Reported within \u00bd mile (Colorado Springs police)'));
+      var any = false;
+      CR_KIND.forEach(function (k) {
+        var c = s.cr.h[k[0]]; if (!c || !c[2]) return; any = true;
+        var l = q('span', 'hl'); l.appendChild(q('b', null, k[1] + ': '));
+        l.appendChild(document.createTextNode(c[0] + ' in 30 days \u00b7 ' + c[1] + ' in 90 \u00b7 ' + c[2] + ' in the year' + (s.cr.last[k[0]] ? ' (latest ' + fmtD(s.cr.last[k[0]]) + ')' : '')));
+        t.appendChild(l);
+      });
+      if (!any) t.appendChild(q('span', 'hl', 'No property crime reported within \u00bd mile in the last year.'));
+      var m = s.cr.mile; if (m) t.appendChild(q('span', 'hl', 'Within 1 mile, last year: ' + m.b + ' burglaries, ' + m.v + ' vehicle, ' + m.t + ' other theft, ' + m.d + ' vandalism'));
+    } else {
+      var holder = q('span'); t.appendChild(holder);
+      secRates(function (r) {
+        var ori = r.towns && r.towns[S.region], a = ori && r.agencies && r.agencies[ori]; if (!a || !a.property) return;
+        holder.appendChild(q('small', 'sub', 'Town figures: ' + a.name + ', 12 months to ' + monthName(a.property.to)));
+        var line = function (lbl, x) { return x ? x.n + ' ' + lbl + (x.per1k != null ? ' (' + x.per1k + ' per 1,000)' : '') : ''; };
+        holder.appendChild(q('span', 'hl', [line('burglaries', a.burglary), line('vehicle thefts', a.mvt), line('property crimes in all', a.property)].filter(Boolean).join(' \u00b7 ')));
+      });
+    }
+    if (s.tg) {
+      var L = {}; ((CO && CO.extraWork) || []).forEach(function (w) { L[w[0]] = w[1]; });
+      var said = Object.keys(s.tg).sort(function (a, c) { return s.tg[c] - s.tg[a]; }).map(function (k) { return (L[k] || k).toLowerCase() + ' (' + s.tg[k] + ')'; });
+      if (said.length) t.appendChild(q('span', 'hl', 'Reps noted nearby, last 30 days: ' + said.join(', ')));
+    }
+    b.appendChild(t);
+    return b;
+  }
+  /* crime by neighbourhood: where Colorado Springs police reports allow it, neighbourhoods ranked by property crime nearby */
+  function secListView() {
+    hideToast(); S.screen = 'seclist'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Crime by neighbourhood', sub: 'Property crime reported nearby', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; var holder = q('div', 'seclist'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('seclist').then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the list.')); return; }
+      holder.appendChild(q('div', 'sub2', 'Property crime reported within \u00bc mile of each neighbourhood\u2019s doors, last 90 days (30 days after the dot). Source: ' + j.source + (j.through ? ', through ' + fmtD(j.through) : '') + '. Only neighbourhoods those reports cover are listed.'));
+      if (!j.areas.length) { holder.appendChild(q('div', 'msg', 'No neighbourhoods are covered by published police reports yet.')); return; }
+      var sum = function (c) { return (c.b || 0) + (c.v || 0) + (c.t || 0) + (c.d || 0); };
+      j.areas.forEach(function (a) {
+        var r = q('button', 'srow'); r.type = 'button';
+        var head = q('span', 'hl'); head.appendChild(q('b', null, a.area)); head.appendChild(document.createTextNode(' \u00b7 ' + a.town + ' \u00b7 ' + a.doors + ' doors')); r.appendChild(head);
+        r.appendChild(q('span', 'hl', sum(a.d90) + ' reports: ' + a.d90.b + ' burglary, ' + a.d90.v + ' vehicle, ' + a.d90.t + ' theft, ' + a.d90.d + ' vandalism \u00b7 ' + sum(a.d30) + ' in 30 days'));
+        r.addEventListener('click', function () { S.region = a.region; S.area = null; S.returnTo = secListView; openArea(a.area); });
+        holder.appendChild(r);
+      });
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'The list needs signal.')); });
   }
   /* the season strip on the Colorado screen, and the line on each card: fetched once a session */
   function seasonStrip() {

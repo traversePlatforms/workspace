@@ -81,7 +81,7 @@ function company(): array {
     $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
             'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
-            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false, 'pest' => false],
+            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false, 'pest' => false, 'security' => false],
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
             'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
@@ -111,6 +111,10 @@ function solarOn(string $role): bool { return $role === 'admin' && feature('sola
    last sale month (data-pipeline/door-territory/pest/), plus, from this install's own records, customers and bookings within
    about 160 m and what neighbours told the team in the last 30 days. Admins only, where the company turns pest on. */
 function pestOn(string $role): bool { return $role === 'admin' && feature('pest'); }
+/* security (2026-10-06, TraverseSecurity): crime reported near the house (Colorado Springs police, area counts only, never a
+   location), town figures (FBI), owner lives elsewhere, plus the pest build's sale month, year built and open space, and the
+   same neighbours / bookings / door-note counts. Admins only, where the company turns security on. */
+function securityOn(string $role): bool { return $role === 'admin' && feature('security'); }
 function loadSide(string $kind, string $key): array {
     static $memo = [];
     $k = $kind . '-' . $key;
@@ -1255,8 +1259,9 @@ if ($action === 'area') {
     $mfxOf = loadMatFix($key);
     $solarOf = solarOn($role) ? loadSide('solar', $key) : [];
     $pestOf = []; $custPts = []; $bookPts = []; $notePts = []; $posOf = [];
-    if (pestOn($role)) {
-        $pestOf = loadSide('pest', $key);
+    $secOf = securityOn($role) ? loadSide('security', $key) : [];
+    if (pestOn($role) || securityOn($role)) {
+        $pestOf = pestOn($role) ? loadSide('pest', $key) : [];
         foreach ($data['areas'] as $a0) foreach ($a0['doors'] as $d0) if (isset($d0['lat'], $d0['lon'])) $posOf[$d0['id']] = [(float) $d0['lat'], (float) $d0['lon']];
         foreach (customerDoors() as $dk => $_) { $pp = explode('/', (string) $dk, 2); if (count($pp) === 2 && $pp[0] === $key && isset($posOf[$pp[1]])) $custPts[$pp[1]] = $posOf[$pp[1]]; }
         $since = time() - 30 * 86400;
@@ -1273,15 +1278,17 @@ if ($action === 'area') {
             $p = $phones[$d['id']] ?? null;
             $n = $notes[$d['id']] ?? null;
             $em = $emails[$d['id']] ?? null;
-            $pestRow = null;
-            if (pestOn($role)) {
+            $pestRow = null; $secRow = null;
+            if (pestOn($role) || securityOn($role)) {
                 $pp = $posOf[$d['id']] ?? null; $nb = 0; $bk = 0; $tg = [];
                 if ($pp) {
                     foreach ($custPts as $ci => $cp) if ($ci !== $d['id'] && $nearby($pp, $cp)) $nb++;
                     foreach ($bookPts as $bi => $bp) if ($bi !== $d['id'] && $nearby($pp, $bp)) $bk++;
                     foreach ($notePts as $ni => $nt) if ($ni !== $d['id'] && $nearby($pp, $nt[0])) foreach ($nt[1] as $t) $tg[$t] = ($tg[$t] ?? 0) + 1;
                 }
-                $pestRow = ($pestOf[$d['id']] ?? []) + ['nb' => $nb, 'bk' => $bk] + ($tg ? ['tg' => $tg] : []);
+                $near = ['nb' => $nb, 'bk' => $bk] + ($tg ? ['tg' => $tg] : []);
+                if (pestOn($role)) $pestRow = ($pestOf[$d['id']] ?? []) + $near;
+                if (securityOn($role)) $secRow = ($secOf[$d['id']] ?? []) + $near;
             }
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
@@ -1293,7 +1300,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null, 'pest' => $pestRow,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null, 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
@@ -2528,6 +2535,18 @@ if ($action === 'leadstatus') {
     $row = ['id' => $id, 'by' => $me, 'at' => time()]; if ($status !== '') $row['status'] = $status; if ($note !== '') $row['note'] = $note;
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+
+/* security edition: the town figures, and neighbourhoods ranked by reported property crime nearby (data/rounds/security-*.json) */
+if ($action === 'secrates' || $action === 'seclist') {
+    if (!securityOn($role)) fail('Not here.', 404);
+    if ($action === 'secrates') out(['ok' => true] + (json_decode((string) @file_get_contents(DATA_DIR . '/security-rates.json'), true) ?: []));
+    $ar = json_decode((string) @file_get_contents(DATA_DIR . '/security-areas.json'), true) ?: [];
+    $rows = [];
+    foreach (($ar['towns'] ?? []) as $town => $areas) foreach ($areas as $name => $c) $rows[] = ['region' => (string) $town, 'town' => regionLabel((string) $town), 'area' => (string) $name, 'd30' => $c['d30'], 'd90' => $c['d90'], 'doors' => (int) ($c['doors'] ?? 0)];
+    $sum = fn($c) => array_sum(array_map('intval', (array) $c));
+    usort($rows, fn($a, $b) => [$sum($b['d90']), $sum($b['d30'])] <=> [$sum($a['d90']), $sum($a['d30'])]);
+    out(['ok' => true, 'through' => (string) ($ar['through'] ?? ''), 'source' => (string) ($ar['source'] ?? ''), 'areas' => $rows]);
 }
 
 /* what is in season this month (pest edition): data/rounds/pest-season.json, each line from a named source */
