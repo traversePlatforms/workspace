@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Training: seven headings and Sixfold's 31 lessons
+## ⏳ TO UPLOAD — Training: seven headings and Sixfold's 31 lessons; the calendar as a month grid
 
 Matthew 2026-10-05: build out the crew's Training section. Headings are now **Doors · Sales · Quotes · Phones ·
 Paperwork · Safety · Using the app** (plus Other, kept for any lesson filed under the old three). A row of chips at the
@@ -17,7 +17,9 @@ top filters to one heading, and the phone remembers the choice. Lesson previews 
 are Sixfold's, written in `sixfold/training/` (Surge's door method rebuilt for Sixfold, plus Sixfold's own crib sheets,
 water, quote, safety and app material). See `sixfold/training/README.md`.
 
-train7-test 10/10, teams 53/53.
+**Calendar (same upload, index.html only):** a month grid instead of a 30-day list. Sunday-first weeks, today circled, a coloured dot per walk (green), come-back (amber), follow-up (ember) and entry (grey); on a wide screen the dots become short titles. Tap a day and its list opens underneath, with + Add to this day. ‹ › change month; Today jumps back.
+
+train7-test 10/10, teams 54/54 (calendar checks rewritten for the grid).
 
 **⚑ ORDER: rounds.php and index.html BEFORE training.json.** The old page only knows three headings, so it wouldn't show
 lessons filed under Sales, Quotes and the rest; and the old server would turn them into Other if anyone saved.

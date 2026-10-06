@@ -797,6 +797,27 @@
   .calnav span{flex:1;text-align:center;font-weight:700;font-size:13.5px}
   .calnav button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
   .calnav button:disabled{opacity:.45}
+  .calnav .calmon{font:400 21px/1.2 var(--serif);text-align:left;padding-left:2px}
+  .calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin:4px 0 8px}
+  .calwd{text-align:center;font-size:11.5px;font-weight:700;color:var(--soft);padding:2px 0 4px}
+  .calcell{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-height:58px;padding:5px 4px;border:0;border-radius:10px;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-shadow:var(--shadow);min-width:0}
+  .calcell.out{background:transparent;box-shadow:none;color:var(--soft);opacity:.6}
+  .calnum{font-size:13px;font-weight:700;line-height:1}
+  .calcell.today .calnum{display:inline-grid;place-items:center;width:22px;height:22px;margin:-3px 0 0 -2px;border-radius:50%;background:var(--ember-ink);color:#fff}
+  .calcell.sel{outline:2.5px solid var(--accent);outline-offset:-2.5px}
+  .calmarks{display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-width:0}
+  .calchip{display:block;width:8px;height:8px;border-radius:50%;overflow:hidden;font-size:0;background:var(--soft)}
+  .calchip.k-walk,.callegend i.k-walk{background:var(--go)}.calchip.k-revisit,.callegend i.k-revisit{background:var(--later)}
+  .calchip.k-lead,.callegend i.k-lead{background:var(--ember-ink)}.calchip.k-own,.callegend i.k-own{background:var(--soft)}
+  .calmore{font-size:10.5px;font-weight:700;color:var(--soft);line-height:1}
+  .callegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--soft);margin:0 0 4px}
+  .callegend span{display:inline-flex;align-items:center;gap:5px}.callegend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  @media (min-width:700px){
+    .calcell{min-height:96px;padding:7px 6px}
+    .calmarks{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:2px}
+    .calchip{width:auto;height:auto;font-size:11.5px;line-height:1.35;padding:1px 5px;border-radius:5px;color:#fff;white-space:nowrap;text-overflow:ellipsis}
+    .calchip.k-own{color:var(--card)}
+  }
   h2.calday{margin:14px 0 6px;font-size:15px}
   h2.calday.today{color:var(--ember-ink)}
   .calev{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:var(--card);color:var(--ink);border-radius:14px;padding:10px 12px;margin:0 0 6px;box-shadow:var(--shadow);font:inherit;cursor:pointer}
@@ -4033,37 +4054,83 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(tabs);
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     if (S.calTab === 'leads') return calLeads(holder, who);
-    var from = S.calFrom, to = isoMinus(from, -30);
+    /* a month grid (Matthew 2026-10-05: "more like a calendar, less like a to-do list"): Sunday-first weeks, a coloured mark per
+       walk, come-back, follow-up and entry, and the picked day's list underneath. On a wide screen the marks carry titles. */
+    var today = todayISO();
+    S.calDay = S.calDay || today;
+    var mon = S.calMonth || S.calDay.slice(0, 7);
+    var y = +mon.slice(0, 4), m = +mon.slice(5, 7);
+    var isoD = function (d) { return d.toISOString().slice(0, 10); };
+    var first = new Date(Date.UTC(y, m - 1, 1)), start = new Date(first.getTime()); start.setUTCDate(1 - first.getUTCDay());
+    var weeks = Math.ceil((first.getUTCDay() + new Date(Date.UTC(y, m, 0)).getUTCDate()) / 7);
+    var stop = new Date(start.getTime()); stop.setUTCDate(start.getUTCDate() + weeks * 7 - 1);
+    var from = isoD(start), to = isoD(stop);
+    var shift = function (n) { var d = new Date(Date.UTC(y, m - 1 + n, 1)); S.calMonth = isoD(d).slice(0, 7); S.calOpenId = null; calendarView(); };
     api('calendar', { params: { who: who, from: from, to: to } }).then(function (j) {
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the calendar.')); return; }
       var nav = q('div', 'calnav');
-      var pv = q('button', null, '\u2039 Earlier'); pv.type = 'button'; pv.addEventListener('click', function () { S.calFrom = isoMinus(from, 30); calendarView(); });
-      var td = q('button', null, 'Today'); td.type = 'button'; td.disabled = from === todayISO(); td.addEventListener('click', function () { S.calFrom = todayISO(); calendarView(); });
-      var nx = q('button', null, 'Later \u203a'); nx.type = 'button'; nx.addEventListener('click', function () { S.calFrom = isoMinus(from, -31); calendarView(); });
-      nav.appendChild(pv); nav.appendChild(q('span', null, dayName(from) + ' \u2013 ' + dayName(to))); nav.appendChild(td); nav.appendChild(nx);
+      var pv = q('button', null, '\u2039'); pv.type = 'button'; pv.setAttribute('aria-label', 'Previous month'); pv.addEventListener('click', function () { shift(-1); });
+      var nx = q('button', null, '\u203a'); nx.type = 'button'; nx.setAttribute('aria-label', 'Next month'); nx.addEventListener('click', function () { shift(1); });
+      var td = q('button', null, 'Today'); td.type = 'button'; td.disabled = mon === today.slice(0, 7) && S.calDay === today;
+      td.addEventListener('click', function () { S.calDay = today; S.calMonth = today.slice(0, 7); S.calOpenId = null; calendarView(); });
+      nav.appendChild(pv); nav.appendChild(q('span', 'calmon', first.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }))); nav.appendChild(nx); nav.appendChild(td);
       holder.appendChild(nav);
-      if (j.edit) {
-        var ad = q('button', 'addlead', S.calAdd ? 'Close the form' : '+ Add to ' + (who === S.me ? 'my' : who + '\u2019s') + ' calendar'); ad.type = 'button';
-        ad.addEventListener('click', function () { S.calAdd = !S.calAdd; calendarView(); }); holder.appendChild(ad);
-        if (S.calAdd) holder.appendChild(calForm(who));
-      } else holder.appendChild(q('div', 'sub2', 'Looking only: this is ' + who + '\u2019s calendar.'));
-      if (!j.events.length) { holder.appendChild(q('div', 'msg', 'Nothing on this calendar from ' + dayName(from) + ' to ' + dayName(to) + '.')); return; }
       var KIND = { walk: ['cal', 'Walk booked'], revisit: ['clock', 'Come back: they said not now'], lead: ['phone', 'Follow up a lead'], own: ['note', 'Entry'] };
-      var last = '';
-      j.events.forEach(function (e) {
-        if (e.date !== last) { holder.appendChild(q('h2', 'calday' + (e.date === todayISO() ? ' today' : ''), (e.date === todayISO() ? 'Today \u00b7 ' : '') + dayName(e.date))); last = e.date; }
-        var k = KIND[e.kind] || KIND.own;
-        var r = q('button', 'calev k-' + e.kind); r.type = 'button';
-        r.appendChild(ico(k[0], 2.2));
-        var tx = q('span'); tx.appendChild(q('b', null, (e.time ? fmtTime(e.time) + ' \u00b7 ' : '') + (e.kind === 'own' ? e.title : streetCase(e.title))));
-        tx.appendChild(q('small', null, k[1] + (e.need ? ' \u00b7 ' + e.need : '') + (e.town ? ' \u00b7 ' + e.town : '')));
-        r.appendChild(tx);
-        r.addEventListener('click', function () { calOpen(e, j.edit, who); });
-        holder.appendChild(r);
-        if (S.calOpenId && S.calOpenId === (e.cid || '')) holder.appendChild(calDetail(e, j.edit, who));
-      });
+      var byDay = {}; j.events.forEach(function (e) { (byDay[e.date] = byDay[e.date] || []).push(e); });
+      var short = function (e) { return (e.time ? fmtTime(e.time).replace(' ', '') + ' ' : '') + (e.kind === 'own' ? e.title : streetCase(e.title)); };
+      var grid = q('div', 'calgrid');
+      ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(function (w) { grid.appendChild(q('span', 'calwd', w)); });
+      for (var i = 0; i < weeks * 7; i++) {
+        var dd = new Date(start.getTime()); dd.setUTCDate(start.getUTCDate() + i);
+        (function (iso, dnum, inMonth) {
+          var evs = byDay[iso] || [];
+          var c = q('button', 'calcell' + (inMonth ? '' : ' out') + (iso === today ? ' today' : '') + (iso === S.calDay ? ' sel' : '') + (evs.length ? ' has' : ''));
+          c.type = 'button'; c.setAttribute('aria-label', dayName(iso) + (evs.length ? ', ' + evs.length + ' on the calendar' : ''));
+          c.appendChild(q('span', 'calnum', String(dnum)));
+          var marks = q('span', 'calmarks');
+          evs.slice(0, 3).forEach(function (e) { marks.appendChild(q('span', 'calchip k-' + e.kind, short(e))); });
+          if (evs.length > 3) marks.appendChild(q('span', 'calmore', '+' + (evs.length - 3)));
+          c.appendChild(marks);
+          c.addEventListener('click', function () {
+            S.calDay = iso; S.calOpenId = null; S.calAdd = false;
+            if (iso.slice(0, 7) !== mon) { S.calMonth = iso.slice(0, 7); calendarView(); return; }
+            holder.querySelectorAll('.calcell.sel').forEach(function (x) { x.classList.remove('sel'); }); c.classList.add('sel');
+            drawDay();
+          });
+          grid.appendChild(c);
+        })(isoD(dd), dd.getUTCDate(), dd.getUTCMonth() === m - 1);
+      }
+      holder.appendChild(grid);
+      var legend = q('div', 'callegend');
+      [['walk', 'Walk'], ['revisit', 'Come back'], ['lead', 'Follow-up'], ['own', 'Entry']].forEach(function (k) { var s = q('span'); s.appendChild(q('i', 'k-' + k[0])); s.appendChild(document.createTextNode(k[1])); legend.appendChild(s); });
+      holder.appendChild(legend);
+      var dayBox = q('div', 'calbox'); holder.appendChild(dayBox);
+      function drawDay() {
+        dayBox.textContent = '';
+        var iso = S.calDay;
+        dayBox.appendChild(q('h2', 'calday' + (iso === today ? ' today' : ''), (iso === today ? 'Today \u00b7 ' : '') + dayName(iso)));
+        if (j.edit) {
+          var ad = q('button', 'addlead', S.calAdd ? 'Close the form' : '+ Add to this day'); ad.type = 'button';
+          ad.addEventListener('click', function () { S.calAdd = !S.calAdd; drawDay(); }); dayBox.appendChild(ad);
+          if (S.calAdd) dayBox.appendChild(calForm(who));
+        } else dayBox.appendChild(q('div', 'sub2', 'Looking only: this is ' + who + '\u2019s calendar.'));
+        var evs = byDay[iso] || [];
+        if (!evs.length) { dayBox.appendChild(q('div', 'msg', 'Nothing on this day.')); return; }
+        evs.forEach(function (e) {
+          var k = KIND[e.kind] || KIND.own;
+          var r = q('button', 'calev k-' + e.kind); r.type = 'button';
+          r.appendChild(ico(k[0], 2.2));
+          var tx = q('span'); tx.appendChild(q('b', null, (e.time ? fmtTime(e.time) + ' \u00b7 ' : '') + (e.kind === 'own' ? e.title : streetCase(e.title))));
+          tx.appendChild(q('small', null, k[1] + (e.need ? ' \u00b7 ' + e.need : '') + (e.town ? ' \u00b7 ' + e.town : '')));
+          r.appendChild(tx);
+          r.addEventListener('click', function () { calOpen(e, j.edit, who); });
+          dayBox.appendChild(r);
+          if (S.calOpenId && S.calOpenId === (e.cid || '')) dayBox.appendChild(calDetail(e, j.edit, who));
+        });
+      }
+      drawDay();
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'The calendar needs signal.')); });
   }
   function fmtTime(t) { var p = String(t).split(':'), h = +p[0]; return (h % 12 || 12) + (p[1] !== '00' ? ':' + p[1] : '') + (h < 12 ? ' am' : ' pm'); }
@@ -4097,7 +4164,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var f = q('div', 'phf');
     var field = function (label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; };
     var tt = field('What', q('input')); tt.maxLength = 80; tt.placeholder = 'e.g. Call back the Smiths about the estimate';
-    var dt = field('Day', q('input')); dt.type = 'date'; dt.value = S.calFrom || todayISO();
+    var dt = field('Day', q('input')); dt.type = 'date'; dt.value = S.calDay || todayISO();
     var tm = field('Time (optional)', q('input')); tm.type = 'time'; tm.step = 900;
     var nt = field('Note (optional)', q('textarea')); nt.rows = 2; nt.maxLength = 500;
     var err = q('div', 'err'); f.appendChild(err);
