@@ -127,8 +127,9 @@ if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matche
 </script>
 <style>
 html.anim .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
-html.anim .rv.rv-l{transform:translateX(-28px)}
-html.anim .rv.rv-r{transform:translateX(28px)}
+/* the app section slides in from its sides only where it has sides; it clips so the slide never widens the page */
+#product{overflow-x:hidden;overflow-x:clip}
+@media (min-width:1001px){html.anim .rv.rv-l{transform:translateX(-28px)}html.anim .rv.rv-r{transform:translateX(28px)}}
 html.anim .rv.rv-pop{transform:scale(.9)}
 html.anim .rv.in{opacity:1;transform:none}
 /* the hero: the doors appear, the route draws from the first door to the target, the door card slides up */
