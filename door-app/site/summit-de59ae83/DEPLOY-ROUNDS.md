@@ -9,7 +9,7 @@ verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 check
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
 each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
 
-## ⏳ TO UPLOAD — Commercial test: three admin-only towns of apartments, commercial and industrial buildings
+## ✅ LIVE 2026-10-05 (verified 13/13 signed in as the Claude Check admin: page identical plain and busted at the folder URL, 14 towns, 1,203 / 822 / 3,057 buildings, every commercial area check opens with leads, hail, wind and photo, an ordinary town unchanged, search leaves the test towns out; crew refusal tested in the harness only) — Commercial test: three admin-only towns of apartments, commercial and industrial buildings
 
 Matthew 2026-10-05: try the commercial roofing test in the app. **5,082 buildings** in three storm spots (Colorado Springs east,
 South metro, West Denver / Lakewood; how and why in `operations/door-territory/commercial/README.md`), grouped on the Colorado
