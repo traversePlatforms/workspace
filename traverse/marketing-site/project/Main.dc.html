@@ -174,50 +174,72 @@ h1,h2,h3{text-wrap:balance}
 </div>
 </section>
 
-<!-- how it works: a real sequence, drawn as the traverse -->
-<section id="how" style="background: #13294b; color: #ffffff;">
-<div style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-direction: column; gap: 40px;">
-<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.015em; color: #ffffff;">From the first door to the signed job</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 28px;">
-<div style="display: flex; flex-direction: column; gap: 10px;">
-<div style="display: flex; align-items: center; gap: 10px;"><span style="width: 22px; height: 22px; border-radius: 50%; border: 5px solid #ffffff; box-sizing: border-box;"></span><span style="flex: 1; height: 5px; border-radius: 3px; background: #ffffff;"></span></div>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d6ea;">Station 1</span>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px; color: #ffffff;">Load your territory</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #dce6f5;">Every house in the towns you work, grouped into neighbourhoods your crews can claim.</p>
+<!-- how it works: the mark itself, drawn large across the band; each step sits on its station -->
+<section id="how" style="background: #13294b; color: #ffffff; overflow: hidden;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px 96px; display: flex; flex-direction: column; gap: 56px;">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #ff7a45;">How it works</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 56px; line-height: 1.02; letter-spacing: -0.025em; color: #ffffff;">From the first door to the signed job</h2>
 </div>
-<div style="display: flex; flex-direction: column; gap: 10px;">
-<div style="display: flex; align-items: center; gap: 10px;"><span style="width: 22px; height: 22px; border-radius: 50%; border: 5px solid #ffffff; box-sizing: border-box;"></span><span style="flex: 1; height: 5px; border-radius: 3px; background: #ffffff;"></span></div>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d6ea;">Station 2</span>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px; color: #ffffff;">Knock and mark</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #dce6f5;">Reps work street by street and mark every door. The office sees each mark as it happens.</p>
+<div class="trav" style="position: relative;">
+<svg class="trav-line" viewBox="0 0 1000 220" preserveAspectRatio="none" width="100%" height="220" style="position: absolute; left: 0; top: 0; display: block; overflow: visible;" aria-hidden="true"><polyline points="125,190 375,70 625,130 875,26" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+<div class="trav-row" style="position: relative; display: flex;">
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 176px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 01</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Load your territory</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">Every house in the towns you work, grouped into neighbourhoods your crews can claim.</p>
 </div>
-<div style="display: flex; flex-direction: column; gap: 10px;">
-<div style="display: flex; align-items: center; gap: 10px;"><span style="width: 22px; height: 22px; border-radius: 50%; border: 5px solid #ffffff; box-sizing: border-box;"></span><span style="flex: 1; height: 5px; border-radius: 3px; background: #ffffff;"></span></div>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d6ea;">Station 3</span>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px; color: #ffffff;">Book the appointment</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #dce6f5;">A yes at the door becomes a booked walk on the calendar and a lead in the pipeline, with its owner set.</p>
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 56px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 02</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Knock and mark</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">Reps work street by street and mark every door. The office sees each one as it happens.</p>
 </div>
-<div style="display: flex; flex-direction: column; gap: 10px;">
-<div style="display: flex; align-items: center; gap: 10px;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #ff7a45; border: 4px solid #ffffff; box-sizing: border-box;"></span></div>
-<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d6ea;">The close</span>
-<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 22px; color: #ffffff;">Win and keep the customer</h3>
-<p style="margin: 0; font-size: 16px; line-height: 24px; color: #dce6f5;">The won job becomes a customer record with their visits, what is due next and a review request.</p>
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 116px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 03</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Book the appointment</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">A yes at the door becomes a booked walk on the calendar and a lead in the pipeline, with its owner set.</p>
+</div>
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 4px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 44px; height: 44px; border-radius: 50%; background: #ff7a45; border: 5px solid #ffffff; box-sizing: border-box; flex: none; box-shadow: 0 0 0 10px rgba(255,122,69,0.18);"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #ff7a45;">THE CLOSE</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Win and keep the customer</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">The signed job becomes a customer record with their visits, what is due next and a review request.</p>
+</div>
 </div>
 </div>
 </div>
 </section>
 
-<!-- built for the field -->
-<section style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-wrap: wrap; gap: 48px; align-items: center;">
-<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
-<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.015em;">Works anywhere your team does</h2>
-<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">Large text and big buttons, easy to read in bright sun and easy to tap with gloves on. With no signal, everything entered is saved on the phone and sent as soon as the signal returns. Managers run their teams, territories and goals from the same app.</p>
+<!-- built for the field: the conditions it is built for, said big; then the team features as one strip -->
+<section style="background-color: #f4f6f9; background-image: linear-gradient(rgba(19,41,75,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(19,41,75,0.05) 1px, transparent 1px); background-size: 44px 44px;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px; display: flex; flex-direction: column; gap: 48px;">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #b83608;">Out on the street</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 56px; line-height: 1.02; letter-spacing: -0.025em;">Works anywhere your team does</h2>
 </div>
-<div style="flex: 1 1 460px; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
-<div style="background: #ffffff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 18px;">Crews and teams</b><span style="font-size: 15px; line-height: 22px; color: #566476;">Crew, manager and admin roles. Managers run their own team's territories, leads and goals.</span></div>
-<div style="background: #ffffff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 18px;">Storm and fire alerts</b><span style="font-size: 15px; line-height: 22px; color: #566476;">Phone alerts when a severe storm or wildfire warning reaches your territory.</span></div>
-<div style="background: #ffffff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 18px;">Training built in</b><span style="font-size: 15px; line-height: 22px; color: #566476;">Your own lessons for doors, sales, quotes, phones and safety, on every rep's phone.</span></div>
-<div style="background: #ffffff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 18px;">Your data stays yours</b><span style="font-size: 15px; line-height: 22px; color: #566476;">A full backup every night, and one you can download at any time.</span></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px 40px;">
+<div style="display: flex; flex-direction: column; gap: 10px; border-top: 4px solid #13294b; padding-top: 18px;">
+<b style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.02em; color: #13294b;">Full sun<span style="color: #d6400c;">.</span></b>
+<p style="margin: 0; font-size: 17px; line-height: 26px; color: #566476; max-width: 32ch;">Large, high-contrast text you can read at noon on a driveway.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; border-top: 4px solid #13294b; padding-top: 18px;">
+<b style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.02em; color: #13294b;">Gloves on<span style="color: #d6400c;">.</span></b>
+<p style="margin: 0; font-size: 17px; line-height: 26px; color: #566476; max-width: 32ch;">Big buttons you can tap without taking them off.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; border-top: 4px solid #d6400c; padding-top: 18px;">
+<b style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.02em; color: #13294b;">No signal<span style="color: #d6400c;">.</span></b>
+<p style="margin: 0; font-size: 17px; line-height: 26px; color: #566476; max-width: 32ch;">Everything entered is saved on the phone and sent the moment the signal returns.</p>
+</div>
+</div>
+<div style="background: #13294b; color: #ffffff; border-radius: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); overflow: hidden;">
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset -1px 0 0 rgba(255,255,255,0.12);"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Crews and teams</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">Crew, manager and admin roles. Managers run their own team's territories, leads and goals.</span></div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset -1px 0 0 rgba(255,255,255,0.12);"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Storm and fire alerts</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">Phone alerts when a severe storm or wildfire warning reaches your territory.</span></div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset -1px 0 0 rgba(255,255,255,0.12);"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Training built in</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">Your own lessons for doors, sales, quotes, phones and safety, on every rep's phone.</span></div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Your data stays yours</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">A full backup every night, and one you can download at any time.</span></div>
+</div>
 </div>
 </section>
 
@@ -238,8 +260,8 @@ h1,h2,h3{text-wrap:balance}
 
 <!-- closing call to action -->
 <section id="demo" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 20px;">
-<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; max-width: 18ch;">See a day in Traverse</h2>
-<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476; max-width: 52ch;">Book a demo and we will walk you through a full day in the app, from the first door to the signed job.</p>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; max-width: 18ch;">Traverse your day</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476; max-width: 52ch;">Book a demo and see how a full day runs: at the door, on the phone and in the office.</p>
 <a href="#demo" style="display: inline-flex; align-items: center; height: 52px; padding: 0 26px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 17px; text-decoration: none;">Book a demo</a>
 </section>
 

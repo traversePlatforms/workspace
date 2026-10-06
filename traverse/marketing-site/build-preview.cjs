@@ -56,6 +56,12 @@ html{scroll-behavior:smooth}
   .daycol{gap:28px !important}
   .dayitem{align-items:flex-start !important;text-align:left !important}
   .daycol-l .dayitem > div:first-child{flex-direction:row-reverse}
+  /* How it works: the drawn traverse needs width; on a phone the stations stack down a line instead */
+  .trav-line{display:none !important}
+  .trav-row{flex-direction:column;gap:32px;border-left:5px solid #ffffff;padding-left:22px;margin-left:12px}
+  .trav-st{padding:0 !important;align-items:flex-start !important;text-align:left !important}
+  .trav-st > span:first-child{margin-left:-41px}
+  h2{font-size:34px !important}
 }
 @media (max-width:420px){
   h1{font-size:36px !important}
