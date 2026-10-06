@@ -3,7 +3,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 const HERE = process.env.HAIL_DIR || '.';   /* where the downloaded files are */
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/door-app/site/data/rounds';
+const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
 function parseCSV(s) {
   const rows = []; let row = [], f = '', q = false;
   for (let i = 0; i < s.length; i++) {

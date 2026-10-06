@@ -19,7 +19,7 @@ import { inRings, loadBuildings, pickHouse, townParcels, merc } from '../../tree
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..', '..'), TZ = join(DT, 'tree-zones');
-const DATA = join(DT, '..', '..', 'site', 'data', 'rounds');
+const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'cache');
 mkdirSync(CACHE, { recursive: true });
 const TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek'];

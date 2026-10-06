@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 const HERE = process.env.HAIL_DIR || '.';   /* where the downloaded files are */
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/door-app/site/data/rounds';
+const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
 const b = readFileSync(`${HERE}/${process.argv[2] || 'mesh.grib2'}`);
 let p = 16, g = {}, png = null;
 while (p < b.length - 4 && b.toString('ascii', p, p + 4) !== '7777') {

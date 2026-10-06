@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROSTER = readdirSync(HERE).filter((f) => /^hoa-roster-active-\d{4}-\d{2}-\d{2}\.csv$/.test(f)).sort().pop();
-const ROUNDS = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const ROUNDS = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const COUNTIES = ['El Paso', 'Douglas', 'Teller'];
 /* mailing zips by county — approximate, see the header */
 const ZIPS = {

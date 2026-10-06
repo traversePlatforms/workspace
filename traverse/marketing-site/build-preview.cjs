@@ -1,6 +1,6 @@
 // Builds the hidden web preview of the traverseplatforms.com homepage from the design canvas.
 //
-//   node door-app/brand/traverse/homepage/build-preview.cjs
+//   node traverse/marketing-site/build-preview.cjs
 //
 // Source: project/Main.dc.html (the canvas board, published at claude.ai/artifact/7kA7Cu7Pfh7BFyAwqVFQpb).
 // Output: preview/tp-5ea36a05/{index.html,.htaccess}. Upload BOTH into
@@ -26,7 +26,7 @@ const head = between(src, '<helmet>', '</helmet>').trim();
 let body = between(src, '</helmet>', '</x-dc>').trim();
 
 // The edition pages and sign-in page don't exist yet, and Sixfold's ErrorDocument sends any missing path to
-// Sixfold's own homepage. Roofing and Yards open their apps (build-app.cjs, on the same hosting); Solar and Pest
+// Sixfold's own homepage. Roofing and Yards open their apps (build-editions.cjs, on the same hosting); Solar and Pest
 // have none, so they stay on this page; Sign in goes to the editions so you pick which app.
 const APPS = ['tr-cb2e8587', 'ty-25604fff'];
 const links = { '/roofing': '/' + APPS[0] + '/', '/yards': '/' + APPS[1] + '/', '/solar': '#trades', '/pest': '#trades', '/sign-in': '#trades' };

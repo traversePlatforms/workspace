@@ -319,7 +319,7 @@ what a door is chosen on; the full name is in the CSV if anyone needs it.
 
 ## Rebuilding the door data — the full pipeline (2026-10-01)
 
-1. **Snapshot** `../../site/data/rounds/` first.
+1. **Snapshot** `../../app/data/rounds/` first.
 2. Builder per town — `build-walklist.mjs` (El Paso) or `build-walklist-co.mjs` (statewide), with
    that town's radius and `--out=<town>.csv`.
 3. `node build-walklist-pdf.mjs <town>.csv` — writes the sidecar (with coordinates) and the book.

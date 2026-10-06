@@ -1,7 +1,7 @@
 # Using the app
 
 How the crew uses the door app day to day. One `## ` heading = one lesson in the app (heading: Using the app).
-Short versions of door-app/operations/door-territory/APP-GUIDE, which describes every screen.
+Short versions of traverse/data-pipeline/door-territory/APP-GUIDE, which describes every screen.
 
 ## A day at the doors
 Source: APP-GUIDE (A day at the doors; Door rounds, screen by screen).

@@ -71,7 +71,7 @@ The pitch stays the same. How you deliver it changes with the person in front of
 - Take control of the conversation, of your day and of what you do next.
 
 ## No soliciting: three levels
-Source: door-app/operations/door-territory/NO-SOLICIT-SCOPE.md.
+Source: traverse/data-pipeline/door-territory/NO-SOLICIT-SCOPE.md.
 
 There are three kinds of "no soliciting". The app can handle two of them.
 

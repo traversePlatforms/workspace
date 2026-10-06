@@ -1,13 +1,13 @@
 # Door rounds — what to upload, and the one check that matters
 
-**⚑ Moved 2026-10-04: the app now lives in `door-app/` (Matthew's own product, see [../../README.md](../../README.md)).** Every "from `sixfold/site/`" below now means **from `door-app/site/`**: same file names, same places on the server. The sections below are kept as written. Two files stay in Sixfold: `quote.html` (`sixfold/site/summit-de59ae83/`) and the crew codes file.
+**⚑ Moved 2026-10-04: the app now lives in `traverse/` (Matthew's own product, see [../../README.md](../../README.md)).** Every "from `sixfold/site/`" below now means **from `traverse/app/`**: same file names, same places on the server. The sections below are kept as written. Two files stay in Sixfold: `quote.html` (`sixfold/site/summit-de59ae83/`) and the crew codes file.
 
 **Live = the competitor-audit batch (commit `d917514`), uploaded by Matthew and verified 2026-10-03: index.html
 and quote.html byte-identical plain and cache-busted, every new action answering, Black Forest outlines 12/12.**
 Before that: **the 2026-10-03 batch (commit `808f91b` door files + `e9b2350` code), uploaded by Matthew and
 verified 2026-10-03** — signed in with the "Claude Check" admin code: 24 checks, plus a test
 enquiry that emailed Contact@ and filed itself in Leads. The dated sections further down explain
-each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../operations/door-territory/ROUNDS-WEB-SCOPE.md).
+each change. Phase 1 of [ROUNDS-WEB-SCOPE.md](../../data-pipeline/door-territory/ROUNDS-WEB-SCOPE.md).
 
 ## ✅ LIVE 2026-10-06 (verified: page identical plain and busted at the folder URL; a bad calendar date now answers JSON, not a 500; live lessons identical to training.json; 15 towns. nightly-backup.php sits outside public_html, so its new file list shows first in tonight's 18:00 copy) — overnight review fixes (2026-10-06)
 
@@ -21,10 +21,10 @@ review3-test 17/17, teams 55/55, backup 20/20.
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/api/rounds.php` (245,065 bytes) | `public_html/api/` |
-| 2 | `door-app/site/summit-de59ae83/index.html` (568,496 bytes) | `public_html/summit-de59ae83/` |
-| 3 | `door-app/site/data/rounds/training.json` (32,025 bytes, replaces) | `sixfold-data/rounds/` |
-| 4 | `door-app/site/tools/nightly-backup.php` (4,178 bytes, replaces) | `sixfold-tools/` |
+| 1 | `traverse/app/api/rounds.php` (245,065 bytes) | `public_html/api/` |
+| 2 | `traverse/app/summit-de59ae83/index.html` (568,496 bytes) | `public_html/summit-de59ae83/` |
+| 3 | `traverse/app/data/rounds/training.json` (32,025 bytes, replaces) | `sixfold-data/rounds/` |
+| 4 | `traverse/app/tools/nightly-backup.php` (4,178 bytes, replaces) | `sixfold-tools/` |
 | 5 | Flush the cache | SiteGround |
 
 ## ✅ LIVE 2026-10-05 (uploaded by Matthew before bed; verified read-only 2026-10-06: page byte-identical to commit 7675ff2, 31 lessons under the seven headings) — Training: seven headings and Sixfold's 31 lessons; the calendar as a month grid
@@ -44,9 +44,9 @@ lessons filed under Sales, Quotes and the rest; and the old server would turn th
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/api/rounds.php` | `public_html/api/` |
-| 2 | `door-app/site/summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
-| 3 | `door-app/site/data/rounds/training.json` (**new**; the live list was empty on 2026-10-05) | `sixfold-data/rounds/` |
+| 1 | `traverse/app/api/rounds.php` | `public_html/api/` |
+| 2 | `traverse/app/summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 3 | `traverse/app/data/rounds/training.json` (**new**; the live list was empty on 2026-10-05) | `sixfold-data/rounds/` |
 | 4 | Flush the cache | SiteGround |
 
 ## ✅ LIVE 2026-10-05 (verified 13/13: 15 towns, showcase 5 areas / 6 buildings each with roof, lead, hail, wind, photo; corrected com- files up, no blank owner in tier 1 across 5,082) — Commercial showcase town, and corrected commercial door files
@@ -64,9 +64,9 @@ business word now count as companies. No code changes. com-test 11/11, territory
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/data/rounds/com-springs.json`, `com-south.json`, `com-west.json` (replace) | `sixfold-data/rounds/` |
-| 2 | `door-app/site/data/rounds/com-showcase.json`, `hail-com-showcase.json`, `wind-com-showcase.json`, `naip-com-showcase.json` (**new**, 8 KB) | `sixfold-data/rounds/` |
-| 3 | `door-app/site/data/rounds/index.json` (replace, **last**) | `sixfold-data/rounds/` |
+| 1 | `traverse/app/data/rounds/com-springs.json`, `com-south.json`, `com-west.json` (replace) | `sixfold-data/rounds/` |
+| 2 | `traverse/app/data/rounds/com-showcase.json`, `hail-com-showcase.json`, `wind-com-showcase.json`, `naip-com-showcase.json` (**new**, 8 KB) | `sixfold-data/rounds/` |
+| 3 | `traverse/app/data/rounds/index.json` (replace, **last**) | `sixfold-data/rounds/` |
 | 4 | Flush the cache | SiteGround |
 
 ## ✅ LIVE 2026-10-05 (verified 13/13 signed in as the Claude Check admin: page identical plain and busted at the folder URL, 14 towns, 1,203 / 822 / 3,057 buildings, every commercial area check opens with leads, hail, wind and photo, an ordinary town unchanged, search leaves the test towns out; crew refusal tested in the harness only) — Commercial test: three admin-only towns of apartments, commercial and industrial buildings
@@ -85,11 +85,11 @@ the crew would see the test towns.
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/api/rounds.php` (244,426 bytes) | `public_html/api/` |
-| 2 | `door-app/site/data/rounds/com-springs.json`, `com-south.json`, `com-west.json` (**new**, 2.6 MB) | `sixfold-data/rounds/` |
-| 3 | `door-app/site/data/rounds/hail-com-*.json`, `wind-com-*.json`, `naip-com-*.json` (9 files, **new**, 2.8 MB) | `sixfold-data/rounds/` |
-| 4 | `door-app/site/data/rounds/index.json` (1,272 bytes, replaces) | `sixfold-data/rounds/` |
-| 5 | `door-app/site/summit-de59ae83/index.html` (560,987 bytes) | `public_html/summit-de59ae83/` |
+| 1 | `traverse/app/api/rounds.php` (244,426 bytes) | `public_html/api/` |
+| 2 | `traverse/app/data/rounds/com-springs.json`, `com-south.json`, `com-west.json` (**new**, 2.6 MB) | `sixfold-data/rounds/` |
+| 3 | `traverse/app/data/rounds/hail-com-*.json`, `wind-com-*.json`, `naip-com-*.json` (9 files, **new**, 2.8 MB) | `sixfold-data/rounds/` |
+| 4 | `traverse/app/data/rounds/index.json` (1,272 bytes, replaces) | `sixfold-data/rounds/` |
+| 5 | `traverse/app/summit-de59ae83/index.html` (560,987 bytes) | `public_html/summit-de59ae83/` |
 | 6 | Flush the cache | SiteGround |
 
 To take it out again: delete the 12 `*com-*` files and put the previous index.json back (its regions without the three `com-` entries).
@@ -106,10 +106,10 @@ matfix-test 9/9, naip-test 4/4, plus the full suite.
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/data/rounds/naip-*.json` (11 towns, **new**, 3.1 MB) | `sixfold-data/rounds/` |
-| 2 | `door-app/site/data/rounds/material-*.json` (11 towns, replaces the ones there, 1.5 MB; **check black-forest and castle-rock land**) | `sixfold-data/rounds/` |
-| 3 | `door-app/site/api/rounds.php` (243,436 bytes) | `public_html/api/` |
-| 4 | `door-app/site/summit-de59ae83/index.html` (557,796 bytes) | `public_html/summit-de59ae83/` |
+| 1 | `traverse/app/data/rounds/naip-*.json` (11 towns, **new**, 3.1 MB) | `sixfold-data/rounds/` |
+| 2 | `traverse/app/data/rounds/material-*.json` (11 towns, replaces the ones there, 1.5 MB; **check black-forest and castle-rock land**) | `sixfold-data/rounds/` |
+| 3 | `traverse/app/api/rounds.php` (243,436 bytes) | `public_html/api/` |
+| 4 | `traverse/app/summit-de59ae83/index.html` (557,796 bytes) | `public_html/summit-de59ae83/` |
 | 5 | Flush the cache | SiteGround |
 
 ## ✅ LIVE 2026-10-05 (verified: page identical, photo actions answer, Profile opens with every row and signs out, materials live in every town file; black-forest and castle-rock went up on a second pass) — Profile (photo, alerts, look, sign out) and roof materials
@@ -122,9 +122,9 @@ profile-test 14/14, card 18/18, lookinstall 20/20, push 18/18, stormlist 20/20; 
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/data/rounds/material-*.json` (11 towns, about 1 MB) | `sixfold-data/rounds/` (beside public_html) |
-| 2 | `door-app/site/api/rounds.php` | `public_html/api/` |
-| 3 | `door-app/site/summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
+| 1 | `traverse/app/data/rounds/material-*.json` (11 towns, about 1 MB) | `sixfold-data/rounds/` (beside public_html) |
+| 2 | `traverse/app/api/rounds.php` | `public_html/api/` |
+| 3 | `traverse/app/summit-de59ae83/index.html` | `public_html/summit-de59ae83/` |
 | 4 | Flush the cache | SiteGround |
 
 ## ✅ LIVE 2026-10-05 (verified 29/29: page and sw.js identical, webpush.php silent, private files 404, every new action answering, wind and thresholds and sample up, the alerts key made on first ask and kept, calendar and storm list open; cron */5 push-alerts.php added by Matthew) — teams and managers, calendars, lead owners, goals, Training, the Storm list, wind, phone alerts
@@ -143,14 +143,14 @@ teams-test 53/53, stormlist 20/20, push 18/18, storm 16/16, sample 19/19, plus t
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/data/rounds/wind-*.json` (11 towns) and `wind-storms.json` | `sixfold-data/rounds/` (beside public_html) |
-| 2 | `door-app/site/data/rounds/roof-damage-defaults.json` (1,758 bytes) | `sixfold-data/rounds/` |
-| 3 | `door-app/site/data/rounds/sample-door.json` (120,006 bytes; adds wind) | `sixfold-data/rounds/` |
-| 4 | `door-app/site/api/webpush.php` (20,988 bytes, **new**) | `public_html/api/` |
-| 5 | `door-app/site/api/rounds.php` (238,985 bytes) | `public_html/api/` |
-| 6 | `door-app/site/tools/push-alerts.php` (2,198 bytes, **new**) | `sixfold-tools/` (beside public_html, where morning-email.php is) |
-| 7 | `door-app/site/summit-de59ae83/sw.js` (9,943 bytes) | `public_html/summit-de59ae83/` |
-| 8 | `door-app/site/summit-de59ae83/index.html` (544,944 bytes) | `public_html/summit-de59ae83/` |
+| 1 | `traverse/app/data/rounds/wind-*.json` (11 towns) and `wind-storms.json` | `sixfold-data/rounds/` (beside public_html) |
+| 2 | `traverse/app/data/rounds/roof-damage-defaults.json` (1,758 bytes) | `sixfold-data/rounds/` |
+| 3 | `traverse/app/data/rounds/sample-door.json` (120,006 bytes; adds wind) | `sixfold-data/rounds/` |
+| 4 | `traverse/app/api/webpush.php` (20,988 bytes, **new**) | `public_html/api/` |
+| 5 | `traverse/app/api/rounds.php` (238,985 bytes) | `public_html/api/` |
+| 6 | `traverse/app/tools/push-alerts.php` (2,198 bytes, **new**) | `sixfold-tools/` (beside public_html, where morning-email.php is) |
+| 7 | `traverse/app/summit-de59ae83/sw.js` (9,943 bytes) | `public_html/summit-de59ae83/` |
+| 8 | `traverse/app/summit-de59ae83/index.html` (544,944 bytes) | `public_html/summit-de59ae83/` |
 | 9 | **Flush the cache** (sw.js changed) | SiteGround |
 | 10 | **New cron job**, every 5 minutes: the morning email's command with `push-alerts.php` in place of `morning-email.php` | SiteGround > Cron Jobs |
 
@@ -167,9 +167,9 @@ sample-test 19/19, storm-test 16/16, alerts-test 10/10, hail-test 15/15.
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/data/rounds/sample-door.json` (**119,872** bytes; not in git) | `sixfold-data/rounds/` (beside public_html, **not inside it**) |
-| 2 | `door-app/site/api/rounds.php` (**199,165** bytes) | `public_html/api/` |
-| 3 | `door-app/site/summit-de59ae83/index.html` (**487,631** bytes) | `public_html/summit-de59ae83/` |
+| 1 | `traverse/app/data/rounds/sample-door.json` (**119,872** bytes; not in git) | `sixfold-data/rounds/` (beside public_html, **not inside it**) |
+| 2 | `traverse/app/api/rounds.php` (**199,165** bytes) | `public_html/api/` |
+| 3 | `traverse/app/summit-de59ae83/index.html` (**487,631** bytes) | `public_html/summit-de59ae83/` |
 
 ## ✅ LIVE 2026-10-05 (verified 8/8; the Leaderboard tap could not be tried live: no one has knocked in 30 days) — county bars on Colorado, tap a Leaderboard name, and the Add info button in dark mode (index.html only)
 
@@ -177,13 +177,13 @@ Matthew 2026-10-05: (1) on the Colorado screen each county is now a fold-out bar
 
 | Step | File | Goes to |
 |---|---|---|
-| 1 | `door-app/site/summit-de59ae83/index.html` (**477,745** bytes) | `public_html/summit-de59ae83/` (no flush needed for this folder) |
+| 1 | `traverse/app/summit-de59ae83/index.html` (**477,745** bytes) | `public_html/summit-de59ae83/` (no flush needed for this folder) |
 
 ## ✅ LIVE 2026-10-05 (verified 13/13) — fixes from the full code review. Page identical; a bare sign-out link signs nobody out and the page's POST does; the skip export refuses a made-up town; tools, Door rounds and Find an address work on a phone; Sign out in the page really ends the session (me 401); no page errors. The sign-in pause was not exercised live (that would mean sending wrong codes)
 
 A full review of the app found no security hole in sessions, admin gating, paths, exports or the offline queue. Fixed: the site-wide sign-in pause now needs wrong codes from 5+ addresses (two phones could keep new sign-ins paused for everyone); the sign-in screen forgets who was signed in, so the once-a-minute send stops redrawing it while someone types; a bare sign-out link signs nobody out (the page posts); a photo ceiling of 120 per person per hour; viewed photos not kept in a shared iPad's cache; search allows 150 per 10 minutes and waits 400 ms; the skip-trace export refuses a made-up town; a stale signed-out neighbourhood goes to sign-in; the come-back day uses the server's rest days; "Quotes to build" now says Pipeline. Also: the 11 door files, 11 area lists and walk-tool.html (owners' names) are no longer tracked in git (still on disk). review2-test 6/6, all 70 suites pass.
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | `api/rounds.php` (**195,908** bytes) | `public_html/api/` |
 | 2 | `summit-de59ae83/index.html` (**475,294** bytes) | `public_html/summit-de59ae83/` |
@@ -193,7 +193,7 @@ A full review of the app found no security hole in sessions, admin gating, paths
 
 Matthew 2026-10-05. On the Hail screen: **Live radar map** (NOAA NEXRAD through the Iowa Environmental Mesonet tile cache, every 5 minutes) and, on each storm, **Show on the map** (the day's radar hail path, ~1 km squares coloured by size; opens with radar off). On the roof line: **See the roof (aerial photo, 2020)**, a 3-inch photo of the house read in the browser from the State of Colorado's public bucket (DRAPP 2020, public domain), only the blocks over the house (1-2 MB); 8,503 doors in Castle Rock, Franktown and Sedalia. Tested: mapphoto-test 10/10 (the photo really loads from the bucket in Chrome); all 70 suites pass. Includes the hail-and-roof-only-in-preview change below if that has not gone up yet.
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | `data/rounds/hail-paths.json` (**139,970** bytes) and `data/rounds/photo-castle-rock.json`, `photo-franktown.json`, `photo-sedalia.json` (**424 KB** together), gitignored, on this computer | `sixfold-data/rounds/`, beside monument.json |
 | 2 | `api/rounds.php` (**194,212** bytes) | `public_html/api/` |
@@ -204,7 +204,7 @@ Matthew 2026-10-05. On the Hail screen: **Live radar map** (NOAA NEXRAD through 
 
 Matthew 2026-10-05: hail is irrelevant to the lawn crew. Sixfold's company.json now has `card.hail` and `card.roof` off, so the normal card shows neither, and the Hail tile shows only in Roofing preview, which always shows both (a roofing company's install leaves them on). card-test 18/18, hail-test, roof-test, settings-test pass.
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | `data/rounds/company.json` (**1,902** bytes) | `sixfold-data/rounds/` (replace) |
 | 2 | `summit-de59ae83/index.html` (**466,474** bytes) | `public_html/summit-de59ae83/` |
@@ -214,7 +214,7 @@ Matthew 2026-10-05: hail is irrelevant to the lawn crew. Sixfold's company.json 
 
 Run while Matthew slept, all local; nothing uploaded. **Roof** (laser scan, El Paso 2018 / Douglas 2020): about N sq ft, squares and pitch on 21,530 of 26,674 doors; **year built** (county files) on 98.6%, plus remodeled year, roof shape and material for Douglas. Admins only, behind `features.roof`; a house built after the scan says so. Checks against Douglas County's records in [research/ROOFING-DATA-CHECK-2026-10.md](../../research/ROOFING-DATA-CHECK-2026-10.md). **Review fixes** (second review of everything since 851ede3; nothing severe): the public settings answer no longer carries the app's address; the Roofing preview also hides the trees chip in Find an address; the tools screen redraws on a first visit when the settings arrive late; the visit form's default service; opening a neighbourhood from Hail right after switching the preview; no line breaks into the weather-service header; hail files decoded once per request; hail days more than an hour from 6 am are not filed (3 April 2022 days were; no storms on them, so nothing visible changed). Tested: roof-test 6/6; all 69 suites pass (lookinstall needed a re-run: its known install-prompt timing flake, 3/3 alone).
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | the 7 `data/rounds/roof-<town>.json` (**2.2 MB**) and 7 `data/rounds/year-<town>.json` (**1.6 MB**), gitignored, on this computer | `sixfold-data/rounds/`, beside monument.json, never inside public_html |
 | 2 | `data/rounds/company.json` (**1,864** bytes: roof switched on) | `sixfold-data/rounds/` (replace) |
@@ -228,7 +228,7 @@ Optional: `data/rounds/hail-storms.json` again (only its days-read count changed
 
 Matthew 2026-10-04: a roofer's card should not carry Sixfold's lawn and fire. company.json now has a `card` block (lawn, trees, fire, money, water; missing = shown; Sixfold: all on, so the crew see no change). Admins get a **Door card: Sixfold | Roofing preview** switch on the tools screen, under Look: on that device only, cards show the basics and hail, and lawn, trees, fire, money, water, the fire check, the Show doors with row and the Fire / Lawn / Trees sorts are hidden. It stays on for that device until switched back. Also: the tools screen draws itself again when fresher company settings arrive (the missing Hail tile, 2026-10-04). Tested: card-test 15/15; all 68 suites pass alone (lookinstall's check now reads the first switch row).
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | `data/rounds/company.json` (**1,846** bytes) | `sixfold-data/rounds/` (replace) |
 | 2 | `api/rounds.php` (**192,106** bytes) | `public_html/api/` |
@@ -239,7 +239,7 @@ Matthew 2026-10-04: a roofer's card should not carry Sixfold's lawn and fire. co
 
 Matthew 2026-10-04: the first roofing piece, for him to evaluate. NOAA's radar estimate of the largest hail within about 1 km of each house, per day, April–September 2020 to 30 Sep 2026 (1,275 days read; 6 not in the archive). 96 storm days at ¾ in or more near our doors, 54 at 1 in or more; the largest 2.74 in on 22 June 2023. **Admins only**: a Hail tile (storm days newest first; tap one for the neighbourhoods it hit, tap a neighbourhood to open it) and a hail line on each door card, labelled a radar estimate. Crew get neither (the server leaves it out of their answers). Switched on by `features.hail` in company.json. Tested: hail-test 14/14 (crew refused, admins get it, off in company.json means off for everyone).
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | `data/rounds/hail-storms.json` and the 11 `data/rounds/hail-<town>.json` (**3.6 MB** together; gitignored, on this computer) | `sixfold-data/rounds/` — beside monument.json, never inside public_html |
 | 2 | `data/rounds/company.json` (**1,737** bytes: hail switched on) | `sixfold-data/rounds/` (replace) |
@@ -247,15 +247,15 @@ Matthew 2026-10-04: the first roofing piece, for him to evaluate. NOAA's radar e
 | 4 | `summit-de59ae83/index.html` (**460,599** bytes) | `public_html/summit-de59ae83/` |
 | 5 | — | Flush the cache |
 
-Not automatic yet: new storms need `node door-app/operations/door-territory/hail/build-hail.mjs fetch` then `build`, and the hail files uploaded again.
+Not automatic yet: new storms need `node traverse/data-pipeline/door-territory/hail/build-hail.mjs fetch` then `build`, and the hail files uploaded again.
 
 ## ✅ LIVE 2026-10-04 (verified 17/18) — company settings (company.json): nothing about Sixfold in the code any more. index.html and sw.js identical; action=company answers with Sixfold's file from beside the door files (not reachable on the website); a fresh phone shows Sixfold and the Ridge mark; Quote builder, Communities, Skip trace, Extra work (Sixfold's list) and Fire check all present; no page errors. The 1 fail was the check looking for Book the walk on a door that was not booked (that button only shows after Quote booked): not checkable read-only. ⏳ The next morning email should still end with the app link
 
-Matthew 2026-10-04: the app is his product, so the company it runs for is a settings file, not code. Sixfold's name, phone, email, Ridge mark, services, enquiry list, extra-work list, "yard walk", review link and which tools it uses (Quote builder, Communities, fire check, skip trace) now come from `company.json` beside the door files. **For Sixfold nothing should look different.** See [../../README.md](../../README.md) for every setting. Tested: settings-test 21/21 (runs as Sixfold, then as the made-up roofer in `door-app/company.example.json`, then Sixfold again); all 67 suites pass alone.
+Matthew 2026-10-04: the app is his product, so the company it runs for is a settings file, not code. Sixfold's name, phone, email, Ridge mark, services, enquiry list, extra-work list, "yard walk", review link and which tools it uses (Quote builder, Communities, fire check, skip trace) now come from `company.json` beside the door files. **For Sixfold nothing should look different.** See [../../README.md](../../README.md) for every setting. Tested: settings-test 21/21 (runs as Sixfold, then as the made-up roofer in `traverse/app/company.example.json`, then Sixfold again); all 67 suites pass alone.
 
 **⚑ Step 1 first.** Without company.json the app calls itself "Door App" and hides the Quote builder, Communities and fire check.
 
-| Step | File (from `door-app/site/`) | Goes to |
+| Step | File (from `traverse/app/`) | Goes to |
 |---|---|---|
 | 1 | `data/rounds/company.json` (**1,963** bytes) | `sixfold-data/rounds/` — beside monument.json, **never inside public_html** (not secret, but it is install data) |
 | 2 | `api/rounds.php` (**190,677** bytes) | `public_html/api/` |
@@ -1726,11 +1726,11 @@ missing from this section). It is what stops a rebuild putting one house's marks
 #    folder nests it, and the check used to "pass" having compared nothing)
 mkdir -p /tmp/rounds-before && for f in $(git ls-files sixfold/site/data/rounds/*.json); do git show HEAD:$f > /tmp/rounds-before/$(basename $f); done
 # 2. rebuild
-node ../../operations/door-territory/sample-value.mjs                   # county values (Douglas, Teller)
-node ../../operations/door-territory/build-walklist-pdf.mjs <area>.csv   # clustering
-node ../../operations/door-territory/build-rounds-data.mjs              # writes data/rounds/
+node ../../data-pipeline/door-territory/sample-value.mjs                   # county values (Douglas, Teller)
+node ../../data-pipeline/door-territory/build-walklist-pdf.mjs <area>.csv   # clustering
+node ../../data-pipeline/door-territory/build-rounds-data.mjs              # writes data/rounds/
 # 3. the gate
-node ../../operations/door-territory/verify-superset.mjs /tmp/rounds-before
+node ../../data-pipeline/door-territory/verify-superset.mjs /tmp/rounds-before
 ```
 **Exit 1 means do not upload.** It fails on a lost, moved or renamed door, on a town missing from
 the new index.json, and when it had nothing to compare. A door that left a town for its partner

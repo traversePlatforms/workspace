@@ -7,7 +7,7 @@
    shading is exactly what the size was measured from. Large lawns also carry their summer
    greenness from the NDVI trial (ndvi-results.csv), with the image dates.
 
-   Output: one pack per town, site/data/rounds/lawnmask-<town>.json, served behind sign-in by
+   Output: one pack per town, app/data/rounds/lawnmask-<town>.json, served behind sign-in by
    api/rounds.php action=lawnmask. Each entry: b (south, west, north, east), w, h, r (run-length
    mask, row-major: 0 none, 1 counted, 2 left out), d (photo date), g (greenness, Large only).
    Incremental: doors already in a pack are skipped. Saved every 50.
@@ -21,7 +21,7 @@ import { inRings, loadBuildings, pickHouse, townParcels } from '../tree-zones/zo
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..');
-const SITE = join(DT, '..', '..', 'site', 'data', 'rounds');
+const SITE = join(DT, '..', '..', 'app', 'data', 'rounds');
 const TOWNS = ['monument', 'palmer-lake', 'black-forest', 'castle-rock', 'larkspur', 'sedalia', 'franktown', 'woodland-park', 'divide', 'florissant', 'cripple-creek'];
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 6);

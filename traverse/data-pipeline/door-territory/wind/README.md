@@ -76,7 +76,7 @@ duplicates (391 dropped by matching day, lat/lon, type and speed), and it is spa
   (Rampart Reservoir "4 E Crystola", Manchester "9 NNW Woodland Park", Carpenter Peak) are kept: exposed,
   but at the height of the houses around them. Add a pattern to drop another.
 
-## Output (site/data/rounds/)
+## Output (app/data/rounds/)
 
 `wind-<town>.json`
 ```
@@ -145,12 +145,12 @@ derecho), 30,368 doors in 10 towns; 2025-12-17 85 mph, 21,892; 2022-12-02 84 mph
 ## Re-run
 
 ```
-cd door-app/operations/door-territory/wind
+cd traverse/data-pipeline/door-territory/wind
 node build-wind.mjs all        # fetch (cache/, gitignored; the current year refreshes if older than 20 h) then build
 node build-wind.mjs build      # rebuild from the cache only
 ```
 About 15 s for the download, 1 s for the build. Past years are never re-downloaded; delete the file in
-`cache/` to force it. `build` reads the towns from `site/data/rounds/index.json`, so a new town needs no
+`cache/` to force it. `build` reads the towns from `app/data/rounds/index.json`, so a new town needs no
 change here. The outputs are not ignored by the repo `.gitignore` the way `hail-*.json` are; decide before
 committing.
 

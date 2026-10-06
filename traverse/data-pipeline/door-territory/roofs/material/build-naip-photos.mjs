@@ -1,7 +1,7 @@
 /* The 2023 roof close-up for every house (Matthew 2026-10-05).
  * The material scan (fetch.mjs) already found, per house, a window on the roof and the USDA NAIP 2023 photo (0.3 m in
  * Colorado) that holds it. This turns that index into a small file per town the app reads:
- *   site/data/rounds/naip-<town>.json = { source, built, doors: { <id>: [item, minLon, minLat, maxLon, maxLat] } }
+ *   app/data/rounds/naip-<town>.json = { source, built, doors: { <id>: [item, minLon, minLat, maxLon, maxLat] } }
  * The window is widened 1.6x so the yard around the roof shows. The phone asks Microsoft Planetary Computer's public data
  * API for that window as a picture when someone taps "See the roof"; nothing is stored on our server.
  *   node build-naip-photos.mjs
@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '..', '..', '..', 'site', 'data', 'rounds');
+const OUT = join(HERE, '..', '..', '..', '..', 'app', 'data', 'rounds');
 const TOWNS = ['black-forest', 'monument', 'palmer-lake', 'castle-rock', 'franktown', 'sedalia', 'larkspur', 'woodland-park', 'divide', 'florissant', 'cripple-creek'];
 const GROW = 1.6;
 let total = 0;

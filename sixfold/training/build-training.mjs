@@ -1,6 +1,6 @@
 /* Sixfold training -> the door app's Training section (2026-10-05).
  *
- *   node sixfold/training/build-training.mjs     writes door-app/site/data/rounds/training.json
+ *   node sixfold/training/build-training.mjs     writes traverse/app/data/rounds/training.json
  *
  * Each 0N-*.md file is one heading in the app; each "## " in it is one lesson. "Source:" lines are kept out of the app.
  * The lesson id comes from the file and the title, so editing a lesson's text keeps its id; renaming it makes a new one.
@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '..', 'door-app', 'site', 'data', 'rounds', 'training.json');
+const OUT = join(HERE, '..', '..', 'traverse', 'app', 'data', 'rounds', 'training.json');
 const KIND = { '01-doors.md': 'door', '02-sales.md': 'sales', '03-quotes.md': 'quote', '04-phones.md': 'phone', '05-paperwork.md': 'paper', '06-safety.md': 'safety', '07-using-the-app.md': 'app' };
 
 const lessons = [];

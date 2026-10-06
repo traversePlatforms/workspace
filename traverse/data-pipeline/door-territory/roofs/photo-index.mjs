@@ -6,7 +6,7 @@
  * house (about 1 MB) straight from the bucket (it allows cross-site reads). Covers the DRCOG region: Douglas, not El Paso.
  *
  *   node photo-index.mjs index    reads every file's header (bounds) -> photo-index.json here
- *   node photo-index.mjs build    per door: which file and which pixel -> site/data/rounds/photo-<town>.json   */
+ *   node photo-index.mjs build    per door: which file and which pixel -> app/data/rounds/photo-<town>.json   */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,7 @@ import { fromUrl } from '../tree-zones/node_modules/geotiff/dist-node/geotiff.js
 import proj4 from '../tree-zones/node_modules/proj4/dist/proj4-src.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const BUCKET = 'https://colorado-public-imagery.s3.us-west-2.amazonaws.com';
 const PREFIX = 'DRAPP/DRAPP2020/Imagery/';
 const SIZE = 10560;   /* every file (checked on samples) */

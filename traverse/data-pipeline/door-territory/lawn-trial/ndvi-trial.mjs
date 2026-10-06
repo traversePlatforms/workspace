@@ -52,7 +52,7 @@ import { inRings, townParcels } from '../tree-zones/zones.mjs';
 import { measure as measureLawn, STAC as NAIP_STAC, json } from './lawn-mask.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROUNDS = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const ROUNDS = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'ndvi-cache.json');
 const STAC = 'https://earth-search.aws.element84.com/v1/search';
 let YEARS = [2025, 2026], MONTHS = [6, 7, 8, 9], PER_MONTH = { 6: 1, 7: 3, 8: 3, 9: 1 };   /* July-August carry the comparison */

@@ -12,7 +12,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const COUNTY = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas' };
 for (const spec of process.argv.slice(2)) {
   const [town, addr] = spec.split(':');
-  const r = JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'site', 'data', 'rounds', `${town}.json`), 'utf8'));
+  const r = JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'app', 'data', 'rounds', `${town}.json`), 'utf8'));
   const d = r.areas.flatMap((a) => a.doors).find((x) => x.address === addr);
   if (!d) { console.log('not found', spec); continue; }
   const pq = await json(PARCELS + '?' + new URLSearchParams({ f: 'json', geometry: `${d.lon},${d.lat}`, geometryType: 'esriGeometryPoint', inSR: '4326', outSR: '4326', spatialRel: 'esriSpatialRelIntersects', returnGeometry: 'true', outFields: 'OBJECTID' }));

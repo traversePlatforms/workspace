@@ -15,7 +15,7 @@ const answers = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 /* Fable, blind, from the photos alone (0 = no lawn) */
 const FABLE = { '01': 0, '02': 6000, '03': 0, '04': 5500, '05': 3000, '06': 0, '07': 0 /* artificial turf, see notes */, '08': 0, '09': 4500, '10': 7500, '11': 5000, '12': 1000 };
 const doors = new Map();
-for (const f of ['black-forest', 'palmer-lake', 'monument']) for (const a of JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'site', 'data', 'rounds', f + '.json'), 'utf8')).areas) for (const d of a.doors) doors.set(d.id, d);
+for (const f of ['black-forest', 'palmer-lake', 'monument']) for (const a of JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'app', 'data', 'rounds', f + '.json'), 'utf8')).areas) for (const d of a.doors) doors.set(d.id, d);
 
 
 const RULES = [[150, Infinity], [400, Infinity], [800, Infinity], [150, 40], [400, 40], [400, 30], [800, 40], [400, 60]];

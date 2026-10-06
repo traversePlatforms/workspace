@@ -82,5 +82,5 @@ rather than after. The neighbourhood card already shows counts; this adds a stat
 
 Scoped 2026-10-01, not built — the rounds app is **live and in use**, so a change means code,
 upload, and a cache flush, which is the expensive path. **Build it on a fresh day**, and
-re-read [DEPLOY-ROUNDS.md](../../site/summit-de59ae83/DEPLOY-ROUNDS.md): flush first, then
+re-read [DEPLOY-ROUNDS.md](../../app/summit-de59ae83/DEPLOY-ROUNDS.md): flush first, then
 compare the plain URL against a busted one, because a cache-busted check alone is a false pass.

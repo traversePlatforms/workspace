@@ -10,14 +10,14 @@
  *                                      22 roof material, 26 year built, 27 year remodeled (0 = none)
  *            Columns read from the rows themselves (no layout file is published); checked on sample houses.
  * Doors are matched through the town CSVs (address -> parcel), the same lists the door files are built from.
- *   node build-year.mjs     writes site/data/rounds/year-<town>.json { doors: { id: { yb, rm?, shape?, mat?, bsf? } } } */
+ *   node build-year.mjs     writes app/data/rounds/year-<town>.json { doors: { id: { yb, rm?, shape?, mat?, bsf? } } } */
 import { readFileSync, writeFileSync, existsSync, createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), RAW = join(HERE, 'raw'), DT = join(HERE, '..');
-const DATA = join(DT, '..', '..', 'site', 'data', 'rounds');
+const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas' };
 const q = (line) => line.replace(/^"|"\s*$/g, '').split('","');
 const lines = async (f, fn) => { const rl = createInterface({ input: createReadStream(f), crlfDelay: Infinity }); for await (const l of rl) if (l) fn(l); };

@@ -10,7 +10,7 @@
  *
  * fetch keeps only our corner of Colorado per day (days/<date>.json, gitignored, a few KB each): every
  * grid square inside the doors' bounding box with any hail, in tenths of a millimetre.
- * build writes, beside the door files (site/data/rounds/):
+ * build writes, beside the door files (app/data/rounds/):
  *   hail-<town>.json   { through, doors: { id: [[date, inches], ...newest first] } }   storms of 0.75 in or more
  *   hail-storms.json   { through, from, days, storms: [{ date, max, n1, n34, towns: {key: {n1, n34, max, areas: {name: n1}}}}] }
  *   hail-paths.json    { lat1, lon1, dx, dy, r0, c0, paths: { date: [[row, col, inches x 100], ...] } }   for the hail map
@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { decodeMesh } from './mesh.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const DAYS = join(HERE, 'days');
 const ARCHIVE = 'https://mtarchive.geol.iastate.edu';
 const MIN_STORE = 19.05;   /* 0.75 in: kept per door */

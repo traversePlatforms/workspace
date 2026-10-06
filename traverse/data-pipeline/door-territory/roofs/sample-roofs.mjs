@@ -16,7 +16,7 @@
  * Writes roof-cache.json here: { "lat,lon": { fp, sq, sqs, deg, pitch, flat, h, cells, yr } | { err } }.
  * Incremental: re-running measures only doors not in the cache.
  *   node sample-roofs.mjs [--town=monument] [--conc=4] [--limit=N]
- *   node sample-roofs.mjs --build      writes site/data/rounds/roof-<town>.json { doors: { id: {...} } }   */
+ *   node sample-roofs.mjs --build      writes app/data/rounds/roof-<town>.json { doors: { id: {...} } }   */
 import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +26,7 @@ import proj4 from '../tree-zones/node_modules/proj4/dist/proj4-src.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..'), TZ = join(DT, 'tree-zones');
-const DATA = join(DT, '..', '..', 'site', 'data', 'rounds');
+const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'roof-cache.json');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas' };
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };

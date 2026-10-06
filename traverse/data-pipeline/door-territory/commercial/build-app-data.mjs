@@ -1,6 +1,6 @@
 /* Commercial test -> the app (2026-10-05). Admin-only regions, so the crew never see them.
  *
- *   node build-app-data.mjs     reads out/commercial-<spot>.json; writes into ../../../site/data/rounds/:
+ *   node build-app-data.mjs     reads out/commercial-<spot>.json; writes into ../../../app/data/rounds/:
  *     com-<spot>.json         the door file (areas = building type x compass quarter), each door with a "com" block
  *     hail-com-<spot>.json    { through, from, doors: { id: [[date, inches], ...] } }       same shape as the house files
  *     wind-com-<spot>.json    { ..., doors: { id: [[date, mph|null, kind, miles], ...] } }   same rule as ../wind/build-wind.mjs
@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), OUT = join(HERE, 'out');
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const LSR = join(HERE, '..', 'wind', 'cache');
 const SPOTS = { springs: 'Commercial test · Springs east', south: 'Commercial test · South metro', west: 'Commercial test · West Denver / Lakewood' };
 const RADIUS_MI = 10, MIN_MPH = 50, CAP = 10, FROM = '2020-01-01';
@@ -60,9 +60,9 @@ const through = rep.reduce((m, r) => (r.day > m ? r.day : m), FROM);
 const idxF = join(DATA, 'index.json'), idx = JSON.parse(readFileSync(idxF, 'utf8'));
 idx.regions = idx.regions.filter((r) => !String(r.key).startsWith('com-'));
 /* 2026-10-06: the commercial towns belong to TraverseRoofing, not Sixfold. Sixfold's index keeps none; their entries go to
-   the Roofing edition's list, which door-app/brand/traverse/app/build-app.cjs adds to that edition only. */
+   the Roofing edition's list, which traverse/editions/build-editions.cjs adds to that edition only. */
 const com = [];
-const comF = join(DATA, '..', '..', '..', 'brand', 'traverse', 'app', 'editions', 'roofing-extra-regions.json');
+const comF = join(DATA, '..', '..', '..', 'editions', 'roofing-commercial-towns.json');
 const quarter = (c, b) => { const dy = b.lat - c[0], dx = (b.lon - c[1]) * Math.cos(c[0] * Math.PI / 180); return Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 'north' : 'south') : (dx > 0 ? 'east' : 'west'); };
 const KIND = { apartments: 'Apartments', commercial: 'Commercial', industrial: 'Industrial' };
 const byAddr = new Map();

@@ -1,11 +1,11 @@
 // Builds the Traverse editions of the door app: TraverseRoofing and TraverseYards, each with a made-up client.
 //
-//   node door-app/brand/traverse/app/build-app.cjs            both
-//   node door-app/brand/traverse/app/build-app.cjs yards      one
+//   node traverse/editions/build-editions.cjs            both
+//   node traverse/editions/build-editions.cjs yards      one
 //
 // Matthew, 2026-10-06: rebrand the app as Traverse but leave Sixfold's app alone; then split Yards from Roofing,
 // each standing alone with its own colours ("hail, wind etc. don't play as much of an impact" for yards). So this is
-// NOT a hand copy: door-app/site stays the one source (and Sixfold's install), and this script makes each edition from
+// NOT a hand copy: traverse/app stays the one source (and Sixfold's install), and this script makes each edition from
 // it, so every fix to the app lands in all of them. Never edit dist/ by hand.
 //
 // Each edition is a separate install with its own data (his decision): its own sign-ins, marks, leads and customers;
@@ -27,8 +27,8 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
-const REPO = path.resolve(__dirname, '..', '..', '..', '..');
-const SRC = path.join(REPO, 'door-app', 'site');
+const REPO = path.resolve(__dirname, '..', '..');
+const SRC = path.join(REPO, 'traverse', 'app');
 const APP = path.join(SRC, 'summit-de59ae83');
 const DATA = path.join(SRC, 'data', 'rounds');
 const OUT = path.join(__dirname, 'dist');
@@ -48,9 +48,9 @@ const EDITIONS = {
          dBg: '#0d131b', dCard: '#161e29', dLine: '#2a3646', dSunk: '#111821', dBar: '#18222e', dAccent: '#a9bbd1' },
     // storm data and roofs; no lawn, trees, fire, funding or water
     keep: (f) => !/^(lawnmask-|cwpp\.json$|hoa-communities\.json$)/.test(f),
-    money: false, extraRegions: 'roofing-extra-regions.json',
+    money: false, extraRegions: 'roofing-commercial-towns.json',
     company: () => {
-      const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'door-app', 'company.example.json'), 'utf8'));
+      const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'traverse', 'app', 'company.example.json'), 'utf8'));
       delete ex._about; delete ex.colors;
       return Object.assign(ex, {
         email: '', site: 'traverseplatforms.com',
@@ -161,7 +161,7 @@ function page(E) {
   const tokens = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style id="traverse-tokens">
-  /* ${E.name}: Traverse brand kit (claude.ai/artifact/QZ8aUZCLNXXeNc2Ns5KrkV), written by door-app/brand/traverse/app/build-app.cjs */
+  /* ${E.name}: Traverse brand kit (claude.ai/artifact/QZ8aUZCLNXXeNc2Ns5KrkV), written by traverse/editions/build-editions.cjs */
   :root{
     --bg:${c.bg}; --card:${COMMON_BG['--card']}; --ink:${COMMON_BG['--ink']}; --soft:${COMMON_BG['--soft']}; --line:${c.line}; --sunk:${c.sunk};
     --bar:${c.bar}; --bar-ink:#ffffff; --bar-soft:${c.barSoft}; --bar-lift:rgba(255,255,255,.09); --bar-edge:rgba(255,255,255,.16);
@@ -257,7 +257,7 @@ async function build(key) {
     let buf = fs.readFileSync(p);
     if (f === 'index.json') {
       const idx = JSON.parse(buf.toString('utf8'));
-      if (E.extraRegions) idx.regions = idx.regions.concat(JSON.parse(fs.readFileSync(path.join(__dirname, 'editions', E.extraRegions), 'utf8')).regions);
+      if (E.extraRegions) idx.regions = idx.regions.concat(JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions);
       // the API reads each town's county from docs/money.json; write it into the edition's own index too
       for (const reg of idx.regions) if (!reg.county && money.counties[reg.key]) reg.county = money.counties[reg.key];
       const missing = idx.regions.filter((reg) => !reg.county).map((reg) => reg.key);
@@ -282,9 +282,9 @@ async function build(key) {
   if (!fs.existsSync(codes)) {
     const pin = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
     write(path.join(E.priv, 'rounds-codes.php'), `<?php
-/* Sign-in codes for ${E.name} (made by build-app.cjs ${new Date().toISOString().slice(0, 10)}).
+/* Sign-in codes for ${E.name} (made by build-editions.cjs ${new Date().toISOString().slice(0, 10)}).
    Upload to ${E.priv}/ BESIDE public_html, never inside it. Not in git. Add people from the app's
-   Accounts screen; this file only needs the first admin. Shape: door-app/site/api/rounds-codes.example.php */
+   Accounts screen; this file only needs the first admin. Shape: traverse/app/api/rounds-codes.example.php */
 return [
     'session_key' => '${crypto.randomBytes(32).toString('hex')}',
     'session_days' => 45,

@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { measure, STAC, json } from './lawn-mask.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROUNDS = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const ROUNDS = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const OUT = join(HERE, 'check');
 const ANSWERS = process.argv[2];
 const COUNT = +(process.argv[3] || 12);

@@ -1,6 +1,6 @@
 # Roof material per house (2026-10-05)
 
-What is on each roof, for the roofing version of the door-knocking app: `site/data/rounds/material-<town>.json`.
+What is on each roof, for the roofing version of the door-knocking app: `app/data/rounds/material-<town>.json`.
 Two sources, kept apart in the file:
 
 - **county** – Douglas County's assessor records the roof material (`year-<town>.json` `mat`). Used as is for Castle Rock,
@@ -188,12 +188,12 @@ custom homes and 2 are grey roofs the eye cannot settle. That is a sanity check,
 ## Re-running
 
 ```
-cd door-app/operations/door-territory/roofs/material
+cd traverse/data-pipeline/door-territory/roofs/material
 node houses.mjs                 # house centres and outlines -> cache/houses-<town>.json (skips towns already done)
 node fetch.mjs [--town=x]       # NAIP crops -> cache/crops/<town>/ (fetches only what is missing; ~30 min from empty)
 python features.py [town ...]   # -> cache/features-<town>.csv (skips a town whose csv is newer than its crop index; --force)
 python train.py                 # -> cache/model.pkl, model-report.json (about 6 min)
-python predict.py               # -> site/data/rounds/material-<town>.json, coverage.json
+python predict.py               # -> app/data/rounds/material-<town>.json, coverage.json
 python look.py <town> [n] [start] [out.png] ["Concrete Tile" | pred:asphalt]   # spot-check sheet, delete after looking
 ```
 

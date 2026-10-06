@@ -1,5 +1,5 @@
 {
-  "_about": "The commercial test towns (admin-only), moved out of Sixfold's index.json on 2026-10-06 when Roofing became its own app. build-app.cjs adds them to the Roofing copy only. Their door files (com-*.json etc.) stay in door-app/site/data/rounds.",
+  "_about": "The commercial test towns (admin-only), moved out of Sixfold's index.json on 2026-10-06 when Roofing became its own app. build-editions.cjs adds them to the Roofing copy only. Their door files (com-*.json etc.) stay in traverse/app/data/rounds.",
   "regions": [
     {
       "key": "com-springs",

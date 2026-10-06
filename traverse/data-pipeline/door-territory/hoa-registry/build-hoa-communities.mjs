@@ -1,7 +1,7 @@
 /* HOAs matched to our neighbourhoods, for the door app's Communities view (SX-40, 2026-10-03).
    Reads hoa-sixfold.csv (build-hoa-list.mjs, from the free state HOA roster) and keeps only the
    rows matched to a neighbourhood by subdivision or metro-district name ("match..." in
-   why_in_scope). Writes site/data/rounds/hoa-communities.json: place name (lower case) -> the
+   why_in_scope). Writes app/data/rounds/hoa-communities.json: place name (lower case) -> the
    HOAs there, with units, how they are managed and the management company. No designated
    agents or addresses: the app needs who to pitch, not a mailing list.
    Run:  node build-hoa-communities.mjs                                                      */
@@ -9,7 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '..', '..', 'site', 'data', 'rounds', 'hoa-communities.json');
+const OUT = join(HERE, '..', '..', '..', 'app', 'data', 'rounds', 'hoa-communities.json');
 
 const parse = (l) => { const c = []; let cur = '', q = false; for (let i = 0; i < l.length; i++) { const ch = l[i]; if (q) { if (ch === '"' && l[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; } else if (ch === '"' && cur === '') q = true; else if (ch === ',') { c.push(cur); cur = ''; } else cur += ch; } c.push(cur); return c; };
 const lines = readFileSync(join(HERE, 'hoa-sixfold.csv'), 'utf8').trim().split(/\r?\n/);

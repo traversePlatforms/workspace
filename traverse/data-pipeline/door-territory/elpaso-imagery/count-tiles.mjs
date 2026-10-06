@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const SVC = 'https://gisservices.elpasoco.com/arcgis2/rest/services/HubPublic/Aerial_Delivery_Tiles/MapServer/0/query';
 const GRID = join(HERE, 'tiles.json');
 if (!existsSync(GRID)) {

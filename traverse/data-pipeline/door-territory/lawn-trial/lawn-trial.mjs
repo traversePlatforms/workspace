@@ -10,7 +10,7 @@ import { PNG } from 'pngjs';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 
 import { fileURLToPath } from 'node:url';
-const DATA = fileURLToPath(new URL('../../../site/data/rounds', import.meta.url));
+const DATA = fileURLToPath(new URL('../../../app/data/rounds', import.meta.url));
 const OUT = fileURLToPath(new URL('./out/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const T = { rag: +(process.env.T_RAG || 10.5), ctex: +(process.env.T_CTEX || 99), ndvi: +(process.env.T_NDVI || 0.36), tall: +(process.env.T_TALL || 2), short: +(process.env.T_SHORT || 1), minpx: +(process.env.T_MINPX || 150) };

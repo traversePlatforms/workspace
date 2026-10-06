@@ -13,7 +13,7 @@
  *   node build-wind.mjs build     door and storm files from the cache
  *   node build-wind.mjs all       both
  *
- * build writes, beside the door files (site/data/rounds/):
+ * build writes, beside the door files (app/data/rounds/):
  *   wind-<town>.json  { source, radiusMi, minMph, built, from, through, cap, capped, doors: { id: [[date, mph|null, kind, miles], ...newest first] } }
  *                      kind: 'measured' | 'estimated' | 'damage'; miles = whole miles from the house to the report.
  *                      One entry per door per local (Colorado) day: the strongest gust of 50 mph or more within RADIUS_MI,
@@ -28,7 +28,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'cache');
 const IEM = 'https://mesonet.agron.iastate.edu/cgi-bin/request/gis/lsr.py';
 const SOURCE = 'NWS Local Storm Reports via Iowa Environmental Mesonet (mesonet.agron.iastate.edu/request/gis/lsrs.phtml)';

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { quadkey } from './zones.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const OUT = join(HERE, 'buildings');
 mkdirSync(OUT, { recursive: true });
 

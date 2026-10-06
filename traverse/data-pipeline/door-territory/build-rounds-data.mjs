@@ -5,7 +5,7 @@
    artifact use, so all three name the same pockets and use the same door ids.
    One clustering implementation, three consumers.
 
-   Writes into door-app/site/data/rounds/, which the server reads and NEVER
+   Writes into traverse/app/data/rounds/, which the server reads and NEVER
    serves directly — see the .htaccess written beside it.
 
    Run:  node build-walklist-pdf.mjs <each csv>   # the sidecars
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { isSale } from './owner-names.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '..', 'site', 'data', 'rounds');
+const OUT = join(HERE, '..', '..', 'app', 'data', 'rounds');
 const SOURCES = [
   ['monument', 'Monument', 'monument-areas.json'],
   ['palmer-lake', 'Palmer Lake', 'palmer-lake-areas.json'],
@@ -237,5 +237,5 @@ Require all denied
 </FilesMatch>
 `, 'utf8');
 
-console.log(`\nwrote ${index.length} region files + index.json + .htaccess into site/data/rounds/`);
+console.log(`\nwrote ${index.length} region files + index.json + .htaccess into app/data/rounds/`);
 console.log('⚑ These go OUTSIDE public_html on the host — see site/rounds/DEPLOY-ROUNDS.md.');

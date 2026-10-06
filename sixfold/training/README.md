@@ -19,7 +19,7 @@ in `surge/training-source/` are untouched. Everything here is a new Sixfold docu
 | [05-paperwork.md](05-paperwork.md) | Paperwork | 4 |
 | [06-safety.md](06-safety.md) | Safety | 3 |
 | [07-using-the-app.md](07-using-the-app.md) | Using the app | 4 |
-| [build-training.mjs](build-training.mjs) | builds `door-app/site/data/rounds/training.json` | |
+| [build-training.mjs](build-training.mjs) | builds `traverse/app/data/rounds/training.json` | |
 
 Each `## ` heading is one lesson. Inside it, `### ` is a heading, `- ` a bullet and a blank line a new paragraph, which
 is all the app draws. No bold or code marks: the build refuses them, because they would show as raw characters.

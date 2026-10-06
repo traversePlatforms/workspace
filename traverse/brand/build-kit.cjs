@@ -1,4 +1,4 @@
-// Traverse brand kit (2026-10-06): writes the Design System artifact's files into ./project/. Run: node door-app/brand/traverse/build-kit.cjs
+// Traverse brand kit (2026-10-06): writes the Design System artifact's files into ./project/. Run: node traverse/brand/build-kit.cjs
 const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, 'project');

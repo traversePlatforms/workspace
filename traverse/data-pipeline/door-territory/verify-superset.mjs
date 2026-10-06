@@ -12,7 +12,7 @@
    that Monument and Black Forest had been truncated since they were first built.
 
    Usage:
-     1. BEFORE rebuilding:  cp -r door-app/site/data/rounds  <somewhere>/rounds-before
+     1. BEFORE rebuilding:  cp -r traverse/app/data/rounds  <somewhere>/rounds-before
      2. rebuild (builders -> build-walklist-pdf.mjs -> build-rounds-data.mjs)
      3. node verify-superset.mjs <somewhere>/rounds-before
    Exits 1 if any existing door would corrupt its marks. Do not upload on a 1. */
@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 const SNAP = process.argv[2];
 if (!SNAP) { console.error('usage: node verify-superset.mjs <snapshot-of-rounds-before>'); process.exit(2); }
-const NOW = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'site', 'data', 'rounds');
+const NOW = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'data', 'rounds');
 
 const load = (dir, f) => {
   const j = JSON.parse(readFileSync(`${dir}/${f}`, 'utf8'));

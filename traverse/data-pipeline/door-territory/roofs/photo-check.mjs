@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { fromUrl } from '../tree-zones/node_modules/geotiff/dist-node/geotiff.js';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const [town = 'castle-rock', nth = '0', out = 'photo-check.png'] = process.argv.slice(2);
-const P = JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'site', 'data', 'rounds', `photo-${town}.json`), 'utf8'));
+const P = JSON.parse(readFileSync(join(HERE, '..', '..', '..', 'app', 'data', 'rounds', `photo-${town}.json`), 'utf8'));
 const [id, [file, px, py, R]] = Object.entries(P.doors)[+nth];
 
 const t0 = Date.now();

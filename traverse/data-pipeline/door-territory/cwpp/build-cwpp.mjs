@@ -9,7 +9,7 @@
    The PDF is 17 MB, so it is not kept here. Download it, extract its text (any PDF-to-text tool;
    pdf-parse was used), and run:
      node build-cwpp.mjs <path-to-teller-2025.txt>
-   Writes cwpp-teller-2025.json (the tables) and ../../../site/data/rounds/cwpp.json (our
+   Writes cwpp-teller-2025.json (the tables) and ../../../app/data/rounds/cwpp.json (our
    neighbourhood place names -> rating), matched by name against the subdivision names on our
    Teller doors. A match needs the plan's name (minus "AREA", "ZONE n" and the like) to equal
    our place name or, if it has at least two words, to be contained in it word for word. A one-word name must match exactly.
@@ -20,7 +20,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SITE = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const SITE = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const src = process.argv[2];
 if (!src || !existsSync(src)) { console.log('Usage: node build-cwpp.mjs <teller-2025.txt>'); process.exit(1); }
 const lines = readFileSync(src, 'utf8').split(/\r?\n/).map((l) => l.trim());

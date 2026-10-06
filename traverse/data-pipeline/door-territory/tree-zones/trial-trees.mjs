@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { PARCELS, ZONES, TALL, json, inRing, inRings, ringDist, merc, chm, loadBuildings, pickHouse, measure } from './zones.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'site', 'data', 'rounds');
+const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
 
 const trial = JSON.parse(readFileSync(join(HERE, '..', 'lawn-trial', 'results.json'), 'utf8'));
