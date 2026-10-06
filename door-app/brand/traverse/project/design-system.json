@@ -1,0 +1,92 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-06T16:43:05Z"
+  },
+  "title": "Traverse",
+  "namespace": "Traverse",
+  "libraries": [],
+  "sections": {},
+  "groups": [
+    "Logos"
+  ],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "m",
+      "order": [
+        "traverse-mark-color.svg",
+        "traverse-mark-reverse.svg",
+        "traverse-mark-navy.svg",
+        "traverse-icon.svg",
+        "traverse-solar-icon.svg",
+        "traverse-roof-icon.svg",
+        "traverse-pest-icon.svg",
+        "traverse-yards-icon.svg"
+      ],
+      "files": {
+        "traverse-mark-color.svg": {
+          "name": "traverse-mark-color.svg",
+          "blob": "d3fd1fbfdb9c49ab7229c54e6b43d857",
+          "size": 499,
+          "type": "image/svg+xml"
+        },
+        "traverse-mark-reverse.svg": {
+          "name": "traverse-mark-reverse.svg",
+          "blob": "ffe9f97c1df3ccc4720909a352ae3143",
+          "size": 499,
+          "type": "image/svg+xml"
+        },
+        "traverse-mark-navy.svg": {
+          "name": "traverse-mark-navy.svg",
+          "blob": "3b6700a5f429819daeded8322e47ec38",
+          "size": 499,
+          "type": "image/svg+xml"
+        },
+        "traverse-icon.svg": {
+          "name": "traverse-icon.svg",
+          "blob": "6008e18eb4fcbbd9e0a490a1d079da19",
+          "size": 603,
+          "type": "image/svg+xml"
+        },
+        "traverse-solar-icon.svg": {
+          "name": "traverse-solar-icon.svg",
+          "blob": "9216c0d9aeef14e47cbfa77f5693d36b",
+          "size": 603,
+          "type": "image/svg+xml"
+        },
+        "traverse-roof-icon.svg": {
+          "name": "traverse-roof-icon.svg",
+          "blob": "5d85112fd260733dfec4c0c9bd041ab1",
+          "size": 603,
+          "type": "image/svg+xml"
+        },
+        "traverse-pest-icon.svg": {
+          "name": "traverse-pest-icon.svg",
+          "blob": "7904dc3208ba8b20223e524ec7facc55",
+          "size": 603,
+          "type": "image/svg+xml"
+        },
+        "traverse-yards-icon.svg": {
+          "name": "traverse-yards-icon.svg",
+          "blob": "caf5ff2ede3ff168048b929a1341810d",
+          "size": 603,
+          "type": "image/svg+xml"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "lastChange": {
+    "by": "Matthew Sharpe",
+    "at": "2026-10-06T16:43:05Z",
+    "via": "Claude Code",
+    "note": "First brand kit: the traverse mark, editions, app icons, colour, type, door card and website hero."
+  }
+}

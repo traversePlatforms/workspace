@@ -1,0 +1,28 @@
+<!-- @dsCard group="Product" height=420 width=420 subtitle="TraverseRoof, at the door" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Door card</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap"><style>.wrap{padding:var(--space-4)}
+.door{border-top:4px solid var(--roof);display:grid;gap:var(--space-2)}
+.top{display:flex;justify-content:space-between;align-items:center}
+h1{font:600 24px/30px var(--font-display);margin:var(--space-1) 0 0}
+.own{margin:0;font-size:13px}
+dl{margin:var(--space-2) 0;display:grid;gap:var(--space-2)}
+dl div{display:flex;justify-content:space-between;gap:var(--space-3);border-bottom:1px solid var(--line);padding-bottom:var(--space-2)}
+dt{font-size:13px;color:var(--ink-muted)} dd{margin:0;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--roof)}
+.acts{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2)}</style></head>
+<body>
+
+<div class="wrap"><div class="tv-card door">
+  <div class="top"><span class="tv-chip tv-chip-walk">Walk booked</span><span class="tv-data tv-muted">0.4 mi</span></div>
+  <h1>1840 Ponderosa Dr</h1>
+  <p class="tv-muted own">Owner of record · Castle Rock, CO</p>
+  <dl>
+    <div><dt>Roof</dt><dd class="tv-data">31 sq · asphalt · 2009</dd></div>
+    <div><dt>Hail at the house</dt><dd class="tv-data"><span class="dot"></span>1.75 in · 23 Jun 2026</dd></div>
+    <div><dt>Wind</dt><dd class="tv-data">72 mph · 3 mi away</dd></div>
+  </dl>
+  <div class="acts"><button class="tv-btn tv-btn-primary" type="button">Quote booked</button><button class="tv-btn tv-btn-deep" type="button">Not now</button><button class="tv-btn" type="button">No answer</button></div>
+</div></div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+body { margin: 0; font-family: var(--font-sans); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; }
+.tv-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; padding: var(--space-4); }
+.tv-stack { display: grid; gap: var(--space-3); padding: var(--space-4); }
+.tv-wordmark { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+.tv-edition { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; }
+.tv-lockup { display: inline-flex; align-items: center; gap: 0.32em; }
+.tv-mark, .tv-icon { display: block; flex: none; }
+.tv-btn { font: 700 16px/1 var(--font-sans); height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-md); border: 1.5px solid var(--line); background: var(--surface-raised); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: var(--space-2); }
+.tv-btn-primary { background: var(--flag); border-color: var(--flag); color: var(--on-flag); }
+.tv-btn-deep { background: transparent; border-color: var(--deep); color: var(--deep); }
+.tv-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tv-chip { display: inline-flex; align-items: center; gap: 6px; font: 700 13px/1 var(--font-sans); height: 28px; padding: 0 var(--space-3); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.tv-chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .9; }
+.tv-chip-new { color: var(--ink-muted); }
+.tv-chip-walk { background: var(--flag-soft); border-color: transparent; color: var(--flag); }
+.tv-chip-quoted { background: var(--deep); border-color: transparent; color: var(--on-deep); }
+.tv-chip-won { background: var(--won-soft); border-color: transparent; color: var(--won); }
+.tv-chip-lost { background: var(--lost-soft); border-color: transparent; color: var(--lost); }
+.tv-card { background: var(--surface-raised); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-4); }
+.tv-muted { color: var(--ink-muted); }
+.tv-data { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
