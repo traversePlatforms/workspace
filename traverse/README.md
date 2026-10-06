@@ -32,17 +32,17 @@ node traverse/brand/build-kit.cjs                  the brand kit files
 **After any change to `app/`, rebuild the editions** and upload what changed, so Roofing and Yards get the same fix as
 Sixfold. Never edit `editions/dist/` by hand.
 
-## The three installs on the server (all on sixfoldcolorado.com for now)
+## The installs on the server (all on sixfoldcolorado.com for now)
 
-| | Sixfold | TraverseRoofing | TraverseYards |
-|---|---|---|---|
-| App page | `public_html/summit-de59ae83/` | `public_html/tr-cb2e8587/` | `public_html/ty-25604fff/` |
-| API | `public_html/api/rounds.php` (+ skiptrace, webpush) | `public_html/api/traverse-rounds.php` (+2) | `public_html/api/traverse-yards-rounds.php` (+2) |
-| Door data | `sixfold-data/rounds/` | `traverse-data/rounds/` | `traverse-yards-data/rounds/` |
-| Codes | `sixfold-private/` | `traverse-private/` | `traverse-yards-private/` |
-| Comes from | `app/` as it is | `editions/dist/` | `editions/dist/` |
-| Look | Sixfold's | storm slate | field green |
-| On | lawn, trees, fire, quotes, communities | hail, wind, storm list, roofs, commercial towns | lawn, trees, fire, funding, water, communities |
+| | Sixfold | TraverseRoofing | TraverseYards | TraverseSolar |
+|---|---|---|---|---|
+| App page | `public_html/summit-de59ae83/` | `public_html/tr-cb2e8587/` | `public_html/ty-25604fff/` | `public_html/ts-016064fc/` |
+| API | `public_html/api/rounds.php` (+ skiptrace, webpush) | `public_html/api/traverse-rounds.php` (+2) | `public_html/api/traverse-yards-rounds.php` (+2) | `public_html/api/traverse-solar-rounds.php` (+2) |
+| Door data | `sixfold-data/rounds/` | `traverse-data/rounds/` | `traverse-yards-data/rounds/` | `traverse-solar-data/rounds/` |
+| Codes | `sixfold-private/` | `traverse-private/` | `traverse-yards-private/` | `traverse-solar-private/` |
+| Comes from | `app/` as it is | `editions/dist/` | `editions/dist/` | `editions/dist/` |
+| Look | Sixfold's | storm slate | field green | late-sun amber |
+| On | lawn, trees, fire, quotes, communities | hail, wind, storm list, roofs, commercial towns | lawn, trees, fire, funding, water, communities | roofs, solar (sun-facing roof, shade, panels, output, power company) |
 
 Data and codes always go **beside** public_html, never inside it. The homepage is at `public_html/tp-5ea36a05/`. When
 Traverse has its own hosting, the editions and the homepage move there.
