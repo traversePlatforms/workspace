@@ -1,0 +1,7 @@
+# Traverse Platforms homepage preview (2026-10-06). Unlisted stopgap on Sixfold's hosting until
+# Traverse has its own account. Keep it out of search, and out of SiteGround's Dynamic Cache so an
+# upload shows at once (same reason as summit-de59ae83/.htaccess).
+<IfModule mod_headers.c>
+Header set X-Robots-Tag "noindex, nofollow"
+Header set Cache-Control "private, no-cache"
+</IfModule>
