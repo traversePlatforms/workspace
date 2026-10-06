@@ -182,7 +182,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       selected, surface the tax credit / grant / insurer re-score material. **This one is
       genuinely good** — the funding research already exists and currently only lives in a
       pamphlet nobody reads at quote time. Build after SX-2.
-- [ ] **SX-3a — Kara: get both agreements signed.** **Drafting is done.** Aeration $1,100
+- [x] **SX-3a — Kara: get both agreements signed.** **✅ SIGNED (Matthew confirmed 2026-10-06).** **Drafting is done.** Aeration $1,100
       (5pp) and maintenance $250/mo (6pp), both signed-shape, both with a quote and a DocuSign
       packet. Field map and sending rules in `agreements/kara-docusign-setup.md`.
       **⚑ Two things left. (1) is done.**
