@@ -86,7 +86,12 @@ html{scroll-behavior:smooth}
   .conds{grid-template-columns:repeat(3,1fr) !important;gap:28px 28px !important}
   .featstrip{grid-template-columns:1fr 1fr !important;gap:1px !important;background:rgba(255,255,255,0.14) !important}
   .featstrip > div{box-shadow:none !important;background:#13294b}
-  /* five editions, two across: the last one takes the whole row rather than sitting alone */
+}
+/* five editions sit in one row on a desktop; narrower than that they go two across, the mark beside the name,
+   and the last one takes the whole row rather than sitting alone */
+@media (max-width:1180px){
+  .eds{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:20px !important}
+  .eds > div > div:first-child{flex-direction:row !important;align-items:center !important}
   .eds > div:last-child:nth-child(odd){grid-column:1 / -1}
 }
 /* phones */
@@ -112,6 +117,114 @@ html{scroll-behavior:smooth}
 }
 </style>`;
 
+// Motion. The page opens at the top on a reload or a Back, whatever the browser remembers. Things rise into view
+// as you reach them, the hero route draws itself and How it works traces its line. All of it hangs off html.anim,
+// which the head script sets only when the device hasn't asked for reduced motion, so without the script (or with
+// reduced motion) everything simply shows.
+const motionHead = `<script>
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) document.documentElement.classList.add('anim');
+</script>
+<style>
+html.anim .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+html.anim .rv.rv-l{transform:translateX(-28px)}
+html.anim .rv.rv-r{transform:translateX(28px)}
+html.anim .rv.rv-pop{transform:scale(.9)}
+html.anim .rv.in{opacity:1;transform:none}
+/* the hero: the doors appear, the route draws from the first door to the target, the door card slides up */
+html.anim .hero-door{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:center;transition:opacity .35s ease var(--d,0s),transform .45s cubic-bezier(.3,1.6,.5,1) var(--d,0s)}
+html.anim .hero-route{transition:stroke-dashoffset 1.5s cubic-bezier(.55,.1,.35,1) .45s}
+html.anim .hero-stop{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:center;transition:opacity .3s ease var(--d,0s),transform .5s cubic-bezier(.3,1.7,.5,1) var(--d,0s)}
+html.anim .hero-ping{opacity:0;transform-box:fill-box;transform-origin:center}
+html.anim .go .hero-door,html.anim .go .hero-stop{opacity:1;transform:none}
+html.anim .go .hero-route{stroke-dashoffset:0 !important}
+html.anim .go .hero-ping{animation:ping 2.4s ease-out 2.3s infinite}
+@keyframes ping{0%{opacity:.7;transform:scale(1)}80%,100%{opacity:0;transform:scale(2.8)}}
+/* How it works: the line wipes in left to right and each station arrives as the line reaches it */
+html.anim .trav-line{clip-path:inset(-30px 100% -30px -30px);transition:clip-path 1.7s cubic-bezier(.45,.05,.4,1)}
+html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
+/* hover: the edition and plan cards lift, the buttons nudge */
+.eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
+.eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
+html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
+a[href="#demo"],a[href="#trades"]{transition:translate .2s ease,filter .2s ease}
+a[href="#demo"]:hover,a[href="#trades"]:hover{translate:0 -2px;filter:brightness(1.06)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+</style>`;
+const motionJs = `<script>
+(function () {
+  // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
+  // to jump back to. A link that arrives with one from elsewhere still goes there, once.
+  var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+  function top() { try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, 0); } }
+  if (location.hash && nav.type === 'navigate') window.addEventListener('load', function () { setTimeout(function () { history.replaceState(null, '', location.pathname + location.search); }, 0); });
+  else { if (location.hash) history.replaceState(null, '', location.pathname + location.search); top(); }
+  window.addEventListener('pageshow', function (e) { if (e.persisted) top(); });
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href').slice(1), t = id && document.getElementById(id); if (!t) return;
+    e.preventDefault();
+    var how = document.documentElement.classList.contains('anim') ? 'smooth' : 'auto';
+    if (id === 'top') window.scrollTo({ top: 0, behavior: how }); else t.scrollIntoView({ behavior: how, block: 'start' });
+  });
+
+  var root = document.documentElement; if (!root.classList.contains('anim')) return;
+  var all = [];
+  function tag(list, cls, step, start) {
+    Array.prototype.forEach.call(list, function (el, i) {
+      el.classList.add('rv'); if (cls) el.classList.add(cls);
+      el.style.setProperty('--d', ((start || 0) + i * (step || 0)).toFixed(2) + 's'); all.push(el);
+    });
+  }
+  function $(s) { return document.querySelectorAll(s); }
+  try {
+    // the hero
+    tag($('#top > div:first-child > *'), '', 0.09);
+    var vis = document.querySelector('#top > div:last-child');
+    if (vis) {
+      var map = vis.firstElementChild, card = vis.lastElementChild, svg = map && map.querySelector('svg');
+      if (svg) {
+        Array.prototype.forEach.call(svg.querySelectorAll('circle[r="7"]'), function (c, i) { c.classList.add('hero-door'); c.style.setProperty('--d', (0.05 + i * 0.035).toFixed(2) + 's'); });
+        var route = svg.querySelector('polyline');
+        if (route && route.getTotalLength) { var len = route.getTotalLength(); route.classList.add('hero-route'); route.style.strokeDasharray = len; route.style.strokeDashoffset = len; }
+        var stops = svg.querySelectorAll('circle:not([r="7"])');
+        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', [0.35, 0.95, 1.35, 1.85][i] + 's'); });
+        var last = stops[stops.length - 1];
+        if (last) { var p = last.cloneNode(); p.setAttribute('class', 'hero-ping'); p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#d6400c'); p.setAttribute('stroke-width', '4'); p.removeAttribute('style'); last.parentNode.insertBefore(p, last); }
+        map.classList.add('hero-map');
+      }
+      if (map) tag([map], 'rv-pop', 0, 0.05);
+      if (card && card !== map) tag([card], '', 0, 1.9);
+    }
+    // the rest of the page, as each part comes into view
+    Array.prototype.forEach.call($('section h2'), function (h) { if (!h.closest('#top') && h.parentElement.tagName !== 'SECTION') tag([h.parentElement]); });
+    tag($('.dayphone'), 'rv-pop', 0, 0.1);
+    tag($('.daycol-l .dayitem'), 'rv-l', 0.15, 0.25);
+    tag($('.daycol-r .dayitem'), 'rv-r', 0.15, 0.25);
+    tag($('.eds > div'), '', 0.08);
+    var trav = document.querySelector('.trav'); if (trav) { trav.classList.add('rv-wrap'); all.push(trav); }
+    var wide = window.matchMedia('(min-width: 1001px)').matches;
+    tag($('.trav-st'), '', wide ? 0.38 : 0.12, wide ? 0.25 : 0);
+    tag($('.conds > div'), '', 0.12);
+    tag($('.featstrip'), '', 0, 0.1);
+    var plans = document.querySelectorAll('#pricing [style*="minmax(270px"] > div');
+    Array.prototype.forEach.call(plans, function (d) { d.classList.add('plan'); });
+    tag(plans, '', 0.1);
+    tag($('#demo > *'), '', 0.08);
+  } catch (err) { all.forEach(function (el) { el.classList.add('in'); }); root.classList.remove('anim'); return; }
+
+  function show(el) {
+    el.classList.add('in');
+    if (el.classList.contains('hero-map')) el.classList.add('go');
+  }
+  if (!('IntersectionObserver' in window)) { all.forEach(show); return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { show(en.target); io.unobserve(en.target); } });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+  all.forEach(function (el) { io.observe(el); });
+})();
+</script>`;
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -122,10 +235,12 @@ const html = `<!doctype html>
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(icon)}">
 ${head}
 ${phone}
+${motionHead}
 </head>
 <body>
 ${body}
 ${menuJs}
+${motionJs}
 </body>
 </html>
 `;
