@@ -2543,7 +2543,9 @@ if ($action === 'secrates' || $action === 'seclist') {
     if ($action === 'secrates') out(['ok' => true] + (json_decode((string) @file_get_contents(DATA_DIR . '/security-rates.json'), true) ?: []));
     $ar = json_decode((string) @file_get_contents(DATA_DIR . '/security-areas.json'), true) ?: [];
     $rows = [];
-    foreach (($ar['towns'] ?? []) as $town => $areas) foreach ($areas as $name => $c) $rows[] = ['region' => (string) $town, 'town' => regionLabel((string) $town), 'area' => (string) $name, 'd30' => $c['d30'], 'd90' => $c['d90'], 'doors' => (int) ($c['doors'] ?? 0)];
+    $zero = ['b' => 0, 'v' => 0, 't' => 0, 'd' => 0];
+    foreach (($ar['towns'] ?? []) as $town => $areas) foreach ((array) $areas as $name => $c) $rows[] = ['region' => (string) $town, 'town' => regionLabel((string) $town), 'area' => (string) $name,
+        'd30' => array_replace($zero, (array) ($c['d30'] ?? [])), 'd90' => array_replace($zero, (array) ($c['d90'] ?? [])), 'doors' => (int) ($c['doors'] ?? 0)];
     $sum = fn($c) => array_sum(array_map('intval', (array) $c));
     usort($rows, fn($a, $b) => [$sum($b['d90']), $sum($b['d30'])] <=> [$sum($a['d90']), $sum($a['d30'])]);
     out(['ok' => true, 'through' => (string) ($ar['through'] ?? ''), 'source' => (string) ($ar['source'] ?? ''), 'areas' => $rows]);
@@ -2787,7 +2789,8 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         $c = $cs[$cid]; $next = null;
         /* next due becomes a month (or a year) after this visit, unless that is earlier than it already is:
            a mow a day early still moves it on, and last month's visit typed in late never pulls it back */
-        if ($status === 'done' && in_array($c['plan'] ?? '', ['monthly', 'yearly'], true)) {
+        /* quarterly too (review 2026-10-06: the pest plan was in CUST_PLANS and nextDue, but a done visit never moved it on) */
+        if ($status === 'done' && in_array($c['plan'] ?? '', ['monthly', 'quarterly', 'yearly'], true)) {
             $cand = nextDue($date, (string) $c['plan']);
             if (empty($c['next']) || $cand > $c['next']) { $next = $cand; $write($cid, ['next' => $next]); }
         }
@@ -3265,7 +3268,9 @@ if ($action === 'walkics') {
     $town = regionLabel($key);
     $p = loadPhones($key)[$id] ?? null; $p = ($p && ($p['source'] ?? '') === 'door' && empty(ownerFlag($door, $p)['prev'])) ? $p : null;
     $n = loadNotes($key)[$id] ?? null; $n = ($n && empty(ownerFlag($door, $n)['prev'])) ? $n : null;
-    $desc = 'Yard walk for a quote. Booked at the door by ' . ($w['by'] ?: 'the crew') . '.';
+    /* the visit is the company's (company.json visit: "yard walk", "roof inspection"); review 2026-10-06, it said Yard walk in every edition */
+    $visit = ucfirst((string) (company()['visit'] ?: 'visit'));
+    $desc = $visit . ' for a quote. Booked at the door by ' . ($w['by'] ?: 'the crew') . '.';
     if ($p) $desc .= "\nPhone (given at the door): " . $p['phone'];
     if ($n) $desc .= "\nNote: " . mb_substr((string) $n['note'], 0, 300);
     $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//' . str_replace(['/', "\n"], '', company()['name']) . '//Door rounds//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
@@ -3280,13 +3285,13 @@ if ($action === 'walkics') {
         $L[] = 'DTSTART;VALUE=DATE:' . $st->format('Ymd');
         $L[] = 'DTEND;VALUE=DATE:' . (clone $st)->modify('+1 day')->format('Ymd');
     }
-    $L[] = 'SUMMARY:' . icsEsc('Yard walk: ' . $door['address'] . ($w['time'] === '' ? ' (time to agree)' : ''));
+    $L[] = 'SUMMARY:' . icsEsc($visit . ': ' . $door['address'] . ($w['time'] === '' ? ' (time to agree)' : ''));
     $L[] = 'LOCATION:' . icsEsc($door['address'] . ', ' . $town . ', CO');
     if (isset($door['lat'], $door['lon'])) $L[] = 'GEO:' . $door['lat'] . ';' . $door['lon'];
     $L[] = 'DESCRIPTION:' . icsEsc($desc);
     /* the day before; and an hour before when there is a time (an all-day walk gets 9 am the day before) */
     foreach ($w['time'] !== '' ? ['-P1D', '-PT1H'] : ['-PT15H'] as $tr) {
-        array_push($L, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' . icsEsc('Yard walk: ' . $door['address']), 'TRIGGER:' . $tr, 'END:VALARM');
+        array_push($L, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' . icsEsc($visit . ': ' . $door['address']), 'TRIGGER:' . $tr, 'END:VALARM');
     }
     array_push($L, 'END:VEVENT', 'END:VCALENDAR');
     header('Content-Type: text/calendar; charset=utf-8');

@@ -43,7 +43,7 @@ if (!is_array($mxD) || empty($mxD['ok'])) { fwrite(STDERR, 'sixfold morning: no 
 $day = fn(string $iso) => $iso === '' ? '' : date('D j M', strtotime($iso . ' 12:00'));
 $tel = function (string $p) { $d = preg_replace('/\D/', '', $p); if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1); return strlen($d) === 10 ? '(' . substr($d, 0, 3) . ') ' . substr($d, 3, 3) . '-' . substr($d, 6) : $p; };
 $src = ['website' => 'Website form', 'meta' => 'Meta ad', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other'];
-$plan = ['oneoff' => 'one-off', 'monthly' => 'monthly', 'yearly' => 'yearly', 'custom' => 'custom'];
+$plan = ['oneoff' => 'one-off', 'monthly' => 'monthly', 'quarterly' => 'quarterly', 'yearly' => 'yearly', 'custom' => 'custom'];
 $hm = function (string $t) { if ($t === '') return 'time to agree'; [$h, $m] = array_map('intval', explode(':', $t)); return ($h % 12 ?: 12) . ':' . str_pad((string) $m, 2, '0', STR_PAD_LEFT) . ($h < 12 ? ' am' : ' pm'); };
 $walksToday = array_values(array_filter($mxD['walks'], fn($w) => $w['date'] === $mxD['today']));
 $walksTom = array_values(array_filter($mxD['walks'], fn($w) => $w['date'] === $mxD['tomorrow']));
