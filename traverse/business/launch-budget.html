@@ -1,0 +1,381 @@
+<title>Traverse Launch Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a surveyor's field book. Totals band first, then the three ledgers, then upgrade options as tiered cards. */
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --ink:#0f1b2d; --muted:#566476; --line:#dce2ea; --sunk:#eaeef3;
+  --deep:#13294b; --flag:#d6400c; --flag-ink:#b83608; --flag-soft:#fde6dc; --on-deep:#ffffff;
+  --ok:#1f7a4d; --ok-soft:#dcefe5; --warn:#8a5a00; --warn-soft:#f7ead0;
+  --display:"Familjen Grotesk","Atkinson Hyperlegible",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1220; --surface:#131c2e; --ink:#e8edf5; --muted:#9aa8bc; --line:#26324a; --sunk:#0f1828;
+  --deep:#dce6f5; --flag:#ff7a45; --flag-ink:#ff9a6e; --flag-soft:#3a1d12; --on-deep:#0b1220;
+  --ok:#6fcf9b; --ok-soft:#133324; --warn:#e8b04f; --warn-soft:#3a2c10; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --surface:#131c2e; --ink:#e8edf5; --muted:#9aa8bc; --line:#26324a; --sunk:#0f1828;
+  --deep:#dce6f5; --flag:#ff7a45; --flag-ink:#ff9a6e; --flag-soft:#3a1d12; --on-deep:#0b1220;
+  --ok:#6fcf9b; --ok-soft:#133324; --warn:#e8b04f; --warn-soft:#3a2c10; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:34px;letter-spacing:-.02em;font-weight:700}
+h2{font-size:22px;font-weight:700;letter-spacing:-.01em}
+h3{font-size:17px;font-weight:600}
+.num,td.amt,.tile b{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+a{color:var(--deep)} a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,label:focus-within{outline:2px solid var(--flag);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:44px;height:44px;flex:none}
+.stamp{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px dashed var(--line);padding:6px 10px;border-radius:8px}
+.lede{max-width:68ch;color:var(--muted);margin:0}
+
+/* totals */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.tile.key{background:var(--deep);color:var(--on-deep);border-color:var(--deep)}
+.tile.key .muted{color:inherit;opacity:.8}
+.tile span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.tile b{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:-.01em}
+.tile small{font-size:13px}
+.addline{font-size:13px;color:var(--flag-ink)}
+.tile.key .addline{color:inherit}
+
+/* ledgers */
+section{display:flex;flex-direction:column;gap:14px}
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;font-weight:700;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--sunk)}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.amt{text-align:right;white-space:nowrap;font-weight:700}
+th.amt{text-align:right}
+td.inc{width:44px}
+tr.off td:not(.inc){opacity:.45}
+.item b{display:block}
+.item small{display:block;color:var(--muted);margin-top:2px;max-width:60ch}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+select,input[type=number]{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+input[type=number]{width:96px}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--flag)}
+.src{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.src.off{background:var(--ok-soft);color:var(--ok)}
+.src.cmp{background:var(--warn-soft);color:var(--warn)}
+.src.quote{background:var(--flag-soft);color:var(--flag-ink)}
+.src.est{background:var(--sunk);color:var(--muted)}
+
+/* add-ons */
+.addons{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:14px}
+.addon{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.addon.on{border-color:var(--flag)}
+.addon p{margin:0;color:var(--muted);font-size:14px}
+.tiers{display:flex;flex-direction:column;gap:8px}
+.tier{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.tier:hover{border-color:var(--muted)}
+.tier input{margin:3px 0 0;accent-color:var(--flag)}
+.tier.sel{border-color:var(--flag);background:var(--flag-soft)}
+.tier b{display:block;font-size:14.5px}
+.tier small{display:block;color:var(--muted);font-size:13px}
+.tier .price{text-align:right;font-weight:700;font-size:14px;white-space:nowrap}
+.tier .price small{font-weight:400}
+.notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.sources ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button.reset{font:inherit;font-size:13px;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.visually{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){h1{font-size:28px}.tile b{font-size:26px}}
+@media (prefers-reduced-motion:no-preference){.tier,.addon{transition:border-color .15s,background .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg>
+      <div><h1>Launch budget</h1><div class="muted">Traverse Platforms LLC</div></div>
+    </div>
+    <div class="stamp">Prices checked 6 Oct 2026</div>
+  </header>
+  <p class="lede">What it costs to start Traverse and keep it running, then what each upgrade to the app would add. Tick, untick or change any line and the totals follow. Each price says where it came from: an official price list, a comparison site, or a quote you still need to get.</p>
+
+  <section aria-labelledby="t-sum">
+    <h2 id="t-sum" class="visually">Totals</h2>
+    <div class="tiles">
+      <div class="tile key"><span>Up front</span><b id="sumUp">$0</b><small class="muted" id="sumUpNote"></small><small class="addline" id="addUp"></small></div>
+      <div class="tile"><span>Monthly overhead</span><b id="sumMo">$0</b><small class="muted">every month once running</small><small class="addline" id="addMo"></small></div>
+      <div class="tile"><span>Yearly overhead</span><b id="sumYr">$0</b><small class="muted">every year once running</small><small class="addline" id="addYr"></small></div>
+      <div class="tile"><span>First 12 months</span><b id="sumY1">$0</b><small class="muted">up front + a year of overhead</small><small class="addline" id="addY1"></small></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-up">
+    <div class="sec-head"><h2 id="t-up">Up front: starting the company</h2><span class="muted">Paid once, at launch</span></div>
+    <div class="tbl"><table><thead><tr><th></th><th>Item</th><th>Source</th><th class="amt">Cost</th></tr></thead><tbody id="tb-up"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="t-mo">
+    <div class="sec-head"><h2 id="t-mo">Monthly overhead</h2><span class="muted">Running costs, per month</span></div>
+    <div class="tbl"><table><thead><tr><th></th><th>Item</th><th>Source</th><th class="amt">Per month</th></tr></thead><tbody id="tb-mo"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="t-yr">
+    <div class="sec-head"><h2 id="t-yr">Yearly overhead</h2><span class="muted">Renewals and annual bills</span></div>
+    <div class="tbl"><table><thead><tr><th></th><th>Item</th><th>Source</th><th class="amt">Per year</th></tr></thead><tbody id="tb-yr"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="t-add">
+    <div class="sec-head"><h2 id="t-add">Upgrades to the app</h2><span class="muted">Optional. Pick a level and it shows in orange on the totals</span></div>
+    <div class="addons" id="addons"></div>
+  </section>
+
+  <section aria-labelledby="t-not">
+    <h2 id="t-not">Not counted in the totals</h2>
+    <div class="notes"><ul>
+      <li><b>Card fees on what you sell.</b> Stripe takes 2.9% + 30¢ per card payment, or 0.8% (capped at $5) per bank debit. On a $200 monthly subscription that is about $6.10 by card or $1.60 by bank debit.</li>
+      <li><b>Colorado sales tax on subscriptions from 1 January 2027</b> (HB 26-1223). Your customer pays it and you file it, so it changes your quotes, not your costs. Home-rule cities such as Colorado Springs (3.07%) and Denver (5.15%) need their own registration.</li>
+      <li><b>The Do Not Call list.</b> Each client that makes the calls needs its own access: the first five area codes are free, then $85 each a year from 1 October 2026. Their cost, not Traverse's.</li>
+      <li><b>Trademark extras.</b> The USPTO adds $100 to $200 per class if the description is not picked from its standard list, and asks for maintenance filings in years 5 to 6 and every 10 years.</li>
+      <li><b>The attorney</b> until you type a quote into that line.</li>
+      <li><b>Prices change.</b> Porkbun will likely raise its .com price after Verisign's 1 November 2026 increase, and the SiteGround and .app prices shown are first-year offers where marked.</li>
+    </ul></div>
+  </section>
+
+  <section class="sources" aria-labelledby="t-src">
+    <div class="sec-head"><h2 id="t-src">Sources</h2><button class="reset" id="reset" type="button">Reset to the starting picks</button></div>
+    <div class="notes"><ol id="srcList"></ol></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var SRC = {
+    sos: ['Colorado Secretary of State, business fee schedule', 'https://www.sos.state.co.us/pubs/info_center/fees/business.html', 'off'],
+    irs: ['IRS, apply for an EIN (free)', 'https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online', 'off'],
+    uspto: ['USPTO trademark fees per class (TMarkMetric summary of the fee schedule)', 'https://tmarkmetric.com/insights/uspto-trademark-fees-2026', 'cmp'],
+    dor: ['Colorado sales tax licence fee and deposit (Sales Tax Handbook)', 'https://www.salestaxhandbook.com/colorado/sales-tax-permits', 'cmp'],
+    sg: ['SiteGround web hosting plans', 'https://www.siteground.com/web-hosting.htm', 'off'],
+    pb: ['Porkbun domain prices (its live price list)', 'https://porkbun.com/products/domains', 'off'],
+    gw: ['Google Workspace pricing', 'https://workspace.google.com/pricing', 'off'],
+    ins: ['Insureon, app developer insurance cost (average tech E&O)', 'https://insureon.com/technology-business-insurance/mobile-app-developers/cost', 'cmp'],
+    esri: ['ArcGIS Location Platform pricing', 'https://location.arcgis.com/pricing/', 'off'],
+    nearmap: ['Nearmap subscription pricing (quote only; regional co-op price list)', 'https://www.nctcog.org/regional-data/spatial-data-cooperative-program-sdcp/aerial-photography-1', 'quote'],
+    batch: ['BatchData pricing', 'https://batchdata.io/pricing', 'off'],
+    ihm: ['Hail tracking software prices (HailMate comparison; Interactive Hail Maps blocks its own page to us)', 'https://hailmate.ai/blog/hail-tracking-software-cost', 'cmp'],
+    ht: ['HailTrace pricing (Roofing Software Guide)', 'https://roofingsoftwareguide.com/reviews/hailtrace-pricing/', 'cmp'],
+    twilio: ['Twilio 10DLC registration and SMS prices (comparison of Twilio fees)', 'https://readysms.io/blog/10dlc-registration-cost', 'cmp'],
+    twilio1: ['Twilio A2P 10DLC', 'https://www.twilio.com/en-us/phone-numbers/a2p-10dlc', 'off'],
+    stripe: ['Stripe pricing', 'https://stripe.com/pricing', 'off'],
+    tax: ['PwC: Colorado expands sales tax to software (HB 26-1223)', 'https://www.pwc.com/us/en/services/tax/library/colorado-expands-sales-and-use-tax-to-software-remote-access.html', 'cmp'],
+    ftc: ['FTC: 2027 Do Not Call registry fees', 'https://www.ftc.gov/news-events/news/press-releases/2026/08/ftc-announces-2027-telemarketer-fees-access-national-do-not-call-registry', 'off']
+  };
+  var TAG = { off: 'Official', cmp: 'Comparison site', quote: 'Quote only', est: 'Your number' };
+
+  /* Each line: where it lands (up = once at launch, mo = monthly from day one, mo2 = monthly from year two,
+     yr = yearly from year one, yr2 = yearly from year two). A control can change the amounts. */
+  var LINES = [
+    { id: 'llc', sec: 'up', name: 'Form Traverse Platforms LLC', note: 'Articles of Organization, filed online with the Colorado Secretary of State.', src: 'sos', on: true, calc: function () { return { up: 50 }; } },
+    { id: 'ein', sec: 'up', name: 'Federal tax ID (EIN)', note: 'Free from the IRS. Needed for the bank account and card payments.', src: 'irs', on: true, calc: function () { return { up: 0 }; } },
+    { id: 'bank', sec: 'up', name: 'Business bank account', note: 'Usually free. Keeps Traverse money apart from yours and from Surge.', src: null, srcTag: 'est', on: true, calc: function () { return { up: 0 }; } },
+    { id: 'tn', sec: 'up', name: 'Trade names', note: 'TraverseRoofing, TraverseYards: $20 each to file, $5 each to renew (Colorado’s fees).', src: 'sos', on: true,
+      ctl: { type: 'count', label: 'Names', min: 0, max: 6, def: 2 }, calc: function (v) { return { up: 20 * v.n, yr2: 5 * v.n }; } },
+    { id: 'tm', sec: 'up', name: 'Trademark filing (USPTO)', note: '$350 per class. Software usually needs two classes. An attorney should check the 1994 TRAVERSE mark first.', src: 'uspto', on: true,
+      ctl: { type: 'count', label: 'Classes', min: 0, max: 4, def: 2 }, calc: function (v) { return { up: 350 * v.n }; } },
+    { id: 'stl', sec: 'up', name: 'Colorado sales tax licence', note: '$16 for two years plus a $50 deposit that comes back once $50 of tax has been paid in. Needed before selling from 2027.', src: 'dor', on: true, refund: 50, calc: function () { return { up: 66 }; } },
+    { id: 'atty', sec: 'up', name: 'Attorney', note: 'Trademark check, terms of service and a privacy policy. No reliable published figure: type the quote you get.', src: null, srcTag: 'quote', on: true,
+      ctl: { type: 'money', label: 'Quote $', def: 0 }, calc: function (v) { return { up: v.n }; } },
+    { id: 'host', sec: 'up', name: 'Hosting: first 12 months (SiteGround, prepaid)', note: 'StartUp hosts one website (the homepage). The homepage plus two apps needs GrowBig. The renewal is in the monthly list.', src: 'sg', on: true,
+      ctl: { type: 'pick', opts: [['startup', 'StartUp: 1 site'], ['growbig', 'GrowBig: unlimited sites']], def: 'startup' },
+      calc: function (v) { return v.k === 'growbig' ? { up: 59.88, mo2: 29.99 } : { up: 35.88, mo2: 17.99 }; } },
+    { id: 'com', sec: 'up', name: 'traverseplatforms.com, first year (Porkbun)', note: 'Renews at the same price; see the yearly list.', src: 'pb', on: true, calc: function () { return { up: 11.08, yr2: 11.08 }; } },
+    { id: 'app', sec: 'up', name: 'Edition domains (.app), first year', note: 'traverseroofing.app, traverseyards.app and so on: $8.75 first year (a sale), then $14.93.', src: 'pb', on: true,
+      ctl: { type: 'count', label: 'Domains', min: 0, max: 6, def: 2 }, calc: function (v) { return { up: 8.75 * v.n, yr2: 14.93 * v.n }; } },
+
+    { id: 'hostmo', sec: 'mo', name: 'Hosting renewal', note: 'Starts in year two, at the plan picked above: StartUp $17.99, GrowBig $29.99 a month.', src: 'sg', link: 'host' },
+    { id: 'mail', sec: 'mo', name: 'Company email', note: 'SiteGround includes email with hosting. Google Workspace Starter is $7 per person a month.', src: 'gw', on: true,
+      ctl: { type: 'pick', opts: [['sg', 'SiteGround email (included)'], ['gw1', 'Google Workspace, 1 person'], ['gw2', 'Google Workspace, 2 people'], ['gw3', 'Google Workspace, 3 people']], def: 'sg' },
+      calc: function (v) { var n = { sg: 0, gw1: 1, gw2: 2, gw3: 3 }[v.k] || 0; return { mo: 7 * n }; } },
+
+    { id: 'ins', sec: 'yr', name: 'Insurance: tech errors and omissions, with cyber cover', note: 'Average for app developers is about $68 a month ($810 a year). Traverse holds owners’ names and addresses, so treat it as a must-have. Replace with your quote.', src: 'ins', on: true,
+      ctl: { type: 'money', label: 'Per year $', def: 810 }, calc: function (v) { return { yr: v.n }; } },
+    { id: 'report', sec: 'yr', name: 'Colorado annual report', note: 'Due every year in the month the LLC was formed, from the first anniversary.', src: 'sos', on: true, calc: function () { return { yr2: 25 }; } },
+    { id: 'comyr', sec: 'yr', name: 'Domain renewals', note: 'The .com at $11.08 and each .app at $14.93, from year two.', src: 'pb', link: 'com,app' },
+    { id: 'tnyr', sec: 'yr', name: 'Trade name renewals', note: '$5 each.', src: 'sos', link: 'tn' }
+  ];
+
+  var ADDONS = [
+    { id: 'img', name: 'Sharper aerial photos', blurb: 'The app shows USDA NAIP aerial photos from 2023 and the 2020 Denver-area aerials, both free. Sharper, newer imagery helps roof and lawn calls from the truck.',
+      tiers: [
+        { k: 'none', name: 'Keep the free imagery', sub: 'NAIP 2023 and DRAPP 2020', price: '$0' },
+        { k: 'esri', name: 'Esri World Imagery', sub: 'Often newer and sharper in towns. 2 million map tiles a month free, then $0.15 per 1,000 tiles. A crew stays inside the free amount at today’s size.', price: '$0', unit: 'within the free tier', src: 'esri', c: {} },
+        { k: 'nearmap', name: 'Nearmap', sub: 'Inch-level aerials flown several times a year, built for roofing. Quote only: small-business users report about $2,000+ a year.', price: 'Quote', unit: 'about $2,000+/yr reported', src: 'nearmap', c: { yr: 2000 } }
+      ] },
+    { id: 'skip', name: 'Phone numbers (BatchData skip tracing)', blurb: 'Today a rep looks numbers up one door at a time. BatchData fills them in by the thousand and flags Do Not Call and known litigators. Its cheapest plan has a $2,000 monthly floor.',
+      tiers: [
+        { k: 'none', name: 'Keep looking up by hand', sub: 'Free, one door at a time', price: '$0' },
+        { k: 'g', name: 'Growth', sub: '100,000 records a month (about 2¢ each). Phones, emails, DNC status, litigator scrub, API.', price: '$2,000', unit: '/month', src: 'batch', c: { mo: 2000 } },
+        { k: 'p', name: 'Professional', sub: '300,000 records a month (about 1.7¢ each).', price: '$5,000', unit: '/month', src: 'batch', c: { mo: 5000 } },
+        { k: 's', name: 'Scale', sub: '750,000 records a month (about 1.3¢ each).', price: '$10,000', unit: '/month', src: 'batch', c: { mo: 10000 } }
+      ] },
+    { id: 'hail', name: 'Hail and storm data', blurb: 'The app uses NOAA radar hail estimates and weather-service wind reports, both free. Paid hail maps add verified swaths and storm alerts built for roofers.',
+      tiers: [
+        { k: 'none', name: 'Keep the free NOAA data', sub: 'Radar estimate per door, since 2020', price: '$0' },
+        { k: 'ihm1', name: 'Interactive Hail Maps: Colorado', sub: 'One state, paid yearly or split monthly.', price: '$999', unit: '/year', src: 'ihm', c: { yr: 999 } },
+        { k: 'ihm3', name: 'Interactive Hail Maps: three states', sub: 'For a second and third state.', price: '$1,499', unit: '/year', src: 'ihm', c: { yr: 1499 } },
+        { k: 'ihmn', name: 'Interactive Hail Maps: nationwide', sub: 'Homeowner contact data is extra: $799 a year per state.', price: '$1,999', unit: '/year', src: 'ihm', c: { yr: 1999 } },
+        { k: 'ht', name: 'HailTrace', sub: 'Quote only. Published per-report prices: $40 weather history, $150 meteorologist-reviewed, $1,000 certified.', price: 'Quote', unit: '', src: 'ht', c: {} }
+      ] },
+    { id: 'sms', name: 'Texting customers (Twilio)', blurb: 'Confirmation and reminder texts sent from the app instead of a rep’s own phone. Carriers require a one-time registration first.',
+      tiers: [
+        { k: 'none', name: 'Keep texting from reps’ phones', sub: 'What the app does today', price: '$0' },
+        { k: 'low', name: 'Low volume (under 6,000 texts a day)', sub: '$4 brand + $15 campaign check once; $1.50 campaign + $1.15 number a month; about 0.8¢ per text plus carrier fees.', price: '$2.65', unit: '/month + $19 once', src: 'twilio', c: { up: 19, mo: 2.65 } },
+        { k: 'std', name: 'Standard', sub: '$44 brand + $15 campaign check once; $10 campaign + $1.15 number a month; plus per-text charges.', price: '$11.15', unit: '/month + $59 once', src: 'twilio', c: { up: 59, mo: 11.15 } }
+      ] }
+  ];
+
+  var KEY = 'traverse.budget.v1';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function st(id) { return state[id] || (state[id] = {}); }
+
+  var fmt = function (n) { var r = Math.round(n * 100) / 100; return '$' + r.toLocaleString('en-US', { minimumFractionDigits: r % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
+  var el = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  function srcBadge(line) {
+    var tag = line.src ? SRC[line.src][2] : (line.srcTag || 'est');
+    var s = el('span', 'src ' + tag, TAG[tag]);
+    if (line.src) { var n = Object.keys(SRC).indexOf(line.src) + 1; s.title = SRC[line.src][0]; s.textContent = TAG[tag] + ' · ' + n; }
+    return s;
+  }
+  function val(line) {
+    var s = st(line.id), c = line.ctl;
+    if (!c) return {};
+    if (c.type === 'pick') return { k: s.k || c.def };
+    var n = s.n != null ? s.n : c.def;
+    return { n: Math.max(c.min != null ? c.min : 0, Math.min(c.max != null ? c.max : 1e9, +n || 0)) };
+  }
+  function isOn(line) { var s = st(line.id); return s.on != null ? s.on : line.on !== false; }
+  function amounts(line) { return isOn(line) && line.calc ? line.calc(val(line)) : {}; }
+  var byId = {}; LINES.forEach(function (l) { byId[l.id] = l; });
+
+  function buildRow(line) {
+    var tr = el('tr'); tr.id = 'row-' + line.id;
+    var tdI = el('td', 'inc');
+    if (!line.link) {
+      var cb = el('input'); cb.type = 'checkbox'; cb.id = 'on-' + line.id; cb.checked = isOn(line);
+      cb.setAttribute('aria-label', 'Count ' + line.name);
+      cb.addEventListener('change', function () { st(line.id).on = cb.checked; save(); render(); });
+      tdI.appendChild(cb);
+    }
+    var tdN = el('td', 'item'); tdN.appendChild(el('b', null, line.name)); tdN.appendChild(el('small', null, line.note));
+    if (line.ctl) {
+      var c = line.ctl, box = el('div', 'ctl');
+      if (c.type === 'pick') {
+        var sel = el('select'); sel.id = 'ctl-' + line.id;
+        c.opts.forEach(function (o) { var op = el('option', null, o[1]); op.value = o[0]; sel.appendChild(op); });
+        sel.value = val(line).k;
+        sel.addEventListener('change', function () { st(line.id).k = sel.value; save(); render(); });
+        box.appendChild(sel);
+      } else {
+        var lab = el('label', 'muted', c.label + ' '); var inp = el('input'); inp.type = 'number'; inp.id = 'ctl-' + line.id;
+        inp.min = c.min != null ? c.min : 0; if (c.max != null) inp.max = c.max; inp.step = c.type === 'money' ? '1' : '1'; inp.value = val(line).n;
+        inp.addEventListener('input', function () { st(line.id).n = inp.value === '' ? 0 : +inp.value; save(); render(true); });
+        lab.appendChild(inp); box.appendChild(lab);
+      }
+      tdN.appendChild(box);
+    }
+    var tdS = el('td'); tdS.appendChild(srcBadge(line));
+    var tdA = el('td', 'amt'); tdA.id = 'amt-' + line.id;
+    tr.appendChild(tdI); tr.appendChild(tdN); tr.appendChild(tdS); tr.appendChild(tdA);
+    return tr;
+  }
+
+  function sumLines() {
+    var t = { up: 0, mo: 0, mo2: 0, yr: 0, yr2: 0, refund: 0 };
+    LINES.forEach(function (l) { if (!l.calc) return; var a = amounts(l); for (var k in a) t[k] += a[k]; if (isOn(l) && l.refund) t.refund += l.refund; });
+    return t;
+  }
+  function sumAddons() {
+    var t = { up: 0, mo: 0, yr: 0, picked: [] };
+    ADDONS.forEach(function (a) { var k = st('add-' + a.id).k || 'none'; var tier = a.tiers.filter(function (x) { return x.k === k; })[0]; if (!tier || k === 'none') return; t.picked.push(tier.name); var c = tier.c || {}; t.up += c.up || 0; t.mo += c.mo || 0; t.yr += c.yr || 0; });
+    return t;
+  }
+
+  function render(soft) {
+    LINES.forEach(function (l) {
+      var cell = document.getElementById('amt-' + l.id), row = document.getElementById('row-' + l.id);
+      var shown;
+      if (l.link) {
+        var tot = 0, on = false;
+        l.link.split(',').forEach(function (id) { var src = byId[id]; if (!isOn(src)) return; on = true; var a = src.calc(val(src)); tot += (l.sec === 'mo' ? (a.mo2 || 0) : (a.yr2 || 0)); });
+        shown = tot; row.classList.toggle('off', !on);
+      } else {
+        var a = amounts(l);
+        shown = l.sec === 'up' ? (a.up || 0) : l.sec === 'mo' ? ((a.mo || 0) + (a.mo2 || 0)) : ((a.yr || 0) + (a.yr2 || 0));
+        row.classList.toggle('off', !isOn(l));
+        if (!soft && l.ctl && l.ctl.type !== 'pick') { var i = document.getElementById('ctl-' + l.id); if (i && document.activeElement !== i) i.value = val(l).n; }
+      }
+      cell.textContent = l.id === 'atty' && isOn(l) && !val(l).n ? 'Get a quote' : fmt(shown);
+    });
+    var t = sumLines(), ad = sumAddons();
+    var mo = t.mo + t.mo2, yr = t.yr + t.yr2, y1 = t.up + 12 * t.mo + t.yr;
+    document.getElementById('sumUp').textContent = fmt(t.up);
+    document.getElementById('sumUpNote').textContent = t.refund ? 'of which ' + fmt(t.refund) + ' comes back (tax deposit)' : 'paid once';
+    document.getElementById('sumMo').textContent = fmt(mo);
+    document.getElementById('sumYr').textContent = fmt(yr);
+    document.getElementById('sumY1').textContent = fmt(y1);
+    var plus = function (n) { return n ? '+ ' + fmt(n) + ' with upgrades' : ''; };
+    document.getElementById('addUp').textContent = plus(ad.up);
+    document.getElementById('addMo').textContent = plus(ad.mo);
+    document.getElementById('addYr').textContent = plus(ad.yr);
+    document.getElementById('addY1').textContent = plus(ad.up + 12 * ad.mo + ad.yr);
+    ADDONS.forEach(function (a) {
+      var k = st('add-' + a.id).k || 'none';
+      document.getElementById('card-' + a.id).classList.toggle('on', k !== 'none');
+      a.tiers.forEach(function (x) { var lab = document.getElementById('tier-' + a.id + '-' + x.k); lab.classList.toggle('sel', x.k === k); lab.querySelector('input').checked = x.k === k; });
+    });
+  }
+
+  function buildAddons() {
+    var holder = document.getElementById('addons');
+    ADDONS.forEach(function (a) {
+      var card = el('article', 'addon'); card.id = 'card-' + a.id;
+      card.appendChild(el('h3', null, a.name)); card.appendChild(el('p', null, a.blurb));
+      var tiers = el('div', 'tiers'); tiers.setAttribute('role', 'radiogroup'); tiers.setAttribute('aria-label', a.name);
+      a.tiers.forEach(function (x) {
+        var lab = el('label', 'tier'); lab.id = 'tier-' + a.id + '-' + x.k;
+        var r = el('input'); r.type = 'radio'; r.name = 'add-' + a.id; r.value = x.k; r.id = 'r-' + a.id + '-' + x.k;
+        r.addEventListener('change', function () { st('add-' + a.id).k = x.k; save(); render(); });
+        var mid = el('span'); mid.appendChild(el('b', null, x.name)); mid.appendChild(el('small', null, x.sub));
+        if (x.src) { var b = srcBadge({ src: x.src }); b.style.marginTop = '6px'; mid.appendChild(b); }
+        var pr = el('span', 'price', x.price); if (x.unit) { pr.appendChild(el('small', null, x.unit)); }
+        lab.appendChild(r); lab.appendChild(mid); lab.appendChild(pr); tiers.appendChild(lab);
+      });
+      card.appendChild(tiers); holder.appendChild(card);
+    });
+  }
+
+  function buildSources() {
+    var ol = document.getElementById('srcList');
+    Object.keys(SRC).forEach(function (k) {
+      var li = el('li'); var a = el('a', null, SRC[k][0]); a.href = SRC[k][1]; a.target = '_blank'; a.rel = 'noopener';
+      li.appendChild(a); li.appendChild(document.createTextNode(' — ')); li.appendChild(el('span', 'src ' + SRC[k][2], TAG[SRC[k][2]])); ol.appendChild(li);
+    });
+  }
+
+  ['up', 'mo', 'yr'].forEach(function (sec) { var tb = document.getElementById('tb-' + sec); LINES.filter(function (l) { return l.sec === sec; }).forEach(function (l) { tb.appendChild(buildRow(l)); }); });
+  buildAddons(); buildSources(); render();
+  document.getElementById('reset').addEventListener('click', function () {
+    state = {}; save();
+    LINES.forEach(function (l) { var cb = document.getElementById('on-' + l.id); if (cb) cb.checked = l.on !== false; var c = document.getElementById('ctl-' + l.id); if (c) c.value = l.ctl.type === 'pick' ? l.ctl.def : l.ctl.def; });
+    render();
+  });
+})();
+</script>
