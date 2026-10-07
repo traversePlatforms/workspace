@@ -18,8 +18,15 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const LAYER = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
-const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'highlands-ranch', 'parker', 'castle-pines'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'] };
-const COUNTY = { douglas: 'Douglas', teller: 'Teller' };
+/* 2026-10-07: the editions' counties too (the state layer fills apprValTot on 95-100% of parcels in each; Larimer on none, so
+   Windsor's Larimer side has no value). A town in two counties is listed under both: a parcel the other county answers for is
+   left as it is (below). */
+const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'highlands-ranch', 'parker', 'castle-pines'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'],
+  jefferson: ['arvada'], adams: ['arvada', 'thornton', 'commerce-city'], arapahoe: ['centennial'], weld: ['windsor', 'erie', 'thornton'], boulder: ['erie', 'boulder'], denver: ['denver'] };
+const COUNTY = { douglas: 'Douglas', teller: 'Teller', jefferson: 'JEFFERSON', adams: 'ADAMS', arapahoe: 'ARAPAHOE', weld: 'WELD', boulder: 'BOULDER', denver: 'DENVER' };
+/* El Paso: the state layer carries no value there, but the county assessor's own parcel file does (MARKETVALUE, the assessor's
+   market value; assessor/raw/EPC Parcel Data.txt, refreshed weekly). Matched on the parcel number the walk lists carry. */
+const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain'];
 const OUT = join(HERE, 'value-cache.json');
 
 function csvRows(file) {
@@ -58,11 +65,11 @@ const cache = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : {};
 let asked = 0, got = 0, empty = 0;
 for (const [cty, towns] of Object.entries(TOWNS)) {
   const byParcel = new Map();
-  for (const t of towns) for (const r of csvRows(join(HERE, `${t}.csv`))) {
+  for (const t of towns) { if (!existsSync(join(HERE, `${t}.csv`))) continue; for (const r of csvRows(join(HERE, `${t}.csv`))) {
     if (!r.parcel || !r.lat || !r.lon) continue;
     const key = `${parseFloat(r.lat)},${parseFloat(r.lon)}`;
     (byParcel.get(r.parcel) || byParcel.set(r.parcel, []).get(r.parcel)).push(key);
-  }
+  } }
   const ids = [...byParcel.keys()];
   for (let i = 0; i < ids.length; i += 100) {
     const batch = ids.slice(i, i + 100);
@@ -77,10 +84,30 @@ for (const [cty, towns] of Object.entries(TOWNS)) {
       for (const key of byParcel.get(a.parcel_id) || []) cache[key] = Number.isFinite(v) && v > 0 ? { v, d } : { v: null, d };
       if (Number.isFinite(v) && v > 0) got++; else empty++;
     }
-    for (const p of batch) if (!seen.has(p)) for (const key of byParcel.get(p)) cache[key] = { v: null, d: null };
+    /* not found in this county: blank, unless another county already gave it a value (a town in two counties) */
+    for (const p of batch) if (!seen.has(p)) for (const key of byParcel.get(p)) if (!(cache[key] && cache[key].v > 0)) cache[key] = { v: null, d: null };
     process.stdout.write(`\r  ${COUNTY[cty]}: ${Math.min(i + 100, ids.length)}/${ids.length} parcels`);
   }
   console.log('');
+}
+{
+  const f = join(HERE, 'assessor', 'raw', 'EPC Parcel Data.txt');
+  if (existsSync(f)) {
+    const lines = readFileSync(f, 'latin1').split(/\r?\n/), cols = lines.shift().split('\t'), iP = cols.indexOf('PARCEL'), iV = cols.indexOf('MARKETVALUE'), iD = cols.indexOf('LastUpdate');
+    const mv = new Map();
+    for (const l of lines) { const r = l.split('\t'); if (r.length !== cols.length) continue; const v = parseInt(String(r[iV]).replace(/[^0-9]/g, ''), 10); if (v > 0) mv.set(r[iP].trim(), v); }
+    let n = 0, hit = 0;
+    for (const t of EL_PASO) {
+      if (!existsSync(join(HERE, `${t}.csv`))) continue;
+      for (const r of csvRows(join(HERE, `${t}.csv`))) {
+        if (!r.parcel || !r.lat || !r.lon) continue; n++;
+        const v = mv.get(String(r.parcel).trim());
+        cache[`${parseFloat(r.lat)},${parseFloat(r.lon)}`] = v ? { v, d: null, src: 'El Paso assessor' } : { v: null, d: null };
+        if (v) hit++;
+      }
+    }
+    console.log(`El Paso (assessor file): ${hit} of ${n} doors with a market value`);
+  }
 }
 writeFileSync(OUT, JSON.stringify(cache), 'utf8');
 console.log(`${asked} parcels asked · ${got} with a value · ${empty} blank · ${asked - got - empty} not found -> value-cache.json`);

@@ -27,6 +27,8 @@ for t in $SOLAR; do step "solar-$t" bash -c "cd solar && node sample-solar.mjs -
 step solar-build-c bash -c "cd solar && node sample-solar.mjs --build"
 for t in $PEST; do step "trees-$t" bash -c "cd tree-zones && node sample-trees.mjs --town=$t --conc=6"; done
 step year-c bash -c "cd assessor && node build-year.mjs"
+# county values: the editions' counties and El Paso's assessor file (added 2026-10-07, after Denver's door list)
+step value-c node sample-value.mjs
 step rounds-c2 node build-rounds-data.mjs
 step pest-c bash -c "cd pest && node build-pest.mjs"
 step security-c bash -c "cd security && node build-security.mjs"
