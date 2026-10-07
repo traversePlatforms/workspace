@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold Email Footer</title>
+<!-- Draft 2026-10-07. Every line is from the live site's footer (sixfoldcolorado.com, checked 2026-10-07). Nothing is applied
+     until Matthew pastes it into the Admin console himself. -->
+<style>
+:root{--ink:#0E1512;--soft:#5b6660;--line:#dcd6cb;--bg:#f6f3ee;--card:#ffffff;--ember:#B84C15;--moss:#5f7a52}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--ember:#E4703A;--moss:#8AA07A}}
+:root[data-theme="dark"]{--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--ember:#E4703A;--moss:#8AA07A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
+h1{font:600 28px/1.2 "Palatino Linotype","Book Antiqua",Palatino,serif;margin:0 0 6px}
+h2{font-size:17px;margin:32px 0 10px}
+.sub{color:var(--soft);margin:0 0 24px}
+.mail{background:#ffffff;color:#222;border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px}
+.mail .body{color:#444;margin:0 0 18px}
+.mail .q{color:#999;border-left:3px solid #ddd;padding-left:10px;margin:0 0 18px;font-size:14px}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0}
+button{font:600 15px system-ui,sans-serif;border:0;border-radius:10px;padding:11px 16px;background:var(--ember);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.ok{color:var(--moss);font-weight:600;align-self:center}
+ol{padding-left:22px;margin:0}
+ol li{margin:0 0 10px}
+code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:14px;word-break:break-all}
+.note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--soft);font-size:15px}
+.note b{color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Sixfold email footer</h1>
+  <p class="sub">One footer, added by Google Workspace to every email anyone at Sixfold sends. Below is how it looks under a message.</p>
+
+  <div class="mail">
+    <p class="body">Hi Alex, thanks for walking the yard with us today. Your quote is attached.</p>
+    <!-- the footer itself: this block is what Copy footer copies -->
+    <div id="footer">
+      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif">
+        <tr>
+          <td style="padding:0 14px 0 0;vertical-align:top"><img src="https://sixfoldcolorado.com/assets/email/sixfold-mark-email-64.png" width="52" height="60" alt="Sixfold" style="display:block;border:0"></td>
+          <td style="vertical-align:top;border-left:2px solid #8AA07A;padding:0 0 0 14px">
+            <div style="font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;font-size:18px;font-weight:bold;color:#0E1512;line-height:1.2">Sixfold Colorado</div>
+            <div style="font-size:13px;color:#5b6660;line-height:1.5;margin-top:2px">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation</div>
+            <div style="font-size:13px;line-height:1.5;margin-top:4px"><a href="tel:+13039151045" style="color:#B84C15;text-decoration:none;font-weight:bold">(303) 915-1045</a> <span style="color:#b9b2a6">·</span> <a href="mailto:Contact@SixfoldColorado.com" style="color:#B84C15;text-decoration:none">Contact@SixfoldColorado.com</a> <span style="color:#b9b2a6">·</span> <a href="https://sixfoldcolorado.com" style="color:#B84C15;text-decoration:none">SixfoldColorado.com</a></div>
+            <div style="font-size:12px;color:#8a918c;line-height:1.5;margin-top:2px">Monument, CO · serving El Paso, Teller and Douglas counties</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <p class="q" style="margin-top:18px">The footer goes at the very end of each email, so in a long reply thread it sits under the quoted text.</p>
+  </div>
+  <div class="btns">
+    <button type="button" id="copy">Copy footer</button>
+    <button type="button" class="alt" id="copytxt">Copy as plain text</button>
+    <span class="ok" id="msg" role="status"></span>
+  </div>
+
+  <h2>1. Put the logo online (once)</h2>
+  <p>Gmail's footer can only show a picture from a public website, not from Google Drive. Upload both files from <code>sixfold\site\assets\email\</code> to <code>public_html/assets/email/</code> on sixfoldcolorado.com, so this address opens the picture:</p>
+  <p><code>https://sixfoldcolorado.com/assets/email/sixfold-mark-email-64.png</code></p>
+
+  <h2>2. Add the footer for everyone</h2>
+  <ol>
+    <li>Sign in to <code>admin.google.com</code> with the Sixfold super admin account.</li>
+    <li>Go to <b>Apps → Google Workspace → Gmail → Compliance</b>.</li>
+    <li>Pick the top organizational unit on the left, so it covers the whole team.</li>
+    <li>Find <b>Append footer</b> and click <b>Configure</b>. Name it <i>Sixfold footer</i>.</li>
+    <li>Click into the footer box and paste (Ctrl+V) what <b>Copy footer</b> copied. If the picture doesn't come across, put the cursor at the start, click the picture button and enter the address from step 1.</li>
+    <li>Leave <b>Also apply footer for internal messages</b> unticked, so emails between the team stay clean.</li>
+    <li>Click <b>Save</b>. Changes can take up to an hour to reach everyone. Send yourself a test to an outside address, like a personal Gmail.</li>
+  </ol>
+
+  <h2>3. Each person's own name (optional)</h2>
+  <p class="note"><b>The footer is the same for everyone</b>, so it carries the company, not a name. Anyone who wants their name and role on their emails can add a short personal signature in Gmail (Settings → See all settings → Signature), for example just their name and role on one line. Keep the phone, email and logo out of it, because the footer already adds them.</p>
+  <p class="note" style="margin-top:10px"><b>If the paste drops the side-by-side layout</b> (the admin editor accepts formatting, not page code), use <b>Copy as plain text</b> instead, paste it, then bold the first line and add the picture with the picture button. It still reads well stacked.</p>
+</main>
+<script>
+(function () {
+  var msg = document.getElementById('msg');
+  function say(t) { msg.textContent = t; setTimeout(function () { msg.textContent = ''; }, 4000); }
+  var html = document.getElementById('footer').innerHTML;   /* taken before the preview swap below, so it keeps the live address */
+  /* until the logo is uploaded (step 1), the preview shows the local copy; what is copied still points at the website */
+  var lg = document.querySelector('#footer img');
+  function local() { lg.src = '../../site/assets/email/sixfold-mark-email-64.png'; }
+  if (lg.complete && !lg.naturalWidth) local(); else lg.addEventListener('error', local);
+  var text = 'Sixfold Colorado\nLawn & turf care · Landscaping · Land clearing · Fire mitigation\n(303) 915-1045 · Contact@SixfoldColorado.com · SixfoldColorado.com\nMonument, CO · serving El Paso, Teller and Douglas counties';
+  function selectCopy(el) {
+    var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    s.removeAllRanges(); return ok;
+  }
+  document.getElementById('copy').addEventListener('click', function () {
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })])
+          .then(function () { say('Copied. Paste it into the footer box.'); }, function () { say(selectCopy(document.getElementById('footer')) ? 'Copied. Paste it into the footer box.' : 'Select the footer above and press Ctrl+C.'); });
+        return;
+      }
+    } catch (e) {}
+    say(selectCopy(document.getElementById('footer')) ? 'Copied. Paste it into the footer box.' : 'Select the footer above and press Ctrl+C.');
+  });
+  document.getElementById('copytxt').addEventListener('click', function () {
+    var done = function () { say('Plain text copied.'); };
+    try { navigator.clipboard.writeText(text).then(done, function () { say('Select the text and press Ctrl+C.'); }); } catch (e) { say('Select the text and press Ctrl+C.'); }
+  });
+})();
+</script>
+</body>
+</html>
