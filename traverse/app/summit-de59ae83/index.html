@@ -2606,6 +2606,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
     }
     view.appendChild(alertStrip(S.region));          /* this town's fire weather and nearby fires (SX-41) */
+    if (bestTrade() === 'yards') view.appendChild(seasonStrip(S.region));   /* frost dates and the last 30 days of rain (2026-10-07) */
     view.appendChild(aroundStrip(S.region));         /* neighbours of jobs won here (2026-10-03) */
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
@@ -6754,6 +6755,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* FEMA's National Risk Index (2026-10-07) for the door's census tract: FEMA's rating against every US tract and how many events
      a year it counts there. An area fact from FEMA, said as one; it rates the tract, never the house. Roofing: hail, strong wind,
      tornado. A lawn and yard card (fire on, hail off): wildfire. */
+  /* frost and rain for the town (2026-10-07, TraverseYards): NOAA's 1991-2020 frost dates at the nearest station that has them,
+     and the last 30 days of rain at the nearest gauge that reported, against the normal for the same days. Loads after the list. */
+  function seasonStrip(region) {
+    var box = q('div', 'sub2 season');
+    api('climate', { params: { region: region } }).then(function (j) {
+      if (!j || !j.ok || !j.climate || S.region !== region) return;
+      var c = j.climate, lines = [], now = new Date(), y = now.getFullYear();
+      var dateOf = function (md) { var p = String(md || '').split('/'); return p.length === 2 ? new Date(y, +p[0] - 1, +p[1]) : null; };
+      var nice = function (md) { var d = dateOf(md); return d ? d.getDate() + ' ' + MONTHS[d.getMonth()] : md; };
+      var inDays = function (d) { return Math.ceil((d - new Date(y, now.getMonth(), now.getDate())) / 86400000); };
+      var f = c.frost;
+      if (f) {
+        var first = dateOf(f.first), last = dateOf(f.last), hard = dateOf(f.hardFirst), s;
+        if (last && now < last) { var n0 = inDays(last); s = 'Last spring frost here is usually around ' + nice(f.last) + (n0 > 0 ? ' (in ' + n0 + (n0 === 1 ? ' day)' : ' days)') : ''); }
+        else if (first && now < first) { var n1 = inDays(first); s = 'First frost here is usually around ' + nice(f.first) + ' (in ' + n1 + (n1 === 1 ? ' day)' : ' days)') + (f.hardFirst ? '; a hard freeze around ' + nice(f.hardFirst) : ''); }
+        else s = 'Past the usual first frost here (' + nice(f.first) + ')' + (hard ? (now < hard ? '; a hard freeze usually comes around ' + nice(f.hardFirst) + ' (in ' + inDays(hard) + (inDays(hard) === 1 ? ' day)' : ' days)') : '; and the usual hard freeze (' + nice(f.hardFirst) + ')') : '');
+        lines.push(s + '. NOAA 1991–2020 averages, ' + f.name.replace(/\b([A-Z])([A-Z]{3,})\b/g, function (m, a, b) { return a + b.toLowerCase(); }) + ' station' + (f.km ? ', ' + f.km + ' km away' : '') + '.');
+      }
+      var r = c.rain;
+      if (r) {
+        var thr = new Date(r.through + 'T12:00:00');
+        var t2 = 'Rain in the 30 days to ' + thr.getDate() + ' ' + MONTHS[thr.getMonth()] + ': ' + r.in.toFixed(2) + ' in';
+        if (r.normal != null) t2 += ', against ' + r.normal.toFixed(2) + ' in normal for those days' + (r.normal > 0 ? ' (' + Math.round(100 * r.in / r.normal) + '% of normal)' : '');
+        lines.push(t2 + '. Gauge ' + r.gauge.replace(/\b([A-Z])([A-Z]{3,})\b/g, function (m, a, b) { return a + b.toLowerCase(); }) + ', ' + r.km + ' km away (NOAA).');   /* "NNW 0.5" stays in capitals */
+      }
+      lines.forEach(function (l) { box.appendChild(q('div', null, l)); });
+    }).catch(function () {});
+    return box;
+  }
   /* the Census Bureau's American Community Survey for the door's block group (2026-10-07): a few hundred homes around it.
      Estimates for the area, with margins of error; said as such, never as the house. */
   function kUsd(n) { return n >= 1000000 ? '$' + (Math.round(n / 100000) / 10) + 'M' : '$' + Math.round(n / 1000) + 'k'; }

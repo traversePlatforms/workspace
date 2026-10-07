@@ -236,3 +236,7 @@ traverse/app/data/rounds/nri-*.json
 # Census block-group cache (2026-10-07), refetchable; and the generated per-town files
 traverse/data-pipeline/door-territory/census/census-cache.json
 traverse/app/data/rounds/census-*.json
+
+# Yards frost and rain (2026-10-07): generated, and the server's rain cache
+traverse/app/data/rounds/climate.json
+traverse/app/data/rounds/climate-cache.json

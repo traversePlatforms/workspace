@@ -2913,6 +2913,54 @@ function secMapCity(string $city): ?array {
     return ['name' => $c['name'], 'source' => $c['source'], 'centre' => $c['centre'], 'zoom' => $c['zoom'], 'through' => $through, 'at' => time(),
             'grid' => ['lat0' => $n, 'lon0' => $w, 'dy' => SECMAP_DY, 'dx' => SECMAP_DX], 'cells' => array_values($cells)];
 }
+/* ---- frost and rain (2026-10-07, TraverseYards) ----
+ * climate.json (data-pipeline/door-territory/climate/build-climate.mjs) holds each town's frost dates (NOAA 1991-2020 normals at
+ * the nearest station that has them), that station's year-to-date normal rain by day, and the nearest rain gauges. Here: the last
+ * 30 days of rain at the first gauge that reported most of them (NCEI Access Data Service, daily summaries; no key), against the
+ * normal for the same 30 days. Fetched at most every 6 hours per town; a failed fetch keeps the last answer. */
+if ($action === 'climate') {
+    if ($role !== 'admin' || company()['best'] !== 'yards') fail('Not here.', 404);
+    $ckey = (string) ($_GET['region'] ?? '');
+    $C = json_decode((string) @file_get_contents(DATA_DIR . '/climate.json'), true) ?: [];
+    $t = $C['towns'][$ckey] ?? null;
+    if (!$t) out(['ok' => true, 'climate' => null]);
+    $res = ['frost' => $t['frost'] ?? null, 'rain' => null];
+    if (!empty($t['gauges'])) {
+        $cf = DATA_DIR . '/climate-cache.json';
+        $cache = json_decode((string) @file_get_contents($cf), true) ?: [];
+        $hit = $cache[$ckey] ?? null;
+        if (!$hit || ($hit['at'] ?? 0) < time() - 6 * 3600) {
+            $url = 'https://www.ncei.noaa.gov/access/services/data/v1?' . http_build_query(['dataset' => 'daily-summaries', 'stations' => implode(',', array_column($t['gauges'], 0)),
+                'startDate' => date('Y-m-d', time() - 45 * 86400), 'endDate' => date('Y-m-d'), 'dataTypes' => 'PRCP', 'units' => 'standard', 'format' => 'json']);
+            $rows = httpJsonPlain($url, [agentHeader(), 'Accept: application/json']);
+            if (is_array($rows)) {
+                $by = [];
+                foreach ($rows as $r) { $p = trim((string) ($r['PRCP'] ?? '')); if ($p !== '' && is_numeric($p)) $by[(string) $r['STATION']][(string) $r['DATE']] = (float) $p; }
+                $rain = null;
+                foreach ($t['gauges'] as [$gid, $gname, $gkm]) {          /* nearest first: the first that reported at least 24 of its last 30 days */
+                    if (empty($by[$gid])) continue;
+                    $days = $by[$gid]; ksort($days); $thru = array_key_last($days);
+                    $from = date('Y-m-d', strtotime($thru) - 29 * 86400);
+                    $win = array_filter($days, fn($v, $d) => $d >= $from && $d <= $thru, ARRAY_FILTER_USE_BOTH);
+                    if (count($win) < 24) continue;
+                    $rain = ['in' => round(array_sum($win), 2), 'days' => count($win), 'from' => $from, 'through' => $thru, 'gauge' => $gname, 'km' => $gkm];
+                    break;
+                }
+                /* the normal for those 30 days, from the frost station's year-to-date normals */
+                if ($rain && !empty($t['ytd']) && !empty($C['ytdDays'])) {
+                    $pos = array_flip($C['ytdDays']);
+                    $at = function (string $ymd) use ($pos, $t) { $k = substr($ymd, 5); return $t['ytd'][$pos[$k] ?? ($pos[$k === '02-29' ? '02-28' : $k] ?? 0)] ?? null; };
+                    $end = $at($rain['through']); $before = $at(date('Y-m-d', strtotime($rain['from']) - 86400));
+                    if ($end !== null && $before !== null) $rain['normal'] = round($end >= $before ? $end - $before : end($t['ytd']) - $before + $end, 2);
+                }
+                $hit = ['at' => time(), 'rain' => $rain];
+                $cache[$ckey] = $hit; writeJsonAtomic($cf, $cache);
+            }
+        }
+        $res['rain'] = $hit['rain'] ?? null;
+    }
+    out(['ok' => true, 'climate' => $res]);
+}
 if ($action === 'secmap') {
     if (!securityOn($role)) fail('Not here.', 404);
     $f = DATA_DIR . '/secmap-cache.json';
