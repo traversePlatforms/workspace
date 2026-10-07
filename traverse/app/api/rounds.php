@@ -1687,6 +1687,11 @@ const ALERT_TOWNS = [
 const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
     'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch',
     'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning'];
+/* per install (Matthew 2026-10-06: "only include the weather alerts that are relative to each edition"): company.json "alerts"
+   lists the events this install shows and pushes, and wildfires only when it names 'Wildfires'. Without it (Sixfold), ALERT_EVENTS
+   and the wildfire feed as before. Freeze and frost are fetched for the lawn edition. */
+const ALERT_EXTRA = ['Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'];
+function alertEvents(): ?array { $a = company()['alerts'] ?? null; return is_array($a) ? array_values(array_map('strval', $a)) : null; }
 /* hail (Matthew 2026-10-05): the storm alerts go only where hail is on (admins of a company with features.hail); a warning
    carries the NWS's own hail size and wind gust. Each one seen is remembered for STORM_KEEP so the storm call list still
    works the day after, when the warning has left the live feed. */
@@ -1756,7 +1761,7 @@ function freshAlerts(int $maxAge = 600): array {
         if ($j === null) { $wOk = false; continue; }
         foreach (($j['features'] ?? []) as $ft) {
             $p = $ft['properties'] ?? [];
-            if (!in_array($p['event'] ?? '', ALERT_EVENTS, true)) continue;
+            if (!in_array($p['event'] ?? '', ALERT_EVENTS, true) && !in_array($p['event'] ?? '', ALERT_EXTRA, true)) continue;
             $id = (string) ($p['id'] ?? $ft['id'] ?? '');
             if (!isset($weather[$id])) $weather[$id] = ['event' => $p['event'], 'headline' => (string) ($p['headline'] ?? ''),
                 'ends' => (string) ($p['ends'] ?? $p['expires'] ?? ''), 'severity' => (string) ($p['severity'] ?? ''),
@@ -1796,8 +1801,14 @@ function freshAlerts(int $maxAge = 600): array {
 }
 if ($action === 'alerts') {
     $a = freshAlerts();
-    $w = array_values(array_filter($a['weather'] ?? [], fn($x) => !isStorm($x) || hailOn($role)));   /* storms: where hail is on only */
-    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $w, 'fires' => $a['fires'] ?? [], 'stale' => !empty($a['stale'])]);
+    $list = alertEvents();
+    $w = array_values(array_filter($a['weather'] ?? [], function ($x) use ($list, $role) {
+        $ev = (string) ($x['event'] ?? '');
+        if ($list === null) return in_array($ev, ALERT_EVENTS, true) && (!isStorm($x) || hailOn($role));   /* storms: where hail is on only */
+        return in_array($ev, $list, true) && (!isStorm($x) || !feature('hail') || hailOn($role));          /* a storm is a safety warning where there is no hail card */
+    }));
+    $fires = $list === null || in_array('Wildfires', $list, true) ? ($a['fires'] ?? []) : [];
+    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $w, 'fires' => $fires, 'stale' => !empty($a['stale'])]);
 }
 
 /* ---- around our jobs (2026-10-03, after GlassHouse) ------------------------------------
@@ -2322,6 +2333,7 @@ if ($action === 'stormdoors') {
  * push-subscriptions.json. The cron job (sixfold-tools/push-alerts.php, every 5 minutes) runs action=pushcron. */
 const PUSH_STORM = ['Severe Thunderstorm Warning', 'Tornado Warning', 'High Wind Warning'];
 const PUSH_FIRE = ['Red Flag Warning', 'Fire Warning'];
+const PUSH_FREEZE = ['Freeze Warning', 'Hard Freeze Warning'];   /* only where company.json "alerts" names them (the lawn edition) */
 const PUSH_MAX_DEVICES = 4;
 function pushPrivDir(): string { $p = dirname(__DIR__, 2) . '/sixfold-private'; return is_dir($p) ? $p : dirname(DATA_DIR); }
 function pushVapid(bool $make = false): ?array {
@@ -2415,10 +2427,13 @@ if ($action === 'pushcron') {
     foreach (($idx['regions'] ?? []) as $rg) { $label[$rg['key']] = $rg['label']; foreach (loadAssign($rg['key']) as $who) $townsOf[$who][$rg['key']] = true; }
     $co = company(); $stormAll = feature('hail') && (($co['card']['hail'] ?? true) !== false); $stormAdmins = feature('hail');
     $fireOn = ($co['card']['fire'] ?? true) !== false;   /* 2026-10-06: fire warnings only where the company shows fire (not a roofer's app) */
+    $list = alertEvents();
+    if ($list !== null && !feature('hail')) $stormAll = true;   /* an edition's storm warnings are for everyone's safety */
     $pushed = [];
     foreach (($al['weather'] ?? []) as $w) {
         $id = (string) ($w['id'] ?? ''); $ev = (string) ($w['event'] ?? '');
-        $storm = in_array($ev, PUSH_STORM, true); $fire = $fireOn && in_array($ev, PUSH_FIRE, true);
+        if ($list === null) { $storm = in_array($ev, PUSH_STORM, true); $fire = $fireOn && in_array($ev, PUSH_FIRE, true); }
+        else { $storm = in_array($ev, $list, true) && in_array($ev, array_merge(PUSH_STORM, PUSH_FREEZE), true); $fire = in_array($ev, $list, true) && in_array($ev, PUSH_FIRE, true); }
         if ($id === '' || (!$storm && !$fire) || isset($sent[$id])) continue;
         $ends = strtotime((string) ($w['ends'] ?? '')) ?: time() + 3600;
         if ($ends < time()) continue;
@@ -2538,6 +2553,64 @@ if ($action === 'leadstatus') {
 }
 
 /* security edition: the town figures, and neighbourhoods ranked by reported property crime nearby (data/rounds/security-*.json) */
+/* ---- crime map (Matthew 2026-10-06, TraverseSecurity: "a crime map like a live radar") ----
+ * Property crime reported to Colorado Springs police in the last 90 days, counted in squares of about 280 m: a square, never a
+ * house or a point. From the city's open data (policedata.coloradosprings.gov, dataset bc88-hemr: burglary, vehicle theft and
+ * break-ins, other theft, vandalism; never domestic). Refreshed at most every 12 hours; a failed refresh keeps the last good map. */
+const SECMAP_KINDS = ['Burglary/Breaking & Entering' => 'b', 'Motor Vehicle Theft' => 'v', 'Theft From Motor Vehicle' => 'v',
+    'Theft Of Motor Vehicle Parts' => 'v', 'All Other Larceny' => 't', 'Theft From Building' => 't', 'Destruction/Damage/Vandalism of Property' => 'd'];
+const SECMAP_BOX = [39.08, -104.95, 38.68, -104.55];   /* N, W, S, E: the city with a margin */
+const SECMAP_DY = 0.0025, SECMAP_DX = 0.0032, SECMAP_DAYS = 90, SECMAP_AGE = 12 * 3600;
+function secMapFetch(): ?array {
+    $kinds = implode(',', array_map(fn($k) => "'" . str_replace("'", "''", $k) . "'", array_keys(SECMAP_KINDS)));
+    [$n, $w, $s, $e] = SECMAP_BOX;
+    $since = date('Y-m-d', time() - (SECMAP_DAYS + 1) * 86400);
+    $where = "reporteddate > '$since' AND domestic = 'No' AND crimecodedescription IN ($kinds) AND within_box(location_point, $n, $w, $s, $e)";
+    $seen = []; $cells = []; $through = '';
+    for ($off = 0; $off < 200000; $off += 50000) {
+        $url = 'https://policedata.coloradosprings.gov/resource/bc88-hemr.json?' . http_build_query(['$select' => 'casenumber,reporteddate,crimecodedescription,location_point',
+            '$where' => $where, '$limit' => 50000, '$offset' => $off, '$order' => 'casenumber']);
+        $rows = null;
+        if (function_exists('curl_init')) {
+            $c = curl_init($url);
+            curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 40, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_HTTPHEADER => [agentHeader(), 'Accept: application/json']]);
+            $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
+            if ($body !== false && $code === 200) $rows = json_decode((string) $body, true);
+        } else $rows = httpJsonPlain($url, [agentHeader(), 'Accept: application/json']);
+        if (!is_array($rows)) return null;
+        foreach ($rows as $r) {
+            $k = SECMAP_KINDS[$r['crimecodedescription'] ?? ''] ?? null; $pt = $r['location_point']['coordinates'] ?? null;
+            if (!$k || !is_array($pt) || count($pt) < 2) continue;
+            $id = ($r['casenumber'] ?? '') . '|' . $k; if (isset($seen[$id])) continue; $seen[$id] = 1;   /* one case, several offences: once per kind */
+            $row = (int) floor(($n - (float) $pt[1]) / SECMAP_DY); $col = (int) floor(((float) $pt[0] - $w) / SECMAP_DX);
+            $day = substr((string) ($r['reporteddate'] ?? ''), 0, 10);
+            $key = $row . ',' . $col;
+            if (!isset($cells[$key])) $cells[$key] = [$row, $col, 0, 0, 0, 0, 0];   /* row, col, b, v, t, d, of them in the last 30 days */
+            $cells[$key][['b' => 2, 'v' => 3, 't' => 4, 'd' => 5][$k]]++;
+            if ($day >= date('Y-m-d', time() - 30 * 86400)) $cells[$key][6]++;
+            if ($day > $through) $through = $day;
+        }
+        if (count($rows) < 50000) break;
+    }
+    return ['at' => time(), 'through' => $through, 'days' => SECMAP_DAYS, 'grid' => ['lat0' => $n, 'lon0' => $w, 'dy' => SECMAP_DY, 'dx' => SECMAP_DX],
+            'cells' => array_values($cells), 'source' => 'Colorado Springs Police Department, Crime Level Data'];
+}
+if ($action === 'secmap') {
+    if (!securityOn($role)) fail('Not here.', 404);
+    $f = DATA_DIR . '/secmap-cache.json';
+    $m = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: null) : null;
+    if (!$m || ($m['at'] ?? 0) < time() - SECMAP_AGE) {
+        $fp = @fopen($f . '.lock', 'c');
+        if ($fp && flock($fp, LOCK_EX | LOCK_NB)) {
+            $fresh = secMapFetch();
+            if ($fresh) { @file_put_contents($f, json_encode($fresh, JSON_UNESCAPED_SLASHES), LOCK_EX); $m = $fresh; }
+            flock($fp, LOCK_UN); fclose($fp);
+        }
+    }
+    if (!$m) fail('The police map could not be reached. Try again in a few minutes.', 503);
+    out(['ok' => true, 'stale' => ($m['at'] ?? 0) < time() - SECMAP_AGE] + $m);
+}
+
 if ($action === 'secrates' || $action === 'seclist') {
     if (!securityOn($role)) fail('Not here.', 404);
     if ($action === 'secrates') out(['ok' => true] + (json_decode((string) @file_get_contents(DATA_DIR . '/security-rates.json'), true) ?: []));

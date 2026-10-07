@@ -505,6 +505,12 @@
   .aerial .amap{flex:1;min-height:0;position:relative;isolation:isolate;z-index:0;background:#2a332e}
   .aerial .afoot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;flex-wrap:wrap;
     background:var(--card);border-top:1px solid var(--line)}
+  /* a data block on a phone (Matthew 2026-10-06): its heading and first line, then More (fold()) */
+  .ftog{display:none}
+  @media (max-width:700px){
+    .fold:not(.open) .fmore{display:none !important}
+    .fold .ftog{display:inline-block;margin-top:3px;padding:2px 0;font-weight:700}
+  }
   .aerial .alegend{padding:10px 14px 0;font-size:13px;line-height:1.45;color:var(--ink);display:flex;flex-direction:column;gap:5px}
   .aerial .alegend .k{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
   .aerial .alegend .soft{color:var(--soft);font-size:12px}
@@ -1384,7 +1390,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      settings (Sixfold does), and the Roofing preview always shows them */
   var ROOF_SHOW = { hail: 1, roof: 1 };
   function cardOn(k) {
-    if (S.region === SAMPLE_KEY) return true;      /* the Sample door shows every part, whatever the switches say */
+    /* the Sample door follows the switches too (Matthew 2026-10-06: one sample door per edition, not one with everything) */
     if (roofOn()) { if (ROOF_HIDE[k]) return false; if (ROOF_SHOW[k]) return true; }
     return !(CO && CO.card && CO.card[k] === false);
   }
@@ -1922,7 +1928,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var storms = cardOn('hail') ? here.filter(isStormA) : [];      /* the server sends storms only where hail is on; the card switch decides here */
       if (storms.length) holder.appendChild(stormStrip(j, storms, townKey));
       var fireOn = cardOn('fire');
-      var w = here.filter(function (a) { return !isStormA(a) && (fireOn || !FIRE_EV[a.event]); });
+      /* without the hail card a storm warning is an ordinary safety alert (the editions, 2026-10-06) */
+      var w = here.filter(function (a) { return (!isStormA(a) || !cardOn('hail')) && (fireOn || !FIRE_EV[a.event]); });
       var fires = !fireOn ? [] : (j.fires || []).filter(function (f) { return !townKey || (f.dist ? f.dist[townKey] <= 30 : f.near === townKey); });
       if (!w.length && !fires.length) return;
       var fk = townKey && fires[0] && fires[0].dist ? townKey : fires[0] && fires[0].near, fm = fires[0] ? (fires[0].dist && fk ? fires[0].dist[fk] : fires[0].miles) : 0;
@@ -1953,14 +1960,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         (f.acres ? ' · ' + Math.round(f.acres).toLocaleString('en-US') + ' acres' : '') + (f.contained !== null && f.contained !== undefined ? ' · ' + Math.round(f.contained) + '% contained' : '') + '.'));
       box.appendChild(row);
     });
-    box.appendChild(q('div', null, 'Never knock inside an evacuation area or near an active fire. After a scare, lead with help: a free look at the property, the tax credit, what insurers now have to count.'));
-    if (S.role === 'admin') {
+    /* the fire lines only where there is fire to speak of (an edition's freeze or storm warning has nothing to do with them) */
+    var fireTalk = fires.length || w.some(function (a) { return FIRE_EV[a.event]; });
+    if (fireTalk) box.appendChild(q('div', null, 'Never knock inside an evacuation area or near an active fire. After a scare, lead with help: a free look at the property, the tax credit, what insurers now have to count.'));
+    if (S.role === 'admin' && fireTalk) {
       var cl = q('button', 'back', 'Call list: check in with our customers in these towns'); cl.type = 'button';
       cl.addEventListener('click', callListView);
       box.appendChild(cl);
     }
     if (j.sample) { box.appendChild(q('div', 'soft', 'Made-up alerts for the sample door. Real ones come from the National Weather Service and the national wildfire feed.')); return box; }
-    box.appendChild(q('div', 'soft', 'Weather: National Weather Service. Fires: national interagency incident feed (prescribed burns left out). Checked ' +
+    box.appendChild(q('div', 'soft', 'Weather: National Weather Service.' + (fireTalk ? ' Fires: national interagency incident feed (prescribed burns left out).' : '') + ' Checked ' +
       new Date(j.at * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' }) + (j.stale ? '; one feed did not answer, so part of this is older' : '') + '.'));
     return box;
   }
@@ -2403,7 +2412,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'door', 'Door rounds', 'Knock a neighbourhood. Works with no signal.', null, start),
       tile('button', 'chart', 'My stats', 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
-      tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView)]);
+      tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView),
+      radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colours mean.', null, function () { hailMapView(null, chooseView); }) : null,
+      feat('security') && S.role === 'admin' ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', 'Admin only', crimeMapView) : null].filter(Boolean));
     /* a manager is crew plus their own team (Matthew 2026-10-05): leads to hand out, the team's numbers and territories */
     if (S.role === 'manager') grp('Your team', [
       tile('button', 'clip', 'Leads', 'New enquiries to hand out, and your team\u2019s.', 'Manager', teamLeadsView),
@@ -2436,7 +2447,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
-        tile('button', 'door', 'Sample door', 'One made-up door with every part of the card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)]);
+        tile('button', 'door', 'Sample door', 'One made-up door with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     view.appendChild(box);
@@ -2499,6 +2510,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (sc.children.length) pi.appendChild(sc);
     pg.appendChild(pi);
     view.appendChild(pg);
+    if (S.role === 'admin' && feat('security') && cardOn('security')) {
+      /* security: the police or sheriff's figures for the whole town, once here, not on every door (Matthew 2026-10-06) */
+      var tf = q('div', 'sub2 townsec'); view.appendChild(tf);
+      secRates(function (sr) {
+        var ori = sr.towns && sr.towns[S.region], a = ori && sr.agencies && sr.agencies[ori]; if (!a || !a.property) return;
+        var line = function (lbl, x) { return x ? x.n + ' ' + lbl + (x.per1k != null ? ' (' + x.per1k + ' per 1,000 people)' : '') : ''; };
+        tf.appendChild(document.createTextNode('Town figures, ' + a.name + ', 12 months to ' + monthName(a.property.to) + ': ' +
+          [line('burglaries', a.burglary), line('vehicle thefts', a.mvt), line('property crimes in all', a.property)].filter(Boolean).join(' \u00b7 ') +
+          '. Doors near Colorado Springs police reports carry their own counts within 1 mile.'));
+      });
+    }
     var pend = queue().length + (S.photoPending || 0);
     if (pend) view.appendChild(q('div', 'msg bad', pend + (pend === 1 ? ' change' : ' changes') + ' saved on this phone, waiting for signal. They send by themselves.'));
 
@@ -3201,7 +3223,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!g[k[0]]) return;
         var bar = q('div', 'bgoal'), v = c[k[0]], pctv = Math.min(100, Math.round(100 * v / g[k[0]]));
         var tr = q('div', 'btr'), fl = q('div', 'bfl' + (v >= g[k[0]] ? ' hit' : '')); fl.style.width = pctv + '%'; tr.appendChild(fl);
-        bar.appendChild(tr); bar.appendChild(q('span', null, v + ' / ' + g[k[0]] + ' ' + k[1]));
+        bar.appendChild(tr); bar.appendChild(q('span', null, v + ' of ' + g[k[0]] + ' ' + k[1] + ' (today\u2019s goal)'));
         mid.appendChild(bar);
       });
       row.appendChild(mid);
@@ -3531,21 +3553,40 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(ed);
     return box;
   }
+  function fold(b, key) {
+    var t = b.lastElementChild; if (!t) return b;
+    var seenHl = false, more = t.querySelectorAll('.fmore').length;
+    [].slice.call(t.children).forEach(function (c, i) {
+      if (c.classList.contains('fkeep') || c.classList.contains('fmore')) return;
+      if (i === 0 && c.tagName === 'SMALL') return;
+      if (!seenHl && c.classList.contains('hl')) { seenHl = true; return; }
+      c.classList.add('fmore'); more++;
+    });
+    if (!more) return b;
+    b.classList.add('fold');
+    S.foldOpen = S.foldOpen || {};
+    var tg = q('button', 'lnk ftog'); tg.type = 'button';
+    var set = function (open) { b.classList.toggle('open', open); tg.textContent = open ? 'Less' : 'More'; tg.setAttribute('aria-expanded', String(open)); };
+    set(!!S.foldOpen[key]);
+    tg.addEventListener('click', function (e) { e.stopPropagation(); S.foldOpen[key] = !S.foldOpen[key]; set(S.foldOpen[key]); });
+    t.appendChild(tg);
+    return b;
+  }
   /* what is saved on the door: walk, phone, note, email, extra work, fire check, photos. A block
      hides while its form is open in the capture panel, so an untouched card stays short. */
   function extras(d) {
     var wrap = q('div', 'xt');
-    if (d.com) wrap.appendChild(comBlock(d));   /* commercial test buildings: what it is and who to ask for */
+    if (d.com) wrap.appendChild(fold(comBlock(d), d.id + ':com'));   /* commercial test buildings: what it is and who to ask for */
     if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id && S.editWalk !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
     else if (!d.phone && !capOpen(d)) wrap.appendChild(lookupButton(d));   /* Look up number (2026-10-04) */
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
-    if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(hailBlock(d));             /* hail near the house: the server sends it to admins only */
-    if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(windBlock(d));             /* wind reported near the house (2026-10-05): rides with hail */
-    if (d.sec && cardOn('security')) wrap.appendChild(secBlock(d));     /* security (2026-10-06): admins only, where the company has security on */
-    if (d.pest && cardOn('pest')) wrap.appendChild(pestBlock(d));      /* pest (2026-10-06): the server sends it to admins only, where the company has pest on */
-    if (d.solar && cardOn('solar')) wrap.appendChild(solarBlock(d));   /* solar (2026-10-06): the server sends it to admins only, where the company has solar on */
-    if (cardOn('roof')) wrap.appendChild(roofBlock(d));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
+    if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(fold(hailBlock(d), d.id + ':hail'));             /* hail near the house: the server sends it to admins only */
+    if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(fold(windBlock(d), d.id + ':wind'));             /* wind reported near the house (2026-10-05): rides with hail */
+    if (d.sec && feat('security') && cardOn('security')) wrap.appendChild(fold(secBlock(d), d.id + ':sec'));     /* security (2026-10-06): admins only, where the company has security on */
+    if (d.pest && feat('pest') && cardOn('pest')) wrap.appendChild(fold(pestBlock(d), d.id + ':pest'));      /* pest (2026-10-06): the server sends it to admins only, where the company has pest on */
+    if (d.solar && feat('solar') && cardOn('solar')) wrap.appendChild(fold(solarBlock(d), d.id + ':solar'));   /* solar (2026-10-06): the server sends it to admins only, where the company has solar on */
+    if (cardOn('roof')) wrap.appendChild(fold(roofBlock(d), d.id + ':roof'));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
     if (d.work && S.editWork !== d.id) wrap.appendChild(workBlock(d));
@@ -4043,7 +4084,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     rows.forEach(function (x) {
       var g = G[x[0]]; if (g === null || g === undefined) return; any = true;
       var r = q('div', 'grow' + (x[2] >= g && g > 0 ? ' hit' : ''));
-      r.appendChild(q('span', 'gl', x[1])); r.appendChild(q('b', null, x[2] + ' / ' + g));
+      r.appendChild(q('span', 'gl', x[1])); r.appendChild(q('b', null, x[2] + ' of ' + g + ' today'));
       var bar = q('i', 'gbar'); var fill = q('i'); fill.style.width = Math.min(100, g ? Math.round(x[2] / g * 100) : 0) + '%'; bar.appendChild(fill); r.appendChild(bar);
       box.appendChild(r);
     });
@@ -6039,7 +6080,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(el);
     var lg = q('div', 'legend');
     /* "you" is near-black, never blue: blue is To knock */
-    var keys = [['k', 'To knock'], ['d', 'Back on the list'], ['a', 'No answer, waiting'], ['x', 'Done'], ['h', 'High fire hazard']];
+    var keys = [['k', 'To knock'], ['d', 'Back on the list'], ['a', 'No answer, waiting'], ['x', 'Done']];
+    if (cardOn('fire')) keys.push(['h', 'High fire hazard']);
     if (S.doors.some(function (d) { return d.cust; })) keys.push(['c', 'Customer']);   /* where we already work (2026-10-04) */
     if (S.here) keys.push(['u', 'You']);
     keys.forEach(function (x) {
@@ -6257,6 +6299,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(q('div', 'msg', 'Every door anyone has marked, and what became of it. Booked means Quote booked at the door; won and lost are set in the Pipeline. Grey rows have fewer than 10 doors knocked, which is too few to read anything into.'));
       holder.appendChild(q('div', 'sub2', t.knocked + ' knocked · ' + t.booked + ' booked (' + pct(t.booked, t.knocked) + ') · ' + t.won + ' won · ' + t.lost + ' lost' + (t.won ? ' · ' + money(t.value) + ' won' : '')));
       RES_DIMS.forEach(function (dm) {
+        if ((dm[0] === 'fire' || dm[0] === 'lawn' || dm[0] === 'trees') && !cardOn(dm[0])) return;   /* an edition without that part */
         var rows = j.dims[dm[0]] || {};
         var order = dm[2] || (dm[0] === 'work' ? WORK.map(function (w) { return [w[0], w[1]]; }).concat([['none', 'Nothing extra spotted']])
                                                : Object.keys(rows).sort().map(function (k) { return [k, k]; }));
@@ -6354,11 +6397,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var b = q('div', 'hailx'); b.appendChild(ico('hail', 2.2));
     var t = q('span'); t.appendChild(q('small', null, 'Hail near the house (radar estimate)'));
     var line = q('span', 'hl');
+    var rest = q('span', 'fmore');
     d.hail.slice(0, 3).forEach(function (h, i) {
-      if (i) line.appendChild(document.createTextNode(' · '));
-      line.appendChild(q(h[1] >= 1 ? 'b' : 'span', null, inch(h[1]))); line.appendChild(document.createTextNode(' on ' + hailDay(h[0])));
+      var at = i ? rest : line;
+      if (i) at.appendChild(document.createTextNode(' · '));
+      at.appendChild(q(h[1] >= 1 ? 'b' : 'span', null, inch(h[1]))); at.appendChild(document.createTextNode(' on ' + hailDay(h[0])));
     });
-    if (d.hail.length > 3) line.appendChild(document.createTextNode(' · ' + (d.hail.length - 3) + ' more'));
+    if (d.hail.length > 3) rest.appendChild(document.createTextNode(' · ' + (d.hail.length - 3) + ' more'));
+    if (rest.childNodes.length) line.appendChild(rest);
     t.appendChild(line); b.appendChild(t);
     return b;
   }
@@ -6468,24 +6514,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (why.length) { var l1 = q('span', 'hl'); l1.appendChild(q('b', null, why.join(' \u00b7 '))); t.appendChild(l1); }
     if (s.yb && !(s.yb >= now.getFullYear() - 5)) t.appendChild(q('span', 'hl', 'Built ' + s.yb));
     if (s.cr) {
-      t.appendChild(q('small', 'sub', 'Reported within \u00bd mile (Colorado Springs police)'));
-      var any = false, hh = s.cr.h || {}, last = s.cr.last || {};
+      /* m: within 1 mile [30, 90, 365 days] by kind (h: within 1/2 mile). An older file has h and a year-only mile total. */
+      var mm = s.cr.m || null, hh = s.cr.h || {}, last = s.cr.last || {}, any = false;
+      t.appendChild(q('small', 'sub', 'Reported within ' + (mm ? '1 mile' : '\u00bd mile') + ' (Colorado Springs police)'));
       CR_KIND.forEach(function (k) {
-        var c = hh[k[0]]; if (!c || !c[2]) return; any = true;
+        var c = (mm || hh)[k[0]]; if (!c || !c[2]) return; any = true;
         var l = q('span', 'hl'); l.appendChild(q('b', null, k[1] + ': '));
         l.appendChild(document.createTextNode(c[0] + ' in 30 days \u00b7 ' + c[1] + ' in 90 \u00b7 ' + c[2] + ' in the year' + (last[k[0]] ? ' (latest ' + fmtD(last[k[0]]) + ')' : '')));
         t.appendChild(l);
       });
-      if (!any) t.appendChild(q('span', 'hl', 'No property crime reported within \u00bd mile in the last year.'));
-      var m = s.cr.mile; if (m) t.appendChild(q('span', 'hl', 'Within 1 mile, last year: ' + m.b + ' burglaries, ' + m.v + ' vehicle, ' + m.t + ' other theft, ' + m.d + ' vandalism'));
-    } else {
-      var holder = q('span'); t.appendChild(holder);
-      secRates(function (r) {
-        var ori = r.towns && r.towns[S.region], a = ori && r.agencies && r.agencies[ori]; if (!a || !a.property) return;
-        holder.appendChild(q('small', 'sub', 'Town figures: ' + a.name + ', 12 months to ' + monthName(a.property.to)));
-        var line = function (lbl, x) { return x ? x.n + ' ' + lbl + (x.per1k != null ? ' (' + x.per1k + ' per 1,000)' : '') : ''; };
-        holder.appendChild(q('span', 'hl', [line('burglaries', a.burglary), line('vehicle thefts', a.mvt), line('property crimes in all', a.property)].filter(Boolean).join(' \u00b7 ')));
-      });
+      if (!any) t.appendChild(q('span', 'hl', 'No property crime reported within ' + (mm ? '1 mile' : '\u00bd mile') + ' in the last year.'));
+      if (mm && any) {
+        var hs = function (i) { return CR_KIND.reduce(function (n, k) { return n + ((hh[k[0]] || [])[i] || 0); }, 0); };
+        t.appendChild(q('span', 'hl', 'Closer, within \u00bd mile: ' + hs(1) + ' in 90 days \u00b7 ' + hs(2) + ' in the year'));
+      }
     }
     if (s.tg) {
       var L = {}; ((CO && CO.extraWork) || []).forEach(function (w) { L[w[0]] = w[1]; });
@@ -6537,12 +6579,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var b = q('div', 'hailx windx'); b.appendChild(ico('flag', 2.2));
     var t = q('span'); t.appendChild(q('small', null, 'Wind reported near the house (nearest station or report)'));
     var line = q('span', 'hl');
+    var rest = q('span', 'fmore');
     d.wind.slice(0, 3).forEach(function (w, i) {
-      if (i) line.appendChild(document.createTextNode(' · '));
-      line.appendChild(q(w[1] >= 58 ? 'b' : 'span', null, w[1] ? w[1] + ' mph' : 'damage'));
-      line.appendChild(document.createTextNode(' on ' + hailDay(w[0]) + ' (' + w[3] + ' mi)'));
+      var at = i ? rest : line;
+      if (i) at.appendChild(document.createTextNode(' · '));
+      at.appendChild(q(w[1] >= 58 ? 'b' : 'span', null, w[1] ? w[1] + ' mph' : 'damage'));
+      at.appendChild(document.createTextNode(' on ' + hailDay(w[0]) + ' (' + w[3] + ' mi)'));
     });
-    if (d.wind.length > 3) line.appendChild(document.createTextNode(' · ' + (d.wind.length - 3) + ' more'));
+    if (d.wind.length > 3) rest.appendChild(document.createTextNode(' · ' + (d.wind.length - 3) + ' more'));
+    if (rest.childNodes.length) line.appendChild(rest);
     t.appendChild(line); b.appendChild(t);
     return b;
   }
@@ -6603,16 +6648,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.appendChild(matLine(d));
     if (d.photo) {
       var open = S.photoOpen === d.id;
-      var pb = q('button', 'lnk', open ? 'Hide the roof photo' : 'See the roof (aerial photo, ' + (d.photoYear || 2020) + ')'); pb.type = 'button';
+      var pb = q('button', 'lnk fkeep', open ? 'Hide the roof photo' : 'See the roof (aerial photo, ' + (d.photoYear || 2020) + ')'); pb.type = 'button';
       pb.addEventListener('click', function () { S.photoOpen = open ? null : d.id; renderDoors(); });
       t.appendChild(pb);
-      if (open) t.appendChild(roofPhoto(d));
+      if (open) { var rp = roofPhoto(d); rp.classList.add('fkeep'); t.appendChild(rp); }
     } else if (d.naip) {      /* every other house (2026-10-05): the 2023 USDA photo, about 1 ft a pixel */
       var openN = S.photoOpen === d.id;
-      var nb = q('button', 'lnk', openN ? 'Hide the roof photo' : 'See the roof (aerial photo, 2023)'); nb.type = 'button';
+      var nb = q('button', 'lnk fkeep', openN ? 'Hide the roof photo' : 'See the roof (aerial photo, 2023)'); nb.type = 'button';
       nb.addEventListener('click', function () { S.photoOpen = openN ? null : d.id; renderDoors(); });
       t.appendChild(nb);
-      if (openN) t.appendChild(naipPhoto(d));
+      if (openN) { var np = naipPhoto(d); np.classList.add('fkeep'); t.appendChild(np); }
     }
     b.appendChild(t);
     return b;
@@ -6685,6 +6730,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       TOWN_NAME[SAMPLE_KEY] = j.town || 'Sample';
       if (j.alerts) {          /* made-up alerts, as if going on now: times are set from the moment it opens */
         j.alerts.at = Math.floor(Date.now() / 1000);
+        /* only the kinds this install shows for real (company.json "alerts" in an edition; Sixfold's rules otherwise) */
+        var AL = CO && CO.alerts;
+        j.alerts.weather = (j.alerts.weather || []).filter(function (a) { return AL ? AL.indexOf(a.event) >= 0 : (!isStormA(a) || feat('hail')) && !/Freeze|Frost/.test(a.event); });
+        if (AL ? AL.indexOf('Wildfires') < 0 : !cardOn('fire')) j.alerts.fires = [];
         (j.alerts.weather || []).forEach(function (a) { a.ends = new Date(Date.now() + (a.endsIn || 6) * 3600000).toISOString(); a.towns = [SAMPLE_KEY]; });
         (j.alerts.fires || []).forEach(function (f) { f.near = SAMPLE_KEY; f.dist = {}; f.dist[SAMPLE_KEY] = f.miles; });
       }
@@ -6947,9 +6996,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var HAIL_BINS = [[2, '#7F1D1D', '2 in +'], [1.5, '#B91C1C', '1.5 to 2 in'], [1, '#EA580C', '1 to 1.5 in'], [0.75, '#F59E0B', '\u00be to 1 in']];
   function hailColour(inch) { for (var i = 0; i < HAIL_BINS.length; i++) if (inch >= HAIL_BINS[i][0]) return HAIL_BINS[i][1]; return HAIL_BINS[HAIL_BINS.length - 1][1]; }
   var RADAR_URL = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png';
-  function hailMapView(day) {
+  /* the radar's colours (NOAA reflectivity, as the Iowa Environmental Mesonet draws it), in plain words (Matthew 2026-10-06) */
+  var RADAR_KEY = [['#02c501', 'Light rain'], ['#fdf802', 'Moderate'], ['#fd9500', 'Heavy'], ['#fd0000', 'Very heavy'], ['#f800fd', 'Hail likely']];
+  function radarOn() { return feat('hail') || !!(CO && CO.alerts && CO.alerts.length); }   /* the editions; Sixfold reaches it through Hail */
+  function hailMapView(day, back) {
     hideToast(); S.signin = null; S.screen = 'hailmap'; foot.hidden = true; setDock(null);
-    setBar('back', { title: day ? 'Hail ' + hailDay(day) : 'Live radar', sub: day ? 'Radar estimate of the hail path' : 'NOAA NEXRAD, every 5 minutes', back: hailView, backLabel: 'Hail' });
+    var backTo = back || (feat('hail') && cardOn('hail') ? hailView : chooseView);
+    setBar('back', { title: day ? 'Hail ' + hailDay(day) : 'Live radar', sub: day ? 'Radar estimate of the hail path' : 'NOAA NEXRAD, every 5 minutes', back: backTo, backLabel: backTo === hailView ? 'Hail' : 'Field tools' });
     view.textContent = '';
     var box = q('div', 'mapwrap hailmap'), el = q('div', 'map'); box.appendChild(el);
     var lg = q('div', 'legend');
@@ -6957,6 +7010,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var rb = q('button', 'back radarbtn', 'Live radar: ' + (day ? 'off' : 'on')); rb.type = 'button';
     lg.appendChild(rb);
     box.appendChild(lg);
+    var rk = q('div', 'legend radarkey');   /* what the radar colours mean; shown while the radar is on */
+    RADAR_KEY.forEach(function (k) { var sp = q('span'), i = q('i'); i.style.background = k[0]; sp.appendChild(i); sp.appendChild(document.createTextNode(k[1])); rk.appendChild(sp); });
+    box.appendChild(rk);
     if (day) box.appendChild(q('div', 'sub2', 'Squares are about 1 km: the radar estimate of the largest hail there that day. It runs smaller than ground reports for big stones.'));
     view.appendChild(box);
     loadLeaflet(function () {
@@ -6971,7 +7027,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (on && !radar) radar = L.tileLayer(RADAR_URL + '?_=' + Math.floor(Date.now() / 300000), { opacity: 0.6, maxZoom: 19, maxNativeZoom: 8,
           attribution: 'Radar: NOAA NEXRAD via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>' }).addTo(map);
         if (!on && radar) { map.removeLayer(radar); radar = null; }
-        rb.textContent = 'Live radar: ' + (on ? 'on' : 'off');
+        rb.textContent = 'Live radar: ' + (on ? 'on' : 'off'); rk.hidden = !on;
       };
       rb.addEventListener('click', function () { setRadar(!radar); });
       setRadar(!day);   /* a past storm opens without today's radar on top of it; the live map opens with it */
@@ -6989,6 +7045,54 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (bounds) map.fitBounds(bounds.pad(0.15));
         map.attributionControl.addAttribution('Hail: NOAA MRMS MESH (estimate)');
       }).catch(function () { box.appendChild(q('div', 'msg bad', 'The hail path needs signal.')); });
+    });
+  }
+  /* ---- crime map (Matthew 2026-10-06) ----
+     Squares of about 280 m coloured by the property crime Colorado Springs police reported in them, last 90 days (or 30). Tap a
+     square for its counts by kind. A square holds a few streets: the map shows where it is busy, never which house. */
+  var CRIME_BINS = [[1, '#fde68a', '1\u20132'], [3, '#fbbf24', '3\u20135'], [6, '#f97316', '6\u201310'], [11, '#dc2626', '11\u201320'], [21, '#7f1d1d', 'over 20']];
+  function crimeColour(n) { var c = CRIME_BINS[0][1]; CRIME_BINS.forEach(function (b) { if (n >= b[0]) c = b[1]; }); return c; }
+  function crimeMapView() {
+    hideToast(); S.signin = null; S.screen = 'crimemap'; foot.hidden = true; setDock(null);
+    S.crimeDays = S.crimeDays || 90;
+    setBar('back', { title: 'Crime map', sub: 'Colorado Springs police reports, by area', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var box = q('div', 'mapwrap hailmap'), el = q('div', 'map'); box.appendChild(el);
+    var lg = q('div', 'legend');
+    CRIME_BINS.forEach(function (b) { var sp = q('span'), i = q('i'); i.style.background = b[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(b[2])); lg.appendChild(sp); });
+    var db = q('button', 'back radarbtn', 'Last ' + S.crimeDays + ' days'); db.type = 'button';
+    lg.appendChild(db); box.appendChild(lg);
+    var note = q('div', 'sub2', 'Loading the police reports\u2026'); box.appendChild(note);
+    view.appendChild(box);
+    loadLeaflet(function () {
+      if (!document.body.contains(el)) return;
+      if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
+      var map = L.map(el, { zoomControl: true, preferCanvas: true });
+      el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      map.setView([38.88, -104.76], 11);
+      var layer = L.layerGroup().addTo(map), data = null;
+      var draw = function () {
+        layer.clearLayers(); if (!data) return;
+        var g = data.grid, n30 = S.crimeDays === 30, shown = 0;
+        data.cells.forEach(function (c) {
+          var n = n30 ? c[6] : c[2] + c[3] + c[4] + c[5]; if (!n) return; shown++;
+          var lat = g.lat0 - c[0] * g.dy, lon = g.lon0 + c[1] * g.dx;
+          var rect = L.rectangle([[lat - g.dy, lon], [lat, lon + g.dx]], { stroke: false, fillColor: crimeColour(n), fillOpacity: 0.6 });
+          rect.bindPopup(n30 ? n + (n === 1 ? ' report' : ' reports') + ' in this square, last 30 days'
+            : '<b>' + n + (n === 1 ? ' report' : ' reports') + ' in this square, last 90 days</b><br>' + c[2] + ' burglary \u00b7 ' + c[3] + ' vehicle \u00b7 ' + c[4] + ' other theft \u00b7 ' + c[5] + ' vandalism<br>' + c[6] + ' of them in the last 30 days');
+          rect.addTo(layer);
+        });
+        note.textContent = shown + ' squares of about 280 m with reports in the last ' + S.crimeDays + ' days, through ' + fmtD(data.through) + '. Property crime only (burglary, vehicle, other theft, vandalism), never domestic. Outside the city other agencies police, and their reports are not published, so an empty square there means no data, not no crime.' + (data.stale ? ' This copy is more than 12 hours old: the police site did not answer.' : '');
+      };
+      db.addEventListener('click', function () { S.crimeDays = S.crimeDays === 90 ? 30 : 90; db.textContent = 'Last ' + S.crimeDays + ' days'; draw(); });
+      api('secmap').then(function (j) {
+        if (!document.body.contains(el)) return;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { note.textContent = j.error || 'The police reports could not load.'; return; }
+        data = j; draw();
+        map.attributionControl.addAttribution('Reports: Colorado Springs Police Department');
+      }).catch(function () { note.textContent = 'The crime map needs signal.'; });
     });
   }
   function openFromCommunity(a, back) {

@@ -14,9 +14,9 @@
  *     property crime, monthly counts and rates per 100,000, for each town's police or sheriff.
  *   - El Paso's sale month, year built and open space come from the pest build (pest-<town>.json); owner lives elsewhere
  *     compares the owner's mailing address with the house (mail-<town>.json), a PO box counting as unknown.
- * cr (Colorado Springs doors): counts of reported offences within 1/2 mile, [last 30, 90, 365 days], by kind (b burglary,
- * v vehicle: theft of and from vehicles and parts, t other theft, d vandalism), the date of the latest of each kind within
- * 1/2 mile, and 1-mile totals for the year. Dates only; never a location. */
+ * cr (Colorado Springs doors): counts of reported offences, [last 30, 90, 365 days], by kind (b burglary, v vehicle: theft of
+ * and from vehicles and parts, t other theft, d vandalism): m within 1 mile (the headline, Matthew 2026-10-06), h within
+ * 1/2 mile, and the date of the latest of each kind within 1 mile. Dates only; never a location. */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -162,17 +162,17 @@ for (const t of towns) {
       }
       if (d.lat != null && inCity(d.lat, d.lon)) {
         o.cs = 1; hit.cs++;
-        const p = P(d.lon, d.lat), half = { b: [0, 0, 0], v: [0, 0, 0], t: [0, 0, 0], d: [0, 0, 0] }, last = {}, mile = { b: 0, v: 0, t: 0, d: 0 };
+        const p = P(d.lon, d.lat), z3 = () => ({ b: [0, 0, 0], v: [0, 0, 0], t: [0, 0, 0], d: [0, 0, 0] }), half = z3(), mile = z3(), last = {};
         for (const x of around(p)) {
           const dist = Math.hypot(x.p[0] - p[0], x.p[1] - p[1]);
-          if (dist <= MI) mile[x.k]++;
-          if (dist <= MI / 2) {
-            half[x.k][2]++; if (x.age <= 90) half[x.k][1]++; if (x.age <= 30) half[x.k][0]++;
+          if (dist <= MI) {
+            mile[x.k][2]++; if (x.age <= 90) mile[x.k][1]++; if (x.age <= 30) mile[x.k][0]++;
             if (!last[x.k] || x.t > last[x.k]) last[x.k] = x.t;
           }
+          if (dist <= MI / 2) { half[x.k][2]++; if (x.age <= 90) half[x.k][1]++; if (x.age <= 30) half[x.k][0]++; }
           if (dist <= MI / 4) { if (x.age <= 90) areaSeen[90].set(x.c + x.k, x.k); if (x.age <= 30) areaSeen[30].set(x.c + x.k, x.k); }
         }
-        o.cr = { h: half, last, mile };
+        o.cr = { m: mile, h: half, last };   /* m: within 1 mile (the headline, Matthew 2026-10-06), h: within 1/2 mile; last: latest within 1 mile */
       }
       if (Object.keys(o).length) doors[d.id] = o;
     }
