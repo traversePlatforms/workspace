@@ -57,7 +57,7 @@ const EDITIONS = {
         // the weather this edition shows and pushes (Matthew 2026-10-06): storms with their hail size, wind and heat; no fire
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
-        townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
+        townGroups: ['north-douglas', 'cs-east', 'security-widefield', 'fountain'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
         features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true },
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
@@ -87,7 +87,7 @@ const EDITIONS = {
                   ['branches', 'Branches near the house'], ['fuel', 'Dry brush close to the house']],
       // storm and tornado warnings for the crew's safety, and freeze and frost for the lawn; no fire alerts (Matthew 2026-10-06)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'],
-      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
+      townGroups: ['north-douglas'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
       links: { googleReview: '' }
@@ -115,7 +115,7 @@ const EDITIONS = {
       extraWork: [['south', 'Roof faces south'], ['shade', 'Shade from trees'], ['oldroof', 'Roof looks near the end of its life'],
                   ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
+      townGroups: ['north-douglas', 'arvada', 'centennial', 'thornton'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
       links: { googleReview: '' }
@@ -143,7 +143,7 @@ const EDITIONS = {
       extraWork: [['wasps', 'Wasp nest seen'], ['ants', 'Ant trails'], ['spiders', 'Spiders or webs'], ['mice', 'Signs of mice'],
                   ['firewood', 'Firewood against the house'], ['water', 'Standing water'], ['otherco', 'Already has a pest company']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
+      townGroups: ['north-douglas', 'windsor', 'erie', 'commerce-city'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true },
       card: { lawn: false, trees: true, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: true },
       links: { googleReview: '' }
@@ -170,7 +170,7 @@ const EDITIONS = {
       extraWork: [['nosystem', 'No visible system'], ['doorbell', 'Has a camera doorbell'], ['sign', 'Provider sign in the yard'],
                   ['otherco', 'Already has a provider'], ['dog', 'Dog at home'], ['newmove', 'Just moved in']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
+      townGroups: ['north-douglas', 'denver', 'cs-east', 'cs-west', 'boulder'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: false, security: true },
       links: { googleReview: '' }
@@ -348,12 +348,19 @@ async function build(key) {
   fs.rmSync(rounds, { recursive: true, force: true });
   const money = JSON.parse(fs.readFileSync(path.join(DATA, 'docs', 'money.json'), 'utf8'));
   let copied = 0, bytes = 0;
+  /* the towns this edition does not show (2026-10-07): a town in a group its company.json townGroups does not list. Its door file
+     and its side files (hail-, roof-, outline- ... -<town>.json) stay out of the pack, and it leaves the edition's index. */
+  const groupsShown = (E.company().townGroups || []);
+  const notHere = new Set(JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions.filter((r) => r.group && !groupsShown.includes(r.group)).map((r) => r.key));
+  const townOfFile = (f) => { const b = f.replace(/\.json$/, ''); if (notHere.has(b)) return b; for (const k of notHere) if (b.endsWith('-' + k)) return k; return null; };
   for (const f of fs.readdirSync(DATA)) {
     const p = path.join(DATA, f);
     if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || !E.keep(f)) continue;
+    if (townOfFile(f)) continue;
     let buf = fs.readFileSync(p);
     if (f === 'index.json') {
       const idx = JSON.parse(buf.toString('utf8'));
+      idx.regions = idx.regions.filter((r) => !notHere.has(r.key));
       if (E.extraRegions) idx.regions = idx.regions.concat(JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions);
       // the API reads each town's county from docs/money.json; write it into the edition's own index too
       for (const reg of idx.regions) if (!reg.county && money.counties[reg.key]) reg.county = money.counties[reg.key];

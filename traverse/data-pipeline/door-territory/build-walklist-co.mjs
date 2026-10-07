@@ -37,7 +37,7 @@
      node build-walklist-co.mjs --county=TELLER --lat=39.0 --lon=-105.057 --radius=2
      node build-walklist-co.mjs --coverage=DOUGLAS                                   */
 
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -139,6 +139,35 @@ const outFile = arg('out', `walklist-${place ?? county.toLowerCase()}.csv`);
 /* used when the county leaves the situs city blank — see the note at its use */
 const REGION_FALLBACK = (place ?? `${county} COUNTY`).replace(/-/g, ' ').toUpperCase();
 
+/* --municipality="Centennial" (2026-10-07): keep only parcels whose centre is inside the town's legal boundary, from the state's
+   municipal layer (DOLA, as security/build-security.mjs reads Colorado Springs). Better than the postal city where a town's
+   homes carry neighbours' city names (Centennial: Englewood, Littleton, Aurora). The layer holds the town as its original area
+   plus every annexation, pieces that can overlap: inside ANY piece counts. */
+const MUNI = arg('municipality', '');
+let muniPieces = null;
+/* --pieces=file.json: the same test against shapes saved beforehand ([{ rings, bb }], e.g. a city's chosen neighbourhoods) */
+const PIECES = arg('pieces', '');
+if (PIECES) {
+  muniPieces = JSON.parse(readFileSync(join(HERE, PIECES), 'utf8'));
+  console.log(`${PIECES}: ${muniPieces.length} shapes`);
+} else if (MUNI) {
+  muniPieces = [];
+  for (let off = 0; ; off += 1000) {
+    const q = new URLSearchParams({ where: `cityname = '${MUNI.replace(/'/g, "''")}'`, outFields: 'OBJECTID', outSR: '4326', f: 'json', resultOffset: String(off), resultRecordCount: '1000' });
+    const j = await getJSON(`https://services3.arcgis.com/DgjqnJA1rgO92Soi/arcgis/rest/services/Municipal_Boundary/FeatureServer/0/query?${q}`);
+    if (j.error) throw new Error('municipal boundary: ' + JSON.stringify(j.error).slice(0, 200));
+    for (const f of j.features || []) if (f.geometry && f.geometry.rings) {
+      const rings = f.geometry.rings, all = rings.flat();
+      muniPieces.push({ rings, bb: [Math.min(...all.map((p) => p[0])), Math.min(...all.map((p) => p[1])), Math.max(...all.map((p) => p[0])), Math.max(...all.map((p) => p[1]))] });
+    }
+    if (!j.exceededTransferLimit && (j.features || []).length < 1000) break;
+  }
+  if (!muniPieces.length) { console.error(`no municipal boundary named "${MUNI}"`); process.exit(1); }
+  console.log(`${MUNI}: ${muniPieces.length} boundary pieces`);
+}
+const inRingXY = (x, y, r) => { let c = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+const inMuni = (x, y) => muniPieces.some((p) => x >= p.bb[0] && x <= p.bb[2] && y >= p.bb[1] && y <= p.bb[3] && (p.rings.filter((r) => inRingXY(x, y, r)).length % 2 === 1));
+
 /* ---- pull ---------------------------------------------------------------- */
 const dLat = radiusMi / 69;
 const dLon = radiusMi / (69 * Math.cos(lat * Math.PI / 180));
@@ -177,17 +206,33 @@ const centroid = (ring) => [
   ring.reduce((s, p) => s + p[1], 0) / ring.length,
 ];
 
-let noAcres = 0, wrongSize = 0, notRes = 0, noSitus = 0, offCity = 0;
+let noAcres = 0, wrongSize = 0, notRes = 0, noSitus = 0, offCity = 0, shapeAcres = 0;
+/* planar area of lat/lon rings in square metres (the same as build-walklist.mjs's areaM2) */
+function areaM2(rings) {
+  let total = 0;
+  for (const ring of rings) {
+    const lat0 = (ring.reduce((s, p) => s + p[1], 0) / ring.length) * Math.PI / 180;
+    const R = 6378137, kx = R * Math.cos(lat0) * Math.PI / 180, ky = R * Math.PI / 180;
+    let ar = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) ar += ring[j][0] * kx * (ring[i][1] * ky) - ring[i][0] * kx * (ring[j][1] * ky);
+    total += Math.abs(ar / 2);
+  }
+  return total;
+}
 const kept = [];
 for (const f of feats) {
   const a = f.attributes;
   if (!f.geometry?.rings?.length) continue;
-  const acres = Number(a.landAcres);
+  /* Denver, Arapahoe and Larimer leave landAcres empty (coverage 0%, 2026-10-07): the lot size then comes from the parcel's own
+     shape, as build-walklist.mjs does for El Paso (planar area, under a percent off at parcel scale) */
+  let acres = Number(a.landAcres);
+  if (!(acres > 0) && f.geometry.rings.length) { acres = areaM2(f.geometry.rings) / 4046.8564; shapeAcres++; }
   if (!(acres > 0)) { noAcres++; continue; }
   if (acres < minAcres || acres > maxAcres) { wrongSize++; continue; }
   const use = (a.landUseDsc || '').trim();
   if (use && NOT_RESIDENTIAL.test(use)) { notRes++; continue; }
   if (!(a.situsAdd || '').trim()) { noSitus++; continue; }
+  if (muniPieces) { const [cx, cy] = centroid(f.geometry.rings[0]); if (!inMuni(cx, cy)) { offCity++; continue; } }
   if (CITIES.length || CITY_ZIP.length) {
     const cty = (a.sitAddCty || '').trim().toUpperCase(), zip = String(a.sitAddZip || '').replace(/\D/g, '').slice(0, 5);
     if (!CITIES.includes(cty) && !CITY_ZIP.some(([c, z]) => c === cty && z === zip)) { offCity++; continue; }
@@ -195,7 +240,7 @@ for (const f of feats) {
   kept.push({ a, acres, c: centroid(f.geometry.rings[0]) });
 }
 console.log(`  in size band:   ${kept.length + noSitus + notRes}`);
-console.log(`  dropped:        ${notRes} non-residential land use · ${noSitus} with no property address · ${noAcres} with no acreage${offCity ? ' · ' + offCity + ' outside the cities asked for' : ''}`);
+console.log(`  dropped:        ${notRes} non-residential land use · ${noSitus} with no property address · ${noAcres} with no acreage${offCity ? ' · ' + offCity + ' outside the cities asked for' : ''}${shapeAcres ? ' · ' + shapeAcres + ' lot sizes from the parcel shape' : ''}`);
 
 /* ---- does the owner live there? -----------------------------------------
 
