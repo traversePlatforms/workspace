@@ -3595,6 +3595,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (d.hail && d.hail.length && cardOn('hail')) wrap.appendChild(fold(hailBlock(d), d.id + ':hail'));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(fold(windBlock(d), d.id + ':wind'));             /* wind reported near the house (2026-10-05): rides with hail */
+    if (d.cen && bestTrade()) { var cb0 = censusBlock(d); if (cb0) wrap.appendChild(fold(cb0, d.id + ':cen')); }   /* the Census survey for the block (2026-10-07): the editions */
     if (d.nri && (cardOn('hail') || cardOn('fire'))) { var nb0 = nriBlock(d); if (nb0) wrap.appendChild(fold(nb0, d.id + ':nri')); }   /* FEMA's tract ratings (2026-10-07): the server sends them in the editions only */
     if (d.sec && feat('security') && cardOn('security')) wrap.appendChild(fold(secBlock(d), d.id + ':sec'));     /* security (2026-10-06): admins only, where the company has security on */
     if (d.pest && feat('pest') && cardOn('pest')) wrap.appendChild(fold(pestBlock(d), d.id + ':pest'));      /* pest (2026-10-06): the server sends it to admins only, where the company has pest on */
@@ -4025,7 +4026,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return f;
     }
   };
-  function bestFacts(d) { var t = bestTrade(); return t ? BEST[t](d) || [] : []; }
+  function bestFacts(d) {
+    var t = bestTrade(); if (!t) return [];
+    var f = BEST[t](d) || [];
+    /* every trade (2026-10-07): a block that is mostly rented sinks; renters rarely buy a roof, panels, a plan or a system */
+    if (d.cen && d.cen.o != null && d.cen.o < 40) f.push([-2, 'Block mostly rented (' + d.cen.o + '% owner-occupied)']);
+    return f;
+  }
   function bestPts(f) { return f.reduce(function (n, x) { return n + x[0]; }, 0); }
   /* equal points: the trade's strongest fact decides (the biggest hail, the most output, the biggest lot), then street order */
   function bestTie(d) {
@@ -6747,6 +6754,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* FEMA's National Risk Index (2026-10-07) for the door's census tract: FEMA's rating against every US tract and how many events
      a year it counts there. An area fact from FEMA, said as one; it rates the tract, never the house. Roofing: hail, strong wind,
      tornado. A lawn and yard card (fire on, hail off): wildfire. */
+  /* the Census Bureau's American Community Survey for the door's block group (2026-10-07): a few hundred homes around it.
+     Estimates for the area, with margins of error; said as such, never as the house. */
+  function kUsd(n) { return n >= 1000000 ? '$' + (Math.round(n / 100000) / 10) + 'M' : '$' + Math.round(n / 1000) + 'k'; }
+  function censusBlock(d) {
+    var c = d.cen; if (!c) return null;
+    var b = q('div', 'hailx cenx'); b.appendChild(ico('door', 2.2));
+    var t = q('span'); t.appendChild(q('small', null, 'Census: the ' + (c.h ? c.h.toLocaleString('en-US') + ' homes' : 'homes') + ' around it (' + (c.ver || 'ACS') + ', estimates)'));
+    var any = false, add = function (node) { t.appendChild(node); any = true; };
+    if (c.o != null) { var l1 = q('span', 'hl'); l1.appendChild(q('b', null, c.o + '% owner-occupied')); if (c.o < 40) l1.appendChild(document.createTextNode(': mostly rented')); add(l1); }
+    var money = []; if (c.i) money.push('typical household income ' + kUsd(c.i)); if (c.v) money.push('typical home value ' + kUsd(c.v));
+    if (money.length) add(q('span', 'hl', money.join(' · ').replace(/^t/, 'T')));
+    var age = []; if (c.y) age.push('typical house built ' + c.y); if (c.m) age.push('owners moved in around ' + c.m);
+    if (age.length) add(q('span', 'hl', age.join(' · ').replace(/^t/, 'T').replace(/^o/, 'O')));
+    var mix = []; if (c.sf != null) mix.push(c.sf + '% detached houses'); if (c.vc != null) mix.push(c.vc + '% vacant');
+    if (mix.length) add(q('span', 'hl', mix.join(' · ')));
+    if (!any) return null;
+    t.appendChild(q('span', 'hl', 'Figures for the area, not this house.'));
+    b.appendChild(t);
+    return b;
+  }
   var NRI_NAME = { h: 'Hail', w: 'Strong wind', t: 'Tornado', f: 'Wildfire' };
   function nriBlock(d) {
     var n = d.nri, keys = cardOn('hail') ? ['h', 'w', 't'] : ['f'], rows = keys.filter(function (k) { return n[k] && n[k][0]; });

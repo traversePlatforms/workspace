@@ -1494,6 +1494,9 @@ if ($action === 'area') {
     $permOf = ($role === 'admin' && (feature('roof') || feature('solar'))) ? loadSide('permit', $key) : [];
     /* FEMA's National Risk Index for the door's census tract (2026-10-07, nri/build-nri.mjs): the editions only, admins */
     $nriF = ($role === 'admin' && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/nri-' . $key . '.json'), true) ?: []) : [];
+    /* the Census Bureau's survey for the door's block group (2026-10-07, census/build-census.mjs): the editions only, admins */
+    $cenF = ($role === 'admin' && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: []) : [];
+    $cenOf = function (string $id) use ($cenF) { $b = $cenF['doors'][$id] ?? null; return $b !== null && isset($cenF['bgs'][$b]) ? $cenF['bgs'][$b] + ['ver' => $cenF['ver'] ?? ''] : null; };
     $nriOf = function (string $id) use ($nriF) { $t = $nriF['doors'][$id] ?? null; return $t !== null && isset($nriF['tracts'][$t]) ? $nriF['tracts'][$t] + ['v' => $nriF['ver'] ?? ''] : null; };
     /* the door's power company in figures (2026-10-07): EIA-861 price, bill, solar homes, outages, time-of-use; solar-utilities.json */
     $solarU = $solarOf ? (json_decode((string) @file_get_contents(DATA_DIR . '/solar-utilities.json'), true) ?: []) : [];
@@ -1543,7 +1546,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => $olOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => $olOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

@@ -232,3 +232,7 @@ traverse/data-pipeline/door-territory/nri/nri-cache.json
 # generated per-town side files (2026-10-07): permits and FEMA tract ratings, rebuilt by the pipeline
 traverse/app/data/rounds/permit-*.json
 traverse/app/data/rounds/nri-*.json
+
+# Census block-group cache (2026-10-07), refetchable; and the generated per-town files
+traverse/data-pipeline/door-territory/census/census-cache.json
+traverse/app/data/rounds/census-*.json
