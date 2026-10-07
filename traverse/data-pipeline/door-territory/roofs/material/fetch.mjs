@@ -22,7 +22,23 @@ const RES = 0.3;   /* m per pixel, native */
 const TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines'];
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 6), LIMIT = +arg('limit', 1e9);
-const items = JSON.parse(readFileSync(join(CACHE, 'naip-items.json'), 'utf8'));
+/* --index-only (2026-10-07): the window and its NAIP item per house, for the close-ups (build-naip-photos.mjs), without the
+   crop itself. For towns whose roof material comes from the county record (Douglas), where the classifier is not run. */
+const INDEX_ONLY = process.argv.includes('--index-only');
+const ITEMS_F = join(CACHE, 'naip-items.json');
+const items = JSON.parse(readFileSync(ITEMS_F, 'utf8'));
+const STAC = 'https://planetarycomputer.microsoft.com/api/stac/v1/search';
+/* a town with no NAIP item list yet: the 2023 photos over its houses, from the STAC search (as lawn-trial/sample-lawn.mjs) */
+async function itemsFor(town, houses) {
+  if (items[town]) return;
+  const pts = Object.values(houses).map((h) => h.c), lats = pts.map((p) => p[0]), lons = pts.map((p) => p[1]);
+  const bbox = [Math.min(...lons) - 0.01, Math.min(...lats) - 0.01, Math.max(...lons) + 0.01, Math.max(...lats) + 0.01];
+  const r = await fetch(STAC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['naip'], bbox, query: { 'naip:year': { eq: '2023' } }, limit: 250 }) });
+  const j = await r.json();
+  items[town] = (j.features || []).map((f) => ({ id: f.id, bbox: f.bbox, date: f.properties.datetime.slice(0, 10), gsd: f.properties.gsd, epsg: f.properties['proj:epsg'] }));
+  writeFileSync(ITEMS_F, JSON.stringify(items));
+  console.log(' + ' + town + ': ' + items[town].length + ' NAIP 2023 items');
+}
 const safe = (id) => String(id).replace(/[^a-z0-9_-]/gi, '_');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -49,10 +65,20 @@ for (const town of TOWNS) {
   const hf = join(CACHE, `houses-${town}.json`);
   if (!existsSync(hf)) { console.log(`${town}: no houses file yet (run houses.mjs)`); continue; }
   const houses = JSON.parse(readFileSync(hf, 'utf8'));
+  await itemsFor(town, houses);
   const dir = join(CACHE, 'crops', town); mkdirSync(dir, { recursive: true });
   const idxF = join(CACHE, `crops-${town}.json`);
   const idx = existsSync(idxF) ? JSON.parse(readFileSync(idxF, 'utf8')) : {};
   const save = () => { writeFileSync(idxF + '.tmp', JSON.stringify(idx)); renameSync(idxF + '.tmp', idxF); };
+  if (INDEX_ONLY) {
+    let n = 0;
+    for (const [id, h] of Object.entries(houses)) {
+      if (idx[id] && !idx[id].err) continue;
+      const { bbox, px } = windowFor(h), item = itemFor(town, bbox);
+      idx[id] = item ? { bbox, px, item: item.replace(/^co_m_/, '') } : { err: 'no NAIP item' }; n++;
+    }
+    save(); console.log(town + ': ' + n + ' windows indexed (no crops fetched)'); continue;
+  }
   const todo = Object.entries(houses).filter(([id]) => !(idx[id] && !idx[id].err && existsSync(join(dir, safe(id) + '.npy.gz')))).slice(0, LIMIT);
   console.log(`${town}: ${todo.length} crops to fetch`);
   let i = 0, fails = 0;

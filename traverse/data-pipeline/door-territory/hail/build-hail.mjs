@@ -88,7 +88,13 @@ async function fetchAll(from, to) {
   for (let d = from; d <= to; d = addDays(d, 1)) {
     const mo = +d.slice(5, 7);
     if ((mo < 4 || mo > 9) && d < ALL_YEAR_FROM) continue;
-    if (!existsSync(join(DAYS, d + '.json'))) todo.push(d);
+    const f = join(DAYS, d + '.json');
+    if (!existsSync(f)) { todo.push(d); continue; }
+    /* a day kept for a smaller set of towns (2026-10-07: the north-Douglas towns sit above the old box) is fetched again */
+    const o = JSON.parse(readFileSync(f, 'utf8'));
+    if (o.missing || !o.dy) continue;
+    const row = (lat) => Math.round((o.lat1 - lat) / o.dy), col = (lon) => Math.round((lon + 360 - o.lon1) / o.dx);
+    if (row(box.n) < o.r0 || row(box.s) > o.r0 + o.rows - 1 || col(box.w) < o.c0 || col(box.e) > o.c0 + o.cols - 1) todo.push(d);
   }
   console.log(`box ${JSON.stringify(box)}; ${todo.length} days to fetch`);
   let done = 0, miss = 0, fail = 0;
