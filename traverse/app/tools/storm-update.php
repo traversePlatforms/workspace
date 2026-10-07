@@ -20,7 +20,11 @@ final class SixfoldOut extends Exception { public array $body; public function _
 define('SIXFOLD_CLI', true);
 $_REQUEST = ['action' => 'stormcron'] + (in_array('--force', $suArgs, true) ? ['force' => '1'] : []); $_GET = $_REQUEST; $_SERVER['REQUEST_METHOD'] = 'GET';
 $suOut = null;
-try { require $suApi . '/' . (getenv('SIXFOLD_API_FILE') ?: 'rounds.php'); } catch (SixfoldOut $e) { $suOut = $e->body; }
+/* --api=traverse-rounds.php: a Traverse edition's own API file (2026-10-07; TraverseRoofing is the one with hail) */
+$suFile = getenv('SIXFOLD_API_FILE') ?: 'rounds.php';
+foreach ($suArgs as $a) if (strncmp($a, '--api=', 6) === 0) $suFile = substr($a, 6);
+if (!preg_match('/^[a-z0-9-]*rounds\.php$/', $suFile) || !is_file($suApi . '/' . $suFile)) { fwrite(STDERR, 'storm update: no API file ' . $suFile . "\n"); exit(1); }
+try { require $suApi . '/' . $suFile; } catch (SixfoldOut $e) { $suOut = $e->body; }
 if (!is_array($suOut) || empty($suOut['ok'])) { fwrite(STDERR, 'storm update: ' . (is_array($suOut) ? ($suOut['error'] ?? '?') : 'nothing back') . "\n"); exit(1); }
 if (!empty($suOut['note'])) { echo $suOut['note'], "\n"; exit(0); }
 if (!empty($suOut['skipped'])) { echo 'nothing to do (' . $suOut['skipped'] . '); hail through ' . ($suOut['through'] ?? '?') . "\n"; exit(0); }

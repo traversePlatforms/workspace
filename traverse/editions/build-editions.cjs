@@ -439,4 +439,36 @@ return [
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build
   fs.rmSync(path.join(OUT, 'upload', '4-extract-in-public_html--app-tr-cb2e8587.zip'), { force: true });
   for (const k of only ? [only] : Object.keys(EDITIONS)) await build(k);
+  tools();
 })().catch((e) => { console.error(e); process.exit(1); });
+
+/* ------------------------------------------------------------- scheduled jobs (2026-10-07)
+   traverse-tools/, beside public_html like Sixfold's sixfold-tools/: the app's own command-line tools, unchanged, plus
+   push-alerts.sh, which runs the phone alerts once per edition (one cron job for all five). Each edition pushes only the warnings
+   its company.json "alerts" names, to its own phones; the key and phone list stay in its own private folder. */
+function tools() {
+  const dir = path.join(OUT, 'traverse-tools');
+  fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
+  for (const f of ['push-alerts.php', 'storm-update.php']) fs.copyFileSync(path.join(SRC, 'tools', f), path.join(dir, f));
+  const apis = Object.keys(EDITIONS).map((k) => EDITIONS[k].api + '-rounds.php');
+  const sh = [
+    '#!/bin/sh',
+    '# Traverse phone alerts: each edition\'s new warnings to the phones that turned alerts on, every 5 minutes.',
+    '# SiteGround cron job (the same path style as Sixfold\'s push-alerts job, with traverse-tools in place of sixfold-tools):',
+    '#   */5 * * * *   sh /home/<account>/www/<site>/traverse-tools/push-alerts.sh',
+    '# Prints only when something was pushed. Add --dry-run to see what would go, to how many phones, without sending.',
+    'D=$(cd "$(dirname "$0")" && pwd)',
+    'PHP=${PHP:-php}',
+    'for a in ' + apis.join(' ') + '; do',
+    '  [ -f "$D/../public_html/api/$a" ] || continue',
+    '  "$PHP" "$D/push-alerts.php" --api="$a" "$@"',
+    'done',
+    '',
+  ].join('\n');
+  fs.writeFileSync(path.join(dir, 'push-alerts.sh'), sh);
+  const up = path.join(OUT, 'upload', 'tools');
+  fs.rmSync(up, { recursive: true, force: true }); fs.mkdirSync(up, { recursive: true });
+  const tar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+  execFileSync(tar, ['-a', '-c', '-f', path.join(up, '1-extract-in-HOME-beside-public_html--traverse-tools.zip'), '-C', OUT, 'traverse-tools']);
+  console.log('tools: traverse-tools (push-alerts.sh for ' + apis.length + ' editions, storm-update.php); pack in ' + path.relative(REPO, up));
+}
