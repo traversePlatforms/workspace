@@ -188,3 +188,6 @@ traverse/data-pipeline/door-territory/pest/cache/
 # TraverseSecurity data (regenerable: data-pipeline/door-territory/security/build-security.mjs)
 traverse/app/data/rounds/security-*.json
 traverse/data-pipeline/door-territory/security/cache/
+
+# edition town research (2026-10-07): downloaded inputs and the built table, regenerable with rank.mjs
+traverse/data-pipeline/door-territory/research-editions/*.json
