@@ -1124,11 +1124,17 @@
   .hailc .hmax{font-weight:700;font-size:13px;color:var(--soft);white-space:nowrap}
   .roofpic{margin-top:8px;display:grid;gap:4px}
   .roofpic img{width:100%;max-width:520px;border-radius:12px;border:1px solid var(--line);display:block}
+  .roofpic .rpwrap{position:relative;width:100%;max-width:520px}
+  .roofpic .rpwrap svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:12px;overflow:hidden}
   .roofpic small{font-size:11.5px;color:var(--soft)}
   .hailmap .legend{position:static;inset:auto;pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;padding:0;background:none;box-shadow:none;font-size:12.5px;color:var(--soft)}
   .hailmap .legend span{background:none;box-shadow:none;padding:0}
   .hailmap .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .hailmap .radarbtn{margin-left:auto}
+  .hailmap .radarkey{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:6px;font-size:12.5px;color:var(--soft)}
+  .hailmap .radarkey span{display:inline-flex;align-items:center}
+  .hailmap .radarkey i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px}
+  .hailmap .radarkey[hidden]{display:none}
   .hailc .hmax.big{color:var(--later)}
   .hailc .calist .lq{font-weight:700;font-size:13px;margin-top:4px}
   .hailx{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13.5px}
@@ -2442,7 +2448,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       officeGroup(box, 'storms', 'Storms and data', [
         feat('security') && S.role === 'admin' ? tile('button', 'shield', 'Crime by neighbourhood', 'Neighbourhoods ranked by property crime reported nearby, last 90 days.', 'Admin only', secListView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', 'From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.', 'Admin only · in testing', stormView) : null,
-        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms since 2020 and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
+        feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms from the last two years (five for a big one) and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
@@ -6682,20 +6688,40 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the 2023 close-up (2026-10-05): USDA NAIP, 0.3 m in Colorado, public domain, cut to the house by Microsoft Planetary Computer's
      public data API when the button is tapped; nothing is stored on our server. d.naip = [item, minLon, minLat, maxLon, maxLat]. */
+  /* the building's outline over a roof picture (Matthew 2026-10-06: a commercial lot can hold several roofs). pts run 0-1000
+     across and down the picture (outline-<town>.json). Returns the picture alone when there is no outline. */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function withOutline(im, pts) {
+    if (!pts || pts.length < 3) return im;
+    var w = q('div', 'rpwrap'); w.appendChild(im);
+    var svg = document.createElementNS(SVGNS, 'svg'); svg.setAttribute('viewBox', '0 0 1000 1000'); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+    var pg = document.createElementNS(SVGNS, 'polygon');
+    pg.setAttribute('points', pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' '));
+    pg.setAttribute('fill', 'rgba(255,212,0,0.10)'); pg.setAttribute('stroke', '#ffd400'); pg.setAttribute('stroke-width', '3');
+    pg.setAttribute('stroke-linejoin', 'round'); pg.setAttribute('vector-effect', 'non-scaling-stroke');
+    svg.appendChild(pg); w.appendChild(svg);
+    return w;
+  }
+  var OUTLINE_NOTE = ' Yellow line: the building, traced from photos (it can be a few feet off).';
   function naipPhoto(d) {
     var box = q('div', 'roofpic'), n = d.naip;
     var im = q('img'); im.alt = 'Aerial photo of the roof at ' + d.address;
     im.src = 'https://planetarycomputer.microsoft.com/api/data/v1/item/bbox/' + n.slice(1).join(',') + '/640x640.png?collection=naip&item=co_m_' + encodeURIComponent(n[0]) + '&assets=image&asset_bidx=image%7C1%2C2%2C3';
-    var cap = q('small', null, 'Aerial photo, 2023, about 1 ft a pixel (USDA, public domain). A roof replaced since will not show.');
+    var ol = d.ol && d.ol.n;
+    var cap = q('small', null, 'Aerial photo, 2023, about 1 ft a pixel (USDA, public domain). A roof replaced since will not show.' + (ol ? OUTLINE_NOTE : ''));
     im.addEventListener('error', function () { cap.textContent = 'The photo could not load. Try again with better signal.'; });
-    box.appendChild(im); box.appendChild(cap);
+    box.appendChild(withOutline(im, ol)); box.appendChild(cap);
     return box;
   }
   function roofPhoto(d) {
     var box = q('div', 'roofpic');
     S.photoImg = S.photoImg || {};
     var cap = q('small', null, d.photoCap || 'Aerial photo, 2020, 3 in a pixel (State of Colorado, public domain). A roof replaced since will not show.');
-    if (S.photoImg[d.id]) { var im0 = q('img'); im0.src = S.photoImg[d.id]; im0.alt = 'Aerial photo of the roof at ' + d.address; box.appendChild(im0); box.appendChild(cap); return box; }
+    if (S.photoImg[d.id]) {
+      var im0 = q('img'); im0.src = S.photoImg[d.id]; im0.alt = 'Aerial photo of the roof at ' + d.address;
+      var olp = d.ol && d.ol.p; if (olp) cap.textContent += OUTLINE_NOTE;
+      box.appendChild(withOutline(im0, olp)); box.appendChild(cap); return box;
+    }
     var say = q('div', 'sub2', 'Loading the roof photo (1-2 MB)\u2026'); box.appendChild(say);
     var p = d.photo, h = p[3] || 200, id = d.id;
     loadGeoTiff(function () {
@@ -6759,7 +6785,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var MAT_NAME = { asphalt: 'Asphalt shingle', tile: 'Tile', shake: 'Wood shake', metal: 'Metal', flat: 'Flat or built-up', slate: 'Slate or stone' };
   function stormView() {
     hideToast(); S.signin = null; S.screen = 'storm'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Storm list', sub: 'Hail and wind since 2020', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', { title: 'Storm list', sub: 'Hail and wind, last two years', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('stormdays').then(function (j) {
@@ -6920,7 +6946,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function hailView() {
     hideToast(); S.signin = null; S.screen = 'hail'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Hail', sub: 'Storms since 2020 · radar estimate', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', { title: 'Hail', sub: 'Last two years · radar estimate', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     var go = S.hail ? Promise.resolve(S.hail) : api('hail');
@@ -7010,7 +7036,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var rb = q('button', 'back radarbtn', 'Live radar: ' + (day ? 'off' : 'on')); rb.type = 'button';
     lg.appendChild(rb);
     box.appendChild(lg);
-    var rk = q('div', 'legend radarkey');   /* what the radar colours mean; shown while the radar is on */
+    var rk = q('div', 'radarkey');   /* what the radar colours mean; shown while the radar is on */
     RADAR_KEY.forEach(function (k) { var sp = q('span'), i = q('i'); i.style.background = k[0]; sp.appendChild(i); sp.appendChild(document.createTextNode(k[1])); rk.appendChild(sp); });
     box.appendChild(rk);
     if (day) box.appendChild(q('div', 'sub2', 'Squares are about 1 km: the radar estimate of the largest hail there that day. It runs smaller than ground reports for big stones.'));

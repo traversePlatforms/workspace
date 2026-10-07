@@ -3,7 +3,8 @@
  * Source: NOAA/NSSL MRMS "MESH" (maximum estimated size of hail), the 24-hour maximum, as archived by Iowa
  * State University: https://mtarchive.geol.iastate.edu/YYYY/MM/DD/mrms/ncep/MESH_Max_1440min/
  * The file at 12:00 UTC on day D+1 covers 12:00 UTC D to 12:00 UTC D+1 (6 am to 6 am Colorado summer
- * time), so its storms are filed under day D. Complete from 2020; April to September only (hail season).
+ * time), so its storms are filed under day D. Complete from 2020: April to September up to 2024, all year from October 2024
+ * (Matthew 2026-10-06: more recent storms). Storm days older than two years drop off, five for a major one (../storm-keep.mjs).
  *
  *   node build-hail.mjs fetch [2020-04-01] [2026-09-30]   download what is missing (resumes; polite, 3 at a time)
  *   node build-hail.mjs build                             door and storm files from what is downloaded
@@ -21,6 +22,8 @@ import { gunzipSync } from 'node:zlib';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decodeMesh } from './mesh.mjs';
+import { cutoffs, keepHailDay } from '../storm-keep.mjs';
+const ALL_YEAR_FROM = '2024-10-01';   /* before this, hail season only (April to September) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
@@ -84,7 +87,7 @@ async function fetchAll(from, to) {
   const box = bbox(), todo = [];
   for (let d = from; d <= to; d = addDays(d, 1)) {
     const mo = +d.slice(5, 7);
-    if (mo < 4 || mo > 9) continue;
+    if ((mo < 4 || mo > 9) && d < ALL_YEAR_FROM) continue;
     if (!existsSync(join(DAYS, d + '.json'))) todo.push(d);
   }
   console.log(`box ${JSON.stringify(box)}; ${todo.length} days to fetch`);
@@ -113,6 +116,7 @@ function build() {
   const through = have[have.length - 1].d, from = have[0].d;
   const storms = {};
   let total = 0;
+  const perTown = [];
   for (const t of towns()) {
     let ds; try { ds = doorsOf(t.key); } catch { continue; }
     const doors = {};
@@ -132,10 +136,16 @@ function build() {
         if (best >= BIG) { s.n1++; tw.n1++; tw.areas[d.area] = (tw.areas[d.area] || 0) + 1; }
       }
     }
-    for (const id of Object.keys(doors)) doors[id].sort((a, b) => (a[0] < b[0] ? 1 : -1));
-    writeFileSync(join(DATA, `hail-${t.key}.json`), JSON.stringify({ through, from, doors }));
+    perTown.push({ t, n: ds.length, doors });
+  }
+  /* the keep rule, by storm day (the whole day, so door lists and the storm list agree) */
+  const cut = cutoffs(), kept = new Set(Object.values(storms).filter((s) => keepHailDay(s.date, s.max, cut)).map((s) => s.date));
+  for (const k of Object.keys(storms)) if (!kept.has(k)) delete storms[k];
+  for (const { t, n, doors } of perTown) {
+    for (const id of Object.keys(doors)) { doors[id] = doors[id].filter((e) => kept.has(e[0])).sort((a, b) => (a[0] < b[0] ? 1 : -1)); if (!doors[id].length) delete doors[id]; }
+    writeFileSync(join(DATA, `hail-${t.key}.json`), JSON.stringify({ through, from, keep: cut, doors }));
     total += Object.keys(doors).length;
-    console.log(`  ${t.key}: ${Object.keys(doors).length} of ${ds.length} doors with a storm of 0.75 in or more`);
+    console.log(`  ${t.key}: ${Object.keys(doors).length} of ${n} doors with a storm of 0.75 in or more`);
   }
   const list = Object.values(storms).sort((a, b) => (a.date < b.date ? 1 : -1));
   writeFileSync(join(DATA, 'hail-storms.json'), JSON.stringify({ through, from, days: have.length, missing: days.length - have.length, storms: list }));

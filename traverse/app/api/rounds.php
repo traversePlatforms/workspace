@@ -971,10 +971,214 @@ if ($isPost) {
     $body = (array) (json_decode($raw, true) ?? []);
 }
 
+/* ---- storms kept fresh by the server (Matthew 2026-10-06: "pull more recent storms", and a time limit) ----
+ * The offline build (data-pipeline/door-territory/hail/build-hail.mjs) writes hail-<town>.json, hail-storms.json and hail-paths.json.
+ * After that the server adds each new day itself: when an admin opens Hail or the Storm list and the files were last brought up to
+ * date more than 12 hours ago, it reads NOAA's MRMS MESH 24-hour maximum for each day since (Iowa State's archive, the same files
+ * the build reads; at most HAIL_MAX_DAYS a time), adds the storms to the doors, and drops storm days past the keep rule: two years,
+ * five when hail reached 2 in (data-pipeline/door-territory/storm-keep.mjs holds the same numbers). Hail only; wind waits for the
+ * next offline build. Nothing about a door leaves the server: only NOAA's file comes in. */
+const HAIL_ARCHIVE = 'https://mtarchive.geol.iastate.edu';
+const HAIL_MIN_MM = 19.05, HAIL_BIG_MM = 25.4, HAIL_REFRESH = 12 * 3600, HAIL_MAX_DAYS = 10;
+const KEEP_YEARS = 2, KEEP_MAJOR_YEARS = 5, KEEP_MAJOR_HAIL_IN = 2.0;
+function httpGetRaw(string $url, int $timeout = 20): ?string {
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_FOLLOWLOCATION => true, CURLOPT_HTTPHEADER => [agentHeader()]]);
+        $b = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
+        return ($b !== false && $code === 200) ? (string) $b : null;
+    }
+    $b = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => $timeout, 'header' => agentHeader()]]));
+    return $b === false ? null : $b;
+}
+/** one MRMS MESH GRIB2 file (lat/lon grid, PNG packing) cut to a box: grid, the box's first row and column, and every square with
+    hail as [row, col, tenths of a mm] from there. Mirrors data-pipeline/door-territory/hail/mesh.mjs, but unpacks only the rows
+    it needs (from the nearest row above that does not lean on the one before it). */
+function meshCrop(string $b, float $n, float $s, float $w, float $e): ?array {
+    if (substr($b, 0, 4) !== 'GRIB' || ord($b[7]) !== 2) return null;
+    $u16 = fn(int $o) => unpack('n', substr($b, $o, 2))[1];
+    $u32 = fn(int $o) => unpack('N', substr($b, $o, 4))[1];
+    $s16 = function (int $o) use ($u16) { $v = $u16($o); return $v & 0x8000 ? -($v & 0x7fff) : $v; };
+    $s32 = function (int $o) use ($u32) { $v = $u32($o); return $v & 0x80000000 ? -($v & 0x7fffffff) : $v; };
+    $p = 16; $g = []; $png = null; $len = strlen($b);
+    while ($p < $len - 4 && substr($b, $p, 4) !== '7777') {
+        $sl = $u32($p); $sec = ord($b[$p + 4]);
+        if ($sl < 5) return null;
+        if ($sec === 3) {
+            if ($u16($p + 12) !== 0) return null;
+            $g = ['nx' => $u32($p + 30), 'ny' => $u32($p + 34), 'lat1' => $s32($p + 46) / 1e6, 'lon1' => $u32($p + 50) / 1e6, 'dx' => $u32($p + 63) / 1e6, 'dy' => $u32($p + 67) / 1e6];
+        }
+        if ($sec === 5) { if ($u16($p + 9) !== 41) return null; $g['R'] = unpack('G', substr($b, $p + 11, 4))[1]; $g['E'] = $s16($p + 15); $g['D'] = $s16($p + 17); }
+        if ($sec === 7) $png = substr($b, $p + 5, $sl - 5);
+        $p += $sl;
+    }
+    if ($png === null || empty($g['nx']) || !isset($g['R'])) return null;
+    $q = 8; $idat = ''; $W = 0; $H = 0; $pl = strlen($png);
+    while ($q + 8 <= $pl) {
+        $L = unpack('N', substr($png, $q, 4))[1]; $t = substr($png, $q + 4, 4);
+        if ($t === 'IHDR') { $W = unpack('N', substr($png, $q + 8, 4))[1]; $H = unpack('N', substr($png, $q + 12, 4))[1]; if (ord($png[$q + 16]) !== 16 || ord($png[$q + 17]) !== 0) return null; }
+        if ($t === 'IDAT') $idat .= substr($png, $q + 8, $L);
+        $q += 12 + $L;
+    }
+    unset($png);
+    if ($W < 1 || !function_exists('inflate_init')) return null;
+    $stride = $W * 2; $rb = $stride + 1;
+    $row = fn(float $lat) => (int) round(($g['lat1'] - $lat) / $g['dy']);
+    $col = fn(float $lon) => (int) round(($lon + 360 - $g['lon1']) / $g['dx']);
+    $r0 = max(0, $row($n)); $r1 = min($H - 1, $row($s)); $c0 = max(0, $col($w)); $c1 = min($W - 1, $col($e));
+    if ($r1 < $r0 || $c1 < $c0) return null;
+    /* unpacked as a stream (the whole image is 49 MB): only the rows from WIN above the box down to its last are kept */
+    $WIN = 256; $rows = []; $y = 0; $buf = ''; $ctx = inflate_init(ZLIB_ENCODING_DEFLATE);
+    foreach (str_split($idat, 4096) as $chunk) {
+        $more = @inflate_add($ctx, $chunk, ZLIB_SYNC_FLUSH); if ($more === false) return null;
+        $buf .= $more; $off = 0; $bl = strlen($buf);
+        while ($bl - $off >= $rb) { if ($y >= $r0 - $WIN) $rows[$y] = substr($buf, $off, $rb); $off += $rb; $y++; if ($y > $r1) break 2; }
+        $buf = substr($buf, $off);
+    }
+    unset($idat, $buf);
+    if (!isset($rows[$r1])) return null;
+    $k = $r0; while ($k > max(0, $r0 - $WIN) && ord($rows[$k][0]) >= 2) $k--;   /* Up, Average and Paeth lean on the row above */
+    $scale = 2 ** $g['E']; $div = 10 ** $g['D']; $cells = []; $prev = null;
+    for ($y = $k; $y <= $r1; $y++) {
+        $f = ord($rows[$y][0]); $cur = array_values(unpack('C*', substr($rows[$y], 1, $stride))); unset($rows[$y]);
+        if ($f !== 0) for ($x = 0; $x < $stride; $x++) {
+            $a = $x >= 2 ? $cur[$x - 2] : 0; $c = $prev ? $prev[$x] : 0; $ul = ($x >= 2 && $prev) ? $prev[$x - 2] : 0; $v = $cur[$x];
+            if ($f === 1) $o = $v + $a; elseif ($f === 2) $o = $v + $c; elseif ($f === 3) $o = $v + (($a + $c) >> 1);
+            else { $pp = $a + $c - $ul; $pa = abs($pp - $a); $pb = abs($pp - $c); $pc = abs($pp - $ul); $o = $v + ($pa <= $pb && $pa <= $pc ? $a : ($pb <= $pc ? $c : $ul)); }
+            $cur[$x] = $o & 255;
+        }
+        if ($y >= $r0) for ($x = $c0; $x <= $c1; $x++) {
+            $mm = ($g['R'] + ($cur[2 * $x] * 256 + $cur[2 * $x + 1]) * $scale) / $div;
+            if ($mm > 0) $cells[] = [$y - $r0, $x - $c0, (int) round($mm * 10)];
+        }
+        $prev = $cur;
+    }
+    return ['lat1' => $g['lat1'], 'lon1' => $g['lon1'], 'dx' => $g['dx'], 'dy' => $g['dy'], 'r0' => $r0, 'c0' => $c0, 'cells' => $cells];
+}
+/** one storm day D: the 24-hour file nearest 12:00 UTC on D+1 (6 am Colorado summer time), cut to the box. null = not there yet. */
+function hailDayFetch(string $day, array $box): ?array {
+    $base = getenv('TRAVERSE_HAIL_ARCHIVE') ?: HAIL_ARCHIVE;   /* the override is for the test copy only */
+    $nx = date('Y/m/d', strtotime($day . ' 12:00 UTC +1 day'));
+    $dir = $base . '/' . $nx . '/mrms/ncep/MESH_Max_1440min/';
+    $html = httpGetRaw($dir, 15); if ($html === null) return null;
+    if (!preg_match_all('/href="([^"]+?_\d{8}-(\d{6})\.grib2\.gz)"/', $html, $m, PREG_SET_ORDER)) return ['missing' => 'no files'];
+    $files = []; foreach ($m as $x) { $dt = abs((int) $x[2] - 120000); if ($dt <= 10000) $files[$x[1]] = $dt; }
+    if (!$files) return ['missing' => 'no file near 12:00 UTC'];
+    asort($files);
+    foreach (array_slice(array_keys($files), 0, 3) as $fn) {
+        $gz = httpGetRaw($dir . $fn, 30); if ($gz === null) continue;
+        $grib = @gzdecode($gz); if (!is_string($grib)) continue;
+        $c = meshCrop($grib, $box['n'], $box['s'], $box['w'], $box['e']);
+        if ($c) return $c + ['file' => $fn];
+    }
+    return ['missing' => 'unreadable'];
+}
+function keepCutoffs(): array { return ['keep' => date('Y-m-d', strtotime('-' . KEEP_YEARS . ' years')), 'major' => date('Y-m-d', strtotime('-' . KEEP_MAJOR_YEARS . ' years'))]; }
+function writeJsonAtomic(string $f, array $j): bool {
+    $tmp = $f . '.tmp' . getmypid();
+    if (@file_put_contents($tmp, json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) return false;
+    return @rename($tmp, $f);
+}
+/** bring the hail files up to date (see above). Returns what it did; never throws. */
+function stormRefresh(bool $force = false): array {
+    $state = DATA_DIR . '/storm-refresh.json';
+    $st = is_readable($state) ? (json_decode((string) file_get_contents($state), true) ?: []) : [];
+    if (!$force && ($st['at'] ?? 0) > time() - HAIL_REFRESH) return ['skipped' => 'fresh'] + $st;
+    if (PHP_SAPI === 'cli-server' && !getenv('TRAVERSE_HAIL_ARCHIVE')) return ['skipped' => 'test server'];   /* PHP's own test server never reaches out for storms */
+    $fp = @fopen($state . '.lock', 'c');
+    if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) return ['skipped' => 'busy'];
+    @set_time_limit(120); @ignore_user_abort(true);   /* a phone that stops waiting does not stop the update half-way */
+    $sf = DATA_DIR . '/hail-storms.json';
+    $hs = json_decode((string) @file_get_contents($sf), true);
+    if (!is_array($hs)) { flock($fp, LOCK_UN); fclose($fp); return ['skipped' => 'no hail files yet']; }
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    /* every door, once: town, area, id, where (the box is the doors' extent plus a margin, as the build's) */
+    $doors = []; $box = ['n' => -90, 's' => 90, 'w' => 180, 'e' => -180]; $label = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $f = regionFile((string) $r['key']); if (!$f) continue;
+        $d = json_decode((string) @file_get_contents($f), true); if (!is_array($d)) continue;
+        $label[$r['key']] = (string) ($r['label'] ?? $r['key']);
+        foreach (($d['areas'] ?? []) as $a) foreach (($a['doors'] ?? []) as $x) {
+            if (!is_numeric($x['lat'] ?? null) || !is_numeric($x['lon'] ?? null)) continue;
+            $la = (float) $x['lat']; $lo = (float) $x['lon'];
+            $doors[] = [$r['key'], (string) $a['name'], (string) $x['id'], $la, $lo];
+            $box['n'] = max($box['n'], $la); $box['s'] = min($box['s'], $la); $box['w'] = min($box['w'], $lo); $box['e'] = max($box['e'], $lo);
+        }
+    }
+    if (!$doors) { flock($fp, LOCK_UN); fclose($fp); return ['skipped' => 'no doors']; }
+    $box = ['n' => $box['n'] + 0.03, 's' => $box['s'] - 0.03, 'w' => $box['w'] - 0.03, 'e' => $box['e'] + 0.03];
+    $through = (string) ($hs['through'] ?? '2020-03-31');
+    $yesterday = date('Y-m-d', strtotime('yesterday'));
+    $pf = DATA_DIR . '/hail-paths.json';
+    $paths = json_decode((string) @file_get_contents($pf), true);
+    $hail = []; $touched = []; $added = []; $missing = []; $storms = [];
+    foreach ((array) ($hs['storms'] ?? []) as $sx) $storms[$sx['date']] = $sx;
+    $loadTown = function (string $k) use (&$hail) { if (!isset($hail[$k])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $k . '.json'), true); $hail[$k] = is_array($j) ? $j : ['doors' => []]; if (!is_array($hail[$k]['doors'] ?? null)) $hail[$k]['doors'] = []; } };
+    for ($day = date('Y-m-d', strtotime($through . ' +1 day')), $n = 0; $day <= $yesterday && $n < HAIL_MAX_DAYS; $day = date('Y-m-d', strtotime($day . ' +1 day')), $n++) {
+        $c = hailDayFetch($day, $box);
+        $recent = $day >= date('Y-m-d', strtotime('-3 days'));
+        if ($c === null || isset($c['missing'])) {
+            if ($recent) break;                      /* not published yet: try again next time */
+            $missing[] = $day; $through = $day; continue;   /* an old gap stays a gap, as in the build */
+        }
+        $grid = []; foreach ($c['cells'] as $x) $grid[$x[0] * 100000 + $x[1]] = $x[2] / 10;
+        if ($grid) foreach ($doors as [$tk, $area, $id, $la, $lo]) {
+            $r = (int) round(($c['lat1'] - $la) / $c['dy']) - $c['r0']; $cc = (int) round(($lo + 360 - $c['lon1']) / $c['dx']) - $c['c0'];
+            $best = 0.0;
+            for ($dr = -1; $dr <= 1; $dr++) for ($dc = -1; $dc <= 1; $dc++) { $v = $grid[($r + $dr) * 100000 + $cc + $dc] ?? 0; if ($v > $best) $best = $v; }
+            if ($best < HAIL_MIN_MM) continue;
+            $inch = round($best / 25.4, 2);
+            $loadTown($tk); $touched[$tk] = true;
+            $list = array_values(array_filter((array) ($hail[$tk]['doors'][$id] ?? []), fn($e) => ($e[0] ?? '') !== $day));
+            array_unshift($list, [$day, $inch]); usort($list, fn($x, $y) => strcmp((string) $y[0], (string) $x[0]));
+            $hail[$tk]['doors'][$id] = $list;
+            $s = $storms[$day] ?? ['date' => $day, 'max' => 0, 'n1' => 0, 'n34' => 0, 'towns' => []];
+            $tw = $s['towns'][$tk] ?? ['label' => $label[$tk] ?? $tk, 'n1' => 0, 'n34' => 0, 'max' => 0, 'areas' => (object) []];
+            $tw['areas'] = (array) $tw['areas'];
+            $s['max'] = max($s['max'], $inch); $tw['max'] = max($tw['max'], $inch); $s['n34']++; $tw['n34']++;
+            if ($best >= HAIL_BIG_MM) { $s['n1']++; $tw['n1']++; $tw['areas'][$area] = ($tw['areas'][$area] ?? 0) + 1; }
+            $s['towns'][$tk] = $tw; $storms[$day] = $s;
+        }
+        if (isset($storms[$day]) && is_array($paths)) {
+            $paths['paths'][$day] = array_values(array_map(fn($x) => [$x[0] + $c['r0'] - (int) $paths['r0'], $x[1] + $c['c0'] - (int) $paths['c0'], (int) round($x[2] / 10 / 25.4 * 100)],
+                array_filter($c['cells'], fn($x) => $x[2] / 10 >= HAIL_MIN_MM)));
+        }
+        $added[] = $day; $through = $day;
+    }
+    /* the keep rule, by storm day (whole days, so door lists and the storm list agree) */
+    $cut = keepCutoffs(); $kept = [];
+    foreach ($storms as $d => $s) if ($d >= $cut['keep'] || ((float) ($s['max'] ?? 0) >= KEEP_MAJOR_HAIL_IN && $d >= $cut['major'])) $kept[$d] = true;
+    $dropped = array_values(array_diff(array_keys($storms), array_keys($kept)));
+    if ($dropped) {
+        foreach (($idx['regions'] ?? []) as $r) {
+            $k = (string) $r['key']; $loadTown($k);
+            foreach ($hail[$k]['doors'] as $id => $list) {
+                $l2 = array_values(array_filter((array) $list, fn($e) => isset($kept[$e[0] ?? ''])));
+                if (count($l2) !== count((array) $list)) { $touched[$k] = true; if ($l2) $hail[$k]['doors'][$id] = $l2; else unset($hail[$k]['doors'][$id]); }
+            }
+        }
+        foreach ($dropped as $d) { unset($storms[$d]); if (is_array($paths)) unset($paths['paths'][$d]); }
+    }
+    $ok = true;
+    foreach (array_keys($touched) as $k) { $hail[$k]['through'] = $through; $hail[$k]['keep'] = $cut; $ok = writeJsonAtomic(DATA_DIR . '/hail-' . $k . '.json', $hail[$k]) && $ok; }
+    if ($added || $dropped || $missing) {
+        krsort($storms);
+        $hs['storms'] = array_values($storms); $hs['through'] = $through; $hs['keep'] = $cut;
+        $hs['days'] = (int) ($hs['days'] ?? 0) + count($added); $hs['missing'] = (int) ($hs['missing'] ?? 0) + count($missing);
+        $ok = writeJsonAtomic($sf, $hs) && $ok;
+        if (is_array($paths)) $ok = writeJsonAtomic($pf, $paths) && $ok;
+    }
+    $res = ['at' => time(), 'through' => $through, 'added' => $added, 'dropped' => count($dropped), 'missing' => $missing, 'written' => $ok];
+    @file_put_contents($state, json_encode($res, JSON_UNESCAPED_SLASHES), LOCK_EX);
+    flock($fp, LOCK_UN); fclose($fp);
+    return $res;
+}
+
 /* the Hail screen: every storm day, the towns and neighbourhoods it hit (admins, where the company has it on) */
 if ($action === 'hail') {
     if (!$session) fail('Sign in first.', 401);
     if (!hailOn((string) ($session['r'] ?? ''))) fail('Not allowed.', 403);
+    stormRefresh();   /* new storm days since the files were made, and the keep rule (at most every 12 hours) */
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-storms.json'), true);
     out(['ok' => true] + (is_array($j) ? $j : ['storms' => [], 'none' => true]));
 }
@@ -1047,7 +1251,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -1254,6 +1458,7 @@ if ($action === 'area') {
     $hailOf = hailOn($role) ? loadHail($key) : [];   /* admins only: storms near the house, newest first */
     $roofOf = roofDataOn($role) ? loadSide('roof', $key) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key) : [];
     $photoOf = roofDataOn($role) ? loadSide('photo', $key) : [];
+    $olOf = roofDataOn($role) ? loadSide('outline', $key) : [];   /* the building's outline on the roof photo (2026-10-06, data-pipeline/door-territory/roofs/outline-photos.mjs) */
     $windOf = hailOn($role) ? loadSide('wind', $key) : [];
     $matOf = roofDataOn($role) ? loadSide('material', $key) : [];
     $mfxOf = loadMatFix($key);
@@ -1300,7 +1505,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null, 'pest' => $pestRow, 'sec' => $secRow,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => $olOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null, 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
@@ -2257,6 +2462,7 @@ if ($action === 'roofsettings') {
 }
 if ($action === 'stormdays') {
     if (!hailOn($role)) fail('Not allowed.', 403);
+    stormRefresh();
     $h = json_decode((string) @file_get_contents(DATA_DIR . '/hail-storms.json'), true) ?: [];
     $w = json_decode((string) @file_get_contents(DATA_DIR . '/wind-storms.json'), true) ?: [];
     $days = [];
@@ -2407,6 +2613,11 @@ if ($action === 'pushlatest') {
     $sent = json_decode((string) @file_get_contents(DATA_DIR . '/push-sent.json'), true) ?: [];
     $best = null; foreach ($sent as $id => $s) if (($s['at'] ?? 0) > time() - 3 * 3600 && (!$best || $s['at'] > $best[1]['at'])) $best = [$id, $s];
     out(['ok' => true, 'alert' => $best ? ['title' => $best[1]['title'], 'body' => $best[1]['body'], 'url' => './', 'tag' => (string) $best[0], 'id' => (string) $best[0]] : null]);
+}
+if ($action === 'stormcron') {
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    if (!feature('hail')) out(['ok' => true, 'note' => 'Hail is off for this company.']);
+    out(['ok' => true] + stormRefresh(!empty($_GET['force'])));
 }
 if ($action === 'pushcron') {
     if (!defined('SIXFOLD_CLI')) fail('Not here.', 404);

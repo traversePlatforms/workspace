@@ -27,6 +27,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'no
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { cutoffs, keepWindDay } from '../storm-keep.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'cache');
@@ -160,6 +161,7 @@ function build() {
   /* a bounding box pre-filter around all doors, generous by the radius */
   const degLat = RADIUS_MI / 69, degLon = RADIUS_MI / 54;
   let total = 0;
+  const perTown = [];
   for (const t of towns()) {
     let ds; try { ds = doorsOf(t.key); } catch { console.log(`  ${t.key}: no door file`); continue; }
     let s = 90, n = -90, w = 180, e = -180;
@@ -168,7 +170,6 @@ function build() {
     const byDay = new Map();
     for (const x of near) { const k = x.r.day; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(x); }
     const doors = {};
-    let capped = 0;
     for (const d of ds) {
       const list = [];
       for (const [day, xs] of byDay) {
@@ -192,12 +193,23 @@ function build() {
         if (pick.mph && pick.mph > st.max) { st.max = pick.mph; st.kind = pick.kind; }
         if (pick.mph && pick.mph > tw.max) { tw.max = pick.mph; tw.kind = pick.kind; }
       }
-      if (!list.length) continue;
+      if (list.length) doors[d.id] = list;
+    }
+    perTown.push({ t, ds, doors });
+  }
+  /* the keep rule (Matthew 2026-10-06), by storm day: two years, five for a gust of 75 mph or more; then the cap */
+  const cut = cutoffs(), kept = new Set(Object.values(storms).filter((s) => keepWindDay(s.date, s.max, cut)).map((s) => s.date));
+  for (const k of Object.keys(storms)) if (!kept.has(k)) delete storms[k];
+  for (const { t, ds, doors } of perTown) {
+    let capped = 0;
+    for (const id of Object.keys(doors)) {
+      const list = doors[id].filter((e) => kept.has(e[0]));
+      if (!list.length) { delete doors[id]; continue; }
       list.sort((a, b) => rank(b) - rank(a) || (a[0] < b[0] ? 1 : -1));
       if (list.length > CAP) capped++;
-      doors[d.id] = list.slice(0, CAP).sort((a, b) => (a[0] < b[0] ? 1 : -1));
+      doors[id] = list.slice(0, CAP).sort((a, b) => (a[0] < b[0] ? 1 : -1));
     }
-    writeFileSync(join(DATA, `wind-${t.key}.json`), JSON.stringify({ ...meta, cap: CAP, capped, doors }));
+    writeFileSync(join(DATA, `wind-${t.key}.json`), JSON.stringify({ ...meta, keep: cut, cap: CAP, capped, doors }));
     total += Object.keys(doors).length;
     const days = new Set(Object.values(doors).flat().map((e) => e[0]));
     console.log(`  ${t.key}: ${Object.keys(doors).length} of ${ds.length} doors with a report within ${RADIUS_MI} mi; ${days.size} storm days in the lists; ${capped} doors had more than ${CAP} days (strongest kept)`);
