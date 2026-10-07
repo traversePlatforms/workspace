@@ -7109,8 +7109,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var layer = L.layerGroup().addTo(map), data = null;
       var draw = function () {
         layer.clearLayers(); if (!data) return;
-        var g = data.grid, n30 = S.crimeDays === 30, shown = 0;
-        data.cells.forEach(function (c) {
+        var g = data.grid || {}, n30 = S.crimeDays === 30, shown = 0;
+        (data.cells || []).forEach(function (c) {
           var n = n30 ? c[6] : c[2] + c[3] + c[4] + c[5]; if (!n) return; shown++;
           var lat = g.lat0 - c[0] * g.dy, lon = g.lon0 + c[1] * g.dx;
           var rect = L.rectangle([[lat - g.dy, lon], [lat, lon + g.dx]], { stroke: false, fillColor: crimeColour(n), fillOpacity: 0.8 });
@@ -7118,7 +7118,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             : '<b>' + n + (n === 1 ? ' report' : ' reports') + ' in this square, last 90 days</b><br>' + c[2] + ' burglary \u00b7 ' + c[3] + ' vehicle \u00b7 ' + c[4] + ' other theft \u00b7 ' + c[5] + ' vandalism<br>' + c[6] + ' of them in the last 30 days');
           rect.addTo(layer);
         });
-        note.textContent = shown + ' squares of about 280 m with reports in the last ' + S.crimeDays + ' days, through ' + fmtD(data.through) + '. Property crime only (burglary, vehicle, other theft, vandalism), never domestic. Outside the city other agencies police, and their reports are not published, so an empty square there means no data, not no crime.' + (data.stale ? ' This copy is more than 12 hours old: the police site did not answer.' : '');
+        note.textContent = shown + ' squares of about 280 m with reports in the last ' + S.crimeDays + ' days' + (data.through ? ', through ' + fmtD(data.through) : '') + '. Property crime only (burglary, vehicle, other theft, vandalism), never domestic. Outside the city other agencies police, and their reports are not published, so an empty square there means no data, not no crime.' + (data.stale ? ' This copy is more than 12 hours old: the police site did not answer.' : '');
       };
       db.addEventListener('click', function () { S.crimeDays = S.crimeDays === 90 ? 30 : 90; db.textContent = 'Last ' + S.crimeDays + ' days'; draw(); });
       api('secmap').then(function (j) {
