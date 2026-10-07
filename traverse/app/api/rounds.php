@@ -994,7 +994,10 @@ if ($isPost) {
 const HAIL_ARCHIVE = 'https://mtarchive.geol.iastate.edu';
 const HAIL_MIN_MM = 19.05, HAIL_BIG_MM = 25.4, HAIL_REFRESH = 12 * 3600, HAIL_MAX_DAYS = 10;
 const KEEP_YEARS = 2, KEEP_MAJOR_YEARS = 5, KEEP_MAJOR_HAIL_IN = 2.0;
-function httpGetRaw(string $url, int $timeout = 20): ?string {
+const HAIL_BUDGET = 75;   /* seconds of fetching per run (review 2026-10-07): what is done by then is written; the rest waits for the next run */
+/** GET as bytes; null when it failed. $code gets the HTTP status (0 = no answer at all), so a 404 ("not there") can be told from an outage */
+function httpGetRaw(string $url, int $timeout = 20, ?int &$code = null): ?string {
+    $code = 0;
     if (function_exists('curl_init')) {
         $c = curl_init($url);
         curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_FOLLOWLOCATION => true, CURLOPT_HTTPHEADER => [agentHeader()]]);
@@ -1002,6 +1005,8 @@ function httpGetRaw(string $url, int $timeout = 20): ?string {
         return ($b !== false && $code === 200) ? (string) $b : null;
     }
     $b = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => $timeout, 'header' => agentHeader()]]));
+    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $m)) $code = (int) $m[1];
+    if ($b !== false && $code === 0) $code = 200;
     return $b === false ? null : $b;
 }
 /** one MRMS MESH GRIB2 file (lat/lon grid, PNG packing) cut to a box: grid, the box's first row and column, and every square with
@@ -1068,23 +1073,26 @@ function meshCrop(string $b, float $n, float $s, float $w, float $e): ?array {
     }
     return ['lat1' => $g['lat1'], 'lon1' => $g['lon1'], 'dx' => $g['dx'], 'dy' => $g['dy'], 'r0' => $r0, 'c0' => $c0, 'cells' => $cells];
 }
-/** one storm day D: the 24-hour file nearest 12:00 UTC on D+1 (6 am Colorado summer time), cut to the box. null = not there yet. */
+/** one storm day D: the 24-hour file nearest 12:00 UTC on D+1 (6 am Colorado summer time), cut to the box.
+    ['missing' => why] = the archive answered and has no usable file for that day; null = no proper answer (an outage, a timeout),
+    so nothing can be said about the day yet (review 2026-10-07: an outage used to be written down as a gap for good). */
 function hailDayFetch(string $day, array $box): ?array {
     $base = getenv('TRAVERSE_HAIL_ARCHIVE') ?: HAIL_ARCHIVE;   /* the override is for the test copy only */
     $nx = date('Y/m/d', strtotime($day . ' 12:00 UTC +1 day'));
     $dir = $base . '/' . $nx . '/mrms/ncep/MESH_Max_1440min/';
-    $html = httpGetRaw($dir, 15); if ($html === null) return null;
+    $html = httpGetRaw($dir, 15, $code);
+    if ($html === null) return $code === 404 ? ['missing' => 'no such day'] : null;
     if (!preg_match_all('/href="([^"]+?_\d{8}-(\d{6})\.grib2\.gz)"/', $html, $m, PREG_SET_ORDER)) return ['missing' => 'no files'];
     $files = []; foreach ($m as $x) { $dt = abs((int) $x[2] - 120000); if ($dt <= 10000) $files[$x[1]] = $dt; }
     if (!$files) return ['missing' => 'no file near 12:00 UTC'];
-    asort($files);
+    asort($files); $outage = false;
     foreach (array_slice(array_keys($files), 0, 3) as $fn) {
-        $gz = httpGetRaw($dir . $fn, 30); if ($gz === null) continue;
+        $gz = httpGetRaw($dir . $fn, 30, $code); if ($gz === null) { if ($code !== 404) $outage = true; continue; }
         $grib = @gzdecode($gz); if (!is_string($grib)) continue;
         $c = meshCrop($grib, $box['n'], $box['s'], $box['w'], $box['e']);
         if ($c) return $c + ['file' => $fn];
     }
-    return ['missing' => 'unreadable'];
+    return $outage ? null : ['missing' => 'unreadable'];
 }
 function keepCutoffs(): array { return ['keep' => date('Y-m-d', strtotime('-' . KEEP_YEARS . ' years')), 'major' => date('Y-m-d', strtotime('-' . KEEP_MAJOR_YEARS . ' years'))]; }
 function writeJsonAtomic(string $f, array $j): bool {
@@ -1127,10 +1135,13 @@ function stormRefresh(bool $force = false): array {
     $hail = []; $touched = []; $added = []; $missing = []; $storms = [];
     foreach ((array) ($hs['storms'] ?? []) as $sx) $storms[$sx['date']] = $sx;
     $loadTown = function (string $k) use (&$hail) { if (!isset($hail[$k])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $k . '.json'), true); $hail[$k] = is_array($j) ? $j : ['doors' => []]; if (!is_array($hail[$k]['doors'] ?? null)) $hail[$k]['doors'] = []; } };
+    $t0 = microtime(true);
     for ($day = date('Y-m-d', strtotime($through . ' +1 day')), $n = 0; $day <= $yesterday && $n < HAIL_MAX_DAYS; $day = date('Y-m-d', strtotime($day . ' +1 day')), $n++) {
+        if (microtime(true) - $t0 > HAIL_BUDGET) break;   /* out of time: write what is done, the rest next run */
         $c = hailDayFetch($day, $box);
+        if ($c === null) break;                      /* the archive did not answer properly: nothing is known about this day yet */
         $recent = $day >= date('Y-m-d', strtotime('-3 days'));
-        if ($c === null || isset($c['missing'])) {
+        if (isset($c['missing'])) {
             if ($recent) break;                      /* not published yet: try again next time */
             $missing[] = $day; $through = $day; continue;   /* an old gap stays a gap, as in the build */
         }
@@ -2095,7 +2106,9 @@ if ($action === 'alertcalls') {
             foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = $why;
         }
     } else {
-        foreach (($al['weather'] ?? []) as $w) if (!isStorm($w)) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
+        /* the warnings this install shows (review 2026-10-07: the cache now also holds freeze and frost for the lawn edition; Sixfold's list never did) */
+        $shown = alertEvents() ?? ALERT_EVENTS;
+        foreach (($al['weather'] ?? []) as $w) if (!isStorm($w) && in_array((string) ($w['event'] ?? ''), $shown, true)) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
         foreach (($al['fires'] ?? []) as $fi) foreach ((array) ($fi['dist'] ?? []) as $t => $mi) if ($mi <= 30) $towns[$t][] = 'Wildfire ' . $mi . ' mi away (' . $fi['name'] . ')';
     }
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
@@ -2827,7 +2840,7 @@ if ($action === 'secmap') {
         $fp = @fopen($f . '.lock', 'c');
         if ($fp && flock($fp, LOCK_EX | LOCK_NB)) {
             $fresh = secMapFetch();
-            if ($fresh) { @file_put_contents($f, json_encode($fresh, JSON_UNESCAPED_SLASHES), LOCK_EX); $m = $fresh; }
+            if ($fresh) { writeJsonAtomic($f, $fresh); $m = $fresh; }   /* whole or not at all: a reader never sees half a map */
             flock($fp, LOCK_UN); fclose($fp);
         }
     }
