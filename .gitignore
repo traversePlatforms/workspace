@@ -128,6 +128,9 @@ traverse/app/data/rounds/roof-*.json
 traverse/app/data/rounds/year-*.json
 # Roof photos (2026-10-05): per-door photo windows, the photo file index, house centres and spot-check images; regenerable
 traverse/app/data/rounds/photo-*.json
+traverse/app/data/rounds/outline-*.json
+traverse/app/data/rounds/storm-refresh.json*
+traverse/app/data/rounds/secmap-cache.json*
 traverse/data-pipeline/door-territory/roofs/photo-index.json
 traverse/data-pipeline/door-territory/roofs/photo-index.log
 traverse/data-pipeline/door-territory/roofs/houses-*.json
