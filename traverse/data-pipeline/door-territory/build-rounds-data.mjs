@@ -247,7 +247,8 @@ const index = [];
 for (const { key, label, group, j, areas: raw } of built) {
   const areas = raw.filter((a) => a.doors.length).map((a) => ({ name: a.name, avg: a.avg, place: placeOf(a.src), fw: firewiseOf(a.src), doors: a.doors }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');
-  index.push({ key, label, ...(group ? { group } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
+  /* c: the town's centre, where the server asks the weather service for alerts (2026-10-07) */
+  index.push({ key, label, ...(group ? { group } : {}), ...(CENTRE[key] ? { c: CENTRE[key] } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
   console.log(`${key}.json  ${areas.length} areas, ${index[index.length - 1].doors} doors`);
 }
 writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');

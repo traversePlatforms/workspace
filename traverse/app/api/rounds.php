@@ -1977,6 +1977,20 @@ function httpJsonMany(array $urls): array {
 function milesBetween(float $la1, float $lo1, float $la2, float $lo2): float {
     return hypot(($la1 - $la2) * 69.0, ($lo1 - $lo2) * 69.0 * cos(deg2rad($la1)));
 }
+/** the towns whose alerts this install asks for (2026-10-07): every town it shows, at its centre (index.json "c", written by
+    build-rounds-data.mjs); a town without one falls back to ALERT_TOWNS, and with none at all the fixed list is used */
+function alertTowns(): array {
+    static $t = null; if ($t !== null) return $t;
+    $t = [];
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = (string) ($r['key'] ?? ''); if ($k === '' || regionHidden($k)) continue;
+        if (isset($r['c'][0], $r['c'][1]) && is_numeric($r['c'][0]) && is_numeric($r['c'][1])) $t[$k] = [round((float) $r['c'][0], 4), round((float) $r['c'][1], 4)];
+        elseif (isset(ALERT_TOWNS[$k])) $t[$k] = ALERT_TOWNS[$k];
+    }
+    if (!$t) $t = ALERT_TOWNS;
+    return $t;
+}
 function freshAlerts(int $maxAge = 600): array {
     $f = DATA_DIR . '/alerts-cache.json';
     $cache = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
@@ -1984,8 +1998,9 @@ function freshAlerts(int $maxAge = 600): array {
     $fp = @fopen($f . '.lock', 'c');                        /* one refresh at a time */
     if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) return $cache ?: ['at' => 0, 'weather' => [], 'fires' => [], 'stale' => true];
     $weather = []; $wOk = true;
-    $answers = httpJsonMany(array_map(fn($p) => 'https://api.weather.gov/alerts/active?point=' . $p[0] . ',' . $p[1], ALERT_TOWNS));
-    foreach (ALERT_TOWNS as $town => [$la, $lo]) {
+    $towns = alertTowns();
+    $answers = httpJsonMany(array_map(fn($p) => 'https://api.weather.gov/alerts/active?point=' . $p[0] . ',' . $p[1], $towns));
+    foreach ($towns as $town => [$la, $lo]) {
         $j = $answers[$town] ?? null;
         if ($j === null) { $wOk = false; continue; }
         foreach (($j['features'] ?? []) as $ft) {
@@ -2011,7 +2026,7 @@ function freshAlerts(int $maxAge = 600): array {
         if (!isset($g['x'], $g['y'])) continue;
         if (($a['PercentContained'] ?? null) !== null && (float) $a['PercentContained'] >= 100) continue;
         $best = null; $dist = [];
-        foreach (ALERT_TOWNS as $town => [$la, $lo]) { $mi = milesBetween($la, $lo, (float) $g['y'], (float) $g['x']); $dist[$town] = (int) round($mi); if (!$best || $mi < $best[1]) $best = [$town, $mi]; }
+        foreach ($towns as $town => [$la, $lo]) { $mi = milesBetween($la, $lo, (float) $g['y'], (float) $g['x']); $dist[$town] = (int) round($mi); if (!$best || $mi < $best[1]) $best = [$town, $mi]; }
         $fires[] = ['name' => (string) ($a['IncidentName'] ?? 'Unnamed fire'), 'acres' => isset($a['IncidentSize']) ? (float) $a['IncidentSize'] : null,
             'contained' => isset($a['PercentContained']) ? (float) $a['PercentContained'] : null,
             'found' => isset($a['FireDiscoveryDateTime']) ? (int) ($a['FireDiscoveryDateTime'] / 1000) : null,
@@ -2791,61 +2806,112 @@ if ($action === 'leadstatus') {
 
 /* security edition: the town figures, and neighbourhoods ranked by reported property crime nearby (data/rounds/security-*.json) */
 /* ---- crime map (Matthew 2026-10-06, TraverseSecurity: "a crime map like a live radar") ----
- * Property crime reported to Colorado Springs police in the last 90 days, counted in squares of about 280 m: a square, never a
- * house or a point. From the city's open data (policedata.coloradosprings.gov, dataset bc88-hemr: burglary, vehicle theft and
- * break-ins, other theft, vandalism; never domestic). Refreshed at most every 12 hours; a failed refresh keeps the last good map. */
+ * Property crime reported to the police in the last 90 days, counted in squares of about 280 m: a square, never a house or a
+ * point. Three cities publish their reports with a map point (2026-10-07):
+ *   Colorado Springs: policedata.coloradosprings.gov, dataset bc88-hemr (never domestic)
+ *   Denver: the city's open data, ArcGIS ODC_CRIME_OFFENSES_P layer 324
+ *   Boulder: Boulder Police Department, ArcGIS BPD_Offenses layer 0
+ * The same four kinds everywhere (burglary; vehicle theft and break-ins; other theft, not shoplifting; vandalism), as the security
+ * build counts them per door. Refreshed at most every 12 hours; a city that fails keeps its last good map. */
 const SECMAP_KINDS = ['Burglary/Breaking & Entering' => 'b', 'Motor Vehicle Theft' => 'v', 'Theft From Motor Vehicle' => 'v',
     'Theft Of Motor Vehicle Parts' => 'v', 'All Other Larceny' => 't', 'Theft From Building' => 't', 'Destruction/Damage/Vandalism of Property' => 'd'];
-const SECMAP_BOX = [39.08, -104.95, 38.68, -104.55];   /* N, W, S, E: the city with a margin */
+const SECMAP_BOULDER_KINDS = ['Burglary / Breaking and Entering' => 'b', 'Motor Vehicle Theft' => 'v', 'Theft from a Motor Vehicle' => 'v',
+    'Theft of Motor Vehicle Parts or Accessories' => 'v', 'All Other Larceny' => 't', 'Theft from a Building' => 't', 'Destruction / Damage / Vandalism of Property' => 'd'];
+const SECMAP_CITIES = [   /* box: N, W, S, E with a margin; centre: where the map opens on that city */
+    'cs' => ['name' => 'Colorado Springs', 'source' => 'Colorado Springs Police Department', 'box' => [39.08, -104.95, 38.68, -104.55], 'centre' => [38.88, -104.76], 'zoom' => 11],
+    'denver' => ['name' => 'Denver', 'source' => 'Denver Police Department', 'box' => [39.92, -105.11, 39.61, -104.60], 'centre' => [39.74, -104.93], 'zoom' => 11],
+    'boulder' => ['name' => 'Boulder', 'source' => 'Boulder Police Department', 'box' => [40.10, -105.32, 39.95, -105.17], 'centre' => [40.015, -105.26], 'zoom' => 12],
+];
 const SECMAP_DY = 0.0025, SECMAP_DX = 0.0032, SECMAP_DAYS = 90, SECMAP_AGE = 12 * 3600;
-function secMapFetch(): ?array {
-    $kinds = implode(',', array_map(fn($k) => "'" . str_replace("'", "''", $k) . "'", array_keys(SECMAP_KINDS)));
-    [$n, $w, $s, $e] = SECMAP_BOX;
-    $since = date('Y-m-d', time() - (SECMAP_DAYS + 1) * 86400);
-    $where = "reporteddate > '$since' AND domestic = 'No' AND crimecodedescription IN ($kinds) AND within_box(location_point, $n, $w, $s, $e)";
-    $seen = []; $cells = []; $through = '';
-    for ($off = 0; $off < 200000; $off += 50000) {
-        $url = 'https://policedata.coloradosprings.gov/resource/bc88-hemr.json?' . http_build_query(['$select' => 'casenumber,reporteddate,crimecodedescription,location_point',
-            '$where' => $where, '$limit' => 50000, '$offset' => $off, '$order' => 'casenumber']);
-        $rows = null;
-        if (function_exists('curl_init')) {
-            $c = curl_init($url);
-            curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 40, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_HTTPHEADER => [agentHeader(), 'Accept: application/json']]);
-            $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
-            if ($body !== false && $code === 200) $rows = json_decode((string) $body, true);
-        } else $rows = httpJsonPlain($url, [agentHeader(), 'Accept: application/json']);
-        if (!is_array($rows)) return null;
-        foreach ($rows as $r) {
-            $k = SECMAP_KINDS[$r['crimecodedescription'] ?? ''] ?? null; $pt = $r['location_point']['coordinates'] ?? null;
-            if (!$k || !is_array($pt) || count($pt) < 2) continue;
-            $id = ($r['casenumber'] ?? '') . '|' . $k; if (isset($seen[$id])) continue; $seen[$id] = 1;   /* one case, several offences: once per kind */
-            $row = (int) floor(($n - (float) $pt[1]) / SECMAP_DY); $col = (int) floor(((float) $pt[0] - $w) / SECMAP_DX);
-            $day = substr((string) ($r['reporteddate'] ?? ''), 0, 10);
-            $key = $row . ',' . $col;
-            if (!isset($cells[$key])) $cells[$key] = [$row, $col, 0, 0, 0, 0, 0];   /* row, col, b, v, t, d, of them in the last 30 days */
-            $cells[$key][['b' => 2, 'v' => 3, 't' => 4, 'd' => 5][$k]]++;
-            if ($day >= date('Y-m-d', time() - 30 * 86400)) $cells[$key][6]++;
-            if ($day > $through) $through = $day;
-        }
-        if (count($rows) < 50000) break;
+function secMapGet(string $url): ?array {
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 40, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_HTTPHEADER => [agentHeader(), 'Accept: application/json']]);
+        $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
+        if ($body === false || $code !== 200) return null;
+        $j = json_decode((string) $body, true); return is_array($j) ? $j : null;
     }
-    return ['at' => time(), 'through' => $through, 'days' => SECMAP_DAYS, 'grid' => ['lat0' => $n, 'lon0' => $w, 'dy' => SECMAP_DY, 'dx' => SECMAP_DX],
-            'cells' => array_values($cells), 'source' => 'Colorado Springs Police Department, Crime Level Data'];
+    return httpJsonPlain($url, [agentHeader(), 'Accept: application/json']);
+}
+/** one city's reports as [case id, kind, day, lat, lon]; null when the city's service did not answer */
+function secMapRows(string $city): ?array {
+    $since = date('Y-m-d', time() - (SECMAP_DAYS + 1) * 86400); $out = [];
+    if ($city === 'cs') {
+        [$n, $w, $s, $e] = SECMAP_CITIES['cs']['box'];
+        $kinds = implode(',', array_map(fn($k) => "'" . str_replace("'", "''", $k) . "'", array_keys(SECMAP_KINDS)));
+        $where = "reporteddate > '$since' AND domestic = 'No' AND crimecodedescription IN ($kinds) AND within_box(location_point, $n, $w, $s, $e)";
+        for ($off = 0; $off < 200000; $off += 50000) {
+            $rows = secMapGet('https://policedata.coloradosprings.gov/resource/bc88-hemr.json?' . http_build_query(['$select' => 'casenumber,reporteddate,crimecodedescription,location_point',
+                '$where' => $where, '$limit' => 50000, '$offset' => $off, '$order' => 'casenumber']));
+            if (!is_array($rows)) return null;
+            foreach ($rows as $r) { $pt = $r['location_point']['coordinates'] ?? null; $k = SECMAP_KINDS[$r['crimecodedescription'] ?? ''] ?? null;
+                if ($k && is_array($pt) && count($pt) >= 2) $out[] = ['C' . ($r['casenumber'] ?? ''), $k, substr((string) ($r['reporteddate'] ?? ''), 0, 10), (float) $pt[1], (float) $pt[0]]; }
+            if (count($rows) < 50000) break;
+        }
+        return $out;
+    }
+    $ts = "TIMESTAMP '$since 00:00:00'";
+    if ($city === 'denver') { $url = 'https://services1.arcgis.com/zdB7qR0BtYrg0Xpl/arcgis/rest/services/ODC_CRIME_OFFENSES_P/FeatureServer/324/query';
+        $q = ['where' => "REPORTED_DATE > $ts AND IS_CRIME = 1 AND OFFENSE_CATEGORY_ID IN ('burglary','auto-theft','theft-from-motor-vehicle','larceny','public-disorder')",
+              'outFields' => 'INCIDENT_ID,OFFENSE_CATEGORY_ID,OFFENSE_TYPE_ID,REPORTED_DATE,GEO_LAT,GEO_LON', 'returnGeometry' => 'false', 'f' => 'json'];
+    } elseif ($city === 'boulder') { $url = 'https://services.arcgis.com/ePKBjXrBZ2vEEgWd/arcgis/rest/services/BPD_Offenses/FeatureServer/0/query';
+        $q = ['where' => "Report_Date > $ts", 'outFields' => 'Report_Number,nibrs_offense,Report_Date', 'returnGeometry' => 'true', 'outSR' => '4326', 'f' => 'json'];
+    } else return null;
+    for ($off = 0; $off < 100000; $off += 2000) {
+        $j = secMapGet($url . '?' . http_build_query($q + ['resultOffset' => $off, 'resultRecordCount' => 2000]));
+        if (!is_array($j) || isset($j['error'])) return null;
+        foreach (($j['features'] ?? []) as $f) {
+            $a = $f['attributes'] ?? [];
+            if ($city === 'denver') {
+                $cat = (string) ($a['OFFENSE_CATEGORY_ID'] ?? ''); $type = (string) ($a['OFFENSE_TYPE_ID'] ?? '');
+                $k = $cat === 'burglary' ? 'b' : (($cat === 'auto-theft' || $cat === 'theft-from-motor-vehicle') ? 'v'
+                    : (($cat === 'larceny' && !preg_match('/shoplift|services/', $type)) ? 't' : (preg_match('/^criminal-mischief/', $type) ? 'd' : null)));
+                if ($k && is_numeric($a['GEO_LAT'] ?? null) && is_numeric($a['GEO_LON'] ?? null)) $out[] = ['D' . ($a['INCIDENT_ID'] ?? ''), $k, date('Y-m-d', (int) (($a['REPORTED_DATE'] ?? 0) / 1000)), (float) $a['GEO_LAT'], (float) $a['GEO_LON']];
+            } else {
+                $k = SECMAP_BOULDER_KINDS[(string) ($a['nibrs_offense'] ?? '')] ?? null; $g = $f['geometry'] ?? [];
+                if ($k && is_numeric($g['y'] ?? null) && is_numeric($g['x'] ?? null)) $out[] = ['B' . ($a['Report_Number'] ?? ''), $k, date('Y-m-d', (int) (($a['Report_Date'] ?? 0) / 1000)), (float) $g['y'], (float) $g['x']];
+            }
+        }
+        if (empty($j['exceededTransferLimit']) && count($j['features'] ?? []) < 2000) break;
+    }
+    return $out;
+}
+/** one city's map: the squares with reports, [row, col, b, v, t, d, of them in the last 30 days], from the box's north-west corner */
+function secMapCity(string $city): ?array {
+    $rows = secMapRows($city); if ($rows === null) return null;
+    [$n, $w] = SECMAP_CITIES[$city]['box']; $seen = []; $cells = []; $through = ''; $d30 = date('Y-m-d', time() - 30 * 86400);
+    foreach ($rows as [$id, $k, $day, $la, $lo]) {
+        $key0 = $id . '|' . $k; if (isset($seen[$key0])) continue; $seen[$key0] = 1;   /* one case, several offences: once per kind */
+        $row = (int) floor(($n - $la) / SECMAP_DY); $col = (int) floor(($lo - $w) / SECMAP_DX);
+        if ($row < 0 || $col < 0) continue;
+        $key = $row . ',' . $col;
+        if (!isset($cells[$key])) $cells[$key] = [$row, $col, 0, 0, 0, 0, 0];
+        $cells[$key][['b' => 2, 'v' => 3, 't' => 4, 'd' => 5][$k]]++;
+        if ($day >= $d30) $cells[$key][6]++;
+        if ($day > $through) $through = $day;
+    }
+    $c = SECMAP_CITIES[$city];
+    return ['name' => $c['name'], 'source' => $c['source'], 'centre' => $c['centre'], 'zoom' => $c['zoom'], 'through' => $through, 'at' => time(),
+            'grid' => ['lat0' => $n, 'lon0' => $w, 'dy' => SECMAP_DY, 'dx' => SECMAP_DX], 'cells' => array_values($cells)];
 }
 if ($action === 'secmap') {
     if (!securityOn($role)) fail('Not here.', 404);
     $f = DATA_DIR . '/secmap-cache.json';
-    $m = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: null) : null;
-    if (!$m || ($m['at'] ?? 0) < time() - SECMAP_AGE) {
+    $m = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
+    if (!isset($m['cities']) || !is_array($m['cities'])) $m = ['cities' => []];   /* a cache from before 2026-10-07 held Colorado Springs alone */
+    $stale = array_filter(array_keys(SECMAP_CITIES), fn($k) => (($m['cities'][$k]['at'] ?? 0) < time() - SECMAP_AGE));
+    if ($stale) {
         $fp = @fopen($f . '.lock', 'c');
         if ($fp && flock($fp, LOCK_EX | LOCK_NB)) {
-            $fresh = secMapFetch();
-            if ($fresh) { writeJsonAtomic($f, $fresh); $m = $fresh; }   /* whole or not at all: a reader never sees half a map */
+            @set_time_limit(120); $changed = false;
+            foreach ($stale as $k) { $fresh = secMapCity($k); if ($fresh) { $m['cities'][$k] = $fresh; $changed = true; } }   /* a city that fails keeps its last map */
+            if ($changed) { $m['at'] = time(); writeJsonAtomic($f, $m); }
             flock($fp, LOCK_UN); fclose($fp);
         }
     }
-    if (!$m) fail('The police map could not be reached. Try again in a few minutes.', 503);
-    out(['ok' => true, 'stale' => ($m['at'] ?? 0) < time() - SECMAP_AGE] + $m);
+    if (!$m['cities']) fail('The police maps could not be reached. Try again in a few minutes.', 503);
+    foreach ($m['cities'] as $k => $c) $m['cities'][$k]['stale'] = (($c['at'] ?? 0) < time() - SECMAP_AGE);
+    out(['ok' => true, 'days' => SECMAP_DAYS, 'cities' => $m['cities']]);
 }
 
 if ($action === 'secrates' || $action === 'seclist') {

@@ -1135,6 +1135,7 @@
   .hailmap .radarkey span{display:inline-flex;align-items:center}
   .hailmap .radarkey i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px}
   .hailmap .radarkey[hidden]{display:none}
+  .crimecities button{margin-right:12px;font-weight:700}.crimecities button.on{text-decoration:underline}
   .hailc .hmax.big{color:var(--later)}
   .hailc .calist .lq{font-weight:700;font-size:13px;margin-top:4px}
   .hailx{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13.5px}
@@ -1464,6 +1465,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         .then(function (j) {
           j._status = r.status; if (fromSaved) j._saved = true;
           if (TRIM_ACTIONS[action]) trimCard(j);
+          /* every town's name for the alerts (2026-10-07): TOWN_NAME only knew Sixfold's eleven */
+          if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; });
           if (j.ok && opts.body && action !== 'signin') warmArea();
           return j;
         });
@@ -7082,22 +7085,27 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }).catch(function () { box.appendChild(q('div', 'msg bad', 'The hail path needs signal.')); });
     });
   }
-  /* ---- crime map (Matthew 2026-10-06) ----
-     Squares of about 280 m coloured by the property crime Colorado Springs police reported in them, last 90 days (or 30). Tap a
-     square for its counts by kind. A square holds a few streets: the map shows where it is busy, never which house. */
-  var CRIME_BINS = [[1, '#facc15','1\u20132'], [3, '#f59e0b','3\u20135'], [6, '#f97316', '6\u201310'], [11, '#dc2626', '11\u201320'], [21, '#7f1d1d', 'over 20']];
+  /* ---- crime map (Matthew 2026-10-06; Denver and Boulder 2026-10-07) ----
+     Squares of about 280 m coloured by the property crime the police reported in them, last 90 days (or 30), in each city that
+     publishes its reports: Colorado Springs, Denver, Boulder. A button per city moves the map there. Tap a square for its counts by
+     kind. A square holds a few streets: the map shows where it is busy, never which house. */
+  var CRIME_BINS = [[1, '#facc15', '1–2'], [3, '#f59e0b', '3–5'], [6, '#f97316', '6–10'], [11, '#dc2626', '11–20'], [21, '#7f1d1d', 'over 20']];
   function crimeColour(n) { var c = CRIME_BINS[0][1]; CRIME_BINS.forEach(function (b) { if (n >= b[0]) c = b[1]; }); return c; }
+  /* the city to open on: the one the town on screen is in, else Colorado Springs */
+  function crimeCityFor(region) { var r = String(region || ''); return r === 'denver' ? 'denver' : r === 'boulder' ? 'boulder' : 'cs'; }
   function crimeMapView() {
     hideToast(); S.signin = null; S.screen = 'crimemap'; foot.hidden = true; setDock(null);
     S.crimeDays = S.crimeDays || 90;
-    setBar('back', { title: 'Crime map', sub: 'Colorado Springs police reports, by area', back: chooseView, backLabel: 'Field tools' });
+    S.crimeCity = S.crimeCity || crimeCityFor(S.region);
+    setBar('back', { title: 'Crime map', sub: 'Police reports, by area', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
     var box = q('div', 'mapwrap hailmap'), el = q('div', 'map'); box.appendChild(el);
     var lg = q('div', 'legend');
     CRIME_BINS.forEach(function (b) { var sp = q('span'), i = q('i'); i.style.background = b[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(b[2])); lg.appendChild(sp); });
     var db = q('button', 'back radarbtn', 'Last ' + S.crimeDays + ' days'); db.type = 'button';
     lg.appendChild(db); box.appendChild(lg);
-    var note = q('div', 'sub2', 'Loading the police reports\u2026'); box.appendChild(note);
+    var cityRow = q('div', 'radarkey crimecities'); box.appendChild(cityRow);
+    var note = q('div', 'sub2', 'Loading the police reports…'); box.appendChild(note);
     view.appendChild(box);
     loadLeaflet(function () {
       if (!document.body.contains(el)) return;
@@ -7106,27 +7114,49 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } });
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
       map.setView([38.88, -104.76], 11);
-      var layer = L.layerGroup().addTo(map), data = null;
+      var layer = L.layerGroup().addTo(map), cities = null;
       var draw = function () {
-        layer.clearLayers(); if (!data) return;
-        var g = data.grid || {}, n30 = S.crimeDays === 30, shown = 0;
-        (data.cells || []).forEach(function (c) {
-          var n = n30 ? c[6] : c[2] + c[3] + c[4] + c[5]; if (!n) return; shown++;
-          var lat = g.lat0 - c[0] * g.dy, lon = g.lon0 + c[1] * g.dx;
-          var rect = L.rectangle([[lat - g.dy, lon], [lat, lon + g.dx]], { stroke: false, fillColor: crimeColour(n), fillOpacity: 0.8 });
-          rect.bindPopup(n30 ? n + (n === 1 ? ' report' : ' reports') + ' in this square, last 30 days'
-            : '<b>' + n + (n === 1 ? ' report' : ' reports') + ' in this square, last 90 days</b><br>' + c[2] + ' burglary \u00b7 ' + c[3] + ' vehicle \u00b7 ' + c[4] + ' other theft \u00b7 ' + c[5] + ' vandalism<br>' + c[6] + ' of them in the last 30 days');
-          rect.addTo(layer);
+        layer.clearLayers(); if (!cities) return;
+        var n30 = S.crimeDays === 30, shown = 0;
+        Object.keys(cities).forEach(function (key) {
+          var c0 = cities[key] || {}, g = c0.grid || {};
+          if (!g.dy || !g.dx) return;
+          (c0.cells || []).forEach(function (c) {
+            var n = n30 ? c[6] : c[2] + c[3] + c[4] + c[5]; if (!n) return;
+            if (key === S.crimeCity) shown++;
+            var lat = g.lat0 - c[0] * g.dy, lon = g.lon0 + c[1] * g.dx;
+            var rect = L.rectangle([[lat - g.dy, lon], [lat, lon + g.dx]], { stroke: false, fillColor: crimeColour(n), fillOpacity: 0.8 });
+            rect.bindPopup(n30 ? n + (n === 1 ? ' report' : ' reports') + ' in this square, last 30 days'
+              : '<b>' + n + (n === 1 ? ' report' : ' reports') + ' in this square, last 90 days</b><br>' + c[2] + ' burglary · ' + c[3] + ' vehicle · ' + c[4] + ' other theft · ' + c[5] + ' vandalism<br>' + c[6] + ' of them in the last 30 days');
+            rect.addTo(layer);
+          });
         });
-        note.textContent = shown + ' squares of about 280 m with reports in the last ' + S.crimeDays + ' days' + (data.through ? ', through ' + fmtD(data.through) : '') + '. Property crime only (burglary, vehicle, other theft, vandalism), never domestic. Outside the city other agencies police, and their reports are not published, so an empty square there means no data, not no crime.' + (data.stale ? ' This copy is more than 12 hours old: the police site did not answer.' : '');
+        var cur = cities[S.crimeCity] || {};
+        note.textContent = (cur.name ? cur.name + ': ' : '') + shown + ' squares of about 280 m with reports in the last ' + S.crimeDays + ' days' + (cur.through ? ', through ' + fmtD(cur.through) : '') +
+          (cur.source ? ' (' + cur.source + ')' : '') + '. Property crime only (burglary, vehicle, other theft, vandalism). Outside these cities other agencies police, and their reports are not published, so an empty area there means no data, not no crime.' +
+          (cur.stale ? ' This copy is more than 12 hours old: the police site did not answer.' : '');
+      };
+      var go = function (key) {
+        var c0 = cities && cities[key]; if (!c0) return;
+        S.crimeCity = key;
+        if (c0.centre) map.setView(c0.centre, c0.zoom || 11);
+        [].forEach.call(cityRow.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-k') === key); });
+        draw();
       };
       db.addEventListener('click', function () { S.crimeDays = S.crimeDays === 90 ? 30 : 90; db.textContent = 'Last ' + S.crimeDays + ' days'; draw(); });
       api('secmap').then(function (j) {
         if (!document.body.contains(el)) return;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { note.textContent = j.error || 'The police reports could not load.'; return; }
-        data = j; draw();
-        map.attributionControl.addAttribution('Reports: Colorado Springs Police Department');
+        cities = j.cities || {};
+        Object.keys(cities).forEach(function (key) {
+          var b = q('button', 'lnk', cities[key].name || key); b.type = 'button'; b.setAttribute('data-k', key);
+          b.addEventListener('click', function () { go(key); });
+          cityRow.appendChild(b);
+        });
+        if (!cities[S.crimeCity]) S.crimeCity = Object.keys(cities)[0];
+        go(S.crimeCity);
+        map.attributionControl.addAttribution('Reports: Colorado Springs, Denver and Boulder police');
       }).catch(function () { note.textContent = 'The crime map needs signal.'; });
     });
   }
