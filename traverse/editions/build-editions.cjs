@@ -351,8 +351,18 @@ async function build(key) {
   /* the towns this edition does not show (2026-10-07): a town in a group its company.json townGroups does not list. Its door file
      and its side files (hail-, roof-, outline- ... -<town>.json) stay out of the pack, and it leaves the edition's index. */
   const groupsShown = (E.company().townGroups || []);
-  const notHere = new Set(JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions.filter((r) => r.group && !groupsShown.includes(r.group)).map((r) => r.key));
-  const townOfFile = (f) => { const b = f.replace(/\.json$/, ''); if (notHere.has(b)) return b; for (const k of notHere) if (b.endsWith('-' + k)) return k; return null; };
+  const allRegions = JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions
+    .concat(E.extraRegions ? JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions : []);
+  const notHere = new Set(allRegions.filter((r) => r.group && !groupsShown.includes(r.group)).map((r) => r.key));
+  /* the town a data file belongs to: the file is the town itself, or <kind>-<town>.json. Matched against EVERY town, longest key
+     first, so a town whose key ends another town's key (say "springs" against "com-springs") never claims the other's files
+     (review 2026-10-07). Returns the town only when this edition does not show it. */
+  const keysLongestFirst = allRegions.map((r) => r.key).sort((a, b) => b.length - a.length);
+  const townOfFile = (f) => {
+    const b = f.replace(/\.json$/, '');
+    const k = keysLongestFirst.find((key) => b === key || b.endsWith('-' + key));
+    return k && notHere.has(k) ? k : null;
+  };
   for (const f of fs.readdirSync(DATA)) {
     const p = path.join(DATA, f);
     if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || !E.keep(f)) continue;
