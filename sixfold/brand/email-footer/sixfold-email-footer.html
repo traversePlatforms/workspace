@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sixfold Email Footer</title>
-<!-- Draft 2026-10-07. Every line is from the live site's footer (sixfoldcolorado.com, checked 2026-10-07). Nothing is applied
+<!-- Draft 2026-10-07; the green card mark (the cascade on Pine, as printed 2026-09-29) and Turf links, Matthew's ask. Every line is from the live site's footer (sixfoldcolorado.com, checked 2026-10-07). Nothing is applied
      until Matthew pastes it into the Admin console himself. -->
 <style>
-:root{--ink:#0E1512;--soft:#5b6660;--line:#dcd6cb;--bg:#f6f3ee;--card:#ffffff;--ember:#B84C15;--moss:#5f7a52}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--ember:#E4703A;--moss:#8AA07A}}
-:root[data-theme="dark"]{--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--ember:#E4703A;--moss:#8AA07A}
+:root{--ink:#0E1512;--soft:#5b6660;--line:#dcd6cb;--bg:#f6f3ee;--card:#ffffff;--ember:#2F7A4F;--moss:#5f7a52}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--ember:#3f8f5e;--moss:#8AA07A}}
+:root[data-theme="dark"]{--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--ember:#3f8f5e;--moss:#8AA07A}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
@@ -41,11 +41,11 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
     <div id="footer">
       <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif">
         <tr>
-          <td style="padding:0 14px 0 0;vertical-align:top"><img src="https://sixfoldcolorado.com/assets/email/sixfold-mark-email-64.png" width="52" height="60" alt="Sixfold" style="display:block;border:0"></td>
-          <td style="vertical-align:top;border-left:2px solid #8AA07A;padding:0 0 0 14px">
+          <td style="padding:0 14px 0 0;vertical-align:top"><img src="https://sixfoldcolorado.com/assets/email/sixfold-mark-email-green-64.png" width="56" height="56" alt="Sixfold" style="display:block;border:0"></td>
+          <td style="vertical-align:top;border-left:2px solid #2F7A4F;padding:0 0 0 14px">
             <div style="font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;font-size:18px;font-weight:bold;color:#0E1512;line-height:1.2">Sixfold Colorado</div>
             <div style="font-size:13px;color:#5b6660;line-height:1.5;margin-top:2px">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation</div>
-            <div style="font-size:13px;line-height:1.5;margin-top:4px"><a href="tel:+13039151045" style="color:#B84C15;text-decoration:none;font-weight:bold">(303) 915-1045</a> <span style="color:#b9b2a6">·</span> <a href="mailto:Contact@SixfoldColorado.com" style="color:#B84C15;text-decoration:none">Contact@SixfoldColorado.com</a> <span style="color:#b9b2a6">·</span> <a href="https://sixfoldcolorado.com" style="color:#B84C15;text-decoration:none">SixfoldColorado.com</a></div>
+            <div style="font-size:13px;line-height:1.5;margin-top:4px"><a href="tel:+13039151045" style="color:#2F7A4F;text-decoration:none;font-weight:bold">(303) 915-1045</a> <span style="color:#b9b2a6">·</span> <a href="mailto:Contact@SixfoldColorado.com" style="color:#2F7A4F;text-decoration:none">Contact@SixfoldColorado.com</a> <span style="color:#b9b2a6">·</span> <a href="https://sixfoldcolorado.com" style="color:#2F7A4F;text-decoration:none">SixfoldColorado.com</a></div>
             <div style="font-size:12px;color:#8a918c;line-height:1.5;margin-top:2px">Monument, CO · serving El Paso, Teller and Douglas counties</div>
           </td>
         </tr>
@@ -60,8 +60,8 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
   </div>
 
   <h2>1. Put the logo online (once)</h2>
-  <p>Gmail's footer can only show a picture from a public website, not from Google Drive. Upload both files from <code>sixfold\site\assets\email\</code> to <code>public_html/assets/email/</code> on sixfoldcolorado.com, so this address opens the picture:</p>
-  <p><code>https://sixfoldcolorado.com/assets/email/sixfold-mark-email-64.png</code></p>
+  <p>Gmail's footer can only show a picture from a public website, not from Google Drive. Upload the two green files, <code>sixfold-mark-email-green-64.png</code> and <code>sixfold-mark-email-green.png</code>, from <code>sixfold\site\assets\email\</code> to <code>public_html/assets/email/</code> on sixfoldcolorado.com, so this address opens the picture:</p>
+  <p><code>https://sixfoldcolorado.com/assets/email/sixfold-mark-email-green-64.png</code></p>
 
   <h2>2. Add the footer for everyone</h2>
   <ol>
@@ -85,7 +85,7 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
   var html = document.getElementById('footer').innerHTML;   /* taken before the preview swap below, so it keeps the live address */
   /* until the logo is uploaded (step 1), the preview shows the local copy; what is copied still points at the website */
   var lg = document.querySelector('#footer img');
-  function local() { lg.src = '../../site/assets/email/sixfold-mark-email-64.png'; }
+  function local() { lg.src = '../../site/assets/email/sixfold-mark-email-green-64.png'; }
   if (lg.complete && !lg.naturalWidth) local(); else lg.addEventListener('error', local);
   var text = 'Sixfold Colorado\nLawn & turf care · Landscaping · Land clearing · Fire mitigation\n(303) 915-1045 · Contact@SixfoldColorado.com · SixfoldColorado.com\nMonument, CO · serving El Paso, Teller and Douglas counties';
   function selectCopy(el) {
