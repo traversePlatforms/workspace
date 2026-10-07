@@ -219,3 +219,16 @@ traverse/data-pipeline/door-territory/solar/eia861/
 
 # free Census API key for the pipeline (2026-10-07); never committed
 traverse/data-pipeline/door-territory/census-key.txt
+
+# free NOAA Climate Data Online token for the pipeline (2026-10-07); never committed
+traverse/data-pipeline/door-territory/noaa-token.txt
+
+# permit pulls (2026-10-07): refetchable; douglas-permits.json holds street addresses
+traverse/data-pipeline/door-territory/permits/*-permits.json
+
+# FEMA tract cache (2026-10-07), refetchable
+traverse/data-pipeline/door-territory/nri/nri-cache.json
+
+# generated per-town side files (2026-10-07): permits and FEMA tract ratings, rebuilt by the pipeline
+traverse/app/data/rounds/permit-*.json
+traverse/app/data/rounds/nri-*.json

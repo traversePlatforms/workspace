@@ -30,6 +30,12 @@ step year-c bash -c "cd assessor && node build-year.mjs"
 # county values: the editions' counties and El Paso's assessor file (added 2026-10-07, after Denver's door list)
 step value-c node sample-value.mjs
 step rounds-c2 node build-rounds-data.mjs
+# added 2026-10-07 evening, after the door files: re-roof and solar permits, FEMA tract ratings, power company figures
+step permits-pprbd-c bash -c "cd permits && node fetch-pprbd.mjs"
+step permits-douglas-c bash -c "cd permits && node fetch-douglas.mjs"
+step permits-build-c bash -c "cd permits && node build-permits.mjs"
+step nri-c bash -c "cd nri && node build-nri.mjs"
+step utility-figures-c bash -c "cd solar && node utility-figures.mjs && node sample-solar.mjs --build"
 step pest-c bash -c "cd pest && node build-pest.mjs"
 step security-c bash -c "cd security && node build-security.mjs"
 step hail-fetch-c bash -c "cd hail && node build-hail.mjs fetch 2021-10-01 $(date -d yesterday +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)"

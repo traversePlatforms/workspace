@@ -75,7 +75,7 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-)/.test(f),
+    keep: (f) => !/^(hail-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-)/.test(f),
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -106,7 +106,7 @@ const EDITIONS = {
          bg: '#f7f5ef', line: '#e6e0d1', sunk: '#efeadf', card1: '#4d380c', appbar: '#45320a', tile: '#5c4410',
          dBg: '#120e05', dCard: '#1d170b', dLine: '#3a2f18', dSunk: '#17120a', dBar: '#211906', dAccent: '#f2c14e' },
     // the roof and the sun; none of the storm, lawn, fire or commercial layers
-    keep: (f) => !/^(hail-|wind-|com-|lawnmask-|pest-|security-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(nri-|hail-|wind-|com-|lawnmask-|pest-|security-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Solar Co', short: 'Example Solar', tagline: 'Solar and battery installs',
@@ -135,7 +135,7 @@ const EDITIONS = {
          bg: '#f6f4f8', line: '#e2dce8', sunk: '#ede8f2', card1: '#4c2a6b', appbar: '#452664', tile: '#5f3786',
          dBg: '#100b15', dCard: '#1b1424', dLine: '#33283f', dSunk: '#150f1b', dBar: '#1e1229', dAccent: '#c9a6ea' },
     // the pest layers and trees near the house; none of the storm, roof, solar, lawn, fire or commercial layers
-    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|outline-|com-|solar-|lawnmask-|security-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(nri-|hail-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|lawnmask-|security-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Pest Co', short: 'Example Pest', tagline: 'Pest control for homes',
@@ -163,7 +163,7 @@ const EDITIONS = {
          bg: '#f3f7f8', line: '#dbe6e8', sunk: '#e6eff1', card1: '#1a4d58', appbar: '#164550', tile: '#22606d',
          dBg: '#081315', dCard: '#101e21', dLine: '#233a3f', dSunk: '#0c181b', dBar: '#0d262b', dAccent: '#8fd0da' },
     // the security layers; none of the storm, roof, solar, pest, lawn, fire or commercial layers
-    keep: (f) => !/^(hail-|wind-|roof-|year-|material-|photo-|naip-|outline-|com-|solar-|pest-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(nri-|hail-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Security Co', short: 'Example Security', tagline: 'Home security and monitoring',
