@@ -900,6 +900,20 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **X-8 — Weekly analytics pull** across everything running. **Do this last** — it's a
       wrapper around things that are still moving, and building it now means rebuilding it.
 
+## Traverse
+
+Matthew's own field-sales app ([traverse/](traverse/)), its five editions and the data behind them. Added 2026-10-07.
+
+- [ ] **TR-1 — Send the building permit records requests.** Six towns publish no permit list:
+      Castle Rock, Parker, Castle Pines (Roofing and Solar), Arvada, Centennial, Thornton (Solar).
+      One letter, filled in per town, asking for re-roof and solar permits since 2016 (addresses,
+      dates, types; no names) —
+      [permit-records-requests-2026-10.md](traverse/research/permit-records-requests-2026-10.md).
+      **Castle Rock takes requests only through its online Open Records Center, not email.** Castle
+      Pines' and Centennial's routes weren't confirmed: find them on each town's site. Towns may
+      charge after the first hour; the letter asks for a quote first. When a file comes back, drop it
+      in `traverse/data-pipeline/door-territory/permits/raw/` and tell Claude the town.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
