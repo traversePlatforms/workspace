@@ -430,6 +430,10 @@ if (droppedBiz || droppedDup) {
   console.log(`   filtered out: ${droppedBiz} non-residential owners, ${droppedDup} duplicate addresses`);
 }
 
+/* --no-pdf (2026-10-07): the neighbourhood sidecar only. The Traverse editions' towns need no printed book, and that book is
+   Sixfold's (its name is on every sheet). */
+if (process.argv.includes('--no-pdf')) { console.log(`written ${areaSlug}-areas.json (no PDF)`); process.exit(0); }
+
 /* ---- render, and assert the page count ----------------------------------- */
 const run = spawnSync('node', [join(SIXFOLD, 'tools', 'html-to-pdf.mjs'), 'Sixfold-Walk-List'],
   { cwd: SIXFOLD, encoding: 'utf8' });
