@@ -57,7 +57,7 @@ const EDITIONS = {
         // the weather this edition shows and pushes (Matthew 2026-10-06): storms with their hail size, wind and heat; no fire
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
-        townGroups: ['north-douglas', 'cs-east', 'security-widefield', 'fountain'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
+        townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
         features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true },
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
@@ -170,7 +170,7 @@ const EDITIONS = {
       extraWork: [['nosystem', 'No visible system'], ['doorbell', 'Has a camera doorbell'], ['sign', 'Provider sign in the yard'],
                   ['otherco', 'Already has a provider'], ['dog', 'Dog at home'], ['newmove', 'Just moved in']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas', 'denver', 'cs-east', 'cs-west', 'boulder'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
+      townGroups: ['north-douglas', 'denver', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'boulder'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: false, security: true },
       links: { googleReview: '' }

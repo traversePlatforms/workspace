@@ -37,7 +37,9 @@ const SOURCES = [
   ['castle-pines', 'Castle Pines', 'castle-pines-areas.json', 'north-douglas'],
   /* each edition's own best towns (2026-10-07, traverse/research/edition-towns-2026-10.md): the group is the town itself, and each
      edition's company.json townGroups names the ones it carries (Roofing: the hail towns; Solar; Pest; Security: police data) */
-  ['cs-east', 'Colorado Springs East', 'cs-east-areas.json', 'cs-east'],
+  /* Colorado Springs as four towns of 24,000-31,000 doors (east and west split at -104.76, then north and south at each half's middle) */
+  ['cs-northeast', 'Colorado Springs Northeast', 'cs-northeast-areas.json', 'cs-northeast'],
+  ['cs-southeast', 'Colorado Springs Southeast', 'cs-southeast-areas.json', 'cs-southeast'],
   ['security-widefield', 'Security-Widefield', 'security-widefield-areas.json', 'security-widefield'],
   ['fountain', 'Fountain', 'fountain-areas.json', 'fountain'],
   ['arvada', 'Arvada', 'arvada-areas.json', 'arvada'],
@@ -47,7 +49,8 @@ const SOURCES = [
   ['erie', 'Erie', 'erie-areas.json', 'erie'],
   ['commerce-city', 'Commerce City', 'commerce-city-areas.json', 'commerce-city'],
   ['denver', 'Denver', 'denver-areas.json', 'denver'],
-  ['cs-west', 'Colorado Springs West', 'cs-west-areas.json', 'cs-west'],
+  ['cs-northwest', 'Colorado Springs Northwest', 'cs-northwest-areas.json', 'cs-northwest'],
+  ['cs-southwest', 'Colorado Springs Southwest', 'cs-southwest-areas.json', 'cs-southwest'],
   ['boulder', 'Boulder', 'boulder-areas.json', 'boulder'],
 ];
 
@@ -156,7 +159,7 @@ const CENTRE = {
   franktown: [39.3894, -104.7519], 'woodland-park': [39.0000, -105.0569], divide: [38.9469, -105.1636],
   florissant: [38.9469, -105.2911], 'cripple-creek': [38.7466, -105.1783],
   'highlands-ranch': [39.540, -104.985], parker: [39.515, -104.765], 'castle-pines': [39.455, -104.895],
-  'cs-east': [38.88, -104.7],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-west': [38.88, -104.82],   'boulder': [40.015, -105.255],
+  'cs-northeast': [38.95, -104.70],   'cs-southeast': [38.86, -104.71],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-northwest': [38.92, -104.82],   'cs-southwest': [38.81, -104.81],   'boulder': [40.015, -105.255],
 };
 const km = (la1, lo1, la2, lo2) => Math.hypot((la1 - la2) * 111, (lo1 - lo2) * 111 * Math.cos((la1 * Math.PI) / 180));
 const built = [];

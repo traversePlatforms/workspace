@@ -7,7 +7,7 @@
     "black-forest": "elpaso", "monument": "elpaso", "palmer-lake": "elpaso",
     "woodland-park": "teller", "divide": "teller", "florissant": "teller", "cripple-creek": "teller",
     "highlands-ranch": "douglas", "parker": "douglas", "castle-pines": "douglas",
-    "cs-east": "elpaso", "security-widefield": "elpaso", "fountain": "elpaso", "arvada": "jefferson", "centennial": "arapahoe", "thornton": "adams", "windsor": "weld", "erie": "weld", "commerce-city": "adams", "denver": "denver", "cs-west": "elpaso", "boulder": "boulder"
+    "cs-northeast": "elpaso", "cs-southeast": "elpaso", "security-widefield": "elpaso", "fountain": "elpaso", "arvada": "jefferson", "centennial": "arapahoe", "thornton": "adams", "windsor": "weld", "erie": "weld", "commerce-city": "adams", "denver": "denver", "cs-northwest": "elpaso", "cs-southwest": "elpaso", "boulder": "boulder"
   },
   "cards": {
     "_note": "One short line each for the door card (new layout). Keep them in step with the sheets below.",
