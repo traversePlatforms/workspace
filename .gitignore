@@ -216,3 +216,6 @@ traverse/data-pipeline/door-territory/data-gov-key.txt
 
 # EIA-861 survey download (2026-10-07), large and re-fetchable
 traverse/data-pipeline/door-territory/solar/eia861/
+
+# free Census API key for the pipeline (2026-10-07); never committed
+traverse/data-pipeline/door-territory/census-key.txt
