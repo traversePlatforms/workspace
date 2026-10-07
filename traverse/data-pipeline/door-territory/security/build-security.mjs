@@ -23,7 +23,8 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), DT = join(HERE, '..');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds'), CACHE = join(HERE, 'cache');
-const KEY = process.env.DATA_GOV_KEY || 'DEMO_KEY';
+/* the free api.data.gov key (2026-10-07): data-gov-key.txt beside the door lists, never in git; DEMO_KEY allows 30 calls an hour */
+const KEY = process.env.DATA_GOV_KEY || (existsSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'data-gov-key.txt')) ? readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'data-gov-key.txt'), 'utf8').trim() : '') || 'DEMO_KEY';
 mkdirSync(CACHE, { recursive: true });
 const today = new Date(), iso = (d) => d.toISOString().slice(0, 10);
 const daysAgo = (n) => new Date(today.getTime() - n * 86400000);

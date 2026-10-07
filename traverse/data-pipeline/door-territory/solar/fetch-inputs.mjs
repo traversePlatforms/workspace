@@ -11,7 +11,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const KEY = process.env.NLR_API_KEY || 'DEMO_KEY';
+/* the free api.data.gov key (2026-10-07): data-gov-key.txt beside the door lists, never in git; DEMO_KEY allows 30 calls an hour */
+const KEY = process.env.NLR_API_KEY || (existsSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'data-gov-key.txt')) ? readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'data-gov-key.txt'), 'utf8').trim() : '') || 'DEMO_KEY';
 const AT = { lat: 39.23, lon: -104.88 };
 const AZ = [90, 135, 180, 225, 270], TILT = [10, 25, 40];
 const UTIL = 'https://services3.arcgis.com/DgjqnJA1rgO92Soi/arcgis/rest/services/Electric_Utility_Service_Territories/FeatureServer/0/query';
