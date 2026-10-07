@@ -55,6 +55,7 @@ const EDITIONS = {
       return Object.assign(ex, {
         email: '', site: 'traverseplatforms.com',
         // the weather this edition shows and pushes (Matthew 2026-10-06): storms with their hail size, wind and heat; no fire
+        best: 'roof',   // best doors first: this trade's walking order (2026-10-07)
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
         townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
@@ -86,6 +87,7 @@ const EDITIONS = {
       extraWork: [['thin', 'Thin or patchy lawn'], ['weeds', 'Weeds'], ['leaves', 'Leaves or debris'], ['shrubs', 'Overgrown shrubs'],
                   ['branches', 'Branches near the house'], ['fuel', 'Dry brush close to the house']],
       // storm and tornado warnings for the crew's safety, and freeze and frost for the lawn; no fire alerts (Matthew 2026-10-06)
+      best: 'yards',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'],
       townGroups: ['north-douglas'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
@@ -114,6 +116,7 @@ const EDITIONS = {
       leadNeeds: ['Solar quote', 'Lower my bill', 'Battery backup', 'EV charger', 'Question'],
       extraWork: [['south', 'Roof faces south'], ['shade', 'Shade from trees'], ['oldroof', 'Roof looks near the end of its life'],
                   ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
+      best: 'solar',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
       townGroups: ['north-douglas', 'arvada', 'centennial', 'thornton'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
@@ -142,6 +145,7 @@ const EDITIONS = {
       leadNeeds: ['Pest plan', 'Ants or spiders', 'Wasps', 'Mice or rodents', 'Mosquitoes', 'Question'],
       extraWork: [['wasps', 'Wasp nest seen'], ['ants', 'Ant trails'], ['spiders', 'Spiders or webs'], ['mice', 'Signs of mice'],
                   ['firewood', 'Firewood against the house'], ['water', 'Standing water'], ['otherco', 'Already has a pest company']],
+      best: 'pest',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
       townGroups: ['north-douglas', 'windsor', 'erie', 'commerce-city'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true },
@@ -169,6 +173,7 @@ const EDITIONS = {
       leadNeeds: ['Alarm quote', 'Cameras', 'Video doorbell', 'Smart home', 'Question'],
       extraWork: [['nosystem', 'No visible system'], ['doorbell', 'Has a camera doorbell'], ['sign', 'Provider sign in the yard'],
                   ['otherco', 'Already has a provider'], ['dog', 'Dog at home'], ['newmove', 'Just moved in']],
+      best: 'security',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
       townGroups: ['north-douglas', 'denver', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'boulder'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true },

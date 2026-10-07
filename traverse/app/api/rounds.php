@@ -87,13 +87,16 @@ function company(): array {
             /* the weather warnings this install shows and pushes (2026-10-06, the editions); null = Sixfold's rules (see alertEvents) */
             'alerts' => null,
             /* the town groups this install shows (2026-10-07): a town in index.json with a "group" is hidden unless named here */
-            'townGroups' => []];
+            'townGroups' => [],
+            /* best doors first (2026-10-07, the editions): the trade whose walking order the door list offers; null = none (Sixfold) */
+            'best' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
     $c['card'] = array_replace($def['card'], is_array($c['card']) ? $c['card'] : []);
     foreach (['services', 'extraWork'] as $k) $c[$k] = array_values(array_filter((array) $c[$k], fn($p) => is_array($p) && count($p) >= 2 && preg_match('/^[a-z0-9_-]{1,30}$/D', (string) $p[0])));
     if (!$c['services']) $c['services'] = $def['services'];
+    if (!in_array($c['best'], ['roof', 'yards', 'solar', 'pest', 'security'], true)) $c['best'] = null;
     $c['townGroups'] = array_values(array_filter(array_map(fn($g) => is_string($g) ? trim($g) : '', (array) $c['townGroups']), fn($g) => (bool) preg_match('/^[a-z0-9-]{1,40}$/D', $g)));
     $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
     return $c;

@@ -1062,6 +1062,8 @@
   .old .oldl{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-bottom:3px}
   .oldl.maybe{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-top:3px}
   .prevm{font-style:italic}
+  .bestwhy{display:flex;gap:6px;align-items:flex-start;font-size:13px;font-weight:700;color:var(--ink);margin:4px 0 2px;line-height:1.35}
+  .bestwhy .ic{flex:none;width:15px;height:15px;margin-top:1px;color:var(--soft)}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
   .strh:first-of-type{margin-top:6px}
   .wk{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
@@ -3338,9 +3340,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.area = j.area; S.doors = j.doors; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null; S.rest = j.rest || 2; S.areaPlace = j.place || null; S.areaFw = j.fw || null;
       if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss' && !backOn(fd)) S.showAgain = true; }
-      if (!S.dview) { var dv = 'street'; try { dv = localStorage.getItem('sixfold.rounds.doorview') || 'street'; } catch (e) {} S.dview = dv; }
+      /* an edition with a walking order opens on it until the phone picks another (2026-10-07) */
+      if (!S.dview) { var dv0 = bestTrade() ? 'best' : 'street', dv = dv0; try { dv = localStorage.getItem('sixfold.rounds.doorview') || dv0; } catch (e) {} S.dview = dv; }
       /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
-      if (S.dview === 'map') S.dview = 'street';
+      if (S.dview === 'map' || (S.dview === 'best' && !bestTrade())) S.dview = 'street';
       S.mapSel = null; S.sheetMin = false;
       if (S.dview === 'near' && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
@@ -3942,6 +3945,88 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     return bar;
   }
+  /* ---- best doors first (Matthew 2026-10-07): each edition's own walking order ----
+     company.json "best" names the trade. Each door gets the facts from its own card that matter for that trade, each worth a few
+     points; the list runs most points first and every door says why it is there. The same facts the card shows, never a number
+     on the door. Security leaves crime out: it is the same for every door in a neighbourhood, and never pinned on a house; the
+     crime map is for choosing the neighbourhood. */
+  var BEST_NAME = { roof: 'roofing', yards: 'lawn and yard work', solar: 'solar', pest: 'pest control', security: 'home security' };
+  function bestTrade() { var b = CO && CO.best; return BEST_NAME[b] ? b : null; }
+  function bestNewOwner(d, sold) {
+    var now = new Date();
+    if (sold && (now.getFullYear() - +sold.slice(0, 4)) * 12 + (now.getMonth() + 1 - +sold.slice(5, 7)) <= 12) return 'New owner (sold ' + MONTHS[+sold.slice(5, 7) - 1] + ' ' + sold.slice(0, 4) + ')';
+    if (d.os) return 'New owner since ' + String(d.os).slice(0, 7);
+    return null;
+  }
+  function bestNear(x, n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+  var BEST = {
+    roof: function (d) {
+      var f = [], yr = new Date().getFullYear();
+      if (d.hail && d.hail.length && cardOn('hail')) {
+        var h = d.hail.reduce(function (m, x) { return x[1] > m[1] ? x : m; }, d.hail[0]);
+        var hp = h[1] >= 1.75 ? 6 : h[1] >= 1.25 ? 4 : h[1] >= 1 ? 3 : h[1] >= 0.75 ? 1 : 0;
+        if (hp) f.push([hp, 'Hail ' + inch(h[1]) + ' on ' + hailDay(h[0])]);
+      }
+      if (d.wind && d.wind.length && cardOn('hail')) {
+        var w = d.wind.reduce(function (m, x) { return (x[1] || 0) > (m[1] || 0) ? x : m; }, d.wind[0]);
+        if (w[1] >= 58) f.push([w[1] >= 75 ? 3 : 2, 'Wind ' + w[1] + ' mph on ' + hailDay(w[0])]);
+      }
+      if (d.bld && d.bld.yb) {
+        var age = yr - Math.max(d.bld.yb, d.bld.rm || 0);
+        if (age >= 12) f.push([age >= 20 ? 2 : 1, 'Built ' + d.bld.yb + (d.bld.rm ? ', remodeled ' + d.bld.rm : '')]);
+      }
+      if (d.roof && d.roof.sqs >= 30) f.push([1, 'Big roof, ' + d.roof.sqs + ' squares']);
+      return f;
+    },
+    yards: function (d) {
+      var f = [], lv = cardOn('lawn') ? lawnLevelOf(d) : null, tl = cardOn('trees') ? treeLevel(d) : null;
+      if (lv === 'L') f.push([3, 'Large lawn']); else if (lv === 'M') f.push([2, 'Medium lawn']);
+      if (cardOn('fire') && d.fire === 5) f.push([2, 'Very high fire hazard']); else if (cardOn('fire') && d.fire === 4) f.push([1, 'High fire hazard']);
+      if (tl === 'against') f.push([2, 'Trees against the house']); else if (tl === 'heavy') f.push([1, 'Heavy trees within 30 ft']);
+      if (d.acres >= 0.5) f.push([1, Math.round(d.acres * 10) / 10 + '-acre lot']);
+      return f;
+    },
+    solar: function (d) {
+      var s = d.solar, f = []; if (!s || !feat('solar')) return f;
+      if (s.pn && s.kwh) { var sp = s.kwh >= 10000 ? 3 : s.kwh >= 7000 ? 2 : s.kwh >= 4000 ? 1 : 0;
+        if (sp) f.push([sp, 'Room for about ' + s.pn + ' panels, about ' + s.kwh.toLocaleString('en-US') + ' kWh a year']); }
+      if (s.sh === 'open') f.push([2, 'No tall trees on the sunny side']);
+      else if (s.sh === 'heavy') f.push([-3, 'but heavy shade on the sunny side']);
+      return f;
+    },
+    pest: function (d) {
+      var p = d.pest, f = []; if (!p || !feat('pest')) return f;
+      var nw = bestNewOwner(d, p.sold); if (nw) f.push([2, nw]);
+      if (p.nb) f.push([2, bestNear(0, p.nb, 'neighbour', 'neighbours') + ' on service nearby']);
+      if (p.bk) f.push([1, p.bk + ' booked nearby this month']);
+      var tl = treeLevel(d); if (tl === 'against') f.push([1, 'Trees against the house']); else if (tl === 'heavy') f.push([1, 'Heavy trees around the house']);
+      if (p.os) f.push([1, p.os.n ? 'Backs onto ' + p.os.n : 'Next to ' + p.os.k]);
+      if (p.wa) f.push([1, p.wa.n ? p.wa.n + ' nearby' : 'A ' + p.wa.k + ' nearby']);
+      return f;
+    },
+    security: function (d) {
+      var s = d.sec, f = []; if (!s || !feat('security')) return f;
+      var nw = bestNewOwner(d, s.sold); if (nw) f.push([2, nw]);
+      if (s.yb && s.yb >= new Date().getFullYear() - 5) f.push([1, 'Newer home (built ' + s.yb + ')']);
+      if (s.ab) f.push([1, 'Owner lives elsewhere']);
+      if (d.acres >= 1) f.push([1, Math.round(d.acres * 10) / 10 + '-acre lot']);
+      if (s.os) f.push([1, s.os.n ? 'Backs onto ' + s.os.n : 'Next to ' + s.os.k]);
+      if (s.nb) f.push([2, bestNear(0, s.nb, 'neighbour', 'neighbours') + ' on service nearby']);
+      if (s.bk) f.push([1, s.bk + ' booked nearby this month']);
+      return f;
+    }
+  };
+  function bestFacts(d) { var t = bestTrade(); return t ? BEST[t](d) || [] : []; }
+  function bestPts(f) { return f.reduce(function (n, x) { return n + x[0]; }, 0); }
+  /* equal points: the trade's strongest fact decides (the biggest hail, the most output, the biggest lot), then street order */
+  function bestTie(d) {
+    var t = bestTrade();
+    if (t === 'roof') return (d.hail && d.hail.length ? Math.max.apply(null, d.hail.map(function (h) { return h[1]; })) : 0) * 1000 + (d.roof ? d.roof.sqs || 0 : 0);
+    if (t === 'solar') return d.solar && d.solar.kwh || 0;
+    if (t === 'yards' || t === 'security') return d.acres || 0;
+    return 0;
+  }
+  function bestWhy(f) { var w = q('div', 'bestwhy'); w.appendChild(ico('chart', 2)); w.appendChild(document.createTextNode(f.map(function (x) { return x[1]; }).join(' · '))); return w; }
   /* ---- Colorado: every county and town (2026-10-04) ----
      Matthew: Door rounds opens on the state, not on Monument. Each county with its towns: doors
      still to knock, how far through, high-risk doors left, quotes booked. Tap a town for its
@@ -5996,7 +6081,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function hoodDist(a) { return typeof a.la === 'number' && typeof a.lo === 'number' ? metresTo({ lat: a.la, lon: a.lo }) : null; }
   function doorDock() {
     var topBack = function () { var b = document.querySelector('.appbar .back'); if (b) b.click(); };
-    setDock([['street', 'Street order', 'list'], ['near', 'Nearest', 'near'], ['route', 'Route', 'route'], ['map', 'Map', 'map']], S.dview, function (v) {
+    var dopts = [['street', 'Street order', 'list']];
+    if (bestTrade()) dopts.push(['best', 'Best first', 'chart']);   /* the editions' walking order (2026-10-07) */
+    dopts.push(['near', 'Nearest', 'near'], ['route', 'Route', 'route'], ['map', 'Map', 'map']);
+    setDock(dopts, S.dview, function (v) {
       S.dview = v;
       if (v !== 'map') { try { localStorage.setItem('sixfold.rounds.doorview', v); } catch (e) {} }
       if (v === 'near' || v === 'route') locate(function () { if (S.area) renderDoors(); });
@@ -7773,6 +7861,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         view.appendChild(rf);
       }
     }
+    /* best first (2026-10-07): most points from this trade's facts first, street order breaking ties */
+    var bestOn = S.dview === 'best' && !!bestTrade(), bf = new Map(), nBest = 0;
+    if (bestOn) {
+      var bo = new Map(), bt = new Map(); todo.forEach(function (d, i) { bo.set(d, i); bf.set(d, bestFacts(d)); bt.set(d, bestTie(d)); });
+      todo.sort(function (x, y) { return bestPts(bf.get(y)) - bestPts(bf.get(x)) || bt.get(y) - bt.get(x) || bo.get(x) - bo.get(y); });
+      nBest = todo.filter(function (d) { return bestPts(bf.get(d)) > 0; }).length;
+      view.appendChild(q('div', 'sub2', 'Best for ' + BEST_NAME[bestTrade()] + ' first: ' + nBest + ' of ' + todo.length + (todo.length === 1 ? ' door' : ' doors') + ' to knock have a reason, from what their cards show. Each door says why.'));
+    }
     if (S.dview === 'route' && todo.length > 1) {
       var rt = walkRoute(todo, S.here);
       todo = rt.order;
@@ -7796,7 +7892,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* opened from "Doors to come back to": those doors lead, under their own heading, and
        the rest of the street grouping follows (the follow-ups promise them first) */
     var lead = [];
-    if (S.backFirst && S.dview !== 'near' && S.dview !== 'route') {
+    if (S.backFirst && S.dview !== 'near' && S.dview !== 'route' && !bestOn) {
       lead = todo.filter(backOn); todo = todo.filter(function (d) { return !backOn(d); });
       if (lead.length) {
         view.appendChild(q('h3', 'strh', 'Come back to \u00b7 ' + lead.length));
@@ -7806,7 +7902,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var streetsHere = {};
     todo.forEach(function (d) { var s = streetOfAddr(d.address); streetsHere[s] = (streetsHere[s] || 0) + 1; });
     var nStreets = Object.keys(streetsHere).length;
-    if (S.dview !== 'near' && S.dview !== 'route' && (nStreets > 1 || (lead.length && nStreets === 1))) {
+    if (bestOn) {
+      var noneHead = false;
+      todo.forEach(function (d) {
+        var f = bf.get(d) || [];
+        if (bestPts(f) <= 0 && !noneHead) { view.appendChild(q('h3', 'strh', 'Nothing stands out · ' + (todo.length - nBest))); noneHead = true; }
+        var el = doorCardFor(d);
+        if (f.length) el.insertBefore(bestWhy(f), el.children[1] || null);
+        view.appendChild(el);
+      });
+    } else if (S.dview !== 'near' && S.dview !== 'route' && (nStreets > 1 || (lead.length && nStreets === 1))) {
       var main = mainStreetOf(S.area);
       var rank = Object.keys(streetsHere).sort(function (x, y) { return (y === main) - (x === main) || streetsHere[y] - streetsHere[x] || x.localeCompare(y); });
       var pos = {}; rank.forEach(function (s, i) { pos[s] = i; });
