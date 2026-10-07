@@ -116,6 +116,80 @@ const grid = new Map(), cellOf = (p) => `${Math.floor(p[0] / MI)},${Math.floor(p
 for (const x of inc) { const k = cellOf(x.p); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(x); }
 const around = (p) => { const [cx, cy] = cellOf(p).split(',').map(Number), out = []; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) out.push(...(grid.get(`${cx + a},${cy + b}`) || [])); return out; };
 
+
+/* ---- Denver and Boulder (2026-10-07, the Security edition's towns) ----
+   Both police departments publish every report with a map point, as Colorado Springs does:
+     Denver: the city's open data, ArcGIS ODC_CRIME_OFFENSES_P layer 324 (OFFENSE_CATEGORY_ID / OFFENSE_TYPE_ID, GEO_LAT/GEO_LON,
+       REPORTED_DATE), daily.
+     Boulder: Boulder Police Department, ArcGIS BPD_Offenses layer 0 (nibrs_offense, Report_Date; points asked for in WGS84).
+   The same four kinds as Colorado Springs (burglary; vehicle theft and break-ins; other theft, not shoplifting; vandalism), the
+   last 365 days, counted only for doors inside that city's limits (outside them, no reports does not mean no crime). */
+const muniPieces = async (name) => cached(`muni-${name.toLowerCase()}.json`, async () => {
+  const out = [];
+  for (let off = 0; ; off += 1000) {
+    const q = new URLSearchParams({ where: `cityname = '${name}'`, outFields: 'OBJECTID', outSR: '4326', f: 'json', resultOffset: String(off), resultRecordCount: '1000' });
+    const j = await getJSON(`https://services3.arcgis.com/DgjqnJA1rgO92Soi/arcgis/rest/services/Municipal_Boundary/FeatureServer/0/query?${q}`);
+    for (const f of j.features || []) if (f.geometry && f.geometry.rings) out.push(f.geometry.rings);
+    if (!j.exceededTransferLimit && (j.features || []).length < 1000) break;
+  }
+  return out;
+});
+const arcgisAll = async (url, params) => {
+  const out = [];
+  for (let off = 0; ; off += 2000) {
+    const j = await getJSON(url + '?' + new URLSearchParams({ ...params, resultOffset: String(off), resultRecordCount: '2000', f: 'json' }));
+    if (j.error) throw new Error(url + ': ' + JSON.stringify(j.error).slice(0, 200));
+    out.push(...(j.features || []));
+    if (!j.exceededTransferLimit && (j.features || []).length < 2000) break;
+  }
+  return out;
+};
+const sinceSql = `TIMESTAMP '${iso(daysAgo(366))} 00:00:00'`;
+const DEN_KIND = (cat, type) => cat === 'burglary' ? 'b' : (cat === 'auto-theft' || cat === 'theft-from-motor-vehicle') ? 'v'
+  : (cat === 'larceny' && !/shoplift|services/.test(type)) ? 't' : /^criminal-mischief/.test(type) ? 'd' : null;
+const BOU_KIND = { 'Burglary / Breaking and Entering': 'b', 'Motor Vehicle Theft': 'v', 'Theft from a Motor Vehicle': 'v', 'Theft of Motor Vehicle Parts or Accessories': 'v',
+  'All Other Larceny': 't', 'Theft from a Building': 't', 'Destruction / Damage / Vandalism of Property': 'd' };
+const OTHER = [
+  { name: 'Denver', label: 'Denver police', fetch: async () => (await arcgisAll('https://services1.arcgis.com/zdB7qR0BtYrg0Xpl/arcgis/rest/services/ODC_CRIME_OFFENSES_P/FeatureServer/324/query',
+      { where: `REPORTED_DATE > ${sinceSql} AND IS_CRIME = 1 AND OFFENSE_CATEGORY_ID IN ('burglary','auto-theft','theft-from-motor-vehicle','larceny','public-disorder')`, outFields: 'INCIDENT_ID,OFFENSE_CATEGORY_ID,OFFENSE_TYPE_ID,REPORTED_DATE,GEO_LAT,GEO_LON', returnGeometry: 'false' }))
+      .map((f) => f.attributes).map((a) => ({ c: 'D' + a.INCIDENT_ID, k: DEN_KIND(a.OFFENSE_CATEGORY_ID, a.OFFENSE_TYPE_ID || ''), t: new Date(a.REPORTED_DATE).toISOString().slice(0, 10), lat: a.GEO_LAT, lon: a.GEO_LON })) },
+  { name: 'Boulder', label: 'Boulder police', fetch: async () => (await arcgisAll('https://services.arcgis.com/ePKBjXrBZ2vEEgWd/arcgis/rest/services/BPD_Offenses/FeatureServer/0/query',
+      { where: `Report_Date > ${sinceSql}`, outFields: 'Report_Number,nibrs_offense,Report_Date', returnGeometry: 'true', outSR: '4326' }))
+      .map((f) => ({ c: 'B' + f.attributes.Report_Number, k: BOU_KIND[f.attributes.nibrs_offense] || null, t: new Date(f.attributes.Report_Date).toISOString().slice(0, 10), lat: f.geometry && f.geometry.y, lon: f.geometry && f.geometry.x })) },
+];
+for (const c of OTHER) {
+  const rings = await muniPieces(c.name);
+  c.pieces = rings.map((r) => ({ rings: r, bb: r.flat().reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]) }));
+  c.inside = (lat, lon) => c.pieces.some((p) => lon >= p.bb[0] && lon <= p.bb[2] && lat >= p.bb[1] && lat <= p.bb[3] && inRings(lon, lat, p.rings));
+  c.doors = []; for (const t of towns) for (const a of doorsOf[t].areas) for (const d of a.doors) if (d.lat != null && c.inside(d.lat, d.lon)) c.doors.push(d);
+  if (!c.doors.length) { console.log(`doors inside ${c.name}: 0`); continue; }
+  const seen = new Set();
+  const rows = (await cached(`${c.name.toLowerCase()}-${iso(today)}.json`, c.fetch)).filter((x) => x.k && Number.isFinite(x.lat) && Number.isFinite(x.lon))
+    .filter((x) => { const key = x.c + '|' + x.k; if (seen.has(key)) return false; seen.add(key); return true; });   /* one case, several offences: once per kind */
+  c.P = proj(c.doors[0].lat);
+  c.grid = new Map();
+  for (const x of rows) { const y = { ...x, p: c.P(x.lon, x.lat), age: (today - new Date(x.t + 'T12:00:00')) / 86400000 }; const k = cellOf(y.p); if (!c.grid.has(k)) c.grid.set(k, []); c.grid.get(k).push(y); }
+  c.around = (p) => { const [cx, cy] = cellOf(p).split(',').map(Number), out = []; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) out.push(...(c.grid.get(`${cx + a},${cy + b}`) || [])); return out; };
+  c.through = rows.reduce((m, x) => x.t > m ? x.t : m, '');
+  c.ready = true;
+  console.log(`doors inside ${c.name}: ${c.doors.length}; ${rows.length} property reports in the last year, through ${c.through}`);
+}
+/* counts around one door: m within 1 mile [30, 90, 365 days] by kind, h within 1/2 mile, the latest of each kind within 1 mile */
+function crAround(city, d, areaSeen) {
+  const p = city.P(d.lon, d.lat), z3 = () => ({ b: [0, 0, 0], v: [0, 0, 0], t: [0, 0, 0], d: [0, 0, 0] }), half = z3(), mile = z3(), last = {};
+  for (const x of city.around(p)) {
+    const dist = Math.hypot(x.p[0] - p[0], x.p[1] - p[1]);
+    if (dist <= MI) {
+      mile[x.k][2]++; if (x.age <= 90) mile[x.k][1]++; if (x.age <= 30) mile[x.k][0]++;
+      if (!last[x.k] || x.t > last[x.k]) last[x.k] = x.t;
+    }
+    if (dist <= MI / 2) { half[x.k][2]++; if (x.age <= 90) half[x.k][1]++; if (x.age <= 30) half[x.k][0]++; }
+    if (dist <= MI / 4) { if (x.age <= 90) areaSeen[90].set(x.c + x.k, x.k); if (x.age <= 30) areaSeen[30].set(x.c + x.k, x.k); }
+  }
+  return { m: mile, h: half, last, src: city.label };   /* src: whose reports (the card names them) */
+}
+const CS_CITY = { label: 'Colorado Springs police', P, around, ready: true };
+
 /* ---- the town figures (FBI), last 12 reported months per agency ---- */
 const OFF = { burglary: 'burglary', mvt: 'motor-vehicle-theft', property: 'property-crime' };
 const ratesF = join(CACHE, 'fbi-rates.json'), fbi = existsSync(ratesF) ? JSON.parse(readFileSync(ratesF, 'utf8')) : {};
@@ -160,20 +234,9 @@ for (const t of towns) {
         const mailing = norm(String(m.m).split(',')[0]), house = norm(d.address);
         if (!/^(PO|P O|POST OFFICE) ?BOX|^BOX /.test(mailing) && mailing && house && mailing !== house && !(mailing.startsWith(house) || house.startsWith(mailing))) { o.ab = 1; hit.ab++; }
       }
-      if (d.lat != null && inCity(d.lat, d.lon)) {
-        o.cs = 1; hit.cs++;
-        const p = P(d.lon, d.lat), z3 = () => ({ b: [0, 0, 0], v: [0, 0, 0], t: [0, 0, 0], d: [0, 0, 0] }), half = z3(), mile = z3(), last = {};
-        for (const x of around(p)) {
-          const dist = Math.hypot(x.p[0] - p[0], x.p[1] - p[1]);
-          if (dist <= MI) {
-            mile[x.k][2]++; if (x.age <= 90) mile[x.k][1]++; if (x.age <= 30) mile[x.k][0]++;
-            if (!last[x.k] || x.t > last[x.k]) last[x.k] = x.t;
-          }
-          if (dist <= MI / 2) { half[x.k][2]++; if (x.age <= 90) half[x.k][1]++; if (x.age <= 30) half[x.k][0]++; }
-          if (dist <= MI / 4) { if (x.age <= 90) areaSeen[90].set(x.c + x.k, x.k); if (x.age <= 30) areaSeen[30].set(x.c + x.k, x.k); }
-        }
-        o.cr = { m: mile, h: half, last };   /* m: within 1 mile (the headline, Matthew 2026-10-06), h: within 1/2 mile; last: latest within 1 mile */
-      }
+      /* inside a city whose police publish their reports (cs = covered: the area list and the town line read it) */
+      const city = d.lat == null ? null : inCity(d.lat, d.lon) ? CS_CITY : OTHER.find((c) => c.ready && c.inside(d.lat, d.lon));
+      if (city) { o.cs = 1; hit.cs++; o.cr = crAround(city, d, areaSeen); }
       if (Object.keys(o).length) doors[d.id] = o;
     }
     if (a.doors.some((d) => doors[d.id] && doors[d.id].cs)) {
@@ -185,6 +248,6 @@ for (const t of towns) {
   writeFileSync(join(DATA, `security-${t}.json`), JSON.stringify({ built: iso(today), doors }));
   console.log(`  security-${t}.json: ${Object.keys(doors).length} doors`);
 }
-writeFileSync(join(DATA, 'security-areas.json'), JSON.stringify({ built: iso(today), through: inc.reduce((m, x) => x.t > m ? x.t : m, ''), source: 'Colorado Springs Police Department, Crime Level Data (property crimes, reported within 1/4 mile of the neighbourhood\'s doors)', towns: areasOut }));
+writeFileSync(join(DATA, 'security-areas.json'), JSON.stringify({ built: iso(today), through: inc.reduce((m, x) => x.t > m ? x.t : m, ''), source: 'Colorado Springs, Denver and Boulder police (property crimes reported within 1/4 mile of the neighbourhood\'s doors)', towns: areasOut }));
 console.log(`${tot} doors: inside Colorado Springs ${hit.cs}, owner lives elsewhere ${hit.ab}, sale month ${hit.sold}, year built ${hit.yb}, open space ${hit.os}`);
 console.log('town figures:', Object.entries(rates.agencies).map(([o, a]) => `${a.name.replace(/ (Police Department|Sheriff's Office)/, '')}: ${a.burglary ? a.burglary.n + ' burglaries to ' + a.burglary.to : 'pending'}`).join(' | '));

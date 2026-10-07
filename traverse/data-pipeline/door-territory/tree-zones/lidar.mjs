@@ -47,7 +47,7 @@ const hits = (a, b) => a[0] < b[2] && a[3] > b[0] && a[1] < b[3] && a[4] > b[1];
 export let MAX_DEPTH = +(process.env.LIDAR_MAX_DEPTH || 0);
 /* per survey: the depth whose tiles give ~1 m spacing (El Paso depth 9 ~ 175 m tiles; Douglas
    depth 10 ~ 120 m). Checked 2026-10-02: same answers as full depth on the test lots, ~10x less download. */
-const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10 };
+const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10, CO_DRCOG_1_2020: 10, CO_Eastern_B1_2018: 9 };
 export function setMaxDepth(n) { MAX_DEPTH = n; }
 async function nodesFor(p, box) {
   const e = await eptInfo(p), root = e.bounds, out = [];
@@ -144,8 +144,11 @@ export async function heightGrid(p, box, cell, cacheDir) {
   return { x0: box[0], y1: box[3], cell, w, h, hgt, multi, top };
 }
 
-export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020' };
-export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020 };
+/* keyed by the label the town lists use: the county where that was all (elpaso, douglas), else the survey block itself
+   (2026-10-07, the editions' towns: drcog2 covers Arvada, Centennial, Thornton, Erie, Denver and Commerce City; drcog1 Boulder;
+   eastern-b1 Windsor) */
+export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020', drcog2: 'CO_DRCOG_2_2020', drcog1: 'CO_DRCOG_1_2020', 'eastern-b1': 'CO_Eastern_B1_2018' };
+export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020, CO_DRCOG_1_2020: 2020, CO_Eastern_B1_2018: 2018 };
 
 /* ---- the measurement on LiDAR -------------------------------------------------------
    Same zones as zones.mjs. The building outline is first slid (up to 4 m each way) to

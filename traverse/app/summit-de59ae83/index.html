@@ -2524,7 +2524,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var line = function (lbl, x) { return x ? x.n + ' ' + lbl + (x.per1k != null ? ' (' + x.per1k + ' per 1,000 people)' : '') : ''; };
         tf.appendChild(document.createTextNode('Town figures, ' + a.name + ', 12 months to ' + monthName(to.to) + ': ' +
           [line('burglaries', a.burglary), line('vehicle thefts', a.mvt), line('property crimes in all', a.property)].filter(Boolean).join(' \u00b7 ') +
-          '. Doors near Colorado Springs police reports carry their own counts within 1 mile.'));
+          '. Doors inside a city whose police publish their reports carry their own counts within 1 mile.'));
       });
     }
     var pend = queue().length + (S.photoPending || 0);
@@ -6522,7 +6522,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (s.cr) {
       /* m: within 1 mile [30, 90, 365 days] by kind (h: within 1/2 mile). An older file has h and a year-only mile total. */
       var mm = s.cr.m || null, hh = s.cr.h || {}, last = s.cr.last || {}, any = false;
-      t.appendChild(q('small', 'sub', 'Reported within ' + (mm ? '1 mile' : '\u00bd mile') + ' (Colorado Springs police)'));
+      t.appendChild(q('small', 'sub', 'Reported within ' + (mm ? '1 mile' : '\u00bd mile') + ' (' + (s.cr.src || 'Colorado Springs police') + ')'));   /* src: Denver and Boulder too (2026-10-07) */
       CR_KIND.forEach(function (k) {
         var c = (mm || hh)[k[0]]; if (!c || !c[2]) return; any = true;
         var l = q('span', 'hl'); l.appendChild(q('b', null, k[1] + ': '));

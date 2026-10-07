@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..', '..', '..', '..', 'app', 'data', 'rounds');
-const TOWNS = ['black-forest', 'monument', 'palmer-lake', 'castle-rock', 'franktown', 'sedalia', 'larkspur', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines'];
+const TOWNS = ['black-forest', 'monument', 'palmer-lake', 'castle-rock', 'franktown', 'sedalia', 'larkspur', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'];
 const GROW = 1.6;
 let total = 0;
 for (const town of TOWNS) {
