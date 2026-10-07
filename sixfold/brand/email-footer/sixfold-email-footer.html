@@ -39,17 +39,14 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
     <p class="body">Hi Alex, thanks for walking the yard with us today. Your quote is attached.</p>
     <!-- the footer itself: this block is what Copy footer copies -->
     <div id="footer">
-      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif">
-        <tr>
-          <td style="padding:0 14px 0 0;vertical-align:top"><img src="https://sixfoldcolorado.com/assets/email/sixfold-mark-email-green-64.png" width="56" height="56" alt="Sixfold" style="display:block;border:0"></td>
-          <td style="vertical-align:top;border-left:2px solid #2F7A4F;padding:0 0 0 14px">
-            <div style="font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;font-size:18px;font-weight:bold;color:#0E1512;line-height:1.2">Sixfold Colorado</div>
-            <div style="font-size:13px;color:#5b6660;line-height:1.5;margin-top:2px">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation</div>
-            <div style="font-size:13px;line-height:1.5;margin-top:4px"><a href="tel:+13039151045" style="color:#2F7A4F;text-decoration:none;font-weight:bold">(303) 915-1045</a> <span style="color:#b9b2a6">·</span> <a href="mailto:Contact@SixfoldColorado.com" style="color:#2F7A4F;text-decoration:none">Contact@SixfoldColorado.com</a> <span style="color:#b9b2a6">·</span> <a href="https://sixfoldcolorado.com" style="color:#2F7A4F;text-decoration:none">SixfoldColorado.com</a></div>
-            <div style="font-size:12px;color:#8a918c;line-height:1.5;margin-top:2px">Monument, CO · serving El Paso, Teller and Douglas counties</div>
-          </td>
-        </tr>
-      </table>
+      <!-- no table (2026-10-07): Google's footer editor drew borders round the invisible one; the logo sits on top, the lines under it -->
+      <div style="font-family:Arial,Helvetica,sans-serif">
+        <img src="https://sixfoldcolorado.com/assets/email/sixfold-mark-email-green-64.png" width="56" height="56" alt="Sixfold" style="display:block;border:0;margin:0 0 8px">
+        <div style="font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;font-size:18px;font-weight:bold;color:#0E1512;line-height:1.2">Sixfold Colorado</div>
+        <div style="font-size:13px;color:#5b6660;line-height:1.5;margin-top:2px">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation</div>
+        <div style="font-size:13px;line-height:1.5;margin-top:4px"><a href="tel:+13039151045" style="color:#2F7A4F;text-decoration:none;font-weight:bold">(303) 915-1045</a> <span style="color:#b9b2a6">·</span> <a href="mailto:Contact@SixfoldColorado.com" style="color:#2F7A4F;text-decoration:none">Contact@SixfoldColorado.com</a> <span style="color:#b9b2a6">·</span> <a href="https://sixfoldcolorado.com" style="color:#2F7A4F;text-decoration:none">SixfoldColorado.com</a></div>
+        <div style="font-size:12px;color:#8a918c;line-height:1.5;margin-top:2px">Monument, CO · serving El Paso, Teller and Douglas counties</div>
+      </div>
     </div>
     <p class="q" style="margin-top:18px">The footer goes at the very end of each email, so in a long reply thread it sits under the quoted text.</p>
   </div>
@@ -76,7 +73,7 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
 
   <h2>3. Each person's own name (optional)</h2>
   <p class="note"><b>The footer is the same for everyone</b>, so it carries the company, not a name. Anyone who wants their name and role on their emails can add a short personal signature in Gmail (Settings → See all settings → Signature), for example just their name and role on one line. Keep the phone, email and logo out of it, because the footer already adds them.</p>
-  <p class="note" style="margin-top:10px"><b>If the paste drops the side-by-side layout</b> (the admin editor accepts formatting, not page code), use <b>Copy as plain text</b> instead, paste it, then bold the first line and add the picture with the picture button. It still reads well stacked.</p>
+  <p class="note" style="margin-top:10px"><b>If anything comes across wrong in the paste</b> (the admin editor keeps formatting, not page code), use <b>Copy as plain text</b> instead, paste it, set each line as in the table Claude gave you, and add the logo with the picture button.</p>
 </main>
 <script>
 (function () {
