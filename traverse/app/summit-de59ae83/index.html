@@ -3985,7 +3985,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var big = d.hail && d.hail.length ? d.hail.reduce(function (m, x) { return x[1] > m[1] ? x : m; }, d.hail[0]) : null;
         if (big && pr >= big[0].slice(0, 7)) f.push([-8, 'Re-roofed ' + monthName(pr) + ', after that hail']);
         else if (yr - +pr.slice(0, 4) <= 5) f.push([-3, 'Re-roofed ' + monthName(pr)]);
-      } else if (P && P.since && d.bld && d.bld.yb && +P.since.slice(0, 4) - d.bld.yb >= 5) f.push([1, 'No re-roof permit since ' + P.since.slice(0, 4)]);
+      } else if (P && P.since && P.full !== false && d.bld && d.bld.yb && +P.since.slice(0, 4) - d.bld.yb >= 5) f.push([1, 'No re-roof permit since ' + P.since.slice(0, 4)]);
       return f;
     },
     yards: function (d) {
@@ -6828,7 +6828,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (p.r) {
       var recent = (new Date().getFullYear() - +p.r.slice(0, 4)) <= 3;
       l.appendChild(q(recent ? 'b' : 'span', null, 'Re-roof permit ' + monthName(p.r) + (p.m ? ' · ' + p.m : '')));
-    } else l.appendChild(document.createTextNode('No re-roof permit since ' + P.since.slice(0, 4)));
+    } else if (P.full !== false) l.appendChild(document.createTextNode('No re-roof permit since ' + P.since.slice(0, 4)));
+    else return null;   /* the department covers only part of this town's list: a missing permit proves nothing */
     l.appendChild(document.createTextNode(' (' + P.src + ')'));
     return l;
   }
@@ -6837,7 +6838,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = d.permit || {}, l = q('span', 'hl');
     if (p.s && !p.so) l.appendChild(q('b', null, 'Solar permit ' + monthName(p.s) + ': it already has panels'));
     else if (p.s) l.appendChild(document.createTextNode('Solar permit ' + monthName(p.s) + ', panels removed ' + monthName(p.so)));
-    else l.appendChild(document.createTextNode('No solar permit since ' + P.since.slice(0, 4)));
+    else if (P.full !== false) l.appendChild(document.createTextNode('No solar permit since ' + P.since.slice(0, 4)));
+    else return null;
     l.appendChild(document.createTextNode(' (' + P.src + ')'));
     return l;
   }

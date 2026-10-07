@@ -13,8 +13,12 @@ import { normAddr } from './fetch-douglas.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), DT = join(HERE, '..');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
-const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain'];
+/* Pikes Peak permits for all of El Paso County, and for the City of Woodland Park (2026-10-07) */
+const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain', 'woodland-park'];
 const DOUGLAS = ['highlands-ranch', 'sedalia', 'franktown', 'larkspur'];
+/* towns whose list reaches past the department's area: Woodland Park's runs into unincorporated Teller County (its own building
+   department), and Larkspur is its own town. There a missing permit proves nothing, so the card never says "no permit" (full: false). */
+const PARTIAL = new Set(['woodland-park', 'larkspur']);
 const SRC = { pprbd: 'Pikes Peak Regional Building Department', douglas: 'Douglas County building division' };
 
 function parseCSV(s) {
@@ -67,7 +71,7 @@ for (const town of [...EL_PASO, ...DOUGLAS]) {
   }
   writeFileSync(join(DATA, `permit-${town}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), source: isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through, doors }));
   console.log(`  permit-${town}.json: ${k} of ${n} doors have a permit (${nr} re-roofed since ${idx.meta.since.slice(0, 4)}, ${ns} with solar)`);
-  cover[town] = { src: isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through };
+  cover[town] = { src: isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through, full: !PARTIAL.has(town) };
   tot += n; hit += k;
 }
 writeFileSync(join(DATA, 'permit-index.json'), JSON.stringify(cover));

@@ -61,7 +61,8 @@ if (process.argv[1] && process.argv[1].endsWith('fetch-pprbd.mjs')) {
   const permits = {}, n = { roof: 0, solar: 0, rr: 0, off: 0 }; let through = '';
   for (const a of rows) {
     const k = kindOf(a.ProjectDesc), p = String(a.parcel || '').trim();
-    if (!k || !/^\d{10}$/.test(p) || !a.PermitDate || permits[a.PermitNum]) continue;
+    /* El Paso parcels are 10 digits; Woodland Park's (Teller) look like 1234.567890123 (2026-10-07) */
+    if (!k || !/^(\d{10}|\d{4,5}\.\d{8,9})$/.test(p) || !a.PermitDate || permits[a.PermitNum]) continue;
     const day = new Date(a.PermitDate).toISOString().slice(0, 10);
     permits[a.PermitNum] = [p, day, k]; n[k]++;
     if (day > through) through = day;
