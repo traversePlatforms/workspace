@@ -83,13 +83,16 @@ function company(): array {
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
             'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false, 'pest' => false, 'security' => false],
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
-            'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => []];
+            'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => [],
+            /* the weather warnings this install shows and pushes (2026-10-06, the editions); null = Sixfold's rules (see alertEvents) */
+            'alerts' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
     $c['card'] = array_replace($def['card'], is_array($c['card']) ? $c['card'] : []);
     foreach (['services', 'extraWork'] as $k) $c[$k] = array_values(array_filter((array) $c[$k], fn($p) => is_array($p) && count($p) >= 2 && preg_match('/^[a-z0-9_-]{1,30}$/D', (string) $p[0])));
     if (!$c['services']) $c['services'] = $def['services'];
+    $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
     return $c;
 }
 function feature(string $k): bool { return !empty(company()['features'][$k]); }

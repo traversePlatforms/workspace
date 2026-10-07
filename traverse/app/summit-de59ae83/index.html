@@ -509,7 +509,7 @@
   .ftog{display:none}
   @media (max-width:700px){
     .fold:not(.open) .fmore{display:none !important}
-    .fold .ftog{display:inline-block;margin-top:3px;padding:2px 0;font-weight:700}
+    .fold .ftog{display:inline-block;justify-self:start;margin-top:3px;padding:2px 0;background:none;border:0;color:var(--accent);font:700 13px var(--sans);cursor:pointer}
   }
   .aerial .alegend{padding:10px 14px 0;font-size:13px;line-height:1.45;color:var(--ink);display:flex;flex-direction:column;gap:5px}
   .aerial .alegend .k{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
@@ -2520,9 +2520,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* security: the police or sheriff's figures for the whole town, once here, not on every door (Matthew 2026-10-06) */
       var tf = q('div', 'sub2 townsec'); view.appendChild(tf);
       secRates(function (sr) {
-        var ori = sr.towns && sr.towns[S.region], a = ori && sr.agencies && sr.agencies[ori]; if (!a || !a.property) return;
+        var ori = sr.towns && sr.towns[S.region], a = ori && sr.agencies && sr.agencies[ori], to = a && (a.property || a.burglary || a.mvt); if (!to) return;   /* whichever figures the FBI has sent so far */
         var line = function (lbl, x) { return x ? x.n + ' ' + lbl + (x.per1k != null ? ' (' + x.per1k + ' per 1,000 people)' : '') : ''; };
-        tf.appendChild(document.createTextNode('Town figures, ' + a.name + ', 12 months to ' + monthName(a.property.to) + ': ' +
+        tf.appendChild(document.createTextNode('Town figures, ' + a.name + ', 12 months to ' + monthName(to.to) + ': ' +
           [line('burglaries', a.burglary), line('vehicle thefts', a.mvt), line('property crimes in all', a.property)].filter(Boolean).join(' \u00b7 ') +
           '. Doors near Colorado Springs police reports carry their own counts within 1 mile.'));
       });
@@ -6750,6 +6750,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (S.screen !== 'sample') return;
       if (!j.ok) { view.textContent = ''; view.appendChild(q('div', 'msg', j.error || 'Could not load the sample door.')); return; }
+      /* trimmed as a real door is (TRIM_DOOR): a part this company has off loses its fields, so a roofer's sample has no fire
+         badge, trees chip or fire check; and its extra work uses this company's own list */
+      Object.keys(TRIM_DOOR).forEach(function (k) { if (!cardOn(k)) TRIM_DOOR[k].forEach(function (f) { j.door[f] = null; }); });
+      if (j.door.work && j.door.work.tags) {
+        var known = ((CO && CO.extraWork) || []).map(function (w) { return w[0]; });
+        var tags = j.door.work.tags.filter(function (x) { return known.indexOf(x) >= 0; });
+        j.door.work.tags = tags.length ? tags : known.slice(0, 2);
+        if (!j.door.work.tags.length) j.door.work = null;
+      }
       S.sampleData = j; S.sampleDoor = JSON.parse(JSON.stringify(j.door));
       S.photoImg = S.photoImg || {}; if (j.images && j.images.roof) S.photoImg[j.door.id] = j.images.roof;
       if (S.region !== SAMPLE_KEY) S.sampleWas = S.region;
@@ -7076,7 +7085,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- crime map (Matthew 2026-10-06) ----
      Squares of about 280 m coloured by the property crime Colorado Springs police reported in them, last 90 days (or 30). Tap a
      square for its counts by kind. A square holds a few streets: the map shows where it is busy, never which house. */
-  var CRIME_BINS = [[1, '#fde68a', '1\u20132'], [3, '#fbbf24', '3\u20135'], [6, '#f97316', '6\u201310'], [11, '#dc2626', '11\u201320'], [21, '#7f1d1d', 'over 20']];
+  var CRIME_BINS = [[1, '#facc15','1\u20132'], [3, '#f59e0b','3\u20135'], [6, '#f97316', '6\u201310'], [11, '#dc2626', '11\u201320'], [21, '#7f1d1d', 'over 20']];
   function crimeColour(n) { var c = CRIME_BINS[0][1]; CRIME_BINS.forEach(function (b) { if (n >= b[0]) c = b[1]; }); return c; }
   function crimeMapView() {
     hideToast(); S.signin = null; S.screen = 'crimemap'; foot.hidden = true; setDock(null);
@@ -7104,7 +7113,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         data.cells.forEach(function (c) {
           var n = n30 ? c[6] : c[2] + c[3] + c[4] + c[5]; if (!n) return; shown++;
           var lat = g.lat0 - c[0] * g.dy, lon = g.lon0 + c[1] * g.dx;
-          var rect = L.rectangle([[lat - g.dy, lon], [lat, lon + g.dx]], { stroke: false, fillColor: crimeColour(n), fillOpacity: 0.6 });
+          var rect = L.rectangle([[lat - g.dy, lon], [lat, lon + g.dx]], { stroke: false, fillColor: crimeColour(n), fillOpacity: 0.8 });
           rect.bindPopup(n30 ? n + (n === 1 ? ' report' : ' reports') + ' in this square, last 30 days'
             : '<b>' + n + (n === 1 ? ' report' : ' reports') + ' in this square, last 90 days</b><br>' + c[2] + ' burglary \u00b7 ' + c[3] + ' vehicle \u00b7 ' + c[4] + ' other theft \u00b7 ' + c[5] + ' vandalism<br>' + c[6] + ' of them in the last 30 days');
           rect.addTo(layer);
@@ -7679,7 +7688,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.dview === 'map' && S.liveMap && S.liveMap.area === S.area && document.body.contains(S.liveMap.el)) { S.liveMap.refresh(); return; }
     S.liveMap = null;
     view.textContent = '';
-    if (S.region === SAMPLE_KEY) view.appendChild(q('div', 'samplebar', 'Sample door. The address is real; every figure on it is made up. Nothing you do here is saved, sent or counted, and it never shows in a town. Money and Water show Castle Rock\u2019s sheets.'));
+    if (S.region === SAMPLE_KEY) view.appendChild(q('div', 'samplebar', 'Sample door. The address is real; every figure on it is made up. Nothing you do here is saved, sent or counted, and it never shows in a town.' + (cardOn('money') || cardOn('water') ? ' Money and Water show Castle Rock\u2019s sheets.' : '')));
     if (S.region === SAMPLE_KEY) view.appendChild(alertStrip(SAMPLE_KEY));   /* its made-up alerts, drawn as the real ones are */
     var wp = S.walkPrompt ? S.doors.filter(function (x) { return x.id === S.walkPrompt; })[0] : null;
     if (wp && wp.mark && wp.mark.outcome === 'booked') view.appendChild(walkPromptBox(wp)); else S.walkPrompt = null;
