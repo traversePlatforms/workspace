@@ -1,7 +1,8 @@
 /* solar-<town>.json for the app (2026-10-06, TraverseSolar), from solar-cache.json, pvwatts.json and utilities.geojson.
  *   node sample-solar.mjs --build        (calls build() below)
  * Per door: { a: {S,SE,SW,E,W,N,F} sq ft, sd: median slope of the sun-facing roof (degrees), sh: open | some | heavy,
- *             pn: panels, kw, kwh: a year's output, yr: survey year, u: power company }.
+ *             pn: panels, kw, kwh: a year's output, yr: survey year, u: power company, ui: its EIA utility number }.
+ * solar-utilities.json: each power company's EIA-861 figures (utility-figures.mjs), for the card (2026-10-07).
  * The system is an ESTIMATE on stated assumptions, shown as such on the card:
  *   - 60% of the sun-facing roof is usable once fire-code walkways along edges and ridges, vents and chimneys are kept clear;
  *   - a 400 W panel is about 20 sq ft;
@@ -40,14 +41,20 @@ export async function build(CACHE, TOWNS, DATA) {
   const util = JSON.parse(readFileSync(join(HERE, 'utilities.geojson'), 'utf8')).features.map((f) => {
     const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
     const xs = polys.flatMap((p) => p[0].map((c) => c[0])), ys = polys.flatMap((p) => p[0].map((c) => c[1]));
-    return { name: String(f.properties.LabelName || f.properties.NAME || '').trim(), polys, bb: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], area: polys.reduce((s, p) => s + ringArea(p[0]), 0) };
+    return { name: String(f.properties.LabelName || f.properties.NAME || '').trim(), id: f.properties.ID != null ? String(f.properties.ID) : null, full: String(f.properties.NAME || ''), polys, bb: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], area: polys.reduce((s, p) => s + ringArea(p[0]), 0) };
   });
   /* the smallest service territory holding the house: a town's own utility sits inside a co-op's map */
   const utilityAt = (lon, lat) => {
     let best = null;
     for (const u of util) if (lon >= u.bb[0] && lon <= u.bb[2] && lat >= u.bb[1] && lat <= u.bb[3] && u.polys.some((p) => inPoly(lon, lat, p)) && (!best || u.area < best.area)) best = u;
-    return best ? best.name : null;
+    return best;
   };
+  /* EIA-861 figures by utility number; a territory the map leaves without a number (United Power's) is matched on its name */
+  const UF = existsSync(join(HERE, 'utility-figures.json')) ? JSON.parse(readFileSync(join(HERE, 'utility-figures.json'), 'utf8')) : null;
+  const norm = (t) => String(t || '').toUpperCase().replace(/\(CO\)|\bINC\b|\bLLC\b|[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const byName = {}; if (UF) for (const [id, o] of Object.entries(UF.u)) byName[norm(o.name)] = id;
+  const idOf = (b) => b.id && UF && UF.u[b.id] ? b.id : (byName[norm(b.full)] || byName[norm(b.name)] || null);
+  const seenIds = {};
   const idx = JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8'));
   let tot = 0, withRoof = 0, withUtil = 0; const byUtil = {};
   for (const reg of idx.regions) {
@@ -57,8 +64,8 @@ export async function build(CACHE, TOWNS, DATA) {
     for (const a of d.areas) for (const x of a.doors) {
       tot++;
       const out = {};
-      const u = x.lat != null ? utilityAt(x.lon, x.lat) : null;
-      if (u) { out.u = u; withUtil++; byUtil[u] = (byUtil[u] || 0) + 1; }
+      const ub = x.lat != null ? utilityAt(x.lon, x.lat) : null, u = ub ? ub.name : null;
+      if (u) { out.u = u; withUtil++; byUtil[u] = (byUtil[u] || 0) + 1; const ui = idOf(ub); if (ui) { out.ui = ui; seenIds[ui] = true; } }
       const r = TOWNS[reg.key] ? cache[`${x.lat},${x.lon}`] : null;
       if (r && !r.err && r.a) {
         withRoof++;
@@ -74,6 +81,11 @@ export async function build(CACHE, TOWNS, DATA) {
     }
     writeFileSync(join(DATA, `solar-${reg.key}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), assumptions: { usable: USABLE, panelSqft: PANEL_SQFT, panelKw: PANEL_KW, pvwatts: 'NREL/NLR PVWatts v8, 14% losses' }, doors }));
     console.log(`  solar-${reg.key}.json: ${Object.keys(doors).length} doors`);
+  }
+  if (UF) {
+    const uOut = {}; for (const id of Object.keys(seenIds)) uOut[id] = UF.u[id];
+    writeFileSync(join(DATA, 'solar-utilities.json'), JSON.stringify({ source: UF.source, year: UF.year, co: UF.co, u: uOut }));
+    console.log(`  solar-utilities.json: ${Object.keys(uOut).length} power companies (EIA-861 ${UF.year})`);
   }
   console.log(`${withRoof} of ${tot} doors have a solar roof estimate; ${withUtil} have a power company`);
   console.log('power companies:', Object.entries(byUtil).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(' | '));

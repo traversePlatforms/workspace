@@ -1,0 +1,403 @@
+{
+ "source": "U.S. Energy Information Administration, Form EIA-861 2025 (released 2026-10-07); Colorado monthly price from EIA open data",
+ "year": 2025,
+ "co": {
+  "month": "2026-07",
+  "cents": 17,
+  "yearAgo": 15.99
+ },
+ "u": {
+  "3989": {
+   "name": "City of Colorado Springs - (CO)",
+   "homes": 220059,
+   "cents": 15.43,
+   "bill": 93,
+   "solar": 9965,
+   "batt": 354,
+   "out": 41,
+   "outCalm": 41,
+   "outTimes": 0.68,
+   "tou": 11119,
+   "pct": 4.5
+  },
+  "5086": {
+   "name": "Delta Montrose Electric Assn",
+   "homes": 32985,
+   "cents": 14.9,
+   "bill": 107,
+   "solar": 2174,
+   "out": 115,
+   "outCalm": 115,
+   "outTimes": 0.96,
+   "tou": 1649,
+   "pct": 6.6
+  },
+  "5862": {
+   "name": "Empire Electric Assn, Inc",
+   "homes": 13016,
+   "cents": 15.68,
+   "bill": 110,
+   "solar": 659,
+   "batt": 15,
+   "out": 175,
+   "outCalm": 175,
+   "outTimes": 1.36,
+   "tou": 13016,
+   "pct": 5.1
+  },
+  "6604": {
+   "name": "City of Fort Collins - (CO)",
+   "homes": 71804,
+   "cents": 14.34,
+   "bill": 87,
+   "solar": 4412,
+   "batt": 324,
+   "out": 8,
+   "outCalm": 8,
+   "outTimes": 0.13,
+   "tou": 71804,
+   "pct": 6.1
+  },
+  "6610": {
+   "name": "City of Fort Morgan",
+   "homes": 5434,
+   "cents": 7.31,
+   "bill": 75,
+   "solar": 31,
+   "pct": 0.6
+  },
+  "6638": {
+   "name": "City of Fountain",
+   "homes": 17088,
+   "cents": 14.05,
+   "bill": 100,
+   "solar": 1004,
+   "out": 42,
+   "outCalm": 42,
+   "outTimes": 0.56,
+   "pct": 5.9
+  },
+  "7563": {
+   "name": "Grand Valley Power",
+   "homes": 17657,
+   "cents": 16.2,
+   "bill": 129,
+   "solar": 1415,
+   "batt": 38,
+   "out": 116,
+   "outCalm": 116,
+   "outTimes": null,
+   "tou": 17657,
+   "pct": 8
+  },
+  "8570": {
+   "name": "Highline Electric Assn",
+   "homes": 5013,
+   "cents": 15.16,
+   "bill": 137,
+   "solar": 63,
+   "tou": 7,
+   "pct": 1.3
+  },
+  "8773": {
+   "name": "Holy Cross Electric Assn, Inc",
+   "homes": 50431,
+   "cents": 12.45,
+   "bill": 140,
+   "solar": 2757,
+   "batt": 270,
+   "out": 71,
+   "outCalm": 71,
+   "outTimes": 1.07,
+   "tou": 62,
+   "pct": 5.5
+  },
+  "9336": {
+   "name": "CORE Electric Cooperative",
+   "homes": 168587,
+   "cents": 15.62,
+   "bill": 132,
+   "solar": 10448,
+   "out": 381,
+   "outCalm": 52,
+   "outTimes": 0.97,
+   "tou": 89,
+   "pct": 6.2
+  },
+  "10066": {
+   "name": "K C Electric Association",
+   "homes": 3411,
+   "cents": 13.02,
+   "bill": 128,
+   "solar": 22,
+   "pct": 0.6
+  },
+  "10539": {
+   "name": "La Plata Electric Assn, Inc",
+   "homes": 40369,
+   "cents": 18.33,
+   "bill": 118,
+   "solar": 3105,
+   "batt": 239,
+   "out": 218,
+   "outCalm": 67,
+   "outTimes": 1.7,
+   "tou": 4869,
+   "pct": 7.7
+  },
+  "11187": {
+   "name": "City of Longmont",
+   "homes": 41483,
+   "cents": 13.12,
+   "bill": 88,
+   "solar": 1070,
+   "out": 40,
+   "outCalm": 40,
+   "outTimes": 0.56,
+   "pct": 2.6
+  },
+  "11256": {
+   "name": "City of Loveland - (CO)",
+   "homes": 37387,
+   "cents": 15.29,
+   "bill": 95,
+   "solar": 559,
+   "batt": 31,
+   "out": 27,
+   "outCalm": 27,
+   "outTimes": 0.34,
+   "pct": 1.5
+  },
+  "12860": {
+   "name": "Morgan County Rural Elec Assn",
+   "homes": 5891,
+   "cents": 14.46,
+   "bill": 146,
+   "solar": 92,
+   "tou": 18,
+   "pct": 1.6
+  },
+  "12866": {
+   "name": "Moon Lake Electric Assn Inc",
+   "homes": 1525,
+   "cents": 9.71,
+   "bill": 80,
+   "solar": 4,
+   "pct": 0.3
+  },
+  "13050": {
+   "name": "Mountain Parks Electric, Inc",
+   "homes": 19571,
+   "cents": 17.54,
+   "bill": 128,
+   "solar": 419,
+   "batt": 9,
+   "out": 181,
+   "outCalm": 122,
+   "outTimes": 2.42,
+   "tou": 521,
+   "pct": 2.1
+  },
+  "13058": {
+   "name": "Mountain View Elec Assn, Inc",
+   "homes": 61343,
+   "cents": 15.65,
+   "bill": 137,
+   "solar": 4086,
+   "batt": 403,
+   "out": 130,
+   "outCalm": 30,
+   "outTimes": 0.84,
+   "tou": 188,
+   "pct": 6.7
+  },
+  "15257": {
+   "name": "Poudre Valley REA, Inc",
+   "homes": 50933,
+   "cents": 12.47,
+   "bill": 109,
+   "solar": 2448,
+   "out": 151,
+   "outCalm": 49,
+   "outTimes": 1.03,
+   "pct": 4.8
+  },
+  "15466": {
+   "name": "Public Service Co of Colorado",
+   "homes": 1379910,
+   "cents": 15.9,
+   "bill": 93,
+   "solar": 121127,
+   "out": 360,
+   "outCalm": 149,
+   "outTimes": 1.58,
+   "tou": 1375000,
+   "pct": 8.8
+  },
+  "16603": {
+   "name": "San Luis Valley R E C, Inc",
+   "homes": 8948,
+   "cents": 19.4,
+   "bill": 126,
+   "solar": 306,
+   "out": 150,
+   "outCalm": 105,
+   "outTimes": 1.49,
+   "tou": 1245,
+   "pct": 3.4
+  },
+  "16616": {
+   "name": "San Isabel Electric Assn, Inc",
+   "homes": 23415,
+   "cents": 18.86,
+   "bill": 118,
+   "solar": 1416,
+   "tou": 1203,
+   "pct": 6
+  },
+  "16622": {
+   "name": "San Miguel Power Assn, Inc",
+   "homes": 12379,
+   "cents": 16.84,
+   "bill": 135,
+   "solar": 753,
+   "tou": 12379,
+   "pct": 6.1
+  },
+  "17592": {
+   "name": "Southeast Colorado Power Assn",
+   "homes": 8169,
+   "cents": 17.92,
+   "bill": 127,
+   "solar": 100,
+   "out": 1290,
+   "outCalm": 1280,
+   "outTimes": null,
+   "tou": 9,
+   "pct": 1.2
+  },
+  "17715": {
+   "name": "Southwestern Electric Coop Inc - (NM)",
+   "homes": 5,
+   "cents": 21.58,
+   "bill": 273
+  },
+  "19160": {
+   "name": "Tri-County Electric Coop, Inc (OK)",
+   "homes": 14,
+   "cents": 16.17,
+   "bill": 78
+  },
+  "19499": {
+   "name": "United Power, Inc",
+   "homes": 103104,
+   "cents": 16.5,
+   "bill": 131,
+   "solar": 13299,
+   "out": 303,
+   "outCalm": 90,
+   "outTimes": 1.18,
+   "tou": 3636,
+   "pct": 12.9
+  },
+  "20510": {
+   "name": "Wheatland Electric Coop, Inc",
+   "homes": 29,
+   "cents": 20.32,
+   "bill": 72
+  },
+  "20576": {
+   "name": "White River Electric Assn, Inc",
+   "homes": 2641,
+   "cents": 14.69,
+   "bill": 103,
+   "solar": 21,
+   "pct": 0.8
+  },
+  "21075": {
+   "name": "Y-W Electric Assn Inc",
+   "homes": 4878,
+   "cents": 15.66,
+   "bill": 122,
+   "solar": 35,
+   "out": 700,
+   "outCalm": 700,
+   "outTimes": null,
+   "pct": 0.7
+  },
+  "21081": {
+   "name": "Yampa Valley Electric Assn Inc",
+   "homes": 23604,
+   "cents": 16.98,
+   "bill": 146,
+   "solar": 339,
+   "batt": 29,
+   "out": 272,
+   "outCalm": 189,
+   "outTimes": 2.01,
+   "pct": 1.4
+  },
+  "27058": {
+   "name": "High West Energy, Inc",
+   "homes": 671,
+   "cents": 15.13,
+   "bill": 126,
+   "solar": 11,
+   "tou": 12,
+   "pct": 1.6
+  },
+  "56146": {
+   "name": "Black Hills Colorado Electric, LLC",
+   "homes": 97888,
+   "cents": 18.71,
+   "bill": 95,
+   "solar": 9803,
+   "out": 95,
+   "outCalm": 95,
+   "outTimes": 0.9,
+   "pct": 10
+  },
+  "57313": {
+   "name": "Tesla Inc.",
+   "homes": 12824,
+   "cents": 12.48,
+   "bill": 68
+  },
+  "59580": {
+   "name": "SunPower Capital, LLC",
+   "homes": 1302,
+   "cents": 23.85,
+   "bill": 62
+  },
+  "59647": {
+   "name": "Sunrun Inc.",
+   "homes": 9437,
+   "cents": 17.09,
+   "bill": 110
+  },
+  "59943": {
+   "name": "Spruce Finance",
+   "homes": 1043,
+   "cents": 9.28,
+   "bill": 63
+  },
+  "60025": {
+   "name": "Greenbacker Renewable Energy Corporation",
+   "homes": 11,
+   "cents": 11.11,
+   "bill": 45
+  },
+  "66026": {
+   "name": "Palmetto Solar, LLC",
+   "homes": 1670,
+   "cents": 15.61,
+   "bill": 110
+  },
+  "66036": {
+   "name": "EverBright, LLC",
+   "homes": 590,
+   "cents": 15.46,
+   "bill": 123
+  }
+ }
+}

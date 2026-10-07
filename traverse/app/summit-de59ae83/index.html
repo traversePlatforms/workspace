@@ -6557,6 +6557,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (s.sh) t.appendChild(q('span', 'hl', SH[s.sh] || ''));
     }
     if (s.u) { var l3 = q('span', 'hl'); l3.appendChild(document.createTextNode('Power company: ')); l3.appendChild(q('b', null, s.u)); t.appendChild(l3); }
+    /* the power company in figures (2026-10-07): the EIA's 2025 survey of every utility (Form EIA-861), and Colorado's latest
+       monthly price from EIA open data. Averages across the company's homes, said as such. */
+    var uf = s.uf;
+    if (uf && uf.cents) {
+      var mins = function (m) { return m < 90 ? m + ' minutes' : (Math.round(m / 6) / 10) + ' hours'; };
+      t.appendChild(q('small', 'sub', s.u + ', ' + uf.yr + ' (U.S. Energy Information Administration)'));
+      t.appendChild(q('span', 'hl', 'Its homes paid ' + uf.cents + '¢ a kWh on average · average bill $' + uf.bill + ' a month'));
+      if (s.kwh) { var lv = q('span', 'hl'); lv.appendChild(q('b', null, 'At that price this roof’s output is worth about $' + (Math.round(s.kwh * uf.cents / 1000) * 10).toLocaleString('en-US') + ' a year')); t.appendChild(lv); }
+      if (uf.pct) t.appendChild(q('span', 'hl', uf.pct + '% of its homes have solar (' + uf.solar.toLocaleString('en-US') + ')' + (uf.batt ? ' · ' + uf.batt.toLocaleString('en-US') + ' with a battery' : '')));
+      if (uf.out != null) t.appendChild(q('span', 'hl', 'Power out ' + mins(uf.out) + ' per home over the year' + (uf.outCalm != null && uf.outCalm !== uf.out ? ' (' + mins(uf.outCalm) + ' not counting major event days)' : '')));
+      if (uf.tou) t.appendChild(q('span', 'hl', uf.tou >= uf.homes * 0.9 ? 'Nearly all its homes are on time-of-use pricing' : 'Offers time-of-use pricing (' + uf.tou.toLocaleString('en-US') + (uf.tou === 1 ? ' home' : ' homes') + ' on it)'));
+      if (uf.co && uf.co.cents) t.appendChild(q('span', 'hl', 'Colorado homes paid ' + uf.co.cents + '¢ a kWh in ' + monthName(uf.co.month) + (uf.co.yearAgo ? (uf.co.cents > uf.co.yearAgo ? ', up from ' : uf.co.cents < uf.co.yearAgo ? ', down from ' : ', the same as ') + uf.co.yearAgo + '¢ a year before' : '')));
+    }
     b.appendChild(t);
     return b;
   }

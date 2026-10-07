@@ -1490,6 +1490,12 @@ if ($action === 'area') {
     $matOf = roofDataOn($role) ? loadSide('material', $key) : [];
     $mfxOf = loadMatFix($key);
     $solarOf = solarOn($role) ? loadSide('solar', $key) : [];
+    /* the door's power company in figures (2026-10-07): EIA-861 price, bill, solar homes, outages, time-of-use; solar-utilities.json */
+    $solarU = $solarOf ? (json_decode((string) @file_get_contents(DATA_DIR . '/solar-utilities.json'), true) ?: []) : [];
+    $solarRow = function ($sv) use ($solarU) {
+        if (is_array($sv) && isset($sv['ui'], $solarU['u'][$sv['ui']])) $sv['uf'] = $solarU['u'][$sv['ui']] + ['yr' => $solarU['year'] ?? null, 'co' => $solarU['co'] ?? null];
+        return $sv;
+    };
     $pestOf = []; $custPts = []; $bookPts = []; $notePts = []; $posOf = [];
     $secOf = securityOn($role) ? loadSide('security', $key) : [];
     if (pestOn($role) || securityOn($role)) {
@@ -1532,7 +1538,7 @@ if ($action === 'area') {
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => $olOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarOf[$d['id']] ?? null, 'pest' => $pestRow, 'sec' => $secRow,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => $olOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

@@ -213,3 +213,6 @@ traverse/app/data/rounds/boulder.json
 
 # free api.data.gov key for the pipeline (FBI crime figures, solar inputs); never committed
 traverse/data-pipeline/door-territory/data-gov-key.txt
+
+# EIA-861 survey download (2026-10-07), large and re-fetchable
+traverse/data-pipeline/door-territory/solar/eia861/
