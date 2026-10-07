@@ -24,6 +24,9 @@ import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/* 2026-10-07: a photo-server connection that times out inside the image reader escaped every try and stopped the whole run
+   (Parker, at 22,400 of 24,717). Log it and carry on; the door is left unmeasured and the next run picks it up. */
+process.on('unhandledRejection', (e) => { console.log('    (network error, skipped: ' + String((e && (e.cause && e.cause.code)) || (e && e.message) || e).slice(0, 80) + ')'); });
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..');
 const CACHE = join(DT, 'lawn-cache.json');

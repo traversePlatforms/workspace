@@ -8,6 +8,9 @@ cd "$(dirname "$0")"
 L=logs-2026-10-07; mkdir -p "$L"
 NEW="highlands-ranch parker castle-pines"
 step() { local name=$1; shift; echo "$(date +%H:%M:%S) start $name"; ( "$@" ) > "$L/$name.log" 2>&1; echo "$(date +%H:%M:%S) end   $name (exit $?) $(tail -1 "$L/$name.log" | cut -c1-140)"; }
+# anything stage one left unmeasured (Parker stopped at 22,400 of 24,717 on a network timeout, 2026-10-07): measured now, then the town files again
+for t in $NEW; do step "lawn-retry-$t" bash -c "cd lawn-trial && node sample-lawn.mjs --town=$t --conc=6"; done
+step rounds-again node build-rounds-data.mjs
 step year bash -c "cd assessor && node build-year.mjs"
 for t in $NEW; do step "roofs-$t" bash -c "cd roofs && node sample-roofs.mjs --town=$t --conc=6"; done
 step roofs-build bash -c "cd roofs && node sample-roofs.mjs --build"
