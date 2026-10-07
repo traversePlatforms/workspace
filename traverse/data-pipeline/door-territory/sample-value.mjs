@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const LAYER = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
-const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'] };
+const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'highlands-ranch', 'parker', 'castle-pines'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'] };
 const COUNTY = { douglas: 'Douglas', teller: 'Teller' };
 const OUT = join(HERE, 'value-cache.json');
 

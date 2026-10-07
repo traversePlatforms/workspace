@@ -28,7 +28,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..'), TZ = join(DT, 'tree-zones');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'roof-cache.json');
-const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas' };
+const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas' };
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 const SQFT = 10.7639;

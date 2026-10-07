@@ -85,13 +85,16 @@ function company(): array {
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
             'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => [],
             /* the weather warnings this install shows and pushes (2026-10-06, the editions); null = Sixfold's rules (see alertEvents) */
-            'alerts' => null];
+            'alerts' => null,
+            /* the town groups this install shows (2026-10-07): a town in index.json with a "group" is hidden unless named here */
+            'townGroups' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
     $c['card'] = array_replace($def['card'], is_array($c['card']) ? $c['card'] : []);
     foreach (['services', 'extraWork'] as $k) $c[$k] = array_values(array_filter((array) $c[$k], fn($p) => is_array($p) && count($p) >= 2 && preg_match('/^[a-z0-9_-]{1,30}$/D', (string) $p[0])));
     if (!$c['services']) $c['services'] = $def['services'];
+    $c['townGroups'] = array_values(array_filter(array_map(fn($g) => is_string($g) ? trim($g) : '', (array) $c['townGroups']), fn($g) => (bool) preg_match('/^[a-z0-9-]{1,40}$/D', $g)));
     $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
     return $c;
 }
@@ -400,7 +403,14 @@ function adminRegion(string $key): bool {
     if ($set === null) { $set = []; $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: []; foreach (($idx['regions'] ?? []) as $r) if (!empty($r['admin'])) $set[(string) $r['key']] = true; }
     return isset($set[$key]);
 }
+/** a town in a group this company does not show (index.json "group" vs company.json "townGroups"): as if it were not there */
+function regionHidden(string $key): bool {
+    static $grp = null;
+    if ($grp === null) { $grp = []; $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: []; foreach (($idx['regions'] ?? []) as $r) if (!empty($r['group'])) $grp[(string) $r['key']] = (string) $r['group']; }
+    return isset($grp[$key]) && !in_array($grp[$key], company()['townGroups'], true);
+}
 function loadRegion(string $key): ?array {
+    if (regionHidden($key)) return null;
     if (adminRegion($key) && ($GLOBALS['role'] ?? '') !== 'admin') return null;
     $f = regionFile($key);
     return $f ? json_decode((string) file_get_contents($f), true) : null;

@@ -57,6 +57,7 @@ const EDITIONS = {
         // the weather this edition shows and pushes (Matthew 2026-10-06): storms with their hail size, wind and heat; no fire
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
+        townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
         features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true },
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
@@ -86,6 +87,7 @@ const EDITIONS = {
                   ['branches', 'Branches near the house'], ['fuel', 'Dry brush close to the house']],
       // storm and tornado warnings for the crew's safety, and freeze and frost for the lawn; no fire alerts (Matthew 2026-10-06)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'],
+      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
       links: { googleReview: '' }
@@ -113,6 +115,7 @@ const EDITIONS = {
       extraWork: [['south', 'Roof faces south'], ['shade', 'Shade from trees'], ['oldroof', 'Roof looks near the end of its life'],
                   ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
+      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
       links: { googleReview: '' }
@@ -140,6 +143,7 @@ const EDITIONS = {
       extraWork: [['wasps', 'Wasp nest seen'], ['ants', 'Ant trails'], ['spiders', 'Spiders or webs'], ['mice', 'Signs of mice'],
                   ['firewood', 'Firewood against the house'], ['water', 'Standing water'], ['otherco', 'Already has a pest company']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
+      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true },
       card: { lawn: false, trees: true, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: true },
       links: { googleReview: '' }
@@ -166,6 +170,7 @@ const EDITIONS = {
       extraWork: [['nosystem', 'No visible system'], ['doorbell', 'Has a camera doorbell'], ['sign', 'Provider sign in the yard'],
                   ['otherco', 'Already has a provider'], ['dog', 'Dog at home'], ['newmove', 'Just moved in']],
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
+      townGroups: ['north-douglas'],   // Highlands Ranch, Parker, Castle Pines (2026-10-07; not Sixfold's)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: false, security: true },
       links: { googleReview: '' }

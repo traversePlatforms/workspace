@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, 'hoa-cache.json');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas',
-  'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller' };
+  'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas' };
 const STATE = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const DOUGLAS_SUBS = 'https://services.arcgis.com/seTexOicoRXDvRsJ/arcgis/rest/services/OpenData/FeatureServer/6/query';
 const EPC_METRO = 'https://gisservices.elpasoco.com/arcgis2/rest/services/HubPublic/MetropolitanDistricts/FeatureServer/0/query';

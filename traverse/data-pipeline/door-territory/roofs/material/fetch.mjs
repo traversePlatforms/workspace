@@ -19,7 +19,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CACHE = join(HERE, 'cache');
 const API = 'https://planetarycomputer.microsoft.com/api/data/v1/item/bbox';
 const RES = 0.3;   /* m per pixel, native */
-const TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek'];
+const TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines'];
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 6), LIMIT = +arg('limit', 1e9);
 const items = JSON.parse(readFileSync(join(CACHE, 'naip-items.json'), 'utf8'));

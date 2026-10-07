@@ -35,11 +35,17 @@ const load = (dir, f) => {
    compared NOTHING: an empty snapshot folder, or `cp -r rounds rounds-before` landing in
    rounds-before/rounds/. It also never read index.json, so a town missing from the new index
    (gone from the app) could pass on an untouched old file. Both now fail. */
-const snapFiles = readdirSync(SNAP).filter((x) => x.endsWith('.json') && !['index.json', 'money.json'].includes(x)).sort();
+/* door files only (2026-10-07): the side files beside them (hail-, wind-, year-, outline- ...) carry no "areas" and were
+   reported as whole towns vanishing */
+const isTownFile = (f) => { try { return Array.isArray(JSON.parse(readFileSync(join(SNAP, f), 'utf8')).areas); } catch { return false; } };
+const snapFiles = readdirSync(SNAP).filter((x) => x.endsWith('.json') && !['index.json', 'money.json'].includes(x) && isTownFile(x)).sort();
 if (!snapFiles.length) { console.error(`\u2691 ${SNAP} holds no door files. Nothing was compared, so nothing is proven. DO NOT UPLOAD.`); process.exit(1); }
 let idx;
 try { idx = JSON.parse(readFileSync(join(NOW, 'index.json'), 'utf8')); } catch { console.error('\u2691 The new index.json is missing or unreadable. DO NOT UPLOAD.'); process.exit(1); }
 const listed = new Set((idx.regions || []).map((r) => r.key));
+/* and the editions' own extra towns (Roofing's commercial test towns live in traverse/editions/*-towns.json, not index.json) */
+const EDS = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'editions');
+try { for (const f of readdirSync(EDS).filter((x) => /-towns\.json$/.test(x))) for (const r of JSON.parse(readFileSync(join(EDS, f), 'utf8')).regions || []) listed.add(r.key); } catch {}
 const shared = idx.shared || {};
 
 /* every door in the NEW set, all towns: a door that left one town for a partner town is a move,

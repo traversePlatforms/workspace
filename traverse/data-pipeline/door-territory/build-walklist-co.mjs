@@ -54,6 +54,11 @@ const PLACES = {
   sedalia:       ['DOUGLAS', 39.4386, -104.9614],
   larkspur:      ['DOUGLAS', 39.2311, -104.8747],
   franktown:     ['DOUGLAS', 39.3894, -104.7519],
+  /* north Douglas (2026-10-07, Matthew: three more high-lawn places, for the Traverse lawn edition): drawn by the situs
+     city with --cities, not by the circle alone. ⚑ Outside Sixfold's area: they go to the editions only. */
+  'highlands-ranch': ['DOUGLAS', 39.540, -104.985],
+  parker:            ['DOUGLAS', 39.515, -104.765],
+  'castle-pines':    ['DOUGLAS', 39.455, -104.895],
   /* Teller */
   'woodland-park': ['TELLER', 39.0000, -105.0569],
   divide:          ['TELLER', 38.9469, -105.1636],
@@ -126,6 +131,10 @@ const minAcres = Number(arg('min-acres', '0.18'));
    ⚑ WIDENING IS SAFE, NARROWING IS NOT: marks survive a rebuild that adds doors, but
    a door that drops out orphans its mark. Do not lower this without reading SX-13. */
 const maxAcres = Number(arg('max-acres', '10'));
+/* --cities=PARKER,AURORA keeps only parcels whose property address is in those cities; --city-zip=CASTLE ROCK:80108 also keeps
+   that city within that ZIP (Castle Pines Village is addressed Castle Rock 80108). Both empty = the whole circle, as before. */
+const CITIES = (arg('cities', '') || '').split(',').map((c) => c.trim().toUpperCase()).filter(Boolean);
+const CITY_ZIP = (arg('city-zip', '') || '').split(',').map((c) => c.trim().toUpperCase().split(':')).filter((p) => p.length === 2);
 const outFile = arg('out', `walklist-${place ?? county.toLowerCase()}.csv`);
 /* used when the county leaves the situs city blank — see the note at its use */
 const REGION_FALLBACK = (place ?? `${county} COUNTY`).replace(/-/g, ' ').toUpperCase();
@@ -168,7 +177,7 @@ const centroid = (ring) => [
   ring.reduce((s, p) => s + p[1], 0) / ring.length,
 ];
 
-let noAcres = 0, wrongSize = 0, notRes = 0, noSitus = 0;
+let noAcres = 0, wrongSize = 0, notRes = 0, noSitus = 0, offCity = 0;
 const kept = [];
 for (const f of feats) {
   const a = f.attributes;
@@ -179,10 +188,14 @@ for (const f of feats) {
   const use = (a.landUseDsc || '').trim();
   if (use && NOT_RESIDENTIAL.test(use)) { notRes++; continue; }
   if (!(a.situsAdd || '').trim()) { noSitus++; continue; }
+  if (CITIES.length || CITY_ZIP.length) {
+    const cty = (a.sitAddCty || '').trim().toUpperCase(), zip = String(a.sitAddZip || '').replace(/\D/g, '').slice(0, 5);
+    if (!CITIES.includes(cty) && !CITY_ZIP.some(([c, z]) => c === cty && z === zip)) { offCity++; continue; }
+  }
   kept.push({ a, acres, c: centroid(f.geometry.rings[0]) });
 }
 console.log(`  in size band:   ${kept.length + noSitus + notRes}`);
-console.log(`  dropped:        ${notRes} non-residential land use · ${noSitus} with no property address · ${noAcres} with no acreage`);
+console.log(`  dropped:        ${notRes} non-residential land use · ${noSitus} with no property address · ${noAcres} with no acreage${offCity ? ' · ' + offCity + ' outside the cities asked for' : ''}`);
 
 /* ---- does the owner live there? -----------------------------------------
 

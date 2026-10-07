@@ -15,6 +15,7 @@ mkdirSync(OUT, { recursive: true });
 const need = new Map();
 for (const f of readdirSync(DATA).filter((f) => f.endsWith('.json') && f !== 'index.json')) {
   const r = JSON.parse(readFileSync(join(DATA, f), 'utf8'));
+  if (!Array.isArray(r.areas)) continue;   /* door files only: the side files (hail-, wind-, ...) have none */
   for (const a of r.areas) for (const d of a.doors) if (typeof d.lat === 'number') {
     const k = quadkey(d.lon, d.lat, 9); need.set(k, (need.get(k) || 0) + 1);
   }

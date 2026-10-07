@@ -5,7 +5,8 @@
   "counties": {
     "castle-rock": "douglas", "larkspur": "douglas", "sedalia": "douglas", "franktown": "douglas",
     "black-forest": "elpaso", "monument": "elpaso", "palmer-lake": "elpaso",
-    "woodland-park": "teller", "divide": "teller", "florissant": "teller", "cripple-creek": "teller"
+    "woodland-park": "teller", "divide": "teller", "florissant": "teller", "cripple-creek": "teller",
+    "highlands-ranch": "douglas", "parker": "douglas", "castle-pines": "douglas"
   },
   "cards": {
     "_note": "One short line each for the door card (new layout). Keep them in step with the sheets below.",
@@ -185,7 +186,10 @@
         "larkspur": "Mostly wells: ask what it allows",
         "sedalia": "Mostly wells: ask what it allows",
         "divide": "Mostly wells: ask what it allows",
-        "florissant": "Mostly wells: ask what it allows"
+        "florissant": "Mostly wells: ask what it allows",
+        "highlands-ranch": "Highlands Ranch: 2 days a week (Stage 1)",
+        "parker": "Parker Water: 3 days a week; other districts: ask",
+        "castle-pines": "Castle Pines North: 3 days a week; the Village: ask"
       },
       "wellSmall": "Under 35 acres: a well may not water a lawn",
       "wellBig": "35 acres or more: a well may water up to 1 acre"
@@ -415,6 +419,61 @@
                 "p": [
                   "Ask whether they are on a well, and what the well permit allows.",
                   "If it is household use only, sell aeration, mowing or cleanup, not an overseed."
+                ]
+              }
+            ]
+          },
+          "highlands-ranch": {
+            "title": "Highlands Ranch water",
+            "blocks": [
+              {
+                "h": "Highlands Ranch Water (Centennial Water and Sanitation District)",
+                "p": [
+                  "Stage 1 drought restrictions since March 2026: two days a week, on days set by the house number.",
+                  "Odd addresses Wednesday and Saturday, even addresses Thursday and Sunday.",
+                  "No watering from 10am to 6pm, 1 May to 30 September. Outdoor water budgets end 15 October."
+                ]
+              },
+              {
+                "h": "Before quoting seed",
+                "p": [
+                  "Two days a week is hard on new seed. Sell aeration first, and check what the district allows for new seed before quoting an overseed."
+                ]
+              }
+            ]
+          },
+          "parker": {
+            "title": "Parker water",
+            "blocks": [
+              {
+                "h": "Parker Water and Sanitation District",
+                "p": [
+                  "Three days a week by house number: even Sunday, Tuesday and Thursday; odd Monday, Wednesday and Saturday.",
+                  "In season no watering from 10am to 6pm, and new sod needs a permit. The daytime limit ended for the year on 1 October."
+                ]
+              },
+              {
+                "h": "Other water districts",
+                "p": [
+                  "Parts of Parker are served by other districts with their own rules. Ask who their water comes from."
+                ]
+              }
+            ]
+          },
+          "castle-pines": {
+            "title": "Castle Pines water",
+            "blocks": [
+              {
+                "h": "Castle Pines North Metropolitan District",
+                "p": [
+                  "Three days a week through September by house number: even Sunday, Tuesday and Thursday; odd Monday, Wednesday and Saturday.",
+                  "Lawns only between 8pm and 8am. New sod or plants: water daily for 21 days."
+                ]
+              },
+              {
+                "h": "Castle Pines Village",
+                "p": [
+                  "The Village has its own water district and its rules were not checked. Ask the homeowner or the district."
                 ]
               }
             ]

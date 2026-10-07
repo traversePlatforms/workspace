@@ -22,7 +22,7 @@ const DT = join(HERE, '..', '..'), TZ = join(DT, 'tree-zones');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'cache');
 mkdirSync(CACHE, { recursive: true });
-const TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek'];
+const TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines'];
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null);
 

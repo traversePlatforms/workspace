@@ -30,6 +30,11 @@ const SOURCES = [
   ['divide', 'Divide', 'divide-areas.json'],
   ['florissant', 'Florissant', 'florissant-areas.json'],
   ['cripple-creek', 'Cripple Creek', 'cripple-creek-areas.json'],
+  /* north Douglas (2026-10-07, Matthew: three more high-lawn places). The group keeps them out of any company that does not
+     list it in company.json "townGroups" (Sixfold does not: they are outside its area, Brandon's call); the editions do. */
+  ['highlands-ranch', 'Highlands Ranch', 'highlands-ranch-areas.json', 'north-douglas'],
+  ['parker', 'Parker', 'parker-areas.json', 'north-douglas'],
+  ['castle-pines', 'Castle Pines', 'castle-pines-areas.json', 'north-douglas'],
 ];
 
 /* same slug rule as build-walk-tool.mjs, so a door has one id everywhere */
@@ -136,10 +141,11 @@ const CENTRE = {
   'castle-rock': [39.3722, -104.8561], larkspur: [39.2311, -104.8747], sedalia: [39.4386, -104.9614],
   franktown: [39.3894, -104.7519], 'woodland-park': [39.0000, -105.0569], divide: [38.9469, -105.1636],
   florissant: [38.9469, -105.2911], 'cripple-creek': [38.7466, -105.1783],
+  'highlands-ranch': [39.540, -104.985], parker: [39.515, -104.765], 'castle-pines': [39.455, -104.895],
 };
 const km = (la1, lo1, la2, lo2) => Math.hypot((la1 - la2) * 111, (lo1 - lo2) * 111 * Math.cos((la1 * Math.PI) / 180));
 const built = [];
-for (const [key, label, fileName] of SOURCES) {
+for (const [key, label, fileName, group] of SOURCES) {
   const p = join(HERE, fileName);
   if (!existsSync(p)) { console.log(`skipping ${label} — no ${fileName}`); continue; }
   const j = JSON.parse(readFileSync(p, 'utf8'));
@@ -155,8 +161,9 @@ for (const [key, label, fileName] of SOURCES) {
       return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d), val: valueOf(d) };
     }),
   }));
-  built.push({ key, label, j, areas });
+  built.push({ key, label, group, j, areas });
 }
+const groupOf = Object.fromEntries(built.map((b) => [b.key, b.group || null]));
 const towns = new Map();   /* id -> towns listing it */
 for (const b of built) for (const a of b.areas) for (const d of a.doors) { if (!towns.has(d.id)) towns.set(d.id, []); towns.get(d.id).push(b.key); }
 const SHARED_FILE = join(HERE, 'shared-towns.json');
@@ -167,7 +174,9 @@ const owner = new Map();
 for (const b of built) for (const a of b.areas) for (const d of a.doors) {
   const list = towns.get(d.id);
   if (list.length < 2 || owner.has(d.id)) continue;
-  const near = list.filter((t) => CENTRE[t] && d.lat != null).sort((x, y) => km(d.lat, d.lon, ...CENTRE[x]) - km(d.lat, d.lon, ...CENTRE[y]))[0] || list[0];
+  /* a town in a group (editions only) never takes a door from a town without one: Sixfold would lose it (2026-10-07) */
+  const ungrouped = list.filter((t) => !groupOf[t]), pool = ungrouped.length ? ungrouped : list;
+  const near = pool.filter((t) => CENTRE[t] && d.lat != null).sort((x, y) => km(d.lat, d.lon, ...CENTRE[x]) - km(d.lat, d.lon, ...CENTRE[y]))[0] || pool[0];
   owner.set(d.id, near);
   for (const t of list) for (const u of list) if (t !== u) addPair(t, u);
 }
@@ -217,10 +226,10 @@ writeFileSync(OWNERS, JSON.stringify(hist), 'utf8');
 console.log(firstOwnerBuild ? `owner history started: ${Object.keys(hist).length} doors recorded (changes are detected from the next rebuild)` : `${newOwners} doors have a new owner since the last rebuild`);
 
 const index = [];
-for (const { key, label, j, areas: raw } of built) {
+for (const { key, label, group, j, areas: raw } of built) {
   const areas = raw.filter((a) => a.doors.length).map((a) => ({ name: a.name, avg: a.avg, place: placeOf(a.src), fw: firewiseOf(a.src), doors: a.doors }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');
-  index.push({ key, label, areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
+  index.push({ key, label, ...(group ? { group } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
   console.log(`${key}.json  ${areas.length} areas, ${index[index.length - 1].doors} doors`);
 }
 writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');
