@@ -24,6 +24,31 @@ of that size) and a four-tab sheet (This town · Wells · Permits · Say). Every
 Lake, Cripple Creek, every scheme outside Colorado Springs and Castle Rock) say "not checked" in the app
 rather than guessing. Re-check the provider pages before the 2027 season; drought stages move without warning.
 
+**Water for the north-Douglas towns (added 2026-10-07, for the Traverse editions).** Each line comes from the
+district's own website, checked **2026-10-07**:
+
+- **Highlands Ranch:** Highlands Ranch Water (Centennial Water and Sanitation District),
+  [water-conservation](https://centennialwater.specialdistrict.org/water-conservation). Stage 1 drought restrictions are
+  in effect: two days a week, no watering 10am to 6pm from 1 May to 30 September, and outdoor water budgets end
+  15 October. The days (odd addresses Wednesday and Saturday, even Thursday and Sunday) and the March 2026 start come
+  from the district's announcement,
+  [highlands-ranch-water-implements-stage-1-drought-restrictions](https://centennialwater.specialdistrict.org/highlands-ranch-water-implements-stage-1-drought-restrictions).
+- **Parker:** Parker Water and Sanitation District, [Watering Restrictions](https://www.pwsd.org/3366/Watering-Restrictions).
+  - Even addresses water Sunday, Tuesday and Thursday; odd addresses Monday, Wednesday and Saturday.
+  - No watering from 10am to 6pm.
+  - New sod needs a permit in season.
+  - The daytime limit and the permit ended for the year on 1 October.
+  - Other districts serve parts of Parker; the card says to ask.
+- **Castle Pines:** Castle Pines North Metropolitan District,
+  [2026 watering schedule](https://cpnmd.specialdistrict.org/2026-watering-schedule).
+  - Three days a week through September.
+  - Lawns only between 8pm and 8am.
+  - New sod or plants may be watered daily for 21 days.
+  - The even and odd days (Sunday, Tuesday and Thursday; Monday, Wednesday and Saturday) are from the district's 2026
+    schedule image and bill insert, not the page's text.
+  - **Castle Pines Village has its own district, not checked**; the card says to ask.
+- **Not used:** a sprinkler company's page that mixed Parker, Colorado with Parker, Texas.
+
 **Corrected 2026-10-04:** the card said "Aeration needs no watering", from the research's headline "Aeration does
 not need water". Colorado State University Extension says water thoroughly the day before, water soon after, keep
 watering regularly, and don't core-aerate a lawn that is brown or dormant from water restrictions (PlantTalk
