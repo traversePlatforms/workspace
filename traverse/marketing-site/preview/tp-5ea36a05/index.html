@@ -23,14 +23,16 @@ html{scroll-behavior:smooth}
 #top > div:last-child > div:first-child{top:0;right:40px;bottom:50px;left:0}
 /* tablets held upright, and phones */
 @media (max-width:1000px){
-  /* header: logo, Book a demo and a menu button on one row; the links open in a panel */
-  header{position:relative}
+  /* header: logo, Book a demo and a menu button on one row; the links open in a panel. It stays at the top while the
+     page scrolls (Matthew 2026-10-08), so a page link stops below it rather than under it */
+  header{position:sticky;top:0;z-index:40}
+  section[id]{scroll-margin-top:76px}
   header > div{flex-wrap:nowrap !important}
   #mainnav{margin-left:auto;gap:0 !important}
   #mainnav a:not(:last-child){display:none !important}
   .navtoggle{display:inline-grid;place-items:center;flex:none;order:1;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
   .navtoggle svg{width:22px;height:22px}
-  #mainnav.open{position:absolute;top:100%;left:0;right:0;z-index:30;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:#ffffff;border-bottom:1px solid #dce2ea;padding:6px 24px 18px;box-shadow:0 12px 24px -12px rgba(15,27,45,0.25)}
+  #mainnav.open{position:absolute;top:100%;left:0;right:0;z-index:30;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:#ffffff;border-bottom:1px solid #dce2ea;padding:6px 24px 18px;box-shadow:0 12px 24px -12px rgba(15,27,45,0.25);max-height:calc(100vh - 76px);overflow-y:auto;box-sizing:border-box}
   #mainnav.open a:not(:last-child){display:block !important;width:100%;text-align:left;padding:14px 2px;border-bottom:1px solid #eef1f5;font-size:17px}
   #mainnav.open a:last-child{display:flex !important;width:100%;box-sizing:border-box;margin-top:14px;justify-content:center;height:48px !important;font-size:16px !important}
   /* the whole-day section: the phone first, the four parts in a two-by-two grid under it */
@@ -48,8 +50,7 @@ html{scroll-behavior:smooth}
   .trav-st > span:first-child{margin-left:-51.5px}
   .trav-st:last-child > span:first-child{margin-left:-58.5px}
   .trav-st p{max-width:52ch !important}
-  /* the conditions three across, the features two by two with hairline dividers */
-  .conds{grid-template-columns:repeat(3,1fr) !important;gap:28px 28px !important}
+  /* the features two by two with hairline dividers */
   .featstrip{grid-template-columns:1fr 1fr !important;gap:1px !important;background:rgba(255,255,255,0.14) !important}
   .featstrip > div{box-shadow:none !important;background:#13294b}
 }
@@ -70,7 +71,6 @@ html{scroll-behavior:smooth}
   #top{gap:32px !important}
   .daycol{grid-template-columns:1fr !important;gap:28px !important}
   .conds{grid-template-columns:1fr !important}
-  .conds b{font-size:38px !important}
   .featstrip{grid-template-columns:1fr !important}
   .eds{grid-template-columns:1fr !important}
 }
