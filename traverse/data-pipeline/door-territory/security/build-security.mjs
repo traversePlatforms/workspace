@@ -246,7 +246,11 @@ for (const t of towns) {
     }
   }
   if (!Object.keys(areasOut[t]).length) delete areasOut[t];
-  writeFileSync(join(DATA, `security-${t}.json`), JSON.stringify({ built: iso(today), doors }));
+  /* packed (2026-10-08): each door's entry as JSON text. Denver's file, read whole as nested objects, took 176 MB of the
+     server's memory before one neighbourhood could be picked out; as text it is a fraction, and the server unpacks only the
+     doors it sends (rounds.php loadSide). */
+  const packedDoors = {}; for (const [id, v] of Object.entries(doors)) packedDoors[id] = JSON.stringify(v);
+  writeFileSync(join(DATA, `security-${t}.json`), JSON.stringify({ built: iso(today), packed: 1, doors: packedDoors }));
   console.log(`  security-${t}.json: ${Object.keys(doors).length} doors`);
 }
 writeFileSync(join(DATA, 'security-areas.json'), JSON.stringify({ built: iso(today), through: inc.reduce((m, x) => x.t > m ? x.t : m, ''), source: 'Colorado Springs, Denver and Boulder police (property crimes reported within 1/4 mile of the neighbourhood\'s doors)', towns: areasOut }));

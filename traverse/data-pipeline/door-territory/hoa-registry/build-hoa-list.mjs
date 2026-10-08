@@ -68,7 +68,9 @@ const matches = (a, b) => {
 const places = new Map();   // core -> { name, towns:Set, doors }
 for (const f of readdirSync(ROUNDS).filter((x) => x.endsWith('.json') && !['index.json', 'money.json'].includes(x))) {
   const town = f.replace('.json', '');
-  for (const a of JSON.parse(readFileSync(join(ROUNDS, f), 'utf8')).areas) {
+  const j = JSON.parse(readFileSync(join(ROUNDS, f), 'utf8'));
+  if (!Array.isArray(j.areas)) continue;   /* town door files only: the side files (permit-, census-, climate ...) have none (2026-10-08) */
+  for (const a of j.areas) {
     if (!a.place?.n) continue;
     const k = core(a.place.n); if (!k) continue;
     if (!places.has(k)) places.set(k, { name: a.place.n, towns: new Set(), doors: 0 });

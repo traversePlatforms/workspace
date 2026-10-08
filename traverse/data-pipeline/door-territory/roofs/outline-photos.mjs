@@ -72,7 +72,11 @@ for (const r of regions) {
     if (!o.p) delete o.p; if (!o.n) delete o.n;
     if (o.p || o.n) { out[d.id] = o; drawn++; }
   }
-  writeFileSync(join(DATA, `outline-${key}.json`), JSON.stringify({ source: 'Microsoft Global ML Building Footprints (ODbL)', doors: out }));
+  /* each outline as text, "u,v u,v ..." (2026-10-08): as lists of points, Parker's file took 86 MB in the server's memory. The
+     server turns them back into [[u, v], ...] for the doors it sends. */
+  const packed = {};
+  for (const [id, o] of Object.entries(out)) { packed[id] = {}; for (const k of Object.keys(o)) packed[id][k] = o[k].map((p) => p[0] + ',' + p[1]).join(' '); }
+  writeFileSync(join(DATA, `outline-${key}.json`), JSON.stringify({ source: 'Microsoft Global ML Building Footprints (ODbL)', format: 'u,v u,v ...', doors: packed }));
   console.log(`  outline-${key}.json: ${Object.keys(out).length} of ${doors.length} doors with a photo`);
 }
 console.log(`${drawn} of ${total} doors with a photo have an outline`);

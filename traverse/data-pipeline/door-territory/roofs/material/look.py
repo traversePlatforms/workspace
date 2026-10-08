@@ -15,11 +15,11 @@ houses = json.loads((HERE / 'cache' / f'houses-{town}.json').read_text())
 idx = json.loads((HERE / 'cache' / f'crops-{town}.json').read_text())
 want = sys.argv[5] if len(sys.argv) > 5 else None   # e.g. "Concrete Tile": only houses the county lists as that
 labels = {}
-yf = HERE.parents[3] / 'site' / 'data' / 'rounds' / f'year-{town}.json'
+yf = HERE.parents[3] / 'app' / 'data' / 'rounds' / f'year-{town}.json'
 if yf.exists():
     labels = {k: v.get('mat') for k, v in json.loads(yf.read_text())['doors'].items()}
 if want and want.startswith('pred:'):   # "pred:asphalt": houses the finished material-<town>.json calls that, from imagery
-    mf = json.loads((HERE.parents[3] / 'site' / 'data' / 'rounds' / f'material-{town}.json').read_text())['doors']
+    mf = json.loads((HERE.parents[3] / 'app' / 'data' / 'rounds' / f'material-{town}.json').read_text())['doors']
     labels = {k: f"{v['m']} {v['p']} ({v['src']})" for k, v in mf.items()}
     sel = {k for k, v in mf.items() if v['src'] == 'imagery' and v['m'] == want[5:]}
     ids = [i for i in idx if i in sel and 'err' not in idx[i]][start:start + n]

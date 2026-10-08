@@ -67,6 +67,13 @@ function dataDir(): string {
     exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
 define('DATA_DIR', dataDir());
+/* memory (2026-10-08): the editions' big towns carry tens of MB of side files. The door view and the town list read only what
+   they need, but ask for 256 MB where the host's limit is lower and lets a script raise it; diag reports what was granted. */
+(function () {
+    $m = trim((string) ini_get('memory_limit'));
+    $mb = $m === '-1' ? PHP_INT_MAX : (int) $m * (['g' => 1024, 'm' => 1, 'k' => 1 / 1024][strtolower(substr($m, -1))] ?? 1 / 1048576);
+    if ($mb < 256) @ini_set('memory_limit', '256M');
+})();
 
 /* ---- the company this install is for (2026-10-04) ----------------------------------------
  * Matthew: the app is his product and Sixfold is its first user, so nothing about one company is
@@ -124,12 +131,37 @@ function pestOn(string $role): bool { return $role === 'admin' && feature('pest'
    location), town figures (FBI), owner lives elsewhere, plus the pest build's sale month, year built and open space, and the
    same neighbours / bookings / door-note counts. Admins only, where the company turns security on. */
 function securityOn(string $role): bool { return $role === 'admin' && feature('security'); }
-function loadSide(string $kind, string $key): array {
+function loadSide(string $kind, string $key, ?array $only = null): array {
     static $memo = [];
     $k = $kind . '-' . $key;
-    if (!isset($memo[$k])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $k . '.json'), true); $memo[$k] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
+    /* $only (2026-10-08): keep just these door ids and let the rest go at once. A town's side files can be tens of MB once
+       decoded (wind for Colorado Springs southeast was 78 MB); one neighbourhood needs a few hundred rows of each. Not memoised. */
+    /* a packed file (2026-10-08: security-<town>) holds each door's entry as JSON text; unpacked here, for the rows returned */
+    $unpack = fn(array $d, $j) => empty($j['packed']) ? $d : array_map(fn($v) => is_string($v) ? json_decode($v, true) : $v, $d);
+    if ($only !== null) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $k . '.json'), true); $d = is_array($j['doors'] ?? null) ? $unpack(array_intersect_key($j['doors'], $only), $j) : []; unset($j); return $d; }
+    if (!isset($memo[$k])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $k . '.json'), true); $memo[$k] = is_array($j['doors'] ?? null) ? $unpack($j['doors'], $j) : []; }
     return $memo[$k];
 }
+/* wind reports (2026-10-08): wind-<town>.json stores each as "date|mph|kind|miles" (a fifth of the memory of a small array in
+   PHP); the door gets them back as [date, mph or null, kind, miles], as before. An older file's arrays pass through. */
+function windRows($v): ?array {
+    if (!is_array($v)) return null;
+    $o = [];
+    foreach ($v as $e) {
+        if (is_array($e)) { $o[] = $e; continue; }
+        $p = explode('|', (string) $e);
+        if (count($p) >= 4) $o[] = [$p[0], $p[1] === '' ? null : (int) $p[1], $p[2], is_numeric($p[3]) ? $p[3] + 0 : $p[3]];
+    }
+    return $o;
+}
+/* roof outlines (2026-10-08): outline-<town>.json stores each as "u,v u,v ..."; the door gets [[u, v], ...] back, as before */
+function olRows($v): ?array {
+    if (!is_array($v)) return null;
+    $o = [];
+    foreach ($v as $k => $pts) $o[$k] = is_array($pts) ? $pts : array_map(fn($p) => array_map('intval', explode(',', $p)), explode(' ', trim((string) $pts)));
+    return $o;
+}
+function windMph($e): float { return is_array($e) ? (float) ($e[1] ?? 0) : (float) (explode('|', (string) $e)[1] ?? 0); }
 /** service keys, and the label for each */
 function custServices(): array { return array_map(fn($p) => (string) $p[0], company()['services']); }
 function workLabels(): array { $o = []; foreach (company()['extraWork'] as $p) $o[(string) $p[0]] = (string) $p[1]; return $o; }
@@ -917,10 +949,16 @@ function bestTownPoints(string $trade, string $key, array $data): array {
     $side = function (string $p) use ($key): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $p . '-' . $key . '.json'), true); return is_array($j['doors'] ?? null) ? $j['doors'] : []; };
     $cen = json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: [];
     $pidx = (json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null;
-    $hail = $trade === 'roof' ? $side('hail') : []; $wind = $trade === 'roof' ? $side('wind') : [];
-    $year = $trade === 'roof' ? $side('year') : []; $roof = $trade === 'roof' ? $side('roof') : [];
-    $solar = $trade === 'solar' ? $side('solar') : []; $perm = ($trade === 'roof' || $trade === 'solar') ? $side('permit') : [];
-    $pest = $trade === 'pest' ? $side('pest') : []; $sec = $trade === 'security' ? $side('security') : [];
+    /* one file at a time, keeping only what the points use (2026-10-08): whole and together they passed 160 MB for a big town */
+    $take = function (string $p, callable $f) use ($side): array { $o = []; foreach ($side($p) as $id => $v) { $x = $f(is_string($v) && ($v[0] ?? '') === '{' ? json_decode($v, true) : $v); if ($x !== null) $o[$id] = $x; } return $o; };
+    $hail = $trade === 'roof' ? $take('hail', function ($v) { $big = null; foreach ((array) $v as $x) if (is_array($x) && (!$big || (float) $x[1] > (float) $big[1])) $big = [(string) $x[0], (float) $x[1]]; return $big ? [$big] : null; }) : [];
+    $wind = $trade === 'roof' ? $take('wind', function ($v) { $m = 0.0; foreach ((array) $v as $e) $m = max($m, windMph($e)); return $m > 0 ? [['', $m]] : null; }) : [];
+    $year = $trade === 'roof' ? $take('year', fn($v) => is_array($v) && !empty($v['yb']) ? ['yb' => (int) $v['yb'], 'rm' => (int) ($v['rm'] ?? 0)] : null) : [];
+    $roof = $trade === 'roof' ? $take('roof', fn($v) => is_array($v) && isset($v['sqs']) ? ['sqs' => (float) $v['sqs']] : null) : [];
+    $solar = $trade === 'solar' ? $take('solar', fn($v) => is_array($v) ? array_intersect_key($v, ['pn' => 1, 'kwh' => 1, 'sh' => 1]) : null) : [];
+    $perm = ($trade === 'roof' || $trade === 'solar') ? $take('permit', fn($v) => is_array($v) ? array_intersect_key($v, ['r' => 1, 's' => 1, 'so' => 1]) : null) : [];
+    $pest = $trade === 'pest' ? $take('pest', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'os' => 1, 'wa' => 1]) : null) : [];
+    $sec = $trade === 'security' ? $take('security', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'yb' => 1, 'ab' => 1, 'os' => 1]) : null) : [];
     $yr = (int) date('Y'); $ymNow = $yr * 12 + (int) date('n');
     $recent = fn(string $ym): bool => strlen($ym) >= 7 && $ymNow - ((int) substr($ym, 0, 4) * 12 + (int) substr($ym, 5, 2)) <= 12;
     $p = [];
@@ -1420,6 +1458,7 @@ if ($action === 'diag') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $expected = dirname(__DIR__, 2) . '/sixfold-data/rounds';
     out(['ok' => true,
+        'memory_limit' => ini_get('memory_limit'),   /* 2026-10-08: what the host granted (the script asks for 256M) */
         'using'        => DATA_DIR,
         'using_exists' => is_dir(DATA_DIR),
         'expected'     => $expected,
@@ -1516,6 +1555,7 @@ if ($action === 'regions') {
                         '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []);
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
+        unset($data, $bp, $areas);   /* free this town before the next is read (2026-10-08): two big towns at once passed 96 MB */
     }
     /* ---- our own odds (SX-54, 2026-10-04) ----
        Expected quotes from the doors still to knock: each door counts at the rate doors like it
@@ -1558,16 +1598,19 @@ if ($action === 'area') {
     /* skip-trace results ride along for admins only (crew too if the config says crew_see); every number carries its DNC answer */
     $placeOf = skipMail($key);   /* id => {c: city, z: ZIP, m: mailing}; only c and z are sent */
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
-    $hailOf = hailOn($role) ? loadHail($key) : [];   /* admins only: storms near the house, newest first */
-    $roofOf = roofDataOn($role) ? loadSide('roof', $key) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key) : [];
-    $photoOf = roofDataOn($role) ? loadSide('photo', $key) : [];
-    $olOf = roofDataOn($role) ? loadSide('outline', $key) : [];   /* the building's outline on the roof photo (2026-10-06, data-pipeline/door-territory/roofs/outline-photos.mjs) */
-    $windOf = hailOn($role) ? loadSide('wind', $key) : [];
-    $matOf = roofDataOn($role) ? loadSide('material', $key) : [];
+    /* the side files are read for this neighbourhood's doors only (2026-10-08): whole, the big towns' files needed 220-320 MB */
+    $only = [];
+    foreach ($data['areas'] as $a0) if ($a0['name'] === $name) foreach ($a0['doors'] as $d0) $only[(string) $d0['id']] = true;
+    $hailOf = hailOn($role) ? loadSide('hail', $key, $only) : [];   /* admins only: storms near the house, newest first */
+    $roofOf = roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
+    $photoOf = roofDataOn($role) ? loadSide('photo', $key, $only) : [];
+    $olOf = roofDataOn($role) ? loadSide('outline', $key, $only) : [];   /* the building's outline on the roof photo (2026-10-06, data-pipeline/door-territory/roofs/outline-photos.mjs) */
+    $windOf = hailOn($role) ? loadSide('wind', $key, $only) : [];
+    $matOf = roofDataOn($role) ? loadSide('material', $key, $only) : [];
     $mfxOf = loadMatFix($key);
-    $solarOf = solarOn($role) ? loadSide('solar', $key) : [];
+    $solarOf = solarOn($role) ? loadSide('solar', $key, $only) : [];
     /* re-roof and solar permits (2026-10-07, permits/build-permits.mjs): admins, where the company sells roofs or solar */
-    $permOf = ($role === 'admin' && (feature('roof') || feature('solar'))) ? loadSide('permit', $key) : [];
+    $permOf = ($role === 'admin' && (feature('roof') || feature('solar'))) ? loadSide('permit', $key, $only) : [];
     /* FEMA's National Risk Index for the door's census tract (2026-10-07, nri/build-nri.mjs): the editions only, admins */
     $nriF = ($role === 'admin' && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/nri-' . $key . '.json'), true) ?: []) : [];
     /* the Census Bureau's survey for the door's block group (2026-10-07, census/build-census.mjs): the editions only, admins */
@@ -1581,9 +1624,9 @@ if ($action === 'area') {
         return $sv;
     };
     $pestOf = []; $custPts = []; $bookPts = []; $notePts = []; $posOf = [];
-    $secOf = securityOn($role) ? loadSide('security', $key) : [];
+    $secOf = securityOn($role) ? loadSide('security', $key, $only) : [];
     if (pestOn($role) || securityOn($role)) {
-        $pestOf = pestOn($role) ? loadSide('pest', $key) : [];
+        $pestOf = pestOn($role) ? loadSide('pest', $key, $only) : [];
         foreach ($data['areas'] as $a0) foreach ($a0['doors'] as $d0) if (isset($d0['lat'], $d0['lon'])) $posOf[$d0['id']] = [(float) $d0['lat'], (float) $d0['lon']];
         foreach (customerDoors() as $dk => $_) { $pp = explode('/', (string) $dk, 2); if (count($pp) === 2 && $pp[0] === $key && isset($posOf[$pp[1]])) $custPts[$pp[1]] = $posOf[$pp[1]]; }
         $since = time() - 30 * 86400;
@@ -1591,7 +1634,7 @@ if ($action === 'area') {
         foreach ($work as $wid => $wk) if ((int) ($wk['at'] ?? 0) >= $since && isset($posOf[$wid])) $notePts[$wid] = [$posOf[$wid], $wk['tags']];
     }
     $nearby = function (array $a, array $b): bool { $dy = ($a[0] - $b[0]) * 111000; $dx = ($a[1] - $b[1]) * 111000 * cos(deg2rad($a[0])); return $dx * $dx + $dy * $dy <= 160 * 160; };
-    $naipOf = roofDataOn($role) ? loadSide('naip', $key) : [];   /* the 2023 roof close-up window for every house (2026-10-05) */   /* what someone at the house said the roof is (everyone sees it) */   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
+    $naipOf = roofDataOn($role) ? loadSide('naip', $key, $only) : [];   /* the 2023 roof close-up window for every house (2026-10-05) */   /* what someone at the house said the roof is (everyone sees it) */   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
     foreach ($data['areas'] as $a) {
         if ($a['name'] !== $name) continue;
         $doors = [];
@@ -1621,8 +1664,8 @@ if ($action === 'area') {
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
-                'hail' => $hailOf[$d['id']] ?? null, 'wind' => $windOf[$d['id']] ?? null,
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => $olOf[$d['id']] ?? null, 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
+                'hail' => $hailOf[$d['id']] ?? null, 'wind' => windRows($windOf[$d['id']] ?? null),
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => olRows($olOf[$d['id']] ?? null), 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,

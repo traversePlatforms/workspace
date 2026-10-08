@@ -1,6 +1,6 @@
 """Step 5: a roof material for every house that can carry one, in the app's data folder.
 
-Writes site/data/rounds/material-<town>.json:
+Writes app/data/rounds/material-<town>.json:
   { source, built, classes, thresholds, doors: { id: { m: 'asphalt'|'tile'|'shake'|'metal'|'flat', p: 0-1, src: 'county'|'imagery' } } }
 Where Douglas County's assessor has the material it is used as is (src county, p 1). Everywhere else the model's
 call is written only when its probability clears that class's threshold (model-report.json, from the held-out
@@ -19,7 +19,7 @@ HERE = Path(__file__).parent
 GUESS_CLASSES = ('asphalt', 'tile')
 GUESS_MIN = 0.6
 CACHE = HERE / 'cache'
-DATA = HERE.parents[3] / 'site' / 'data' / 'rounds'
+DATA = HERE.parents[3] / 'app' / 'data' / 'rounds'   # was site/, before the 2026-10-06 reorganisation
 
 
 def main(towns):

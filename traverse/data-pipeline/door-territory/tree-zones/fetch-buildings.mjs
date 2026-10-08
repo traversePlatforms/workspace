@@ -20,6 +20,8 @@ for (const f of readdirSync(DATA).filter((f) => f.endsWith('.json') && f !== 'in
     const k = quadkey(d.lon, d.lat, 9); need.set(k, (need.get(k) || 0) + 1);
   }
 }
+/* extra tiles by name (2026-10-08): a town list can reach a tile that no built door file has a door in yet (Commerce City, 023101013) */
+for (const k of process.argv.slice(2)) if (/^\d{9}$/.test(k) && !need.has(k)) need.set(k, 0);
 const idx = await (await fetch('https://minedbuildings.z5.web.core.windows.net/global-buildings/dataset-links.csv')).text();
 const rows = idx.split('\n').filter((l) => l.startsWith('UnitedStates,'));
 for (const [qk, doors] of need) {

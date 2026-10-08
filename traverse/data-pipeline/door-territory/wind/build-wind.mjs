@@ -14,7 +14,8 @@
  *   node build-wind.mjs all       both
  *
  * build writes, beside the door files (app/data/rounds/):
- *   wind-<town>.json  { source, radiusMi, minMph, built, from, through, cap, capped, doors: { id: [[date, mph|null, kind, miles], ...newest first] } }
+ *   wind-<town>.json  { source, radiusMi, minMph, built, from, through, cap, capped, format, doors: { id: ["date|mph|kind|miles", ...newest first] } }
+ *                      (each report packed as text since 2026-10-08; mph is empty for a damage report with no number)
  *                      kind: 'measured' | 'estimated' | 'damage'; miles = whole miles from the house to the report.
  *                      One entry per door per local (Colorado) day: the strongest gust of 50 mph or more within RADIUS_MI,
  *                      else the nearest damage report. At most CAP entries per door (the strongest kept, then ordered
@@ -209,7 +210,11 @@ function build() {
       if (list.length > CAP) capped++;
       doors[id] = list.slice(0, CAP).sort((a, b) => (a[0] < b[0] ? 1 : -1));
     }
-    writeFileSync(join(DATA, `wind-${t.key}.json`), JSON.stringify({ ...meta, keep: cut, cap: CAP, capped, doors }));
+    /* each report as "date|mph|kind|miles" (2026-10-08): as small arrays, a big town's file took 78 MB in the server's memory;
+       as text, about a fifth. The server turns them back into [date, mph or null, kind, miles] for the doors it sends. */
+    const packed = {};
+    for (const [id, l] of Object.entries(doors)) packed[id] = l.map((e) => `${e[0]}|${e[1] ?? ''}|${e[2]}|${e[3]}`);
+    writeFileSync(join(DATA, `wind-${t.key}.json`), JSON.stringify({ ...meta, keep: cut, cap: CAP, capped, format: 'date|mph|kind|miles', doors: packed }));
     total += Object.keys(doors).length;
     const days = new Set(Object.values(doors).flat().map((e) => e[0]));
     console.log(`  ${t.key}: ${Object.keys(doors).length} of ${ds.length} doors with a report within ${RADIUS_MI} mi; ${days.size} storm days in the lists; ${capped} doors had more than ${CAP} days (strongest kept)`);

@@ -14,7 +14,7 @@ from scipy import ndimage as ndi
 
 HERE = Path(__file__).parent
 CACHE = HERE / 'cache'
-DATA = HERE.parents[3] / 'site' / 'data' / 'rounds'
+DATA = HERE.parents[3] / 'app' / 'data' / 'rounds'   # was site/, before the 2026-10-06 reorganisation
 TOWNS = ['castle-rock', 'franktown', 'sedalia', 'larkspur', 'black-forest', 'monument', 'palmer-lake', 'woodland-park', 'divide', 'florissant', 'cripple-creek']
 RES = 0.3
 NDVI_VEG = 0.30       # vegetation: NDVI above this AND near-infrared well above every visible band (NIR_OVER). A green or
