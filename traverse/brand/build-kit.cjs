@@ -15,7 +15,7 @@ function mark({ line, end, ring, hole = '#FFFFFF' }) {
     `<circle cx="53" cy="17" r="8" fill="${end}"${ring ? ` stroke="${ring}" stroke-width="3"` : ''}/>`;
 }
 const svg = (inner, vb = '0 0 64 64') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${inner}</svg>`;
-const C = { navy: '#13294B', flag: '#D6400C', white: '#FFFFFF', ink: '#0F1B2D', solar: '#F2A900', roof: '#4E6680', pest: '#7A3FA3', yards: '#2F7A3A' };
+const C = { navy: '#13294B', flag: '#D6400C', white: '#FFFFFF', ink: '#0F1B2D', solar: '#F2A900', roof: '#4E6680', pest: '#7A3FA3', yards: '#2F7A3A', security: '#1B6F7A' };   /* security: night teal, the edition's own colour since 2026-10-06 */
 const icon = (bg, line, end, ring) => `<rect width="64" height="64" rx="14" fill="${bg}"/><g transform="translate(8.5 8.5) scale(0.734)">${mark({ line, end, ring, hole: bg })}</g>`;
 
 const ASSETS = {
@@ -24,9 +24,10 @@ const ASSETS = {
   'traverse-mark-navy.svg': svg(mark({ line: C.navy, end: C.navy })),
   'traverse-icon.svg': svg(icon(C.navy, C.white, C.flag)),
   'traverse-solar-icon.svg': svg(icon(C.solar, C.ink, C.ink)),
-  'traverse-roof-icon.svg': svg(icon(C.roof, C.white, C.white)),
+  'traverse-roofing-icon.svg': svg(icon(C.roof, C.white, C.white)),
   'traverse-pest-icon.svg': svg(icon(C.pest, C.white, C.white)),
   'traverse-yards-icon.svg': svg(icon(C.yards, C.white, C.white)),
+  'traverse-security-icon.svg': svg(icon(C.security, C.white, C.white)),
 };
 for (const [n, s] of Object.entries(ASSETS)) w('assets/Logos/' + n, s);
 w('assets/Logos/README.md', `# Logos
@@ -37,7 +38,7 @@ Single files for placing the Traverse mark where the type's previews cannot. Eac
 - \`traverse-mark-reverse.svg\` — white legs, flag-orange close. On \`deep\` (navy) and on photography darker than mid-grey.
 - \`traverse-mark-navy.svg\` — one ink, navy throughout. For one-colour printing, embossing, stamps.
 - \`traverse-icon.svg\` — the parent app icon: navy tile, white traverse, flag-orange close.
-- \`traverse-solar-icon.svg\`, \`traverse-roof-icon.svg\`, \`traverse-pest-icon.svg\`, \`traverse-yards-icon.svg\` — edition app icons, each on its edition colour, the mark in that edition's \`on-\` colour (ink on solar, white on the rest).
+- \`traverse-solar-icon.svg\`, \`traverse-roofing-icon.svg\`, \`traverse-pest-icon.svg\`, \`traverse-yards-icon.svg\`, \`traverse-security-icon.svg\` — edition app icons, each on its edition colour, the mark in that edition's \`on-\` colour (ink on solar, white on the rest).
 
 The wordmark is set live in the display face (Familjen Grotesk 700); it is not yet outlined to a vector file.
 `);
@@ -61,12 +62,14 @@ const tokens = {
       col('flag-soft', '#fde6dc', '#3a1a0c', 'Tinted ground behind flag text: selected rows, the active map pin halo.'),
       col('solar', '#f2a900', null, 'TraverseSolar edition fill: its icon tile, header accent, map pins. Never as text on surface (1.9:1); pair with on-solar.'),
       col('on-solar', '#0f1b2d', null, 'Text and mark on a solar fill (8.6:1).'),
-      col('roof', '#4e6680', null, 'TraverseRoof edition fill. White on it: 5.9:1.'),
+      col('roof', '#4e6680', null, 'TraverseRoofing edition fill. White on it: 5.9:1.'),
       col('on-roof', '#ffffff', null, 'Text and mark on a roof fill.'),
       col('pest', '#7a3fa3', null, 'TraversePest edition fill. White on it: 6.9:1. Low against the dark ground (2.7:1): tiles carry a label.'),
       col('on-pest', '#ffffff', null, 'Text and mark on a pest fill.'),
       col('yards', '#2f7a3a', null, 'TraverseYards (landscaping and lawn) edition fill. White on it: 5.3:1.'),
       col('on-yards', '#ffffff', null, 'Text and mark on a yards fill.'),
+      col('security', '#1b6f7a', null, 'TraverseSecurity edition fill (night teal). White on it: 5.8:1. Low against the dark ground (3.0:1): tiles carry a label.'),
+      col('on-security', '#ffffff', null, 'Text and mark on a security fill.'),
       col('won', '#1f7a4d', '#5cc98f', 'Pipeline state Won, as chip text and dot; always with the word.'),
       col('won-soft', '#ddf3e7', '#123323', 'Ground behind won text.'),
       col('lost', '#b42318', '#ff8a80', 'Pipeline state Lost and destructive actions; always with the word. Darker than won in light, lighter in dark, so the two differ by more than hue.'),
@@ -135,9 +138,10 @@ const mk = (size, line = 'var(--deep)', end = 'var(--flag)', hole = 'var(--surfa
 const ic = (size, bg, line, end) => `<svg class="tv-icon" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">${icon(bg, line, end)}</svg>`;
 const EDITIONS = [
   { key: 'Solar', bg: 'var(--solar)', fg: 'var(--on-solar)', dom: 'traversesolar.app', who: 'Solar sales: homeowners, roof fit, utility bills.' },
-  { key: 'Roof', bg: 'var(--roof)', fg: 'var(--on-roof)', dom: 'traverseroof.app', who: 'Roofing: storm days, hail at the house, roof size and material.' },
+  { key: 'Roofing', bg: 'var(--roof)', fg: 'var(--on-roof)', dom: 'traverseroofing.app', who: 'Roofing: storm days, hail at the house, roof size and material.' },
   { key: 'Pest', bg: 'var(--pest)', fg: 'var(--on-pest)', dom: 'traversepest.app', who: 'Pest control: routes, recurring plans, seasons.' },
   { key: 'Yards', bg: 'var(--yards)', fg: 'var(--on-yards)', dom: 'traverseyards.app', who: 'Landscaping and lawn care: lawn size, water rules, monthly plans.' },
+  { key: 'Security', bg: 'var(--security)', fg: 'var(--on-security)', dom: 'traversesecurity.app', who: 'Home security: new owners, newer homes, police reports by area.' },
 ];
 
 /* ---- bundle.css: the shared component styles ---- */
@@ -192,13 +196,13 @@ The Traverse mark is a surveyor's traverse: three measured legs between stations
 
 comp('Editions', `# Editions
 
-Traverse is one product with an edition per trade. An edition is named "Traverse" plus one trade word, joined and title-cased: TraverseSolar, TraverseRoof, TraversePest, TraverseYards. The same form is the domain: \`traverse<trade>.app\`.
+Traverse is one product with an edition per trade. An edition is named "Traverse" plus one trade word, joined and title-cased: TraverseSolar, TraverseRoofing, TraversePest, TraverseYards, TraverseSecurity. The same form is the domain: \`traverse<trade>.app\`.
 
 - **The parent** is Traverse Platforms (the company) at traverseplatforms.com: the site that explains the product and sends people to their edition.
-- **An edition's colour** (\`solar\`, \`roof\`, \`pest\`, \`yards\`) fills its icon tile and accents its header and map pins. Flag orange stays the action colour in every edition: a primary button is flag in TraverseSolar too.
+- **An edition's colour** (\`solar\`, \`roof\`, \`pest\`, \`yards\`, \`security\`) fills its icon tile and accents its header and map pins. Flag orange stays the action colour in every edition: a primary button is flag in TraverseSolar too.
 - **Lockup:** the edition's icon tile, "Traverse" in \`display\` 700, the trade word in \`display\` 500, in \`ink\`. The trade word never takes the edition colour as text (solar fails on a light ground).
 - **A new edition** gets one trade word and one colour that differs from the others in lightness as well as hue, with its \`on-\` colour at 4.5:1 or better.
-`, page('<!-- @dsCard group="Brand" height=330 subtitle="The parent and the trade editions" -->', 'Editions', `
+`, page('<!-- @dsCard group="Brand" height=440 subtitle="The parent and the trade editions" -->', 'Editions', `
 <div class="ed">
   <div class="parent"><span class="tv-lockup" style="font-size:34px">${ic(52, 'var(--deep)', 'var(--on-deep)', 'var(--flag)')}<span><span class="tv-wordmark">Traverse</span> <span class="tv-edition">Platforms</span></span></span><span class="tv-data tv-muted">traverseplatforms.com</span></div>
   ${EDITIONS.map((e) => `<div class="one"><span class="tv-lockup" style="font-size:26px">${ic(40, e.bg, e.fg, e.fg)}<span><span class="tv-wordmark">Traverse</span><span class="tv-edition">${e.key}</span></span></span><span class="tv-data tv-muted">${e.dom}</span><small>${e.who}</small></div>`).join('')}
@@ -232,8 +236,8 @@ Where a lead sits in the pipeline: New, Walk booked, Quoted, Won, Lost. Every ch
 
 comp('DoorCard', `# Door card
 
-The card a rep sees at the door: the address in \`heading\`, the owner and what we know, the pipeline chip, the three outcomes as buttons. On \`surface-raised\` with \`shadow-card\`. The example shows TraverseRoof: the edition colour appears only as the thin header rule and the hail figure's icon, never as a fill behind text.
-`, page('<!-- @dsCard group="Product" height=420 width=420 subtitle="TraverseRoof, at the door" -->', 'Door card', `
+The card a rep sees at the door: the address in \`heading\`, the owner and what we know, the pipeline chip, the three outcomes as buttons. On \`surface-raised\` with \`shadow-card\`. The example shows TraverseRoofing: the edition colour appears only as the thin header rule and the hail figure's icon, never as a fill behind text.
+`, page('<!-- @dsCard group="Product" height=420 width=420 subtitle="TraverseRoofing, at the door" -->', 'Door card', `
 <div class="wrap"><div class="tv-card door">
   <div class="top"><span class="tv-chip tv-chip-walk">Walk booked</span><span class="tv-data tv-muted">0.4 mi</span></div>
   <h1>1840 Ponderosa Dr</h1>
@@ -287,7 +291,7 @@ h1{font:700 56px/60px var(--font-display);letter-spacing:-.02em;margin:0;text-wr
 .g{stroke:var(--line);stroke-width:1}
 .leg{fill:none;stroke:var(--deep);stroke-width:12;stroke-linecap:round;stroke-linejoin:round}
 .stn{fill:var(--surface);stroke:var(--deep);stroke-width:8} .cls{fill:var(--flag)}
-.eds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3);padding:0 var(--space-8) var(--space-8)}
+.eds{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--space-3);padding:0 var(--space-8) var(--space-8)}
 .ed{display:flex;align-items:center;gap:var(--space-3);background:var(--surface-raised);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4)}
 .ed span{display:grid;gap:2px} .ed b{font:700 16px/1.2 var(--font-display)} .ed small{color:var(--ink-muted)}`));
 
@@ -351,7 +355,7 @@ ${dots.join('\n')}
 `);
 
 /* ---- README: the brand book ---- */
-w('README.md', `Traverse is field sales software: a rep's doors, phone calls, appointments and pipeline in one app, with an edition for each trade. The company is **Traverse Platforms**; traverseplatforms.com explains the product, and each edition lives at its own \`traverse<trade>.app\` (TraverseSolar, TraverseRoof, TraversePest, TraverseYards).
+w('README.md', `Traverse is field sales software: a rep's doors, phone calls, appointments and pipeline in one app, with an edition for each trade. The company is **Traverse Platforms**; traverseplatforms.com explains the product, and each edition lives at its own \`traverse<trade>.app\` (TraverseSolar, TraverseRoofing, TraversePest, TraverseYards, TraverseSecurity).
 
 ## The idea
 

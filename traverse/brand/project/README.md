@@ -1,4 +1,4 @@
-Traverse is field sales software: a rep's doors, phone calls, appointments and pipeline in one app, with an edition for each trade. The company is **Traverse Platforms**; traverseplatforms.com explains the product, and each edition lives at its own `traverse<trade>.app` (TraverseSolar, TraverseRoof, TraversePest, TraverseYards).
+Traverse is field sales software: a rep's doors, phone calls, appointments and pipeline in one app, with an edition for each trade. The company is **Traverse Platforms**; traverseplatforms.com explains the product, and each edition lives at its own `traverse<trade>.app` (TraverseSolar, TraverseRoofing, TraversePest, TraverseYards, TraverseSecurity).
 
 ## The idea
 

@@ -22,9 +22,10 @@
         "traverse-mark-navy.svg",
         "traverse-icon.svg",
         "traverse-solar-icon.svg",
-        "traverse-roof-icon.svg",
+        "traverse-roofing-icon.svg",
         "traverse-pest-icon.svg",
-        "traverse-yards-icon.svg"
+        "traverse-yards-icon.svg",
+        "traverse-security-icon.svg"
       ],
       "files": {
         "traverse-mark-color.svg": {
@@ -57,12 +58,6 @@
           "size": 603,
           "type": "image/svg+xml"
         },
-        "traverse-roof-icon.svg": {
-          "name": "traverse-roof-icon.svg",
-          "blob": "5d85112fd260733dfec4c0c9bd041ab1",
-          "size": 603,
-          "type": "image/svg+xml"
-        },
         "traverse-pest-icon.svg": {
           "name": "traverse-pest-icon.svg",
           "blob": "7904dc3208ba8b20223e524ec7facc55",
@@ -73,6 +68,18 @@
           "name": "traverse-yards-icon.svg",
           "blob": "caf5ff2ede3ff168048b929a1341810d",
           "size": 603,
+          "type": "image/svg+xml"
+        },
+        "traverse-roofing-icon.svg": {
+          "name": "traverse-roofing-icon.svg",
+          "blob": "5614b609ba21043b7d05e51cbaf61cb8",
+          "size": 651,
+          "type": "image/svg+xml"
+        },
+        "traverse-security-icon.svg": {
+          "name": "traverse-security-icon.svg",
+          "blob": "70512cd66d6d0a5df4557ccd71d520f3",
+          "size": 651,
           "type": "image/svg+xml"
         }
       }
@@ -85,8 +92,8 @@
   },
   "lastChange": {
     "by": "Matthew Sharpe",
-    "at": "2026-10-06T16:43:05Z",
+    "at": "2026-10-08T16:20:38Z",
     "via": "Claude Code",
-    "note": "First brand kit: the traverse mark, editions, app icons, colour, type, door card and website hero."
+    "note": "TraverseSecurity edition added (night teal, icon, editions and colour notes); TraverseRoof renamed TraverseRoofing (traverseroofing.app, traverse-roofing-icon.svg)."
   }
 }
