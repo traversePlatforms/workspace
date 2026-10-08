@@ -36,8 +36,10 @@
     "firecheck": true,
     "skiptrace": true,
     "hail": false,
-    "roof": false
+    "roof": false,
+    "crew": true
   },
+  "best": "yards",
   "card": {
     "lawn": true,
     "trees": true,

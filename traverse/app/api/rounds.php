@@ -117,9 +117,12 @@ function company(): array {
     return $c;
 }
 function feature(string $k): bool { return !empty(company()['features'][$k]); }
+/* who sees the card's trade parts (2026-10-08): admins, and everyone signed in where the company sets features.crew (the editions,
+   and Sixfold for its yard parts). These began as an admin-only preview inside Sixfold. Office tools (accounts, JobNimbus) stay admin. */
+function crewSees(string $role): bool { return $role === 'admin' || ($role !== '' && feature('crew')); }
 /* ---- hail (2026-10-04): the radar estimate per door, built offline by operations/door-territory/hail/build-hail.mjs.
    Admin only, and only where the company turns it on (features.hail). Matthew is evaluating it for roofing. */
-function hailOn(string $role): bool { return $role === 'admin' && feature('hail'); }
+function hailOn(string $role): bool { return crewSees($role) && feature('hail'); }
 function loadHail(string $key): array {
     static $memo = [];
     if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $key . '.json'), true); $memo[$key] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
@@ -127,18 +130,18 @@ function loadHail(string $key): array {
 }
 /* roof size and pitch (laser scan) and year built / roof material (county files), per door, built offline
    (operations/door-territory/roofs/sample-roofs.mjs, assessor/build-year.mjs). Admins only, features.roof. */
-function roofDataOn(string $role): bool { return $role === 'admin' && feature('roof'); }
+function roofDataOn(string $role): bool { return crewSees($role) && feature('roof'); }
 /* solar (2026-10-06, TraverseSolar): sun-facing roof, shade, a system that fits, its yearly output and the power company, per door,
    built offline by data-pipeline/door-territory/solar/. Admins only, like the roof data, and only where the company turns it on. */
-function solarOn(string $role): bool { return $role === 'admin' && feature('solar'); }
+function solarOn(string $role): bool { return crewSees($role) && feature('solar'); }
 /* pest (2026-10-06, TraversePest): why a door is worth knocking. Open space or water beside the house, year built and El Paso's
    last sale month (data-pipeline/door-territory/pest/), plus, from this install's own records, customers and bookings within
    about 160 m and what neighbours told the team in the last 30 days. Admins only, where the company turns pest on. */
-function pestOn(string $role): bool { return $role === 'admin' && feature('pest'); }
+function pestOn(string $role): bool { return crewSees($role) && feature('pest'); }
 /* security (2026-10-06, TraverseSecurity): crime reported near the house (Colorado Springs police, area counts only, never a
    location), town figures (FBI), owner lives elsewhere, plus the pest build's sale month, year built and open space, and the
    same neighbours / bookings / door-note counts. Admins only, where the company turns security on. */
-function securityOn(string $role): bool { return $role === 'admin' && feature('security'); }
+function securityOn(string $role): bool { return crewSees($role) && feature('security'); }
 function loadSide(string $kind, string $key, ?array $only = null): array {
     static $memo = [];
     $k = $kind . '-' . $key;
@@ -1502,7 +1505,7 @@ if ($action === 'regions') {
         $lfix = loadLawnFix($r['key']);
         $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
         /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
-        $bestT = $role === 'admin' ? company()['best'] : null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
+        $bestT = crewSees($role) ? company()['best'] : null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -1618,11 +1621,11 @@ if ($action === 'area') {
     $mfxOf = loadMatFix($key);
     $solarOf = solarOn($role) ? loadSide('solar', $key, $only) : [];
     /* re-roof and solar permits (2026-10-07, permits/build-permits.mjs): admins, where the company sells roofs or solar */
-    $permOf = ($role === 'admin' && (feature('roof') || feature('solar'))) ? loadSide('permit', $key, $only) : [];
+    $permOf = (crewSees($role) && (feature('roof') || feature('solar'))) ? loadSide('permit', $key, $only) : [];
     /* FEMA's National Risk Index for the door's census tract (2026-10-07, nri/build-nri.mjs): the editions only, admins */
-    $nriF = ($role === 'admin' && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/nri-' . $key . '.json'), true) ?: []) : [];
+    $nriF = (crewSees($role) && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/nri-' . $key . '.json'), true) ?: []) : [];
     /* the Census Bureau's survey for the door's block group (2026-10-07, census/build-census.mjs): the editions only, admins */
-    $cenF = ($role === 'admin' && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: []) : [];
+    $cenF = (crewSees($role) && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: []) : [];
     $cenOf = function (string $id) use ($cenF) { $b = $cenF['doors'][$id] ?? null; return $b !== null && isset($cenF['bgs'][$b]) ? $cenF['bgs'][$b] + ['ver' => $cenF['ver'] ?? ''] : null; };
     $nriOf = function (string $id) use ($nriF) { $t = $nriF['doors'][$id] ?? null; return $t !== null && isset($nriF['tracts'][$t]) ? $nriF['tracts'][$t] + ['v' => $nriF['ver'] ?? ''] : null; };
     /* the door's power company in figures (2026-10-07): EIA-861 price, bill, solar homes, outages, time-of-use; solar-utilities.json */
@@ -1694,7 +1697,7 @@ if ($action === 'area') {
         out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
              'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key))),
              /* whose permits cover this town and for which years (2026-10-07): lets the card say "no re-roof permit since 2016" */
-             'perm' => $permOf || ($role === 'admin' && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null]);
+             'perm' => $permOf || (crewSees($role) && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null]);
     }
     fail('No such neighbourhood.', 404);
 }
@@ -3052,7 +3055,7 @@ function secMapCity(string $city): ?array {
  * 30 days of rain at the first gauge that reported most of them (NCEI Access Data Service, daily summaries; no key), against the
  * normal for the same 30 days. Fetched at most every 6 hours per town; a failed fetch keeps the last answer. */
 if ($action === 'climate') {
-    if ($role !== 'admin' || company()['best'] !== 'yards') fail('Not here.', 404);
+    if (!crewSees($role) || company()['best'] !== 'yards') fail('Not here.', 404);
     $ckey = (string) ($_GET['region'] ?? '');
     $C = json_decode((string) @file_get_contents(DATA_DIR . '/climate.json'), true) ?: [];
     $t = $C['towns'][$ckey] ?? null;
@@ -4303,7 +4306,7 @@ function brandColors(string $hex): array {
 }
 const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site'];
 if ($action === 'companyset') {
-    if ($role !== 'admin' || company()['best'] === null) fail('Not allowed.', 403);
+    if ($role !== 'admin' || !feature('company')) fail('Not allowed.', 403);   /* the Company screen: editions and clients (features.company), not Sixfold */
     if (!$isPost) fail('POST required', 405);
     $clean = fn($v, int $max) => trim(preg_replace('/[\x00-\x1f\x7f]+/', ' ', (string) $v));
     $loc = [];

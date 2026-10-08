@@ -395,6 +395,7 @@ async function build(key) {
     write(path.join(E.data, 'rounds', 'docs', 'money.json'), JSON.stringify(m, null, 1));
   }
   const co = E.company();
+  co.features = Object.assign({}, co.features, { crew: true, company: true });   /* crew codes see the whole card; the Company screen (2026-10-08) */
   co.appUrl = (E.host || 'https://sixfoldcolorado.com') + '/' + E.folder + '/';   /* a client install may live elsewhere (clients.cjs) */
   write(path.join(E.data, 'rounds', 'company.json'), JSON.stringify(co, null, 2) + '\n');
 

@@ -1062,6 +1062,12 @@
   .old .oldl{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-bottom:3px}
   .oldl.maybe{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-top:3px}
   .prevm{font-style:italic}
+  /* an opened door scrolls in below the app bar and above the bottom bar, however tall its card (2026-10-08) */
+  #view .door{scroll-margin-top:76px;scroll-margin-bottom:96px}
+  .dscore{flex:none;align-self:center;min-width:26px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:8px;display:inline-grid;place-items:center;font:800 13.5px var(--sans);font-variant-numeric:tabular-nums}
+  .dscore.hi{background:var(--go);color:var(--on-go)}
+  .dscore.mid{border:1.5px solid var(--go);color:var(--go)}
+  .dscore.lo{background:var(--sunk);color:var(--soft)}
   .bestwhy{display:flex;gap:6px;align-items:flex-start;font-size:13px;font-weight:700;color:var(--ink);margin:4px 0 2px;line-height:1.35}
   .bestwhy .ic{flex:none;width:15px;height:15px;margin-top:1px;color:var(--soft)}
   .jnbox{margin:10px 0;padding:12px 14px;display:grid;gap:6px}
@@ -1404,6 +1410,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var ROOF_HIDE = { lawn: 1, trees: 1, fire: 1, money: 1, water: 1, fc: 1 };
   /* 2026-10-06: Roofing is its own app now (TraverseRoofing), so the preview is off unless a company asks for it (features.roofPreview) */
   function roofOn() { return !!S.roofView && S.role === 'admin' && feat('roofPreview'); }
+  /* the card's trade parts and their screens, for admins and, where the company sets features.crew, everyone (2026-10-08; as crewSees on the server) */
+  function crewSees() { return S.role === 'admin' || (!!S.role && feat('crew')); }
+  function crewTag() { return feat('crew') ? null : 'Admin only'; }
   /* hail and roof are the roofing parts (Matthew 2026-10-05: irrelevant to the lawn crew): a company turns them off in its card
      settings (Sixfold does), and the Roofing preview always shows them */
   var ROOF_SHOW = { hail: 1, roof: 1 };
@@ -2436,7 +2445,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
       tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView),
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colours mean.', null, function () { hailMapView(null, chooseView); }) : null,
-      feat('security') && S.role === 'admin' ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', 'Admin only', crimeMapView) : null].filter(Boolean));
+      feat('security') && crewSees() ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', crewTag(), crimeMapView) : null].filter(Boolean));
     /* a manager is crew plus their own team (Matthew 2026-10-05): leads to hand out, the team's numbers and territories */
     if (S.role === 'manager') grp('Your team', [
       tile('button', 'clip', 'Leads', 'New enquiries to hand out, and your team\u2019s.', 'Manager', teamLeadsView),
@@ -2462,14 +2471,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tile('button', 'award', 'Leaderboard', 'Rankings and the daily goal.', 'Admin only · in testing', boardView),
         tile('button', 'route', 'Territories', 'Assign neighbourhoods to people.', 'Admin only', territoriesView)]);
       officeGroup(box, 'storms', 'Storms and data', [
-        feat('security') && S.role === 'admin' ? tile('button', 'shield', 'Crime by neighbourhood', 'Neighbourhoods ranked by property crime reported nearby, last 90 days.', 'Admin only', secListView) : null,
+        feat('security') && crewSees() ? tile('button', 'shield', 'Crime by neighbourhood', 'Neighbourhoods ranked by property crime reported nearby, last 90 days.', crewTag(), secListView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', 'From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.', 'Admin only · in testing', stormView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms from the last two years (five for a big one) and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         tile('button', 'table', 'Results', 'Which doors turn into jobs.', 'Admin only', resultsView),
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
-        bestTrade() ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
+        feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
         tile('button', 'door', 'Sample door', 'One made-up door with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
@@ -2533,7 +2542,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (sc.children.length) pi.appendChild(sc);
     pg.appendChild(pi);
     view.appendChild(pg);
-    if (S.role === 'admin' && feat('security') && cardOn('security')) {
+    if (crewSees() && feat('security') && cardOn('security')) {
       /* security: the police or sheriff's figures for the whole town, once here, not on every door (Matthew 2026-10-06) */
       var tf = q('div', 'sub2 townsec'); view.appendChild(tf);
       secRates(function (sr) {
@@ -3798,6 +3807,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     row.setAttribute('role', 'button'); row.tabIndex = 0;
     var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', d.address));
     var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
+    var scr = scoreChip(d); if (scr) top.appendChild(scr);   /* the door score, 1 to 10 (2026-10-08) */
     top.appendChild(ico('chev', 2.4));
     row.appendChild(top);
     var meta = q('div', 'meta');
@@ -4130,6 +4140,47 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (t === 'yards' || t === 'security') return d.acres || 0;
     return 0;
   }
+  /* the door score (2026-10-08, Matthew, after SalesRabbit's 1-10 buyer score). 1 to 10, so a rep reads at a glance how much a door
+     has going for it. Three quarters is NEED for this trade: the Best-first points (BEST above) over the trade's top, with the size of
+     the strongest fact added as a fraction (bigger hail and roof, more kWh, more lawn and land), so doors under the same storm still
+     spread. One quarter is ABILITY TO BUY, which SalesRabbit's score is mostly made of: the county's value of this house (or the block's
+     median when the county has none) and how much of the block owns its home. A door that sinks (re-roofed after the hail, already has
+     panels) has no need left, so it scores 3 at most. It adds up what the card shows; it is not a forecast of who will buy. */
+  /* what a strong door scores in each trade, not every fact at once (almost no door has them all): set 2026-10-08 from the spread over
+     real neighbourhoods, so the best doors reach 9 or 10 */
+  var BEST_TOP = { roof: 10, yards: 6, solar: 5, pest: 5, security: 4 };
+  function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+  function scoreParts(d, f) {
+    var t = bestTrade(); if (!t || !crewSees()) return null;
+    f = f || bestFacts(d);
+    var pts = bestPts(f), tf = 0;
+    if (t === 'roof') { var mh = d.hail && d.hail.length ? Math.max.apply(null, d.hail.map(function (h) { return h[1]; })) : 0; tf = clamp01((mh - 0.75) / 1.75) * 0.6 + clamp01((d.roof ? d.roof.sqs || 0 : 0) / 45) * 0.4; }
+    else if (t === 'solar') tf = clamp01((d.solar && d.solar.kwh || 0) / 16000);
+    else if (t === 'yards') tf = clamp01((d.lawn && d.lawn.sq || 0) / 15000) * 0.6 + clamp01((d.acres || 0) / 2) * 0.4;
+    else if (t === 'pest') tf = clamp01((d.acres || 0) / 1) * 0.5 + clamp01(d.trees && d.trees.z2 || 0) * 0.5;
+    else if (t === 'security') tf = clamp01((d.acres || 0) / 2);
+    var need = pts <= -3 ? 0 : clamp01((pts + tf) / (BEST_TOP[t] + 1));
+    var val = d.val || (d.cen && d.cen.v) || null, own = d.cen && d.cen.o != null ? d.cen.o : null;
+    var ability = val === null && own === null ? 0.5 : (val === null ? 0.5 : clamp01((val - 200000) / 700000)) * 0.7 + (own === null ? 0.5 : clamp01((own - 40) / 50)) * 0.3;
+    var v = 0.75 * need + 0.25 * ability;
+    return { f: f, v: v, score: Math.max(1, Math.min(10, Math.round(1 + 9 * v))), val: val, own: own };
+  }
+  function doorScore(d, f) { var sp = scoreParts(d, f); return sp ? sp.score : null; }
+  function scoreChip(d) {
+    var sc = doorScore(d); if (sc === null) return null;
+    var c = q('span', 'dscore ' + (sc >= 7 ? 'hi' : sc >= 4 ? 'mid' : 'lo'), String(sc));
+    c.setAttribute('aria-label', 'Door score ' + sc + ' out of 10'); c.title = 'Door score ' + sc + ' out of 10 for ' + BEST_NAME[bestTrade()];
+    return c;
+  }
+  function scoreWhy(d) {
+    var sp = scoreParts(d); if (!sp) return null;
+    var f = sp.f, sc = sp.score, why = f.map(function (x) { return x[1]; });
+    if (!why.length) why.push('nothing stands out for ' + BEST_NAME[bestTrade()]);
+    if (sp.val) why.push((d.val ? 'home value ' : 'block home value ') + fmtVal(sp.val));
+    var w = q('div', 'bestwhy'); w.appendChild(ico('chart', 2));
+    w.appendChild(document.createTextNode('Score ' + sc + ' of 10: ' + why.join(' · ')));
+    return w;
+  }
   function bestWhy(f) { var w = q('div', 'bestwhy'); w.appendChild(ico('chart', 2)); w.appendChild(document.createTextNode(f.map(function (x) { return x[1]; }).join(' · '))); return w; }
   /* ---- Colorado: every county and town (2026-10-04) ----
      Matthew: Door rounds opens on the state, not on Monument. Each county with its towns: doors
@@ -4168,8 +4219,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (T.booked) { var sc = q('div', 'chips'); sc.appendChild(chipEl('bk', 'check', T.booked + (T.booked === 1 ? ' quote' : ' quotes') + ' booked')); pi.appendChild(sc); }
     pc.appendChild(pi); view.appendChild(pc);
     view.appendChild(alertStrip(null));
-    if (feat('pest') && S.role === 'admin') view.appendChild(seasonStrip());
-    if (feat('security') && S.role === 'admin') secRates(function () {});   /* the town figures, ready for the cards */   /* pest edition: what is in season (2026-10-06) */
+    if (feat('pest') && crewSees()) view.appendChild(seasonStrip());
+    if (feat('security') && crewSees()) secRates(function () {});   /* the town figures, ready for the cards */   /* pest edition: what is in season (2026-10-06) */
     /* counties, in the order the towns are listed. Each folds up (Matthew 2026-10-05: more counties would clutter
        the screen); the bar carries the county's totals, and each phone remembers which are open. One county: open. */
     var order = [];
@@ -7963,6 +8014,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var top = q('div', 'd-top');
     top.appendChild(q('div', 'addr', d.address));
     var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
+    var scr = scoreChip(d); if (scr) top.appendChild(scr);   /* the door score, 1 to 10 (2026-10-08) */
     card.appendChild(top);
     /* slimmer card: the fire badge sits at the start of the details line */
     var meta = q('div', 'meta');
@@ -7975,6 +8027,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     card.appendChild(meta);
+    var sw = scoreWhy(d); if (sw) card.appendChild(sw);   /* why the score (2026-10-08) */
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + (OUT[d.prevMark.outcome] || d.prevMark.outcome) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
     if (d.mark && d.mark.maybe) { var mb = q('div', 'meta st'); maybeNote(mb, d.mark); card.appendChild(mb); }
     if (S.treeOpen === d.id && d.trees) card.appendChild(treeDetail(d));
@@ -8117,8 +8170,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* best first (2026-10-07): most points from this trade's facts first, street order breaking ties */
     var bestOn = S.dview === 'best' && !!bestTrade(), bf = new Map(), nBest = 0;
     if (bestOn) {
-      var bo = new Map(), bt = new Map(); todo.forEach(function (d, i) { bo.set(d, i); bf.set(d, bestFacts(d)); bt.set(d, bestTie(d)); });
-      todo.sort(function (x, y) { return bestPts(bf.get(y)) - bestPts(bf.get(x)) || bt.get(y) - bt.get(x) || bo.get(x) - bo.get(y); });
+      var bo = new Map(), bt = new Map(), bv = new Map(); todo.forEach(function (d, i) { bo.set(d, i); bf.set(d, bestFacts(d)); bt.set(d, bestTie(d)); var sp = scoreParts(d, bf.get(d)); bv.set(d, sp ? sp.v : 0); });
+      /* doors with a reason first, then by the door score (2026-10-08), so the list reads 10s first; equal scores keep the old order: points, the strongest fact, the street */
+      todo.sort(function (x, y) { return (bestPts(bf.get(y)) > 0) - (bestPts(bf.get(x)) > 0) || bv.get(y) - bv.get(x) || bestPts(bf.get(y)) - bestPts(bf.get(x)) || bt.get(y) - bt.get(x) || bo.get(x) - bo.get(y); });
       nBest = todo.filter(function (d) { return bestPts(bf.get(d)) > 0; }).length;
       view.appendChild(q('div', 'sub2', 'Best for ' + BEST_NAME[bestTrade()] + ' first: ' + nBest + ' of ' + todo.length + (todo.length === 1 ? ' door' : ' doors') + ' to knock have a reason, from what their cards show. Each door says why.'));
     }
@@ -8145,7 +8199,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* opened from "Doors to come back to": those doors lead, under their own heading, and
        the rest of the street grouping follows (the follow-ups promise them first) */
     var lead = [];
-    if (S.backFirst && S.dview !== 'near' && S.dview !== 'route' && !bestOn) {
+    if (S.backFirst && S.dview !== 'near' && S.dview !== 'route') {   /* Best first too (2026-10-08): the doors promised a come-back still lead */
       lead = todo.filter(backOn); todo = todo.filter(function (d) { return !backOn(d); });
       if (lead.length) {
         view.appendChild(q('h3', 'strh', 'Come back to \u00b7 ' + lead.length));
@@ -8161,7 +8215,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var f = bf.get(d) || [];
         if (bestPts(f) <= 0 && !noneHead) { view.appendChild(q('h3', 'strh', 'Nothing stands out · ' + (todo.length - nBest))); noneHead = true; }
         var el = doorCardFor(d);
-        if (f.length) el.insertBefore(bestWhy(f), el.children[1] || null);
+        if (f.length && !el.classList.contains('open')) el.insertBefore(bestWhy(f), el.children[1] || null);
         view.appendChild(el);
       });
     } else if (S.dview !== 'near' && S.dview !== 'route' && (nStreets > 1 || (lead.length && nStreets === 1))) {
