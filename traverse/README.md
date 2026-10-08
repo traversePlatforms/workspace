@@ -24,7 +24,7 @@ on 2026-10-06 (every move is listed in `_archive/MOVE-MANIFEST-2026-10-06.csv`).
 ## Building
 
 ```
-node traverse/editions/build-editions.cjs          both editions (or: roofing / yards)
+node traverse/editions/build-editions.cjs          every edition and client (or: roofing / yards / solar / pest / security / c-<client>)
 node traverse/marketing-site/build-preview.cjs     the homepage web page
 node traverse/brand/build-kit.cjs                  the brand kit files
 ```
@@ -65,6 +65,27 @@ Nothing about one company is written into the code. Each install has a **`compan
 | `links.googleReview` | The Ask for a review link |
 
 **Nothing in it is secret**: the page reads it before anyone signs in. Never put a key, a code or a price in it.
+
+An admin's **Company** screen (Setup, editions and client installs, not Sixfold) saves name, short name, tagline, phone,
+email, website and a brand colour to **`company-local.json`** beside it. The server lays that over `company.json`, and
+turns the colour into the full set of colour tokens, darkened until white text on it reads. Data packs never carry the
+file, so a data upload can't undo it. The home-screen icon and name come from the build and change only with a rebuild.
+
+## A client install (2026-10-08)
+
+One paying company gets its own install: its own folder, data, codes and look, built from an edition.
+
+```
+node traverse/editions/new-client.cjs --name "Acme Roofing" --trade roofing --color "#1f6feb" --phone "(719) 555-0100" --site acme.example
+node traverse/editions/build-editions.cjs c-acme-roofing
+```
+
+The first writes `editions/clients/acme-roofing.json` (trade is roofing, yards, solar, pest or security; `towns` limits
+the towns, `host` sets where it will live). The build picks a random folder name, writes it back into that file so the
+next build keeps it, and makes `c-acme-roofing-private/rounds-codes.php` with the first admin code. Upload the packs in
+`dist/upload/c-acme-roofing/` the way the editions go up, plus the private folder. That first code is yours (it signs in as
+Matthew Sharpe): sign in, add the client's own admin under Accounts, and they set the rest on the Company screen and add
+their crew.
 
 ## Roofing data (admins, `features.hail` / `features.roof`)
 

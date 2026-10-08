@@ -1068,6 +1068,9 @@
   .jnbox .bad{color:var(--danger,#b42318)}
   .jnrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .jnform{display:grid;gap:8px}
+  .coform{margin:12px 0;padding:14px}.coform small{font-weight:400}
+  .coform .save{min-height:46px;min-width:9em;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14.5px var(--sans);cursor:pointer}
+  .coform input[type=color]{width:52px;height:36px;padding:2px;border-radius:8px}
   .jnform label{display:grid;gap:3px;font-size:13px;font-weight:700}
   .jnform input{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line,#ccd);border-radius:8px;background:var(--card,#fff);color:inherit}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
@@ -2464,6 +2467,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
+        bestTrade() ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
         tile('button', 'door', 'Sample door', 'One made-up door with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
@@ -4938,6 +4942,45 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      nobody can look a code up later (a forgotten code gets a new one). Removing someone signs
      their phone out on its next tap; what they recorded stays. The server refuses removing or
      demoting yourself and removing the last admin. */
+  /* ---- Company (2026-10-08): the install's own name, contact details and brand colour ----
+     Saved on the server beside the door data (company-local.json), so a data refresh never undoes it; every phone picks it up
+     the next time it opens. The colour sets the bar, sign-in screen, keys and accents; the home-screen icon and name stay as
+     the install was built. */
+  function companyView() {
+    hideToast(); S.signin = null; S.screen = 'company'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Company', sub: 'How the app names and shows you', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var f = q('form', 'card jnform coform');
+    var fld = function (label, name, val, type, ph, hint) { var l = q('label', null, label); var i = q('input'); i.name = name; i.type = type || 'text'; i.value = val || ''; if (ph) i.placeholder = ph; l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); f.appendChild(l); return i; };
+    var nm = fld('Company name', 'name', CO.name, 'text', 'Acme Roofing', 'On text messages to homeowners, reports and the top of the app.');
+    var sh = fld('Short name', 'short', CO.short, 'text', 'Acme', 'Where space is tight. 20 characters at most.');
+    var tg = fld('Tagline', 'tagline', CO.tagline, 'text', 'Roofing done right', 'Optional.');
+    var ph = fld('Phone', 'phone', CO.phone, 'tel', '(719) 555-0100');
+    var em = fld('Email', 'email', CO.email, 'email', 'office@yourcompany.com');
+    var st = fld('Website', 'site', CO.site, 'text', 'yourcompany.com');
+    var cl = q('label', null, 'Brand colour'); var crow = q('div', 'jnrow');
+    var pick = q('input'); pick.type = 'color'; pick.name = 'color'; pick.value = /^#[0-9a-f]{6}$/i.test(CO.brand || '') ? CO.brand : '#2f4155';
+    var hex = q('input'); hex.type = 'text'; hex.value = CO.brand || ''; hex.placeholder = 'as built'; hex.style.maxWidth = '9em';
+    var paint = function () {};
+    pick.addEventListener('input', function () { hex.value = pick.value; paint(); });
+    hex.addEventListener('input', function () { if (/^#[0-9a-f]{6}$/i.test(hex.value.trim())) { pick.value = hex.value.trim(); paint(); } });
+    crow.appendChild(pick); crow.appendChild(hex); cl.appendChild(crow);
+    cl.appendChild(q('small', 'sub2', 'Sets the bar, the sign-in screen and the buttons; text on it stays readable (the app darkens a light colour). Empty keeps the colours the app was built with. The icon on phones’ home screens changes only when the app is rebuilt.'));
+    f.appendChild(cl); paint();
+    var msg = q('div', 'sub2'); var row = q('div', 'jnrow'); var save = q('button', 'save', 'Save'); save.type = 'submit'; row.appendChild(save); f.appendChild(row); f.appendChild(msg);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); save.disabled = true; msg.textContent = 'Saving…';
+      api('companyset', { body: { name: nm.value, short: sh.value, tagline: tg.value, phone: ph.value, email: em.value, site: st.value, color: hex.value.trim() } }).then(function (j) {
+        save.disabled = false;
+        if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; }
+        return api('company').then(function (k) {
+          if (k && k.ok && k.company) { try { localStorage.setItem('doorapp.company', JSON.stringify(k.company)); } catch (er) {} setCompany(k.company); }
+          companyView(); toast('Company saved', 'Every phone shows it the next time the app opens.', null);
+        });
+      }).catch(function () { save.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+    });
+    view.appendChild(f);
+  }
   function accountsView() {
     if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; }   /* PINs hide whenever you leave the screen */
     hideToast(); S.signin = null; S.screen = 'accounts';

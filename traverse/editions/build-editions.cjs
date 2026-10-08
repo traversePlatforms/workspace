@@ -182,6 +182,8 @@ const EDITIONS = {
     })
   }
 };
+/* client installs (2026-10-08): one per signed company, from ./clients/<slug>.json (clients.cjs, new-client.cjs) */
+const CLIENTS = require('./clients.cjs')(EDITIONS);
 
 /* every swap is counted, so a change in the source fails the build instead of shipping half a rebrand */
 function rep(s, from, to, want, what) {
@@ -393,7 +395,7 @@ async function build(key) {
     write(path.join(E.data, 'rounds', 'docs', 'money.json'), JSON.stringify(m, null, 1));
   }
   const co = E.company();
-  co.appUrl = 'https://sixfoldcolorado.com/' + E.folder + '/';
+  co.appUrl = (E.host || 'https://sixfoldcolorado.com') + '/' + E.folder + '/';   /* a client install may live elsewhere (clients.cjs) */
   write(path.join(E.data, 'rounds', 'company.json'), JSON.stringify(co, null, 2) + '\n');
 
   // sign-in codes, made once per edition
@@ -440,7 +442,7 @@ return [
 
 (async () => {
   const only = process.argv[2];
-  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest, security)');
+  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest, security, or c-<client> from editions/clients/)');
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build
   fs.rmSync(path.join(OUT, 'upload', '4-extract-in-public_html--app-tr-cb2e8587.zip'), { force: true });
   for (const k of only ? [only] : Object.keys(EDITIONS)) await build(k);

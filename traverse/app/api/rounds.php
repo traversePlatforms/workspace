@@ -96,8 +96,16 @@ function company(): array {
             /* the town groups this install shows (2026-10-07): a town in index.json with a "group" is hidden unless named here */
             'townGroups' => [],
             /* best doors first (2026-10-07, the editions): the trade whose walking order the door list offers; null = none (Sixfold) */
-            'best' => null];
+            'best' => null,
+            /* the Company screen's brand colour (2026-10-08), laid over from company-local.json */
+            'brand' => ''];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
+    /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
+    $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
+    if (is_array($f) && is_array($loc)) {
+        foreach (['name', 'short', 'tagline', 'phone', 'email', 'site'] as $k0) if (isset($loc[$k0]) && is_string($loc[$k0])) $f[$k0] = $loc[$k0];   /* COMPANY_LOCAL, listed here: a top-level const is not defined yet when company() first runs */
+        if (!empty($loc['color']) && preg_match('/^#[0-9a-f]{6}$/', (string) $loc['color'])) { $f['colors'] = brandColors((string) $loc['color']); $f['brand'] = (string) $loc['color']; }
+    }
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
     $c['card'] = array_replace($def['card'], is_array($c['card']) ? $c['card'] : []);
@@ -4255,6 +4263,57 @@ if ($action === 'jobber') {
     }
     fclose($fh);
     exit;
+}
+
+/* ---- the Company screen (2026-10-08): a client install's own name, contact details and brand colour ----
+ * Kept in company-local.json beside company.json in the data folder: the server makes it and a data refresh never ships one,
+ * so an upload of new door data can't undo what the client's admin set. company() lays it over company.json. The brand
+ * colour becomes the same set of colour variables build-editions.cjs writes (editions/clients.cjs, palette()), white on the
+ * accent checked at 4.5:1. The home-screen icon, the app's home-screen name and the phone's bar colour are set when the
+ * install is built (manifest and icons) and change only with a rebuild. Admins, in the editions and client installs (not Sixfold). */
+function hexRgb(string $h): array { $n = hexdec(ltrim($h, '#')); return [($n >> 16) & 255, ($n >> 8) & 255, $n & 255]; }
+function rgbHsl(array $c): array {
+    [$r, $g, $b] = array_map(fn($v) => $v / 255, $c); $mx = max($r, $g, $b); $mn = min($r, $g, $b); $l = ($mx + $mn) / 2; $h = 0; $s = 0;
+    if ($mx !== $mn) { $d = $mx - $mn; $s = $l > 0.5 ? $d / (2 - $mx - $mn) : $d / ($mx + $mn);
+        $h = $mx === $r ? ($g - $b) / $d + ($g < $b ? 6 : 0) : ($mx === $g ? ($b - $r) / $d + 2 : ($r - $g) / $d + 4); $h /= 6; }
+    return [$h, $s, $l];
+}
+function hslHex(float $h, float $s, float $l): string {
+    $f = function ($n) use ($h, $s, $l) { $k = fmod($n + $h * 12, 12); $a = $s * min($l, 1 - $l); return $l - $a * max(-1, min($k - 3, 9 - $k, 1)); };
+    return sprintf('#%02x%02x%02x', (int) round(max(0, min(1, $f(0))) * 255), (int) round(max(0, min(1, $f(8))) * 255), (int) round(max(0, min(1, $f(4))) * 255));
+}
+function relLum(string $hex): float { $c = array_map(function ($v) { $v /= 255; return $v <= 0.03928 ? $v / 12.92 : pow(($v + 0.055) / 1.055, 2.4); }, hexRgb($hex)); return 0.2126 * $c[0] + 0.7152 * $c[1] + 0.0722 * $c[2]; }
+function contrastRatio(string $a, string $b): float { $x = relLum($a); $y = relLum($b); return (max($x, $y) + 0.05) / (min($x, $y) + 0.05); }
+/** the colour variables for one brand colour, light and dark, as company.json "colors" (the page's paintCompany applies them) */
+function brandColors(string $hex): array {
+    [$h, $s0, $l0] = rgbHsl(hexRgb($hex)); $s = min($s0, 0.6); $at = fn($l, $sat = null) => hslHex($h, $sat ?? $s, $l);
+    $accent = strtolower($hex); $la = $l0;
+    while (contrastRatio($accent, '#ffffff') < 4.5 && $la > 0.05) { $la -= 0.02; $accent = hslHex($h, $s0, $la); }
+    return ['light' => ['--bg' => $at(0.965, $s * 0.25), '--line' => $at(0.88, $s * 0.2), '--sunk' => $at(0.925, $s * 0.2), '--bar' => $at(0.2), '--bar-soft' => $at(0.85, $s * 0.45),
+                        '--moss' => $at(0.55, $s * 0.6), '--moss-ink' => $at(0.2), '--accent' => $accent, '--signin' => $at(0.2), '--signin-deep' => $at(0.13),
+                        '--signin-soft' => $at(0.85, $s * 0.45), '--key' => $at(0.28), '--key-down' => $at(0.35)],
+            'dark' => ['--bg' => $at(0.06, $s * 0.5), '--card' => $at(0.1, $s * 0.45), '--line' => $at(0.2, $s * 0.35), '--sunk' => $at(0.08, $s * 0.45), '--bar' => $at(0.12, $s * 0.5),
+                       '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55)]];
+}
+const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site'];
+if ($action === 'companyset') {
+    if ($role !== 'admin' || company()['best'] === null) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $clean = fn($v, int $max) => trim(preg_replace('/[\x00-\x1f\x7f]+/', ' ', (string) $v));
+    $loc = [];
+    $loc['name'] = $clean($body['name'] ?? '', 60); $loc['short'] = $clean($body['short'] ?? '', 20);
+    if ($loc['name'] === '' || mb_strlen($loc['name']) > 60) fail('The company name is needed (60 characters at most).');
+    if ($loc['short'] === '' || mb_strlen($loc['short']) > 20) fail('The short name is needed (20 characters at most): it goes where space is tight.');
+    $loc['tagline'] = $clean($body['tagline'] ?? '', 80); if (mb_strlen($loc['tagline']) > 80) fail('The tagline is 80 characters at most.');
+    $loc['phone'] = $clean($body['phone'] ?? '', 30); if ($loc['phone'] !== '' && !preg_match('/^[0-9 ()+.\-]{7,30}$/', $loc['phone'])) fail('That phone number has characters a phone number does not.');
+    $loc['email'] = $clean($body['email'] ?? '', 120); if ($loc['email'] !== '' && !filter_var($loc['email'], FILTER_VALIDATE_EMAIL)) fail('That email address does not look right.');
+    $loc['site'] = strtolower($clean($body['site'] ?? '', 80)); if ($loc['site'] !== '' && !preg_match('#^(https?://)?[a-z0-9.-]+\.[a-z]{2,}(/[a-z0-9._~/-]*)?$#', $loc['site'])) fail('That website does not look right (like yourcompany.com).');
+    $color = strtolower(trim((string) ($body['color'] ?? '')));
+    if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/', $color)) fail('Pick a colour.');
+    if ($color !== '') $loc['color'] = $color;
+    $loc['by'] = $me; $loc['at'] = time();
+    if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
 }
 
 /* ---- booked doors for JobNimbus (2026-10-08, TraverseRoofing) ----
