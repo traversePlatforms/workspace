@@ -35,7 +35,11 @@ const AGENCY = {
   'black-forest': ['CO0210000', "El Paso County Sheriff's Office"], 'castle-rock': ['CO0180100', 'Castle Rock Police Department'],
   larkspur: ['CO0180000', "Douglas County Sheriff's Office"], sedalia: ['CO0180000', "Douglas County Sheriff's Office"], franktown: ['CO0180000', "Douglas County Sheriff's Office"],
   'woodland-park': ['CO0600100', 'Woodland Park Police Department'], divide: ['CO0600000', "Teller County Sheriff's Office"], florissant: ['CO0600000', "Teller County Sheriff's Office"],
-  'cripple-creek': ['CO0600200', 'Cripple Creek Police Department']
+  'cripple-creek': ['CO0600200', 'Cripple Creek Police Department'],
+  /* 2026-10-08: codes from the FBI's own Colorado agency list. Highlands Ranch is unincorporated (the sheriff); Castle Pines
+     contracts its policing to the sheriff (castlepinesco.gov, Public Safety; 2025 intergovernmental agreement) */
+  parker: ['CO0180500', 'Parker Police Department'], 'castle-pines': ['CO0180000', "Douglas County Sheriff's Office"],
+  'highlands-ranch': ['CO0180000', "Douglas County Sheriff's Office"]
 };
 const CSPD = ['CO0210100', 'Colorado Springs Police Department'];
 const KIND = {
