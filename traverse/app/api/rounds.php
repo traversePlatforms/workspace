@@ -900,6 +900,74 @@ function lawnLevel(array $d, array $fix): ?string {
     return $d['lawn']['lv'] ?? null;
 }
 
+/* ---- best neighbourhoods (2026-10-07, the editions) ----
+ * The page's Best first gives each door points from its own card's facts (index.html, BEST). The town screen ranks neighbourhoods
+ * by the same points over their doors still to knock, so the points are worked out here too, per door, with the same rules.
+ * Cached per town in best-<trade>-<town>.json and rebuilt when any file it reads changes (a storm refresh rewrites hail-<town>).
+ * Left out here, and added in the regions loop instead: a crew member's lawn correction (Yards). Left out entirely: Pest and
+ * Security's "neighbours on service" and "booked nearby", which change by the hour. Keep the numbers in step with BEST. */
+function bestTownPoints(string $trade, string $key, array $data): array {
+    $src = ['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'];
+    $files = array_map(fn($p) => DATA_DIR . '/' . $p . '-' . $key . '.json', $src);
+    $files[] = DATA_DIR . '/' . $key . '.json'; $files[] = DATA_DIR . '/permit-index.json';
+    $sig = md5(implode('|', array_map(fn($f) => (string) (@filemtime($f) ?: 0), $files)) . '|' . date('Y') . '|v1');
+    $cf = DATA_DIR . '/best-' . $trade . '-' . $key . '.json';
+    $c = json_decode((string) @file_get_contents($cf), true);
+    if (is_array($c) && ($c['sig'] ?? '') === $sig && is_array($c['p'] ?? null)) return $c['p'];
+    $side = function (string $p) use ($key): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $p . '-' . $key . '.json'), true); return is_array($j['doors'] ?? null) ? $j['doors'] : []; };
+    $cen = json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: [];
+    $pidx = (json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null;
+    $hail = $trade === 'roof' ? $side('hail') : []; $wind = $trade === 'roof' ? $side('wind') : [];
+    $year = $trade === 'roof' ? $side('year') : []; $roof = $trade === 'roof' ? $side('roof') : [];
+    $solar = $trade === 'solar' ? $side('solar') : []; $perm = ($trade === 'roof' || $trade === 'solar') ? $side('permit') : [];
+    $pest = $trade === 'pest' ? $side('pest') : []; $sec = $trade === 'security' ? $side('security') : [];
+    $yr = (int) date('Y'); $ymNow = $yr * 12 + (int) date('n');
+    $recent = fn(string $ym): bool => strlen($ym) >= 7 && $ymNow - ((int) substr($ym, 0, 4) * 12 + (int) substr($ym, 5, 2)) <= 12;
+    $p = [];
+    foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+        $id = (string) $d['id']; $pts = 0;
+        if ($trade === 'roof') {
+            $big = null; foreach (($hail[$id] ?? []) as $x) if (is_array($x) && (!$big || (float) $x[1] > (float) $big[1])) $big = $x;
+            if ($big) { $h = (float) $big[1]; $pts += $h >= 1.75 ? 6 : ($h >= 1.25 ? 4 : ($h >= 1 ? 3 : ($h >= 0.75 ? 1 : 0))); }
+            $w = 0.0; foreach (($wind[$id] ?? []) as $x) if (is_array($x)) $w = max($w, (float) ($x[1] ?? 0));
+            if ($w >= 58) $pts += $w >= 75 ? 3 : 2;
+            $b = $year[$id] ?? null;
+            if ($b && !empty($b['yb'])) { $age = $yr - max((int) $b['yb'], (int) ($b['rm'] ?? 0)); if ($age >= 12) $pts += $age >= 20 ? 2 : 1; }
+            if ((float) ($roof[$id]['sqs'] ?? 0) >= 30) $pts += 1;
+            $pr = (string) ($perm[$id]['r'] ?? '');
+            if ($pr !== '') { if ($big && $pr >= substr((string) $big[0], 0, 7)) $pts -= 8; elseif ($yr - (int) substr($pr, 0, 4) <= 5) $pts -= 3; }
+            elseif ($pidx && ($pidx['full'] ?? true) !== false && $b && !empty($b['yb']) && (int) substr((string) $pidx['since'], 0, 4) - (int) $b['yb'] >= 5) $pts += 1;
+        } elseif ($trade === 'yards') {                            /* the lawn itself is added live, in the regions loop */
+            $f = (int) ($d['fire'] ?? 0); if ($f === 5) $pts += 2; elseif ($f === 4) $pts += 1;
+            $tl = treeLevel($d); if ($tl === 'against') $pts += 2; elseif ($tl === 'heavy') $pts += 1;
+            if ((float) ($d['acres'] ?? 0) >= 0.5) $pts += 1;
+        } elseif ($trade === 'solar') {
+            $s = $solar[$id] ?? null;
+            if ($s && !empty($s['pn']) && !empty($s['kwh'])) { $k = (float) $s['kwh']; $pts += $k >= 10000 ? 3 : ($k >= 7000 ? 2 : ($k >= 4000 ? 1 : 0)); }
+            if ($s && ($s['sh'] ?? '') === 'open') $pts += 2; elseif ($s && ($s['sh'] ?? '') === 'heavy') $pts -= 3;
+            $pm = $perm[$id] ?? null; if ($pm && !empty($pm['s']) && empty($pm['so'])) $pts -= 8;
+        } elseif ($trade === 'pest') {
+            $x = $pest[$id] ?? [];
+            if ($recent((string) ($x['sold'] ?? ''))) $pts += 2;
+            if (in_array(treeLevel($d), ['against', 'heavy'], true)) $pts += 1;
+            if (!empty($x['os'])) $pts += 1;
+            if (!empty($x['wa'])) $pts += 1;
+        } elseif ($trade === 'security') {
+            $x = $sec[$id] ?? [];
+            if ($recent((string) ($x['sold'] ?? ''))) $pts += 2;
+            if (!empty($x['yb']) && (int) $x['yb'] >= $yr - 5) $pts += 1;
+            if (!empty($x['ab'])) $pts += 1;
+            if ((float) ($d['acres'] ?? 0) >= 1) $pts += 1;
+            if (!empty($x['os'])) $pts += 1;
+        }
+        $bg = $cen['doors'][$id] ?? null; $o = $bg !== null ? ($cen['bgs'][$bg]['o'] ?? null) : null;
+        if ($o !== null && $o < 40) $pts -= 2;                    /* a block mostly rented, as on the card */
+        if ($pts) $p[$id] = $pts;
+    }
+    writeJsonAtomic($cf, ['sig' => $sig, 'p' => $p]);
+    return $p;
+}
+
 /* ---- neighbourhood no-soliciting flag (2026-10-01, SX-13) ----------------
  * A posting at a subdivision entrance. Any crew member can raise it; only an
  * admin can clear it, or one wrong tap quietly drops a neighbourhood from the
@@ -1385,7 +1453,9 @@ if ($action === 'regions') {
         $marks = loadMarks($r['key']);
         $aflags = loadAreaFlags($r['key']);
         $lfix = loadLawnFix($r['key']);
-        $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
+        $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
+        /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
+        $bestT = $role === 'admin' ? company()['best'] : null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -1404,6 +1474,7 @@ if ($action === 'regions') {
             $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
+            $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
             $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
             $streets = [];                           /* doors per street: a neighbourhood is named after its biggest street only */
             $aseg = [];                              /* SX-54: doors still to knock, per kind of door */
@@ -1420,6 +1491,11 @@ if ($action === 'regions') {
                 if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
                 if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
                 if ($open && ($f === 4 || $f === 5) && in_array(lawnLevel($d, $lfix), ['L', 'M'], true) && in_array(treeLevel($d), ['against', 'heavy'], true)) $all3++;
+                if ($open && $bp !== null) {
+                    $pt = (int) ($bp[(string) $d['id']] ?? 0);
+                    if ($bestT === 'yards') { $lv0 = lawnLevel($d, $lfix); $pt += $lv0 === 'L' ? 3 : ($lv0 === 'M' ? 2 : 0); }   /* live: crews correct lawns */
+                    if ($pt > 0) { $bestN++; $bestS += $pt; }
+                }
                 $seg = (in_array($f, [3, 4, 5], true) ? (string) $f : 'x') . (lawnLevel($d, $lfix) ?: 'x');
                 if ($open) $aseg[$seg] = ($aseg[$seg] ?? 0) + 1;
                 if ($m && in_array($m['outcome'], ['booked', 'later'], true)) { $segT[$seg] = ($segT[$seg] ?? 0) + 1; if ($m['outcome'] === 'booked') $segB[$seg] = ($segB[$seg] ?? 0) + 1; }
@@ -1437,7 +1513,7 @@ if ($action === 'regions') {
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
                         'st' => topStreets($streets, 4), 'ns' => count($streets), 'who' => $assign[$a['name']] ?? null,
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
-                        '_seg' => $aseg];
+                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []);
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
     }

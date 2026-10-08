@@ -240,3 +240,6 @@ traverse/app/data/rounds/census-*.json
 # Yards frost and rain (2026-10-07): generated, and the server's rain cache
 traverse/app/data/rounds/climate.json
 traverse/app/data/rounds/climate-cache.json
+
+# server-made best-neighbourhood caches (2026-10-07)
+traverse/app/data/rounds/best-*.json

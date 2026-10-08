@@ -2563,8 +2563,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (mode === 'fire' && !hasFire) mode = 'map';
     if (mode === 'lawn' && !hasLawn) mode = 'map';
     var hasTrees = r.areas.some(function (a) { return (a.treeA || 0) + (a.treeH || 0) > 0; });
+    /* best neighbourhoods (2026-10-07): the editions rank neighbourhoods by their trade's best doors still to knock */
+    var hasBest = !!bestTrade() && r.areas.some(function (a) { return typeof a.bestN === 'number'; });
+    if (mode === 'best' && !hasBest) mode = 'map';
     if (mode === 'trees' && !hasTrees) mode = 'map';
-    var opts = [['map', 'Big lots', 'route'], ['near', 'Nearest', 'near']];   /* was "Map order": the list is biggest lots first, not a route (Fable, live review) */
+    var opts = [['map', 'Big lots', 'route'], ['near', 'Nearest', 'near']];
+    if (hasBest) opts.unshift(['best', 'Best', 'chart']);   /* was "Map order": the list is biggest lots first, not a route (Fable, live review) */
     if (hasFire) opts.push(['fire', 'Fire', 'flame']);
     if (hasLawn) opts.push(['lawn', 'Lawn', 'leaf']);
     if (hasTrees) opts.push(['trees', 'Trees', 'tree']);
@@ -2572,7 +2576,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* SX-54: our own booking rate. Admins always see it (with how far off it is); the crew once there is enough to go on */
     var od = r.odds || null;
     /* Matthew 2026-10-04: a phone that has not picked a sort starts on Odds once it is on, else on Lawn (aeration leads) */
-    if (!picked) mode = od && od.ready ? 'odds' : hasLawn ? 'lawn' : 'map';
+    if (!picked) mode = hasBest ? 'best' : od && od.ready ? 'odds' : hasLawn ? 'lawn' : 'map';
     if (od && (od.ready || S.role === 'admin')) opts.push(['odds', 'Odds', 'chart']);
     else if (mode === 'odds') mode = 'map';
     setDock(opts, mode, function (v) {
@@ -2610,7 +2614,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(aroundStrip(S.region));         /* neighbours of jobs won here (2026-10-03) */
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'doors' ? 'Most doors to knock first' : mode === 'odds' && od && od.ready ? 'Most quotes expected first' : mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
+    sect.appendChild(q('span', null, mode === 'best' ? 'Most best doors for ' + BEST_NAME[bestTrade()] + ' to knock first' : mode === 'doors' ? 'Most doors to knock first' : mode === 'odds' && od && od.ready ? 'Most quotes expected first' : mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
     view.appendChild(sect);
 
     if (mode === 'odds' && od && !od.ready) view.appendChild(q('div', 'msg', 'Odds sorts by the rate our own doors book at, by fire hazard and lawn size. It needs ' + od.min + ' conversations across the team first; there are ' + od.talked + ' so far. Until then this list is biggest lots first.'));
@@ -2624,6 +2628,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       om.addEventListener('click', function () { S.onlyMine = !S.onlyMine; renderAreas(); });
       ym.appendChild(om); view.appendChild(ym);
       if (S.onlyMine) list = list.filter(function (a) { return a.who === S.me; });
+    }
+    /* best first (2026-10-07): the most points from this trade's doors still to knock, then the most such doors */
+    if (mode === 'best') {
+      list.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || (y.bestS || 0) - (x.bestS || 0) || (y.bestN || 0) - (x.bestN || 0); });
     }
     /* most doors still to knock first (2026-10-04); a no-answer still needs a knock */
     if (mode === 'doors') {
@@ -2686,6 +2694,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var chips = q('div', 'chips');
       if (a.who) chips.appendChild(chipEl('mine' + (a.who === S.me ? ' me' : ''), 'users', a.who === S.me ? 'Yours' : 'Assigned to ' + a.who));
       if (a.all3) chips.appendChild(chipEl('all3', 'check', a.all3 + (a.all3 === 1 ? ' door' : ' doors') + ' with fire, lawn and trees'));
+      if (mode === 'best' && typeof a.bestN === 'number') chips.appendChild(chipEl('oddc', 'chart', a.bestN ? a.bestN + (a.bestN === 1 ? ' best door' : ' best doors') + ' to knock' : 'No best doors left to knock'));
       if (mode === 'odds' && a.odds && a.odds.open) chips.appendChild(chipEl('oddc', 'chart', 'About ' + a.odds.exp + (a.odds.exp === 1 ? ' quote' : ' quotes') + ' expected from ' + a.odds.open + ' to knock'));
       if (a.nosol) chips.appendChild(chipEl('nsp', 'flag', 'No soliciting posted'));
       if (a.fw) chips.appendChild(chipEl('fwc', 'check', 'Firewise nearby: ' + a.fw[0].n));
