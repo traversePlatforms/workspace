@@ -4257,6 +4257,67 @@ if ($action === 'jobber') {
     exit;
 }
 
+/* ---- booked doors for JobNimbus (2026-10-08, TraverseRoofing) ----
+ * Roofers commonly run their business in JobNimbus. This writes every booked door as a JobNimbus contact import: the columns
+ * named as JobNimbus's contact fields (its import matches them, and asks about any it can't), "Contact Type" and "Status" filled
+ * because its import requires both (Customer / Lead: change them to the company's own workflow names while importing).
+ * Names: the county's owner of record exactly as written, under Last Name, or under Company for a trust, an estate or a
+ * business; never split into first and last, because the county writes couples and trusts many ways and a guess would put a
+ * wrong name in the roofer's system. Description carries what the rep saw and what the card knew: the walk, hail, wind, roof,
+ * year built, material, re-roof permit, value, the door note. Admins, where the company has roofs on. */
+if ($action === 'jobnimbus') {
+    if ($role !== 'admin' || !feature('roof')) fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="booked-doors-for-jobnimbus-' . date('Y-m-d') . '.csv"');
+    $fh = fopen('php://output', 'w');
+    fputcsv($fh, ['First Name', 'Last Name', 'Company', 'Address Line 1', 'City', 'State', 'Zip', 'Mobile Phone', 'Email', 'Contact Type', 'Status', 'Source', 'Description', 'Tags'], ',', '"', '');
+    $co = company(); $src = 'Door knocking (' . ($co['name'] ?: 'door app') . ')';
+    $in = fn($v) => rtrim(rtrim(number_format((float) $v, 2), '0'), '.') . ' in';
+    $day = fn(string $ymd) => ($t = strtotime($ymd)) ? date('M j, Y', $t) : $ymd;
+    foreach (($idx['regions'] ?? []) as $r) {
+        $key = (string) $r['key'];
+        $data = loadRegion($key);
+        if (!$data) continue;
+        $marks = loadMarks($key);
+        $booked = [];
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) { $m = freshMark($d, $marks[$d['id']] ?? null); if ($m && $m['outcome'] === 'booked') $booked[(string) $d['id']] = [$d, $m]; }
+        if (!$booked) continue;
+        $phones = loadPhones($key); $emails = loadEmails($key); $notes = loadNotes($key); $walks = loadWalks($key); $placeOf = skipMail($key);
+        $hailOf = loadSide('hail', $key, $booked); $windOf = loadSide('wind', $key, $booked); $roofOf = loadSide('roof', $key, $booked);
+        $bldOf = loadSide('year', $key, $booked); $matOf = loadSide('material', $key, $booked); $permOf = loadSide('permit', $key, $booked);
+        foreach ($booked as $id => [$d, $m]) {
+            $p = $phones[$id] ?? null; if ($p && ownerAge($d, $p) === 'prev') $p = null;
+            $em = $emails[$id] ?? null; if ($em && ownerAge($d, $em) === 'prev') $em = null;
+            $n = $notes[$id] ?? null; if ($n && ownerAge($d, $n) === 'prev') $n = null;
+            $owner = trim((string) ($d['owner'] ?? '')); if (preg_match('/^unavailable$/i', $owner)) $owner = '';
+            $org = (bool) preg_match('/\b(LLC|L\.L\.C|INC|CORP|CORPORATION|COMPANY|LTD|LLLP|LP|PARTNERSHIP|TRUST|ESTATE|TRUSTEES?)\b/i', $owner);
+            $pl = $placeOf[$id] ?? [];
+            $bits = ['Booked at the door by ' . ($m['by'] ?: 'the rep') . ' on ' . date('M j, Y', (int) $m['at']) . '.'];
+            if (!empty($walks[$id]['date'])) $bits[] = 'Roof walk booked for ' . $day($walks[$id]['date']) . (!empty($walks[$id]['time']) ? ' at ' . date('g:i a', strtotime('2000-01-01 ' . $walks[$id]['time'])) : '') . '.';
+            $big = null; foreach ((array) ($hailOf[$id] ?? []) as $h) if (is_array($h) && (!$big || (float) $h[1] > (float) $big[1])) $big = $h;
+            if ($big) $bits[] = 'Hail near the house: ' . $in($big[1]) . ' on ' . $day((string) $big[0]) . ' (NOAA radar estimate).';
+            $wmax = null; foreach ((array) (windRows($windOf[$id] ?? null) ?? []) as $w) if ((float) ($w[1] ?? 0) >= 58 && (!$wmax || (float) $w[1] > (float) $wmax[1])) $wmax = $w;
+            if ($wmax) $bits[] = 'Wind ' . (int) $wmax[1] . ' mph on ' . $day((string) $wmax[0]) . ', ' . $wmax[3] . ' mi away (NWS report).';
+            $rf = $roofOf[$id] ?? null; if ($rf) $bits[] = 'Roof: about ' . number_format((float) ($rf['sq'] ?? 0)) . ' sq ft, ' . ($rf['sqs'] ?? '?') . ' squares, ' . (!empty($rf['flat']) ? 'flat or low slope' : ($rf['pitch'] ?? '?') . '/12 pitch') . ' (laser scan estimate).';
+            $b = $bldOf[$id] ?? null; if ($b && !empty($b['yb'])) $bits[] = 'Built ' . $b['yb'] . (!empty($b['rm']) ? ', remodeled ' . $b['rm'] : '') . ' (county records).';
+            $mt = $matOf[$id]['m'] ?? ($b['mat'] ?? null); if ($mt) $bits[] = 'Roof material: ' . strtolower((string) $mt) . (($matOf[$id]['src'] ?? '') === 'imagery' ? ' (from the aerial photo)' : '') . '.';
+            $pm = $permOf[$id] ?? null; if ($pm && !empty($pm['r'])) $bits[] = 'Last re-roof permit: ' . date('M Y', strtotime($pm['r'] . '-01')) . '.';
+            if (!empty($d['val'])) $bits[] = 'County value: $' . number_format((int) $d['val']) . '.';
+            if ($owner !== '') $bits[] = 'Owner of record (county): ' . $owner . '.';
+            if ($p && ($p['source'] ?? '') !== 'door') $bits[] = 'Phone was looked up, not given at the door: check the Do Not Call lists before calling.';
+            if ($n) $bits[] = 'Door note: ' . $n['note'];
+            $tags = ['Door knock', (string) ($r['label'] ?? $key)];
+            if ($big && (float) $big[1] >= 1) $tags[] = 'Hail ' . $in($big[1]);
+            if ($wmax) $tags[] = 'Wind ' . (int) $wmax[1] . ' mph';
+            fputcsv($fh, array_map('csvSafe', ['', $org ? '' : $owner, $org ? $owner : '', (string) $d['address'], (string) ($pl['c'] ?? ($r['label'] ?? '')), 'CO', (string) ($pl['z'] ?? ''),
+                $p['phone'] ?? '', $em['email'] ?? '', 'Customer', 'Lead', $src, implode(' ', $bits), implode(', ', $tags)]), ',', '"', '');
+        }
+    }
+    fclose($fh);
+    exit;
+}
+
 if ($action === 'report' || $action === 'export') {
     if ($action === 'export' && $role !== 'admin') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];

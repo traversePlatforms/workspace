@@ -5552,7 +5552,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     imp.addEventListener('click', function () { fileIn.value = ''; fileIn.click(); });
     fileIn.addEventListener('change', function () { if (fileIn.files && fileIn.files[0]) readMetaFile(fileIn.files[0]); });
     top.appendChild(imp); top.appendChild(fileIn);
-    var jb = q('a', 'adminlink', 'Door bookings for Jobber (CSV)'); jb.href = API + '?action=jobber'; jb.setAttribute('download', '');
+    /* the booked doors for the company's own system (2026-10-08): roofers use JobNimbus; the lawn and yard side Jobber */
+    var jb = feat('roof') ? q('a', 'adminlink', 'Booked doors for JobNimbus (CSV)') : q('a', 'adminlink', 'Door bookings for Jobber (CSV)');
+    jb.href = API + (feat('roof') ? '?action=jobnimbus' : '?action=jobber'); jb.setAttribute('download', '');
+    if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
     top.appendChild(jb);
     holder.appendChild(top);
     if (S.leadAdd) holder.appendChild(leadForm());
