@@ -2636,6 +2636,7 @@ function roofSettings(): array {
 if ($action === 'roofsettings') {
     if (!hailOn($role)) fail('Not allowed.', 403);
     if (!$isPost) out(['ok' => true, 'settings' => roofSettings(), 'classes' => MAT_CLASS]);
+    if ($role !== 'admin') fail('Not allowed.', 403);   /* the company's prices and thresholds: admins set them (review 2026-10-08: crew could, once features.crew opened hail) */
     $cur = roofSettings();
     $num = function ($v, $max) { if ($v === null || $v === '') return null; if (!is_numeric($v) || (float) $v < 0 || (float) $v > $max) fail('Use numbers from 0 to ' . $max . '.'); return round((float) $v, 2); };
     $save = ['price' => [], 'damage' => [], 'by' => $me, 'at' => time()];
@@ -2668,7 +2669,8 @@ if ($action === 'stormdays') {
     out(['ok' => true, 'days' => array_values($days), 'hailThrough' => $h['through'] ?? null, 'windThrough' => $w['through'] ?? null]);
 }
 if ($action === 'stormdoors') {
-    if (!hailOn($role)) fail('Not allowed.', 403);
+    /* an office tool: every town's owners and their looked-up phones (review 2026-10-08), so admins only even where crew see hail */
+    if ($role !== 'admin' || !hailOn($role)) fail('Not allowed.', 403);
     $day = (string) ($_GET['day'] ?? ''); $only = (string) ($_GET['town'] ?? '');
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day)) fail('Pick a storm day.');
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
