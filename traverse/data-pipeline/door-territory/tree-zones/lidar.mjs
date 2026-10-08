@@ -113,7 +113,9 @@ async function loadTile(p, key, cacheDir) {
 export async function heightGrid(p, box, cell, cacheDir) {
   const w = Math.ceil((box[2] - box[0]) / cell), h = Math.ceil((box[3] - box[1]) / cell);
   const top = new Float32Array(w * h).fill(-Infinity), gnd = new Float32Array(w * h).fill(Infinity), multi = new Uint8Array(w * h);
-  for (const key of await nodesFor(p, box)) {
+  let yr = null;
+  if (p === TELLER) yr = tellerCells(box, cell, w, h, top, gnd, multi, cacheDir);
+  else for (const key of await nodesFor(p, box)) {
     const t = await tilePoints(p, key, cacheDir);
     for (let i = 0; i < t.n; i++) {
       const x = t.xyz[i * 3], y = t.xyz[i * 3 + 1];
@@ -141,13 +143,52 @@ export async function heightGrid(p, box, cell, cacheDir) {
   for (let o = 0; o < w * h; o++) hgt[o] = top[o] === -Infinity || g[o] === Infinity ? NaN : Math.max(0, top[o] - g[o]);
   /* top: the highest return per cell as an elevation (-Infinity = none). Added 2026-10-06 for solar facing: a roof plane fitted
      to height above ground takes on the slope of the ground under the house, so on a hillside a low roof reads as facing downhill. */
-  return { x0: box[0], y1: box[3], cell, w, h, hgt, multi, top };
+  return { x0: box[0], y1: box[3], cell, w, h, hgt, multi, top, yr };
+}
+
+/* ---- Teller County (2026-10-08) ----------------------------------------------------
+   Not in the cloud copy above. teller-grids.mjs turns the downloaded USGS LAZ files into 0.6 m Web Mercator grids
+   (top, ground, split-pulse), lidar-cache/teller-grid/. Each grid cell inside the box counts as one return at the cell's
+   centre, top and ground both, so the same gap fill and height follow. The year is the survey year of the grids used
+   (2023 or 2024; the most cells wins). */
+export const TELLER = 'CO_Teller_LAZ';
+let tIndex = null;
+const tMemo = new Map();
+function tellerGrid(dir, name) {
+  if (tMemo.has(name)) { const v = tMemo.get(name); tMemo.delete(name); tMemo.set(name, v); return v; }
+  const b = readFileSync(join(dir, name + '.grid')), nl = b.indexOf(10), H = JSON.parse(b.subarray(0, nl).toString()), n = H.w * H.h, o = nl + 1;
+  const g = { ...H, top: new Uint16Array(b.buffer.slice(b.byteOffset + o, b.byteOffset + o + n * 2)), gnd: new Uint16Array(b.buffer.slice(b.byteOffset + o + n * 2, b.byteOffset + o + n * 4)), multi: new Uint8Array(b.buffer.slice(b.byteOffset + o + n * 4, b.byteOffset + o + n * 5)) };
+  tMemo.set(name, g); if (tMemo.size > 12) tMemo.delete(tMemo.keys().next().value);
+  return g;
+}
+function tellerCells(box, cell, w, h, top, gnd, multi, cacheDir) {
+  const dir = join(cacheDir, 'teller-grid');
+  if (!tIndex) tIndex = existsSync(join(dir, 'index.json')) ? JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8')) : {};
+  const years = {};
+  for (const [name, t] of Object.entries(tIndex)) {
+    if (!(t.box[0] < box[2] && t.box[2] > box[0] && t.box[1] < box[3] && t.box[3] > box[1])) continue;
+    const g = tellerGrid(dir, name);
+    const c0 = Math.max(0, Math.floor((box[0] - g.x0) / g.R)), c1 = Math.min(g.w - 1, Math.floor((box[2] - g.x0) / g.R));
+    const r0 = Math.max(0, Math.floor((g.y1 - box[3]) / g.R)), r1 = Math.min(g.h - 1, Math.floor((g.y1 - box[1]) / g.R));
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+      const i = r * g.w + c, tz = g.top[i], gz = g.gnd[i];
+      if (tz === 0xffff && gz === 0xffff) continue;
+      const x = g.x0 + (c + 0.5) * g.R, y = g.y1 - (r + 0.5) * g.R;
+      if (x < box[0] || x >= box[2] || y < box[1] || y >= box[3]) continue;
+      const o = Math.floor((box[3] - y) / cell) * w + Math.floor((x - box[0]) / cell);
+      if (gz !== 0xffff) { const z = g.zb + gz / 100; if (z < gnd[o]) gnd[o] = z; }
+      if (tz !== 0xffff) { const z = g.zb + tz / 100; if (z > top[o]) top[o] = z; if (g.multi[i]) multi[o] = 1; }
+      years[g.yr] = (years[g.yr] || 0) + 1;
+    }
+  }
+  const best = Object.entries(years).sort((a, b) => b[1] - a[1])[0];
+  return best ? +best[0] : null;
 }
 
 /* keyed by the label the town lists use: the county where that was all (elpaso, douglas), else the survey block itself
    (2026-10-07, the editions' towns: drcog2 covers Arvada, Centennial, Thornton, Erie, Denver and Commerce City; drcog1 Boulder;
-   eastern-b1 Windsor) */
-export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020', drcog2: 'CO_DRCOG_2_2020', drcog1: 'CO_DRCOG_1_2020', 'eastern-b1': 'CO_Eastern_B1_2018' };
+   eastern-b1 Windsor; 2026-10-08 teller: Woodland Park, Divide, Florissant, Cripple Creek from the downloaded files) */
+export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020', drcog2: 'CO_DRCOG_2_2020', drcog1: 'CO_DRCOG_1_2020', 'eastern-b1': 'CO_Eastern_B1_2018', teller: TELLER };
 export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020, CO_DRCOG_1_2020: 2020, CO_Eastern_B1_2018: 2018 };
 
 /* ---- the measurement on LiDAR -------------------------------------------------------

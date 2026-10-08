@@ -24,7 +24,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..'), TZ = join(DT, 'tree-zones');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'solar-cache.json');
-const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'arvada': 'drcog2', 'centennial': 'drcog2', 'thornton': 'drcog2' };
+const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'arvada': 'drcog2', 'centennial': 'drcog2', 'thornton': 'drcog2', 'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller' };   /* teller: 2026-10-08, the downloaded USGS files (tree-zones/teller-grids.mjs) */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 const SQFT = 10.7639;
@@ -105,7 +105,7 @@ export async function measureSolar(lat, lon, house, project) {
     const brg = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
     if (brg >= 110 && brg <= 250) shade++;
   }
-  return { a: area, sd: sun.length ? Math.round(median(sun)) : null, h: Math.round(roofH * 10) / 10, shade, yr: PROJECT_YEAR[project] || null };
+  return { a: area, sd: sun.length ? Math.round(median(sun)) : null, h: Math.round(roofH * 10) / 10, shade, yr: G.yr || PROJECT_YEAR[project] || null };
 }
 
 async function sample() {

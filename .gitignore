@@ -172,10 +172,6 @@ traverse/app/data/rounds/naip-com-*.json
 # Traverse copy of the door app: build output (50 MB of door data + a sign-in codes file). Rebuild with build-app.cjs.
 traverse/editions/dist/
 
-# 2026-10-06 reorganisation: door-app/ became traverse/. The old build output (door-app/brand/traverse/app/dist/)
-# was held open by a window and could not move; delete door-app/ once it is free, then remove this line.
-door-app/
-
 # TraverseSolar data (regenerable: data-pipeline/door-territory/solar/, node sample-solar.mjs then --build)
 traverse/app/data/rounds/solar-*.json
 traverse/data-pipeline/door-territory/solar/solar-cache.json

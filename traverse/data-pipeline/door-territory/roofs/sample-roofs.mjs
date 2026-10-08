@@ -28,7 +28,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..'), TZ = join(DT, 'tree-zones');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'roof-cache.json');
-const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso' };
+const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller' };   /* teller: 2026-10-08, the downloaded USGS files (tree-zones/teller-grids.mjs) */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 const SQFT = 10.7639;
@@ -98,7 +98,7 @@ export async function measureRoof(lat, lon, house, project) {
     sqs: Math.round(roofM2 * SQFT / 100 * 10) / 10, /* roofing squares (100 sq ft) */
     deg: Math.round(deg * 10) / 10, pitch: flat ? 0 : pitchOf(deg), flat,
     h: Math.round(median(roofCells.map((o) => G.hgt[o])) * 10) / 10,   /* roof height above ground, m (median) */
-    cells: slopes.length, yr: PROJECT_YEAR[project] || null,
+    cells: slopes.length, yr: G.yr || PROJECT_YEAR[project] || null,
     /* the house's centre (outline slid onto the roof) and its longest side, so the roof photo is framed on the house, not the lot */
     c: (() => { const hx = (hb[0] + hb[2]) / 2 + best[0] * cell, hy = (hb[1] + hb[3]) / 2 + best[1] * cell; const [lo, la] = proj4('EPSG:3857', 'EPSG:4326', [hx, hy]); return [+la.toFixed(6), +lo.toFixed(6)]; })(),
     ext: Math.round(Math.max(hb[2] - hb[0], hb[3] - hb[1]) * k),

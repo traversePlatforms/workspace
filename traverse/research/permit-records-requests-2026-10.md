@@ -17,7 +17,7 @@ These towns issue their own permits and publish no bulk list that we found (chec
 
 | Town | Editions it's in | Where to send | Notes |
 |---|---|---|---|
-| Castle Rock | Roofing, Solar | Town of Castle Rock **Open Records Center** (crgov.com/1977/Open-Records). You make an account. | The town says emailed requests are not honored. Permits run through its eTRAKiT system. |
+| Castle Rock | Roofing, Solar | Town of Castle Rock **Open Records Center** (crgov.com/1977/Open-Records). You make an account. | The town says emailed requests are not honored. Permits run through its eTRAKiT system. **Use a general records request, not the property records form**: that one is one street address per request (Matthew's screenshot, 2026-10-08). Past the first hour: **$41.37 an hour** (C.R.S. 24-72-205(6)(b), same screenshot). |
 | Parker | Roofing, Solar | Town of Parker open records form (parkerco.gov/138/Open-Records-Request) | |
 | Castle Pines | Roofing, Solar | City of Castle Pines; its public records policy was amended 2026-02-10. Find the request form or clerk's email on castlepinesco.gov. | I couldn't confirm the submission route. |
 | Arvada | Solar | City of Arvada "Records and Requests" page (arvadaco.gov/797/City-Records), online form | |
@@ -63,6 +63,18 @@ These towns issue their own permits and publish no bulk list that we found (chec
 > Matthew Sharpe
 
 ---
+
+## Sent (tracking)
+
+| Town | Sent | Reference | Notes |
+|---|---|---|---|
+| Parker | 2026-10-08 | | open records form |
+| Centennial | 2026-10-08 | | |
+| Castle Pines | 2026-10-08 | | emailed buildingdept@castlepinesco.gov |
+| Arvada | 2026-10-08 | **2026-580**, security key **8A7D2581** | "All other records": the permit list |
+| Arvada | 2026-10-08 | **2026-579**, security key **B9809CE7** | the other request type (plans), in case it helps |
+| Thornton | 2026-10-08 | | City Clerk form |
+| Castle Rock | not sent | | portal takes one address per request; call the Building Division (720-733-3527) |
 
 ## When a file comes back
 

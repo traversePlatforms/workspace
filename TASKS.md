@@ -916,7 +916,21 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       Pines' and Centennial's routes weren't confirmed: find them on each town's site. Towns may
       charge after the first hour; the letter asks for a quote first. When a file comes back, drop it
       in `traverse/data-pipeline/door-territory/permits/raw/` and tell Claude the town.
-- [ ] **TR-2 — Apply to AccuLynx for integration access.** AccuLynx's developer docs say businesses
+      **Request numbers (keep):** Arvada **2026-580**, security key **8A7D2581** — "All other records" (the
+      permit list). Arvada **2026-579**, security key **B9809CE7** — filed under the other request type (Matthew
+      thinks plans/blueprints), sent in case it helps. Both 2026-10-08.
+      **Where it stands (2026-10-08):** **Parker — sent. Centennial — sent. Castle Pines — emailed. Arvada — sent.
+      Thornton — sent.** Only **Castle Rock** is left. **Castle Rock** — its portal
+      only takes one address per property-records request; next step is calling the Building Division
+      (720-733-3527) to ask for a town-wide re-roof/solar report or the right request type. **Castle Pines** —
+      no form found; email the letter to its Building Department (buildingdept@castlepinesco.gov, 303-705-0227),
+      asking them to pass it to the City Clerk if needed. **Arvada** — use "All other records" (its online permit
+      search is one address at a time). **Thornton** — forms.thorntonco.gov/CityClerk/RequestForPublicRecords or
+      clerk@ThorntonCO.gov. **Parker police:** optional, the crime-list letter in
+      [crime-records-requests-2026-10.md](traverse/research/crime-records-requests-2026-10.md) would put Parker on
+      TraverseSecurity's crime map.
+- [x] **TR-2 — Apply to AccuLynx for integration access.** **✅ Matthew emailed api@acculynx.com 2026-10-08;
+      waiting on their answer.** AccuLynx's developer docs say businesses
       integrating for their customers must request access first, or the roofer's account can be suspended;
       so TraverseRoofing doesn't connect to AccuLynx until they say yes. Their request form is gone, so it's
       an email to api@acculynx.com — drafted in
