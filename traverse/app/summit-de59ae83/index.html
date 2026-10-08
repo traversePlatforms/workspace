@@ -1454,7 +1454,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function sampleAnswer(action, opts) {
     var r = (opts.body && opts.body.region) || (opts.params && opts.params.region);
     if (r !== SAMPLE_KEY) return null;
-    if (action === 'area') return { ok: true, _status: 200, area: 'Sample door', avg: null, doors: S.sampleDoor ? [S.sampleDoor] : [], rest: 2, place: null, fw: null, nosol: null };
+    if (action === 'area') return { ok: true, _status: 200, area: 'Sample door', avg: null, doors: S.sampleDoor ? [S.sampleDoor] : [], rest: 2, place: null, fw: null, nosol: null, perm: (S.sampleData && S.sampleData.perm) || null };
+    /* the made-up frost and rain (Yards' season line), 2026-10-08 */
+    if (action === 'climate') return S.sampleData && S.sampleData.climate ? { ok: true, _status: 200, climate: S.sampleData.climate } : { ok: false, _status: 404 };
     if (SAMPLE_OK[action]) return { ok: true, _status: 200, sample: true };
     return { ok: false, _status: 400, error: 'Not on the sample door: it saves nothing.' };
   }
