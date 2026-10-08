@@ -2677,12 +2677,18 @@ if ($action === 'stormdoors') {
         $k = $r['key']; $hit = [];
         $hl = $side('hail', $k); foreach ($hl as $id => $rows) foreach ($rows as $x) if ($x[0] === $day) { $hit[$id]['hail'] = (float) $x[1]; break; }
         unset($hl);
-        $wl = $side('wind', $k); foreach ($wl as $id => $rows) foreach ($rows as $x) if ($x[0] === $day) { $hit[$id]['wind'] = [$x[1], $x[2], $x[3]]; break; }
+        /* wind files are packed ("date|mph|kind|miles", 2026-10-07): windRows unpacks them (2026-10-08 fix: read raw, a packed
+           town's wind never matched, so a wind day listed only towns still in the old format) */
+        $wl = $side('wind', $k); foreach ($wl as $id => $rows) foreach ((windRows($rows) ?? []) as $x) if ($x[0] === $day) { $hit[$id]['wind'] = [$x[1], $x[2], $x[3]]; break; }
         unset($wl);
         if (!$hit) continue;
         $nh = 0; foreach ($hit as $h) if (isset($h['hail'])) $nh++;
         $towns[] = ['key' => $k, 'label' => $r['label'], 'n' => count($hit), 'hail' => $nh];
-        $hits[$k] = $hit; $total += count($hit);
+        $total += count($hit);
+        /* keep the doors only while they could be listed: a big wind day reaches most of the map, and holding every door of
+           every town just to answer "pick a town" ran out of memory (2026-10-08) */
+        if ($only !== '' ? $k === $only : $total <= STORM_MAX_ROWS) $hits[$k] = $hit; elseif ($only === '') $hits = [];
+        unset($hit);
     }
     /* a big wind day can reach most of the map (one station covers 10 miles), so past STORM_MAX_ROWS the page picks a town */
     if ($only === '' && $total > STORM_MAX_ROWS) out(['ok' => true, 'day' => $day, 'pick' => true, 'total' => $total, 'towns' => $towns, 'doors' => [], 'settings' => roofSettings(), 'classes' => MAT_CLASS]);

@@ -203,7 +203,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       start. Later is not fatal,
       the job just moves. Download the certificate of completion, not just the signed PDF.
       Maintenance has no deadline pressure — first payment 1 Nov, first visit Thu 19 Nov.
-- [ ] **SX-3b — Brian Skelton, Castle Rock: $400 aeration + overseed + fertilize. Added in the 2026-10-06
+- [x] **SX-3b — Brian Skelton, Castle Rock: $400 aeration + overseed + fertilize.** **✅ SIGNED (Matthew confirmed
+      2026-10-08). The job is Thursday 15 October.** Added in the 2026-10-06
       tidy-up — the job was in the repo (commits `283e7b4`, `1928cd0`, `6f8ec2c`, all 2026-10-05) but not on
       this list.** Packet `sixfold/quotes/Sixfold-Quote-and-Agreement-Aeration-Brian-Skelton.pdf` (6 pp, quote
       in front), DocuSign sheet `sixfold/agreements/brian-docusign-setup.md`, notes
@@ -280,7 +281,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       be quoted. `ESTP@csu.org`, or the Conservation Center, 2855 Mesa Rd. Background:
       `sixfold/research/water-restrictions-2026.md`.
 
-- [ ] **SX-11 — Message Karen on Nextdoor, 8 October.** ⚑ **A dated commitment**, and the
+- [x] **SX-11 — Message Karen on Nextdoor, 8 October.** **✅ Matthew reached out 2026-10-08.** Next: her reply,
+      then book the site visit and quote. ⚑ **A dated commitment**, and the
       only thing on this list with a fixed day rather than a deadline. **Karen, not Kara** —
       different person, and Nextdoor is the channel.
       **✅ Who she is, answered 2026-10-01: a live inbound lead for TREE CLEARING.** She posted
@@ -848,7 +850,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [x] **SG-5 — Pull down the WhatsApp content** from the Surge chats while it's still there.
       **✅ PHOTOS PULLED 2026-10-01.** The urgent half is done — the thing that disappears on
       someone else's schedule is off the clock.
-      **⏰ REMIND HIM 2026-10-08: pull again. Content comes in regularly**, so this is a
+      **✅ Pulled again 2026-10-08 (Matthew).** The next sweep has no date yet.
+      **⏰ (was) REMIND HIM 2026-10-08: pull again. Content comes in regularly**, so this is a
       recurring sweep, not a one-off — his words. Pairs with SX-11, which is the same day.
       **✅ The TEXT is pulled too — confirmed 2026-10-01, “all the content”.** So the quotes,
       agreements and promises that lived only in those messages are now off someone else's
@@ -995,8 +998,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 |---|---|
 | **3 Oct** | **SX-1b(2)** — ask Matthew for the PPE counts and sizes back from Brandon and Brad |
 | **7 Oct** | **SX-3a** — last safe signing day for Kara to keep the 12 Oct start |
-| **8 Oct** | **SX-11** — Karen on Nextdoor, and **SG-5** — pull WhatsApp again |
-| **9 Oct** | **SX-3b** — last safe signing day for Brian Skelton to keep the 15 Oct job |
+| ~~8 Oct~~ | ~~SX-11 Karen on Nextdoor, SG-5 pull WhatsApp again~~ — both done 2026-10-08 |
+| ~~9 Oct~~ | ~~SX-3b Brian Skelton's signing day~~ — signed (confirmed 2026-10-08) |
 | **12 Oct** | Kara's aeration job |
 | **15 Oct** | Brian Skelton's aeration job (SX-3b) |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
