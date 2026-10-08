@@ -454,7 +454,7 @@ return [
 function tools() {
   const dir = path.join(OUT, 'traverse-tools');
   fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
-  for (const f of ['push-alerts.php', 'storm-update.php']) fs.copyFileSync(path.join(SRC, 'tools', f), path.join(dir, f));
+  for (const f of ['push-alerts.php', 'storm-update.php', 'crm-sync.php']) fs.copyFileSync(path.join(SRC, 'tools', f), path.join(dir, f));
   const apis = Object.keys(EDITIONS).map((k) => EDITIONS[k].api + '-rounds.php');
   const sh = [
     '#!/bin/sh',
@@ -467,6 +467,7 @@ function tools() {
     'for a in ' + apis.join(' ') + '; do',
     '  [ -f "$D/../public_html/api/$a" ] || continue',
     '  "$PHP" "$D/push-alerts.php" --api="$a" "$@"',
+    '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/crm-sync.php" --api="$a" ;; esac   # booked doors to JobNimbus, where connected (2026-10-08); never in a dry run',
     'done',
     '',
   ].join('\n');

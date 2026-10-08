@@ -913,6 +913,13 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       Pines' and Centennial's routes weren't confirmed: find them on each town's site. Towns may
       charge after the first hour; the letter asks for a quote first. When a file comes back, drop it
       in `traverse/data-pipeline/door-territory/permits/raw/` and tell Claude the town.
+- [ ] **TR-2 — Apply to AccuLynx for integration access.** AccuLynx's developer docs say businesses
+      integrating for their customers must request access first, or the roofer's account can be suspended;
+      so TraverseRoofing doesn't connect to AccuLynx until they say yes. Their request form is gone, so it's
+      an email to api@acculynx.com — drafted in
+      [acculynx-access-request-2026-10.md](traverse/research/acculynx-access-request-2026-10.md).
+      **Decide the company line first** (Traverse Platforms LLC isn't filed and the site isn't live; your own
+      name works). Roofers also need AccuLynx's paid AppConnections add-on to make a key.
 
 ## Personal
 

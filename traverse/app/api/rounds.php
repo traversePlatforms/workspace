@@ -1384,7 +1384,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -4258,21 +4258,43 @@ if ($action === 'jobber') {
 }
 
 /* ---- booked doors for JobNimbus (2026-10-08, TraverseRoofing) ----
- * Roofers commonly run their business in JobNimbus. This writes every booked door as a JobNimbus contact import: the columns
- * named as JobNimbus's contact fields (its import matches them, and asks about any it can't), "Contact Type" and "Status" filled
- * because its import requires both (Customer / Lead: change them to the company's own workflow names while importing).
- * Names: the county's owner of record exactly as written, under Last Name, or under Company for a trust, an estate or a
+ * Roofers commonly run their business in JobNimbus. Two ways in, both from the same facts (bookedLeads below):
+ *   jobnimbus  GET   a JobNimbus contact import (CSV): columns named as its contact fields, "Contact Type" and "Status" filled
+ *                    because its import requires both (Customer / Lead: change them to the company's own workflow while importing)
+ *   jnset      POST  connect: the roofer's own JobNimbus API key (JobNimbus: Settings, API, New API key), tested against
+ *                    JobNimbus before it is kept; plus the workflow, status, appointment type and lead source names to use
+ *   jnstatus   GET   connected or not (the key's last four characters only, never the key), sent and waiting counts, last run
+ *   jnsync     POST  send now: each booked door not yet sent becomes a JobNimbus contact, and its roof walk an appointment;
+ *                    a walk booked after the door was sent goes up on the next run. Also run every 5 minutes by
+ *                    traverse-tools/push-alerts.sh (CLI). Each door goes once: jobnimbus-sent.json remembers its JobNimbus id.
+ * Names: the county's owner of record exactly as written, under last name, or under company for a trust, an estate or a
  * business; never split into first and last, because the county writes couples and trusts many ways and a guess would put a
- * wrong name in the roofer's system. Description carries what the rep saw and what the card knew: the walk, hail, wind, roof,
- * year built, material, re-roof permit, value, the door note. Admins, where the company has roofs on. */
-if ($action === 'jobnimbus') {
-    if ($role !== 'admin' || !feature('roof')) fail('Not allowed.', 403);
+ * wrong name in the roofer's system. The key and the sent list live in the private folder, never in public_html, never in git.
+ * Admins, where the company has roofs on. JobNimbus API: https://app.jobnimbus.com/api1/ (Bearer token; contacts, tasks). */
+function jnFile(string $f): string { return pushPrivDir() . '/' . $f; }
+function jnConf(): array { $j = json_decode((string) @file_get_contents(jnFile('jobnimbus.json')), true); return is_array($j) ? $j : []; }
+function jnBase(): string { return rtrim((string) (getenv('TRAVERSE_JOBNIMBUS_BASE') ?: 'https://app.jobnimbus.com/api1'), '/'); }   /* the override is for the test copy only */
+/** one JobNimbus call: [HTTP status, decoded answer or null, error text] */
+function jnCall(string $method, string $path, ?array $body, string $key): array {
+    $url = jnBase() . $path;
+    $hdr = ['Authorization: Bearer ' . $key, 'Content-Type: application/json', 'Accept: application/json', agentHeader()];
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $hdr]);
+        if ($body !== null) curl_setopt($c, CURLOPT_POSTFIELDS, json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        $raw = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); $err = $raw === false ? curl_error($c) : ''; curl_close($c);
+    } else {
+        $ctx = stream_context_create(['http' => ['method' => $method, 'header' => implode("\r\n", $hdr), 'content' => $body !== null ? json_encode($body) : '', 'timeout' => 25, 'ignore_errors' => true]]);
+        $raw = @file_get_contents($url, false, $ctx); $code = 0; $err = $raw === false ? 'no answer' : '';
+        foreach (($http_response_header ?? []) as $h) if (preg_match('#^HTTP/\S+\s+(\d{3})#', $h, $mm)) $code = (int) $mm[1];
+    }
+    $j = is_string($raw) ? json_decode($raw, true) : null;
+    return [$code, is_array($j) ? $j : null, $err];
+}
+/** every booked door this install shows, with what the card knew, for the CSV and for JobNimbus */
+function bookedLeads(): array {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="booked-doors-for-jobnimbus-' . date('Y-m-d') . '.csv"');
-    $fh = fopen('php://output', 'w');
-    fputcsv($fh, ['First Name', 'Last Name', 'Company', 'Address Line 1', 'City', 'State', 'Zip', 'Mobile Phone', 'Email', 'Contact Type', 'Status', 'Source', 'Description', 'Tags'], ',', '"', '');
-    $co = company(); $src = 'Door knocking (' . ($co['name'] ?: 'door app') . ')';
+    $co = company(); $out = [];
     $in = fn($v) => rtrim(rtrim(number_format((float) $v, 2), '0'), '.') . ' in';
     $day = fn(string $ymd) => ($t = strtotime($ymd)) ? date('M j, Y', $t) : $ymd;
     foreach (($idx['regions'] ?? []) as $r) {
@@ -4293,8 +4315,9 @@ if ($action === 'jobnimbus') {
             $owner = trim((string) ($d['owner'] ?? '')); if (preg_match('/^unavailable$/i', $owner)) $owner = '';
             $org = (bool) preg_match('/\b(LLC|L\.L\.C|INC|CORP|CORPORATION|COMPANY|LTD|LLLP|LP|PARTNERSHIP|TRUST|ESTATE|TRUSTEES?)\b/i', $owner);
             $pl = $placeOf[$id] ?? [];
+            $walk = !empty($walks[$id]['date']) ? ['date' => (string) $walks[$id]['date'], 'time' => (string) ($walks[$id]['time'] ?? '')] : null;
             $bits = ['Booked at the door by ' . ($m['by'] ?: 'the rep') . ' on ' . date('M j, Y', (int) $m['at']) . '.'];
-            if (!empty($walks[$id]['date'])) $bits[] = 'Roof walk booked for ' . $day($walks[$id]['date']) . (!empty($walks[$id]['time']) ? ' at ' . date('g:i a', strtotime('2000-01-01 ' . $walks[$id]['time'])) : '') . '.';
+            if ($walk) $bits[] = 'Roof walk booked for ' . $day($walk['date']) . ($walk['time'] !== '' ? ' at ' . date('g:i a', strtotime('2000-01-01 ' . $walk['time'])) : '') . '.';
             $big = null; foreach ((array) ($hailOf[$id] ?? []) as $h) if (is_array($h) && (!$big || (float) $h[1] > (float) $big[1])) $big = $h;
             if ($big) $bits[] = 'Hail near the house: ' . $in($big[1]) . ' on ' . $day((string) $big[0]) . ' (NOAA radar estimate).';
             $wmax = null; foreach ((array) (windRows($windOf[$id] ?? null) ?? []) as $w) if ((float) ($w[1] ?? 0) >= 58 && (!$wmax || (float) $w[1] > (float) $wmax[1])) $wmax = $w;
@@ -4310,12 +4333,95 @@ if ($action === 'jobnimbus') {
             $tags = ['Door knock', (string) ($r['label'] ?? $key)];
             if ($big && (float) $big[1] >= 1) $tags[] = 'Hail ' . $in($big[1]);
             if ($wmax) $tags[] = 'Wind ' . (int) $wmax[1] . ' mph';
-            fputcsv($fh, array_map('csvSafe', ['', $org ? '' : $owner, $org ? $owner : '', (string) $d['address'], (string) ($pl['c'] ?? ($r['label'] ?? '')), 'CO', (string) ($pl['z'] ?? ''),
-                $p['phone'] ?? '', $em['email'] ?? '', 'Customer', 'Lead', $src, implode(' ', $bits), implode(', ', $tags)]), ',', '"', '');
+            $out[] = ['key' => $key, 'id' => $id, 'owner' => $owner, 'org' => $org, 'address' => (string) $d['address'], 'city' => (string) ($pl['c'] ?? ($r['label'] ?? '')),
+                      'zip' => (string) ($pl['z'] ?? ''), 'phone' => (string) ($p['phone'] ?? ''), 'email' => (string) ($em['email'] ?? ''), 'desc' => implode(' ', $bits), 'tags' => $tags,
+                      'lat' => isset($d['lat']) && is_numeric($d['lat']) ? (float) $d['lat'] : null, 'lon' => isset($d['lon']) && is_numeric($d['lon']) ? (float) $d['lon'] : null, 'walk' => $walk];
+        }
+        unset($data);
+    }
+    return $out;
+}
+/** send what has not gone yet; [sent contacts, appointments, failures, errors] */
+function jnSync(int $max = 60): array {
+    $cf = jnConf(); $key = (string) ($cf['key'] ?? '');
+    if ($key === '') return ['ok' => false, 'error' => 'JobNimbus is not connected.'];
+    $sf = jnFile('jobnimbus-sent.json');
+    $lk = @fopen($sf . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['ok' => true, 'busy' => true, 'sent' => 0, 'tasks' => 0, 'failed' => 0];
+    $sent = json_decode((string) @file_get_contents($sf), true) ?: [];
+    $tz = new DateTimeZone('America/Denver'); $n = 0; $t = 0; $bad = 0; $errs = [];
+    foreach (bookedLeads() as $L) {
+        if ($n + $t >= $max) break;
+        $sk = $L['key'] . '/' . $L['id']; $s = $sent[$sk] ?? null;
+        if (!$s) {
+            $c = ['first_name' => '', 'last_name' => $L['org'] ? '' : ($L['owner'] !== '' ? $L['owner'] : $L['address']), 'company' => $L['org'] ? $L['owner'] : '',
+                  'record_type_name' => (string) ($cf['workflow'] ?? 'Customer'), 'status_name' => (string) ($cf['status'] ?? 'Lead'),
+                  'address_line1' => $L['address'], 'city' => $L['city'], 'state_text' => 'CO', 'zip' => $L['zip'],
+                  'mobile_phone' => $L['phone'], 'email' => $L['email'], 'description' => $L['desc'], 'tags' => implode(',', $L['tags'])];
+            if (!empty($cf['source'])) $c['source_name'] = (string) $cf['source'];
+            if ($L['lat'] !== null && $L['lon'] !== null) $c['geo'] = ['lat' => $L['lat'], 'lon' => $L['lon']];
+            [$code, $j, $err] = jnCall('POST', '/contacts', $c, $key);
+            $jnid = (string) ($j['jnid'] ?? ($j['id'] ?? ''));
+            if ($code < 200 || $code >= 300 || $jnid === '') { $bad++; $errs[] = $L['address'] . ': JobNimbus answered ' . ($code ?: 'nothing') . ($err ? ' (' . $err . ')' : '') . (isset($j['message']) ? ' ' . substr((string) $j['message'], 0, 120) : ''); if ($code === 401 || $code === 403) break; continue; }
+            $s = $sent[$sk] = ['jnid' => $jnid, 'at' => time(), 'task' => null]; $n++;
+        }
+        if ($L['walk'] && empty($s['task'])) {
+            $start = new DateTime($L['walk']['date'] . ' ' . ($L['walk']['time'] !== '' ? $L['walk']['time'] : '09:00'), $tz);
+            $task = ['title' => 'Roof walk: ' . $L['address'] . ($L['walk']['time'] === '' ? ' (time to agree)' : ''), 'date_start' => $start->getTimestamp(), 'date_end' => $start->getTimestamp() + 3600,
+                     'related' => [['id' => $s['jnid']]], 'record_type_name' => (string) ($cf['task'] ?? 'Appointment'), 'description' => $L['desc']];
+            [$code, $j, $err] = jnCall('POST', '/tasks', $task, $key);
+            $tid = (string) ($j['jnid'] ?? ($j['id'] ?? ''));
+            if ($code >= 200 && $code < 300 && $tid !== '') { $sent[$sk]['task'] = $tid; $sent[$sk]['walk'] = $L['walk']['date'] . ' ' . $L['walk']['time']; $t++; }
+            else { $bad++; $errs[] = $L['address'] . ' (appointment): JobNimbus answered ' . ($code ?: 'nothing') . ($err ? ' (' . $err . ')' : ''); }
         }
     }
-    fclose($fh);
-    exit;
+    writeJsonAtomic($sf, $sent); @chmod($sf, 0600);
+    /* "last send" is the last run that sent or failed something; a run with nothing new only notes when it checked */
+    if ($n || $t || $bad) $cf['last'] = ['at' => time(), 'sent' => $n, 'tasks' => $t, 'failed' => $bad, 'error' => $errs[0] ?? null];
+    $cf['checked'] = time(); writeJsonAtomic(jnFile('jobnimbus.json'), $cf); @chmod(jnFile('jobnimbus.json'), 0600);
+    flock($lk, LOCK_UN); fclose($lk);
+    return ['ok' => true, 'sent' => $n, 'tasks' => $t, 'failed' => $bad, 'errors' => array_slice($errs, 0, 5)];
+}
+if (in_array($action, ['jobnimbus', 'jnset', 'jnstatus', 'jnsync'], true)) {
+    if ($role !== 'admin' || !feature('roof')) fail('Not allowed.', 403);
+    if ($action === 'jobnimbus') {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="booked-doors-for-jobnimbus-' . date('Y-m-d') . '.csv"');
+        $fh = fopen('php://output', 'w');
+        fputcsv($fh, ['First Name', 'Last Name', 'Company', 'Address Line 1', 'City', 'State', 'Zip', 'Mobile Phone', 'Email', 'Contact Type', 'Status', 'Source', 'Description', 'Tags'], ',', '"', '');
+        $src = 'Door knocking (' . (company()['name'] ?: 'door app') . ')';
+        foreach (bookedLeads() as $L) fputcsv($fh, array_map('csvSafe', ['', $L['org'] ? '' : $L['owner'], $L['org'] ? $L['owner'] : '', $L['address'], $L['city'], 'CO', $L['zip'],
+            $L['phone'], $L['email'], 'Customer', 'Lead', $src, $L['desc'], implode(', ', $L['tags'])]), ',', '"', '');
+        fclose($fh);
+        exit;
+    }
+    if ($action === 'jnstatus') {
+        $cf = jnConf(); $sent = json_decode((string) @file_get_contents(jnFile('jobnimbus-sent.json')), true) ?: [];
+        $key = (string) ($cf['key'] ?? ''); $waiting = 0;
+        if ($key !== '') foreach (bookedLeads() as $L) { $s = $sent[$L['key'] . '/' . $L['id']] ?? null; if (!$s || ($L['walk'] && empty($s['task']))) $waiting++; }
+        out(['ok' => true, 'connected' => $key !== '', 'tail' => $key !== '' ? substr($key, -4) : '', 'workflow' => $cf['workflow'] ?? 'Customer', 'status' => $cf['status'] ?? 'Lead',
+             'task' => $cf['task'] ?? 'Appointment', 'source' => $cf['source'] ?? '', 'sent' => count($sent), 'waiting' => $waiting, 'last' => $cf['last'] ?? null]);
+    }
+    if (!$isPost && !defined('SIXFOLD_CLI')) fail('POST required', 405);
+    if ($action === 'jnset') {
+        $cf = jnConf();
+        if (!empty($body['clear'])) { @unlink(jnFile('jobnimbus.json')); out(['ok' => true, 'connected' => false]); }
+        $name = fn($v, $d) => ($v = trim((string) $v)) !== '' ? substr(preg_replace('/[\x00-\x1f]/', '', $v), 0, 60) : $d;
+        $key = trim((string) ($body['key'] ?? ''));
+        if ($key !== '') {
+            if (!preg_match('/^[A-Za-z0-9._-]{8,200}$/D', $key)) fail('That does not look like a JobNimbus API key.');
+            [$code, , $err] = jnCall('GET', '/contacts?size=1', null, $key);   /* proves the key before it is kept */
+            if ($code === 401 || $code === 403) fail('JobNimbus refused that key. In JobNimbus: Settings, API, make a new key and paste it here.');
+            if ($code < 200 || $code >= 300) fail('JobNimbus could not be reached (' . ($code ?: $err ?: 'no answer') . '). Try again in a minute.');
+            $cf['key'] = $key; $cf['setBy'] = $me; $cf['setAt'] = time();
+        } elseif (empty($cf['key'])) fail('Paste the JobNimbus API key first.');
+        $cf['workflow'] = $name($body['workflow'] ?? '', $cf['workflow'] ?? 'Customer'); $cf['status'] = $name($body['status'] ?? '', $cf['status'] ?? 'Lead');
+        $cf['task'] = $name($body['task'] ?? '', $cf['task'] ?? 'Appointment');
+        if (array_key_exists('source', $body)) $cf['source'] = $name($body['source'] ?? '', '');
+        if (!writeJsonAtomic(jnFile('jobnimbus.json'), $cf)) fail('Could not save that. Try again.', 500);
+        @chmod(jnFile('jobnimbus.json'), 0600);
+        out(['ok' => true, 'connected' => true, 'tail' => substr((string) $cf['key'], -4)]);
+    }
+    if ($action === 'jnsync') { @set_time_limit(120); out(jnSync()); }
 }
 
 if ($action === 'report' || $action === 'export') {

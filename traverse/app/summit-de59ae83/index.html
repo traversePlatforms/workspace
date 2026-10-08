@@ -1064,6 +1064,12 @@
   .prevm{font-style:italic}
   .bestwhy{display:flex;gap:6px;align-items:flex-start;font-size:13px;font-weight:700;color:var(--ink);margin:4px 0 2px;line-height:1.35}
   .bestwhy .ic{flex:none;width:15px;height:15px;margin-top:1px;color:var(--soft)}
+  .jnbox{margin:10px 0;padding:12px 14px;display:grid;gap:6px}
+  .jnbox .bad{color:var(--danger,#b42318)}
+  .jnrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .jnform{display:grid;gap:8px}
+  .jnform label{display:grid;gap:3px;font-size:13px;font-weight:700}
+  .jnform input{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line,#ccd);border-radius:8px;background:var(--card,#fff);color:inherit}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
   .strh:first-of-type{margin-top:6px}
   .wk{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
@@ -3957,6 +3963,72 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     return bar;
   }
+  /* ---- JobNimbus (2026-10-08, TraverseRoofing) ----
+     The roofer's own JobNimbus API key, pasted once (the server tests it with JobNimbus and keeps it; the page only ever sees its
+     last four characters). Booked doors then go up as JobNimbus contacts, roof walks as appointments: every 5 minutes on the
+     server, or now with Send now. Names go as the county owner of record, as written. */
+  function jnAgo(t) { var s = Math.max(0, Math.round(Date.now() / 1000 - t)); return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' days ago'; }
+  function jnPanel() {
+    var box = q('div', 'card jnbox'); box.appendChild(q('div', 'sub2', 'JobNimbus: checking…'));
+    var draw = function (st, edit) {
+      box.textContent = '';
+      var h = q('div', 'jnhead'); h.appendChild(q('b', null, 'JobNimbus')); box.appendChild(h);
+      if (st.connected && !edit) {
+        h.appendChild(document.createTextNode(' · connected (key ending ' + st.tail + ')'));
+        box.appendChild(q('div', 'sub2', st.sent + (st.sent === 1 ? ' booked door sent' : ' booked doors sent') + ' · ' + (st.waiting ? st.waiting + ' waiting' : 'nothing waiting') +
+          '. New bookings go up every 5 minutes as a ' + st.workflow + ' contact, status ' + st.status + ', and roof walks as ' + st.task + ' appointments.'));
+        if (st.last) box.appendChild(q('div', 'sub2' + (st.last.failed ? ' bad' : ''), 'Last send ' + jnAgo(st.last.at) + ': ' + st.last.sent + ' contact(s), ' + st.last.tasks + ' appointment(s)' +
+          (st.last.failed ? '; ' + st.last.failed + ' failed: ' + (st.last.error || '') : '') + '.'));
+        var row = q('div', 'jnrow');
+        var go = q('button', 'back', 'Send now'); go.type = 'button';
+        go.addEventListener('click', function () {
+          go.disabled = true; go.textContent = 'Sending…';
+          api('jnsync', { body: {} }).then(function (j) {
+            if (!j.ok) toast('Not sent', j.error || 'Try again.', null);
+            else toast('JobNimbus', j.busy ? 'A send is already running.' : j.sent + ' contact(s) and ' + j.tasks + ' appointment(s) sent' + (j.failed ? ', ' + j.failed + ' failed' : '') + '.', null);
+            load();
+          }).catch(function () { toast('No signal', 'Nothing was sent. Try again with signal.', null); load(); });
+        });
+        var set = q('button', 'lnk', 'Settings'); set.type = 'button'; set.addEventListener('click', function () { draw(st, true); });
+        row.appendChild(go); row.appendChild(set); box.appendChild(row);
+        return;
+      }
+      if (!st.connected && !edit) {   /* one line until someone opens it */
+        h.appendChild(document.createTextNode(' · send booked doors straight into your JobNimbus'));
+        var cn = q('button', 'back', 'Connect'); cn.type = 'button'; cn.addEventListener('click', function () { draw(st, true); });
+        var r0 = q('div', 'jnrow'); r0.appendChild(cn); box.appendChild(r0);
+        return;
+      }
+      box.appendChild(q('div', 'sub2', st.connected ? 'Change the key or the names JobNimbus should use. They must match names in your JobNimbus settings.'
+        : 'Send each booked door straight into your JobNimbus. In JobNimbus: Settings, API, New API key; paste it here. It is kept on the server, not on this phone.'));
+      var f = q('form', 'jnform');
+      var fld = function (label, name, val, type, ph) { var l = q('label', null, label); var i = q('input'); i.name = name; i.type = type || 'text'; i.value = val || ''; if (ph) i.placeholder = ph; i.autocomplete = 'off'; l.appendChild(i); f.appendChild(l); return i; };
+      var k = fld('API key', 'key', '', 'password', st.connected ? 'Leave empty to keep the key ending ' + st.tail : 'Paste the JobNimbus API key');
+      var wf = fld('Contact workflow', 'workflow', st.workflow || 'Customer'), ss = fld('Status', 'status', st.status || 'Lead');
+      var tk = fld('Appointment type', 'task', st.task || 'Appointment'), sr = fld('Lead source (optional; must be one of yours)', 'source', st.source || '');
+      var msg = q('div', 'sub2'); var row2 = q('div', 'jnrow');
+      var save = q('button', 'back', 'Save'); save.type = 'submit'; row2.appendChild(save);
+      if (st.connected) {
+        var cancel = q('button', 'lnk', 'Cancel'); cancel.type = 'button'; cancel.addEventListener('click', function () { draw(st, false); }); row2.appendChild(cancel);
+        var off = q('button', 'lnk', 'Disconnect'); off.type = 'button';
+        off.addEventListener('click', function () { if (!window.confirm('Disconnect JobNimbus? Booked doors stop going up until a key is pasted again.')) return; api('jnset', { body: { clear: true } }).then(load); });
+        row2.appendChild(off);
+      }
+      f.appendChild(row2); f.appendChild(msg);
+      f.addEventListener('submit', function (e) {
+        e.preventDefault(); msg.textContent = 'Checking the key with JobNimbus…'; save.disabled = true;
+        api('jnset', { body: { key: k.value.trim(), workflow: wf.value, status: ss.value, task: tk.value, source: sr.value } }).then(function (j) {
+          save.disabled = false;
+          if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; }
+          toast('JobNimbus', 'Connected. Booked doors will go up within 5 minutes, or press Send now.', null); load();
+        }).catch(function () { save.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+      });
+      box.appendChild(f);
+    };
+    var load = function () { api('jnstatus').then(function (j) { if (j && j.ok) draw(j, false); else box.textContent = ''; }).catch(function () { box.textContent = ''; }); };
+    load();
+    return box;
+  }
   /* ---- best doors first (Matthew 2026-10-07): each edition's own walking order ----
      company.json "best" names the trade. Each door gets the facts from its own card that matter for that trade, each worth a few
      points; the list runs most points first and every door says why it is there. The same facts the card shows, never a number
@@ -5558,6 +5630,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
     top.appendChild(jb);
     holder.appendChild(top);
+    if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
     if (S.metaPrev) holder.appendChild(metaPreview());
     holder.appendChild(walksUp(S.qlist || []));
