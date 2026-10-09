@@ -239,3 +239,7 @@ traverse/app/data/rounds/climate-cache.json
 
 # server-made best-neighbourhood caches (2026-10-07)
 traverse/app/data/rounds/best-*.json
+
+# map files (2026-10-08): the PMTiles tool and the Colorado basemap extract (rebuilt by data-pipeline/maps/build-basemap.sh)
+traverse/data-pipeline/maps/bin/
+*.pmtiles

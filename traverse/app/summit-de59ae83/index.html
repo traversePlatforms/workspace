@@ -1063,8 +1063,94 @@
   .oldl.maybe{display:block;font-size:12.5px;font-weight:700;color:var(--later);margin-top:3px}
   .prevm{font-style:italic}
   /* an opened door scrolls in below the app bar and above the bottom bar, however tall its card (2026-10-08) */
-  #view .door{scroll-margin-top:76px;scroll-margin-bottom:96px}
-  .fpanel{margin:8px 0 12px;padding:14px}
+  /* below the app bar and the Sort & filter bar pinned under it (2026-10-08) */
+  #view .door,#view .cap,#view .later{scroll-margin-top:142px;scroll-margin-bottom:96px}
+  .walkp,.walkp .cap{scroll-margin-top:76px;scroll-margin-bottom:96px}
+  .dclose{flex:none;align-self:center;display:inline-grid;place-items:center;width:44px;height:44px;margin:-8px -10px -8px 0;border:0;border-radius:12px;background:none;color:var(--soft);cursor:pointer}
+  .dclose .ic{width:22px;height:22px;transform:rotate(-90deg)}
+  .dtap{cursor:pointer}
+  .fbar{position:sticky;top:64px;z-index:6;display:flex;align-items:center;gap:8px;margin:4px 0 10px;padding:6px 0;background:var(--bg)}
+  .fbar .fbtn{flex:1;display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card,#fff);color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .fbar .fbtn > .ic:first-child{flex:none;width:20px;height:20px;color:var(--go)}
+  .fbar .fbtn > .ic:last-child{flex:none;width:20px;height:20px;transform:rotate(90deg);transition:transform .2s;color:var(--soft)}
+  .fbar.open .fbtn > .ic:last-child{transform:rotate(-90deg)}
+  .fbar .fbt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+  .fbar .fbt b{font:800 15px var(--sans)}
+  .fbar .fbt small{font-size:13px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fbar .lnk{min-height:44px;padding:0 6px;border:0;background:none;color:var(--go);font:700 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  #view .fbar{scroll-margin-top:64px}
+  /* the desktop workspace (2026-10-08): list | map | card on a wide screen; each column scrolls on its own */
+  .wrap:has(> #view > .desk){max-width:none;padding:0}
+  #view > .desk{position:fixed;left:0;right:0;top:65px;bottom:73px;z-index:1;display:grid;grid-template-columns:minmax(320px,380px) minmax(300px,1fr) minmax(380px,460px);background:var(--bg)}
+  .desk .dk-list,.desk .dk-card{min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px 24px}
+  .desk .dk-card{border-left:1px solid var(--line)}
+  .desk .dk-map{position:relative;min-width:0;border-left:1px solid var(--line)}
+  .desk .dk-mapel{position:absolute;inset:0}
+  .desk .dk-legend{top:auto;bottom:22px;left:10px;right:auto;z-index:500;flex-direction:column;align-items:flex-start}
+  .desk .dk-legend i{border-width:2.5px}
+  .desk .fbar{top:-12px}
+  #view .desk .dk-list .door{scroll-margin-top:72px;scroll-margin-bottom:16px}
+  #view .desk .dk-card .door,#view .desk .dk-card .cap,#view .desk .dk-card .later{scroll-margin-top:12px;scroll-margin-bottom:16px}
+  #view .desk .door.sel{box-shadow:0 0 0 3px var(--ink)}
+  .desk .dk-empty{margin:40px 8px;text-align:center;color:var(--soft)}
+  .desk .door.open{margin-top:0}
+  /* the planning table (2026-10-08) */
+  .wrap:has(> #view > .plan){max-width:1480px}
+  .plan .planhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 10px}
+  .plan .pltitle{font:800 17px var(--sans)}
+  .plan .planhead .back{margin:0}
+  .plan .planfilt{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .plan .planbar{position:sticky;top:64px;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 0;background:var(--bg)}
+  .plan .planbar select{min-height:44px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:700 14px var(--sans)}
+  .plan .planbar .back{margin:0}
+  .plan .soft{color:var(--soft);font-size:13.5px}
+  .plan .ptable{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  .plan table{width:100%;border-collapse:collapse;font-size:14px}
+  .plan th{position:sticky;top:0;background:var(--card);text-align:left;border-bottom:1.5px solid var(--line);padding:0;white-space:nowrap}
+  .plan th button{width:100%;min-height:44px;padding:0 10px;border:0;background:none;color:var(--soft);font:800 12.5px var(--sans);letter-spacing:.04em;text-transform:uppercase;text-align:inherit;cursor:pointer}
+  .plan th[aria-sort] button{color:var(--ink)}
+  .plan th.n,.plan td.n{text-align:right}
+  .plan td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .plan td.ad{white-space:normal;min-width:180px;font-weight:700}
+  .plan tbody tr{cursor:pointer}
+  .plan tbody tr:hover td{background:color-mix(in srgb,var(--go) 7%,transparent)}
+  .plan tbody tr.on td{background:color-mix(in srgb,var(--go) 13%,transparent)}
+  .plan .ck{width:44px;text-align:center}
+  .plan .ck input{width:18px;height:18px;cursor:pointer}
+  .plan td.rp{font-weight:700}
+  .plan .plannote{margin:10px 2px 30px}
+  .tag.reptag{background:color-mix(in srgb,#13294b 12%,transparent);color:var(--ink)}
+  /* the office dashboard (2026-10-08) */
+  .wrap:has(> #view > .office){max-width:1480px}
+  .office .okpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:10px 0 14px;min-height:96px}
+  .office .okpi{padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+  .office .okpi small{font:800 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+  .office .okpi b{font:800 32px/1.1 var(--sans);font-variant-numeric:tabular-nums}
+  .office .okpi span{font-size:13px;color:var(--soft)}
+  .office .okpi.tap{cursor:pointer}
+  .office .ocols{display:grid;gap:14px}
+  @media (min-width:1000px){ .office .ocols{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr);align-items:start} }
+  .office .ocol{display:grid;gap:14px;min-width:0}
+  .office .card h3{margin:0 0 10px;font:800 16px var(--sans)}
+  .office .omap,.office .oteam,.office .owalks{padding:14px 16px}
+  .office .omaph{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .office .omaph h3{margin:0}
+  .office .omaph .back{margin:0}
+  .office .omapel{height:clamp(320px,58vh,640px);border-radius:12px;overflow:hidden}
+  .office .radarkey{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;font-size:12.5px;color:var(--soft)}
+  .office .radarkey i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .office table{width:100%;border-collapse:collapse;font-size:14px}
+  .office th{font:800 12px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--soft);text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--line)}
+  .office td{padding:8px;border-bottom:1px solid var(--line)}
+  .office th.n,.office td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .office td.soft{color:var(--soft)}
+  .office .oteam tr[tabindex]{cursor:pointer}
+  .office .oteam tr[tabindex]:hover td{background:color-mix(in srgb,var(--go) 7%,transparent)}
+  .office .owalk{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;width:100%;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+  .office .owalk b{grid-row:span 2;white-space:nowrap}
+  .office .owalk small{color:var(--soft)}
+  .office .soft{color:var(--soft)}
+  .fpanel{margin:0 0 12px;padding:14px}
   .fpanel .fph{margin:4px 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .fpanel .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
   .fpanel .chips button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--card,#fff);color:var(--ink);font:700 14px var(--sans);cursor:pointer}
@@ -1079,9 +1165,14 @@
   .fpanel .lnk,.fsum .lnk{min-height:44px;padding:0 6px;border:0;background:none;color:var(--go);font:700 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
   .fbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--go);color:var(--on-go);font:800 11px var(--sans)}
   .dscore{flex:none;align-self:center;min-width:26px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:8px;display:inline-grid;place-items:center;font:800 13.5px var(--sans);font-variant-numeric:tabular-nums}
-  .dscore.hi{background:var(--go);color:var(--on-go)}
-  .dscore.mid{border:1.5px solid var(--go);color:var(--go)}
-  .dscore.lo{background:var(--sunk);color:var(--soft)}
+  .dscore{display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
+  .dscore.hi{background:#1f8a4c;color:#fff}
+  .dscore.top{background:#1f8a4c;color:#fff;box-shadow:0 0 0 2px #f2c230,0 0 12px 1px rgba(242,194,48,.75)}
+  .dscore.mid{background:#f2c230;color:#3a2b00}
+  .dscore.lo{background:#c8372d;color:#fff}
+  .dscore.star{padding:0 7px 0 5px}
+  .dscore .ic{width:14px;height:14px;fill:currentColor;stroke:none}
+  .dscore.top .ic{color:#ffd84d}
   .bestwhy{display:flex;gap:6px;align-items:flex-start;font-size:13px;font-weight:700;color:var(--ink);margin:4px 0 2px;line-height:1.35}
   .bestwhy .ic{flex:none;width:15px;height:15px;margin-top:1px;color:var(--soft)}
   .jnbox{margin:10px 0;padding:12px 14px;display:grid;gap:6px}
@@ -1602,6 +1693,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     award: '<circle cx="12" cy="9" r="5.5"/><path d="M8.6 13.4L7.2 21l4.8-2.6 4.8 2.6-1.4-7.6"/>',
     search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5 5"/>',
     filter: '<path d="M4 5.5h16l-6.2 7.3v5.6l-3.6 1.8v-7.4z"/>',
+    star: '<path d="M12 3.2l2.7 5.5 6 .9-4.35 4.25 1 6-5.35-2.85-5.35 2.85 1-6L3.3 9.6l6-.9z"/>',
     knock: '<path d="M7 21V4.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V21M4.5 21h15"/><circle cx="13.8" cy="12.5" r=".9" fill="currentColor"/>',
     globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.6 5.4 3.6 8.5s-1 6.1-3.6 8.5c-2.6-2.4-3.6-5.4-3.6-8.5s1-6.1 3.6-8.5z"/>',
     phone: '<path d="M6 3.5h3.2l1.6 4.4-2.1 1.3a10.5 10.5 0 0 0 6.1 6.1l1.3-2.1 4.4 1.6V18a2 2 0 0 1-2 2A15.5 15.5 0 0 1 4 6a2 2 0 0 1 2-2.5z"/>',
@@ -2466,7 +2558,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'clip', 'Leads', 'New enquiries to hand out, and your team\u2019s.', 'Manager', teamLeadsView),
       tile('button', 'users', 'Team stats', 'Your team\u2019s numbers.', 'Manager', teamView),
       tile('button', 'award', 'Leaderboard', 'Your team\u2019s rankings and goals.', 'Manager', boardView),
-      tile('button', 'route', 'Territories', 'Assign neighbourhoods within your team.', 'Manager', territoriesView)]);
+      tile('button', 'route', 'Territories', 'Assign neighbourhoods within your team.', 'Manager', territoriesView),
+      tile('button', 'chart', 'Office', 'Your team today and this week, the map of best doors left, walks and live radar.', 'Manager', officeView)]);
     if (S.role === 'admin') {
       var pt = tile('button', 'clip', 'Pipeline', 'Door bookings and enquiries, call to won.', 'Admin only', pipelineView);
       api('leads', { params: { count: 1 } }).then(function (j) {
@@ -2477,6 +2570,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* Office in four fold-out groups (Matthew 2026-10-05: thirteen tiles in a row ran long). Each bar names what is
          inside; the phone remembers which are open (Sales open the first time). The tiles stay in the page when folded. */
       box.appendChild(q('h2', 'tgrp', 'Office'));
+      /* the dashboard (2026-10-08): above the fold-out groups, one tap */
+      var otl = q('div', 'tgrid'); otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
       officeGroup(box, 'sales', 'Sales', [pt,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         qt,
@@ -2557,6 +2652,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (sc.children.length) pi.appendChild(sc);
     pg.appendChild(pi);
     view.appendChild(pg);
+    if (planOk()) {   /* the planning table (2026-10-08): admins and managers */
+      var pb = q('button', 'jump plango'); pb.type = 'button';
+      pb.appendChild(ico('table', 2.2));
+      var pt = q('span', 'fut'); pt.appendChild(q('b', null, 'Plan the doors in a table')); pt.appendChild(q('small', null, 'Sort, filter and assign doors to people · best on a computer'));
+      pb.appendChild(pt); pb.appendChild(ico('chev', 2.4));
+      pb.addEventListener('click', function () { planView(r.key); window.scrollTo(0, 0); });
+      view.appendChild(pb);
+    }
     if (crewSees() && feat('security') && cardOn('security')) {
       /* security: the police or sheriff's figures for the whole town, once here, not on every door (Matthew 2026-10-06) */
       var tf = q('div', 'sub2 townsec'); view.appendChild(tf);
@@ -3391,7 +3494,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
       if (S.dview === 'map') S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : null;   /* back to the order the phone had (review 2026-10-08) */
       if (!S.dview || !orderOk(S.dview)) S.dview = bestTrade() ? 'best' : 'street';
-      S.mapSel = null; S.sheetMin = false; S.filterOpen = false;
+      S.mapSel = null; S.sheetMin = false; S.filterOpen = false; S.allClosed = false;
       if ((S.dview === 'near' || S.dview === 'bestnear' || S.dview === 'route') && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
       renderDoors();
@@ -3416,8 +3519,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     d.mark = kind === null ? null : { outcome: kind, by: S.me, pending: true, revisit: item.revisit || '', retry: kind === 'miss' ? isoMinus(todayISO(), -(S.rest || 2)) : '' };
     if (kind === 'booked' && !d.walk) { S.walkPrompt = d.id; S.editWalk = d.id; S.walkDate = ''; S.walkTime = ''; S.capAnim = 'prompt'; }   /* SX-51: book the walk while still at the door */
     else if (kind !== 'booked' && (S.walkPrompt === d.id || S.editWalk === d.id)) { S.walkPrompt = null; S.editWalk = null; }   /* an undone booking takes its walk form with it (Fable 2026-10-04) */
-    if (kind !== null && S.openDoor === d.id) { S.openDoor = null; S.growNext = true; }   /* the next door opens, and grows into place */
+    if (kind !== null && S.openDoor === d.id) { S.openDoor = null; S.growNext = true; S.allClosed = false; }   /* the next door opens, and grows into place */
     renderDoors();
+    if (kind === 'booked' && S.walkPrompt === d.id) snapTo('.walkp'); else if (kind !== null) snapTo('#view .door.open');   /* go to what opened (2026-10-08) */
     api('mark', { body: item }).then(function (j) {
       if (j.ok) { dropQueued('mark', item.region, item.id); if (d.mark) d.mark.pending = false; }
       else if (j._status === 401) { return keepAndSignIn('mark', item); }
@@ -3661,7 +3765,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var ai = q('button', 'addinfo'); ai.type = 'button';
       ai.appendChild(ico('note', 2.2)); ai.appendChild(document.createTextNode('Add info'));
       ai.setAttribute('aria-label', 'Add a phone, email, photo, note, extra work or a fire check');
-      ai.addEventListener('click', function () { clearEdits(); S.capture = d.id; S.capAnim = d.id; renderDoors(); });
+      ai.addEventListener('click', function () { clearEdits(); S.capture = d.id; S.capAnim = d.id; renderDoors(); snapTo('#view .door.open .cap'); });
       row.appendChild(ai); n++;
     }
     if (n) wrap.appendChild(row);
@@ -3833,11 +3937,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.mark && backOn(d)) meta.appendChild(q('span', 'tag again', d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }   /* worth knowing before the knock */
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
+    if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));   /* from the planning table (2026-10-08) */
     if (meta.children.length) row.appendChild(meta);
     var open = function () {
-      S.openDoor = d.id; S.capture = null; clearEdits(); S.justOpened = d.id; renderDoors();
-      var c = document.querySelector('#view .door.open[data-id="' + d.id + '"]');
-      if (c) try { c.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {}
+      S.openDoor = d.id; S.allClosed = false; S.capture = null; clearEdits(); S.justOpened = d.id; renderDoors();
+      snapTo('#view .door.open[data-id="' + d.id + '"]');   /* its top, not just enough to show some of it (2026-10-08) */
     };
     row.addEventListener('click', open);
     row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
@@ -3854,7 +3958,135 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     el.classList.add(cls);
     if (e > 16 && delayEl) delayEl.style.animationDelay = (-e) + 'ms';
   }
+  /* bring an element's top just under the app bar (scroll-margin on .door and .cap keeps it clear of the bars), after the redraw */
+  function snapTo(sel) {
+    /* a field still focused (a phone number just typed) keeps pulling the page back to itself, and on a phone the keyboard closing
+       resizes the screen: let go of the field, snap now, and once more when the keyboard is down */
+    var ae = document.activeElement; if (ae && ae !== document.body && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !(ae.closest && ae.closest(sel))) try { ae.blur(); } catch (e) {}
+    var go = function (how) { var el = document.querySelector(sel); if (el) try { el.scrollIntoView({ block: 'start', behavior: how }); } catch (e) {} };
+    setTimeout(function () { go(reduced() ? 'auto' : 'smooth'); }, 30);
+    setTimeout(function () { go('auto'); }, 380);
+  }
+  function showNear(sel) { setTimeout(function () { var el = document.querySelector(sel); if (el) try { el.scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {} }, 30); }
+  /* Close on an open card (2026-10-08): no card open until the next tap, instead of the list opening the first door again */
+  function closeDoor() { S.openDoor = null; S.allClosed = true; S.capture = null; clearEdits(); renderDoors(); }
   function clearEdits() { S.editPhone = null; S.editEmail = null; S.editNote = null; S.editWork = null; S.editFc = null; S.editWalk = null; }
+  /* ---- the desktop workspace (2026-10-08) ----
+     On a wide screen the doors screen is three columns: the list on the left, a live map of the neighbourhood in the middle
+     with every door as a pin coloured by its score, and the open card on the right. It is made from the phone list after
+     that is drawn, so the list, the card and every button stay the same code; phones never see it. The map is kept between
+     redraws (a mark redraws the list twice) and rebuilt only for another neighbourhood. Map (the bottom bar) still opens
+     the full-screen map. */
+  var DESK_MQ = window.matchMedia ? matchMedia('(min-width: 1100px)') : null;
+  function deskOn() { return !!(DESK_MQ && DESK_MQ.matches) && S.screen === 'doors' && S.dview !== 'map'; }
+  function deskSave() {
+    var l = view.querySelector('.dk-list'), c = view.querySelector('.dk-card');
+    if (l) S.deskScroll = { area: S.region + '|' + S.area, top: l.scrollTop };
+    if (c) S.deskCardScroll = { id: S.openDoor, top: c.scrollTop };
+  }
+  function doorById(id) { for (var i = 0; i < S.doors.length; i++) if (S.doors[i].id === id) return S.doors[i]; return null; }
+  function deskLayout() {
+    if (!deskOn()) return;
+    var key = S.region + '|' + S.area, list = q('div', 'dk-list'), card = q('div', 'dk-card');
+    card.setAttribute('aria-label', 'Door card');
+    while (view.firstChild) list.appendChild(view.firstChild);
+    var openEl = list.querySelector('.door.open'), od = S.openDoor ? doorById(S.openDoor) : null;
+    if (openEl) {
+      /* the open card moves to the right; the list keeps a highlighted row in its place */
+      var d = doorById(openEl.getAttribute('data-id'));
+      if (d) { var r = doorRow(d); r.classList.add('sel'); r.setAttribute('aria-current', 'true'); openEl.parentNode.replaceChild(r, openEl); }
+      card.appendChild(openEl);
+    } else if (od) card.appendChild(doorCardFor(od));   /* a door the list does not show (done, or filtered out), opened from the map */
+    else card.appendChild(q('div', 'dk-empty', 'Pick a door from the list or the map to see its card here.'));
+    var keep = S.desk && S.desk.key === key ? S.desk.col : null;
+    var grid = q('div', 'desk');
+    grid.appendChild(list); grid.appendChild(keep || q('div', 'dk-map')); grid.appendChild(card);
+    view.appendChild(grid);
+    if (window.scrollY) window.scrollTo(0, 0);
+    deskSize();
+    if (S.deskScroll && S.deskScroll.area === key) list.scrollTop = S.deskScroll.top;
+    if (S.deskCardScroll && S.deskCardScroll.id === S.openDoor) card.scrollTop = S.deskCardScroll.top;
+    if (S.deskReveal) { S.deskReveal = null; var rv = list.querySelector('.door.sel'); if (rv) try { rv.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
+    deskMap(grid.children[1]);
+  }
+  /* the columns are pinned between the app bar (and the slow-signal line, when it shows) and the bottom bar, and scroll on their own */
+  function deskSize() {
+    var g = view.querySelector('.desk'); if (!g) return;
+    var ob = document.getElementById('offbar');
+    g.style.top = ((hdr.hidden ? 0 : hdr.offsetHeight) + (ob && !ob.hidden ? ob.offsetHeight : 0)) + 'px';
+    g.style.bottom = (dock.hidden ? 0 : dock.offsetHeight) + 'px';
+    if (S.desk && S.desk.map) S.desk.map.invalidateSize();
+  }
+  /* a pin's look: to-knock doors by their score (the badge's colours), no-answers white, done doors small and grey;
+     doors the filters leave out fade; the open door is ringed in navy and drawn on top */
+  function deskStyle(d) {
+    var st = statusOf(d), sel = d.id === S.openDoor, dim = matchOn() && st !== 'x' && !doorMatches(d);
+    var sc = st === 'k' || st === 'd' ? doorScore(d) : null;
+    var fill = st === 'x' ? '#8A948E' : st === 'a' ? '#ffffff' : sc === null ? MAPC[st] : sc >= 7 ? '#1f8a4c' : sc >= 4 ? '#f2c230' : '#c8372d';
+    var ring = sel ? (darkUI() ? '#ffffff' : '#13294b') : sc === 10 ? '#f2c230' : st === 'a' ? '#55635B' : '#ffffff';
+    return { radius: (st === 'x' ? 6 : sc === 10 ? 11 : 9) + (sel ? 4 : 0), color: ring, weight: sel ? 4 : sc === 10 ? 4 : 2,
+      fillColor: fill, fillOpacity: dim ? 0.25 : st === 'x' ? 0.6 : 0.95, opacity: dim ? 0.45 : 1 };
+  }
+  function deskOpen(id) {
+    S.openDoor = id; S.allClosed = false; S.capture = null; S.pickLater = null; clearEdits(); S.justOpened = id; S.deskReveal = id;
+    renderDoors();
+    var c = view.querySelector('.dk-card'); if (c) c.scrollTop = 0;
+  }
+  function deskLegend() {
+    var lg = q('div', 'legend dk-legend'), scored = S.doors.some(function (d) { return doorScore(d) !== null; });
+    var keys = scored ? [['#1f8a4c', '#f2c230', 'Score 10'], ['#1f8a4c', '#fff', '7 to 9'], ['#f2c230', '#fff', '4 to 6'], ['#c8372d', '#fff', '1 to 3']]
+      : [[MAPC.k, '#fff', 'To knock'], [MAPC.d, '#fff', 'Back on the list']];
+    keys = keys.concat([['#ffffff', '#55635B', 'No answer, waiting'], ['#8A948E', '#fff', 'Done']]);
+    keys.forEach(function (x) { var sp = q('span'), i = q('i'); i.style.background = x[0]; i.style.borderColor = x[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(x[2])); lg.appendChild(sp); });
+    return lg;
+  }
+  function deskMap(col) {
+    var key = S.region + '|' + S.area;
+    if (S.desk && S.desk.key === key && S.desk.col === col) { if (S.desk.map) { S.desk.map.invalidateSize(); S.desk.restyle(true); } return; }
+    if (S.desk && S.desk.map) try { S.desk.map.remove(); } catch (e) {}
+    col.textContent = '';
+    var el = q('div', 'dk-mapel'); col.appendChild(el); col.appendChild(deskLegend());
+    var D = S.desk = { key: key, col: col, map: null, markers: {}, restyle: function () {} };
+    loadLeaflet(function () {
+      if (S.desk !== D || !document.body.contains(el)) return;
+      if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load — no signal, or the map service is down. The list still works.')); return; }
+      var map = D.map = L.map(el, { zoomControl: false });
+      el.addEventListener('click', function (e) {   /* credit links open in a new tab, never over the app */
+        var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null;
+        if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+      }, true);
+      L.control.zoom({ position: 'topright' }).addTo(map);
+      baseLayer(map, 20);
+      var pts = [];
+      S.doors.forEach(function (d) {
+        if (typeof d.lat !== 'number') return;
+        var m = L.circleMarker([d.lat, d.lon], deskStyle(d)).addTo(map), id = d.id;
+        m.on('click', function (e) { L.DomEvent.stopPropagation(e); deskOpen(id); });
+        m.bindTooltip(function () { var x = doorById(id) || d, sc = doorScore(x); return q('span', null, x.address + (sc !== null ? ' · ' + sc + ' of 10' : '')); }, { direction: 'top', offset: [0, -8] });   /* an element, so an address is never read as HTML */
+        D.markers[id] = m; pts.push([d.lat, d.lon]);
+      });
+      if (S.here) L.marker([S.here.lat, S.here.lon], { icon: L.divIcon({ className: 'you-ic', html: '<span></span>', iconSize: [16, 16] }), interactive: false, keyboard: false }).addTo(map);
+      /* marking redraws the pins in place: no new map, no lost position; the open door is panned into view if it is off it */
+      D.restyle = function (follow) {
+        Object.keys(D.markers).forEach(function (id) { var d = doorById(id); if (!d) return; var m = D.markers[id]; m.setStyle(deskStyle(d)); m.setRadius(deskStyle(d).radius); if (id === S.openDoor) m.bringToFront(); });
+        var sel = S.openDoor && D.markers[S.openDoor];
+        if (follow && sel && !map.getBounds().pad(-0.15).contains(sel.getLatLng())) map.panTo(sel.getLatLng());
+      };
+      map.on('click', function () { if (S.openDoor) closeDoor(); });
+      if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
+      else if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 18 });
+      map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
+      D.restyle(false);
+    });
+  }
+  if (DESK_MQ) {   /* crossing the width (a window dragged narrower) redraws the doors screen in the other layout */
+    var deskFlip = function () { if (S.screen === 'doors' && S.area) renderDoors(); };
+    if (DESK_MQ.addEventListener) DESK_MQ.addEventListener('change', deskFlip); else if (DESK_MQ.addListener) DESK_MQ.addListener(deskFlip);
+  }
+  window.addEventListener('resize', function () { if (view.querySelector('.desk')) deskSize(); });
+  /* the app bar settles once its fonts load, the slow-signal line comes and goes, and the bottom bar can change: re-measure the columns then too */
+  if (window.ResizeObserver) { var deskRO = new ResizeObserver(function () { if (view.querySelector('.desk')) deskSize(); }); deskRO.observe(hdr); deskRO.observe(dock); var ob = document.getElementById('offbar'); if (ob) deskRO.observe(ob); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (view.querySelector('.desk')) deskSize(); });
   function capOpen(d) { return S.capture === d.id || [S.editPhone, S.editEmail, S.editNote, S.editWork, S.editFc, S.editWalk].indexOf(d.id) >= 0; }
   var CAP = [];   /* setCompany(): Extra work only with a list, Fire check only where the company uses it */
   /* everything a person might tell you, one tap each; a tick on what is already saved */
@@ -3885,6 +4117,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         else if (c[0] === 'fc') { S.editFc = d.id; S.fcPick = d.fc && d.fc.length ? Object.assign({}, d.fc[d.fc.length - 1].items) : {}; S.fcNote = ''; }
         else if (c[0] === 'walk') { S.editWalk = d.id; S.walkDate = d.walk ? d.walk.date : ''; S.walkTime = d.walk ? d.walk.time || '' : ''; }
         ctx.redraw();
+        snapTo(inPrompt ? '.walkp .cap' : '#view .door.open .cap');   /* the form opens at the top of the panel: show it (2026-10-08) */
       });
       grid.appendChild(b);
     });
@@ -3892,7 +4125,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     S.capHas[d.id] = now;
     if (!inPrompt) {
       var dn = q('button', 'capdone', 'Done'); dn.type = 'button';
-      dn.addEventListener('click', function () { clearEdits(); S.capture = null; ctx.redraw(); });
+      dn.addEventListener('click', function () { clearEdits(); S.capture = null; ctx.redraw(); snapTo('#view .door.open'); });
       box.appendChild(dn);
     }
     return box;
@@ -4025,12 +4258,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var row = q('div', 'fprow');
     row.appendChild(q('span', 'fpn', shown + ' of ' + all + (all === 1 ? ' door' : ' doors') + ' to knock'));
     if (matchOn()) { var cl = q('button', 'lnk', 'Clear filters'); cl.type = 'button'; cl.addEventListener('click', function () { S.filt = {}; filtSave(); renderDoors(); }); row.appendChild(cl); }
-    var dn = q('button', 'save', 'Done'); dn.type = 'button'; dn.addEventListener('click', function () { S.filterOpen = false; renderDoors(); window.scrollTo(0, 0); });
+    var dn = q('button', 'save', 'Done'); dn.type = 'button'; dn.addEventListener('click', function () { S.filterOpen = false; renderDoors(); snapTo('#view .fbar'); });
     row.appendChild(dn);
     box.appendChild(row);
     return box;
   }
-  /* closed, the list says what it is showing, with a way back to everything */
+  /* the dropdown at the top of the list: what it is showing, tap to open the panel under it; it stays under the app bar while the
+     list scrolls (2026-10-08) */
+  function filterBar(shown, all) {
+    var ord = (ORDER.filter(function (o) { return o[0] === S.dview; })[0] || [0, ''])[1], fw = filtOn();
+    var bar = q('div', 'fbar' + (S.filterOpen ? ' open' : ''));
+    var b = q('button', 'fbtn'); b.type = 'button'; b.setAttribute('aria-expanded', String(!!S.filterOpen));
+    b.appendChild(ico('filter', 2.2));
+    var tx = q('span', 'fbt'); tx.appendChild(q('b', null, 'Sort & filter'));
+    tx.appendChild(q('small', null, ord + (fw.length ? ' \u00b7 ' + fw.length + (fw.length === 1 ? ' filter' : ' filters') + ' \u00b7 ' + shown + ' of ' + all : '')));
+    b.appendChild(tx); b.appendChild(ico('chev', 2.4));
+    b.setAttribute('aria-label', 'Sort and filter: ' + ord + (fw.length ? ', ' + fw.length + (fw.length === 1 ? ' filter' : ' filters') + ' on, ' + shown + ' of ' + all + ' doors' : ''));
+    b.addEventListener('click', function () { S.filterOpen = !S.filterOpen; renderDoors(); var y = bar.getBoundingClientRect(); if (S.filterOpen) snapTo('#view .fbar'); });
+    bar.appendChild(b);
+    if (fw.length && !S.filterOpen) { var cl = q('button', 'lnk', 'Clear'); cl.type = 'button'; cl.addEventListener('click', function () { S.filt = {}; filtSave(); renderDoors(); }); bar.appendChild(cl); }
+    /* under the app bar on a phone; at the top of its own column in the desktop workspace, which scrolls by itself */
+    requestAnimationFrame(function () { var ab = document.querySelector('.appbar'); if (ab) bar.style.top = bar.closest('.dk-list') ? '-12px' : ab.offsetHeight + 'px'; });
+    return bar;
+  }
+  /* (the closed-panel summary line of the first version; the bar above replaced it) */
   function filterSummary(shown, all) {
     var ord = (ORDER.filter(function (o) { return o[0] === S.dview; })[0] || [0, ''])[1], fw = filtOn().map(function (x) { return x[2]; });
     if (!fw.length && S.dview === (bestTrade() ? 'best' : 'street')) return null;
@@ -4211,7 +4462,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      panels) has no need left, so it scores 3 at most. It adds up what the card shows; it is not a forecast of who will buy. */
   /* what a strong door scores in each trade, not every fact at once (almost no door has them all): set 2026-10-08 from the spread over
      real neighbourhoods, so the best doors reach 9 or 10 */
-  var BEST_TOP = { roof: 10, yards: 6, solar: 5, pest: 5, security: 4 };
+  var BEST_TOP = { roof: 10, yards: 6, solar: 6, pest: 5, security: 4 };   /* solar 5 -> 6 (2026-10-08): a big sunny roof alone made half a street 10s */
   function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
   function scoreParts(d, f) {
     var t = bestTrade(); if (!t || !crewSees()) return null;
@@ -4231,7 +4482,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function doorScore(d, f) { var sp = scoreParts(d, f); return sp ? sp.score : null; }
   function scoreChip(d) {
     var sc = doorScore(d); if (sc === null) return null;
-    var c = q('span', 'dscore ' + (sc >= 7 ? 'hi' : sc >= 4 ? 'mid' : 'lo'), String(sc));
+    /* 10 gold-ringed with a star; 8-9 green with a star; 7 green; 4-6 yellow; 1-3 red (Matthew 2026-10-08) */
+    var c = q('span', 'dscore ' + (sc === 10 ? 'top star' : sc >= 8 ? 'hi star' : sc === 7 ? 'hi' : sc >= 4 ? 'mid' : 'lo'));
+    if (sc >= 8) c.appendChild(ico('star', 0));
+    c.appendChild(document.createTextNode(String(sc)));
     c.setAttribute('role', 'img'); c.setAttribute('aria-label', 'Door score ' + sc + ' out of 10'); c.title = 'Door score ' + sc + ' out of 10 for ' + BEST_NAME[bestTrade()];
     return c;
   }
@@ -6000,7 +6254,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(walkBlock(d, ctx));
     box.appendChild(capturePanel(d, ctx, true));
     var dn = q('button', 'capdone', 'Done with this door'); dn.type = 'button';
-    dn.addEventListener('click', function () { clearEdits(); S.capture = null; S.walkPrompt = null; renderDoors(); });
+    dn.addEventListener('click', function () { clearEdits(); S.capture = null; S.walkPrompt = null; renderDoors(); snapTo('#view .door.open'); });
     box.appendChild(dn);
     return box;
   }
@@ -6343,15 +6597,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function doorDock() {
     var topBack = function () { var b = document.querySelector('.appbar .back'); if (b) b.click(); };
     /* Sort and filter (2026-10-08): the orders and the filters live in one panel; Map stays its own button */
-    var dopts = [['filter', 'Sort & filter', 'filter'], ['map', 'Map', 'map']];
-    setDock(dopts, S.dview === 'map' ? 'map' : (S.filterOpen ? 'filter' : null), function (v) {
-      if (v === 'map') { if (S.dview === 'map') S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : 'street'; else { S.lastView = S.dview; S.dview = 'map'; } S.filterOpen = false; }
-      else { if (S.dview === 'map') S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : 'street'; S.filterOpen = !S.filterOpen; }
+    /* the sort and filters are a dropdown at the top of the list (Matthew 2026-10-08); the bottom bar keeps Back and Map */
+    setDock([['map', 'Map', 'map']], S.dview === 'map' ? 'map' : null, function () {
+      if (S.dview === 'map') S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : 'street'; else { S.lastView = S.dview; S.dview = 'map'; }
+      S.filterOpen = false;
       renderDoors();
       window.scrollTo(0, 0);
     }, topBack);
-    var nf = filtOn().length, fbtn = dock.querySelector('button:not(.dback)');
-    if (nf && fbtn) { var fbg = q('span', 'fbadge', String(nf)); fbg.setAttribute('aria-hidden', 'true'); fbtn.appendChild(fbg); fbtn.setAttribute('aria-label', 'Sort and filter, ' + nf + (nf === 1 ? ' filter' : ' filters') + ' on'); }
   }
 
   function flashCard() {
@@ -6381,8 +6633,36 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var sc = document.createElement('script'); sc.src = LEAFLET.js;
     sc.integrity = LEAFLET.jsSri; sc.crossOrigin = 'anonymous';
     var done = function () { S.leafletLoading = false; var qq = S.leafletQ; S.leafletQ = []; qq.forEach(function (f) { f(); }); };
-    sc.onload = done; sc.onerror = done;
+    /* then the vector basemap's drawing library and a look for the map file; either missing, the maps fall back to the old tiles */
+    var basemap = function () {
+      var pm = document.createElement('script'); pm.src = BASEMAP.js; pm.integrity = BASEMAP.jsSri; pm.crossOrigin = 'anonymous';
+      var checked = function () {
+        if (!window.protomapsL) { BASEMAP.ok = false; return done(); }
+        fetch(BASEMAP.url, { method: 'HEAD', cache: 'no-store' }).then(function (r) { BASEMAP.ok = r.ok; }, function () { BASEMAP.ok = false; }).then(done);
+      };
+      pm.onload = checked; pm.onerror = checked;
+      document.head.appendChild(pm);
+    };
+    sc.onload = basemap; sc.onerror = done;
     document.head.appendChild(sc);
+  }
+  /* ---- the basemap (2026-10-08) ----
+     One file of OpenStreetMap vector tiles for every town the installs cover, cut from Protomaps' build to zoom 15
+     (data-pipeline/maps/build-basemap.sh, about 150 MB), served from this site at /maps/colorado.pmtiles and read in pieces as the
+     map needs them: no tile server and no map account. protomaps-leaflet draws it, crisp at any zoom, light or dark with the app.
+     Without the file (or the library) the maps use OpenStreetMap's public tiles as before. */
+  var BASEMAP = { url: '/maps/colorado.pmtiles', ok: null,
+                  js: 'https://cdn.jsdelivr.net/npm/protomaps-leaflet@5.1.0/dist/protomaps-leaflet.js', jsSri: 'sha384-pAKrddYWxjFAIJwatOtmmtq9ebz3ZwluHCEg3pqOMpOporUofLqz/l5hs+0LAWaH' };
+  var OSM_CREDIT = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  function darkUI() { var t = theme(); return t === 'dark' || (t === 'auto' && !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)); }
+  function baseLayer(map, maxZoom) {
+    if (BASEMAP.ok && window.protomapsL) {
+      try {
+        return protomapsL.leafletLayer({ url: BASEMAP.url, flavor: darkUI() ? 'dark' : 'light', lang: 'en', maxDataZoom: 15, maxZoom: maxZoom || 21,
+          attribution: OSM_CREDIT + ' &middot; <a href="https://protomaps.com">Protomaps</a>' }).addTo(map);
+      } catch (e) {}
+    }
+    return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: maxZoom || 19, maxNativeZoom: 19, attribution: OSM_CREDIT }).addTo(map);
   }
   /* back on the list (2026-10-02): a Not-now whose date has come, or a no-answer that has
      rested (the server sends its come-back day as mark.retry) */
@@ -6459,9 +6739,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
       }, true);
       L.control.zoom({ position: 'topright' }).addTo(map);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
+      baseLayer(map, 19);
       var pts = [], markers = {};
       function base(d) { return statusOf(d) === 'x' ? 9 : 13; }   /* bigger to tap (review) */
       function select(d) {
@@ -7513,7 +7791,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
       var map = L.map(el, { zoomControl: true, preferCanvas: true });
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      baseLayer(map, 19);
       map.setView([39.2, -104.85], 9);   /* our corner of Colorado until a path is drawn */
       var radar = null;
       var setRadar = function (on) {
@@ -7567,7 +7845,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
       var map = L.map(el, { zoomControl: true, preferCanvas: true });
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } });
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      baseLayer(map, 19);
       map.setView([38.88, -104.76], 11);
       var layer = L.layerGroup().addTo(map), cities = null;
       var draw = function () {
@@ -7853,8 +8131,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!document.body.contains(mapEl)) return;
       if (!window.L) { cap.textContent = 'The map could not load (no signal?). Use Google Maps.'; return; }
       var map = L.map(mapEl, { zoomControl: true });
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 21, maxNativeZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      baseLayer(map, 21);
       map.setView([d.lat, d.lon], zoomFor(d.acres));
       mapEl.addEventListener('click', function (e) {                 /* credit links open in a new tab, never over the app */
         var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null;
@@ -8022,7 +8299,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* opens the Add info panel straight on the phone form, with the look-up box on top */
   function lookupButton(d) {
     var lk = q('button', 'lookbtn'); lk.type = 'button'; lk.appendChild(ico('search', 2.2)); lk.appendChild(document.createTextNode('Look up number'));
-    lk.addEventListener('click', function () { clearEdits(); S.capture = d.id; S.capAnim = d.id; S.editPhone = d.id; renderDoors(); });
+    lk.addEventListener('click', function () { clearEdits(); S.capture = d.id; S.capAnim = d.id; S.editPhone = d.id; renderDoors(); snapTo('#view .door.open .cap'); });
     return lk;
   }
   /* ---- Look up number (Matthew 2026-10-04) ----
@@ -8067,7 +8344,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the door card, shared by the list and the map (2026-10-02) */
   function doorCardFor(d, full) {
     var auto = false;
-    if (!full) { if (!S.openDoor) { S.openDoor = d.id; auto = true; } if (S.openDoor !== d.id) return doorRow(d); }
+    if (!full) { if (!S.openDoor && !S.allClosed) { S.openDoor = d.id; auto = true; } if (S.openDoor !== d.id) return doorRow(d); }
     var card = q('div', 'door ' + fireClass(d.fire) + ' open'); card.setAttribute('data-id', d.id);
     if (!full) {
       var startGrow = S.justOpened === d.id || (auto && S.growNext);
@@ -8078,6 +8355,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     top.appendChild(q('div', 'addr', d.address));
     var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
     var scr = scoreChip(d); if (scr) top.appendChild(scr);   /* the door score, 1 to 10 (2026-10-08) */
+    if (!full) {   /* close this card (2026-10-08) */
+      var xb = q('button', 'dclose'); xb.type = 'button'; xb.setAttribute('aria-label', 'Close this door'); xb.appendChild(ico('chev', 2.4));
+      xb.addEventListener('click', function (e) { e.stopPropagation(); closeDoor(); });
+      top.appendChild(xb);
+      top.classList.add('dtap'); top.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('button,a,input,select,textarea')) return; closeDoor(); });
+    }
     card.appendChild(top);
     /* slimmer card: the fire badge sits at the start of the details line */
     var meta = q('div', 'meta');
@@ -8089,6 +8372,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
+    if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
     var sw = scoreWhy(d); if (sw) card.appendChild(sw);   /* why the score (2026-10-08) */
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + (OUT[d.prevMark.outcome] || d.prevMark.outcome) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
@@ -8131,7 +8415,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var b = q('button'); b.type = 'button'; b.setAttribute('data-k', k[0]);
       b.appendChild(ico(k[1], 2.3)); b.appendChild(document.createTextNode(OUT[k[0]]));
       b.addEventListener('click', function () {
-        if (k[0] === 'later') { S.pickLater = d.id; S.editPhone = null; S.editNote = null; renderDoors(); return; }
+        if (k[0] === 'later') { S.pickLater = d.id; S.editPhone = null; S.editNote = null; renderDoors(); showNear('#view .door.open .later'); return; }
         animateMark(card, d, k[0], b);
       });
       acts.appendChild(b);
@@ -8174,6 +8458,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     foot.hidden = true;
     if (S.dview === 'map' && S.liveMap && S.liveMap.area === S.area && document.body.contains(S.liveMap.el)) { S.liveMap.refresh(); return; }
     S.liveMap = null;
+    deskSave();   /* the desktop columns' scroll, put back once redrawn */
     view.textContent = '';
     if (S.region === SAMPLE_KEY) view.appendChild(q('div', 'samplebar', 'Sample door. The address is real; every figure on it is made up. Nothing you do here is saved, sent or counted, and it never shows in a town.' + (cardOn('money') || cardOn('water') ? ' Money and Water show Castle Rock\u2019s sheets.' : '')));
     if (S.region === SAMPLE_KEY) view.appendChild(alertStrip(SAMPLE_KEY));   /* its made-up alerts, drawn as the real ones are */
@@ -8213,10 +8498,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.dview !== 'map') {
       var nAll = todo.length;
       todo = todo.filter(doorMatches);
+      view.appendChild(filterBar(todo.length, nAll));
       if (S.filterOpen) view.appendChild(filterPanel(todo.length, nAll));
-      else { var fsm = filterSummary(todo.length, nAll); if (fsm) view.appendChild(fsm); }
       if (matchOn() && !todo.length) view.appendChild(q('div', 'msg', 'No door to knock here has ' + matchWords() + '. Clear a filter to see more.'));
-      if (S.openDoor && !todo.concat(again).some(function (x) { return x.id === S.openDoor; })) S.openDoor = null;
+      /* on the desktop any door opened from the map keeps its card, listed or not */
+      if (S.openDoor && !todo.concat(again).some(function (x) { return x.id === S.openDoor; }) && !(deskOn() && doorById(S.openDoor))) S.openDoor = null;
     }
     /* ---- street order, nearest to me, or a map (2026-10-01) ---- */
     if (S.dview === 'bestnear') {   /* the door score less a point for every 200 m away (2026-10-08) */
@@ -8359,6 +8645,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.animArea = S.region + '|' + S.area + '|' + S.dview;
       [].forEach.call(view.querySelectorAll('.door'), function (el, i) { if (i > 14) return; el.style.animationDelay = (i * 32) + 'ms'; el.classList.add('enter'); });
     }
+    deskLayout();
     flashCard();
   }
   /* subdivision / metro district and nearby Firewise sites (2026-10-02). Firewise sites are
@@ -8393,6 +8680,385 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!j.ok) { window.alert(j.error || 'Could not save that.'); return; }
       refresh().then(function () { openArea(S.area); });
     }).catch(function () { window.alert('No connection. Try again when you have signal.'); });
+  }
+
+  /* ---- the planning table (2026-10-08) ----
+     Admins and managers, best on a computer: every door in a town's neighbourhoods in one sortable table, the same filters as
+     the list, tick boxes, assign the ticked doors to a person, and a CSV of them (admins; it carries owners' names). Loads the
+     neighbourhoods with the most to knock first, up to about 3,000 doors at a time, one neighbourhood answer each, so every
+     figure, score and filter is the card's own. A row opens its door in the neighbourhood, and Back comes here again. */
+  var PLAN_CAP = 3000;
+  var PLAN_NUM = { score: 1, hail: 1, roof: 1, built: 1, kwh: 1, panels: 1, acres: 1, value: 1 };   /* columns of figures, set to the right */
+  function planOk() { return S.role === 'admin' || S.role === 'manager'; }
+  function planTown() { return S.regions.filter(function (x) { return x.key === (S.plan && S.plan.key); })[0] || null; }
+  function planWho(d) { if (d.rep) return d.rep; var r = planTown(), a = r && r.areas.filter(function (x) { return x.name === d._area; })[0]; return a && a.who ? a.who : ''; }
+  function planStatus(d) { return !d.mark ? 'To knock' : backOn(d) ? (d.mark.outcome === 'later' ? 'Due back' : 'Try again') : (OUT[d.mark.outcome] || d.mark.outcome); }
+  /* the columns: the door, this trade's facts, then where it stands. [key, heading, cell text, sort value, numeric] */
+  function planCols() {
+    var t = bestTrade(), yr = function (d) { return d.bld && d.bld.yb ? d.bld.yb : null; };
+    var hailMax = function (d) { return d.hail && d.hail.length ? Math.max.apply(null, d.hail.map(function (h) { return h[1]; })) : null; };
+    var c = [];
+    if (t && crewSees()) c.push(['score', 'Score', function (d) { return d._sc === null ? '' : String(d._sc); }, function (d) { return d._sc === null ? -1 : d._sc; }, true]);
+    c.push(['addr', 'Address', function (d) { return d.address; }, function (d) { return d.address; }, false]);
+    c.push(['area', 'Neighbourhood', function (d) { return d._area; }, function (d) { return d._area; }, false]);
+    if (t === 'roof') {
+      if (cardOn('hail')) c.push(['hail', 'Biggest hail', function (d) { var h = hailMax(d); return h ? inch(h) : ''; }, hailMax, true]);
+      c.push(['roof', 'Roof', function (d) { return d.roof && d.roof.sqs ? d.roof.sqs + ' sq' : ''; }, function (d) { return d.roof ? d.roof.sqs || 0 : null; }, true]);
+      c.push(['built', 'Built', function (d) { return yr(d) ? String(yr(d)) : ''; }, yr, true]);
+      c.push(['reroof', 'Last re-roof', function (d) { return d.permit && d.permit.r ? monthName(d.permit.r) : ''; }, function (d) { return d.permit && d.permit.r ? d.permit.r : ''; }, false]);
+    } else if (t === 'solar') {
+      c.push(['kwh', 'kWh a year', function (d) { return d.solar && d.solar.kwh ? d.solar.kwh.toLocaleString('en-US') : ''; }, function (d) { return d.solar ? d.solar.kwh || 0 : null; }, true]);
+      c.push(['panels', 'Panels', function (d) { return d.solar && d.solar.pn ? String(d.solar.pn) : ''; }, function (d) { return d.solar ? d.solar.pn || 0 : null; }, true]);
+      c.push(['shade', 'Shade', function (d) { return d.solar && d.solar.sh ? d.solar.sh : ''; }, function (d) { return d.solar && d.solar.sh ? ({ open: 0, some: 1, heavy: 2 })[d.solar.sh] : null; }, true]);
+      c.push(['built', 'Built', function (d) { return yr(d) ? String(yr(d)) : ''; }, yr, true]);
+    } else {
+      if (cardOn('lawn')) c.push(['lawn', 'Lawn', function (d) { return ({ L: 'Large', M: 'Medium', S: 'Small' })[lawnLevelOf(d)] || ''; }, function (d) { return ({ L: 3, M: 2, S: 1 })[lawnLevelOf(d)] || 0; }, true]);
+      if (cardOn('trees')) c.push(['trees', 'Trees', function (d) { return ({ against: 'Against the house', heavy: 'Heavy within 30 ft' })[treeLevel(d)] || ''; }, function (d) { return ({ against: 2, heavy: 1 })[treeLevel(d)] || 0; }, true]);
+      if (cardOn('fire')) c.push(['fire', 'Fire', function (d) { return d.fire === 5 ? 'Very high' : d.fire === 4 ? 'High' : ''; }, function (d) { return d.fire || 0; }, true]);
+      if (t === 'pest' || t === 'security') {
+        c.push(['newown', 'New owner', function (d) { return bestNewOwner(d, (d.pest && d.pest.sold) || (d.sec && d.sec.sold)) ? 'Yes' : ''; }, function (d) { return bestNewOwner(d, (d.pest && d.pest.sold) || (d.sec && d.sec.sold)) ? 1 : 0; }, true]);
+        c.push(['built', 'Built', function (d) { return yr(d) ? String(yr(d)) : ''; }, yr, true]);
+      }
+      c.push(['acres', 'Acres', function (d) { return d.acres ? d.acres.toFixed(2) : ''; }, function (d) { return d.acres || 0; }, true]);
+    }
+    c.push(['value', 'Value', function (d) { var v = d.val || (d.cen && d.cen.v); return v ? fmtVal(v) : ''; }, function (d) { return d.val || (d.cen && d.cen.v) || 0; }, true]);
+    c.push(['status', 'Status', planStatus, function (d) { return !d.mark ? 0 : backOn(d) ? 1 : d.mark.outcome === 'miss' ? 2 : 3; }, true]);
+    c.push(['rep', 'Assigned to', planWho, function (d) { return planWho(d); }, false]);
+    return c;
+  }
+  /* the neighbourhoods to load, most to knock first (the town's Best order where the trade has one) */
+  function planOrder(r) {
+    return r.areas.slice().sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || (y.bestS || 0) - (x.bestS || 0) || (y.total - y.done) - (x.total - x.done); }).map(function (a) { return a.name; });
+  }
+  function planView(key) {
+    if (!planOk()) return renderAreas();
+    var r = S.regions.filter(function (x) { return x.key === key; })[0]; if (!r) return renderAreas();
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'plan'; S.region = key; S.area = null;
+    setDock(null); foot.hidden = true;
+    setBar('back', { title: 'Plan the doors', sub: r.label, back: function () { S.region = key; renderAreas(); }, backLabel: 'Back' });
+    if (!S.plan || S.plan.key !== key) S.plan = { key: key, rows: [], got: {}, order: planOrder(r), sort: bestTrade() && crewSees() ? ['score', -1] : ['addr', 1], filt: { open: true }, sel: {}, people: null, limit: 500 };
+    view.textContent = '';
+    var P = S.plan;
+    if (P.stale) {   /* back from a door: that neighbourhood again, so its marks are current */
+      var sa = P.stale; P.stale = null; delete P.got[sa]; P.rows = P.rows.filter(function (d) { return d._area !== sa; });
+      return planLoad([sa]);
+    }
+    if (!P.rows.length) return planMore();
+    planDraw();
+  }
+  function planMore() {
+    var P = S.plan, want = [], n = 0, r = planTown();
+    P.order.forEach(function (a) {
+      if (P.got[a] || (want.length && n >= PLAN_CAP)) return;
+      var ar = r && r.areas.filter(function (x) { return x.name === a; })[0];
+      want.push(a); n += ar ? ar.total : 0;
+    });
+    planLoad(want);
+  }
+  function planLoad(names) {
+    var P = S.plan, key = P.key, i = 0, busy = 0, done = 0, failed = 0;
+    view.textContent = '';
+    var box = q('div', 'msg'); view.appendChild(box);
+    var say = function () { box.textContent = 'Loading neighbourhoods: ' + done + ' of ' + names.length + '…'; };
+    say();
+    return new Promise(function (resolve) {
+      var next = function () {
+        if (S.screen !== 'plan' || S.plan !== P) return resolve();
+        if (i >= names.length && !busy) return resolve();
+        while (busy < 4 && i < names.length) {
+          var nm = names[i++]; busy++;
+          (function (nm) {
+            api('area', { params: { region: key, area: nm } }).then(function (j) {
+              if (j && j.ok) { P.got[nm] = true; if (j.perm) P.perm = j.perm; j.doors.forEach(function (d) { d._area = nm; P.rows.push(d); }); } else failed++;
+            }).catch(function () { failed++; }).then(function () { busy--; done++; say(); next(); });
+          })(nm);
+        }
+      };
+      next();
+    }).then(function () {
+      if (S.screen !== 'plan' || S.plan !== P) return;
+      S.areaPerm = P.perm || null;   /* the permit coverage the roofing points read */
+      P.rows.forEach(function (d) { var sp = scoreParts(d); d._sc = sp ? sp.score : null; });
+      P.failed = failed;
+      planDraw();
+    });
+  }
+  function planShown() {
+    var P = S.plan, on = FILT.filter(function (x) { return P.filt[x[0]] && x[3](); });
+    return P.rows.filter(function (d) {
+      if (P.filt.open && d.mark && !backOn(d)) return false;
+      if (P.filt.mine && !planWho(d)) return false;
+      if (P.filt.free && planWho(d)) return false;
+      return on.every(function (x) { return x[4](d); });
+    });
+  }
+  function planDraw() {
+    var P = S.plan, r = planTown(), cols = planCols();
+    var keep = window.scrollY;
+    view.textContent = '';
+    var wrap = q('div', 'plan');
+    var nAreas = Object.keys(P.got).length, left = P.order.filter(function (a) { return !P.got[a]; }).length;
+    var head = q('div', 'planhead');
+    head.appendChild(q('div', 'pltitle', P.rows.length.toLocaleString() + ' doors in ' + nAreas + ' of ' + P.order.length + ' neighbourhoods' + (left ? ', the most to knock first' : '')));
+    if (left) { var mb = q('button', 'back', 'Load the next neighbourhoods'); mb.type = 'button'; mb.addEventListener('click', planMore); head.appendChild(mb); }
+    if (P.failed) head.appendChild(q('div', 'msg bad', P.failed + (P.failed === 1 ? ' neighbourhood' : ' neighbourhoods') + ' did not load. Back, then Plan again, to retry.'));
+    wrap.appendChild(head);
+
+    /* filters: the list's own, plus where each door stands and whether it has someone */
+    var fl = q('div', 'chips matchb planfilt');
+    var chip = function (k, label, icon) {
+      var b = q('button', null); b.type = 'button'; b.setAttribute('aria-pressed', String(!!P.filt[k])); b.setAttribute('data-m', k);
+      if (icon) b.appendChild(ico(icon, 2.2)); b.appendChild(document.createTextNode(label));
+      b.addEventListener('click', function () { P.filt[k] = !P.filt[k]; if (k === 'mine' && P.filt.mine) P.filt.free = false; if (k === 'free' && P.filt.free) P.filt.mine = false; planDraw(); });
+      fl.appendChild(b);
+    };
+    chip('open', 'Not knocked yet', 'door');
+    FILT.forEach(function (x) { if (x[3]()) chip(x[0], x[2], x[1]); });
+    chip('free', 'Nobody assigned', 'users'); chip('mine', 'Assigned', 'users');
+    wrap.appendChild(fl);
+
+    var shown = planShown();
+    var sc = P.sort, col = cols.filter(function (c) { return c[0] === sc[0]; })[0] || cols[0];
+    shown.sort(function (a, b) {
+      var x = col[3](a), y = col[3](b);
+      if (x === null || x === '') return 1; if (y === null || y === '') return -1;
+      var o = col[4] ? x - y : String(x).localeCompare(String(y), 'en', { numeric: true });
+      return o * sc[1] || a.address.localeCompare(b.address, 'en', { numeric: true });
+    });
+    var ids = {}; shown.forEach(function (d) { ids[d.id] = true; });
+    Object.keys(P.sel).forEach(function (k) { if (!ids[k]) delete P.sel[k]; });   /* only doors in view stay ticked */
+    var nSel = Object.keys(P.sel).length;
+
+    /* the action bar: what is ticked, and what to do with it */
+    var bar = q('div', 'planbar');
+    bar.appendChild(q('b', null, shown.length.toLocaleString() + (shown.length === 1 ? ' door matches' : ' doors match')));
+    bar.appendChild(q('span', 'soft', nSel ? nSel + ' ticked' : 'Tick doors to assign them'));
+    if (nSel) {
+      var sel = q('select'); sel.setAttribute('aria-label', 'Assign to');
+      var o0 = q('option', null, 'Assign to…'); o0.value = ''; sel.appendChild(o0);
+      (P.people || []).forEach(function (p) { var o = q('option', null, p.name + (p.me ? ' (you)' : '')); o.value = p.name; sel.appendChild(o); });
+      var oc = q('option', null, 'Nobody (clear)'); oc.value = '-clear-'; sel.appendChild(oc);   /* names never start with a hyphen */
+      sel.addEventListener('change', function () { if (sel.value) planAssign(Object.keys(P.sel), sel.value === '-clear-' ? '' : sel.value); });
+      bar.appendChild(sel);
+      if (!P.people) api('calpeople').then(function (j) { if (j && j.ok) { P.people = j.people.filter(function (p) { return S.role === 'admin' || p.edit; }); if (S.screen === 'plan') planDraw(); } });
+    }
+    if (S.role === 'admin' && shown.length) {
+      var dl = q('button', 'back'); dl.type = 'button'; dl.appendChild(ico('table', 2.2));
+      dl.appendChild(document.createTextNode(nSel ? 'Download the ' + nSel + ' ticked (CSV)' : 'Download these ' + shown.length.toLocaleString() + ' (CSV)'));
+      dl.addEventListener('click', function () { planCsv(nSel ? shown.filter(function (d) { return P.sel[d.id]; }) : shown, cols); });
+      bar.appendChild(dl);
+    }
+    wrap.appendChild(bar);
+
+    /* the table */
+    var tw = q('div', 'ptable'), t = document.createElement('table'), thead = document.createElement('thead'), hr = document.createElement('tr');
+    var th0 = q('th', 'ck'), all = document.createElement('input'); all.type = 'checkbox'; all.setAttribute('aria-label', 'Tick every door shown');
+    all.checked = shown.length > 0 && nSel === shown.length; all.indeterminate = nSel > 0 && nSel < shown.length;
+    all.addEventListener('change', function () { P.sel = {}; if (all.checked) shown.forEach(function (d) { P.sel[d.id] = true; }); planDraw(); });
+    th0.appendChild(all); hr.appendChild(th0);
+    cols.forEach(function (c) {
+      var th = q('th', PLAN_NUM[c[0]] ? 'n' : null), b = q('button', null, c[1]); b.type = 'button';
+      if (sc[0] === c[0]) { th.setAttribute('aria-sort', sc[1] > 0 ? 'ascending' : 'descending'); b.appendChild(document.createTextNode(sc[1] > 0 ? ' ▲' : ' ▼')); }
+      b.addEventListener('click', function () { P.sort = [c[0], sc[0] === c[0] ? -sc[1] : (c[4] ? -1 : 1)]; planDraw(); });
+      th.appendChild(b); hr.appendChild(th);
+    });
+    thead.appendChild(hr); t.appendChild(thead);
+    var tb = document.createElement('tbody');
+    shown.slice(0, P.limit).forEach(function (d) {
+      var tr = document.createElement('tr'); tr.setAttribute('data-id', d.id); if (P.sel[d.id]) tr.className = 'on';
+      var td0 = q('td', 'ck'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!P.sel[d.id]; cb.setAttribute('aria-label', 'Tick ' + d.address);
+      cb.addEventListener('click', function (e) { e.stopPropagation(); });
+      cb.addEventListener('change', function () { if (cb.checked) P.sel[d.id] = true; else delete P.sel[d.id]; planDraw(); });
+      td0.appendChild(cb); tr.appendChild(td0);
+      cols.forEach(function (c) {
+        var td = q('td', PLAN_NUM[c[0]] ? 'n' : c[0] === 'addr' ? 'ad' : null);
+        if (c[0] === 'score') { var ch = scoreChip(d); if (ch) td.appendChild(ch); }
+        else td.textContent = c[2](d);
+        if (c[0] === 'rep' && d.rep) td.className = 'rp';   /* this door's own person, not its neighbourhood's */
+        tr.appendChild(td);
+      });
+      tr.tabIndex = 0;
+      var open = function () { planOpen(d); };
+      tr.addEventListener('click', open);
+      tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); open(); } });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); tw.appendChild(t); wrap.appendChild(tw);
+    if (shown.length > P.limit) {
+      var more = q('button', 'back', 'Show ' + Math.min(1000, shown.length - P.limit).toLocaleString() + ' more of ' + (shown.length - P.limit).toLocaleString()); more.type = 'button';
+      more.addEventListener('click', function () { P.limit += 1000; planDraw(); });
+      wrap.appendChild(more);
+    }
+    if (!shown.length) wrap.appendChild(q('div', 'msg', P.rows.length ? 'No door here matches every filter. Clear one to see more.' : 'No doors here.'));
+    wrap.appendChild(q('div', 'soft plannote', 'A row opens its door in the neighbourhood; Back comes here again. ' + (left ? 'Big towns load a part at a time.' : '')));
+    view.appendChild(wrap);
+    if (keep) window.scrollTo(0, keep);
+  }
+  function planOpen(d) {
+    var P = S.plan, key = P.key;
+    P.stale = d._area;
+    S.region = key; S.area = null; S.flash = d.id; S.openDoor = d.id; S.allClosed = false; S.capture = null;
+    S.returnTo = function () { planView(key); };
+    openArea(d._area);
+  }
+  function planAssign(ids, who) {
+    var P = S.plan;
+    if (!ids.length) return;
+    if (!window.confirm((who ? 'Assign ' : 'Clear the person on ') + ids.length + (ids.length === 1 ? ' door' : ' doors') + (who ? ' to ' + who : '') + '?')) return planDraw();
+    api('doorassign', { body: { region: P.key, ids: ids, who: who } }).then(function (j) {
+      if (!j || !j.ok) { window.alert((j && j.error) || 'Could not save that.'); return planDraw(); }
+      var set = {}; ids.forEach(function (k) { set[k] = true; });
+      P.rows.forEach(function (d) { if (set[d.id]) d.rep = who || null; });
+      P.sel = {};
+      toast(who ? j.n + (j.n === 1 ? ' door' : ' doors') + ' assigned to ' + who : 'Cleared ' + j.n + (j.n === 1 ? ' door' : ' doors'), '');
+      planDraw();
+    }).catch(function () { window.alert('No connection. Try again when you have signal.'); planDraw(); });
+  }
+  /* a spreadsheet of the doors: the columns on screen, plus city, ZIP and owner for a CRM import (JobNimbus takes a CSV) */
+  function planCsv(rows, cols) {
+    var esc = function (v) { v = v === null || v === undefined ? '' : String(v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var hd = cols.filter(function (c) { return c[0] !== 'addr'; }).map(function (c) { return c[1]; });
+    var lines = [['Address', 'City', 'ZIP', 'Owner'].concat(hd).map(esc).join(',')];
+    rows.forEach(function (d) {
+      var cells = cols.map(function (c) { return c[0] === 'score' ? (d._sc === null ? '' : d._sc) : c[2](d); });
+      lines.push([d.address, d.city || '', d.zip || '', ownerText(d.owner)].concat(cells.filter(function (_, i) { return cols[i][0] !== 'addr'; })).map(esc).join(','));
+    });
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'doors-' + S.plan.key + '-' + todayISO() + '.csv';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.parentNode.removeChild(a); }, 1000);
+  }
+
+  /* ---- the office dashboard (2026-10-08) ----
+     One screen for admins and managers: warnings across every town, the team's numbers today and this week, a map of every
+     neighbourhood shaded by the best doors still to knock (with NOAA's live radar over it), who did what, and the walks
+     booked for the week. Everything comes from answers the app already has (regions, stats, walks, alerts). A manager
+     sees their own team. Laid out in columns on a computer, one under another on a phone. */
+  function officeView() {
+    if (!planOk()) return chooseView();
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'office'; S.region = S.region || null;
+    setDock(null); foot.hidden = true;
+    setBar('back', { title: 'Office', sub: (CO && CO.short) || 'Today and this week', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var box = q('div', 'office');
+    box.appendChild(alertStrip(null));   /* storms, fire weather and fires, every town */
+    var kp = q('div', 'okpis'); box.appendChild(kp);
+    var cols = q('div', 'ocols'), left = q('div', 'ocol omapcol'), right = q('div', 'ocol');
+    cols.appendChild(left); cols.appendChild(right); box.appendChild(cols);
+    view.appendChild(box);
+
+    /* the numbers: the team's doors, conversations and quotes, today and the last 7 days */
+    var kpi = function (label, today, week, note) {
+      var c = q('div', 'card okpi'); c.appendChild(q('small', null, label));
+      c.appendChild(q('b', null, today === null ? '–' : today.toLocaleString('en-US')));
+      c.appendChild(q('span', null, [week === null ? '' : week.toLocaleString('en-US') + ' this week', note || ''].filter(Boolean).join(' · ')));
+      return c;
+    };
+    var today = todayISO();
+    api('stats', { params: { days: 7, team: 1 } }).then(function (j) {
+      if (!j || !j.ok || S.screen !== 'office') return;
+      var T = { d: [0, 0], t: [0, 0], b: [0, 0] };
+      var ppl = (j.people || []).filter(function (p) { return !/^(claude|fable)\b/i.test(p.name); });
+      ppl.forEach(function (p) {
+        p._t = { d: [0, 0], t: [0, 0], b: [0, 0] };
+        (p.days || []).forEach(function (x) {   /* [0] the 7 days, [1] today */
+          var k = x.date === j.today, talk = (x.booked || 0) + (x.later || 0);
+          p._t.d[0] += x.doors || 0; p._t.t[0] += talk; p._t.b[0] += x.booked || 0;
+          if (k) { p._t.d[1] += x.doors || 0; p._t.t[1] += talk; p._t.b[1] += x.booked || 0; }
+        });
+        ['d', 't', 'b'].forEach(function (z) { T[z][0] += p._t[z][0]; T[z][1] += p._t[z][1]; });
+      });
+      kp.textContent = '';
+      kp.appendChild(kpi('Doors knocked today', T.d[1], T.d[0]));
+      kp.appendChild(kpi('Conversations today', T.t[1], T.t[0], 'booked or not now'));
+      kp.appendChild(kpi('Quotes booked today', T.b[1], T.b[0], T.t[0] ? Math.round(100 * T.b[0] / T.t[0]) + '% of conversations' : ''));
+      var lk = kpi('New leads', null, null, 'from the website and Meta'); kp.appendChild(lk);
+      if (S.role === 'admin') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok) { lk.querySelector('b').textContent = String(l.new || 0); lk.querySelector('span').textContent = 'waiting in the Pipeline'; lk.classList.add('tap'); lk.addEventListener('click', pipelineView); } }).catch(function () {});
+      else lk.querySelector('span').textContent = 'see Leads';
+      /* the team: who did what */
+      var tc = q('div', 'card oteam'); tc.appendChild(q('h3', null, 'The team, this week'));
+      var tbl = document.createElement('table'), hr = document.createElement('tr');
+      ['', 'Doors', 'Talked', 'Booked', 'Today'].forEach(function (h, i) { hr.appendChild(q('th', i ? 'n' : null, h)); });
+      tbl.appendChild(hr);
+      ppl.sort(function (a, b) { return b._t.d[0] - a._t.d[0] || a.name.localeCompare(b.name); });
+      ppl.forEach(function (p) {
+        var tr = document.createElement('tr'); tr.tabIndex = 0;
+        tr.appendChild(q('td', null, p.name));
+        tr.appendChild(q('td', 'n', String(p._t.d[0]))); tr.appendChild(q('td', 'n', String(p._t.t[0]))); tr.appendChild(q('td', 'n', String(p._t.b[0])));
+        tr.appendChild(q('td', 'n soft', p._t.d[1] ? p._t.d[1] + ' doors' : '–'));
+        var go = function () { statsView(p.name, officeView); };
+        tr.addEventListener('click', go); tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+        tbl.appendChild(tr);
+      });
+      if (!ppl.length) tc.appendChild(q('div', 'msg', 'Nobody has marked a door this week yet.')); else tc.appendChild(tbl);
+      right.insertBefore(tc, right.firstChild);
+    }).catch(function () {});
+
+    /* walks booked for the next 7 days */
+    var wk = q('div', 'card owalks'); wk.appendChild(q('h3', null, (feat('hail') ? 'Roof walks' : 'Walks') + ', next 7 days')); right.appendChild(wk);
+    var to = new Date(Date.now() + 7 * 864e5), toISO = to.getFullYear() + '-' + String(to.getMonth() + 1).padStart(2, '0') + '-' + String(to.getDate()).padStart(2, '0');
+    api('walks', { params: { from: today, to: toISO } }).then(function (j) {
+      if (!j || !j.ok || S.screen !== 'office') return;
+      var ws2 = (j.walks || []).slice().sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+      if (!ws2.length) { wk.appendChild(q('div', 'soft', 'None booked.')); return; }
+      ws2.slice(0, 12).forEach(function (w) {
+        var b = q('button', 'owalk'); b.type = 'button';
+        b.appendChild(q('b', null, (w.date === today ? 'Today' : fmtDayStr(w.date)) + (w.time ? ' · ' + w.time : '')));
+        b.appendChild(q('span', null, w.address + ' · ' + w.town));
+        b.appendChild(q('small', null, w.by || ''));
+        b.addEventListener('click', function () { S.region = w.region; S.area = null; S.flash = w.id; S.openDoor = w.id; S.allClosed = false; S.returnTo = officeView; openArea(w.area); });
+        wk.appendChild(b);
+      });
+      if (ws2.length > 12) wk.appendChild(q('div', 'soft', (ws2.length - 12) + ' more on the Calendar.'));
+    }).catch(function () {});
+
+    /* the territory map */
+    left.appendChild(officeMap());
+  }
+  function officeMap() {
+    var card = q('div', 'card omap');
+    var hd = q('div', 'omaph'); hd.appendChild(q('h3', null, bestTrade() ? 'Best doors left, by neighbourhood' : 'Doors left, by neighbourhood'));
+    var radar = false; try { radar = localStorage.getItem('sixfold.office.radar') === '1'; } catch (e) {}
+    var rb = q('button', 'back radarbtn'); rb.type = 'button'; hd.appendChild(rb); card.appendChild(hd);
+    var el = q('div', 'omapel'); card.appendChild(el);
+    var lg = q('div', 'radarkey'); card.appendChild(lg);
+    var key = function () {
+      lg.textContent = '';
+      lg.appendChild(q('span', 'soft', 'Bigger = more doors left' + (bestTrade() ? '; darker green = more of them worth knocking first' : '; darker = less of it visited')));
+      if (radar) RADAR_KEY.forEach(function (k) { var sp = q('span'), i = q('i'); i.style.background = k[0]; sp.appendChild(i); sp.appendChild(document.createTextNode(k[1])); lg.appendChild(sp); });
+    };
+    var paintBtn = function () { rb.textContent = 'Live radar: ' + (radar ? 'on' : 'off'); rb.setAttribute('aria-pressed', String(radar)); key(); };
+    paintBtn();
+    loadLeaflet(function () {
+      if (!document.body.contains(el)) return;
+      if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
+      var map = L.map(el, { zoomControl: true });   /* dots as SVG, like the doors map: each one a tap target with a tooltip */
+      el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
+      baseLayer(map, 18);
+      var rl = null;
+      var setRadar = function () {
+        if (radar && !rl) rl = L.tileLayer(RADAR_URL + '?t=' + Math.floor(Date.now() / 300000), { opacity: 0.6, maxNativeZoom: 12, maxZoom: 18, zIndex: 5, attribution: 'Radar: NOAA via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>' }).addTo(map);
+        if (!radar && rl) { map.removeLayer(rl); rl = null; }
+      };
+      rb.addEventListener('click', function () { radar = !radar; try { localStorage.setItem('sixfold.office.radar', radar ? '1' : '0'); } catch (e) {} paintBtn(); setRadar(); });
+      setRadar();
+      var pts = [], scored = !!bestTrade();
+      S.regions.forEach(function (r) {
+        r.areas.forEach(function (a) {
+          if (typeof a.la !== 'number' || typeof a.lo !== 'number') return;
+          var left = Math.max(0, a.total - a.done - (a.noanswer || 0)), share = scored ? (left ? Math.min(1, (a.bestN || 0) / left) : 0) : (a.total ? (a.done + (a.noanswer || 0)) / a.total : 0);
+          var fill = scored ? 'rgba(31,138,76,' + (0.18 + 0.77 * share).toFixed(2) + ')' : 'rgba(19,41,75,' + (0.85 - 0.6 * share).toFixed(2) + ')';
+          var m = L.circleMarker([a.la, a.lo], { radius: 4 + Math.min(18, Math.sqrt(left) * 0.9), color: a.nosol ? '#c8372d' : '#ffffff', weight: a.nosol ? 2.5 : 1.25, fillColor: fill, fillOpacity: 1 }).addTo(map);
+          m.bindTooltip(q('span', null, a.name + ' · ' + r.label + ' · ' + left + ' to knock' + (scored ? ', ' + (a.bestN || 0) + ' worth it first' : '') + (a.who ? ' · ' + a.who : '') + (a.nosol ? ' · no soliciting posted' : '')), { direction: 'top' });
+          m.on('click', function () { S.region = r.key; S.area = null; S.openDoor = null; S.allClosed = false; S.returnTo = officeView; openArea(a.name); });
+          pts.push([a.la, a.lo]);
+        });
+      });
+      if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] });
+      map.on('moveend', function () { var c = map.getCenter(); S.officeView = { c: [c.lat, c.lng], z: map.getZoom() }; });
+    });
+    return card;
   }
 
   function renderReport() {

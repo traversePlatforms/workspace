@@ -395,7 +395,8 @@ async function build(key) {
     write(path.join(E.data, 'rounds', 'docs', 'money.json'), JSON.stringify(m, null, 1));
   }
   const co = E.company();
-  co.features = Object.assign({}, co.features, { crew: true, company: true });   /* crew codes see the whole card; the Company screen (2026-10-08) */
+  co.features = Object.assign({}, co.features, { crew: true, company: true });
+  if (!E.client) { co.name = E.name; co.short = E.name; }   /* the edition's own name, TraverseRoofing and so on, not the example company's (Matthew 2026-10-08); a client install keeps its own */   /* crew codes see the whole card; the Company screen (2026-10-08) */
   co.appUrl = (E.host || 'https://sixfoldcolorado.com') + '/' + E.folder + '/';   /* a client install may live elsewhere (clients.cjs) */
   write(path.join(E.data, 'rounds', 'company.json'), JSON.stringify(co, null, 2) + '\n');
 

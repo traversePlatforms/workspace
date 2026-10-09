@@ -746,6 +746,19 @@ function loadAssign(string $key): array {
 function appendAssign(string $key, array $row): bool {
     return (bool) @file_put_contents(DATA_DIR . '/assign-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* Doors assigned to one person (2026-10-08, the desktop planning table): finer than a neighbourhood. Newest row per door wins;
+   who '' clears it, and the door falls back to its neighbourhood's person, if any. Same visibility as territories. */
+function loadDoorAssign(string $key): array {
+    $out = [];
+    foreach (logRows('dassign', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (($r['who'] ?? '') === '') unset($out[$r['id']]); else $out[(string) $r['id']] = (string) $r['who'];
+    }
+    return $out;
+}
+function appendDoorAssign(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/dassign-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
 function loadGoals(): array {
     $g = json_decode((string) @file_get_contents(DATA_DIR . '/goals.json'), true);
     return is_array($g) ? $g : ['doors' => null, 'talked' => null, 'booked' => null];
@@ -1606,6 +1619,7 @@ if ($action === 'area') {
     $fchk = loadFireChecks($key);
     $walks = loadWalks($key);
     $custDoors = customerDoors();   /* the crew see the tag on the door (plan and start date only, no contact details) */
+    $repOf = (TERRITORIES_OPEN || $role === 'admin' || $role === 'manager') ? loadDoorAssign($key) : [];   /* doors assigned to one person (2026-10-08) */
     /* skip-trace results ride along for admins only (crew too if the config says crew_see); every number carries its DNC answer */
     $placeOf = skipMail($key);   /* id => {c: city, z: ZIP, m: mailing}; only c and z are sent */
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
@@ -1690,6 +1704,7 @@ if ($action === 'area') {
                 'fc' => isset($fchk[$d['id']]) ? lastChecks($fchk[$d['id']]) : null,
                 'walk' => walkFor($m, $walks[$d['id']] ?? null),
                 'cust' => $custDoors[$key . '/' . $d['id']] ?? null,
+                'rep' => $repOf[$d['id']] ?? null,
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
@@ -3702,6 +3717,28 @@ if ($action === 'assign') {
     if (!mayAssign((string) (loadAssign($key)[$area] ?? ''), $who)) fail('A manager changes territories within their own team.', 403);
     if (!appendAssign($key, ['area' => $area, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+/* doors to one person, from the desktop planning table (2026-10-08): up to 1,000 at a time, all or none.
+   A manager moves only doors that are unassigned or their team's, to someone on their team. */
+if ($action === 'doorassign') {
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
+    $ids = is_array($body['ids'] ?? null) ? array_values(array_unique(array_map('strval', $body['ids']))) : [];
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!$ids || count($ids) > 1000) fail('Pick the doors to assign (up to 1,000 at a time).');
+    if ($who !== '') {
+        $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
+        if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
+    }
+    $home = [];
+    foreach ($ids as $id) { if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.'); $home[$id] = doorHome($key, $id); }
+    $cur = [];
+    foreach (array_unique(array_values($home)) as $hk) $cur += loadDoorAssign($hk);
+    foreach ($ids as $id) if (!mayAssign((string) ($cur[$id] ?? ''), $who)) fail('A manager assigns doors within their own team: one of these is someone else\'s.', 403);
+    $at = time();
+    foreach ($ids as $id) if (!appendDoorAssign($home[$id], ['id' => $id, 'who' => $who, 'by' => $me, 'at' => $at])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'n' => count($ids)]);
 }
 
 const SEARCH_TYPES = ['DR', 'RD', 'LN', 'CT', 'ST', 'AVE', 'AV', 'WAY', 'CIR', 'PL', 'TRL', 'BLVD', 'PKWY', 'HWY', 'LOOP', 'TER', 'PT', 'RUN', 'PASS', 'VW', 'HTS', 'N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'];
