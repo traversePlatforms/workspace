@@ -1213,6 +1213,16 @@
   #view .desk .dk-card .door.open{margin:6px 0 0;padding:0;border:0;background:none;box-shadow:none}
   #view .desk .dk-card .door.open > .d-top,#view .desk .dk-card .door.open > .bestwhy,#view .desk .dk-card .door.open .meta .own{display:none}
   #view .desk .dk-card .door.open .acts{position:sticky;bottom:0;z-index:2;margin:14px -18px 0;padding:12px 18px;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 14px rgba(0,0,0,.06)}
+  /* desktop panels (2026-10-09, Matthew: in the editions an empty panel vanished into the page): every panel gets an outline and a
+     soft shadow, the page sits a shade darker than the panels, and an empty panel says so in a tinted box. Works in every palette and dark. */
+  body.dnav-on{--dline:color-mix(in srgb,var(--ink) 13%,transparent);--dshadow:0 1px 2px rgba(15,27,45,.07),0 6px 18px rgba(15,27,45,.06);background:color-mix(in srgb,var(--bg) 94%,var(--ink) 6%)}
+  body.dnav-on .dhome .card,body.dnav-on .office .card,body.dnav-on .plan .card,body.dnav-on .plan .ptable,body.dnav-on .dbrowse .db-table{background:var(--card);border:1px solid var(--dline);box-shadow:var(--dshadow);border-radius:16px}
+  body.dnav-on .dhome .dh-cont{background:var(--bar);border-color:transparent}
+  body.dnav-on .dhome .dh-tool{border:1px solid var(--dline);box-shadow:var(--dshadow)}
+  body.dnav-on .dbrowse .db-towns,body.dnav-on .dbrowse .db-side{background:var(--card)}
+  body.dnav-on .desk .dk-list{background:color-mix(in srgb,var(--bg) 94%,var(--ink) 6%)}
+  body.dnav-on .desk .dkrow{box-shadow:0 1px 2px rgba(15,27,45,.06)}
+  .dempty{display:block;margin:4px 0 0;padding:12px 14px;border-radius:12px;border:1px dashed var(--dline,var(--line));background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--soft);font-size:13.5px}
   /* the desktop home (2026-10-09, mock-up E3) */
   .wrap:has(> #view > .dhome),.wrap:has(> #view > .dbrowse){max-width:none;padding:0}
   .dhome{min-height:calc(100vh - 56px)}
@@ -4365,16 +4375,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var ws = (j && j.ok ? j.walks : []).filter(function (w) { return planOk() || w.by === S.me; }).sort(function (a, b) { return String(a.time).localeCompare(String(b.time)); });
       var add = function (l1, l2, fn) { var r = q(fn ? 'button' : 'div', 'dh-trow'); if (fn) { r.type = 'button'; r.addEventListener('click', fn); } r.appendChild(q('b', null, l1)); r.appendChild(q('span', null, l2)); tc.appendChild(r); };
       ws.slice(0, 5).forEach(function (w) { add(w.time || 'Today', (feat('hail') ? 'Roof walk' : 'Walk') + ' \u00b7 ' + w.address + (planOk() && w.by ? ' \u00b7 ' + w.by : ''), function () { S.region = w.region; S.area = null; S.flash = w.id; S.openDoor = w.id; S.allClosed = false; S.returnTo = chooseView; openArea(w.area); }); });
-      withRegions(function () { var F = followups(); if (F.due) add('Due', F.due + (F.due === 1 ? ' door asked you back today' : ' doors asked you back today'), followupView); if (F.na) add('Again', F.na + (F.na === 1 ? ' no-answer back on the list' : ' no-answers back on the list'), followupView); if (!ws.length && !F.due && !F.na) tc.appendChild(q('small', 'soft', 'Nothing booked for today.')); });
+      withRegions(function () { var F = followups(); if (F.due) add('Due', F.due + (F.due === 1 ? ' door asked you back today' : ' doors asked you back today'), followupView); if (F.na) add('Again', F.na + (F.na === 1 ? ' no-answer back on the list' : ' no-answers back on the list'), followupView); if (!ws.length && !F.due && !F.na) tc.appendChild(q('span', 'dempty', 'Nothing booked for today. Walks, come-backs and new leads show here.')); });
       if (S.role === 'admin') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) add('Leads', l.new + (l.new === 1 ? ' new lead in the Pipeline' : ' new leads in the Pipeline'), pipelineView); }).catch(function () {});
     }).catch(function () {});
     /* storms and warnings */
     var sc = q('div', 'dh-storm'); c2.appendChild(sc); sc.appendChild(alertStrip(null));
     if (S.role === 'admin' && feat('hail') && cardOn('hail')) api('stormdays').then(function (j) {
-      var d0 = j && j.ok && (j.days || [])[0]; if (!d0) return;
+      /* the newest storm day (the answer: date, hail, hailDoors, wind, windDoors, towns) */
+      var d0 = j && j.ok ? (j.days || []).filter(function (d) { return d.hail || d.wind; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0] : null; if (!d0) return;
       var c = q('div', 'card dh-hail'); c.appendChild(q('small', null, 'Latest storm'));
-      c.appendChild(q('b', null, 'Hail up to ' + inch(d0.max || d0.big || 0) + ', ' + hailDay(d0.day || d0.date)));
-      if (d0.doors) c.appendChild(q('span', null, Number(d0.doors).toLocaleString('en-US') + ' doors hit'));
+      c.appendChild(q('b', null, (d0.hail ? 'Hail up to ' + inch(d0.hail) : 'Wind ' + Math.round(d0.wind) + ' mph') + ', ' + hailDay(d0.date)));
+      var nd = (d0.hailDoors || 0) || (d0.windDoors || 0); var tw = (d0.towns || []).slice(0, 3).join(', ');
+      if (nd || tw) c.appendChild(q('span', null, [nd ? nd.toLocaleString('en-US') + ' doors hit' : '', tw].filter(Boolean).join(' · ')));
       var b = q('button', 'back', 'Open the storm list'); b.type = 'button'; b.addEventListener('click', stormView); c.appendChild(b); sc.appendChild(c);
     }).catch(function () {});
   }
@@ -10315,7 +10327,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           tr.addEventListener('click', go); tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
           tbl.appendChild(tr);
         });
-        if (!ppl.length) tc.appendChild(q('div', 'msg', 'Nobody has marked a door this week yet.')); else tc.appendChild(tbl);
+        if (!ppl.length) tc.appendChild(q('span', 'dempty', 'Nobody has marked a door this week yet. Doors, talks and quotes show here for each person as they work.')); else tc.appendChild(tbl);
       }).catch(function () {});
     };
     var to = new Date(Date.now() + 7 * 864e5), toISO = to.getFullYear() + '-' + String(to.getMonth() + 1).padStart(2, '0') + '-' + String(to.getDate()).padStart(2, '0');
@@ -10327,7 +10339,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var nToday = ws2.filter(function (w) { return w.date === today; }).length;
         kpiFill(cards.w, ws2.length, [nToday + ' today']);
         wk.textContent = ''; wk.appendChild(q('h3', null, (feat('hail') ? 'Roof walks' : 'Walks') + ', next 7 days'));
-        if (!ws2.length) { wk.appendChild(q('div', 'soft', 'None booked.')); return; }
+        if (!ws2.length) { wk.appendChild(q('span', 'dempty', 'No walks booked for the next 7 days.')); return; }
         ws2.slice(0, 12).forEach(function (w) {
           var b = q('button', 'owalk'); b.type = 'button';
           b.appendChild(q('b', null, (w.date === today ? 'Today' : fmtDayStr(w.date)) + (w.time ? ' \u00b7 ' + w.time : '')));
@@ -10360,7 +10372,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     };
     var paintBtn = function () { rb.textContent = 'Live radar: ' + (radar ? 'on' : 'off'); rb.setAttribute('aria-pressed', String(radar)); key(); };
     paintBtn();
-    loadLeaflet(function () {
+    /* after the card is on the page: with Leaflet already loaded (say, after Doors) the callback runs at once, before the card
+       is added, and the map was never drawn (live check 2026-10-09) */
+    setTimeout(function () { loadLeaflet(function () {
       if (!document.body.contains(el)) return;
       if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
       if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}   /* the last visit's map (Fable 2026-10-09: one leaked per visit) */
@@ -10398,7 +10412,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         })();
       });
       });
-    });
+    }); }, 0);
     return card;
   }
 
