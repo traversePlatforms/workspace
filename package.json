@@ -4,5 +4,9 @@
     "pdf-lib": "^1.17.1",
     "polygon-clipping": "^0.15.7",
     "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "csso": "^5.0.5",
+    "terser": "^5.44.0"
   }
 }

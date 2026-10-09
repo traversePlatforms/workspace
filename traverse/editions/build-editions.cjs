@@ -26,6 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const { minifyPage } = require('./minify-page.cjs');
 
 const REPO = path.resolve(__dirname, '..', '..');
 const SRC = path.join(REPO, 'traverse', 'app');
@@ -289,7 +290,9 @@ function page(E) {
 </head>`;
   html = rep(html, '</head>', tokens, 1, 'head');
   html = rep(html, '<meta name="viewport"', '<meta name="robots" content="noindex, nofollow">\n<meta name="viewport"', 1, 'robots');
-  return html;
+  // last, after every swap and check above has seen the source as written: comments, whitespace and local names out of the
+  // copy that ships (2026-10-09, speed: 820 KB -> 570 KB, 226 KB -> 164 KB gzipped). The source keeps its record.
+  return minifyPage(html);
 }
 
 /* ------------------------------------------------------------- offline worker */
