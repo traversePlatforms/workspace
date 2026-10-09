@@ -51,11 +51,12 @@ for (const f of files) {
   const ptr = lp._malloc(buf.length); lp.HEAPU8.set(buf, ptr);
   const zip = new lp.LASZip(); zip.open(ptr, buf.length);
   const n = zip.getCount(), plen = zip.getPointLength(), pp = lp._malloc(plen);
-  const dv = new DataView(lp.HEAPU8.buffer);
+  let dv = new DataView(lp.HEAPU8.buffer);   /* remade when the decoder's memory grows: the old buffer is then detached (2026-10-09) */
   const du = maxX - minX, dvv = maxY - minY;
   const gps = [];
   for (let i = 0; i < n; i++) {
     zip.getPoint(pp);
+    if (dv.buffer !== lp.HEAPU8.buffer) dv = new DataView(lp.HEAPU8.buffer);
     const cls = lp.HEAPU8[pp + 16];
     if (SKIP.has(cls) || (lp.HEAPU8[pp + 15] & 4)) continue;   /* noise, water, withheld (flag bit 2) */
     const X = dv.getInt32(pp, true) * sx + ox, Y = dv.getInt32(pp + 4, true) * sy + oy, Z = dv.getInt32(pp + 8, true) * sz + oz;
