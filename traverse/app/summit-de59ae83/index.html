@@ -3736,8 +3736,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function streetOfAddr(a) { return String(a || '').replace(/^\s*\d+\s+/, '').trim(); }
   function mainStreetOf(name) { return String(name || '').replace(/\s+·\s+\d+$/, '').replace(/\s+\d+(–\d+)?$/, ''); }
   /* back out of a neighbourhood: to wherever the door was opened from (S.returnTo), else the neighbourhood list */
+  /* the neighbourhood being left: put this phone's own count into the towns in hand, so the list drawn at once is not a step behind
+     (2026-10-09: with the towns kept ready, a finished neighbourhood read '1 to knock' until the fresh answer landed) */
+  function keepLeft() {
+    if (!S.area || !S.doors || !S.regions) return;
+    var r = S.regions.filter(function (x) { return x.key === S.region; })[0], a = r && r.areas.filter(function (x) { return x.name === S.area; })[0]; if (!a) return;
+    var todo = S.doors.filter(function (d) { return !d.mark || backOn(d); }).length, again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss' && !backOn(d); }).length;
+    a.noanswer = again; a.done = Math.max(0, a.total - todo - again);
+  }
   function areaBack() {
-    S.area = null; S.mapSel = null; var f = S.returnTo; S.returnTo = null;
+    keepLeft(); S.area = null; S.mapSel = null; var f = S.returnTo; S.returnTo = null;
     if (f) return f();
     /* the town list used to wait 2-3 s for every town's counts, with the old door cards still
        tappable underneath (Fable, live review). Draw it now; update the counts when they land. */
@@ -9621,7 +9629,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var nb = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'booked'; }).length;
       fin.appendChild(q('p', null, S.doors.length + (S.doors.length === 1 ? ' door' : ' doors') + ' · ' + nb + (nb === 1 ? ' quote' : ' quotes') + ' booked'));
       var nx = q('button', null, 'Pick another neighbourhood'); nx.type = 'button';
-      nx.addEventListener('click', function () { S.area = null; S.mapSel = null; refresh(); });
+      nx.addEventListener('click', function () { keepLeft(); S.area = null; S.mapSel = null; refresh(); });
       fin.appendChild(nx);
       view.appendChild(fin);
       if (S.celebrate) setTimeout(function () { burst(fin.querySelector('svg')); }, 120);
