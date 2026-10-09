@@ -4692,7 +4692,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var draw = function () {
       lst.textContent = ''; if (!r) return;
       var qv = (inp.value || '').trim().toUpperCase();
-      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || (a.st || []).some(function (x) { return String(x[0] || x).toUpperCase().indexOf(qv) >= 0; }); });
+      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || (a.st || []).some(function (x) { return String(typeof x === 'string' ? x : (x && x[0]) || '').toUpperCase().indexOf(qv) >= 0; }); });   /* st is street names (2026-10-09: x[0] read the first letter) */
       var left = function (a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); };
       as.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.bestN || 0) - (x.bestN || 0) || left(y) - left(x); });
       as.slice(0, 250).forEach(function (a) {
