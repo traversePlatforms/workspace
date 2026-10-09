@@ -123,11 +123,6 @@ function crewSees(string $role): bool { return $role === 'admin' || ($role !== '
 /* ---- hail (2026-10-04): the radar estimate per door, built offline by operations/door-territory/hail/build-hail.mjs.
    Admin only, and only where the company turns it on (features.hail). Matthew is evaluating it for roofing. */
 function hailOn(string $role): bool { return crewSees($role) && feature('hail'); }
-function loadHail(string $key): array {
-    static $memo = [];
-    if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $key . '.json'), true); $memo[$key] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
-    return $memo[$key];
-}
 /* roof size and pitch (laser scan) and year built / roof material (county files), per door, built offline
    (operations/door-territory/roofs/sample-roofs.mjs, assessor/build-year.mjs). Admins only, features.roof. */
 function roofDataOn(string $role): bool { return crewSees($role) && feature('roof'); }
@@ -1643,7 +1638,7 @@ if ($action === 'regions') {
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
-                        'st' => topStreets($streets, 4), 'ns' => count($streets), 'who' => $assign[$a['name']] ?? null,
+                        'st' => topStreets($streets, 4), 'who' => $assign[$a['name']] ?? null,
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
                         '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []);
         }
