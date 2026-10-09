@@ -375,7 +375,7 @@ async function build(key) {
   };
   for (const f of fs.readdirSync(DATA)) {
     const p = path.join(DATA, f);
-    if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || !E.keep(f)) continue;
+    if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || /^(regions-cache-|best-)/.test(f) || !E.keep(f)) continue;   /* the server's kept answers: each install makes its own (Fable 2026-10-09) */
     if (townOfFile(f)) continue;
     let buf = fs.readFileSync(p);
     if (f === 'index.json') {
