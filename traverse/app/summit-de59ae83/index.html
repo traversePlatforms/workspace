@@ -1103,6 +1103,34 @@
   .mapsw button[aria-pressed="true"]{background:#13294b;color:#fff}
   .legend i.ring{background:transparent!important;border:2px dashed #13294b!important;box-shadow:none}
   :root[data-theme="dark"] .legend i.ring{border-color:#fff!important}
+  /* the desk map's Hail layer and Draw a territory (2026-10-09): white panels under their buttons, like the map's other controls */
+  .dkctl{max-width:260px}
+  .dkctl .dkc-main{width:100%;text-align:left}
+  .dkctl .dkpan{width:250px;box-sizing:border-box;padding:8px 10px 10px;border-top:1px solid #DCD3C3;background:#fff;color:#16201C;font:13px/1.4 var(--sans)}
+  .dkctl .dklist{max-height:300px;overflow:auto;overscroll-behavior:contain}
+  .dkctl .dkh{font:800 12px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:#55635B;margin:0 0 6px}
+  .dkctl .dknote{margin:0 0 6px}
+  .dkctl .dknote.soft{color:#55635B;font-size:12px}
+  .dkctl .dknote.bad{color:#B91C1C;font-weight:700}
+  .dkctl .dkpan button{display:block;width:100%;min-height:36px;margin:0 0 4px;padding:6px 10px;border:1px solid #DCD3C3;border-radius:8px;background:#fff;color:#16201C;font:700 13px var(--sans);text-align:left;cursor:pointer}
+  .dkctl .dkpan button:disabled{opacity:.5;cursor:default}
+  .dkctl .dkpan button[aria-pressed="true"],.dkctl .dkpan button.pri{background:#13294b;border-color:#13294b;color:#fff}
+  .dkctl .dkday b{display:block;font-weight:800}
+  .dkctl .dkday span{display:block;font-weight:600;font-size:12px;opacity:.85}
+  .dkctl .dkrow2{display:flex;gap:6px}
+  .dkctl .dkrow2 button{width:auto;flex:1;margin:0;text-align:center}
+  .dkctl .dkkey{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+  .dkctl .dkkey span{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+  .dkctl .dkkey i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .dkctl .dkkey button{width:auto;min-height:30px;margin:4px 0 0 auto;padding:2px 14px}
+  .dkctl .dkkey .dkout{flex-basis:100%;margin:4px 0 0}
+  .dkctl .dkkey button.dkgo{flex-basis:100%;margin:4px 0 0;text-align:center}
+  .dkctl .dkform input,.dkctl .dkform select{display:block;width:100%;box-sizing:border-box;margin:0 0 6px;padding:7px 9px;border:1px solid #DCD3C3;border-radius:8px;background:#fff;color:#16201C;font:14px var(--sans)}
+  .dkctl .dksv{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid #ECE6DA}
+  .dkctl .dksv span{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+  .dkctl .dksv button{width:auto;margin:0;min-height:32px;padding:2px 10px}
+  .dk-mapel.dk-drawing,.dk-mapel.dk-drawing .leaflet-interactive{cursor:crosshair}
+  .leaflet-tooltip.terrlbl{padding:2px 8px;border:1px solid #13294b;border-radius:999px;background:rgba(255,255,255,.92);color:#13294b;font:800 12px var(--sans);box-shadow:none}
   /* the desktop as its own app (2026-10-09, mock-up A) */
   .dnav{position:sticky;top:0;z-index:12;display:flex;align-items:center;gap:14px;height:56px;padding:0 18px;background:var(--bar);color:var(--bar-ink,#fff);box-shadow:0 1px 0 rgba(0,0,0,.15)}
   .dnav[hidden]{display:none!important}
@@ -4609,6 +4637,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.desk && S.desk.map) try { S.desk.map.remove(); } catch (e) {}
     if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}
     S.desk = null; S.officeMap = null; S.plan = null; S.deskScroll = null; S.deskCardScroll = null;
+    S.deskHail = null; S.terr = null;   /* the desk map's hail day and drawn territories (2026-10-09) */
   }
   /* the workspace's neighbourhood picker: a town, a search, the neighbourhoods best first */
   function deskPicker() {
@@ -4747,7 +4776,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (typeof d.lat !== 'number') return;
         var p0 = deskPin(d), m = L.marker([d.lat, d.lon], { icon: deskIcon(p0), keyboard: false, riseOnHover: true }).addTo(map), id = d.id;
         m._pin = p0.cls + p0.txt;
-        m.on('click', function (e) { L.DomEvent.stopPropagation(e); deskOpen(id); });
+        m.on('click', function (e) { L.DomEvent.stopPropagation(e); if (D.drawing) { D.drawing.click(e.latlng); return; } deskOpen(id); });   /* while an outline is drawn, a pin is a point like anywhere else */
+        m.on('dblclick', function () { if (D.drawing) D.drawing.dbl(); });   /* a pin's clicks never reach the map */
         m.bindTooltip(function () { var x = doorById(id) || d, sc = doorScore(x); return q('span', null, x.address + (sc !== null ? ' · ' + sc + ' of 10' : '')); }, { direction: 'top', offset: [0, -8] });   /* an element, so an address is never read as HTML */
         D.markers[id] = m; pts.push([d.lat, d.lon]);
       });
@@ -4758,13 +4788,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var sel = S.openDoor && D.markers[S.openDoor];
         if (follow && sel && !map.getBounds().pad(-0.15).contains(sel.getLatLng())) map.panTo(sel.getLatLng());
       };
-      map.on('click', function () { if (S.openDoor) closeDoor(); });
+      map.on('click', function (e) { if (D.drawing) { D.drawing.click(e.latlng); return; } if (S.openDoor) closeDoor(); });
       if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
       else if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 18 });
       map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
       /* after the map has a view (Leaflet can't place layers before one) */
-      satSwitch(map, true);   /* Satellite / Street map (2026-10-09); photos first on the desktop */
-      hoodRings(map, openHood);   /* the other neighbourhoods, a tap opens one (2026-10-09) */
+      satSwitch(map, true);   /* Map / Hybrid / Photo (2026-10-09); photos first on the desktop */
+      if (deskHailOn()) deskHail(map);   /* a storm day's hail path, under the map switch (2026-10-09) */
+      hoodRings(map, function (k, n) { if (!D.drawing) openHood(k, n); });   /* the other neighbourhoods, a tap opens one (2026-10-09); not mid-outline */
+      deskTerr(map, D);   /* the drawn territories, and Draw a territory for admins and managers (2026-10-09) */
       D.restyle(false);
     });
   }
@@ -7454,6 +7486,310 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function openHood(key, name) {
     S.region = key; S.area = null; S.openDoor = null; S.allClosed = false; S.capture = null; S.mapSel = null; S.filterOpen = false;
     openArea(name);
+  }
+  /* ---- the Hail layer on the desk map (2026-10-09) ----
+     A storm day's hail path over the neighbourhood, on the desktop. Under the Satellite switch: the storm days that hit this town,
+     newest first, each with the biggest hail the radar put in the town that day and how many doors here it reached. One picked draws
+     its path coloured by size, as on the hail map, with a small key and Off. Admins, where the company has the hail card on (the
+     Storms tool's gate; the server's hailOn is never narrower). The pick holds while the map is redrawn for the same neighbourhood
+     and goes when another one opens. The squares go on one canvas: a big day has 2,000 of them. */
+  function deskHailOn() { return S.role === 'admin' && feat('hail') && cardOn('hail'); }
+  function deskHail(map) {
+    var key = S.region + '|' + S.area, region = S.region;
+    if (!S.deskHail || S.deskHail.key !== key) S.deskHail = { key: key, day: null, open: false };
+    var H = S.deskHail, layer = null, seq = 0, box = null, msg = '', failed = '', attr = false, cells = [], near = null, inView = true;
+    map.createPane('dkhail');
+    var pane = map.getPane('dkhail'); pane.style.zIndex = 390; pane.style.pointerEvents = 'none';   /* over the photos, under the outlines and pins */
+    var rend = L.canvas({ pane: 'dkhail', padding: 0.3 });
+    var alive = function () { return !!map._container && document.body.contains(map._container); };
+    var here = function (date) { return S.doors.filter(function (d) { return (d.hail || []).some(function (h) { return h[0] === date; }); }).length; };
+    var days = function () {
+      return ((S.hail && S.hail.storms) || []).filter(function (s) { return s.towns && s.towns[region]; })
+        .map(function (s) { var t = s.towns[region]; return { date: s.date, max: typeof t.max === 'number' ? t.max : s.max }; })
+        .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    };
+    var load = function () {
+      failed = '';
+      api('hail').then(function (j) { if (j && j.ok) S.hail = j; else failed = (j && j.error) || 'The storm days could not load.'; if (alive()) paint(); })
+        .catch(function () { failed = 'The storm days need signal.'; if (alive()) paint(); });
+    };
+    var draw = function () {
+      var n = ++seq, day = H.day;
+      if (layer) { map.removeLayer(layer); layer = null; }
+      if (box) box.removeAttribute('data-cells');
+      cells = []; near = null; inView = true;
+      paint();
+      if (!day) return;
+      api('hailmap', { params: { day: day } }).then(function (j) {
+        if (n !== seq || !alive()) return;
+        if (!j || !j.ok || !j.cells || !j.cells.length) { msg = (j && j.error) || 'No hail path saved for this day.'; paint(); return; }
+        var g = j.grid; layer = L.layerGroup();
+        j.cells.forEach(function (c) {
+          var r = c[0] + g.r0, col = c[1] + g.c0, lat = g.lat1 - r * g.dy, lon = g.lon1 - 360 + col * g.dx, sz = c[2] / 100;
+          var bb = L.latLngBounds([lat - g.dy / 2, lon - g.dx / 2], [lat + g.dy / 2, lon + g.dx / 2]); cells.push(bb);
+          L.rectangle(bb, { renderer: rend, stroke: false, fillColor: hailColour(sz), fillOpacity: 0.5, interactive: false }).addTo(layer);
+        });
+        layer.addTo(map);
+        /* a path can cross the town and miss this neighbourhood: Show the path goes to its part within about 30 km, or all of it */
+        var c0 = map.getCenter();
+        cells.forEach(function (bb) { var c = bb.getCenter(); if (Math.abs(c.lat - c0.lat) < 0.27 && Math.abs(c.lng - c0.lng) < 0.35) near = near ? near.extend(bb) : L.latLngBounds(bb.getSouthWest(), bb.getNorthEast()); });
+        if (!near) cells.forEach(function (bb) { near = near ? near.extend(bb) : L.latLngBounds(bb.getSouthWest(), bb.getNorthEast()); });
+        inView = seen(); paint();
+        if (box) box.setAttribute('data-cells', String(j.cells.length));
+        if (!attr && map.attributionControl) { map.attributionControl.addAttribution('Hail: NOAA MRMS MESH (estimate)'); attr = true; }
+      }).catch(function () { if (n === seq && alive()) { msg = 'The hail path needs signal.'; paint(); } });
+    };
+    var seen = function () { var v = map.getBounds(); return cells.some(function (bb) { return v.intersects(bb); }); };
+    map.on('moveend', function () { if (!cells.length) return; var v = seen(); if (v !== inView) { inView = v; paint(); } });
+    var paint = function () {
+      if (!box) return;
+      box.textContent = '';
+      var b = L.DomUtil.create('button', 'dkc-main', box); b.type = 'button';
+      b.textContent = H.day ? 'Hail ' + hailDay(H.day) : 'Hail layer';
+      b.title = 'A storm day’s hail path (NOAA radar estimate)';
+      b.setAttribute('aria-expanded', String(!!H.open)); b.setAttribute('aria-pressed', String(!!H.day));
+      b.addEventListener('click', function () { H.open = !H.open; if (H.open && !S.hail) load(); paint(); });
+      if (H.day) {   /* the key, and Off */
+        var k = L.DomUtil.create('div', 'dkpan dkkey', box);
+        HAIL_BINS.forEach(function (x) { var sp = q('span'), i = q('i'); i.style.background = x[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(x[2])); k.appendChild(sp); });
+        var off = q('button', null, 'Off'); off.type = 'button';
+        off.addEventListener('click', function () { H.day = null; H.open = false; msg = ''; draw(); });
+        k.appendChild(off);
+        if (near) {
+          if (!inView) k.appendChild(q('div', 'dknote soft dkout', 'None of this day’s path is in view.'));
+          var go = q('button', 'dkgo', 'Show the path'); go.type = 'button';
+          go.addEventListener('click', function () { if (near) map.fitBounds(near, { padding: [30, 30], maxZoom: 15 }); });
+          k.appendChild(go);
+        }
+      }
+      if (msg) L.DomUtil.create('div', 'dkpan', box).appendChild(q('div', 'dknote bad', msg));
+      if (!H.open) return;
+      var p = L.DomUtil.create('div', 'dkpan dklist', box);
+      if (!S.hail) { p.appendChild(q('div', 'dknote' + (failed ? ' bad' : ''), failed || 'Loading the storm days…')); return; }
+      var list = days();
+      p.appendChild(q('div', 'dkh', list.length ? 'Storm days in ' + townLabel() + ', newest first' : 'No storm days on file for ' + townLabel() + '.'));
+      list.forEach(function (s) {
+        var n = here(s.date), r = q('button', 'dkday'); r.type = 'button'; r.setAttribute('aria-pressed', String(H.day === s.date));
+        r.appendChild(q('b', null, hailDay(s.date)));
+        r.appendChild(q('span', null, 'Up to ' + inch(s.max) + (n ? ' · ' + n + (n === 1 ? ' door' : ' doors') + ' here' : '')));
+        r.addEventListener('click', function () { H.day = s.date; H.open = false; msg = ''; draw(); });
+        p.appendChild(r);
+      });
+    };
+    var ctl = L.control({ position: 'topright' });
+    ctl.onAdd = function () {
+      box = L.DomUtil.create('div', 'leaflet-bar mapsw dkctl dkhail');
+      L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box);
+      L.DomEvent.on(box, 'click', L.DomEvent.stopPropagation);   /* a button that redraws the panel is gone from it by the time Leaflet looks, and its click read as one on the map */
+      paint(); return box;
+    };
+    ctl.addTo(map);
+    if (H.open && !S.hail) load();
+    if (H.day) draw();   /* the same neighbourhood redrawn: the day picked comes back */
+    return ctl;
+  }
+  /* ---- territories drawn on the desk map (2026-10-09) ----
+     An admin or a manager draws a territory on the desktop map: click the corners, double-click (or click the first point) to close
+     it, Esc cancels, Undo takes the last point back. Closed, it counts this neighbourhood's doors inside and asks for a name and a
+     person; Save assigns those doors to them (doorassign, 1,000 at a time, as the planning table does; the server keeps the team
+     rules and its refusal is shown here), then keeps the outline (terrsave). Everyone who sees territories sees the outlines, thin,
+     labelled with the name and the person. Deleting an outline leaves its doors with their person. */
+  function inPoly(lat, lon, poly) {
+    var ins = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      var yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1];
+      if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) ins = !ins;
+    }
+    return ins;
+  }
+  var TERR_INK = '#d6400c';   /* the outline being drawn */
+  function deskTerr(map, D) {
+    var region = S.region, ink = darkUI() ? '#ffffff' : '#13294b', grp = L.layerGroup().addTo(map), el = map.getContainer();
+    var list = S.terr && S.terr.region === region ? S.terr.list : [];
+    var box = null, showSaved = false, dr = null, people = null;
+    function alive() { return S.desk === D && document.body.contains(el); }
+    function drawSaved() {
+      grp.clearLayers();
+      list.forEach(function (t) {
+        if (!t.poly || t.poly.length < 3) return;
+        var pg = L.polygon(t.poly, { color: ink, weight: 1.5, opacity: 0.9, fill: false, interactive: false, className: 'terrline' }).addTo(grp);
+        pg.bindTooltip(q('span', null, t.name + ' · ' + t.who), { permanent: true, direction: 'center', className: 'terrlbl' });   /* an element: a name is never read as HTML */
+      });
+    }
+    function load() {
+      api('terrlist', { params: { region: region } }).then(function (j) {
+        if (!j || !j.ok || !alive()) return;
+        list = j.territories || []; S.terr = { region: region, list: list };
+        drawSaved(); paint();
+      }).catch(function () {});
+    }
+    function start() {
+      if (dr || !alive()) return;
+      dr = { pts: [], layer: L.layerGroup().addTo(map), rub: null, done: false, ids: [], name: '', who: '', err: '', saving: false, click: add, dbl: dbl };
+      D.drawing = dr;
+      map.doubleClickZoom.disable(); el.classList.add('dk-drawing');
+      document.addEventListener('keydown', onKey, true); map.on('mousemove', onMove); map.on('dblclick', dbl);
+      if (!people) api('calpeople').then(function (j) {
+        if (!j || !j.ok) return;
+        /* as the planning table: the people this person may assign to, never the test sign-ins */
+        people = j.people.filter(function (p) { return (S.role === 'admin' || p.edit) && !/^(claude|fable)\b/i.test(p.name); }).map(function (p) { return p.name; });
+        if (dr && dr.done && !dr.saving && alive()) paint();
+      }).catch(function () {});
+      paint();
+    }
+    function shape() {
+      dr.layer.clearLayers();
+      if (dr.done) { L.polygon(dr.pts, { color: TERR_INK, weight: 2.5, dashArray: '6 5', fillColor: TERR_INK, fillOpacity: 0.12, interactive: false, className: 'terrdraft' }).addTo(dr.layer); return; }
+      if (dr.pts.length > 1) L.polyline(dr.pts, { color: TERR_INK, weight: 2.5, interactive: false }).addTo(dr.layer);
+      dr.pts.forEach(function (pt, i) { L.circleMarker(pt, { radius: i === 0 ? 7 : 4, color: TERR_INK, weight: 2, fillColor: '#ffffff', fillOpacity: 1, interactive: false, className: 'terrdot' }).addTo(dr.layer); });
+    }
+    function add(ll) {
+      if (!dr || dr.done) return;
+      var p = map.latLngToContainerPoint(ll), n = dr.pts.length;
+      if (n >= 3 && p.distanceTo(map.latLngToContainerPoint(dr.pts[0])) < 12) return close();   /* back on the first point */
+      if (n && p.distanceTo(map.latLngToContainerPoint(dr.pts[n - 1])) < 6) return;   /* the second click of a double-click */
+      if (n >= 200) { toast('200 points is the most', 'Close the outline'); return; }   /* the server keeps 200 */
+      dr.pts.push([ll.lat, ll.lng]); shape(); paint();
+    }
+    function dbl() { if (dr && !dr.done && dr.pts.length >= 3) close(); }
+    function undo() {
+      if (!dr || dr.done || !dr.pts.length) return;
+      dr.pts.pop();
+      if (dr.rub) { map.removeLayer(dr.rub); dr.rub = null; }
+      shape(); paint();
+    }
+    function onMove(e) {   /* a dashed line from the last point to the pointer */
+      if (!dr || dr.done || !dr.pts.length) return;
+      var ll = [dr.pts[dr.pts.length - 1], [e.latlng.lat, e.latlng.lng]];
+      if (dr.rub) dr.rub.setLatLngs(ll); else dr.rub = L.polyline(ll, { color: TERR_INK, weight: 1.5, dashArray: '4 4', interactive: false }).addTo(map);
+    }
+    function onKey(e) { if (e.key === 'Escape' && dr && !dr.saving) { e.preventDefault(); e.stopPropagation(); end(); } }
+    function close() {
+      if (!dr || dr.done || dr.pts.length < 3) return;
+      dr.done = true;
+      if (dr.rub) { map.removeLayer(dr.rub); dr.rub = null; }
+      dr.ids = S.doors.filter(function (d) { return typeof d.lat === 'number' && typeof d.lon === 'number' && inPoly(d.lat, d.lon, dr.pts); }).map(function (d) { return d.id; });
+      shape(); el.classList.remove('dk-drawing');
+      setTimeout(function () { if (map._container) map.doubleClickZoom.enable(); }, 0);   /* after this double-click, so it does not zoom */
+      paint();
+      var nm = box && box.querySelector('input'); if (nm) try { nm.focus(); } catch (e) {}
+    }
+    function end() {
+      if (!dr) return;
+      if (dr.rub) map.removeLayer(dr.rub);
+      map.removeLayer(dr.layer);
+      dr = null; D.drawing = null;
+      document.removeEventListener('keydown', onKey, true); map.off('mousemove', onMove); map.off('dblclick', dbl);
+      el.classList.remove('dk-drawing'); map.doubleClickZoom.enable();
+      paint();
+    }
+    function save() {
+      if (!dr || !dr.done || dr.saving) return;
+      var mine = dr, name = (dr.name || '').trim(), who = dr.who, ids = dr.ids.slice();
+      var pts = dr.pts.map(function (p) { return [Math.round(p[0] * 1e6) / 1e6, Math.round(p[1] * 1e6) / 1e6]; });
+      if (!name) { dr.err = 'Give it a name.'; return paint(); }
+      if (!who) { dr.err = 'Pick the person it is for.'; return paint(); }
+      if (ids.length && !window.confirm('Save “' + name + '” and assign its ' + ids.length + (ids.length === 1 ? ' door' : ' doors') + ' to ' + who + '?')) return;
+      dr.err = ''; dr.saving = true; paint();
+      var chunks = []; for (var i = 0; i < ids.length; i += 1000) chunks.push(ids.slice(i, i + 1000));   /* the server takes 1,000 at a time */
+      var saved = 0;
+      var fail = function (why) {
+        if (saved && alive() && S.screen === 'doors') renderDoors();
+        if (dr !== mine) { window.alert(why); return; }
+        mine.saving = false; mine.err = (saved ? saved + ' doors assigned, then: ' : '') + why + (saved ? '' : ' Nothing was saved.');
+        if (alive()) paint();
+      };
+      var step = function (k) {
+        if (k < chunks.length) {
+          api('doorassign', { body: { region: region, ids: chunks[k], who: who } }).then(function (j) {
+            if (!j || !j.ok) return fail(j && j._status === 409 ? 'A door has left the list since this map loaded. Reload and draw it again.' : (j && j.error) || 'Could not save that.');
+            chunks[k].forEach(function (id) { var d = doorById(id); if (d) d.rep = who; });
+            saved += chunks[k].length; step(k + 1);
+          }, function () { fail('No connection. Try again when you have signal.'); });
+          return;
+        }
+        /* the doors are theirs: now the outline */
+        api('terrsave', { body: { region: region, name: name, who: who, poly: pts } }).then(function (j) {
+          if (!j || !j.ok) return fail((j && j.error) || 'Could not save the outline.');
+          list = list.concat([j.territory]); S.terr = { region: region, list: list };
+          if (dr === mine) end();
+          toast('Saved ' + name, saved ? saved + (saved === 1 ? ' door' : ' doors') + ' assigned to ' + who : 'No doors inside it');
+          if (!alive()) return;
+          drawSaved();
+          if (saved && S.screen === 'doors') renderDoors();   /* the rows' "Assigned to"; the same map stays */
+        }, function () { fail('No connection. Try again when you have signal.'); });
+      };
+      step(0);
+    }
+    function del(t) {
+      if (!window.confirm('Delete the outline “' + t.name + '”? This takes the outline off the map only: its doors stay assigned to ' + t.who + '. Change them on the planning table.')) return;
+      api('terrsave', { body: { region: region, id: t.id, del: true } }).then(function (j) {
+        if (!j || !j.ok) { window.alert((j && j.error) || 'Could not delete that.'); return; }
+        list = list.filter(function (x) { return x.id !== t.id; }); S.terr = { region: region, list: list };
+        if (alive()) { drawSaved(); paint(); }
+        toast('Outline deleted', 'Its doors keep their person');
+      }, function () { window.alert('No connection. Try again when you have signal.'); });
+    }
+    function paint() {
+      if (!box) return;
+      box.textContent = '';
+      var b = L.DomUtil.create('button', 'dkc-main', box); b.type = 'button';
+      b.textContent = dr ? (dr.done ? 'New territory' : 'Drawing a territory') : 'Draw a territory';
+      b.setAttribute('aria-pressed', String(!!dr));
+      b.addEventListener('click', function () { if (!dr) start(); });
+      var p, row;
+      if (dr && !dr.done) {
+        p = L.DomUtil.create('div', 'dkpan dkdraw', box);
+        p.appendChild(q('div', 'dknote', dr.pts.length < 3 ? 'Click the map to add the corners (' + dr.pts.length + ' so far).' : dr.pts.length + ' points. Double-click, or click the first point, to close it.'));
+        p.appendChild(q('div', 'dknote soft', 'Esc cancels.'));
+        row = q('div', 'dkrow2');
+        var u = q('button', null, 'Undo'); u.type = 'button'; u.disabled = !dr.pts.length; u.addEventListener('click', undo);
+        var c = q('button', null, 'Cancel'); c.type = 'button'; c.addEventListener('click', end);
+        row.appendChild(u); row.appendChild(c); p.appendChild(row);
+      } else if (dr) {
+        var cur = dr;
+        p = L.DomUtil.create('div', 'dkpan dkform', box);
+        p.appendChild(q('div', 'dkh dkcount', cur.ids.length.toLocaleString('en-US') + (cur.ids.length === 1 ? ' door' : ' doors') + ' inside'));
+        var nm = q('input'); nm.type = 'text'; nm.maxLength = 60; nm.placeholder = 'Name, e.g. North loop'; nm.value = cur.name; nm.setAttribute('aria-label', 'Territory name');
+        nm.addEventListener('input', function () { cur.name = nm.value; });
+        nm.addEventListener('keydown', function (e) { if (e.key === 'Enter') save(); });
+        var sel = q('select'); sel.setAttribute('aria-label', 'Person');
+        var o0 = q('option', null, people ? 'Pick a person' : 'Loading the people…'); o0.value = ''; sel.appendChild(o0);
+        (people || []).forEach(function (n) { var o = q('option', null, n); o.value = n; if (n === cur.who) o.selected = true; sel.appendChild(o); });
+        sel.addEventListener('change', function () { cur.who = sel.value; });
+        p.appendChild(nm); p.appendChild(sel);
+        if (cur.err) p.appendChild(q('div', 'dknote bad', cur.err));
+        row = q('div', 'dkrow2');
+        var sv = q('button', 'pri', cur.saving ? 'Saving…' : 'Save'); sv.type = 'button'; sv.disabled = cur.saving; sv.addEventListener('click', save);
+        var ds = q('button', null, 'Discard'); ds.type = 'button'; ds.disabled = cur.saving; ds.addEventListener('click', end);
+        row.appendChild(sv); row.appendChild(ds); p.appendChild(row);
+        p.appendChild(q('div', 'dknote soft', 'Save gives these doors to the person.'));
+      } else if (list.length) {
+        p = L.DomUtil.create('div', 'dkpan dksaved', box);
+        var tg = q('button', null, showSaved ? 'Hide the saved outlines' : 'Saved outlines (' + list.length + ')'); tg.type = 'button';
+        tg.setAttribute('aria-expanded', String(showSaved));
+        tg.addEventListener('click', function () { showSaved = !showSaved; paint(); });
+        p.appendChild(tg);
+        if (showSaved) list.forEach(function (t) {
+          var r = q('div', 'dksv'); r.appendChild(q('span', null, t.name + ' · ' + t.who));
+          if (t.del) { var x = q('button', null, 'Delete'); x.type = 'button'; x.setAttribute('aria-label', 'Delete the outline ' + t.name); x.addEventListener('click', function () { del(t); }); r.appendChild(x); }
+          p.appendChild(r);
+        });
+      }
+    }
+    drawSaved();
+    if (planOk()) {
+      var ctl = L.control({ position: 'topright' });
+      ctl.onAdd = function () {
+        box = L.DomUtil.create('div', 'leaflet-bar mapsw dkctl dkterr');
+        L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box);
+        L.DomEvent.on(box, 'click', L.DomEvent.stopPropagation);   /* as the Hail layer's */
+        paint(); return box;
+      };
+      ctl.addTo(map);
+    }
+    map.on('unload', function () { document.removeEventListener('keydown', onKey, true); if (D.drawing === dr) D.drawing = null; });   /* the map rebuilt mid-outline */
+    load();
   }
   /* back on the list (2026-10-02): a Not-now whose date has come, or a no-answer that has
      rested (the server sends its come-back day as mark.retry) */

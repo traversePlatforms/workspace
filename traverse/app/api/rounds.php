@@ -3769,6 +3769,68 @@ if ($action === 'doorassign') {
     foreach ($lines as $hk => $ls) if (@file_put_contents(DATA_DIR . '/dassign-' . $hk . '.log', implode("\n", $ls) . "\n", FILE_APPEND | LOCK_EX) === false) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'n' => count($ids)]);
 }
+/* ---- territories drawn on the desk map (2026-10-09) ----
+ * An admin or manager draws an outline on the desktop map, names it and gives it to one person; the page assigns the doors
+ * inside through doorassign (which keeps the team rules), then saves the outline here. territory-<town>.log, one line per
+ * change, append-only like the other logs: {id, name, who, poly: [[lat, lon], ...], by, at}; {id, del: true, by, at} takes
+ * an outline away. Deleting removes the outline only: the doors keep their person. Seen by whoever sees territories. */
+const TERR_MAX_POINTS = 200;
+function loadTerr(string $key): array {
+    $out = [];
+    foreach (logRows('territory', $key) as $r) {
+        if (!is_array($r) || !isset($r['id']) || isset($r['_from'])) continue;   /* this town's own file only: an outline belongs to one town */
+        $id = (string) $r['id'];
+        if (!empty($r['del'])) { unset($out[$id]); continue; }
+        $out[$id] = ['id' => $id, 'name' => (string) ($r['name'] ?? ''), 'who' => (string) ($r['who'] ?? ''), 'poly' => array_values((array) ($r['poly'] ?? [])),
+                     'by' => (string) ($r['by'] ?? ''), 'at' => (int) ($r['at'] ?? 0)];
+    }
+    return $out;
+}
+function appendTerr(string $key, array $row): bool {
+    return (bool) @file_put_contents(DATA_DIR . '/territory-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+if ($action === 'terrlist') {
+    if (!TERRITORIES_OPEN && $role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    $key = (string) ($_GET['region'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    /* 'del': may this person take the outline away (a manager only their team's) */
+    $list = array_map(fn($t) => $t + ['del' => mayAssign($t['who'], '')], array_values(loadTerr($key)));
+    out(['ok' => true, 'territories' => $list]);
+}
+if ($action === 'terrsave') {
+    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!empty($body['del'])) {
+        $id = (string) ($body['id'] ?? '');
+        $cur = loadTerr($key)[$id] ?? null;
+        if (!$cur) fail('That outline is not there any more.', 404);
+        if (!mayAssign($cur['who'], '')) fail('A manager changes territories within their own team.', 403);
+        if (!appendTerr($key, ['id' => $id, 'del' => true, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    $name = trim((string) preg_replace('/[\x00-\x1F\x7F\s]+/u', ' ', (string) ($body['name'] ?? '')));
+    if ($name === '' || mb_strlen($name) > 60) fail('Give the territory a name (up to 60 characters).');
+    $who = trim((string) ($body['who'] ?? ''));
+    $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
+    if ($who === '' || !$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
+    if (!mayAssign('', $who)) fail('A manager saves territories for their own team.', 403);
+    $pts = $body['poly'] ?? null;
+    if (!is_array($pts) || count($pts) < 3 || count($pts) > TERR_MAX_POINTS) fail('Draw an outline of 3 to ' . TERR_MAX_POINTS . ' points.');
+    $poly = [];
+    foreach ($pts as $p) {
+        /* numbers only, as the page sends them (a string or a nested list is refused, not cast) */
+        if (!is_array($p) || count($p) !== 2 || !array_key_exists(0, $p) || !array_key_exists(1, $p)) fail('That outline is not one the app drew.');
+        if (!(is_int($p[0]) || is_float($p[0])) || !(is_int($p[1]) || is_float($p[1]))) fail('That outline is not one the app drew.');
+        $la = (float) $p[0]; $lo = (float) $p[1];
+        if ($la < 36.9 || $la > 41.1 || $lo < -109.1 || $lo > -102.0) fail('The outline has to be in Colorado.');   /* the state's rough box */
+        $poly[] = [round($la, 6), round($lo, 6)];
+    }
+    $row = ['id' => 't' . bin2hex(random_bytes(6)), 'name' => $name, 'who' => $who, 'poly' => $poly, 'by' => $me, 'at' => time()];
+    if (!appendTerr($key, $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'territory' => $row + ['del' => true]]);
+}
 
 const SEARCH_TYPES = ['DR', 'RD', 'LN', 'CT', 'ST', 'AVE', 'AV', 'WAY', 'CIR', 'PL', 'TRL', 'BLVD', 'PKWY', 'HWY', 'LOOP', 'TER', 'PT', 'RUN', 'PASS', 'VW', 'HTS', 'N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'];
 if ($action === 'search') {
