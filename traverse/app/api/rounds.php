@@ -198,7 +198,21 @@ header('Referrer-Policy: no-referrer');
 function out(array $body, int $status = 200): never {
     if (defined('SIXFOLD_CLI')) throw new SixfoldOut($body);    /* the morning email (sixfold-tools/morning-email.php), command line only */
     http_response_code($status);
-    echo json_encode($body, JSON_UNESCAPED_SLASHES);
+    sendJson((string) json_encode($body, JSON_UNESCAPED_SLASHES));
+}
+/* gzip (2026-10-09, Matthew: the app ran slowly): the towns answer is 1.6 MB of JSON and shrinks about ten to one. Compressed
+   here when the browser says it takes gzip, the answer is big enough to matter, and nothing is compressing it already: not
+   PHP (zlib.output_compression or an ob_gzhandler) and not the host (a Content-Encoding already set). Apache and nginx leave
+   a response that carries a Content-Encoding alone, so it is never compressed twice. The page reads only the body (fetch
+   undoes gzip by itself), and sw.js already drops the encoding headers from the copy it keeps. */
+function sendJson(string $txt): never {
+    $zlibOff = in_array(strtolower(trim((string) ini_get('zlib.output_compression'))), ['', '0', 'off', 'no', 'false'], true);
+    if (strlen($txt) >= 1024 && !headers_sent() && stripos((string) ($_SERVER['HTTP_ACCEPT_ENCODING'] ?? ''), 'gzip') !== false
+        && $zlibOff && !preg_grep('/gz|zlib/i', ob_list_handlers()) && !preg_grep('/^content-encoding:/i', headers_list())) {
+        $gz = gzencode($txt, 6);
+        if ($gz !== false) { header('Content-Encoding: gzip'); header('Vary: Accept-Encoding'); $txt = $gz; }
+    }
+    echo $txt;
     exit;
 }
 function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
