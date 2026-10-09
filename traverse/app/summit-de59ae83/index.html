@@ -1425,10 +1425,7 @@
   .fprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
   .fprow .fpn{flex:1;font-weight:700;font-size:14px}
   .fprow .save{min-height:44px;min-width:7em;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14.5px var(--sans);cursor:pointer}
-  .fsum{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
-  .fsum .fsumt{flex:1;display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card,#fff);color:var(--ink);font:700 13.5px var(--sans);text-align:left;cursor:pointer}
-  .fsum .fsumt .ic{flex:none;width:18px;height:18px;color:var(--go)}
-  .fpanel .lnk,.fsum .lnk{min-height:44px;padding:0 6px;border:0;background:none;color:var(--go);font:700 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .fpanel .lnk{min-height:44px;padding:0 6px;border:0;background:none;color:var(--go);font:700 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
   .fbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--go);color:var(--on-go);font:800 11px var(--sans)}
   .dscore{flex:none;align-self:center;min-width:26px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:8px;display:inline-grid;place-items:center;font:800 13.5px var(--sans);font-variant-numeric:tabular-nums}
   .dscore{display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
@@ -4695,7 +4692,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var draw = function () {
       lst.textContent = ''; if (!r) return;
       var qv = (inp.value || '').trim().toUpperCase();
-      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || (a.st || []).some(function (x) { return String(x[0] || x).toUpperCase().indexOf(qv) >= 0; }); });
+      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || (a.st || []).some(function (x) { return String(typeof x === 'string' ? x : (x && x[0]) || '').toUpperCase().indexOf(qv) >= 0; }); });   /* st is street names (2026-10-09: x[0] read the first letter) */
       var left = function (a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); };
       as.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.bestN || 0) - (x.bestN || 0) || left(y) - left(x); });
       as.slice(0, 250).forEach(function (a) {
@@ -4773,14 +4770,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { cls: cls, txt: sc === null ? '' : String(sc), size: size };
   }
   function deskIcon(p) { return L.divIcon({ className: 'dkpin', html: '<span class="pin ' + p.cls + '">' + p.txt + '</span>', iconSize: [p.size, p.size], iconAnchor: [p.size / 2, p.size / 2] }); }
-  function deskStyle(d) {
-    var st = statusOf(d), sel = d.id === S.openDoor, dim = matchOn() && st !== 'x' && !doorMatches(d);
-    var sc = st === 'k' || st === 'd' ? doorScore(d) : null;
-    var fill = st === 'x' ? '#8A948E' : st === 'a' ? '#ffffff' : sc === null ? MAPC[st] : sc >= 7 ? '#1f8a4c' : sc >= 4 ? '#f2c230' : '#c8372d';
-    var ring = sel ? (darkUI() ? '#ffffff' : '#13294b') : sc === 10 ? '#f2c230' : st === 'a' ? '#55635B' : '#ffffff';
-    return { radius: (st === 'x' ? 6 : sc === 10 ? 11 : 9) + (sel ? 4 : 0), color: ring, weight: sel ? 4 : sc === 10 ? 4 : 2,
-      fillColor: fill, fillOpacity: dim ? 0.25 : st === 'x' ? 0.6 : 0.95, opacity: dim ? 0.45 : 1 };
-  }
   function deskOpen(id) {
     S.openDoor = id; S.allClosed = false; S.capture = null; S.pickLater = null; clearEdits(); S.justOpened = id; S.deskReveal = id;
     renderDoors();
@@ -4983,7 +4972,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function filtLoad() { if (S.filt) return; S.filt = {}; try { S.filt = JSON.parse(localStorage.getItem('sixfold.rounds.filters') || '{}') || {}; } catch (e) {} }
   function filtSave() { try { localStorage.setItem('sixfold.rounds.filters', JSON.stringify(S.filt || {})); } catch (e) {} }
   function filtOn() { filtLoad(); if (S.region === SAMPLE_KEY) return []; return FILT.filter(function (x) { return S.filt[x[0]] && x[3](); }); }
-  function picks() { var o = {}; filtOn().forEach(function (x) { o[x[0]] = true; }); return o; }
   function matchOn() { return filtOn().length > 0; }
   function matchWords() { return filtOn().map(function (x) { return x[2].toLowerCase(); }).join(' and '); }
   function doorMatches(d) { return filtOn().every(function (x) { return x[4](d); }); }
@@ -5043,18 +5031,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* under the app bar on a phone; at the top of its own column in the desktop workspace, which scrolls by itself */
     requestAnimationFrame(function () { var ab = document.querySelector('.appbar'); if (ab) bar.style.top = bar.closest('.dk-list') ? '-12px' : ab.offsetHeight + 'px'; });
     return bar;
-  }
-  /* (the closed-panel summary line of the first version; the bar above replaced it) */
-  function filterSummary(shown, all) {
-    var ord = (ORDER.filter(function (o) { return o[0] === S.dview; })[0] || [0, ''])[1], fw = filtOn().map(function (x) { return x[2]; });
-    if (!fw.length && S.dview === (bestTrade() ? 'best' : 'street')) return null;
-    var w = q('div', 'fsum');
-    var t = q('button', 'fsumt'); t.type = 'button'; t.appendChild(ico('filter', 2.2));
-    t.appendChild(document.createTextNode(ord + (fw.length ? ' · ' + fw.join(' · ') + ' · ' + shown + ' of ' + all : '')));
-    t.addEventListener('click', function () { S.filterOpen = true; renderDoors(); window.scrollTo(0, 0); });
-    w.appendChild(t);
-    if (fw.length) { var cl = q('button', 'lnk', 'Clear'); cl.type = 'button'; cl.addEventListener('click', function () { S.filt = {}; filtSave(); renderDoors(); }); w.appendChild(cl); }
-    return w;
   }
   /* ---- JobNimbus (2026-10-08, TraverseRoofing) ----
      The roofer's own JobNimbus API key, pasted once (the server tests it with JobNimbus and keeps it; the page only ever sees its

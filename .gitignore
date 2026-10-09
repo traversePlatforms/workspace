@@ -246,3 +246,5 @@ traverse/data-pipeline/maps/bin/
 
 # the server's ready-made towns answer (2026-10-09), rebuilt by itself
 traverse/app/data/rounds/regions-cache-*.json
+# Sixfold's upload copy of the app's page, shrunk by traverse/editions/minify-page.cjs (2026-10-09); rebuilt in a second
+traverse/app/dist/

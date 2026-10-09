@@ -123,11 +123,6 @@ function crewSees(string $role): bool { return $role === 'admin' || ($role !== '
 /* ---- hail (2026-10-04): the radar estimate per door, built offline by operations/door-territory/hail/build-hail.mjs.
    Admin only, and only where the company turns it on (features.hail). Matthew is evaluating it for roofing. */
 function hailOn(string $role): bool { return crewSees($role) && feature('hail'); }
-function loadHail(string $key): array {
-    static $memo = [];
-    if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $key . '.json'), true); $memo[$key] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
-    return $memo[$key];
-}
 /* roof size and pitch (laser scan) and year built / roof material (county files), per door, built offline
    (operations/door-territory/roofs/sample-roofs.mjs, assessor/build-year.mjs). Admins only, features.roof. */
 function roofDataOn(string $role): bool { return crewSees($role) && feature('roof'); }
@@ -198,7 +193,22 @@ header('Referrer-Policy: no-referrer');
 function out(array $body, int $status = 200): never {
     if (defined('SIXFOLD_CLI')) throw new SixfoldOut($body);    /* the morning email (sixfold-tools/morning-email.php), command line only */
     http_response_code($status);
-    echo json_encode($body, JSON_UNESCAPED_SLASHES);
+    sendJson((string) json_encode($body, JSON_UNESCAPED_SLASHES));
+}
+/* gzip (2026-10-09, Matthew: the app ran slowly): the towns answer is 1.6 MB of JSON and shrinks about ten to one. Compressed
+   here when the browser says it takes gzip, the answer is big enough to matter, and nothing is compressing it already: not
+   PHP (zlib.output_compression or an ob_gzhandler) and not the host (a Content-Encoding already set). Apache and nginx leave
+   a response that carries a Content-Encoding alone, so it is never compressed twice. The page reads only the body (fetch
+   undoes gzip by itself), and sw.js already drops the encoding headers from the copy it keeps. */
+function sendJson(string $txt): never {
+    if (defined('SIXFOLD_CLI')) throw new SixfoldOut((array) json_decode($txt, true));   /* the command-line tools take the answer as an array, as from out() */
+    $zlibOff = in_array(strtolower(trim((string) ini_get('zlib.output_compression'))), ['', '0', 'off', 'no', 'false'], true);
+    if (strlen($txt) >= 1024 && !headers_sent() && stripos((string) ($_SERVER['HTTP_ACCEPT_ENCODING'] ?? ''), 'gzip') !== false
+        && $zlibOff && !preg_grep('/gz|zlib/i', ob_list_handlers()) && !preg_grep('/^content-encoding:/i', headers_list())) {
+        $gz = gzencode($txt, 6);
+        if ($gz !== false) { header('Content-Encoding: gzip'); header('Vary: Accept-Encoding'); $txt = $gz; }
+    }
+    echo $txt;
     exit;
 }
 function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
@@ -1260,9 +1270,10 @@ function hailDayFetch(string $day, array $box): ?array {
     return $outage ? null : ['missing' => 'unreadable'];
 }
 function keepCutoffs(): array { return ['keep' => date('Y-m-d', strtotime('-' . KEEP_YEARS . ' years')), 'major' => date('Y-m-d', strtotime('-' . KEEP_MAJOR_YEARS . ' years'))]; }
-function writeJsonAtomic(string $f, array $j): bool {
+function writeJsonAtomic(string $f, array $j): bool { return writeTextAtomic($f, (string) json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); }
+function writeTextAtomic(string $f, string $txt): bool {
     $tmp = $f . '.tmp' . getmypid() . bin2hex(random_bytes(3));   /* threaded servers share a pid */
-    if (@file_put_contents($tmp, json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) return false;
+    if (@file_put_contents($tmp, $txt, LOCK_EX) === false) return false;
     return @rename($tmp, $f);
 }
 /** bring the hail files up to date (see above). Returns what it did; never throws. */
@@ -1552,8 +1563,12 @@ if ($action === 'regions') {
         $rsig[] = $bn . ':' . (string) @filesize($rf) . ':' . (string) @filemtime($rf);
     }
     $rsig = md5(implode('|', $rsig)); $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
-    $rc = json_decode((string) @file_get_contents($rcache), true);
-    if (is_array($rc) && ($rc['sig'] ?? '') === $rsig && is_array($rc['regions'] ?? null)) out(['ok' => true, 'regions' => $rc['regions'], 'cached' => true]);
+    /* the kept answer is sent as the text it was written as (2026-10-09, speed): decoding 1.7 MB of JSON and encoding it again
+       took 160 ms of every request. The file is {"sig":...,"regions":[...]}, written whole or not at all (writeTextAtomic),
+       so a matching head and a closing ]} is the whole check. */
+    $rc = (string) @file_get_contents($rcache); $rhead = '{"sig":"' . $rsig . '","regions":';
+    if (strncmp($rc, $rhead, strlen($rhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"regions":' . substr($rc, strlen($rhead), -1) . ',"cached":true}');
+    unset($rc);
     $segT = []; $segB = [];                  /* SX-54: conversations and quotes per kind of door, across every town */
     /* the county each town is in, from the funding sheet (one list to keep up to date) */
     $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
@@ -1623,7 +1638,7 @@ if ($action === 'regions') {
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
-                        'st' => topStreets($streets, 4), 'ns' => count($streets), 'who' => $assign[$a['name']] ?? null,
+                        'st' => topStreets($streets, 4), 'who' => $assign[$a['name']] ?? null,
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
                         '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []);
         }
@@ -1650,8 +1665,9 @@ if ($action === 'regions') {
         $rg['odds'] = ['ready' => $ready, 'talked' => $T, 'booked' => $B, 'min' => ODDS_MIN];
     }
     unset($rg);
-    writeJsonAtomic($rcache, ['sig' => $rsig, 'regions' => $regions]);
-    out(['ok' => true, 'regions' => $regions]);
+    $rtxt = (string) json_encode($regions, JSON_UNESCAPED_SLASHES);   /* encoded once, for the file and the answer alike */
+    writeTextAtomic($rcache, $rhead . $rtxt . '}');
+    sendJson('{"ok":true,"regions":' . $rtxt . '}');
 }
 
 if ($action === 'area') {
