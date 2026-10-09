@@ -1091,6 +1091,21 @@ function flagSummary(array $hit): ?array {
  * The Pipeline shows every door marked Quote booked. Ticking "quote sent" moves it to
  * the Quote sent stage. Same append-only shape as the rest. */
 function quotedFile(string $key): string { return DATA_DIR . '/quoted-' . $key . '.log'; }
+/* ---- the roof job (2026-10-09, roofing installs): after the booking, the insurance job's steps with their dates, so the app can
+ * show Colorado's two 72-hour cancellation windows (C.R.S. 6-22-103(1)(f): 72 hours after entering the contract; 6-22-104(1): 72
+ * hours after the homeowner receives the insurer's written denial, in whole or in part, with payments back within 10 days, 6-22-104(2)).
+ * One line per change: { id, step, when ('YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM', Colorado time; null clears), by, at }. */
+const ROOF_STEPS = ['signed', 'claim', 'adjuster', 'approved', 'denied', 'materials', 'installed', 'cancelled'];
+const ROOF_TIMED = ['signed', 'denied', 'cancelled'];   /* the windows run from these, so they carry a time of day */
+function loadRoofJobs(string $key): array {
+    $out = [];
+    foreach (logRows('roofjob', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'], $r['step']) || !in_array($r['step'], ROOF_STEPS, true)) continue;
+        if (($r['when'] ?? null) === null) unset($out[$r['id']][$r['step']]);
+        else $out[$r['id']][$r['step']] = ['when' => (string) $r['when'], 'by' => $r['by'] ?? '', 'at' => (int) ($r['at'] ?? 0)];
+    }
+    return $out;
+}
 function loadQuoted(string $key): array {
     $out = [];
     foreach (logRows('quoted', $key) as $q) {
@@ -4162,6 +4177,7 @@ if ($action === 'areaflag') {
  * owner, acres, fire hazard, coordinates, the number and its source, the note. */
 if ($action === 'quotes') {
     if ($role !== 'admin') fail('Not allowed.', 403);
+    $roofOn = feature('roof');
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $list = [];
     foreach (($idx['regions'] ?? []) as $r) {
@@ -4177,6 +4193,7 @@ if ($action === 'quotes') {
         $work = loadWork($r['key']);
         $res = loadResults($r['key']);
         $walks = loadWalks($r['key']);
+        $rjobs = $roofOn ? loadRoofJobs($r['key']) : [];
         foreach ($data['areas'] as $a) {
             foreach ($a['doors'] as $d) {
                 $m = freshMark($d, $marks[$d['id']] ?? null);
@@ -4195,6 +4212,8 @@ if ($action === 'quotes') {
                     'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
                     'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                     'quoted' => $qd,
+                    /* steps saved before this booking belong to an earlier one */
+                    'roofjob' => $roofOn ? (array_filter($rjobs[$d['id']] ?? [], fn($st) => $st['at'] >= (int) $m['at']) ?: null) : null,
                     'lawn' => $d['lawn'] ?? null, 'lawnfix' => $lfix[$d['id']] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null,
                     'work' => $work[$d['id']] ?? null,
                     'walk' => walkFor($m, $walks[$d['id']] ?? null),
@@ -4207,6 +4226,32 @@ if ($action === 'quotes') {
     }
     usort($list, function ($x, $y) { return $y['at'] <=> $x['at']; });
     out(['ok' => true, 'quotes' => $list]);
+}
+
+if ($action === 'roofjob') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    if (!feature('roof')) fail('Roofing is not turned on here.', 404);
+    $key = (string) ($body['region'] ?? '');
+    $id  = (string) ($body['id'] ?? '');
+    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
+    $key = doorHome($key, $id);
+    $step = (string) ($body['step'] ?? '');
+    if (!in_array($step, ROOF_STEPS, true)) fail('Unknown step.');
+    $when = $body['when'] ?? null;
+    if ($when !== null && $when !== '') {
+        $when = (string) $when;
+        $timed = in_array($step, ROOF_TIMED, true);
+        if (!preg_match($timed ? '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D' : '/^\d{4}-\d{2}-\d{2}$/D', $when)) fail($timed ? 'That step needs a date and a time.' : 'That step needs a date.');
+        $dt = DateTime::createFromFormat($timed ? '!Y-m-d\TH:i' : '!Y-m-d', $when, new DateTimeZone('America/Denver'));
+        if (!$dt || $dt->format($timed ? 'Y-m-d\TH:i' : 'Y-m-d') !== $when) fail('That is not a real date.');
+        $yr = (int) $dt->format('Y'); $now = (int) date('Y');
+        if ($yr < $now - 3 || $yr > $now + 2) fail('That date is too far from today.');
+    } else $when = null;
+    $row = ['id' => $id, 'step' => $step, 'when' => $when, 'by' => $me, 'at' => time()];
+    if (!@file_put_contents(DATA_DIR . '/roofjob-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
 }
 
 if ($action === 'quoted') {

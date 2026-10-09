@@ -1489,6 +1489,23 @@
   .walkup .wur b{color:var(--go)}
   .walkup .wur.soft{color:var(--soft);font-size:12.5px}
   .res{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+  /* the roof job (2026-10-09, roofing installs) */
+  .rj{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px}
+  .rj h4{margin:0 0 8px;font:700 15px var(--sans)}
+  .rj .rjw{margin:0 0 8px;padding:9px 11px;border-radius:10px;background:var(--later-tint);color:var(--ink);font-size:14px;line-height:20px}
+  .rj .rjw b{color:var(--later)}
+  .rj .rjw.done{background:var(--miss-tint)}
+  .rj .rjs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-height:44px;border-top:1px solid var(--line)}
+  .rj .rjs:first-of-type{border-top:0}
+  .rj .rjs > span:first-child{flex:1 1 150px;font-weight:700;font-size:14px}
+  .rj .rjs .when{font-family:var(--mono, monospace);font-size:13px}
+  .rj .rjs input{min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 8px;background:transparent;color:var(--ink);font:14px var(--sans)}
+  .rj .rjs .rb{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  .rj .lnk{min-height:40px;padding:0 6px;background:none;border:0;font:700 13px var(--sans);color:var(--accent);cursor:pointer}
+  .rj .rjlaw{margin-top:8px;font-size:12px;line-height:17px;color:var(--miss)}
+  .rjopen{margin:0 0 12px;padding:12px;border-radius:14px;background:var(--later-tint)}
+  .rjopen h4{margin:0 0 6px;font:700 15px var(--sans);color:var(--later)}
+  .rjopen div{font-size:14px;line-height:21px}
   .res .rb{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .res .rb.won{border-color:var(--go);color:var(--go)}
   .res .rb.lost{border-color:var(--miss);color:var(--miss)}
@@ -6801,7 +6818,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
     top.appendChild(jb);
     holder.appendChild(top);
-    if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());   /* send booked doors straight into JobNimbus (2026-10-08) */
+    if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());
+    var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
     if (S.metaPrev) holder.appendChild(metaPreview());
     holder.appendChild(walksUp(S.qlist || []));
@@ -8005,7 +8023,92 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     c.appendChild(b);
     c.appendChild(resultBox(x));
+    if (feat('roof') && !(x.result && x.result.result === 'lost')) c.appendChild(roofJobBox(x));
     return c;
+  }
+  /* ---- the roof job (2026-10-09, roofing installs) ----
+     The insurance job after the booking, step by step with dates, and Colorado's two 72-hour cancellation windows worked out
+     from them: 72 hours after the contract is signed (C.R.S. 6-22-103(1)(f)), and 72 hours after the homeowner receives the
+     insurer's written denial, in whole or in part, with payments back within 10 days of cancelling (6-22-104). Dates are
+     Colorado wall time as typed; the steps can be filled in any order, because jobs run in different orders. */
+  var ROOF_STEP = [['signed', 'Contract signed', 1], ['claim', 'Claim filed', 0], ['adjuster', 'Adjuster meeting', 0], ['approved', 'Claim approved', 0],
+    ['denied', 'Denial reached the homeowner', 1], ['materials', 'Materials delivered', 0], ['installed', 'Roof installed', 0], ['cancelled', 'Homeowner cancelled', 1]];
+  function rjDate(v) { var p = String(v).split(/[-T:]/); return new Date(+p[0], +p[1] - 1, +p[2], +(p[3] || 0), +(p[4] || 0)); }
+  function rjFmt(d, timed) {
+    var s = WDAY[d.getDay()].slice(0, 3) + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+    if (d.getFullYear() !== new Date().getFullYear()) s += ' ' + d.getFullYear();
+    return timed ? s + ', ' + fmtTime(d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2)) : s;
+  }
+  function rjLocal(d, timed) { var z = function (n) { return ('0' + n).slice(-2); }; var s = d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); return timed ? s + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()) : s; }
+  /* what the dates mean today: open windows, a refund due, payments in trust */
+  function rjNotes(j) {
+    var out = [], now = new Date(), H72 = 72 * 3600 * 1000;
+    var st = function (k) { return j && j[k] ? rjDate(j[k].when) : null; };
+    var sg = st('signed'), dn = st('denied'), cx = st('cancelled');
+    if (cx) {
+      if (dn && cx >= dn) out.push({ k: 'refund', t: 'Cancelled after the denial: payments go back by ' + rjFmt(new Date(cx.getTime() + 10 * 864e5), false) + ' (within 10 days), less work actually done.' });
+      else out.push({ k: 'refund', t: 'Cancelled: any deposit goes back in full.' });
+      return out;
+    }
+    if (sg && now < new Date(sg.getTime() + H72)) out.push({ k: 'open', until: new Date(sg.getTime() + H72), t: 'can cancel until ', why: ' (72 hours after signing) and get any deposit back in full.' });
+    if (dn && now < new Date(dn.getTime() + H72)) out.push({ k: 'open', until: new Date(dn.getTime() + H72), t: 'can cancel until ', why: ' (72 hours after the denial reached them). Payments go back within 10 days, less work actually done.' });
+    if (sg && !st('materials') && !st('installed')) out.push({ k: 'trust', t: 'Payments stay in trust until materials are delivered or most of the work is done.' });
+    return out;
+  }
+  function rjNoteEl(n) {
+    var d = q('div', 'rjw' + (n.k === 'open' ? '' : ' done'));
+    if (n.k === 'open') { d.appendChild(document.createTextNode('The homeowner ' + n.t)); d.appendChild(q('b', null, rjFmt(n.until, true))); d.appendChild(document.createTextNode(n.why)); }
+    else d.textContent = n.t;
+    return d;
+  }
+  function roofJobBox(x) {
+    var j = x.roofjob || {}, box = q('div', 'rj');
+    box.appendChild(q('h4', null, 'Roof job'));
+    rjNotes(j).forEach(function (n) { box.appendChild(rjNoteEl(n)); });
+    ROOF_STEP.forEach(function (st) {
+      var k = st[0], timed = !!st[2], row = q('div', 'rjs'), ek = x.region + '|' + x.id + '|' + k;
+      row.setAttribute('data-step', k);
+      row.appendChild(q('span', null, st[1]));
+      if (S.rjEdit === ek) {
+        var inp = q('input'); inp.type = timed ? 'datetime-local' : 'date';
+        inp.value = j[k] ? j[k].when : rjLocal(new Date(), timed); inp.setAttribute('aria-label', st[1]);
+        var sv = q('button', 'rb', 'Save'); sv.type = 'button';
+        sv.addEventListener('click', function () { if (inp.value) saveRoofStep(x, k, inp.value); });
+        var cl = q('button', 'lnk', 'Cancel'); cl.type = 'button'; cl.addEventListener('click', function () { S.rjEdit = null; drawPipe(); });
+        row.appendChild(inp); row.appendChild(sv);
+        if (j[k]) { var rm = q('button', 'lnk', 'Clear'); rm.type = 'button'; rm.addEventListener('click', function () { saveRoofStep(x, k, null); }); row.appendChild(rm); }
+        row.appendChild(cl);
+        setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
+      } else if (j[k]) {
+        row.appendChild(q('span', 'when', rjFmt(rjDate(j[k].when), timed)));
+        var ch = q('button', 'lnk', 'Change'); ch.type = 'button'; ch.addEventListener('click', function () { S.rjEdit = ek; drawPipe(); });
+        row.appendChild(ch);
+      } else {
+        var ad = q('button', 'rb', 'Add date'); ad.type = 'button'; ad.addEventListener('click', function () { S.rjEdit = ek; drawPipe(); });
+        row.appendChild(ad);
+      }
+      box.appendChild(row);
+    });
+    box.appendChild(q('div', 'rjlaw', 'From Colorado\u2019s roofing law (C.R.S. 6-22-103 and 104). Never offer to pay, waive or rebate the deductible (6-22-105).'));
+    return box;
+  }
+  function saveRoofStep(x, step, when) {
+    api('roofjob', { body: { region: x.region, id: x.id, step: step, when: when } }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+      S.rjEdit = null; pipelineView();
+    }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+  }
+  /* the Pipeline's top: every booking with a cancellation window open right now, soonest first */
+  function roofWindows(list) {
+    var open = [];
+    list.forEach(function (x) { if (x.result && x.result.result === 'lost') return; rjNotes(x.roofjob).forEach(function (n) { if (n.k === 'open') open.push({ x: x, until: n.until }); }); });
+    if (!open.length) return null;
+    open.sort(function (a, b) { return a.until - b.until; });
+    var box = q('div', 'rjopen');
+    box.appendChild(q('h4', null, open.length === 1 ? 'A cancellation window is open' : open.length + ' cancellation windows are open'));
+    open.forEach(function (o) { box.appendChild(q('div', null, o.x.address + ' \u00b7 until ' + rjFmt(o.until, true))); });
+    return box;
   }
   /* ---- what became of it (2026-10-03): won with the job's value, or lost with a reason.
      The Results screen reads these to show which doors actually turn into jobs. ---- */
