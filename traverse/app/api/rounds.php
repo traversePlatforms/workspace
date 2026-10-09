@@ -1246,7 +1246,7 @@ function hailDayFetch(string $day, array $box): ?array {
 }
 function keepCutoffs(): array { return ['keep' => date('Y-m-d', strtotime('-' . KEEP_YEARS . ' years')), 'major' => date('Y-m-d', strtotime('-' . KEEP_MAJOR_YEARS . ' years'))]; }
 function writeJsonAtomic(string $f, array $j): bool {
-    $tmp = $f . '.tmp' . getmypid();
+    $tmp = $f . '.tmp' . getmypid() . bin2hex(random_bytes(3));   /* threaded servers share a pid */
     if (@file_put_contents($tmp, json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) return false;
     return @rename($tmp, $f);
 }
@@ -1529,8 +1529,11 @@ if ($action === 'regions') {
        day turns, or the code changes. One per kind of viewer: what it shows differs only by admin or not and whether crew see scores. */
     $rkind = ($role === 'admin' ? 'a' : 'c') . (crewSees($role) ? '1' : '0') . ((TERRITORIES_OPEN || $role === 'admin') ? 't' : 'n');
     $rsig = [$today, (string) @filemtime(__FILE__)];
+    /* files written on timers that the towns answer never reads (Fable review 2026-10-09: the alerts cron rewrote alerts-cache.json
+       every few minutes, so the kept answer rarely lived past ten) */
+    $rskip = array_flip(['alerts-cache.json', 'push-sent.json', 'push.log', 'storms-recent.json', 'climate-cache.json', 'secmap-cache.json', 'storm-refresh.json', 'calendar.log']);
     foreach (array_merge(glob(DATA_DIR . '/*.json') ?: [], glob(DATA_DIR . '/*.log') ?: [], glob(DATA_DIR . '/docs/*.json') ?: []) as $rf) {
-        $bn = basename($rf); if (strpos($bn, 'regions-cache-') === 0 || strpos($bn, 'best-') === 0) continue;
+        $bn = basename($rf); if (strpos($bn, 'regions-cache-') === 0 || strpos($bn, 'best-') === 0 || isset($rskip[$bn])) continue;
         $rsig[] = $bn . ':' . (string) @filesize($rf) . ':' . (string) @filemtime($rf);
     }
     $rsig = md5(implode('|', $rsig)); $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
@@ -1607,7 +1610,7 @@ if ($action === 'regions') {
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
                         'st' => topStreets($streets, 4), 'ns' => count($streets), 'who' => $assign[$a['name']] ?? null,
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
-                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8] : []);
+                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []);
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
         unset($data, $bp, $areas);   /* free this town before the next is read (2026-10-08): two big towns at once passed 96 MB */

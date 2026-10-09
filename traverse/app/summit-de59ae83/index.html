@@ -4659,6 +4659,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function officeReset() {
     if (S.desk && S.desk.map) try { S.desk.map.remove(); } catch (e) {}
     if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}
+    if (S.browseMap) try { S.browseMap.remove(); } catch (e) {}
+    clearInterval(S.officeTick); S.browseMap = null;   /* Fable review 2026-10-09: left behind at sign-out */
     S.desk = null; S.officeMap = null; S.plan = null; S.deskScroll = null; S.deskCardScroll = null;
     S.deskHail = null; S.terr = null;   /* the desk map's hail day and drawn territories (2026-10-09) */
   }
@@ -5236,7 +5238,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* a neighbourhood's score (2026-10-09): the average 1-10 score of its doors still to knock, coloured like a door's, and its 8-or-better count */
   /* the order to pick neighbourhoods by score: the average, pulled towards 5 where only a few doors are left, so one leftover 8
      doesn't outrank 28 doors averaging 7 (2026-10-09) */
-  function hoodRank(a) { var n = Math.max(0, a.total - a.done - (a.noanswer || 0)); return typeof a.sc === 'number' && n ? (a.sc * n + 5 * 5) / (n + 5) : 0; }
+  function hoodRank(a) { var n = Math.max(0, a.total - a.done - (a.noanswer || 0)), m = a.scn || n; return typeof a.sc === 'number' && n ? (a.sc * m + 5 * 5) / (m + 5) : 0; }   /* m: the doors the server averaged (resting no-answers too) */
   function hoodScore(a) {
     var v = Math.round(a.sc), c = q('span', 'hscore');
     c.appendChild(q('span', 'dscore ' + (v >= 10 ? 'top' : v >= 7 ? 'hi' : v >= 4 ? 'mid' : 'lo'), a.sc.toFixed(1)));
@@ -7509,7 +7511,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return n;
   }
   function openHood(key, name) {
-    S.region = key; S.area = null; S.openDoor = null; S.allClosed = false; S.capture = null; S.mapSel = null; S.filterOpen = false;
+    keepLeft(); S.region = key; S.area = null; S.openDoor = null; S.allClosed = false; S.capture = null; S.mapSel = null; S.filterOpen = false;
     openArea(name);
   }
   /* ---- the Hail layer on the desk map (2026-10-09) ----
