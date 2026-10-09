@@ -12,7 +12,7 @@
  *
  * Writes solar-cache.json here: { "lat,lon": { a: {S,SE,SW,E,W,N,F}, sd, h, shade, yr } | { err } }.
  * Incremental: re-running measures only doors not in the cache.
- *   node sample-solar.mjs [--town=monument] [--conc=4] [--limit=N]
+ *   node sample-solar.mjs [--town=monument] [--conc=4] [--limit=N] [--redo]
  *   node sample-solar.mjs --build      writes app/data/rounds/solar-<town>.json (with the yield table and utilities) */
 import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -118,7 +118,8 @@ async function sample() {
     const p = join(DT, `${town}-areas.json`);
     if (!existsSync(p)) continue;
     const all = JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.la === 'number');
-    const todo = all.filter((d) => !cache[`${d.la},${d.lo}`]).slice(0, LIMIT);
+    const REDO = process.argv.includes('--redo');   /* measure again even if cached (2026-10-09: Teller, after its grids were redone) */
+    const todo = all.filter((d) => REDO || !cache[`${d.la},${d.lo}`]).slice(0, LIMIT);
     if (!todo.length) { console.log(`${town}: all ${all.length} measured`); continue; }
     const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);
     const bbox = [Math.min(...lons) - 0.003, Math.min(...lats) - 0.003, Math.max(...lons) + 0.003, Math.max(...lats) + 0.003];
