@@ -1105,6 +1105,9 @@
   :root[data-theme="dark"] .legend i.ring{border-color:#fff!important}
   /* the desk map's Hail layer and Draw a territory (2026-10-09): white panels under their buttons, like the map's other controls */
   .dkctl{max-width:260px}
+  .leaflet-bar.mapsw.dkctl{display:block}   /* the Hail and Territory panels stack; only the Map/Hybrid/Photo switch is a row (2026-10-09) */
+  .leaflet-bar.mapsw.dkctl > button{width:100%;text-align:left;padding:0 12px!important}
+  .leaflet-bar.mapsw.dkctl > button[aria-pressed="true"]{background:#eef2f7;color:#16201C}
   .dkctl .dkc-main{width:100%;text-align:left}
   .dkctl .dkpan{width:250px;box-sizing:border-box;padding:8px 10px 10px;border-top:1px solid #DCD3C3;background:#fff;color:#16201C;font:13px/1.4 var(--sans)}
   .dkctl .dklist{max-height:300px;overflow:auto;overscroll-behavior:contain}
@@ -7480,7 +7483,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         grp.addLayer(m); n++;
       });
     });
-    grp.addTo(map);
+    /* far out the rings pile into blobs: they show from town level in (2026-10-09) */
+    var fit = function () { var on = map.getZoom() >= 12; if (on && !map.hasLayer(grp)) grp.addTo(map); if (!on && map.hasLayer(grp)) map.removeLayer(grp); };
+    map.on('zoomend', fit); fit();
     return n;
   }
   function openHood(key, name) {
