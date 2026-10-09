@@ -1099,6 +1099,71 @@
   .mapsw button[aria-pressed="true"]{background:#13294b;color:#fff}
   .legend i.ring{background:transparent!important;border:2px dashed #13294b!important;box-shadow:none}
   :root[data-theme="dark"] .legend i.ring{border-color:#fff!important}
+  /* the desktop as its own app (2026-10-09, mock-up A) */
+  .dnav{position:sticky;top:0;z-index:12;display:flex;align-items:center;gap:14px;height:56px;padding:0 18px;background:var(--bar);color:var(--bar-ink,#fff);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .dnav[hidden]{display:none!important}
+  .dnav .dnh{display:flex;align-items:center;gap:10px;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+  .dnav .dnh svg{width:30px;height:30px;color:var(--ember)}
+  .dnav .dnh b{font:600 19px var(--serif);white-space:nowrap}
+  .dnav .dnl{display:flex;gap:4px}
+  .dnav .dnl button{min-height:40px;padding:0 12px;border:0;border-radius:10px;background:none;color:inherit;opacity:.78;font:700 14px var(--sans);cursor:pointer}
+  .dnav .dnl button:hover{opacity:1;background:rgba(255,255,255,.08)}
+  .dnav .dnl button.on{opacity:1;background:rgba(255,255,255,.16)}
+  .dnav .dnsp{flex:1}
+  .dnav .dns{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.1)}
+  .dnav .dns .ic{width:16px;height:16px;opacity:.8}
+  .dnav .dns input{width:190px;border:0;background:transparent;color:inherit;font:14px var(--sans);outline:none}
+  .dnav .dns input::placeholder{color:inherit;opacity:.7}
+  body.dnav-on .appbar{top:56px}
+  body.dnav-on .plan .planbar{top:120px}
+  body.dk-on #hdr,body.dk-on #dock{display:none!important}
+  .desk .dk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+  .desk .dkh-t b{display:block;font:400 21px/1.15 var(--serif)}
+  .desk .dkh-t small{font-size:13px;color:var(--soft)}
+  .desk .dkh-b{min-height:40px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  #view .desk .dkrow{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:0 0 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);box-shadow:none;cursor:pointer}
+  #view .desk .dkrow{position:relative;overflow:hidden;padding-left:18px}
+  #view .desk .dkrow::before{width:5px;border-radius:0}   /* the fire edge, a bar down the left like the phone card */
+  #view .desk .dk-card .door.open::before,#view .desk .dk-card .door.open::after{display:none}
+  #view .desk .dkrow:hover{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
+  #view .desk .dkrow.sel{box-shadow:none;outline:2px solid var(--ember,#d6400c);background:color-mix(in srgb,var(--ember,#d6400c) 12%,var(--card))}
+  .desk .dkr-m{flex:1;min-width:0}
+  .desk .dkr-m b{display:block;font:700 15px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .desk .dkr-m small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;color:var(--soft)}
+  .desk .dkrow .dist{font-size:12px;color:var(--soft)}
+  .desk .strh{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:14px 2px 6px}
+  .dkpin{background:none;border:0}
+  .dkpin .pin{display:grid;place-items:center;width:100%;height:100%;box-sizing:border-box;border-radius:50%;font:800 12px var(--sans);color:#fff;box-shadow:0 0 0 2px #fff,0 1px 4px rgba(0,0,0,.35);cursor:pointer}
+  .dkpin .pin.hi{background:#1f8a4c}
+  .dkpin .pin.top{background:#1f8a4c;font-size:13px;box-shadow:0 0 0 3px #f2c230,0 0 10px 2px rgba(242,194,48,.7)}
+  .dkpin .pin.mid{background:#f2c230;color:#3a2b00}
+  .dkpin .pin.lo{background:#c8372d}
+  .dkpin .pin.plain{background:#2563A8}
+  .dkpin .pin.back{background:#2F7A4F}
+  .dkpin .pin.miss{background:#fff;box-shadow:0 0 0 2px #55635B}
+  .dkpin .pin.done{background:#8A948E;opacity:.75}
+  .dkpin .pin.sel{box-shadow:0 0 0 3px #13294b,0 0 0 7px rgba(214,64,12,.35)}
+  :root[data-theme="dark"] .dkpin .pin.sel{box-shadow:0 0 0 3px #fff,0 0 0 7px rgba(214,64,12,.45)}
+  .dkpin .pin.dim{opacity:.3}
+  .desk .dk-legend{flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;right:auto;max-width:calc(100% - 140px);padding:8px 12px;border-radius:12px;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 16px rgba(0,0,0,.06)}
+  .desk .dk-legend span{background:none;box-shadow:none;padding:0;font-size:13px}
+  .mapsw button{border-radius:10px!important;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .desk .dk-card{padding:18px 18px 0}
+  .desk .dkc-top{display:flex;align-items:flex-start;gap:12px}
+  .desk .dkc-t{flex:1;min-width:0}
+  .desk .dkc-t h2{margin:0;font:400 24px/1.25 var(--serif)}
+  .desk .dkc-sub{font-size:13px;color:var(--soft);margin-top:2px}
+  .desk .dscore.big{height:34px;padding:0 10px;font-size:17px;border-radius:10px}
+  .desk .dkc-x{flex:none;width:40px;height:40px;margin:-4px -6px 0 0;border:0;border-radius:10px;background:none;color:var(--soft);cursor:pointer;display:grid;place-items:center}
+  .desk .dkc-x .ic{width:20px;height:20px}
+  .desk .dkc-why{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--ink) 5%,transparent);font-weight:700;font-size:14px}
+  .desk .dkc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 4px}
+  .desk .dkc-tile{padding:9px 12px;border-radius:12px;border:1px solid var(--line)}
+  .desk .dkc-tile small{display:block;font-size:12.5px;color:var(--soft)}
+  .desk .dkc-tile span{font:500 13px/1.35 var(--mono,ui-monospace,monospace)}
+  #view .desk .dk-card .door.open{margin:6px 0 0;padding:0;border:0;background:none;box-shadow:none}
+  #view .desk .dk-card .door.open > .d-top,#view .desk .dk-card .door.open > .bestwhy,#view .desk .dk-card .door.open .meta .own{display:none}
+  #view .desk .dk-card .door.open .acts{position:sticky;bottom:0;z-index:2;margin:14px -18px 0;padding:12px 18px;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 14px rgba(0,0,0,.06)}
   /* the planning table (2026-10-08) */
   .wrap:has(> #view > .plan){max-width:1480px}
   .plan .planhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 10px}
@@ -1795,6 +1860,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function setBar(mode, o) {
     o = o || {};
     hdr.hidden = false;
+    document.body.classList.remove('dk-on');   /* the workspace hides this bar; every other screen shows it (2026-10-09) */
+    if (typeof dnavPaint === 'function') { dnavPaint(); setTimeout(dnavPaint, 0); }   /* the desktop top bar follows the screen */
     S.barArea = null;                             /* renderDoors re-claims it */
     var b = document.getElementById('barin');
     b.textContent = '';
@@ -1904,7 +1971,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Sign in: six boxes and a number pad, big enough for gloves. A keyboard works
      too (digits, Backspace). Six digits sends it; a wrong code shakes and clears. */
   function signinView(err) {
-    S.me = null; S.role = 'crew'; S.sid = null; officeReset();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3929,6 +3996,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      next to knock), the rest one line each; a yes opens everything in one panel; the money buttons
      become one line saying what this door qualifies for; a filter for the three drivers. */
   function doorRow(d) {
+    if (deskOn()) return deskRow(d);   /* the desktop list's compact row (2026-10-09) */
     var row = q('div', 'door drow ' + fireClass(d.fire)); row.setAttribute('data-id', d.id);
     row.setAttribute('role', 'button'); row.tabIndex = 0;
     var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', d.address));
@@ -3985,6 +4053,124 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      the full-screen map. */
   var DESK_MQ = window.matchMedia ? matchMedia('(min-width: 1100px)') : null;
   function deskOn() { return !!(DESK_MQ && DESK_MQ.matches) && S.screen === 'doors' && S.dview !== 'map'; }
+  /* ---- the desktop top bar (2026-10-09) ----
+     On a computer the app runs like a desktop app: one bar across the top with the places people go (each only for the roles
+     and editions that have it), a search box and the profile; the phone's own bars stay for the screens inside. */
+  var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
+  hdr.parentNode.insertBefore(dnav, hdr);
+  function dnavItems() {
+    var it = [['doors', 'Doors', function () { S.returnTo = null; if (S.region && S.area) openArea(S.area); else if (S.region) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
+    if (planOk()) it.push(['plan', 'Plan', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }, ['plan']]);
+    if (S.role === 'admin' && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
+    if (S.role === 'admin') it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip']]);
+    else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
+    it.push(['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]);
+    if (planOk()) it.push(['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]);
+    else it.push(['team', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);
+    if (planOk()) it.push(['office', 'Office', officeView, ['office']]);
+    return it;
+  }
+  function dnavOn() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me && S.screen !== 'signin'; }
+  function dnavPaint() {
+    var on = dnavOn();
+    document.body.classList.toggle('dnav-on', on); dnav.hidden = !on;
+    if (!on) return;
+    var items = dnavItems(), sig = [S.me, S.role, S.avatar || '', (CO && CO.name) || '', items.map(function (x) { return x[0]; }).join()].join('|');
+    if (dnav._sig !== sig) {
+      dnav._sig = sig; dnav.textContent = '';
+      var home = q('button', 'dnh'); home.type = 'button'; home.setAttribute('aria-label', 'Field tools');
+      home.appendChild(ridge('mk')); home.appendChild(q('b', null, (CO && CO.name) || 'Doors'));
+      home.addEventListener('click', chooseView); dnav.appendChild(home);
+      var links = q('div', 'dnl');
+      items.forEach(function (x) { var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('data-k', x[0]); b.addEventListener('click', function () { window.scrollTo(0, 0); x[2](); }); links.appendChild(b); });
+      dnav.appendChild(links);
+      dnav.appendChild(q('span', 'dnsp'));
+      var lab = q('label', 'dns'); lab.appendChild(ico('search', 2.2));
+      var inp = q('input'); inp.type = 'search'; inp.placeholder = 'Find an address'; inp.setAttribute('aria-label', 'Find an address'); inp.autocomplete = 'off';
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { S.searchQ = inp.value.trim(); inp.value = ''; inp.blur(); searchView(chooseView); } });
+      lab.appendChild(inp); dnav.appendChild(lab);
+      dnav.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
+    }
+    var cur = S.screen;
+    [].forEach.call(dnav.querySelectorAll('.dnl button'), function (b) {
+      var x = items.filter(function (y) { return y[0] === b.getAttribute('data-k'); })[0];
+      var act = !!x && x[3].indexOf(cur) >= 0;
+      b.classList.toggle('on', act); if (act) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+  }
+  /* ---- the desk list's rows (2026-10-09): one line of what makes the door worth it, and its score ---- */
+  var FIRE_WORD = ['', 'Very low fire hazard', 'Low fire hazard', 'Moderate fire hazard', 'High fire hazard', 'Very high fire hazard'];
+  function deskFacts(d) {
+    var sp = scoreParts(d), out = [];
+    if (sp && sp.f && sp.f.length) out = sp.f.filter(function (x) { return x[0] > 0; }).sort(function (a, b) { return b[0] - a[0]; }).slice(0, 3).map(function (x) { return x[1]; });
+    if (!out.length) {
+      var lv = cardOn('lawn') ? lawnLevelOf(d) : null, tl = cardOn('trees') ? treeLevel(d) : null;
+      if (lv === 'L') out.push('Large lawn'); else if (lv === 'M') out.push('Medium lawn');
+      if (tl === 'against') out.push('Trees against the house'); else if (tl === 'heavy') out.push('Heavy trees within 30 ft');
+      if (cardOn('fire') && FIRE_WORD[d.fire] && d.fire >= 4) out.push(FIRE_WORD[d.fire]);
+      if (!out.length && d.acres) out.push(d.acres.toFixed(2) + ' acres');
+    }
+    if (d.mark && backOn(d)) out.unshift(d.mark.outcome === 'later' ? 'Due back' : 'Try again');
+    if (d.os) out.push('New owner');
+    if (d.rep) out.push(d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep);
+    if (d.cust) out.push('Customer');
+    return out.join(' \u00b7 ');
+  }
+  function deskRow(d) {
+    var row = q('div', 'door drow dkrow ' + fireClass(d.fire)); row.setAttribute('data-id', d.id);
+    row.setAttribute('role', 'button'); row.tabIndex = 0;
+    var m = q('span', 'dkr-m'); m.appendChild(q('b', null, d.address));
+    var fx = deskFacts(d); if (fx) m.appendChild(q('small', null, fx));
+    row.appendChild(m);
+    var dl = distLabel(d); if (dl) row.appendChild(q('span', 'dist', dl));
+    var sc = scoreChip(d); if (sc) row.appendChild(sc);
+    var open = function () {
+      S.openDoor = d.id; S.allClosed = false; S.capture = null; clearEdits(); S.justOpened = d.id; renderDoors();
+      var c = view.querySelector('.dk-card'); if (c) c.scrollTop = 0;
+    };
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    return row;
+  }
+  /* ---- the desk card's head (2026-10-09): the address, the score and why, then the trade's facts as tiles ---- */
+  function deskTiles(d) {
+    var t = [], tr = bestTrade(), cap = function (x) { return x.charAt(0) + x.slice(1).toLowerCase(); };
+    var mx = function (arr) { return arr.reduce(function (m, x) { return (x[1] || 0) > (m[1] || 0) ? x : m; }, arr[0]); };
+    if (d.roof && d.roof.sq) t.push(['Roof', Number(d.roof.sq).toLocaleString('en-US') + ' sq ft \u00b7 ' + (d.roof.flat ? 'low slope' : d.roof.pitch + '/12')]);
+    if (d.roof || tr === 'roof') {
+      var mt = d.matfix ? (MAT_NAME[d.matfix.m] || d.matfix.m) + ' (seen)' : d.bld && d.bld.mat ? cap(d.bld.mat) + ' (county)' : d.mat && d.mat.src === 'imagery' ? (MAT_NAME[d.mat.m] || d.mat.m) + ' (photo)' : null;
+      if (mt) t.push(['Material', mt]);
+    }
+    if (cardOn('hail') && d.hail && d.hail.length) { var h = mx(d.hail); t.push(['Biggest hail', inch(h[1]) + ' \u00b7 ' + hailDay(h[0])]); }
+    if (cardOn('hail') && d.wind && d.wind.length) { var w = mx(d.wind); if (w[1]) t.push(['Wind', w[1] + ' mph \u00b7 ' + hailDay(w[0])]); }
+    if (feat('solar') && d.solar) {
+      if (d.solar.kwh) t.push(['Solar a year', d.solar.kwh.toLocaleString('en-US') + ' kWh']);
+      if (d.solar.pn) t.push(['Panels', d.solar.pn + (d.solar.kw ? ' \u00b7 ' + d.solar.kw + ' kW' : '')]);
+      if (d.solar.sh) t.push(['Shade', ({ open: 'Open', some: 'Some', heavy: 'Heavy' })[d.solar.sh] || d.solar.sh]);
+    }
+    if (cardOn('lawn')) { var lv = ({ L: 'Large', M: 'Medium', S: 'Small' })[lawnLevelOf(d)]; if (lv) t.push(['Lawn', lv + (d.lawn && d.lawn.sq ? ' \u00b7 ' + Math.round(d.lawn.sq).toLocaleString('en-US') + ' sq ft' : '')]); }
+    if (cardOn('trees')) { var tw = ({ against: 'Against the house', heavy: 'Heavy within 30 ft' })[treeLevel(d)]; if (tw) t.push(['Trees', tw]); }
+    if (cardOn('fire') && FIRE_WORD[d.fire]) t.push(['Fire hazard', FIRE_WORD[d.fire].replace(' fire hazard', '')]);   /* 1 to 5; anything else is left off */
+    if (d.bld && d.bld.yb) t.push(['Built', d.bld.yb + (d.bld.rm ? ', remodeled ' + d.bld.rm : '')]);
+    if (d.acres) t.push(['Lot', d.acres.toFixed(2) + ' acres']);
+    var v = d.val || (d.cen && d.cen.v); if (v) t.push([d.val ? 'County value' : 'Block home value', fmtVal(v)]);
+    return t.slice(0, 8);
+  }
+  function deskHead(d) {
+    var box = q('div', 'dkc-head');
+    var top = q('div', 'dkc-top'), tt = q('div', 'dkc-t');
+    tt.appendChild(q('h2', null, d.address));
+    tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), 'Owner: ' + ownerText(d.owner)].join(' \u00b7 ')));
+    top.appendChild(tt);
+    var sc = scoreChip(d); if (sc) { sc.classList.add('big'); top.appendChild(sc); }
+    var x = q('button', 'dkc-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close this door'); x.appendChild(ico('close', 2.4));
+    x.addEventListener('click', closeDoor); top.appendChild(x);
+    box.appendChild(top);
+    var why = scoreWhy(d); if (why) { why.classList.add('dkc-why'); box.appendChild(why); }
+    var tl = deskTiles(d);
+    if (tl.length) { var g = q('div', 'dkc-tiles'); tl.forEach(function (x) { var c = q('div', 'dkc-tile'); c.appendChild(q('small', null, x[0])); c.appendChild(q('span', null, x[1])); g.appendChild(c); }); box.appendChild(g); }
+    return box;
+  }
   function deskSave() {
     var l = view.querySelector('.dk-list'), c = view.querySelector('.dk-card');
     if (l) S.deskScroll = { area: S.region + '|' + S.area, top: l.scrollTop };
@@ -3999,17 +4185,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function doorById(id) { for (var i = 0; i < S.doors.length; i++) if (S.doors[i].id === id) return S.doors[i]; return null; }
   function deskLayout() {
+    document.body.classList.toggle('dk-on', deskOn());
     if (!deskOn()) return;
     var key = S.region + '|' + S.area, list = q('div', 'dk-list'), card = q('div', 'dk-card');
     card.setAttribute('aria-label', 'Door card');
+    /* the list's header: the town, the neighbourhood and what is left, and the way back (2026-10-09) */
+    var nLeft = S.doors.filter(function (d) { return !d.mark || backOn(d); }).length;
+    var lh = q('div', 'dk-head'), lt = q('div', 'dkh-t');
+    lt.appendChild(q('b', null, townLabel())); lt.appendChild(q('small', null, S.area + ' \u00b7 ' + nLeft + (nLeft === 1 ? ' door' : ' doors') + ' to knock'));
+    lh.appendChild(lt);
+    var chg = q('button', 'dkh-b', S.returnTo ? 'Back' : 'Change'); chg.type = 'button'; chg.addEventListener('click', areaBack); lh.appendChild(chg);
+    list.appendChild(lh);
     while (view.firstChild) list.appendChild(view.firstChild);
     var openEl = list.querySelector('.door.open'), od = S.openDoor ? doorById(S.openDoor) : null;
     if (openEl) {
       /* the open card moves to the right; the list keeps a highlighted row in its place */
       var d = doorById(openEl.getAttribute('data-id'));
       if (d) { var r = doorRow(d); r.classList.add('sel'); r.setAttribute('aria-current', 'true'); openEl.parentNode.replaceChild(r, openEl); }
+      var hd = d && deskHead(d); if (hd) card.appendChild(hd);
       card.appendChild(openEl);
-    } else if (od) card.appendChild(doorCardFor(od));   /* a door the list does not show (done, or filtered out), opened from the map */
+    } else if (od) { card.appendChild(deskHead(od)); card.appendChild(doorCardFor(od)); }   /* a door the list does not show (done, or filtered out), opened from the map */
     else card.appendChild(q('div', 'dk-empty', 'Pick a door from the list or the map to see its card here.'));
     var keep = S.desk && S.desk.key === key ? S.desk.col : null;
     var grid = q('div', 'desk');
@@ -4026,12 +4221,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function deskSize() {
     var g = view.querySelector('.desk'); if (!g) return;
     var ob = document.getElementById('offbar');
-    g.style.top = ((hdr.hidden ? 0 : hdr.offsetHeight) + (ob && !ob.hidden ? ob.offsetHeight : 0)) + 'px';
-    g.style.bottom = (dock.hidden ? 0 : dock.offsetHeight) + 'px';
+    g.style.top = ((dnav.hidden ? 0 : dnav.offsetHeight) + (hdr.hidden ? 0 : hdr.offsetHeight) + (ob && !ob.hidden ? ob.offsetHeight : 0)) + 'px';
+    g.style.bottom = (dock.hidden ? 0 : dock.offsetHeight) + 'px';   /* both bars are hidden in the workspace (offsetHeight 0) */
     if (S.desk && S.desk.map) S.desk.map.invalidateSize();
   }
   /* a pin's look: to-knock doors by their score (the badge's colours), no-answers white, done doors small and grey;
      doors the filters leave out fade; the open door is ringed in navy and drawn on top */
+  /* a numbered pin (2026-10-09, mock-up A): the score in a disc of the badge's colour; no-answers white, done doors small and grey */
+  function deskPin(d) {
+    var st = statusOf(d), sel = d.id === S.openDoor, dim = matchOn() && st !== 'x' && !doorMatches(d);
+    var sc = st === 'k' || st === 'd' ? doorScore(d) : null;
+    var cls = st === 'x' ? 'done' : st === 'a' ? 'miss' : sc === null ? (st === 'd' ? 'back' : 'plain') : sc === 10 ? 'top' : sc >= 7 ? 'hi' : sc >= 4 ? 'mid' : 'lo';
+    var size = st === 'x' || st === 'a' ? 14 : sc === 10 ? 32 : sc === null ? 18 : 28;
+    if (sel) { cls += ' sel'; size += 4; } if (dim) cls += ' dim';
+    return { cls: cls, txt: sc === null ? '' : String(sc), size: size };
+  }
+  function deskIcon(p) { return L.divIcon({ className: 'dkpin', html: '<span class="pin ' + p.cls + '">' + p.txt + '</span>', iconSize: [p.size, p.size], iconAnchor: [p.size / 2, p.size / 2] }); }
   function deskStyle(d) {
     var st = statusOf(d), sel = d.id === S.openDoor, dim = matchOn() && st !== 'x' && !doorMatches(d);
     var sc = st === 'k' || st === 'd' ? doorScore(d) : null;
@@ -4047,11 +4252,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function deskLegend() {
     var lg = q('div', 'legend dk-legend'), scored = S.doors.some(function (d) { return doorScore(d) !== null; });
-    var keys = scored ? [['#1f8a4c', '#f2c230', 'Score 10'], ['#1f8a4c', '#fff', '7 to 9'], ['#f2c230', '#fff', '4 to 6'], ['#c8372d', '#fff', '1 to 3']]
+    var keys = scored ? [['#1f8a4c', '#fff', '7 to 10'], ['#f2c230', '#fff', '4 to 6'], ['#c8372d', '#fff', '1 to 3']]
       : [[MAPC.k, '#fff', 'To knock'], [MAPC.d, '#fff', 'Back on the list']];
-    keys = keys.concat([['#ffffff', '#55635B', 'No answer, waiting'], ['#8A948E', '#fff', 'Done']]);
+    keys = keys.concat([['#ffffff', '#55635B', 'No answer'], ['#8A948E', '#fff', 'Knocked']]);
     keys.forEach(function (x) { var sp = q('span'), i = q('i'); i.style.background = x[0]; i.style.borderColor = x[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(x[2])); lg.appendChild(sp); });
-    var hs = q('span'), hi = q('i', 'ring'); hs.appendChild(hi); hs.appendChild(document.createTextNode('Other neighbourhoods: tap one')); lg.appendChild(hs);
+    var hs = q('span'), hi = q('i', 'ring'); hs.appendChild(hi); hs.appendChild(document.createTextNode('Other neighbourhoods')); lg.appendChild(hs);
     return lg;
   }
   function deskMap(col) {
@@ -4075,7 +4280,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var pts = [];
       S.doors.forEach(function (d) {
         if (typeof d.lat !== 'number') return;
-        var m = L.circleMarker([d.lat, d.lon], deskStyle(d)).addTo(map), id = d.id;
+        var p0 = deskPin(d), m = L.marker([d.lat, d.lon], { icon: deskIcon(p0), keyboard: false, riseOnHover: true }).addTo(map), id = d.id;
+        m._pin = p0.cls + p0.txt;
         m.on('click', function (e) { L.DomEvent.stopPropagation(e); deskOpen(id); });
         m.bindTooltip(function () { var x = doorById(id) || d, sc = doorScore(x); return q('span', null, x.address + (sc !== null ? ' · ' + sc + ' of 10' : '')); }, { direction: 'top', offset: [0, -8] });   /* an element, so an address is never read as HTML */
         D.markers[id] = m; pts.push([d.lat, d.lon]);
@@ -4083,7 +4289,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.here) L.marker([S.here.lat, S.here.lon], { icon: L.divIcon({ className: 'you-ic', html: '<span></span>', iconSize: [16, 16] }), interactive: false, keyboard: false }).addTo(map);
       /* marking redraws the pins in place: no new map, no lost position; the open door is panned into view if it is off it */
       D.restyle = function (follow) {
-        Object.keys(D.markers).forEach(function (id) { var d = doorById(id); if (!d) return; var m = D.markers[id]; m.setStyle(deskStyle(d)); m.setRadius(deskStyle(d).radius); if (id === S.openDoor) m.bringToFront(); });
+        Object.keys(D.markers).forEach(function (id) { var d = doorById(id); if (!d) return; var m = D.markers[id], p = deskPin(d); if (m._pin !== p.cls + p.txt) { m.setIcon(deskIcon(p)); m._pin = p.cls + p.txt; } m.setZIndexOffset(id === S.openDoor ? 1000 : 0); });
         var sel = S.openDoor && D.markers[S.openDoor];
         if (follow && sel && !map.getBounds().pad(-0.15).contains(sel.getLatLng())) map.panTo(sel.getLatLng());
       };
@@ -4098,12 +4304,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
   }
   if (DESK_MQ) {   /* crossing the width (a window dragged narrower) redraws the doors screen in the other layout */
-    var deskFlip = function () { if (S.screen === 'doors' && S.area) renderDoors(); };
+    var deskFlip = function () { dnavPaint(); if (S.screen === 'doors' && S.area) renderDoors(); };
     if (DESK_MQ.addEventListener) DESK_MQ.addEventListener('change', deskFlip); else if (DESK_MQ.addListener) DESK_MQ.addListener(deskFlip);
   }
   window.addEventListener('resize', function () { if (view.querySelector('.desk')) deskSize(); });
   /* the app bar settles once its fonts load, the slow-signal line comes and goes, and the bottom bar can change: re-measure the columns then too */
-  if (window.ResizeObserver) { var deskRO = new ResizeObserver(function () { if (view.querySelector('.desk')) deskSize(); }); deskRO.observe(hdr); deskRO.observe(dock); var ob = document.getElementById('offbar'); if (ob) deskRO.observe(ob); }
+  if (window.ResizeObserver) { var deskRO = new ResizeObserver(function () { if (view.querySelector('.desk')) deskSize(); }); deskRO.observe(hdr); deskRO.observe(dock); deskRO.observe(dnav); var ob = document.getElementById('offbar'); if (ob) deskRO.observe(ob); }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (view.querySelector('.desk')) deskSize(); });
   function capOpen(d) { return S.capture === d.id || [S.editPhone, S.editEmail, S.editNote, S.editWork, S.editFc, S.editWalk].indexOf(d.id) >= 0; }
   var CAP = [];   /* setCompany(): Extra work only with a list, Fire check only where the company uses it */
@@ -6803,6 +7009,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.classList.add('has-sheet');
   }
   function renderMap() {
+    document.body.classList.remove('dk-on');
     var box = q('div', 'mapwrap');
     var el = q('div', 'map');
     box.appendChild(el);
@@ -8666,7 +8873,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var f = bf.get(d) || [];
         if (bestPts(f) <= 0 && !noneHead) { view.appendChild(q('h3', 'strh', 'Nothing stands out · ' + todo.filter(function (x) { return bestPts(bf.get(x) || []) <= 0; }).length)); noneHead = true; }
         var el = doorCardFor(d);
-        if (f.length && !el.classList.contains('open')) el.insertBefore(bestWhy(f), el.children[1] || null);
+        if (f.length && !el.classList.contains('open') && !el.classList.contains('dkrow')) el.insertBefore(bestWhy(f), el.children[1] || null);   /* the desk row already says why */
         view.appendChild(el);
       });
     } else if (S.dview !== 'near' && S.dview !== 'route' && S.dview !== 'bestnear' && (nStreets > 1 || (lead.length && nStreets === 1))) {   /* street headings: Street order only (2026-10-08) */
