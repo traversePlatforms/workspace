@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Traverse editions</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2313294b%22%2F%3E%3Cg%20transform%3D%22translate(8.5%208.5)%20scale(0.734)%22%3E%3Cpolyline%20points%3D%229%2C47%2024%2C31%2037%2C40%2053%2C17%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%2247%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2231%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2237%22%20cy%3D%2240%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2253%22%20cy%3D%2217%22%20r%3D%228%22%20fill%3D%22%23d6400c%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Familjen+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0;background:#f4f6f9;color:#0f1b2d;font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#13294b}a:hover{color:#d6400c}
+h1,h2,h3{text-wrap:balance}
+</style>
+<style>
+html{scroll-behavior:smooth}
+.navtoggle{display:none}
+/* a section the script has focused after a page link: no ring on a block of content */
+[tabindex="-1"]:focus{outline:none}
+/* the hero map: the board sets it with the inset shorthand; browsers without it (iOS 14.0 and under) get the longhands */
+#top > div:last-child > div:first-child{top:0;right:40px;bottom:50px;left:0}
+/* tablets held upright, and phones */
+@media (max-width:1000px){
+  /* header: logo, Book a demo and a menu button on one row; the links open in a panel. It stays at the top while the
+     page scrolls (Matthew 2026-10-08), so a page link stops below it rather than under it */
+  header{position:sticky;top:0;z-index:40}
+  section[id]{scroll-margin-top:76px}
+  header > div{flex-wrap:nowrap !important}
+  #mainnav{margin-left:auto;gap:0 !important}
+  #mainnav a:not(:last-child){display:none !important}
+  .navtoggle{display:inline-grid;place-items:center;flex:none;order:1;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
+  .navtoggle svg{width:22px;height:22px}
+  #mainnav.open{position:absolute;top:100%;left:0;right:0;z-index:30;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:#ffffff;border-bottom:1px solid #dce2ea;padding:6px 24px 18px;box-shadow:0 12px 24px -12px rgba(15,27,45,0.25);max-height:calc(100vh - 76px);overflow-y:auto;box-sizing:border-box}
+  #mainnav.open a:not(:last-child){display:block !important;width:100%;text-align:left;padding:14px 2px;border-bottom:1px solid #eef1f5;font-size:17px}
+  #mainnav.open a:last-child{display:flex !important;width:100%;box-sizing:border-box;margin-top:14px;justify-content:center;height:48px !important;font-size:16px !important}
+  /* the whole-day section: the phone first, the four parts in a two-by-two grid under it */
+  .dayrow{flex-direction:column;align-items:center}
+  .dayphone{order:-1}
+  .daycol{width:100%;flex:none !important;display:grid !important;grid-template-columns:1fr 1fr;gap:32px !important}
+  .dayitem{align-items:flex-start !important;text-align:left !important}
+  .daycol-l .dayitem > div:first-child{flex-direction:row-reverse}
+  .dayitem p{max-width:none !important}
+  /* How it works: the drawn traverse needs a wide screen; under it the stations run down one line that stops at the close */
+  .trav-line{display:none !important}
+  .trav-row{flex-direction:column}
+  .trav-st{position:relative;padding:0 0 34px 34px !important;margin-left:14px;border-left:5px solid #ffffff;align-items:flex-start !important;text-align:left !important}
+  .trav-st:last-child{border-left-color:transparent;padding-bottom:0 !important}
+  .trav-st > span:first-child{margin-left:-51.5px}
+  .trav-st:last-child > span:first-child{margin-left:-58.5px}
+  .trav-st p{max-width:52ch !important}
+  /* the features two by two with hairline dividers */
+  .featstrip{grid-template-columns:1fr 1fr !important;gap:1px !important;background:rgba(255,255,255,0.14) !important}
+  .featstrip > div{box-shadow:none !important;background:#13294b}
+}
+/* five editions sit in one row on a desktop; narrower than that they go two across, the mark beside the name,
+   and the last one takes the whole row rather than sitting alone */
+@media (max-width:1180px){
+  .eds{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:20px !important}
+  .eds > div > div:first-child{flex-direction:row !important;align-items:center !important}
+  .eds > div:last-child:nth-child(odd){grid-column:1 / -1}
+}
+/* phones */
+@media (max-width:760px){
+  h1{font-size:42px !important}
+  h2{font-size:32px !important}
+  #demo h2{font-size:34px !important}
+  section[style*="max-width: 1200px"],
+  section > div[style*="max-width: 1200px"]{padding-top:52px !important;padding-bottom:52px !important}
+  #top{gap:32px !important}
+  .daycol{grid-template-columns:1fr !important;gap:28px !important}
+  .conds{grid-template-columns:1fr !important}
+  .featstrip{grid-template-columns:1fr !important}
+  .eds{grid-template-columns:1fr !important}
+}
+/* small phones: the wordmark drops "Platforms" so the header stays on one row */
+@media (max-width:480px){
+  h1{font-size:36px !important}
+  #top > div:last-child{height:430px !important}
+  header a[href="#top"] > span > span{display:none}
+  #mainnav a:last-child{height:40px !important;padding:0 14px !important;font-size:14px !important;white-space:nowrap}
+  /* the hero's door card is 290px on the board; under 338px wide it would hang off the left edge, so it narrows to fit */
+  #top > div:last-child > div:last-child{width:auto !important;max-width:290px;left:0;margin-left:auto}
+  /* the storm pill on the map may need two lines */
+  #top > div:last-child > div:first-child > div{height:auto !important;min-height:32px;padding:5px 12px !important;line-height:1.25}
+  /* the plans: one column, whatever the width (the board's 270px minimum would overflow a 300px screen) */
+  #pricing [style*="minmax(270px"]{grid-template-columns:1fr !important}
+}
+/* the smallest phones: the wordmark, Book a demo and the menu button need 378px between them, so under 390px
+   Book a demo leaves the header row (it is still the first thing in the hero, and in the open menu) */
+@media (max-width:389px){
+  #mainnav:not(.open) a:last-child{display:none !important}
+}
+/* on paper there is no scrolling to reveal anything: everything shows, the menu button goes */
+@media print{
+  html.anim .rv,html.anim .hero-door,html.anim .hero-stop{opacity:1 !important;transform:none !important;transition:none !important}
+  html.anim .hero-route{stroke-dashoffset:0 !important}
+  html.anim .hero-ping{display:none}
+  html.anim .trav-line{clip-path:none !important}
+  .navtoggle{display:none !important}
+}
+</style>
+<script>
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) document.documentElement.classList.add('anim');
+</script>
+<style>
+html.anim .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+/* the app section slides in from its sides only where it has sides; it clips so the slide never widens the page */
+#product{overflow-x:hidden;overflow-x:clip}
+@media (min-width:1001px){html.anim .rv.rv-l{transform:translateX(-28px)}html.anim .rv.rv-r{transform:translateX(28px)}}
+html.anim .rv.rv-pop{transform:scale(.9)}
+html.anim .rv.in{opacity:1;transform:none}
+/* the hero: the doors appear, the route draws from the first door to the target, the door card slides up */
+html.anim .hero-door{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:center;transition:opacity .35s ease var(--d,0s),transform .45s cubic-bezier(.3,1.6,.5,1) var(--d,0s)}
+html.anim .hero-route{transition:stroke-dashoffset 1.5s cubic-bezier(.55,.1,.35,1) .45s}
+html.anim .hero-stop{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:center;transition:opacity .3s ease var(--d,0s),transform .5s cubic-bezier(.3,1.7,.5,1) var(--d,0s)}
+html.anim .hero-ping{opacity:0;transform-box:fill-box;transform-origin:center}
+html.anim .go .hero-door,html.anim .go .hero-stop{opacity:1;transform:none}
+html.anim .go .hero-route{stroke-dashoffset:0 !important}
+html.anim .go .hero-ping{animation:ping 2.4s ease-out 2.3s infinite}
+@keyframes ping{0%{opacity:.7;transform:scale(1)}80%,100%{opacity:0;transform:scale(2.8)}}
+/* How it works: the line wipes in left to right and each station arrives as the line reaches it */
+html.anim .trav-line{clip-path:inset(-30px 100% -30px -30px);transition:clip-path 1.7s cubic-bezier(.45,.05,.4,1)}
+html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
+/* hover: the edition and plan cards lift, the buttons nudge */
+.eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
+.eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
+html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
+/* (the Find your edition button is the a[href="#trades"] with a border; the Sign in text links map to #trades too and stay still) */
+a[href="#demo"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
+a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div style="width: 100%; min-height: 100vh; background: #f4f6f9; color: #0f1b2d; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;">
+
+<!-- header -->
+<header style="background: #ffffff; border-bottom: 1px solid #dce2ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+<a href="../#top" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0f1b2d;">
+<svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#d6400c"></circle></g></svg>
+<span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 22px; letter-spacing: -0.02em;"><b style="font-weight: 700;">Traverse</b> <span style="font-weight: 500;">Platforms</span></span>
+</a>
+<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<nav id="mainnav" aria-label="Main" style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; font-weight: 700; font-size: 15px;">
+<a href="../#product" style="text-decoration: none;">Product</a>
+<a href="../#trades" style="text-decoration: none;">Trades</a>
+<a href="../#how" style="text-decoration: none;">How it works</a>
+<a href="../#pricing" style="text-decoration: none;">Pricing</a>
+<a href="../#trades" style="text-decoration: none;">Sign in</a>
+<a href="../#demo" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 10px; background: #d6400c; color: #ffffff; text-decoration: none;">Book a demo</a>
+</nav>
+</div>
+</header>
+<main id="editions">
+<section class="edh" style="background: var(--edc, #13294b);">
+<div class="edw">
+<span class="ede">Editions</span>
+<div class="edrow">
+<h1 class="edt"><b>Traverse</b><span id="edname">Roofing</span></h1>
+<label class="eds"><span class="vh">Choose an edition</span>
+<select id="edsel" aria-label="Choose an edition">
+<option value="roofing">TraverseRoofing</option><option value="yards">TraverseYards</option><option value="solar">TraverseSolar</option><option value="pest">TraversePest</option><option value="security">TraverseSecurity</option>
+</select></label>
+</div>
+<p class="edl" id="edline"></p>
+<p class="edwho" id="edwho"></p>
+<div class="edcta"><a class="edb pri" href="../#demo">Book a demo</a><a class="edb" id="edapp" href="#">Open the app</a></div>
+</div>
+</section>
+<section class="edw edbody">
+<div class="edg">
+<div class="edcard"><h2>On every door</h2><ul id="eddoor"></ul></div>
+<div class="edside">
+<div class="edsample" aria-label="A sample door card">
+<div class="eds-h"><div><small>Sample door</small><b id="edplace">A house in Monument</b></div><span class="eds-sc" id="edscore">10</span></div>
+<div class="eds-t" id="edtiles"></div>
+<small class="eds-n">Figures made up for this example.</small>
+</div>
+<div class="edcard"><h2>Best doors first</h2><p id="edrank"></p></div>
+</div>
+</div>
+<div class="edg2">
+<div class="edcard"><h2>What it adds</h2><ul id="edtools"></ul></div>
+<div class="edcard"><h2>Where the facts come from</h2><ul id="eddata"></ul><p class="ednote" id="ednote"></p></div>
+</div>
+<div class="edall"><h2>Every edition also has</h2>
+<p>Door lists for every house in the towns you work, neighbourhoods your crews can claim, a 1 to 10 score on every door, the map, calendars and booked walks, the pipeline from knock to signed job, teams with managers, training built in, and it works with no signal.</p></div>
+</section>
+</main>
+<style>
+#editions{--edc:#4e6680;--edi:#fff}
+#editions .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#editions .edw{max-width:1200px;margin:0 auto;padding:0 24px}
+#editions .edh{color:var(--edi);padding:56px 0 44px;transition:background .2s}
+#editions .ede{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;text-transform:uppercase;opacity:.8}
+#editions .edrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-top:8px}
+#editions .edt{margin:0;font-family:'Familjen Grotesk',sans-serif;font-size:56px;line-height:1.02;letter-spacing:-.025em;font-weight:500}
+#editions .edt b{font-weight:700}
+#editions .eds select{min-height:52px;padding:0 44px 0 16px;border-radius:12px;border:0;background:#fff;color:#0f1b2d;font:700 17px 'Atkinson Hyperlegible',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer}
+#editions .edh p,#editions .edh h1,#editions .edh span{color:var(--edi)}
+#editions .edl{margin:18px 0 0;font-size:22px;line-height:1.35;max-width:46ch;font-family:'Familjen Grotesk',sans-serif;font-weight:500}
+#editions .edwho{margin:8px 0 0;font-size:17px;opacity:.85}
+#editions .edcta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+#editions .edb{display:inline-flex;align-items:center;height:48px;padding:0 22px;border-radius:10px;border:1.5px solid currentColor;color:inherit;font-weight:700;font-size:16px;text-decoration:none}
+#editions .edb.pri{background:#d6400c;border-color:#d6400c;color:#fff}
+#editions .edbody{padding-top:40px;padding-bottom:72px;display:grid;gap:20px}
+#editions .edg{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
+#editions .edg2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+#editions .edside{display:grid;gap:20px}
+#editions .edcard,#editions .edall{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 2px rgba(15,27,45,.08),0 6px 16px rgba(15,27,45,.06)}
+#editions h2{margin:0 0 12px;font-family:'Familjen Grotesk',sans-serif;font-size:24px;letter-spacing:-.01em}
+#editions ul{margin:0;padding-left:18px;display:grid;gap:8px;font-size:16px;line-height:24px;color:#0f1b2d}
+#editions p{margin:0;font-size:16px;line-height:25px;color:#0f1b2d}
+#editions .ednote{margin-top:12px;color:#566476;font-size:14px}
+#editions .edsample{border-radius:16px;padding:20px;background:#fff;border:2px solid var(--edc);box-shadow:0 10px 30px rgba(15,27,45,.12)}
+#editions .eds-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+#editions .eds-h small{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#566476}
+#editions .eds-h b{font-family:'Familjen Grotesk',sans-serif;font-size:21px}
+#editions .eds-sc{display:inline-grid;place-items:center;min-width:44px;height:34px;padding:0 8px;border-radius:10px;background:#1f8a4c;color:#fff;font:800 17px 'Atkinson Hyperlegible',sans-serif}
+#editions .eds-sc.top{box-shadow:0 0 0 2px #f2c230,0 0 12px rgba(242,194,48,.7)}
+#editions .eds-t{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+#editions .eds-t div{padding:9px 11px;border-radius:10px;border:1px solid #dce2ea}
+#editions .eds-t small{display:block;font-size:12px;color:#566476}
+#editions .eds-t span{font-family:'JetBrains Mono',monospace;font-size:13px}
+#editions .eds-n{display:block;margin-top:10px;font-size:12px;color:#566476}
+@media (max-width:860px){#editions .edg,#editions .edg2{grid-template-columns:1fr}#editions .edt{font-size:40px}}
+</style>
+<script>
+(function () {
+  var D = {"ED":{"roofing":{"name":"Roofing","colour":"#4e6680","ink":"#ffffff","line":"Find the roofs the last storm hit, and know the roof before you knock.","who":"Roofing and storm-restoration companies that canvass after hail and wind.","door":["Hail at the house, storm by storm since 2020 (radar estimate)","Damaging wind reported nearby, with the date","Roof size and pitch, measured from laser scans","Roof material from county records or the aerial photo","Year built and remodelled, so you know the roof’s age","Re-roof permits where the town publishes them","A close-up aerial photo of the roof with its outline","Owner, county value and FEMA’s risk ratings for the area"],"rank":"The biggest hail on the roof, damaging wind, the roof’s age and size, and no re-roof since the storm, then the owner’s ability to pay.","tools":["Storm list: every door a storm day reached, biggest hail first","Hail layer: a storm’s path over your neighbourhood map","Phone alerts for severe storms in your towns","Booked doors sent straight into JobNimbus"],"data":["NOAA radar hail estimates (MRMS)","National Weather Service storm reports","USGS laser scans (3DEP LiDAR)","Colorado aerial photos (DRAPP)","County assessors and building departments","FEMA National Risk Index"],"sample":[["Biggest hail","1.75 in · 14 May"],["Roof","3,300 sq ft · 6/12"],["Material","Asphalt (county)"],["Built","2004 · no re-roof since"]],"score":10},"yards":{"name":"Yards","colour":"#2f7a3a","ink":"#ffffff","line":"See the lawn, the trees and the fire risk at every house before you pull up.","who":"Lawn care, landscaping, tree and wildfire-mitigation companies.","door":["Lawn size and health, measured from aerial photos","Trees close to the house, in zones from laser scans","Wildfire hazard for the property","The community wildfire plan and HOA the house belongs to","The tax credit, insurance and grants that cover the work","The town’s watering rules and well rules","Frost dates and recent rain at the nearest gauge","Owner, county value and the area’s figures"],"rank":"Large and medium lawns, fire hazard, trees against the house and lot size, then the owner’s ability to pay.","tools":["Monthly and quarterly plans, with the visits that are due","A fire check with a printable homeowner report","Customers with their visit history","Phone alerts for fire weather and nearby fires"],"data":["USDA aerial photos (NAIP 2023)","USGS laser scans (3DEP LiDAR)","USFS Wildfire Hazard Potential","Colorado HOA registry","NOAA climate normals and rain gauges","County assessors"],"sample":[["Lawn","Large · 6,200 sq ft"],["Trees","Against the house"],["Fire hazard","High"],["Lot","0.84 acres"]],"score":9},"solar":{"name":"Solar","colour":"#f2a900","ink":"#0f1b2d","line":"Know how much sun a roof gets, and what it’s worth, before the first conversation.","who":"Residential solar installers and their sales teams.","door":["Sun-facing roof area by direction, from laser scans","Shade from tall trees on the sunny side","Room for panels, the system size and a year’s output","The household’s power company and its average price","Existing solar permits, so you skip houses that have it","Roof size, pitch and year built","Owner, county value and the area’s figures"],"rank":"A year’s output and open sun, with houses that already have solar sinking, then the owner’s ability to pay.","tools":["The planning table with solar columns: output, panels, shade","Draw territories on the map and assign them","Customers and their follow-ups","The office dashboard with the team’s day"],"data":["USGS laser scans (3DEP LiDAR)","PVWatts (National Laboratory of the Rockies)","Colorado electric utility territories","US EIA-861 power prices","County building permits","County assessors"],"sample":[["Solar a year","11,400 kWh"],["Panels","26 · 10.4 kW"],["Shade","Open"],["Power company","Xcel Energy"]],"score":9},"pest":{"name":"Pest","colour":"#7a3fa3","ink":"#ffffff","line":"Show up with the reason this house needs you, and the neighbours who already use you.","who":"Pest control companies selling plans door to door.","door":["New owners, and when they bought","Open space, creeks and ponds beside the house","Trees close to the house and the year it was built","What is in season this month, pest by pest","Neighbours already on your service, from your own customers","Recent bookings and door notes nearby","Owner, county value and the area’s figures"],"rank":"A new owner, trees against the house, and open space or water beside it, then the owner’s ability to pay.","tools":["Quarterly plans with the visits that are due","Import your customer list so neighbours show on every door","Customers and their visit history","The office dashboard with the team’s day"],"data":["County assessors and sale records","Colorado protected areas (COMaP)","USGS National Hydrography (creeks and ponds)","USGS laser scans (3DEP LiDAR)","CSU Extension pest calendars","Your own customer list"],"sample":[["New owner","Bought in June"],["Beside the house","Open space · creek"],["Neighbours on service","3 within a block"],["In season","Wasps, mice"]],"score":8},"security":{"name":"Security","colour":"#1b6f7a","ink":"#ffffff","line":"The facts that make a home security conversation relevant, house by house.","who":"Home security and smart-home companies.","door":["Property crime reported within a mile, last 30, 90 and 365 days, where police publish it","Town crime figures from the FBI","New owners and newer homes","Owners who live somewhere else","Big lots and homes backing onto open space","Owner, county value and the area’s figures"],"rank":"New owners, newer homes, owners who live elsewhere, big lots and open space behind, then the owner’s ability to pay. Crime is shown on the card but kept out of the score.","tools":["Neighbourhoods ranked by recent crime, and a crime map","The planning table and territories","Customers and their follow-ups","The office dashboard with the team’s day"],"data":["Colorado Springs, Denver and Boulder police open data","FBI Crime Data Explorer","County assessors and sale records","Colorado protected areas (COMaP)"],"sample":[["Crime within 1 mile","4 in 90 days"],["New owner","Bought in March"],["Owner lives","Out of state"],["Lot","1.2 acres"]],"score":8,"note":"Crime is always shown as counts around a house or a neighbourhood, never placed on a house."}},"APPS":{"roofing":"tr-cb2e8587","yards":"ty-25604fff","solar":"ts-016064fc","pest":"tq-9cf8d9de","security":"tg-3b0b89e7"}}, keys = Object.keys(D.ED), $ = function (id) { return document.getElementById(id); };
+  var list = function (el, items) { el.textContent = ''; items.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; el.appendChild(li); }); };
+  function show(k) {
+    var e = D.ED[k]; if (!e) { k = 'roofing'; e = D.ED[k]; }
+    var root = $('editions'); root.style.setProperty('--edc', e.colour); root.style.setProperty('--edi', e.ink);
+    $('edname').textContent = e.name; $('edsel').value = k; document.title = 'Traverse' + e.name + ' \u00b7 Traverse editions';
+    $('edline').textContent = e.line; $('edwho').textContent = 'Built for ' + e.who.charAt(0).toLowerCase() + e.who.slice(1);
+    $('edapp').href = '/' + D.APPS[k] + '/'; $('edapp').textContent = 'Open Traverse' + e.name;
+    list($('eddoor'), e.door); list($('edtools'), e.tools); list($('eddata'), e.data);
+    $('edrank').textContent = e.rank; $('ednote').textContent = e.note || ''; $('ednote').hidden = !e.note;
+    var sc = $('edscore'); sc.textContent = String(e.score); sc.className = 'eds-sc' + (e.score === 10 ? ' top' : '');
+    var tl = $('edtiles'); tl.textContent = '';
+    e.sample.forEach(function (x) { var d = document.createElement('div'), s = document.createElement('small'), v = document.createElement('span'); s.textContent = x[0]; v.textContent = x[1]; d.appendChild(s); d.appendChild(v); tl.appendChild(d); });
+  }
+  var start = new URLSearchParams(location.search).get('e'); if (keys.indexOf(start) < 0) start = 'roofing';
+  $('edsel').addEventListener('change', function () { var k = $('edsel').value; show(k); try { history.replaceState(null, '', '?e=' + k); } catch (x) {} });
+  show(start);
+})();
+</script>
+<footer style="background: #0f1b2d; color: #c9d6ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 48px 24px; display: flex; flex-wrap: wrap; gap: 40px; justify-content: space-between;">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1 1 260px; min-width: 0;">
+<span style="display: flex; align-items: center; gap: 10px;"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#0f1b2d" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#0f1b2d" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#0f1b2d" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ff7a45"></circle></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 20px; color: #ffffff;"><b style="font-weight: 700;">Traverse</b> <span style="font-weight: 500;">Platforms</span></span></span>
+<span style="font-size: 14px; line-height: 21px; max-width: 34ch;">The sales platform for doors, phones and the office.</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+<b style="color: #ffffff; font-size: 14px;">Editions</b>
+<a href="editions/?e=roofing" style="color: #c9d6ea; text-decoration: none;">TraverseRoofing</a>
+<a href="editions/?e=yards" style="color: #c9d6ea; text-decoration: none;">TraverseYards</a>
+<a href="editions/?e=solar" style="color: #c9d6ea; text-decoration: none;">TraverseSolar</a>
+<a href="editions/?e=pest" style="color: #c9d6ea; text-decoration: none;">TraversePest</a>
+<a href="editions/?e=security" style="color: #c9d6ea; text-decoration: none;">TraverseSecurity</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+<b style="color: #ffffff; font-size: 14px;">Company</b>
+<a href="../#product" style="color: #c9d6ea; text-decoration: none;">Product</a>
+<a href="../#pricing" style="color: #c9d6ea; text-decoration: none;">Pricing</a>
+<a href="../#trades" style="color: #c9d6ea; text-decoration: none;">Sign in</a>
+<span>[Contact email]</span>
+</div>
+</div>
+<div style="max-width: 1200px; margin: 0 auto; padding: 16px 24px 32px; border-top: 1px solid #263243; font-size: 13px;">© 2026 Traverse Platforms</div>
+</footer>
+
+</div>
+<script>
+(function () {
+  var b = document.querySelector('.navtoggle'), n = document.getElementById('mainnav'); if (!b || !n) return;
+  function isOpen() { return n.classList.contains('open'); }
+  function set(open) { n.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }
+  b.addEventListener('click', function () { set(!isOpen()); });
+  n.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a')) set(false); });
+  // Escape closes it and puts the focus back on the button; a tap anywhere outside the header closes it
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) { set(false); b.focus(); } });
+  document.addEventListener('click', function (e) { if (isOpen() && !(e.target.closest && e.target.closest('header'))) set(false); });
+})();
+</script>
+<script>
+(function () {
+  // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
+  // to jump back to. A link that arrives with one from elsewhere still goes there, once.
+  var root = document.documentElement;
+  var navType = (function () {
+    try { var en = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]; if (en && en.type) return en.type; } catch (e) {}
+    try { return ['navigate', 'reload', 'back_forward'][performance.navigation.type] || 'navigate'; } catch (e) { return 'navigate'; }
+  })();
+  // an instant jump whatever the browser makes of behavior:'instant': the smooth scrolling is switched off around it
+  function jump(fn) { var was = root.style.scrollBehavior; root.style.scrollBehavior = 'auto'; try { fn(); } finally { root.style.scrollBehavior = was; } }
+  function top() { jump(function () { window.scrollTo(0, 0); }); }
+  function untag() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  if (location.hash && navType === 'navigate') {
+    // arrived from elsewhere with a #section: go there once the page has its fonts and sizes, then tidy the address
+    window.addEventListener('load', function () { setTimeout(function () {
+      var t = document.getElementById(location.hash.slice(1)); if (t) jump(function () { t.scrollIntoView(true); });
+      untag();
+    }, 0); });
+  } else { if (location.hash) untag(); top(); }
+  window.addEventListener('pageshow', function (e) { if (e.persisted) top(); });
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href').slice(1), t = id && document.getElementById(id); if (!t) return;
+    e.preventDefault();
+    var how = root.classList.contains('anim') ? 'smooth' : 'auto';
+    if (id === 'top') window.scrollTo({ top: 0, behavior: how }); else t.scrollIntoView({ behavior: how, block: 'start' });
+    // the keyboard carries on from the section, not from the link
+    if (id !== 'top') { t.tabIndex = -1; try { t.focus({ preventScroll: true }); } catch (err) { t.focus(); } }
+  });
+
+  if (!root.classList.contains('anim')) return;
+  var all = [];
+  function tag(list, cls, step, start) {
+    Array.prototype.forEach.call(list, function (el, i) {
+      el.classList.add('rv'); if (cls) el.classList.add(cls);
+      el.style.setProperty('--d', ((start || 0) + i * (step || 0)).toFixed(2) + 's'); all.push(el);
+    });
+  }
+  function $(s) { return document.querySelectorAll(s); }
+  try {
+    // the hero
+    tag($('#top > div:first-child > *'), '', 0.09);
+    var vis = document.querySelector('#top > div:last-child');
+    if (vis) {
+      var map = vis.firstElementChild, card = vis.lastElementChild, svg = map && map.querySelector('svg');
+      if (svg) {
+        Array.prototype.forEach.call(svg.querySelectorAll('circle[r="7"]'), function (c, i) { c.classList.add('hero-door'); c.style.setProperty('--d', (0.05 + i * 0.035).toFixed(2) + 's'); });
+        var route = svg.querySelector('polyline');
+        if (route && route.getTotalLength) { var len = route.getTotalLength(); route.classList.add('hero-route'); route.style.strokeDasharray = len; route.style.strokeDashoffset = len; }
+        var stops = svg.querySelectorAll('circle:not([r="7"])');
+        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', ([0.35, 0.95, 1.35, 1.85][i] || (0.35 + i * 0.5)) + 's'); });
+        var last = stops[stops.length - 1];
+        if (last) { var p = last.cloneNode(); p.setAttribute('class', 'hero-ping'); p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#d6400c'); p.setAttribute('stroke-width', '4'); p.removeAttribute('style'); last.parentNode.insertBefore(p, last); }
+        map.classList.add('hero-map');
+      }
+      if (map) tag([map], 'rv-pop', 0, 0.05);
+      if (card && card !== map) tag([card], '', 0, 1.9);
+    }
+    // the rest of the page, as each part comes into view
+    Array.prototype.forEach.call($('section h2'), function (h) { if (!h.closest('#top') && h.parentElement.tagName !== 'SECTION') tag([h.parentElement]); });
+    tag($('.dayphone'), 'rv-pop', 0, 0.1);
+    tag($('.daycol-l .dayitem'), 'rv-l', 0.15, 0.25);
+    tag($('.daycol-r .dayitem'), 'rv-r', 0.15, 0.25);
+    tag($('.eds > div'), '', 0.08);
+    var trav = document.querySelector('.trav'); if (trav) { trav.classList.add('rv-wrap'); all.push(trav); }
+    var wide = window.matchMedia('(min-width: 1001px)').matches;
+    tag($('.trav-st'), '', wide ? 0.38 : 0.12, wide ? 0.25 : 0);
+    tag($('.conds > div'), '', 0.12);
+    tag($('.featstrip'), '', 0, 0.1);
+    var plans = document.querySelectorAll('#pricing [style*="minmax(270px"] > div');
+    Array.prototype.forEach.call(plans, function (d) { d.classList.add('plan'); });
+    tag(plans, '', 0.1);
+    tag($('#demo > *'), '', 0.08);
+  } catch (err) { all.forEach(function (el) { el.classList.add('in'); }); root.classList.remove('anim'); return; }
+
+  function show(el) {
+    el.classList.add('in');
+    if (el.classList.contains('hero-map')) el.classList.add('go');
+  }
+  if (!('IntersectionObserver' in window)) { all.forEach(show); return; }
+  // a part shows once 12% of it is in view, or once it fills a third of a short screen (a tall part on a phone held
+  // sideways might never reach 12%, and would stay hidden)
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var tall = en.intersectionRect && en.intersectionRect.height >= (window.innerHeight || 0) / 3;
+      if (en.intersectionRatio >= 0.12 || tall) { show(en.target); io.unobserve(en.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: [0, 0.12] });
+  all.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>
