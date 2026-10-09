@@ -34,7 +34,9 @@ mkdirSync(OUT, { recursive: true });
 const lp = await createLazPerf();
 const idxF = join(OUT, 'index.json');
 const index = existsSync(idxF) ? JSON.parse(readFileSync(idxF, 'utf8')) : {};
-const files = readdirSync(SRC).filter((f) => f.endsWith('.laz')).sort();
+/* ONLY=<tile name> converts that one tile: the decoder's memory never shrinks, so a long run of big tiles ends in an uncatchable
+   out-of-memory abort; one process per tile avoids it (2026-10-09; see teller-grids-each.sh) */
+const files = readdirSync(SRC).filter((f) => f.endsWith('.laz') && (!process.env.ONLY || f === process.env.ONLY + '.laz')).sort();
 let done = 0;
 for (const f of files) {
   const name = f.replace(/\.laz$/, '');
