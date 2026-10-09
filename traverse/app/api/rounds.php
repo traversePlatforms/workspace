@@ -755,11 +755,7 @@ function loadDoorAssign(string $key): array {
         if (($r['who'] ?? '') === '') unset($out[$r['id']]); else $out[(string) $r['id']] = (string) $r['who'];
     }
     return $out;
-}
-function appendDoorAssign(string $key, array $row): bool {
-    return (bool) @file_put_contents(DATA_DIR . '/dassign-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-}
-function loadGoals(): array {
+}function loadGoals(): array {
     $g = json_decode((string) @file_get_contents(DATA_DIR . '/goals.json'), true);
     return is_array($g) ? $g : ['doors' => null, 'talked' => null, 'booked' => null];
 }
@@ -3733,11 +3729,21 @@ if ($action === 'doorassign') {
     }
     $home = [];
     foreach ($ids as $id) { if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.'); $home[$id] = doorHome($key, $id); }
+    /* who holds each door now: its own person, else its neighbourhood's (Fable 2026-10-09: checking only the door's own let a
+       manager take doors in another team's neighbourhood) */
     $cur = [];
-    foreach (array_unique(array_values($home)) as $hk) $cur += loadDoorAssign($hk);
+    foreach (array_unique(array_values($home)) as $hk) {
+        $own = loadDoorAssign($hk); $terr = loadAssign($hk); $data = loadRegion($hk);
+        foreach (($data['areas'] ?? []) as $a) foreach ($a['doors'] as $d) {
+            $id = (string) $d['id'];
+            if (($home[$id] ?? null) === $hk) $cur[$id] = $own[$id] ?? ($terr[$a['name']] ?? '');
+        }
+    }
     foreach ($ids as $id) if (!mayAssign((string) ($cur[$id] ?? ''), $who)) fail('A manager assigns doors within their own team: one of these is someone else\'s.', 403);
-    $at = time();
-    foreach ($ids as $id) if (!appendDoorAssign($home[$id], ['id' => $id, 'who' => $who, 'by' => $me, 'at' => $at])) fail('Could not save that. Try again.', 500);
+    /* all or none: one write per town file */
+    $at = time(); $lines = [];
+    foreach ($ids as $id) $lines[$home[$id]][] = json_encode(stamped(['id' => $id, 'who' => $who, 'by' => $me, 'at' => $at]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    foreach ($lines as $hk => $ls) if (@file_put_contents(DATA_DIR . '/dassign-' . $hk . '.log', implode("\n", $ls) . "\n", FILE_APPEND | LOCK_EX) === false) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'n' => count($ids)]);
 }
 

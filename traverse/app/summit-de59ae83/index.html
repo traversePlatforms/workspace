@@ -1086,7 +1086,7 @@
   .desk .dk-card{border-left:1px solid var(--line)}
   .desk .dk-map{position:relative;min-width:0;border-left:1px solid var(--line)}
   .desk .dk-mapel{position:absolute;inset:0}
-  .desk .dk-legend{top:auto;bottom:22px;left:10px;right:auto;z-index:500;flex-direction:column;align-items:flex-start}
+  .desk .dk-legend{top:auto;bottom:40px;left:10px;right:auto;z-index:500;flex-direction:column;align-items:flex-start}
   .desk .dk-legend i{border-width:2.5px}
   .desk .fbar{top:-12px}
   #view .desk .dk-list .door{scroll-margin-top:72px;scroll-margin-bottom:16px}
@@ -1094,6 +1094,11 @@
   #view .desk .door.sel{box-shadow:0 0 0 3px var(--ink)}
   .desk .dk-empty{margin:40px 8px;text-align:center;color:var(--soft)}
   .desk .door.open{margin-top:0}
+  /* Satellite / Street map switch and the other-neighbourhood rings (2026-10-09) */
+  .mapsw button{display:block;min-width:44px;min-height:44px;padding:0 12px;border:0;border-radius:4px;background:#fff;color:#16201C;font:800 13px var(--sans);cursor:pointer}
+  .mapsw button[aria-pressed="true"]{background:#13294b;color:#fff}
+  .legend i.ring{background:transparent!important;border:2px dashed #13294b!important;box-shadow:none}
+  :root[data-theme="dark"] .legend i.ring{border-color:#fff!important}
   /* the planning table (2026-10-08) */
   .wrap:has(> #view > .plan){max-width:1480px}
   .plan .planhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 10px}
@@ -1899,7 +1904,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Sign in: six boxes and a number pad, big enough for gloves. A keyboard works
      too (digits, Backspace). Six digits sends it; a wrong code shakes and clears. */
   function signinView(err) {
-    S.me = null; S.role = 'crew'; S.sid = null;   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.sid = null; officeReset();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -2448,7 +2453,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.sid = null; clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -3492,8 +3497,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* an edition with a walking order opens on it until the phone picks another (2026-10-07) */
       if (!S.dview) { var dv0 = bestTrade() ? 'best' : 'street', dv = dv0; try { dv = localStorage.getItem('sixfold.rounds.doorview') || dv0; } catch (e) {} S.dview = dv; }
       /* the map is a look-around, not a mode: each neighbourhood opens on the list (Nearest, a sort, is kept) */
-      if (S.dview === 'map') S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : null;   /* back to the order the phone had (review 2026-10-08) */
-      if (!S.dview || !orderOk(S.dview)) S.dview = bestTrade() ? 'best' : 'street';
+      if (S.dview === 'map' && !S.keepMap) S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : null;   /* back to the order the phone had (review 2026-10-08) */
+      if (S.dview !== 'map' && (!S.dview || !orderOk(S.dview))) S.dview = bestTrade() ? 'best' : 'street';
+      S.keepMap = false;
       S.mapSel = null; S.sheetMin = false; S.filterOpen = false; S.allClosed = false;
       if ((S.dview === 'near' || S.dview === 'bestnear' || S.dview === 'route') && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
@@ -3982,7 +3988,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function deskSave() {
     var l = view.querySelector('.dk-list'), c = view.querySelector('.dk-card');
     if (l) S.deskScroll = { area: S.region + '|' + S.area, top: l.scrollTop };
-    if (c) S.deskCardScroll = { id: S.openDoor, top: c.scrollTop };
+    var oc = c && c.querySelector('.door.open');
+    if (c) S.deskCardScroll = { id: oc ? oc.getAttribute('data-id') : null, top: c.scrollTop };
+  }
+  /* the planning table's rows (owners' names), the staff list and the desk and office maps belong to whoever is signed in (Fable 2026-10-09) */
+  function officeReset() {
+    if (S.desk && S.desk.map) try { S.desk.map.remove(); } catch (e) {}
+    if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}
+    S.desk = null; S.officeMap = null; S.plan = null; S.deskScroll = null; S.deskCardScroll = null;
   }
   function doorById(id) { for (var i = 0; i < S.doors.length; i++) if (S.doors[i].id === id) return S.doors[i]; return null; }
   function deskLayout() {
@@ -4038,15 +4051,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       : [[MAPC.k, '#fff', 'To knock'], [MAPC.d, '#fff', 'Back on the list']];
     keys = keys.concat([['#ffffff', '#55635B', 'No answer, waiting'], ['#8A948E', '#fff', 'Done']]);
     keys.forEach(function (x) { var sp = q('span'), i = q('i'); i.style.background = x[0]; i.style.borderColor = x[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(x[2])); lg.appendChild(sp); });
+    var hs = q('span'), hi = q('i', 'ring'); hs.appendChild(hi); hs.appendChild(document.createTextNode('Other neighbourhoods: tap one')); lg.appendChild(hs);
     return lg;
   }
   function deskMap(col) {
     var key = S.region + '|' + S.area;
-    if (S.desk && S.desk.key === key && S.desk.col === col) { if (S.desk.map) { S.desk.map.invalidateSize(); S.desk.restyle(true); } return; }
+    var sig = S.doors.map(function (d) { return d.id; }).join(',') + (S.here ? '|here' : '');
+    if (S.desk && S.desk.key === key && S.desk.col === col && S.desk.sig === sig) { if (S.desk.map) { S.desk.map.invalidateSize(); S.desk.restyle(true); } return; }
     if (S.desk && S.desk.map) try { S.desk.map.remove(); } catch (e) {}
     col.textContent = '';
     var el = q('div', 'dk-mapel'); col.appendChild(el); col.appendChild(deskLegend());
-    var D = S.desk = { key: key, col: col, map: null, markers: {}, restyle: function () {} };
+    var D = S.desk = { key: key, col: col, sig: sig, map: null, markers: {}, restyle: function () {} };
     loadLeaflet(function () {
       if (S.desk !== D || !document.body.contains(el)) return;
       if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load — no signal, or the map service is down. The list still works.')); return; }
@@ -4076,6 +4091,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
       else if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 18 });
       map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
+      /* after the map has a view (Leaflet can't place layers before one) */
+      satSwitch(map);   /* Satellite / Street map (2026-10-09) */
+      hoodRings(map, openHood);   /* the other neighbourhoods, a tap opens one (2026-10-09) */
       D.restyle(false);
     });
   }
@@ -4274,7 +4292,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     tx.appendChild(q('small', null, ord + (fw.length ? ' \u00b7 ' + fw.length + (fw.length === 1 ? ' filter' : ' filters') + ' \u00b7 ' + shown + ' of ' + all : '')));
     b.appendChild(tx); b.appendChild(ico('chev', 2.4));
     b.setAttribute('aria-label', 'Sort and filter: ' + ord + (fw.length ? ', ' + fw.length + (fw.length === 1 ? ' filter' : ' filters') + ' on, ' + shown + ' of ' + all + ' doors' : ''));
-    b.addEventListener('click', function () { S.filterOpen = !S.filterOpen; renderDoors(); var y = bar.getBoundingClientRect(); if (S.filterOpen) snapTo('#view .fbar'); });
+    b.addEventListener('click', function () { S.filterOpen = !S.filterOpen; renderDoors(); if (S.filterOpen) snapTo('#view .fbar'); });
     bar.appendChild(b);
     if (fw.length && !S.filterOpen) { var cl = q('button', 'lnk', 'Clear'); cl.type = 'button'; cl.addEventListener('click', function () { S.filt = {}; filtSave(); renderDoors(); }); bar.appendChild(cl); }
     /* under the app bar on a phone; at the top of its own column in the desktop workspace, which scrolls by itself */
@@ -6664,6 +6682,78 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: maxZoom || 19, maxNativeZoom: 19, attribution: OSM_CREDIT }).addTo(map);
   }
+  /* ---- satellite view on the door maps (2026-10-09) ----
+     Matthew: a satellite map in the app, not only the Google link. The 2023 USDA aerial photos (public domain, 60 cm), the same
+     photos as the lawn sizes and the aerial view, stitched into one layer by Microsoft's Planetary Computer: a "mosaic" registered
+     once per visit (a search for Colorado's 2023 NAIP), then ordinary map tiles. From zoom 13 in: wider than that the service
+     is slow and the street map shows instead. It is a free PREVIEW service, so tiles that keep failing switch back to the map.
+     The choice is remembered on this device. */
+  var SAT_FALLBACK = 'fe04cec383767467e9a31d04fab20050';   /* the id Planetary Computer gave this search on 2026-10-09 */
+  function satOn() { try { return localStorage.getItem('sixfold.rounds.sat') === '1'; } catch (e) { return false; } }
+  function satSet(v) { try { localStorage.setItem('sixfold.rounds.sat', v ? '1' : '0'); } catch (e) {} }
+  function satSearch(cb) {
+    if (S.satId) return cb(S.satId);
+    fetch(PC_API + '/data/v1/mosaic/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 'filter-lang': 'cql2-json', filter: { op: 'and', args: [{ op: '=', args: [{ property: 'collection' }, 'naip'] }, { op: '=', args: [{ property: 'naip:state' }, 'co'] }, { op: '=', args: [{ property: 'naip:year' }, '2023'] }] },
+        sortby: [{ field: 'properties.gsd', direction: 'asc' }] }) })
+      .then(function (r) { return r.json(); }).then(function (j) { S.satId = (j && /^[a-f0-9]{16,64}$/.test(j.searchid || '')) ? j.searchid : SAT_FALLBACK; }, function () { S.satId = SAT_FALLBACK; })
+      .then(function () { cb(S.satId); });
+  }
+  /* a Satellite / Street map switch in the map's corner; the street map stays underneath for zoomed-out views and gaps */
+  function satSwitch(map) {
+    var layer = null, fails = 0;
+    var ctl = L.control({ position: 'topright' });
+    var btn = null;
+    var paint = function () { if (!btn) return; var on = satOn(); btn.textContent = on ? 'Street map' : 'Satellite'; btn.setAttribute('aria-pressed', String(on)); btn.title = on ? 'Show the street map' : 'Show the 2023 aerial photos'; };
+    var apply = function () {
+      if (satOn() && !layer) satSearch(function (id) {
+        if (layer || !satOn() || !map._container || !document.body.contains(map._container)) return;
+        layer = L.tileLayer(PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png',
+          { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP 2023 aerial photos (public domain), Microsoft Planetary Computer' });
+        layer.on('tileerror', function () { if (++fails === 8 && layer) { map.removeLayer(layer); layer = null; satSet(false); paint(); toast('Satellite photos are not loading right now', 'Showing the street map'); } });
+        layer.on('tileload', function () { fails = 0; });
+        layer.addTo(map);
+      });
+      if (!satOn() && layer) { map.removeLayer(layer); layer = null; }
+    };
+    ctl.onAdd = function () {
+      var box = L.DomUtil.create('div', 'leaflet-bar mapsw'); btn = L.DomUtil.create('button', '', box); btn.type = 'button';
+      L.DomEvent.disableClickPropagation(box);
+      btn.addEventListener('click', function () { satSet(!satOn()); fails = 0; paint(); apply(); });
+      paint(); return box;
+    };
+    ctl.addTo(map); apply();
+    return ctl;
+  }
+  /* ---- the other neighbourhoods on a door map (2026-10-09) ----
+     Matthew: zoomed out, the map should show the other neighbourhoods and open one with a tap. Every neighbourhood in this
+     town, and those within about 15 km in other towns, as a dashed ring at its centre (bigger = more doors left); a tap
+     opens it, in the same layout. */
+  function hoodRings(map, onOpen) {
+    var cur = S.regions.filter(function (x) { return x.key === S.region; })[0];
+    var here = cur && cur.areas.filter(function (a) { return a.name === S.area; })[0];
+    var c0 = here && typeof here.la === 'number' ? [here.la, here.lo] : null;
+    var near = function (a) { if (!c0) return false; var dy = (a.la - c0[0]) * 111, dx = (a.lo - c0[1]) * 111 * Math.cos(c0[0] * Math.PI / 180); return dx * dx + dy * dy <= 225; };
+    var ink = darkUI() ? '#ffffff' : '#13294b', grp = L.layerGroup(), n = 0;
+    S.regions.forEach(function (r) {
+      r.areas.forEach(function (a) {
+        if (typeof a.la !== 'number' || typeof a.lo !== 'number') return;
+        if (r.key === S.region && a.name === S.area) return;
+        if (r.key !== S.region && !near(a)) return;
+        var left = Math.max(0, a.total - a.done - (a.noanswer || 0));
+        var m = L.circleMarker([a.la, a.lo], { radius: 7 + Math.min(14, Math.sqrt(left) * 0.8), color: a.nosol ? '#c8372d' : ink, weight: 2, dashArray: '4 4', fillColor: ink, fillOpacity: 0.1 });
+        m.bindTooltip(q('span', null, a.name + (r.key !== S.region ? ' · ' + r.label : '') + ' · ' + left + ' to knock' + (bestTrade() && a.bestN ? ', ' + a.bestN + ' worth it first' : '') + ' · tap to open'), { direction: 'top' });
+        m.on('click', function (e) { L.DomEvent.stopPropagation(e); onOpen(r.key, a.name); });
+        grp.addLayer(m); n++;
+      });
+    });
+    grp.addTo(map);
+    return n;
+  }
+  function openHood(key, name) {
+    S.region = key; S.area = null; S.openDoor = null; S.allClosed = false; S.capture = null; S.mapSel = null; S.filterOpen = false;
+    openArea(name);
+  }
   /* back on the list (2026-10-02): a Not-now whose date has come, or a no-answer that has
      rested (the server sends its come-back day as mark.retry) */
   function backOn(d) {
@@ -6722,9 +6812,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (cardOn('fire')) keys.push(['h', 'High fire hazard']);
     if (S.doors.some(function (d) { return d.cust; })) keys.push(['c', 'Customer']);   /* where we already work (2026-10-04) */
     if (S.here) keys.push(['u', 'You']);
+    keys.push(['r', 'Other neighbourhoods: tap one']);   /* 2026-10-09 */
     keys.forEach(function (x) {
-      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : x[0] === 'c' ? 'c' : null);
-      if (x[0] !== 'h' && x[0] !== 'c') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
+      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : x[0] === 'c' ? 'c' : x[0] === 'r' ? 'ring' : null);
+      if (x[0] !== 'h' && x[0] !== 'c' && x[0] !== 'r') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
       sp.appendChild(i); sp.appendChild(document.createTextNode(x[1])); lg.appendChild(sp);
     });
     box.appendChild(lg);
@@ -6779,6 +6870,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
       else if (pts.length) map.fitBounds(pts, { padding: [36, 36], maxZoom: 18 });
       map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
+      satSwitch(map);   /* after the view, as on the desktop map (2026-10-09) */
+      hoodRings(map, function (k, n) { S.keepMap = true; openHood(k, n); });   /* opened from the map, the next one opens on its map too */
       if (S.mapSel && markers[S.mapSel]) select(markers[S.mapSel].d);
     });
   }
@@ -8750,7 +8843,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function planMore() {
     var P = S.plan, want = [], n = 0, r = planTown();
     P.order.forEach(function (a) {
-      if (P.got[a] || (want.length && n >= PLAN_CAP)) return;
+      if (P.got[a] || (want.length && n >= PLAN_CAP)) return;   /* true = loaded, 'loading' = on its way */
       var ar = r && r.areas.filter(function (x) { return x.name === a; })[0];
       want.push(a); n += ar ? ar.total : 0;
     });
@@ -8767,18 +8860,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (S.screen !== 'plan' || S.plan !== P) return resolve();
         if (i >= names.length && !busy) return resolve();
         while (busy < 4 && i < names.length) {
-          var nm = names[i++]; busy++;
+          var nm = names[i++]; busy++; P.got[nm] = 'loading';
           (function (nm) {
             api('area', { params: { region: key, area: nm } }).then(function (j) {
-              if (j && j.ok) { P.got[nm] = true; if (j.perm) P.perm = j.perm; j.doors.forEach(function (d) { d._area = nm; P.rows.push(d); }); } else failed++;
-            }).catch(function () { failed++; }).then(function () { busy--; done++; say(); next(); });
+              if (j && j.ok) {
+                P.got[nm] = true; if (j.perm) { P.perm = j.perm; S.areaPerm = j.perm; } if (j._saved) P.saved = true;
+                j.doors.forEach(function (d) { d._area = nm; var sp = scoreParts(d); d._sc = sp ? sp.score : null; P.rows.push(d); });
+              } else { delete P.got[nm]; failed++; }
+            }).catch(function () { delete P.got[nm]; failed++; }).then(function () { busy--; done++; say(); next(); });
           })(nm);
         }
       };
       next();
     }).then(function () {
       if (S.screen !== 'plan' || S.plan !== P) return;
-      S.areaPerm = P.perm || null;   /* the permit coverage the roofing points read */
+      S.areaPerm = P.perm || null;   /* the permit coverage the roofing points read: score again now every answer is in */
       P.rows.forEach(function (d) { var sp = scoreParts(d); d._sc = sp ? sp.score : null; });
       P.failed = failed;
       planDraw();
@@ -8798,11 +8894,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var keep = window.scrollY;
     view.textContent = '';
     var wrap = q('div', 'plan');
-    var nAreas = Object.keys(P.got).length, left = P.order.filter(function (a) { return !P.got[a]; }).length;
+    var nAreas = Object.keys(P.got).filter(function (a) { return P.got[a] === true; }).length, left = P.order.filter(function (a) { return !P.got[a]; }).length;
     var head = q('div', 'planhead');
     head.appendChild(q('div', 'pltitle', P.rows.length.toLocaleString() + ' doors in ' + nAreas + ' of ' + P.order.length + ' neighbourhoods' + (left ? ', the most to knock first' : '')));
     if (left) { var mb = q('button', 'back', 'Load the next neighbourhoods'); mb.type = 'button'; mb.addEventListener('click', planMore); head.appendChild(mb); }
-    if (P.failed) head.appendChild(q('div', 'msg bad', P.failed + (P.failed === 1 ? ' neighbourhood' : ' neighbourhoods') + ' did not load. Back, then Plan again, to retry.'));
+    if (P.failed) head.appendChild(q('div', 'msg bad', P.failed + (P.failed === 1 ? ' neighbourhood' : ' neighbourhoods') + ' did not load. Load the next neighbourhoods tries again.'));
+    if (P.saved) head.appendChild(q('div', 'msg', 'Slow or no signal: some neighbourhoods are this device\u2019s saved copy and may be behind.'));
     wrap.appendChild(head);
 
     /* filters: the list's own, plus where each door stands and whether it has someone */
@@ -8821,8 +8918,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var shown = planShown();
     var sc = P.sort, col = cols.filter(function (c) { return c[0] === sc[0]; })[0] || cols[0];
     shown.sort(function (a, b) {
-      var x = col[3](a), y = col[3](b);
-      if (x === null || x === '') return 1; if (y === null || y === '') return -1;
+      var x = col[3](a), y = col[3](b), xe = x === null || x === undefined || x === '', ye = y === null || y === undefined || y === '';
+      if (xe && ye) return a.address.localeCompare(b.address, 'en', { numeric: true });
+      if (xe) return 1; if (ye) return -1;
       var o = col[4] ? x - y : String(x).localeCompare(String(y), 'en', { numeric: true });
       return o * sc[1] || a.address.localeCompare(b.address, 'en', { numeric: true });
     });
@@ -8830,36 +8928,47 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     Object.keys(P.sel).forEach(function (k) { if (!ids[k]) delete P.sel[k]; });   /* only doors in view stay ticked */
     var nSel = Object.keys(P.sel).length;
 
-    /* the action bar: what is ticked, and what to do with it */
-    var bar = q('div', 'planbar');
-    bar.appendChild(q('b', null, shown.length.toLocaleString() + (shown.length === 1 ? ' door matches' : ' doors match')));
-    bar.appendChild(q('span', 'soft', nSel ? nSel + ' ticked' : 'Tick doors to assign them'));
-    if (nSel) {
-      var sel = q('select'); sel.setAttribute('aria-label', 'Assign to');
-      var o0 = q('option', null, 'Assign to…'); o0.value = ''; sel.appendChild(o0);
-      (P.people || []).forEach(function (p) { var o = q('option', null, p.name + (p.me ? ' (you)' : '')); o.value = p.name; sel.appendChild(o); });
-      var oc = q('option', null, 'Nobody (clear)'); oc.value = '-clear-'; sel.appendChild(oc);   /* names never start with a hyphen */
-      sel.addEventListener('change', function () { if (sel.value) planAssign(Object.keys(P.sel), sel.value === '-clear-' ? '' : sel.value); });
-      bar.appendChild(sel);
-      if (!P.people) api('calpeople').then(function (j) { if (j && j.ok) { P.people = j.people.filter(function (p) { return S.role === 'admin' || p.edit; }); if (S.screen === 'plan') planDraw(); } });
-    }
-    if (S.role === 'admin' && shown.length) {
-      var dl = q('button', 'back'); dl.type = 'button'; dl.appendChild(ico('table', 2.2));
-      dl.appendChild(document.createTextNode(nSel ? 'Download the ' + nSel + ' ticked (CSV)' : 'Download these ' + shown.length.toLocaleString() + ' (CSV)'));
-      dl.addEventListener('click', function () { planCsv(nSel ? shown.filter(function (d) { return P.sel[d.id]; }) : shown, cols); });
-      bar.appendChild(dl);
-    }
+    /* the action bar: what is ticked, and what to do with it; redrawn by itself when a tick changes */
+    var mkBar = function () {
+      var nSel = Object.keys(P.sel).length, bar = q('div', 'planbar');
+      bar.appendChild(q('b', null, shown.length.toLocaleString() + (shown.length === 1 ? ' door matches' : ' doors match')));
+      bar.appendChild(q('span', 'soft', nSel ? nSel + ' ticked' : 'Tick doors to assign them'));
+      if (nSel) {
+        var sel = q('select'); sel.setAttribute('aria-label', 'Assign the ticked doors to');
+        var o0 = q('option', null, 'Assign to\u2026'); o0.value = ''; sel.appendChild(o0);
+        (P.people || []).forEach(function (p) { var o = q('option', null, p.name + (p.me ? ' (you)' : '')); o.value = p.name; sel.appendChild(o); });
+        var oc = q('option', null, 'Nobody (clear)'); oc.value = '-clear-'; sel.appendChild(oc);   /* names never start with a hyphen */
+        var go = q('button', 'save', 'Assign'); go.type = 'button';
+        go.addEventListener('click', function () { if (sel.value) planAssign(Object.keys(P.sel), sel.value === '-clear-' ? '' : sel.value); else sel.focus(); });
+        bar.appendChild(sel); bar.appendChild(go);
+        if (!P.people) api('calpeople').then(function (j) { if (j && j.ok) { P.people = j.people.filter(function (p) { return (S.role === 'admin' || p.edit) && !/^(claude|fable)\b/i.test(p.name); }); /* the server never assigns to its test sign-ins */ if (S.screen === 'plan') redrawBar(); } });
+      }
+      if (S.role === 'admin' && shown.length) {
+        var dl = q('button', 'back'); dl.type = 'button'; dl.appendChild(ico('table', 2.2));
+        dl.appendChild(document.createTextNode(nSel ? 'Download the ' + nSel + ' ticked (CSV)' : 'Download these ' + shown.length.toLocaleString() + ' (CSV)'));
+        dl.addEventListener('click', function () { planCsv(nSel ? shown.filter(function (d) { return P.sel[d.id]; }) : shown, cols); });
+        bar.appendChild(dl);
+      }
+      return bar;
+    };
+    var bar = mkBar();
+    var redrawBar = function () {
+      var nb = mkBar(); if (bar.parentNode) bar.parentNode.replaceChild(nb, bar); bar = nb;
+      var n = Object.keys(P.sel).length, onScreen = Math.min(shown.length, P.limit);
+      all.checked = onScreen > 0 && n >= onScreen; all.indeterminate = n > 0 && n < onScreen;
+    };
     wrap.appendChild(bar);
 
     /* the table */
     var tw = q('div', 'ptable'), t = document.createElement('table'), thead = document.createElement('thead'), hr = document.createElement('tr');
-    var th0 = q('th', 'ck'), all = document.createElement('input'); all.type = 'checkbox'; all.setAttribute('aria-label', 'Tick every door shown');
-    all.checked = shown.length > 0 && nSel === shown.length; all.indeterminate = nSel > 0 && nSel < shown.length;
-    all.addEventListener('change', function () { P.sel = {}; if (all.checked) shown.forEach(function (d) { P.sel[d.id] = true; }); planDraw(); });
+    var onScreen = Math.min(shown.length, P.limit);
+    var th0 = q('th', 'ck'), all = document.createElement('input'); all.type = 'checkbox'; all.setAttribute('aria-label', 'Tick every door on screen');
+    all.checked = onScreen > 0 && nSel >= onScreen; all.indeterminate = nSel > 0 && nSel < onScreen;
+    all.addEventListener('change', function () { P.sel = {}; if (all.checked) shown.slice(0, P.limit).forEach(function (d) { P.sel[d.id] = true; }); planDraw(); });
     th0.appendChild(all); hr.appendChild(th0);
     cols.forEach(function (c) {
       var th = q('th', PLAN_NUM[c[0]] ? 'n' : null), b = q('button', null, c[1]); b.type = 'button';
-      if (sc[0] === c[0]) { th.setAttribute('aria-sort', sc[1] > 0 ? 'ascending' : 'descending'); b.appendChild(document.createTextNode(sc[1] > 0 ? ' ▲' : ' ▼')); }
+      if (sc[0] === c[0]) { th.setAttribute('aria-sort', sc[1] > 0 ? 'ascending' : 'descending'); var ar = q('span', null, sc[1] > 0 ? ' \u25B2' : ' \u25BC'); ar.setAttribute('aria-hidden', 'true'); b.appendChild(ar); }
       b.addEventListener('click', function () { P.sort = [c[0], sc[0] === c[0] ? -sc[1] : (c[4] ? -1 : 1)]; planDraw(); });
       th.appendChild(b); hr.appendChild(th);
     });
@@ -8869,7 +8978,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var tr = document.createElement('tr'); tr.setAttribute('data-id', d.id); if (P.sel[d.id]) tr.className = 'on';
       var td0 = q('td', 'ck'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!P.sel[d.id]; cb.setAttribute('aria-label', 'Tick ' + d.address);
       cb.addEventListener('click', function (e) { e.stopPropagation(); });
-      cb.addEventListener('change', function () { if (cb.checked) P.sel[d.id] = true; else delete P.sel[d.id]; planDraw(); });
+      cb.addEventListener('change', function () { if (cb.checked) P.sel[d.id] = true; else delete P.sel[d.id]; tr.className = cb.checked ? 'on' : ''; redrawBar(); });
       td0.appendChild(cb); tr.appendChild(td0);
       cols.forEach(function (c) {
         var td = q('td', PLAN_NUM[c[0]] ? 'n' : c[0] === 'addr' ? 'ad' : null);
@@ -8878,10 +8987,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (c[0] === 'rep' && d.rep) td.className = 'rp';   /* this door's own person, not its neighbourhood's */
         tr.appendChild(td);
       });
-      tr.tabIndex = 0;
+      tr.tabIndex = 0; tr.setAttribute('aria-label', 'Open ' + d.address);
       var open = function () { planOpen(d); };
       tr.addEventListener('click', open);
-      tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); open(); } });
+      tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName !== 'INPUT') { e.preventDefault(); open(); } });
       tb.appendChild(tr);
     });
     t.appendChild(tb); tw.appendChild(t); wrap.appendChild(tw);
@@ -8906,14 +9015,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var P = S.plan;
     if (!ids.length) return;
     if (!window.confirm((who ? 'Assign ' : 'Clear the person on ') + ids.length + (ids.length === 1 ? ' door' : ' doors') + (who ? ' to ' + who : '') + '?')) return planDraw();
-    api('doorassign', { body: { region: P.key, ids: ids, who: who } }).then(function (j) {
-      if (!j || !j.ok) { window.alert((j && j.error) || 'Could not save that.'); return planDraw(); }
-      var set = {}; ids.forEach(function (k) { set[k] = true; });
-      P.rows.forEach(function (d) { if (set[d.id]) d.rep = who || null; });
-      P.sel = {};
-      toast(who ? j.n + (j.n === 1 ? ' door' : ' doors') + ' assigned to ' + who : 'Cleared ' + j.n + (j.n === 1 ? ' door' : ' doors'), '');
-      planDraw();
-    }).catch(function () { window.alert('No connection. Try again when you have signal.'); planDraw(); });
+    var chunks = []; for (var i = 0; i < ids.length; i += 1000) chunks.push(ids.slice(i, i + 1000));   /* the server takes 1,000 at a time */
+    var saved = 0, mark = function (part) { var set = {}; part.forEach(function (k) { set[k] = true; delete P.sel[k]; }); P.rows.forEach(function (d) { if (set[d.id]) d.rep = who || null; }); saved += part.length; };
+    var step = function (k) {
+      if (k >= chunks.length) { toast(who ? saved + (saved === 1 ? ' door' : ' doors') + ' assigned to ' + who : 'Cleared ' + saved + (saved === 1 ? ' door' : ' doors'), ''); return planDraw(); }
+      api('doorassign', { body: { region: P.key, ids: chunks[k], who: who } }).then(function (j) {
+        if (!j || !j.ok) {
+          var why = j && j._status === 409 ? 'A door has left the list since this table loaded. Go Back and open the table again.' : (j && j.error) || 'Could not save that.';
+          window.alert((saved ? saved + ' saved, then: ' : '') + why); return planDraw();
+        }
+        mark(chunks[k]); step(k + 1);
+      }).catch(function () { window.alert((saved ? saved + ' saved, then: ' : '') + 'No connection. Try again when you have signal.'); planDraw(); });
+    };
+    step(0);
   }
   /* a spreadsheet of the doors: the columns on screen, plus city, ZIP and owner for a CRM import (JobNimbus takes a CSV) */
   function planCsv(rows, cols) {
@@ -8998,9 +9112,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* walks booked for the next 7 days */
     var wk = q('div', 'card owalks'); wk.appendChild(q('h3', null, (feat('hail') ? 'Roof walks' : 'Walks') + ', next 7 days')); right.appendChild(wk);
     var to = new Date(Date.now() + 7 * 864e5), toISO = to.getFullYear() + '-' + String(to.getMonth() + 1).padStart(2, '0') + '-' + String(to.getDate()).padStart(2, '0');
-    api('walks', { params: { from: today, to: toISO } }).then(function (j) {
+    var teamP = S.role === 'manager' ? api('calpeople').then(function (c) { return c && c.ok ? c.people.map(function (p) { return p.name; }) : null; }, function () { return null; }) : Promise.resolve(null);
+    Promise.all([api('walks', { params: { from: today, to: toISO } }), teamP]).then(function (two) {
+      var j = two[0], team = two[1];
       if (!j || !j.ok || S.screen !== 'office') return;
-      var ws2 = (j.walks || []).slice().sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+      var ws2 = (j.walks || []).filter(function (w) { return !team || team.indexOf(w.by) >= 0; }).slice().sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
       if (!ws2.length) { wk.appendChild(q('div', 'soft', 'None booked.')); return; }
       ws2.slice(0, 12).forEach(function (w) {
         var b = q('button', 'owalk'); b.type = 'button';
@@ -9033,7 +9149,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     loadLeaflet(function () {
       if (!document.body.contains(el)) return;
       if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
-      var map = L.map(el, { zoomControl: true });   /* dots as SVG, like the doors map: each one a tap target with a tooltip */
+      if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}   /* the last visit's map (Fable 2026-10-09: one leaked per visit) */
+      var map = S.officeMap = L.map(el, { zoomControl: true });   /* dots as SVG, like the doors map: each one a tap target with a tooltip */
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
       baseLayer(map, 18);
       var rl = null;
@@ -9042,21 +9159,31 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!radar && rl) { map.removeLayer(rl); rl = null; }
       };
       rb.addEventListener('click', function () { radar = !radar; try { localStorage.setItem('sixfold.office.radar', radar ? '1' : '0'); } catch (e) {} paintBtn(); setRadar(); });
+      /* the towns' list loads in the background after sign-in: opened straight from the tools screen, the map can come first,
+         so it asks for the list itself (live check 2026-10-09: four editions drew an empty map). The view comes first, then the
+         dots and the radar (Leaflet can't place layers on a map with no view). */
+      var withTowns = function (cb) {
+        if (S.regions && S.regions.length) return cb();
+        api('regions').then(function (j) { if (j && j.ok) S.regions = j.regions; cb(); }, function () { cb(); });
+      };
+      withTowns(function () {
+      if (S.officeMap !== map || !document.body.contains(el)) return;
+      var pts = [], scored = !!bestTrade(), list = [];
+      (S.regions || []).forEach(function (r) { r.areas.forEach(function (a) { if (typeof a.la === 'number' && typeof a.lo === 'number') { list.push([r, a]); pts.push([a.la, a.lo]); } }); });
+      if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] }); else map.setView([39.1, -104.85], 9);   /* the Front Range */
+      map.on('moveend', function () { var c = map.getCenter(); S.officeView = { c: [c.lat, c.lng], z: map.getZoom() }; });
       setRadar();
-      var pts = [], scored = !!bestTrade();
-      S.regions.forEach(function (r) {
-        r.areas.forEach(function (a) {
-          if (typeof a.la !== 'number' || typeof a.lo !== 'number') return;
+      list.forEach(function (ra) {
+        var r = ra[0], a = ra[1];
+        (function () {
           var left = Math.max(0, a.total - a.done - (a.noanswer || 0)), share = scored ? (left ? Math.min(1, (a.bestN || 0) / left) : 0) : (a.total ? (a.done + (a.noanswer || 0)) / a.total : 0);
           var fill = scored ? 'rgba(31,138,76,' + (0.18 + 0.77 * share).toFixed(2) + ')' : 'rgba(19,41,75,' + (0.85 - 0.6 * share).toFixed(2) + ')';
           var m = L.circleMarker([a.la, a.lo], { radius: 4 + Math.min(18, Math.sqrt(left) * 0.9), color: a.nosol ? '#c8372d' : '#ffffff', weight: a.nosol ? 2.5 : 1.25, fillColor: fill, fillOpacity: 1 }).addTo(map);
           m.bindTooltip(q('span', null, a.name + ' · ' + r.label + ' · ' + left + ' to knock' + (scored ? ', ' + (a.bestN || 0) + ' worth it first' : '') + (a.who ? ' · ' + a.who : '') + (a.nosol ? ' · no soliciting posted' : '')), { direction: 'top' });
           m.on('click', function () { S.region = r.key; S.area = null; S.openDoor = null; S.allClosed = false; S.returnTo = officeView; openArea(a.name); });
-          pts.push([a.la, a.lo]);
-        });
+        })();
       });
-      if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] });
-      map.on('moveend', function () { var c = map.getCenter(); S.officeView = { c: [c.lat, c.lng], z: map.getZoom() }; });
+      });
     });
     return card;
   }
