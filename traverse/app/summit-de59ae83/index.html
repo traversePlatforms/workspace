@@ -1096,6 +1096,10 @@
   .desk .door.open{margin-top:0}
   /* Satellite / Street map switch and the other-neighbourhood rings (2026-10-09) */
   .mapsw button{display:block;min-width:44px;min-height:44px;padding:0 12px;border:0;border-radius:4px;background:#fff;color:#16201C;font:800 13px var(--sans);cursor:pointer}
+  .mapsw{display:flex;overflow:hidden}
+  .leaflet-bar.mapsw{border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .leaflet-bar.mapsw button{border-radius:0!important;box-shadow:none!important;min-width:0!important;padding:0 11px!important}
+  .mapsw button + button{border-left:1px solid #d6dbe2}
   .mapsw button[aria-pressed="true"]{background:#13294b;color:#fff}
   .legend i.ring{background:transparent!important;border:2px dashed #13294b!important;box-shadow:none}
   :root[data-theme="dark"] .legend i.ring{border-color:#fff!important}
@@ -1123,10 +1127,21 @@
   .desk .dk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
   .desk .dkh-t b{display:block;font:400 21px/1.15 var(--serif)}
   .desk .dkh-t small{font-size:13px;color:var(--soft)}
+  .desk .dkh-bs{display:flex;gap:6px}
+  .desk .dkh-b.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .desk .dkpick{display:grid;gap:8px}
+  .desk .dkp-town,.desk .dkp-q{min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:700 14px var(--sans)}
+  .desk .dkp-q{font-weight:400}
+  .desk .dkp-list{display:grid;gap:6px;margin-top:4px}
+  .desk .dkp-row{display:grid;gap:3px;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+  .desk .dkp-row:hover{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
+  .desk .dkp-row.cur{outline:2px solid var(--ember,#d6400c)}
+  .desk .dkp-row b{font:700 14.5px var(--sans)}
+  .desk .dkp-m{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--soft)}
   .desk .dkh-b{min-height:40px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
   #view .desk .dkrow{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:0 0 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);box-shadow:none;cursor:pointer}
   #view .desk .dkrow{position:relative;overflow:hidden;padding-left:18px}
-  #view .desk .dkrow::before{width:5px;border-radius:0}   /* the fire edge, a bar down the left like the phone card */
+  #view .desk .dkrow::before{display:none}   /* the phone card's fire edge: the row's own words say the hazard (2026-10-09) */
   #view .desk .dk-card .door.open::before,#view .desk .dk-card .door.open::after{display:none}
   #view .desk .dkrow:hover{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
   #view .desk .dkrow.sel{box-shadow:none;outline:2px solid var(--ember,#d6400c);background:color-mix(in srgb,var(--ember,#d6400c) 12%,var(--card))}
@@ -1227,6 +1242,8 @@
   .plan .dkc-x{flex:none;width:36px;height:36px;border:0;border-radius:10px;background:none;color:var(--soft);cursor:pointer;display:grid;place-items:center}
   .plan .dkc-x .ic{width:18px;height:18px}
   .plan tbody tr.peek td{box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--ember,#d6400c) 10%,transparent)}
+  .hscore{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--soft);font-weight:700}
+  .hscore .dscore{height:22px;min-width:34px;font-size:12.5px}
   .tag.reptag{background:color-mix(in srgb,#13294b 12%,transparent);color:var(--ink)}
   /* the office dashboard (2026-10-08) */
   .wrap:has(> #view > .office){max-width:1560px}
@@ -2829,6 +2846,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (mode === 'best' && !hasBest) mode = 'map';
     if (mode === 'trees' && !hasTrees) mode = 'map';
     var opts = [['map', 'Big lots', 'route'], ['near', 'Nearest', 'near']];
+    var hasSc = r.areas.some(function (a) { return typeof a.sc === 'number'; });   /* the average door score (2026-10-09) */
+    if (mode === 'score' && !hasSc) mode = 'map';
+    if (hasSc) opts.unshift(['score', 'Score', 'star']);
     if (hasBest) opts.unshift(['best', 'Best', 'chart']);   /* was "Map order": the list is biggest lots first, not a route (Fable, live review) */
     if (hasFire) opts.push(['fire', 'Fire', 'flame']);
     if (hasLawn) opts.push(['lawn', 'Lawn', 'leaf']);
@@ -2875,7 +2895,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(aroundStrip(S.region));         /* neighbours of jobs won here (2026-10-03) */
     var sect = q('div', 'sect');
     sect.appendChild(q('h2', null, 'Neighbourhoods'));
-    sect.appendChild(q('span', null, mode === 'best' ? 'Most best doors for ' + BEST_NAME[bestTrade()] + ' to knock first' : mode === 'doors' ? 'Most doors to knock first' : mode === 'odds' && od && od.ready ? 'Most quotes expected first' : mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
+    sect.appendChild(q('span', null, mode === 'best' ? 'Most best doors for ' + BEST_NAME[bestTrade()] + ' to knock first' : mode === 'score' ? 'Highest average door score first' : mode === 'doors' ? 'Most doors to knock first' : mode === 'odds' && od && od.ready ? 'Most quotes expected first' : mode === 'fire' ? 'Most fire hazard first' : mode === 'lawn' ? 'Most lawn first' : mode === 'trees' ? 'Most trees at the house first' : mode === 'near' ? 'Nearest first' : 'Biggest lots first'));
     view.appendChild(sect);
 
     if (mode === 'odds' && od && !od.ready) view.appendChild(q('div', 'msg', 'Odds sorts by the rate our own doors book at, by fire hazard and lawn size. It needs ' + od.min + ' conversations across the team first; there are ' + od.talked + ' so far. Until then this list is biggest lots first.'));
@@ -2891,6 +2911,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.onlyMine) list = list.filter(function (a) { return a.who === S.me; });
     }
     /* best first (2026-10-07): the most points from this trade's doors still to knock, then the most such doors */
+    /* by the average score of the doors still to knock, then how many of them are 8 or more (Matthew 2026-10-09) */
+    if (mode === 'score') list.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.sc8 || 0) - (x.sc8 || 0); });
     if (mode === 'best') {
       list.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || (y.bestS || 0) - (x.bestS || 0) || (y.bestN || 0) - (x.bestN || 0); });
     }
@@ -2954,6 +2976,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       mid.appendChild(sub);
       var chips = q('div', 'chips');
       if (a.who) chips.appendChild(chipEl('mine' + (a.who === S.me ? ' me' : ''), 'users', a.who === S.me ? 'Yours' : 'Assigned to ' + a.who));
+      if (typeof a.sc === 'number') chips.appendChild(hoodScore(a));   /* 2026-10-09 */
       if (a.all3) chips.appendChild(chipEl('all3', 'check', a.all3 + (a.all3 === 1 ? ' door' : ' doors') + ' with fire, lawn and trees'));
       if (mode === 'best' && typeof a.bestN === 'number') chips.appendChild(chipEl('oddc', 'chart', a.bestN ? a.bestN + (a.bestN === 1 ? ' best door' : ' best doors') + ' to knock' : 'No best doors left to knock'));
       if (mode === 'odds' && a.odds && a.odds.open) chips.appendChild(chipEl('oddc', 'chart', 'About ' + a.odds.exp + (a.odds.exp === 1 ? ' quote' : ' quotes') + ' expected from ' + a.odds.open + ' to knock'));
@@ -4233,6 +4256,38 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}
     S.desk = null; S.officeMap = null; S.plan = null; S.deskScroll = null; S.deskCardScroll = null;
   }
+  /* the workspace's neighbourhood picker: a town, a search, the neighbourhoods best first */
+  function deskPicker() {
+    var box = q('div', 'dkpick'), key = S.pickTown || S.region;
+    var sel = q('select', 'dkp-town'); sel.setAttribute('aria-label', 'Town');
+    S.regions.forEach(function (rg) { var o = q('option', null, rg.label); o.value = rg.key; if (rg.key === key) o.selected = true; sel.appendChild(o); });
+    sel.addEventListener('change', function () { S.pickTown = sel.value; S.pickQ = ''; renderDoors(); });
+    box.appendChild(sel);
+    var inp = q('input', 'dkp-q'); inp.type = 'search'; inp.placeholder = 'Find a neighbourhood or street'; inp.value = S.pickQ || ''; inp.setAttribute('aria-label', 'Find a neighbourhood or street');
+    box.appendChild(inp);
+    var lst = q('div', 'dkp-list'); box.appendChild(lst);
+    var r = S.regions.filter(function (x) { return x.key === key; })[0];
+    var draw = function () {
+      lst.textContent = ''; if (!r) return;
+      var qv = (inp.value || '').trim().toUpperCase();
+      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || (a.st || []).some(function (x) { return String(x[0] || x).toUpperCase().indexOf(qv) >= 0; }); });
+      var left = function (a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); };
+      as.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.bestN || 0) - (x.bestN || 0) || left(y) - left(x); });
+      as.slice(0, 250).forEach(function (a) {
+        var b = q('button', 'dkp-row' + (r.key === S.region && a.name === S.area ? ' cur' : '')); b.type = 'button';
+        b.appendChild(q('b', null, a.name));
+        var m = q('span', 'dkp-m'); if (typeof a.sc === 'number') m.appendChild(hoodScore(a));
+        m.appendChild(q('span', null, left(a) + ' to knock' + (a.who ? ' · ' + a.who : '') + (a.nosol ? ' · no soliciting posted' : '')));
+        b.appendChild(m);
+        b.addEventListener('click', function () { S.deskPick = false; S.pickQ = ''; S.pickTown = null; openHood(r.key, a.name); });
+        lst.appendChild(b);
+      });
+      if (!as.length) lst.appendChild(q('div', 'msg', 'No neighbourhood here matches.'));
+    };
+    inp.addEventListener('input', function () { S.pickQ = inp.value; draw(); });
+    draw();
+    return box;
+  }
   function doorById(id) { for (var i = 0; i < S.doors.length; i++) if (S.doors[i].id === id) return S.doors[i]; return null; }
   function deskLayout() {
     document.body.classList.toggle('dk-on', deskOn());
@@ -4244,9 +4299,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var lh = q('div', 'dk-head'), lt = q('div', 'dkh-t');
     lt.appendChild(q('b', null, townLabel())); lt.appendChild(q('small', null, S.area + ' \u00b7 ' + nLeft + (nLeft === 1 ? ' door' : ' doors') + ' to knock'));
     lh.appendChild(lt);
-    var chg = q('button', 'dkh-b', S.returnTo ? 'Back' : 'Change'); chg.type = 'button'; chg.addEventListener('click', areaBack); lh.appendChild(chg);
+    var hb = q('div', 'dkh-bs');
+    if (S.returnTo) { var bk = q('button', 'dkh-b', 'Back'); bk.type = 'button'; bk.addEventListener('click', areaBack); hb.appendChild(bk); }
+    /* Change: another neighbourhood or town without leaving the workspace (Matthew 2026-10-09: it used to drop back to the phone screens) */
+    var chg = q('button', 'dkh-b' + (S.deskPick ? ' on' : ''), S.deskPick ? 'Close' : 'Change'); chg.type = 'button'; chg.setAttribute('aria-expanded', String(!!S.deskPick));
+    chg.addEventListener('click', function () { S.deskPick = !S.deskPick; S.pickTown = null; S.pickQ = ''; renderDoors(); if (S.deskPick) setTimeout(function () { var i = view.querySelector('.dkpick input'); if (i) i.focus(); }, 30); });
+    hb.appendChild(chg); lh.appendChild(hb);
     list.appendChild(lh);
-    while (view.firstChild) list.appendChild(view.firstChild);
+    if (S.deskPick) { view.textContent = ''; list.appendChild(deskPicker()); }
+    else while (view.firstChild) list.appendChild(view.firstChild);
     var openEl = list.querySelector('.door.open'), od = S.openDoor ? doorById(S.openDoor) : null;
     if (openEl) {
       /* the open card moves to the right; the list keeps a highlighted row in its place */
@@ -4348,7 +4409,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       else if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 18 });
       map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
       /* after the map has a view (Leaflet can't place layers before one) */
-      satSwitch(map);   /* Satellite / Street map (2026-10-09) */
+      satSwitch(map, true);   /* Satellite / Street map (2026-10-09); photos first on the desktop */
       hoodRings(map, openHood);   /* the other neighbourhoods, a tap opens one (2026-10-09) */
       D.restyle(false);
     });
@@ -4761,6 +4822,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (sc >= 8) c.appendChild(ico('star', 0));
     c.appendChild(document.createTextNode(String(sc)));
     c.setAttribute('role', 'img'); c.setAttribute('aria-label', 'Door score ' + sc + ' out of 10'); c.title = 'Door score ' + sc + ' out of 10 for ' + BEST_NAME[bestTrade()];
+    return c;
+  }
+  /* a neighbourhood's score (2026-10-09): the average 1-10 score of its doors still to knock, coloured like a door's, and its 8-or-better count */
+  /* the order to pick neighbourhoods by score: the average, pulled towards 5 where only a few doors are left, so one leftover 8
+     doesn't outrank 28 doors averaging 7 (2026-10-09) */
+  function hoodRank(a) { var n = Math.max(0, a.total - a.done - (a.noanswer || 0)); return typeof a.sc === 'number' && n ? (a.sc * n + 5 * 5) / (n + 5) : 0; }
+  function hoodScore(a) {
+    var v = Math.round(a.sc), c = q('span', 'hscore');
+    c.appendChild(q('span', 'dscore ' + (v >= 10 ? 'top' : v >= 7 ? 'hi' : v >= 4 ? 'mid' : 'lo'), a.sc.toFixed(1)));
+    c.appendChild(document.createTextNode(' avg' + (a.sc8 ? ' · ' + a.sc8 + ' at 8+' : '')));
+    c.title = 'Average door score ' + a.sc.toFixed(1) + ' of 10 for the doors still to knock' + (a.sc8 ? '; ' + a.sc8 + ' score 8 or more' : '');
     return c;
   }
   function scoreWhy(d) {
@@ -6945,8 +7017,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      is slow and the street map shows instead. It is a free PREVIEW service, so tiles that keep failing switch back to the map.
      The choice is remembered on this device. */
   var SAT_FALLBACK = 'fe04cec383767467e9a31d04fab20050';   /* the id Planetary Computer gave this search on 2026-10-09 */
-  function satOn() { try { return localStorage.getItem('sixfold.rounds.sat') === '1'; } catch (e) { return false; } }
-  function satSet(v) { try { localStorage.setItem('sixfold.rounds.sat', v ? '1' : '0'); } catch (e) {} }
+  function satSet(v) { try { localStorage.setItem('sixfold.rounds.sat', v === true ? '1' : v === false ? '0' : String(v)); } catch (e) {} }
   function satSearch(cb) {
     if (S.satId) return cb(S.satId);
     fetch(PC_API + '/data/v1/mosaic/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -6955,27 +7026,46 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .then(function (r) { return r.json(); }).then(function (j) { S.satId = (j && /^[a-f0-9]{16,64}$/.test(j.searchid || '')) ? j.searchid : SAT_FALLBACK; }, function () { S.satId = SAT_FALLBACK; })
       .then(function () { cb(S.satId); });
   }
-  /* a Satellite / Street map switch in the map's corner; the street map stays underneath for zoomed-out views and gaps */
-  function satSwitch(map) {
-    var layer = null, fails = 0;
+  /* the map's look, three ways (2026-10-09): Map (the street map), Hybrid (the photos with the streets and their names drawn on
+     top, from our own map file) and Photo. Stored as '0', '2' or '1' under sixfold.rounds.sat. The street map stays underneath for
+     zoomed-out views and gaps. Hybrid needs the map file, so without it the choice is Map or Photo. */
+  function satMode(def) { var v = null; try { v = localStorage.getItem('sixfold.rounds.sat'); } catch (e) {} if (v === null) return def ? '1' : '0'; return v === '2' || v === '1' ? v : '0'; }
+  function hybridOk() { return !!(BASEMAP.ok && window.protomapsL); }
+  /* the street map's own roads, borders and names, with no land or water under them, so the photos show through */
+  function hybridLayer() {
+    try {
+      var ref = protomapsL.leafletLayer({ url: BASEMAP.url, flavor: 'light', lang: 'en' });
+      var pr = (ref.paintRules || []).filter(function (r) { return r.dataLayer === 'roads' || r.dataLayer === 'boundaries'; });
+      return protomapsL.leafletLayer({ url: BASEMAP.url, paintRules: pr, labelRules: ref.labelRules || [], maxDataZoom: 15, maxZoom: 21, zIndex: 4 });
+    } catch (e) { return null; }
+  }
+  function satSwitch(map, def) {
+    var photo = null, lines = null, fails = 0, box = null;
     var ctl = L.control({ position: 'topright' });
-    var btn = null;
-    var paint = function () { if (!btn) return; var on = satOn(); btn.textContent = on ? 'Street map' : 'Satellite'; btn.setAttribute('aria-pressed', String(on)); btn.title = on ? 'Show the street map' : 'Show the 2023 aerial photos'; };
+    var mode = function () { var m = satMode(def); return m === '2' && !hybridOk() ? '1' : m; };
+    var paint = function () { if (!box) return; var m = mode(); [].forEach.call(box.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === m)); }); };
     var apply = function () {
-      if (satOn() && !layer) satSearch(function (id) {
-        if (layer || !satOn() || !map._container || !document.body.contains(map._container)) return;
-        layer = L.tileLayer(PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png',
+      var m = mode();
+      if (m !== '0' && !photo) satSearch(function (id) {
+        if (photo || mode() === '0' || !map._container || !document.body.contains(map._container)) return;
+        photo = L.tileLayer(PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png',
           { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP 2023 aerial photos (public domain), Microsoft Planetary Computer' });
-        layer.on('tileerror', function () { if (++fails === 8 && layer) { map.removeLayer(layer); layer = null; satSet(false); paint(); toast('Satellite photos are not loading right now', 'Showing the street map'); } });
-        layer.on('tileload', function () { fails = 0; });
-        layer.addTo(map);
+        photo.on('tileerror', function () { if (++fails === 8 && photo) { map.removeLayer(photo); photo = null; satSet('0'); paint(); apply(); toast('Aerial photos are not loading right now', 'Showing the street map'); } });
+        photo.on('tileload', function () { fails = 0; });
+        photo.addTo(map);
       });
-      if (!satOn() && layer) { map.removeLayer(layer); layer = null; }
+      if (m === '0' && photo) { map.removeLayer(photo); photo = null; }
+      if (m === '2' && !lines) { lines = hybridLayer(); if (lines) lines.addTo(map); }
+      if (m !== '2' && lines) { map.removeLayer(lines); lines = null; }
     };
     ctl.onAdd = function () {
-      var box = L.DomUtil.create('div', 'leaflet-bar mapsw'); btn = L.DomUtil.create('button', '', box); btn.type = 'button';
+      box = L.DomUtil.create('div', 'leaflet-bar mapsw');
+      [['0', 'Map', 'The street map'], ['2', 'Hybrid', 'The aerial photos with the streets and their names'], ['1', 'Photo', 'The 2023 aerial photos']].forEach(function (x) {
+        if (x[0] === '2' && !hybridOk()) return;
+        var b = L.DomUtil.create('button', '', box); b.type = 'button'; b.textContent = x[1]; b.title = x[2]; b.setAttribute('data-m', x[0]);
+        b.addEventListener('click', function () { satSet(x[0]); fails = 0; paint(); apply(); });
+      });
       L.DomEvent.disableClickPropagation(box);
-      btn.addEventListener('click', function () { satSet(!satOn()); fails = 0; paint(); apply(); });
       paint(); return box;
     };
     ctl.addTo(map); apply();
@@ -7127,7 +7217,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
       else if (pts.length) map.fitBounds(pts, { padding: [36, 36], maxZoom: 18 });
       map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
-      satSwitch(map);   /* after the view, as on the desktop map (2026-10-09) */
+      satSwitch(map, false);   /* after the view, as on the desktop map (2026-10-09) */
       hoodRings(map, function (k, n) { S.keepMap = true; openHood(k, n); });   /* opened from the map, the next one opens on its map too */
       if (S.mapSel && markers[S.mapSel]) select(markers[S.mapSel].d);
     });

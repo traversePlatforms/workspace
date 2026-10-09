@@ -958,14 +958,23 @@ function lawnLevel(array $d, array $fix): ?string {
  * Cached per town in best-<trade>-<town>.json and rebuilt when any file it reads changes (a storm refresh rewrites hail-<town>).
  * Left out here, and added in the regions loop instead: a crew member's lawn correction (Yards). Left out entirely: Pest and
  * Security's "neighbours on service" and "booked nearby", which change by the hour. Keep the numbers in step with BEST. */
-function bestTownPoints(string $trade, string $key, array $data): array {
+/* $parts (2026-10-09): per door [trade figure, ability], what the page's door score adds to the points, so a neighbourhood
+   can carry the average 1-10 score of its doors still to knock (Matthew: pick neighbourhoods by score). Keep in step with
+   scoreParts() in index.html, as the points are with BEST. */
+const BEST_TOP_PHP = ['roof' => 10, 'yards' => 6, 'solar' => 6, 'pest' => 5, 'security' => 4];
+function doorScore10(string $trade, int $pts, array $q): int {
+    $need = $pts <= -3 ? 0.0 : max(0.0, min(1.0, ($pts + (float) $q[0]) / ((BEST_TOP_PHP[$trade] ?? 6) + 1)));
+    $v = 0.75 * $need + 0.25 * (float) $q[1];
+    return max(1, min(10, (int) round(1 + 9 * $v)));
+}
+function bestTownPoints(string $trade, string $key, array $data, ?array &$parts = null): array {
     $src = ['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'];
     $files = array_map(fn($p) => DATA_DIR . '/' . $p . '-' . $key . '.json', $src);
     $files[] = DATA_DIR . '/' . $key . '.json'; $files[] = DATA_DIR . '/permit-index.json';
-    $sig = md5(implode('|', array_map(fn($f) => (string) (@filemtime($f) ?: 0), $files)) . '|' . date('Y') . '|v1');
+    $sig = md5(implode('|', array_map(fn($f) => (string) (@filemtime($f) ?: 0), $files)) . '|' . date('Y') . '|v2');
     $cf = DATA_DIR . '/best-' . $trade . '-' . $key . '.json';
     $c = json_decode((string) @file_get_contents($cf), true);
-    if (is_array($c) && ($c['sig'] ?? '') === $sig && is_array($c['p'] ?? null)) return $c['p'];
+    if (is_array($c) && ($c['sig'] ?? '') === $sig && is_array($c['p'] ?? null) && is_array($c['q'] ?? null)) { $parts = $c['q']; return $c['p']; }
     $side = function (string $p) use ($key): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $p . '-' . $key . '.json'), true); return is_array($j['doors'] ?? null) ? $j['doors'] : []; };
     $cen = json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: [];
     $pidx = (json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null;
@@ -981,7 +990,8 @@ function bestTownPoints(string $trade, string $key, array $data): array {
     $sec = $trade === 'security' ? $take('security', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'yb' => 1, 'ab' => 1, 'os' => 1]) : null) : [];
     $yr = (int) date('Y'); $ymNow = $yr * 12 + (int) date('n');
     $recent = fn(string $ym): bool => strlen($ym) >= 7 && $ymNow - ((int) substr($ym, 0, 4) * 12 + (int) substr($ym, 5, 2)) <= 12;
-    $p = [];
+    $p = []; $qq = [];
+    $c01 = fn($x) => max(0.0, min(1.0, (float) $x));
     foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
         $id = (string) $d['id']; $pts = 0;
         if ($trade === 'roof') {
@@ -1021,8 +1031,19 @@ function bestTownPoints(string $trade, string $key, array $data): array {
         $bg = $cen['doors'][$id] ?? null; $o = $bg !== null ? ($cen['bgs'][$bg]['o'] ?? null) : null;
         if ($o !== null && $o < 40) $pts -= 2;                    /* a block mostly rented, as on the card */
         if ($pts) $p[$id] = $pts;
+        /* the trade figure and the ability to pay, as scoreParts() works them out */
+        $acres = (float) ($d['acres'] ?? 0); $tf = 0.0;
+        if ($trade === 'roof') { $bg0 = null; foreach (($hail[$id] ?? []) as $x) if (is_array($x) && (!$bg0 || (float) $x[1] > (float) $bg0[1])) $bg0 = $x; $tf = $c01((($bg0 ? (float) $bg0[1] : 0) - 0.75) / 1.75) * 0.6 + $c01((float) ($roof[$id]['sqs'] ?? 0) / 45) * 0.4; }
+        elseif ($trade === 'solar') $tf = $c01((float) ($solar[$id]['kwh'] ?? 0) / 16000);
+        elseif ($trade === 'yards') $tf = $c01((float) ($d['lawn']['sq'] ?? 0) / 15000) * 0.6 + $c01($acres / 2) * 0.4;
+        elseif ($trade === 'pest') $tf = $c01($acres) * 0.5 + $c01((float) ($d['trees']['z2'] ?? 0)) * 0.5;
+        elseif ($trade === 'security') $tf = $c01($acres / 2);
+        $val = $d['val'] ?? ($bg !== null ? ($cen['bgs'][$bg]['v'] ?? null) : null);
+        $ab = ($val === null && $o === null) ? 0.5 : ($val === null ? 0.5 : $c01(((float) $val - 200000) / 700000)) * 0.7 + ($o === null ? 0.5 : $c01(((float) $o - 40) / 50)) * 0.3;
+        $qq[$id] = [round($tf, 3), round($ab, 3)];
     }
-    writeJsonAtomic($cf, ['sig' => $sig, 'p' => $p]);
+    writeJsonAtomic($cf, ['sig' => $sig, 'p' => $p, 'q' => $qq]);
+    $parts = $qq;
     return $p;
 }
 
@@ -1514,7 +1535,7 @@ if ($action === 'regions') {
         $lfix = loadLawnFix($r['key']);
         $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
         /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
-        $bestT = crewSees($role) ? company()['best'] : null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
+        $bestT = crewSees($role) ? company()['best'] : null; $bq = null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data, $bq) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
         $areas = [];
         foreach ($data['areas'] as $a) {
             /* A no-answer is NOT a finished door — nobody was home. It is counted
@@ -1534,6 +1555,7 @@ if ($action === 'regions') {
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
             $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
             $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
+            $scSum = 0; $scN = 0; $sc8 = 0;         /* their 1-10 door scores: the average and how many are 8 or more (2026-10-09) */
             $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
             $streets = [];                           /* doors per street: a neighbourhood is named after its biggest street only */
             $aseg = [];                              /* SX-54: doors still to knock, per kind of door */
@@ -1554,6 +1576,7 @@ if ($action === 'regions') {
                     $pt = (int) ($bp[(string) $d['id']] ?? 0);
                     if ($bestT === 'yards') { $lv0 = lawnLevel($d, $lfix); $pt += $lv0 === 'L' ? 3 : ($lv0 === 'M' ? 2 : 0); }   /* live: crews correct lawns */
                     if ($pt > 0) { $bestN++; $bestS += $pt; }
+                    if ($bq !== null) { $s10 = doorScore10($bestT, $pt, $bq[(string) $d['id']] ?? [0, 0.5]); $scSum += $s10; $scN++; if ($s10 >= 8) $sc8++; }
                 }
                 $seg = (in_array($f, [3, 4, 5], true) ? (string) $f : 'x') . (lawnLevel($d, $lfix) ?: 'x');
                 if ($open) $aseg[$seg] = ($aseg[$seg] ?? 0) + 1;
@@ -1572,7 +1595,7 @@ if ($action === 'regions') {
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
                         'st' => topStreets($streets, 4), 'ns' => count($streets), 'who' => $assign[$a['name']] ?? null,
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
-                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []);
+                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8] : []);
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
         unset($data, $bp, $areas);   /* free this town before the next is read (2026-10-08): two big towns at once passed 96 MB */
