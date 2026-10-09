@@ -10455,10 +10455,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
 
   function refresh() {
+    /* with towns already in hand (2026-10-09, speed): draw them now and quietly redraw if the fresh answer differs, as areaBack does */
+    var had = S.regions && S.regions.length ? JSON.stringify(S.regions) : '';   /* the whole answer, so a count that changes 5 to 6 still redraws */
+    if (had) renderAreas();
     return api('regions').then(function (j) {
       if (!j.ok) { if (j._status === 401) return signinView(); return; }
       S.regions = j.regions;
-      renderAreas();   /* no town picked: the Colorado overview */
+      if (had && (JSON.stringify(j.regions) === had || (S.screen !== 'areas' && S.screen !== 'state'))) return;
+      var y = window.scrollY; renderAreas(); if (had) window.scrollTo(0, y);   /* no town picked: the Colorado overview */
     });
   }
 

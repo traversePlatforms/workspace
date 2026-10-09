@@ -1524,6 +1524,18 @@ if ($action === 'regions') {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $regions = [];
     $today = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d');
+    /* a ready-made answer (2026-10-09, Matthew: the app ran slowly; this answer took 1.5 s in an edition every time): built once and
+       kept until something it reads changes (any door file, log or settings file in the data folder, by name, size and time), the
+       day turns, or the code changes. One per kind of viewer: what it shows differs only by admin or not and whether crew see scores. */
+    $rkind = ($role === 'admin' ? 'a' : 'c') . (crewSees($role) ? '1' : '0') . ((TERRITORIES_OPEN || $role === 'admin') ? 't' : 'n');
+    $rsig = [$today, (string) @filemtime(__FILE__)];
+    foreach (array_merge(glob(DATA_DIR . '/*.json') ?: [], glob(DATA_DIR . '/*.log') ?: [], glob(DATA_DIR . '/docs/*.json') ?: []) as $rf) {
+        $bn = basename($rf); if (strpos($bn, 'regions-cache-') === 0 || strpos($bn, 'best-') === 0) continue;
+        $rsig[] = $bn . ':' . (string) @filesize($rf) . ':' . (string) @filemtime($rf);
+    }
+    $rsig = md5(implode('|', $rsig)); $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
+    $rc = json_decode((string) @file_get_contents($rcache), true);
+    if (is_array($rc) && ($rc['sig'] ?? '') === $rsig && is_array($rc['regions'] ?? null)) out(['ok' => true, 'regions' => $rc['regions'], 'cached' => true]);
     $segT = []; $segB = [];                  /* SX-54: conversations and quotes per kind of door, across every town */
     /* the county each town is in, from the funding sheet (one list to keep up to date) */
     $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
@@ -1620,6 +1632,7 @@ if ($action === 'regions') {
         $rg['odds'] = ['ready' => $ready, 'talked' => $T, 'booked' => $B, 'min' => ODDS_MIN];
     }
     unset($rg);
+    writeJsonAtomic($rcache, ['sig' => $rsig, 'regions' => $regions]);
     out(['ok' => true, 'regions' => $regions]);
 }
 

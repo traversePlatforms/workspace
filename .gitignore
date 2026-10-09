@@ -243,3 +243,6 @@ traverse/app/data/rounds/best-*.json
 # map files (2026-10-08): the PMTiles tool and the Colorado basemap extract (rebuilt by data-pipeline/maps/build-basemap.sh)
 traverse/data-pipeline/maps/bin/
 *.pmtiles
+
+# the server's ready-made towns answer (2026-10-09), rebuilt by itself
+traverse/app/data/rounds/regions-cache-*.json
