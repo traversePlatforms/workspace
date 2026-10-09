@@ -1182,6 +1182,94 @@
   #view .desk .dk-card .door.open{margin:6px 0 0;padding:0;border:0;background:none;box-shadow:none}
   #view .desk .dk-card .door.open > .d-top,#view .desk .dk-card .door.open > .bestwhy,#view .desk .dk-card .door.open .meta .own{display:none}
   #view .desk .dk-card .door.open .acts{position:sticky;bottom:0;z-index:2;margin:14px -18px 0;padding:12px 18px;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 14px rgba(0,0,0,.06)}
+  /* the desktop home (2026-10-09, mock-up E3) */
+  .wrap:has(> #view > .dhome),.wrap:has(> #view > .dbrowse){max-width:none;padding:0}
+  .dhome{min-height:calc(100vh - 56px)}
+  .dhome .dh-hero{padding:34px 48px 26px;background:linear-gradient(180deg,var(--bar) 0%,color-mix(in srgb,var(--bar) 82%,#3b6ea8) 100%);color:#fff}
+  .dhome .dh-hero h1{margin:0;font:400 34px/1.2 var(--serif)}
+  .dhome .dh-sub{font-size:15px;opacity:.8;margin-top:4px}
+  .dhome .dh-search{position:relative;max-width:760px;margin-top:18px}
+  .dhome .dh-sbox{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 18px;border-radius:14px;background:#fff;color:#16201C;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .dhome .dh-sbox .ic{width:20px;height:20px;color:#55635B}
+  .dhome .dh-sbox input{flex:1;border:0;outline:none;background:none;font:16px var(--sans);color:#16201C}
+  .dhome .dh-sug{position:absolute;left:0;right:0;top:62px;z-index:20;padding:6px;border-radius:14px;background:var(--card);color:var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.25)}
+  .dhome .dh-sg{display:grid;width:100%;padding:9px 12px;border:0;border-radius:10px;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
+  .dhome .dh-sg:hover{background:color-mix(in srgb,var(--go) 10%,transparent)}
+  .dhome .dh-sg small{color:var(--soft);font-size:12.5px}
+  .dhome .dh-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .dhome .dh-chip{min-height:34px;padding:0 14px;border:0;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font:700 13px var(--sans);cursor:pointer}
+  .dhome .dh-chip:hover{background:rgba(255,255,255,.26)}
+  .dhome .dh-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:24px 48px;align-items:start}
+  .dhome .dh-col{display:grid;gap:14px;min-width:0}
+  .dhome .card{padding:16px 18px}
+  .dhome .card h3{margin:0 0 10px;font:800 15px var(--sans)}
+  .dhome .dh-cont{background:var(--bar);color:#fff}
+  .dhome .dh-cont small{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+  .dhome .dh-name{display:block;font:400 23px/1.25 var(--serif);margin-top:4px}
+  .dhome .dh-meta{font-size:13px;opacity:.8}
+  .dhome .dh-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.18);margin:12px 0 4px;overflow:hidden}
+  .dhome .dh-bar i{display:block;height:100%;background:#f2c230}
+  .dhome .dh-pct{display:block;margin-bottom:12px;letter-spacing:0!important;text-transform:none!important}
+  .dhome .dh-go{min-height:42px;padding:0 16px;border:0;border-radius:10px;background:var(--ember,#d6400c);color:#fff;font:700 14px var(--sans);cursor:pointer}
+  .dhome .dh-wk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .dhome .dh-wk b{display:block;font:800 26px/1.1 var(--sans)}
+  .dhome .dh-wk small{font-size:12px;color:var(--soft)}
+  .dhome .dh-trow{display:flex;gap:10px;align-items:baseline;width:100%;padding:7px 0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);text-align:left;font:14px var(--sans)}
+  .dhome button.dh-trow{cursor:pointer}
+  .dhome .dh-trow b{min-width:62px;font:500 13px var(--mono,monospace)}
+  .dhome .dh-hail{display:grid;gap:4px;background:color-mix(in srgb,var(--ember,#d6400c) 8%,var(--card));border:1px solid color-mix(in srgb,var(--ember,#d6400c) 30%,transparent)}
+  .dhome .dh-hail small{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ember,#d6400c)}
+  .dhome .dh-hail .back{justify-self:start;margin:6px 0 0}
+  .dhome .dh-brow{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;width:100%;padding:7px 0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+  .dhome .dh-brow .dscore{grid-row:span 2;min-width:40px;height:26px}
+  .dhome .dh-bn{font-weight:700;font-size:14px}
+  .dhome .dh-brow small{font-size:12.5px;color:var(--soft)}
+  .dhome .dh-best .lnk{margin-top:8px;padding:0;border:0;background:none;color:var(--go);font:700 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .dhome .dh-tools{display:flex;flex-wrap:wrap;gap:10px;padding:0 48px 36px}
+  .dhome .dh-tool{min-height:42px;padding:0 14px;border:0;border-radius:12px;background:var(--card);color:var(--ink);font:700 14px var(--sans);box-shadow:0 1px 2px rgba(0,0,0,.08);cursor:pointer}
+  .dhome .dh-tool:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.08)}
+  /* towns and neighbourhoods (2026-10-09, mock-up F) */
+  .dbrowse{display:grid;grid-template-columns:250px minmax(0,1fr) 420px;min-height:calc(100vh - 56px)}
+  .dbrowse .db-towns{padding:14px;border-right:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;gap:6px;position:sticky;top:56px;height:calc(100vh - 56px);overflow:auto;box-sizing:border-box}
+  .dbrowse .db-tq{min-height:40px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:14px var(--sans)}
+  .dbrowse .db-cty{margin:10px 2px 2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .dbrowse .db-town{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--ink);font:700 14px var(--sans);text-align:left;cursor:pointer}
+  .dbrowse .db-town:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+  .dbrowse .db-town.on{background:color-mix(in srgb,var(--ember,#d6400c) 12%,transparent);outline:2px solid var(--ember,#d6400c)}
+  .dbrowse .db-town .dscore{min-width:34px;height:22px;font-size:12px}
+  .dbrowse .db-mid{padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+  .dbrowse .db-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .dbrowse .db-head h2{margin:0;font:400 28px/1.2 var(--serif)}
+  .dbrowse .db-head small{font-size:13.5px;color:var(--soft)}
+  .dbrowse .db-head .back{margin:0}
+  .dbrowse .db-table{border-radius:14px;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.08);overflow:auto}
+  .dbrowse table{width:100%;border-collapse:collapse;font-size:14px}
+  .dbrowse th{position:sticky;top:0;background:var(--card);padding:10px 12px;border-bottom:1.5px solid var(--line);font:800 12px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--soft);text-align:left}
+  .dbrowse th.n,.dbrowse td.n{text-align:right}
+  .dbrowse td{padding:10px 12px;border-bottom:1px solid var(--line)}
+  .dbrowse td.db-n{font-weight:700}
+  .dbrowse .db-ns{color:#c8372d;font-weight:700}
+  .dbrowse td.soft{color:var(--soft)}
+  .dbrowse tr.dbr{cursor:pointer}
+  .dbrowse tr.dbr:hover td{background:color-mix(in srgb,var(--go) 7%,transparent)}
+  .dbrowse tr.dbr.on td{background:color-mix(in srgb,var(--ember,#d6400c) 11%,transparent)}
+  .dbrowse .db-vis{display:block;width:100%;min-width:60px;height:8px;border-radius:4px;background:color-mix(in srgb,var(--ink) 9%,transparent);overflow:hidden}
+  .dbrowse .db-vis i{display:block;height:100%;background:var(--bar)}
+  .dbrowse .dscore{min-width:40px}
+  .dbrowse .db-side{border-left:1px solid var(--line);background:var(--card);position:sticky;top:56px;height:calc(100vh - 56px);display:flex;flex-direction:column;box-sizing:border-box}
+  .dbrowse .db-map{flex:1;min-height:300px}
+  .dbrowse .db-sum{padding:16px 18px;display:grid;gap:10px;border-top:1px solid var(--line)}
+  .dbrowse .db-st{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .dbrowse .db-st h3{margin:0;font:400 22px/1.25 var(--serif)}
+  .dbrowse .db-st small{font-size:13px;color:var(--soft)}
+  .dbrowse .dscore.big{height:32px;min-width:48px;font-size:16px;border-radius:10px}
+  .dbrowse .db-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .dbrowse .db-tiles div{padding:8px;border-radius:10px;border:1px solid var(--line)}
+  .dbrowse .db-tiles b{display:block;font:800 18px var(--sans)}
+  .dbrowse .db-tiles small{font-size:12px;color:var(--soft)}
+  .dbrowse .db-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .dbrowse .db-btns .back{margin:0}
+  .dbrowse .dbopen{margin:0;min-height:44px;padding:0 16px;border:0;border-radius:12px;background:var(--ember,#d6400c);color:#fff;font:700 14px var(--sans);cursor:pointer}
   /* the planning table (2026-10-08) */
   .wrap:has(> #view > .plan){max-width:1480px}
   .plan .planhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 10px}
@@ -2636,6 +2724,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     S.signin = null; S.screen = 'tools';
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
     S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
+    if (deskWide()) return deskHome();   /* on a computer: the desktop home (2026-10-09, mock-up E3) */
     foot.hidden = true; setDock(null);
     setBar('tools', { title: CO.short, sub: 'Field tools', avatar: true });
     view.textContent = '';
@@ -2765,6 +2854,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
 
   function renderAreas() {
     S.returnTo = null; S.backFirst = false;       /* the neighbourhood list is home again */
+    if (deskWide()) return deskBrowse();   /* on a computer: towns, neighbourhoods and the map in one screen (2026-10-09, mock-up F) */
     S.ringAnim = S.animRegion !== S.region; if (S.ringAnim) S.animRegion = S.region;
     if (S.ringAnim) setTimeout(function () { S.ringAnim = false; }, 0);
     if (!S.region) return stateView();
@@ -3631,7 +3721,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!j) return;
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) return renderAreas();
-      S.area = j.area; S.doors = j.doors; S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
+      S.area = j.area; S.doors = j.doors;
+      try { if (S.region !== SAMPLE_KEY) localStorage.setItem('sixfold.desk.last', JSON.stringify({ r: S.region, a: j.area })); } catch (e) {}   /* the home's "pick up where you left off" */ S.editPhone = null; S.editNote = null; S.pickLater = null; S.editLawn = null; S.editEmail = null;
       S.areaNosol = j.nosol || null; S.rest = j.rest || 2; S.areaPlace = j.place || null; S.areaFw = j.fw || null; S.areaPerm = j.perm || null;
       if (S.flash) { var fd = S.doors.filter(function (x) { return x.id === S.flash; })[0]; if (fd && fd.mark && fd.mark.outcome === 'miss' && !backOn(fd)) S.showAgain = true; }
       /* an edition with a walking order opens on it until the phone picks another (2026-10-07) */
@@ -4125,6 +4216,269 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      redraws (a mark redraws the list twice) and rebuilt only for another neighbourhood. Map (the bottom bar) still opens
      the full-screen map. */
   var DESK_MQ = window.matchMedia ? matchMedia('(min-width: 1100px)') : null;
+  function deskWide() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me; }
+  function deskTools() {   /* the places, for the home's quiet row of tools */
+    var t = [];
+    if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
+    if (S.role === 'admin' && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
+    if (S.role === 'admin') { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
+    else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
+    t.push(['Calendar', function () { S.calWho = S.me; calendarView(); }]);
+    t.push(['Training', trainingView]);
+    t.push(planOk() ? ['Team stats', teamView] : ['My stats', function () { statsView(S.me, chooseView); }]);
+    if (planOk()) t.push(['Office dashboard', officeView]);
+    if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
+    if (S.role === 'admin') { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); }
+    return t;
+  }
+  function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
+  function withRegions(cb) { if (S.regions && S.regions.length) return cb(); api('regions').then(function (j) { if (j && j.ok) S.regions = j.regions; cb(); }, function () { cb(); }); }
+  /* ---- the desktop home (2026-10-09, mock-up E3): one search, where you left off, your week, today, the storm, the best
+     neighbourhoods near you, and the tools ---- */
+  function deskHome() {
+    S.screen = 'tools'; foot.hidden = true; setDock(null);
+    setBar('tools', { title: CO.short, sub: 'Field tools', avatar: true });
+    document.body.classList.add('dk-top');
+    view.textContent = '';
+    var page = q('div', 'dhome');
+    var hero = q('section', 'dh-hero'), hr = new Date().getHours();
+    hero.appendChild(q('h1', null, (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
+    var sub = q('div', 'dh-sub', new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })); hero.appendChild(sub);
+    /* one search: towns and neighbourhoods as you type; Enter looks the address up */
+    var sw = q('div', 'dh-search'), lab = q('label', 'dh-sbox'); lab.appendChild(ico('search', 2.4));
+    var inp = q('input'); inp.type = 'search'; inp.placeholder = 'Find a door, a street, a neighbourhood or a town'; inp.setAttribute('aria-label', 'Find a door, a street, a neighbourhood or a town'); inp.autocomplete = 'off';
+    lab.appendChild(inp); sw.appendChild(lab);
+    var sug = q('div', 'dh-sug'); sug.hidden = true; sw.appendChild(sug);
+    hero.appendChild(sw);
+    var suggest = function () {
+      var v = inp.value.trim().toUpperCase(); sug.textContent = '';
+      if (v.length < 2) { sug.hidden = true; return; }
+      var hits = [];
+      S.regions.forEach(function (r) {
+        if (r.label.toUpperCase().indexOf(v) >= 0) hits.push(['town', r, null]);
+        r.areas.forEach(function (a) { if (a.name.toUpperCase().indexOf(v) >= 0) hits.push(['area', r, a]); });
+      });
+      hits.slice(0, 8).forEach(function (h) {
+        var b = q('button', 'dh-sg'); b.type = 'button';
+        b.appendChild(q('b', null, h[0] === 'town' ? h[1].label : h[2].name));
+        b.appendChild(q('small', null, h[0] === 'town' ? 'Town \u00b7 ' + h[1].areas.length + ' neighbourhoods' : 'Neighbourhood \u00b7 ' + h[1].label + ' \u00b7 ' + areaLeft(h[2]) + ' to knock'));
+        b.addEventListener('click', function () { if (h[0] === 'town') { S.region = h[1].key; renderAreas(); } else openHood(h[1].key, h[2].name); });
+        sug.appendChild(b);
+      });
+      var b2 = q('button', 'dh-sg addr'); b2.type = 'button'; b2.appendChild(q('b', null, 'Look up the address \u201c' + inp.value.trim() + '\u201d')); b2.appendChild(q('small', null, 'Every door in every town'));
+      b2.addEventListener('click', function () { S.searchQ = inp.value.trim(); searchView(chooseView); }); sug.appendChild(b2);
+      sug.hidden = false;
+    };
+    inp.addEventListener('input', suggest);
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var f = sug.querySelector('.dh-sg'); if (f && !f.classList.contains('addr') && sug.querySelectorAll('.dh-sg').length === 2) f.click(); else { S.searchQ = inp.value.trim(); searchView(chooseView); } } if (e.key === 'Escape') { sug.hidden = true; } });
+    var chips = q('div', 'dh-chips'); hero.appendChild(chips);
+    page.appendChild(hero);
+    var grid = q('section', 'dh-grid'), c1 = q('div', 'dh-col'), c2 = q('div', 'dh-col'), c3 = q('div', 'dh-col');
+    grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3); page.appendChild(grid);
+    var tools = q('section', 'dh-tools');
+    deskTools().forEach(function (t) { var b = q('button', 'dh-tool', t[0]); b.type = 'button'; b.addEventListener('click', function () { window.scrollTo(0, 0); t[1](); }); tools.appendChild(b); });
+    page.appendChild(tools);
+    view.appendChild(page);
+    withRegions(function () {
+      if (S.screen !== 'tools' || !document.body.contains(page)) return;
+      /* the line under the date: what is left across the towns */
+      var left = 0, at8 = 0; S.regions.forEach(function (r) { r.areas.forEach(function (a) { left += areaLeft(a); at8 += a.sc8 || 0; }); });
+      sub.textContent += ' \u00b7 ' + S.regions.length + (S.regions.length === 1 ? ' town \u00b7 ' : ' towns \u00b7 ') + left.toLocaleString('en-US') + ' doors left' + (at8 ? ' \u00b7 ' + at8.toLocaleString('en-US') + ' score 8 or more' : '');
+      /* quick chips */
+      var chip = function (label, fn) { var b = q('button', 'dh-chip', label); b.type = 'button'; b.addEventListener('click', fn); chips.appendChild(b); };
+      var all = []; S.regions.forEach(function (r) { r.areas.forEach(function (a) { all.push([r, a]); }); });
+      chip('Best near me', function () { locate(function () { var best = nearBest(all, 1)[0]; if (best) openHood(best[0].key, best[1].name); else renderAreas(); }); });
+      if (S.role === 'admin' && feat('hail') && cardOn('hail')) chip('Hit by hail lately', stormView);
+      if (all.some(function (x) { return x[1].who === S.me; })) chip('My territories', function () { S.browseMine = true; renderAreas(); });
+      var F = followups(); if (F.na + F.due) chip((F.na + F.due) + ' to come back to', followupView);
+      /* where you left off */
+      var last = null; try { last = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
+      var lr = last && S.regions.filter(function (r) { return r.key === last.r; })[0], la = lr && lr.areas.filter(function (a) { return a.name === last.a; })[0];
+      if (!la) { var mine = all.filter(function (x) { return x[1].who === S.me && areaLeft(x[1]); })[0] || nearBest(all, 1)[0]; if (mine) { lr = mine[0]; la = mine[1]; } }
+      if (la) {
+        var cc = q('div', 'card dh-cont'), vis = la.total ? (la.done + (la.noanswer || 0)) / la.total : 0;
+        cc.appendChild(q('small', null, last && lr.key === last.r && la.name === last.a ? 'Pick up where you left off' : 'A good place to start'));
+        cc.appendChild(q('b', 'dh-name', la.name));
+        cc.appendChild(q('span', 'dh-meta', lr.label + ' \u00b7 ' + areaLeft(la) + ' of ' + la.total + ' doors left' + (la.sc8 ? ' \u00b7 ' + la.sc8 + ' score 8+' : '')));
+        var bar = q('div', 'dh-bar'), fill = q('i'); fill.style.width = Math.round(vis * 100) + '%'; bar.appendChild(fill); cc.appendChild(bar);
+        cc.appendChild(q('small', 'dh-pct', Math.round(vis * 100) + '% visited'));
+        var ob = q('button', 'dh-go', 'Open the workspace'); ob.type = 'button'; ob.addEventListener('click', function () { openHood(lr.key, la.name); }); cc.appendChild(ob);
+        c1.insertBefore(cc, c1.firstChild);   /* above Your week, which can land first */
+      }
+      /* the best neighbourhoods near you (or overall, without a location) */
+      var bc = q('div', 'card dh-best'); bc.appendChild(q('h3', null, S.here ? 'Best neighbourhoods near you' : 'Best neighbourhoods to knock next'));
+      nearBest(all, 6).forEach(function (x) {
+        var b = q('button', 'dh-brow'); b.type = 'button';
+        if (typeof x[1].sc === 'number') b.appendChild(q('span', 'dscore ' + (x[1].sc >= 9.5 ? 'top' : x[1].sc >= 6.5 ? 'hi' : x[1].sc >= 3.5 ? 'mid' : 'lo'), x[1].sc.toFixed(1)));
+        b.appendChild(q('span', 'dh-bn', x[1].name)); b.appendChild(q('small', null, x[0].label + ' \u00b7 ' + areaLeft(x[1]) + ' left'));
+        b.addEventListener('click', function () { openHood(x[0].key, x[1].name); }); bc.appendChild(b);
+      });
+      var allB = q('button', 'lnk', 'All towns and neighbourhoods'); allB.type = 'button'; allB.addEventListener('click', function () { renderAreas(); }); bc.appendChild(allB);
+      c3.appendChild(bc);
+      if (!S.here && !S.locating && navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name: 'geolocation' }).then(function (st) { if (st.state === 'granted') locate(function () { if (S.screen === 'tools') chooseView(); }); }).catch(function () {});
+    });
+    /* your week */
+    var wc = q('div', 'card dh-week'); wc.appendChild(q('h3', null, 'Your week')); c1.appendChild(wc);
+    api('stats', { params: { days: 7, who: S.me || '' } }).then(function (j) {
+      var pp = j && j.ok ? (j.people || []).filter(function (x) { return x.name === S.me; })[0] : null, d = 0, t = 0, b = 0;
+      (pp ? pp.days || [] : []).forEach(function (x) { d += x.doors || 0; t += (x.booked || 0) + (x.later || 0); b += x.booked || 0; });
+      var g = (j && j.goal) || (j && j.company) || {};
+      var row = q('div', 'dh-wk');
+      [[d, 'doors', g.doors ? 'goal ' + g.doors + ' a day' : ''], [t, 'talked', ''], [b, 'quotes', '']].forEach(function (x) { var c = q('div'); c.appendChild(q('b', null, String(x[0]))); c.appendChild(q('small', null, x[1] + (x[2] ? ' \u00b7 ' + x[2] : ''))); row.appendChild(c); });
+      wc.appendChild(row);
+    }).catch(function () {});
+    /* today: walks, come-backs, leads */
+    var tc = q('div', 'card dh-today'); tc.appendChild(q('h3', null, 'Today')); c2.appendChild(tc);
+    var today = todayISO();
+    api('walks', { params: { from: today, to: today } }).then(function (j) {
+      var ws = (j && j.ok ? j.walks : []).filter(function (w) { return planOk() || w.by === S.me; }).sort(function (a, b) { return String(a.time).localeCompare(String(b.time)); });
+      var add = function (l1, l2, fn) { var r = q(fn ? 'button' : 'div', 'dh-trow'); if (fn) { r.type = 'button'; r.addEventListener('click', fn); } r.appendChild(q('b', null, l1)); r.appendChild(q('span', null, l2)); tc.appendChild(r); };
+      ws.slice(0, 5).forEach(function (w) { add(w.time || 'Today', (feat('hail') ? 'Roof walk' : 'Walk') + ' \u00b7 ' + w.address + (planOk() && w.by ? ' \u00b7 ' + w.by : ''), function () { S.region = w.region; S.area = null; S.flash = w.id; S.openDoor = w.id; S.allClosed = false; S.returnTo = chooseView; openArea(w.area); }); });
+      withRegions(function () { var F = followups(); if (F.due) add('Due', F.due + (F.due === 1 ? ' door asked you back today' : ' doors asked you back today'), followupView); if (F.na) add('Again', F.na + (F.na === 1 ? ' no-answer back on the list' : ' no-answers back on the list'), followupView); if (!ws.length && !F.due && !F.na) tc.appendChild(q('small', 'soft', 'Nothing booked for today.')); });
+      if (S.role === 'admin') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) add('Leads', l.new + (l.new === 1 ? ' new lead in the Pipeline' : ' new leads in the Pipeline'), pipelineView); }).catch(function () {});
+    }).catch(function () {});
+    /* storms and warnings */
+    var sc = q('div', 'dh-storm'); c2.appendChild(sc); sc.appendChild(alertStrip(null));
+    if (S.role === 'admin' && feat('hail') && cardOn('hail')) api('stormdays').then(function (j) {
+      var d0 = j && j.ok && (j.days || [])[0]; if (!d0) return;
+      var c = q('div', 'card dh-hail'); c.appendChild(q('small', null, 'Latest storm'));
+      c.appendChild(q('b', null, 'Hail up to ' + inch(d0.max || d0.big || 0) + ', ' + hailDay(d0.day || d0.date)));
+      if (d0.doors) c.appendChild(q('span', null, Number(d0.doors).toLocaleString('en-US') + ' doors hit'));
+      var b = q('button', 'back', 'Open the storm list'); b.type = 'button'; b.addEventListener('click', stormView); c.appendChild(b); sc.appendChild(c);
+    }).catch(function () {});
+  }
+  /* the best neighbourhoods, near here when there is a fix (within about 25 km), else overall; by hoodRank */
+  function nearBest(all, n) {
+    var list = all.filter(function (x) { return areaLeft(x[1]) > 0 && !x[1].nosol; });
+    if (S.here) { var near = list.filter(function (x) { var m = hoodDist(x[1]); return m !== null && m <= 25000; }); if (near.length) list = near; }
+    return list.sort(function (x, y) { return hoodRank(y[1]) - hoodRank(x[1]) || (y[1].bestN || 0) - (x[1].bestN || 0) || areaLeft(y[1]) - areaLeft(x[1]); }).slice(0, n);
+  }
+  /* ---- towns and neighbourhoods on a computer (2026-10-09, mock-up F): towns by county, the town's neighbourhoods as a table,
+     and the town's map with the picked neighbourhood's summary ---- */
+  function deskBrowse() {
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'areas'; S.area = null; S.backFirst = false;
+    if (!S.region || !S.regions.some(function (r) { return r.key === S.region; })) S.region = S.regions[0] ? S.regions[0].key : null;
+    foot.hidden = true; setDock(null);
+    setBar('town'); renderRegions();
+    document.body.classList.add('dk-top');
+    view.textContent = '';
+    if (!S.region) { view.appendChild(q('div', 'msg', 'No towns yet.')); return; }
+    var r = S.regions.filter(function (x) { return x.key === S.region; })[0];
+    var page = q('div', 'dbrowse'), towns = q('aside', 'db-towns'), mid = q('section', 'db-mid'), side = q('aside', 'db-side');
+    page.appendChild(towns); page.appendChild(mid); page.appendChild(side); view.appendChild(page);
+    /* towns, by county, each with its doors-left-weighted score */
+    var tq = q('input', 'db-tq'); tq.type = 'search'; tq.placeholder = 'Find a town'; tq.setAttribute('aria-label', 'Find a town'); towns.appendChild(tq);
+    var tl = q('div', 'db-tl'); towns.appendChild(tl);
+    var townSc = function (rg) { var n = 0, s2 = 0; rg.areas.forEach(function (a) { var l = areaLeft(a); if (typeof a.sc === 'number' && l) { n += l; s2 += a.sc * l; } }); return n ? s2 / n : null; };
+    var drawTowns = function () {
+      tl.textContent = ''; var v = tq.value.trim().toUpperCase(), order = [];
+      S.regions.forEach(function (x) { var k = x.county || 'other'; if (order.indexOf(k) < 0) order.push(k); });
+      order.forEach(function (k) {
+        var ts = S.regions.filter(function (x) { return (x.county || 'other') === k && (!v || x.label.toUpperCase().indexOf(v) >= 0); }); if (!ts.length) return;
+        if (order.length > 1) tl.appendChild(q('small', 'db-cty', COUNTY_NAME[k] || 'Other towns'));
+        ts.forEach(function (x) {
+          var b = q('button', 'db-town' + (x.key === S.region ? ' on' : '')); b.type = 'button'; b.setAttribute('data-town', x.key);
+          b.appendChild(q('span', null, x.label)); var ts2 = townSc(x);
+          if (ts2 !== null) b.appendChild(q('span', 'dscore ' + (ts2 >= 9.5 ? 'top' : ts2 >= 6.5 ? 'hi' : ts2 >= 3.5 ? 'mid' : 'lo'), ts2.toFixed(1)));
+          b.addEventListener('click', function () { S.region = x.key; S.browseSel = null; renderAreas(); });
+          tl.appendChild(b);
+        });
+      });
+    };
+    tq.addEventListener('input', drawTowns); drawTowns();
+    /* the town's head and the sort */
+    var T = townSum(r), at8 = r.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
+    var hd = q('div', 'db-head'), ht = q('div');
+    ht.appendChild(q('h2', null, r.label));
+    ht.appendChild(q('small', null, r.areas.length + ' neighbourhoods \u00b7 ' + T.total.toLocaleString('en-US') + ' doors \u00b7 ' + Math.round(T.total ? 100 * T.done / T.total : 0) + '% visited' + (at8 ? ' \u00b7 ' + at8.toLocaleString('en-US') + ' doors score 8+' : '')));
+    hd.appendChild(ht);
+    var hb = q('div', 'db-hb');
+    if (planOk()) { var pg = q('button', 'back plango', 'Plan this town in a table'); pg.type = 'button'; pg.addEventListener('click', function () { planView(r.key); window.scrollTo(0, 0); }); hb.appendChild(pg); }
+    hd.appendChild(hb); mid.appendChild(hd);
+    mid.appendChild(alertStrip(r.key));
+    var hasSc = r.areas.some(function (a) { return typeof a.sc === 'number'; });
+    var SORTS = [hasSc ? ['score', 'Best score'] : null, ['left', 'Most left'], ['near', 'Nearest'], r.areas.some(function (a) { return a.who; }) ? ['mine', S.role === 'crew' ? 'Mine' : 'Assigned'] : null, ['name', 'A to Z']].filter(Boolean);
+    var mode = S.browseSort && SORTS.some(function (x) { return x[0] === S.browseSort; }) ? S.browseSort : SORTS[0][0];
+    if (S.browseMine && SORTS.some(function (x) { return x[0] === 'mine'; })) { mode = 'mine'; S.browseMine = false; }
+    var sb = q('div', 'chips matchb db-sorts');
+    SORTS.forEach(function (x) { var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(mode === x[0])); b.setAttribute('data-s', x[0]); b.addEventListener('click', function () { S.browseSort = x[0]; if (x[0] === 'near' && !S.here) locate(function () { if (S.screen === 'areas') renderAreas(); }); renderAreas(); }); sb.appendChild(b); });
+    mid.appendChild(sb);
+    var list = r.areas.slice();
+    if (mode === 'mine') list = list.filter(function (a) { return S.role === 'crew' ? a.who === S.me : !!a.who; });
+    list.sort(function (x, y) {
+      return mode === 'score' ? ((x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.sc8 || 0) - (x.sc8 || 0))
+        : mode === 'left' ? areaLeft(y) - areaLeft(x)
+        : mode === 'near' ? ((hoodDist(x) === null ? 1e12 : hoodDist(x)) - (hoodDist(y) === null ? 1e12 : hoodDist(y)))
+        : x.name.localeCompare(y.name, 'en', { numeric: true });
+    });
+    if (!S.browseSel || !r.areas.some(function (a) { return a.name === S.browseSel; })) S.browseSel = list[0] ? list[0].name : null;
+    /* the table */
+    var tw = q('div', 'db-table'), t = document.createElement('table'), th = document.createElement('tr');
+    [['Neighbourhood', ''], hasSc ? ['Score', 'n'] : null, hasSc ? ['8+', 'n'] : null, ['Left', 'n'], ['Visited', ''], ['Who', '']].filter(Boolean).forEach(function (h) { th.appendChild(q('th', h[1] || null, h[0])); });
+    var thead = document.createElement('thead'); thead.appendChild(th); t.appendChild(thead);
+    var tb = document.createElement('tbody');
+    list.forEach(function (a) {
+      var tr = document.createElement('tr'); tr.className = 'dbr' + (a.name === S.browseSel ? ' on' : ''); tr.setAttribute('data-area', a.name); tr.tabIndex = 0;
+      tr.setAttribute('aria-label', a.name + ': show it on the map; double-click to open');
+      var n = q('td', 'db-n'); n.appendChild(document.createTextNode(a.name)); if (a.nosol) n.appendChild(q('small', 'db-ns', ' \u00b7 no soliciting posted')); tr.appendChild(n);
+      if (hasSc) { var sct = q('td', 'n'); if (typeof a.sc === 'number') { var v = Math.round(a.sc); sct.appendChild(q('span', 'dscore ' + (v >= 10 ? 'top' : v >= 7 ? 'hi' : v >= 4 ? 'mid' : 'lo'), a.sc.toFixed(1))); } tr.appendChild(sct); tr.appendChild(q('td', 'n', String(a.sc8 || 0))); }
+      tr.appendChild(q('td', 'n', String(areaLeft(a))));
+      var vt = q('td'), vb = q('span', 'db-vis'), vf = q('i'); vf.style.width = Math.round(100 * (a.total ? (a.done + (a.noanswer || 0)) / a.total : 0)) + '%'; vb.appendChild(vf); vt.appendChild(vb); tr.appendChild(vt);
+      tr.appendChild(q('td', a.who ? null : 'soft', a.who ? (a.who === S.me ? 'You' : a.who) : 'open'));
+      tr.addEventListener('click', function () { S.browseSel = a.name; selRow(); });
+      tr.addEventListener('dblclick', function () { openHood(r.key, a.name); });
+      tr.addEventListener('keydown', function (e) { if (e.key === 'Enter') openHood(r.key, a.name); });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); tw.appendChild(t); mid.appendChild(tw);
+    if (!list.length) mid.appendChild(q('div', 'msg', mode === 'mine' ? 'No neighbourhood here is assigned yet.' : 'No neighbourhoods.'));
+    mid.appendChild(q('small', 'soft', 'Click a neighbourhood to see it on the map; double-click it, or Open in workspace, to start knocking.'));
+    /* the map and the summary */
+    var mapEl = q('div', 'db-map'); side.appendChild(mapEl);
+    var sum = q('div', 'db-sum'); side.appendChild(sum);
+    var marks = {};
+    var drawSum = function () {
+      sum.textContent = ''; var a = r.areas.filter(function (x) { return x.name === S.browseSel; })[0]; if (!a) return;
+      var top = q('div', 'db-st'), tt = q('div'); tt.appendChild(q('h3', null, a.name)); tt.appendChild(q('small', null, r.label + ' \u00b7 ' + (a.who ? (a.who === S.me ? 'yours' : a.who) : 'nobody assigned') + (a.place && a.place.n ? ' \u00b7 ' + a.place.n : '')));
+      top.appendChild(tt); if (typeof a.sc === 'number') { var v = Math.round(a.sc); top.appendChild(q('span', 'dscore big ' + (v >= 10 ? 'top' : v >= 7 ? 'hi' : v >= 4 ? 'mid' : 'lo'), a.sc.toFixed(1))); } sum.appendChild(top);
+      var g = q('div', 'db-tiles');
+      [[areaLeft(a), 'left'], [a.sc8 || 0, 'score 8+'], [a.booked || 0, 'quotes']].forEach(function (x) { var c = q('div'); c.appendChild(q('b', null, String(x[0]))); c.appendChild(q('small', null, x[1])); g.appendChild(c); });
+      sum.appendChild(g);
+      var bits = []; if (a.hot) bits.push(a.hot + ' high fire hazard'); if ((a.lawnL || 0) + (a.lawnM || 0)) bits.push((a.lawnL || 0) + (a.lawnM || 0) + ' large or medium lawns'); if ((a.treeA || 0) + (a.treeH || 0)) bits.push((a.treeA || 0) + (a.treeH || 0) + ' with trees close'); if (a.due) bits.push(a.due + ' due back');
+      if (bits.length) sum.appendChild(q('small', 'soft', bits.join(' \u00b7 ')));
+      var bt = q('div', 'db-btns'), ob = q('button', 'save dbopen', 'Open in workspace'); ob.type = 'button'; ob.addEventListener('click', function () { openHood(r.key, a.name); }); bt.appendChild(ob);
+      if (planOk()) { var asg = q('button', 'back', 'Assign\u2026'); asg.type = 'button'; asg.addEventListener('click', territoriesView); bt.appendChild(asg); }
+      sum.appendChild(bt);
+    };
+    var selRow = function () {
+      [].forEach.call(tb.querySelectorAll('tr.dbr'), function (x) { x.classList.toggle('on', x.getAttribute('data-area') === S.browseSel); });
+      drawSum();
+      Object.keys(marks).forEach(function (k) { var m = marks[k]; m.setStyle({ color: k === S.browseSel ? '#d6400c' : '#ffffff', weight: k === S.browseSel ? 4 : 1.5 }); if (k === S.browseSel) { m.bringToFront(); if (S.browseMap && !S.browseMap.getBounds().contains(m.getLatLng())) S.browseMap.panTo(m.getLatLng()); } });
+    };
+    drawSum();
+    loadLeaflet(function () {
+      if (!document.body.contains(mapEl) || !window.L) return;
+      if (S.browseMap) try { S.browseMap.remove(); } catch (e) {}
+      var map = S.browseMap = L.map(mapEl, { zoomControl: true });
+      mapEl.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
+      baseLayer(map, 19);
+      var pts = r.areas.filter(function (a) { return typeof a.la === 'number'; }).map(function (a) { return [a.la, a.lo]; });
+      if (pts.length) map.fitBounds(pts, { padding: [24, 24], maxZoom: 15 }); else map.setView([39.1, -104.85], 10);
+      satSwitch(map, false);
+      r.areas.forEach(function (a) {
+        if (typeof a.la !== 'number') return;
+        var v = typeof a.sc === 'number' ? a.sc : null, l = areaLeft(a);
+        var fill = l === 0 ? '#9ba9ba' : v === null ? '#2563A8' : v >= 6.5 ? '#1f8a4c' : v >= 3.5 ? '#f2c230' : '#c8372d';
+        var m = L.circleMarker([a.la, a.lo], { radius: 5 + Math.min(16, Math.sqrt(l) * 0.9), color: a.name === S.browseSel ? '#d6400c' : '#ffffff', weight: a.name === S.browseSel ? 4 : 1.5, dashArray: a.nosol ? '4 3' : null, fillColor: fill, fillOpacity: 0.8 }).addTo(map);
+        m.bindTooltip(q('span', null, a.name + ' \u00b7 ' + l + ' to knock' + (v !== null ? ' \u00b7 score ' + v.toFixed(1) : '')), { direction: 'top' });
+        m.on('click', function () { S.browseSel = a.name; selRow(); });
+        m.on('dblclick', function () { openHood(r.key, a.name); });
+        marks[a.name] = m;
+      });
+      selRow();
+    });
+  }
   function deskOn() { return !!(DESK_MQ && DESK_MQ.matches) && S.screen === 'doors' && S.dview !== 'map'; }
   /* ---- the desktop top bar (2026-10-09) ----
      On a computer the app runs like a desktop app: one bar across the top with the places people go (each only for the roles
@@ -4132,7 +4486,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
-    var it = [['doors', 'Doors', function () { S.returnTo = null; if (S.region && S.area) openArea(S.area); else if (S.region) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
+    var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }, ['plan']]);
     if (S.role === 'admin' && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
     if (S.role === 'admin') it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip']]);
@@ -4415,7 +4769,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
   }
   if (DESK_MQ) {   /* crossing the width (a window dragged narrower) redraws the doors screen in the other layout */
-    var deskFlip = function () { dnavPaint(); if (S.screen === 'doors' && S.area) renderDoors(); };
+    var deskFlip = function () { dnavPaint(); if (S.screen === 'doors' && S.area) renderDoors(); else if (S.screen === 'tools') chooseView(); else if (S.screen === 'areas' || S.screen === 'state') renderAreas(); };
     if (DESK_MQ.addEventListener) DESK_MQ.addEventListener('change', deskFlip); else if (DESK_MQ.addListener) DESK_MQ.addListener(deskFlip);
   }
   window.addEventListener('resize', function () { if (view.querySelector('.desk')) deskSize(); });
@@ -4857,6 +5211,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }, { total: 0, done: 0, left: 0, hot: 0, booked: 0, all3: 0 });
   }
   function stateView() {
+    if (deskWide()) { S.returnTo = null; return deskBrowse(); }
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'state'; S.region = null; S.area = null;
     setBar('town'); renderRegions();
