@@ -20,11 +20,14 @@ const DOUGLAS = ['highlands-ranch', 'sedalia', 'franktown', 'larkspur'];
    Thornton labels re-roofs only from 2025 and solar from 2023, so a missing re-roof proves nothing there (PARTIAL). */
 const CITY = { thornton: { file: 'thornton-permits.json', src: 'City of Thornton building division' },
   /* Parker's monthly reports (2023 on) carry the county parcel number, so Parker matches on it through parker.csv, like El Paso */
-  parker: { file: 'parker-permits.json', src: 'Town of Parker building division', parcel: true } };
+  parker: { file: 'parker-permits.json', src: 'Town of Parker building division', parcel: true },
+  /* Centennial's public permit search (fetch-centennial.mjs), 2018 on, matched on the street address */
+  centennial: { file: 'centennial-permits.json', src: 'City of Centennial building division' } };
 /* towns whose list reaches past the department's area: Woodland Park's runs into unincorporated Teller County (its own building
    department), and Larkspur is its own town. There a missing permit proves nothing, so the card never says "no permit" (full: false).
-   Parker's list also takes in unincorporated Douglas County around the town, which the town's reports don't cover. */
-const PARTIAL = new Set(['woodland-park', 'larkspur', 'thornton', 'parker']);
+   Parker's list also takes in unincorporated Douglas County around the town, which the town's reports don't cover, and
+   Centennial's was drawn by the address city, which in Arapahoe County takes in unincorporated land too. */
+const PARTIAL = new Set(['woodland-park', 'larkspur', 'thornton', 'parker', 'centennial']);
 const SRC = { pprbd: 'Pikes Peak Regional Building Department', douglas: 'Douglas County building division' };
 
 function parseCSV(s) {

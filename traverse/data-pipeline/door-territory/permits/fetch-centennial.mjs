@@ -58,6 +58,9 @@ for (const kw of KEYWORDS) {
     await sleep(PAUSE);
   }
 }
+/* the city's current system starts in 2018 (3,202 re-roofs that year); before it the search holds a few dozen legacy records a
+   year, so the file starts in 2018 and the app does not claim cover it lacks */
+for (const [k, p] of Object.entries(prog.permits)) if (p[1] < '2018') delete prog.permits[k];
 const days = Object.values(prog.permits).map((p) => p[1]).sort();
 const n = { roof: 0, solar: 0 }; for (const p of Object.values(prog.permits)) n[p[2]]++;
 writeFileSync(join(HERE, 'centennial-permits.json'), JSON.stringify({ source: 'City of Centennial public permit search (EnerGov self-service)', since: days[0], through: days.at(-1), fetched: new Date().toISOString().slice(0, 10), permits: prog.permits }));
