@@ -1,10 +1,8 @@
 {
   "monument": [
-    "castle-pines",
     "palmer-lake"
   ],
   "palmer-lake": [
-    "castle-pines",
     "monument"
   ],
   "castle-rock": [
@@ -21,76 +19,16 @@
   ],
   "castle-pines": [
     "castle-rock",
-    "monument",
-    "palmer-lake",
     "sedalia"
   ],
   "black-forest": [
     "cs-northeast",
-    "cs-northwest",
-    "parker"
-  ],
-  "parker": [
-    "black-forest"
+    "cs-northwest"
   ],
   "cs-northeast": [
-    "arvada",
     "black-forest"
   ],
   "cs-northwest": [
-    "black-forest",
-    "boulder",
-    "erie",
-    "fountain"
-  ],
-  "woodland-park": [
-    "boulder",
-    "cs-southwest",
-    "denver",
-    "fountain"
-  ],
-  "boulder": [
-    "cs-northwest",
-    "cs-southwest",
-    "florissant",
-    "security-widefield",
-    "thornton",
-    "woodland-park"
-  ],
-  "cs-southwest": [
-    "boulder",
-    "denver",
-    "fountain",
-    "thornton",
-    "woodland-park"
-  ],
-  "fountain": [
-    "cs-northwest",
-    "cs-southwest",
-    "denver",
-    "woodland-park"
-  ],
-  "florissant": [
-    "boulder"
-  ],
-  "arvada": [
-    "cs-northeast"
-  ],
-  "security-widefield": [
-    "boulder",
-    "denver"
-  ],
-  "thornton": [
-    "boulder",
-    "cs-southwest"
-  ],
-  "erie": [
-    "cs-northwest"
-  ],
-  "denver": [
-    "cs-southwest",
-    "fountain",
-    "security-widefield",
-    "woodland-park"
+    "black-forest"
   ]
 }

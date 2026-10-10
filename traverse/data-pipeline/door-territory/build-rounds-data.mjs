@@ -182,16 +182,32 @@ for (const [key, label, fileName, group] of SOURCES) {
   built.push({ key, label, group, j, areas });
 }
 const groupOf = Object.fromEntries(built.map((b) => [b.key, b.group || null]));
-const towns = new Map();   /* id -> towns listing it */
-for (const b of built) for (const a of b.areas) for (const d of a.doors) { if (!towns.has(d.id)) towns.set(d.id, []); towns.get(d.id).push(b.key); }
+/* id -> towns listing it AS THE SAME HOUSE (2026-10-10). Ids come from the street address alone, so "100 Main St" in Denver and
+   in Fountain made the same id: 58 different houses were each dropped from one town, and 20 town pairs that share no house were
+   linked, so their logs could read into each other. A listing counts as the same door only within 150 m of the first. */
+const SAME_KM = 0.15;
+const towns = new Map(), firstAt = new Map();
+for (const b of built) for (const a of b.areas) for (const d of a.doors) {
+  const p = firstAt.get(d.id);
+  if (!p) { firstAt.set(d.id, d); towns.set(d.id, [b.key]); continue; }
+  const same = p.lat != null && d.lat != null ? km(p.lat, p.lon, d.lat, d.lon) < SAME_KM : false;
+  if (same && !towns.get(d.id).includes(b.key)) towns.get(d.id).push(b.key);
+}
 const SHARED_FILE = join(HERE, 'shared-towns.json');
 const shared = existsSync(SHARED_FILE) ? JSON.parse(readFileSync(SHARED_FILE, 'utf8')) : {};
 const addPair = (x, y) => { (shared[x] ||= []); if (!shared[x].includes(y)) shared[x].push(y); };
+/* a pair stays only where the two towns really share houses; the false pairs the address-only ids made go (no history can depend
+   on a pair with no shared house: a door's rows only ever moved between two listings of that same house) */
+const realPair = new Set();
+for (const list of towns.values()) if (list.length > 1) for (const t of list) for (const u of list) if (t !== u) realPair.add(t + '|' + u);
+let pruned = 0;
+for (const k of Object.keys(shared)) { const keep = shared[k].filter((u) => realPair.has(k + '|' + u)); pruned += shared[k].length - keep.length; if (keep.length) shared[k] = keep; else delete shared[k]; }
+if (pruned) console.log(`${pruned / 2} town pairs unlinked: they share no house, only street addresses`);
 let moved = 0;
 const owner = new Map();
 for (const b of built) for (const a of b.areas) for (const d of a.doors) {
   const list = towns.get(d.id);
-  if (list.length < 2 || owner.has(d.id)) continue;
+  if (list.length < 2 || owner.has(d.id) || !list.includes(b.key)) continue;
   /* a town in a group (editions only) never takes a door from a town without one: Sixfold would lose it (2026-10-07) */
   const ungrouped = list.filter((t) => !groupOf[t]), pool = ungrouped.length ? ungrouped : list;
   const near = pool.filter((t) => CENTRE[t] && d.lat != null).sort((x, y) => km(d.lat, d.lon, ...CENTRE[x]) - km(d.lat, d.lon, ...CENTRE[y]))[0] || pool[0];
@@ -199,7 +215,8 @@ for (const b of built) for (const a of b.areas) for (const d of a.doors) {
   for (const t of list) for (const u of list) if (t !== u) addPair(t, u);
 }
 for (const b of built) for (const a of b.areas) {
-  const keep = a.doors.map((d, i) => ({ d, src: a.src[i] })).filter(({ d }) => !owner.has(d.id) || owner.get(d.id) === b.key);
+  /* a door whose town is not among its id's same-house listings is a different house with the same address: it stays */
+  const keep = a.doors.map((d, i) => ({ d, src: a.src[i] })).filter(({ d }) => !owner.has(d.id) || owner.get(d.id) === b.key || !towns.get(d.id).includes(b.key));
   moved += a.doors.length - keep.length;
   a.doors = keep.map((x) => x.d); a.src = keep.map((x) => x.src);
 }
