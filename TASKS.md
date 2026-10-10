@@ -902,6 +902,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       review date set. Do this *with* the first week's numbers rather than before them.
 - [ ] **X-8 — Weekly analytics pull** across everything running. **Do this last** — it's a
       wrapper around things that are still moving, and building it now means rebuilding it.
+- [ ] **X-10 — Access that saves you clicks, when each comes up** (Matthew 2026-10-09: "add them to the list"):
+      **(a)** SSH keys for the Surge and Sixfold SiteGround accounts when work on them resumes (Site Tools → Devs → SSH Keys
+      Manager; save in `C:\Users\Surge Inc\.ssh\`; send the password + Hostname/Username/Port). **(b)** A Porkbun API key when
+      the .app domains or DNS changes come up (Porkbun → Account → API Access, switched on per domain). **(c)** Fewer
+      permission prompts: allow the routine read-only commands that keep asking. Guardrails stay: buying, publishing,
+      sending and public changes going live still need your go.
 - [ ] **X-9 — A new off-computer backup.** OneDrive went with Microsoft 365 (2026-10-09), so the laptop is now the
       only copy of everything (repo, video, photos, personal). Pick a personal Google Drive (15 GB free; not Sixfold's
       Workspace) and/or an external drive, and the nightly 6 PM mirror gets pointed at it.
