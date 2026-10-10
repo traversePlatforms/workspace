@@ -1274,7 +1274,9 @@ function keepCutoffs(): array { return ['keep' => date('Y-m-d', strtotime('-' . 
 function writeJsonAtomic(string $f, array $j): bool { return writeTextAtomic($f, (string) json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); }
 function writeTextAtomic(string $f, string $txt): bool {
     $tmp = $f . '.tmp' . getmypid() . bin2hex(random_bytes(3));   /* threaded servers share a pid */
-    if (@file_put_contents($tmp, $txt, LOCK_EX) === false) return false;
+    /* the whole text or nothing (review 2026-10-10): a full disk makes file_put_contents write part and return the count,
+       not false, and the towns answer is sent from this file on its head and tail alone */
+    if (@file_put_contents($tmp, $txt, LOCK_EX) !== strlen($txt)) { @unlink($tmp); return false; }
     return @rename($tmp, $f);
 }
 /** bring the hail files up to date (see above). Returns what it did; never throws. */
