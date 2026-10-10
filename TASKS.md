@@ -962,7 +962,18 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-5 — More export options (someday, not now).** Matthew 2026-10-09: SalesRabbit exports into more platforms than
       Traverse does. Today Traverse has JobNimbus (live send + CSV) and a Jobber CSV; AccuLynx waits on their reply (TR-2).
       Look at which CRMs roofers, solar and pest companies actually use before adding any.
-- [ ] **TR-6 — Roof material for Roofing's new Front Range towns.** ✅ **2026-10-10: the 2020 state photo, 2023 close-up and outline are LIVE for all five** (every door has both photos; outlines on 106,226 of 113,281). **Left: roof material only.** Original note: Thornton, Centennial,
+- [ ] **TR-6 — Roof material for Roofing's new Front Range towns.** ✅ **2026-10-10: the 2020 state photo, 2023 close-up and outline are LIVE for all five** (every door has both photos; outlines on 106,226 of 113,281). **Left: roof material only.**
+      **Year built — what each county publishes (checked 2026-10-10, county pages):**
+      | Town | County file | Year built | Roof cover recorded |
+      |---|---|---|---|
+      | Thornton, Commerce City | Adams assessor "Detailed Data Dump – Appraisal" (zip, twice a year) | YEARBLT | **yes** (ROOFTYPE, ROOFCOVER) |
+      | Erie (Boulder side) | Boulder assessor Buildings.csv (daily) | builtYear, EffectiveYear | **yes** (Roof_Cover) |
+      | Erie (Weld side) | Weld assessor "All Data (CSV)" (weekly) | not yet checked | not yet checked |
+      | Denver | Denver open data "Real Property Residential Characteristics" (212,852 homes, updated 2026-10-08) | CCYRBLT + CCAGE_RM (remodel) | no |
+      | Centennial | Arapahoe: no public bulk download found | — | — |
+      So Adams and Boulder give RECORDED roof material (like Douglas, no model needed); Denver gives year built and
+      remodel year for the model; Centennial needs a records request (or the model without year, weaker). Terms on all
+      four: as-is disclaimers, no stated ban on reuse. Original note: Thornton, Centennial,
       Erie, Commerce City and Denver went live on Roofing 2026-10-10 with hail, wind, roof size/pitch and permits (Thornton,
       Centennial), but none of the three extras the older towns carry. The close-up and outline need only the photo window
       index and outline-photos.mjs (add the towns to roofs/material TOWNS lists). **Material needs year built**, which comes
