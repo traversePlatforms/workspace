@@ -997,7 +997,15 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       $30/mo, Mapbox Static Tiles 200k free then $0.50/1,000 (their pricing pages, 2026-10-10). Free outside services
       still in use, no guarantee: Microsoft Planetary Computer (2023 aerials, close-ups), Iowa State (radar). The hail
       map costs nothing to run and stays included in Roofing.
-- [ ] **TR-7 — Split big towns' door files per neighbourhood (server memory).** Opening one neighbourhood decodes the whole
+- [~] **TR-11 — Same address in two towns (bug found 2026-10-10).** Door ids come from the street address alone, so "100
+      Main St" in Denver and in Fountain were treated as one door: 56 houses had been dropped from one town, and 20 town pairs
+      that share no house were linked, so their logs could read into each other. ✅ Fixed in build-rounds-data.mjs (same house
+      only within 150 m), houses restored with their side data, false pairs removed (7 real overlaps kept). **Goes live with the
+      next upload** (the index.json of every copy carries the pairs). Their 2023 close-ups still need a forced houses.mjs run.
+- [~] **TR-7 — Split big towns' door files per neighbourhood (server memory).** ✅ **Built and tested 2026-10-10**
+      (commit 4d5e077): server-side town cache, no whole-town decode on taps; identical answers on 635 neighbourhoods; a
+      Denver tap 190 → 112 MB. **Waiting on Matthew's go to upload.** Remaining big item per tap: the hail file (unpacked
+      for the storm job). Original note: Opening one neighbourhood decodes the whole
       town: Denver's door file alone is ~80 MB of server memory per tap (peak 190 MB with hail and wind), Thornton/Parker
       ~150. Fine under the host's 768 MB, but several crews tapping at once add up. 2026-10-10 already done: side files packed
       in the editions, the best-doors scorer keeps plain numbers (Roofing+Denver towns build ~300 → 234 MB, scores identical).
