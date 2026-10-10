@@ -973,6 +973,12 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       matthew@traverseplatforms.com) + free aliases (hello@, sales@). **DNS is on SiteGround, not Porkbun**: Google's MX,
       SPF, DKIM and DMARC records go in Site Tools → Domain → DNS Zone Editor (Matthew enters them; Claude walks it).
       Free fallback: SiteGround mail (10 GB shared, weaker delivery). Then swap the homepage's placeholder contact.
+- [~] **TR-10 — Backups.** ✅ **2026-10-10: nightly copy of everything that exists only on traverseplatforms.com** (all
+      private folders, every log, leads, customers, digests, Sixfold's server backups, app-written settings; ~7 MB) to
+      `C:\Users\Surge Inc\TraverseBackups\` (outside the repo — sign-in data; never commit or open), Windows task "Traverse
+      server backup", 2:45 AM, newest 30 kept, result in backup.log. Script: traverse/ops/pull-server-backup.sh.
+      **Still open: an OFF-MACHINE copy** of this computer (repo + TraverseBackups) — OneDrive is gone; Matthew to set up a
+      drive (Google Drive personal or USB), then the 6 PM mirror is re-pointed.
 - [ ] **TR-9 — Paid map tiles before paying customers.** The app's base map uses OpenStreetMap's own tile server: free,
       but its policy says commercial use "may be withdrawn at any point", blocking without notice. Move to a paid
       OSM-based tile provider (estimate: free tier, then tens of dollars a month — price real options). The hail map
