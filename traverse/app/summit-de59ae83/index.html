@@ -1855,6 +1855,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { ok: false, _status: 400, error: 'Not on the sample door: it saves nothing.' };
   }
   function moneyKey() { return S.region === SAMPLE_KEY && S.sampleData ? S.sampleData.as : S.region; }   /* the sample borrows a town's money and water sheets */
+  /* the towns answer leaves out a neighbourhood's empty fields (2026-10-09, speed); put them back so every screen reads the same object */
+  var AREA_ZERO = ['done', 'noanswer', 'hot', 'vhot', 'due', 'retry', 'booked', 'lawnL', 'lawnM', 'treeA', 'treeH', 'all3'], AREA_NULL = ['nosol', 'la', 'lo', 'place', 'fw', 'who', 'cwpp'];
+  function areaFill(rg) {
+    (rg && rg.areas || []).forEach(function (a) {
+      for (var i = 0; i < AREA_ZERO.length; i++) if (!(AREA_ZERO[i] in a)) a[AREA_ZERO[i]] = 0;
+      for (var k = 0; k < AREA_NULL.length; k++) if (!(AREA_NULL[k] in a)) a[AREA_NULL[k]] = null;
+    });
+  }
   function api(action, opts) {
     opts = opts || {};
     var fake = sampleAnswer(action, opts); if (fake) return Promise.resolve(fake);
@@ -1873,7 +1881,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           j._status = r.status; if (fromSaved) j._saved = true;
           if (TRIM_ACTIONS[action]) trimCard(j);
           /* every town's name for the alerts (2026-10-07): TOWN_NAME only knew Sixfold's eleven */
-          if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; });
+          if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; areaFill(rg); });
           if (j.ok && opts.body && action !== 'signin') warmArea();
           return j;
         });
@@ -4692,7 +4700,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var draw = function () {
       lst.textContent = ''; if (!r) return;
       var qv = (inp.value || '').trim().toUpperCase();
-      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || (a.st || []).some(function (x) { return String(typeof x === 'string' ? x : (x && x[0]) || '').toUpperCase().indexOf(qv) >= 0; }); });   /* st is street names (2026-10-09: x[0] read the first letter) */
+      var stz = (S.streets || {})[r.key];
+      if (qv && !stz && !(S.streetsAsk || {})[r.key]) {   /* the streets of this town, once, when the search first needs them (2026-10-09) */
+        S.streetsAsk = S.streetsAsk || {}; S.streetsAsk[r.key] = true;
+        api('streets', { params: { region: r.key } }).then(function (j) { if (j && j.ok) { S.streets = S.streets || {}; S.streets[j.region] = j.streets; if (document.body.contains(lst)) draw(); } }).catch(function () { S.streetsAsk[r.key] = false; });
+      }
+      var as = r.areas.filter(function (a) { return !qv || a.name.toUpperCase().indexOf(qv) >= 0 || ((stz && stz[a.name]) || a.st || []).some(function (x) { return String(typeof x === 'string' ? x : (x && x[0]) || '').toUpperCase().indexOf(qv) >= 0; }); });   /* st is street names (2026-10-09: x[0] read the first letter) */
       var left = function (a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); };
       as.sort(function (x, y) { return (x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.bestN || 0) - (x.bestN || 0) || left(y) - left(x); });
       as.slice(0, 250).forEach(function (a) {

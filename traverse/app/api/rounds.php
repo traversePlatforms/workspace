@@ -546,6 +546,16 @@ function ownerAge(array $d, ?array $r): string {
 function streetName(string $address): string { return trim((string) preg_replace('/^\s*\d+\s+/', '', $address)); }
 /** the biggest streets first (Fable, live review 2026-10-03: 62% of doors are on a street other than the name) */
 function topStreets(array $counts, int $n): array { arsort($counts); return array_slice(array_keys($counts), 0, $n); }
+/* the towns answer without its empty fields (2026-10-09, speed): a 0 count or a null on every one of 6,841 neighbourhoods was
+   a third of Security's 2.6 MB. Only fields every neighbourhood always carried are left out, and the page puts them back as
+   the answer arrives (AREA_ZERO / AREA_NULL in the page), so every screen reads the same object as before. */
+const AREA_ZERO = ['done', 'noanswer', 'hot', 'vhot', 'due', 'retry', 'booked', 'lawnL', 'lawnM', 'treeA', 'treeH', 'all3'];
+const AREA_NULL = ['nosol', 'la', 'lo', 'place', 'fw', 'who', 'cwpp'];
+function areaCompact(array $a): array {
+    foreach (AREA_ZERO as $k) if (($a[$k] ?? null) === 0) unset($a[$k]);
+    foreach (AREA_NULL as $k) if (array_key_exists($k, $a) && $a[$k] === null) unset($a[$k]);
+    return $a;
+}
 /** the mark, unless it was surely made for the previous owner */
 function freshMark(array $d, ?array $m): ?array { return ($m && ownerAge($d, $m) !== 'prev') ? $m : null; }
 /** the flag a record carries in the app: ['prev' => true], ['maybe' => true] or nothing */
@@ -1534,6 +1544,20 @@ function cwppPlaces(): array {
     if ($p === null) $p = json_decode((string) @file_get_contents(DATA_DIR . '/cwpp.json'), true)['places'] ?? [];
     return $p;
 }
+/* the four biggest streets of each neighbourhood in one town (2026-10-09): only the desktop picker's search uses them, so they left
+   the towns answer (409 KB of Security's) and come here when someone searches that town. Same towns as the towns answer. */
+if ($action === 'streets') {
+    $key = (string) ($_GET['region'] ?? '');
+    if (!preg_match('/^[a-z0-9-]{1,40}$/D', $key) || !($data = loadRegion($key))) fail('No such region.', 404);
+    $out = [];
+    foreach ($data['areas'] as $a) {
+        $streets = [];
+        foreach ($a['doors'] as $d) { $sn = streetName((string) ($d['address'] ?? '')); if ($sn !== '') $streets[$sn] = ($streets[$sn] ?? 0) + 1; }
+        $out[$a['name']] = topStreets($streets, 4);
+    }
+    out(['ok' => true, 'region' => $key, 'streets' => $out]);
+}
+
 if ($action === 'regions') {
     if (!is_readable(DATA_DIR . '/index.json')) {
         fail('The door lists are not on this server yet. Sign in as admin and open ?action=diag to see where it looked.', 503);
@@ -1593,11 +1617,8 @@ if ($action === 'regions') {
             $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
             $scSum = 0; $scN = 0; $sc8 = 0;         /* their 1-10 door scores: the average and how many are 8 or more (2026-10-09) */
             $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
-            $streets = [];                           /* doors per street: a neighbourhood is named after its biggest street only */
             $aseg = [];                              /* SX-54: doors still to knock, per kind of door */
             foreach ($a['doors'] as $d) {
-                $sn = streetName((string) ($d['address'] ?? ''));
-                if ($sn !== '') $streets[$sn] = ($streets[$sn] ?? 0) + 1;
                 $m = freshMark($d, $marks[$d['id']] ?? null);
                 $f = (int) ($d['fire'] ?? 0);
                 if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
@@ -1624,14 +1645,14 @@ if ($action === 'regions') {
                 elseif ($m['outcome'] === 'miss') $noanswer++;
                 else $done++;
             }
-            $areas[] = ['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
+            $areas[] = areaCompact(['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
-                        'la' => $nll ? round($sla / $nll, 5) : null, 'lo' => $nll ? round($slo / $nll, 5) : null,
+                        'la' => $nll ? round($sla / $nll, 4) : null, 'lo' => $nll ? round($slo / $nll, 4) : null,   /* 4 places: about 10 m, plenty for a neighbourhood's centre */
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
-                        'st' => topStreets($streets, 4), 'who' => $assign[$a['name']] ?? null,
+                        'who' => $assign[$a['name']] ?? null,   /* the streets come from ?action=streets, one town at a time */
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
-                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []);
+                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []));
         }
         $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
         unset($data, $bp, $areas);   /* free this town before the next is read (2026-10-08): two big towns at once passed 96 MB */
