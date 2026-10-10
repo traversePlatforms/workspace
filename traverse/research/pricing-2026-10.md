@@ -111,8 +111,8 @@ Sales terms that stay off the public page: a 3-user minimum on Pro, one metro pe
   unrestricted; sharing the outline data itself means including the licence text; no use of Microsoft's name or
   logo. County assessor terms on reusing owner records differ by county — check each.
 - **Coverage**: sell by metro; the Front Range is covered (see above).
-- **Cost per user**: small. Hosting is a flat monthly bill and the data is almost all free; 70% gross margin is easy
-  at $69. The real costs are new-metro setup and support time.
+- **Cost per user**: small. Hosting is a flat monthly bill, the data is almost all free, the hail map costs nothing to
+  run, and the street map is self-hosted (no per-user map bill); 70% gross margin is easy at $69. The real costs are new-metro setup and support time.
 
 **Open question:** what do five local crew owners pay today for canvassing and data combined? That settles these
 numbers better than more research.
