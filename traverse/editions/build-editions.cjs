@@ -59,7 +59,7 @@ const EDITIONS = {
         best: 'roof',   // best doors first: this trade's walking order (2026-10-07)
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
-        townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the four Front Range hail towns now measured (Denver when its roofs finish)
+        townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: four Front Range hail towns measured; Denver waits on the towns-cache memory (it needs 256-384 MB to build)
         features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true },
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });

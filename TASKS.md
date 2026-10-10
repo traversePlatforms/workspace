@@ -934,7 +934,11 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       from 2025, solar from 2023). **Centennial** — replied with portal instructions: its self-service portal
       (Search Public Records → Permit → Advanced → Permit Type + Issued Date → **Export**) exports a date range,
       so Matthew can pull it himself, in yearly chunks. **Castle Pines** — one record at a time only; dropped for now.
-      **Parker** — sent a 2023–2026 zip; it's still in his email, to save it to the computer. **Castle Rock** — its portal
+      **Parker** — sent a 2023–2026 zip; it's still in his email, to save it to the computer.
+      **Later 2026-10-10: Parker DONE** (monthly reports, matched on parcel: 3,211 of 24,715 doors) and **Centennial DONE**
+      (I read its public permit search myself, a year at a time: 8,899 of 17,632 doors, 2018 on). All three LIVE on Roofing
+      and Solar the same day. Left: **Castle Rock** (call), **Castle Pines** (one at a time; dropped), **Arvada** (request
+      2026-580 pending). **Castle Rock** — its portal
       only takes one address per property-records request; next step is calling the Building Division
       (720-733-3527) to ask for a town-wide re-roof/solar report or the right request type. **Castle Pines** —
       no form found; email the letter to its Building Department (buildingdept@castlepinesco.gov, 303-705-0227),
@@ -958,6 +962,12 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-5 — More export options (someday, not now).** Matthew 2026-10-09: SalesRabbit exports into more platforms than
       Traverse does. Today Traverse has JobNimbus (live send + CSV) and a Jobber CSV; AccuLynx waits on their reply (TR-2).
       Look at which CRMs roofers, solar and pest companies actually use before adding any.
+- [ ] **TR-6 — Roof material, 2023 close-up and outline for Roofing's new Front Range towns.** Thornton, Centennial,
+      Erie, Commerce City and Denver went live on Roofing 2026-10-10 with hail, wind, roof size/pitch and permits (Thornton,
+      Centennial), but none of the three extras the older towns carry. The close-up and outline need only the photo window
+      index and outline-photos.mjs (add the towns to roofs/material TOWNS lists). **Material needs year built**, which comes
+      from each county's assessor (Adams, Arapahoe, Boulder, Weld, Denver: none pulled yet); without it the model is weaker.
+      Matthew's call on material; crop downloads ~3.5 min per 1,000 doors (~7 h for all five).
 - [x] **TR-4 — Move all six apps to the Traverse hosting** ✅ **Done 2026-10-09:** all six live on traverseplatforms.com, crons moved, everything app-related deleted from Sixfold (its website + secrets.php remain), Sixfold SSH key deleted; the app is the only lead intake for now (the website form just emails). Original note: (Sixfold + the five editions, same folder names on
       traverseplatforms.com). **In progress 2026-10-09:** data and apps copying over SSH. Left: check, set each install's
       address, test, then the switch-over with you — final top-up copy, redirects from the old addresses, the five

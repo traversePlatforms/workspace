@@ -2,6 +2,12 @@
 # Not cached by SiteGround's Dynamic Cache, so an upload shows at once.
 # The apps live here too (moved from sixfoldcolorado.com 2026-10-09), so the same guards Sixfold's site had: no logs,
 # scripts or source maps served, nothing starting with a dot, and the browser safety headers.
+# One address: www goes to the bare domain (2026-10-10), so links, saved apps and sign-ins all sit on the same name.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^www\.traverseplatforms\.com$ [NC]
+RewriteRule ^ https://traverseplatforms.com%{REQUEST_URI} [R=301,L]
+</IfModule>
 <FilesMatch "\.(md|mjs|log|sh|map)$">
   Require all denied
 </FilesMatch>
