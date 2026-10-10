@@ -21,7 +21,7 @@ const SIZE = 10560;   /* every file (checked on samples) */
 const MAIN = /^DRAPP\/DRAPP2020\/Imagery\/[NS]\d+[EW]\d+[a-d]\.tif$/;
 const INDEX = join(HERE, 'photo-index.json');
 proj4.defs('EPSG:6342', '+proj=utm +zone=13 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');   /* NAD83(2011) / UTM 13N */
-const TOWNS = ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'monument', 'palmer-lake', 'black-forest', 'highlands-ranch', 'parker', 'castle-pines'];
+const TOWNS = ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'monument', 'palmer-lake', 'black-forest', 'highlands-ranch', 'parker', 'castle-pines', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'];   /* + the Front Range Roofing towns (2026-10-10) */
 
 async function listKeys() {
   const keys = []; let token = '';

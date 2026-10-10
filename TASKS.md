@@ -968,6 +968,16 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       index and outline-photos.mjs (add the towns to roofs/material TOWNS lists). **Material needs year built**, which comes
       from each county's assessor (Adams, Arapahoe, Boulder, Weld, Denver: none pulled yet); without it the model is weaker.
       Matthew's call on material; crop downloads ~3.5 min per 1,000 doors (~7 h for all five).
+- [ ] **TR-8 — Company email for Traverse.** Recommended: Google Workspace Business Starter (~$7/user/mo yearly,
+      $8.40 monthly — check Google's page), its own Workspace account, not Sixfold's. One mailbox (e.g.
+      matthew@traverseplatforms.com) + free aliases (hello@, sales@). **DNS is on SiteGround, not Porkbun**: Google's MX,
+      SPF, DKIM and DMARC records go in Site Tools → Domain → DNS Zone Editor (Matthew enters them; Claude walks it).
+      Free fallback: SiteGround mail (10 GB shared, weaker delivery). Then swap the homepage's placeholder contact.
+- [ ] **TR-9 — Paid map tiles before paying customers.** The app's base map uses OpenStreetMap's own tile server: free,
+      but its policy says commercial use "may be withdrawn at any point", blocking without notice. Move to a paid
+      OSM-based tile provider (estimate: free tier, then tens of dollars a month — price real options). The hail map
+      itself costs nothing to run (NOAA radar hail estimates, NWS reports, Iowa State radar tiles, our hosting), so it
+      stays included in Roofing, not sold separately.
 - [ ] **TR-7 — Split big towns' door files per neighbourhood (server memory).** Opening one neighbourhood decodes the whole
       town: Denver's door file alone is ~80 MB of server memory per tap (peak 190 MB with hail and wind), Thornton/Parker
       ~150. Fine under the host's 768 MB, but several crews tapping at once add up. 2026-10-10 already done: side files packed
