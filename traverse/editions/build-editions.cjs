@@ -119,7 +119,7 @@ const EDITIONS = {
                   ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
       best: 'solar',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas', 'arvada', 'centennial', 'thornton'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
+      townGroups: ['north-douglas', 'arvada', 'centennial', 'thornton', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the El Paso towns now measured for sun (Matthew: every relevant town in)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
       links: { googleReview: '' }
