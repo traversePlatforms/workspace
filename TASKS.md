@@ -962,7 +962,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-5 — More export options (someday, not now).** Matthew 2026-10-09: SalesRabbit exports into more platforms than
       Traverse does. Today Traverse has JobNimbus (live send + CSV) and a Jobber CSV; AccuLynx waits on their reply (TR-2).
       Look at which CRMs roofers, solar and pest companies actually use before adding any.
-- [ ] **TR-6 — Roof material, 2023 close-up and outline for Roofing's new Front Range towns.** Thornton, Centennial,
+- [ ] **TR-6 — Roof material for Roofing's new Front Range towns.** ✅ **2026-10-10: the 2020 state photo, 2023 close-up and outline are LIVE for all five** (every door has both photos; outlines on 106,226 of 113,281). **Left: roof material only.** Original note: Thornton, Centennial,
       Erie, Commerce City and Denver went live on Roofing 2026-10-10 with hail, wind, roof size/pitch and permits (Thornton,
       Centennial), but none of the three extras the older towns carry. The close-up and outline need only the photo window
       index and outline-photos.mjs (add the towns to roofs/material TOWNS lists). **Material needs year built**, which comes
