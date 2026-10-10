@@ -8023,13 +8023,50 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Colorado wall time as typed; the steps can be filled in any order, because jobs run in different orders. */
   var ROOF_STEP = [['signed', 'Contract signed', 1], ['claim', 'Claim filed', 0], ['adjuster', 'Adjuster meeting', 0], ['approved', 'Claim approved', 0],
     ['denied', 'Denial reached the homeowner', 1], ['materials', 'Materials delivered', 0], ['installed', 'Roof installed', 0], ['cancelled', 'Homeowner cancelled', 1]];
-  function rjDate(v) { var p = String(v).split(/[-T:]/); return new Date(+p[0], +p[1] - 1, +p[2], +(p[3] || 0), +(p[4] || 0)); }
-  function rjFmt(d, timed) {
-    var s = WDAY[d.getDay()].slice(0, 3) + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
-    if (d.getFullYear() !== new Date().getFullYear()) s += ' ' + d.getFullYear();
-    return timed ? s + ', ' + fmtTime(d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2)) : s;
+  /* Colorado wall time <-> moments (2026-10-10, Fable's review): the steps are saved as Colorado wall time, so a phone set to
+     another time zone must not read a 2 pm Denver signing as 2 pm where it is. Falls back to the device's clock without Intl. */
+  var RJ_TZ = null; try { RJ_TZ = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' }); } catch (e) {}
+  function rjParts(t) {   /* a moment, as Colorado sees it */
+    if (!RJ_TZ) { var dl = new Date(t); return { y: dl.getFullYear(), m: dl.getMonth() + 1, d: dl.getDate(), h: dl.getHours(), mi: dl.getMinutes(), wd: dl.getDay() }; }
+    var o = {}; RJ_TZ.formatToParts(new Date(t)).forEach(function (p) { o[p.type] = p.value; });
+    return { y: +o.year, m: +o.month, d: +o.day, h: +o.hour % 24, mi: +o.minute, wd: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(o.weekday) };
   }
-  function rjLocal(d, timed) { var z = function (n) { return ('0' + n).slice(-2); }; var s = d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); return timed ? s + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()) : s; }
+  function rjAt(y, m, d, h, mi) {   /* Colorado wall time to a moment */
+    if (!RJ_TZ) return new Date(y, m - 1, d, h, mi).getTime();
+    var guess = Date.UTC(y, m - 1, d, h, mi), t = guess;
+    for (var n = 0; n < 2; n++) { var p = rjParts(t); t = guess - (Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - t); }
+    return t;
+  }
+  function rjDate(v) { var p = String(v).split(/[-T:]/); return new Date(rjAt(+p[0], +p[1], +p[2], +(p[3] || 0), +(p[4] || 0))); }
+  function rjFmt(d, timed) {
+    var p = rjParts(d.getTime());
+    var s = WDAY[p.wd].slice(0, 3) + ' ' + p.d + ' ' + MONTHS[p.m - 1];
+    if (p.y !== rjParts(Date.now()).y) s += ' ' + p.y;
+    return timed ? s + ', ' + fmtTime(p.h + ':' + ('0' + p.mi).slice(-2)) : s;
+  }
+  function rjLocal(d, timed) { var z = function (n) { return ('0' + n).slice(-2); }, p = rjParts(d.getTime()); var s = p.y + '-' + z(p.m) + '-' + z(p.d); return timed ? s + 'T' + z(p.h) + ':' + z(p.mi) : s; }
+  /* the federal cooling-off rule (16 CFR 429): a sale of $25+ made at the home can be cancelled until midnight of the third
+     business day after it. Sundays and federal holidays are not business days. A holiday that falls on a weekend is skipped on
+     both the day itself and its day off, so the app errs toward the later deadline. */
+  function rjHolidays(y) {
+    var out = {}, z = function (n) { return ('0' + n).slice(-2); };
+    var add = function (m, d) { out[y + '-' + z(m) + '-' + z(d)] = 1; var wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); if (wd === 6) { var f = new Date(Date.UTC(y, m - 1, d - 1)); out[f.getUTCFullYear() + '-' + z(f.getUTCMonth() + 1) + '-' + z(f.getUTCDate())] = 1; } if (wd === 0) { var mo = new Date(Date.UTC(y, m - 1, d + 1)); out[mo.getUTCFullYear() + '-' + z(mo.getUTCMonth() + 1) + '-' + z(mo.getUTCDate())] = 1; } };
+    var nth = function (m, wd, n) { var d1 = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(); return 1 + ((wd - d1 + 7) % 7) + 7 * (n - 1); };
+    var last = function (m, wd) { var dl = new Date(Date.UTC(y, m, 0)), back = (dl.getUTCDay() - wd + 7) % 7; return dl.getUTCDate() - back; };
+    add(1, 1); add(1, nth(1, 1, 3)); add(2, nth(2, 1, 3)); add(5, last(5, 1)); add(6, 19); add(7, 4);
+    add(9, nth(9, 1, 1)); add(10, nth(10, 1, 2)); add(11, 11); add(11, nth(11, 4, 4)); add(12, 25);
+    return out;
+  }
+  function rjCoolingOff(signed) {   /* midnight ending the third business day after the signing day, in Colorado */
+    var p = rjParts(signed.getTime()), d = new Date(Date.UTC(p.y, p.m - 1, p.d)), n = 0, hol = {}, z = function (x) { return ('0' + x).slice(-2); };
+    while (n < 3) {
+      d = new Date(d.getTime() + 864e5);
+      var y = d.getUTCFullYear(); if (!hol[y]) hol[y] = rjHolidays(y);
+      var key = y + '-' + z(d.getUTCMonth() + 1) + '-' + z(d.getUTCDate());
+      if (d.getUTCDay() !== 0 && !hol[y][key]) n++;
+    }
+    return new Date(rjAt(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), 23, 59) + 59999);
+  }
   /* what the dates mean today: open windows, a refund due, payments in trust */
   function rjNotes(j) {
     var out = [], now = new Date(), H72 = 72 * 3600 * 1000;
@@ -8041,13 +8078,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return out;
     }
     if (sg && now < new Date(sg.getTime() + H72)) out.push({ k: 'open', until: new Date(sg.getTime() + H72), t: 'can cancel until ', why: ' (72 hours after signing) and get any deposit back in full.' });
+    var fco = sg ? rjCoolingOff(sg) : null;
+    if (fco && now < fco) out.push({ k: 'open', until: fco, day: true, t: 'can also cancel until midnight on ', why: ' if the contract was signed at their home (the federal cooling-off rule: three business days). The later deadline is the one that counts.' });
     if (dn && now < new Date(dn.getTime() + H72)) out.push({ k: 'open', until: new Date(dn.getTime() + H72), t: 'can cancel until ', why: ' (72 hours after the denial reached them). Payments go back within 10 days, less work actually done.' });
     if (sg && !st('materials') && !st('installed')) out.push({ k: 'trust', t: 'Payments stay in trust until materials are delivered or most of the work is done.' });
     return out;
   }
   function rjNoteEl(n) {
     var d = q('div', 'rjw' + (n.k === 'open' ? '' : ' done'));
-    if (n.k === 'open') { d.appendChild(document.createTextNode('The homeowner ' + n.t)); d.appendChild(q('b', null, rjFmt(n.until, true))); d.appendChild(document.createTextNode(n.why)); }
+    if (n.k === 'open') { d.appendChild(document.createTextNode('The homeowner ' + n.t)); d.appendChild(q('b', null, rjFmt(n.until, !n.day))); d.appendChild(document.createTextNode(n.why)); }
     else d.textContent = n.t;
     return d;
   }
@@ -8079,7 +8118,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       box.appendChild(row);
     });
-    box.appendChild(q('div', 'rjlaw', 'From Colorado\u2019s roofing law (C.R.S. 6-22-103 and 104). Never offer to pay, waive or rebate the deductible (6-22-105).'));
+    box.appendChild(q('div', 'rjlaw', 'Times are Colorado time. From Colorado\u2019s roofing law (C.R.S. 6-22-103 and 104) and the federal cooling-off rule for sales at the home (16 CFR 429). Never offer to pay, waive or rebate the deductible (6-22-105).'));
     return box;
   }
   function saveRoofStep(x, step, when) {
