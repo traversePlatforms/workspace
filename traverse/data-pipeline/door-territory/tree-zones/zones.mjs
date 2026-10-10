@@ -32,7 +32,8 @@ export const CHM = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsg
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function json(url, opts) {
-  for (let i = 0; i < 4; i++) { try { const r = await fetch(url, opts); if (r.ok) return await r.json(); } catch {} await sleep(1000 * (i + 1)); }
+  /* 7 tries over ~2.5 min: the state parcel service drops pages under load (Denver's lots, 2026-10-10) */
+  for (let i = 0; i < 7; i++) { try { const r = await fetch(url, opts); if (r.ok) return await r.json(); } catch {} await sleep([1, 3, 8, 15, 30, 45, 60][i] * 1000); }
   throw new Error('fetch failed: ' + url.slice(0, 80));
 }
 export function quadkey(lon, lat, z) {

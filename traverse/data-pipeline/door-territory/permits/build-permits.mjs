@@ -18,10 +18,13 @@ const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-
 const DOUGLAS = ['highlands-ranch', 'sedalia', 'franktown', 'larkspur'];
 /* towns that sent their own permit report (2026-10-10, Matthew's records requests), matched on the street address like Douglas.
    Thornton labels re-roofs only from 2025 and solar from 2023, so a missing re-roof proves nothing there (PARTIAL). */
-const CITY = { thornton: { file: 'thornton-permits.json', src: 'City of Thornton building division' } };
+const CITY = { thornton: { file: 'thornton-permits.json', src: 'City of Thornton building division' },
+  /* Parker's monthly reports (2023 on) carry the county parcel number, so Parker matches on it through parker.csv, like El Paso */
+  parker: { file: 'parker-permits.json', src: 'Town of Parker building division', parcel: true } };
 /* towns whose list reaches past the department's area: Woodland Park's runs into unincorporated Teller County (its own building
-   department), and Larkspur is its own town. There a missing permit proves nothing, so the card never says "no permit" (full: false). */
-const PARTIAL = new Set(['woodland-park', 'larkspur', 'thornton']);
+   department), and Larkspur is its own town. There a missing permit proves nothing, so the card never says "no permit" (full: false).
+   Parker's list also takes in unincorporated Douglas County around the town, which the town's reports don't cover. */
+const PARTIAL = new Set(['woodland-park', 'larkspur', 'thornton', 'parker']);
 const SRC = { pprbd: 'Pikes Peak Regional Building Department', douglas: 'Douglas County building division' };
 
 function parseCSV(s) {
@@ -57,10 +60,10 @@ const cityIdx = {}; for (const [t, c] of Object.entries(CITY)) if (existsSync(jo
 for (const town of [...EL_PASO, ...DOUGLAS, ...Object.keys(CITY)]) {
   const doorF = join(DATA, `${town}.json`), csvF = join(DT, `${town}.csv`);
   if (!existsSync(doorF)) { console.log(`  ${town}: no door file`); continue; }
-  const isEP = EL_PASO.includes(town), idx = CITY[town] ? (cityIdx[town] || {}) : isEP ? pp : dg;
+  const isEP = EL_PASO.includes(town), byParcel = isEP || !!(CITY[town] && CITY[town].parcel), idx = CITY[town] ? (cityIdx[town] || {}) : isEP ? pp : dg;
   if (!idx.meta) { console.log(`  ${town}: no permits pulled`); continue; }
   let parcelOf = null;
-  if (isEP) {
+  if (byParcel) {
     if (!existsSync(csvF)) { console.log(`  ${town}: no list`); continue; }
     const rows = parseCSV(readFileSync(csvF, 'utf8')), h = rows[0], iA = h.indexOf('address'), iP = h.indexOf('parcel');
     parcelOf = new Map(); for (const r of rows.slice(1)) if (r[iA] && r[iP]) parcelOf.set(r[iA].trim().toUpperCase(), r[iP].trim());
@@ -68,7 +71,7 @@ for (const town of [...EL_PASO, ...DOUGLAS, ...Object.keys(CITY)]) {
   const d = JSON.parse(readFileSync(doorF, 'utf8')), doors = {}; let n = 0, k = 0, nr = 0, ns = 0;
   for (const a of d.areas) for (const x of a.doors) {
     n++;
-    const key = isEP ? parcelOf.get(String(x.address).trim().toUpperCase()) : normAddr(x.address);
+    const key = byParcel ? parcelOf.get(String(x.address).trim().toUpperCase()) : normAddr(x.address);
     const list = key && idx.m.get(key); if (!list) continue;
     const s = summary(list); if (!s) continue;
     doors[x.id] = s; k++; if (s.r) nr++; if (s.s && !s.so) ns++;
