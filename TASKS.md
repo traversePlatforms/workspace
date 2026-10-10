@@ -929,7 +929,12 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       permit list). Arvada **2026-579**, security key **B9809CE7** — filed under the other request type (Matthew
       thinks plans/blueprints), sent in case it helps. Both 2026-10-08.
       **Where it stands (2026-10-08):** **Parker — sent. Centennial — sent. Castle Pines — emailed. Arvada — sent.
-      Thornton — sent.** Only **Castle Rock** is left. **Castle Rock** — its portal
+      Thornton — sent.** Only **Castle Rock** is left.
+      **2026-10-10:** **Thornton — DONE**, report received and in the app data (2,889 doors; re-roofs labelled only
+      from 2025, solar from 2023). **Centennial** — replied with portal instructions: its self-service portal
+      (Search Public Records → Permit → Advanced → Permit Type + Issued Date → **Export**) exports a date range,
+      so Matthew can pull it himself, in yearly chunks. **Castle Pines** — one record at a time only; dropped for now.
+      **Parker** — sent a 2023–2026 zip; it's still in his email, to save it to the computer. **Castle Rock** — its portal
       only takes one address per property-records request; next step is calling the Building Division
       (720-733-3527) to ask for a town-wide re-roof/solar report or the right request type. **Castle Pines** —
       no form found; email the letter to its Building Department (buildingdept@castlepinesco.gov, 303-705-0227),
