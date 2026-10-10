@@ -990,12 +990,25 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
     $cen = json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: [];
     $pidx = (json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null;
     /* one file at a time, keeping only what the points use (2026-10-08): whole and together they passed 160 MB for a big town */
-    $take = function (string $p, callable $f) use ($side): array { $o = []; foreach ($side($p) as $id => $v) { $x = $f(is_string($v) && ($v[0] ?? '') === '{' ? json_decode($v, true) : $v); if ($x !== null) $o[$id] = $x; } return $o; };
-    $hail = $trade === 'roof' ? $take('hail', function ($v) { $big = null; foreach ((array) $v as $x) if (is_array($x) && (!$big || (float) $x[1] > (float) $big[1])) $big = [(string) $x[0], (float) $x[1]]; return $big ? [$big] : null; }) : [];
-    $wind = $trade === 'roof' ? $take('wind', function ($v) { $m = 0.0; foreach ((array) $v as $e) $m = max($m, windMph($e)); return $m > 0 ? [['', $m]] : null; }) : [];
-    $year = $trade === 'roof' ? $take('year', fn($v) => is_array($v) && !empty($v['yb']) ? ['yb' => (int) $v['yb'], 'rm' => (int) ($v['rm'] ?? 0)] : null) : [];
-    $roof = $trade === 'roof' ? $take('roof', fn($v) => is_array($v) && isset($v['sqs']) ? ['sqs' => (float) $v['sqs']] : null) : [];
-    $solar = $trade === 'solar' ? $take('solar', fn($v) => is_array($v) ? array_intersect_key($v, ['pn' => 1, 'kwh' => 1, 'sh' => 1]) : null) : [];
+    /* a packed file (an edition's side files since 2026-10-10) holds each door's entry as JSON text, unpacked here one door at a time */
+    $take = function (string $p, callable $f) use ($side): array { $o = []; foreach ($side($p) as $id => $v) { $x = $f(is_string($v) && in_array($v[0] ?? '', ['{', '['], true) ? json_decode($v, true) : $v); if ($x !== null) $o[$id] = $x; } return $o; };
+    /* plain numbers and short strings per door, not little arrays (2026-10-10): a two-item array costs PHP several hundred bytes,
+       and for Denver's 40,000 doors the arrays kept here came to about 86 MB. $hailS / $hailD: the biggest stone and its date;
+       $wind: the strongest gust; $yb / $ym: year built, and the later of it and the last remodel; $sqs: roof squares;
+       $kwh / $pn / $sh: a year's output, whether the roof can carry panels, and its shade. */
+    $hailS = []; $hailD = [];
+    if ($trade === 'roof') foreach ($side('hail') as $id => $v) {
+        if (is_string($v)) $v = json_decode($v, true);
+        $big = null; foreach ((array) $v as $x) if (is_array($x) && (!$big || (float) $x[1] > (float) $big[1])) $big = $x;
+        if ($big) { $hailS[$id] = (float) $big[1]; $hailD[$id] = substr((string) $big[0], 0, 10); }
+    }
+    $wind = $trade === 'roof' ? $take('wind', function ($v) { $m = 0.0; foreach ((array) $v as $e) $m = max($m, windMph($e)); return $m > 0 ? $m : null; }) : [];
+    $yb = $trade === 'roof' ? $take('year', fn($v) => is_array($v) && !empty($v['yb']) ? (int) $v['yb'] : null) : [];
+    $ym = $trade === 'roof' ? $take('year', fn($v) => is_array($v) && !empty($v['yb']) ? max((int) $v['yb'], (int) ($v['rm'] ?? 0)) : null) : [];
+    $sqs = $trade === 'roof' ? $take('roof', fn($v) => is_array($v) && isset($v['sqs']) ? (float) $v['sqs'] : null) : [];
+    $kwh = $trade === 'solar' ? $take('solar', fn($v) => is_array($v) && !empty($v['kwh']) ? (float) $v['kwh'] : null) : [];
+    $pn = $trade === 'solar' ? $take('solar', fn($v) => is_array($v) && !empty($v['pn']) ? 1 : null) : [];
+    $sh = $trade === 'solar' ? $take('solar', fn($v) => is_array($v) && isset($v['sh']) ? (string) $v['sh'] : null) : [];
     $perm = ($trade === 'roof' || $trade === 'solar') ? $take('permit', fn($v) => is_array($v) ? array_intersect_key($v, ['r' => 1, 's' => 1, 'so' => 1]) : null) : [];
     $pest = $trade === 'pest' ? $take('pest', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'os' => 1, 'wa' => 1]) : null) : [];
     $sec = $trade === 'security' ? $take('security', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'yb' => 1, 'ab' => 1, 'os' => 1]) : null) : [];
@@ -1006,24 +1019,23 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
     foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
         $id = (string) $d['id']; $pts = 0;
         if ($trade === 'roof') {
-            $big = null; foreach (($hail[$id] ?? []) as $x) if (is_array($x) && (!$big || (float) $x[1] > (float) $big[1])) $big = $x;
-            if ($big) { $h = (float) $big[1]; $pts += $h >= 1.75 ? 6 : ($h >= 1.25 ? 4 : ($h >= 1 ? 3 : ($h >= 0.75 ? 1 : 0))); }
-            $w = 0.0; foreach (($wind[$id] ?? []) as $x) if (is_array($x)) $w = max($w, (float) ($x[1] ?? 0));
+            $big = isset($hailS[$id]);
+            if ($big) { $h = $hailS[$id]; $pts += $h >= 1.75 ? 6 : ($h >= 1.25 ? 4 : ($h >= 1 ? 3 : ($h >= 0.75 ? 1 : 0))); }
+            $w = (float) ($wind[$id] ?? 0);
             if ($w >= 58) $pts += $w >= 75 ? 3 : 2;
-            $b = $year[$id] ?? null;
-            if ($b && !empty($b['yb'])) { $age = $yr - max((int) $b['yb'], (int) ($b['rm'] ?? 0)); if ($age >= 12) $pts += $age >= 20 ? 2 : 1; }
-            if ((float) ($roof[$id]['sqs'] ?? 0) >= 30) $pts += 1;
+            $b = $yb[$id] ?? 0;
+            if ($b) { $age = $yr - (int) $ym[$id]; if ($age >= 12) $pts += $age >= 20 ? 2 : 1; }
+            if ((float) ($sqs[$id] ?? 0) >= 30) $pts += 1;
             $pr = (string) ($perm[$id]['r'] ?? '');
-            if ($pr !== '') { if ($big && $pr >= substr((string) $big[0], 0, 7)) $pts -= 8; elseif ($yr - (int) substr($pr, 0, 4) <= 5) $pts -= 3; }
-            elseif ($pidx && ($pidx['full'] ?? true) !== false && $b && !empty($b['yb']) && (int) substr((string) $pidx['since'], 0, 4) - (int) $b['yb'] >= 5) $pts += 1;
+            if ($pr !== '') { if ($big && $pr >= substr($hailD[$id], 0, 7)) $pts -= 8; elseif ($yr - (int) substr($pr, 0, 4) <= 5) $pts -= 3; }
+            elseif ($pidx && ($pidx['full'] ?? true) !== false && $b && (int) substr((string) $pidx['since'], 0, 4) - $b >= 5) $pts += 1;
         } elseif ($trade === 'yards') {                            /* the lawn itself is added live, in the regions loop */
             $f = (int) ($d['fire'] ?? 0); if ($f === 5) $pts += 2; elseif ($f === 4) $pts += 1;
             $tl = treeLevel($d); if ($tl === 'against') $pts += 2; elseif ($tl === 'heavy') $pts += 1;
             if ((float) ($d['acres'] ?? 0) >= 0.5) $pts += 1;
         } elseif ($trade === 'solar') {
-            $s = $solar[$id] ?? null;
-            if ($s && !empty($s['pn']) && !empty($s['kwh'])) { $k = (float) $s['kwh']; $pts += $k >= 10000 ? 3 : ($k >= 7000 ? 2 : ($k >= 4000 ? 1 : 0)); }
-            if ($s && ($s['sh'] ?? '') === 'open') $pts += 2; elseif ($s && ($s['sh'] ?? '') === 'heavy') $pts -= 3;
+            if (isset($pn[$id], $kwh[$id])) { $k = $kwh[$id]; $pts += $k >= 10000 ? 3 : ($k >= 7000 ? 2 : ($k >= 4000 ? 1 : 0)); }
+            $s = $sh[$id] ?? ''; if ($s === 'open') $pts += 2; elseif ($s === 'heavy') $pts -= 3;
             $pm = $perm[$id] ?? null; if ($pm && !empty($pm['s']) && empty($pm['so'])) $pts -= 8;
         } elseif ($trade === 'pest') {
             $x = $pest[$id] ?? [];
@@ -1044,8 +1056,8 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
         if ($pts) $p[$id] = $pts;
         /* the trade figure and the ability to pay, as scoreParts() works them out */
         $acres = (float) ($d['acres'] ?? 0); $tf = 0.0;
-        if ($trade === 'roof') { $bg0 = null; foreach (($hail[$id] ?? []) as $x) if (is_array($x) && (!$bg0 || (float) $x[1] > (float) $bg0[1])) $bg0 = $x; $tf = $c01((($bg0 ? (float) $bg0[1] : 0) - 0.75) / 1.75) * 0.6 + $c01((float) ($roof[$id]['sqs'] ?? 0) / 45) * 0.4; }
-        elseif ($trade === 'solar') $tf = $c01((float) ($solar[$id]['kwh'] ?? 0) / 16000);
+        if ($trade === 'roof') $tf = $c01(((float) ($hailS[$id] ?? 0) - 0.75) / 1.75) * 0.6 + $c01((float) ($sqs[$id] ?? 0) / 45) * 0.4;
+        elseif ($trade === 'solar') $tf = $c01((float) ($kwh[$id] ?? 0) / 16000);
         elseif ($trade === 'yards') $tf = $c01((float) ($d['lawn']['sq'] ?? 0) / 15000) * 0.6 + $c01($acres / 2) * 0.4;
         elseif ($trade === 'pest') $tf = $c01($acres) * 0.5 + $c01((float) ($d['trees']['z2'] ?? 0)) * 0.5;
         elseif ($trade === 'security') $tf = $c01($acres / 2);
@@ -2779,7 +2791,7 @@ if ($action === 'stormdoors') {
         unset($hl);
         /* wind files are packed ("date|mph|kind|miles", 2026-10-07): windRows unpacks them (2026-10-08 fix: read raw, a packed
            town's wind never matched, so a wind day listed only towns still in the old format) */
-        $wl = $side('wind', $k); foreach ($wl as $id => $rows) foreach ((windRows($rows) ?? []) as $x) if ($x[0] === $day) { $hit[$id]['wind'] = [$x[1], $x[2], $x[3]]; break; }
+        $wl = $side('wind', $k); foreach ($wl as $id => $rows) foreach ((windRows(is_string($rows) ? json_decode($rows, true) : $rows) ?? []) as $x)   /* packed: JSON text per door (2026-10-10) */ if ($x[0] === $day) { $hit[$id]['wind'] = [$x[1], $x[2], $x[3]]; break; }
         unset($wl);
         if (!$hit) continue;
         $nh = 0; foreach ($hit as $h) if (isset($h['hail'])) $nh++;

@@ -59,7 +59,7 @@ const EDITIONS = {
         best: 'roof',   // best doors first: this trade's walking order (2026-10-07)
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
-        townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: four Front Range hail towns measured; Denver waits on the towns-cache memory (it needs 256-384 MB to build)
+        townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the five Front Range hail towns measured (Denver after the packed side files and the lighter scorer)
         features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true },
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
@@ -387,6 +387,20 @@ async function build(key) {
       const missing = idx.regions.filter((reg) => !reg.county).map((reg) => reg.key);
       if (missing.length) throw new Error('towns with no county: ' + missing.join(' '));
       buf = Buffer.from(JSON.stringify(idx));
+    }
+    /* packed side files (2026-10-10, memory): each door's entry as JSON text, so the server holds 40,000 strings instead of
+       hundreds of thousands of small arrays when it reads a big town's file whole (Roofing with Denver needed 256-384 MB to build its
+       towns answer). loadSide() and the best-doors scorer unpack only the doors they keep. Hail stays as it is: the storm job rewrites
+       it in place; census is read raw. */
+    const PACK = /^(wind|roof|year|permit|solar|pest|material|naip|outline|photo)-(.+)\.json$/;
+    const pm = f.match(PACK);
+    if (pm && allRegions.some((r) => r.key === pm[2])) {
+      const j = JSON.parse(buf.toString('utf8'));
+      if (j && j.doors && typeof j.doors === 'object' && !Array.isArray(j.doors) && !j.packed) {
+        for (const id of Object.keys(j.doors)) j.doors[id] = JSON.stringify(j.doors[id]);
+        j.packed = 1;
+        buf = Buffer.from(JSON.stringify(j));
+      }
     }
     write(path.join(E.data, 'rounds', f), buf);
     copied++; bytes += buf.length;

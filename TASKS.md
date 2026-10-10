@@ -968,6 +968,11 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       index and outline-photos.mjs (add the towns to roofs/material TOWNS lists). **Material needs year built**, which comes
       from each county's assessor (Adams, Arapahoe, Boulder, Weld, Denver: none pulled yet); without it the model is weaker.
       Matthew's call on material; crop downloads ~3.5 min per 1,000 doors (~7 h for all five).
+- [ ] **TR-7 — Split big towns' door files per neighbourhood (server memory).** Opening one neighbourhood decodes the whole
+      town: Denver's door file alone is ~80 MB of server memory per tap (peak 190 MB with hail and wind), Thornton/Parker
+      ~150. Fine under the host's 768 MB, but several crews tapping at once add up. 2026-10-10 already done: side files packed
+      in the editions, the best-doors scorer keeps plain numbers (Roofing+Denver towns build ~300 → 234 MB, scores identical).
+      Next step if it matters: one file per neighbourhood (or a slim per-town index), and pack hail (the storm job must learn it).
 - [x] **TR-4 — Move all six apps to the Traverse hosting** ✅ **Done 2026-10-09:** all six live on traverseplatforms.com, crons moved, everything app-related deleted from Sixfold (its website + secrets.php remain), Sixfold SSH key deleted; the app is the only lead intake for now (the website form just emails). Original note: (Sixfold + the five editions, same folder names on
       traverseplatforms.com). **In progress 2026-10-09:** data and apps copying over SSH. Left: check, set each install's
       address, test, then the switch-over with you — final top-up copy, redirects from the old addresses, the five
