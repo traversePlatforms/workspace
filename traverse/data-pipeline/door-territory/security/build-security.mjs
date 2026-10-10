@@ -39,7 +39,12 @@ const AGENCY = {
   /* 2026-10-08: codes from the FBI's own Colorado agency list. Highlands Ranch is unincorporated (the sheriff); Castle Pines
      contracts its policing to the sheriff (castlepinesco.gov, Public Safety; 2025 intergovernmental agreement) */
   parker: ['CO0180500', 'Parker Police Department'], 'castle-pines': ['CO0180000', "Douglas County Sheriff's Office"],
-  'highlands-ranch': ['CO0180000', "Douglas County Sheriff's Office"]
+  'highlands-ranch': ['CO0180000', "Douglas County Sheriff's Office"],
+  /* 2026-10-10: the Security edition's city towns had no town figures (the card reads towns[] only). Codes from the FBI's
+     Colorado agency list (api.usa.gov/crime/fbi/cde/agency/byStateAbbr/CO) */
+  'cs-northeast': ['CO0210100', 'Colorado Springs Police Department'], 'cs-southeast': ['CO0210100', 'Colorado Springs Police Department'],
+  'cs-northwest': ['CO0210100', 'Colorado Springs Police Department'], 'cs-southwest': ['CO0210100', 'Colorado Springs Police Department'],
+  denver: ['CODPD0000', 'Denver Police Department'], boulder: ['CO0070100', 'Boulder Police Department']
 };
 const CSPD = ['CO0210100', 'Colorado Springs Police Department'];
 const KIND = {
@@ -216,6 +221,7 @@ for (const [ori, name] of Object.values(AGENCY).concat([CSPD])) rates.agencies[o
 for (const t of towns) if (AGENCY[t]) rates.towns[t] = AGENCY[t][0];
 rates.cityAgency = CSPD[0];
 writeFileSync(join(DATA, 'security-rates.json'), JSON.stringify(rates, null, 1));
+if (process.argv.includes('--rates-only')) { console.log('security-rates.json:', Object.keys(rates.towns).length, 'towns'); process.exit(0); }   /* the town figures alone (2026-10-10) */
 
 /* ---- per door ---- */
 const norm = (s) => String(s || '').toUpperCase().replace(/[.,#]/g, ' ').replace(/\s+/g, ' ').trim();
