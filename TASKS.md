@@ -990,11 +990,13 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       server backup", 2:45 AM, newest 30 kept, result in backup.log. Script: traverse/ops/pull-server-backup.sh.
       **Still open: an OFF-MACHINE copy** of this computer (repo + TraverseBackups) — OneDrive is gone; Matthew to set up a
       drive (Google Drive personal or USB), then the 6 PM mirror is re-pointed.
-- [ ] **TR-9 — Paid map tiles before paying customers.** The app's base map uses OpenStreetMap's own tile server: free,
-      but its policy says commercial use "may be withdrawn at any point", blocking without notice. Move to a paid
-      OSM-based tile provider (estimate: free tier, then tens of dollars a month — price real options). The hail map
-      itself costs nothing to run (NOAA radar hail estimates, NWS reports, Iowa State radar tiles, our hosting), so it
-      stays included in Roofing, not sold separately.
+- [x] **TR-9 — Map tiles: not needed (checked 2026-10-10).** The street map is ALREADY self-hosted: the app draws
+      /maps/colorado.pmtiles (146 MB, Protomaps, on traverseplatforms.com since 2026-10-09) on the phone. OpenStreetMap's
+      tile server is only the fallback if that file fails to load. Colorado only: a new state needs a bigger file (free
+      to build). If a paid fallback is ever wanted: Stadia Maps Starter $20/mo (1M tiles, commercial OK), MapTiler Flex
+      $30/mo, Mapbox Static Tiles 200k free then $0.50/1,000 (their pricing pages, 2026-10-10). Free outside services
+      still in use, no guarantee: Microsoft Planetary Computer (2023 aerials, close-ups), Iowa State (radar). The hail
+      map costs nothing to run and stays included in Roofing.
 - [ ] **TR-7 — Split big towns' door files per neighbourhood (server memory).** Opening one neighbourhood decodes the whole
       town: Denver's door file alone is ~80 MB of server memory per tap (peak 190 MB with hail and wind), Thornton/Parker
       ~150. Fine under the host's 768 MB, but several crews tapping at once add up. 2026-10-10 already done: side files packed
