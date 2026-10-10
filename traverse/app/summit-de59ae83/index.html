@@ -1879,9 +1879,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.', _notOurs: true }; })
         .then(function (j) {
           j._status = r.status; if (fromSaved) j._saved = true;
+          if (action === 'regions' && j.ok && j.regions) j.regions.forEach(areaFill);   /* before trimCard, which takes away the parts an edition does not have */
           if (TRIM_ACTIONS[action]) trimCard(j);
           /* every town's name for the alerts (2026-10-07): TOWN_NAME only knew Sixfold's eleven */
-          if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; areaFill(rg); });
+          if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; });
           if (j.ok && opts.body && action !== 'signin') warmArea();
           return j;
         });
