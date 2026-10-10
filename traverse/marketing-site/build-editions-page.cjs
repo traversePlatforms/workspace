@@ -27,7 +27,6 @@ head = head.replace(/<title>[^<]*<\/title>/, '<title>Traverse editions</title>')
 if (!/<title>Traverse editions<\/title>/.test(head)) throw new Error('title not set');
 
 /* ---- the editions ---- */
-const APPS = { roofing: 'tr-cb2e8587', yards: 'ty-25604fff', solar: 'ts-016064fc', pest: 'tq-9cf8d9de', security: 'tg-3b0b89e7' };
 /* colour = the band; ink = text on the band; deep = the accent as text on white (Solar's yellow is too light for that) */
 const ED = {
   roofing: {
@@ -83,11 +82,53 @@ const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar|county|assessor|LiDAR|laser|aerial|
 const copy = JSON.stringify({ ED, ALL });
 const bad = copy.match(SOURCE_WORDS); if (bad) throw new Error('source or banned word in the editions copy: ' + bad[0]);
 
-const json = JSON.stringify({ ED, APPS }).replace(/</g, '\\u003c');
+/* ---- the hero picture (2026-10-09, Matthew: the space right of the hero was empty): a phone showing the edition's map with
+   its own layer, drawn here as plain shapes. Made-up houses and scores, like the sample door. No app link anywhere on this
+   page (Matthew: sign-in pages are not for the public). ---- */
+const HOUSES = [[40,64,7],[150,56,9],[175,45,6],[236,62,8],[30,130,5],[40,180,8],[125,130,10],[170,140,9],[130,185,7],[180,190,8],[255,130,6],[265,185,9],[35,260,6],[130,265,8],[180,270,5],[265,265,7]];
+const pinCol = (sc) => (sc >= 8 ? '#1f8a4c' : sc >= 6 ? '#c98a10' : '#8a96a3');
+const FONT = 'font-family="Atkinson Hyperlegible, sans-serif"';
+function art(key, e) {
+  const road = (w, c) => '<g stroke="' + c + '" stroke-width="' + w + '"><path d="M-10 95 L310 80"/><path d="M-10 215 L310 230"/><path d="M95 -10 L80 310"/><path d="M215 -10 C225 120 200 200 230 310"/></g>';
+  const roads = '<g fill="none" stroke-linecap="round">' + road(15, '#d3dbd2') + road(12, '#fff') + '</g>';
+  let under = '', over = '', label = '';
+  if (key === 'roofing') {
+    under = '<ellipse cx="150" cy="150" rx="185" ry="52" transform="rotate(-25 150 150)" fill="rgba(84,96,230,.16)" stroke="rgba(84,96,230,.55)" stroke-width="2" stroke-dasharray="6 5"/>';
+    label = 'Storm path';
+  } else if (key === 'yards') {
+    under = HOUSES.map(([x, y]) => '<rect x="' + (x - 17) + '" y="' + (y - 13) + '" width="34" height="28" rx="7" fill="#a7d18a" opacity=".75"/>').join('') +
+      [[52, 58], [150, 108], [200, 118], [60, 160], [150, 210], [240, 170], [60, 282], [205, 285], [285, 70]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="8" fill="#3f7d3a"/>').join('');
+    label = 'Lawns and trees';
+  } else if (key === 'solar') {
+    over = '<g transform="translate(278 25)"><circle r="11" fill="#f2a900"/>' +
+      [0, 45, 90, 135, 180, 225, 270, 315].map((a) => '<line x1="0" y1="-16" x2="0" y2="-22" stroke="#f2a900" stroke-width="3" stroke-linecap="round" transform="rotate(' + a + ')"/>').join('') + '</g>';
+    label = 'Sun on every roof';
+  } else if (key === 'pest') {
+    under = '<rect x="228" y="0" width="80" height="74" fill="#b5d9a1"/><path d="M-10 160 C60 120 110 178 160 152 S260 118 310 162" fill="none" stroke="#5aa0d6" stroke-width="7" stroke-linecap="round"/>';
+    label = 'Creek and open space';
+  } else if (key === 'security') {
+    under = '<circle cx="150" cy="158" r="118" fill="rgba(27,111,122,.07)" stroke="#1b6f7a" stroke-width="2" stroke-dasharray="7 6"/>';
+    label = 'Within one mile';
+  }
+  const houses = HOUSES.map(([x, y, sc]) => {
+    const roof = key === 'solar' && sc >= 8 ? '#ffd65c' : '#cfd6cf';
+    const px = x + 9, py = y - 11;
+    const ring = sc === 10 ? '<circle cx="' + px + '" cy="' + py + '" r="12.5" fill="none" stroke="#f2c230" stroke-width="3"/>' : '';
+    return '<rect x="' + (x - 9) + '" y="' + (y - 7) + '" width="18" height="14" rx="2" fill="' + roof + '" stroke="#aeb8ae"/>' + ring +
+      '<circle cx="' + px + '" cy="' + py + '" r="9" fill="' + pinCol(sc) + '" stroke="#fff" stroke-width="2"/>' +
+      '<text x="' + px + '" y="' + (py + 3.5) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" ' + FONT + '>' + sc + '</text>';
+  }).join('');
+  const tag = '<g transform="translate(10 10)"><rect width="' + Math.round(label.length * 6.4 + 30) + '" height="24" rx="12" fill="#fff" stroke="#d3dae4"/>' +
+    '<circle cx="12" cy="12" r="4" fill="' + e.deep + '"/><text x="21" y="16" font-size="11" font-weight="700" fill="#0f1b2d" ' + FONT + '>' + label + '</text></g>';
+  return '<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="300" fill="#e9eee8"/>' + under + roads + houses + over + tag + '</svg>';
+}
+const ART = {}; for (const k of Object.keys(ED)) ART[k] = art(k, ED[k]);
+const json = JSON.stringify({ ED, ART }).replace(/</g, '\\u003c');
 const main = `
 <main id="editions">
 <section class="edh">
-<div class="edw">
+<div class="edw edhw">
+<div class="edhl">
 <span class="ede">Editions</span>
 <div class="edrow">
 <h1 class="edt"><b>Traverse</b><span id="edname">Roofing</span></h1>
@@ -98,7 +139,9 @@ const main = `
 </div>
 <p class="edl" id="edline"></p>
 <p class="edwho" id="edwho"></p>
-<div class="edcta"><a class="edb pri" href="../#demo">Book a demo</a><a class="edb" id="edapp" href="#">Open the app</a></div>
+<div class="edcta"><a class="edb pri" href="../#demo">Book a demo</a></div>
+</div>
+<div class="edart" aria-hidden="true"><div class="edphone"><div class="edscreen"><div class="edbar"><b>Traverse<span id="edbarname">Roofing</span></b><small>Monument</small></div><div id="edmap"></div><div class="edchip"><div><small id="edchipk"></small><b id="edchipv"></b></div><span class="eds-sc" id="edchips">10</span></div></div></div></div>
 </div>
 </section>
 <section class="edw edtop">
@@ -123,7 +166,7 @@ const main = `
 #editions .edh p,#editions .edh h1,#editions .edh span{color:var(--edi)}
 #editions .ede,#editions .edk{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
 #editions .ede{opacity:.8}
-#editions .edrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-top:8px}
+#editions .edrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:14px 24px;margin-top:8px}
 #editions .edt{margin:0;font-family:'Familjen Grotesk',sans-serif;font-size:56px;line-height:1.02;letter-spacing:-.025em;font-weight:500}
 #editions .edt b{font-weight:700}
 #editions .eds select{min-height:52px;padding:0 44px 0 16px;border-radius:12px;border:0;background:#fff;color:#0f1b2d;font:700 17px 'Atkinson Hyperlegible',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer}
@@ -132,6 +175,19 @@ const main = `
 #editions .edcta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
 #editions .edb{display:inline-flex;align-items:center;height:48px;padding:0 22px;border-radius:10px;border:1.5px solid currentColor;color:inherit;font-weight:700;font-size:16px;text-decoration:none}
 #editions .edb.pri{background:#d6400c;border-color:#d6400c;color:#fff}
+/* the hero picture: a phone with the edition's map */
+#editions .edhw{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:56px;align-items:center}
+#editions .edphone{width:300px;padding:10px;border-radius:38px;background:#0f1b2d;box-shadow:0 24px 60px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.14)}
+#editions .edscreen{border-radius:29px;overflow:hidden;background:#fff}
+#editions .edh .edbar{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px 10px;border-bottom:1px solid #e3e8ee}
+#editions .edh .edbar b{font:700 15px 'Familjen Grotesk',sans-serif;color:#0f1b2d}
+#editions .edh .edbar b span{color:var(--edd)}
+#editions .edh .edbar small{font-size:12px;color:#566476}
+#editions #edmap svg{display:block;width:100%;height:auto}
+#editions .edh .edchip{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px 16px;border-top:1px solid #e3e8ee}
+#editions .edh .edchip small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#566476}
+#editions .edh .edchip b{font:700 15px 'JetBrains Mono',monospace;color:#0f1b2d}
+#editions .edh .edchip span.eds-sc{color:#fff}
 /* on every door: a plain checklist beside the one card on the page */
 #editions .edtop{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:start;padding-top:52px;padding-bottom:52px}
 #editions .edchk{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
@@ -166,7 +222,7 @@ const main = `
 #editions .edall ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
 #editions .edall li{padding:9px 14px;border-radius:999px;background:#fff;border:1px solid #d3dae4;font-size:15px}
 @media (max-width:960px){#editions .edtools ol{grid-template-columns:1fr 1fr}}
-@media (max-width:860px){#editions .edtop{grid-template-columns:1fr}#editions .edt{font-size:40px}#editions .edrank p{font-size:22px}}
+@media (max-width:860px){#editions .edhw{grid-template-columns:1fr}#editions .edart{display:none}#editions .edtop{grid-template-columns:1fr}#editions .edt{font-size:40px}#editions .edrank p{font-size:22px}}
 @media (max-width:560px){#editions .edchk{grid-template-columns:1fr}#editions .edtools ol{grid-template-columns:1fr}}
 </style>
 <script>
@@ -180,7 +236,9 @@ const main = `
     var root = $('editions'); root.style.setProperty('--edc', e.colour); root.style.setProperty('--edi', e.ink); root.style.setProperty('--edd', e.deep);
     $('edname').textContent = e.name; $('edsel').value = k; document.title = 'Traverse' + e.name + ' \\u00b7 Traverse editions';
     $('edline').textContent = e.line; $('edwho').textContent = 'Built for ' + e.who;
-    $('edapp').href = '/' + D.APPS[k] + '/'; $('edapp').textContent = 'Open Traverse' + e.name;
+    $('edmap').innerHTML = D.ART[k]; $('edbarname').textContent = e.name;   /* our own drawing, built with this page */
+    $('edchipk').textContent = e.sample[0][0]; $('edchipv').textContent = e.sample[0][1];
+    var cs = $('edchips'); cs.textContent = String(e.score); cs.className = 'eds-sc' + (e.score === 10 ? ' top' : '');
     list($('eddoor'), e.door); $('edrank').textContent = e.rank;
     var tl = $('edtools'); tl.textContent = '';
     e.tools.forEach(function (x) { var li = el('li'); li.appendChild(el('b', x[0])); li.appendChild(el('span', x[1])); tl.appendChild(li); });

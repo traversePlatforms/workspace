@@ -5,7 +5,7 @@
 //   node traverse/marketing-site/build-site.cjs
 // Output: site/public_html/{index.html, editions/index.html, .htaccess} and site/extract-in-traverseplatforms-public_html.zip,
 // which goes into the NEW account's traverseplatforms.com/public_html (never Sixfold's).
-// The apps live on this same account (moved from Sixfold's hosting 2026-10-09), so "Open the app" links within the site.
+// The apps live on this same account (moved from Sixfold's hosting 2026-10-09), but nothing here links to them (no public sign-in).
 // Still noindex: the pricing is sample and the contact email is a placeholder; Matthew says when it opens to search.
 'use strict';
 const fs = require('fs');
@@ -13,15 +13,17 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const here = __dirname, PREV = path.join(here, 'preview', 'tp-5ea36a05'), OUT = path.join(here, 'site', 'public_html');
-const APP_BASE = '/';   /* 2026-10-09: the apps moved onto this account, same folder names (they were on https://sixfoldcolorado.com/) */
+/* the apps live on this account (moved 2026-10-09), but the public pages never point at them: Matthew 2026-10-09, the sign-in
+   pages are not for the public. The build refuses a page that names an app folder. */
+const APP_FOLDERS = ['summit-de59ae83', 'tr-cb2e8587', 'ty-25604fff', 'ts-016064fc', 'tq-9cf8d9de', 'tg-3b0b89e7'];
 
 const home = fs.readFileSync(path.join(PREV, 'index.html'), 'utf8');
-let eds = fs.readFileSync(path.join(PREV, 'editions', 'index.html'), 'utf8');
-if (/href="\/[^"]/.test(home)) throw new Error('the homepage links to a path on this domain; nothing lives there yet');
-const a = "'/' + D.APPS[k] + '/'";
-if (eds.split(a).length !== 2) throw new Error('the editions page app link moved; update build-site.cjs');
-if (APP_BASE !== '/') eds = eds.replace(a, "'" + APP_BASE + "' + D.APPS[k] + '/'");
-if (/href="\/[^"]/.test(eds)) throw new Error('the editions page links to a path on this domain');
+const eds = fs.readFileSync(path.join(PREV, 'editions', 'index.html'), 'utf8');
+for (const [name, page] of [['homepage', home], ['editions page', eds]]) {
+  const hit = APP_FOLDERS.find((f) => page.includes(f));
+  if (hit) throw new Error('the ' + name + ' names an app folder (' + hit + '); the public pages must not lead to a sign-in');
+  if (/href="\/[^"]/.test(page)) throw new Error('the ' + name + ' links to a path on this domain');
+}
 
 const htaccess = `# traverseplatforms.com (2026-10-09). Out of search until Matthew opens it (sample pricing, placeholder contact).
 # Not cached by SiteGround's Dynamic Cache, so an upload shows at once.
