@@ -251,3 +251,6 @@ traverse/app/dist/
 
 # the traverseplatforms.com upload zip (rebuilt by build-site.cjs)
 traverse/marketing-site/site/*.zip
+
+# personal Claude Code settings (permission rules for this machine)
+.claude/settings.local.json
