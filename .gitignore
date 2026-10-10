@@ -254,3 +254,6 @@ traverse/marketing-site/site/*.zip
 
 # personal Claude Code settings (permission rules for this machine)
 .claude/settings.local.json
+
+# raw permit files from towns (may hold owner names; like assessor/raw)
+traverse/data-pipeline/door-territory/permits/raw/
