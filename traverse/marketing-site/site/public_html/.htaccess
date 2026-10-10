@@ -1,6 +1,15 @@
 # traverseplatforms.com (2026-10-09). Out of search until Matthew opens it (sample pricing, placeholder contact).
 # Not cached by SiteGround's Dynamic Cache, so an upload shows at once.
+# The apps live here too (moved from sixfoldcolorado.com 2026-10-09), so the same guards Sixfold's site had: no logs,
+# scripts or source maps served, nothing starting with a dot, and the browser safety headers.
+<FilesMatch "\.(md|mjs|log|sh|map)$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.(?!well-known)
 <IfModule mod_headers.c>
 Header set X-Robots-Tag "noindex, nofollow"
 Header set Cache-Control "private, no-cache"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>

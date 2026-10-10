@@ -902,6 +902,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       review date set. Do this *with* the first week's numbers rather than before them.
 - [ ] **X-8 — Weekly analytics pull** across everything running. **Do this last** — it's a
       wrapper around things that are still moving, and building it now means rebuilding it.
+- [ ] **X-9 — A new off-computer backup.** OneDrive went with Microsoft 365 (2026-10-09), so the laptop is now the
+      only copy of everything (repo, video, photos, personal). Pick a personal Google Drive (15 GB free; not Sixfold's
+      Workspace) and/or an external drive, and the nightly 6 PM mirror gets pointed at it.
 
 ## Traverse
 
@@ -937,6 +940,15 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       [acculynx-access-request-2026-10.md](traverse/research/acculynx-access-request-2026-10.md).
       **Decide the company line first** (Traverse Platforms LLC isn't filed and the site isn't live; your own
       name works). Roofers also need AccuLynx's paid AppConnections add-on to make a key.
+- [x] **TR-3 — Domain + hosting.** ✅ **traverseplatforms.com bought 2026-10-09** (Porkbun, renews $11.08/yr, privacy
+      free, auto-renew on) and a **SiteGround GrowBig** account ($4.99/mo first year, then $29.99/mo — look at it before
+      the year ends). Nameservers on SiteGround, Let's Encrypt + HTTPS Enforce on, homepage and editions page live (still
+      noindex: sample pricing, placeholder contact email). The .app edition domains are not bought.
+- [ ] **TR-4 — Move all six apps to the Traverse hosting** (Sixfold + the five editions, same folder names on
+      traverseplatforms.com). **In progress 2026-10-09:** data and apps copying over SSH. Left: check, set each install's
+      address, test, then the switch-over with you — final top-up copy, redirects from the old addresses, the five
+      scheduled jobs re-created on Traverse and deleted on Sixfold, crew reinstall. **After: delete both SSH keys** in
+      SSH Keys Manager. Sixfold's own website stays on Sixfold's account.
 
 ## Personal
 

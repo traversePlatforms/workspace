@@ -250,7 +250,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
     var root = $('editions'); root.style.setProperty('--edc', e.colour); root.style.setProperty('--edi', e.ink); root.style.setProperty('--edd', e.deep);
     $('edname').textContent = e.name; $('edsel').value = k; document.title = 'Traverse' + e.name + ' \u00b7 Traverse editions';
     $('edline').textContent = e.line; $('edwho').textContent = 'Built for ' + e.who;
-    $('edapp').href = 'https://sixfoldcolorado.com/' + D.APPS[k] + '/'; $('edapp').textContent = 'Open Traverse' + e.name;
+    $('edapp').href = '/' + D.APPS[k] + '/'; $('edapp').textContent = 'Open Traverse' + e.name;
     list($('eddoor'), e.door); $('edrank').textContent = e.rank;
     var tl = $('edtools'); tl.textContent = '';
     e.tools.forEach(function (x) { var li = el('li'); li.appendChild(el('b', x[0])); li.appendChild(el('span', x[1])); tl.appendChild(li); });
