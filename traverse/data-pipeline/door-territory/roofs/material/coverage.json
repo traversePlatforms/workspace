@@ -1,167 +1,62 @@
 {
- "castle-rock": {
-  "doors": 7082,
+ "cs-northeast": {
+  "doors": 21142,
   "structural_data": true,
-  "crops": 7082,
-  "usable_crops": 6797,
-  "county": 7025,
-  "imagery": 40,
-  "guess": 11,
-  "labelled": 7065,
-  "share": 0.999,
+  "crops": 21142,
+  "usable_crops": 20670,
+  "county": 0,
+  "imagery": 16999,
+  "guess": 3541,
+  "labelled": 16999,
+  "share": 0.972,
   "by_class": {
-   "asphalt": 6454,
-   "flat": 8,
-   "shake": 37,
-   "metal": 9,
-   "tile": 568
+   "asphalt": 20245,
+   "tile": 295
   }
  },
- "franktown": {
-  "doors": 1545,
+ "cs-southeast": {
+  "doors": 23942,
   "structural_data": true,
-  "crops": 1545,
-  "usable_crops": 1507,
-  "county": 1544,
-  "imagery": 0,
-  "guess": 0,
-  "labelled": 1544,
-  "share": 0.999,
+  "crops": 23942,
+  "usable_crops": 23679,
+  "county": 0,
+  "imagery": 14024,
+  "guess": 9398,
+  "labelled": 14024,
+  "share": 0.978,
   "by_class": {
-   "asphalt": 1151,
-   "shake": 62,
-   "tile": 326,
-   "flat": 3,
-   "metal": 2
+   "asphalt": 23212,
+   "tile": 210
   }
  },
- "sedalia": {
-  "doors": 575,
+ "security-widefield": {
+  "doors": 6175,
   "structural_data": true,
-  "crops": 575,
-  "usable_crops": 561,
-  "county": 575,
-  "imagery": 0,
-  "guess": 0,
-  "labelled": 575,
-  "share": 1.0,
+  "crops": 6175,
+  "usable_crops": 6167,
+  "county": 0,
+  "imagery": 3630,
+  "guess": 2499,
+  "labelled": 3630,
+  "share": 0.993,
   "by_class": {
-   "tile": 159,
-   "metal": 10,
-   "shake": 51,
-   "asphalt": 354,
-   "flat": 1
+   "asphalt": 6085,
+   "tile": 44
   }
  },
- "larkspur": {
-  "doors": 671,
+ "fountain": {
+  "doors": 6823,
   "structural_data": true,
-  "crops": 671,
-  "usable_crops": 647,
-  "county": 668,
-  "imagery": 0,
-  "guess": 1,
-  "labelled": 668,
-  "share": 0.997,
+  "crops": 6823,
+  "usable_crops": 6754,
+  "county": 0,
+  "imagery": 5005,
+  "guess": 1704,
+  "labelled": 5005,
+  "share": 0.983,
   "by_class": {
-   "tile": 42,
-   "asphalt": 606,
-   "shake": 6,
-   "metal": 10,
-   "flat": 5
+   "asphalt": 6499,
+   "tile": 210
   }
- },
- "black-forest": {
-  "doors": 9286,
-  "structural_data": true,
-  "crops": 9286,
-  "usable_crops": 8888,
-  "county": 0,
-  "imagery": 5409,
-  "guess": 3212,
-  "labelled": 5409,
-  "share": 0.928,
-  "by_class": {
-   "asphalt": 7992,
-   "tile": 629
-  }
- },
- "monument": {
-  "doors": 7071,
-  "structural_data": true,
-  "crops": 7071,
-  "usable_crops": 6909,
-  "county": 0,
-  "imagery": 2117,
-  "guess": 4088,
-  "labelled": 2117,
-  "share": 0.878,
-  "by_class": {
-   "asphalt": 5720,
-   "tile": 485
-  }
- },
- "palmer-lake": {
-  "doors": 444,
-  "structural_data": true,
-  "crops": 444,
-  "usable_crops": 440,
-  "county": 0,
-  "imagery": 183,
-  "guess": 237,
-  "labelled": 183,
-  "share": 0.946,
-  "by_class": {
-   "asphalt": 393,
-   "tile": 27
-  }
- },
- "woodland-park": {
-  "doors": 2751,
-  "structural_data": false,
-  "crops": 2751,
-  "usable_crops": 0,
-  "county": 0,
-  "imagery": 0,
-  "guess": 0,
-  "labelled": 0,
-  "share": 0.0,
-  "by_class": {}
- },
- "divide": {
-  "doors": 575,
-  "structural_data": false,
-  "crops": 575,
-  "usable_crops": 0,
-  "county": 0,
-  "imagery": 0,
-  "guess": 0,
-  "labelled": 0,
-  "share": 0.0,
-  "by_class": {}
- },
- "florissant": {
-  "doors": 409,
-  "structural_data": false,
-  "crops": 409,
-  "usable_crops": 0,
-  "county": 0,
-  "imagery": 0,
-  "guess": 0,
-  "labelled": 0,
-  "share": 0.0,
-  "by_class": {}
- },
- "cripple-creek": {
-  "doors": 55,
-  "structural_data": false,
-  "crops": 55,
-  "usable_crops": 0,
-  "county": 0,
-  "imagery": 0,
-  "guess": 0,
-  "labelled": 0,
-  "share": 0.0,
-  "by_class": {}
  }
 }

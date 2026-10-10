@@ -257,3 +257,6 @@ traverse/marketing-site/site/*.zip
 
 # raw permit files from towns (may hold owner names; like assessor/raw)
 traverse/data-pipeline/door-territory/permits/raw/
+
+# overnight run logs: error lines can carry street addresses (2026-10-10)
+traverse/data-pipeline/door-territory/logs-*/

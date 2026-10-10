@@ -2,25 +2,25 @@
   "roster": "hoa-roster-active-2026-10-03.csv",
   "rosterRows": 8596,
   "countyBlank": 7959,
-  "inScope": 1022,
+  "inScope": 1056,
   "byWhy": {
-    "match+zip": 90,
-    "match+county+zip": 6,
+    "match+zip": 158,
+    "match+county+zip": 9,
     "match+county": 1,
-    "name only, manager in Denver metro: confirm": 42,
-    "county+zip": 74,
+    "name only, manager in Denver metro: confirm": 76,
+    "county+zip": 71,
     "county": 1,
-    "zip": 808
+    "zip": 740
   },
-  "matched": 97,
-  "matchedUnits": 32087,
-  "ourPlaces": 186,
-  "placesMatched": 54,
+  "matched": 168,
+  "matchedUnits": 88185,
+  "ourPlaces": 302,
+  "placesMatched": 117,
   "landOwners": 93,
   "landOwnersMatched": 60,
   "managed": {
-    "Professionally Managed": 869,
-    "Self-Managed": 153
+    "Self-Managed": 157,
+    "Professionally Managed": 899
   },
-  "managers": 65
+  "managers": 66
 }
