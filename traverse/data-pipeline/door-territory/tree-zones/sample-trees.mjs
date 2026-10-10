@@ -50,7 +50,9 @@ for (const [town, county] of Object.entries(TOWNS)) {
   if (!existsSync(p)) continue;
   const all = MAIL ? mailDoors(p, town)
     : JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.la === 'number');   /* neighbourhood order = good tile reuse */
-  const todo = all.filter((d) => !cache[`${d.la},${d.lo}`]).slice(0, LIMIT);
+  /* --redo-canopy (2026-10-09): measure again the doors whose figures came from the canopy map, now that Teller has laser scans */
+  const REDO_CANOPY = process.argv.includes('--redo-canopy');
+  const todo = all.filter((d) => { const c = cache[`${d.la},${d.lo}`]; return !c || (REDO_CANOPY && c.src === 'canopy'); }).slice(0, LIMIT);
   if (!todo.length) { console.log(`${town}: all ${all.length} measured`); continue; }
   const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);
   const bbox = [Math.min(...lons) - 0.003, Math.min(...lats) - 0.003, Math.max(...lons) + 0.003, Math.max(...lats) + 0.003];
