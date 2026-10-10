@@ -903,7 +903,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **X-8 — Weekly analytics pull** across everything running. **Do this last** — it's a
       wrapper around things that are still moving, and building it now means rebuilding it.
 - [ ] **X-10 — Access that saves you clicks, when each comes up** (Matthew 2026-10-09: "add them to the list"):
-      **(a)** SSH keys for the Surge and Sixfold SiteGround accounts when work on them resumes (Site Tools → Devs → SSH Keys
+      **(a) ✅ DONE 2026-10-10** (Sixfold + Surge keys working; the Surge key covers staging and live) — SSH keys for the Surge and Sixfold SiteGround accounts (Site Tools → Devs → SSH Keys
       Manager; save in `C:\Users\Surge Inc\.ssh\`; send the password + Hostname/Username/Port). **(b) ✅ DONE 2026-10-10** (key "claude", stored privately) — a Porkbun API key when
       the .app domains or DNS changes come up (Porkbun → Account → API Access, switched on per domain). **(c)** Fewer
       permission prompts: allow the routine read-only commands that keep asking. Guardrails stay: buying, publishing,
