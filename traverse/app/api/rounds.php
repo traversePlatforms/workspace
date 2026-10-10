@@ -462,6 +462,60 @@ function loadRegion(string $key): ?array {
     $f = regionFile($key);
     return $f ? json_decode((string) file_get_contents($f), true) : null;
 }
+/* ---- light reads of a town (2026-10-10, TR-7) ------------------------------
+ * Denver's door file is 40,000 doors: decoded whole it is ~80 MB of server memory, and every tap paid it (a mark checked
+ * the town exists with loadRegion, then doorHome decoded it again for the door ids). Now:
+ *   regionAvailable()  the same answer as loadRegion() !== null, without decoding the file;
+ *   townSplit()        once per change of the town file, its neighbourhoods are written one file each, with its own
+ *                      fields and every door id and position, under DATA_DIR/town-cache/<town>/; meta.json is written
+ *                      last, so a meta whose stamp matches the town file means every part is there;
+ *   areaOf() / doorIds() / townPositions() read those small files. Any failure returns null and the caller falls back
+ *   to loadRegion(), as before. */
+function regionAvailable(string $key): bool {
+    if (regionHidden($key)) return false;
+    if (adminRegion($key) && ($GLOBALS['role'] ?? '') !== 'admin') return false;
+    return regionFile($key) !== null;
+}
+function townSplit(string $key): ?array {
+    static $memo = [];
+    if (array_key_exists($key, $memo)) return $memo[$key];
+    $f = regionFile($key); if (!$f) return $memo[$key] = null;
+    $dir = DATA_DIR . '/town-cache/' . $key; $stamp = (string) @filesize($f) . '-' . (string) @filemtime($f);
+    $meta = json_decode((string) @file_get_contents($dir . '/meta.json'), true);
+    if (!is_array($meta) || ($meta['stamp'] ?? '') !== $stamp) {
+        $data = json_decode((string) @file_get_contents($f), true);
+        if (!is_array($data) || !is_array($data['areas'] ?? null)) return $memo[$key] = null;
+        if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) return $memo[$key] = null;
+        $names = []; $lines = [];
+        foreach ($data['areas'] as $i => $a) {
+            if (!isset($names[(string) $a['name']])) $names[(string) $a['name']] = $i;   /* the first of a repeated name, as the old loop found */
+            foreach ($a['doors'] as $d) $lines[] = $d['id'] . "\t" . (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon']) ? $d['lat'] . ',' . $d['lon'] : '');
+            if (!writeJsonAtomic($dir . '/a' . $i . '.json', $a)) return $memo[$key] = null;
+        }
+        if (!writeTextAtomic($dir . '/doors.txt', implode("\n", $lines))) return $memo[$key] = null;
+        unset($lines);
+        $top = $data; unset($top['areas'], $data);
+        $meta = ['stamp' => $stamp, 'top' => $top, 'names' => $names];
+        if (!writeJsonAtomic($dir . '/meta.json', $meta)) return $memo[$key] = null;
+    }
+    return $memo[$key] = $meta + ['dir' => $dir];
+}
+/** one neighbourhood of a split town, or null when it has none by that name */
+function areaOf(array $split, string $name): ?array {
+    $i = $split['names'][$name] ?? null;
+    if ($i === null) return null;
+    $a = json_decode((string) @file_get_contents($split['dir'] . '/a' . $i . '.json'), true);
+    return is_array($a) ? $a : null;
+}
+/** id => [lat, lon] for every door of a split town */
+function townPositions(array $split): array {
+    $out = [];
+    foreach (explode("\n", (string) @file_get_contents($split['dir'] . '/doors.txt')) as $ln) {
+        $t = strpos($ln, "\t"); if ($t === false || $t === strlen($ln) - 1) continue;
+        $ll = explode(',', substr($ln, $t + 1)); if (count($ll) === 2) $out[substr($ln, 0, $t)] = [(float) $ll[0], (float) $ll[1]];
+    }
+    return $out;
+}
 
 /* ---- towns that used to share doors (2026-10-03) --------------------------
  * 958 doors were listed under two towns at once (all of Palmer Lake inside Monument; Castle
@@ -483,7 +537,9 @@ function doorIds(string $key): array {
     static $cache = [];
     if (!isset($cache[$key])) {
         $ids = [];
-        foreach ((loadRegion($key)['areas'] ?? []) as $a) foreach (($a['doors'] ?? []) as $d) $ids[$d['id']] = true;
+        $sp = regionAvailable($key) ? townSplit($key) : null;   /* the small id list, not the whole town (TR-7) */
+        if ($sp) { foreach (explode("\n", (string) @file_get_contents($sp['dir'] . '/doors.txt')) as $ln) { $t = strpos($ln, "\t"); if ($t) $ids[substr($ln, 0, $t)] = true; } }
+        else foreach ((loadRegion($key)['areas'] ?? []) as $a) foreach (($a['doors'] ?? []) as $d) $ids[$d['id']] = true;
         $cache[$key] = $ids;
     }
     return $cache[$key];
@@ -1699,7 +1755,11 @@ if ($action === 'regions') {
 if ($action === 'area') {
     $key  = (string) ($_REQUEST['region'] ?? '');
     $name = (string) ($_REQUEST['area'] ?? '');
-    $data = loadRegion($key);
+    /* just this neighbourhood, from the town's split cache (TR-7, 2026-10-10); the whole town only when the cache can't be made */
+    if (!regionAvailable($key)) fail('No such region.', 404);
+    $split = townSplit($key);
+    if ($split) { $one = areaOf($split, $name); $data = $split['top'] + ['areas' => $one ? [$one] : []]; }
+    else $data = loadRegion($key);
     if (!$data) fail('No such region.', 404);
     $marks = loadMarks($key);
     $phones = loadPhones($key);
@@ -1744,7 +1804,9 @@ if ($action === 'area') {
     $secOf = securityOn($role) ? loadSide('security', $key, $only) : [];
     if (pestOn($role) || securityOn($role)) {
         $pestOf = pestOn($role) ? loadSide('pest', $key, $only) : [];
-        foreach ($data['areas'] as $a0) foreach ($a0['doors'] as $d0) if (isset($d0['lat'], $d0['lon'])) $posOf[$d0['id']] = [(float) $d0['lat'], (float) $d0['lon']];
+        /* every door's position in the town (customers, bookings and notes nearby are counted town-wide) */
+        if ($split) $posOf = townPositions($split);
+        else foreach ($data['areas'] as $a0) foreach ($a0['doors'] as $d0) if (isset($d0['lat'], $d0['lon'])) $posOf[$d0['id']] = [(float) $d0['lat'], (float) $d0['lon']];
         foreach (customerDoors() as $dk => $_) { $pp = explode('/', (string) $dk, 2); if (count($pp) === 2 && $pp[0] === $key && isset($posOf[$pp[1]])) $custPts[$pp[1]] = $posOf[$pp[1]]; }
         $since = time() - 30 * 86400;
         foreach ($marks as $mid => $mk) if (($mk['outcome'] ?? '') === 'booked' && (int) ($mk['at'] ?? 0) >= $since && isset($posOf[$mid])) $bookPts[$mid] = $posOf[$mid];
@@ -1814,7 +1876,7 @@ if ($action === 'mark') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     $out = $body['outcome'] ?? null;                              // null = undo
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     /* 'nosolicit' (2026-10-01): the door shows a no-soliciting sign. A finished door,
@@ -1840,7 +1902,7 @@ if ($action === 'phone') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $raw = $body['phone'] ?? null;
@@ -1867,7 +1929,7 @@ if ($action === 'email') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $e = trim((string) ($body['email'] ?? ''));
@@ -1886,7 +1948,7 @@ if ($action === 'photo') {
     if (!throttleTake(rateFile('photo|' . (string) ($session['c'] ?? $me)), 120, 3600)) fail('That is a lot of photos in an hour. Wait a little and try again.', 429);
     $key = (string) ($_GET['region'] ?? '');
     $id  = (string) ($_GET['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $bin = $raw ?? '';
@@ -1908,7 +1970,7 @@ if ($action === 'photoget') {
     $key = (string) ($_GET['region'] ?? '');
     $id  = (string) ($_GET['id'] ?? '');
     $f   = (string) ($_GET['f'] ?? '');
-    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
+    if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
     $hit = null;
     foreach (loadPhotos($key)[$id] ?? [] as $x) if ($x['f'] === $f) $hit = $x;
     $path = $hit ? photoPath($hit['k'], $id, $f) : '';
@@ -1925,7 +1987,7 @@ if ($action === 'photodel') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     $f   = (string) ($body['f'] ?? '');
-    if (!loadRegion($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
+    if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || !validPhotoName($f)) fail('No such photo.', 404);
     $hit = null;
     foreach (loadPhotos($key)[$id] ?? [] as $x) if ($x['f'] === $f) $hit = $x;
     if (!$hit) fail('No such photo.', 404);
@@ -2086,7 +2148,7 @@ if ($action === 'mydoors') {
 if ($action === 'lawnmask') {
     $key = (string) ($_GET['region'] ?? '');
     $id  = (string) ($_GET['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $home = doorHome($key, $id);
     $f = DATA_DIR . '/lawnmask-' . $home . '.json';
@@ -3489,7 +3551,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
 if ($action === 'matfix') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? ''); $m = (string) ($body['m'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     if ($m !== '' && !in_array($m, MAT_KEYS, true)) fail('Pick a roof material.');
@@ -3501,7 +3563,7 @@ if ($action === 'lawnfix') {
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
     $lv  = $body['lv'] ?? null;
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     if ($lv !== null && !in_array($lv, ['N', 'S', 'M', 'L'], true)) fail('Bad lawn size.');
@@ -3513,7 +3575,7 @@ if ($action === 'work') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $tags = $body['work'] ?? [];
@@ -3817,7 +3879,7 @@ if ($action === 'doorassign') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $ids = is_array($body['ids'] ?? null) ? array_values(array_unique(array_map('strval', $body['ids']))) : [];
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!$ids || count($ids) > 1000) fail('Pick the doors to assign (up to 1,000 at a time).');
     if ($who !== '') {
         $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
@@ -3865,7 +3927,7 @@ function appendTerr(string $key, array $row): bool {
 if ($action === 'terrlist') {
     if (!TERRITORIES_OPEN && $role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
     $key = (string) ($_GET['region'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     /* 'del': may this person take the outline away (a manager only their team's) */
     $list = array_map(fn($t) => $t + ['del' => mayAssign($t['who'], '')], array_values(loadTerr($key)));
     out(['ok' => true, 'territories' => $list]);
@@ -3874,7 +3936,7 @@ if ($action === 'terrsave') {
     if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!empty($body['del'])) {
         $id = (string) ($body['id'] ?? '');
         $cur = loadTerr($key)[$id] ?? null;
@@ -3943,7 +4005,7 @@ if ($action === 'walk') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $date = $body['date'] ?? null;                                  // null = no walk booked after all
@@ -4087,7 +4149,7 @@ if ($action === 'firecheck') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $items = $body['items'] ?? null;
@@ -4108,7 +4170,7 @@ if ($action === 'result') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $result = $body['result'] ?? null;
@@ -4173,7 +4235,7 @@ if ($action === 'note') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $raw = (string) ($body['note'] ?? '');
@@ -4276,7 +4338,7 @@ if ($action === 'roofjob') {
     if (!feature('roof')) fail('Roofing is not turned on here.', 404);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $step = (string) ($body['step'] ?? '');
@@ -4301,7 +4363,7 @@ if ($action === 'quoted') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $row = ['id' => $id, 'quoted' => empty($body['quoted']) ? null : true, 'by' => $me, 'at' => time()];
@@ -4346,7 +4408,7 @@ if ($action === 'skiptrace') {
     if (!$isPost && !defined('SIXFOLD_CLI')) fail('POST required', 405);
     $in = defined('SIXFOLD_CLI') ? $_REQUEST : $body;
     $key = (string) ($in['region'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     $area = (string) ($in['area'] ?? '');
     $limit = max(1, min(5000, (int) ($in['limit'] ?? 500)));
     $dry = !isset($in['dry']) || (string) $in['dry'] !== '0';          /* a dry run unless told otherwise */
@@ -4442,7 +4504,7 @@ if ($action === 'skippick') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? '');
-    if (!loadRegion($key)) fail('No such region.', 404);
+    if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
     $n = skipDigits((string) ($body['phone'] ?? ''));
