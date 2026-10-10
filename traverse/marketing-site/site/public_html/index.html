@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Traverse Platforms</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2313294b%22%2F%3E%3Cg%20transform%3D%22translate(8.5%208.5)%20scale(0.734)%22%3E%3Cpolyline%20points%3D%229%2C47%2024%2C31%2037%2C40%2053%2C17%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%2247%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2231%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2237%22%20cy%3D%2240%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2253%22%20cy%3D%2217%22%20r%3D%228%22%20fill%3D%22%23d6400c%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Familjen+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0;background:#f4f6f9;color:#0f1b2d;font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#13294b}a:hover{color:#d6400c}
+h1,h2,h3{text-wrap:balance}
+</style>
+<style>
+html{scroll-behavior:smooth}
+.navtoggle{display:none}
+/* a section the script has focused after a page link: no ring on a block of content */
+[tabindex="-1"]:focus{outline:none}
+/* the hero map: the board sets it with the inset shorthand; browsers without it (iOS 14.0 and under) get the longhands */
+#top > div:last-child > div:first-child{top:0;right:40px;bottom:50px;left:0}
+/* tablets held upright, and phones */
+@media (max-width:1000px){
+  /* header: logo, Book a demo and a menu button on one row; the links open in a panel. It stays at the top while the
+     page scrolls (Matthew 2026-10-08), so a page link stops below it rather than under it */
+  header{position:sticky;top:0;z-index:40}
+  section[id]{scroll-margin-top:76px}
+  header > div{flex-wrap:nowrap !important}
+  #mainnav{margin-left:auto;gap:0 !important}
+  #mainnav a:not(:last-child){display:none !important}
+  .navtoggle{display:inline-grid;place-items:center;flex:none;order:1;width:44px;height:44px;margin-left:10px;border:1.5px solid #dce2ea;border-radius:10px;background:#ffffff;color:#13294b;cursor:pointer}
+  .navtoggle svg{width:22px;height:22px}
+  #mainnav.open{position:absolute;top:100%;left:0;right:0;z-index:30;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:#ffffff;border-bottom:1px solid #dce2ea;padding:6px 24px 18px;box-shadow:0 12px 24px -12px rgba(15,27,45,0.25);max-height:calc(100vh - 76px);overflow-y:auto;box-sizing:border-box}
+  #mainnav.open a:not(:last-child){display:block !important;width:100%;text-align:left;padding:14px 2px;border-bottom:1px solid #eef1f5;font-size:17px}
+  #mainnav.open a:last-child{display:flex !important;width:100%;box-sizing:border-box;margin-top:14px;justify-content:center;height:48px !important;font-size:16px !important}
+  /* the whole-day section: the phone first, the four parts in a two-by-two grid under it */
+  .dayrow{flex-direction:column;align-items:center}
+  .dayphone{order:-1}
+  .daycol{width:100%;flex:none !important;display:grid !important;grid-template-columns:1fr 1fr;gap:32px !important}
+  .dayitem{align-items:flex-start !important;text-align:left !important}
+  .daycol-l .dayitem > div:first-child{flex-direction:row-reverse}
+  .dayitem p{max-width:none !important}
+  /* How it works: the drawn traverse needs a wide screen; under it the stations run down one line that stops at the close */
+  .trav-line{display:none !important}
+  .trav-row{flex-direction:column}
+  .trav-st{position:relative;padding:0 0 34px 34px !important;margin-left:14px;border-left:5px solid #ffffff;align-items:flex-start !important;text-align:left !important}
+  .trav-st:last-child{border-left-color:transparent;padding-bottom:0 !important}
+  .trav-st > span:first-child{margin-left:-51.5px}
+  .trav-st:last-child > span:first-child{margin-left:-58.5px}
+  .trav-st p{max-width:52ch !important}
+  /* the features two by two with hairline dividers */
+  .featstrip{grid-template-columns:1fr 1fr !important;gap:1px !important;background:rgba(255,255,255,0.14) !important}
+  .featstrip > div{box-shadow:none !important;background:#13294b}
+}
+/* five editions sit in one row on a desktop; narrower than that they go two across, the mark beside the name,
+   and the last one takes the whole row rather than sitting alone */
+@media (max-width:1180px){
+  .eds{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:20px !important}
+  .eds > div > div:first-child{flex-direction:row !important;align-items:center !important}
+  .eds > div:last-child:nth-child(odd){grid-column:1 / -1}
+}
+/* phones */
+@media (max-width:760px){
+  h1{font-size:42px !important}
+  h2{font-size:32px !important}
+  #demo h2{font-size:34px !important}
+  section[style*="max-width: 1200px"],
+  section > div[style*="max-width: 1200px"]{padding-top:52px !important;padding-bottom:52px !important}
+  #top{gap:32px !important}
+  .daycol{grid-template-columns:1fr !important;gap:28px !important}
+  .conds{grid-template-columns:1fr !important}
+  .featstrip{grid-template-columns:1fr !important}
+  .eds{grid-template-columns:1fr !important}
+}
+/* small phones: the wordmark drops "Platforms" so the header stays on one row */
+@media (max-width:480px){
+  h1{font-size:36px !important}
+  #top > div:last-child{height:430px !important}
+  header a[href="#top"] > span > span{display:none}
+  #mainnav a:last-child{height:40px !important;padding:0 14px !important;font-size:14px !important;white-space:nowrap}
+  /* the hero's door card is 290px on the board; under 338px wide it would hang off the left edge, so it narrows to fit */
+  #top > div:last-child > div:last-child{width:auto !important;max-width:290px;left:0;margin-left:auto}
+  /* the storm pill on the map may need two lines */
+  #top > div:last-child > div:first-child > div{height:auto !important;min-height:32px;padding:5px 12px !important;line-height:1.25}
+  /* the plans: one column, whatever the width (the board's 270px minimum would overflow a 300px screen) */
+  #pricing [style*="minmax(270px"]{grid-template-columns:1fr !important}
+}
+/* the smallest phones: the wordmark, Book a demo and the menu button need 378px between them, so under 390px
+   Book a demo leaves the header row (it is still the first thing in the hero, and in the open menu) */
+@media (max-width:389px){
+  #mainnav:not(.open) a:last-child{display:none !important}
+}
+/* on paper there is no scrolling to reveal anything: everything shows, the menu button goes */
+@media print{
+  html.anim .rv,html.anim .hero-door,html.anim .hero-stop{opacity:1 !important;transform:none !important;transition:none !important}
+  html.anim .hero-route{stroke-dashoffset:0 !important}
+  html.anim .hero-ping{display:none}
+  html.anim .trav-line{clip-path:none !important}
+  .navtoggle{display:none !important}
+}
+</style>
+<script>
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) document.documentElement.classList.add('anim');
+</script>
+<style>
+html.anim .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+/* the app section slides in from its sides only where it has sides; it clips so the slide never widens the page */
+#product{overflow-x:hidden;overflow-x:clip}
+@media (min-width:1001px){html.anim .rv.rv-l{transform:translateX(-28px)}html.anim .rv.rv-r{transform:translateX(28px)}}
+html.anim .rv.rv-pop{transform:scale(.9)}
+html.anim .rv.in{opacity:1;transform:none}
+/* the hero: the doors appear, the route draws from the first door to the target, the door card slides up */
+html.anim .hero-door{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:center;transition:opacity .35s ease var(--d,0s),transform .45s cubic-bezier(.3,1.6,.5,1) var(--d,0s)}
+html.anim .hero-route{transition:stroke-dashoffset 1.5s cubic-bezier(.55,.1,.35,1) .45s}
+html.anim .hero-stop{opacity:0;transform:scale(0);transform-box:fill-box;transform-origin:center;transition:opacity .3s ease var(--d,0s),transform .5s cubic-bezier(.3,1.7,.5,1) var(--d,0s)}
+html.anim .hero-ping{opacity:0;transform-box:fill-box;transform-origin:center}
+html.anim .go .hero-door,html.anim .go .hero-stop{opacity:1;transform:none}
+html.anim .go .hero-route{stroke-dashoffset:0 !important}
+html.anim .go .hero-ping{animation:ping 2.4s ease-out 2.3s infinite}
+@keyframes ping{0%{opacity:.7;transform:scale(1)}80%,100%{opacity:0;transform:scale(2.8)}}
+/* How it works: the line wipes in left to right and each station arrives as the line reaches it */
+html.anim .trav-line{clip-path:inset(-30px 100% -30px -30px);transition:clip-path 1.7s cubic-bezier(.45,.05,.4,1)}
+html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
+/* hover: the edition and plan cards lift, the buttons nudge */
+.eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
+.eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
+html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
+/* (the Find your edition button is the a[href="#trades"] with a border; the Sign in text links map to #trades too and stay still) */
+a[href="#demo"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
+a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div style="width: 100%; min-height: 100vh; background: #f4f6f9; color: #0f1b2d; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;">
+
+<!-- header -->
+<header style="background: #ffffff; border-bottom: 1px solid #dce2ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+<a href="#top" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0f1b2d;">
+<svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#d6400c"></circle></g></svg>
+<span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 22px; letter-spacing: -0.02em;"><b style="font-weight: 700;">Traverse</b> <span style="font-weight: 500;">Platforms</span></span>
+</a>
+<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<nav id="mainnav" aria-label="Main" style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; font-weight: 700; font-size: 15px;">
+<a href="#product" style="text-decoration: none;">Product</a>
+<a href="#trades" style="text-decoration: none;">Trades</a>
+<a href="#how" style="text-decoration: none;">How it works</a>
+<a href="#pricing" style="text-decoration: none;">Pricing</a>
+<a href="#trades" style="text-decoration: none;">Sign in</a>
+<a href="#demo" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 10px; background: #d6400c; color: #ffffff; text-decoration: none;">Book a demo</a>
+</nav>
+</div>
+</header>
+
+<!-- hero -->
+<section id="top" style="max-width: 1200px; margin: 0 auto; padding: 72px 24px 56px; display: flex; flex-wrap: wrap; align-items: center; gap: 48px;">
+<div style="flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 22px;">
+<p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #b83608;">Territory sales platform</p>
+<h1 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 60px; line-height: 1.02; letter-spacing: -0.025em;">Stop guessing. Work the real territory.</h1>
+<p style="margin: 0; font-size: 19px; line-height: 30px; color: #566476; max-width: 46ch;">Traverse runs your sales from the first knock to the signed job: doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px;">
+<a href="#demo" style="display: inline-flex; align-items: center; height: 48px; padding: 0 22px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 16px; text-decoration: none;">Book a demo</a>
+<a href="#trades" style="display: inline-flex; align-items: center; height: 48px; padding: 0 22px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; font-size: 16px; text-decoration: none;">Find your edition</a>
+</div>
+</div>
+
+<!-- hero visual: a territory with the day's traverse and the open door card -->
+<div style="flex: 1 1 480px; min-width: 0; position: relative; height: 470px;">
+<div style="position: absolute; inset: 0 40px 50px 0; border-radius: 16px; background-color: #13294b; background-image: linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px); background-size: 44px 44px; overflow: hidden; box-shadow: 0 2px 4px rgba(15,27,45,0.12), 0 12px 28px rgba(15,27,45,0.18);">
+<svg viewBox="0 0 520 420" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<circle cx="70" cy="80" r="7" fill="#5f7699"></circle><circle cx="130" cy="60" r="7" fill="#5f7699"></circle><circle cx="420" cy="300" r="7" fill="#5f7699"></circle><circle cx="470" cy="210" r="7" fill="#5f7699"></circle><circle cx="260" cy="330" r="7" fill="#5f7699"></circle><circle cx="90" cy="250" r="7" fill="#6fcf9b"></circle><circle cx="350" cy="90" r="7" fill="#6fcf9b"></circle><circle cx="200" cy="120" r="7" fill="#d6400c"></circle>
+<polyline points="60,350 180,210 290,260 430,100" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></polyline>
+<circle cx="60" cy="350" r="11" fill="#13294b" stroke="#ffffff" stroke-width="7"></circle>
+<circle cx="180" cy="210" r="11" fill="#13294b" stroke="#ffffff" stroke-width="7"></circle>
+<circle cx="290" cy="260" r="11" fill="#13294b" stroke="#ffffff" stroke-width="7"></circle>
+<circle cx="430" cy="100" r="16" fill="#d6400c" stroke="#ffffff" stroke-width="4"></circle>
+</svg>
+<div style="position: absolute; top: 16px; left: 16px; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; background: #ffffff; color: #13294b; font-weight: 700; font-size: 13px; letter-spacing: 0.02em;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #d6400c;"></span>Storm day · Hail 1.75 in · 214 doors</div>
+</div>
+<div style="position: absolute; right: 0; bottom: 0; width: 290px; background: #ffffff; border-radius: 16px; border-top: 4px solid #4e6680; padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 4px rgba(15,27,45,0.10), 0 12px 28px rgba(15,27,45,0.14);">
+<div style="display: flex; justify-content: space-between; align-items: center;"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: #fde6dc; color: #b83608; font-weight: 700; font-size: 12px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #b83608;"></span>Walk booked</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #566476;">0.4 mi</span></div>
+<div style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 21px;">1840 Benchmark Dr</div>
+<div style="font-size: 13px; color: #566476;">Owner of record · sample door</div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; border-top: 1px solid #dce2ea; padding-top: 8px;"><span style="color: #566476;">Roof</span><span style="font-family: 'JetBrains Mono', monospace;">31 sq · asphalt · 2009</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; border-top: 1px solid #dce2ea; padding-top: 8px;"><span style="color: #566476;">Hail at the house</span><span style="font-family: 'JetBrains Mono', monospace;">1.75 in · 23 Jun</span></div>
+<div style="display: flex; gap: 8px; margin-top: 4px;"><span style="flex: 1; display: inline-flex; justify-content: center; align-items: center; height: 40px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 14px;">Quote booked</span><span style="flex: 1; display: inline-flex; justify-content: center; align-items: center; height: 40px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; font-size: 14px;">Not now</span></div>
+</div>
+</div>
+</section>
+
+<!-- the whole day: the app's own home screen in the middle, its four parts called out around it -->
+<section id="product" style="background: #ffffff; border-top: 1px solid #dce2ea; border-bottom: 1px solid #dce2ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-direction: column; gap: 44px;">
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.015em;">One app for the whole day</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">The knock, the phone call, the call back, the appointment and the signed job, in one place.</p>
+</div>
+<div class="dayrow" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 40px;">
+
+<div class="daycol daycol-l" style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 56px;">
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; text-align: right;">
+<div style="display: flex; align-items: center; gap: 12px;"><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Doors</h3><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"></path><circle cx="14.5" cy="13" r="1"></circle></svg></span></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Every house in your territory, in street order, with what you need to know before you knock. Mark each door in one tap: quote booked, or not now with a come-back date.</p>
+</div>
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; text-align: right;">
+<div style="display: flex; align-items: center; gap: 12px;"><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Phones</h3><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Call and text the leads handed to you, with follow-ups that land on your calendar. Every lead keeps its notes and next step in one place.</p>
+</div>
+</div>
+
+<div class="dayphone" style="flex: 0 0 300px; width: 300px; max-width: 100%; border-radius: 40px; background: #0f1b2d; padding: 12px; box-shadow: 0 4px 10px rgba(15,27,45,0.15), 0 30px 60px -20px rgba(15,27,45,0.45);" aria-hidden="true">
+<div style="border-radius: 30px; overflow: hidden; background: #f4f6f9;">
+<div style="background: #13294b; color: #ffffff; padding: 18px 16px 14px; display: flex; align-items: center; gap: 10px;"><svg width="26" height="26" viewBox="0 0 64 64"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#d6400c"></circle></svg><span style="display: flex; flex-direction: column; line-height: 1.15;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 16px;">Your company</b><small style="font-size: 11px; color: #c9d6ea;">Field tools</small></span></div>
+<div style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+<div style="background: #13294b; color: #ffffff; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 18px;">Good morning</b><div style="display: flex; gap: 6px;"><span style="flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px; font-size: 10px; letter-spacing: 0.06em;"><b style="display: block; font-size: 18px; letter-spacing: 0;">38</b>DOORS</span><span style="flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px; font-size: 10px; letter-spacing: 0.06em;"><b style="display: block; font-size: 18px; letter-spacing: 0;">12</b>TALKED</span><span style="flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px; font-size: 10px; letter-spacing: 0.06em;"><b style="display: block; font-size: 18px; letter-spacing: 0; color: #ff7a45;">3</b>QUOTES</span></div></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Doors</b><small style="font-size: 11px; color: #566476;">Pine Ridge · 46 to knock</small></span></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Phones</b><small style="font-size: 11px; color: #566476;">5 call-backs today</small></span></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Calendar</b><small style="font-size: 11px; color: #566476;">2 walks this afternoon</small></span></div>
+<div style="background: #ffffff; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(15,27,45,0.08);"><span style="width: 30px; height: 30px; border-radius: 8px; background: #13294b; display: inline-grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h6"></path></svg></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><b style="font-size: 13px;">Pipeline</b><small style="font-size: 11px; color: #566476;">9 open leads</small></span></div>
+<div style="height: 6px;"></div>
+</div>
+</div>
+</div>
+
+<div class="daycol daycol-r" style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 56px;">
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; align-items: center; gap: 12px;"><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path></svg></span><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Appointments</h3></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Book the walk or the estimate while you are standing at the door, see the day's bookings, and send the homeowner a confirmation.</p>
+</div>
+<div class="dayitem" style="display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; align-items: center; gap: 12px;"><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h10"></path><path d="M4 18h6"></path><circle cx="18" cy="17" r="3"></circle></svg></span><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Pipeline</h3></div>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Every lead from the doors, the website and your ads in one pipeline, each with an owner and a next step. A won job becomes a customer with their visits and what is due next.</p>
+</div>
+</div>
+
+</div>
+</div>
+</section>
+
+<!-- editions -->
+<section id="trades" style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-direction: column; gap: 36px;">
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.1; letter-spacing: -0.015em;">An edition for your trade</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">The same app underneath, set up for the work you sell: the data on each door, the services you quote, the lessons your reps learn.</p>
+</div>
+<div class="eds" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px;">
+
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#4e6680"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#4e6680" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#4e6680" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#4e6680" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Roofing</span></span></div>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
+<li>A storm list: every door the hail or wind reached, by day</li>
+<li>Hail size and wind at every house, storm by storm</li>
+<li>Roof size, material and age</li>
+<li>A close-up photo of every roof</li>
+<li>Booked doors sent straight into JobNimbus</li>
+</ul>
+<a href="editions/?e=roofing" style="margin-top: auto; font-weight: 700; font-size: 14px;">See TraverseRoofing &rarr;</a>
+</div>
+
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2f7a3a"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Yards</span></span></div>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
+<li>Lawn size at every house</li>
+<li>Trees close to the house</li>
+<li>Wildfire risk by property, for fuel-reduction work</li>
+<li>Monthly plans and the visits that are due</li>
+<li>Frost dates and recent rain for each town</li>
+</ul>
+<a href="editions/?e=yards" style="margin-top: auto; font-weight: 700; font-size: 14px;">See TraverseYards &rarr;</a>
+</div>
+
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#f2a900"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#0f1b2d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#0f1b2d"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Solar</span></span></div>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
+<li>Sun-facing roof area at every house</li>
+<li>Room for panels, and a year's output</li>
+<li>Shade from tall trees on the sunny side</li>
+<li>The household's power company and its prices</li>
+<li>What a year's output is worth on that bill</li>
+</ul>
+<a href="editions/?e=solar" style="margin-top: auto; font-weight: 700; font-size: 14px;">See TraverseSolar &rarr;</a>
+</div>
+
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#7a3fa3"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#7a3fa3" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#7a3fa3" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#7a3fa3" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Pest</span></span></div>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
+<li>New owners, and when they bought</li>
+<li>Neighbours already on your service</li>
+<li>Open space, creeks and ponds beside the house</li>
+<li>What is in season, month by month</li>
+<li>Quarterly plans with the visits that are due</li>
+</ul>
+<a href="editions/?e=pest" style="margin-top: auto; font-weight: 700; font-size: 14px;">See TraversePest &rarr;</a>
+</div>
+
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1b6f7a"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#1b6f7a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#1b6f7a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#1b6f7a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Security</span></span></div>
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
+<li>Crime reported near each house, where police publish it</li>
+<li>Neighbourhoods ranked by recent crime</li>
+<li>New owners and newer homes</li>
+<li>Owners who live somewhere else</li>
+<li>Big lots and homes backing onto open space</li>
+</ul>
+<a href="editions/?e=security" style="margin-top: auto; font-weight: 700; font-size: 14px;">See TraverseSecurity &rarr;</a>
+</div>
+
+</div>
+</section>
+
+<!-- how it works: the mark itself, drawn large across the band; each step sits on its station -->
+<section id="how" style="background: #13294b; color: #ffffff; overflow: hidden;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px 96px; display: flex; flex-direction: column; gap: 56px;">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #ff7a45;">How it works</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 56px; line-height: 1.02; letter-spacing: -0.025em; color: #ffffff;">From the first door to the signed job</h2>
+</div>
+<div class="trav" style="position: relative;">
+<svg class="trav-line" viewBox="0 0 1000 220" preserveAspectRatio="none" width="100%" height="220" style="position: absolute; left: 0; top: 0; display: block; overflow: visible;" aria-hidden="true"><polyline points="125,190 375,70 625,130 875,26" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline></svg>
+<div class="trav-row" style="position: relative; display: flex;">
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 176px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 01</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Load your territory</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">Every house in the towns you work, grouped into neighbourhoods your crews can claim.</p>
+</div>
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 56px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 02</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Knock and mark</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">Reps work street by street and mark every door. The office sees each one as it happens.</p>
+</div>
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 116px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 03</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Book the appointment</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">A yes at the door becomes a booked walk on the calendar and a lead in the pipeline, with its owner set.</p>
+</div>
+<div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 4px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
+<span style="width: 44px; height: 44px; border-radius: 50%; background: #ff7a45; border: 5px solid #ffffff; box-sizing: border-box; flex: none; box-shadow: 0 0 0 10px rgba(255,122,69,0.18);"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #ff7a45;">THE CLOSE</span>
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Win and keep the customer</h3>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">The signed job becomes a customer record with their visits, what is due next and a review request.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- built for the field: the conditions it is built for as one line of three, then the team features as one strip -->
+<section style="background-color: #f4f6f9; background-image: linear-gradient(rgba(19,41,75,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(19,41,75,0.05) 1px, transparent 1px); background-size: 44px 44px;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px; display: flex; flex-direction: column; gap: 36px;">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #b83608;">Out on the street</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 56px; line-height: 1.02; letter-spacing: -0.025em;">Works anywhere your team does</h2>
+</div>
+<div class="conds" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 40px;">
+<div style="display: flex; align-items: center; gap: 14px;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.9 4.9l1.4 1.4"></path><path d="M17.7 17.7l1.4 1.4"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M4.9 19.1l1.4-1.4"></path><path d="M17.7 6.3l1.4-1.4"></path></svg></span><p style="margin: 0; font-size: 17px; line-height: 26px; color: #0f1b2d;">Large, high-contrast text you can read at noon on a driveway.</p></div>
+<div style="display: flex; align-items: center; gap: 14px;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a1.5 1.5 0 0 1 3 0v5"></path><path d="M12 10V4a1.5 1.5 0 0 1 3 0v6"></path><path d="M15 10V6a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7h-.5a6 6 0 0 1-4.6-2.2L3 14.5a1.5 1.5 0 0 1 2.2-2L9 15V11"></path></svg></span><p style="margin: 0; font-size: 17px; line-height: 26px; color: #0f1b2d;">Big buttons you can tap with gloves on.</p></div>
+<div style="display: flex; align-items: center; gap: 14px;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a15 15 0 0 1 20 0"></path><path d="M5.5 12.5a10 10 0 0 1 13 0"></path><path d="M9 16a5 5 0 0 1 6 0"></path><circle cx="12" cy="19.5" r="1"></circle></svg></span><p style="margin: 0; font-size: 17px; line-height: 26px; color: #0f1b2d;">Works offline. Everything entered is saved on the device and sent the moment the signal returns.</p></div>
+</div>
+<div class="featstrip" style="background: #13294b; color: #ffffff; border-radius: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); overflow: hidden;">
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset -1px 0 0 rgba(255,255,255,0.12);"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Crews and teams</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">Crew, manager and admin roles. Managers run their own team's territories, leads and goals.</span></div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset -1px 0 0 rgba(255,255,255,0.12);"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Best doors first</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">Every door ranked for your trade, and neighbourhoods ranked by their best doors.</span></div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset -1px 0 0 rgba(255,255,255,0.12);"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Training built in</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">Your own lessons for doors, sales, quotes, phones and safety, built into the app.</span></div>
+<div style="padding: 24px; display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Your data stays yours</b><span style="font-size: 15px; line-height: 22px; color: #c9d6ea;">A full backup every night, and one you can download at any time.</span></div>
+</div>
+</div>
+</section>
+
+<!-- pricing: SAMPLE figures for the mockup only (Matthew 2026-10-06), shaped on what similar apps publish; Traverse pricing is not set -->
+<section id="pricing" style="background: #ffffff; border-top: 1px solid #dce2ea; border-bottom: 1px solid #dce2ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; gap: 36px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 640px;">
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;">Pricing</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">Priced per person, per month. Every plan includes your trade's edition.</p>
+</div>
+<span style="display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1.5px dashed #b83608; color: #b83608; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;">Sample pricing · not final</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; align-items: stretch;">
+
+<div style="border: 1px solid #dce2ea; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 22px;">Crew</b><span style="font-size: 15px; color: #566476;">For a team getting started on doors.</span></div>
+<div style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; letter-spacing: -0.02em;">$35</span><span style="font-size: 15px; color: #566476;">per person / month</span></div>
+<ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 22px;">
+<li>Doors, street by street, offline</li>
+<li>Appointments and calendar</li>
+<li>Pipeline and customers</li>
+<li>Training lessons</li>
+</ul>
+<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Book a demo</a>
+</div>
+
+<div style="border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px; background: #13294b; color: #ffffff; box-shadow: 0 2px 4px rgba(15,27,45,0.12), 0 18px 40px -16px rgba(15,27,45,0.45);">
+<div style="display: flex; flex-direction: column; gap: 6px;"><div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 22px;">Pro</b><span style="height: 26px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 999px; background: #d6400c; color: #ffffff; font-size: 12px; font-weight: 700;">Full edition</span></div><span style="font-size: 15px; color: #c9d6ea;">Everything your trade's edition can do.</span></div>
+<div style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; letter-spacing: -0.02em;">$69</span><span style="font-size: 15px; color: #c9d6ea;">per person / month</span></div>
+<ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 22px;">
+<li>Everything in Crew</li>
+<li>Your edition's data on every door</li>
+<li>Phones, call-backs and follow-ups</li>
+<li>Teams, territories and goals</li>
+<li>Storm and fire alerts</li>
+</ul>
+<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; text-decoration: none;">Book a demo</a>
+</div>
+
+<div style="border: 1px solid #dce2ea; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 6px;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 22px;">Company</b><span style="font-size: 15px; color: #566476;">For several teams, trades or offices.</span></div>
+<div style="display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; letter-spacing: -0.02em;">Custom</span></div>
+<ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 22px;">
+<li>Everything in Pro</li>
+<li>More than one edition</li>
+<li>Your own lessons and services</li>
+<li>Nightly backups you can download</li>
+</ul>
+<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Talk to us</a>
+</div>
+
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 20px; color: #566476; max-width: 90ch;">Sample figures for this mockup only, not Traverse's pricing. They sit inside what similar door-to-door sales apps publish: about $25 to $75 per person a month, and up to $137 with homeowner and storm data added (October 2026).</p>
+</div>
+</section>
+
+<!-- closing call to action -->
+<section id="demo" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 20px;">
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; max-width: 18ch;">Traverse your day</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476; max-width: 52ch;">Book a demo and see how a full day runs: at the door, on the phone and in the office.</p>
+<a href="#demo" style="display: inline-flex; align-items: center; height: 52px; padding: 0 26px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 17px; text-decoration: none;">Book a demo</a>
+</section>
+
+<!-- footer -->
+<footer style="background: #0f1b2d; color: #c9d6ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 48px 24px; display: flex; flex-wrap: wrap; gap: 40px; justify-content: space-between;">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1 1 260px; min-width: 0;">
+<span style="display: flex; align-items: center; gap: 10px;"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#0f1b2d" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#0f1b2d" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#0f1b2d" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ff7a45"></circle></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 20px; color: #ffffff;"><b style="font-weight: 700;">Traverse</b> <span style="font-weight: 500;">Platforms</span></span></span>
+<span style="font-size: 14px; line-height: 21px; max-width: 34ch;">The sales platform for doors, phones and the office.</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+<b style="color: #ffffff; font-size: 14px;">Editions</b>
+<a href="editions/?e=roofing" style="color: #c9d6ea; text-decoration: none;">TraverseRoofing</a>
+<a href="editions/?e=yards" style="color: #c9d6ea; text-decoration: none;">TraverseYards</a>
+<a href="editions/?e=solar" style="color: #c9d6ea; text-decoration: none;">TraverseSolar</a>
+<a href="editions/?e=pest" style="color: #c9d6ea; text-decoration: none;">TraversePest</a>
+<a href="editions/?e=security" style="color: #c9d6ea; text-decoration: none;">TraverseSecurity</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+<b style="color: #ffffff; font-size: 14px;">Company</b>
+<a href="#product" style="color: #c9d6ea; text-decoration: none;">Product</a>
+<a href="#pricing" style="color: #c9d6ea; text-decoration: none;">Pricing</a>
+<a href="#trades" style="color: #c9d6ea; text-decoration: none;">Sign in</a>
+<span>[Contact email]</span>
+</div>
+</div>
+<div style="max-width: 1200px; margin: 0 auto; padding: 16px 24px 32px; border-top: 1px solid #263243; font-size: 13px;">© 2026 Traverse Platforms</div>
+</footer>
+
+</div>
+<script>
+(function () {
+  var b = document.querySelector('.navtoggle'), n = document.getElementById('mainnav'); if (!b || !n) return;
+  function isOpen() { return n.classList.contains('open'); }
+  function set(open) { n.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }
+  b.addEventListener('click', function () { set(!isOpen()); });
+  n.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a')) set(false); });
+  // Escape closes it and puts the focus back on the button; a tap anywhere outside the header closes it
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) { set(false); b.focus(); } });
+  document.addEventListener('click', function (e) { if (isOpen() && !(e.target.closest && e.target.closest('header'))) set(false); });
+})();
+</script>
+<script>
+(function () {
+  // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
+  // to jump back to. A link that arrives with one from elsewhere still goes there, once.
+  var root = document.documentElement;
+  var navType = (function () {
+    try { var en = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]; if (en && en.type) return en.type; } catch (e) {}
+    try { return ['navigate', 'reload', 'back_forward'][performance.navigation.type] || 'navigate'; } catch (e) { return 'navigate'; }
+  })();
+  // an instant jump whatever the browser makes of behavior:'instant': the smooth scrolling is switched off around it
+  function jump(fn) { var was = root.style.scrollBehavior; root.style.scrollBehavior = 'auto'; try { fn(); } finally { root.style.scrollBehavior = was; } }
+  function top() { jump(function () { window.scrollTo(0, 0); }); }
+  function untag() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  if (location.hash && navType === 'navigate') {
+    // arrived from elsewhere with a #section: go there once the page has its fonts and sizes, then tidy the address
+    window.addEventListener('load', function () { setTimeout(function () {
+      var t = document.getElementById(location.hash.slice(1)); if (t) jump(function () { t.scrollIntoView(true); });
+      untag();
+    }, 0); });
+  } else { if (location.hash) untag(); top(); }
+  window.addEventListener('pageshow', function (e) { if (e.persisted) top(); });
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href').slice(1), t = id && document.getElementById(id); if (!t) return;
+    e.preventDefault();
+    var how = root.classList.contains('anim') ? 'smooth' : 'auto';
+    if (id === 'top') window.scrollTo({ top: 0, behavior: how }); else t.scrollIntoView({ behavior: how, block: 'start' });
+    // the keyboard carries on from the section, not from the link
+    if (id !== 'top') { t.tabIndex = -1; try { t.focus({ preventScroll: true }); } catch (err) { t.focus(); } }
+  });
+
+  if (!root.classList.contains('anim')) return;
+  var all = [];
+  function tag(list, cls, step, start) {
+    Array.prototype.forEach.call(list, function (el, i) {
+      el.classList.add('rv'); if (cls) el.classList.add(cls);
+      el.style.setProperty('--d', ((start || 0) + i * (step || 0)).toFixed(2) + 's'); all.push(el);
+    });
+  }
+  function $(s) { return document.querySelectorAll(s); }
+  try {
+    // the hero
+    tag($('#top > div:first-child > *'), '', 0.09);
+    var vis = document.querySelector('#top > div:last-child');
+    if (vis) {
+      var map = vis.firstElementChild, card = vis.lastElementChild, svg = map && map.querySelector('svg');
+      if (svg) {
+        Array.prototype.forEach.call(svg.querySelectorAll('circle[r="7"]'), function (c, i) { c.classList.add('hero-door'); c.style.setProperty('--d', (0.05 + i * 0.035).toFixed(2) + 's'); });
+        var route = svg.querySelector('polyline');
+        if (route && route.getTotalLength) { var len = route.getTotalLength(); route.classList.add('hero-route'); route.style.strokeDasharray = len; route.style.strokeDashoffset = len; }
+        var stops = svg.querySelectorAll('circle:not([r="7"])');
+        Array.prototype.forEach.call(stops, function (c, i) { c.classList.add('hero-stop'); c.style.setProperty('--d', ([0.35, 0.95, 1.35, 1.85][i] || (0.35 + i * 0.5)) + 's'); });
+        var last = stops[stops.length - 1];
+        if (last) { var p = last.cloneNode(); p.setAttribute('class', 'hero-ping'); p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#d6400c'); p.setAttribute('stroke-width', '4'); p.removeAttribute('style'); last.parentNode.insertBefore(p, last); }
+        map.classList.add('hero-map');
+      }
+      if (map) tag([map], 'rv-pop', 0, 0.05);
+      if (card && card !== map) tag([card], '', 0, 1.9);
+    }
+    // the rest of the page, as each part comes into view
+    Array.prototype.forEach.call($('section h2'), function (h) { if (!h.closest('#top') && h.parentElement.tagName !== 'SECTION') tag([h.parentElement]); });
+    tag($('.dayphone'), 'rv-pop', 0, 0.1);
+    tag($('.daycol-l .dayitem'), 'rv-l', 0.15, 0.25);
+    tag($('.daycol-r .dayitem'), 'rv-r', 0.15, 0.25);
+    tag($('.eds > div'), '', 0.08);
+    var trav = document.querySelector('.trav'); if (trav) { trav.classList.add('rv-wrap'); all.push(trav); }
+    var wide = window.matchMedia('(min-width: 1001px)').matches;
+    tag($('.trav-st'), '', wide ? 0.38 : 0.12, wide ? 0.25 : 0);
+    tag($('.conds > div'), '', 0.12);
+    tag($('.featstrip'), '', 0, 0.1);
+    var plans = document.querySelectorAll('#pricing [style*="minmax(270px"] > div');
+    Array.prototype.forEach.call(plans, function (d) { d.classList.add('plan'); });
+    tag(plans, '', 0.1);
+    tag($('#demo > *'), '', 0.08);
+  } catch (err) { all.forEach(function (el) { el.classList.add('in'); }); root.classList.remove('anim'); return; }
+
+  function show(el) {
+    el.classList.add('in');
+    if (el.classList.contains('hero-map')) el.classList.add('go');
+  }
+  if (!('IntersectionObserver' in window)) { all.forEach(show); return; }
+  // a part shows once 12% of it is in view, or once it fills a third of a short screen (a tall part on a phone held
+  // sideways might never reach 12%, and would stay hidden)
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var tall = en.intersectionRect && en.intersectionRect.height >= (window.innerHeight || 0) / 3;
+      if (en.intersectionRatio >= 0.12 || tall) { show(en.target); io.unobserve(en.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: [0, 0.12] });
+  all.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

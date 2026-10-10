@@ -1,0 +1,6 @@
+# traverseplatforms.com (2026-10-09). Out of search until Matthew opens it (sample pricing, placeholder contact).
+# Not cached by SiteGround's Dynamic Cache, so an upload shows at once.
+<IfModule mod_headers.c>
+Header set X-Robots-Tag "noindex, nofollow"
+Header set Cache-Control "private, no-cache"
+</IfModule>
