@@ -16,9 +16,12 @@ const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 /* Pikes Peak permits for all of El Paso County, and for the City of Woodland Park (2026-10-07) */
 const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain', 'woodland-park'];
 const DOUGLAS = ['highlands-ranch', 'sedalia', 'franktown', 'larkspur'];
+/* towns that sent their own permit report (2026-10-10, Matthew's records requests), matched on the street address like Douglas.
+   Thornton labels re-roofs only from 2025 and solar from 2023, so a missing re-roof proves nothing there (PARTIAL). */
+const CITY = { thornton: { file: 'thornton-permits.json', src: 'City of Thornton building division' } };
 /* towns whose list reaches past the department's area: Woodland Park's runs into unincorporated Teller County (its own building
    department), and Larkspur is its own town. There a missing permit proves nothing, so the card never says "no permit" (full: false). */
-const PARTIAL = new Set(['woodland-park', 'larkspur']);
+const PARTIAL = new Set(['woodland-park', 'larkspur', 'thornton']);
 const SRC = { pprbd: 'Pikes Peak Regional Building Department', douglas: 'Douglas County building division' };
 
 function parseCSV(s) {
@@ -50,10 +53,11 @@ function summary(list) {
 
 const pp = index('pprbd-permits.json', (p) => p), dg = index('douglas-permits.json', (p) => p);
 let tot = 0, hit = 0; const cover = {};   /* permit-index.json: which towns are covered, by whom, since and through when */
-for (const town of [...EL_PASO, ...DOUGLAS]) {
+const cityIdx = {}; for (const [t, c] of Object.entries(CITY)) if (existsSync(join(HERE, c.file))) cityIdx[t] = index(c.file, (p) => p);
+for (const town of [...EL_PASO, ...DOUGLAS, ...Object.keys(CITY)]) {
   const doorF = join(DATA, `${town}.json`), csvF = join(DT, `${town}.csv`);
   if (!existsSync(doorF)) { console.log(`  ${town}: no door file`); continue; }
-  const isEP = EL_PASO.includes(town), idx = isEP ? pp : dg;
+  const isEP = EL_PASO.includes(town), idx = CITY[town] ? (cityIdx[town] || {}) : isEP ? pp : dg;
   if (!idx.meta) { console.log(`  ${town}: no permits pulled`); continue; }
   let parcelOf = null;
   if (isEP) {
@@ -69,9 +73,9 @@ for (const town of [...EL_PASO, ...DOUGLAS]) {
     const s = summary(list); if (!s) continue;
     doors[x.id] = s; k++; if (s.r) nr++; if (s.s && !s.so) ns++;
   }
-  writeFileSync(join(DATA, `permit-${town}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), source: isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through, doors }));
+  writeFileSync(join(DATA, `permit-${town}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), source: CITY[town] ? CITY[town].src : isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through, doors }));
   console.log(`  permit-${town}.json: ${k} of ${n} doors have a permit (${nr} re-roofed since ${idx.meta.since.slice(0, 4)}, ${ns} with solar)`);
-  cover[town] = { src: isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through, full: !PARTIAL.has(town) };
+  cover[town] = { src: CITY[town] ? CITY[town].src : isEP ? SRC.pprbd : SRC.douglas, since: idx.meta.since, through: idx.meta.through, full: !PARTIAL.has(town) };
   tot += n; hit += k;
 }
 writeFileSync(join(DATA, 'permit-index.json'), JSON.stringify(cover));
