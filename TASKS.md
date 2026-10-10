@@ -944,6 +944,9 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       free, auto-renew on) and a **SiteGround GrowBig** account ($4.99/mo first year, then $29.99/mo — look at it before
       the year ends). Nameservers on SiteGround, Let's Encrypt + HTTPS Enforce on, homepage and editions page live (still
       noindex: sample pricing, placeholder contact email). The .app edition domains are not bought.
+- [ ] **TR-5 — More export options (someday, not now).** Matthew 2026-10-09: SalesRabbit exports into more platforms than
+      Traverse does. Today Traverse has JobNimbus (live send + CSV) and a Jobber CSV; AccuLynx waits on their reply (TR-2).
+      Look at which CRMs roofers, solar and pest companies actually use before adding any.
 - [x] **TR-4 — Move all six apps to the Traverse hosting** ✅ **Done 2026-10-09:** all six live on traverseplatforms.com, crons moved, everything app-related deleted from Sixfold (its website + secrets.php remain), Sixfold SSH key deleted; the app is the only lead intake for now (the website form just emails). Original note: (Sixfold + the five editions, same folder names on
       traverseplatforms.com). **In progress 2026-10-09:** data and apps copying over SSH. Left: check, set each install's
       address, test, then the switch-over with you — final top-up copy, redirects from the old addresses, the five
