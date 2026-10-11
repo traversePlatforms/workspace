@@ -988,6 +988,13 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       takes days to weeks); then keys in `<install>-private/sms-config.php` (shape: api/sms-config.example.php), the number's
       webhook set to the install's `?action=smsin`, and `features.sms: true` in that install's company.json. Cost per text and
       the 10DLC fees: not checked yet (Twilio's pricing page). TCPA/state rules stay each company's responsibility.
+- [~] **TR-15 — Sell outside Colorado: the metro builder.** ✅ Built 2026-10-11 (commit ac88760): `node build-metro.mjs <metro>` from
+      `traverse/data-pipeline/door-territory/metros/<metro>.json` (towns + where each county publishes parcels). First market **Dallas–Fort Worth**
+      (Collin CAD, homestead = owner-occupied): McKinney 49,874 · Plano 54,120 · Frisco Collin side 26,090 homes, with value, year built,
+      house size, wildfire, hail, wind, FEMA risk, census. **Not yet for metros:** laser-scan roof size/pitch and solar (no public USGS
+      survey reaches Collin County yet), aerial photo / outline / roof material, lawn and trees, permits, crime. **Not in any edition yet:**
+      a DFW install needs "dfw" in its company.json townGroups, a Collin County name in the app, and a hosting decision (Matthew).
+      Denton County (rest of Frisco) is one more source in the config.
 - [ ] **TR-14 — Review the first walkthrough video and the two computer voices (Matthew).** Made 2026-10-11, all in
       traverse/videos/roofing-crew-phone/: `roofing-crew-phone.mp4` (TraverseRoofing, a crew member's day, phone, 2:42,
       captions only), `-voice-joe.mp4` (free male voice) and `-voice-kristin.mp4` (free female voice), plus the
