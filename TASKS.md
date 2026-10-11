@@ -994,11 +994,12 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       house size, wildfire, hail, wind, FEMA risk, census. **Not yet for metros:** laser-scan roof size/pitch and solar (no public USGS
       survey reaches Collin County yet), aerial photo / outline / roof material, lawn and trees, permits, crime. **Not in any edition yet:**
       a DFW install needs "dfw" in its company.json townGroups, a Collin County name in the app, and a hosting decision (Matthew).
-      Denton County (rest of Frisco) is one more source in the config.
+      Denton County (rest of Frisco) is one more source in the config. Storm and census steps finished 2026-10-11 (commit 662d274): 24 hail days, 20 wind days since 2020.
 - [x] **TR-16 — Monthly permit refresh.** ✅ 2026-10-11: `traverse/ops/refresh-permits.sh`, Windows task "Traverse permit refresh"
       (1st of the month, 4:10 am, runs when the laptop next wakes). PPRBD, Douglas County and Centennial re-fetched; stops and uploads nothing if
       a source or town shrinks; uploads only changed permit files to Roofing and Solar with backup + md5. Parker/Thornton stay manual (records
-      requests). Log: traverse/ops/logs/permit-refresh.log.
+      requests). Log: traverse/ops/logs/permit-refresh.log. First run 2026-10-11: PPRBD +152, Douglas +45, Centennial −370 (−1.7%),
+      every town within a few doors; 16 files each to Roofing and Solar, md5-checked.
 - [ ] **TR-14 — Review the first walkthrough video and the two computer voices (Matthew).** Made 2026-10-11, all in
       traverse/videos/roofing-crew-phone/: `roofing-crew-phone.mp4` (TraverseRoofing, a crew member's day, phone, 2:42,
       captions only), `-voice-joe.mp4` (free male voice) and `-voice-kristin.mp4` (free female voice), plus the
