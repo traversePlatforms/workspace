@@ -591,12 +591,29 @@
   .teamrow .tv small{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .teamrow .ts{grid-column:1/-1;font-size:12.5px;color:var(--soft)}
   /* leaderboard (SX-53) */
-  .bseg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 12px}
+  .bseg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 12px}
   .bseg button{border:1px solid var(--line);border-radius:12px;min-height:42px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .bseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
   .bcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:5px}
   .bcard .wl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .bcard .bgv{font-size:15px;font-weight:700}
+  /* the sales funnel (2026-10-10) */
+  .fnl{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 2px}
+  .fst{display:flex;flex-direction:column;gap:1px;padding:8px 6px;border-radius:12px;background:var(--sunk);text-align:center;min-width:0}
+  .fst b{font:800 20px var(--sans);font-variant-numeric:tabular-nums}
+  .fst span{font-size:12px;font-weight:700}
+  .fst small{font-size:11px;color:var(--soft)}
+  /* voice notes (2026-10-10) */
+  .mic{align-self:flex-start;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;margin:4px 0}
+  .mic.on{background:var(--later);border-color:var(--later);color:#fff}
+  .srbtn{display:block;margin-top:4px;text-align:left}
+  .fst.fval b{color:var(--go)}
+  .fwrap{overflow-x:auto;margin-top:6px}
+  .ftab{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+  .ftab th{font-size:11px;font-weight:700;color:var(--soft);text-align:right;padding:4px 6px;white-space:nowrap}
+  .ftab td{text-align:right;padding:6px;border-top:1px solid var(--line);white-space:nowrap}
+  .ftab th:first-child,.ftab td:first-child{text-align:left;white-space:normal}
+  @media (max-width:520px){.fnl{grid-template-columns:repeat(3,1fr)}.fst b{font-size:18px}.ftab{font-size:12.5px}.ftab th,.ftab td{padding:5px 3px}}
   .bcard .lnk{align-self:flex-start;background:none;border:0;padding:4px 0 0;color:var(--accent);font:700 13px var(--sans);cursor:pointer}
   .bgf{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
   .bgf label{display:grid;gap:4px;font-size:12.5px;font-weight:700;color:var(--soft)}
@@ -3638,7 +3655,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      only while it is tested (Matthew, 2026-10-04); the server's BOARD_OPEN shows it to the crew.
      Ranked by quotes booked, then people talked to, then doors. Won = jobs won on doors that
      person booked. The goal is one daily target per person for the whole team. */
-  var BOARD_PER = [['today', 'Today'], ['week', '7 days'], ['month', '30 days']];
+  var BOARD_PER = [['today', 'Today'], ['week', '7 days'], ['month', '30 days'], ['quarter', '90 days']];
   function boardView() {
     hideToast(); S.signin = null; S.screen = 'board';
     foot.hidden = true; setDock(null);
@@ -3661,6 +3678,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     holder.appendChild(seg);
     holder.appendChild(goalCard(holder));
+    if (S.role === 'admin' || S.role === 'manager') holder.appendChild(funnelCard((j.people || []).filter(function (r) { return r[per] && (r[per].doors || r[per].won); }), per));
     var g = j.goals || {};
     var rows = (j.people || []).filter(function (r) { return r[per].doors || r[per].won; })
       .sort(function (a, b) { return b[per].booked - a[per].booked || b[per].talked - a[per].talked || b[per].doors - a[per].doors || (a.name < b.name ? -1 : 1); });
@@ -3693,6 +3711,37 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     holder.appendChild(q('div', 'sub2', 'Talked to = doors knocked minus no-answers and no-soliciting. Rate = quotes per person talked to. Test sign-ins are left out.'));
     var tl = q('button', 'tolink', 'Neighbourhoods by person live on the Territories screen →'); tl.type = 'button';
     tl.addEventListener('click', territoriesView); holder.appendChild(tl);
+  }
+  /* the sales funnel (Matthew 2026-10-10): for the period picked, the team's doors → talked to → quotes → won → dollars,
+     each step as a share of the one before, then the same per rep. Admins and managers (a manager's board is their team). */
+  function funnelCard(rows, per) {
+    var box = q('div', 'bcard funnel'), t = { doors: 0, talked: 0, booked: 0, won: 0, value: 0 };
+    box.appendChild(q('div', 'wl', 'Sales funnel'));
+    rows.forEach(function (r) { var c = r[per] || {}; for (var k in t) t[k] += c[k] || 0; });
+    var usd = function (n) { return '$' + Math.round(n || 0).toLocaleString('en-US'); };
+    var steps = [['doors', 'Doors'], ['talked', 'Talked to'], ['booked', 'Quotes'], ['won', 'Won']];
+    var bar = q('div', 'fnl');
+    steps.forEach(function (st, i) {
+      var cell = q('div', 'fst'); cell.appendChild(q('b', null, String(t[st[0]]))); cell.appendChild(q('span', null, st[1]));
+      cell.appendChild(q('small', null, i ? rate(t[st[0]], t[steps[i - 1][0]]) + ' of ' + steps[i - 1][1].toLowerCase() : '\u00a0'));
+      bar.appendChild(cell);
+    });
+    var val = q('div', 'fst fval'); val.appendChild(q('b', null, usd(t.value))); val.appendChild(q('span', null, 'Won'));
+    val.appendChild(q('small', null, t.won ? usd(t.value / t.won) + ' a job' : '\u00a0'));
+    bar.appendChild(val); box.appendChild(bar);
+    if (rows.length) {
+      var wrap = q('div', 'fwrap'), tb = q('table', 'ftab'), hd = q('tr');
+      ['Rep', 'Doors', 'Talked', 'Quotes', 'Won', '$', 'Close'].forEach(function (h) { hd.appendChild(q('th', null, h)); });
+      tb.appendChild(hd);
+      rows.slice().sort(function (a, b) { return (b[per].value || 0) - (a[per].value || 0) || b[per].booked - a[per].booked || (a.name < b.name ? -1 : 1); }).forEach(function (r) {
+        var c = r[per], tr = q('tr');
+        [r.name, c.doors, c.talked, c.booked, c.won, usd(c.value), rate(c.won, c.booked)].forEach(function (v) { tr.appendChild(q('td', null, String(v))); });
+        tb.appendChild(tr);
+      });
+      wrap.appendChild(tb); box.appendChild(wrap);
+    }
+    box.appendChild(q('div', 'sub2', 'Each step is a share of the one before. Close = jobs won per quote. Won and dollars count jobs marked won on doors that rep booked, on the day they were won; dollars only where a job value was entered.'));
+    return box;
   }
   function goalCard(holder) {
     var g = S.board.goals || {}, box = q('div', 'bcard');
@@ -3983,6 +4032,33 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.editNote = null; renderDoors(); return true;
     });
   }
+  /* voice notes (Matthew 2026-10-10): speak the note instead of typing it with gloves on. The browser's own speech-to-text
+     (Chrome, Edge, Safari); the button only shows where the browser has it. Words go on the end of what is already typed. */
+  function micButton(ta, after) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    var b = q('button', 'mic', 'Speak the note'), on = null; b.type = 'button';
+    b.addEventListener('click', function () {
+      if (on) { try { on.stop(); } catch (e) {} return; }
+      var r = new SR(); r.lang = 'en-US'; r.interimResults = false; r.continuous = false; r.maxAlternatives = 1;
+      r.onresult = function (e) {
+        var t = ''; for (var i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) t += e.results[i][0].transcript;
+        t = t.trim(); if (!t) return;
+        t = t.charAt(0).toUpperCase() + t.slice(1);
+        var cur = ta.value.replace(/\s+$/, '');
+        var joined = cur ? cur + (/[.!?]$/.test(cur) ? ' ' : '. ') + t : t;
+        ta.value = joined.slice(0, ta.maxLength > 0 ? ta.maxLength : 2000);
+        if (after) after();
+      };
+      r.onerror = function (e) {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Microphone blocked', 'Allow the microphone for this site in the browser settings, then try again.', null);
+        else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Could not hear that', 'Try again, or type the note.', null);
+      };
+      r.onend = function () { on = null; b.classList.remove('on'); b.textContent = 'Speak the note'; };
+      try { r.start(); on = r; b.classList.add('on'); b.textContent = 'Listening\u2026 tap to stop'; } catch (e) { on = null; }
+    });
+    return b;
+  }
   function noteBlock(d) {
     var box = q('div', 'nt');
     if (S.editNote === d.id) {
@@ -3994,7 +4070,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       lb.appendChild(ta); f.appendChild(lb);
       var cnt = q('div', 'cnt');
       function upd() { cnt.textContent = (500 - ta.value.length) + ' characters left'; }
-      ta.addEventListener('input', upd); upd(); f.appendChild(cnt);
+      ta.addEventListener('input', upd); upd();
+      var mic = micButton(ta, upd); if (mic) f.appendChild(mic);
+      f.appendChild(cnt);
       var err = q('div', 'err'); f.appendChild(err);
       var row = q('div', 'row');
       var sv = q('button', 'save', 'Save'); sv.type = 'button';
@@ -8319,6 +8397,71 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      promise a size on a roof. */
   function hailDay(iso) { var p = iso.split('-'); return +p[2] + ' ' + MONTHS[+p[1] - 1] + ' ' + p[0]; }
   function inch(v) { return (Math.round(v * 100) / 100).toFixed(2).replace(/0$/, '') + ' in'; }
+  /* the storm report (Matthew 2026-10-10): one page per house for the homeowner or the adjuster, opened in its own tab to
+     print or save as PDF. Every number is one the card already has: radar hail at the address, wind reports nearby, the roof,
+     its age and material, the last re-roof permit. Built from elements and text only (no HTML strings). */
+  function stormReport(d) {
+    var capFirst = function (x) { x = String(x || '').toLowerCase(); return x.charAt(0).toUpperCase() + x.slice(1); };
+    var w = window.open('', '_blank');
+    if (!w) { toast('Pop-up blocked', 'Allow pop-ups for this site to open the report.', null); return; }
+    var doc = w.document, el = function (tag, text, cls) { var x = doc.createElement(tag); if (text != null) x.textContent = text; if (cls) x.className = cls; return x; };
+    var town = ((S.regions || []).filter(function (r) { return r.key === S.region; })[0] || {}).label || '';
+    var now = new Date(), stamp = now.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Denver' });
+    doc.title = 'Storm report \u2014 ' + d.address;
+    var css = el('style', [
+      'body{font:15px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1b2533;background:#fff;max-width:760px;margin:0 auto;padding:28px 22px}',
+      'h1{font-size:24px;margin:0}h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:#4a5668;margin:22px 0 6px;border-top:1px solid #dfe4ea;padding-top:14px}',
+      '.co{font-weight:700;color:#4a5668}.addr{font-size:19px;font-weight:700;margin:6px 0 2px}.meta{color:#4a5668;font-size:13px}',
+      'table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e6eaef}th{font-size:12px;color:#4a5668}',
+      '.big{font-weight:800}.kv{display:grid;grid-template-columns:180px 1fr;gap:4px 12px}.kv b{color:#4a5668;font-weight:600}',
+      '.note{font-size:12px;color:#4a5668;margin-top:22px;border-top:1px solid #dfe4ea;padding-top:12px}',
+      '.bar{display:flex;gap:8px;margin-bottom:18px}.bar button{font:700 14px inherit;padding:10px 16px;border-radius:10px;border:1px solid #1b2533;background:#1b2533;color:#fff;cursor:pointer}.bar button+button{background:#fff;color:#1b2533}',
+      '@media print{.bar{display:none}body{padding:0}}'
+    ].join(''));
+    doc.head.appendChild(css);
+    var b = doc.body, bar = el('div', null, 'bar');
+    var pr = el('button', 'Print or save as PDF'); pr.addEventListener('click', function () { w.print(); }); bar.appendChild(pr);
+    var cl = el('button', 'Close'); cl.addEventListener('click', function () { w.close(); }); bar.appendChild(cl);
+    b.appendChild(bar);
+    if (CO && CO.name) b.appendChild(el('div', CO.name, 'co'));
+    b.appendChild(el('h1', 'Storm report'));
+    b.appendChild(el('div', d.address + (town ? ', ' + town : ''), 'addr'));
+    b.appendChild(el('div', 'Prepared ' + stamp + (S.name ? ' by ' + S.name : ''), 'meta'));
+
+    var hail = (d.hail || []).slice().sort(function (x, y) { return x[0] < y[0] ? 1 : -1; });
+    b.appendChild(el('h2', 'Hail at this address'));
+    if (hail.length) {
+      var big = hail.reduce(function (m, x) { return x[1] > m[1] ? x : m; }, hail[0]);
+      b.appendChild(el('p', 'Largest: ' + inch(big[1]) + ' on ' + hailDay(big[0]) + '. ' + hail.length + (hail.length === 1 ? ' storm day' : ' storm days') + ' with hail at the address in the period on record.'));
+      var ht = el('table'), hh = el('tr'); hh.appendChild(el('th', 'Date')); hh.appendChild(el('th', 'Largest hail (radar estimate)')); ht.appendChild(hh);
+      hail.forEach(function (h) { var tr = el('tr'); tr.appendChild(el('td', hailDay(h[0]))); tr.appendChild(el('td', inch(h[1]), h === big ? 'big' : null)); ht.appendChild(tr); });
+      b.appendChild(ht);
+    } else b.appendChild(el('p', 'No hail on record at this address.'));
+
+    var wind = (d.wind || []).filter(function (r) { return Array.isArray(r); });
+    if (wind.length) {
+      b.appendChild(el('h2', 'Wind reports nearby'));
+      var wt = el('table'), wh = el('tr'); ['Date', 'Gust', 'Report', 'Distance'].forEach(function (x) { wh.appendChild(el('th', x)); }); wt.appendChild(wh);
+      wind.slice().sort(function (x, y) { return x[0] < y[0] ? 1 : -1; }).forEach(function (r) {
+        var tr = el('tr'); tr.appendChild(el('td', hailDay(r[0]))); tr.appendChild(el('td', r[1] ? r[1] + ' mph' : '\u2014'));
+        tr.appendChild(el('td', r[2] || '')); tr.appendChild(el('td', r[3] != null ? r[3] + ' mi' : '')); wt.appendChild(tr);
+      });
+      b.appendChild(wt);
+    }
+
+    var kv = [];
+    if (d.roof && d.roof.sq) kv.push(['Roof area', Number(d.roof.sq).toLocaleString('en-US') + ' sq ft' + (d.roof.sqs ? ' (' + d.roof.sqs + ' squares)' : '')]);
+    if (d.roof && (d.roof.pitch || d.roof.flat)) kv.push(['Pitch', d.roof.flat ? 'Low slope' : d.roof.pitch + '/12']);
+    if (d.bld && d.bld.yb) kv.push(['Year built', String(d.bld.yb) + (d.bld.rm ? ' (remodelled ' + d.bld.rm + ')' : '')]);
+    var mt = d.matfix ? (MAT_NAME[d.matfix.m] || d.matfix.m) + ' (seen on site)' : d.bld && d.bld.mat ? capFirst(d.bld.mat) + ' (county record)' : d.mat && d.mat.src === 'imagery' ? (MAT_NAME[d.mat.m] || d.mat.m) + ' (from aerial photos)' : null;
+    if (mt) kv.push(['Roof material', mt]);
+    if (d.permit && d.permit.r) kv.push(['Last re-roof permit', d.permit.r]);
+    if (kv.length) {
+      b.appendChild(el('h2', 'The roof'));
+      var g = el('div', null, 'kv'); kv.forEach(function (p) { g.appendChild(el('b', p[0])); g.appendChild(el('span', p[1])); }); b.appendChild(g);
+    }
+    b.appendChild(el('div', 'Hail sizes are NOAA radar estimates of the largest hail in the square kilometre around the address (MRMS maximum estimated size of hail), not measurements on the roof. Wind reports are National Weather Service storm reports, with their distance from the address. Roof size and pitch are measured from public laser-scan surveys; year built and material come from county records or aerial photos where the county records none. This report is not a damage inspection.', 'note'));
+  }
   function hailBlock(d) {
     var b = q('div', 'hailx'); b.appendChild(ico('hail', 2.2));
     var t = q('span'); t.appendChild(q('small', null, 'Hail near the house (radar estimate)'));
@@ -8331,7 +8474,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     if (d.hail.length > 3) rest.appendChild(document.createTextNode(' · ' + (d.hail.length - 3) + ' more'));
     if (rest.childNodes.length) line.appendChild(rest);
-    t.appendChild(line); b.appendChild(t);
+    t.appendChild(line);
+    var sr = q('button', 'tolink srbtn fkeep', 'Storm report for this house'); sr.type = 'button';
+    sr.addEventListener('click', function (e) { e.stopPropagation(); stormReport(d); });
+    t.appendChild(sr); b.appendChild(t);
     return b;
   }
   /* commercial test buildings (2026-10-05, admin-only towns): what the building is, how big the roof is, and the closest public

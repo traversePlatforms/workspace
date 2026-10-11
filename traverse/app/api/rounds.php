@@ -3730,18 +3730,19 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     }
 }
 
-/* the board: per person, today / 7 days / 30 days. Talked to = doors minus no-answers and
-   no-soliciting. Won = jobs won on doors that person booked, credited when the job was won. */
+/* the board: per person, today / 7 days / 30 days / 90 days. Talked to = doors minus no-answers and
+   no-soliciting. Won = jobs won on doors that person booked, credited when the job was won; value = their
+   dollar amounts (the sales funnel, 2026-10-10). */
 if ($action === 'board') {
     if (!boardOpen($role)) fail('Not allowed.', 403);
     $tz = new DateTimeZone('America/Denver');
     $today = (new DateTime('today', $tz));
-    $from = ['today' => $today->format('Y-m-d'), 'week' => (clone $today)->modify('-6 days')->format('Y-m-d'), 'month' => (clone $today)->modify('-29 days')->format('Y-m-d')];
-    $zero = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'won' => 0];
+    $from = ['today' => $today->format('Y-m-d'), 'week' => (clone $today)->modify('-6 days')->format('Y-m-d'), 'month' => (clone $today)->modify('-29 days')->format('Y-m-d'), 'quarter' => (clone $today)->modify('-89 days')->format('Y-m-d')];
+    $zero = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'won' => 0, 'value' => 0];
     $rows = [];
-    foreach (teamDays(30, '') as $p) {
+    foreach (teamDays(90, '') as $p) {
         if (boardHidden($p['name'])) continue;
-        $r = ['name' => $p['name'], 'today' => $zero, 'week' => $zero, 'month' => $zero];
+        $r = ['name' => $p['name'], 'today' => $zero, 'week' => $zero, 'month' => $zero, 'quarter' => $zero];
         foreach ($p['days'] as $d) foreach ($from as $per => $since) {
             if ($d['date'] < $since) continue;
             $r[$per]['doors'] += $d['doors'];
@@ -3764,8 +3765,8 @@ if ($action === 'board') {
                 if (!$m || $m['outcome'] !== 'booked' || !$x || ($x['result'] ?? '') !== 'won' || (int) $x['at'] < (int) $m['at']) continue;
                 $who = (string) ($m['by'] ?? ''); if ($who === '' || boardHidden($who)) continue;
                 $day = (new DateTime('@' . (int) $x['at']))->setTimezone($tz)->format('Y-m-d');
-                if (!isset($rows[$who])) $rows[$who] = ['name' => $who, 'today' => $zero, 'week' => $zero, 'month' => $zero];
-                foreach ($from as $per => $since) if ($day >= $since) $rows[$who][$per]['won']++;
+                if (!isset($rows[$who])) $rows[$who] = ['name' => $who, 'today' => $zero, 'week' => $zero, 'month' => $zero, 'quarter' => $zero];
+                foreach ($from as $per => $since) if ($day >= $since) { $rows[$who][$per]['won']++; $rows[$who][$per]['value'] += (int) ($x['value'] ?? 0); }
             }
             if (isset($assign[$a['name']])) $terr[] = ['region' => $rg['key'], 'town' => $rg['label'], 'area' => $a['name'], 'who' => $assign[$a['name']], 'total' => $total, 'knocked' => $knocked];
         }
