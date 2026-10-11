@@ -20,6 +20,7 @@ LOGD="$REPO/traverse/ops/logs"; mkdir -p "$LOGD"
 LOG="$LOGD/permit-refresh.log"; OUT="$LOGD/permit-refresh-last.out"
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 UPLOAD=1; [ "${1:-}" = "--no-upload" ] && UPLOAD=0
+ONLYUP=0; [ "${1:-}" = "--upload-only" ] && ONLYUP=1   # send what the last run built (it must be less than a day old)
 STAMP=$(date +%Y-%m-%d)
 LOCK="$LOGD/permit-refresh.lock"
 if ! mkdir "$LOCK" 2>/dev/null; then echo "$STAMP skipped: another run holds the lock" >> "$LOG"; exit 0; fi
@@ -35,6 +36,11 @@ count() { node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1]
 for f in pprbd douglas centennial; do cp "$P/$f-permits.json" "$SAVE/" 2>/dev/null; eval "BEFORE_$f=$(count "$P/$f-permits.json")"; done
 for f in "$DATA"/permit-*.json; do cp "$f" "$SAVE/app-$(basename "$f")"; done
 
+if [ $ONLYUP = 1 ]; then
+  fresh=$(find "$ED/dist" -path '*-data/rounds/permit-index.json' -mmin -1440 2>/dev/null | head -1)
+  [ -n "$fresh" ] || fail "--upload-only: no permit files built in the last day; run without it"
+  say "upload only: using the permit files built $(date -r "$fresh" '+%Y-%m-%d %H:%M')"
+else
 # 1. fetch
 cd "$P" || fail "no permits folder"
 for f in pprbd douglas centennial; do
@@ -57,6 +63,7 @@ done
 # 3. the editions (their permit files are packed per install)
 say "build-editions"
 cd "$ED" && node build-editions.cjs > "$LOGD/permit-refresh-editions.out" 2>&1 || fail "build-editions.cjs failed (see permit-refresh-editions.out)"
+fi
 
 # 4. upload what changed, install by install
 TOTAL=0
