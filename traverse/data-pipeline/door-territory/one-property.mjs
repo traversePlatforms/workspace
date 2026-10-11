@@ -91,5 +91,5 @@ const town = { key: A.key, label: A.label, built, admin: true, areas: [{ name: A
 writeFileSync(join(OUT, `${A.key}.json`), JSON.stringify(town));
 if (naip) writeFileSync(join(OUT, `naip-${A.key}.json`), JSON.stringify({ source: 'USDA NAIP 2023 via Microsoft Planetary Computer', built, doors: { [id]: naip } }));
 writeFileSync(join(OUT, `wind-${A.key}.json`), JSON.stringify({ source: 'NWS Local Storm Reports (Iowa Environmental Mesonet archive)', radiusMi: 10, minMph: 50, built, from: '2020-01-01', through: built, keep: 10, cap: 10, capped: 0, format: 'date|mph|kind|miles', doors: wind.length ? { [id]: wind } : {} }));
-writeFileSync(join(OUT, 'index-entry.json'), JSON.stringify({ key: A.key, label: A.label, c: [+lat.toFixed(4), +lon.toFixed(4)], areas: 1, doors: 1, admin: true }));
+writeFileSync(join(OUT, 'index-entry.json'), JSON.stringify({ key: A.key, label: A.label, c: [+lat.toFixed(4), +lon.toFixed(4)], areas: 1, doors: 1, admin: true, ...(A.county ? { county: A.county } : {}) }));   /* --county park: the app's county heading */
 log('written to', OUT);
