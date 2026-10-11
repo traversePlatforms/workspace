@@ -70,7 +70,11 @@ async function adams() {
 /* Boulder: parcel -> the largest building's facts. Buildings.csv is by account (strap); Account_Parcels.csv joins strap to the
    12-digit parcel number. EffectiveYear is an appraisal age, not a remodel date, so it is not used as one. */
 async function boulder() {
-  const csvRow = (l) => l.replace(/^"|"\s*$/g, '').split('","');
+  /* one CSV line: quoted and bare fields both occur (empty ones are bare: ,,,) */
+  const csvRow = (l) => { const o = []; let f = '', q = false; for (let i = 0; i < l.length; i++) { const ch = l[i];
+    if (q) { if (ch === '"') { if (l[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { o.push(f); f = ''; } else if (ch !== '\r') f += ch; }
+    o.push(f); return o; };
   const best = new Map(); let h = null;
   await lines(join(RAW, 'boulder', 'Buildings.csv'), (l) => {
     const c = csvRow(l); if (!h) { h = c; return; }
