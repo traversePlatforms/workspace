@@ -11,7 +11,7 @@
  * Writes cache/houses-<town>.json: { id: { c: [lat, lon], ext: m, ring: [[lat, lon], ...], how } }
  *   how: 'lot' (outline inside the lot), 'near' (nearest large outline), 'none' (no outline; parcel point used)
  * Only id, lat and lon are read from the door files. Nothing else from them is copied anywhere.
- *   node houses.mjs [--town=castle-rock]                                                                  */
+ *   node houses.mjs [--town=castle-rock] [--redo]                                                                  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,7 +32,7 @@ const bboxOf = (pts) => [Math.min(...pts.map((p) => p[0])), Math.min(...pts.map(
 for (const town of TOWNS) {
   if (ONLY && town !== ONLY) continue;
   const out = join(CACHE, `houses-${town}.json`);
-  if (existsSync(out)) { console.log(`${town}: have it`); continue; }
+  if (existsSync(out) && !process.argv.includes('--redo')) { console.log(`${town}: have it`); continue; }   /* --redo: rebuild anyway (2026-10-10: a town that gained doors) */
   const doors = JSON.parse(readFileSync(join(DATA, `${town}.json`), 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.lat === 'number').map((d) => ({ id: d.id, lat: d.lat, lon: d.lon }));
   const lidar = existsSync(join(HERE, '..', `houses-${town}.json`)) ? JSON.parse(readFileSync(join(HERE, '..', `houses-${town}.json`), 'utf8')) : {};
   const lats = doors.map((d) => d.lat), lons = doors.map((d) => d.lon);
