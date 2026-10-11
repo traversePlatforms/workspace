@@ -21,6 +21,7 @@ function minifyPage(html) {
   let scripts = 0, styles = 0;
   html = html.replace(/(<script(?:\s[^>]*)?>)([\s\S]*?)(<\/script>)/g, (m, open, body, close) => {
     if (!body.trim()) return m;
+    if (/type\s*=\s*["']?application\/json/i.test(open)) return m;   /* data (the Spanish dictionary, 2026-10-11), not code */
     const r = terser.minify_sync(body, { ecma: 5, compress: { passes: 2 }, mangle: true, format: { comments: false, ecma: 5 } });
     if (r.error) throw r.error;
     scripts++;
