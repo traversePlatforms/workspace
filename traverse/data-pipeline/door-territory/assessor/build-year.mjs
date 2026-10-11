@@ -25,8 +25,8 @@ const HERE = dirname(fileURLToPath(import.meta.url)), RAW = join(HERE, 'raw'), D
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southwest': 'elpaso',
   /* 2026-10-10: the Front Range Roofing towns. Adams and Boulder record roof cover; Denver gives year built and remodel; Arapahoe
-     (Centennial) publishes nothing in bulk. Thornton's and Erie's Weld parts are not read yet. */
-  thornton: 'adams', 'commerce-city': 'adams', erie: 'boulder', denver: 'denver' };
+     (Centennial) publishes nothing in bulk. Thornton and Erie straddle Weld: both counties are read for them. */
+  thornton: ['adams', 'weld'], 'commerce-city': 'adams', erie: ['boulder', 'weld'], denver: 'denver' };
 const q = (line) => line.replace(/^"|"\s*$/g, '').split('","');
 const lines = async (f, fn) => { const rl = createInterface({ input: createReadStream(f), crlfDelay: Infinity }); for await (const l of rl) if (l) fn(l); };
 
@@ -69,12 +69,13 @@ async function adams() {
 }
 /* Boulder: parcel -> the largest building's facts. Buildings.csv is by account (strap); Account_Parcels.csv joins strap to the
    12-digit parcel number. EffectiveYear is an appraisal age, not a remodel date, so it is not used as one. */
+/* one CSV line: quoted and bare fields both occur (empty ones are bare: ,,,) */
+const csvRow = (l) => { const o = []; let f = '', q = false; for (let i = 0; i < l.length; i++) { const ch = l[i];
+  if (q) { if (ch === '"') { if (l[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+  else if (ch === '"') q = true; else if (ch === ',') { o.push(f); f = ''; } else if (ch !== '\r') f += ch; }
+  o.push(f); return o; };
 async function boulder() {
-  /* one CSV line: quoted and bare fields both occur (empty ones are bare: ,,,) */
-  const csvRow = (l) => { const o = []; let f = '', q = false; for (let i = 0; i < l.length; i++) { const ch = l[i];
-    if (q) { if (ch === '"') { if (l[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
-    else if (ch === '"') q = true; else if (ch === ',') { o.push(f); f = ''; } else if (ch !== '\r') f += ch; }
-    o.push(f); return o; };
+
   const best = new Map(); let h = null;
   await lines(join(RAW, 'boulder', 'Buildings.csv'), (l) => {
     const c = csvRow(l); if (!h) { h = c; return; }
@@ -89,6 +90,26 @@ async function boulder() {
     const c = csvRow(l); if (!h2) { h2 = c.map((x) => x.toLowerCase()); return; }
     const st = (c[h2.indexOf('strap')] || '').trim(), p = (c[h2.indexOf('parcelno')] || '').trim();
     if (st && p && best.has(st) && !m.has(p)) m.set(p, best.get(st));
+  });
+  return m;
+}
+/* Weld: parcel -> the largest building's facts. ImpsCurrentInvntry.csv by account, AcctCurrentInvntry.csv joins account to
+   parcel. Headers carry stray spaces (" ACCOUNTNO"). */
+async function weld() {
+  const best = new Map(); let h = null;
+  await lines(join(RAW, 'weld', 'ImpsCurrentInvntry.csv'), (l) => {
+    const c = csvRow(l); if (!h) { h = c.map((x) => x.trim().toUpperCase()); return; }
+    const g = (k) => (c[h.indexOf(k)] || '').trim();
+    const yb = +g('YRBLT'), sf = +g('BLTASSF') || +g('SF') || 0; if (!(yb > 1800)) return;
+    const a = g('ACCOUNTNO'), cur = best.get(a); if (cur && (cur.bsf || 0) >= sf) return;
+    const rm = +g('YRREMODELED');
+    best.set(a, { yb, rm: rm > yb ? rm : undefined, shape: g('ROOFTYPE') || undefined, mat: g('ROOFCOVER') || undefined, bsf: sf > 0 ? Math.round(sf) : undefined });
+  });
+  const m = new Map(); let h2 = null;
+  await lines(join(RAW, 'weld', 'AcctCurrentInvntry.csv'), (l) => {
+    const c = csvRow(l); if (!h2) { h2 = c.map((x) => x.trim().toUpperCase()); return; }
+    const a = (c[h2.indexOf('ACCOUNTNO')] || '').trim(), p = (c[h2.indexOf('PARCELNB')] || '').trim();
+    if (a && p && best.has(a) && !m.has(p)) m.set(p, best.get(a));
   });
   return m;
 }
@@ -113,8 +134,9 @@ const dg = existsSync(join(RAW, 'Property_Improvements.txt')) ? await douglas() 
 const ad = existsSync(join(RAW, 'adams', 'Built_As.TXT')) ? await adams() : new Map();
 const bo = existsSync(join(RAW, 'boulder', 'Buildings.csv')) ? await boulder() : new Map();
 const dn = denver();
-console.log(`El Paso parcels with a year built: ${ep.size}; Douglas residential parcels: ${dg.size}; Adams ${ad.size}; Boulder ${bo.size}; Denver ${dn.size}`);
-const SRC = { elpaso: ep, douglas: dg, adams: ad, boulder: bo, denver: dn };
+const wd = existsSync(join(RAW, 'weld', 'ImpsCurrentInvntry.csv')) ? await weld() : new Map();
+console.log(`El Paso parcels with a year built: ${ep.size}; Douglas residential parcels: ${dg.size}; Adams ${ad.size}; Boulder ${bo.size}; Denver ${dn.size}; Weld ${wd.size}`);
+const SRC = { elpaso: ep, douglas: dg, adams: ad, boulder: bo, denver: dn, weld: wd };
 let tot = 0, hit = 0;
 for (const [town, county] of Object.entries(TOWNS)) {
   const csvF = join(DT, `${town}.csv`), doorF = join(DATA, `${town}.json`);
@@ -122,7 +144,8 @@ for (const [town, county] of Object.entries(TOWNS)) {
   const rows = parseCSV(readFileSync(csvF, 'utf8')), h = rows[0];
   const iA = h.indexOf('address'), iP = h.indexOf('parcel');
   const parcelOf = new Map(); for (const r of rows.slice(1)) if (r[iA] && r[iP]) parcelOf.set(r[iA].trim().toUpperCase(), r[iP].trim());
-  const src = SRC[county] || new Map(), doors = {};
+  const srcs = (Array.isArray(county) ? county : [county]).map((k) => SRC[k] || new Map()), doors = {};
+  const src = { get: (p) => { for (const m of srcs) { const v = m.get(p); if (v) return v; } return undefined; } };
   const d = JSON.parse(readFileSync(doorF, 'utf8'));
   let n = 0, k = 0;
   for (const a of d.areas) for (const x of a.doors) {
