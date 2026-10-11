@@ -10,6 +10,11 @@
  *                                      22 roof material, 26 year built, 27 year remodeled (0 = none)
  *            Columns read from the rows themselves (no layout file is published); checked on sample houses.
  * Doors are matched through the town CSVs (address -> parcel), the same lists the door files are built from.
+ *   Adams    https://adamscountyco.gov/our-county/elected-officials/assessor/maps-data/  Appraisal_<year>_<n>.zip, Built_As.TXT
+ *            (fixed width, layout in Appraisal_FileLayout.doc): PARCELNB 11+13, BLTASSF 37+12, ROOFTYPE 184+20, ROOFCOVER 204+20,
+ *            YRBLT 362+5, YRREM 367+5. The largest building on the parcel is the house.
+ *   Boulder  https://bouldercounty.gov/property-and-land/assessor/data-download/  Buildings.csv + Account_Parcels.csv (by strap)
+ *   Denver   open data "Real Property Residential Characteristics" via fetch-denver.mjs -> raw/denver/residential.json
  *   node build-year.mjs     writes app/data/rounds/year-<town>.json { doors: { id: { yb, rm?, shape?, mat?, bsf? } } } */
 import { readFileSync, writeFileSync, existsSync, createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
@@ -18,7 +23,10 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), RAW = join(HERE, 'raw'), DT = join(HERE, '..');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
-const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southwest': 'elpaso' };
+const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southwest': 'elpaso',
+  /* 2026-10-10: the Front Range Roofing towns. Adams and Boulder record roof cover; Denver gives year built and remodel; Arapahoe
+     (Centennial) publishes nothing in bulk. Thornton's and Erie's Weld parts are not read yet. */
+  thornton: 'adams', 'commerce-city': 'adams', erie: 'boulder', denver: 'denver' };
 const q = (line) => line.replace(/^"|"\s*$/g, '').split('","');
 const lines = async (f, fn) => { const rl = createInterface({ input: createReadStream(f), crlfDelay: Infinity }); for await (const l of rl) if (l) fn(l); };
 
@@ -48,6 +56,45 @@ async function douglas() {
   for (const [a, b] of best) { const p = acct.get(a); if (p) { const { no, ...rest } = b; m.set(p, rest); } }
   return m;
 }
+/* Adams: parcel -> the largest building's facts */
+async function adams() {
+  const m = new Map(), cut = (l, a, n) => l.substr(a, n).trim();
+  await lines(join(RAW, 'adams', 'Built_As.TXT'), (l) => {
+    const p = cut(l, 11, 13), yb = +cut(l, 362, 5), sf = +cut(l, 37, 12); if (!p || !(yb > 1800)) return;
+    const cur = m.get(p); if (cur && (cur.bsf || 0) >= sf) return;
+    const rm = +cut(l, 367, 5);
+    m.set(p, { yb, rm: rm > yb ? rm : undefined, shape: cut(l, 184, 20) || undefined, mat: cut(l, 204, 20) || undefined, bsf: sf > 0 ? Math.round(sf) : undefined });
+  });
+  return m;
+}
+/* Boulder: parcel -> the largest building's facts. Buildings.csv is by account (strap); Account_Parcels.csv joins strap to the
+   12-digit parcel number. EffectiveYear is an appraisal age, not a remodel date, so it is not used as one. */
+async function boulder() {
+  const csvRow = (l) => l.replace(/^"|"\s*$/g, '').split('","');
+  const best = new Map(); let h = null;
+  await lines(join(RAW, 'boulder', 'Buildings.csv'), (l) => {
+    const c = csvRow(l); if (!h) { h = c; return; }
+    const g = (k) => (c[h.indexOf(k)] || '').trim();
+    const yb = +g('builtYear'), sf = +g('TotalFinishedSF') || +g('mainfloorSF') || 0; if (!(yb > 1800)) return;
+    const cur = best.get(g('strap')); if (cur && (cur.bsf || 0) >= sf) return;
+    best.set(g('strap'), { yb, mat: g('Roof_CoverDscr') || undefined, bsf: sf > 0 ? Math.round(sf) : undefined });
+  });
+  const m = new Map(); let h2 = null;
+  const apF = join(RAW, 'boulder', 'Account_Parcels.csv'); if (!existsSync(apF)) return m;
+  await lines(apF, (l) => {
+    const c = csvRow(l); if (!h2) { h2 = c.map((x) => x.toLowerCase()); return; }
+    const st = (c[h2.indexOf('strap')] || '').trim(), p = (c[h2.indexOf('parcelno')] || '').trim();
+    if (st && p && best.has(st) && !m.has(p)) m.set(p, best.get(st));
+  });
+  return m;
+}
+/* Denver: parcel -> year built, remodel (fetch-denver.mjs) */
+function denver() {
+  const m = new Map(), f = join(RAW, 'denver', 'residential.json');
+  if (!existsSync(f)) return m;
+  for (const [p, v] of Object.entries(JSON.parse(readFileSync(f, 'utf8')))) m.set(p, v[1] ? { yb: v[0], rm: v[1] } : { yb: v[0] });
+  return m;
+}
 function parseCSV(s) {
   const rows = []; let row = [], f = '', inq = false;
   for (let i = 0; i < s.length; i++) { const ch = s[i];
@@ -59,7 +106,11 @@ function parseCSV(s) {
 
 const ep = existsSync(join(RAW, 'EPC Parcel Data.txt')) ? await elPaso() : new Map();
 const dg = existsSync(join(RAW, 'Property_Improvements.txt')) ? await douglas() : new Map();
-console.log(`El Paso parcels with a year built: ${ep.size}; Douglas residential parcels: ${dg.size}`);
+const ad = existsSync(join(RAW, 'adams', 'Built_As.TXT')) ? await adams() : new Map();
+const bo = existsSync(join(RAW, 'boulder', 'Buildings.csv')) ? await boulder() : new Map();
+const dn = denver();
+console.log(`El Paso parcels with a year built: ${ep.size}; Douglas residential parcels: ${dg.size}; Adams ${ad.size}; Boulder ${bo.size}; Denver ${dn.size}`);
+const SRC = { elpaso: ep, douglas: dg, adams: ad, boulder: bo, denver: dn };
 let tot = 0, hit = 0;
 for (const [town, county] of Object.entries(TOWNS)) {
   const csvF = join(DT, `${town}.csv`), doorF = join(DATA, `${town}.json`);
@@ -67,7 +118,7 @@ for (const [town, county] of Object.entries(TOWNS)) {
   const rows = parseCSV(readFileSync(csvF, 'utf8')), h = rows[0];
   const iA = h.indexOf('address'), iP = h.indexOf('parcel');
   const parcelOf = new Map(); for (const r of rows.slice(1)) if (r[iA] && r[iP]) parcelOf.set(r[iA].trim().toUpperCase(), r[iP].trim());
-  const src = county === 'elpaso' ? ep : dg, doors = {};
+  const src = SRC[county] || new Map(), doors = {};
   const d = JSON.parse(readFileSync(doorF, 'utf8'));
   let n = 0, k = 0;
   for (const a of d.areas) for (const x of a.doors) {
