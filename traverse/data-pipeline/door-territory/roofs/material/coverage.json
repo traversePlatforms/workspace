@@ -58,5 +58,85 @@
    "asphalt": 6499,
    "tile": 210
   }
+ },
+ "thornton": {
+  "doors": 28882,
+  "structural_data": true,
+  "crops": 28864,
+  "usable_crops": 28504,
+  "county": 28712,
+  "imagery": 139,
+  "guess": 24,
+  "labelled": 28851,
+  "share": 1,
+  "by_class": {
+   "asphalt": 27953,
+   "flat": 23,
+   "tile": 382,
+   "shake": 517
+  }
+ },
+ "commerce-city": {
+  "doors": 17059,
+  "structural_data": true,
+  "crops": 17059,
+  "usable_crops": 16057,
+  "county": 13875,
+  "imagery": 2234,
+  "guess": 924,
+  "labelled": 16109,
+  "share": 0.998,
+  "by_class": {
+   "asphalt": 15556,
+   "metal": 3,
+   "tile": 1465,
+   "flat": 5,
+   "shake": 4
+  }
+ },
+ "erie": {
+  "doors": 9587,
+  "structural_data": true,
+  "crops": 9587,
+  "usable_crops": 7538,
+  "county": 5259,
+  "imagery": 2810,
+  "guess": 1041,
+  "labelled": 8069,
+  "share": 0.95,
+  "by_class": {
+   "asphalt": 8614,
+   "metal": 4,
+   "shake": 7,
+   "tile": 482,
+   "flat": 3
+  }
+ },
+ "centennial": {
+  "doors": 17632,
+  "structural_data": false,
+  "crops": 17632,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0,
+  "by_class": {}
+ },
+ "denver": {
+  "doors": 40127,
+  "structural_data": true,
+  "crops": 40127,
+  "usable_crops": 37399,
+  "county": 0,
+  "imagery": 15474,
+  "guess": 20806,
+  "labelled": 15474,
+  "share": 0.904,
+  "by_class": {
+   "asphalt": 32946,
+   "tile": 3334
+  }
  }
 }

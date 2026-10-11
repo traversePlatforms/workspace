@@ -207,6 +207,10 @@ traverse/app/data/rounds/erie.json
 traverse/app/data/rounds/commerce-city.json
 traverse/app/data/rounds/denver.json
 traverse/app/data/rounds/boulder.json
+# Metro towns (2026-10-11, build-metro.mjs dfw): same reason
+traverse/app/data/rounds/mckinney.json
+traverse/app/data/rounds/plano.json
+traverse/app/data/rounds/frisco.json
 
 # free api.data.gov key for the pipeline (FBI crime figures, solar inputs); never committed
 traverse/data-pipeline/door-territory/data-gov-key.txt

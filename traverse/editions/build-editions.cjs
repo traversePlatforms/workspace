@@ -372,7 +372,12 @@ async function build(key) {
   const allRegions = JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions
     .concat(E.extraRegions ? JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions : []);
   const notHere = new Set(allRegions.filter((r) => r.group && !groupsShown.includes(r.group)).map((r) => r.key));
-  const metroGroupsHidden = new Set(allRegions.filter((r) => r.metro && !groupsShown.includes(r.group)).map((r) => r.group));
+  /* metro groups come from the metro configs themselves, not the index: an index built before a metro existed let
+     wind-storms-dfw.json into Roofing's pack (caught locally 2026-10-11, never uploaded) */
+  const METROS = path.join(__dirname, '..', 'data-pipeline', 'door-territory', 'metros');
+  const metroGroups = fs.readdirSync(METROS).filter((f) => /^[a-z0-9-]+\.json$/.test(f))
+    .map((f) => JSON.parse(fs.readFileSync(path.join(METROS, f), 'utf8'))).filter((m) => m.key && Array.isArray(m.towns)).map((m) => m.group || m.key);
+  const metroGroupsHidden = new Set(metroGroups.concat(allRegions.filter((r) => r.metro).map((r) => r.group)).filter((g) => !groupsShown.includes(g)));
   /* the town a data file belongs to: the file is the town itself, or <kind>-<town>.json. Matched against EVERY town, longest key
      first, so a town whose key ends another town's key (say "springs" against "com-springs") never claims the other's files
      (review 2026-10-07). Returns the town only when this edition does not show it. */

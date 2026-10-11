@@ -71,7 +71,11 @@ def main(towns):
         (DATA / f'material-{town}.json').write_text(json.dumps(out, separators=(',', ':')))
         summary[town] = {'doors': n_doors, 'structural_data': has_struct, 'crops': int(len(df)), 'usable_crops': int(len(ok)), 'county': n_county, 'imagery': n_img, 'guess': n_guess, 'labelled': len(doors) - n_guess, 'share': round(len(doors) / max(n_doors, 1), 3), 'by_class': by_cls}
         print(f'{town}: {n_doors} doors, {len(ok)} usable crops, county {n_county}, imagery {n_img}, guess {n_guess}, total {len(doors)} ({summary[town]["share"]:.0%}) {by_cls}')
-    (HERE / 'coverage.json').write_text(json.dumps(summary, indent=1))
+    # merged into the towns already recorded: a run for some towns used to wipe the rest (2026-10-11)
+    cov = HERE / 'coverage.json'
+    allcov = json.loads(cov.read_text()) if cov.exists() else {}
+    allcov.update(summary)
+    cov.write_text(json.dumps(allcov, indent=1))
     return summary
 
 
