@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  /* 1080x1920 overlay: solid background with a rounded hole where the phone screen shows through; the bezel around it */
+  html,body{margin:0;width:1080px;height:1920px;background:transparent;overflow:hidden;font-family:'Segoe UI',sans-serif}
+  .hole{position:absolute;left:var(--x);top:var(--y);width:var(--w);height:var(--h);border-radius:46px;
+        box-shadow:0 0 0 14px #05080c,0 0 0 17px #2b3644,0 0 0 3000px var(--bg)}
+  .glow{position:absolute;left:0;right:0;top:0;height:420px;background:radial-gradient(ellipse at 50% 0%,rgba(228,112,58,.16),transparent 70%)}
+  .brand{position:absolute;left:60px;top:44px;display:flex;align-items:center;gap:14px;color:#cfd8e3;font:600 30px 'Segoe UI'}
+  .brand i{width:34px;height:34px;border:4px solid #E4703A;border-radius:50%;display:inline-grid;place-items:center;font:800 19px 'Segoe UI';color:#E4703A;font-style:normal}
+  .tag{position:absolute;right:60px;top:52px;color:#8696a8;font:400 24px 'Segoe UI'}
+</style></head>
+<body>
+  <div class="hole"></div>
+  <div class="glow"></div>
+  <div class="brand"><i>T</i><span id="name">TraverseRoofing</span></div>
+  <div class="tag" id="tag">A day on the doors</div>
+<script>
+  const p = new URLSearchParams(location.search);
+  for (const k of ['x', 'y', 'w', 'h']) document.documentElement.style.setProperty('--' + k, p.get(k) + 'px');
+  document.documentElement.style.setProperty('--bg', p.get('bg') || '#111821');
+  if (p.get('name')) document.getElementById('name').textContent = p.get('name');
+  if (p.get('tag')) document.getElementById('tag').textContent = p.get('tag');
+</script>
+</body></html>
