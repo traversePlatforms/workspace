@@ -988,6 +988,14 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       takes days to weeks); then keys in `<install>-private/sms-config.php` (shape: api/sms-config.example.php), the number's
       webhook set to the install's `?action=smsin`, and `features.sms: true` in that install's company.json. Cost per text and
       the 10DLC fees: not checked yet (Twilio's pricing page). TCPA/state rules stay each company's responsibility.
+- [ ] **TR-14 — Review the first walkthrough video and the two computer voices (Matthew).** Made 2026-10-11, all in
+      traverse/videos/roofing-crew-phone/: `roofing-crew-phone.mp4` (TraverseRoofing, a crew member's day, phone, 2:42,
+      captions only), `-voice-joe.mp4` (free male voice) and `-voice-kristin.mp4` (free female voice), plus the
+      voice-over script `roofing-crew-phone-voiceover.md` if you'd rather record your own. **Decide:** keep the story as
+      it is or change scenes/lines; your own voice, joe, kristin, or a paid voice (ElevenLabs etc., prices not checked);
+      speed. **Then** Claude makes the rest — every edition × crew / manager / admin × phone and desktop — each with its
+      own storyline and a dry run first. Known nits: "Good morning" shows at the 4:45 PM scene and the storm report says
+      8:30 AM (the app reads the real clock); the time picker can't be drawn, so 5:30 PM just appears.
 - [~] **TR-13 — Billing (Stripe).** ✅ **Built 2026-10-10, commit afd2580, NOT uploaded, off everywhere.** Admin-only
       Billing tile: Duo / Crew / Pro, monthly or yearly, seats, second edition on Pro ($20), founding companies get a 14-day
       pilot once + the 30%-off coupon on Pro. Pays on Stripe Checkout; Manage billing = Stripe's portal. Webhook
