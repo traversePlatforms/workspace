@@ -1006,8 +1006,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       the customer portal settings; then per install a webhook endpoint + `<install>-private/billing-config.php` (shape:
       api/billing-config.example.php, every step listed in it) and `features.billing: true`. Start in Stripe test mode.
       Not built: a public sign-up page that makes a new install (installs are still built by hand).
-      **Upload note:** the rebuilt `*-rounds.php` now requires `*-sms.php` and `*-billing.php` — upload all three together
-      or the app breaks.
+      ✅ **Code uploaded OFF to all six installs 2026-10-11** (Sixfold 85/85 suites, editions 20/20; billing and texting answer "not on"
+      live). Turning either on = keys in the private folder + the feature in company.json, nothing else to upload.
 - [ ] **TR-8 — Company email for Traverse.** Recommended: Google Workspace Business Starter (~$7/user/mo yearly,
       $8.40 monthly — check Google's page), its own Workspace account, not Sixfold's. One mailbox (e.g.
       matthew@traverseplatforms.com) + free aliases (hello@, sales@). **DNS is on SiteGround, not Porkbun**: Google's MX,
