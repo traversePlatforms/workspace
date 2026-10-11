@@ -979,6 +979,27 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       index and outline-photos.mjs (add the towns to roofs/material TOWNS lists). **Material needs year built**, which comes
       from each county's assessor (Adams, Arapahoe, Boulder, Weld, Denver: none pulled yet); without it the model is weaker.
       Matthew's call on material; crop downloads ~3.5 min per 1,000 doors (~7 h for all five).
+- [~] **TR-12 — In-app texting (Twilio).** ✅ **Built 2026-10-10, commit 9657ec6, NOT uploaded, off everywhere.** Text a
+      homeowner from the door (only a number saved as "given at the door"), a lead card or a customer card; the thread stays
+      with them. Server rules: never a looked-up number, quiet hours 8 am–9 pm Colorado time, STOP/START replies, the first
+      text adds "<name>, <company>. Reply STOP to opt out." Replies come in on `?action=smsin` (Twilio signature checked).
+      Mock test 21/21 (18/18 after 9 pm, when the quiet-hours refusal is what's tested). **Matthew's part:** a Twilio
+      account, a number, and the **A2P 10DLC brand + campaign registration** (US carriers block unregistered business texts;
+      takes days to weeks); then keys in `<install>-private/sms-config.php` (shape: api/sms-config.example.php), the number's
+      webhook set to the install's `?action=smsin`, and `features.sms: true` in that install's company.json. Cost per text and
+      the 10DLC fees: not checked yet (Twilio's pricing page). TCPA/state rules stay each company's responsibility.
+- [~] **TR-13 — Billing (Stripe).** ✅ **Built 2026-10-10, commit afd2580, NOT uploaded, off everywhere.** Admin-only
+      Billing tile: Duo / Crew / Pro, monthly or yearly, seats, second edition on Pro ($20), founding companies get a 14-day
+      pilot once + the 30%-off coupon on Pro. Pays on Stripe Checkout; Manage billing = Stripe's portal. Webhook
+      `?action=billinghook` (signature checked, this install's events only, repeats ignored) keeps plan/seats/status in
+      billing.json. Seats used vs paid warns on Billing and Accounts; **nothing ever locks anyone out** (enforcement is
+      Matthew's call, later). Mock test 47/47. **Matthew's part:** a Stripe account (Traverse Platforms LLC, its bank
+      account), products + monthly/yearly prices for Duo, Crew, Pro, Second edition, the founding coupon (30%, 12 months),
+      the customer portal settings; then per install a webhook endpoint + `<install>-private/billing-config.php` (shape:
+      api/billing-config.example.php, every step listed in it) and `features.billing: true`. Start in Stripe test mode.
+      Not built: a public sign-up page that makes a new install (installs are still built by hand).
+      **Upload note:** the rebuilt `*-rounds.php` now requires `*-sms.php` and `*-billing.php` — upload all three together
+      or the app breaks.
 - [ ] **TR-8 — Company email for Traverse.** Recommended: Google Workspace Business Starter (~$7/user/mo yearly,
       $8.40 monthly — check Google's page), its own Workspace account, not Sixfold's. One mailbox (e.g.
       matthew@traverseplatforms.com) + free aliases (hello@, sales@). **DNS is on SiteGround, not Porkbun**: Google's MX,
