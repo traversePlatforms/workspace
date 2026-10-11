@@ -711,7 +711,8 @@ const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
  * looked-up: no Call link until the provider says it is not on the Do Not Call list. The provider,
  * the batching, the results log and the rule live in api/skiptrace.php; the actions are below. */
 require_once __DIR__ . '/skiptrace.php';
-require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push, no secrets in it */
+require_once __DIR__ . '/webpush.php';
+require_once __DIR__ . '/sms.php';   /* in-app texting (2026-10-10): Twilio, keys in the private folder */   /* phone alerts (2026-10-05): Web Push, no secrets in it */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -1465,6 +1466,27 @@ if ($action === 'hailmap') {
     out(['ok' => true, 'day' => $day, 'grid' => array_intersect_key($j, array_flip(['lat1', 'lon1', 'dx', 'dy', 'r0', 'c0'])), 'cells' => $j['paths'][$day] ?? []]);
 }
 
+/* a text coming in (2026-10-10): Twilio's webhook for the company's number. No session: the request must carry a valid
+   X-Twilio-Signature for the configured URL. STOP-type words opt the number out at once, START opts it back in. */
+if ($action === 'smsin') {
+    $sc = smsConfig(__DIR__);
+    if (!smsConfigured($sc)) fail('Not found.', 404);
+    $url = (string) ($sc['public_url'] ?: ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '')));
+    $params = $_POST;
+    if (!smsValid($sc, $url, $params, (string) ($_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? ''))) fail('Not allowed.', 403);
+    $num = smsE164((string) ($params['From'] ?? ''));
+    if ($num !== null) {
+        $text = mb_substr((string) ($params['Body'] ?? ''), 0, 1600);
+        $kw = smsKeyword($text);
+        if ($kw === 'stop') smsSetOpt($num, true, 'reply');
+        if ($kw === 'start') smsSetOpt($num, false, 'reply');
+        smsLog(['num' => $num, 'dir' => 'in', 'body' => $text, 'sid' => (string) ($params['MessageSid'] ?? ''), 'at' => time()] + ($kw ? ['kw' => $kw] : []));
+    }
+    header('Content-Type: text/xml; charset=utf-8');
+    echo '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
+    exit;
+}
+
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
 if ($action === 'company') out(['ok' => true, 'company' => array_diff_key(company(), ['appUrl' => 1])]);
@@ -1538,6 +1560,64 @@ if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) 
         $fresh = [(string) ($session['c'] ?? ''), (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName()];
         sessEdit(function ($a) use ($tagNow, $fresh) { $a['s'][$tagNow] = $fresh; return $a; });
     }
+}
+
+/* ---- in-app texting (2026-10-10, api/sms.php) ----
+ * A text goes to a number the homeowner gave: a door phone saved as "given at the door" (anyone who can see the door), a
+ * lead (admins, managers, or the lead's owner) or a customer (admins). Never a looked-up number. */
+function smsTarget(array $body, string $role, string $me): array {
+    $kind = (string) ($body['kind'] ?? ''); $id = (string) ($body['id'] ?? '');
+    if ($kind === 'door') {
+        $key = (string) ($body['region'] ?? '');
+        if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) return ['err' => 'No such door.'];
+        if (!crewSees($role)) return ['err' => 'Not allowed.'];
+        $key = doorHome($key, $id); $p = loadPhones($key)[$id] ?? null;
+        if (!$p) return ['err' => 'This door has no phone number.'];
+        if (($p['source'] ?? '') !== 'door') return ['err' => 'Only a number the homeowner gave at the door can be texted from the app.', 'num' => smsE164((string) $p['phone']), 'blocked' => true];
+        return ['num' => smsE164((string) $p['phone']), 'ref' => ['kind' => 'door', 'region' => $key, 'id' => $id]];
+    }
+    if ($kind === 'lead') {
+        $l = leadsAll()[$id] ?? null; if (!$l) return ['err' => 'No such lead.'];
+        if ($role !== 'admin' && $role !== 'manager' && (string) ($l['owner'] ?? '') !== $me) return ['err' => 'Not allowed.'];
+        return ['num' => smsE164((string) ($l['phone'] ?? '')), 'ref' => ['kind' => 'lead', 'id' => $id]];
+    }
+    if ($kind === 'customer') {
+        if ($role !== 'admin') return ['err' => 'Not allowed.'];
+        $c = loadCustomers()[$id] ?? null; if (!$c) return ['err' => 'No such customer.'];
+        return ['num' => smsE164((string) ($c['phone'] ?? '')), 'ref' => ['kind' => 'customer', 'id' => $id]];
+    }
+    return ['err' => 'Pick who to text.'];
+}
+if ($action === 'smsthread' || $action === 'smssend') {
+    $sc = smsConfig(__DIR__);
+    if (!feature('sms')) fail('Texting is not on for this company.', 403);
+    $req = $action === 'smssend' ? $body : $_GET;
+    $tg = smsTarget($req, $role, $me);
+    if (isset($tg['err']) && empty($tg['blocked'])) fail($tg['err'], $tg['err'] === 'Not allowed.' ? 403 : 404);
+    $num = $tg['num'] ?? null;
+    $ready = smsConfigured($sc);
+    $state = ['ready' => $ready, 'num' => $num ? substr($num, 0, 2) . ' ••• ' . substr($num, -4) : null, 'blocked' => $tg['err'] ?? null,
+              'optedOut' => $num ? smsOptedOut($num) : false, 'quiet' => smsQuiet($sc), 'quietFrom' => (int) $sc['quiet_end'], 'quietTo' => (int) $sc['quiet_start'],
+              'first' => $num ? !smsSentBefore($num) : false];
+    if ($action === 'smsthread') {
+        $msgs = $num && empty($tg['blocked']) ? array_map(fn($r) => array_intersect_key($r, array_flip(['dir', 'body', 'by', 'at', 'status', 'kw'])), smsThread($num)) : [];
+        out(['ok' => true, 'messages' => $msgs] + $state);
+    }
+    if (!$isPost) fail('POST required', 405);
+    if (!empty($tg['blocked'])) fail($tg['err']);
+    if (!$ready) fail('Texting is not set up yet: the company\'s Twilio keys are missing.', 503);
+    if ($num === null) fail('That is not a US phone number the app can text.');
+    if ($state['optedOut']) fail('This number replied STOP. It cannot be texted from the app.');
+    if ($state['quiet']) fail('Texts go out between ' . (int) $sc['quiet_start'] . ' am and ' . ((int) $sc['quiet_end'] - 12) . ' pm Colorado time. Try again then.');
+    $text = trim(preg_replace("/[ \t]+/", ' ', (string) ($body['body'] ?? '')) ?? '');
+    if ($text === '') fail('Type the message first.');
+    if (mb_strlen($text) > SMS_MAX) fail('Keep it under ' . SMS_MAX . ' characters.');
+    if ($state['first']) $text .= "\n\n" . $me . ', ' . (string) (company()['name'] ?? '') . '. Reply STOP to opt out.';
+    $res = smsSend($sc, $num, $text);
+    smsLog(['num' => $num, 'dir' => 'out', 'body' => $text, 'by' => $me, 'at' => time(), 'ref' => $tg['ref'] ?? null,
+            'sid' => $res['sid'] ?? '', 'status' => $res['ok'] ? ($res['status'] ?? 'queued') : 'failed'] + ($res['ok'] ? [] : ['error' => $res['error'] ?? '']));
+    if (!$res['ok']) fail($res['error'] ?? 'Not sent. Try again.', 502);
+    out(['ok' => true, 'message' => ['dir' => 'out', 'body' => $text, 'by' => $me, 'at' => time(), 'status' => $res['status'] ?? 'queued']]);
 }
 
 if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);

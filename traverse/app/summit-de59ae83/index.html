@@ -607,6 +607,24 @@
   .mic{align-self:flex-start;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;margin:4px 0}
   .mic.on{background:var(--later);border-color:var(--later);color:#fff}
   .srbtn{display:block;margin-top:4px;text-align:left}
+  /* in-app texting (2026-10-10) */
+  .smsbtn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;margin:4px 6px 0 0}
+  .smsm{position:fixed;inset:0;background:rgba(10,16,24,.55);z-index:900;display:flex;align-items:flex-end;justify-content:center}
+  .smsp{background:var(--bg);width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
+  .smsh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .smsh b{font:800 17px var(--sans)}.smsh button{border:0;background:none;font:700 15px var(--sans);color:var(--ink);cursor:pointer;min-height:40px}
+  .smst{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+  .smsb{max-width:82%;padding:9px 12px;border-radius:14px;font-size:15px;line-height:1.35;white-space:pre-wrap;word-wrap:break-word}
+  .smsb.out{align-self:flex-end;background:var(--go);color:#fff;border-bottom-right-radius:4px}
+  .smsb.in{align-self:flex-start;background:var(--sunk);color:var(--ink);border-bottom-left-radius:4px}
+  .smsb small{display:block;font-size:11px;opacity:.8;margin-top:3px}
+  .smsn{font-size:13px;color:var(--soft);padding:6px 14px}.smsn.bad{color:var(--miss)}
+  .smsc{display:flex;flex-wrap:wrap;gap:6px;padding:4px 14px}
+  .smsc button{border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:600 13px var(--sans);padding:6px 10px;cursor:pointer}
+  .smsf{display:flex;gap:8px;padding:10px 14px 14px;border-top:1px solid var(--line)}
+  .smsf textarea{flex:1;min-height:44px;max-height:140px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px;font:15px var(--sans);background:var(--card);color:var(--ink)}
+  .smsf button{min-width:80px;border:0;border-radius:12px;background:var(--go);color:#fff;font:800 15px var(--sans);cursor:pointer}
+  .smsf button:disabled{opacity:.5;cursor:default}
   .fst.fval b{color:var(--go)}
   .fwrap{overflow-x:auto;margin-top:6px}
   .ftab{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
@@ -3547,7 +3565,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tel = digits(l.phone);
     if (tel.length >= 10) {
       var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
-      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
+      if (smsOn()) ct.appendChild(smsButton({ kind: 'lead', id: l.id }, l.name || ''));
+      else { var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     }
     if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
@@ -6660,7 +6679,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tel = digits(c.phone);
     if (tel.length >= 10) {
       var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
-      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
+      if (smsOn()) ct.appendChild(smsButton({ kind: 'customer', id: c.id }, c.name || ''));
+      else { var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     }
     if (c.email) { var a3 = q('a'); a3.href = 'mailto:' + c.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(c.email)); ct.appendChild(a3); }
     /* ask for a Google review (2026-10-04): the same words to every customer, sent from the admin's own phone.
@@ -9666,6 +9686,75 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
 
 
+  /* in-app texting (Matthew 2026-10-10): one person, one message at a time, the thread kept with the door, lead or customer.
+     The server holds the rules (only numbers the homeowner gave, quiet hours, STOP, the first text's opt-out line); this
+     sheet shows them. Shown only where company.json turns on features.sms. */
+  function smsOn() { return !!(CO && CO.features && CO.features.sms); }
+  var SMS_TPL = [
+    ['Thanks', function () { return 'Hi, it\u2019s ' + (S.name || '') + ' with ' + ((CO && CO.name) || 'us') + '. Thanks for your time today. Text me here if any questions come up.'; }],
+    ['Estimate', function () { return 'Just following up on the estimate. Any questions I can answer?'; }],
+    ['Confirm', function () { return 'Confirming our appointment. Reply here if the time needs to change.'; }],
+    ['Running late', function () { return 'Running about 15 minutes behind. See you shortly.'; }]
+  ];
+  function smsButton(ref, label) {
+    var b = q('button', 'smsbtn'); b.type = 'button'; b.appendChild(ico('chat', 2.2)); b.appendChild(document.createTextNode('Text in app'));
+    b.addEventListener('click', function (e) { e.stopPropagation(); smsSheet(ref, label); });
+    return b;
+  }
+  function smsSheet(ref, label) {
+    var params = { kind: ref.kind, id: ref.id }; if (ref.region) params.region = ref.region;
+    var wrap = q('div', 'smsm'), p = q('div', 'smsp'); wrap.appendChild(p);
+    var h = q('div', 'smsh'), ttl = q('b', null, 'Text ' + (label || '')); h.appendChild(ttl);
+    var cl = q('button', null, 'Close'); cl.type = 'button'; cl.addEventListener('click', function () { wrap.remove(); }); h.appendChild(cl);
+    p.appendChild(h);
+    var list = q('div', 'smst'), note = q('div', 'smsn'), chips = q('div', 'smsc'), form = q('div', 'smsf');
+    var ta = q('textarea'); ta.rows = 2; ta.maxLength = 640; ta.placeholder = 'Message'; var go = q('button', null, 'Send'); go.type = 'button';
+    form.appendChild(ta); form.appendChild(go);
+    p.appendChild(list); p.appendChild(note); p.appendChild(chips); p.appendChild(form);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) wrap.remove(); });
+    document.body.appendChild(wrap);
+    list.appendChild(q('div', 'smsn', 'Loading\u2026'));
+    var state = null;
+    function bubble(m) {
+      var bb = q('div', 'smsb ' + (m.dir === 'in' ? 'in' : 'out'), m.body);
+      var meta = [m.dir === 'in' ? 'Them' : (m.by || 'You'), m.at ? ago(m.at) : ''];
+      if (m.status === 'failed') meta.push('not sent');
+      if (m.kw === 'stop') meta.push('opted out'); if (m.kw === 'start') meta.push('opted back in');
+      bb.appendChild(q('small', null, meta.filter(Boolean).join(' \u00b7 ')));
+      return bb;
+    }
+    function paint(j) {
+      state = j; list.textContent = '';
+      if (j.num) ttl.textContent = 'Text ' + (label || '') + ' \u00b7 ' + j.num;
+      (j.messages || []).forEach(function (m) { list.appendChild(bubble(m)); });
+      if (!(j.messages || []).length) list.appendChild(q('div', 'smsn', 'No texts with this number yet.'));
+      list.scrollTop = list.scrollHeight;
+      var why = !j.ready ? 'Texting isn\u2019t set up yet: the company\u2019s Twilio account still needs connecting.'
+        : j.blocked ? j.blocked
+        : j.optedOut ? 'This number replied STOP. It can\u2019t be texted from the app.'
+        : j.quiet ? 'Texts go out between ' + j.quietTo + ' am and ' + (j.quietFrom - 12) + ' pm Colorado time.'
+        : j.first ? 'First text to this number: your name, the company and \u201cReply STOP to opt out\u201d are added at the end.' : '';
+      note.textContent = why; note.className = 'smsn' + (j.ready && !j.blocked && !j.optedOut && !j.quiet ? '' : ' bad');
+      var can = j.ready && !j.blocked && !j.optedOut && !j.quiet;
+      ta.disabled = !can; go.disabled = !can;
+      chips.textContent = '';
+      if (can) SMS_TPL.forEach(function (t) { var c = q('button', null, t[0]); c.type = 'button'; c.addEventListener('click', function () { ta.value = t[1](); ta.focus(); }); chips.appendChild(c); });
+    }
+    api('smsthread', { params: params }).then(function (j) {
+      if (!j.ok) { list.textContent = ''; list.appendChild(q('div', 'smsn bad', j.error || 'Could not open the texts.')); ta.disabled = go.disabled = true; return; }
+      paint(j);
+    }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'smsn bad', 'No connection. Try again when you have signal.')); });
+    go.addEventListener('click', function () {
+      var text = ta.value.trim(); if (!text || !state) return;
+      go.disabled = true;
+      var b = { kind: ref.kind, id: ref.id, body: text }; if (ref.region) b.region = ref.region;
+      api('smssend', { body: b }).then(function (j) {
+        go.disabled = false;
+        if (!j.ok) { note.textContent = j.error || 'Not sent.'; note.className = 'smsn bad'; return; }
+        ta.value = ''; state.first = false; (state.messages = state.messages || []).push(j.message); paint(state);
+      }).catch(function () { go.disabled = false; note.textContent = 'No signal. Not sent. Try again when you have signal.'; note.className = 'smsn bad'; });
+    });
+  }
   function phoneBlock(d) {
     var box = q('div', 'ph');
     if (S.editPhone === d.id) {
@@ -9723,6 +9812,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(ed0);
     } else if (d.phone) {
       box.appendChild(phoneLink(d.phone));
+      if (smsOn() && d.phone.source === 'door') box.appendChild(smsButton({ kind: 'door', region: S.region, id: d.id }, d.address));
       box.appendChild(q('span', 'src', phoneStatement(d.phone)));
       maybeNote(box, d.phone);
       var dm = dncMark(d.phone); if (dm) box.appendChild(dm);

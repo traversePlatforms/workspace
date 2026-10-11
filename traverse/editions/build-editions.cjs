@@ -314,7 +314,8 @@ function api(E, name) {
   let s = fs.readFileSync(path.join(SRC, 'api', name), 'utf8');
   s = s.split('sixfold-data').join(E.data).split('sixfold-private').join(E.priv)
     .split('sixfold-backup').join(E.api + '-backup').split('filename="sixfold-').join('filename="' + E.api + '-')
-    .split('SIXFOLD_SKIPTRACE').join(E.api.toUpperCase().replace(/-/g, '_') + '_SKIPTRACE');
+    .split('SIXFOLD_SKIPTRACE').join(E.api.toUpperCase().replace(/-/g, '_') + '_SKIPTRACE')
+    .split('SIXFOLD_SMS').join(E.api.toUpperCase().replace(/-/g, '_') + '_SMS');
   return s;
 }
 
@@ -345,12 +346,15 @@ async function build(key) {
   r = rep(r, "__DIR__ . '/rounds-codes.php'", "__DIR__ . '/" + E.api + "-rounds-codes.php'", 1, 'codes fallback');
   r = rep(r, "require_once __DIR__ . '/skiptrace.php';", "require_once __DIR__ . '/" + E.api + "-skiptrace.php';", 1, 'require skiptrace');
   r = rep(r, "require_once __DIR__ . '/webpush.php';", "require_once __DIR__ . '/" + E.api + "-webpush.php';", 1, 'require webpush');
+  r = rep(r, "require_once __DIR__ . '/sms.php';", "require_once __DIR__ . '/" + E.api + "-sms.php';", 1, 'require sms');
   for (const bad of ['sixfold-data', 'sixfold-private', "'sfr'"]) if (r.indexOf(bad) >= 0) throw new Error('API still names ' + bad);
   write(path.join('public_html', 'api', E.api + '-rounds.php'), r);
   const st = api(E, 'skiptrace.php');
   if (st.indexOf('sixfold-private') >= 0) throw new Error('skiptrace still names sixfold-private');
   write(path.join('public_html', 'api', E.api + '-skiptrace.php'), st);
   write(path.join('public_html', 'api', E.api + '-webpush.php'), api(E, 'webpush.php'));
+  const sm = api(E, 'sms.php'); if (sm.indexOf('sixfold-private') >= 0) throw new Error('sms still names sixfold-private');
+  write(path.join('public_html', 'api', E.api + '-sms.php'), sm);
 
   // The data: towns and the per-door layers this edition uses. Never Sixfold's own business: its company file and
   // training lessons, or the docs folder (only its funding and water sheets, for Yards, with Sixfold's review link out).
