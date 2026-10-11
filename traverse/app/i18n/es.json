@@ -2200,5 +2200,21 @@
  "Water the lawn a day or two before we come out.": "Riega el césped uno o dos días antes de que vengamos.",
  "A watering schedule for a provider, unless you checked its page this week.": "Un horario de riego de un proveedor, a menos que hayas revisado su página esta semana.",
  "Aerating a lawn that's brown or dormant.": "Airear un césped que está seco o dormido.",
- "\"You're on a well, so the restrictions don't apply.\" Often the opposite.": "\"Tienes pozo, así que no te aplican las restricciones.\" Muchas veces es lo contrario."
+ "\"You're on a well, so the restrictions don't apply.\" Often the opposite.": "\"Tienes pozo, así que no te aplican las restricciones.\" Muchas veces es lo contrario.",
+ "Sync to Google or Apple calendar": "Sincronizar con el calendario de Google o Apple",
+ "Sync your calendar": "Sincroniza tu calendario",
+ "Your walks, come-backs, lead follow-ups and your own entries show up in Google or Apple Calendar and update by themselves. Apple checks every hour or so; Google can take a few hours.": "Tus visitas, regresos, seguimientos de prospectos y tus propias entradas aparecen en el calendario de Google o Apple y se actualizan solos. Apple revisa más o menos cada hora; Google puede tardar unas horas.",
+ "Add to Apple Calendar": "Agregar al calendario de Apple",
+ "iPhone, iPad or Mac: tap, then Subscribe": "iPhone, iPad o Mac: toca y luego Suscribirse",
+ "Add to Google Calendar": "Agregar al calendario de Google",
+ "Opens Google Calendar; tap Add": "Abre Google Calendar; toca Agregar",
+ "Or copy the link": "O copia el enlace",
+ "Google on a computer: Other calendars, +, From URL, then paste it.": "Google en una computadora: Otros calendarios, +, Desde URL, y pégalo.",
+ "Anyone with this link can see your calendar, so keep it to yourself. If it gets out, make a new link: the old one stops working and you add the new one again.": "Cualquiera con este enlace puede ver tu calendario, así que no lo compartas. Si alguien más lo tiene, crea un enlace nuevo: el anterior deja de funcionar y agregas el nuevo otra vez.",
+ "Make a new link": "Crear un enlace nuevo",
+ "New link made": "Enlace nuevo creado",
+ "The old one no longer works.": "El anterior ya no funciona.",
+ "Not changed": "No se cambió",
+ "Could not make the link.": "No se pudo crear el enlace.",
+ "Calendar sync needs signal.": "La sincronización del calendario necesita señal."
 }

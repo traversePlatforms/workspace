@@ -1564,6 +1564,67 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
 
+/* ---- calendar sync (Matthew 2026-10-11): a person's calendar as an iCalendar feed ----
+ * Google Calendar and Apple Calendar subscribe to a link and fetch it themselves (Google every few hours, Apple as set on the
+ * phone), so the feed answers with no session: the link carries the person's id and a token made from a per-person salt
+ * (DATA_DIR/calfeed.json) and the session key. "New link" changes the salt and the old link stops working. A person who is
+ * turned off or removed gets nothing. The feed carries what their calendar screen shows, 30 days back to 4 months ahead:
+ * the address and town of walks and come-backs, lead follow-ups by name, their own entries. No phone numbers, no owners. */
+function calFeedFile(): string { return DATA_DIR . '/calfeed.json'; }
+function calFeedSalt(string $pid, bool $renew = false): ?string {
+    $f = calFeedFile(); $lock = @fopen($f . '.lock', 'c'); if ($lock) flock($lock, LOCK_EX);
+    $all = json_decode((string) @file_get_contents($f), true); if (!is_array($all)) $all = [];
+    if ($renew || empty($all[$pid])) { $all[$pid] = bin2hex(random_bytes(12)); if (!writeJsonAtomic($f, $all)) { if ($lock) { flock($lock, LOCK_UN); fclose($lock); } return null; } }
+    if ($lock) { flock($lock, LOCK_UN); fclose($lock); }
+    return (string) $all[$pid];
+}
+function calFeedToken(string $pid, string $salt, string $key): string { return substr(hash_hmac('sha256', 'calfeed|' . $pid . '|' . $salt, $key), 0, 32); }
+function icsText(string $s): string { return str_replace(["\\", ';', ',', "\r", "\n"], ['\\\\', '\\;', '\\,', '', '\\n'], $s); }
+function icsFold(string $line): string { $out = ''; while (strlen($line) > 74) { $cut = 74; while ($cut > 0 && (ord($line[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($line, 0, $cut) . "\r\n "; $line = substr($line, $cut); } return $out . $line; }
+if ($action === 'calfeed') {
+    $pid = (string) ($_GET['p'] ?? ''); $tok = (string) ($_GET['t'] ?? '');
+    if (!preg_match('/^[A-Za-z0-9_-]{6,80}$/D', $pid) || !preg_match('/^[0-9a-f]{32}$/D', $tok)) fail('Not found.', 404);
+    $all = json_decode((string) @file_get_contents(calFeedFile()), true);
+    $salt = is_array($all) ? (string) ($all[$pid] ?? '') : '';
+    if ($salt === '' || !hash_equals(calFeedToken($pid, $salt, $sessionKey), $tok)) fail('Not found.', 404);
+    $person = null; foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if ($r['id'] === $pid && empty($r['off'])) $person = $r;
+    if (!$person) fail('Not found.', 404);
+    $who = (string) $person['name'];
+    $tz = new DateTimeZone('America/Denver'); $today = new DateTime('now', $tz);
+    $from = (clone $today)->modify('-30 days')->format('Y-m-d'); $to = (clone $today)->modify('+120 days')->format('Y-m-d');
+    $co = company(); $visit = ucfirst((string) ($co['visit'] ?? 'visit')); $host = preg_replace('/[^a-z0-9.-]/i', '', (string) ($_SERVER['HTTP_HOST'] ?? 'traverse'));
+    $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//' . str_replace(['/', "\n"], '', (string) $co['name']) . '//Door rounds//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+          'X-WR-CALNAME:' . icsText((string) ($co['short'] ?: $co['name']) . ' · ' . $who), 'X-WR-TIMEZONE:America/Denver', 'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H',
+          'BEGIN:VTIMEZONE', 'TZID:America/Denver',
+          'BEGIN:DAYLIGHT', 'TZOFFSETFROM:-0700', 'TZOFFSETTO:-0600', 'TZNAME:MDT', 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT',
+          'BEGIN:STANDARD', 'TZOFFSETFROM:-0600', 'TZOFFSETTO:-0700', 'TZNAME:MST', 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD',
+          'END:VTIMEZONE'];
+    $stamp = gmdate('Ymd\THis\Z');
+    foreach (calEventsFor($who, $from, $to) as $e) {
+        $d = str_replace('-', '', (string) $e['date']); $t = (string) ($e['time'] ?? '');
+        $place = trim((string) ($e['title'] ?? '') . (($e['town'] ?? '') !== '' ? ', ' . $e['town'] : '') . ', CO', ', ');
+        if ($e['kind'] === 'walk') { $sum = $visit . ': ' . $e['title']; $loc = $place; $uid = 'walk-' . $e['region'] . '-' . $e['id']; $len = 'PT1H'; }
+        elseif ($e['kind'] === 'revisit') { $sum = 'Come back: ' . $e['title']; $loc = $place; $uid = 'back-' . $e['region'] . '-' . $e['id']; $len = 'PT30M'; }
+        elseif ($e['kind'] === 'lead') { $sum = 'Follow up: ' . $e['title'] . (($e['need'] ?? '') !== '' ? ' (' . $e['need'] . ')' : ''); $loc = (string) ($e['town'] ?? ''); $uid = 'lead-' . $e['lead']; $len = 'PT30M'; }
+        else { $sum = (string) $e['title']; $loc = ''; $uid = 'own-' . $e['cid']; $len = 'PT30M'; }
+        $L[] = 'BEGIN:VEVENT';
+        $L[] = 'UID:' . preg_replace('/[^A-Za-z0-9._-]/', '', $uid) . '@' . $host;
+        $L[] = 'DTSTAMP:' . $stamp;
+        if ($t !== '' && preg_match('/^\d{2}:\d{2}$/', $t)) { $L[] = 'DTSTART;TZID=America/Denver:' . $d . 'T' . str_replace(':', '', $t) . '00'; $L[] = 'DURATION:' . $len; }
+        else { $L[] = 'DTSTART;VALUE=DATE:' . $d; $L[] = 'DTEND;VALUE=DATE:' . (new DateTime($e['date']))->modify('+1 day')->format('Ymd'); $L[] = 'TRANSP:TRANSPARENT'; }
+        $L[] = 'SUMMARY:' . icsText($sum);
+        if ($loc !== '') $L[] = 'LOCATION:' . icsText($loc);
+        if (($e['note'] ?? '') !== '') $L[] = 'DESCRIPTION:' . icsText((string) $e['note']);
+        $L[] = 'END:VEVENT';
+    }
+    $L[] = 'END:VCALENDAR';
+    header('Content-Type: text/calendar; charset=utf-8');
+    header('Cache-Control: no-cache, private');
+    header('Content-Disposition: inline; filename="calendar.ics"');
+    echo implode("\r\n", array_map('icsFold', $L)) . "\r\n";
+    exit;
+}
+
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
@@ -2758,10 +2819,8 @@ if ($action === 'calpeople') {
     $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[(string) $tid] = (string) ($t[0] ?? '');
     out(['ok' => true, 'people' => $list, 'teams' => $tn, 'me' => $me]);
 }
-if ($action === 'calendar') {
-    $who = trim((string) ($_GET['who'] ?? '')) ?: $me;
-    if (!canViewCal($who)) fail('Not allowed.', 403);
-    [$from, $to] = calRange();
+/** everything on one person's calendar between two dates: walks they booked, their come-backs, lead follow-ups, their entries */
+function calEventsFor(string $who, string $from, string $to): array {
     $ev = [];
     foreach (walksBetween($from, $to) as $w) if ($w['by'] === $who)
         $ev[] = ['kind' => 'walk', 'date' => $w['date'], 'time' => $w['time'], 'title' => $w['address'], 'town' => $w['town'], 'region' => $w['region'], 'area' => $w['area'], 'id' => $w['id']];
@@ -2790,7 +2849,26 @@ if ($action === 'calendar') {
         $ev[] = ['kind' => 'own', 'date' => $c['date'], 'time' => (string) ($c['time'] ?? ''), 'title' => (string) $c['title'], 'note' => (string) ($c['note'] ?? ''), 'cid' => $c['id'], 'by' => (string) ($c['by'] ?? '')];
     }
     usort($ev, fn($x, $y) => [$x['date'], $x['time'] === '' ? '99' : $x['time']] <=> [$y['date'], $y['time'] === '' ? '99' : $y['time']]);
-    out(['ok' => true, 'who' => $who, 'from' => $from, 'to' => $to, 'edit' => canManage($who), 'events' => $ev]);
+    return $ev;
+}
+if ($action === 'calendar') {
+    $who = trim((string) ($_GET['who'] ?? '')) ?: $me;
+    if (!canViewCal($who)) fail('Not allowed.', 403);
+    [$from, $to] = calRange();
+    out(['ok' => true, 'who' => $who, 'from' => $from, 'to' => $to, 'edit' => canManage($who), 'events' => calEventsFor($who, $from, $to)]);
+}
+
+/* ---- calendar sync (2026-10-11): the person's own feed link, and a new link (the old one stops) ---- */
+if ($action === 'calfeedurl' || $action === 'calfeedreset') {
+    $pid = (string) ($session['c'] ?? '');
+    if ($pid === '') fail('Not allowed.', 403);
+    if ($action === 'calfeedreset' && !$isPost) fail('POST required', 405);
+    $salt = calFeedSalt($pid, $action === 'calfeedreset');
+    if ($salt === null) fail('Could not save that. Try again.', 500);
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    $path = strtok((string) ($_SERVER['REQUEST_URI'] ?? ''), '?');
+    $https = 'https://' . $host . $path . '?action=calfeed&p=' . rawurlencode($pid) . '&t=' . calFeedToken($pid, $salt, $sessionKey);
+    out(['ok' => true, 'url' => $https, 'webcal' => preg_replace('#^https://#', 'webcal://', $https)]);
 }
 if ($action === 'calsave') {
     if (!$isPost) fail('POST required', 405);
