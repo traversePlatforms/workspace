@@ -1001,10 +1001,10 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       Main St" in Denver and in Fountain were treated as one door: 56 houses had been dropped from one town, and 20 town pairs
       that share no house were linked, so their logs could read into each other. ✅ Fixed in build-rounds-data.mjs (same house
       only within 150 m), houses restored with their side data, false pairs removed (7 real overlaps kept). **Goes live with the
-      next upload** (the index.json of every copy carries the pairs). Their 2023 close-ups still need a forced houses.mjs run.
+      next upload** ✅ LIVE 2026-10-10 evening (all six copies now carry the 7 real pairs). Their 2023 close-ups still need a forced houses.mjs run.
 - [~] **TR-7 — Split big towns' door files per neighbourhood (server memory).** ✅ **Built and tested 2026-10-10**
       (commit 4d5e077): server-side town cache, no whole-town decode on taps; identical answers on 635 neighbourhoods; a
-      Denver tap 190 → 112 MB. **Waiting on Matthew's go to upload.** Remaining big item per tap: the hail file (unpacked
+      Denver tap 190 → 112 MB. **✅ LIVE 2026-10-10 evening** (server town-cache built on first tap per town). Remaining big item per tap: the hail file (unpacked
       for the storm job). Original note: Opening one neighbourhood decodes the whole
       town: Denver's door file alone is ~80 MB of server memory per tap (peak 190 MB with hail and wind), Thornton/Parker
       ~150. Fine under the host's 768 MB, but several crews tapping at once add up. 2026-10-10 already done: side files packed
