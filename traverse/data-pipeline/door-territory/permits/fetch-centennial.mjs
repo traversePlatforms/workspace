@@ -16,7 +16,8 @@ const H = 'https://cityofcentennialco-energovweb.tylerhost.net/apps/selfservice'
 const HD = { tenantId: '1', tenantName: 'CentennialCOProd', 'Tyler-TenantUrl': 'CentennialCOProd', 'Tyler-Tenant-Culture': 'en-US', 'Content-Type': 'application/json;charset=UTF-8', Accept: 'application/json' };
 /* The search stops at 100 pages (10,000 results) and ignores its date filters, so roofs are read a year at a time by
    the exact permit-number prefix of a residential one-stop permit (RONE-24 = 7,701 permits, every kind, in 2024). */
-const KEYWORDS = ['solar', 'renewable', 'photovoltaic', ...Array.from({ length: 9 }, (_, i) => 'RONE-' + (18 + i))];
+/* RONE-18 up to this year's prefix (2026-10-11: was fixed at RONE-26, so the monthly refresh would have missed 2027 on) */
+const KEYWORDS = ['solar', 'renewable', 'photovoltaic', ...Array.from({ length: new Date().getFullYear() - 2018 + 1 }, (_, i) => 'RONE-' + (18 + i))];
 const EXACT = (kw) => kw.startsWith('RONE-');
 const SIZE = 100, PAUSE = 1500;
 const PROG = join(HERE, 'centennial-pages.json');

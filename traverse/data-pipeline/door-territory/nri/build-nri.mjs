@@ -8,18 +8,32 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { metros } from '../metros/registry.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const LAYER = 'https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Census_Tracts/FeatureServer/0/query';
 const HAZ = { h: 'HAIL', w: 'SWND', t: 'TRND', f: 'WFIR' };
-const CACHE = join(HERE, 'nri-cache.json');
+
+/* the metro builder (2026-10-11): METRO=<metro> fetches that metro's counties into its own cache and writes only its towns */
+const METRO = process.env.METRO || '';
+const MDEF = METRO ? metros().find((m) => m.key === METRO) : null;
+if (METRO && !MDEF) throw new Error('no metro ' + METRO);
+const METRO_GROUPS = new Set(metros().map((m) => m.group || m.key));
+const mineTown = (reg) => (METRO ? reg.group === METRO : !METRO_GROUPS.has(reg.group));
+const MCOUNTIES = MDEF ? Object.values(MDEF.sources) : [];
+const CACHE = join(HERE, METRO ? `nri-cache-${METRO}.json` : 'nri-cache.json');
 
 if (!existsSync(CACHE) || process.argv.includes('--fetch')) {
   const fields = ['TRACTFIPS', 'COUNTY', 'NRI_VER', ...Object.values(HAZ).flatMap((h) => [`${h}_RISKR`, `${h}_AFREQ`])];
-  const q = new URLSearchParams({ where: "STATEABBRV='CO'", outFields: fields.join(','), outSR: '4326', maxAllowableOffset: '0.0003', resultRecordCount: '2000', f: 'geojson' });
-  const j = await (await fetch(LAYER, { method: 'POST', body: q })).json();
-  if (!j.features) throw new Error('NRI: ' + JSON.stringify(j).slice(0, 200));
+  const where = MDEF ? `STATEABBRV='${MDEF.state}' AND COUNTY IN (${MCOUNTIES.map((c) => `'${c.countyName}'`).join(',')})` : "STATEABBRV='CO'";
+  const j = { type: 'FeatureCollection', features: [] };
+  for (let off = 0; ; off += 2000) {   /* paged (2026-10-11): a big state has more tracts than one page */
+    const q = new URLSearchParams({ where, outFields: fields.join(','), outSR: '4326', maxAllowableOffset: '0.0003', resultOffset: String(off), resultRecordCount: '2000', orderByFields: 'TRACTFIPS', f: 'geojson' });
+    const p = await (await fetch(LAYER, { method: 'POST', body: q })).json();
+    if (!p.features) throw new Error('NRI: ' + JSON.stringify(p).slice(0, 200));
+    j.features.push(...p.features); if (p.features.length < 2000) break;
+  }
   writeFileSync(CACHE, JSON.stringify(j));
   console.log(`fetched ${j.features.length} Colorado tracts (${j.features[0].properties.NRI_VER})`);
 }
@@ -40,7 +54,7 @@ const tractAt = (lon, lat) => { for (const t of tracts) if (lon >= t.bb[0] && lo
 const idx = JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8'));
 let tot = 0, hit = 0;
 for (const reg of idx.regions) {
-  if (String(reg.key).startsWith('com-')) continue;
+  if (String(reg.key).startsWith('com-') || !mineTown(reg)) continue;
   const f = join(DATA, `${reg.key}.json`); if (!existsSync(f)) continue;
   const d = JSON.parse(readFileSync(f, 'utf8')), doors = {}, used = {};
   let n = 0, k = 0;

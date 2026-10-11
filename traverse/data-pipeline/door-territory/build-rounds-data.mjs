@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isSale } from './owner-names.mjs';
+import { metroTowns } from './metros/registry.mjs';   /* towns outside Colorado from metros/<metro>.json (2026-10-11) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..', '..', 'app', 'data', 'rounds');
@@ -53,6 +54,7 @@ const SOURCES = [
   ['cs-southwest', 'Colorado Springs Southwest', 'cs-southwest-areas.json', 'cs-southwest'],
   ['boulder', 'Boulder', 'boulder-areas.json', 'boulder'],
 ];
+for (const t of metroTowns()) SOURCES.push([t.key, t.label, t.areas, t.group]);   /* the metro builder: each metro is its own group */
 
 /* same slug rule as build-walk-tool.mjs, so a door has one id everywhere */
 const slug = (s) => s.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 60);
@@ -161,6 +163,8 @@ const CENTRE = {
   'highlands-ranch': [39.540, -104.985], parker: [39.515, -104.765], 'castle-pines': [39.455, -104.895],
   'cs-northeast': [38.95, -104.70],   'cs-southeast': [38.86, -104.71],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-northwest': [38.92, -104.82],   'cs-southwest': [38.81, -104.81],   'boulder': [40.015, -105.255],
 };
+for (const t of metroTowns()) if (t.center) CENTRE[t.key] = t.center;
+const METRO_TOWN = Object.fromEntries(metroTowns().map((t) => [t.key, t]));
 const km = (la1, lo1, la2, lo2) => Math.hypot((la1 - la2) * 111, (lo1 - lo2) * 111 * Math.cos((la1 * Math.PI) / 180));
 const built = [];
 for (const [key, label, fileName, group] of SOURCES) {
@@ -265,7 +269,8 @@ for (const { key, label, group, j, areas: raw } of built) {
   const areas = raw.filter((a) => a.doors.length).map((a) => ({ name: a.name, avg: a.avg, place: placeOf(a.src), fw: firewiseOf(a.src), doors: a.doors }));
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');
   /* c: the town's centre, where the server asks the weather service for alerts (2026-10-07) */
-  index.push({ key, label, ...(group ? { group } : {}), ...(CENTRE[key] ? { c: CENTRE[key] } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
+  const mt = METRO_TOWN[key];   /* a metro town carries its metro and county (2026-10-11): the editions need the county */
+  index.push({ key, label, ...(group ? { group } : {}), ...(mt ? { metro: mt.metro, county: mt.county } : {}), ...(CENTRE[key] ? { c: CENTRE[key] } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
   console.log(`${key}.json  ${areas.length} areas, ${index[index.length - 1].doors} doors`);
 }
 writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');

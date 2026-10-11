@@ -116,6 +116,7 @@ traverse/data-pipeline/door-territory/lawn-trial/*.bak
 # Hail per door (2026-10-04): daily radar cut-outs and the built files, regenerable with
 # door-app/operations/door-territory/hail/build-hail.mjs (fetch, then build)
 traverse/data-pipeline/door-territory/hail/days/
+traverse/data-pipeline/door-territory/hail/days-*/
 traverse/data-pipeline/door-territory/hail/fetch.log
 traverse/app/data/rounds/hail-*.json
 
@@ -223,14 +224,14 @@ traverse/data-pipeline/door-territory/noaa-token.txt
 traverse/data-pipeline/door-territory/permits/*-permits.json
 
 # FEMA tract cache (2026-10-07), refetchable
-traverse/data-pipeline/door-territory/nri/nri-cache.json
+traverse/data-pipeline/door-territory/nri/nri-cache*.json
 
 # generated per-town side files (2026-10-07): permits and FEMA tract ratings, rebuilt by the pipeline
 traverse/app/data/rounds/permit-*.json
 traverse/app/data/rounds/nri-*.json
 
 # Census block-group cache (2026-10-07), refetchable; and the generated per-town files
-traverse/data-pipeline/door-territory/census/census-cache.json
+traverse/data-pipeline/door-territory/census/census-cache*.json
 traverse/app/data/rounds/census-*.json
 
 # Yards frost and rain (2026-10-07): generated, and the server's rain cache
@@ -263,3 +264,9 @@ traverse/data-pipeline/door-territory/logs-*/
 
 # one-property towns for a single job (owner names, like the door files above)
 traverse/app/data/one-off/
+
+# monthly permit refresh logs
+traverse/ops/logs/
+
+# metro builder per-door county data (property details)
+traverse/data-pipeline/door-territory/metros/out/

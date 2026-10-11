@@ -11,6 +11,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { metros } from '../metros/registry.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
@@ -21,7 +22,17 @@ const YEAR = 2024, VER = 'ACS 5-year 2020–2024';
 const COUNTIES = ['001', '005', '013', '014', '031', '035', '041', '059', '069', '119', '123'];
 const VARS = ['B25003_001E', 'B25003_002E', 'B19013_001E', 'B25035_001E', 'B25077_001E', 'B25039_002E', 'B25002_001E', 'B25002_003E', 'B25024_001E', 'B25024_002E'];
 const TIGER = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/11/query';
-const CACHE = join(HERE, 'census-cache.json');
+
+/* the metro builder (2026-10-11): METRO=<metro> fetches that metro's counties into its own cache and writes only its towns */
+const METRO = process.env.METRO || '';
+const MDEF = METRO ? metros().find((m) => m.key === METRO) : null;
+if (METRO && !MDEF) throw new Error('no metro ' + METRO);
+const METRO_GROUPS = new Set(metros().map((m) => m.group || m.key));
+const mineTown = (reg) => (METRO ? reg.group === METRO : !METRO_GROUPS.has(reg.group));
+const MCOUNTIES = MDEF ? Object.values(MDEF.sources) : [];
+const CACHE = join(HERE, METRO ? `census-cache-${METRO}.json` : 'census-cache.json');
+const STATE_FIPS = MDEF ? MDEF.stateFips : '08';
+if (MDEF) COUNTIES.splice(0, COUNTIES.length, ...MCOUNTIES.map((c) => c.countyFips));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const val = (x) => { const n = +x; return Number.isFinite(n) && n >= 0 ? n : null; };   /* the API's -666666666 etc. = not available */
 
@@ -29,7 +40,7 @@ if (!existsSync(CACHE) || process.argv.includes('--fetch')) {
   if (!KEY) throw new Error('no Census key: census-key.txt');
   const bgs = {};
   for (const c of COUNTIES) {
-    const u = `https://api.census.gov/data/${YEAR}/acs/acs5?get=${VARS.join(',')}&for=block%20group:*&in=state:08&in=county:${c}&key=${KEY}`;
+    const u = `https://api.census.gov/data/${YEAR}/acs/acs5?get=${VARS.join(',')}&for=block%20group:*&in=state:${STATE_FIPS}&in=county:${c}&key=${KEY}`;
     const j = await (await fetch(u)).json(), h = j[0];
     for (const r of j.slice(1)) {
       const g = (k) => val(r[h.indexOf(k)]), id = r[h.indexOf('state')] + r[h.indexOf('county')] + r[h.indexOf('tract')] + r[h.indexOf('block group')];
@@ -48,7 +59,7 @@ if (!existsSync(CACHE) || process.argv.includes('--fetch')) {
   const shapes = [];
   for (const c of COUNTIES) {
     for (let off = 0; ; off += 1000) {
-      const q = new URLSearchParams({ where: `STATE='08' AND COUNTY='${c}'`, outFields: 'GEOID', outSR: '4326', maxAllowableOffset: '0.0002', resultOffset: String(off), resultRecordCount: '1000', f: 'geojson' });
+      const q = new URLSearchParams({ where: `STATE='${STATE_FIPS}' AND COUNTY='${c}'`, outFields: 'GEOID', outSR: '4326', maxAllowableOffset: '0.0002', resultOffset: String(off), resultRecordCount: '1000', f: 'geojson' });
       const j = await (await fetch(TIGER, { method: 'POST', body: q })).json();
       if (!j.features) throw new Error('TIGERweb: ' + JSON.stringify(j).slice(0, 200));
       shapes.push(...j.features);
@@ -76,7 +87,7 @@ const bgAt = (lon, lat) => { for (const s of grid.get(Math.floor(lon / G) + ',' 
 const idx = JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8'));
 let tot = 0, hit = 0;
 for (const reg of idx.regions) {
-  if (String(reg.key).startsWith('com-')) continue;
+  if (String(reg.key).startsWith('com-') || !mineTown(reg)) continue;
   const f = join(DATA, `${reg.key}.json`); if (!existsSync(f)) continue;
   const d = JSON.parse(readFileSync(f, 'utf8')), doors = {}, used = {};
   let n = 0, k = 0;

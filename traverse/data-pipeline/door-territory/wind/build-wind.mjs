@@ -29,8 +29,16 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { cutoffs, keepWindDay } from '../storm-keep.mjs';
+import { metros } from '../metros/registry.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
+/* the metro builder (2026-10-11): WIND_METRO=<metro> builds that metro alone: its state's reports, its towns, its own storm file */
+const METRO = process.env.WIND_METRO || '';
+const MDEF = METRO ? metros().find((m) => m.key === METRO) : null;
+if (METRO && !MDEF) throw new Error('no metro ' + METRO);
+const METRO_GROUPS = new Set(metros().map((m) => m.group || m.key));
+const STATE = MDEF ? MDEF.state : 'CO', st = STATE.toLowerCase();
+const SUFFIX = METRO ? '-' + METRO : '';
 const CACHE = join(HERE, 'cache');
 const IEM = 'https://mesonet.agron.iastate.edu/cgi-bin/request/gis/lsr.py';
 const SOURCE = 'NWS Local Storm Reports via Iowa Environmental Mesonet (mesonet.agron.iastate.edu/request/gis/lsrs.phtml)';
@@ -45,11 +53,11 @@ const DAMAGE = new Set(['D', 'O']);
    ordinary windy day. Ridge RAWS stations (Rampart, Manchester, Carpenter Peak) are kept: they are exposed, but
    they sit at the same height as the houses around them. Add a pattern here to drop a station; see README. */
 const EXCLUDE_PLACE = /PIKES PEAK/i;
-const TZ = 'America/Denver';
+const TZ = MDEF && MDEF.timezone ? MDEF.timezone : 'America/Denver';
 
 function towns() {
   const idx = JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8'));
-  return (idx.regions || idx).map((r) => (typeof r === 'string' ? { key: r } : r)).filter((r) => r.key);
+  return (idx.regions || idx).map((r) => (typeof r === 'string' ? { key: r } : r)).filter((r) => r.key && (METRO ? r.group === METRO : !METRO_GROUPS.has(r.group)));
 }
 /** only id, lat, lon leave the door file: the file carries owners' names and they stay there */
 function doorsOf(key) {
@@ -84,12 +92,12 @@ async function fetchAll() {
   mkdirSync(CACHE, { recursive: true });
   const y0 = +FROM.slice(0, 4), y1 = +today().slice(0, 4);
   for (let y = y0; y <= y1; y++) {
-    const f = join(CACHE, `lsr-co-${y}.csv`);
+    const f = join(CACHE, `lsr-${st}-${y}.csv`);
     if (existsSync(f)) {
       const ageH = (Date.now() - statSync(f).mtimeMs) / 3600000;
       if (y < y1 || ageH < 20) { console.log(`  ${y}: cached`); continue; }   /* past years never change here; this year refreshes daily */
     }
-    const url = `${IEM}?state=CO&wfo=ALL&sts=${y}-01-01T00:00Z&ets=${y + 1}-01-01T00:00Z&fmt=csv&justcsv=1`;
+    const url = `${IEM}?state=${STATE}&wfo=ALL&sts=${y}-01-01T00:00Z&ets=${y + 1}-01-01T00:00Z&fmt=csv&justcsv=1`;
     const txt = await get(url);
     if (!/^VALID,VALID2,LAT,LON,MAG/.test(txt)) throw new Error(`${y}: not a LSR CSV (${txt.slice(0, 80)})`);
     writeFileSync(f, txt);
@@ -119,7 +127,7 @@ function csvRows(txt) {
 function loadReports() {
   const out = [], seen = new Set();
   const files = [];
-  for (let y = +FROM.slice(0, 4); y <= +today().slice(0, 4); y++) { const f = join(CACHE, `lsr-co-${y}.csv`); if (existsSync(f)) files.push(f); }
+  for (let y = +FROM.slice(0, 4); y <= +today().slice(0, 4); y++) { const f = join(CACHE, `lsr-${st}-${y}.csv`); if (existsSync(f)) files.push(f); }
   if (!files.length) throw new Error('nothing downloaded: run fetch first');
   let raw = 0, dup = 0, summit = 0;
   for (const f of files) {
@@ -128,7 +136,7 @@ function loadReports() {
     for (const r of rows) {
       const type = r[col.TYPECODE];
       if (!TYPES[type]) continue;
-      if (r[col.STATE] !== 'CO') continue;
+      if (r[col.STATE] !== STATE) continue;
       raw++;
       const day = localDay(r[col.VALID2]);
       if (day < FROM) continue;
@@ -223,7 +231,7 @@ function build() {
     date: s.date, max: s.max || null, kind: s.max ? s.kind : 'damage', reports: s.reports.size, n: s.n, towns: s.towns,
     pts: [...s.reports].map((i) => reports[i]).sort((a, b) => (b.mph || 0) - (a.mph || 0)).map((r) => [r.lat, r.lon, r.mph, r.kind, r.place, r.src]),
   }));
-  writeFileSync(join(DATA, 'wind-storms.json'), JSON.stringify({ ...meta, days: list.length, storms: list }));
+  writeFileSync(join(DATA, `wind-storms${SUFFIX}.json`), JSON.stringify({ ...meta, days: list.length, storms: list }));
   console.log(`wind-storms.json: ${list.length} storm days, ${through} latest report; ${total} doors with at least one entry`);
 }
 

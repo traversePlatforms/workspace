@@ -372,6 +372,7 @@ async function build(key) {
   const allRegions = JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions
     .concat(E.extraRegions ? JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions : []);
   const notHere = new Set(allRegions.filter((r) => r.group && !groupsShown.includes(r.group)).map((r) => r.key));
+  const metroGroupsHidden = new Set(allRegions.filter((r) => r.metro && !groupsShown.includes(r.group)).map((r) => r.group));
   /* the town a data file belongs to: the file is the town itself, or <kind>-<town>.json. Matched against EVERY town, longest key
      first, so a town whose key ends another town's key (say "springs" against "com-springs") never claims the other's files
      (review 2026-10-07). Returns the town only when this edition does not show it. */
@@ -385,6 +386,8 @@ async function build(key) {
     const p = path.join(DATA, f);
     if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || /^(regions-cache-|best-)/.test(f) || !E.keep(f)) continue;   /* the server's kept answers: each install makes its own (Fable 2026-10-09) */
     if (townOfFile(f)) continue;
+    /* a metro's own files (2026-10-11: hail-storms-dfw.json, wind-storms-dfw.json ...) only where the edition shows that metro */
+    { const mg = f.match(/-([a-z0-9]+)\.json$/); if (mg && metroGroupsHidden.has(mg[1])) continue; }
     let buf = fs.readFileSync(p);
     if (f === 'index.json') {
       const idx = JSON.parse(buf.toString('utf8'));

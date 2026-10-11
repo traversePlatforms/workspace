@@ -1,0 +1,70 @@
+{
+  "key": "dfw",
+  "label": "Dallas–Fort Worth",
+  "state": "TX",
+  "stateFips": "48",
+  "timezone": "America/Chicago",
+  "group": "dfw",
+  "note": "First market outside Colorado (Matthew 2026-10-11). The Texas statewide parcel service (TxGIO StratMap) advertises queries but refuses them, so each county comes from its own appraisal district. Collin CAD publishes its certified roll as an open feature service (open-data-ccad.hub.arcgis.com; 'public domain, as is'). Frisco is split between Collin and Denton: only its Collin side until Denton CAD is added.",
+  "sources": {
+    "collin": {
+      "label": "Collin Central Appraisal District",
+      "url": "https://services2.arcgis.com/uXyoacYrZTPTKD3R/arcgis/rest/services/CCAD_Parcel_Feature_Set/FeatureServer/4",
+      "pageSize": 2000,
+      "residential": "propCategoryCode = 'A'",
+      "ownerOccupied": "exemptHmstdFlag = 'T'",
+      "fields": {
+        "id": "PROP_ID",
+        "owner": "ownerName",
+        "situs": "situsConcatShort",
+        "city": "situsCity",
+        "zip": "situsZip",
+        "mail1": "ownerAddrLine1",
+        "mail2": "ownerAddrLine2",
+        "mailCity": "ownerAddrCity",
+        "mailState": "ownerAddrState",
+        "mailZip": "ownerAddrZip",
+        "value": "prevValMarket",
+        "valueYear": "prevValYear",
+        "yearBuilt": "imprvYearBuilt",
+        "sqft": "imprvMainArea",
+        "pool": "imprvPoolFlag",
+        "sold": "deedEffDate"
+      },
+      "countyName": "Collin",
+      "countyFips": "085"
+    }
+  },
+  "towns": [
+    {
+      "key": "mckinney",
+      "label": "McKinney",
+      "county": "collin",
+      "where": "situsCity = 'MCKINNEY'",
+      "center": [
+        33.1972,
+        -96.6398
+      ]
+    },
+    {
+      "key": "plano",
+      "label": "Plano",
+      "county": "collin",
+      "where": "situsCity = 'PLANO'",
+      "center": [
+        33.0198,
+        -96.6989
+      ]
+    },
+    {
+      "key": "frisco",
+      "label": "Frisco",
+      "county": "collin",
+      "where": "situsCity = 'FRISCO'",
+      "center": [
+        33.1507,
+        -96.8236
+      ]
+    }
+  ]
+}

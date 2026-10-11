@@ -23,18 +23,23 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decodeMesh } from './mesh.mjs';
 import { cutoffs, keepHailDay } from '../storm-keep.mjs';
+import { metros } from '../metros/registry.mjs';
 const ALL_YEAR_FROM = '2024-10-01';   /* before this, hail season only (April to September) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
-const DAYS = join(HERE, 'days');
+/* the metro builder (2026-10-11): HAIL_METRO=<metro> builds that metro alone, from its own day files, into its own storm files */
+const METRO = process.env.HAIL_METRO || '';
+const METRO_GROUPS = new Set(metros().map((m) => m.group || m.key));
+const DAYS = join(HERE, METRO ? 'days-' + METRO : 'days');
+const SUFFIX = METRO ? '-' + METRO : '';
 const ARCHIVE = 'https://mtarchive.geol.iastate.edu';
 const MIN_STORE = 19.05;   /* 0.75 in: kept per door */
 const BIG = 25.4;          /* 1 in: what a roofer calls a hail day */
 
 function towns() {
   const idx = JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8'));
-  return (idx.regions || idx).map((r) => (typeof r === 'string' ? { key: r } : r)).filter((r) => r.key);
+  return (idx.regions || idx).map((r) => (typeof r === 'string' ? { key: r } : r)).filter((r) => r.key && (METRO ? r.group === METRO : !METRO_GROUPS.has(r.group)));
 }
 function doorsOf(key) {
   const d = JSON.parse(readFileSync(join(DATA, key + '.json'), 'utf8'));
@@ -154,7 +159,7 @@ function build() {
     console.log(`  ${t.key}: ${Object.keys(doors).length} of ${n} doors with a storm of 0.75 in or more`);
   }
   const list = Object.values(storms).sort((a, b) => (a.date < b.date ? 1 : -1));
-  writeFileSync(join(DATA, 'hail-storms.json'), JSON.stringify({ through, from, days: have.length, missing: days.length - have.length, storms: list }));
+  writeFileSync(join(DATA, `hail-storms${SUFFIX}.json`), JSON.stringify({ through, from, days: have.length, missing: days.length - have.length, storms: list }));
   /* the paths for the hail map (2026-10-05): per storm day, every grid square of 0.75 in or more, [row, col, inches x 100]
      on the day file's grid; the map draws each as a ~1 km square */
   const g0 = have[0], paths = {};
@@ -162,7 +167,7 @@ function build() {
     const day = have.find((d) => d.d === s.date); if (!day) continue;
     paths[s.date] = day.cells.filter((c) => c[2] / 10 >= MIN_STORE).map(([r, c, v]) => [r + day.r0 - g0.r0, c + day.c0 - g0.c0, Math.round(v / 10 / 25.4 * 100)]);
   }
-  writeFileSync(join(DATA, 'hail-paths.json'), JSON.stringify({ lat1: g0.lat1, lon1: g0.lon1, dx: g0.dx, dy: g0.dy, r0: g0.r0, c0: g0.c0, paths }));
+  writeFileSync(join(DATA, `hail-paths${SUFFIX}.json`), JSON.stringify({ lat1: g0.lat1, lon1: g0.lon1, dx: g0.dx, dy: g0.dy, r0: g0.r0, c0: g0.c0, paths }));
   console.log(`hail-storms.json: ${list.length} storm days (${list.filter((s) => s.n1).length} with a door at 1 in or more), ${have.length} days read, ${days.length - have.length} missing; ${total} doors`);
 }
 
