@@ -315,7 +315,8 @@ function api(E, name) {
   s = s.split('sixfold-data').join(E.data).split('sixfold-private').join(E.priv)
     .split('sixfold-backup').join(E.api + '-backup').split('filename="sixfold-').join('filename="' + E.api + '-')
     .split('SIXFOLD_SKIPTRACE').join(E.api.toUpperCase().replace(/-/g, '_') + '_SKIPTRACE')
-    .split('SIXFOLD_SMS').join(E.api.toUpperCase().replace(/-/g, '_') + '_SMS');
+    .split('SIXFOLD_SMS').join(E.api.toUpperCase().replace(/-/g, '_') + '_SMS')
+    .split('SIXFOLD_BILLING').join(E.api.toUpperCase().replace(/-/g, '_') + '_BILLING');
   return s;
 }
 
@@ -347,6 +348,7 @@ async function build(key) {
   r = rep(r, "require_once __DIR__ . '/skiptrace.php';", "require_once __DIR__ . '/" + E.api + "-skiptrace.php';", 1, 'require skiptrace');
   r = rep(r, "require_once __DIR__ . '/webpush.php';", "require_once __DIR__ . '/" + E.api + "-webpush.php';", 1, 'require webpush');
   r = rep(r, "require_once __DIR__ . '/sms.php';", "require_once __DIR__ . '/" + E.api + "-sms.php';", 1, 'require sms');
+  r = rep(r, "require_once __DIR__ . '/billing.php';", "require_once __DIR__ . '/" + E.api + "-billing.php';", 1, 'require billing');
   for (const bad of ['sixfold-data', 'sixfold-private', "'sfr'"]) if (r.indexOf(bad) >= 0) throw new Error('API still names ' + bad);
   write(path.join('public_html', 'api', E.api + '-rounds.php'), r);
   const st = api(E, 'skiptrace.php');
@@ -355,6 +357,8 @@ async function build(key) {
   write(path.join('public_html', 'api', E.api + '-webpush.php'), api(E, 'webpush.php'));
   const sm = api(E, 'sms.php'); if (sm.indexOf('sixfold-private') >= 0) throw new Error('sms still names sixfold-private');
   write(path.join('public_html', 'api', E.api + '-sms.php'), sm);
+  const bl = api(E, 'billing.php'); if (bl.indexOf('sixfold-private') >= 0) throw new Error('billing still names sixfold-private');
+  write(path.join('public_html', 'api', E.api + '-billing.php'), bl);
 
   // The data: towns and the per-door layers this edition uses. Never Sixfold's own business: its company file and
   // training lessons, or the docs folder (only its funding and water sheets, for Yards, with Sixfold's review link out).

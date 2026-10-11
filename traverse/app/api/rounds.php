@@ -711,8 +711,9 @@ const PHONE_SOURCES = ['door', 'tps', 'fps', 'other'];
  * looked-up: no Call link until the provider says it is not on the Do Not Call list. The provider,
  * the batching, the results log and the rule live in api/skiptrace.php; the actions are below. */
 require_once __DIR__ . '/skiptrace.php';
-require_once __DIR__ . '/webpush.php';
-require_once __DIR__ . '/sms.php';   /* in-app texting (2026-10-10): Twilio, keys in the private folder */   /* phone alerts (2026-10-05): Web Push, no secrets in it */
+require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push, no secrets in it */
+require_once __DIR__ . '/sms.php';       /* in-app texting (2026-10-10): Twilio, keys in the private folder */
+require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys in the private folder */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -1485,6 +1486,20 @@ if ($action === 'smsin') {
     header('Content-Type: text/xml; charset=utf-8');
     echo '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
     exit;
+}
+
+/* Stripe's webhook for this install (2026-10-10, api/billing.php). No session: the raw body must carry a valid
+   Stripe-Signature for this install's endpoint secret, and only events for this install are taken. */
+if ($action === 'billinghook') {
+    $bc = billingConfig(__DIR__);
+    if (!billingConfigured($bc)) fail('Not found.', 404);
+    if (!$isPost) fail('POST required', 405);
+    if (!stripeSigValid((string) $bc['webhook_secret'], (string) ($raw ?? ''), (string) ($_SERVER['HTTP_STRIPE_SIGNATURE'] ?? ''))) fail('Not allowed.', 400);
+    $ev = json_decode((string) $raw, true);
+    if (!is_array($ev) || empty($ev['type'])) fail('Not an event.', 400);
+    $did = billingTakeEvent($bc, $ev);
+    if ($did !== '') billingLog(['what' => 'event', 'type' => (string) $ev['type'], 'id' => (string) ($ev['id'] ?? ''), 'did' => $did]);
+    out(['ok' => true, 'received' => true]);
 }
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
@@ -3697,6 +3712,36 @@ function acctTaken(array $rows, string $name, string $except = ''): bool {
     foreach ($rows as $r) if (!$r['off'] && $r['id'] !== $except && mb_strtolower($r['name']) === mb_strtolower($name)) return true;
     return false;
 }
+/* ---- billing (2026-10-10, api/billing.php): the admin sees the plan, pays through Stripe Checkout, manages it in Stripe's portal.
+ * Nothing here locks anyone out. */
+if (in_array($action, ['billing', 'billingcheckout', 'billingportal'], true)) {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!feature('billing')) fail('Billing is not on for this install.', 403);
+    $bc = billingConfig(__DIR__);
+    $rows = acctRows($basePeople, $acct, $sessionKey);
+    if ($action === 'billing') out(['ok' => true] + billingState($bc, $rows));
+    if (!$isPost) fail('POST required', 405);
+    if (!billingConfigured($bc)) fail('Billing is not set up yet: the Stripe keys are missing.', 503);
+    $back = billingBack($bc, (string) ($body['back'] ?? ''));
+    if ($back === null) fail('Open Billing from the app and try again.');
+    $b = billingLoad();
+    if ($action === 'billingportal') {
+        if (empty($b['customer'])) fail('There is no Stripe customer yet. Pick a plan first.');
+        $r = stripeCall($bc, 'POST', '/v1/billing_portal/sessions', ['customer' => (string) $b['customer'], 'return_url' => $back]);
+        if (isset($r['error']) || empty($r['url'])) fail($r['error'] ?? 'Stripe did not open the billing page.', 502);
+        billingLog(['what' => 'portal', 'by' => $me]);
+        out(['ok' => true, 'url' => (string) $r['url']]);
+    }
+    if (in_array($b['status'] ?? '', array_merge(BILLING_GOOD, ['past_due', 'unpaid']), true)) fail('There is a plan already. Change it in Manage billing.');
+    $plan = (string) ($body['plan'] ?? ''); $iv = (string) ($body['interval'] ?? ''); $seats = (int) ($body['seats'] ?? 0); $addon = !empty($body['addon']);
+    $cf = billingCheckoutFields($bc, $b, $plan, $iv, $seats, $addon, $back);
+    if (isset($cf['error'])) fail($cf['error']);
+    $r = stripeCall($bc, 'POST', '/v1/checkout/sessions', $cf['fields']);
+    if (isset($r['error']) || empty($r['url'])) fail($r['error'] ?? 'Stripe did not open the payment page.', 502);
+    billingLog(['what' => 'checkout', 'by' => $me, 'plan' => $plan, 'interval' => $iv, 'seats' => $plan === 'duo' ? 1 : $seats, 'addon' => $addon, 'session' => (string) ($r['id'] ?? '')]);
+    out(['ok' => true, 'url' => (string) $r['url']]);
+}
+
 function acctAdmins(array $rows): int { $n = 0; foreach ($rows as $r) if (!$r['off'] && $r['role'] === 'admin') $n++; return $n; }
 if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
@@ -3717,7 +3762,9 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
         usort($tn, fn($x, $y) => strcmp(mb_strtolower($x['name']), mb_strtolower($y['name'])));
-        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn]);
+        /* seats against the plan (2026-10-10), only where billing is on: the screen warns, nothing is blocked */
+        $seatInfo = feature('billing') ? array_intersect_key(billingState(billingConfig(__DIR__), $rows), ['seats' => 1, 'used' => 1, 'status' => 1, 'plan' => 1]) : null;
+        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn, 'seats' => $seatInfo]);
     }
     if (!$isPost) fail('POST required', 405);
     /* every change works on a fresh copy under a lock (Fable 2026-10-04): the file is rewritten whole, so

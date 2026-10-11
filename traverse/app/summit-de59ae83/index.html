@@ -1478,6 +1478,16 @@
   .jnrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .jnform{display:grid;gap:8px}
   .coform{margin:12px 0;padding:14px}.coform small{font-weight:400}
+  /* billing (2026-10-10) */
+  .billcard{margin:12px 0;padding:14px;display:grid;gap:8px}
+  .billhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.billhead b{font:800 18px var(--sans)}
+  .billst{font:700 12px var(--sans);padding:3px 9px;border-radius:999px;border:1px solid var(--line)}.billst.ok{color:var(--go);border-color:var(--go)}.billst.bad{color:var(--bad);border-color:var(--bad)}
+  .billtg{display:flex;gap:6px}.billiv{flex:1;min-height:40px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}.billiv.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .billplans{display:grid;gap:8px}.billplan{display:grid;gap:2px;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:15px var(--sans);cursor:pointer}
+  .billplan.on{border:2px solid var(--go);padding:11px 13px}.billplan b{font:800 16px var(--sans)}.billpr{font:800 24px var(--sans)}.billfd{color:var(--go);font-weight:700}
+  .billopts{display:grid;gap:6px}.billseat{display:grid;gap:4px;font-weight:700}.billseat input{max-width:8em;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:16px var(--sans);background:var(--card);color:var(--ink)}
+  .billadd{display:flex;align-items:center;gap:6px;font-size:14.5px}.billsum{padding-top:6px;border-top:1px solid var(--line)}.billsum b{font:800 18px var(--sans)}
+  .billgo{min-height:46px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 15px var(--sans);cursor:pointer}.billgo:disabled{opacity:.5;cursor:default}
   .coform .save{min-height:46px;min-width:9em;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14.5px var(--sans);cursor:pointer}
   .coform input[type=color]{width:52px;height:36px;padding:2px;border-radius:8px}
   .jnform label{display:grid;gap:3px;font-size:13px;font-weight:700}
@@ -2916,6 +2926,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
+        feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
         tile('button', 'door', 'Sample door', 'One made-up door with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)]);
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
@@ -6178,6 +6189,136 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Saved on the server beside the door data (company-local.json), so a data refresh never undoes it; every phone picks it up
      the next time it opens. The colour sets the bar, sign-in screen, keys and accents; the home-screen icon and name stay as
      the install was built. */
+  /* billing (Matthew 2026-10-10): the admin sees the plan and pays through Stripe. The page never sees a card: Checkout and
+     the customer portal are Stripe's own pages. Shown only where company.json turns on features.billing. Nothing locks. */
+  var BILL_PLAN = {
+    duo: ['Duo', 'For one- and two-person crews.', 'per crew'],
+    crew: ['Crew', 'The app on every phone in the team.', 'per person'],
+    pro: ['Pro', 'Everything your trade’s edition can do.', 'per person']
+  };
+  function billDate(ts) { return ts ? new Date(ts * 1000).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; }
+  function billingReturn() {
+    var m = /[?&]billing=(done|cancel)\b/.exec(location.search); if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    if (S.role !== 'admin') return false;
+    billingView();
+    if (m[1] === 'done') toast('Payment page finished', 'The plan shows here once Stripe confirms it, usually within a minute.', null);
+    else toast('Nothing was charged', 'You left the payment page before paying.', null);
+    return true;
+  }
+  function billingView() {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'billing';   /* hideSplash: back from Stripe it is the first screen drawn */ foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Billing', sub: 'Your Traverse plan', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('billing').then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      holder.textContent = '';
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load billing.')); return; }
+      drawBilling(holder, j);
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Billing needs signal.')); });
+  }
+  function billGo(btn, msg, action, body) {
+    btn.disabled = true; msg.className = 'sub2'; msg.textContent = 'Opening Stripe…';
+    body.back = location.href;
+    api(action, { body: body }).then(function (r) {
+      if (!r.ok || !r.url) { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = r.error || 'Stripe did not open.'; return; }
+      location.href = r.url;
+    }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
+  }
+  function drawBilling(holder, j) {
+    holder.textContent = '';
+    if (!j.ready) holder.appendChild(q('div', 'msg bad', 'Billing isn’t set up yet: the Stripe keys still need adding on the server.'));
+    if (j.mock) holder.appendChild(q('div', 'msg', 'Test mode: nothing is charged and no Stripe page opens for real.'));
+    var live = j.status && j.status !== 'canceled' && j.status !== 'incomplete_expired';
+    if (j.pending) {
+      var pc = q('div', 'card billcard'); pc.appendChild(q('b', null, 'Waiting for Stripe'));
+      pc.appendChild(q('p', 'sub2', 'The payment page finished. Stripe confirms the plan here, usually within a minute.'));
+      var rf = q('button', 'billgo', 'Check again'); rf.type = 'button'; rf.addEventListener('click', billingView); pc.appendChild(rf);
+      holder.appendChild(pc);
+    }
+    if (j.status) {
+      var c = q('div', 'card billcard'), P = BILL_PLAN[j.plan] || ['Plan', '', ''];
+      var head = q('div', 'billhead'); head.appendChild(q('b', null, P[0] + (j.addon ? ' + second edition' : '')));
+      var label = { active: 'Active', trialing: 'Free pilot', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Cancelled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
+      head.appendChild(q('span', 'billst ' + (j.status === 'active' || j.status === 'trialing' ? 'ok' : 'bad'), label));
+      c.appendChild(head);
+      var lines = [];
+      if (j.interval) lines.push(j.interval === 'year' ? 'Paid yearly' : 'Paid monthly');
+      if (live) lines.push(j.used + ' of ' + j.seats + (j.plan === 'duo' ? ' people the plan covers' : ' seats used'));
+      if (j.status === 'trialing' && j.trialEnd) lines.push('Pilot ends ' + billDate(j.trialEnd) + '; the card is charged then.');
+      else if (live && j.periodEnd) lines.push((j.cancelAtEnd ? 'Ends ' : 'Renews ') + billDate(j.periodEnd));
+      lines.forEach(function (t) { c.appendChild(q('div', 'sub2', t)); });
+      if (j.warn) c.appendChild(q('div', 'msg bad', j.warn));
+      if (j.portal) {
+        var mb = q('button', 'billgo', 'Manage billing'); mb.type = 'button'; var mm = q('div', 'sub2');
+        mb.disabled = !j.ready;
+        mb.addEventListener('click', function () { billGo(mb, mm, 'billingportal', {}); });
+        c.appendChild(mb); c.appendChild(q('div', 'sub2', 'Card, plan, seats, invoices and cancelling, on Stripe’s page.')); c.appendChild(mm);
+      }
+      holder.appendChild(c);
+    }
+    if (live || j.pending) return;
+    holder.appendChild(billPicker(j));
+  }
+  function billPicker(j) {
+    var box = q('div', 'card billcard');
+    box.appendChild(q('b', null, j.status === 'canceled' ? 'Pick a plan to carry on' : 'Pick a plan'));
+    var ivs = j.intervals && j.intervals.length ? j.intervals : ['year', 'month'];
+    var st = { plan: j.offer.indexOf('pro') >= 0 ? 'pro' : j.offer[0], iv: ivs.indexOf('year') >= 0 ? 'year' : ivs[0], seats: Math.max(1, j.used || 1), addon: false };
+    var tg = q('div', 'billtg'), plans = q('div', 'billplans'), opts = q('div', 'billopts'), sum = q('div', 'billsum'), msg = q('div', 'sub2');
+    var go = q('button', 'billgo', 'Continue to payment'); go.type = 'button';
+    box.appendChild(tg); box.appendChild(plans); box.appendChild(opts); box.appendChild(sum); box.appendChild(go); box.appendChild(msg);
+    box.appendChild(q('p', 'sub2', 'Several teams, trades or offices? The Company plan is set up with us directly.'));
+    function per(p) { return (j.display[p] || {})[st.iv] || 0; }
+    function paint() {
+      tg.textContent = '';
+      ivs.forEach(function (iv) {
+        var b = q('button', 'billiv' + (st.iv === iv ? ' on' : ''), iv === 'year' ? 'Yearly' : 'Monthly'); b.type = 'button';
+        b.addEventListener('click', function () { st.iv = iv; paint(); }); tg.appendChild(b);
+      });
+      plans.textContent = '';
+      j.offer.forEach(function (p) {
+        var P = BILL_PLAN[p], b = q('button', 'billplan' + (st.plan === p ? ' on' : '')); b.type = 'button';
+        b.appendChild(q('b', null, P[0])); b.appendChild(q('span', 'billpr', money(per(p))));
+        b.appendChild(q('small', null, P[2] + ' a month' + (st.iv === 'year' ? ', billed yearly' : '')));
+        b.appendChild(q('small', 'sub2', P[1]));
+        if (p === 'pro' && j.founding) b.appendChild(q('small', 'billfd', 'Founding company: 30% off for the first year'));
+        b.addEventListener('click', function () { st.plan = p; if (p !== 'pro') st.addon = false; paint(); });
+        plans.appendChild(b);
+      });
+      opts.textContent = '';
+      if (st.plan === 'duo') {
+        opts.appendChild(q('div', 'sub2', 'Duo covers up to ' + j.duoPeople + ' people.'));
+        if (j.used > j.duoPeople) opts.appendChild(q('div', 'msg bad', j.used + ' people can sign in now. Crew or Pro fits better, or remove people in Accounts.'));
+      } else {
+        var l = q('label', 'billseat', 'People (seats)'); var n = q('input'); n.type = 'number'; n.min = '1'; n.max = '500'; n.value = String(st.seats);
+        n.addEventListener('input', function () { var v = parseInt(n.value, 10); if (v >= 1 && v <= 500) { st.seats = v; total(); } });
+        l.appendChild(n); opts.appendChild(l);
+        opts.appendChild(q('small', 'sub2', j.used + ' ' + (j.used === 1 ? 'person can' : 'people can') + ' sign in now (test sign-ins not counted).'));
+        if (st.plan === 'pro' && j.display.addon) {
+          var al = q('label', 'billadd'), cb = q('input'); cb.type = 'checkbox'; cb.checked = st.addon;
+          cb.addEventListener('change', function () { st.addon = cb.checked; total(); });
+          al.appendChild(cb); al.appendChild(document.createTextNode(' Add a second edition (' + money(j.display.addon[st.iv] || 0) + ' per person a month)'));
+          opts.appendChild(al);
+        }
+      }
+      total();
+    }
+    function total() {
+      var qty = st.plan === 'duo' ? 1 : st.seats, m = per(st.plan) * qty + (st.addon ? ((j.display.addon || {})[st.iv] || 0) * qty : 0);
+      sum.textContent = '';
+      sum.appendChild(q('b', null, money(m) + ' a month'));
+      if (st.iv === 'year') sum.appendChild(q('span', 'sub2', ' · ' + money(m * 12) + ' billed once a year'));
+      if (st.plan === 'pro' && j.founding) sum.appendChild(q('div', 'sub2', 'Before the founding discount, which Stripe applies on the next page.'));
+      if (j.trialDays) sum.appendChild(q('div', 'sub2', 'Free for the first ' + j.trialDays + ' days; the card is charged after that. Cancel before then and nothing is charged.'));
+      sum.appendChild(q('div', 'sub2', 'Prices in US dollars. Stripe takes the card; this app never sees it.'));
+    }
+    go.disabled = !j.ready;
+    go.addEventListener('click', function () { billGo(go, msg, 'billingcheckout', { plan: st.plan, interval: st.iv, seats: st.plan === 'duo' ? 1 : st.seats, addon: st.addon }); });
+    paint();
+    return box;
+  }
   function companyView() {
     hideToast(); S.signin = null; S.screen = 'company'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Company', sub: 'How the app names and shows you', back: chooseView, backLabel: 'Field tools' });
@@ -6224,12 +6365,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       holder.textContent = '';
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the accounts.')); return; }
-      S.accts = j.accounts; S.acctTracking = j.tracking || 0; S.acctTeams = j.teams || []; drawAccounts(holder);
+      S.accts = j.accounts; S.acctTracking = j.tracking || 0; S.acctTeams = j.teams || []; S.acctSeats = j.seats || null; drawAccounts(holder);
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
   }
   function drawAccounts(holder) {
     holder.textContent = '';
     if (S.newCode) holder.appendChild(codeCard(S.newCode));
+    /* seats against the plan (2026-10-10): a warning only, adding people is never blocked */
+    var sx = S.acctSeats; if (sx && (sx.status === 'active' || sx.status === 'trialing') && sx.used > sx.seats) holder.appendChild(q('div', 'msg bad', sx.used + ' people can sign in and the plan pays for ' + sx.seats + '. Add seats in Billing.'));
     holder.appendChild(teamsBox(holder));
     var add = q('button', 'addlead', S.acctAdd ? 'Close the form' : '+ Add a person'); add.type = 'button';
     add.addEventListener('click', function () { S.acctAdd = !S.acctAdd; S.newCode = null; drawAccounts(holder); });
@@ -10869,7 +11012,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function boot() {
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; S.avatar = j.avatar || 0; chooseView(); }
+      if (j.ok) { S.me = j.name; S.role = j.role; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn())) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }
