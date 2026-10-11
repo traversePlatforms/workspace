@@ -962,7 +962,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-5 — More export options (someday, not now).** Matthew 2026-10-09: SalesRabbit exports into more platforms than
       Traverse does. Today Traverse has JobNimbus (live send + CSV) and a Jobber CSV; AccuLynx waits on their reply (TR-2).
       Look at which CRMs roofers, solar and pest companies actually use before adding any.
-- [ ] **TR-6 — Roof material for Roofing's new Front Range towns.** ✅ **2026-10-10: the 2020 state photo, 2023 close-up and outline are LIVE for all five** (every door has both photos; outlines on 106,226 of 113,281). **Left: roof material only.**
+- [ ] **TR-6 — Roof material for Roofing's new Front Range towns.** ✅ **2026-10-10: the 2020 state photo, 2023 close-up and outline are LIVE for all five** (every door has both photos; outlines on 106,226 of 113,281). ~~Left: roof material only.~~ ✅ **2026-10-11 ~1:15 AM: roof material + year built LIVE** (Roofing, and Solar for Thornton; 12 files, md5-checked, live-checked as Claude Check). Material per town: Thornton 100% (28,712 county record), Commerce City 100% (13,875 county), Erie 95% (5,259 county, rest from the photo), Denver 90% (15,474 photo, 20,806 photo’s guess shown as "probably"; Denver records no roof cover). **Centennial: none** — Arapahoe publishes no year built or roof data, and the photo-only model reached no confidence threshold, so it calls nothing (a records request would fix it).
       **Year built — what each county publishes (checked 2026-10-10, county pages):**
       | Town | County file | Year built | Roof cover recorded |
       |---|---|---|---|

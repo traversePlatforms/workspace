@@ -65,7 +65,7 @@ def main(towns):
         n_county = sum(1 for d in doors.values() if d['src'] == 'county'); n_guess = sum(1 for d in doors.values() if d['src'] == 'guess'); n_img = len(doors) - n_county - n_guess
         by_cls = {}
         for d in doors.values(): by_cls[d['m']] = by_cls.get(d['m'], 0) + 1
-        out = {'source': 'Douglas County assessor roof material (county) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
+        out = {'source': 'County assessor roof material where the county records it (county: Douglas; Adams for Thornton and Commerce City; Boulder and Weld for Erie) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
                'built': built, 'classes': {'asphalt': 'composition shingle or roll', 'tile': 'concrete or clay tile', 'shake': 'wood shake', 'metal': 'metal', 'flat': 'built-up or membrane'},
                'thresholds': usable, 'doors': doors}
         (DATA / f'material-{town}.json').write_text(json.dumps(out, separators=(',', ':')))
