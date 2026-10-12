@@ -190,7 +190,11 @@
         "florissant": "Mostly wells: ask what it allows",
         "highlands-ranch": "Highlands Ranch: 2 days a week (Stage 1)",
         "parker": "Parker Water: 3 days a week; other districts: ask",
-        "castle-pines": "Castle Pines North: 3 days a week; the Village: ask"
+        "castle-pines": "Castle Pines North: 3 days a week; the Village: ask",
+        "thornton": "Thornton: 2 days a week, you pick (Stage 1)",
+        "commerce-city": "South Adams water: 2 days a week (Stage 1)",
+        "centennial": "Mostly Denver Water: 2 days a week in season",
+        "erie": "Erie: rules changed through 2026: ask"
       },
       "wellSmall": "Under 35 acres: a well may not water a lawn",
       "wellBig": "35 acres or more: a well may water up to 1 acre"
@@ -475,6 +479,88 @@
                 "h": "Castle Pines Village",
                 "p": [
                   "The Village has its own water district and its rules were not checked. Ask the homeowner or the district."
+                ]
+              }
+            ]
+          },
+          "thornton": {
+            "title": "Thornton water",
+            "blocks": [
+              {
+                "h": "Thornton Water",
+                "p": [
+                  "Stage 1 drought since 15 March 2026.",
+                  "Lawns two days a week through the summer, on days the homeowner picks.",
+                  "No lawn watering from 10am to 6pm. Gardens, trees and shrubs as needed; hand-watering dry spots is allowed."
+                ]
+              },
+              {
+                "h": "A permit for new seed",
+                "p": [
+                  "Not checked for Thornton. Don’t promise one."
+                ]
+              }
+            ]
+          },
+          "commerce-city": {
+            "title": "Commerce City water",
+            "blocks": [
+              {
+                "h": "South Adams County Water & Sanitation",
+                "p": [
+                  "Serves most of Commerce City. Stage 1 drought declared 13 May.",
+                  "Two days a week, by address; outdoor watering cut by half.",
+                  "The 2026 outdoor watering season ends on 15 October."
+                ]
+              },
+              {
+                "h": "New seed or sod",
+                "p": [
+                  "May be watered up to 21 days in a row, then twice a week.",
+                  "New sod is strongly discouraged June to August during Stage 1."
+                ]
+              },
+              {
+                "h": "Other providers",
+                "p": [
+                  "Some homes are on another district. Ask which one before giving a schedule."
+                ]
+              }
+            ]
+          },
+          "centennial": {
+            "title": "Centennial water",
+            "blocks": [
+              {
+                "h": "Denver Water (most of Centennial)",
+                "p": [
+                  "Stage 1 drought since 25 March 2026: two assigned days a week, by address.",
+                  "No lawn watering from 10am to 6pm.",
+                  "Summer rules run 1 May to 1 October."
+                ]
+              },
+              {
+                "h": "Other districts",
+                "p": [
+                  "Parts of Centennial are on other water districts. Ask which one; their rules were not checked."
+                ]
+              }
+            ]
+          },
+          "erie": {
+            "title": "Erie water",
+            "blocks": [
+              {
+                "h": "Town of Erie",
+                "p": [
+                  "Erie changed its rules several times in 2026: sprinklers held off in March, a Stage 2 notice in April asking for two days a week, then the water emergency rescinded.",
+                  "The Town’s pages don’t agree on the stage today. Ask the homeowner what the Town has told them."
+                ]
+              },
+              {
+                "h": "A permit for new seed",
+                "p": [
+                  "Not checked for Erie. Don’t promise one."
                 ]
               }
             ]

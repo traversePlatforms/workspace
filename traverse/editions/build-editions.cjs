@@ -485,7 +485,26 @@ return [
   console.log(key + ': built ' + E.folder + ' - data files ' + copied + ', ' + (bytes / 1048576).toFixed(1) + ' MB; packs in ' + path.relative(REPO, up));
 }
 
+/* Sixfold mirrors Yards (Matthew 2026-10-12: "Yards and Sixfold should reflect each other ... the Colorado Yards app branded in their
+   brand"): every Colorado town group Yards shows goes into Sixfold's own company.json (app/data/rounds), on every build. Sixfold's
+   services, lists, tools and brand stay its own. Metro groups (outside Colorado) never go to Sixfold. */
+function syncSixfoldTowns() {
+  const metroDir = path.join(__dirname, '..', 'data-pipeline', 'door-territory', 'metros');
+  const metro = fs.readdirSync(metroDir).filter((x) => /^[a-z0-9-]+.json$/.test(x)).map((x) => { const m = JSON.parse(fs.readFileSync(path.join(metroDir, x), 'utf8')); return m.group || m.key; });
+  const want = (EDITIONS.yards.company().townGroups || []).filter((g) => !metro.includes(g));
+  const cf = path.join(DATA, 'company.json'); const raw = fs.readFileSync(cf, 'utf8'); const co = JSON.parse(raw);
+  if (JSON.stringify(co.townGroups || []) === JSON.stringify(want)) return;
+  const line = '  "townGroups": ' + JSON.stringify(want).replace(/,/g, ', ') + ',';
+  /* one line, swapped in place or put before "best", so the rest of the file keeps its layout */
+  const lines = raw.split('\n'); const at = lines.findIndex((l) => l.startsWith('  "townGroups":'));
+  if (at >= 0) lines[at] = line; else lines.splice(Math.max(1, lines.findIndex((l) => l.startsWith('  "best":'))), 0, line);
+  const next = lines.join('\n');
+  JSON.parse(next);   /* still valid JSON, or nothing is written */
+  fs.writeFileSync(cf, next);
+  console.log('Sixfold: town groups now ' + want.join(', ') + ' (as Yards)');
+}
 (async () => {
+  syncSixfoldTowns();
   const only = process.argv[2];
   if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest, security, or c-<client> from editions/clients/)');
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build

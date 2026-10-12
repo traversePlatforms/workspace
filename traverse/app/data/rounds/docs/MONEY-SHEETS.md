@@ -87,6 +87,13 @@ including the refresh at the top of the directory.
   - Sixfold is not on the August 2026 list.
 - **Teller County.** The $1M COSWAP grant funds a buffer zone protecting Woodland Park infrastructure, with no homeowner component (KOAA).
 
+- **Water, the four towns added 2026-10-12** (each provider’s own page, read 2026-10-12):
+  - Thornton: Thornton Water, April/May 2026 newsletter (thorntonco.gov): Stage 1 from 15 March, lawns two days a week of the homeowner’s choosing, none 10am–6pm.
+  - Commerce City: South Adams County Water & Sanitation (southadamswaterco.gov, conserve.southadamswaterco.gov): Stage 1 declared 13 May, two days a week by address, new seed/sod 21 days then twice a week, season ends 15 October.
+  - Centennial: Denver Water (denverwater.org, editor’s note on the summer rules page): Stage 1 from 25 March 2026, two assigned days, none 10am–6pm, 1 May to 1 October. Other Centennial districts not checked.
+  - Erie: erieco.gov notices disagree on the current stage (April Stage 2 voluntary notice; a later rescinded emergency). Left as "ask" by the research standard.
+  - Rejected: a search summary gave "Erie" a Level 2 schedule that was the Town of Silt’s bulletin; a commercial aggregator (lawnbyseason.com) for South Adams days.
+
 ### Corrected while building
 - **The Douglas County rule.** The project rule that Sixfold must never name the cost-share until it is on the approved list rested on reading "preferably from the list" as a requirement. The crew may now mention it, with the "don't say" lines.
 - **Douglas chipping cap:** $7,500, not $7,000.
