@@ -738,7 +738,7 @@ function loadMarks(string $key): array {
     foreach (logRows('marks', $key) as $m) {
         if (!is_array($m) || !isset($m['id'])) continue;
         if (($m['outcome'] ?? null) === null) { if (!empty($stack[$m['id']])) array_pop($stack[$m['id']]); continue; }
-        $stack[$m['id']][] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0, 'revisit' => $m['revisit'] ?? ''];
+        $stack[$m['id']][] = ['outcome' => $m['outcome'], 'by' => $m['by'] ?? '', 'at' => $m['at'] ?? 0, 'revisit' => $m['revisit'] ?? ''] + (!empty($m['qs']) ? ['qs' => 1] : []);
     }
     $out = [];
     foreach ($stack as $id => $s) if ($s) $out[$id] = end($s);
@@ -1295,7 +1295,7 @@ function loadQuoted(string $key): array {
     foreach (logRows('quoted', $key) as $q) {
         if (!is_array($q) || !isset($q['id'])) continue;
         if (empty($q['quoted'])) unset($out[$q['id']]);
-        else $out[$q['id']] = ['by' => $q['by'] ?? '', 'at' => $q['at'] ?? 0];
+        else $out[$q['id']] = ['by' => $q['by'] ?? '', 'at' => $q['at'] ?? 0] + (!empty($q['src']) ? ['src' => (string) $q['src']] : []);
     }
     return $out;
 }
@@ -1609,6 +1609,85 @@ if ($action === 'billinghook') {
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
 if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1])]);   /* the market checked (2026-10-11) */
 
+/* a session for a person on this install's codes list: the cookie, the signed-in list, and the answer the page expects
+   (sign-in, and since 2026-10-12 the super admin arriving from another install) */
+function startSession(array $hit, string $hitCode, string $sessionKey, int $sessionDays): array {
+    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400, 'j' => bin2hex(random_bytes(4))];
+    $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
+    $tok = sign($payload, $sessionKey);
+    setcookie(COOKIE, $tok, [
+        'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
+        'samesite' => 'Lax', 'secure' => $secure,
+    ]);
+    $line = [$payload['c'], $payload['exp'], time(), deviceName()];
+    sessEdit(function ($a) use ($tok, $line) { $a['s'][sessionTag($tok)] = $line; return $a; });
+    return ['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+}
+
+/* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
+ * me rotate between editions") ----
+ * Every install on this host sits beside the folder traverse-shared/ (outside public_html), which holds installs.json (the list:
+ * id = the install's cookie name, its name, its page's address) and hop.key (64 hex characters made on the server, never in git).
+ * The super admin's page asks this install for a pass to another; the pass is signed with hop.key, names the person and the
+ * install it is for, lasts a minute and works once. The other install checks it, finds ITS OWN super line of the same name and
+ * signs that in, as if the code had been typed there. No code travels, and an install with no super of that name refuses.
+ * Only the super role (set in the codes files alone) can ask for a pass. */
+function hopDir(): string { return dirname(__DIR__, 2) . '/traverse-shared'; }
+function hopKey(): string { $k = trim((string) @file_get_contents(hopDir() . '/hop.key')); return preg_match('/^[0-9a-f]{64}$/D', $k) ? $k : ''; }
+function hopInstalls(): array {
+    $j = json_decode((string) @file_get_contents(hopDir() . '/installs.json'), true);
+    $o = [];
+    foreach ((array) ($j['installs'] ?? []) as $i) {
+        if (!is_array($i)) continue;
+        $id = (string) ($i['id'] ?? ''); $url = (string) ($i['url'] ?? ''); $nm = trim((string) ($i['name'] ?? ''));
+        if (!preg_match('/^[a-z0-9-]{2,40}$/D', $id) || $nm === '' || !preg_match('#^https?://[^\s"<>]{3,200}$#D', $url)) continue;
+        $o[$id] = ['id' => $id, 'name' => substr($nm, 0, 40), 'url' => $url];
+    }
+    return $o;
+}
+/* a pass is spent when it is used: its 'j' is kept until the pass would have run out anyway */
+function hopSpend(string $j, int $exp): bool {
+    $f = hopDir() . '/spent-' . COOKIE . '.json';
+    $h = @fopen($f, 'c+'); if (!$h) return false;
+    flock($h, LOCK_EX);
+    $a = json_decode((string) stream_get_contents($h), true); if (!is_array($a)) $a = [];
+    $now = time(); $a = array_filter($a, fn($e) => (int) $e >= $now);
+    $fresh = !isset($a[$j]);
+    if ($fresh) { $a[$j] = $exp; ftruncate($h, 0); rewind($h); fwrite($h, json_encode($a)); fflush($h); }
+    flock($h, LOCK_UN); fclose($h);
+    return $fresh;
+}
+
+if ($action === 'installs') {
+    if (!$isSuper) fail('Not allowed.', 403);
+    out(['ok' => true, 'here' => COOKIE, 'installs' => hopKey() === '' ? [] : array_values(hopInstalls())]);
+}
+
+if ($action === 'hop') {
+    if (!$isPost) fail('POST required', 405);
+    if (!$isSuper) fail('Not allowed.', 403);
+    $k = hopKey(); $to = (string) ($body['to'] ?? ''); $L = hopInstalls();
+    if ($k === '' || !isset($L[$to])) fail('That edition is not set up for switching.', 404);
+    if ($to === COOKIE) fail('You are already in this one.');
+    $pass = sign(['n' => (string) $session['n'], 'to' => $to, 'exp' => time() + 60, 'j' => bin2hex(random_bytes(12))], $k);
+    out(['ok' => true, 'url' => $L[$to]['url'], 'pass' => $pass]);
+}
+
+if ($action === 'hopin') {
+    if (!$isPost) fail('POST required', 405);
+    if (!throttleTake(rateFile('hopin|' . clientKey()), 30, 3600)) fail('Too many switches from here. Wait a while.', 429);
+    $k = hopKey(); if ($k === '') fail('Switching is not set up here.', 404);
+    $p = verify((string) ($body['pass'] ?? ''), $k);
+    if (!$p || ($p['to'] ?? '') !== COOKIE || !isset($p['j'], $p['n']) || (int) $p['exp'] > time() + 120) fail('That switch ran out. Sign in, or switch again.', 401);
+    if (!hopSpend((string) $p['j'], (int) $p['exp'])) fail('That switch was already used. Switch again.', 401);
+    $hit = null; $hitCode = '';
+    foreach ($people as $c => $who) {
+        if (($who[1] ?? '') === 'super' && strcasecmp(trim((string) $who[0]), trim((string) $p['n'])) === 0) { $hit = $who; $hitCode = (string) $c; }
+    }
+    if (!$hit) fail('This edition has no super admin of that name. Sign in with a code.', 403);
+    out(startSession($hit, $hitCode, $sessionKey, $sessionDays));
+}
+
 if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
     $addrFile = rateFile(clientKey()); $siteFile = rateFile('*site*');
@@ -1628,16 +1707,7 @@ if ($action === 'signin') {
     if (!$hit) { siteAddrs(clientKey()); fail('That code was not recognised.', 401); }      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
     /* 'j': two sign-ins in the same second used to get the same cookie, so the signed-in list saw one phone (2026-10-04) */
-    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400, 'j' => bin2hex(random_bytes(4))];
-    $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
-    $tok = sign($payload, $sessionKey);
-    setcookie(COOKIE, $tok, [
-        'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
-        'samesite' => 'Lax', 'secure' => $secure,
-    ]);
-    $line = [$payload['c'], $payload['exp'], time(), deviceName()];
-    sessEdit(function ($a) use ($tok, $line) { $a['s'][sessionTag($tok)] = $line; return $a; });
-    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])]);
+    out(startSession($hit, $hitCode, $sessionKey, $sessionDays));
 }
 
 /* A sign-out names the session it is for (Fable, 2026-10-03). A phone that signed out with no
@@ -2102,7 +2172,7 @@ if ($action === 'area') {
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],
                 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'fire' => $d['fire'] ?? null,
-                'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? '',
+                'mark' => $m ? ['outcome' => $m['outcome'], 'by' => $m['by'], 'revisit' => $m['revisit'] ?? '', 'qs' => !empty($m['qs']) ? 1 : 0,
                                'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] + ownerFlag($d, $m) : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
@@ -2160,8 +2230,19 @@ if ($action === 'mark') {
         }
         $row['revisit'] = $rv;
     }
+    /* 2026-10-12 (Matthew: "a quote sent, and walk booked options ... instead of the quote booked"): both are a booked door, so every
+       count, goal and leaderboard stays as it was; Quote sent also ticks the door's quote as sent (the Pipeline's Quote sent stage),
+       for a quote given at the door with no walk to book */
+    $qs = $out === 'booked' && !empty($body['qs']);
+    if ($qs) $row['qs'] = 1;
     $ok = appendMark($key, $row);
     if (!$ok) fail('Could not save that. Try again.', 500);
+    /* the quote-sent tick follows the door's mark as it now stands (an undo brings back the mark before): on while that mark is
+       Quote sent, off when it is not, but only a tick a door made comes off; a tick an admin set stays */
+    $cur = loadMarks($key)[$id] ?? null; $curQs = $cur && $cur['outcome'] === 'booked' && !empty($cur['qs']);
+    $qn = loadQuoted($key)[$id] ?? null;
+    if ($curQs && !$qn) appendQuoted($key, ['id' => $id, 'quoted' => true, 'by' => $me, 'at' => $row['at'], 'src' => 'door']);
+    elseif (!$curQs && $qn && ($qn['src'] ?? '') === 'door') appendQuoted($key, ['id' => $id, 'quoted' => null, 'by' => $me, 'at' => $row['at']]);
     out(['ok' => true]);
 }
 
@@ -3171,7 +3252,7 @@ if ($action === 'stormdoors') {
             elseif (isset($traces[$d['id']])) { foreach ((skipPublic($traces[$d['id']])['phones'] ?? []) as $tp) if (!empty($tp['clear'])) { $ph = ['n' => (string) $tp['n'], 'src' => 'trace']; break; } }
             $list[] = ['region' => $k, 'town' => $r['label'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'owner' => (string) ($d['owner'] ?? ''),
                        'hail' => $h['hail'] ?? null, 'wind' => $h['wind'] ?? null, 'roof' => $roof[$d['id']] ?? null, 'yb' => $y['yb'] ?? null, 'rm' => $y['rm'] ?? null,
-                       'mat' => $cls, 'matSrc' => $src, 'matP' => $m['p'] ?? null, 'mark' => $mk ? $mk['outcome'] : null, 'phone' => $ph, 'traced' => isset($traces[$d['id']])];
+                       'mat' => $cls, 'matSrc' => $src, 'matP' => $m['p'] ?? null, 'mark' => $mk ? $mk['outcome'] : null, 'mq' => ($mk && !empty($mk['qs'])) ? 1 : 0, 'phone' => $ph, 'traced' => isset($traces[$d['id']])];
         }
     }
     usort($list, fn($x, $y) => [($y['hail'] ?? 0), ($y['wind'][0] ?? 0)] <=> [($x['hail'] ?? 0), ($x['wind'][0] ?? 0)]);
