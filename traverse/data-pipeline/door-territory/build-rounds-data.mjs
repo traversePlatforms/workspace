@@ -53,6 +53,7 @@ const SOURCES = [
   ['cs-northwest', 'Colorado Springs Northwest', 'cs-northwest-areas.json', 'cs-northwest'],
   ['cs-southwest', 'Colorado Springs Southwest', 'cs-southwest-areas.json', 'cs-southwest'],
   ['boulder', 'Boulder', 'boulder-areas.json', 'boulder'],
+  ['aurora', 'Aurora', 'aurora-areas.json', 'aurora'],   /* 2026-10-12: the largest untapped market (research/markets/yards-markets-2026-10.md); Arapahoe + Adams */
 ];
 for (const t of metroTowns()) SOURCES.push([t.key, t.label, t.areas, t.group]);   /* the metro builder: each metro is its own group */
 
@@ -161,7 +162,7 @@ const CENTRE = {
   franktown: [39.3894, -104.7519], 'woodland-park': [39.0000, -105.0569], divide: [38.9469, -105.1636],
   florissant: [38.9469, -105.2911], 'cripple-creek': [38.7466, -105.1783],
   'highlands-ranch': [39.540, -104.985], parker: [39.515, -104.765], 'castle-pines': [39.455, -104.895],
-  'cs-northeast': [38.95, -104.70],   'cs-southeast': [38.86, -104.71],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-northwest': [38.92, -104.82],   'cs-southwest': [38.81, -104.81],   'boulder': [40.015, -105.255],
+  'aurora': [39.69, -104.78],   'cs-northeast': [38.95, -104.70],   'cs-southeast': [38.86, -104.71],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-northwest': [38.92, -104.82],   'cs-southwest': [38.81, -104.81],   'boulder': [40.015, -105.255],
 };
 for (const t of metroTowns()) if (t.center) CENTRE[t.key] = t.center;
 const METRO_TOWN = Object.fromEntries(metroTowns().map((t) => [t.key, t]));
