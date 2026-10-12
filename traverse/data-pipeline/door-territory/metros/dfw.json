@@ -4,6 +4,18 @@
   "state": "TX",
   "stateFips": "48",
   "timezone": "America/Chicago",
+  "stateName": "Texas",
+  "stateBox": [
+    25.8,
+    -106.7,
+    36.6,
+    -93.5
+  ],
+  "naip": {
+    "state": "tx",
+    "year": "2022"
+  },
+  "appNote": "For an install (2026-10-11, clients.cjs market): stateName and timezone drive the app's labels and clock, stateBox the drawn-outline check, naip the aerial photo search (Planetary Computer: Texas is 2022, checked 2026-10-11), each source url the lot outline on the door map.",
   "group": "dfw",
   "note": "First market outside Colorado (Matthew 2026-10-11). The Texas statewide parcel service (TxGIO StratMap) advertises queries but refuses them, so each county comes from its own appraisal district. Collin CAD publishes its certified roll as an open feature service (open-data-ccad.hub.arcgis.com; 'public domain, as is'). Frisco is split between Collin and Denton: only its Collin side until Denton CAD is added.",
   "sources": {

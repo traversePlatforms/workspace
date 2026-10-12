@@ -10,7 +10,7 @@ declare(strict_types=1);
  * ---- THE RULES (built in, not left to the crew) -------------------------------------------
  *   - Only numbers the homeowner GAVE: a door phone saved as "given at the door", a lead (they filled in the form), or a
  *     customer. A looked-up number (skip trace, people search) is never texted from the app.
- *   - Quiet hours: nothing is sent before 8 am or after 9 pm Colorado time (the federal rule's window).
+ *   - Quiet hours: nothing is sent before 8 am or after 9 pm local time (the federal rule's window; the install's clock, Colorado unless company.json names a market).
  *   - STOP, UNSUBSCRIBE, CANCEL, END, QUIT (and the like) opt the number out at once; START opts it back in. An opted-out
  *     number cannot be texted from the app. Twilio's own opt-out handling stays on as well.
  *   - The first text the app sends to a number names the sender and the company and says "Reply STOP to opt out".
@@ -67,7 +67,7 @@ function smsE164(string $p): ?string {
     return null;
 }
 function smsQuiet(array $c, ?int $now = null): bool {
-    $h = (int) (new DateTime('@' . ($now ?? time())))->setTimezone(new DateTimeZone('America/Denver'))->format('G');
+    $h = (int) (new DateTime('@' . ($now ?? time())))->setTimezone(new DateTimeZone(function_exists('appTz') ? appTz() : 'America/Denver'))->format('G');
     return $h < (int) $c['quiet_start'] || $h >= (int) $c['quiet_end'];
 }
 function smsLogFile(): string { return DATA_DIR . '/sms.log'; }

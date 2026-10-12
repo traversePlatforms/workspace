@@ -9,6 +9,9 @@
 //   color   the brand colour; the bar, sign-in screen, keys and accents are worked out from it, white text checked at 4.5:1
 //   towns   optional: the town groups to show (default: the trade edition's own)
 //   host    optional: where it will live (default https://sixfoldcolorado.com, until Traverse has its own hosting)
+//   market  optional: a market outside Colorado, named as in data-pipeline/door-territory/metros/<market>.json ("dfw").
+//           The install then shows only that market's towns, runs on its clock, and gets its storm lists and nothing
+//           statewide from Colorado (2026-10-11, Matthew chose one install per market). Without it: Colorado, as before.
 //   folder  written back on the first build (a random name, like the editions'): its address never changes after that
 //
 // node new-client.cjs makes the file; node build-editions.cjs <slug> builds it (and everything else without a name).
@@ -17,7 +20,20 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DIR = path.join(__dirname, 'clients');
+const DIR = process.env.TRAVERSE_CLIENTS || path.join(__dirname, 'clients');   /* a test client from elsewhere (the market test, 2026-10-11) */
+const METROS = path.join(__dirname, '..', 'data-pipeline', 'door-territory', 'metros');
+/* what the app needs to know about a market (company.json "market"): drawn as text, so nothing here is trusted either */
+function marketFor(key) {
+  if (!/^[a-z0-9-]{1,30}$/.test(key) || !fs.existsSync(path.join(METROS, key + '.json'))) throw new Error('no such market: ' + key + ' (metros/' + key + '.json)');
+  const M = JSON.parse(fs.readFileSync(path.join(METROS, key + '.json'), 'utf8'));
+  for (const k of ['state', 'stateName', 'timezone', 'stateBox', 'naip']) if (!M[k]) throw new Error('metros/' + key + '.json needs ' + k);
+  const counties = {}, parcels = [];
+  for (const [ck, src] of Object.entries(M.sources || {})) { counties[ck] = (src.countyName || ck) + ' County'; if (src.url) parcels.push(src.url + '/query'); }
+  const cs = M.towns.filter((t) => Array.isArray(t.center)).map((t) => t.center);
+  const centre = cs.length ? [+(cs.reduce((a, c) => a + c[0], 0) / cs.length).toFixed(4), +(cs.reduce((a, c) => a + c[1], 0) / cs.length).toFixed(4)] : null;
+  return { group: M.group || M.key, co: { key: M.key, label: M.label, state: M.state, stateName: M.stateName, tz: M.timezone, box: M.stateBox,
+    counties, parcels, centre, zoom: 10, naip: M.naip } };
+}
 
 /* ---- colour: a palette from one brand colour ---- */
 const hexToRgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h); if (!m) throw new Error('not a colour: ' + h); const n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
@@ -57,7 +73,7 @@ module.exports = function addClients(EDITIONS) {
       fs.writeFileSync(file, JSON.stringify(C, null, 2) + '\n');
     }
     if (!/^[a-z]{1,3}-[0-9a-f]{6}$/.test(C.folder)) throw new Error(f + ': folder must look like ab-1a2b3c');
-    const id = 'c-' + slug, pal = palette(C.color);
+    const id = 'c-' + slug, pal = palette(C.color), mk = C.market ? marketFor(C.market) : null;
     if (EDITIONS[id] || Object.values(EDITIONS).some((e) => e.folder === C.folder)) throw new Error(f + ': folder or name already used');
     EDITIONS[id] = Object.assign({}, base, {
       name: C.name, short: C.short || C.name.split(/\s+/)[0], folder: C.folder,
@@ -66,10 +82,16 @@ module.exports = function addClients(EDITIONS) {
       blurb: C.tagline || base.blurb, icon: pal.accent, iconInk: '#ffffff', c: pal,
       extraRegions: undefined,   /* the demo editions' showcase towns stay out of a client's install */
       host: (C.host || 'https://sixfoldcolorado.com').replace(/\/+$/, ''), client: slug, trade: C.trade,
+      market: mk ? mk.co.key : null, marketGroup: mk ? mk.group : null, money: mk ? false : base.money,
       company: () => {
         const co = base.company();
         Object.assign(co, { name: C.name, short: C.short || C.name.split(/\s+/)[0], tagline: C.tagline || '', phone: C.phone || '', email: C.email || '', site: C.site || '' });
         if (Array.isArray(C.towns)) co.townGroups = C.towns;
+        if (mk) {   /* a market install: its own towns only, and nothing that reads Colorado-only data */
+          co.townGroups = [mk.group]; co.market = mk.co;
+          co.features = Object.assign({}, co.features, { communities: false, firecheck: false, quote: false });
+          co.card = Object.assign({}, co.card, { fire: false, money: false, water: false, fc: false });
+        }
         if (C.logo && C.logo.viewBox && C.logo.path) co.logo = { viewBox: C.logo.viewBox, path: C.logo.path };
         return co;
       },

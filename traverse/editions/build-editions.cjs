@@ -371,7 +371,8 @@ async function build(key) {
   const groupsShown = (E.company().townGroups || []);
   const allRegions = JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions
     .concat(E.extraRegions ? JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions : []);
-  const notHere = new Set(allRegions.filter((r) => r.group && !groupsShown.includes(r.group)).map((r) => r.key));
+  /* a market install (clients.cjs market, 2026-10-11) shows its market's towns and no others, grouped or not */
+  const notHere = new Set(allRegions.filter((r) => E.marketGroup ? r.group !== E.marketGroup : (r.group && !groupsShown.includes(r.group))).map((r) => r.key));
   /* metro groups come from the metro configs themselves, not the index: an index built before a metro existed let
      wind-storms-dfw.json into Roofing's pack (caught locally 2026-10-11, never uploaded) */
   const METROS = path.join(__dirname, '..', 'data-pipeline', 'door-territory', 'metros');
@@ -391,6 +392,15 @@ async function build(key) {
     const p = path.join(DATA, f);
     if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || /^(regions-cache-|best-)/.test(f) || !E.keep(f)) continue;   /* the server's kept answers: each install makes its own (Fable 2026-10-09) */
     if (townOfFile(f)) continue;
+    /* a market install: its towns' files, the index, the damage thresholds (national), and the market's own storm lists under the
+       names the server reads (hail-storms-dfw.json -> hail-storms.json). Nothing statewide from Colorado: storms, HOAs, climate ... */
+    let outName = f;
+    if (E.marketGroup) {
+      const b0 = f.replace(/.json$/, ''), k0 = keysLongestFirst.find((key) => b0 === key || b0.endsWith('-' + key));
+      const ms = f.match(/^(hail-storms|hail-paths|wind-storms)-([a-z0-9-]+).json$/);
+      if (ms && ms[2] === E.marketGroup) outName = ms[1] + '.json';
+      else if (!(k0 && !notHere.has(k0)) && f !== 'index.json' && f !== 'roof-damage-defaults.json') continue;
+    }
     /* a metro's own files (2026-10-11: hail-storms-dfw.json, wind-storms-dfw.json ...) only where the edition shows that metro */
     { const mg = f.match(/-([a-z0-9]+)\.json$/); if (mg && metroGroupsHidden.has(mg[1])) continue; }
     let buf = fs.readFileSync(p);
@@ -418,7 +428,7 @@ async function build(key) {
         buf = Buffer.from(JSON.stringify(j));
       }
     }
-    write(path.join(E.data, 'rounds', f), buf);
+    write(path.join(E.data, 'rounds', outName), buf);
     copied++; bytes += buf.length;
   }
   if (E.money) {

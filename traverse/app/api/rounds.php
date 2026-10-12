@@ -98,7 +98,10 @@ function company(): array {
             /* best doors first (2026-10-07, the editions): the trade whose walking order the door list offers; null = none (Sixfold) */
             'best' => null,
             /* the Company screen's brand colour (2026-10-08), laid over from company-local.json */
-            'brand' => ''];
+            'brand' => '',
+            /* a market outside Colorado (2026-10-11, editions/clients.cjs market): state, clock, county names, map, photo year, parcel
+               service. null = Colorado, as every install was before. Read through market(), never directly. */
+            'market' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -114,7 +117,52 @@ function company(): array {
     if (!in_array($c['best'], ['roof', 'yards', 'solar', 'pest', 'security'], true)) $c['best'] = null;
     $c['townGroups'] = array_values(array_filter(array_map(fn($g) => is_string($g) ? trim($g) : '', (array) $c['townGroups']), fn($g) => (bool) preg_match('/^[a-z0-9-]{1,40}$/D', $g)));
     $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
+    if (!is_array($c['market'])) $c['market'] = null;
     return $c;
+}
+/** the market this install sells in (2026-10-11): Colorado unless company.json names another. Every value checked, since the
+    page is sent the same block before sign-in. */
+function market(): array {
+    static $m = null;
+    if ($m !== null) return $m;
+    $m = ['key' => 'co', 'state' => 'CO', 'stateName' => 'Colorado', 'tz' => 'America/Denver', 'box' => [36.9, -109.1, 41.1, -102.0]];
+    $x = company()['market'] ?? null;
+    if (!is_array($x)) return $m;
+    if (is_string($x['key'] ?? null) && preg_match('/^[a-z0-9-]{1,30}$/D', $x['key'])) $m['key'] = $x['key'];
+    if (is_string($x['state'] ?? null) && preg_match('/^[A-Z]{2}$/D', $x['state'])) $m['state'] = $x['state'];
+    if (is_string($x['stateName'] ?? null) && preg_match('/^[A-Za-z .-]{2,30}$/D', $x['stateName'])) $m['stateName'] = $x['stateName'];
+    if (is_string($x['tz'] ?? null) && in_array($x['tz'], DateTimeZone::listIdentifiers(), true)) $m['tz'] = $x['tz'];
+    $b = $x['box'] ?? null;
+    if (is_array($b) && count($b) === 4 && count(array_filter($b, fn($v) => is_int($v) || is_float($v))) === 4 && $b[0] < $b[2] && $b[1] < $b[3]) $m['box'] = array_map('floatval', array_values($b));
+    /* the page's part: its overview heading, county headings, map start, aerial photo search and lot-outline service */
+    if (is_string($x['label'] ?? null) && mb_strlen($x['label']) <= 40) $m['label'] = $x['label'];
+    $m['counties'] = [];
+    foreach ((array) ($x['counties'] ?? []) as $k => $v) if (is_string($k) && preg_match('/^[a-z0-9-]{1,30}$/D', $k) && is_string($v) && mb_strlen($v) <= 40) $m['counties'][$k] = $v;
+    $m['parcels'] = array_values(array_filter((array) ($x['parcels'] ?? []), fn($u) => is_string($u) && preg_match('#^https://[a-z0-9.-]+/[A-Za-z0-9_/.-]+/query$#D', $u)));
+    $c = $x['centre'] ?? null;
+    if (is_array($c) && count($c) === 2 && (is_int($c[0]) || is_float($c[0])) && (is_int($c[1]) || is_float($c[1]))) $m['centre'] = [(float) $c[0], (float) $c[1]];
+    if (is_int($x['zoom'] ?? null) && $x['zoom'] >= 5 && $x['zoom'] <= 14) $m['zoom'] = $x['zoom'];
+    $n = $x['naip'] ?? null;
+    if (is_array($n) && preg_match('/^[a-z]{2}$/D', (string) ($n['state'] ?? '')) && preg_match('/^20\d\d$/D', (string) ($n['year'] ?? ''))) $m['naip'] = ['state' => $n['state'], 'year' => (string) $n['year']];
+    return $m;
+}
+/** the install's clock: Denver for Colorado, the market's zone elsewhere */
+function appTz(): string { return market()['tz']; }
+/** the time zone block of a calendar feed, for any US zone: the offsets and names in January and July, and the US daylight-saving
+    rule (second Sunday of March to first Sunday of November, since 2007) where the zone keeps one */
+function icsTimezone(string $tzid): array {
+    $z = new DateTimeZone($tzid); $y = (int) gmdate('Y');
+    $w = new DateTime($y . '-01-15 12:00', $z); $s = new DateTime($y . '-07-15 12:00', $z);
+    $off = fn(DateTime $d) => (($o = $d->getOffset()) < 0 ? '-' : '+') . sprintf('%02d%02d', intdiv(abs($o), 3600), intdiv(abs($o) % 3600, 60));
+    $L = ['BEGIN:VTIMEZONE', 'TZID:' . $tzid];
+    if ($w->getOffset() !== $s->getOffset()) {
+        $L = array_merge($L, ['BEGIN:DAYLIGHT', 'TZOFFSETFROM:' . $off($w), 'TZOFFSETTO:' . $off($s), 'TZNAME:' . $s->format('T'), 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT',
+                              'BEGIN:STANDARD', 'TZOFFSETFROM:' . $off($s), 'TZOFFSETTO:' . $off($w), 'TZNAME:' . $w->format('T'), 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD']);
+    } else {
+        $L = array_merge($L, ['BEGIN:STANDARD', 'TZOFFSETFROM:' . $off($w), 'TZOFFSETTO:' . $off($w), 'TZNAME:' . $w->format('T'), 'DTSTART:19700101T000000', 'END:STANDARD']);
+    }
+    $L[] = 'END:VTIMEZONE';
+    return $L;
 }
 function feature(string $k): bool { return !empty(company()['features'][$k]); }
 /* who sees the card's trade parts (2026-10-08): admins, and everyone signed in where the company sets features.crew (the editions,
@@ -174,7 +222,7 @@ function workLabels(): array { $o = []; foreach (company()['extraWork'] as $p) $
 function workTags(): array { return array_keys(workLabels()); }
 /** who the app says it is when it asks a public service for data (the weather service wants a contact) */
 function agentHeader(): string { $c = company(); return 'User-Agent: DoorApp/1.0 (' . preg_replace('/[\r\n]+/', ' ', (string) ($c['email'] ?: ($c['site'] ?: 'no contact set'))) . ')'; }
-date_default_timezone_set('America/Denver');   /* review 2026-10-03: the export's date() used the host's zone */
+date_default_timezone_set(appTz());   /* review 2026-10-03: the export's date() used the host's zone; the market's since 2026-10-11 */
 const COOKIE     = 'sfr';
 const MAX_TRIES  = 8;      // wrong codes per address per window
 const TRY_WINDOW = 900;    // 15 minutes
@@ -587,7 +635,7 @@ function logRows(string $kind, string $key): array {
  * Nothing is deleted; the export keeps it all, with both dates. */
 function dayTs(array $d, string $k): int {
     if (empty($d[$k]) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D', (string) $d[$k])) return 0;
-    return (new DateTime($d[$k] . ' 00:00', new DateTimeZone('America/Denver')))->getTimestamp();
+    return (new DateTime($d[$k] . ' 00:00', new DateTimeZone(appTz())))->getTimestamp();
 }
 /** 'prev' (surely the previous owner's), 'maybe' (either owner's) or '' (the current owner's) */
 function ownerAge(array $d, ?array $r): string {
@@ -649,7 +697,7 @@ function appendMark(string $key, array $row): bool {
    not the same afternoon, and nobody has to remember to put it back. One number to change. */
 const MISS_REST_DAYS = 2;
 function missRetry(array $m): string {
-    return (new DateTime('@' . (int) ($m['at'] ?? 0)))->setTimezone(new DateTimeZone('America/Denver'))
+    return (new DateTime('@' . (int) ($m['at'] ?? 0)))->setTimezone(new DateTimeZone(appTz()))
         ->modify('+' . MISS_REST_DAYS . ' days')->format('Y-m-d');
 }
 /* Put back on the list is for mistakes (2026-10-02): it cancels the mark it undid, so that
@@ -1504,7 +1552,7 @@ if ($action === 'billinghook') {
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
-if ($action === 'company') out(['ok' => true, 'company' => array_diff_key(company(), ['appUrl' => 1])]);
+if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1])]);   /* the market checked (2026-10-11) */
 
 if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
@@ -1590,15 +1638,13 @@ if ($action === 'calfeed') {
     $person = null; foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if ($r['id'] === $pid && empty($r['off'])) $person = $r;
     if (!$person) fail('Not found.', 404);
     $who = (string) $person['name'];
-    $tz = new DateTimeZone('America/Denver'); $today = new DateTime('now', $tz);
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('now', $tz);
     $from = (clone $today)->modify('-30 days')->format('Y-m-d'); $to = (clone $today)->modify('+120 days')->format('Y-m-d');
     $co = company(); $visit = ucfirst((string) ($co['visit'] ?? 'visit')); $host = preg_replace('/[^a-z0-9.-]/i', '', (string) ($_SERVER['HTTP_HOST'] ?? 'traverse'));
     $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//' . str_replace(['/', "\n"], '', (string) $co['name']) . '//Door rounds//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
-          'X-WR-CALNAME:' . icsText((string) ($co['short'] ?: $co['name']) . ' · ' . $who), 'X-WR-TIMEZONE:America/Denver', 'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H',
-          'BEGIN:VTIMEZONE', 'TZID:America/Denver',
-          'BEGIN:DAYLIGHT', 'TZOFFSETFROM:-0700', 'TZOFFSETTO:-0600', 'TZNAME:MDT', 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT',
-          'BEGIN:STANDARD', 'TZOFFSETFROM:-0600', 'TZOFFSETTO:-0700', 'TZNAME:MST', 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD',
-          'END:VTIMEZONE'];
+          'X-WR-CALNAME:' . icsText((string) ($co['short'] ?: $co['name']) . ' · ' . $who), 'X-WR-TIMEZONE:' . appTz(), 'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H',
+          ];
+    $L = array_merge($L, icsTimezone(appTz()));
     $stamp = gmdate('Ymd\THis\Z');
     foreach (calEventsFor($who, $from, $to) as $e) {
         $d = str_replace('-', '', (string) $e['date']); $t = (string) ($e['time'] ?? '');
@@ -1610,7 +1656,7 @@ if ($action === 'calfeed') {
         $L[] = 'BEGIN:VEVENT';
         $L[] = 'UID:' . preg_replace('/[^A-Za-z0-9._-]/', '', $uid) . '@' . $host;
         $L[] = 'DTSTAMP:' . $stamp;
-        if ($t !== '' && preg_match('/^\d{2}:\d{2}$/', $t)) { $L[] = 'DTSTART;TZID=America/Denver:' . $d . 'T' . str_replace(':', '', $t) . '00'; $L[] = 'DURATION:' . $len; }
+        if ($t !== '' && preg_match('/^\d{2}:\d{2}$/', $t)) { $L[] = 'DTSTART;TZID=' . appTz() . ':' . $d . 'T' . str_replace(':', '', $t) . '00'; $L[] = 'DURATION:' . $len; }
         else { $L[] = 'DTSTART;VALUE=DATE:' . $d; $L[] = 'DTEND;VALUE=DATE:' . (new DateTime($e['date']))->modify('+1 day')->format('Ymd'); $L[] = 'TRANSP:TRANSPARENT'; }
         $L[] = 'SUMMARY:' . icsText($sum);
         if ($loc !== '') $L[] = 'LOCATION:' . icsText($loc);
@@ -1684,7 +1730,7 @@ if ($action === 'smsthread' || $action === 'smssend') {
     if (!$ready) fail('Texting is not set up yet: the company\'s Twilio keys are missing.', 503);
     if ($num === null) fail('That is not a US phone number the app can text.');
     if ($state['optedOut']) fail('This number replied STOP. It cannot be texted from the app.');
-    if ($state['quiet']) fail('Texts go out between ' . (int) $sc['quiet_start'] . ' am and ' . ((int) $sc['quiet_end'] - 12) . ' pm Colorado time. Try again then.');
+    if ($state['quiet']) fail('Texts go out between ' . (int) $sc['quiet_start'] . ' am and ' . ((int) $sc['quiet_end'] - 12) . ' pm ' . (market()['key'] === 'co' ? 'Colorado' : 'local') . ' time. Try again then.');
     $text = trim(preg_replace("/[ \t]+/", ' ', (string) ($body['body'] ?? '')) ?? '');
     if ($text === '') fail('Type the message first.');
     if (mb_strlen($text) > SMS_MAX) fail('Keep it under ' . SMS_MAX . ' characters.');
@@ -1790,7 +1836,7 @@ if ($action === 'regions') {
     }
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $regions = [];
-    $today = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d');
+    $today = (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d');
     /* a ready-made answer (2026-10-09, Matthew: the app ran slowly; this answer took 1.5 s in an edition every time): built once and
        kept until something it reads changes (any door file, log or settings file in the data folder, by name, size and time), the
        day turns, or the code changes. One per kind of viewer: what it shows differs only by admin or not and whether crew see scores. */
@@ -2116,7 +2162,7 @@ if ($action === 'photo') {
     if (count($have) >= PHOTO_PER_DOOR) fail('This door already has ' . PHOTO_PER_DOOR . ' photos. Remove one first.');
     $dir = DATA_DIR . '/photos/' . $key . '/' . $id;
     if (!is_dir($dir) && !@mkdir($dir, 0755, true)) fail('Could not save that. Try again.', 500);
-    $f = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.jpg';
+    $f = (new DateTime('now', new DateTimeZone(appTz())))->format('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.jpg';
     if (@file_put_contents($dir . '/' . $f, $bin, LOCK_EX) === false) fail('Could not save that. Try again.', 500);
     if (!appendPhotoLog($key, ['id' => $id, 'f' => $f, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'f' => $f]);
@@ -2163,7 +2209,7 @@ if ($action === 'photodel') {
 /* everyone's (or one person's) days: doors, outcomes, phones given, emails, notes, photos. Shared
    by My stats, Team stats and the leaderboard (SX-53), so they always count the same way. */
 function teamDays(int $days, string $who): array {
-    $tz = new DateTimeZone('America/Denver');
+    $tz = new DateTimeZone(appTz());
     $since = (new DateTime('today', $tz))->modify('-' . ($days - 1) . ' days')->getTimestamp();
     $dayOf = function ($ts) use ($tz) { return (new DateTime('@' . (int) $ts))->setTimezone($tz)->format('Y-m-d'); };
     $people = [];
@@ -2230,7 +2276,7 @@ if ($action === 'stats') {
     if ($role === 'manager' && !empty($_REQUEST['team']) && trim((string) ($_REQUEST['who'] ?? '')) === '') $who = '';
     $list = teamDays($days, $who);
     if ($role === 'manager' && $who === '') $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || sameTeam($p['name'])));
-    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => loadGoals()]);
+    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => loadGoals()]);
 }
 
 /* ---- my doors (2026-10-02) ------------------------------------------------
@@ -2242,7 +2288,7 @@ if ($action === 'mydoors') {
     $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
     $who = whoFor((string) ($_REQUEST['who'] ?? ''));
     if ($who === '') $who = $me;
-    $since = (new DateTime('today', new DateTimeZone('America/Denver')))->modify('-' . ($days - 1) . ' days')->getTimestamp();
+    $since = (new DateTime('today', new DateTimeZone(appTz())))->modify('-' . ($days - 1) . ' days')->getTimestamp();
     /* rows come through logRows(), so a door that now belongs to another town keeps its history
        (2026-10-03: each door belongs to one town; its old rows stay in the old town's file) */
     $read = function (array $rows, bool $onlyWho) use ($since, $who) {
@@ -2291,7 +2337,7 @@ if ($action === 'mydoors') {
         }
     }
     usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
-    out(['ok' => true, 'who' => $who, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d'), 'doors' => $rows]);
+    out(['ok' => true, 'who' => $who, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'doors' => $rows]);
 }
 
 /* ---- money sheets (2026-10-02, SX-23) --------------------------------------
@@ -2591,7 +2637,7 @@ if ($action === 'alertcalls') {
         uasort($st, fn($x, $y) => strcmp((string) ($y['sent'] ?? ''), (string) ($x['sent'] ?? '')));
         foreach ($st as $w) {
             $when = strtotime((string) ($w['sent'] ?? '')) ?: (int) ($w['seen'] ?? time());
-            $why = 'Severe thunderstorm warning ' . (new DateTime('@' . $when))->setTimezone(new DateTimeZone('America/Denver'))->format('D j M') . ($w['hail'] ? ', hail up to ' . rtrim(rtrim(number_format((float) $w['hail'], 2), '0'), '.') . ' in' : '');
+            $why = 'Severe thunderstorm warning ' . (new DateTime('@' . $when))->setTimezone(new DateTimeZone(appTz()))->format('D j M') . ($w['hail'] ? ', hail up to ' . rtrim(rtrim(number_format((float) $w['hail'], 2), '0'), '.') . ' in' : '');
             foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = $why;
         }
     } else {
@@ -2798,7 +2844,7 @@ function calEntries(): array {
     return $o;
 }
 function calRange(): array {
-    $tz = new DateTimeZone('America/Denver');
+    $tz = new DateTimeZone(appTz());
     /* review 2026-10-06: a real date, not just the shape of one. "2026-13-01" passed the pattern and DateTime threw,
        so the request ended with a 500 and no JSON; now a bad from or to falls back like a missing one */
     $ok = fn($d) => dateOk((string) $d);
@@ -3189,7 +3235,7 @@ if ($action === 'pushcron') {
         $ends = strtotime((string) ($w['ends'] ?? '')) ?: time() + 3600;
         if ($ends < time()) continue;
         $towns = array_values((array) ($w['towns'] ?? []));
-        $until = (new DateTime('@' . $ends))->setTimezone(new DateTimeZone('America/Denver'))->format('g:i a');
+        $until = (new DateTime('@' . $ends))->setTimezone(new DateTimeZone(appTz()))->format('g:i a');
         $bodyTxt = implode(', ', array_map(fn($t) => $label[$t] ?? $t, $towns)) . ' · until ' . $until
                  . (!empty($w['hail']) ? ' · hail up to ' . rtrim(rtrim(number_format((float) $w['hail'], 2), '0'), '.') . ' in' : '') . (!empty($w['wind']) ? ' · gusts ' . strtolower((string) $w['wind']) : '');
         $payload = json_encode(['title' => $ev, 'body' => $bodyTxt, 'url' => './', 'tag' => substr(sha1($id), 0, 16), 'id' => $id, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -3478,14 +3524,14 @@ if ($action === 'secrates' || $action === 'seclist') {
 if ($action === 'pestseason') {
     if (!pestOn($role)) fail('Not here.', 404);
     $cal = json_decode((string) @file_get_contents(DATA_DIR . '/pest-season.json'), true) ?: [];
-    $mo = (int) (new DateTime('now', new DateTimeZone('America/Denver')))->format('n'); $now = [];
+    $mo = (int) (new DateTime('now', new DateTimeZone(appTz())))->format('n'); $now = [];
     foreach (($cal['pests'] ?? []) as $k => $pz) if (in_array($mo, (array) ($pz['months'] ?? []), true)) $now[] = ['k' => (string) $k, 'name' => (string) ($pz['name'] ?? $k), 'line' => (string) ($pz['line'] ?? ''), 'src' => (string) ($pz['src'] ?? '')];
     out(['ok' => true, 'month' => $mo, 'pests' => $now]);
 }
 
 if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
-    $tz = new DateTimeZone('America/Denver');
+    $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
     /* the whole list, with each customer's visits and what is due */
     if ($action === 'customers') {
@@ -3940,7 +3986,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
    dollar amounts (the sales funnel, 2026-10-10). */
 if ($action === 'board') {
     if (!boardOpen($role)) fail('Not allowed.', 403);
-    $tz = new DateTimeZone('America/Denver');
+    $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz));
     $from = ['today' => $today->format('Y-m-d'), 'week' => (clone $today)->modify('-6 days')->format('Y-m-d'), 'month' => (clone $today)->modify('-29 days')->format('Y-m-d'), 'quarter' => (clone $today)->modify('-89 days')->format('Y-m-d')];
     $zero = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'won' => 0, 'value' => 0];
@@ -4165,7 +4211,8 @@ if ($action === 'terrsave') {
         if (!is_array($p) || count($p) !== 2 || !array_key_exists(0, $p) || !array_key_exists(1, $p)) fail('That outline is not one the app drew.');
         if (!(is_int($p[0]) || is_float($p[0])) || !(is_int($p[1]) || is_float($p[1]))) fail('That outline is not one the app drew.');
         $la = (float) $p[0]; $lo = (float) $p[1];
-        if ($la < 36.9 || $la > 41.1 || $lo < -109.1 || $lo > -102.0) fail('The outline has to be in Colorado.');   /* the state's rough box */
+        $mb = market()['box'];
+        if ($la < $mb[0] || $la > $mb[2] || $lo < $mb[1] || $lo > $mb[3]) fail('The outline has to be in ' . market()['stateName'] . '.');   /* the state's rough box */
         $poly[] = [round($la, 6), round($lo, 6)];
     }
     $row = ['id' => 't' . bin2hex(random_bytes(6)), 'name' => $name, 'who' => $who, 'poly' => $poly, 'by' => $me, 'at' => time()];
@@ -4219,7 +4266,7 @@ if ($action === 'walk') {
     if ($date !== null) {
         $date = (string) $date;
         if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1])) fail('That is not a real date.');
-        $tz = new DateTimeZone('America/Denver');
+        $tz = new DateTimeZone(appTz());
         $day = new DateTime($date . ' 00:00', $tz); $today = new DateTime('today', $tz);
         $diff = (int) round(($day->getTimestamp() - $today->getTimestamp()) / 86400);
         if ($diff < -30) fail('That date is more than a month ago.');
@@ -4233,7 +4280,7 @@ if ($action === 'walk') {
 /* walks booked in a date range, for the date picker ("already booked that day") and the
    admin's list. Addresses only: the crew see these doors anyway. No phones, no owners. */
 if ($action === 'walks') {
-    $tz = new DateTimeZone('America/Denver');
+    $tz = new DateTimeZone(appTz());
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     $ok = fn($d) => dateOk($d);   /* review 2026-10-06: a 13th month used to reach DateTime and end in a 500 (see calRange) */
     if (!$ok($from)) $from = (new DateTime('today', $tz))->format('Y-m-d');
@@ -4267,7 +4314,7 @@ function walksBetween(string $from, string $to): array {
  * an admin can also ask for it from the app. */
 if ($action === 'digest') {
     if ($role !== 'admin') fail('Not allowed.', 403);
-    $tz = new DateTimeZone('America/Denver');
+    $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
     $yday = (new DateTime('today', $tz))->modify('-1 day')->format('Y-m-d');
     $tom = (new DateTime('today', $tz))->modify('+1 day')->format('Y-m-d');
@@ -4314,7 +4361,7 @@ if ($action === 'walkics') {
     $m = freshMark($door, loadMarks($key)[$id] ?? null);
     $w = walkFor($m, loadWalks($key)[$id] ?? null);
     if (!$w) fail('No walk booked for this door.', 404);
-    $tz = new DateTimeZone('America/Denver'); $utc = new DateTimeZone('UTC');
+    $tz = new DateTimeZone(appTz()); $utc = new DateTimeZone('UTC');
     $town = regionLabel($key);
     $p = loadPhones($key)[$id] ?? null; $p = ($p && ($p['source'] ?? '') === 'door' && empty(ownerFlag($door, $p)['prev'])) ? $p : null;
     $n = loadNotes($key)[$id] ?? null; $n = ($n && empty(ownerFlag($door, $n)['prev'])) ? $n : null;
@@ -4554,7 +4601,7 @@ if ($action === 'roofjob') {
         $when = (string) $when;
         $timed = in_array($step, ROOF_TIMED, true);
         if (!preg_match($timed ? '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D' : '/^\d{4}-\d{2}-\d{2}$/D', $when)) fail($timed ? 'That step needs a date and a time.' : 'That step needs a date.');
-        $dt = DateTime::createFromFormat($timed ? '!Y-m-d\TH:i' : '!Y-m-d', $when, new DateTimeZone('America/Denver'));
+        $dt = DateTime::createFromFormat($timed ? '!Y-m-d\TH:i' : '!Y-m-d', $when, new DateTimeZone(appTz()));
         if (!$dt || $dt->format($timed ? 'Y-m-d\TH:i' : 'Y-m-d') !== $when) fail('That is not a real date.');
         $yr = (int) $dt->format('Y'); $now = (int) date('Y');
         if ($yr < $now - 3 || $yr > $now + 2) fail('That date is too far from today.');
@@ -4768,7 +4815,7 @@ if ($action === 'jobber') {
             if ($lv === 'L' || $lv === 'M') $tags[] = ucfirst($lawnName[$lv]) . ' lawn';
             foreach ($wk as $t) $tags[] = (workLabels()[$t] ?? $t);
             fputcsv($fh, array_map('csvSafe', [$owner, $isCo ? 'TRUE' : 'FALSE', $p['phone'] ?? '', $em['email'] ?? '',
-                (string) $d['address'], (string) ($r['label'] ?? ''), 'CO', 'United States', implode(' ', $noteBits), implode(', ', $tags), 'Other']), ',', '"', '');
+                (string) $d['address'], (string) ($r['label'] ?? ''), market()['state'], 'United States', implode(' ', $noteBits), implode(', ', $tags), 'Other']), ',', '"', '');
         }
     }
     fclose($fh);
@@ -4917,14 +4964,14 @@ function jnSync(int $max = 60): array {
     $sf = jnFile('jobnimbus-sent.json');
     $lk = @fopen($sf . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['ok' => true, 'busy' => true, 'sent' => 0, 'tasks' => 0, 'failed' => 0];
     $sent = json_decode((string) @file_get_contents($sf), true) ?: [];
-    $tz = new DateTimeZone('America/Denver'); $n = 0; $t = 0; $bad = 0; $errs = [];
+    $tz = new DateTimeZone(appTz()); $n = 0; $t = 0; $bad = 0; $errs = [];
     foreach (bookedLeads() as $L) {
         if ($n + $t >= $max) break;
         $sk = $L['key'] . '/' . $L['id']; $s = $sent[$sk] ?? null;
         if (!$s) {
             $c = ['first_name' => '', 'last_name' => $L['org'] ? '' : ($L['owner'] !== '' ? $L['owner'] : $L['address']), 'company' => $L['org'] ? $L['owner'] : '',
                   'record_type_name' => (string) ($cf['workflow'] ?? 'Customer'), 'status_name' => (string) ($cf['status'] ?? 'Lead'),
-                  'address_line1' => $L['address'], 'city' => $L['city'], 'state_text' => 'CO', 'zip' => $L['zip'],
+                  'address_line1' => $L['address'], 'city' => $L['city'], 'state_text' => market()['state'], 'zip' => $L['zip'],
                   'mobile_phone' => $L['phone'], 'email' => $L['email'], 'description' => $L['desc'], 'tags' => implode(',', $L['tags'])];
             if (!empty($cf['source'])) $c['source_name'] = (string) $cf['source'];
             if ($L['lat'] !== null && $L['lon'] !== null) $c['geo'] = ['lat' => $L['lat'], 'lon' => $L['lon']];
@@ -4958,7 +5005,7 @@ if (in_array($action, ['jobnimbus', 'jnset', 'jnstatus', 'jnsync'], true)) {
         $fh = fopen('php://output', 'w');
         fputcsv($fh, ['First Name', 'Last Name', 'Company', 'Address Line 1', 'City', 'State', 'Zip', 'Mobile Phone', 'Email', 'Contact Type', 'Status', 'Source', 'Description', 'Tags'], ',', '"', '');
         $src = 'Door knocking (' . (company()['name'] ?: 'door app') . ')';
-        foreach (bookedLeads() as $L) fputcsv($fh, array_map('csvSafe', ['', $L['org'] ? '' : $L['owner'], $L['org'] ? $L['owner'] : '', $L['address'], $L['city'], 'CO', $L['zip'],
+        foreach (bookedLeads() as $L) fputcsv($fh, array_map('csvSafe', ['', $L['org'] ? '' : $L['owner'], $L['org'] ? $L['owner'] : '', $L['address'], $L['city'], market()['state'], $L['zip'],
             $L['phone'], $L['email'], 'Customer', 'Lead', $src, $L['desc'], implode(', ', $L['tags'])]), ',', '"', '');
         fclose($fh);
         exit;
