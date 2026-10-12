@@ -1016,6 +1016,15 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-17 — Try Desktop layout on a tablet (Matthew).** Added 2026-10-11. Once the change list is live: Profile → Layout →
       Desktop on an iPad or other tablet; it should show the computer layout shrunk to fit the screen (the test browser could not
       shrink it the way a real tablet does). Say if it is too small to use or anything is cut off. Tablet puts it back.
+- [ ] **TR-19 — Overnight 2026-10-11/12 work: upload when Matthew says go.** Built and tested, NOT live: security fixes (19b0c70),
+      speed (7cbbaf7), Spanish sweep (6552394), Yards +Thornton/Erie/Commerce City/Centennial (0cad359). Regression 85/85,
+      editions 20/20, change tests all pass. Contract outline for the attorney: traverse/business/client-contract-outline-DRAFT.md.
+- [ ] **TR-20 — More Yards towns, then new towns.** Next nights (lawn + trees, one parcel-heavy job at a time): Colorado Springs x4
+      (Sixfold's home market: Matthew's call), Denver, Arvada/Boulder/Windsor, Security-Widefield/Fountain. Then build Aurora
+      (Arapahoe + Adams), Littleton, Lakewood, Longmont; Larimer (Fort Collins, Loveland) needs its county data found first.
+      Plan and figures: traverse/research/markets/yards-markets-2026-10.md.
+- [ ] **TR-21 — The prospect list.** 9,102 active Colorado companies by trade (state register, matched by name):
+      traverse/research/prospects/prospects.csv (off git). Needs phone/website lookup before any outreach; nothing sent.
 - [ ] **TR-18 — The client contract (Matthew + an attorney).** Added 2026-10-11. What a company signs before it gets an install:
       a licence to use the door data inside the app only; no bulk copying, export or resale; what happens to their data and access
       when they cancel; who owns what (their customers and notes are theirs; the door data is Traverse's); payment and seats; and the
