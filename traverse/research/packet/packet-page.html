@@ -1,0 +1,283 @@
+<title>Traverse Work Packet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a navy survey band with the packet's six sections as tabs; each section a single column of tables and figure rows. Traverse tokens. */
+:root {
+  --surface: #f4f6f9; --raised: #ffffff; --line: #dce2ea; --ink: #0f1b2d; --muted: #566476;
+  --deep: #13294b; --on-deep: #ffffff; --flag: #d6400c; --on-flag: #ffffff; --flag-soft: #fde6dc;
+  --won: #1f7a4d; --won-soft: #ddf3e7; --roof: #4e6680; --yards: #2f7a3a; --solar: #f2a900; --pest: #7a3fa3; --security: #1b6f7a;
+  --display: "Familjen Grotesk", "Segoe UI", system-ui, sans-serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --surface: #0d131c; --raised: #151d29; --line: #263243; --ink: #e8eef6; --muted: #9ba9ba;
+  --deep: #1b3358; --on-deep: #ffffff; --flag: #ff7a45; --on-flag: #1a0d06; --flag-soft: #3a1a0c; --won: #5cc98f; --won-soft: #123323;
+  --shadow: 0 1px 2px rgba(0,0,0,0.5); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --surface: #0d131c; --raised: #151d29; --line: #263243; --ink: #e8eef6; --muted: #9ba9ba;
+  --deep: #1b3358; --on-deep: #ffffff; --flag: #ff7a45; --on-flag: #1a0d06; --flag-soft: #3a1a0c; --won: #5cc98f; --won-soft: #123323;
+  --shadow: 0 1px 2px rgba(0,0,0,0.5); color-scheme: dark }
+body { margin: 0; background: var(--surface); color: var(--ink); font: 16px/1.5 var(--sans); }
+.band { background: var(--deep); color: var(--on-deep); padding-block: 28px 0; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; }
+.band h1 { font: 700 34px/1.1 var(--display); letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+.band .sub { opacity: .82; margin: 8px 0 18px; max-width: 70ch; }
+.mark { display: inline-flex; gap: 10px; align-items: center; font: 600 13px var(--display); letter-spacing: .08em; text-transform: uppercase; opacity: .85; margin-bottom: 10px; }
+nav.tabs { display: flex; gap: 4px; overflow-x: auto; }
+nav.tabs a { color: var(--on-deep); text-decoration: none; padding: 10px 14px; border-radius: 10px 10px 0 0; font: 600 15px var(--display); opacity: .78; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { background: var(--surface); color: var(--ink); opacity: 1; }
+nav.tabs a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--flag); outline-offset: 2px; }
+main { padding-block: 26px 60px; }
+section[hidden] { display: none; }
+h2 { font: 600 24px/1.25 var(--display); margin: 0 0 6px; text-wrap: balance; }
+h3 { font: 600 18px/1.3 var(--display); margin: 26px 0 8px; }
+p.lead { color: var(--muted); margin: 0 0 18px; max-width: 75ch; }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 18px 0 8px; }
+.fig { background: var(--raised); border-radius: 16px; box-shadow: var(--shadow); padding: 14px 16px; min-width: 0; }
+.fig b { display: block; font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.fig span { color: var(--muted); font-size: 14px; }
+.card { background: var(--raised); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; min-width: 0; }
+.tablewrap { overflow-x: auto; background: var(--raised); border-radius: 16px; box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 13px var(--display); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--raised); position: sticky; top: 0; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+td.mono { font-family: var(--mono); font-size: 13px; }
+tr:last-child td { border-bottom: 0; }
+.src { color: var(--muted); font-size: 13px; }
+.src a { color: inherit; }
+a { color: var(--flag); }
+.chip { display: inline-block; padding: 1px 9px; border-radius: 999px; font: 700 12px var(--sans); white-space: nowrap; }
+.t-roofing { background: var(--roof); color: #fff; } .t-yards { background: var(--yards); color: #fff; } .t-solar { background: var(--solar); color: #0f1b2d; } .t-pest { background: var(--pest); color: #fff; } .t-security { background: var(--security); color: #fff; }
+.lic { background: var(--won-soft); color: var(--won); }
+.ours { background: var(--flag-soft); color: var(--flag); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 6px 0 14px; }
+.filters label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.filters input, .filters select { font: 15px var(--sans); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-height: 40px; }
+.filters input[type="search"] { min-width: 220px; }
+.count { font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+.pager { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+button { font: 700 14px var(--sans); border-radius: 10px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); padding: 8px 14px; min-height: 40px; cursor: pointer; }
+button.primary { background: var(--flag); color: var(--on-flag); border-color: var(--flag); }
+button[disabled] { opacity: .45; cursor: default; }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+ul.plain { margin: 6px 0; padding-left: 18px; } ul.plain li { margin: 4px 0; }
+.note { border-left: 3px solid var(--flag); padding: 2px 0 2px 12px; color: var(--muted); max-width: 80ch; }
+.note:empty { display: none; }
+.copy { font: 600 12px var(--sans); padding: 2px 8px; min-height: 0; border-radius: 6px; margin-left: 6px; }
+@media (prefers-reduced-motion: no-preference) { nav.tabs a { transition: background .15s } }
+</style>
+
+<div class="band">
+  <div class="wrap">
+    <div class="mark"><svg width="34" height="18" viewBox="0 0 34 18" aria-hidden="true"><polyline points="2,16 12,10 21,12 31,3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="2" cy="16" r="2" fill="currentColor"/><circle cx="12" cy="10" r="2" fill="currentColor"/><circle cx="21" cy="12" r="2" fill="currentColor"/><circle cx="31" cy="3" r="2.6" fill="#ff7a45"/></svg>Traverse Platforms</div>
+    <h1>Traverse Work Packet</h1>
+    <p class="sub">Who to sell to in Colorado, who you compete with, what it costs to run, and how the prices work. Every figure names its source.</p>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#summary" data-tab="summary">Summary</a>
+      <a href="#companies" data-tab="companies">Companies to sell to</a>
+      <a href="#competitors" data-tab="competitors">Competitors</a>
+      <a href="#costs" data-tab="costs">Costs</a>
+      <a href="#model" data-tab="model">Business model</a>
+      <a href="#markets" data-tab="markets">Markets</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+<section id="summary" data-sec="summary">
+  <h2>Summary</h2>
+  <p class="lead" id="sumLead">Loading the company list…</p>
+  <div class="figs" id="sumFigs"></div>
+  <div class="cols2">
+    <div class="card">
+      <h3 style="margin-top:0">Where to sell first</h3>
+      <ul class="plain">
+        <li>Lawn and landscaping companies are the largest group: Yards' buyers.</li>
+        <li>They cluster in Denver, Colorado Springs, Aurora, Fort Collins, Longmont, Littleton and Lakewood.</li>
+        <li>Aurora is being built now: 60,757 doors in 1,533 neighbourhoods.</li>
+        <li>Larimer County (Fort Collins, Loveland) has the most lawn companies per home, and no towns built yet.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Against the competition</h3>
+      <ul class="plain">
+        <li>SalesRabbit charges $49 to $75 per rep a month, and $19 to $31 more each for its data and weather add-ons.</li>
+        <li>RepCard's canvassing plan is $49 per rep a month; SPOTIO quotes only, for teams of five or more.</li>
+        <li>Traverse Crew is $35 to $45 per person with the door data built in: hail at the house, roof age, permits, lawn size, trees.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="companies" data-sec="companies" hidden>
+  <h2>Companies to sell to</h2>
+  <p class="lead">Active companies in the Colorado Secretary of State's register, matched by the trade words in their names, plus Denver's licensed alarm and tree-service companies. Websites and phones come from each company's own website, where one was found that names the company. Each name links to its state record.</p>
+  <p class="note" id="cWhich"></p>
+  <div class="filters" role="search">
+    <label for="fq">Search name or city<input id="fq" type="search" placeholder="e.g. Aurora, Pinnacle"></label>
+    <label for="ft">Trade<select id="ft"><option value="">All trades</option><option value="yards">Lawn and landscaping</option><option value="roofing">Roofing</option><option value="solar">Solar</option><option value="pest">Pest</option><option value="security">Alarm and security</option></select></label>
+    <label for="fw">Where<select id="fw"><option value="">Anywhere in Colorado</option><option value="0">In our towns</option><option value="1">Next to our towns</option><option value="2">Elsewhere</option></select></label>
+    <label for="fs">Show<select id="fs"><option value="">All</option><option value="web">With a website</option><option value="phone">With a phone</option><option value="lic">Denver licensed</option></select></label>
+    <label for="fo">Sort<select id="fo"><option value="where">Our towns first</option><option value="old">Oldest first</option><option value="name">A to Z</option></select></label>
+  </div>
+  <p class="count" id="cCount"></p>
+  <div class="tablewrap"><table><thead><tr><th>Company</th><th>Trade</th><th>City</th><th class="n">Formed</th><th>Website</th><th>Phone</th></tr></thead><tbody id="cBody"></tbody></table></div>
+  <div class="pager"><button id="prev" type="button">Previous</button><span id="pg" class="src"></span><button id="next" type="button" class="primary">Next 100</button></div>
+  <p class="src" id="cSrc"></p>
+</section>
+
+<section id="competitors" data-sec="competitors" hidden>
+  <h2>Competitors</h2>
+  <p class="lead">Door-to-door apps first, then storm data and trade software that overlaps a part of what Traverse does. Prices are what each company publishes, read 12 October 2026; where a company publishes none, that is said.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Company</th><th>What it is</th><th>Price</th><th>Data on the door</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><b>SalesRabbit</b></td><td>Door-to-door canvassing app and CRM, all trades; RoofLink for roofers</td><td>Team $59/rep/mo (monthly). Pro $49/rep/mo yearly, $75 monthly. Enterprise: quote. RoofLink Pro $120/rep/mo</td><td>Add-ons per rep a month: DataGrid AI $19–31, Weather $19–31, Mover Leads $13–20, Digital Contracts $13–20</td><td class="src"><a href="https://salesrabbit.com/pricing" target="_blank" rel="noopener">salesrabbit.com/pricing</a></td></tr>
+      <tr><td><b>RepCard</b></td><td>Rep app: digital cards, leaderboards, canvassing on Pro</td><td>Starter $24/rep/mo; Pro $49/rep/mo (canvassing tools); Enterprise custom</td><td>Not described on the pricing page</td><td class="src"><a href="https://repcard.com/pricing" target="_blank" rel="noopener">repcard.com/pricing</a></td></tr>
+      <tr><td><b>SPOTIO</b></td><td>Field sales app, B2B and B2C plans, teams of 5 or more</td><td>Quote only ("pricing is user-based")</td><td>Add-ons: Lead Machine, Next Best Action, DASH AI (no prices shown)</td><td class="src"><a href="https://spotio.com/pricing/" target="_blank" rel="noopener">spotio.com/pricing</a></td></tr>
+      <tr><td><b>Knockbase (Sunbase)</b></td><td>Door-knocking app</td><td>No price found on its own pages</td><td>Not checked</td><td class="src">Not published</td></tr>
+      <tr><td><b>HailTrace</b></td><td>Storm and hail maps for roofers; overlays inside SPOTIO</td><td>Quote only</td><td>Hail swaths by storm, wind, tornado; not per door</td><td class="src">No published price</td></tr>
+      <tr><td><b>FieldRoutes</b> (ServiceTitan)</td><td>Pest control CRM and routing: what a pest company runs after the sale</td><td>From $350/mo per 1,000 active customers (third-party listing)</td><td>None for prospecting</td><td class="src"><a href="https://www.capterra.com/p/146076/FieldRoutes/pricing/" target="_blank" rel="noopener">Capterra listing</a></td></tr>
+      <tr><td><b>Traverse</b></td><td>Door-to-door app in five trade editions, one install per company</td><td>Duo $99–129/crew/mo; Crew $35–45/person; Pro $69–89/person; add-ons $20</td><td><b>Built in:</b> hail at the house, roof size, age and material, re-roof permits, values, lawn size, trees, solar estimates, FEMA risk, census</td><td class="src">Traverse billing settings</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note" style="margin-top:14px">Review sites disagree on SPOTIO's and SalesRabbit's prices (one lists SPOTIO at $39–129 from 2023 data), so only each company's own page is used above, except FieldRoutes, which publishes none.</p>
+</section>
+
+<section id="costs" data-sec="costs" hidden>
+  <h2>Costs</h2>
+  <p class="lead">What Traverse pays to start and to run, from each provider's own pricing page, read 12 October 2026. Lines without a published price say so: get quotes.</p>
+  <h3>To start</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Item</th><th class="n">Cost</th><th>Notes</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Traverse Platforms LLC (Colorado)</td><td class="n">$50</td><td>Articles of Organization, online only</td><td class="src"><a href="https://www.sos.state.co.us/pubs/info_center/fees/business.html" target="_blank" rel="noopener">Colorado SOS fees</a></td></tr>
+      <tr><td>Federal tax number (EIN)</td><td class="n">$0</td><td>From the IRS, online</td><td class="src"><a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number" target="_blank" rel="noopener">irs.gov</a></td></tr>
+      <tr><td>Hosting, first year (SiteGround GrowBig)</td><td class="n">$59.88</td><td>$4.99/mo prepaid for 12 months</td><td class="src"><a href="https://www.siteground.com/web-hosting.htm" target="_blank" rel="noopener">siteground.com</a></td></tr>
+      <tr><td>Trademark filing (if filed)</td><td class="n">$350</td><td>Per class of goods or services</td><td class="src"><a href="https://www.uspto.gov/trademarks/fees-payment-information/summary-2025-trademark-fee-changes" target="_blank" rel="noopener">USPTO</a></td></tr>
+      <tr><td>Business texting registration (when texting is on)</td><td class="n">$61</td><td>Brand $4.50 + vetting $41.50, campaign vetting $15</td><td class="src"><a href="https://support.twilio.com/hc/en-us/articles/1260803965530-Pricing-and-Fees-for-A2P-10DLC-Service" target="_blank" rel="noopener">Twilio help center</a></td></tr>
+      <tr><td>Attorney: client agreement and LLC</td><td class="n">quote</td><td>Draft outline ready (TR-18)</td><td class="src">Get quotes</td></tr>
+      <tr><td>Insurance (liability, cyber)</td><td class="n">quote</td><td>Not priced here</td><td class="src">Get quotes</td></tr>
+    </tbody>
+  </table></div>
+  <h3>To run</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Item</th><th class="n">Cost</th><th>Notes</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Hosting after year one</td><td class="n">$29.99/mo</td><td>GrowBig renewal; CPU time is the limit that matters as clients join</td><td class="src"><a href="https://www.siteground.com/web-hosting.htm" target="_blank" rel="noopener">siteground.com</a></td></tr>
+      <tr><td>Google Workspace Business Starter</td><td class="n">$7/user/mo</td><td>Yearly plan; M.Sharpe@TraversePlatforms.com</td><td class="src"><a href="https://workspace.google.com/pricing" target="_blank" rel="noopener">workspace.google.com</a></td></tr>
+      <tr><td>Domain traverseplatforms.com</td><td class="n">$11.08/yr</td><td>Renewal</td><td class="src"><a href="https://porkbun.com/products/domains" target="_blank" rel="noopener">porkbun.com</a></td></tr>
+      <tr><td>Colorado periodic report</td><td class="n">$25/yr</td><td>Keeps the LLC in good standing; $50 late</td><td class="src"><a href="https://www.sos.state.co.us/pubs/business/FAQs/reports.html" target="_blank" rel="noopener">Colorado SOS</a></td></tr>
+      <tr><td>Card payments (Stripe)</td><td class="n">2.9% + 30¢</td><td>Per charge, plus 0.7% for subscriptions (Stripe Billing)</td><td class="src"><a href="https://stripe.com/pricing" target="_blank" rel="noopener">stripe.com/pricing</a></td></tr>
+      <tr><td>Texts (Twilio)</td><td class="n">$0.0083/text</td><td>Plus carrier fees ($0.0035–0.0045) and $10/mo per campaign</td><td class="src"><a href="https://www.twilio.com/en-us/sms/pricing/us" target="_blank" rel="noopener">twilio.com</a></td></tr>
+      <tr><td>Door data</td><td class="n">$0</td><td>Public sources: county parcels, Census, NOAA radar, USGS laser scans, USDA aerial photos</td><td class="src">Traverse data pipeline</td></tr>
+      <tr><td>Your Claude plan</td><td class="n">your plan</td><td>Builds and runs the app and data</td><td class="src">Your account</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="model" data-sec="model" hidden>
+  <h2>Business model</h2>
+  <p class="lead">One install per company, in its trade's edition, sold by the seat. The door data is the product; the app is how a crew uses it. Prices are the ones set in Traverse's billing settings.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Plan</th><th>Who it's for</th><th class="n">Monthly</th><th class="n">Yearly (per month)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Duo</b></td><td>A one- or two-person crew, flat</td><td class="n">$129</td><td class="n">$99</td></tr>
+      <tr><td><b>Crew</b></td><td>Per person: doors, map, calendar, pipeline</td><td class="n">$45</td><td class="n">$35</td></tr>
+      <tr><td><b>Pro</b></td><td>Per person: everything, managers, office tools</td><td class="n">$89</td><td class="n">$69</td></tr>
+      <tr><td><b>Add-on</b></td><td>Per person, per add-on</td><td class="n">$20</td><td class="n">$20</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cols2" style="margin-top:16px">
+    <div class="card"><h3 style="margin-top:0">Founding companies</h3><ul class="plain"><li>14-day free pilot before the first charge.</li><li>30% off Pro for the first year (a Stripe coupon).</li><li>The pilot is how the first roofer and the first lawn company are signed.</li></ul></div>
+    <div class="card"><h3 style="margin-top:0">One worked example (arithmetic on these prices)</h3><ul class="plain"><li>A six-person crew on Crew, yearly: 6 × $35 = <b>$210 a month</b>.</li><li>Stripe takes 2.9% + 30¢ + 0.7%: about <b>$8</b>.</li><li>Fixed running costs today are about <b>$37 a month</b> (hosting renewal and email), plus your Claude plan.</li><li>So one such company covers the fixed costs; every company after that is mostly margin until hosting needs an upgrade.</li></ul></div>
+    <div class="card"><h3 style="margin-top:0">What protects it</h3><ul class="plain"><li>Only Traverse's super admin downloads the door list, 500 at a time, and every download is logged.</li><li>The client agreement (outline for counsel ready) licenses the data in the app only.</li><li>Each company's own customers and notes stay theirs.</li></ul></div>
+  </div>
+</section>
+
+<section id="markets" data-sec="markets" hidden>
+  <h2>Markets</h2>
+  <p class="lead">Companies with paid employees, by county (US Census County Business Patterns 2023), against owner-occupied homes (Census ACS 2020–2024). One-person outfits without payroll are not in these counts, so the real numbers are higher.</p>
+  <div class="tablewrap"><table><thead><tr><th>County</th><th class="n">Owner homes</th><th class="n">Lawn</th><th class="n">Roofing</th><th class="n">Pest</th><th class="n">Alarm</th><th class="n">Homes per lawn co.</th><th>Our towns</th></tr></thead><tbody id="mCounties"></tbody></table></div>
+  <h3>Cities with the most companies</h3>
+  <div class="tablewrap"><table><thead><tr><th>City</th><th class="n">Lawn</th><th class="n">Roofing</th><th class="n">Pest</th><th class="n">Alarm</th><th class="n">Electrical (solar)</th></tr></thead><tbody id="mCities"></tbody></table></div>
+  <p class="src" style="margin-top:10px">Electrical contractors stand in for solar in the Census counts, so that column overstates solar. Sources: <a href="https://api.census.gov/data/2023/cbp" target="_blank" rel="noopener">Census CBP 2023</a>, <a href="https://data.census.gov/" target="_blank" rel="noopener">ACS 2020–2024</a>.</p>
+</section>
+</main>
+
+<script>
+(function () {
+  var TRADE = { yards: 'Lawn and landscaping', roofing: 'Roofing', solar: 'Solar', pest: 'Pest', security: 'Alarm and security' };
+  var WHERE = ['In our towns', 'Next to our towns', 'Elsewhere'];
+  var tabs = document.querySelectorAll('nav.tabs a'), secs = document.querySelectorAll('main section');
+  function show(id) {
+    if (!document.getElementById(id)) id = 'summary';
+    secs.forEach(function (s) { s.hidden = s.id !== id; });
+    tabs.forEach(function (a) { if (a.getAttribute('data-tab') === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    try { localStorage.setItem('tw.tab', id); } catch (e) {}
+  }
+  tabs.forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); show(a.getAttribute('data-tab')); history.replaceState(null, '', '#' + a.getAttribute('data-tab')); }); });
+  var start = (location.hash || '').slice(1); if (!start) { try { start = localStorage.getItem('tw.tab') || 'summary'; } catch (e) { start = 'summary'; } }
+  show(start);
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function fmt(n) { return Number(n).toLocaleString('en-US'); }
+  (window.PACKET ? Promise.resolve(window.PACKET) : fetch('packet-data.json').then(function (r) { return r.json(); })).then(function (D) {
+    var P = D.prospects, T = D.totals, byT = T.byTrade;
+    /* summary: always the full list */
+    document.getElementById('sumLead').textContent = fmt(T.all) + ' Colorado companies to sell to, ' + fmt(T.ours) + ' of them based in towns the app already covers. Built ' + D.built + '.';
+    if (D.webOnly) document.getElementById('cWhich').textContent = 'This page lists the ' + fmt(T.web) + ' companies whose own website was found, with the phone number on it where one shows. The full list of ' + fmt(T.all) + ', including those with no website, is on your computer: traverse/research/packet/out/traverse-work-packet-full.html.';
+    var figs = document.getElementById('sumFigs');
+    [[byT.yards || 0, 'lawn and landscaping'], [byT.roofing || 0, 'roofing'], [byT.solar || 0, 'solar'], [byT.pest || 0, 'pest'], [byT.security || 0, 'alarm and security'], [T.web, 'with a website found']].forEach(function (f) { var d = el('div', 'fig'); d.appendChild(el('b', null, fmt(f[0]))); d.appendChild(el('span', null, f[1])); figs.appendChild(d); });
+    /* companies */
+    var q = document.getElementById('fq'), t = document.getElementById('ft'), w = document.getElementById('fw'), s = document.getElementById('fs'), o = document.getElementById('fo');
+    var body = document.getElementById('cBody'), page = 0, list = [];
+    function filter() {
+      var qq = q.value.trim().toLowerCase();
+      list = P.filter(function (p) {
+        if (t.value && p[0].split(' ').indexOf(t.value) < 0) return false;
+        if (w.value !== '' && String(p[6]) !== w.value) return false;
+        if (s.value === 'web' && !p[8]) return false; if (s.value === 'phone' && !p[9]) return false; if (s.value === 'lic' && !p[10]) return false;
+        if (qq && (p[1] + ' ' + p[3]).toLowerCase().indexOf(qq) < 0) return false;
+        return true;
+      });
+      if (o.value === 'old') list.sort(function (a, b) { return (a[5] || '9999').localeCompare(b[5] || '9999') || a[1].localeCompare(b[1]); });
+      else if (o.value === 'name') list.sort(function (a, b) { return a[1].localeCompare(b[1]); });
+      else list.sort(function (a, b) { return a[6] - b[6] || (b[8] ? 1 : 0) - (a[8] ? 1 : 0) || a[3].localeCompare(b[3]) || a[1].localeCompare(b[1]); });
+      page = 0; draw();
+    }
+    function draw() {
+      body.textContent = '';
+      list.slice(page * 100, page * 100 + 100).forEach(function (p) {
+        var tr = el('tr'), c = el('td');
+        if (p[7]) { var a = el('a', null, p[1]); a.href = 'https://www.sos.state.co.us/biz/BusinessEntityDetail.do?masterFileId=' + p[7]; a.target = '_blank'; a.rel = 'noopener'; c.appendChild(a); } else c.appendChild(el('span', null, p[1]));
+        if (p[10]) c.appendChild(document.createTextNode(' ')), c.appendChild(el('span', 'chip lic', p[10] === 'A' ? 'Denver alarm licence' : 'Denver tree licence'));
+        tr.appendChild(c);
+        var tc = el('td'); p[0].split(' ').forEach(function (x) { tc.appendChild(el('span', 'chip t-' + x, TRADE[x] || x)); tc.appendChild(document.createTextNode(' ')); }); tr.appendChild(tc);
+        var cc = el('td'); cc.appendChild(el('span', null, p[3] || '')); if (p[6] === 0) { cc.appendChild(document.createTextNode(' ')); cc.appendChild(el('span', 'chip ours', 'our town')); } tr.appendChild(cc);
+        tr.appendChild(el('td', 'n', p[5] || ''));
+        var wc = el('td'); if (p[8]) { var wa = el('a', null, p[8].replace(/^https?:\/\/(www\.)?/, '')); wa.href = p[8]; wa.target = '_blank'; wa.rel = 'noopener'; wc.appendChild(wa); } tr.appendChild(wc);
+        var pc = el('td', 'mono'); if (p[9]) { pc.appendChild(el('span', null, p[9])); var cb = el('button', 'copy', 'Copy'); cb.type = 'button'; cb.addEventListener('click', function () { try { navigator.clipboard.writeText(p[9]).then(function () { cb.textContent = 'Copied'; }, function () { cb.textContent = 'Select it'; }); } catch (e) { cb.textContent = 'Select it'; } }); pc.appendChild(cb); } tr.appendChild(pc);
+        body.appendChild(tr);
+      });
+      var n = list.length, pages = Math.max(1, Math.ceil(n / 100));
+      document.getElementById('cCount').textContent = fmt(n) + (n === 1 ? ' company' : ' companies') + ' · ' + fmt(list.filter(function (p) { return p[8]; }).length) + ' with a website';
+      document.getElementById('pg').textContent = 'Page ' + (page + 1) + ' of ' + pages;
+      document.getElementById('prev').disabled = page === 0; document.getElementById('next').disabled = page >= pages - 1;
+    }
+    document.getElementById('prev').addEventListener('click', function () { if (page > 0) { page--; draw(); } });
+    document.getElementById('next').addEventListener('click', function () { page++; draw(); });
+    [q, t, w, s, o].forEach(function (x) { x.addEventListener(x === q ? 'input' : 'change', filter); });
+    filter();
+    document.getElementById('cSrc').textContent = 'Register: Colorado Secretary of State, Business Entities in Colorado (data.colorado.gov), Good Standing. Denver licences: Active Business Licenses Denver. Websites: every company in the register was checked (' + fmt(D.websitesTried) + '); a site counts only when its own page names the company and shows it is in Colorado. Nobody has been contacted.';
+    /* markets */
+    var mc = document.getElementById('mCounties');
+    D.counties.forEach(function (c) { var tr = el('tr'); [c.county, fmt(c.homes), c.yards, c.roofing, c.pest, c.security, c.yards ? fmt(Math.round(c.homes / c.yards)) : '–', c.ours.length ? c.ours.join(', ') : 'none'].forEach(function (v, i) { tr.appendChild(el('td', i > 0 && i < 7 ? 'n' : null, String(v))); }); mc.appendChild(tr); });
+    var mt = document.getElementById('mCities');
+    D.cities.forEach(function (c) { var tr = el('tr'); [c.city, c.yards, c.roofing, c.pest, c.security, c.solar].forEach(function (v, i) { tr.appendChild(el('td', i ? 'n' : null, String(v))); }); mt.appendChild(tr); });
+  }).catch(function () { document.getElementById('sumLead').textContent = 'The company list did not load. Reload the page.'; });
+})();
+</script>

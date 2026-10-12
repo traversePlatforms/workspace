@@ -10,10 +10,12 @@ import { writeFileSync, readFileSync } from 'node:fs'; import { join, dirname } 
 const HERE = dirname(fileURLToPath(import.meta.url)), REPO = join(HERE, '..', '..', '..');
 const API = 'https://data.colorado.gov/resource/4ykn-tg5h.json';
 const TRADES = {   // edition: [words searched in the register (SQL LIKE), words that must appear (regex), words that rule a match out]
-  roofing: [['%ROOF%'], /ROOF/, /ROOFTOP|ROOF ?GARDEN|RED ROOF|ROOF ?BAR/],
-  yards: [['%LAWN%', '%LANDSCAP%', '%TURF%', '%SPRINKLER%', '%IRRIGATION%', '%AERAT%', '%TREE SERV%', '%TREE CARE%', '%TREE EXPERT%', '%ARBOR%'], /LAWN|LANDSCAP|TURF|SPRINKLER|IRRIGATION|AERAT|TREE SERV|TREE CARE|TREE EXPERT|ARBOR/, /ARBORETUM|HARBOR|LAWN ?MOWER REPAIR|SPRINKLER ?FITTERS? UNION|FIRE SPRINKLER|ASTRO ?TURF/],
-  pest: [['%PEST%', '%EXTERMINAT%', '%TERMITE%', '%MOSQUITO%', '%WILDLIFE CONTROL%', '%BED BUG%'], /PEST|EXTERMINAT|TERMITE|MOSQUITO|WILDLIFE CONTROL|BED BUG/, /PESTO|TEMPEST|BUCHAREST/],
-  solar: [['%SOLAR%'], /SOLAR/, /SOLARIUM|SOLAR ?TAN|SOLAR ?FLARE BAR/],
+  /* 2026-10-12: "proof" words (waterproofing, bulletproof, proofreading), photographers, studios, law firms and suppliers were
+     getting in; ROOF must not follow a P, and the rule-outs below were found by reading the list */
+  roofing: [['%ROOF%'], /(^|[^P])ROOF/, /ROOFTOP|ROOF ?GARDEN|RED ROOF|ROOF ?BAR|PHOTOGRAPH|ROOFNEST|ROOF ?LABS|CONTRACTOR MARKETING/],
+  yards: [['%LAWN%', '%LANDSCAP%', '%TURF%', '%SPRINKLER%', '%IRRIGATION%', '%AERAT%', '%TREE SERV%', '%TREE CARE%', '%TREE EXPERT%', '%ARBOR%'], /LAWN|LANDSCAP|TURF|SPRINKLER|IRRIGATION|AERAT|TREE SERV|TREE CARE|TREE EXPERT|ARBOR/, /ARBORETUM|HARBOR|LAWN ?MOWER REPAIR|SPRINKLER ?FITTERS? UNION|FIRE SPRINKLER|ASTRO ?TURF|ARBOREAL|ARBOR VIEW|ARBOR PROPERT|LANDSCAPE SUPPLY|LAWN BOWLING|ARBOR HOMES?\b|ARBOR HOUSE|ARBOR SHOPPE|MUTUAL IRRIGATION|IRRIGATION DISTRICT|GRAND VALLEY IRRIGATION|DITCH|RESERVOIR/],
+  pest: [['%PEST%', '%EXTERMINAT%', '%TERMITE%', '%MOSQUITO%', '%WILDLIFE CONTROL%', '%BED BUG%'], /PEST|EXTERMINAT|TERMITE|MOSQUITO|WILDLIFE CONTROL|BED BUG/, /PESTO|TEMPEST|BUCHAREST|PESTILEN|MOSQUITO STUDIO/],
+  solar: [['%SOLAR%'], /SOLAR/, /SOLARIUM|SOLAR ?TAN|SOLAR ?FLARE BAR|SOLARI\b|SOLARA\b|SOLAR ?NAIL/],
   security: [['%ALARM%', '%SECURITY SYSTEM%', '%HOME SECURITY%', '%SMART HOME%', '%SURVEILLANCE%'], /ALARM|SECURITY SYSTEM|HOME SECURITY|SMART HOME|SURVEILLANCE/, /FIRE ALARM ?UNION/],
 };
 /* our towns, by the city names the register uses */

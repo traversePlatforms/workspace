@@ -14,6 +14,10 @@ const norm = (s) => String(s || '').toUpperCase().replace(/&/g, ' AND ').replace
 const lic = existsSync(join(R, 'prospects', 'denver-licenses.json')) ? JSON.parse(readFileSync(join(R, 'prospects', 'denver-licenses.json'), 'utf8')) : [];
 const licBy = new Map(); for (const l of lic) for (const n of [l.entity_name, l.trade_name]) if (n) licBy.set(norm(n), l.license_type);
 const W = { 'in our towns': 0, 'next to our towns': 1, 'elsewhere in Colorado': 2 };
+/* sites the finder reached by a redirect that are not the company's own (a supplier's branch finder, an ad network's directory,
+   another state's tree service), found reading the list 2026-10-12 */
+const NOT_THEIRS = /srsdistribution\.com|entravision\.com|atlantatreeservice\.com/;
+for (const k of Object.keys(web)) if (web[k].website && NOT_THEIRS.test(web[k].website)) web[k] = { none: 1 };
 const seen = new Set();
 const P = rows.map((r) => { const w = web[r.record] || {}; const k = norm(r.company); seen.add(k); const id = r.record.split('=').pop();
   return [r.trade, r.company, '', r.city, '', r.formed, W[r.where], id, w.website || '', w.phone || '', licBy.get(k) === 'Burglar Alarm Company' ? 'A' : licBy.get(k) === 'Tree Service Company' ? 'T' : '']; });
@@ -23,10 +27,15 @@ for (const l of lic) { const k = norm(l.entity_name); if (!k || seen.has(k) || (
   P.push([l.license_type === 'Burglar Alarm Company' ? 'security' : 'yards', l.trade_name || l.entity_name, 'Denver licence', 'Denver', '', '', 0, '', '', '', l.license_type === 'Burglar Alarm Company' ? 'A' : 'T']); added++; }
 const markets = JSON.parse(readFileSync(join(R, 'markets', 'markets.json'), 'utf8'));
 const cities = JSON.parse(readFileSync(join(R, 'markets', 'cities.json'), 'utf8'));
+/* --web keeps only companies with a website (the published page; the full list is too big to read through before publishing)
+   but the totals always describe the full list */
+const byTrade = {}; for (const p of P) for (const t of p[0].split(' ')) byTrade[t] = (byTrade[t] || 0) + 1;
+const totals = { all: P.length, ours: P.filter((p) => p[6] === 0).length, web: P.filter((p) => p[8]).length, phone: P.filter((p) => p[9]).length, byTrade };
+const WEB = process.argv.includes('--web');
 const data = {
-  built: new Date().toISOString().slice(0, 10),
+  built: new Date().toISOString().slice(0, 10), webOnly: WEB, totals,
   prospectCols: ['trade', 'company', 'type', 'city', 'zip', 'formed', 'where', 'sosId', 'website', 'phone', 'denver'],
-  prospects: P, addedFromDenver: added, websitesTried: Object.keys(web).length,
+  prospects: WEB ? P.filter((p) => p[8]) : P, addedFromDenver: added, websitesTried: Object.keys(web).length,
   counties: markets.counties.filter((c) => c.ownerHomes > 15000).map((c) => ({ county: c.county, homes: c.ownerHomes, yards: c.yards || 0, roofing: c.roofing || 0, pest: c.pest || 0, security: c.security || 0, solar: c.solar || 0, ours: c.ourTowns || [] })),
   cities: cities.cities.slice(0, 30).map((c) => ({ city: c.city, yards: c.yards || 0, roofing: c.roofing || 0, pest: c.pest || 0, security: c.security || 0, solar: c.solar || 0 })),
 };
