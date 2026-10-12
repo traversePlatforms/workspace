@@ -915,6 +915,24 @@ function loadAssign(string $key): array {
     }
     return $out;
 }
+/* the day each current assignment is for, if it has one (2026-10-12): area => YYYY-MM-DD; a later assignment without a day clears it */
+function assignDays(string $key): array {
+    $out = [];
+    foreach (logRows('assign', $key) as $r) {
+        if (!is_array($r) || !isset($r['area'])) continue;
+        if (($r['who'] ?? '') === '' || empty($r['on'])) unset($out[$r['area']]); else $out[$r['area']] = (string) $r['on'];
+    }
+    return $out;
+}
+/* a day to assign for: empty, or a real date from today up to a year ahead */
+function assignDay($v): string {
+    $v = trim((string) ($v ?? '')); if ($v === '') return '';
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $v, $m) || !checkdate((int) $m[2], (int) $m[3], (int) $m[1])) fail('That is not a real date.');
+    $today = (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d');
+    if ($v < $today) fail('Pick today or a day ahead.');
+    if ($v > (new DateTime('+1 year', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick a day within the next year.');
+    return $v;
+}
 function appendAssign(string $key, array $row): bool {
     return (bool) @file_put_contents(DATA_DIR . '/assign-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
@@ -1991,6 +2009,7 @@ if ($action === 'regions') {
         $aflags = loadAreaFlags($r['key']);
         $lfix = loadLawnFix($r['key']);
         $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
+        $aday = $assign ? assignDays($r['key']) : [];
         /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
         $bestT = crewSees($role) ? company()['best'] : null; $bq = null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data, $bq) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
         $areas = [];
@@ -2048,6 +2067,7 @@ if ($action === 'regions') {
                         'la' => $nll ? round($sla / $nll, 4) : null, 'lo' => $nll ? round($slo / $nll, 4) : null,   /* 4 places: about 10 m, plenty for a neighbourhood's centre */
                         'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
                         'who' => $assign[$a['name']] ?? null,   /* the streets come from ?action=streets, one town at a time */
+                        'on' => $aday[$a['name']] ?? null,      /* the day it is assigned for (2026-10-12) */
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
                         '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []));
         }
@@ -3028,6 +3048,14 @@ function calEventsFor(string $who, string $from, string $to): array {
             $rv = (string) ($m['revisit'] ?? '');
             if ($rv === '' || $rv < $from || $rv > $to) continue;
             $ev[] = ['kind' => 'revisit', 'date' => $rv, 'time' => '', 'title' => $d['address'], 'town' => $r['label'], 'region' => $r['key'], 'area' => $a['name'], 'id' => $d['id']];
+        }
+    }
+    /* territories assigned to this person for a day (2026-10-12) */
+    foreach (($idx['regions'] ?? []) as $r) {
+        $as = loadAssign($r['key']); if (!in_array($who, $as, true)) continue;
+        foreach (assignDays($r['key']) as $area => $day) {
+            if (($as[$area] ?? '') !== $who || $day < $from || $day > $to) continue;
+            $ev[] = ['kind' => 'terr', 'date' => $day, 'time' => '', 'title' => $area, 'town' => $r['label'], 'region' => $r['key'], 'area' => $area];
         }
     }
     foreach (leadsAll() as $l) {
@@ -4249,9 +4277,9 @@ if ($action === 'territories') {
     $towns = [];
     foreach (($idx['regions'] ?? []) as $rg) {
         $ks = townKnockStats($rg['key']); if (!$ks) continue;   /* cached per town (2026-10-11) */
-        $assign = loadAssign($rg['key']);
+        $assign = loadAssign($rg['key']); $aday = assignDays($rg['key']);
         $areas = [];
-        foreach ($ks['areas'] as $ar) $areas[] = ['name' => $ar[0], 'total' => $ar[1], 'knocked' => $ar[2], 'who' => $assign[$ar[0]] ?? null];
+        foreach ($ks['areas'] as $ar) $areas[] = ['name' => $ar[0], 'total' => $ar[1], 'knocked' => $ar[2], 'who' => $assign[$ar[0]] ?? null, 'on' => $aday[$ar[0]] ?? null];
         $towns[] = ['key' => $rg['key'], 'label' => $rg['label'], 'areas' => $areas];
     }
     $names = [];
@@ -4294,7 +4322,8 @@ if ($action === 'assignmany') {
     }
     $cur = loadAssign($key);
     foreach ($areas as $a) if (!mayAssign((string) ($cur[$a] ?? ''), $who)) fail('A manager changes territories within their own team: ' . $a . ' is someone else\'s.', 403);
-    foreach ($areas as $a) if (!appendAssign($key, ['area' => $a, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    $on = $who === '' ? '' : assignDay($body['on'] ?? '');
+    foreach ($areas as $a) if (!appendAssign($key, ['area' => $a, 'who' => $who, 'by' => $me, 'at' => time()] + ($on !== '' ? ['on' => $on] : []))) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'n' => count($areas)]);
 }
 
@@ -4310,7 +4339,8 @@ if ($action === 'assign') {
         if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
     }
     if (!mayAssign((string) (loadAssign($key)[$area] ?? ''), $who)) fail('A manager changes territories within their own team.', 403);
-    if (!appendAssign($key, ['area' => $area, 'who' => $who, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    $on = $who === '' ? '' : assignDay($body['on'] ?? '');
+    if (!appendAssign($key, ['area' => $area, 'who' => $who, 'by' => $me, 'at' => time()] + ($on !== '' ? ['on' => $on] : []))) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
 /* doors to one person, from the desktop planning table (2026-10-08): up to 1,000 at a time, all or none.

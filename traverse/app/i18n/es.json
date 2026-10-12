@@ -2365,5 +2365,11 @@
  "No neighbourhoods assigned to you yet.": "Todavía no tienes vecindarios asignados.",
  "best for aeration first": "primero los mejores para aireación",
  "best first": "primero los mejores",
- "done": "terminado"
+ "done": "terminado",
+ "For a day (optional) ": "Para un día (opcional) ",
+ "For a day (optional)": "Para un día (opcional)",
+ "Territory for the day": "Territorio del día",
+ "Territory": "Territorio",
+ "Pick today or a day ahead.": "Elige hoy o un día próximo.",
+ "Pick a day within the next year.": "Elige un día dentro del próximo año."
 }

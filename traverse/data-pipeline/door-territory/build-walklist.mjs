@@ -157,7 +157,7 @@ for (;;) {
   const p = new URLSearchParams({
     f: 'json', where: '1=1', geometry: envelope, geometryType: 'esriGeometryEnvelope',
     inSR: '4326', outSR: '4326', spatialRel: 'esriSpatialRelIntersects',
-    outFields: 'PARCEL,NAME1,NAME2,ADDRESS2,CITY,STATECODE,ZIPCODE,STArea__',
+    outFields: 'PARCEL,NAME1,NAME2,ADDRESS2,CITY,STATECODE,ZIPCODE,Shape.STArea()',   /* the county renamed STArea__ to Shape.STArea() (found 2026-10-12) */
     returnGeometry: 'true', resultOffset: String(offset), resultRecordCount: '1000',
   });
   const r = await getJSON(`${PARCELS}?${p}`);
@@ -184,7 +184,7 @@ for (const f of parcels) {
   if (!f.geometry?.rings?.length) continue;
   const acres = areaM2(f.geometry.rings) / 4046.8564224;
   /* cross-check against the county's own figure, treating it as square feet */
-  const theirs = (f.attributes.STArea__ ?? 0) / 43560;
+  const theirs = (f.attributes['Shape.STArea()'] ?? f.attributes.STArea__ ?? 0) / 43560;
   if (theirs > 0 && Math.abs(theirs - acres) / acres > 0.15) areaMismatch++;
   if (acres < minAcres || acres > maxAcres) continue;
   sized.push({ f, acres, c: centroid(f.geometry.rings[0]) });
