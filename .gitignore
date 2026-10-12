@@ -284,3 +284,5 @@ traverse/data-pipeline/door-territory/logs-aurora/
 traverse/research/prospects/denver-licenses.json
 traverse/research/packet/out/
 traverse/data-pipeline/door-territory/logs-southdenver/
+traverse/app/data/rounds/south-denver.json
+traverse/app/data/rounds/englewood.json
