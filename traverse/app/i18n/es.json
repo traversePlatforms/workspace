@@ -2357,5 +2357,7 @@
  "Switching is not set up here.": "Aquí no está listo el cambio de edición.",
  "Sign in with your code.": "Inicia sesión con tu código.",
  "No signal. Sign in with your code.": "Sin señal. Inicia sesión con tu código.",
- "Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent;": "Nada todavía. Las citas de puerta aparecen en cuanto alguien del equipo toca Visita agendada o Cotización enviada;"
+ "Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent;": "Nada todavía. Las citas de puerta aparecen en cuanto alguien del equipo toca Visita agendada o Cotización enviada;",
+ "No doors marked yet": "Todavía no ha marcado puertas",
+ "Your team: ": "Tu equipo: "
 }
