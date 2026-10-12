@@ -2308,5 +2308,8 @@
  "Not downloaded": "No descargado",
  "The download needs signal.": "La descarga necesita señal.",
  "Could not load the downloads.": "No se pudieron cargar las descargas.",
- "The downloads need signal.": "Las descargas necesitan señal."
+ "The downloads need signal.": "Las descargas necesitan señal.",
+ "Viewed a lot of doors today": "Vio muchas puertas hoy",
+ "That name is kept for Traverse’s own sign-ins. Use another.": "Ese nombre está reservado para los accesos de Traverse. Usa otro.",
+ "Too many codes tried. Wait an hour, or leave it blank for a random one.": "Demasiados códigos probados. Espera una hora o déjalo vacío para uno al azar."
 }

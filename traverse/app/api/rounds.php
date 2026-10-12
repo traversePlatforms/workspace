@@ -416,6 +416,21 @@ function exportLog(array $row): void {
     @file_put_contents(dirname(accountsFile()) . '/rounds-exports.log', json_encode(['by' => (string) $me] + $row + ['at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
 const EXPORT_MAX = 500;   /* doors in one download of the door list */
+/* review 2026-10-11: doors shown to each person today; every VIEW_STEP crossed goes in the download log as heavy viewing. The Plan of
+   one big town is about 3,000 doors; 20,000 in a day is a whole metro read through. It logs, it never blocks. */
+const VIEW_STEP = 20000;
+function viewCount(int $n): void {
+    global $me;
+    if ($n < 1 || (string) $me === '') return;
+    $f = dirname(accountsFile()) . '/rounds-views.json';
+    $fh = @fopen($f, 'c+'); if (!$fh) return;
+    if (!flock($fh, LOCK_EX)) { fclose($fh); return; }
+    $v = json_decode((string) stream_get_contents($fh), true); $day = date('Y-m-d');
+    if (!is_array($v) || ($v['day'] ?? '') !== $day) $v = ['day' => $day, 'n' => []];
+    $was = (int) ($v['n'][$me] ?? 0); $now = $was + $n; $v['n'][$me] = $now;
+    ftruncate($fh, 0); rewind($fh); fwrite($fh, json_encode($v)); fflush($fh); flock($fh, LOCK_UN); fclose($fh);
+    if (intdiv($now, VIEW_STEP) > intdiv($was, VIEW_STEP)) exportLog(['what' => 'heavy viewing', 'n' => intdiv($now, VIEW_STEP) * VIEW_STEP]);
+}
 
 /* ---- sign-in rate limit -------------------------------------------------
  *
@@ -2088,6 +2103,7 @@ if ($action === 'area') {
              /* whose permits cover this town and for which years (2026-10-07): lets the card say "no re-roof permit since 2016" */
              'perm' => $permOf || (crewSees($role) && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null];
     }
+    viewCount(array_sum(array_map(fn($x) => count($x['doors']), $answers)));
     if ($many) out(['ok' => true, 'many' => $answers]);
     if ($answers) out($answers[0]);
     fail('No such neighbourhood.', 404);
@@ -3831,6 +3847,9 @@ if ($action === 'work') {
 /* ---- the accounts screen (admin) ---------------------------------------------------------- */
 function acctName(string $n): string { return trim((string) preg_replace('/\s+/u', ' ', $n)); }
 function acctNameOk(string $n): bool { return (bool) preg_match("/^\\p{L}[\\p{L} .'\\-]{1,39}$/uD", $n); }
+/** review 2026-10-11: names starting Claude or Fable are hidden from boards and pickers (Traverse's own test sign-ins), so an account
+    made or renamed in the app may not take one: it would be a sign-in nobody sees on the leaderboard */
+function acctNameReserved(string $n): bool { return boardHidden($n); }
 /** every account, active or turned off, without its code */
 function acctRows(array $basePeople, array $acct, string $key): array {
     $rows = [];
@@ -3966,6 +3985,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     if ($action === 'accountadd') {
         $name = acctName((string) ($body['name'] ?? '')); $r = $isMgr ? 'crew' : (string) ($body['role'] ?? 'crew');
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
+        if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
         if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         $code = acctNewCode($basePeople, $acct);
@@ -3985,6 +4005,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $r = array_key_exists('role', $body) ? (string) $body['role'] : $t['role'];
         if ($t['off']) fail('Turn the account back on first.');
         if (array_key_exists('name', $body) && !acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
+        if ($name !== $t['name'] && acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');   /* renaming into one; an existing one keeps its name */
         if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
         if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
         if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
@@ -4002,6 +4023,9 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $want = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
         if ($want !== '') {   /* a code the admin picks (2026-10-11) */
             if ($role !== 'admin') fail('Only an admin picks a code. Leave it blank for a new random one.', 403);
+            /* review 2026-10-11: "taken" says a code exists, so a script could walk all 900,000 and find every code in use, the super
+               admin's included. Ten picks an hour per admin, right or wrong, ends that; a random new code is never limited. */
+            if (!throttleTake(rateFile('codepick|' . $myId), 10, 3600)) fail('Too many codes tried. Wait an hour, or leave it blank for a random one.', 429);
             if (!preg_match('/^\d{6}$/D', $want)) fail('A code is 6 digits.');
             if (acctWeakCode($want)) fail('Pick a code that is harder to guess: not one digit six times or a run like 123456.');
             if (isset($basePeople[$want]) || isset($acct['people'][$want])) fail('That code is taken. Pick another.');
