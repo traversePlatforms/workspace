@@ -21,12 +21,14 @@ const LAYER = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/
 /* 2026-10-07: the editions' counties too (the state layer fills apprValTot on 95-100% of parcels in each; Larimer on none, so
    Windsor's Larimer side has no value). A town in two counties is listed under both: a parcel the other county answers for is
    left as it is (below). */
-const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'highlands-ranch', 'parker', 'castle-pines'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'],
-  jefferson: ['arvada'], adams: ['arvada', 'thornton', 'commerce-city'], arapahoe: ['centennial'], weld: ['windsor', 'erie', 'thornton'], boulder: ['erie', 'boulder'], denver: ['denver'] };
+const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'highlands-ranch', 'parker', 'castle-pines', 'aurora'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'],
+  jefferson: ['arvada'], adams: ['arvada', 'thornton', 'commerce-city', 'aurora'], arapahoe: ['centennial', 'englewood', 'aurora'], weld: ['windsor', 'erie', 'thornton'], boulder: ['erie', 'boulder'], denver: ['denver', 'south-denver'] };   /* +South Denver, Englewood, Aurora 2026-10-12 (left out when they were built) */
+/* --only=a,b asks for just those towns; everything already in the cache stays */
+const ONLY = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 const COUNTY = { douglas: 'Douglas', teller: 'Teller', jefferson: 'JEFFERSON', adams: 'ADAMS', arapahoe: 'ARAPAHOE', weld: 'WELD', boulder: 'BOULDER', denver: 'DENVER' };
 /* El Paso: the state layer carries no value there, but the county assessor's own parcel file does (MARKETVALUE, the assessor's
    market value; assessor/raw/EPC Parcel Data.txt, refreshed weekly). Matched on the parcel number the walk lists carry. */
-const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain'];
+const EL_PASO = ['monument', 'palmer-lake', 'black-forest', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain', 'walden'];
 const OUT = join(HERE, 'value-cache.json');
 
 function csvRows(file) {
@@ -65,7 +67,7 @@ const cache = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : {};
 let asked = 0, got = 0, empty = 0;
 for (const [cty, towns] of Object.entries(TOWNS)) {
   const byParcel = new Map();
-  for (const t of towns) { if (!existsSync(join(HERE, `${t}.csv`))) continue; for (const r of csvRows(join(HERE, `${t}.csv`))) {
+  for (const t of towns) { if (ONLY.length && !ONLY.includes(t)) continue; if (!existsSync(join(HERE, `${t}.csv`))) continue; for (const r of csvRows(join(HERE, `${t}.csv`))) {
     if (!r.parcel || !r.lat || !r.lon) continue;
     const key = `${parseFloat(r.lat)},${parseFloat(r.lon)}`;
     (byParcel.get(r.parcel) || byParcel.set(r.parcel, []).get(r.parcel)).push(key);

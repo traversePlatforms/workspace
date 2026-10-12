@@ -23,12 +23,22 @@
   ],
   "black-forest": [
     "cs-northeast",
-    "cs-northwest"
+    "cs-northwest",
+    "walden"
   ],
   "cs-northeast": [
     "black-forest"
   ],
   "cs-northwest": [
+    "black-forest"
+  ],
+  "denver": [
+    "south-denver"
+  ],
+  "south-denver": [
+    "denver"
+  ],
+  "walden": [
     "black-forest"
   ]
 }

@@ -39,7 +39,7 @@
     "roof": false,
     "crew": true
   },
-  "townGroups": ["north-douglas", "thornton", "erie", "commerce-city", "centennial", "south-denver", "englewood", "walden"],
+  "townGroups": ["north-douglas", "thornton", "erie", "commerce-city", "centennial", "south-denver", "englewood", "walden", "aurora"],
   "best": "yards",
   "card": {
     "lawn": true,
