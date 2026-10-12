@@ -30,7 +30,9 @@ process.on('unhandledRejection', (e) => { console.log('    (network error, skipp
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..');
 const CACHE = join(DT, 'lawn-cache.json');
-const TOWNS = ['monument', 'palmer-lake', 'black-forest', 'castle-rock', 'larkspur', 'sedalia', 'franktown', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines'];
+const TOWNS = ['monument', 'palmer-lake', 'black-forest', 'castle-rock', 'larkspur', 'sedalia', 'franktown', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines',
+  /* Yards beyond the Sixfold towns (2026-10-11, Matthew: "Yards needs more areas"; towns picked by the market check, research/yards-markets-2026-10.md) */
+  'thornton', 'erie', 'commerce-city', 'centennial', 'arvada', 'denver', 'boulder', 'windsor', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain'];
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 const T = { ndvi: 0.36, short: 1, tall: 2, minpx: 150, rag: 10.5 };
