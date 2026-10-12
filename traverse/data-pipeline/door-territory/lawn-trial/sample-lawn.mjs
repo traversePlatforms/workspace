@@ -42,7 +42,15 @@ const CHM = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_glo
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
 
 const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, 'utf8')) : {};
-function save() { writeFileSync(CACHE + '.tmp', JSON.stringify(cache)); renameSync(CACHE + '.tmp', CACHE); }
+/* 2026-10-11: on Windows the replace can meet the file held open for a moment (a virus scan of the big cache); it stopped the
+   overnight tree run twice. Try again for up to 5 s before giving up. */
+function save() {
+  writeFileSync(CACHE + '.tmp', JSON.stringify(cache));
+  for (let i = 0; ; i++) {
+    try { renameSync(CACHE + '.tmp', CACHE); return; }
+    catch (e) { if (i >= 20 || !/EPERM|EBUSY|EACCES/.test(String(e.code))) throw e; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250); }
+  }
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function json(url, opts) {
   for (let i = 0; i < 4; i++) { try { const r = await fetch(url, opts); if (r.ok) return await r.json(); } catch {} await sleep(1000 * (i + 1)); }

@@ -42,7 +42,15 @@ function mailDoors(p, town) {
 setMemoMax(500);
 
 const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, 'utf8')) : {};
-function save() { writeFileSync(CACHE + '.tmp', JSON.stringify(cache)); renameSync(CACHE + '.tmp', CACHE); }
+/* 2026-10-11: on Windows the replace can meet the file held open for a moment (a virus scan of the big cache); it stopped the
+   overnight tree run twice. Try again for up to 5 s before giving up. */
+function save() {
+  writeFileSync(CACHE + '.tmp', JSON.stringify(cache));
+  for (let i = 0; ; i++) {
+    try { renameSync(CACHE + '.tmp', CACHE); return; }
+    catch (e) { if (i >= 20 || !/EPERM|EBUSY|EACCES/.test(String(e.code))) throw e; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250); }
+  }
+}
 
 const started = Date.now(); let done = 0;
 for (const [town, county] of Object.entries(TOWNS)) {

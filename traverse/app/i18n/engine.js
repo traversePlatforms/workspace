@@ -37,14 +37,24 @@ var i18nT = function (t) { return t; };
     var lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.slice(lead.length, s.length - trail.length);
     if (core in EXACT) return lead + EXACT[core] + trail;
     var r = s;
-    for (var i = 0; i < PRE.length; i++) if (r.indexOf(PRE[i][0]) === 0) { r = PRE[i][1] + r.slice(PRE[i][0].length); break; }
+    for (var i = 0; i < PRE.length; i++) if (r.indexOf(PRE[i][0]) === 0) {
+      /* a longer known phrase at the start wins over its first word (2026-10-11: "The largest hail ..." became "La largest hail ...") */
+      var longer = false; for (var q = 0; q < fragKeys.length && !longer; q++) if (fragKeys[q].length > PRE[i][0].length && r.indexOf(fragKeys[q]) === 0) longer = true;
+      if (!longer) r = PRE[i][1] + r.slice(PRE[i][0].length);
+      break;
+    }
     if (FRE) r = r.replace(FRE, function (m) { return FRAG[m]; }).replace(FRE, function (m) { return FRAG[m]; });   /* twice: two pieces can share a " · " */
-    if (r.indexOf(' · ') >= 0) r = r.split(' · ').map(function (p) { var c = p.trim(); return c in EXACT ? p.replace(c, EXACT[c]) : p; }).join(' · ');
+    if (r.indexOf(' · ') >= 0) r = r.split(' · ').map(function (p) {
+      var c = p.trim(); if (c in EXACT) return p.replace(c, EXACT[c]);
+      for (var j = 0; j < PRE.length; j++) if (c.indexOf(PRE[j][0]) === 0) return p.replace(PRE[j][0], PRE[j][1]);   /* "Built 1997" after a dot too (2026-10-11) */
+      return p;
+    }).join(' · ');
     r = r.replace(MRE, function (m, a, num, b) { return a ? MON[a] : num + MON[b]; });
     /* counts the code builds from numbers: '4 of 30,464', '37 doors', '1 door' */
     r = r.replace(/(\d[\d,]*) of (\d)/g, '$1 de $2').replace(/(\d) doors\b/g, '$1 puertas').replace(/(\d) door\b/g, '$1 puerta');
     /* phrases with a name or a number inside (2026-10-11, round 2) */
     r = r.replace(/^Install the (.+) app$/, 'Instalar la app $1').replace(/^Instalar la app (.+) app$/, 'Instalar la app $1')
+      .replace(/\b(\d+) min ago\b/g, 'hace $1 min').replace(/\b(\d+) h ago\b/g, 'hace $1 h').replace(/\bjust now\b/g, 'justo ahora')   /* ago() (2026-10-11) */
       .replace(/(\d{4}) photo\b/g, 'foto $1').replace(/([\d.]+)-acre lot\b/g, 'lote de $1 acres').replace(/(\d[\d,]*) homes\b/g, '$1 casas')
       .replace(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b(?= \d| of)/g, function (m) { return FULLMON[m]; })
       .replace(/\b(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\b(?=,? \d)/g, function (m) { return WDAY[m]; });
