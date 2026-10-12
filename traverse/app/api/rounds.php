@@ -405,6 +405,17 @@ if ($session) {
     if ($line === null) $session = null;
     else { $session['n'] = (string) ($line[0] ?? ''); $session['r'] = (string) ($line[1] ?? 'crew'); }
 }
+/* the super admin (2026-10-11, Matthew): Traverse's own sign-in inside a client's install. Only the server's codes file makes one (role
+   'super' on its line; the app never writes that role, accountedit takes crew, manager or admin). It works as an admin everywhere, no
+   client admin can change, sign out or remove it, and only it downloads the door list. */
+$isSuper = false;
+if ($session && $session['r'] === 'super') { $isSuper = true; $session['r'] = 'admin'; }
+/** every download that leaves the app (2026-10-11, Matthew): who, what, how many, when; admins read it on the Accounts screen */
+function exportLog(array $row): void {
+    global $me;
+    @file_put_contents(dirname(accountsFile()) . '/rounds-exports.log', json_encode(['by' => (string) $me] + $row + ['at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
+const EXPORT_MAX = 500;   /* doors in one download of the door list */
 
 /* ---- sign-in rate limit -------------------------------------------------
  *
@@ -1582,7 +1593,7 @@ if ($action === 'signin') {
     ]);
     $line = [$payload['c'], $payload['exp'], time(), deviceName()];
     sessEdit(function ($a) use ($tok, $line) { $a['s'][sessionTag($tok)] = $line; return $a; });
-    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'], 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])]);
+    out(['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])]);
 }
 
 /* A sign-out names the session it is for (Fable, 2026-10-03). A phone that signed out with no
@@ -1742,7 +1753,7 @@ if ($action === 'smsthread' || $action === 'smssend') {
     out(['ok' => true, 'message' => ['dir' => 'out', 'body' => $text, 'by' => $me, 'at' => time(), 'status' => $res['status'] ?? 'queued']]);
 }
 
-if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -3594,6 +3605,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         if ($json === false) fail('No such copy.', 404);
         accountLog(['by' => $me, 'what' => 'backup', 'copy' => $n]);
         header('Content-Type: application/json; charset=utf-8');
+        exportLog(['what' => 'backup copy']);
         header('Content-Disposition: attachment; filename="' . substr($n, 0, -3) . '"');   /* the same JSON as a fresh download */
         header('Cache-Control: no-store');
         echo $json;
@@ -3615,6 +3627,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
                 'files' => $files, 'photos' => $photos];
         accountLog(['by' => $me, 'what' => 'backup', 'n' => count($files)]);
         header('Content-Type: application/json; charset=utf-8');
+        exportLog(['what' => 'full backup']);
         header('Content-Disposition: attachment; filename="sixfold-backup-' . date('Y-m-d-His') . '.json"');
         header('Cache-Control: no-store');
         echo json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
@@ -3622,6 +3635,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
     }
     if ($action === 'customersexport') {
         $cs = loadCustomers(); $vs = loadVisits();
+        exportLog(['what' => 'customers']);
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="sixfold-customers-' . date('Y-m-d') . '.csv"');
         $fh = fopen('php://output', 'w');
@@ -3875,6 +3889,23 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal'], true)) {
     out(['ok' => true, 'url' => (string) $r['url']]);
 }
 
+/* the door list (2026-10-11, Matthew): the Plan builds the file; the server says yes only to the super admin, at most EXPORT_MAX doors,
+   and logs it. Anyone signed in sees doors on screen; this is the bulk download. */
+if ($action === 'planexport') {
+    if (!$isSuper) fail('Only Traverse downloads the door list.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $n = (int) ($body['n'] ?? 0);
+    if ($n < 1) fail('Nothing to download.');
+    if ($n > EXPORT_MAX) fail('Download ' . EXPORT_MAX . ' doors at a time.');
+    exportLog(['what' => 'door list', 'region' => (string) ($body['region'] ?? ''), 'n' => $n]);
+    out(['ok' => true, 'max' => EXPORT_MAX]);
+}
+if ($action === 'exportlog') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $rows = [];   /* readLines() keeps rows with an id; these have none */
+    foreach ((array) @file(dirname(accountsFile()) . '/rounds-exports.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $ln) { $r = json_decode((string) $ln, true); if (is_array($r) && isset($r['what'], $r['at'])) $rows[] = $r; }
+    out(['ok' => true, 'rows' => array_reverse(array_slice($rows, -100))]);
+}
 function acctAdmins(array $rows): int { $n = 0; foreach ($rows as $r) if (!$r['off'] && $r['role'] === 'admin') $n++; return $n; }
 /** a code anyone could guess (2026-10-11, admins pick codes now): one digit six times, or a run up or down like 123456 */
 function acctWeakCode(string $c): bool {
@@ -3928,7 +3959,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $mine = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
         if ($mine === '' || !hash_equals($myId, codeId($mine, $sessionKey)) || !isset($people[$mine])) fail('That is not your code.', 401);
         throttleGiveBack($addrFile); throttleGiveBack($siteFile);
-        $pins = []; foreach ($rows as $r) if (!$r['off']) $pins[$r['id']] = $r['code'];
+        $pins = []; foreach ($rows as $r) if (!$r['off'] && ($isSuper || $r['role'] !== 'super')) $pins[$r['id']] = $r['code'];
         accountLog(['by' => $me, 'what' => 'showed pins', 'n' => count($pins)]);
         out(['ok' => true, 'pins' => $pins]);
     }
@@ -3947,6 +3978,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id])) fail('No such account.', 404);
     $t = $rows[$id];
+    if ($t['role'] === 'super' && !$isSuper) fail('That is Traverse\'s own sign-in. Only Traverse changes it.', 403);
     if ($isMgr && !$mgrMay($t)) fail('A manager changes the crew on their own team.', 403);
     if ($action === 'accountedit') {
         $name = array_key_exists('name', $body) ? acctName((string) $body['name']) : $t['name'];
@@ -4762,6 +4794,7 @@ if ($action === 'skipexport') {
     $only = (string) ($_REQUEST['region'] ?? '');
     if ($only !== '' && !preg_match('/^[a-z0-9-]{1,40}$/D', $only)) fail('No such region.', 404);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    exportLog(['what' => 'skip trace numbers', 'region' => $only]);
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sixfold-skiptrace-' . ($only !== '' ? $only . '-' : '') . ($all ? 'all-flagged-' : 'cleared-') . date('Y-m-d') . '.csv"');
     $fh = fopen('php://output', 'w');
@@ -4813,6 +4846,7 @@ if ($action === 'skippick') {
 if ($action === 'jobber') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    exportLog(['what' => 'bookings for Jobber']);
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sixfold-booked-for-jobber-' . date('Y-m-d') . '.csv"');
     $fh = fopen('php://output', 'w');
@@ -5033,6 +5067,7 @@ function jnSync(int $max = 60): array {
 if (in_array($action, ['jobnimbus', 'jnset', 'jnstatus', 'jnsync'], true)) {
     if ($role !== 'admin' || !feature('roof')) fail('Not allowed.', 403);
     if ($action === 'jobnimbus') {
+        exportLog(['what' => 'bookings for JobNimbus']);
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="booked-doors-for-jobnimbus-' . date('Y-m-d') . '.csv"');
         $fh = fopen('php://output', 'w');
@@ -5111,6 +5146,7 @@ if ($action === 'report' || $action === 'export') {
     }
 
     /* csvSafe(): see above the Jobber export — it is shared */
+    exportLog(['what' => 'doors worked']);
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sixfold-rounds.csv"');
     $fh = fopen('php://output', 'w');

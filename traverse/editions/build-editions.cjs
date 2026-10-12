@@ -455,7 +455,7 @@ return [
     'session_key' => '${crypto.randomBytes(32).toString('hex')}',
     'session_days' => 45,
     'people' => [
-        '${pin}' => ['Matthew Sharpe', 'admin'],
+        '${pin}' => ['Matthew Sharpe', 'super'],   // Traverse's own sign-in: a super admin (2026-10-11); the client's admins are added in the app
     ],
 ];
 `);

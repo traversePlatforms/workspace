@@ -30,7 +30,8 @@ return [
     // digits is enough here and a password would be worse — a crew member
     // cannot forget a code they keep in their wallet.
     'people' => [
-        // code      => [name, role]
+        // code      => [name, role]   role: crew, manager, admin, or super (Traverse's own sign-in: an admin no client admin can change,
+        //                              and the only one who downloads the door list; set here only, never from the app. 2026-10-11)
         '000000'     => ['Example Person', 'crew'],
     ],
 ];

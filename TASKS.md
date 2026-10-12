@@ -1013,6 +1013,14 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       speed. **Then** Claude makes the rest — every edition × crew / manager / admin × phone and desktop — each with its
       own storyline and a dry run first. Known nits: "Good morning" shows at the 4:45 PM scene and the storm report says
       8:30 AM (the app reads the real clock); the time picker can't be drawn, so 5:30 PM just appears.
+- [ ] **TR-17 — Try Desktop layout on a tablet (Matthew).** Added 2026-10-11. Once the change list is live: Profile → Layout →
+      Desktop on an iPad or other tablet; it should show the computer layout shrunk to fit the screen (the test browser could not
+      shrink it the way a real tablet does). Say if it is too small to use or anything is cut off. Tablet puts it back.
+- [ ] **TR-18 — The client contract (Matthew + an attorney).** Added 2026-10-11. What a company signs before it gets an install:
+      a licence to use the door data inside the app only; no bulk copying, export or resale; what happens to their data and access
+      when they cancel; who owns what (their customers and notes are theirs; the door data is Traverse's); payment and seats; and the
+      data-protection side (the Colorado Privacy Act question flagged earlier). The app now backs it up: only Traverse's super admin
+      downloads the door list, 500 at a time, and every download is logged. An attorney should draft or review it.
 - [~] **TR-13 — Billing (Stripe).** ✅ **Built 2026-10-10, commit afd2580, NOT uploaded, off everywhere.** Admin-only
       Billing tile: Duo / Crew / Pro, monthly or yearly, seats, second edition on Pro ($20), founding companies get a 14-day
       pilot once + the 30%-off coupon on Pro. Pays on Stripe Checkout; Manage billing = Stripe's portal. Webhook
@@ -1025,7 +1033,9 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       Not built: a public sign-up page that makes a new install (installs are still built by hand).
       ✅ **Code uploaded OFF to all six installs 2026-10-11** (Sixfold 85/85 suites, editions 20/20; billing and texting answer "not on"
       live). Turning either on = keys in the private folder + the feature in company.json, nothing else to upload.
-- [ ] **TR-8 — Company email for Traverse.** Recommended: Google Workspace Business Starter (~$7/user/mo yearly,
+- [x] **TR-8 — Company email for Traverse.** ✅ **2026-10-11: done.** Workspace mailbox M.Sharpe@TraversePlatforms.com; MX = smtp.google.com
+      (priority 1); SPF passes (Google is inside SiteGround's managed include); DKIM 2048-bit key published and Google shows
+      "Authenticating email with DKIM"; DMARC p=none. Left for later: the homepage contact. Original note: Recommended: Google Workspace Business Starter (~$7/user/mo yearly,
       $8.40 monthly — check Google's page), its own Workspace account, not Sixfold's. One mailbox (e.g.
       matthew@traverseplatforms.com) + free aliases (hello@, sales@). **DNS is on SiteGround, not Porkbun**: Google's MX,
       SPF, DKIM and DMARC records go in Site Tools → Domain → DNS Zone Editor (Matthew enters them; Claude walks it).

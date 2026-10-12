@@ -2291,5 +2291,22 @@
  "Roof 15+ yrs": "Techo 15+ años",
  "Roof 20+ yrs": "Techo 20+ años",
  "Solar 7k kWh+": "Solar 7k kWh+",
- "Solar 10k kWh+": "Solar 10k kWh+"
+ "Solar 10k kWh+": "Solar 10k kWh+",
+ "Download the top 500 (CSV)": "Descargar las mejores 500 (CSV)",
+ "Tick 500 or fewer to download": "Marca 500 o menos para descargar",
+ "Traverse’s own sign-in, for support. Only Traverse changes it.": "El acceso propio de Traverse, para soporte. Solo Traverse lo cambia.",
+ "Downloads from the app": "Descargas de la app",
+ "Hide downloads": "Ocultar descargas",
+ "Nothing downloaded yet.": "Todavía no se ha descargado nada.",
+ "Door list (Plan)": "Lista de puertas (Plan)",
+ "Doors worked (CSV)": "Puertas trabajadas (CSV)",
+ "Full backup": "Copia de seguridad completa",
+ "Backup copy": "Copia de seguridad",
+ "Skip trace numbers": "Números de skip trace",
+ "Bookings for Jobber": "Citas para Jobber",
+ "Bookings for JobNimbus": "Citas para JobNimbus",
+ "Not downloaded": "No descargado",
+ "The download needs signal.": "La descarga necesita señal.",
+ "Could not load the downloads.": "No se pudieron cargar las descargas.",
+ "The downloads need signal.": "Las descargas necesitan señal."
 }
