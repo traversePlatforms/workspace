@@ -1,0 +1,1409 @@
+{
+ "built": "2026-10-12",
+ "source": "US Census Bureau, County Business Patterns 2023 by ZIP code (api.census.gov/data/2023/cbp, zip code); city = the ZIP's Postal Service name",
+ "note": "Counts business locations with paid employees; one-person shops without payroll are not counted. The electrical code stands in for solar and overstates it.",
+ "cities": [
+  {
+   "city": "Denver",
+   "zips": [
+    "80202",
+    "80203",
+    "80204",
+    "80205",
+    "80206",
+    "80207",
+    "80209",
+    "80210",
+    "80211",
+    "80212",
+    "80214",
+    "80215",
+    "80216",
+    "80219",
+    "80220",
+    "80221",
+    "80222",
+    "80223",
+    "80224",
+    "80226",
+    "80227",
+    "80228",
+    "80229",
+    "80230",
+    "80231",
+    "80232",
+    "80233",
+    "80234",
+    "80235",
+    "80236",
+    "80238",
+    "80239",
+    "80247",
+    "80249",
+    "80260"
+   ],
+   "yards": 277,
+   "roofing": 167,
+   "pest": 6,
+   "security": 6,
+   "solar": 283,
+   "all": 739
+  },
+  {
+   "city": "Colorado Springs",
+   "zips": [
+    "80903",
+    "80904",
+    "80905",
+    "80906",
+    "80907",
+    "80908",
+    "80909",
+    "80910",
+    "80911",
+    "80914",
+    "80915",
+    "80916",
+    "80917",
+    "80918",
+    "80919",
+    "80920",
+    "80921",
+    "80922",
+    "80923",
+    "80924",
+    "80925",
+    "80927",
+    "80939"
+   ],
+   "yards": 204,
+   "roofing": 86,
+   "pest": 6,
+   "solar": 162,
+   "all": 458
+  },
+  {
+   "city": "Littleton",
+   "zips": [
+    "80120",
+    "80121",
+    "80122",
+    "80123",
+    "80125",
+    "80126",
+    "80127",
+    "80128",
+    "80129",
+    "80130"
+   ],
+   "yards": 111,
+   "roofing": 66,
+   "pest": 3,
+   "solar": 117,
+   "all": 297
+  },
+  {
+   "city": "Fort Collins",
+   "zips": [
+    "80521",
+    "80524",
+    "80525",
+    "80526",
+    "80528"
+   ],
+   "yards": 108,
+   "roofing": 33,
+   "pest": 4,
+   "solar": 51,
+   "all": 196
+  },
+  {
+   "city": "Longmont",
+   "zips": [
+    "80501",
+    "80503",
+    "80504"
+   ],
+   "yards": 100,
+   "roofing": 10,
+   "pest": 3,
+   "solar": 60,
+   "all": 173
+  },
+  {
+   "city": "Aurora",
+   "zips": [
+    "80010",
+    "80011",
+    "80012",
+    "80013",
+    "80014",
+    "80015",
+    "80016",
+    "80017",
+    "80018"
+   ],
+   "yards": 98,
+   "roofing": 53,
+   "pest": 11,
+   "security": 6,
+   "solar": 94,
+   "all": 262
+  },
+  {
+   "city": "Englewood",
+   "zips": [
+    "80110",
+    "80111",
+    "80112",
+    "80113"
+   ],
+   "yards": 89,
+   "roofing": 41,
+   "pest": 11,
+   "security": 13,
+   "solar": 92,
+   "all": 246
+  },
+  {
+   "city": "Boulder",
+   "zips": [
+    "80301",
+    "80302",
+    "80303",
+    "80304",
+    "80305"
+   ],
+   "yards": 57,
+   "roofing": 8,
+   "solar": 15,
+   "all": 80
+  },
+  {
+   "city": "Arvada",
+   "zips": [
+    "80002",
+    "80003",
+    "80004",
+    "80005"
+   ],
+   "yards": 51,
+   "roofing": 15,
+   "solar": 65,
+   "all": 131
+  },
+  {
+   "city": "Loveland",
+   "zips": [
+    "80537",
+    "80538"
+   ],
+   "yards": 51,
+   "roofing": 31,
+   "pest": 8,
+   "solar": 51,
+   "all": 141
+  },
+  {
+   "city": "Parker",
+   "zips": [
+    "80134",
+    "80138"
+   ],
+   "yards": 50,
+   "roofing": 14,
+   "pest": 3,
+   "solar": 37,
+   "all": 104
+  },
+  {
+   "city": "Grand Junction",
+   "zips": [
+    "81501",
+    "81503",
+    "81504",
+    "81505",
+    "81506",
+    "81507"
+   ],
+   "yards": 50,
+   "roofing": 8,
+   "pest": 6,
+   "solar": 41,
+   "all": 105
+  },
+  {
+   "city": "Carbondale",
+   "zips": [
+    "81623"
+   ],
+   "yards": 44,
+   "solar": 27,
+   "all": 71
+  },
+  {
+   "city": "Greeley",
+   "zips": [
+    "80631",
+    "80634"
+   ],
+   "yards": 37,
+   "roofing": 23,
+   "solar": 33,
+   "all": 93
+  },
+  {
+   "city": "Broomfield",
+   "zips": [
+    "80020",
+    "80021",
+    "80023"
+   ],
+   "yards": 36,
+   "roofing": 9,
+   "security": 7,
+   "solar": 33,
+   "all": 85
+  },
+  {
+   "city": "Brighton",
+   "zips": [
+    "80601",
+    "80602",
+    "80603"
+   ],
+   "yards": 36,
+   "roofing": 11,
+   "solar": 44,
+   "all": 91
+  },
+  {
+   "city": "Durango",
+   "zips": [
+    "81301",
+    "81303"
+   ],
+   "yards": 35,
+   "roofing": 5,
+   "solar": 19,
+   "all": 59
+  },
+  {
+   "city": "Pueblo",
+   "zips": [
+    "81001",
+    "81003",
+    "81004",
+    "81005",
+    "81006",
+    "81007",
+    "81008"
+   ],
+   "yards": 34,
+   "roofing": 19,
+   "solar": 46,
+   "all": 99
+  },
+  {
+   "city": "Castle Rock",
+   "zips": [
+    "80104",
+    "80108",
+    "80109"
+   ],
+   "yards": 33,
+   "roofing": 14,
+   "pest": 4,
+   "solar": 30,
+   "all": 81
+  },
+  {
+   "city": "Golden",
+   "zips": [
+    "80401",
+    "80403"
+   ],
+   "yards": 29,
+   "roofing": 11,
+   "solar": 43,
+   "all": 83
+  },
+  {
+   "city": "Commerce City",
+   "zips": [
+    "80022"
+   ],
+   "yards": 27,
+   "roofing": 8,
+   "solar": 19,
+   "all": 54
+  },
+  {
+   "city": "Steamboat Springs",
+   "zips": [
+    "80487"
+   ],
+   "yards": 25,
+   "roofing": 7,
+   "solar": 21,
+   "all": 53
+  },
+  {
+   "city": "Montrose",
+   "zips": [
+    "81401",
+    "81403"
+   ],
+   "yards": 25,
+   "roofing": 5,
+   "solar": 21,
+   "all": 51
+  },
+  {
+   "city": "Lafayette",
+   "zips": [
+    "80026"
+   ],
+   "yards": 22,
+   "roofing": 4,
+   "solar": 15,
+   "all": 41
+  },
+  {
+   "city": "Erie",
+   "zips": [
+    "80516"
+   ],
+   "yards": 21,
+   "roofing": 6,
+   "pest": 3,
+   "solar": 12,
+   "all": 42
+  },
+  {
+   "city": "Eagle",
+   "zips": [
+    "81631"
+   ],
+   "yards": 21,
+   "roofing": 6,
+   "solar": 10,
+   "all": 37
+  },
+  {
+   "city": "Breckenridge",
+   "zips": [
+    "80424"
+   ],
+   "yards": 20,
+   "solar": 13,
+   "all": 33
+  },
+  {
+   "city": "Windsor",
+   "zips": [
+    "80550"
+   ],
+   "yards": 19,
+   "roofing": 15,
+   "solar": 20,
+   "all": 54
+  },
+  {
+   "city": "Basalt",
+   "zips": [
+    "81621"
+   ],
+   "yards": 19,
+   "roofing": 4,
+   "solar": 7,
+   "all": 30
+  },
+  {
+   "city": "Berthoud",
+   "zips": [
+    "80513"
+   ],
+   "yards": 18,
+   "roofing": 5,
+   "solar": 11,
+   "all": 34
+  },
+  {
+   "city": "Peyton",
+   "zips": [
+    "80831"
+   ],
+   "yards": 17,
+   "roofing": 7,
+   "solar": 15,
+   "all": 39
+  },
+  {
+   "city": "Aspen",
+   "zips": [
+    "81611"
+   ],
+   "yards": 17,
+   "solar": 10,
+   "all": 27
+  },
+  {
+   "city": "Wheat Ridge",
+   "zips": [
+    "80033"
+   ],
+   "yards": 16,
+   "roofing": 9,
+   "solar": 24,
+   "all": 49
+  },
+  {
+   "city": "Avon",
+   "zips": [
+    "81620"
+   ],
+   "yards": 16,
+   "solar": 8,
+   "all": 24
+  },
+  {
+   "city": "Edwards",
+   "zips": [
+    "81632"
+   ],
+   "yards": 16,
+   "solar": 12,
+   "all": 28
+  },
+  {
+   "city": "Evergreen",
+   "zips": [
+    "80439"
+   ],
+   "yards": 15,
+   "roofing": 8,
+   "solar": 9,
+   "all": 32
+  },
+  {
+   "city": "Wellington",
+   "zips": [
+    "80549"
+   ],
+   "yards": 14,
+   "solar": 11,
+   "all": 25
+  },
+  {
+   "city": "Woodland Park",
+   "zips": [
+    "80863"
+   ],
+   "yards": 14,
+   "roofing": 3,
+   "solar": 4,
+   "all": 21
+  },
+  {
+   "city": "Gunnison",
+   "zips": [
+    "81230"
+   ],
+   "yards": 14,
+   "roofing": 4,
+   "solar": 12,
+   "all": 30
+  },
+  {
+   "city": "Fort Lupton",
+   "zips": [
+    "80621"
+   ],
+   "yards": 13,
+   "solar": 6,
+   "all": 19
+  },
+  {
+   "city": "Elizabeth",
+   "zips": [
+    "80107"
+   ],
+   "yards": 12,
+   "roofing": 3,
+   "solar": 13,
+   "all": 28
+  },
+  {
+   "city": "Glenwood Springs",
+   "zips": [
+    "81601"
+   ],
+   "yards": 12,
+   "roofing": 5,
+   "solar": 18,
+   "all": 35
+  },
+  {
+   "city": "Westminster",
+   "zips": [
+    "80030",
+    "80031"
+   ],
+   "yards": 11,
+   "roofing": 7,
+   "solar": 18,
+   "all": 36
+  },
+  {
+   "city": "Conifer",
+   "zips": [
+    "80433"
+   ],
+   "yards": 11,
+   "solar": 5,
+   "all": 16
+  },
+  {
+   "city": "Gypsum",
+   "zips": [
+    "81637"
+   ],
+   "yards": 11,
+   "roofing": 7,
+   "solar": 19,
+   "all": 37
+  },
+  {
+   "city": "Telluride",
+   "zips": [
+    "81435"
+   ],
+   "yards": 10,
+   "solar": 11,
+   "all": 21
+  },
+  {
+   "city": "Silverthorne",
+   "zips": [
+    "80498"
+   ],
+   "yards": 9,
+   "solar": 10,
+   "all": 19
+  },
+  {
+   "city": "Pagosa Springs",
+   "zips": [
+    "81147"
+   ],
+   "yards": 9,
+   "solar": 9,
+   "all": 18
+  },
+  {
+   "city": "Fruita",
+   "zips": [
+    "81521"
+   ],
+   "yards": 9,
+   "solar": 6,
+   "all": 15
+  },
+  {
+   "city": "Monument",
+   "zips": [
+    "80132"
+   ],
+   "yards": 8,
+   "roofing": 5,
+   "solar": 13,
+   "all": 26
+  },
+  {
+   "city": "Henderson",
+   "zips": [
+    "80640"
+   ],
+   "yards": 8,
+   "roofing": 3,
+   "solar": 4,
+   "all": 15
+  },
+  {
+   "city": "Crested Butte",
+   "zips": [
+    "81224"
+   ],
+   "yards": 8,
+   "roofing": 3,
+   "solar": 8,
+   "all": 19
+  },
+  {
+   "city": "Larkspur",
+   "zips": [
+    "80118"
+   ],
+   "yards": 7,
+   "roofing": 3,
+   "all": 10
+  },
+  {
+   "city": "Fairplay",
+   "zips": [
+    "80440"
+   ],
+   "yards": 7,
+   "solar": 5,
+   "all": 12
+  },
+  {
+   "city": "Johnstown",
+   "zips": [
+    "80534"
+   ],
+   "yards": 7,
+   "solar": 8,
+   "all": 15
+  },
+  {
+   "city": "Mead",
+   "zips": [
+    "80542"
+   ],
+   "yards": 7,
+   "solar": 6,
+   "all": 13
+  },
+  {
+   "city": "Vail",
+   "zips": [
+    "81657"
+   ],
+   "yards": 7,
+   "all": 7
+  },
+  {
+   "city": "Louisville",
+   "zips": [
+    "80027"
+   ],
+   "yards": 6,
+   "solar": 7,
+   "all": 13
+  },
+  {
+   "city": "Thornton",
+   "zips": [
+    "80241"
+   ],
+   "yards": 6,
+   "roofing": 6,
+   "solar": 10,
+   "all": 22
+  },
+  {
+   "city": "Dillon",
+   "zips": [
+    "80435"
+   ],
+   "yards": 6,
+   "solar": 5,
+   "all": 11
+  },
+  {
+   "city": "Morrison",
+   "zips": [
+    "80465"
+   ],
+   "yards": 6,
+   "roofing": 4,
+   "solar": 13,
+   "all": 23
+  },
+  {
+   "city": "Tabernash",
+   "zips": [
+    "80478"
+   ],
+   "yards": 6,
+   "all": 6
+  },
+  {
+   "city": "Estes Park",
+   "zips": [
+    "80517"
+   ],
+   "yards": 6,
+   "solar": 6,
+   "all": 12
+  },
+  {
+   "city": "Eaton",
+   "zips": [
+    "80615"
+   ],
+   "yards": 6,
+   "solar": 9,
+   "all": 15
+  },
+  {
+   "city": "Salida",
+   "zips": [
+    "81201"
+   ],
+   "yards": 6,
+   "roofing": 3,
+   "solar": 11,
+   "all": 20
+  },
+  {
+   "city": "Hesperus",
+   "zips": [
+    "81326"
+   ],
+   "yards": 6,
+   "all": 6
+  },
+  {
+   "city": "Delta",
+   "zips": [
+    "81416"
+   ],
+   "yards": 6,
+   "roofing": 3,
+   "solar": 7,
+   "all": 16
+  },
+  {
+   "city": "Ridgway",
+   "zips": [
+    "81432"
+   ],
+   "yards": 6,
+   "solar": 3,
+   "all": 9
+  },
+  {
+   "city": "Snowmass Village",
+   "zips": [
+    "81615"
+   ],
+   "yards": 6,
+   "all": 6
+  },
+  {
+   "city": "New Castle",
+   "zips": [
+    "81647"
+   ],
+   "yards": 6,
+   "solar": 9,
+   "all": 15
+  },
+  {
+   "city": "Snowmass",
+   "zips": [
+    "81654"
+   ],
+   "yards": 6,
+   "all": 6
+  },
+  {
+   "city": "Bennett",
+   "zips": [
+    "80102"
+   ],
+   "yards": 5,
+   "roofing": 4,
+   "all": 9
+  },
+  {
+   "city": "Franktown",
+   "zips": [
+    "80116"
+   ],
+   "yards": 5,
+   "solar": 4,
+   "all": 9
+  },
+  {
+   "city": "Sedalia",
+   "zips": [
+    "80135"
+   ],
+   "yards": 5,
+   "all": 5
+  },
+  {
+   "city": "Bailey",
+   "zips": [
+    "80421"
+   ],
+   "yards": 5,
+   "all": 5
+  },
+  {
+   "city": "Fraser",
+   "zips": [
+    "80442"
+   ],
+   "yards": 5,
+   "all": 5
+  },
+  {
+   "city": "Oak Creek",
+   "zips": [
+    "80467"
+   ],
+   "yards": 5,
+   "solar": 5,
+   "all": 10
+  },
+  {
+   "city": "Evans",
+   "zips": [
+    "80620"
+   ],
+   "yards": 5,
+   "solar": 5,
+   "all": 10
+  },
+  {
+   "city": "Sterling",
+   "zips": [
+    "80751"
+   ],
+   "yards": 5,
+   "solar": 5,
+   "all": 10
+  },
+  {
+   "city": "Fountain",
+   "zips": [
+    "80817"
+   ],
+   "yards": 5,
+   "solar": 5,
+   "all": 10
+  },
+  {
+   "city": "Manitou Springs",
+   "zips": [
+    "80829"
+   ],
+   "yards": 5,
+   "all": 5
+  },
+  {
+   "city": "La Junta",
+   "zips": [
+    "81050"
+   ],
+   "yards": 5,
+   "solar": 5,
+   "all": 10
+  },
+  {
+   "city": "Bayfield",
+   "zips": [
+    "81122"
+   ],
+   "yards": 5,
+   "solar": 7,
+   "all": 12
+  },
+  {
+   "city": "Canon City",
+   "zips": [
+    "81212"
+   ],
+   "yards": 5,
+   "solar": 10,
+   "all": 15
+  },
+  {
+   "city": "Cortez",
+   "zips": [
+    "81321"
+   ],
+   "yards": 5,
+   "roofing": 3,
+   "solar": 10,
+   "all": 18
+  },
+  {
+   "city": "Loma",
+   "zips": [
+    "81524"
+   ],
+   "yards": 5,
+   "all": 5
+  },
+  {
+   "city": "Craig",
+   "zips": [
+    "81625"
+   ],
+   "yards": 5,
+   "solar": 7,
+   "all": 12
+  },
+  {
+   "city": "Rifle",
+   "zips": [
+    "81650"
+   ],
+   "yards": 5,
+   "roofing": 3,
+   "solar": 16,
+   "all": 24
+  },
+  {
+   "city": "Kiowa",
+   "zips": [
+    "80117"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Palmer Lake",
+   "zips": [
+    "80133"
+   ],
+   "yards": 4,
+   "roofing": 3,
+   "solar": 4,
+   "all": 11
+  },
+  {
+   "city": "Alma",
+   "zips": [
+    "80420"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Black Hawk",
+   "zips": [
+    "80422"
+   ],
+   "yards": 4,
+   "solar": 3,
+   "all": 7
+  },
+  {
+   "city": "Indian Hills",
+   "zips": [
+    "80454"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Pine",
+   "zips": [
+    "80470"
+   ],
+   "yards": 4,
+   "roofing": 4,
+   "solar": 4,
+   "all": 12
+  },
+  {
+   "city": "Bellvue",
+   "zips": [
+    "80512"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Laporte",
+   "zips": [
+    "80535"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Milliken",
+   "zips": [
+    "80543"
+   ],
+   "yards": 4,
+   "solar": 3,
+   "all": 7
+  },
+  {
+   "city": "Timnath",
+   "zips": [
+    "80547"
+   ],
+   "yards": 4,
+   "roofing": 5,
+   "all": 9
+  },
+  {
+   "city": "Kersey",
+   "zips": [
+    "80644"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Brush",
+   "zips": [
+    "80723"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Calhan",
+   "zips": [
+    "80808"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Buena Vista",
+   "zips": [
+    "81211"
+   ],
+   "yards": 4,
+   "solar": 9,
+   "all": 13
+  },
+  {
+   "city": "Wolcott",
+   "zips": [
+    "81655"
+   ],
+   "yards": 4,
+   "all": 4
+  },
+  {
+   "city": "Lone Tree",
+   "zips": [
+    "80124"
+   ],
+   "yards": 3,
+   "roofing": 3,
+   "solar": 6,
+   "all": 12
+  },
+  {
+   "city": "Strasburg",
+   "zips": [
+    "80136"
+   ],
+   "yards": 3,
+   "all": 3
+  },
+  {
+   "city": "Frisco",
+   "zips": [
+    "80443"
+   ],
+   "yards": 3,
+   "solar": 3,
+   "all": 6
+  },
+  {
+   "city": "Granby",
+   "zips": [
+    "80446"
+   ],
+   "yards": 3,
+   "roofing": 3,
+   "solar": 6,
+   "all": 12
+  },
+  {
+   "city": "Frederick",
+   "zips": [
+    "80530"
+   ],
+   "yards": 3,
+   "all": 3
+  },
+  {
+   "city": "Hudson",
+   "zips": [
+    "80642"
+   ],
+   "yards": 3,
+   "solar": 5,
+   "all": 8
+  },
+  {
+   "city": "La Salle",
+   "zips": [
+    "80645"
+   ],
+   "yards": 3,
+   "solar": 4,
+   "all": 7
+  },
+  {
+   "city": "Platteville",
+   "zips": [
+    "80651"
+   ],
+   "yards": 3,
+   "solar": 5,
+   "all": 8
+  },
+  {
+   "city": "Fort Morgan",
+   "zips": [
+    "80701"
+   ],
+   "yards": 3,
+   "solar": 4,
+   "all": 7
+  },
+  {
+   "city": "Trinidad",
+   "zips": [
+    "81082"
+   ],
+   "yards": 3,
+   "solar": 3,
+   "all": 6
+  },
+  {
+   "city": "Alamosa",
+   "zips": [
+    "81101"
+   ],
+   "yards": 3,
+   "solar": 7,
+   "all": 10
+  },
+  {
+   "city": "Dolores",
+   "zips": [
+    "81323"
+   ],
+   "yards": 3,
+   "all": 3
+  },
+  {
+   "city": "Silt",
+   "zips": [
+    "81652"
+   ],
+   "yards": 3,
+   "roofing": 6,
+   "solar": 13,
+   "all": 22
+  },
+  {
+   "city": "Watkins",
+   "zips": [
+    "80137"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Grand Lake",
+   "zips": [
+    "80447"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Leadville",
+   "zips": [
+    "80461"
+   ],
+   "solar": 5,
+   "all": 5
+  },
+  {
+   "city": "Firestone",
+   "zips": [
+    "80520"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Ault",
+   "zips": [
+    "80610"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Keenesburg",
+   "zips": [
+    "80643"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Wiggins",
+   "zips": [
+    "80654"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Wray",
+   "zips": [
+    "80758"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Yuma",
+   "zips": [
+    "80759"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Florissant",
+   "zips": [
+    "80816"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Lamar",
+   "zips": [
+    "81052"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Center",
+   "zips": [
+    "81125"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Crestone",
+   "zips": [
+    "81131"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Del Norte",
+   "zips": [
+    "81132"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Sanford",
+   "zips": [
+    "81151"
+   ],
+   "solar": 5,
+   "all": 5
+  },
+  {
+   "city": "Westcliffe",
+   "zips": [
+    "81252"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Austin",
+   "zips": [
+    "81410"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Cedaredge",
+   "zips": [
+    "81413"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Hotchkiss",
+   "zips": [
+    "81419"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Norwood",
+   "zips": [
+    "81423"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Olathe",
+   "zips": [
+    "81425"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Paonia",
+   "zips": [
+    "81428"
+   ],
+   "solar": 6,
+   "all": 6
+  },
+  {
+   "city": "Clifton",
+   "zips": [
+    "81520"
+   ],
+   "solar": 3,
+   "all": 3
+  },
+  {
+   "city": "Palisade",
+   "zips": [
+    "81526"
+   ],
+   "solar": 4,
+   "all": 4
+  },
+  {
+   "city": "Minturn",
+   "zips": [
+    "81645"
+   ],
+   "solar": 3,
+   "all": 3
+  }
+ ]
+}
