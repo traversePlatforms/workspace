@@ -90,7 +90,7 @@ const EDITIONS = {
       // storm and tornado warnings for the crew's safety, and freeze and frost for the lawn; no fire alerts (Matthew 2026-10-06)
       best: 'yards',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'],
-      townGroups: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
+      townGroups: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial', 'south-denver', 'englewood'],   // +South Denver and Englewood 2026-10-12 (a Sixfold rep there);   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
       links: { googleReview: '' }

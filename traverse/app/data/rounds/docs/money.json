@@ -7,7 +7,7 @@
     "black-forest": "elpaso", "monument": "elpaso", "palmer-lake": "elpaso",
     "woodland-park": "teller", "divide": "teller", "florissant": "teller", "cripple-creek": "teller",
     "highlands-ranch": "douglas", "parker": "douglas", "castle-pines": "douglas",
-    "cs-northeast": "elpaso", "cs-southeast": "elpaso", "security-widefield": "elpaso", "fountain": "elpaso", "arvada": "jefferson", "centennial": "arapahoe", "thornton": "adams", "windsor": "weld", "erie": "weld", "commerce-city": "adams", "denver": "denver", "cs-northwest": "elpaso", "cs-southwest": "elpaso", "boulder": "boulder", "aurora": "arapahoe"
+    "cs-northeast": "elpaso", "cs-southeast": "elpaso", "security-widefield": "elpaso", "fountain": "elpaso", "arvada": "jefferson", "centennial": "arapahoe", "thornton": "adams", "windsor": "weld", "erie": "weld", "commerce-city": "adams", "denver": "denver", "cs-northwest": "elpaso", "cs-southwest": "elpaso", "boulder": "boulder", "aurora": "arapahoe", "south-denver": "denver", "englewood": "arapahoe"
   },
   "cards": {
     "_note": "One short line each for the door card (new layout). Keep them in step with the sheets below.",
@@ -194,7 +194,9 @@
         "thornton": "Thornton: 2 days a week, you pick (Stage 1)",
         "commerce-city": "South Adams water: 2 days a week (Stage 1)",
         "centennial": "Mostly Denver Water: 2 days a week in season",
-        "erie": "Erie: rules changed through 2026: ask"
+        "erie": "Erie: rules changed through 2026: ask",
+        "south-denver": "Denver Water: 2 assigned days a week in season",
+        "englewood": "Englewood Utilities: ask"
       },
       "wellSmall": "Under 35 acres: a well may not water a lawn",
       "wellBig": "35 acres or more: a well may water up to 1 acre"
@@ -528,6 +530,7 @@
               }
             ]
           },
+          "south-denver": {"title": "South Denver water", "blocks": [{"h": "Denver Water", "p": ["Stage 1 drought since 25 March 2026: two assigned days a week, by address.", "No lawn watering from 10am to 6pm.", "Summer rules run 1 May to 1 October."]}]},
           "centennial": {
             "title": "Centennial water",
             "blocks": [
