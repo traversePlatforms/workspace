@@ -1957,10 +1957,16 @@ if ($action === 'regions') {
 if ($action === 'area') {
     $key  = (string) ($_REQUEST['region'] ?? '');
     $name = (string) ($_REQUEST['area'] ?? '');
+    /* several at once (2026-10-11, Matthew: the Plan was slow): POST {region, areas: [...]}, up to 40, answered as {many: [...]}.
+       The town's logs and side files are read once for all of them instead of once per neighbourhood. */
+    $names = ($isPost && isset($body['areas']) && is_array($body['areas'])) ? array_values(array_unique(array_filter(array_map('strval', $body['areas']), fn($x) => $x !== ''))) : [$name];
+    if ($isPost && isset($body['region'])) $key = (string) $body['region'];
+    if (count($names) > 40) fail('Ask for 40 neighbourhoods at most.');
+    $many = $isPost && isset($body['areas']);
     /* just this neighbourhood, from the town's split cache (TR-7, 2026-10-10); the whole town only when the cache can't be made */
     if (!regionAvailable($key)) fail('No such region.', 404);
     $split = townSplit($key);
-    if ($split) { $one = areaOf($split, $name); $data = $split['top'] + ['areas' => $one ? [$one] : []]; }
+    if ($split) { $pick = []; foreach ($names as $nm0) { $one = areaOf($split, $nm0); if ($one) $pick[] = $one; } $data = $split['top'] + ['areas' => $pick]; }
     else $data = loadRegion($key);
     if (!$data) fail('No such region.', 404);
     $marks = loadMarks($key);
@@ -1979,7 +1985,7 @@ if ($action === 'area') {
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
     /* the side files are read for this neighbourhood's doors only (2026-10-08): whole, the big towns' files needed 220-320 MB */
     $only = [];
-    foreach ($data['areas'] as $a0) if ($a0['name'] === $name) foreach ($a0['doors'] as $d0) $only[(string) $d0['id']] = true;
+    foreach ($data['areas'] as $a0) if (in_array($a0['name'], $names, true)) foreach ($a0['doors'] as $d0) $only[(string) $d0['id']] = true;
     $hailOf = hailOn($role) ? loadSide('hail', $key, $only) : [];   /* admins only: storms near the house, newest first */
     $roofOf = roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
     $photoOf = roofDataOn($role) ? loadSide('photo', $key, $only) : [];
@@ -2016,8 +2022,9 @@ if ($action === 'area') {
     }
     $nearby = function (array $a, array $b): bool { $dy = ($a[0] - $b[0]) * 111000; $dx = ($a[1] - $b[1]) * 111000 * cos(deg2rad($a[0])); return $dx * $dx + $dy * $dy <= 160 * 160; };
     $naipOf = roofDataOn($role) ? loadSide('naip', $key, $only) : [];   /* the 2023 roof close-up window for every house (2026-10-05) */   /* what someone at the house said the roof is (everyone sees it) */   /* roof material: county record or the photo classifier (2026-10-05) */   /* damaging wind reported near the house (2026-10-05), with hail */   /* [file, x, y, half-window] in the 2020 3-inch photos */
+    $answers = [];
     foreach ($data['areas'] as $a) {
-        if ($a['name'] !== $name) continue;
+        if (!in_array($a['name'], $names, true)) continue;
         $doors = [];
         foreach ($a['doors'] as $d) {
             $m0 = $marks[$d['id']] ?? null; $m = freshMark($d, $m0);
@@ -2065,11 +2072,13 @@ if ($action === 'area') {
                 'photos' => $photos[$d['id']] ?? [],
             ];
         }
-        out(['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
+        $answers[] = ['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
              'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key))),
              /* whose permits cover this town and for which years (2026-10-07): lets the card say "no re-roof permit since 2016" */
-             'perm' => $permOf || (crewSees($role) && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null]);
+             'perm' => $permOf || (crewSees($role) && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null];
     }
+    if ($many) out(['ok' => true, 'many' => $answers]);
+    if ($answers) out($answers[0]);
     fail('No such neighbourhood.', 404);
 }
 
@@ -3867,10 +3876,22 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal'], true)) {
 }
 
 function acctAdmins(array $rows): int { $n = 0; foreach ($rows as $r) if (!$r['off'] && $r['role'] === 'admin') $n++; return $n; }
+/** a code anyone could guess (2026-10-11, admins pick codes now): one digit six times, or a run up or down like 123456 */
+function acctWeakCode(string $c): bool {
+    if (preg_match('/^(\d)\1{5}$/D', $c)) return true;
+    $up = true; $down = true;
+    for ($i = 1; $i < 6; $i++) { $d = ((int) $c[$i] - (int) $c[$i - 1] + 10) % 10; if ($d !== 1) $up = false; if ($d !== 9) $down = false; }
+    return $up || $down;
+}
 if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins'], true)) {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    /* managers (Matthew 2026-10-11: "they can remove people right? they should be able to"): the crew on their own team only.
+       They add crew (who join their team), give a new code, sign out and remove; roles, teams, PINs and everyone else stay with admins. */
+    $isMgr = $role === 'manager';
+    if ($role !== 'admin' && !($isMgr && in_array($action, ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], true))) fail('Not allowed.', 403);
+    if ($isMgr && $myTeam === '') fail('You are not on a team yet. Ask an admin to put you on one.', 403);
     $rows = acctRows($basePeople, $acct, $sessionKey);
     $myId = (string) ($session['c'] ?? '');
+    $mgrMay = function (array $r) use ($myTeam): bool { global $acct; return $r['role'] === 'crew' && (string) ($acct['member'][$r['id']] ?? '') === $myTeam; };
     if ($action === 'accounts') {
         $sess = sessLoad(); $live = [];
         foreach ((array) ($sess['s'] ?? []) as $l) {
@@ -3882,13 +3903,13 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
             return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? '')];
-        }, array_values($rows));
+        }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
-        $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
+        $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
         usort($tn, fn($x, $y) => strcmp(mb_strtolower($x['name']), mb_strtolower($y['name'])));
         /* seats against the plan (2026-10-10), only where billing is on: the screen warns, nothing is blocked */
-        $seatInfo = feature('billing') ? array_intersect_key(billingState(billingConfig(__DIR__), $rows), ['seats' => 1, 'used' => 1, 'status' => 1, 'plan' => 1]) : null;
-        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn, 'seats' => $seatInfo]);
+        $seatInfo = feature('billing') && !$isMgr ? array_intersect_key(billingState(billingConfig(__DIR__), $rows), ['seats' => 1, 'used' => 1, 'status' => 1, 'plan' => 1]) : null;
+        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn, 'seats' => $seatInfo, 'manager' => $isMgr ? $myTeam : null]);
     }
     if (!$isPost) fail('POST required', 405);
     /* every change works on a fresh copy under a lock (Fable 2026-10-04): the file is rewritten whole, so
@@ -3912,12 +3933,13 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         out(['ok' => true, 'pins' => $pins]);
     }
     if ($action === 'accountadd') {
-        $name = acctName((string) ($body['name'] ?? '')); $r = (string) ($body['role'] ?? 'crew');
+        $name = acctName((string) ($body['name'] ?? '')); $r = $isMgr ? 'crew' : (string) ($body['role'] ?? 'crew');
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
+        if ($isMgr) { $acct['member'] = (array) ($acct['member'] ?? []); $acct['member'][codeId($code, $sessionKey)] = $myTeam; }   /* a manager's new crew join their team */
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         accountLog(['by' => $me, 'what' => 'add', 'name' => $name, 'role' => $r, 'id' => codeId($code, $sessionKey)]);
         out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $name, 'role' => $r, 'code' => $code]);
@@ -3925,6 +3947,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id])) fail('No such account.', 404);
     $t = $rows[$id];
+    if ($isMgr && !$mgrMay($t)) fail('A manager changes the crew on their own team.', 403);
     if ($action === 'accountedit') {
         $name = array_key_exists('name', $body) ? acctName((string) $body['name']) : $t['name'];
         $r = array_key_exists('role', $body) ? (string) $body['role'] : $t['role'];
@@ -3942,14 +3965,24 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     }
     if ($action === 'accountcode') {
         if ($t['off']) fail('Turn the account back on first.');
-        if ($id === $myId) fail('Your own code changes from another admin\'s phone (a new code signs this phone out).');
-        $code = acctNewCode($basePeople, $acct);
+        /* an admin may change their own (2026-10-11): the page signs straight back in with the new code */
+        if ($id === $myId && $role !== 'admin') fail('Ask an admin for a new code.');
+        $want = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
+        if ($want !== '') {   /* a code the admin picks (2026-10-11) */
+            if ($role !== 'admin') fail('Only an admin picks a code. Leave it blank for a new random one.', 403);
+            if (!preg_match('/^\d{6}$/D', $want)) fail('A code is 6 digits.');
+            if (acctWeakCode($want)) fail('Pick a code that is harder to guess: not one digit six times or a run like 123456.');
+            if (isset($basePeople[$want]) || isset($acct['people'][$want])) fail('That code is taken. Pick another.');
+            $code = $want;
+        } else $code = acctNewCode($basePeople, $acct);
+        $tidWas = (string) ($acct['member'][$id] ?? '');
         if ($t['source'] === 'app') { $p = $acct['people'][$t['code']]; unset($acct['people'][$t['code']]); $acct['people'][$code] = $p; }
         else { $acct['off'][$id] = ['by' => $me, 'at' => time(), 'why' => 'new code']; $acct['people'][$code] = [$t['name'], $t['role'], $me, time()]; }
+        if ($tidWas !== '') { $acct['member'][codeId($code, $sessionKey)] = $tidWas; unset($acct['member'][$id]); }   /* the team goes with the person to their new code */
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
-        out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $t['name'], 'role' => $t['role'], 'code' => $code]);
+        out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $t['name'], 'role' => $t['role'], 'code' => $code, 'self' => $id === $myId]);
     }
     if ($action === 'accountsignout') {
         if ($t['off']) fail('That account is off already.');
