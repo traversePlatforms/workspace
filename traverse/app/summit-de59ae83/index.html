@@ -2500,6 +2500,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* Your territories (2026-10-04): every neighbourhood assigned to you, across towns, with how far through it you are.
      Shown once territories are switched on for the crew (TERRITORIES_OPEN in rounds.php); admins see their own now. */
+  /* the order of someone's own neighbourhoods (2026-10-12, Matthew: best first, for aeration): in a lawn edition the large lawns
+     (counted twice) and medium lawns still to knock; elsewhere the trade's points over the doors still to knock; then doors left */
+  function mineRank(a) { return (bestTrade() === 'yards' || (!bestTrade() && cardOn('lawn'))) ? (a.lawnL || 0) * 2 + (a.lawnM || 0) : (a.bestS || 0); }
+  function mineSort(x, y) { return mineRank(y) - mineRank(x) || areaLeft(y) - areaLeft(x); }
   function territoryList(host) {
     var draw = function () {
       host.textContent = '';
@@ -2508,9 +2512,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!mine.length) return;
       host.appendChild(q('h2', 'tgrp', 'Your territories'));
       var g = q('div', 'tgrid');
-      mine.forEach(function (m) {
+      mine.sort(function (x, y) { var l = function (a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }; return (l(y.a) ? 1 : 0) - (l(x.a) ? 1 : 0) || mineSort(x.a, y.a); });   /* best first; finished ones last */
+      mine.forEach(function (m, i) {
         var left = Math.max(0, m.a.total - m.a.done - (m.a.noanswer || 0));
-        g.appendChild(tile('button', 'route', streetCase(m.a.name), m.r.label + ' · ' + m.a.done + ' of ' + m.a.total + ' knocked', left ? left + ' to knock' : 'Done', function () {
+        g.appendChild(tile('button', 'route', (i + 1) + '. ' + streetCase(m.a.name), m.r.label + ' · ' + m.a.done + ' of ' + m.a.total + ' knocked', left ? left + ' to knock' : 'Done', function () {
           S.region = m.r.key; S.area = null; S.returnTo = chooseView; openArea(m.a.name);
         }));
       });
@@ -4708,8 +4713,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var mineA = all.filter(function (x) { return x[1].who === S.me; });
       if (mineA.length) {
         var ac = q('div', 'card dh-best dh-mine'); ac.appendChild(q('h3', null, 'Assigned to you'));
-        mineA.sort(function (x, y) { return areaLeft(y[1]) - areaLeft(x[1]); }).slice(0, 6).forEach(function (x) {
-          var b = q('button', 'dh-brow'); b.type = 'button'; b.appendChild(q('span', 'dh-bn', x[1].name));
+        mineA.sort(function (x, y) { return (areaLeft(y[1]) ? 1 : 0) - (areaLeft(x[1]) ? 1 : 0) || mineSort(x[1], y[1]); }).slice(0, 6).forEach(function (x, i) {   /* best first, numbered (2026-10-12) */
+          var b = q('button', 'dh-brow'); b.type = 'button'; b.appendChild(q('span', 'dh-bn', (i + 1) + '. ' + x[1].name));
           b.appendChild(q('small', null, x[0].label + ' \u00b7 ' + (areaLeft(x[1]) ? areaLeft(x[1]) + ' left' : 'Done')));
           b.addEventListener('click', function () { openHood(x[0].key, x[1].name); }); ac.appendChild(b);
         });
@@ -4825,6 +4830,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     list.sort(function (x, y) {
       return mode === 'score' ? ((x.nosol ? 1 : 0) - (y.nosol ? 1 : 0) || hoodRank(y) - hoodRank(x) || (y.sc8 || 0) - (x.sc8 || 0))
         : mode === 'left' ? areaLeft(y) - areaLeft(x)
+        : mode === 'mine' ? mineSort(x, y)
         : mode === 'near' ? ((hoodDist(x) === null ? 1e12 : hoodDist(x)) - (hoodDist(y) === null ? 1e12 : hoodDist(y)))
         : x.name.localeCompare(y.name, 'en', { numeric: true });
     });
