@@ -574,6 +574,35 @@ function townSplit(string $key): ?array {
     }
     return $memo[$key] = $meta + ['dir' => $dir];
 }
+/** each neighbourhood's doors and knocked doors, and every won job ([who, when, value]), for one town: the same loop Territories and
+    the Leaderboard ran over every door of every town on every request (1.1 s and 0.8 s with 27 towns, 2026-10-11), now kept in
+    town-cache/<town>/knocks.json until the door file or its knock or result logs (its partners' too) change. The rules are the
+    ones they used, unchanged: a knock counts when freshMark() keeps it, a won job when a booking's result is won after it. */
+function townKnockStats(string $key): ?array {
+    if (!regionAvailable($key)) return null;   /* hidden and admin-only towns, as loadRegion() */
+    $f = regionFile($key); if (!$f) return null;
+    $sig = [(string) @filesize($f) . '-' . (string) @filemtime($f)];
+    foreach (['marks', 'result'] as $k) foreach (array_merge([$key], sharedWith($key)) as $p) {   /* the logs logRows() reads: marks-<town>.log, result-<town>.log */ $lf = DATA_DIR . '/' . $k . '-' . $p . '.log'; $sig[] = $k . ':' . $p . ':' . (string) @filesize($lf) . '-' . (string) @filemtime($lf); }
+    $sig = md5(implode('|', $sig));
+    $cf = DATA_DIR . '/town-cache/' . $key . '/knocks.json';
+    $c = json_decode((string) @file_get_contents($cf), true);
+    if (is_array($c) && ($c['sig'] ?? '') === $sig && is_array($c['areas'] ?? null)) return $c;
+    $data = loadRegion($key); if (!$data) return null;
+    $marks = loadMarks($key); $res = loadResults($key); $areas = []; $won = [];
+    foreach ($data['areas'] as $a) {
+        $total = 0; $knocked = 0;
+        foreach ($a['doors'] as $d) {
+            $m = freshMark($d, $marks[$d['id']] ?? null);
+            $total++; if ($m) $knocked++;
+            $x = $res[$d['id']] ?? null;
+            if ($m && $m['outcome'] === 'booked' && $x && ($x['result'] ?? '') === 'won' && (int) $x['at'] >= (int) $m['at']) $won[] = [(string) ($m['by'] ?? ''), (int) $x['at'], (int) ($x['value'] ?? 0)];
+        }
+        $areas[] = [(string) $a['name'], $total, $knocked];   /* in file order, repeated names and all, as the loops listed them */
+    }
+    $c = ['sig' => $sig, 'areas' => $areas, 'won' => $won];
+    if (is_dir(dirname($cf)) || @mkdir(dirname($cf), 0700, true)) writeJsonAtomic($cf, $c);
+    return $c;
+}
 /** one neighbourhood of a split town, or null when it has none by that name */
 function areaOf(array $split, string $name): ?array {
     $i = $split['names'][$name] ?? null;
@@ -4094,22 +4123,15 @@ if ($action === 'board') {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $terr = [];
     foreach (($idx['regions'] ?? []) as $rg) {
-        $data = loadRegion($rg['key']); if (!$data) continue;
-        $marks = loadMarks($rg['key']); $res = loadResults($rg['key']); $assign = loadAssign($rg['key']);
-        foreach ($data['areas'] as $a) {
-            $total = 0; $knocked = 0;
-            foreach ($a['doors'] as $d) {
-                $m = freshMark($d, $marks[$d['id']] ?? null);
-                $total++; if ($m) $knocked++;
-                $x = $res[$d['id']] ?? null;
-                if (!$m || $m['outcome'] !== 'booked' || !$x || ($x['result'] ?? '') !== 'won' || (int) $x['at'] < (int) $m['at']) continue;
-                $who = (string) ($m['by'] ?? ''); if ($who === '' || boardHidden($who)) continue;
-                $day = (new DateTime('@' . (int) $x['at']))->setTimezone($tz)->format('Y-m-d');
-                if (!isset($rows[$who])) $rows[$who] = ['name' => $who, 'today' => $zero, 'week' => $zero, 'month' => $zero, 'quarter' => $zero];
-                foreach ($from as $per => $since) if ($day >= $since) { $rows[$who][$per]['won']++; $rows[$who][$per]['value'] += (int) ($x['value'] ?? 0); }
-            }
-            if (isset($assign[$a['name']])) $terr[] = ['region' => $rg['key'], 'town' => $rg['label'], 'area' => $a['name'], 'who' => $assign[$a['name']], 'total' => $total, 'knocked' => $knocked];
+        $ks = townKnockStats($rg['key']); if (!$ks) continue;   /* cached per town (2026-10-11): the same counts, without decoding every town */
+        $assign = loadAssign($rg['key']);
+        foreach ($ks['won'] as $wn) {
+            $who = (string) $wn[0]; if ($who === '' || boardHidden($who)) continue;
+            $day = (new DateTime('@' . (int) $wn[1]))->setTimezone($tz)->format('Y-m-d');
+            if (!isset($rows[$who])) $rows[$who] = ['name' => $who, 'today' => $zero, 'week' => $zero, 'month' => $zero, 'quarter' => $zero];
+            foreach ($from as $per => $since) if ($day >= $since) { $rows[$who][$per]['won']++; $rows[$who][$per]['value'] += (int) $wn[2]; }
         }
+        foreach ($ks['areas'] as $ar) if (isset($assign[$ar[0]])) $terr[] = ['region' => $rg['key'], 'town' => $rg['label'], 'area' => $ar[0], 'who' => $assign[$ar[0]], 'total' => $ar[1], 'knocked' => $ar[2]];
     }
     $names = [];
     foreach ($people as $code => $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }   /* names only, never codes */
@@ -4145,13 +4167,10 @@ if ($action === 'territories') {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $towns = [];
     foreach (($idx['regions'] ?? []) as $rg) {
-        $data = loadRegion($rg['key']); if (!$data) continue;
-        $marks = loadMarks($rg['key']); $assign = loadAssign($rg['key']);
+        $ks = townKnockStats($rg['key']); if (!$ks) continue;   /* cached per town (2026-10-11) */
+        $assign = loadAssign($rg['key']);
         $areas = [];
-        foreach ($data['areas'] as $a) {
-            $k = 0; foreach ($a['doors'] as $d) if (freshMark($d, $marks[$d['id']] ?? null)) $k++;
-            $areas[] = ['name' => $a['name'], 'total' => count($a['doors']), 'knocked' => $k, 'who' => $assign[$a['name']] ?? null];
-        }
+        foreach ($ks['areas'] as $ar) $areas[] = ['name' => $ar[0], 'total' => $ar[1], 'knocked' => $ar[2], 'who' => $assign[$ar[0]] ?? null];
         $towns[] = ['key' => $rg['key'], 'label' => $rg['label'], 'areas' => $areas];
     }
     $names = [];
@@ -4627,9 +4646,12 @@ if ($action === 'quotes') {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $list = [];
     foreach (($idx['regions'] ?? []) as $r) {
+        /* only towns with a booking (2026-10-11): the knocks first, the door file only when one is booked */
+        $marks = loadMarks($r['key']);
+        $anyBooked = false; foreach ($marks as $mk0) if (($mk0['outcome'] ?? '') === 'booked') { $anyBooked = true; break; }
+        if (!$anyBooked) continue;
         $data = loadRegion($r['key']);
         if (!$data) continue;
-        $marks = loadMarks($r['key']);
         $phones = loadPhones($r['key']);
         $notes = loadNotes($r['key']);
         $quoted = loadQuoted($r['key']);
