@@ -76,7 +76,7 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-)/.test(f),
+    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-)/.test(f),
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -107,7 +107,7 @@ const EDITIONS = {
          bg: '#f7f5ef', line: '#e6e0d1', sunk: '#efeadf', card1: '#4d380c', appbar: '#45320a', tile: '#5c4410',
          dBg: '#120e05', dCard: '#1d170b', dLine: '#3a2f18', dSunk: '#17120a', dBar: '#211906', dAccent: '#f2c14e' },
     // the roof and the sun; none of the storm, lawn, fire or commercial layers
-    keep: (f) => !/^(climate\.json$|nri-|hail-|wind-|com-|lawnmask-|pest-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|com-|lawnmask-|pest-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Solar Co', short: 'Example Solar', tagline: 'Solar and battery installs',
@@ -136,7 +136,7 @@ const EDITIONS = {
          bg: '#f6f4f8', line: '#e2dce8', sunk: '#ede8f2', card1: '#4c2a6b', appbar: '#452664', tile: '#5f3786',
          dBg: '#100b15', dCard: '#1b1424', dLine: '#33283f', dSunk: '#150f1b', dBar: '#1e1229', dAccent: '#c9a6ea' },
     // the pest layers and trees near the house; none of the storm, roof, solar, lawn, fire or commercial layers
-    keep: (f) => !/^(climate\.json$|nri-|hail-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|lawnmask-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|lawnmask-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Pest Co', short: 'Example Pest', tagline: 'Pest control for homes',
@@ -164,7 +164,7 @@ const EDITIONS = {
          bg: '#f3f7f8', line: '#dbe6e8', sunk: '#e6eff1', card1: '#1a4d58', appbar: '#164550', tile: '#22606d',
          dBg: '#081315', dCard: '#101e21', dLine: '#233a3f', dSunk: '#0c181b', dBar: '#0d262b', dAccent: '#8fd0da' },
     // the security layers; none of the storm, roof, solar, pest, lawn, fire or commercial layers
-    keep: (f) => !/^(climate\.json$|nri-|hail-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Security Co', short: 'Example Security', tagline: 'Home security and monitoring',
@@ -219,14 +219,14 @@ function page(E) {
   if (/'(sixfold|doorapp)[.-]/.test(html)) throw new Error('a Sixfold storage key is left in the page');
 
   // the product's name (the client's name comes from company.json, as for every install)
-  html = rep(html, '<title>Door rounds</title>', '<title>' + E.name + '</title>', 1, 'title');
+  html = rep(html, '<title>Sixfold Routes</title>', '<title>' + E.name + '</title>', 1, 'title');
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
-  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Rounds">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
-  html = rep(html, "document.title = c.name ? 'Door rounds — ' + c.name : 'Door rounds';",
+  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Routes">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
+  html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */",
     "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
-  html = rep(html, "tile('button', 'door', 'Door rounds',", "tile('button', 'door', 'Doors',", 1, 'tile');
+  html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Doors',", 1, 'tile');
   // sign-in: the client's mark and name stay on top; the product sits under them as a lockup
-  html = rep(html, "inn.appendChild(q('div', 'sub', 'Door rounds'));",
+  html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));",
     "var tv = q('div', 'sub tvlock'); tv.innerHTML = TV_MARK; tv.appendChild(q('span', null, '" + E.name + "')); inn.appendChild(tv);", 1, 'signin sub');
   html = rep(html, "  var QKEY = ", "  var TV_MARK = '" + mark('currentColor', 'var(--signin)', 'var(--ember)') + "';\n  var QKEY = ", 1, 'mark const');
 

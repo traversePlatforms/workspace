@@ -1025,6 +1025,15 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       Plan and figures: traverse/research/markets/yards-markets-2026-10.md.
 - [ ] **TR-21 — The prospect list.** 9,102 active Colorado companies by trade (state register, matched by name):
       traverse/research/prospects/prospects.csv (off git). Needs phone/website lookup before any outreach; nothing sent.
+- [ ] **TR-22 — Lawn colour (greenness), next growing season.** Tabled by Matthew 2026-10-12 "for the upcoming season". It is
+      live only for the 734 large lawns of the SX-31 trial (lawn photo: this summer vs last, browned/greener than neighbours).
+      **May 2027:** run `node ndvi-trial.mjs --month=2027-06` (SX-42; May–Sept only, winter refused), widen to every medium and
+      large lawn, then `node build-lawn-outlines.mjs --green-only` and upload; consider "browned this summer" as a reason to knock.
+      Satellite pixels are ~30 ft (10 m), so small lawns stay unreadable.
+- [ ] **TR-23 — Paid hail feeds, when there is income.** Noted 2026-10-12 (Matthew: "add the paid feeds to the notes for a later
+      upgrade as we get income in"). Today: NOAA radar MESH daily + hourly, NOAA Storm Events ground reports, NWS same-day spotter
+      reports (all free). Later, priced per seat/month by quote: HailTrace, Interactive Hail Maps (HailStrike/ CoreLogic Weather
+      Verification are the insurer-grade tier). They sharpen swaths and size near the house; compare one storm against ours first.
 - [ ] **TR-18 — The client contract (Matthew + an attorney).** Added 2026-10-11. What a company signs before it gets an install:
       a licence to use the door data inside the app only; no bulk copying, export or resale; what happens to their data and access
       when they cancel; who owns what (their customers and notes are theirs; the door data is Traverse's); payment and seats; and the

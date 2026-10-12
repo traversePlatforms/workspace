@@ -288,3 +288,5 @@ traverse/app/data/rounds/south-denver.json
 traverse/app/data/rounds/englewood.json
 traverse/data-pipeline/door-territory/logs-walden/
 traverse/app/data/rounds/walden.json
+traverse/app/data/rounds/others-*.json
+traverse/data-pipeline/door-territory/hail/se-cache/

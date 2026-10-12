@@ -789,10 +789,25 @@ function liveMarks(array $rows): array {
 function phonesFile(string $key): string { return DATA_DIR . '/phones-' . $key . '.log'; }
 
 /** Replay the append-only log: last line per door wins; a null phone removes it. */
+/* the extra numbers on a door (2026-10-12): id => [{phone, label, source, by, at}], oldest first, at most PHONE_EXTRAS */
+const PHONE_EXTRAS = 4;
+const PHONE_LABELS = ['owner2', 'spouse', 'tenant', 'other'];
+function loadPhoneExtras(string $key): array {
+    $out = [];
+    foreach (logRows('phones', $key) as $p) {
+        if (!is_array($p) || !isset($p['id']) || empty($p['mode'])) continue;
+        $id = (string) $p['id']; $n = (string) ($p['phone'] ?? '');
+        $list = array_values(array_filter($out[$id] ?? [], fn($x) => $x['phone'] !== $n));
+        if ($p['mode'] === 'add') $list[] = ['phone' => $n, 'label' => (string) ($p['label'] ?? 'other'), 'source' => (string) ($p['source'] ?? 'other'), 'by' => (string) ($p['by'] ?? ''), 'at' => (int) ($p['at'] ?? 0)];
+        if ($list) $out[$id] = array_slice($list, -PHONE_EXTRAS); else unset($out[$id]);
+    }
+    return $out;
+}
 function loadPhones(string $key): array {
     $out = [];
     foreach (logRows('phones', $key) as $p) {
         if (!is_array($p) || !isset($p['id'])) continue;
+        if (!empty($p['mode'])) continue;                            // the extra numbers (2026-10-12) are read by loadPhoneExtras
         if (($p['phone'] ?? null) === null) unset($out[$p['id']]);   // removed
         else $out[$p['id']] = ['phone' => $p['phone'], 'source' => $p['source'] ?? 'other',
                                 'seen' => $p['seen'] ?? '', 'by' => $p['by'] ?? '', 'at' => $p['at'] ?? 0]
@@ -1885,6 +1900,33 @@ if ($action === 'smsthread' || $action === 'smssend') {
     out(['ok' => true, 'message' => ['dir' => 'out', 'body' => $text, 'by' => $me, 'at' => time(), 'status' => $res['status'] ?? 'queued']]);
 }
 
+/* the tap log (2026-10-12): [{s: screen, t: tap label or '', at, d: 'p'|'d'}], at most 200 a post and 3,000 a person a day,
+   appended to taplog-YYYY-MM.log beside the data. Labels are cleaned on the phone; cleaned again here. */
+if ($action === 'taplog') {
+    if (!$isPost || !$session) fail('Not allowed.', 403);
+    $ev = is_array($body['ev'] ?? null) ? array_slice($body['ev'], 0, 200) : [];
+    $cf = rateFile('taplog|' . (string) ($session['c'] ?? $me)); if (!throttleTake($cf, 300, 86400)) out(['ok' => true, 'kept' => 0]);
+    $lines = '';
+    foreach ($ev as $e) {
+        if (!is_array($e)) continue;
+        $s = preg_replace('/[^a-z0-9_-]/', '', strtolower((string) ($e['s'] ?? ''))); $t = trim(preg_replace('/\s+/', ' ', (string) ($e['t'] ?? '')));
+        if (preg_match('/\d/', $t)) $t = '(an item)';
+        $t = mb_substr($t, 0, 40); $at = (int) ($e['at'] ?? time()); if ($at < time() - 7 * 86400 || $at > time() + 600) $at = time();
+        $lines .= json_encode(['w' => $me, 'r' => $role, 's' => substr($s, 0, 24), 't' => $t, 'd' => ($e['d'] ?? '') === 'd' ? 'd' : 'p', 'at' => $at], JSON_UNESCAPED_UNICODE) . "\n";
+    }
+    if ($lines !== '') @file_put_contents(DATA_DIR . '/taplog-' . date('Y-m') . '.log', $lines, FILE_APPEND | LOCK_EX);
+    out(['ok' => true]);
+}
+if ($action === 'taplogread') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $days = max(1, min(60, (int) ($_GET['days'] ?? 7))); $since = time() - $days * 86400; $rows = [];
+    foreach ([date('Y-m'), date('Y-m', strtotime('first day of last month'))] as $m) {
+        $f = DATA_DIR . '/taplog-' . $m . '.log'; if (!is_readable($f)) continue;
+        foreach (file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $l) { $r = json_decode($l, true); if (is_array($r) && ($r['at'] ?? 0) >= $since) $rows[] = $r; }
+    }
+    usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
+    out(['ok' => true, 'days' => $days, 'rows' => array_slice($rows, 0, 20000)]);
+}
 if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
@@ -2115,7 +2157,7 @@ if ($action === 'area') {
     else $data = loadRegion($key);
     if (!$data) fail('No such region.', 404);
     $marks = loadMarks($key);
-    $phones = loadPhones($key);
+    $phones = loadPhones($key); $phoneX = loadPhoneExtras($key);
     $notes = loadNotes($key);
     $lfix = loadLawnFix($key);
     $emails = loadEmails($key);
@@ -2132,6 +2174,8 @@ if ($action === 'area') {
     $only = [];
     foreach ($data['areas'] as $a0) if (in_array($a0['name'], $names, true)) foreach ($a0['doors'] as $d0) $only[(string) $d0['id']] = true;
     $hailOf = hailOn($role) ? loadSide('hail', $key, $only) : [];   /* admins only: storms near the house, newest first */
+    $hrepOf = hailOn($role) ? loadSide('hailrep', $key, $only) : [];   /* measured on the ground (2026-10-12) */
+    $hrecent = hailOn($role) ? hailRecentReports() : [];
     $roofOf = roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
     $photoOf = roofDataOn($role) ? loadSide('photo', $key, $only) : [];
     $olOf = roofDataOn($role) ? loadSide('outline', $key, $only) : [];   /* the building's outline on the roof photo (2026-10-06, data-pipeline/door-territory/roofs/outline-photos.mjs) */
@@ -2196,8 +2240,10 @@ if ($action === 'area') {
                                'retry' => $m['outcome'] === 'miss' ? missRetry($m) : ''] + ownerFlag($d, $m) : null,
                 'phone' => $p ? ['phone' => $p['phone'], 'source' => $p['source'], 'seen' => $p['seen'],
                                  'by' => $p['by'], 'at' => $p['at']] + ownerFlag($d, $p) + (isset($p['dnc']) ? ['dnc' => $p['dnc']] : []) : null,
+                'phones2' => $phoneX[$d['id']] ?? null,   /* extra numbers (2026-10-12) */
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
-                'hail' => $hailOf[$d['id']] ?? null, 'wind' => windRows($windOf[$d['id']] ?? null),
+                'hail' => hailWithHours($hailOf[$d['id']] ?? null, $key), 'wind' => windRows($windOf[$d['id']] ?? null),
+                'hrep' => hailRepRows($hrepOf[$d['id']] ?? null, $hrecent, $d),
                 'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => olRows($olOf[$d['id']] ?? null), 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
@@ -2218,6 +2264,7 @@ if ($action === 'area') {
             ];
         }
         $answers[] = ['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
+             'hoa' => hoaFor($a['place'] ?? null),   /* the subdivision's registered HOA (2026-10-12) */
              'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key))),
              /* whose permits cover this town and for which years (2026-10-07): lets the card say "no re-roof permit since 2016" */
              'perm' => $permOf || (crewSees($role) && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null];
@@ -2273,6 +2320,22 @@ if ($action === 'phone') {
     if (!regionAvailable($key)) fail('No such region.', 404);
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('Bad door id.');
     $key = doorHome($key, $id);
+    $mode = (string) ($body['mode'] ?? '');
+    if ($mode === 'add' || $mode === 'del') {                    /* an extra number (2026-10-12) */
+        $digits = preg_replace('/\D/', '', (string) ($body['phone'] ?? ''));
+        if (strlen($digits) === 11 && $digits[0] === '1') $digits = substr($digits, 1);
+        if (!preg_match('/^[2-9]\d{2}[2-9]\d{6}$/D', $digits)) fail('That is not a valid 10-digit US number.');
+        if ($mode === 'add') {
+            $label = (string) ($body['label'] ?? 'other'); if (!in_array($label, PHONE_LABELS, true)) $label = 'other';
+            $source = (string) ($body['source'] ?? 'door'); if (!in_array($source, PHONE_SOURCES, true)) fail('Pick where the number came from.');
+            $have = loadPhoneExtras($key)[$id] ?? [];
+            if (count($have) >= PHONE_EXTRAS && !in_array($digits, array_column($have, 'phone'), true)) fail('A door holds up to ' . (PHONE_EXTRAS + 1) . ' numbers. Remove one first.');
+            if (($p0 = loadPhones($key)[$id] ?? null) && $p0['phone'] === $digits) fail('That is already the main number.');
+            $row = ['id' => $id, 'mode' => 'add', 'phone' => $digits, 'label' => $label, 'source' => $source, 'by' => $me, 'at' => tapTime($body)];
+        } else $row = ['id' => $id, 'mode' => 'del', 'phone' => $digits, 'by' => $me, 'at' => tapTime($body)];
+        if (!appendPhone($key, $row)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'extras' => loadPhoneExtras($key)[$id] ?? []]);
+    }
     $raw = $body['phone'] ?? null;
     if ($raw === null || trim((string) $raw) === '') {             // remove the number
         if (!appendPhone($key, ['id' => $id, 'phone' => null, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
@@ -2530,6 +2593,93 @@ if ($action === 'lawnmask') {
  * parcel records' name) and nearby Firewise sites — with what is still to knock, so a whole
  * HOA or Firewise community can be pitched as one job. HOAs matched by name from the state
  * roster (hoa-communities.json). Admin only. */
+/* the HOAs registered under a subdivision's name (state HOA roster, hoa-communities.json): up to three, for the door card */
+function hoaFor($place): ?array {
+    static $hoa = null;
+    if ($hoa === null) $hoa = json_decode((string) @file_get_contents(DATA_DIR . '/hoa-communities.json'), true)['places'] ?? [];
+    $n = is_array($place) ? strtolower(trim((string) ($place['n'] ?? ''))) : '';
+    if ($n === '' || empty($hoa[$n])) return null;
+    return array_map(fn($h) => ['hoa' => (string) ($h['hoa'] ?? ''), 'units' => (int) ($h['units'] ?? 0), 'mgmt' => (string) ($h['mgmt'] ?? '')], array_slice((array) $hoa[$n], 0, 3));
+}
+/* the homes around a map that are NOT doors to knock (2026-10-12, build-others.mjs): [[lat, lon, code, address], ...] inside the box.
+   code: r owner lives elsewhere, p PO box, u owner unchecked, b business-owned. No owner names are kept in these files. */
+/* soil temperature (2026-10-12): Colorado State University's CoAgMet stations that report it (5 cm, about 2 in), the nearest within
+   25 miles of the town, the average of the last 24 hours. Kept 3 hours in soil-cache.json. No station near: says so (no guessing). */
+const SOIL_STATIONS = [['ccr01', 'Cherry Creek Reservoir', 39.61, -104.83], ['cht01', 'Chatfield', 39.57, -105.05], ['ftl01', 'Fort Lupton', 40.00, -104.85],
+    ['ftc01', 'Fort Collins', 40.59, -105.14], ['alt01', 'Ault', 40.57, -104.72], ['lcn01', 'Lucerne', 40.48, -104.71], ['gly04', 'Greeley', 40.45, -104.64],
+    ['ksy01', 'Kersey', 40.37, -104.54], ['lsl01', 'La Salle', 40.33, -104.63], ['pkh01', 'Peckham', 40.31, -104.73], ['brg01', 'Briggsdale', 40.59, -104.32]];
+/* the last 14 days' hail spotter reports in Colorado (2026-10-12), from NWS Local Storm Reports via Iowa Environmental Mesonet:
+   [[YYYY-MM-DD (Colorado), lat, lon, inches]], kept 6 hours in hail-lsr-recent.json. What build-hail-reports.mjs has not caught yet. */
+/* a door's radar hail days with the town's hours that day (2026-10-12): [date, inches] -> [date, inches, [hours]] when known */
+function hailWithHours($rows, string $town): ?array {
+    if (!$rows) return null;
+    static $hh = null; if ($hh === null) $hh = json_decode((string) @file_get_contents(DATA_DIR . '/hail-hours.json'), true)['days'] ?? [];
+    return array_map(fn($r) => (is_array($r) && isset($hh[$r[0]][$town])) ? [$r[0], $r[1], $hh[$r[0]][$town]] : $r, (array) $rows);
+}
+function hailRecentReports(): array {
+    static $mem = null; if ($mem !== null) return $mem;
+    $f = DATA_DIR . '/hail-lsr-recent.json'; $c = json_decode((string) @file_get_contents($f), true);
+    if (is_array($c) && time() - (int) ($c['got'] ?? 0) < 6 * 3600) return $mem = (array) ($c['r'] ?? []);
+    $sts = gmdate('Y-m-d\TH:i', time() - 14 * 86400) . 'Z'; $ets = gmdate('Y-m-d\TH:i') . 'Z';
+    $csv = httpGetRaw('https://mesonet.agron.iastate.edu/cgi-bin/request/gis/lsr.py?state=CO&wfo=ALL&sts=' . $sts . '&ets=' . $ets . '&fmt=csv&justcsv=1', 12);
+    if ($csv === null) return $mem = (array) ($c['r'] ?? []);   /* the archive did not answer: the last copy stands */
+    $lines = preg_split('/\r?\n/', trim($csv)); $h = str_getcsv((string) array_shift($lines)); $ix = array_flip($h); $r = [];
+    foreach ($lines as $l) {
+        $v = str_getcsv($l); if (($v[$ix['TYPECODE'] ?? -1] ?? '') !== 'H') continue;
+        $mag = (float) ($v[$ix['MAG']] ?? 0); $la = (float) ($v[$ix['LAT']] ?? 0); $lo = (float) ($v[$ix['LON']] ?? 0); if ($mag < 0.75 || !$la) continue;
+        $t = (string) ($v[$ix['VALID']] ?? ''); if (strlen($t) < 12) continue;
+        $dt = new DateTime(substr($t, 0, 4) . '-' . substr($t, 4, 2) . '-' . substr($t, 6, 2) . ' ' . substr($t, 8, 2) . ':' . substr($t, 10, 2), new DateTimeZone('UTC'));
+        $r[] = [$dt->setTimezone(new DateTimeZone('America/Denver'))->format('Y-m-d'), $la, $lo, $mag];
+    }
+    @file_put_contents($f, json_encode(['got' => time(), 'r' => $r]), LOCK_EX);
+    return $mem = $r;
+}
+/* a door's ground reports: the built ones ("date|in|mi|S/L") plus any recent spotter report within 2 miles not in them; newest first */
+function hailRepRows($built, array $recent, array $d): ?array {
+    $rows = [];
+    foreach ((array) $built as $e) { $p = explode('|', (string) $e); if (count($p) >= 4) $rows[$p[0]] = [$p[0], (float) $p[1], (float) $p[2], $p[3]]; }
+    if ($recent && isset($d['lat'], $d['lon'])) foreach ($recent as $x) {
+        if (isset($rows[$x[0]])) continue;
+        $mi = milesBetween((float) $d['lat'], (float) $d['lon'], (float) $x[1], (float) $x[2]); if ($mi > 2) continue;
+        $rows[$x[0]] = [$x[0], (float) $x[3], round($mi, 1), 'L'];
+    }
+    if (!$rows) return null;
+    krsort($rows); return array_values(array_slice($rows, 0, 8));
+}
+if ($action === 'soil') {
+    $key = (string) ($_GET['region'] ?? '');
+    if (!regionAvailable($key)) fail('No such region.', 404);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $c = null; foreach (($idx['regions'] ?? []) as $r) if ($r['key'] === $key) $c = $r['c'] ?? null;
+    if (!is_array($c)) out(['ok' => true, 'none' => true]);
+    $best = null; foreach (SOIL_STATIONS as $s) { $mi = milesBetween((float) $c[0], (float) $c[1], $s[2], $s[3]); if (!$best || $mi < $best[1]) $best = [$s, $mi]; }
+    if ($best[1] > 25) out(['ok' => true, 'none' => true, 'nearest' => $best[0][1], 'mi' => round($best[1])]);
+    $cf = DATA_DIR . '/soil-cache.json'; $cache = json_decode((string) @file_get_contents($cf), true) ?: [];
+    $st = $best[0][0]; $hit = $cache[$st] ?? null;
+    if (!$hit || time() - (int) ($hit['got'] ?? 0) > 3 * 3600) {
+        $to = new DateTime('now', new DateTimeZone('America/Denver')); $from = (clone $to)->modify('-24 hours');
+        $csv = httpGetRaw('https://coagmet.colostate.edu/data/hourly/' . $st . '.csv?from=' . $from->format('Y-m-d\TH:i') . '&to=' . $to->format('Y-m-d\TH:i') . '&fields=st5cm&units=us', 15);
+        $v = []; foreach (explode("\n", (string) $csv) as $l) { $p = str_getcsv(trim($l)); $x = isset($p[2]) ? (float) $p[2] : -999; if ($x > -100) $v[] = $x; }
+        if ($v) { $hit = ['f' => round(array_sum($v) / count($v)), 'lo' => round(min($v)), 'hi' => round(max($v)), 'n' => count($v), 'got' => time()]; $cache[$st] = $hit; @file_put_contents($cf, json_encode($cache), LOCK_EX); }
+    }
+    if (!$hit) out(['ok' => true, 'none' => true, 'nearest' => $best[0][1], 'mi' => round($best[1]), 'down' => true]);
+    out(['ok' => true, 'f' => $hit['f'], 'lo' => $hit['lo'], 'hi' => $hit['hi'], 'station' => $best[0][1], 'mi' => round($best[1]), 'at' => $hit['got']]);
+}
+if ($action === 'others') {
+    $key = (string) ($_GET['region'] ?? '');
+    if (!regionAvailable($key)) fail('No such region.', 404);
+    $b = array_map('floatval', [$_GET['s'] ?? 0, $_GET['w'] ?? 0, $_GET['n'] ?? 0, $_GET['e'] ?? 0]);
+    if ($b[2] <= $b[0] || $b[3] <= $b[1] || ($b[2] - $b[0]) > 0.2 || ($b[3] - $b[1]) > 0.25) fail('Zoom in to see the homes that are not on the list.');
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/others-' . $key . '.json'), true);
+    $o = [];
+    foreach ((array) ($j['doors'] ?? []) as $d) {
+        if (!is_array($d) || count($d) < 3) continue;
+        if ($d[0] < $b[0] || $d[0] > $b[2] || $d[1] < $b[1] || $d[1] > $b[3]) continue;
+        $o[] = [$d[0], $d[1], (string) $d[2], (string) ($d[3] ?? '')];
+        if (count($o) >= 2500) break;
+    }
+    out(['ok' => true, 'homes' => $o]);
+}
 if ($action === 'communities') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
