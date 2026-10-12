@@ -15,13 +15,18 @@ import { inRings, loadBuildings, pickHouse, townParcels } from '../tree-zones/zo
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..');
 const CACHE = join(DT, 'lawn-cache.json');
-const TOWNS = ['monument', 'palmer-lake', 'black-forest', 'castle-rock', 'larkspur', 'sedalia', 'franktown', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines'];
+const TOWNS = ['monument', 'palmer-lake', 'black-forest', 'castle-rock', 'larkspur', 'sedalia', 'franktown', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines',
+  /* Yards beyond the Sixfold towns (2026-10-11, as sample-lawn.mjs) */
+  'thornton', 'erie', 'commerce-city', 'centennial', 'arvada', 'denver', 'boulder', 'windsor', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'security-widefield', 'fountain'];
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 6);
 process.on('unhandledRejection', (e) => { console.log('  (a download failed and was skipped: ' + String(e && e.message || e).slice(0, 80) + ')'); });
 
 const cache = JSON.parse(readFileSync(CACHE, 'utf8'));
-const save = () => { writeFileSync(CACHE + '.tmp', JSON.stringify(cache)); renameSync(CACHE + '.tmp', CACHE); };
+const save = () => {   /* retries while Windows holds the file a moment (2026-10-11, as sample-lawn.mjs) */
+  writeFileSync(CACHE + '.tmp', JSON.stringify(cache));
+  for (let i = 0; ; i++) { try { renameSync(CACHE + '.tmp', CACHE); return; } catch (e) { if (i >= 20 || !/EPERM|EBUSY|EACCES/.test(String(e.code))) throw e; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250); } }
+};
 const started = Date.now(); let done = 0;
 
 for (const town of TOWNS) {
