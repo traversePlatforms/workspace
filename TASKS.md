@@ -995,6 +995,10 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       survey reaches Collin County yet), aerial photo / outline / roof material, lawn and trees, permits, crime. **Not in any edition yet:**
       a DFW install needs "dfw" in its company.json townGroups, a Collin County name in the app, and a hosting decision (Matthew).
       Denton County (rest of Frisco) is one more source in the config. Storm and census steps finished 2026-10-11 (commit 662d274): 24 hail days, 20 wind days since 2020.
+      **Market installs built 2026-10-11 (commit 86a72ea, Matthew chose one install per market):** a client file with
+      "market": "dfw" makes a Texas install (own towns, Central time, Texas storms, Texas 2022 photos, Collin lot lines, nothing
+      Colorado). Tested, NOT uploaded; Colorado installs unchanged. Open: Texas roofing law (federal rule only for now), live upload
+      of the shared code (his call), the first Texas client.
 - [x] **TR-16 — Monthly permit refresh.** ✅ 2026-10-11: `traverse/ops/refresh-permits.sh`, Windows task "Traverse permit refresh"
       (1st of the month, 4:10 am, runs when the laptop next wakes). PPRBD, Douglas County and Centennial re-fetched; stops and uploads nothing if
       a source or town shrinks; uploads only changed permit files to Roofing and Solar with backup + md5. Parker/Thornton stay manual (records
