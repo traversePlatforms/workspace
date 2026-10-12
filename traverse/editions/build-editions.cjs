@@ -219,6 +219,7 @@ function page(E) {
   if (/'(sixfold|doorapp)[.-]/.test(html)) throw new Error('a Sixfold storage key is left in the page');
 
   // the product's name (the client's name comes from company.json, as for every install)
+  html = rep(html, '"Sixfold Routes":"Sixfold Rutas",', '', 1, 'Spanish title key');
   html = rep(html, '<title>Sixfold Routes</title>', '<title>' + E.name + '</title>', 1, 'title');
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
   html = rep(html, '<meta name="apple-mobile-web-app-title" content="Routes">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
@@ -292,7 +293,11 @@ function page(E) {
   html = rep(html, '<meta name="viewport"', '<meta name="robots" content="noindex, nofollow">\n<meta name="viewport"', 1, 'robots');
   // last, after every swap and check above has seen the source as written: comments, whitespace and local names out of the
   // copy that ships (2026-10-09, speed: 820 KB -> 570 KB, 226 KB -> 164 KB gzipped). The source keeps its record.
-  return minifyPage(html);
+  const min = minifyPage(html);
+  // a client must never find Sixfold in its page source (2026-10-12: a Spanish dictionary key slipped through)
+  const left = min.match(/.{0,40}Sixfold.{0,20}/g);
+  if (left) throw new Error("Sixfold is left in the page: " + left.join(" | "));
+  return min;
 }
 
 /* ------------------------------------------------------------- offline worker */

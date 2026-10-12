@@ -33,6 +33,9 @@ function minifyPage(html) {
     return open + csso.minify(body, { restructure: false, comments: false }).css + close;
   });
   if (!scripts || !styles) throw new Error('minify-page: found ' + scripts + ' scripts and ' + styles + ' styles; expected both');
+  /* HTML comments too, outside the scripts (2026-10-12): the page's header comment named Sixfold and its towns in every
+     edition's source. The i18n markers are only read in the source, by sync-es.cjs. */
+  html = html.split(/(<script(?:\s[^>]*)?>[\s\S]*?<\/script>)/).map((part, i) => i % 2 ? part : part.replace(/<!--[\s\S]*?-->\n?/g, '')).join('');
   return html;
 }
 
