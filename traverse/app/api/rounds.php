@@ -722,7 +722,7 @@ function topStreets(array $counts, int $n): array { arsort($counts); return arra
 /* the towns answer without its empty fields (2026-10-09, speed): a 0 count or a null on every one of 6,841 neighbourhoods was
    a third of Security's 2.6 MB. Only fields every neighbourhood always carried are left out, and the page puts them back as
    the answer arrives (AREA_ZERO / AREA_NULL in the page), so every screen reads the same object as before. */
-const AREA_ZERO = ['done', 'noanswer', 'hot', 'vhot', 'due', 'retry', 'booked', 'lawnL', 'lawnM', 'lawnS', 'treeA', 'treeH', 'all3'];
+const AREA_ZERO = ['done', 'noanswer', 'hot', 'vhot', 'due', 'retry', 'booked', 'lawnL', 'lawnM', 'lawnS', 'cg', 'treeA', 'treeH', 'all3'];
 const AREA_NULL = ['nosol', 'la', 'lo', 'place', 'fw', 'who', 'cwpp'];
 function areaCompact(array $a): array {
     foreach (AREA_ZERO as $k) if (($a[$k] ?? null) === 0) unset($a[$k]);
@@ -2104,7 +2104,7 @@ if ($action === 'regions') {
             $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0; $retry = 0;
             $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
-            $lawnL = 0; $lawnM = 0; $lawnS = 0;      /* large / medium / small lawns STILL TO KNOCK, for the lawn sort (small: 2026-10-12, aeration) */
+            $lawnL = 0; $lawnM = 0; $lawnS = 0; $cgN = 0;   /* cgN: townhome lots, the HOA keeps the lawn (2026-10-13) */      /* large / medium / small lawns STILL TO KNOCK, for the lawn sort (small: 2026-10-12, aeration) */
             $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
             $scSum = 0; $scN = 0; $sc8 = 0;         /* their 1-10 door scores: the average and how many are 8 or more (2026-10-09) */
             $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
@@ -2117,12 +2117,13 @@ if ($action === 'regions') {
                 /* a no-answer still counts as needing a knock (SX-9b rule), even during its 2-day rest */
                 $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
-                if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; elseif ($lv === 'S') $lawnS++; }
+                if (!empty($d['cg'])) $cgN++;
+                if ($open && empty($d['cg'])) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; elseif ($lv === 'S') $lawnS++; }
                 if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
                 if ($open && ($f === 4 || $f === 5) && in_array(lawnLevel($d, $lfix), ['L', 'M'], true) && in_array(treeLevel($d), ['against', 'heavy'], true)) $all3++;
                 if ($open && $bp !== null) {
                     $pt = (int) ($bp[(string) $d['id']] ?? 0);
-                    if ($bestT === 'yards') { $pt += yardsLawnPts(lawnLevel($d, $lfix)); }   /* live: crews correct lawns */
+                    if ($bestT === 'yards') { $pt += (!empty($d['cg']) && !isset($lfix[$d['id']])) ? -3 : yardsLawnPts(lawnLevel($d, $lfix)); }   /* a townhome lot is no owner's lawn, unless the crew says otherwise (2026-10-13) */   /* live: crews correct lawns */
                     if ($pt > 0) { $bestN++; $bestS += $pt; }
                     if ($bq !== null) { $s10 = doorScore10($bestT, $pt, $bq[(string) $d['id']] ?? [0, 0.5]); $scSum += $s10; $scN++; if ($s10 >= 8) $sc8++; }
                 }
@@ -2140,7 +2141,7 @@ if ($action === 'regions') {
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 4) : null, 'lo' => $nll ? round($slo / $nll, 4) : null,   /* 4 places: about 10 m, plenty for a neighbourhood's centre */
-                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'lawnS' => $lawnS, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
+                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'lawnS' => $lawnS, 'cg' => $cgN, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
                         'who' => $assign[$a['name']] ?? null,   /* the streets come from ?action=streets, one town at a time */
                         'on' => $aday[$a['name']] ?? null,      /* the day it is assigned for (2026-10-12) */
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
@@ -2282,7 +2283,7 @@ if ($action === 'area') {
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
                 'prevMark' => ($m0 && !$m) ? ['outcome' => $m0['outcome'], 'by' => $m0['by'], 'at' => $m0['at']] : null,
-                'lawn' => $d['lawn'] ?? null,
+                'lawn' => $d['lawn'] ?? null, 'cg' => !empty($d['cg']) ? 1 : null,   /* a townhome lot: the lawn around it is the HOA's (2026-10-13) */
                 'lawnfix' => $lfix[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
                 'val' => $d['val'] ?? null,

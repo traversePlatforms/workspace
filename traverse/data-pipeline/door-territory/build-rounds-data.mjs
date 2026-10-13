@@ -99,6 +99,22 @@ function lawnOf(d) {
    tallest tree within 30 ft (m). src 'lidar' (USGS 3DEP, El Paso 2018 / Douglas 2020) or
    'canopy' (Meta canopy map, Teller — undercounts). */
 const TREE_CACHE = join(HERE, 'tree-cache.json');
+/* Common ground (2026-10-13, Matthew: "when the lawn doesn't belong to the owner and it belongs to the HOA ... how is that displayed"):
+   a townhome or patio-home lot, where the property line hugs the building and the grass around it is the HOA's. Read from the lot's
+   size (lawn-cache) and the house outline's area (tree-cache hs, sq ft): the outline is as big as the lot or bigger (a townhome row's
+   outline spans several owners' lots), or under 400 sq ft of the lot is left open. Checked against the photos 2026-10-13: a first rule
+   (coverage over 55% of a lot under 4,500 sq ft) caught Denver's narrow city lots, which have their own back yards; open ground does
+   not. Under 1% of doors in most towns, 1.5-2% in the Springs. The crew can correct the lawn on the card. */
+/* El Paso County only (checked 2026-10-13): in the Denver-metro towns the building outlines often merge a house with its garage or the
+   house next door, so narrow city lots with their own yards read as townhomes. The Springs photos matched the rule; Denver's did not. */
+const CG_TOWNS = new Set(Object.entries(JSON.parse(readFileSync(join(HERE, '..', '..', 'app', 'data', 'rounds', 'docs', 'money.json'), 'utf8')).counties || {}).filter(([, c]) => c === 'elpaso').map(([t]) => t));
+function commonGround(d, key) {
+  if (typeof d.la !== 'number' || !CG_TOWNS.has(key)) return false;
+  const L = lawnByCoord[`${d.la},${d.lo}`], T = treeByCoord[`${d.la},${d.lo}`];
+  if (!L || !L.lot || !T || T.err || !T.hs) return false;
+  const cov = T.hs / L.lot;
+  return cov >= 1.0 || L.lot - T.hs < 400;
+}
 const treeByCoord = existsSync(TREE_CACHE) ? JSON.parse(readFileSync(TREE_CACHE, 'utf8')) : {};
 function treesOf(d) {
   const c = typeof d.la === 'number' ? treeByCoord[`${d.la},${d.lo}`] : null;
@@ -184,7 +200,7 @@ for (const [key, label, fileName, group] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d), val: valueOf(d) };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d), val: valueOf(d), ...(commonGround(d, key) ? { cg: 1 } : {}) };
     }),
   }));
   built.push({ key, label, group, j, areas });
