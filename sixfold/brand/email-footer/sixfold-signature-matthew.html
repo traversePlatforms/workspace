@@ -48,6 +48,7 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
   </div>
   <div class="btns">
     <button type="button" id="copy">Copy signature</button>
+    <button type="button" class="alt" id="copynologo">Copy without logo</button>
     <button type="button" class="alt" id="copytxt">Copy as plain text</button>
     <span class="ok" id="msg" role="status"></span>
   </div>
@@ -84,6 +85,11 @@ code{background:var(--card);border:1px solid var(--line);border-radius:6px;paddi
       }
     } catch (e) {}
     fall();
+  });
+  /* 2026-10-13: sixfoldcolorado.com's bot check serves a cookie page in place of the logo, so Gmail shows it broken. This copy leaves the picture out; the logo then goes in with Gmail's own Upload button. */
+  document.getElementById('copynologo').addEventListener('click', function () {
+    var h = html.replace(/<img[^>]*>/, '');
+    try { navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([h], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]).then(function () { say('Copied without the logo.'); }, function () { say('Copy failed. Select the text and press Ctrl+C.'); }); } catch (e) { say('Copy failed. Select the text and press Ctrl+C.'); }
   });
   document.getElementById('copytxt').addEventListener('click', function () {
     try { navigator.clipboard.writeText(text).then(function () { say('Plain text copied.'); }, function () { say('Select the text and press Ctrl+C.'); }); } catch (e) { say('Select the text and press Ctrl+C.'); }
