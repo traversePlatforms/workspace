@@ -1,0 +1,708 @@
+<title>The Traverse Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a field manual. Sticky contents rail on the left (a top strip on phones), one reading column, wide tables scroll in place.
+   Brand: Traverse benchmark navy + flagging-tape orange; each edition keeps its own tile colour as a chip. */
+:root {
+  --surface: #f4f6f9; --raised: #ffffff; --line: #dce2ea; --ink: #0f1b2d; --muted: #566476;
+  --deep: #13294b; --flag: #d6400c; --flag-soft: #fde6dc; --sunk: #e9edf3;
+  --six: #b84c15; --roof: #4e6680; --yards: #2f7a3a; --solar: #a06f00; --pest: #7a3fa3; --sec: #1b6f7a;
+  --ok: #2f7a3a; --part: #a06f00; --no: #9aa6b5;
+  --f-display: "Familjen Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-text: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --surface: #0d131c; --raised: #151d29; --line: #263243; --ink: #e8eef6; --muted: #9ba9ba;
+  --deep: #dce6f5; --flag: #ff7a45; --flag-soft: #3a1a0c; --sunk: #111925;
+  --six: #f08a55; --roof: #a9bbd1; --yards: #8fd19a; --solar: #f2c14e; --pest: #c9a6ea; --sec: #8fd0da;
+  --ok: #8fd19a; --part: #f2c14e; --no: #5d6b7d; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --surface: #0d131c; --raised: #151d29; --line: #263243; --ink: #e8eef6; --muted: #9ba9ba;
+  --deep: #dce6f5; --flag: #ff7a45; --flag-soft: #3a1a0c; --sunk: #111925;
+  --six: #f08a55; --roof: #a9bbd1; --yards: #8fd19a; --solar: #f2c14e; --pest: #c9a6ea; --sec: #8fd0da;
+  --ok: #8fd19a; --part: #f2c14e; --no: #5d6b7d; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--surface); color: var(--ink); font: 17px/1.6 var(--f-text); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 80px; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 44px; }
+@media (max-width: 900px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; padding-block: 0 60px; } }
+
+/* contents rail */
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; max-height: calc(100vh - 48px); overflow: auto; }
+nav.toc .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+nav.toc .brand b { font: 700 20px/1 var(--f-display); letter-spacing: -0.02em; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
+nav.toc a { display: block; padding: 6px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 15px; line-height: 1.35; }
+nav.toc a:hover { color: var(--ink); background: var(--sunk); }
+nav.toc a:focus-visible { outline: 2px solid var(--flag); outline-offset: 2px; }
+nav.toc a .n { font: 600 12px var(--f-data); color: var(--flag); margin-right: 8px; }
+@media (max-width: 900px) {
+  nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; max-height: none; background: var(--surface); border-bottom: 1px solid var(--line); margin-inline: -16px; padding: 10px 16px; }
+  nav.toc .brand { display: none; }
+  nav.toc ol { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  nav.toc a { white-space: nowrap; border: 1px solid var(--line); background: var(--raised); font-size: 14px; }
+}
+
+main { min-width: 0; }
+@media (max-width: 900px) { header.hero { padding-top: 22px !important; } }
+header.hero { padding: 8px 0 26px; border-bottom: 2px solid var(--deep); margin-bottom: 8px; }
+.eyebrow { font: 600 12px/1 var(--f-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--flag); }
+h1 { font: 700 clamp(34px, 5vw, 52px)/1.05 var(--f-display); letter-spacing: -0.025em; margin: 10px 0 14px; text-wrap: balance; }
+.lede { font-size: 19px; max-width: 64ch; margin: 0; }
+.stamp { margin-top: 16px; font: 13px/1.5 var(--f-data); color: var(--muted); }
+h2 { font: 700 30px/1.15 var(--f-display); letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
+h3 { font: 600 21px/1.25 var(--f-display); margin: 30px 0 8px; text-wrap: balance; }
+h4 { font: 700 15px/1.3 var(--f-text); margin: 20px 0 6px; letter-spacing: 0.02em; }
+section { padding-top: 48px; scroll-margin-top: 70px; }
+section > .intro { color: var(--muted); max-width: 66ch; margin: 0 0 18px; }
+p, li { max-width: 72ch; }
+ul.plain { padding-left: 20px; margin: 8px 0 14px; }
+ul.plain li { margin: 4px 0; }
+.sn { font: 600 13px var(--f-data); color: var(--flag); display: block; margin-bottom: 6px; letter-spacing: 0.06em; }
+b.k, strong { font-weight: 700; }
+.data { font-family: var(--f-data); font-variant-numeric: tabular-nums; font-size: 0.86em; }
+
+/* edition chips */
+.ed { display: inline-flex; align-items: center; gap: 6px; font: 700 13px/1 var(--f-text); padding: 5px 9px 5px 7px; border-radius: 999px; border: 1.5px solid currentColor; white-space: nowrap; }
+.ed::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: currentColor; }
+.six { color: var(--six); } .roof { color: var(--roof); } .yards { color: var(--yards); } .solar { color: var(--solar); } .pest { color: var(--pest); } .sec { color: var(--sec); }
+
+/* tables */
+.tw { overflow-x: auto; margin: 14px 0 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+thead th { font: 700 12px/1.3 var(--f-text); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--sunk); position: sticky; top: 0; }
+tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+tbody th { font-weight: 700; }
+td.num, th.num { text-align: right; font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.matrix td { text-align: center; white-space: nowrap; }
+table.matrix th[scope="row"] { min-width: 220px; font-weight: 400; }
+table.matrix thead th { text-align: center; }
+table.matrix thead th:first-child { text-align: left; }
+tr.grp th { background: var(--sunk); font: 700 13px/1.3 var(--f-text); color: var(--ink); text-transform: none; letter-spacing: 0; }
+.y, .p, .x { font: 700 15px/1 var(--f-data); }
+.y { color: var(--ok); } .p { color: var(--part); } .x { color: var(--no); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+
+/* edition cards */
+.edhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; margin: 38px 0 6px; padding-top: 22px; border-top: 1px solid var(--line); }
+.edhead h3 { margin: 0; font-size: 26px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 12px 0 16px; }
+.facts div { background: var(--raised); padding: 10px 12px; min-width: 0; }
+.facts small { display: block; font: 700 11px/1.3 var(--f-text); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.facts span { display: block; font: 600 17px/1.3 var(--f-display); margin-top: 3px; }
+.only { border-left: 4px solid var(--flag); background: var(--raised); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 12px 0; }
+.only h4 { margin-top: 0; color: var(--flag); }
+.only ul { margin: 0; padding-left: 20px; }
+
+/* role cards */
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 16px 0; }
+.role { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.role h4 { margin: 0 0 4px; font: 700 19px/1.2 var(--f-display); }
+.role .who { font-size: 14px; color: var(--muted); margin: 0 0 10px; }
+.role ul { margin: 0; padding-left: 18px; font-size: 15px; }
+.role li { margin: 3px 0; }
+
+/* two-column compare */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.panel { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; min-width: 0; }
+.panel h4 { margin-top: 0; font: 700 18px/1.2 var(--f-display); }
+.panel ul { margin: 0; padding-left: 18px; font-size: 15.5px; }
+.panel li { margin: 5px 0; }
+
+.note { font-size: 15px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 14px; margin: 14px 0; }
+.note b { color: var(--ink); }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 18px; font-size: 15px; }
+.flow span { background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.flow i { font-style: normal; color: var(--flag); font-weight: 700; }
+dl.kv { display: grid; grid-template-columns: minmax(150px, max-content) minmax(0, 1fr); gap: 6px 16px; margin: 10px 0 16px; font-size: 15.5px; }
+dl.kv dt { font-weight: 700; }
+dl.kv dd { margin: 0; color: var(--ink); }
+@media (max-width: 560px) { dl.kv { grid-template-columns: minmax(0, 1fr); } dl.kv dd { margin-bottom: 8px; } }
+a { color: var(--flag); }
+.toplink { font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--deep)"/><circle cx="9" cy="47" r="5.2" fill="var(--raised)" stroke="var(--deep)" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="var(--raised)" stroke="var(--deep)" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="var(--raised)" stroke="var(--deep)" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="var(--flag)"/></svg>
+    <b>Traverse</b>
+  </div>
+  <ol>
+    <li><a href="#shape"><span class="n">01</span>How it fits together</a></li>
+    <li><a href="#core"><span class="n">02</span>What every install does</a></li>
+    <li><a href="#editions"><span class="n">03</span>Each edition</a></li>
+    <li><a href="#matrix"><span class="n">04</span>Side-by-side</a></li>
+    <li><a href="#roles"><span class="n">05</span>Roles</a></li>
+    <li><a href="#devices"><span class="n">06</span>Phone and desktop</a></li>
+    <li><a href="#data"><span class="n">07</span>Where the data comes from</a></li>
+    <li><a href="#off"><span class="n">08</span>Built but off, and not built</a></li>
+    <li><a href="#limits"><span class="n">09</span>Limits to know</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="eyebrow">Product reference · internal</div>
+  <h1>The Traverse Manual</h1>
+  <p class="lede">Everything the app does: what all six installs share, what each edition has that the others don't, what each role can do, how the phone and the computer differ, and where every piece of data comes from.</p>
+  <p class="stamp">Checked against the code (traverse/app, the edition build and the server API) on 13 October 2026. Home counts are from the current build files and can differ slightly from live.</p>
+</header>
+
+<!-- ============================================================ 01 -->
+<section id="shape">
+  <span class="sn">01</span>
+  <h2>How it fits together</h2>
+  <p class="intro">Traverse is one app, written once, and built into separate installs. Each install is a complete copy with its own web address, sign-ins, data folder, phone-alert key and customer records.</p>
+
+  <div class="flow" aria-label="How an install is made">
+    <span>One source: <b>traverse/app</b></span><i>→</i>
+    <span>Edition build switches parts on and off</span><i>→</i>
+    <span>Six installs on traverseplatforms.com</span><i>→</i>
+    <span>Later: one install per paying company</span>
+  </div>
+
+  <h3>The six installs</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Install</th><th>Who it's for</th><th class="num">Towns</th><th class="num">Homes</th><th>Trade parts on the door card</th><th>"Best doors first" ranks by</th></tr></thead>
+    <tbody>
+      <tr><th><span class="ed six">Sixfold</span><br><small>called "Routes" in the app</small></th><td>Sixfold Colorado's own crew (lawn, land and fire). The original install.</td><td class="num">22</td><td class="num">243,325</td><td>Lawn, trees, wildfire, funding, water</td><td>Lawn and yard need</td></tr>
+      <tr><th><span class="ed roof">Roofing</span></th><td>Roofing companies</td><td class="num">23 + 4 test</td><td class="num">248,959</td><td>Hail, wind, roof size and pitch, year built, roof material, roof photos, permits</td><td>Roof need</td></tr>
+      <tr><th><span class="ed yards">Yards</span></th><td>Lawn and yard companies</td><td class="num">22</td><td class="num">243,325</td><td>Lawn, trees, wildfire, funding, water, frost and rain, soil</td><td>Lawn and yard need</td></tr>
+      <tr><th><span class="ed solar">Solar</span></th><td>Solar sales teams</td><td class="num">21</td><td class="num">216,930</td><td>Sun-facing roof, shade, system size, yearly output, power company, roof size, permits</td><td>Solar fit</td></tr>
+      <tr><th><span class="ed pest">Pest</span></th><td>Pest control companies</td><td class="num">17</td><td class="num">119,701</td><td>"Why knock" facts, neighbours on service, trees</td><td>Pest signals</td></tr>
+      <tr><th><span class="ed sec">Security</span></th><td>Home security companies</td><td class="num">20</td><td class="num">232,648</td><td>Property crime nearby, town crime figures, owner lives elsewhere</td><td>Security signals</td></tr>
+    </tbody>
+  </table></div>
+
+  <dl class="kv">
+    <dt>Towns every install has</dt><dd>The original 11: Monument, Palmer Lake, Black Forest, Castle Rock, Larkspur, Sedalia, Franktown, Woodland Park, Divide, Florissant, Cripple Creek (30,464 homes). Every install also has Highlands Ranch, Parker and Castle Pines (51,810 homes).</dd>
+    <dt>Roofing adds</dt><dd>Colorado Springs northeast and southeast, Security-Widefield, Fountain, Thornton, Centennial, Erie, Commerce City, Denver, plus four commercial test towns (admins only).</dd>
+    <dt>Yards and Sixfold add</dt><dd>Thornton, Erie, Commerce City, Centennial, South Denver, Englewood, Walden, Aurora. Sixfold copies Yards' town list on every build, so the two always match. Sixfold also has one-off single-property towns for jobs outside its towns (admins only).</dd>
+    <dt>Solar adds</dt><dd>Arvada, Centennial, Thornton, Colorado Springs northeast and southeast, Security-Widefield, Fountain.</dd>
+    <dt>Pest adds</dt><dd>Windsor, Erie, Commerce City.</dd>
+    <dt>Security adds</dt><dd>Denver, Boulder, and all four Colorado Springs sections (northeast, southeast, northwest, southwest).</dd>
+    <dt>Not in any install yet</dt><dd>McKinney, Plano and Frisco (Dallas–Fort Worth), built and tabled.</dd>
+  </dl>
+
+  <h3>Rules that hold across all of them</h3>
+  <ul class="plain">
+    <li><b>Client data never crosses installs.</b> A company's customers, notes, bookings and phone numbers stay in its own install. Pest's "neighbours on service" comes only from that company's own customers.</li>
+    <li><b>Sixfold is lawn and yard only.</b> Hail, roofs, sun, pests and crime stay in the Traverse editions. Fire stays in Sixfold.</li>
+    <li><b>Each edition has its own example client</b> (Example Roofing Co, Example Lawn &amp; Land Co, and so on) until a real company signs.</li>
+    <li><b>A paying company gets its own install</b>, made from its trade's edition with its own name, colour and web address (<span class="data">new-client.cjs</span>, then <span class="data">build-editions.cjs</span>). Your super sign-in comes with it.</li>
+    <li><b>A new market gets its own install</b>, not a state switch. Dallas–Fort Worth is built this way and tabled.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 02 -->
+<section id="core">
+  <span class="sn">02</span>
+  <h2>What every install does</h2>
+  <p class="intro">This is the shared core: the same in all six installs, with each edition's own words swapped in. Sixfold books a "Walk", Pest an "Inspection", Solar a "Survey", Security a "Consult".</p>
+
+  <h3>Signing in and the device</h3>
+  <ul class="plain">
+    <li><b>Six-digit code</b>, picked by an admin. No runs (123456) and no single repeated digit.</li>
+    <li><b>One phone or tablet and one computer per code.</b> Signing in on a second phone signs the first one out and tells it why. A company can turn this off in its settings.</li>
+    <li><b>English or Spanish</b>, switched on the sign-in screen or in Profile. Legal text stays in English.</li>
+    <li><b>Light, dark or automatic look</b>, kept on each device.</li>
+    <li><b>Installs to the home screen</b> like an app, and <b>works with no signal</b>: marks, notes and photos wait on the phone and send when signal comes back. Signing out warns if anything hasn't sent yet.</li>
+    <li><b>Profile photo</b>, shown in the corner and on the team screens.</li>
+  </ul>
+
+  <h3>Finding the doors</h3>
+  <ul class="plain">
+    <li><b>Towns</b> in a dropdown, grouped into fold-out counties.</li>
+    <li><b>Neighbourhoods</b> inside each town, each with homes left to knock, how much is done, quotes booked and a score badge. Sorts include map order, nearest, best, score, and fire or lawn where that edition has them.</li>
+    <li><b>Territories:</b> neighbourhoods assigned to you show on your home screen.</li>
+    <li><b>Find an address</b> searches every town at once.</li>
+    <li><b>Map view</b> with a pin for each home on the list. <b>Grey dots</b> mark homes that aren't on the list: the owner lives elsewhere (rental or second home), gets mail at a PO box, couldn't be checked, or is a business. Tapping one says "Not on the door list".</li>
+    <li><b>Route:</b> walking or driving directions through the next stops, opened in Google Maps (about 9–10 stops at a time).</li>
+    <li><b>Sort &amp; filter</b> on a neighbourhood's doors, plus a <b>door score from 1 to 10</b>. The score is 75% how much the house needs the trade and 25% how able the owner is likely to be, from county value and how many homes nearby are owner-occupied. It scores the house, never the person.</li>
+  </ul>
+
+  <h3>The door card</h3>
+  <dl class="kv">
+    <dt>Top</dt><dd>Address, distance from you, score and the reasons behind it.</dd>
+    <dt>Facts</dt><dd>Lot size, county value, owner of record, "New owner since…" when the owner changed between builds, a Customer tag, and "Assigned to…".</dd>
+    <dt>Trade sections</dt><dd>Whatever the edition carries (see section 03). On a phone each section shows its first line, with More and Less.</dd>
+    <dt>Outcomes</dt><dd><b>Walk booked</b> (the edition's word), <b>Quote sent</b>, <b>Not now</b> with a come-back date, <b>No answer</b> (back on the list after a rest, 2 days by default), <b>No soliciting</b>.</dd>
+    <dt>Add info</dt><dd>Phone numbers (a main number plus up to 4 more), email, photos (with the owner's OK, the property not people), a note typed or <b>spoken</b> (voice notes), extra work spotted from the edition's own list, and a fire check (Sixfold and Yards).</dd>
+    <dt>Booking</dt><dd>Book the walk at the door. It goes on the calendar, and a booked door leaves the knock list.</dd>
+    <dt>Off the list</dt><dd>Customers, booked, quoted and walked doors stay off the knock list until a come-back date or a rest period brings them back.</dd>
+  </dl>
+
+  <h3>Your own day</h3>
+  <ul class="plain">
+    <li><b>Home screen:</b> greeting, today's doors, people talked to and quotes, weather alerts, tips.</li>
+    <li><b>My stats</b> and a <b>personal goal</b> you set yourself.</li>
+    <li><b>Calendar:</b> walks, come-backs, lead follow-ups and your own entries. It <b>syncs to your phone's calendar</b> (Apple or Google) through a private link, and making a new link stops the old one.</li>
+    <li><b>Training:</b> the company's own lessons. The editions start empty, and admins write them.</li>
+    <li><b>Weather alerts</b> across the top for the warnings that edition picked, <b>push alerts to the phone</b> once turned on, and a <b>Live radar</b> map (NOAA radar every 5 minutes, with a colour key) in the editions.</li>
+  </ul>
+
+  <h3>The office side (admins, and managers for their team)</h3>
+  <ul class="plain">
+    <li><b>Pipeline:</b> door bookings and website or Meta enquiries, from first call to won. Web leads have no owner until an admin or manager assigns one; a door booking belongs to whoever knocked.</li>
+    <li><b>Customers:</b> plans (one-off, monthly, quarterly and others), visits and what's due this week. Import a spreadsheet up to 500 rows at a time (addresses matched to doors, no doubles), or export.</li>
+    <li><b>Results:</b> which doors turn into jobs, by outcome, neighbourhood, person and extra work.</li>
+    <li><b>Team stats</b> with the <b>leaderboard</b> inside it, <b>territories</b>, the <b>Plan</b> table for assigning doors, and the <b>Office dashboard</b>.</li>
+    <li><b>Accounts:</b> add, change, sign out and remove sign-ins, plus <b>Flags</b> for unlikely travel (doors marked too far apart for the time between them) and 3 or more phone switches in a day. Flags come from door addresses only; the app never sends anyone's location.</li>
+    <li><b>Downloads log:</b> every export is recorded. <b>Usage:</b> which screens and buttons people use, never what they type.</li>
+    <li><b>Backups:</b> nightly copies on the server, and a reminder to download one to a device if nobody has for a week.</li>
+    <li><b>Jobber export</b> of booked doors (a spreadsheet) in every install.</li>
+    <li><b>Sample door:</b> one made-up door with every part of that edition's card filled in, for demos. Nothing done there is saved.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 03 -->
+<section id="editions">
+  <span class="sn">03</span>
+  <h2>Each edition, and what only it has</h2>
+  <p class="intro">For each install: what it has that the others don't, what it shares with one or two others, and where each piece of data comes from. Section 07 has the full data list.</p>
+
+  <!-- SIXFOLD -->
+  <div class="edhead"><h3>Sixfold (Routes)</h3><span class="ed six">Lawn, land and fire</span></div>
+  <div class="facts">
+    <div><small>Card</small><span>Lawn, trees, fire, funding, water</span></div>
+    <div><small>Towns</small><span>22 (mirrors Yards)</span></div>
+    <div><small>Office tools</small><span>Quote builder, skip trace</span></div>
+    <div><small>Data</small><span>Sixfold's real customers and jobs</span></div>
+  </div>
+  <div class="only"><h4>Only in Sixfold</h4><ul>
+    <li><b>Quote builder:</b> prices a job from the yard-walk counts at Sixfold's rates. Admins only, still in testing, needs signal.</li>
+    <li><b>Skip trace:</b> owner phone numbers from BatchData, a paid provider. Each number is checked against the Do Not Call list before any Call link shows. Admins only, and each lookup costs money.</li>
+    <li><b>Field guide:</b> the 33-lesson Sixfold Field Guide in Training, with the branded PDF and a "What to say at the door" card.</li>
+    <li><b>Morning email</b> for admins at 6 am: leads to call, today's and tomorrow's walks, customers due this week, yesterday at the doors. Any admin can also ask for it in the app.</li>
+    <li><b>One-off properties:</b> single-door towns, admins only, for a job outside the towns.</li>
+    <li><b>Sixfold's Google review link</b> on its funding sheet. Yards has the same sheet with the link blank.</li>
+  </ul></div>
+  <p><b>Shared with Yards:</b> everything on the Yards list below (lawn size, lawn plan, trees, wildfire, fire check, funding, water, Communities, frost and rain, soil, townhome lawns).</p>
+  <p><b>Not in Sixfold:</b> the Company screen and billing (it isn't a paying client), Live radar as a tile, and anything for roofing, solar, pest or security.</p>
+
+  <!-- ROOFING -->
+  <div class="edhead"><h3>Roofing</h3><span class="ed roof">Storm slate</span></div>
+  <div class="facts">
+    <div><small>Card</small><span>Hail, wind, roof, photos, permits</span></div>
+    <div><small>Towns</small><span>23 + 4 commercial test</span></div>
+    <div><small>Alerts</small><span>Storm, tornado, high wind, heat</span></div>
+    <div><small>CRM link</small><span>JobNimbus</span></div>
+  </div>
+  <div class="only"><h4>Only in Roofing</h4><ul>
+    <li><b>Hail per door:</b> every day since April 2020 that radar put hail of ¾ inch or more within a few hundred metres, with the size. Labelled as a radar estimate. Source: NOAA MRMS radar hail size (MESH), daily files from Iowa State's archive.</li>
+    <li><b>Hail measured on the ground nearby:</b> spotter and Storm Events reports with sizes. Source: NOAA Storm Events (about 3 months behind) plus National Weather Service spotter reports. The server adds the last 14 days of spotter reports itself.</li>
+    <li><b>What time the hail fell</b> ("about 3–5 pm"), from 2-minute radar files sampled every 20 minutes on each storm day.</li>
+    <li><b>Wind per door:</b> damaging gusts and wind damage reported nearby, measured or estimated. Source: NWS Local Storm Reports via Iowa State. Reports are sparse, so a home with none doesn't mean no wind.</li>
+    <li><b>Storm list:</b> pick a storm, see the doors it hit, their roofs, who owns them and who to call. Admins only.</li>
+    <li><b>Hail screen:</b> storms from the last two years (five for a big one, 2-inch hail or 75 mph wind) and the streets they hit, with a hail map per storm. New storm days are added automatically, at most every 12 hours.</li>
+    <li><b>Roof settings:</b> your price per square by roof material and the hail size that damages each material. Nothing shows until you fill it in; the app never invents prices.</li>
+    <li><b>Commercial test towns:</b> 5,082 commercial buildings in three hail spots, plus a showcase town of six demo buildings. Each card names the owner or registered agent (from the state business register) and has a <b>Search this owner</b> button. Admins only.</li>
+    <li><b>Hail layer</b> on the desktop map. Admins only.</li>
+    <li><b>Heat and high-wind alerts</b> on top of storm and tornado warnings.</li>
+  </ul></div>
+  <p><b>Shared with Solar</b> (both have the roof switch on):</p>
+  <ul class="plain">
+    <li><b>Roof size and pitch</b> from USGS laser scans.</li>
+    <li><b>Year built</b> from county assessors.</li>
+    <li><b>Roof material:</b> read off aerial photos by a model trained on Douglas County's recorded materials, or the county's own record where Adams or Boulder record it.</li>
+    <li><b>Roof photos:</b> the State of Colorado's 2020 aerial, a 2023 USDA close-up, and the house outline drawn on top.</li>
+    <li><b>Building permits</b> (re-roofs here, solar in Solar).</li>
+    <li><b>Roof job</b> tracker: signed, claim, adjuster, approved or denied, materials, installed, cancelled. It shows the Colorado roofing-contract cancellation windows (C.R.S. 6-22-103 and 6-22-104).</li>
+    <li><b>JobNimbus:</b> send booked doors and walks to JobNimbus with the roofer's own key, or download a spreadsheet. Admins only.</li>
+  </ul>
+  <p><b>Also on the Roofing card:</b> FEMA's risk ratings for the area and the Census survey for the block.</p>
+
+  <!-- YARDS -->
+  <div class="edhead"><h3>Yards</h3><span class="ed yards">Field green</span></div>
+  <div class="facts">
+    <div><small>Card</small><span>Lawn, trees, fire, funding, water</span></div>
+    <div><small>Towns</small><span>22</span></div>
+    <div><small>Alerts</small><span>Storm, tornado, freeze, frost</span></div>
+    <div><small>Ranking</small><span>Aeration-first</span></div>
+  </div>
+  <div class="only"><h4>Only in Yards and Sixfold</h4><ul>
+    <li><b>Lawn size per door:</b> Large, Medium, Small, Little or none, or Mostly trees. Green and under 1 metre tall in the 2023 USDA aerial (via Microsoft Planetary Computer), with Meta/WRI tree heights, inside the county lot line. Crew can correct it at the door, and their answers build the calibration set.</li>
+    <li><b>Lawn plan:</b> seed rates, fertiliser and mowing height by month, from CSU Extension guidance.</li>
+    <li><b>Townhome lawns:</b> in El Paso County towns, a lot with almost no yard outside the house is flagged "Townhome: the HOA keeps the lawn". It's scored down, and a neighbourhood that's mostly townhomes shows a "pitch the HOA" banner.</li>
+    <li><b>Trees near the house</b> in the state's defensible-space zones (0–5, 5–30 and 30–100 ft): against, heavy, some or clear. Source: USGS 3DEP laser scans (El Paso 2018, Douglas 2020; Teller from a tree-canopy map, with 2023–24 scans now in hand) and Microsoft building outlines.</li>
+    <li><b>Wildfire hazard</b> per home, from the USDA Forest Service Wildfire Hazard Potential map (2023).</li>
+    <li><b>Fire check:</b> a defensible-space checklist saved on the door.</li>
+    <li><b>Funding:</b> county and state cost-share programmes a home qualifies for. <b>Water:</b> the water provider's restrictions.</li>
+    <li><b>Communities:</b> HOAs and Firewise sites to pitch as one job. HOA names come from the Colorado Division of Real Estate roster, Firewise sites from NFPA. Admins only.</li>
+    <li><b>HOA on the card</b> where the neighbourhood matches a registered HOA.</li>
+    <li><b>Frost dates and rain:</b> first and last frost (NOAA 1991–2020 normals) and the last 30 days of rain against normal at the nearest gauge (NOAA NCEI, fetched live, at most every 6 hours).</li>
+    <li><b>Soil temperature</b> from the nearest CSU CoAgMet station within 25 miles. El Paso, Douglas and Teller show "no station near".</li>
+    <li><b>Freeze and frost alerts.</b></li>
+    <li><b>County wildfire plans</b> (Teller's 62 neighbourhoods).</li>
+  </ul></div>
+  <p><b>Also on the card:</b> FEMA risk ratings and the Census survey.</p>
+
+  <!-- SOLAR -->
+  <div class="edhead"><h3>Solar</h3><span class="ed solar">Late-sun amber</span></div>
+  <div class="facts">
+    <div><small>Card</small><span>Sun, shade, system, output, utility</span></div>
+    <div><small>Towns</small><span>21</span></div>
+    <div><small>Alerts</small><span>Storm and tornado only</span></div>
+    <div><small>Shares</small><span>Roof data with Roofing</span></div>
+  </div>
+  <div class="only"><h4>Only in Solar</h4><ul>
+    <li><b>Sun-facing roof area</b> split by direction (south, southeast, southwest, east, west, north, flat). Each roof is measured from USGS laser-scan elevations.</li>
+    <li><b>Shade:</b> open, some or heavy, from trees at least as tall as the roof within 20 metres on the sunny side.</li>
+    <li><b>A system that fits:</b> panel count and size, assuming 70% of the good roof is usable and a 400-watt panel takes about 20 sq ft. Shown as an estimate.</li>
+    <li><b>Yearly output</b> in kWh, from NREL's PVWatts (now the National Laboratory of the Rockies) for that roof's direction and slope.</li>
+    <li><b>Power company</b> from Colorado's electric utility territory map (state OIT), with that utility's figures from the federal EIA-861 survey (2025).</li>
+    <li><b>Xcel Energy rates:</b> time-of-use and flat rates from the Colorado PUC and Xcel, read 12 October 2026. A rate increase was pending, so these need updating when the PUC rules.</li>
+    <li><b>Solar permits</b> already pulled at the address.</li>
+  </ul></div>
+  <p><b>Shared with Roofing:</b> roof size and pitch, year built, roof material, roof photos, permits, the roof job tracker and JobNimbus. Solar has no hail, wind or storm screens.</p>
+
+  <!-- PEST -->
+  <div class="edhead"><h3>Pest</h3><span class="ed pest">Violet</span></div>
+  <div class="facts">
+    <div><small>Card</small><span>Why knock, neighbours on service, trees</span></div>
+    <div><small>Towns</small><span>17</span></div>
+    <div><small>Alerts</small><span>Storm and tornado only</span></div>
+    <div><small>Plans</small><span>Quarterly</span></div>
+  </div>
+  <div class="only"><h4>Only in Pest</h4><ul>
+    <li><b>Why knock:</b> facts the rep connects, with no made-up risk score.
+      <ul>
+        <li>Open space within 90 m (Colorado's COMaP protected-lands map, with unnamed private shapes dropped).</li>
+        <li>A named creek within 100 m or a pond within 150 m (USGS National Hydrography Dataset).</li>
+        <li>Year built, and the last sale month in El Paso County (the assessor's sale date only, never owner columns).</li>
+      </ul></li>
+    <li><b>Neighbours on service:</b> the company's own active customers within about 160 m, bookings nearby in the last 30 days, and what neighbours told the team in their door notes in the last 30 days. It only uses that company's own records. A new company fills it by importing its customer list.</li>
+    <li><b>Pest season strip:</b> a Colorado calendar with one sourced line per pest (miller moths, elm seed bugs, mosquitoes, wasps, boxelder bugs, mice, voles), from CSU Extension, Colorado Public Radio and Illinois Extension. Re-check each spring.</li>
+    <li>Pest's own door-note tags: wasps, ants, spiders, mice, firewood, standing water, other company.</li>
+  </ul></div>
+  <p><b>Also on the Pest card:</b> trees near the house. The quarterly plan and customer import exist in every install, but Pest is where they matter most.</p>
+
+  <!-- SECURITY -->
+  <div class="edhead"><h3>Security</h3><span class="ed sec">Night teal</span></div>
+  <div class="facts">
+    <div><small>Card</small><span>Crime nearby, town figures, absentee owner</span></div>
+    <div><small>Towns</small><span>20</span></div>
+    <div><small>Alerts</small><span>Storm and tornado only</span></div>
+    <div><small>Map</small><span>Crime map (90 days)</span></div>
+  </div>
+  <div class="only"><h4>Only in Security</h4><ul>
+    <li><b>Property crime near the door:</b> burglary, vehicle theft and break-ins, other theft and vandalism within ½ and 1 mile, for the last 30, 90 and 365 days, with the latest date. Never domestic, never crimes against people. Source: Colorado Springs Police open data, updated daily, at hundred-block level. <b>Only for homes inside Colorado Springs city limits</b>; outside them the card shows nothing, because no reports doesn't mean no crime.</li>
+    <li><b>Crime map:</b> the last 90 days shaded in squares of about 280 m, never as points. Colorado Springs, Denver and Boulder. Boulder's police data runs about 10 days behind.</li>
+    <li><b>Crime by neighbourhood:</b> neighbourhoods ranked by property crime reported nearby in the last 90 days.</li>
+    <li><b>Town crime figures:</b> each police agency's last 12 reported months for burglary, vehicle theft and property crime, from the FBI Crime Data Explorer. Agencies report on different lags.</li>
+    <li><b>Owner lives elsewhere</b>, from the county mailing address (a PO box counts as unknown).</li>
+    <li>The same neighbours, bookings and door-note counts as Pest, plus sale month, year built and open space.</li>
+  </ul></div>
+  <div class="note"><b>Two rules are built into Security.</b> It shows facts, not "at-risk" scores, and crime is always counted around a door or neighbourhood, never placed on a house.</div>
+
+  <h3>Every edition (not Sixfold)</h3>
+  <ul class="plain">
+    <li><b>Company screen:</b> the client sets its own name, phone, email, website and brand colour.</li>
+    <li><b>Billing</b> through Stripe. Built and switched off; see section 08.</li>
+    <li><b>Live radar</b> tile on the home screen.</li>
+    <li><b>Trade parts shown to crew,</b> not just admins. In Sixfold the crew see the yard parts.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 04 -->
+<section id="matrix">
+  <span class="sn">04</span>
+  <h2>Side-by-side</h2>
+  <p class="intro">What each install switches on. A partial mark means the feature is there but limited: some towns only, admins only, or a cut-down version.</p>
+  <div class="tw"><table class="matrix">
+    <thead><tr><th scope="col">Feature</th><th scope="col"><span class="ed six">Sixfold</span></th><th scope="col"><span class="ed roof">Roofing</span></th><th scope="col"><span class="ed yards">Yards</span></th><th scope="col"><span class="ed solar">Solar</span></th><th scope="col"><span class="ed pest">Pest</span></th><th scope="col"><span class="ed sec">Security</span></th></tr></thead>
+    <tbody>
+      <tr class="grp"><th colspan="7">The shared core</th></tr>
+      <tr><th scope="row">Door list, outcomes, notes, photos, phones, voice notes</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Door score 1–10, Sort &amp; filter, grey dots</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Calendar and phone calendar sync</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Pipeline, leads, customers, results</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Teams, territories, Plan table, Office dashboard</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Training</th><td class="y">●</td><td class="p">◐</td><td class="p">◐</td><td class="p">◐</td><td class="p">◐</td><td class="p">◐</td></tr>
+      <tr><th scope="row">Spanish, one device per code, flags, usage log</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Census survey for the block</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">FEMA risk ratings</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Jobber export</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr class="grp"><th colspan="7">Lawn and yard</th></tr>
+      <tr><th scope="row">Lawn size, lawn plan, townhome lawns</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Trees near the house</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td></tr>
+      <tr><th scope="row">Wildfire hazard, fire check, county fire plans</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Funding and water lines</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Communities (HOAs, Firewise)</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Frost dates, rain, soil temperature</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr class="grp"><th colspan="7">Roof and storm</th></tr>
+      <tr><th scope="row">Hail and wind per door</th><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Storm list, Hail screen, roof settings</th><td class="x">–</td><td class="p">◐ admin</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Roof size, pitch, year built, material, photos</th><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Building permits</th><td class="x">–</td><td class="p">◐ re-roof</td><td class="x">–</td><td class="p">◐ solar</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Roof job tracker, JobNimbus</th><td class="x">–</td><td class="p">◐ admin</td><td class="x">–</td><td class="p">◐ admin</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Commercial test towns</th><td class="x">–</td><td class="p">◐ admin</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr class="grp"><th colspan="7">Other trades</th></tr>
+      <tr><th scope="row">Sun, shade, system size, output, power company</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Pest "why knock", neighbours on service, season strip</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="x">–</td></tr>
+      <tr><th scope="row">Crime nearby, crime map, FBI figures</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="p">◐ CS only</td></tr>
+      <tr class="grp"><th colspan="7">Office extras</th></tr>
+      <tr><th scope="row">Quote builder</th><td class="p">◐ admin</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Skip trace (paid phone lookups)</th><td class="p">◐ admin</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Company screen</th><td class="x">–</td><td class="p">◐ admin</td><td class="p">◐ admin</td><td class="p">◐ admin</td><td class="p">◐ admin</td><td class="p">◐ admin</td></tr>
+      <tr><th scope="row">Live radar tile</th><td class="x">–</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Billing, texting</th><td class="x">off</td><td class="x">off</td><td class="x">off</td><td class="x">off</td><td class="x">off</td><td class="x">off</td></tr>
+    </tbody>
+  </table></div>
+  <div class="legend"><span><span class="y">●</span> on</span><span><span class="p">◐</span> limited (see note in the cell)</span><span><span class="x">–</span> not in this install</span></div>
+  <p class="note"><b>Training ◐ in the editions:</b> the Training screen works everywhere, but the editions start with no lessons until the company writes its own. Sixfold has its 33-lesson field guide.</p>
+</section>
+
+<!-- ============================================================ 05 -->
+<section id="roles">
+  <span class="sn">05</span>
+  <h2>Roles</h2>
+  <p class="intro">Four roles. The server enforces every rule below, so hiding a button is never the only lock. Making someone an admin in Accounts is what gives them the office tools; nothing is tied to a particular person's code, except super.</p>
+
+  <div class="roles">
+    <div class="role"><h4>Crew</h4><p class="who">The reps at the doors.</p><ul>
+      <li>Knock, mark outcomes, add phones, emails, photos, notes and extra work</li>
+      <li>Book walks at the door</li>
+      <li>See the trade parts of the card (editions; yard parts in Sixfold)</li>
+      <li>Their own calendar, and teammates' calendars read-only if they're on a team</li>
+      <li>Their own stats and goal, Training, alerts, radar, map, Find an address</li>
+      <li>See neighbourhoods assigned to them</li>
+    </ul></div>
+    <div class="role"><h4>Manager</h4><p class="who">Crew, plus their own team.</p><ul>
+      <li>Leads: hand out new enquiries, see their team's</li>
+      <li>Team stats and the leaderboard</li>
+      <li>Assign neighbourhoods and doors within their team, in Territories and the Plan table</li>
+      <li>Draw territories on the desktop map</li>
+      <li>Team sign-ins: add crew (always crew, always on their team), give a new random code, sign out, remove</li>
+      <li>Office dashboard for their team; their team's calendars</li>
+    </ul></div>
+    <div class="role"><h4>Admin</h4><p class="who">The company's office. Everything below, across the whole company.</p><ul>
+      <li>Pipeline, Customers (import, export, backups), Results</li>
+      <li>Accounts: add anyone, pick codes, set roles and teams, sign out, remove</li>
+      <li>Flags, the Downloads log, Usage</li>
+      <li>Company screen and billing (editions)</li>
+      <li>Every edition's admin-only tools (Storm list, roof settings, Communities, JobNimbus, Quote builder, skip trace…)</li>
+      <li>Write Training lessons; set team goals; Sample door</li>
+    </ul></div>
+    <div class="role"><h4>Super</h4><p class="who">You, and only you. Set on the server; the app can never grant it.</p><ul>
+      <li>Everything an admin can do, in all six installs</li>
+      <li>The only one who can download the Plan's door list (500 doors at most, and every download is logged)</li>
+      <li>The only one who can see sign-in codes</li>
+      <li>Switch between installs from Profile → Edition (a one-use pass that lasts 60 seconds)</li>
+      <li>Client admins can't edit, re-code, sign out or remove you; they see your line tagged "Traverse"</li>
+    </ul></div>
+  </div>
+
+  <h3>Who can do what</h3>
+  <div class="tw"><table class="matrix">
+    <thead><tr><th scope="col">Action</th><th scope="col">Crew</th><th scope="col">Manager</th><th scope="col">Admin</th><th scope="col">Super</th></tr></thead>
+    <tbody>
+      <tr class="grp"><th colspan="5">At the door</th></tr>
+      <tr><th scope="row">Knock, mark, notes, photos, phones, email, extra work</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">See the trade sections of the card</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Correct the lawn size or roof material at the door</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Delete someone's photo</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr class="grp"><th colspan="5">Calendars, stats and leads</th></tr>
+      <tr><th scope="row">Own calendar, own stats, own goal</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">See other people's calendars</th><td class="p">◐ teammates, read-only</td><td class="p">◐ team</td><td class="y">● anyone</td><td class="y">●</td></tr>
+      <tr><th scope="row">Leaderboard</th><td class="x">–</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Leads: see and assign</th><td class="x">–</td><td class="p">◐ unowned, own, team</td><td class="y">● all</td><td class="y">●</td></tr>
+      <tr><th scope="row">Add or import leads</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Pipeline, Customers, Results</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr class="grp"><th colspan="5">Territories and planning</th></tr>
+      <tr><th scope="row">See territories assigned to you</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Assign neighbourhoods and doors, draw territories, Plan table</th><td class="x">–</td><td class="p">◐ own team</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Office dashboard</th><td class="x">–</td><td class="p">◐ own team</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Download the Plan's door list (500 max, logged)</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="y">●</td></tr>
+      <tr class="grp"><th colspan="5">People and sign-ins</th></tr>
+      <tr><th scope="row">Add crew, new code, sign out, remove</th><td class="x">–</td><td class="p">◐ crew on own team</td><td class="y">● anyone</td><td class="y">●</td></tr>
+      <tr><th scope="row">Pick a chosen code, change roles and teams</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">See sign-in codes</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="y">●</td></tr>
+      <tr><th scope="row">Flags, Downloads log, Usage</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr class="grp"><th colspan="5">Company and data</th></tr>
+      <tr><th scope="row">Write Training lessons, set team goals</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Exports: customers, backups, Jobber, JobNimbus</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Storm list owners and phones, roof settings (Roofing)</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Hail and wind on the door card (Roofing)</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Quote builder, skip trace (Sixfold)</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Communities (Sixfold, Yards)</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Commercial test towns (Roofing)</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Company screen, billing (editions)</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Switch between installs</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="y">●</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><b>Two safety rules in Accounts:</b> nobody can remove themselves, and the last admin can't be removed. A manager who isn't on a team yet can't manage anyone until an admin puts them on one.</div>
+</section>
+
+<!-- ============================================================ 06 -->
+<section id="devices">
+  <span class="sn">06</span>
+  <h2>Phone and desktop</h2>
+  <p class="intro">Same data, same roles, same server rules. Only the layout changes. The desktop layout switches on at 1,100 pixels wide or more. A tablet can choose it in Profile → Layout.</p>
+
+  <div class="cols">
+    <div class="panel"><h4>What the desktop adds</h4><ul>
+      <li><b>Top bar:</b> Home, Doors, Plan, Storms (Roofing admins), Pipeline (admins) or Leads (managers), Calendar, Team or My stats, Office, plus Find an address and your photo.</li>
+      <li><b>Desktop home:</b> a dashboard in place of the phone's tile grid.</li>
+      <li><b>Browser:</b> towns, neighbourhoods and the map on one screen.</li>
+      <li><b>Workspace:</b> door list, map and door card side by side. Pins are numbered and coloured by score, and the card's buttons stay at the bottom.</li>
+      <li><b>Map, Hybrid or Photo</b> view, using 2023 aerials; the desktop opens on Photo.</li>
+      <li><b>Neighbourhood rings:</b> nearby neighbourhoods show as dashed outlines you can click.</li>
+      <li><b>Hail layer</b> on the map (Roofing admins).</li>
+      <li><b>Draw a territory</b> on the map (admins and managers).</li>
+      <li><b>Plan table</b> at full size: sortable trade columns, filters such as Not knocked or Nobody assigned, column picker, score bars, by-neighbourhood filter, tick and assign, a preview panel, and a spreadsheet download for admins.</li>
+      <li><b>Office dashboard</b> with a side menu: Today, Plan the doors, Territories, Communities, Storm list, Pipeline or Leads, Customers, Calendar, Team stats, Leaderboard, Training, Results, Usage, Accounts, Company. Today shows KPI cards against goals, the team today, walks for the next 7 days, a map of the best doors left and live radar, refreshing every 60 seconds.</li>
+    </ul></div>
+    <div class="panel"><h4>What the phone is built for</h4><ul>
+      <li><b>Working with no signal:</b> changes wait on the phone and send later.</li>
+      <li><b>Voice notes:</b> speak the note instead of typing with gloves on. Uses the phone browser's own speech-to-text.</li>
+      <li><b>Photos at the door</b> from the camera.</li>
+      <li><b>Push alerts</b> to the phone (on iPhone, after adding the app to the home screen).</li>
+      <li><b>The fold-up card:</b> each data section shows one line with More and Less, under 700 pixels wide.</li>
+      <li><b>Walking and driving directions</b> through the next stops.</li>
+      <li><b>Tools grid</b> on the home screen: In the field, Your team (managers), and Office in fold-out groups (admins): Sales, Team, Storms and data, Setup.</li>
+      <li>The phone can still open the <b>Plan table</b> ("best on a computer") and the <b>Office dashboard</b>.</li>
+    </ul></div>
+  </div>
+
+  <h3>Switching layouts</h3>
+  <dl class="kv">
+    <dt>On a computer</dt><dd>Profile → Layout → Desktop or Phone. Phone shows the app in a phone-sized frame, which is useful for demos.</dd>
+    <dt>On a tablet</dt><dd>Profile → Layout → Tablet or Desktop.</dd>
+    <dt>Devices per code</dt><dd>One phone or tablet plus one computer at the same time.</dd>
+  </dl>
+</section>
+
+<!-- ============================================================ 07 -->
+<section id="data">
+  <span class="sn">07</span>
+  <h2>Where the data comes from</h2>
+  <p class="intro">Every data set on a door card, its source, how current it is, and which installs carry it. Marketing pages never name these sources; this page is internal.</p>
+
+  <h3>The door list itself</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Data</th><th>Source</th><th>How current</th><th>Installs</th></tr></thead>
+    <tbody>
+      <tr><th>Homes, lot lines, lot size, owner of record</th><td>County parcel records. El Paso County's own GIS and assessor file; every other county through the State of Colorado's public parcel composite and county files (Douglas, Teller, Adams, Arapahoe, Jefferson, Boulder, Weld, Larimer, Denver).</td><td>As of each rebuild</td><td>All</td></tr>
+      <tr><th>Owner-occupied filter</th><td>The owner's mailing address matched to the property (El Paso: geocoded, within 150 m; elsewhere: address match). Businesses, churches and districts are dropped by name; family trusts are kept.</td><td>Each rebuild</td><td>All</td></tr>
+      <tr><th>Property address (El Paso)</th><td>State of Colorado address points, matched inside the lot, because El Paso's parcel data has no property address.</td><td>Each rebuild</td><td>All</td></tr>
+      <tr><th>Neighbourhoods</th><td>Our own grouping: homes within 250 m, with big clusters split on a grid of about 55 doors.</td><td>Each rebuild</td><td>All</td></tr>
+      <tr><th>County value</th><td>The state parcel layer's values; El Paso from the assessor's market value. Larimer publishes none.</td><td>Each rebuild</td><td>All</td></tr>
+      <tr><th>New owner since…</th><td>Our own comparison of owner names between rebuilds.</td><td>Each rebuild</td><td>All</td></tr>
+      <tr><th>Grey dots</th><td>Rows from the same parcel lists that didn't become doors: rental or second home, PO box, couldn't be checked, business. No owner names kept.</td><td>Each rebuild</td><td>All</td></tr>
+      <tr><th>Subdivision, HOA, Firewise tags</th><td>Teller: state subdivision names. Douglas: county table. El Paso: metro districts (El Paso publishes no subdivision names). HOAs: Colorado Division of Real Estate active-HOA roster. Firewise: NFPA's sites in good standing, 2026.</td><td>Each rebuild</td><td>All (HOA on card: Sixfold, Yards)</td></tr>
+      <tr><th>Census survey for the block</th><td>US Census American Community Survey 2020–2024, block groups.</td><td>2024 release</td><td>All</td></tr>
+      <tr><th>FEMA risk ratings</th><td>FEMA National Risk Index v1.20, census tracts.</td><td>Current release</td><td>Sixfold, Roofing, Yards</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Lawn, trees and fire</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Data</th><th>Source</th><th>How current</th><th>Installs</th></tr></thead>
+    <tbody>
+      <tr><th>Lawn size</th><td>USDA NAIP aerial photos, 2023, 30 cm (via Microsoft Planetary Computer), with Meta/WRI tree-height maps, inside the county lot. 2021 photo as a fallback. Never Google imagery.</td><td>Photo from 2023</td><td>Sixfold, Yards</td></tr>
+      <tr><th>Trees near the house</th><td>USGS 3DEP laser scans (El Paso 2018, Douglas 2020) with Microsoft building outlines. Teller: a tree-canopy map; its 2023–24 scans have been measured and go up with the next Teller rebuild.</td><td>Scan years</td><td>Sixfold, Yards, Pest</td></tr>
+      <tr><th>Wildfire hazard</th><td>USDA Forest Service Wildfire Hazard Potential, 2023, 270 m cells. "Not rated" means town or farmland, not safe.</td><td>2023 map</td><td>Sixfold, Yards</td></tr>
+      <tr><th>County wildfire plans</th><td>County Community Wildfire Protection Plans (Teller).</td><td>Plan dates</td><td>Sixfold, Yards</td></tr>
+      <tr><th>Funding and water lines</th><td>County and state cost-share programmes and water-provider restriction pages, kept in the funding sheet.</td><td>Hand-updated</td><td>Sixfold, Yards</td></tr>
+      <tr><th>Lawn plan</th><td>CSU Extension seed rates, Fact Sheet 7.202 (fertiliser, mowing), PlantTalk timing.</td><td>Guidance</td><td>Sixfold, Yards</td></tr>
+      <tr><th>Frost dates, rain</th><td>NOAA 1991–2020 climate normals; last 30 days of rain from NOAA NCEI daily summaries, fetched live.</td><td>Rain: within 6 hours</td><td>Sixfold, Yards</td></tr>
+      <tr><th>Soil temperature</th><td>CSU CoAgMet weather stations with 5 cm soil sensors (north metro only).</td><td>Live, 24-hour average</td><td>Sixfold, Yards</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Roof and storm</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Data</th><th>Source</th><th>How current</th><th>Installs</th></tr></thead>
+    <tbody>
+      <tr><th>Hail per door</th><td>NOAA MRMS radar hail size (MESH), daily files from Iowa State's archive, from April 2020. A radar estimate; it under-reads big hail.</td><td>New storm days added automatically</td><td>Roofing</td></tr>
+      <tr><th>Hail on the ground</th><td>NOAA Storm Events database plus NWS spotter reports; the server adds the last 14 days of spotter reports.</td><td>Weekly refresh; spotters within 6 h</td><td>Roofing</td></tr>
+      <tr><th>Hail timing</th><td>MRMS 2-minute radar files, sampled every 20 minutes, 11 am–11 pm.</td><td>Weekly refresh</td><td>Roofing</td></tr>
+      <tr><th>Wind</th><td>NWS Local Storm Reports via Iowa Environmental Mesonet: measured and estimated gusts, wind damage, thunderstorm and downslope wind.</td><td>Each rebuild</td><td>Roofing</td></tr>
+      <tr><th>Roof size and pitch</th><td>USGS 3DEP laser scans; Teller from USGS tiles surveyed 2023–24.</td><td>Scan years</td><td>Roofing, Solar</td></tr>
+      <tr><th>Year built</th><td>County assessors (El Paso, Douglas and others); Denver open data.</td><td>Each rebuild</td><td>Roofing, Solar, Pest, Security</td></tr>
+      <tr><th>Roof material</th><td>A model trained on Douglas County's recorded roof materials, run on aerial crops; county records where Adams or Boulder record it. Crew can correct it.</td><td>Each rebuild</td><td>Roofing, Solar</td></tr>
+      <tr><th>Roof photos and outline</th><td>State of Colorado DRAPP 2020 aerial (3-inch), USDA NAIP 2023 close-up, Microsoft Global ML Building Footprints.</td><td>2020 and 2023 photos</td><td>Roofing, Solar</td></tr>
+      <tr><th>Permits</th><td>Pikes Peak Regional Building Department (public map), Douglas County open data, Thornton (city report), Parker (monthly reports), Centennial (public permit search). Castle Rock, Castle Pines and Arvada aren't in yet.</td><td>Monthly refresh, 1st of the month</td><td>Roofing, Solar</td></tr>
+      <tr><th>Commercial owners</th><td>County parcels plus the state business register (data.colorado.gov "Business Entities in Colorado"). No people-search sites.</td><td>Built 5 Oct 2026</td><td>Roofing (admins)</td></tr>
+      <tr><th>Weather alerts</th><td>National Weather Service active alerts (api.weather.gov) at each town's centre.</td><td>Every 5 minutes</td><td>All</td></tr>
+      <tr><th>Live radar</th><td>NOAA NEXRAD tiles via Iowa Environmental Mesonet.</td><td>Every 5 minutes</td><td>All (tile in editions)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Solar, pest and security</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Data</th><th>Source</th><th>How current</th><th>Installs</th></tr></thead>
+    <tbody>
+      <tr><th>Sun-facing roof, shade</th><td>USGS 3DEP laser-scan elevations, roof planes fitted per home; shade from tree heights within 20 m on the sunny side.</td><td>Scan years</td><td>Solar</td></tr>
+      <tr><th>Yearly output</th><td>NREL PVWatts (National Laboratory of the Rockies) by tilt and direction.</td><td>Fetched Oct 2026</td><td>Solar</td></tr>
+      <tr><th>Power company</th><td>Colorado OIT Electric Utility Service Territories (updated 24 Aug 2026); utility figures from EIA-861, 2025.</td><td>2025–26</td><td>Solar</td></tr>
+      <tr><th>Xcel rates</th><td>Colorado PUC and Xcel Energy residential rate pages.</td><td>Read 12 Oct 2026</td><td>Solar</td></tr>
+      <tr><th>Open space</th><td>Colorado COMaP protected lands (17 Jul 2026), unnamed private shapes dropped.</td><td>2026</td><td>Pest, Security</td></tr>
+      <tr><th>Creeks and ponds</th><td>USGS National Hydrography Dataset, named features only.</td><td>Current</td><td>Pest</td></tr>
+      <tr><th>Last sale month</th><td>El Paso County assessor sale date (only parcel and sale date are read).</td><td>Each rebuild</td><td>Pest, Security</td></tr>
+      <tr><th>Neighbours on service</th><td>The company's own customers, bookings and door notes in that install.</td><td>Live</td><td>Pest, Security</td></tr>
+      <tr><th>Pest season</th><td>CSU Extension, Colorado Public Radio, Illinois Extension.</td><td>Re-check each spring</td><td>Pest</td></tr>
+      <tr><th>Crime near the door, crime map</th><td>Colorado Springs Police open data (daily, hundred-block points); Denver and Boulder police open data for the map.</td><td>Weekly refresh; map cached 12 h</td><td>Security</td></tr>
+      <tr><th>Town crime figures</th><td>FBI Crime Data Explorer, the last 12 reported months per agency.</td><td>Refreshed if over 28 days old</td><td>Security</td></tr>
+      <tr><th>Owner lives elsewhere</th><td>County mailing address on the parcel record.</td><td>Each rebuild</td><td>Security</td></tr>
+      <tr><th>Skip-trace phones</th><td>BatchData (paid), checked against the Do Not Call list.</td><td>On request</td><td>Sixfold (admins)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>What refreshes by itself</h3>
+  <ul class="plain">
+    <li><b>Every 5 minutes</b> (server): weather alerts and phone pushes; JobNimbus sync where connected.</li>
+    <li><b>Daily, 7:15 am</b> (server): new hail storm days for Roofing.</li>
+    <li><b>Weekly, Mondays</b> ("Traverse weekly refresh" on your PC): crime data, FBI figures when stale, ground hail reports and hail timing. Uploads only changed files.</li>
+    <li><b>Monthly, the 1st</b> ("Traverse permit refresh" on your PC): permits from PPRBD, Douglas and Centennial. Stops itself if a source drops by more than 5%.</li>
+    <li><b>Everything else</b> changes when the towns are rebuilt and uploaded.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 08 -->
+<section id="off">
+  <span class="sn">08</span>
+  <h2>Built but off, and not built</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Item</th><th>State</th><th>What turns it on</th></tr></thead>
+    <tbody>
+      <tr><th>In-app texting</th><td>Code live on all six, switched off. Texts only numbers given at the door, quiet hours 8 am–9 pm, STOP and START handled.</td><td>A Twilio account and number, carrier registration for business texting (10DLC, days to weeks), keys, and the switch in that install's settings.</td></tr>
+      <tr><th>Billing</th><td>Code live on all six, switched off. Nothing locks anyone out.</td><td>A Stripe account with prices and the founding coupon, keys, the switch.</td></tr>
+      <tr><th>Signing contracts at the door (#2)</th><td>Not built.</td><td>Your go. Needs each client's own contract wording.</td></tr>
+      <tr><th>Missed-you door hanger with a QR code (#5)</th><td>Not built.</td><td>Your go.</td></tr>
+      <tr><th>Review request after a won job (#6)</th><td>Not built.</td><td>Your go.</td></tr>
+      <tr><th>Dallas–Fort Worth</th><td>McKinney, Plano and Frisco built (homes, values, year built, hail, wind, FEMA, census). No roof scans, photos, lawn, permits or crime there yet. Tabled.</td><td>Your go, a hosting decision and a Texas client.</td></tr>
+      <tr><th>AccuLynx</th><td>Not built.</td><td>AccuLynx's reply to the access request.</td></tr>
+      <tr><th>Roof material for the newer Roofing towns</th><td>Missing in Thornton, Centennial, Erie, Commerce City, Denver.</td><td>Year-built data from those counties.</td></tr>
+      <tr><th>Terms of Use</th><td>Draft for the attorney. Not shown in the app.</td><td>Attorney review.</td></tr>
+      <tr><th>Lawn colour (greenness)</th><td>Tabled to next growing season.</td><td>Spring 2027.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ 09 -->
+<section id="limits">
+  <span class="sn">09</span>
+  <h2>Limits to know</h2>
+  <p class="intro">Things a client could ask about, and the true answer.</p>
+  <ul class="plain">
+    <li><b>The name on the card is the owner of record,</b> not necessarily who answers the door. Trusts, one spouse on title and recent sales all differ.</li>
+    <li><b>Radar hail is an estimate</b> and reads big hail low. Ground reports are sparse. A home with no hail day listed may still have been hit.</li>
+    <li><b>Lawn size comes from a 2023 photo.</b> It reads open lots about 8–9% high and lots under trees 20–45% low. Dormant brown lawns and homes built after 2023 are missed.</li>
+    <li><b>Crime figures stop at Colorado Springs city limits.</b> Castle Rock police and the El Paso Sheriff publish no downloadable data, so getting it would need a records request.</li>
+    <li><b>Permits are partial</b> in several towns. The card never says "no permit".</li>
+    <li><b>Laser scans have years.</b> Homes built after the scan have no roof size or tree reading.</li>
+    <li><b>Soil temperature only reaches the north metro;</b> the south shows "no station near".</li>
+    <li><b>Some services are free with no guarantee:</b> the 2023 aerials (Microsoft Planetary Computer), radar tiles (Iowa State) and the map libraries. If one is down, that part of the screen falls back or says so.</li>
+    <li><b>Phone numbers are never looked up</b> unless an admin runs a skip trace (Sixfold only), and texting only reaches numbers given at the door.</li>
+  </ul>
+  <p class="toplink"><a href="#shape">Back to the top</a></p>
+</section>
+</main>
+</div>
