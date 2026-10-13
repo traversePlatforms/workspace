@@ -27,6 +27,13 @@
 > **Still open:** contractor loads at Tincup (call Jeffco); trailer size (large → $2,900, small → $2,650). Trucks are gas, not
 > diesel (Matthew, 13 Oct): $198 of fuel stands.
 >
+> **Disposal options checked 13 Oct:** Pine Junction Transfer Station (66615 US-285, ~5½ mi) takes dumpster and household trash,
+> **not logs** (Matthew read their site); the Bailey slash site takes no contractors. **Tincup Ridge (33 mi, $24 per 6 cu yd) stays
+> the plan**, contractor loads still to confirm by phone. Fallback if Tincup says no or the date slips past 25 Oct: Foothills
+> Landfill, 8900 Hwy 93, Golden (43½ mi, Mon-Fri 6:30-5, Sat 7-1), trailers $38.50/cu yd, 5-yd minimum, plus fuel 8-15%, $19.71
+> a load and $1.16/yd (2026 gate sheet): about $500 a large load, which would add roughly $1,500 to the quote; whether it takes logs is
+> not stated (303-371-5115).
+>
 > **40% margin after overhead (Brandon's requirement, 13 Oct).** Margin = profit ÷ price. Costs on the engine's stand-in rates
 > (crew $28/hr, overhead $20/man-hour, ArboStar; Sixfold's real pay is NOT on file): labour 22.6 man-h × $48 = $1,085; dump, chains
 > and gas $389; **total $1,474**. At **$2,900: 49%**; at **$2,650: 44%**; 40% needs at least **$2,457**. The crew can be paid up to
