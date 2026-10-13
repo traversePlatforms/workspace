@@ -1005,7 +1005,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       a source or town shrinks; uploads only changed permit files to Roofing and Solar with backup + md5. Parker/Thornton stay manual (records
       requests). Log: traverse/ops/logs/permit-refresh.log. First run 2026-10-11: PPRBD +152, Douglas +45, Centennial −370 (−1.7%),
       every town within a few doors; 16 files each to Roofing and Solar, md5-checked.
-- [ ] **TR-14 — Review the first walkthrough video and the two computer voices (Matthew).** Made 2026-10-11, all in
+- [ ] **TR-14 — Walkthrough video: ON HOLD (Matthew 2026-10-13: remake it once the features are final; cut 1 is out of date).** Made 2026-10-11, all in
       traverse/videos/roofing-crew-phone/: `roofing-crew-phone.mp4` (TraverseRoofing, a crew member's day, phone, 2:42,
       captions only), `-voice-joe.mp4` (free male voice) and `-voice-kristin.mp4` (free female voice), plus the
       voice-over script `roofing-crew-phone-voiceover.md` if you'd rather record your own. **Decide:** keep the story as
