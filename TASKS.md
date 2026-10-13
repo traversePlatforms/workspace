@@ -1016,7 +1016,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-17 — Try Desktop layout on a tablet (Matthew).** Added 2026-10-11. Once the change list is live: Profile → Layout →
       Desktop on an iPad or other tablet; it should show the computer layout shrunk to fit the screen (the test browser could not
       shrink it the way a real tablet does). Say if it is too small to use or anything is cut off. Tablet puts it back.
-- [ ] **TR-19 — Overnight 2026-10-11/12 work: upload when Matthew says go.** Built and tested, NOT live: security fixes (19b0c70),
+- [x] **TR-19 — Overnight 2026-10-11/12 work: ✅ LIVE (checked 2026-10-13: live rounds.php is byte-identical to the current source, which contains 19b0c70).** Built and tested, NOT live: security fixes (19b0c70),
       speed (7cbbaf7), Spanish sweep (6552394), Yards +Thornton/Erie/Commerce City/Centennial (0cad359). Regression 85/85,
       editions 20/20, change tests all pass. Contract outline for the attorney: traverse/business/client-contract-outline-DRAFT.md.
 - [ ] **TR-20 — More Yards towns, then new towns.** Next nights (lawn + trees, one parcel-heavy job at a time): Colorado Springs x4
