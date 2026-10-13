@@ -32,6 +32,10 @@
 > - **Not claimed:** that any source names Nov/Dec as the best month, or puts a number on how much lower the risk is than October.
 >   That is my reading of the guidance, and the quote doesn't say otherwise.
 >
+> **Trucks (Matthew, 13 Oct): one or two, probably two.** The quote no longer says how many ("From Monument, about 83 miles
+> each way"). Drive labour is unchanged (both people were already priced). Gas for two: $116 (second truck not towing, 15 mpg,
+> **assumed**) to $139 (both 10 mpg). At $2,400 that is 40.8% / 39.8%; the engine gives $2,450 (41%). Price choice open.
+>
 > **Open before it goes to Joe:**
 > 1. **Chipper capacity.** The trunks are about 12–16 in. Most towable rentals take 6–12 in, so this needs a 12 in+ machine, or the
 >    butt logs split down. The $320 is the engine preset, not a quote from a rental yard. A larger machine costs more.
