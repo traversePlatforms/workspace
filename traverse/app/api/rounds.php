@@ -3449,9 +3449,13 @@ if ($action === 'stormdoors') {
         $data = loadRegion($k); if (!$data) continue;
         $roof = $side('roof', $k); $year = $side('year', $k); $mat = $side('material', $k);
         $marks = loadMarks($k); $phones = loadPhones($k); $traces = skipLoad($k); $mfx = loadMatFix($k);
+        /* 2026-10-13 (Fable review): an edition's roof, year and material files are packed (each door's entry as JSON text, since
+           build-editions.cjs 2026-10-10), and $side reads them raw, so every door here had its roof as a string of JSON, no year built
+           and no county material. Unpacked per listed door, as bestTownPoints does, never the whole file. */
+        $un = fn($v) => is_string($v) ? json_decode($v, true) : $v;
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
             if (!isset($hit[$d['id']])) continue;
-            $h = $hit[$d['id']]; $y = $year[$d['id']] ?? null; $m = $mat[$d['id']] ?? null;
+            $h = $hit[$d['id']]; $y = $un($year[$d['id']] ?? null); $m = $un($mat[$d['id']] ?? null);
             if (isset($mfx[$d['id']])) $m = ['m' => $mfx[$d['id']]['m'], 'p' => 1, 'src' => 'crew'];   /* seen at the house: beats the record and the photo */
             $cls = (string) ($m['m'] ?? matClass((string) ($y['mat'] ?? '')));
             $src = $m ? (string) ($m['src'] ?? 'imagery') : (($y['mat'] ?? '') !== '' ? 'county' : '');
@@ -3461,7 +3465,7 @@ if ($action === 'stormdoors') {
             if ($p && !empty($p['phone']) && ownerAge($d, $p) !== 'prev' && (($p['source'] ?? '') === 'door' || ($p['dnc'] ?? '') === 'clear')) $ph = ['n' => (string) $p['phone'], 'src' => (string) $p['source']];
             elseif (isset($traces[$d['id']])) { foreach ((skipPublic($traces[$d['id']])['phones'] ?? []) as $tp) if (!empty($tp['clear'])) { $ph = ['n' => (string) $tp['n'], 'src' => 'trace']; break; } }
             $list[] = ['region' => $k, 'town' => $r['label'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'owner' => (string) ($d['owner'] ?? ''),
-                       'hail' => $h['hail'] ?? null, 'wind' => $h['wind'] ?? null, 'roof' => $roof[$d['id']] ?? null, 'yb' => $y['yb'] ?? null, 'rm' => $y['rm'] ?? null,
+                       'hail' => $h['hail'] ?? null, 'wind' => $h['wind'] ?? null, 'roof' => $un($roof[$d['id']] ?? null), 'yb' => $y['yb'] ?? null, 'rm' => $y['rm'] ?? null,
                        'mat' => $cls, 'matSrc' => $src, 'matP' => $m['p'] ?? null, 'mark' => $mk ? $mk['outcome'] : null, 'mq' => ($mk && !empty($mk['qs'])) ? 1 : 0, 'phone' => $ph, 'traced' => isset($traces[$d['id']])];
         }
     }
