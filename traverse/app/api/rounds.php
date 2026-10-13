@@ -1833,7 +1833,7 @@ if ($action === 'calfeed') {
     $stamp = gmdate('Ymd\THis\Z');
     foreach (calEventsFor($who, $from, $to) as $e) {
         $d = str_replace('-', '', (string) $e['date']); $t = (string) ($e['time'] ?? '');
-        $place = trim((string) ($e['title'] ?? '') . (($e['town'] ?? '') !== '' ? ', ' . $e['town'] : '') . ', CO', ', ');
+        $place = trim((string) ($e['title'] ?? '') . (($e['town'] ?? '') !== '' ? ', ' . $e['town'] : '') . ', ' . market()['state'], ', ');   /* the market's state (2026-10-13, Fable review: it said CO in every market) */
         if ($e['kind'] === 'walk') { $sum = $visit . ': ' . $e['title']; $loc = $place; $uid = 'walk-' . $e['region'] . '-' . $e['id']; $len = 'PT1H'; }
         elseif ($e['kind'] === 'revisit') { $sum = 'Come back: ' . $e['title']; $loc = $place; $uid = 'back-' . $e['region'] . '-' . $e['id']; $len = 'PT30M'; }
         elseif ($e['kind'] === 'lead') { $sum = 'Follow up: ' . $e['title'] . (($e['need'] ?? '') !== '' ? ' (' . $e['need'] . ')' : ''); $loc = (string) ($e['town'] ?? ''); $uid = 'lead-' . $e['lead']; $len = 'PT30M'; }
@@ -4837,7 +4837,7 @@ if ($action === 'walkics') {
         $L[] = 'DTEND;VALUE=DATE:' . (clone $st)->modify('+1 day')->format('Ymd');
     }
     $L[] = 'SUMMARY:' . icsEsc($visit . ': ' . $door['address'] . ($w['time'] === '' ? ' (time to agree)' : ''));
-    $L[] = 'LOCATION:' . icsEsc($door['address'] . ', ' . $town . ', CO');
+    $L[] = 'LOCATION:' . icsEsc($door['address'] . ', ' . $town . ', ' . market()['state']);   /* the market's state (2026-10-13, Fable review) */
     if (isset($door['lat'], $door['lon'])) $L[] = 'GEO:' . $door['lat'] . ';' . $door['lon'];
     $L[] = 'DESCRIPTION:' . icsEsc($desc);
     /* the day before; and an hour before when there is a time (an all-day walk gets 9 am the day before) */
