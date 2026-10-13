@@ -60,7 +60,7 @@ const EDITIONS = {
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
         townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the five Front Range hail towns measured (Denver after the packed side files and the lighter scorer)
-        features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true },
+        features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true, billing: true },   // billing on in Roofing first, Stripe TEST mode (Matthew 2026-10-13)
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
     }
