@@ -1062,8 +1062,9 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       private folders, every log, leads, customers, digests, Sixfold's server backups, app-written settings; ~7 MB) to
       `C:\Users\Surge Inc\TraverseBackups\` (outside the repo — sign-in data; never commit or open), Windows task "Traverse
       server backup", 2:45 AM, newest 30 kept, result in backup.log. Script: traverse/ops/pull-server-backup.sh.
-      **Still open: an OFF-MACHINE copy** of this computer (repo + TraverseBackups) — OneDrive is gone; Matthew to set up a
-      drive (Google Drive personal or USB), then the 6 PM mirror is re-pointed.
+      ✅ **Off-machine copy DONE 2026-10-13:** Google Drive (m.sharpe@traverseplatforms.com), task "Backup claude test 2 to Google Drive"
+      6 PM daily: locked archive (git bundle, memory, TraverseBackups, door-territory working data, surge/clients), newest 7, plus a weekly
+      photo/video mirror. Old OneDrive task disabled; its 130 GB local copy awaits Matthew's OK to delete.
 - [x] **TR-9 — Map tiles: not needed (checked 2026-10-10).** The street map is ALREADY self-hosted: the app draws
       /maps/colorado.pmtiles (146 MB, Protomaps, on traverseplatforms.com since 2026-10-09) on the phone. OpenStreetMap's
       tile server is only the fallback if that file fails to load. Colorado only: a new state needs a bigger file (free
