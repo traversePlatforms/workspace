@@ -101,7 +101,9 @@ function company(): array {
             'brand' => '',
             /* a market outside Colorado (2026-10-11, editions/clients.cjs market): state, clock, county names, map, photo year, parcel
                service. null = Colorado, as every install was before. Read through market(), never directly. */
-            'market' => null];
+            'market' => null,
+            /* one phone and one computer per sign-in at a time (2026-10-12); false lets a code be used anywhere */
+            'oneDevice' => true];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -118,6 +120,7 @@ function company(): array {
     $c['townGroups'] = array_values(array_filter(array_map(fn($g) => is_string($g) ? trim($g) : '', (array) $c['townGroups']), fn($g) => (bool) preg_match('/^[a-z0-9-]{1,40}$/D', $g)));
     $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
     if (!is_array($c['market'])) $c['market'] = null;
+    $c['oneDevice'] = $c['oneDevice'] !== false;
     return $c;
 }
 /** the market this install sells in (2026-10-11): Colorado unless company.json names another. Every value checked, since the
@@ -327,6 +330,7 @@ function sessEdit(callable $fn): void {
     $a = $fn($a);
     $now = time();
     foreach ($a['s'] as $t => $l) if ((int) ($l[1] ?? 0) < $now) unset($a['s'][$t]);   // expired sign-ins drop off
+    foreach ((array) ($a['x'] ?? []) as $t => $x) if ((int) ($x[0] ?? 0) < $now - 60 * 86400) unset($a['x'][$t]);   // ended-elsewhere marks, kept as long as a sign-in can last
     ftruncate($fh, 0); rewind($fh);
     @fwrite($fh, json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     @flock($fh, LOCK_UN); @fclose($fh);
@@ -351,6 +355,16 @@ function deviceName(): string {
     if (stripos($ua, 'Windows') !== false) return 'Windows computer';
     return 'Computer';
 }
+/* one device at a time (2026-10-12, Matthew: "one device login ... that way people cant share and if they do it logs the other account out").
+ * Each person may be signed in on ONE phone or tablet and ONE computer at a time; signing in on a second phone ends the first,
+ * which is told why the next time it asks for anything. The page says which kind it is (an iPad on Safari calls itself a Mac);
+ * without that, the browser's description decides. A company can turn it off: "oneDevice": false in company.json. */
+function devClass(?string $hint = null): string {
+    if ($hint === 'm' || $hint === 'c') return $hint;
+    return preg_match('/iPhone|iPad|Android/i', (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')) ? 'm' : 'c';
+}
+function devClassOf(array $line): string { return (string) ($line[4] ?? (preg_match('/iPhone|iPad|Android/', (string) ($line[3] ?? '')) ? 'm' : 'c')); }
+function oneDeviceOn(): bool { return company()['oneDevice']; }
 $basePeople = $people;
 $acct = loadAccounts();
 foreach ($basePeople as $c => $who) {
@@ -1652,8 +1666,18 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
         'samesite' => 'Lax', 'secure' => $secure,
     ]);
-    $line = [$payload['c'], $payload['exp'], time(), deviceName()];
-    sessEdit(function ($a) use ($tok, $line) { $a['s'][sessionTag($tok)] = $line; return $a; });
+    $cls = devClass(isset($GLOBALS['body']['dev']) ? (string) $GLOBALS['body']['dev'] : null);
+    $line = [$payload['c'], $payload['exp'], time(), deviceName(), $cls];
+    $ended = [];
+    sessEdit(function ($a) use ($tok, $line, $cls, &$ended) {
+        $mine = sessionTag($tok);
+        if (oneDeviceOn()) foreach ($a['s'] as $t => $l) {
+            if ($t === $mine || ($l[0] ?? '') !== $line[0] || devClassOf($l) !== $cls) continue;
+            unset($a['s'][$t]); $a['x'][$t] = [time(), $line[3]]; $ended[] = (string) ($l[3] ?? '');
+        }
+        $a['s'][$mine] = $line; return $a;
+    });
+    if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
     return ['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
@@ -1835,9 +1859,11 @@ $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
-    $lineNow = sessLoad()['s'][$tagNow] ?? null;
+    $sessNow = sessLoad();
+    if (isset($sessNow['x'][$tagNow])) out(['ok' => false, 'why' => 'elsewhere', 'error' => 'Signed out: your code was used to sign in on another ' . (devClass() === 'm' ? 'phone or tablet' : 'computer') . '. Each code works on one phone and one computer at a time. If that was not you, tell your manager.'], 401);
+    $lineNow = $sessNow['s'][$tagNow] ?? null;
     if (!is_array($lineNow) || (int) ($lineNow[2] ?? 0) < time() - SEEN_EVERY) {
-        $fresh = [(string) ($session['c'] ?? ''), (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName()];
+        $fresh = [(string) ($session['c'] ?? ''), (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName(), is_array($lineNow) ? devClassOf($lineNow) : devClass()];
         sessEdit(function ($a) use ($tagNow, $fresh) { $a['s'][$tagNow] = $fresh; return $a; });
     }
 }
@@ -4212,6 +4238,55 @@ if ($action === 'exportlog') {
     $rows = [];   /* readLines() keeps rows with an id; these have none */
     foreach ((array) @file(dirname(accountsFile()) . '/rounds-exports.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $ln) { $r = json_decode((string) $ln, true); if (is_array($r) && isset($r['what'], $r['at'])) $rows[] = $r; }
     out(['ok' => true, 'rows' => array_reverse(array_slice($rows, -100))]);
+}
+/* flags (2026-10-12, Matthew: "flag impossible locations, so if one person filling out door info is in aurora and the other in monument
+   it gets flagged"). Worked out from WHERE THE MARKED DOORS ARE, never from anyone's phone: the app does not track location and this
+   does not need it. Two marks by one person in different towns, further apart than anyone could drive in the time between them,
+   suggest two people on one code. Town centres stand in for the doors, less FLAG_SLACK (10) miles for the size of a town, so a long
+   street at each edge never trips it. Admins are left out (an office marks doors from a desk). Also: a person whose code moved
+   between phones three or more times in a day (one device at a time logs each move). It flags; it never blocks. */
+const FLAG_DAYS = 14, FLAG_SLACK = 10, FLAG_MIN_MILES = 15, FLAG_MPH = 70;
+if ($action === 'flags') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $since = time() - FLAG_DAYS * 86400;
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $cent = []; $label = [];
+    foreach (($idx['regions'] ?? []) as $r) if (isset($r['key'], $r['c'][0], $r['c'][1])) { $cent[$r['key']] = $r['c']; $label[$r['key']] = (string) ($r['label'] ?? $r['key']); }
+    $roleOf = []; foreach ($people as $who) if (is_array($who)) $roleOf[(string) ($who[0] ?? '')] = (string) ($who[1] ?? 'crew');
+    $by = [];
+    foreach ($cent as $key => $c) {
+        $f = DATA_DIR . '/marks-' . $key . '.log'; if (!is_readable($f)) continue;
+        foreach ((array) @file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $ln) {
+            $m = json_decode((string) $ln, true);
+            if (!is_array($m) || (int) ($m['at'] ?? 0) < $since || empty($m['by'])) continue;
+            $who = (string) $m['by']; $rl = $roleOf[$who] ?? 'crew';
+            if ($rl === 'admin' || $rl === 'super') continue;
+            $by[$who][] = [(int) $m['at'], $key];
+        }
+    }
+    $flags = [];
+    foreach ($by as $who => $rows) {
+        usort($rows, fn($x, $y) => $x[0] <=> $y[0]);
+        for ($i = 1; $i < count($rows); $i++) {
+            [$t1, $k1] = $rows[$i - 1]; [$t2, $k2] = $rows[$i];
+            if ($k1 === $k2) continue;
+            $mi = milesBetween((float) $cent[$k1][0], (float) $cent[$k1][1], (float) $cent[$k2][0], (float) $cent[$k2][1]);
+            $far = $mi - FLAG_SLACK; if ($far < FLAG_MIN_MILES) continue;
+            $hrs = max(1 / 60, ($t2 - $t1) / 3600);
+            if ($far / $hrs <= FLAG_MPH) continue;
+            $flags[] = ['kind' => 'far', 'who' => $who, 'a' => $label[$k1], 'b' => $label[$k2], 'at1' => $t1, 'at' => $t2, 'miles' => (int) round($mi), 'min' => (int) round(($t2 - $t1) / 60)];
+        }
+    }
+    $moves = [];
+    foreach ((array) @file(dirname(accountsFile()) . '/rounds-accounts.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $ln) {
+        $r = json_decode((string) $ln, true);
+        if (!is_array($r) || ($r['what'] ?? '') !== 'elsewhere' || (int) ($r['at'] ?? 0) < $since) continue;
+        $day = (new DateTime('@' . (int) $r['at']))->setTimezone(new DateTimeZone(appTz()))->format('Y-m-d');
+        $k = (string) ($r['who'] ?? '') . '|' . $day; $moves[$k] = [($moves[$k][0] ?? 0) + 1, (int) $r['at']];
+    }
+    foreach ($moves as $k => [$n, $at]) if ($n >= 3) $flags[] = ['kind' => 'moves', 'who' => explode('|', $k)[0], 'n' => $n, 'at' => $at];
+    usort($flags, fn($x, $y) => $y['at'] <=> $x['at']);
+    out(['ok' => true, 'days' => FLAG_DAYS, 'flags' => array_slice($flags, 0, 200)]);
 }
 function acctAdmins(array $rows): int { $n = 0; foreach ($rows as $r) if (!$r['off'] && $r['role'] === 'admin') $n++; return $n; }
 /** a code anyone could guess (2026-10-11, admins pick codes now): one digit six times, or a run up or down like 123456 */

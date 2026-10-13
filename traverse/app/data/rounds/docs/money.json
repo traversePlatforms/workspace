@@ -197,7 +197,8 @@
         "erie": "Erie: rules changed through 2026: ask",
         "south-denver": "Denver Water: 2 assigned days a week in season",
         "englewood": "Englewood Utilities: ask",
-        "walden": "Wells or a water district: ask which"
+        "walden": "Wells or a water district: ask which",
+        "aurora": "Aurora Water: ask"
       },
       "wellSmall": "Under 35 acres: a well may not water a lawn",
       "wellBig": "35 acres or more: a well may water up to 1 acre"

@@ -94,6 +94,7 @@ including the refresh at the top of the directory.
   - Erie: erieco.gov notices disagree on the current stage (April Stage 2 voluntary notice; a later rescinded emergency). Left as "ask" by the research standard.
   - Rejected: a search summary gave "Erie" a Level 2 schedule that was the Town of Silt’s bulletin; a commercial aggregator (lawnbyseason.com) for South Adams days.
 - **Water, South Denver and Englewood (added 2026-10-12):** South Denver reuses the Denver Water facts above (denverwater.org, Stage 1 from 25 March 2026, read 2026-10-12). Englewood has its own utility (Englewood Utilities), not researched yet, so its line says "ask" and it has no sheet.
+- **Water, Aurora (added 2026-10-12):** card line "Aurora Water: ask" only. Aurora Water's own watering rules were not read; no sheet until they are, so the card states nothing it has not checked.
 
 ### Corrected while building
 - **The Douglas County rule.** The project rule that Sixfold must never name the cost-share until it is on the approved list rested on reading "preferably from the list" as a requirement. The crew may now mention it, with the "don't say" lines.

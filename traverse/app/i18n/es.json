@@ -2381,7 +2381,6 @@
  "Phone or computer": "Teléfono o computadora",
  "The last 50, as recorded": "Los últimos 50, tal como se registraron",
  "Nothing recorded yet. It fills as people use the app.": "Nada registrado todavía. Se llena a medida que la gente usa la app.",
- "The app records which screens and buttons you use, so the company can see what helps. Never what you type.": "La app registra qué pantallas y botones usas, para que la empresa vea qué ayuda. Nunca lo que escribes.",
  "+ Add another number": "+ Agregar otro número",
  "Another number": "Otro número",
  "Whose number": "De quién es el número",
@@ -2393,5 +2392,11 @@
  "Rental or second home: the owner lives elsewhere": "Alquiler o segunda casa: el dueño vive en otro lugar",
  "Owned by a business, trust or organisation": "De una empresa, fideicomiso u organización",
  "Hail measured on the ground nearby (NOAA reports)": "Granizo medido en el suelo cerca (reportes de NOAA)",
- "check their rules before quoting": "revisa sus reglas antes de cotizar"
+ "check their rules before quoting": "revisa sus reglas antes de cotizar",
+ "The app records which screens and buttons you use, so the company can see what helps. Never what you type. Your code works on one phone and one computer at a time; signing in on another phone signs this one out.": "La app registra qué pantallas y botones usas, para que la empresa vea qué ayuda. Nunca lo que escribes. Tu código funciona en un teléfono y una computadora a la vez; si inicias sesión en otro teléfono, este se cierra.",
+ "Flags: one code in two places": "Alertas: un código en dos lugares",
+ "Hide flags": "Ocultar alertas",
+ "From where the doors people marked are, not from anyone’s phone. Two marks further apart than anyone could drive in the time between them suggest two people on one code. Someone marking doors for a crew member from the office can cause one, so ask before acting.": "Según dónde están las puertas que se marcaron, no según el teléfono de nadie. Dos marcas más lejos de lo que alguien podría manejar en ese tiempo sugieren dos personas con un código. Alguien que marca puertas desde la oficina por un miembro del equipo puede causar una, así que pregunta antes de actuar.",
+ "The flags need signal.": "Las alertas necesitan señal.",
+ "Could not load the flags.": "No se pudieron cargar las alertas."
 }
