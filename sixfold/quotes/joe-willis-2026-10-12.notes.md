@@ -24,7 +24,14 @@
 > fell and cut 8:30-10:45; load both trailers; both tip at Golden about 12:30; back on site about 1:55; load 3 leaves by 2:20 and
 > tips about 3:20; the other truck clears up and heads home. A slow morning pushes load 3 past the cut-off.
 >
-> **Still open:** contractor loads at Tincup (call Jeffco); trailer size (large → $2,900, small → $2,650); truck mpg/fuel type.
+> **Still open:** contractor loads at Tincup (call Jeffco); trailer size (large → $2,900, small → $2,650). Trucks are gas, not
+> diesel (Matthew, 13 Oct): $198 of fuel stands.
+>
+> **40% margin after overhead (Brandon's requirement, 13 Oct).** Margin = profit ÷ price. Costs on the engine's stand-in rates
+> (crew $28/hr, overhead $20/man-hour, ArboStar; Sixfold's real pay is NOT on file): labour 22.6 man-h × $48 = $1,085; dump, chains
+> and gas $389; **total $1,474**. At **$2,900: 49%**; at **$2,650: 44%**; 40% needs at least **$2,457**. The crew can be paid up to
+> about **$40/hr at $2,900** (or **$33/hr at $2,650**) before the margin falls under 40%, with overhead kept at $20/man-hour.
+> **Asked of Brandon:** the real hourly pay for the day and his overhead figure, to confirm.
 
 **Status: DRAFT. Not sent. No agreement built.** Quote: [joe-willis-tree-removal.html](joe-willis-tree-removal.html) →
 `Sixfold-Quote-Tree-Removal-Joe-Willis.pdf` (1 page). Rebuild: `node quotes/build.mjs && node tools/html-to-pdf.mjs Joe-Willis`.
