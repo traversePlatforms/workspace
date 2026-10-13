@@ -4189,7 +4189,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function keepLeft() {
     if (!S.area || !S.doors || !S.regions) return;
     var r = S.regions.filter(function (x) { return x.key === S.region; })[0], a = r && r.areas.filter(function (x) { return x.name === S.area; })[0]; if (!a) return;
-    var todo = S.doors.filter(function (d) { return !d.mark || backOn(d); }).length, again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss' && !backOn(d); }).length;
+    var todo = S.doors.filter(toKnock).length, again = S.doors.filter(function (d) { return !d.cust && d.mark && d.mark.outcome === 'miss' && !backOn(d); }).length;
     a.noanswer = again; a.done = Math.max(0, a.total - todo - again);
   }
   function areaBack() {
@@ -5302,7 +5302,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var key = S.region + '|' + S.area, list = q('div', 'dk-list'), card = q('div', 'dk-card');
     card.setAttribute('aria-label', 'Door card');
     /* the list's header: the town, the neighbourhood and what is left, and the way back (2026-10-09) */
-    var nLeft = S.doors.filter(function (d) { return !d.mark || backOn(d); }).length;
+    var nLeft = S.doors.filter(toKnock).length;
     var lh = q('div', 'dk-head'), lt = q('div', 'dkh-t');
     lt.appendChild(q('b', null, townLabel())); lt.appendChild(q('small', null, S.area + ' \u00b7 ' + nLeft + (nLeft === 1 ? ' door' : ' doors') + ' to knock' + hoodAway()));
     lh.appendChild(lt);
@@ -8717,6 +8717,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* back on the list (2026-10-02): a Not-now whose date has come, or a no-answer that has
      rested (the server sends its come-back day as mark.retry) */
+  /* a door to knock: never marked, or back on the list (a Not now on its date, a no-answer after its rest). An active customer is
+     never one, however the door is marked (2026-10-13, Matthew: Kara's house was still on the list); an ended one comes back. */
+  function toKnock(d) { return !d.cust && (!d.mark || backOn(d)); }
   function backOn(d) {
     var m = d.mark, t = todayISO();
     return !!m && ((m.outcome === 'later' && !!m.revisit && m.revisit <= t) || (m.outcome === 'miss' && !!m.retry && m.retry <= t));
@@ -10934,10 +10937,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var today = todayISO();
     /* 2026-10-02: doors back on the list (a Not-now on its date, a no-answer after its rest)
        rejoin the to-knock list in street order. Opened from "Doors to come back to", they go first. */
-    var todo = S.doors.filter(function (d) { return !d.mark || backOn(d); });
+    var todo = S.doors.filter(toKnock);
     if (S.backFirst) todo.sort(function (a, b) { return (backOn(b) ? 1 : 0) - (backOn(a) ? 1 : 0); });
-    var again = S.doors.filter(function (d) { return d.mark && d.mark.outcome === 'miss' && !backOn(d); });
-    var done = S.doors.filter(function (d) { return d.mark && d.mark.outcome !== 'miss' && !backOn(d); });
+    var again = S.doors.filter(function (d) { return !d.cust && d.mark && d.mark.outcome === 'miss' && !backOn(d); });
+    var done = S.doors.filter(function (d) { return d.cust || (d.mark && d.mark.outcome !== 'miss' && !backOn(d)); });   /* customers sit with the done doors, tagged (2026-10-13) */
 
     /* the bar is kept, not rebuilt, while on the same neighbourhood: a mark redraws
        the page twice (at once, then when the server answers), and a rebuilt bar
@@ -11118,9 +11121,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var fb2 = fireBadge(d); if (fb2) lhs.appendChild(fb2);
         var lc2 = lawnChip(d, true); if (lc2) { if (fb2) lhs.appendChild(document.createTextNode(' ')); lhs.appendChild(lc2); }
         if (d.cust) { lhs.appendChild(document.createTextNode(' ')); lhs.appendChild(q('span', 'tag custtag', custTagText(d.cust))); }
-        if (d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
+        if (d.mark && d.mark.by) lhs.appendChild(q('div', 'by', d.mark.by));
         var rhs = q('div');
         rhs.style.display = 'flex'; rhs.style.alignItems = 'center'; rhs.style.gap = '8px';
+        /* a customer added straight from the paperwork has no knock mark: shown as a customer, nothing to undo (2026-10-13) */
+        if (!d.mark) { rhs.appendChild(q('span', 'tag booked', 'Customer')); row.appendChild(lhs); row.appendChild(rhs); if (S.editLawn === d.id) row.appendChild(lawnChooser(d)); row.appendChild(extras(d)); view.appendChild(row); return; }
         var pending = d.mark.pending || pendingFor(d.id);
         rhs.appendChild(q('span', 'tag ' + (pending ? 'pending' : d.mark.outcome),
           pending ? 'not sent yet' : markName(d.mark) +
@@ -11221,7 +11226,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function planOk() { return S.role === 'admin' || S.role === 'manager'; }
   function planTown() { return S.regions.filter(function (x) { return x.key === (S.plan && S.plan.key); })[0] || null; }
   function planWho(d) { if (d.rep) return d.rep; var r = planTown(), a = r && r.areas.filter(function (x) { return x.name === d._area; })[0]; return a && a.who ? a.who : ''; }
-  function planStatus(d) { return !d.mark ? 'To knock' : backOn(d) ? (d.mark.outcome === 'later' ? 'Due back' : 'Try again') : markName(d.mark); }
+  function planStatus(d) { return d.cust ? 'Customer' : !d.mark ? 'To knock' : backOn(d) ? (d.mark.outcome === 'later' ? 'Due back' : 'Try again') : markName(d.mark); }
   /* the columns: the door, this trade's facts, then where it stands. [key, heading, cell text, sort value, numeric] */
   function planCols() {
     var t = bestTrade(), yr = function (d) { return d.bld && d.bld.yb ? d.bld.yb : null; };

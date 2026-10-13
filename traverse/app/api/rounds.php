@@ -2067,6 +2067,7 @@ if ($action === 'regions') {
         $bn = basename($rf); if (strpos($bn, 'regions-cache-') === 0 || strpos($bn, 'best-') === 0 || isset($rskip[$bn])) continue;
         $rsig[] = $bn . ':' . (string) @filesize($rf) . ':' . (string) @filemtime($rf);
     }
+    $cf0 = custDir() . '/customers.log'; $rsig[] = 'customers:' . (string) @filesize($cf0) . ':' . (string) @filemtime($cf0);   /* customers leave the counts (2026-10-13) */
     $rsig = md5(implode('|', $rsig)); $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
     /* the kept answer is sent as the text it was written as (2026-10-09, speed): decoding 1.7 MB of JSON and encoding it again
        took 160 ms of every request. The file is {"sig":...,"regions":[...]}, written whole or not at all (writeTextAtomic),
@@ -2082,7 +2083,7 @@ if ($action === 'regions') {
         if (!$data) continue;
         $marks = loadMarks($r['key']);
         $aflags = loadAreaFlags($r['key']);
-        $lfix = loadLawnFix($r['key']);
+        $lfix = loadLawnFix($r['key']); $custOpen ??= customerDoors();
         $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
         $aday = $assign ? assignDays($r['key']) : [];
         /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
@@ -2115,7 +2116,7 @@ if ($action === 'regions') {
                 if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
                 $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
                 /* a no-answer still counts as needing a knock (SX-9b rule), even during its 2-day rest */
-                $open = !$m || $m['outcome'] === 'miss' || $isDue;
+                $open = (!$m || $m['outcome'] === 'miss' || $isDue) && !isset($custOpen[$r['key'] . '/' . $d['id']]);   /* an active customer is not a door to knock (2026-10-13) */
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
                 if (!empty($d['cg'])) $cgN++;
                 if ($open && empty($d['cg'])) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; elseif ($lv === 'S') $lawnS++; }
@@ -2723,7 +2724,7 @@ if ($action === 'communities') {
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         if (!$data) continue;
-        $marks = loadMarks($r['key']); $lfix = loadLawnFix($r['key']);
+        $marks = loadMarks($r['key']); $lfix = loadLawnFix($r['key']); $custOpen ??= customerDoors();
         foreach ($data['areas'] as $a) {
             $keys = [];
             if (!empty($a['place']['n'])) $keys[] = [($a['place']['k'] ?? 'sub') === 'metro' ? 'metro' : 'sub', (string) $a['place']['n']];
@@ -2735,7 +2736,7 @@ if ($action === 'communities') {
                 $st['doors']++;
                 $m = freshMark($d, $marks[$d['id']] ?? null);
                 if ($m) { $st['knocked']++; if ($m['outcome'] === 'booked') $st['booked']++; }
-                $open = !$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'));
+                $open = (!$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'))) && !isset($custOpen[$r['key'] . '/' . $d['id']]);   /* customers are not doors to knock (2026-10-13) */
                 if (!$open) continue;
                 $f = (int) ($d['fire'] ?? 0);
                 if ($f === 4 || $f === 5) { $st['hot']++; if ($f === 5) $st['vhot']++; }
@@ -2941,7 +2942,7 @@ if ($action === 'aroundjobs') {
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         if (!$data) continue;
-        $marks = loadMarks($r['key']); $res = loadResults($r['key']);
+        $marks = loadMarks($r['key']); $res = loadResults($r['key']); $custOpen ??= customerDoors();
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
             if (!isset($d['lat'], $d['lon']) || !is_numeric($d['lat'])) continue;
             $m = freshMark($d, $marks[$d['id']] ?? null);
@@ -2950,7 +2951,7 @@ if ($action === 'aroundjobs') {
                 $jobs[] = ['region' => $r['key'], 'town' => $r['label'] ?? $r['key'], 'area' => $a['name'], 'id' => $d['id'],
                            'address' => $d['address'], 'street' => streetName((string) $d['address']), 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'], 'won' => (int) $rs['at']];
             }
-            $open = !$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'));
+            $open = (!$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'))) && !isset($custOpen[$r['key'] . '/' . $d['id']]);   /* customers are not doors to knock (2026-10-13) */
             if ($open) $all[] = ['region' => $r['key'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'],
                                  'fire' => $d['fire'] ?? null, 'lawn' => $d['lawn']['lv'] ?? null];
         }
@@ -3002,7 +3003,7 @@ if ($action === 'alertcalls') {
         if (!isset($towns[$r['key']])) continue;
         $data = loadRegion($r['key']);
         if (!$data) continue;
-        $marks = loadMarks($r['key']); $res = loadResults($r['key']); $quoted = loadQuoted($r['key']); $phones = loadPhones($r['key']);
+        $marks = loadMarks($r['key']); $res = loadResults($r['key']); $custOpen ??= customerDoors(); $quoted = loadQuoted($r['key']); $phones = loadPhones($r['key']);
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
             $m = freshMark($d, $marks[$d['id']] ?? null);
             $rs = $res[$d['id']] ?? null;
