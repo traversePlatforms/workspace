@@ -26,7 +26,7 @@ for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +
 /* the doors, by town/id, wherever they live now */
 const doors = new Map();
 for (const f of readdirSync(ROUNDS).filter((x) => x.endsWith('.json') && !['index.json', 'money.json'].includes(x)))
-  for (const a of JSON.parse(readFileSync(join(ROUNDS, f), 'utf8')).areas) for (const d of a.doors) doors.set(d.id, { ...d, town: f.replace('.json', '') });
+  for (const a of (JSON.parse(readFileSync(join(ROUNDS, f), 'utf8')).areas || [])) for (const d of a.doors) doors.set(d.id, { ...d, town: f.replace('.json', '') });   /* side files (hail-, census-, others-...) have no areas (2026-10-13) */
 
 /* the sample: half the trial could read (>= 1 pixel-equivalent of lawn in pixels >= 30% lawn), half it rejected */
 const masks = JSON.parse(readFileSync(join(HERE, 'lawnmask-cache.json'), 'utf8'));
