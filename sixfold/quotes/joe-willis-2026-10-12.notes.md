@@ -32,6 +32,11 @@
 > and gas $389; **total $1,474**. At **$2,900: 49%**; at **$2,650: 44%**; 40% needs at least **$2,457**. The crew can be paid up to
 > about **$40/hr at $2,900** (or **$33/hr at $2,650**) before the margin falls under 40%, with overhead kept at $20/man-hour.
 > **Asked of Brandon:** the real hourly pay for the day and his overhead figure, to confirm.
+>
+> **What the job normally pays (BLS OEWS, May 2025, median hourly wage; BLS public API, read 13 Oct 2026):** tree trimmers and
+> pruners (37-3013) **$23.82 Colorado Springs**, $28.44 Denver, $24.71 Colorado; landscaping and groundskeeping workers (37-3011)
+> $20.90 / $22.25 / $22.00; landscaping crew supervisors (37-1012) $27.10 / $29.52 / $29.25. Wages only; payroll taxes and workers'
+> comp come on top. At $24/hr crew pay (+$20/man-hour overhead): cost about $1,380, **margin 52% at $2,900, 48% at $2,650**.
 
 **Status: DRAFT. Not sent. No agreement built.** Quote: [joe-willis-tree-removal.html](joe-willis-tree-removal.html) →
 `Sixfold-Quote-Tree-Removal-Joe-Willis.pdf` (1 page). Rebuild: `node quotes/build.mjs && node tools/html-to-pdf.mjs Joe-Willis`.
