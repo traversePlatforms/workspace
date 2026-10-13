@@ -21,8 +21,8 @@ The walk is where the job is won or lost. Walk the lawn with the owner if you ca
 - Beds, new planting or bare ground they want left alone.
 
 ### Tell them
-- The plugs stay on the lawn and break down in a few weeks. That's how it's meant to work.
-- Water the lawn a day or two before we come. Dry, hard ground gives a poor plug.
+Say: "The plugs stay on the lawn and break down in a few weeks. That's how it's meant to work."
+Say: "Water the lawn a day or two before we come. Dry, hard ground gives a poor plug."
 - We request utility locates through Colorado 811 before the job, so the date allows for that.
 
 ### Record it
@@ -61,10 +61,10 @@ Source: sixfold/agreements (fixed price, payment schedule), the door crib sheet,
 You count. The office prices. The Quote builder in the app turns the counts into a price, and only admins use it.
 
 ### Never
-- Never give a price at the door or on the walk. There's no flat aeration rate: every lawn is quoted from its walk.
-- Never fill in a price the office hasn't agreed.
-- Never leave a signed agreement with the price blank.
-- Never quote from an old price sheet or from memory.
+Never: Give a price at the door or on the walk. There's no flat aeration rate: every lawn is quoted from its walk.
+Never: Fill in a price the office hasn't agreed.
+Never: Leave a signed agreement with the price blank.
+Never: Quote from an old price sheet or from memory.
 
 ### What the customer gets
 - A fixed price for the work written on the agreement. Travel isn't billed.

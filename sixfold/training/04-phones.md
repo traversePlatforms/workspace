@@ -8,7 +8,8 @@ not drawn from a Surge original is marked in [README.md](README.md).
 Source: new for Sixfold. Built from the five steps (Surge, rebuilt) and the rule that a price comes from a walk, not a call (remote-signing crib sheet).
 
 ### Pick up like this
-"Sixfold, this is ___." Warm, unhurried, and smiling: they can hear it.
+Say: "Sixfold, this is ___."
+Warm, unhurried, and smiling: they can hear it.
 
 ### Get five things
 - Their name.
@@ -21,9 +22,10 @@ Source: new for Sixfold. Built from the five steps (Surge, rebuilt) and the rule
 The phone close is the same as the door close: a booked walk. "I can have someone out Thursday afternoon or Saturday morning. Which works?" An admin adds them in the Pipeline with + Add a lead (the Pipeline is admin-only, so if that isn't you, pass the five things to the office the same day), and the walk goes on the calendar.
 
 ### What not to do on the phone
-- Don't give a price. "Every property's different, so we walk it and give you a fixed price. The quote's free."
-- Don't promise a date for the work itself until the office has priced it.
-- Don't send an agreement off a phone call. The price comes off a walk.
+Don't: Give a price.
+Say: "Every property's different, so we walk it and give you a fixed price. The quote's free."
+Don't: Promise a date for the work itself until the office has priced it.
+Don't: Send an agreement off a phone call. The price comes off a walk.
 
 ## Where leads come in, and who picks them up
 Source: door-app APP-GUIDE (Leads that belong to someone; Pipeline); DEPLOY-ROUNDS (website form, Meta import, + Add a lead).
@@ -32,7 +34,7 @@ Source: door-app APP-GUIDE (Leads that belong to someone; Pipeline); DEPLOY-ROUN
 - The website form: lands in the app's Pipeline by itself and is emailed to Contact@.
 - Facebook / Instagram ad forms: land in Meta's Leads Center, not in email. An admin downloads them and uses Import leads from Meta in the Pipeline. Someone has to check Leads Center every day, or those people wait.
 - Phone calls, Nextdoor messages and referrals: an admin adds them by hand in the Pipeline with + Add a lead.
-- Doors: a Quote booked at the door goes into the Pipeline by itself.
+- Doors: a Walk booked at the door goes into the Pipeline by itself.
 
 ### Every lead needs an owner
 A new lead belongs to nobody until an admin (in the Pipeline) or a manager (in Leads) gives it an owner. Then it shows in that person's My leads, where they call or text, move its status and set a follow-up date that goes on their calendar.
@@ -47,10 +49,11 @@ Source: new for Sixfold. Federal calling hours (47 CFR 64.1200(c)(1)); the app's
 Someone who just filled in a form is thinking about it now. Call the same day if you can.
 
 ### Say who, for whom and why
-Same as the door: "Hi, this is ___ with Sixfold. You asked about aeration on our website, so I'm calling to set up a time to look at the lawn."
+Same as the door.
+Say: "Hi, this is ___ with Sixfold. You asked about aeration on our website, so I'm calling to set up a time to look at the lawn."
 
 ### Calling hours
-Only between 8 am and 9 pm, their time.
+Law: Only call between 8 am and 9 pm, their time.
 
 ### Do Not Call: whose number is it?
 - They gave us the number (a form, a call, at the door): call them.

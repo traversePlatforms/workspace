@@ -27,7 +27,7 @@ Who we are, what we're doing, why we're doing it. Keep it short and simple: two 
 - Assume the booking: "I can have someone walk it Thursday afternoon or Saturday morning. Which is better?"
 - Close with confidence. Always be closing.
 
-The close at the door is a booked walk. Tap Quote booked and book the walk while you're standing there.
+The close at the door is a booked walk. Tap Walk booked and book the walk while you're standing there.
 
 ### 5. Rehash
 Once the walk is booked, offer the second thing: overseed with the aeration, monthly care, the trees close to the house. Never stop at the first yes. See Adding the second service.
@@ -44,17 +44,41 @@ A negative comment is not a no. Two ways to answer one:
 "I hear you. My last neighbour felt the same way until they found out..." and give one true fact. Only use "my last neighbour" when it happened.
 
 ### What people say, and what's true to say back
-- "I'm in a hurry." "I'll be fifteen seconds, for next time."
-- "How much is it?" "Every lawn's different, so we don't guess at the door. We walk it and you get a fixed price, and the quote's free."
-- "I do it myself." "Plenty of people do. The difference is we bring the machine, the seed and the fertilizer, and it's done in one visit."
-- "I already have a guy." "Good. If he doesn't aerate, we can do just that part."
-- "I need to ask my spouse." "Wouldn't want to get in the way. Let's book the walk for when you're both home, and they can ask me anything then."
-- "Not now." "No problem. Spring or fall?" Then mark Not now with that come-back date.
-- "We're under water restrictions." "Aeration still works on your watering days: water the day before and soon after. Which water provider are you on?" (See Water, wells and seed.)
-- "I'm on a well." "Do you know what your well permit allows for the lawn?" If it's household use only, sell aeration on a green lawn, mowing or cleanup, not seed.
-- "Will the seed come up? Do you guarantee it?" "We don't guarantee germination, because it depends on water and weather. We'll do the aeration, seed and feed properly and tell you exactly how to water it."
-- "Can you spray the weeds while you're here?" "We don't apply weed killer or any pesticide."
-- "Is this legit?" "Fair question. Here's my card. Look us up at sixfoldcolorado.com, or call the number on it."
+They say: "I'm in a hurry."
+Say: "I'll be fifteen seconds, for next time."
+
+They say: "How much is it?"
+Say: "Every lawn's different, so we don't guess at the door. We walk it and you get a fixed price, and the quote's free."
+
+They say: "I do it myself."
+Say: "Plenty of people do. The difference is we bring the machine, the seed and the fertilizer, and it's done in one visit."
+
+They say: "I already have a guy."
+Say: "Good. If he doesn't aerate, we can do just that part."
+
+They say: "I need to ask my spouse."
+Say: "Wouldn't want to get in the way. Let's book the walk for when you're both home, and they can ask me anything then."
+
+They say: "Not now."
+Say: "No problem. Spring or fall?"
+Then mark Not now with that come-back date.
+
+They say: "We're under water restrictions."
+Say: "Aeration still works on your watering days: water the day before and soon after. Which water provider are you on?"
+See Water, wells and seed.
+
+They say: "I'm on a well."
+Say: "Do you know what your well permit allows for the lawn?"
+If it's household use only, sell aeration on a green lawn, mowing or cleanup, not seed.
+
+They say: "Will the seed come up? Do you guarantee it?"
+Say: "We don't guarantee germination, because it depends on water and weather. We'll do the aeration, seed and feed properly and tell you exactly how to water it."
+
+They say: "Can you spray the weeds while you're here?"
+Say: "We don't apply weed killer or any pesticide."
+
+They say: "Is this legit?"
+Say: "Fair question. Here's my card. Look us up at sixfoldcolorado.com, or call the number on it."
 
 ## The closing circle
 Source: Surge "Closing circle", rebuilt for Sixfold.
@@ -128,21 +152,21 @@ If they say no to the bigger option, offer one smaller step: "Want me to have th
 Source: Surge "Dos and Don'ts", rebuilt for Sixfold. One rule reversed: see the first don't.
 
 ### Do
-- Sell with integrity.
-- Think long term: offer monthly care where it fits. The standard lawn plan is month to month.
-- Close more than once. Use the closing circle.
-- Mark every door in the app, the same day.
-- Rehash everyone who says yes.
-- Get the details right on every booking: name, phone, the walk day.
+Do: Sell with integrity.
+Do: Think long term: offer monthly care where it fits. The standard lawn plan is month to month.
+Do: Close more than once. Use the closing circle.
+Do: Mark every door in the app, the same day.
+Do: Rehash everyone who says yes.
+Do: Get the details right on every booking: name, phone, the walk day.
 
 ### Don't
-- Ever skip telling someone who signs that they can cancel within three business days. Say it out loud. The law requires it (see Signing at the door).
-- Misrepresent Sixfold or what we do.
-- Argue with anyone.
-- Send them to the website unless they ask.
-- Rehash before the first yes is secure.
-- Swear.
-- Be creepy, needy or pushy.
+Don't: Ever skip telling someone who signs that they can cancel within three business days. Say it out loud. The law requires it (see Signing at the door).
+Don't: Misrepresent Sixfold or what we do.
+Don't: Argue with anyone.
+Don't: Send them to the website unless they ask.
+Don't: Rehash before the first yes is secure.
+Don't: Swear.
+Don't: Be creepy, needy or pushy.
 
 ## What we never say
 Source: sixfold/agreements/field-instructions (door crib sheet), the water-restrictions research, the aeration ad rules and the agreements.
@@ -150,23 +174,24 @@ Source: sixfold/agreements/field-instructions (door crib sheet), the water-restr
 Some things sound helpful and get Sixfold in trouble. Don't say them, even as a joke.
 
 ### About Sixfold
-- Never say licensed, insured, bonded, certified or Firewise.
-- Never say we'll beat someone's price, or quote a competitor's.
+Never: Say licensed, insured, bonded, certified or Firewise.
+Never: Say we'll beat someone's price, or quote a competitor's.
 
 ### About money
-- Never give a price at the door. There is no flat aeration price: the walk sets it.
-- Never promise a tax credit amount, a refund or an insurance discount.
-- Never name a county cost-share programme as if Sixfold is on its approved list.
-- Call the first half a "first payment", never a "deposit".
+Never: Give a price at the door. There is no flat aeration price: the walk sets it.
+Never: Promise a tax credit amount, a refund or an insurance discount.
+Never: Name a county cost-share programme as if Sixfold is on its approved list.
+Never: Call the first half a "deposit". It's the "first payment".
 
 ### About the work
-- Never promise the seed will come up. We don't guarantee germination.
-- Never promise watering. We can water the ground in on the day, with the owner's own system. After that it's theirs.
-- Never offer weed killer, weed and feed or any pesticide.
-- Never agree to extra work by word of mouth. Changes go on a signed change order first.
+Never: Promise the seed will come up. We don't guarantee germination.
+Never: Promise watering. We can water the ground in on the day, with the owner's own system. After that it's theirs.
+Never: Offer weed killer, weed and feed or any pesticide.
+Never: Agree to extra work by word of mouth. Changes go on a signed change order first.
 
 ### About landscaping
-Landscaping is a service on its own. Never call it the cleanup after fire mitigation. "Book one, or book them together."
+Never: Call landscaping the cleanup after fire mitigation. It is a service on its own.
+Say: "Book one, or book them together."
 
 ## Water, wells and seed
 Source: sixfold/research/water-restrictions-2026.md (researched 2026-09-30, corrected 2026-10-04).
@@ -178,15 +203,15 @@ Aeration needs a green, watered lawn. Overseeding needs much more water. If a cu
 "Which water provider are you on?" One question, and it changes what we should sell.
 
 ### Say
-- "Aeration still works on your watering days: water the day before and soon after."
-- "Water the lawn a day or two before we come out."
-- On Colorado Springs Utilities: "There's a permit that lets you water more often while new seed comes in. I can tell you how to get it."
+Say: "Aeration still works on your watering days: water the day before and soon after."
+Say: "Water the lawn a day or two before we come out."
+Say: On Colorado Springs Utilities: "There's a permit that lets you water more often while new seed comes in. I can tell you how to get it."
 
 ### Wells
 A well is not a way around the rules. Most wells on lots under 35 acres are household use only, and can't legally water a lawn at all. Ask what the well permit allows before offering seed. If it's household use only, sell aeration on a green lawn, mowing or cleanup.
 
 ### Don't
-- Promise the seed will come up.
-- Quote a watering schedule without checking it that week.
-- Say "you're on a well, so the restrictions don't apply."
-- Aerate a lawn that's brown and dormant from water restrictions.
+Don't: Promise the seed will come up.
+Don't: Quote a watering schedule without checking it that week.
+Don't: Say "you're on a well, so the restrictions don't apply."
+Don't: Aerate a lawn that's brown and dormant from water restrictions.

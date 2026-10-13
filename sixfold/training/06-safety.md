@@ -27,16 +27,16 @@ Sixfold provides the protective gear. Ask if you don't have it.
 Source: sixfold/research/crew-safety-and-compliance.md B2-B6.
 
 ### Power lines
-Any tree touching, leaning toward or within 10 feet of a power line is not ours until the utility has made it safe. No exceptions, no "just this branch".
+Never: Touch any tree touching, leaning toward or within 10 feet of a power line until the utility has made it safe. No exceptions, no "just this branch".
 
 ### Heights
 No climbing, no ladder work in trees, no lifts. Everything is felled from the ground. Anything over 80 feet: call the office first.
 
 ### Digging and grinding
-Before any stump grinding or digging, Colorado 811 must be notified at least two business days ahead, not counting the day you call.
+Law: Before any stump grinding or digging, Colorado 811 must be notified at least two business days ahead, not counting the day you call.
 
 ### If you're unsure
-Stop and call. A job that waits a day costs nothing next to an injury.
+Tip: Stop and call. A job that waits a day costs nothing next to an injury.
 
 ## If someone gets hurt
 Source: sixfold/research/crew-safety-and-compliance.md Part D.

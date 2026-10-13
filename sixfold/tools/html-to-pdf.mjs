@@ -179,6 +179,9 @@ const JOBS = [
   { src: 'quotes/brian-aeration.html', out: 'quotes/_part-quote-brian.pdf', mode: 'light', scale: 0.84,
     css: '.ifsolo { display: none; }' },
 
+  /* The Sixfold Field Guide (2026-10-13): built from the training lessons; the app serves the PDF to signed-in crew. Internal. */
+  { src: 'training/field-guide.html', out: 'training/Sixfold-Field-Guide.pdf', mode: 'light', scale: 1, margin: 0.45 },
+
   /* Joe Willis, tree removal + haul-off, 2026-10-12. Standalone only: no agreement built yet. NOT SENT. */
   { src: 'quotes/joe-willis-tree-removal.html', out: 'quotes/Sixfold-Quote-Tree-Removal-Joe-Willis.pdf', mode: 'light', scale: 0.84 },
 

@@ -1,5 +1,43 @@
 # Sixfold training: the lessons in the door app
 
+> ## Revamped 2026-10-13: the Sixfold Field Guide
+>
+> Matthew: *"redo and revamp our current documents like the at the door page what to say what not to say … a better field
+> guide … build the field guide into the app for sixfold … I want it to have the branding and pdf … just for sixfold."*
+>
+> **One source, two outputs.** These lesson files now build both the app's Training section (`build-training.mjs` →
+> `training.json`) and the branded **Sixfold Field Guide PDF** (`build-field-guide.mjs` → `field-guide.html` →
+> `node sixfold/tools/html-to-pdf.mjs Field-Guide` → `Sixfold-Field-Guide.pdf`, 26 pages). They cannot say different things.
+>
+> **Card markers.** A line starting `Say:`, `They say:`, `Do:`, `Don't:`, `Never:`, `Law:` or `Tip:` is drawn as a card in
+> the app and in the PDF. Consecutive `Do:` / `Don't:` / `Never:` lines group into one list card. Say and Never differ by
+> label and mark (" / ✕) as well as colour, because ember and moss fail colourblind separation.
+>
+> **In the app (Sixfold only):** Training opens with a branded Field Guide card (the Ridge mark, *Start with the door visit*,
+> *Open the PDF*); lessons have Previous / Next; the door list has *What to say at the door*. Switched on by
+> `features.fieldguide` in Sixfold's company.json; the PDF is served to signed-in crew by the `guidepdf` action from
+> `sixfold-data/rounds/docs/field-guide.pdf`. The editions never get the lessons, the PDF or the switch.
+>
+> **What changed in the content:**
+> - **New first lesson: At the door, the whole visit on one page** (built only from the lessons below and their sources).
+> - **New lesson: Your sign-in** (one phone and one computer at a time; what the app records; location stays on the phone).
+> - **Using the app** brought up to date: Routes, Walk booked / Quote sent / Not now / No answer, the score and reasons, the
+>   buttons under the score, the folded lines, grey dots, extra phone numbers.
+> - **Stale button names fixed:** "Quote booked" → Walk booked (sales, phones); the no-soliciting button named exactly.
+> - **Openers:** trees and fire now "lawn work and wildfire mitigation" (aeration leads, per the 2026-09-23 positioning).
+> - Objections, do's and don'ts, never-say, water and the legal lines converted to cards. **No wording of a rule changed.**
+> - **The door crib sheet** (`agreements/field-instructions`): its fire-led sample opener ("we do fire mitigation on the
+>   Front Range … wildfire risk notices") replaced by the aeration opener above. Nothing else on it changed; still 2 pages.
+>
+> **Fact-check log (2026-10-13):** every new line traces to an existing lesson or its source. The talking point "From the
+> aerial photo, your lawn's about ___ square feet" is the app's own 2023-photo estimate, so the lesson says "about" and
+> forbids calling it a measurement. "Law:" cards: the 30-second rule (C.R.S. 6-1-105(1)(p)), calling hours (47 CFR
+> 64.1200(c)(1)), saying the cancellation right aloud (16 CFR 429; C.R.S. 5-3-401 to 405), Colorado 811's two business days.
+> Nothing here is legal advice; the agreements' crib sheets govern where they differ.
+>
+> **Upload:** `training.json` replaces every live lesson (check the live list first: on 2026-10-13 it matched the repo
+> build exactly), and `field-guide.pdf` goes to `sixfold-data/rounds/docs/`.
+
 **Written 2026-10-05.** The crew's Training section in the door app, under seven headings: Doors · Sales · Quotes ·
 Phones · Paperwork · Safety · Using the app. **31 lessons.** Internal: for Sixfold's crew, not for customers or for
 publishing.

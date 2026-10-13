@@ -1,17 +1,58 @@
 # Doors
 
-Sixfold's door lessons. Each `## ` heading below is one lesson in the app's Training section (heading: Doors).
-Inside a lesson, `### ` is a heading, `- ` a bullet, and a blank line a new paragraph: the app draws exactly that.
-`Source:` lines stay in this file and are not shown in the app. What changed from Surge's originals, and why, is in
+Sixfold's door lessons. Each `## ` heading below is one lesson in the app's Training section (heading: Doors) and one
+section of the Sixfold Field Guide PDF. Inside a lesson, `### ` is a heading, `- ` a bullet, and a blank line a new
+paragraph. Lines that start with a marker are drawn as cards (revamp 2026-10-13): `Say:` a line to say, `They say:` what
+the customer says, `Never:` and `Don't:` red, `Do:` green, `Law:` the legal rule, `Tip:` a tip. `Source:` lines stay in
+this file and are not shown in the app or the guide. What changed from Surge's originals, and why, is in
 [README.md](README.md).
 
+## At the door: the whole visit on one page
+Source: this file's lessons (The first thirty seconds, Working the territory, No soliciting); 02-sales (The five steps, Objections, Do's and don'ts, What we never say, Water, wells and seed); 03-quotes (Prices: the office sets them); the door crib sheet (C.R.S. 6-1-105(1)(p)); lawn sizes are the app's own estimates from the 2023 aerial photo (Terms of Use draft section 4: estimates are estimates). Added 2026-10-13.
+
+The whole doorstep on one screen. Every line is covered in more detail in the lessons after this one.
+
+### 1. Before you knock
+- Read the door card: lawn size, trees near the house, the water provider, any HOA.
+- A grey dot on the map is not a door to knock. Neither is a "No Soliciting" sign.
+
+### 2. The first thirty seconds
+Law: Within thirty seconds, say who you are, who you're with and why you're there. Opening with a question doesn't count.
+Say: "Hi, I'm ___ with Sixfold. We're booking fall aeration in this neighbourhood, and I'm stopping by to see if your lawn's on the list."
+
+### 3. Make it about their lawn
+Say: "From the aerial photo, your lawn's about ___ square feet. We do it in one visit: aeration, seed and fertilizer, and we bring the machine."
+Say: "Which water provider are you on?"
+Tip: The lawn size on the card comes from a 2023 aerial photo. Say "about", and never call it a measurement.
+
+### 4. Book the walk
+Say: "I can have someone walk it Thursday afternoon or Saturday morning. Which is better?"
+Tap Walk booked and book the walk while you're standing there.
+
+### 5. When they ask the price
+They say: "How much is it?"
+Say: "Every lawn's different, so we don't guess at the door. We walk it and you get a fixed price, and the quote's free."
+
+### 6. Before you walk away
+Do: Offer the second thing once the walk is booked: the overseed, monthly care, the trees close to the house.
+Do: Get the name and a phone number on every booking.
+Do: On a Not now, ask when to come back and set that date.
+Do: Mark the door in the app before you leave the driveway.
+
+### Never at the door
+Never: Give a price. The walk sets it.
+Never: Say licensed, insured, bonded, certified or Firewise.
+Never: Promise the seed will come up, a tax credit amount or an insurance discount.
+Never: Argue. A firm no ends it: thank them, mark the door, go.
+
 ## The first thirty seconds
-Source: Surge "5 Steps to Build Value" steps 1-2 (SEE, WWW, KISS), rebuilt for Sixfold; Colorado's 30-second rule from the door crib sheet (C.R.S. 6-1-105(1)(p)).
+Source: Surge "5 Steps to Build Value" steps 1-2 (SEE, WWW, KISS), rebuilt for Sixfold; Colorado's 30-second rule from the door crib sheet (C.R.S. 6-1-105(1)(p)). Openers re-ordered 2026-10-13: aeration leads (positioning, sixfold/README.md 2026-09-23).
 
 The first half minute decides whether you get a second one. It is also the part the law cares about.
 
 ### Say who, for whom and why, inside thirty seconds
-Colorado makes it a deceptive trade practice to sell door to door unless, within thirty seconds of starting the conversation, you say who you are, who you represent and why you are there. Opening with a question ("Are you the homeowner?") is the easy way to fail it. Lead with the three facts.
+Law: Colorado makes it a deceptive trade practice to sell door to door unless, within thirty seconds of starting the conversation, you say who you are, who you represent and why you are there.
+Opening with a question ("Are you the homeowner?") is the easy way to fail it. Lead with the three facts.
 
 ### SEE: how you say it
 - Smile. It is contagious, and it tells them you are not a problem.
@@ -26,11 +67,11 @@ Colorado makes it a deceptive trade practice to sell door to door unless, within
 Keep it short and simple. Two sentences, then stop and let them answer.
 
 ### Openers that do all three
-- Lawn: "Hi, I'm ___ with Sixfold. We're booking fall aeration in this neighbourhood, and I'm stopping by to see if your lawn's on the list."
-- Landscaping: "Hi, I'm ___ with Sixfold. We do landscaping and lawn care around here, and I'm letting neighbours know we have openings this month."
-- Fire: "Hi, I'm ___ with Sixfold. We do wildfire mitigation as well as lawn work, and I'm stopping by about the trees close to the houses on this street."
+Say: Lawn: "Hi, I'm ___ with Sixfold. We're booking fall aeration in this neighbourhood, and I'm stopping by to see if your lawn's on the list."
+Say: Landscaping: "Hi, I'm ___ with Sixfold. We do landscaping and lawn care around here, and I'm letting neighbours know we have openings this month."
+Say: Trees and fire: "Hi, I'm ___ with Sixfold. We do lawn work and wildfire mitigation, and I'm stopping by about the trees close to the houses on this street."
 
-Only say "we're working on this street" or "your neighbours booked" when it is true today. If it isn't, say "in this neighbourhood".
+Tip: Only say "we're working on this street" or "your neighbours booked" when it is true today. If it isn't, say "in this neighbourhood".
 
 ## Working the territory
 Source: Surge "Law of averages" (Exposure) and "Successful Business Practices" step 5, rebuilt for Sixfold.
@@ -44,9 +85,10 @@ It is a numbers game. You cannot tell from the truck, the paint or the yard who 
 - Finish a street before you jump to the next one.
 
 ### Who you don't knock
-Talking to everyone stops at three things:
+Talking to everyone stops at four things:
 - A "No Soliciting" sign. Mark it and move on (see No soliciting).
 - A neighbourhood the app flags as no-soliciting.
+- A grey dot on the map: a rental, business or other home that is not on the door list.
 - Someone who already said no today, or asked us not to come back.
 
 ## Your day: goals, numbers and attitude
@@ -56,7 +98,7 @@ Source: Surge "Law of averages" (GRACE: goals, ratios, attitude, consistency, ex
 Most doors will say no. That is normal, not a sign you are doing it wrong. Set your own goal for the day in the app (Daily goal) and work to it. How long you work and when is your call.
 
 ### Ratios
-Your own numbers in the app show how many doors you knocked, how many answered and how many booked. Watch your ratio, not one bad street. Sixfold has no target ratio yet; your numbers over a few weeks will set one.
+Your own numbers in the app (My stats) show how many doors you knocked, how many answered and how many booked. Watch your ratio, not one bad street. Sixfold has no target ratio yet; your numbers over a few weeks will set one.
 
 ### Attitude
 Attitude does most of the work, ability a little, luck none. There is no bad weather, bad street or bad day that a good attitude does not improve. Every no brings you closer to a yes. Protect your attitude from the last door: the next homeowner didn't hear it.
@@ -71,15 +113,17 @@ The pitch stays the same. How you deliver it changes with the person in front of
 - Take control of the conversation, of your day and of what you do next.
 
 ## No soliciting: three levels
-Source: traverse/data-pipeline/door-territory/NO-SOLICIT-SCOPE.md.
+Source: traverse/data-pipeline/door-territory/NO-SOLICIT-SCOPE.md. Button name updated 2026-10-13 to match the app.
 
 There are three kinds of "no soliciting". The app can handle two of them.
 
 ### The door
-A "No Soliciting" sign on one house. Don't knock. Mark it in the app (Not now, then flag the sign) so nobody else knocks it either. In some places ignoring the sign is trespass, not just bad manners.
+A "No Soliciting" sign on one house. Don't knock. Tap Not now, then "No-soliciting sign — skip this door for good", so nobody else knocks it either.
+Tip: In some places ignoring the sign is trespass, not just bad manners.
 
 ### The neighbourhood
 An HOA or gated community that posts it at the entrance. The app can flag a whole neighbourhood so the crew avoids it. If you see a sign the app doesn't know about, flag it.
 
 ### The town
-Some towns require a permit for each person who sells door to door. That is the one that can bring a fine, and the app cannot check it for you. Before you work a town Sixfold hasn't worked before, ask the office whether a permit is needed.
+Some towns require a permit for each person who sells door to door. That is the one that can bring a fine, and the app cannot check it for you.
+Do: Before you work a town Sixfold hasn't worked before, ask the office whether a permit is needed.

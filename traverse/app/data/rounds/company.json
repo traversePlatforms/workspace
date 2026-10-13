@@ -30,7 +30,7 @@
     ["bare", "Bare or patchy lawn"],
     ["beds", "Overgrown beds or weeds"]
   ],
-  "features": {
+  "features": { "fieldguide": true,
     "quote": true,
     "communities": true,
     "firecheck": true,

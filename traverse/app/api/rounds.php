@@ -88,7 +88,7 @@ function company(): array {
     $def = ['name' => 'Door App', 'short' => 'Door App', 'tagline' => '', 'phone' => '', 'email' => '', 'site' => '', 'appUrl' => '',
             'visit' => 'visit', 'visitShort' => 'Visit', 'logo' => null, 'colors' => [],
             'services' => [['job', 'Job'], ['other', 'Other']], 'leadNeeds' => ['A quote', 'Question'], 'extraWork' => [],
-            'features' => ['quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false, 'pest' => false, 'security' => false],
+            'features' => ['fieldguide' => false, 'quote' => false, 'communities' => false, 'firecheck' => false, 'skiptrace' => true, 'hail' => false, 'roof' => false, 'solar' => false, 'pest' => false, 'security' => false],
             /* which parts of the door card show (2026-10-04); a part with no data never shows anyway */
             'card' => ['lawn' => true, 'trees' => true, 'fire' => true, 'money' => true, 'water' => true], 'links' => [],
             /* the weather warnings this install shows and pushes (2026-10-06, the editions); null = Sixfold's rules (see alertEvents) */
@@ -3325,7 +3325,22 @@ if ($action === 'mygoal') {
  * the company carries the content (Matthew). Everyone signed in reads it; admins edit it. */
 if ($action === 'training') {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/training.json'), true);
-    out(['ok' => true, 'training' => is_array($j) && is_array($j['lessons'] ?? null) ? $j : ['lessons' => []], 'edit' => $role === 'admin']);
+    /* the field guide PDF (2026-10-13): an install that has docs/field-guide.pdf offers it at the top of Training. Only Sixfold's
+       data carries one (sixfold/training/build-field-guide.mjs); the editions' builds never copy it. */
+    $gf = DATA_DIR . '/docs/field-guide.pdf';
+    $guide = is_file($gf) ? ['kb' => (int) round(filesize($gf) / 1024), 'at' => (int) filemtime($gf)] : null;
+    out(['ok' => true, 'training' => is_array($j) && is_array($j['lessons'] ?? null) ? $j : ['lessons' => []], 'edit' => $role === 'admin', 'guide' => $guide]);
+}
+/* the field guide itself, to anyone signed in to this install (2026-10-13): internal, so it is served here and not from public_html */
+if ($action === 'guidepdf') {
+    $gf = DATA_DIR . '/docs/field-guide.pdf';
+    if (!is_file($gf)) fail('No field guide here.', 404);
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: ' . (!empty($_GET['dl']) ? 'attachment' : 'inline') . '; filename="' . preg_replace('/[^A-Za-z0-9 -]/', '', (string) company()['short']) . ' Field Guide.pdf"');
+    header('Cache-Control: private, max-age=3600');
+    header('Content-Length: ' . filesize($gf));
+    readfile($gf);
+    exit;
 }
 if ($action === 'trainingsave') {
     if ($role !== 'admin') fail('Not allowed.', 403);

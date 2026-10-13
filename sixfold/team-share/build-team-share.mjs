@@ -39,9 +39,15 @@ const FILES = [
   ['team-share/index-sheet.pdf',
    '',
    '00 START HERE - what is in this folder.pdf'],
+  /* The field guide (2026-10-13): built from sixfold/training, the same lessons as the app's Training. Top level, beside START
+     HERE, because it is the first thing new crew should read. Rebuild: node training/build-field-guide.mjs, then
+     node tools/html-to-pdf.mjs Field-Guide. */
+  ['training/Sixfold-Field-Guide.pdf',
+   '',
+   '00 FIELD GUIDE - how we knock, what we say, what we never say (INTERNAL).pdf'],
 
   // ---- 01 What we do -----------------------------------------------------
-  ['marketing/Sixfold-Services-Sheet-D.pdf',
+  ['../_archive/pricing-sheets-2026-09-30/Sixfold-Services-Sheet-D.pdf',   /* archived 2026-09-30 (d232333) but still shared; Matthew to decide (flagged 2026-10-13) */
    '01 What we do',
    'What Sixfold does - services, no prices.pdf'],
 
@@ -83,7 +89,7 @@ const FILES = [
   ['marketing/Sixfold-Referral-Packet-TEMPLATE.pdf',
    '04 Hand to the customer',
    'Referral packet - blank template for the end of a job.pdf'],
-  ['marketing/Sixfold-Services-Sheet-D.pdf',
+  ['../_archive/pricing-sheets-2026-09-30/Sixfold-Services-Sheet-D.pdf',   /* archived 2026-09-30 (d232333) but still shared; Matthew to decide (flagged 2026-10-13) */
    '04 Hand to the customer',
    'What Sixfold does - services, no prices.pdf'],
 

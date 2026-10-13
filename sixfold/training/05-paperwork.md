@@ -17,11 +17,12 @@ If the customer cancels inside the window, Sixfold gets nothing for work already
 - Fill in both cancellation forms yourself: seller name, seller address, date of the transaction, deadline. The law says we fill these in, not the customer.
 
 ### As they sign
-Say it out loud: "You have three business days to change your mind, and these forms are how." Pointing at the box isn't enough.
+Law: You must tell them out loud as they sign. Pointing at the box isn't enough.
+Say: "You have three business days to change your mind, and these forms are how."
 
 ### After
 - Leave them a signed copy of every page and both cancellation forms.
-- Never ask anyone to give up the right to cancel. Asking is itself a violation.
+Never: Ask anyone to give up the right to cancel. Asking is itself a violation.
 - If they cancel: refund everything within ten days, no deductions, and tell the office that day.
 
 ## Starting work and the three-day window
@@ -74,7 +75,7 @@ Source: sixfold/agreements (clause 10 and section 5); the customer packet rules 
 - The rest: when the work is done.
 
 ### Words matter
-Call it the "first payment", never a "deposit". The aeration agreements never use the word: the first payment is due on or before the first day of work, and nothing is taken at signing. An invoice that says "deposit" contradicts them.
+Never: Call it a "deposit". It's the "first payment". The aeration agreements never use the word: the first payment is due on or before the first day of work, and nothing is taken at signing. An invoice that says "deposit" contradicts them.
 
 ### What the money can and can't do
 The first payment holds the date. It doesn't change their right to cancel: if they cancel inside the window, it comes back in full.
