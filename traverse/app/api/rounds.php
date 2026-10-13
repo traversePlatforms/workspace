@@ -1676,6 +1676,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $mine = sessionTag($tok);
         if (oneDeviceOn()) foreach ($a['s'] as $t => $l) {
             if ($t === $mine || ($l[0] ?? '') !== $line[0] || devClassOf($l) !== $cls) continue;
+            if ((int) ($l[1] ?? 0) < time()) continue;   /* 2026-10-13 (Fable review): a sign-in that has run out ends nothing; sessEdit drops it below. It was being logged as a move between devices (Flags) */
             unset($a['s'][$t]); $a['x'][$t] = [time(), $line[3]]; $ended[] = (string) ($l[3] ?? '');
         }
         $a['s'][$mine] = $line; return $a;
