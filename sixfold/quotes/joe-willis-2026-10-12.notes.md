@@ -21,6 +21,26 @@
 > 18.9 × $48 = $907, + chipper, chains, fuel and gas $468 = **$1,375 → 43%**. At BLS-normal $24/h crew pay: $1,300 → **46%**.
 > 40% needs at least $2,292.
 >
+> **Time on site is shorter than the build above (Matthew, 13 Oct). The price stays $2,400.** Brandon's 4-5 hours for the haul job
+> included cutting everything to trailer length and hand-loading three trailers; chipping drops both. The build above carries
+> 5 h on site (felling ~2¼ h + **an assumed** 2½ h of chipping), which is more than the haul figure and is too high. **Working figure:
+> about 3½ h on site** (felling the same, ~1¼ h chipping) until Brandon or Brad give the real chipping time. The drive (~4 h round
+> trip each) does not shrink and is now the largest block of time. At 3½ h the engine would price about $2,150; the gap to $2,400 is
+> margin and a cushion if the big trunks chip slowly.
+>
+> **Profit at $2,400, Brandon and Brad at $50/hr each, two trucks (gas $139), 3½ h on site:**
+>
+> | | Rented chipper | Own chipper |
+> |---|---|---|
+> | Person-hours (7.9 drive + 7 on site + 1 rental run) | 15.9 | 14.9 |
+> | Pay at $50/hr | $795 | $745 |
+> | Chipper $320, chains $60, chipper fuel $19, gas $139 | $538 | $218 |
+> | **Profit, no overhead** | **$1,067 (44%)** | **$1,437 (60%)** |
+> | Profit with the $20/person-hour stand-in overhead | $749 (31%) | $1,139 (47%) |
+>
+> At 5 h on site the same case gives $917 (38%) rented / $1,287 (54%) owned, no overhead. Each hour on site saved = 2 person-hours
+> = $100 of pay at $50/hr each.
+>
 > **What the quote says about beetles, and what it rests on:**
 > - "CSFS lists chipping as a way to treat beetle-infested wood; deal with infested trees before the adults fly the following summer":
 >   CSFS fact sheet 5.528 (2024).
@@ -34,7 +54,7 @@
 >
 > **Trucks (Matthew, 13 Oct): one or two, probably two.** The quote no longer says how many ("From Monument, about 83 miles
 > each way"). Drive labour is unchanged (both people were already priced). Gas for two: $116 (second truck not towing, 15 mpg,
-> **assumed**) to $139 (both 10 mpg). At $2,400 that is 40.8% / 39.8%; the engine gives $2,450 (41%). Price choice open.
+> **assumed**) to $139 (both 10 mpg). At $2,400 that is 40.8% / 39.8%; the engine gives $2,450 (41%). **Matthew kept $2,400.**
 >
 > **Chipper (Matthew, 13 Oct): rented or Sixfold's own, not known yet.** The quote no longer says "hire"; price kept at $2,400.
 > The build still carries the $320 rental as a cost; with an owned chipper that cost (and the rental pick-up time) mostly drops away.
@@ -44,7 +64,9 @@
 >    butt logs split down. The $320 is the engine preset, not a quote from a rental yard. A larger machine costs more.
 > 2. **Joe agrees to the chips staying on his lot**, a fair amount for three pines, spread thin.
 > 3. **Access in November/December** at about 8,000 ft (snow on Old Corral Rd and the driveway) for a truck towing a chipper.
-> 4. Brandon's real crew pay (the margin above is on stand-in rates). Bailey is still outside the 35-mile area (Brandon's call).
+> 4. **Chipping time** for three pines with the machine they'd use (Brandon/Brad); 3½ h on site is a working figure.
+> 5. Pay: Matthew's case is Brandon and Brad at $50/hr each (13 Oct); overhead figure still not on file. Bailey is still outside the
+>    35-mile area (Brandon's call).
 
 > ## Rev 2, 2026-10-13 (SUPERSEDED by rev 3): haul-off on Brandon's figures. **$2,900, one day.** (Rev 1 below: $4,375 over two days, on trade times.)
 >
