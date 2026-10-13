@@ -722,7 +722,7 @@ function topStreets(array $counts, int $n): array { arsort($counts); return arra
 /* the towns answer without its empty fields (2026-10-09, speed): a 0 count or a null on every one of 6,841 neighbourhoods was
    a third of Security's 2.6 MB. Only fields every neighbourhood always carried are left out, and the page puts them back as
    the answer arrives (AREA_ZERO / AREA_NULL in the page), so every screen reads the same object as before. */
-const AREA_ZERO = ['done', 'noanswer', 'hot', 'vhot', 'due', 'retry', 'booked', 'lawnL', 'lawnM', 'treeA', 'treeH', 'all3'];
+const AREA_ZERO = ['done', 'noanswer', 'hot', 'vhot', 'due', 'retry', 'booked', 'lawnL', 'lawnM', 'lawnS', 'treeA', 'treeH', 'all3'];
 const AREA_NULL = ['nosol', 'la', 'lo', 'place', 'fw', 'who', 'cwpp'];
 function areaCompact(array $a): array {
     foreach (AREA_ZERO as $k) if (($a[$k] ?? null) === 0) unset($a[$k]);
@@ -1180,7 +1180,10 @@ function lawnLevel(array $d, array $fix): ?string {
 /* $parts (2026-10-09): per door [trade figure, ability], what the page's door score adds to the points, so a neighbourhood
    can carry the average 1-10 score of its doors still to knock (Matthew: pick neighbourhoods by score). Keep in step with
    scoreParts() in index.html, as the points are with BEST. */
-const BEST_TOP_PHP = ['roof' => 10, 'yards' => 6, 'solar' => 6, 'pest' => 5, 'security' => 4];
+const BEST_TOP_PHP = ['roof' => 10, 'yards' => 4, 'solar' => 6, 'pest' => 5, 'security' => 4];
+/* the lawn's points for lawn work (2026-10-12): any lawn is an aeration job, so small, medium and large count the same and the
+   lawn's size only breaks ties; a small lawn mostly under trees counts 1; no lawn to aerate takes points off. Not measured: 0. */
+function yardsLawnPts(?string $lv): int { return ['L' => 3, 'M' => 3, 'S' => 3, 'T' => 1, 'N' => -3][$lv ?? ''] ?? 0; }
 function doorScore10(string $trade, int $pts, array $q): int {
     $need = $pts <= -3 ? 0.0 : max(0.0, min(1.0, ($pts + (float) $q[0]) / ((BEST_TOP_PHP[$trade] ?? 6) + 1)));
     $v = 0.75 * $need + 0.25 * (float) $q[1];
@@ -1190,7 +1193,7 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
     $src = ['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'];
     $files = array_map(fn($p) => DATA_DIR . '/' . $p . '-' . $key . '.json', $src);
     $files[] = DATA_DIR . '/' . $key . '.json'; $files[] = DATA_DIR . '/permit-index.json';
-    $sig = md5(implode('|', array_map(fn($f) => (string) (@filemtime($f) ?: 0), $files)) . '|' . date('Y') . '|v2');
+    $sig = md5(implode('|', array_map(fn($f) => (string) (@filemtime($f) ?: 0), $files)) . '|' . date('Y') . '|v3');   /* v3 2026-10-12: aeration-first lawn points */
     $cf = DATA_DIR . '/best-' . $trade . '-' . $key . '.json';
     $c = json_decode((string) @file_get_contents($cf), true);
     if (is_array($c) && ($c['sig'] ?? '') === $sig && is_array($c['p'] ?? null) && is_array($c['q'] ?? null)) { $parts = $c['q']; return $c['p']; }
@@ -1238,9 +1241,9 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
             if ($pr !== '') { if ($big && $pr >= substr($hailD[$id], 0, 7)) $pts -= 8; elseif ($yr - (int) substr($pr, 0, 4) <= 5) $pts -= 3; }
             elseif ($pidx && ($pidx['full'] ?? true) !== false && $b && (int) substr((string) $pidx['since'], 0, 4) - $b >= 5) $pts += 1;
         } elseif ($trade === 'yards') {                            /* the lawn itself is added live, in the regions loop */
-            $f = (int) ($d['fire'] ?? 0); if ($f === 5) $pts += 2; elseif ($f === 4) $pts += 1;
-            $tl = treeLevel($d); if ($tl === 'against') $pts += 2; elseif ($tl === 'heavy') $pts += 1;
-            if ((float) ($d['acres'] ?? 0) >= 0.5) $pts += 1;
+            /* aeration first (2026-10-12, Matthew: "we are wanting smaller lots as well due to aeration"): fire hazard and lot size
+               no longer count here (they favoured big foothill lots); trees against the house stay as one point, a trim upsell */
+            if (treeLevel($d) === 'against') $pts += 1;
         } elseif ($trade === 'solar') {
             if (isset($pn[$id], $kwh[$id])) { $k = $kwh[$id]; $pts += $k >= 10000 ? 3 : ($k >= 7000 ? 2 : ($k >= 4000 ? 1 : 0)); }
             $s = $sh[$id] ?? ''; if ($s === 'open') $pts += 2; elseif ($s === 'heavy') $pts -= 3;
@@ -1266,7 +1269,7 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
         $acres = (float) ($d['acres'] ?? 0); $tf = 0.0;
         if ($trade === 'roof') $tf = $c01(((float) ($hailS[$id] ?? 0) - 0.75) / 1.75) * 0.6 + $c01((float) ($sqs[$id] ?? 0) / 45) * 0.4;
         elseif ($trade === 'solar') $tf = $c01((float) ($kwh[$id] ?? 0) / 16000);
-        elseif ($trade === 'yards') $tf = $c01((float) ($d['lawn']['sq'] ?? 0) / 15000) * 0.6 + $c01($acres / 2) * 0.4;
+        elseif ($trade === 'yards') $tf = $c01((float) ($d['lawn']['sq'] ?? 0) / 3000);   /* a tie-break only: full at a large lawn (3,000 sq ft) */
         elseif ($trade === 'pest') $tf = $c01($acres) * 0.5 + $c01((float) ($d['trees']['z2'] ?? 0)) * 0.5;
         elseif ($trade === 'security') $tf = $c01($acres / 2);
         $val = $d['val'] ?? ($bg !== null ? ($cen['bgs'][$bg]['v'] ?? null) : null);
@@ -2097,7 +2100,7 @@ if ($action === 'regions') {
             $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0; $retry = 0;
             $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
             $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
-            $lawnL = 0; $lawnM = 0;                  /* large / medium lawns STILL TO KNOCK, for the lawn sort */
+            $lawnL = 0; $lawnM = 0; $lawnS = 0;      /* large / medium / small lawns STILL TO KNOCK, for the lawn sort (small: 2026-10-12, aeration) */
             $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
             $scSum = 0; $scN = 0; $sc8 = 0;         /* their 1-10 door scores: the average and how many are 8 or more (2026-10-09) */
             $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
@@ -2110,12 +2113,12 @@ if ($action === 'regions') {
                 /* a no-answer still counts as needing a knock (SX-9b rule), even during its 2-day rest */
                 $open = !$m || $m['outcome'] === 'miss' || $isDue;
                 if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
-                if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; }
+                if ($open) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; elseif ($lv === 'S') $lawnS++; }
                 if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
                 if ($open && ($f === 4 || $f === 5) && in_array(lawnLevel($d, $lfix), ['L', 'M'], true) && in_array(treeLevel($d), ['against', 'heavy'], true)) $all3++;
                 if ($open && $bp !== null) {
                     $pt = (int) ($bp[(string) $d['id']] ?? 0);
-                    if ($bestT === 'yards') { $lv0 = lawnLevel($d, $lfix); $pt += $lv0 === 'L' ? 3 : ($lv0 === 'M' ? 2 : 0); }   /* live: crews correct lawns */
+                    if ($bestT === 'yards') { $pt += yardsLawnPts(lawnLevel($d, $lfix)); }   /* live: crews correct lawns */
                     if ($pt > 0) { $bestN++; $bestS += $pt; }
                     if ($bq !== null) { $s10 = doorScore10($bestT, $pt, $bq[(string) $d['id']] ?? [0, 0.5]); $scSum += $s10; $scN++; if ($s10 >= 8) $sc8++; }
                 }
@@ -2133,7 +2136,7 @@ if ($action === 'regions') {
                         'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
                         'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
                         'la' => $nll ? round($sla / $nll, 4) : null, 'lo' => $nll ? round($slo / $nll, 4) : null,   /* 4 places: about 10 m, plenty for a neighbourhood's centre */
-                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
+                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'lawnS' => $lawnS, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
                         'who' => $assign[$a['name']] ?? null,   /* the streets come from ?action=streets, one town at a time */
                         'on' => $aday[$a['name']] ?? null,      /* the day it is assigned for (2026-10-12) */
                         'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,

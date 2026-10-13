@@ -24,7 +24,8 @@ const DT = join(HERE, '..');
 const CACHE = join(DT, 'tree-cache.json');
 const TOWNS = { walden: 'elpaso', monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas',
   'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'windsor': 'eastern-b1', 'erie': 'drcog2', 'commerce-city': 'drcog2',
-  thornton: 'drcog2', centennial: 'drcog2', aurora: 'drcog2', 'south-denver': 'drcog2', englewood: 'drcog2' };   /* Yards' new towns (2026-10-11): both read 8 of 8 sample doors in CO_DRCOG_2_2020 */
+  thornton: 'drcog2', centennial: 'drcog2', aurora: 'drcog2', 'south-denver': 'drcog2', englewood: 'drcog2',
+  'cs-northeast': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southeast': 'elpaso', 'cs-southwest': 'elpaso', 'security-widefield': 'elpaso', fountain: 'elpaso' };   /* Springs (2026-10-12): El Paso county scan, as Monument; 8-door check before the overnight run */   /* Yards' new towns (2026-10-11): both read 8 of 8 sample doors in CO_DRCOG_2_2020 */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 /* --mail: measure the mailing-list properties (../mail/mail-properties.csv, owners who live
