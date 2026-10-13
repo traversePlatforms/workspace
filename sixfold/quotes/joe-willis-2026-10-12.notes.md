@@ -27,7 +27,7 @@
 > - "Fresh pine chips can draw other bark beetles to standing trees … chips kept off the base of your standing pines": Fettig et al.
 >   2007, USDA FS PSW-GTR-203 (ponderosa plots: 2.0% of trees attacked untreated vs 30.2% thinned in spring with all biomass chipped;
 >   authors suggest limiting chips in direct contact with residual trees). CSFS Ips page: freshly cut wood is a main Ips driver.
-> - "Done in November or December, when beetles are not flying": MPB adults emerge mid-June through September (CSFS 5.528); Ips fly
+> - "Done in November or December, after the main beetle flights and when they are least active" (corrected 13 Oct from "when beetles are not flying": CSU/CSFS 5.558 says Ips have been seen "entering trees during warm days as early as late-February on through November"; RTB flies "into early fall", FIDL 55): MPB adults emerge mid-June through September (CSFS 5.528); Ips fly
 >   when days reach 50–60°F (CSFS Ips fact sheet 5.558).
 > - **Not claimed:** that any source names Nov/Dec as the best month, or puts a number on how much lower the risk is than October.
 >   That is my reading of the guidance, and the quote doesn't say otherwise.
