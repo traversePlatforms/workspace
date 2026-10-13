@@ -36,6 +36,9 @@
 > each way"). Drive labour is unchanged (both people were already priced). Gas for two: $116 (second truck not towing, 15 mpg,
 > **assumed**) to $139 (both 10 mpg). At $2,400 that is 40.8% / 39.8%; the engine gives $2,450 (41%). Price choice open.
 >
+> **Chipper (Matthew, 13 Oct): rented or Sixfold's own, not known yet.** The quote no longer says "hire"; price kept at $2,400.
+> The build still carries the $320 rental as a cost; with an owned chipper that cost (and the rental pick-up time) mostly drops away.
+>
 > **Open before it goes to Joe:**
 > 1. **Chipper capacity.** The trunks are about 12–16 in. Most towable rentals take 6–12 in, so this needs a 12 in+ machine, or the
 >    butt logs split down. The $320 is the engine preset, not a quote from a rental yard. A larger machine costs more.
