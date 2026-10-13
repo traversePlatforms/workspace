@@ -179,6 +179,9 @@ const JOBS = [
   { src: 'quotes/brian-aeration.html', out: 'quotes/_part-quote-brian.pdf', mode: 'light', scale: 0.84,
     css: '.ifsolo { display: none; }' },
 
+  /* Joe Willis, tree removal + haul-off, 2026-10-12. Standalone only: no agreement built yet. NOT SENT. */
+  { src: 'quotes/joe-willis-tree-removal.html', out: 'quotes/Sixfold-Quote-Tree-Removal-Joe-Willis.pdf', mode: 'light', scale: 0.84 },
+
   /* Field sheets. Internal, printed and written on with a pen, so they want the
      light print register like everything else in the binder. Four sheets, one
      printed page each — count them after any edit. */

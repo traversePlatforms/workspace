@@ -1,0 +1,107 @@
+# Joe Willis — tree removal and haul-off, 156 Old Corral Rd, Bailey (2026-10-12)
+
+**Status: DRAFT. Not sent. No agreement built.** Quote: [joe-willis-tree-removal.html](joe-willis-tree-removal.html) →
+`Sixfold-Quote-Tree-Removal-Joe-Willis.pdf` (1 page). Rebuild: `node quotes/build.mjs && node tools/html-to-pdf.mjs Joe-Willis`.
+
+**$4,375.00 fixed, $2,187.50 / $2,187.50. Three trailer loads included; each further load $640, agreed before it is hauled.**
+
+## What Matthew asked for
+
+Two beetle-infested pines and one smaller dead tree; haul it all off because of the beetle (Brandon: about 3 hauls for logs
+and brush); price the hauls by volume at the nearest dump; fuel from Monument, with the trailer kept near the Englewood office
+(333 W Hampden Ave). His door note in the app that morning said "chipped on site"; his request later the same day says haul.
+**This quote follows the later instruction.**
+
+Customer details are from the app (door bailey/156-old-corral-rd: phone and email he entered). The county parcel owner is
+WILLIS JOSEPH J; Matthew calls him Joe, so the quote says Joe Willis. **He wrote "165 Old Corral" in his message; the app, the
+parcel and the walk-through PDF all say 156.**
+
+## The trees (from his photos and video frames, iCloud Photos folder)
+
+- Two mature **ponderosa pines**: orange plated bark, long needles in the frames. **Pitch tubes** (resin blobs) visible on the
+  bark close-ups, the sign of beetle attack. Crowns still green, which fits: a crown turns 8–10 months after attack.
+- One **small dead pine**, whole crown red-brown, roughly 15–20 ft by eye.
+- **Diameter:** his tape held straight across read 12–14 in. A tape held across the front of a trunk reads close to the diameter
+  (slightly over, from the angle). The frames show a trunk of that order. **Taken as 12–16 in at chest height** (about 38–50 in
+  round).
+- **Height: NOT MEASURED. Taken as 30–60 ft (the engine band).** Ponderosas of 12–16 in are commonly in that range, but the
+  videos tilt up a tall trunk and **a 60 ft+ tree is possible**. If either is over 60 ft, the engine's 60–80 ft band adds
+  240 man-min (**+$400**) per tree. **Measure before sending:** stand back until a stick held at arm's length (as long as your
+  arm) covers the tree from base to top; your distance from the trunk is roughly its height.
+
+## Disposal — where and what it costs
+
+| Site | Beetle wood | Contractors | Price | Open |
+|---|---|---|---|---|
+| **Jefferson County, Tincup Ridge SLASH yard, 101 Rooney Rd, Golden** | **Yes — the only Jeffco yard that takes MPB logs, outside flight season (before 15 Jun, after 30 Sep)** | **Not stated — CALL to confirm before booking** | **$24 per 6 cu yd (162 cu ft), card only** | Fri–Sun 9–4, through **25 Oct 2026**; arrive by 3:30; hand-unload |
+| Bailey slash site (CUSP / Park County) | not stated | **"No Contractors Please!"** | 2023: $20 per pickup | seasonal |
+| Rocky Top Resources, Colorado Springs | not stated | yes (price guide not readable) | — | too far from Bailey |
+
+Volume: a 7×14 trailer heaped to about 3 ft is ~294 cu ft = 1.81 Jeffco loads = **$43.56 a haul**, $131 for three.
+Cross-check on volume: two 14 in × ~55 ft ponderosas are ~25 cu ft of solid stem each (basal area × height × 0.42 form factor),
+~100 cu ft loose as logs; crowns and brush ~10–16 cu yd loose; the dead tree ~1–2 cu yd. **About 16–22 cu yd, three trailer
+loads**, which agrees with Brandon's three. These are rough rules of thumb, not measurements.
+
+## Route and fuel (OSRM road times, +15% when towing; Census geocoder)
+
+| Leg | Miles | Minutes |
+|---|---|---|
+| Monument office (17890 Sierra Way) → storage (333 W Hampden) | 47.8 | 57 |
+| Storage → job | 35.7 | 51 |
+| Job → Tincup Ridge | 32.6 | 50 |
+| Tincup → job | 32.0 | 49 |
+| Tincup → storage | 16.2 | 24 |
+| Storage → Monument | 48.4 | 58 |
+
+- **Day 1 (fell):** Monument → storage (hook trailer) → job → fell, buck, load haul 1 → loaded trailer back to storage → Monument.
+  167.6 mi, ~232 min driving, ~11 h crew day.
+- **Day 2 (haul; a Friday–Sunday):** Monument → storage → Tincup (tip 1 at 9:00) → job → Tincup (tip 2) → job → Tincup (tip 3,
+  before the 3:30 cut-off) → storage → Monument. 257.8 mi, ~398 min driving, ~9 h crew day.
+- **Fuel:** 35.3 gal at **assumed** 16 mpg truck alone / 10 mpg towing → **$147** at $4.1704 (AAA Denver metro regular,
+  12 Oct 2026); **$223 if the truck is diesel** ($6.3111). Truck and mpg are not on file — Brandon's numbers replace these.
+
+## The price build (engine rates v4, $100/man-hour, two crew)
+
+| Line | Man-min | Source |
+|---|---|---|
+| Mobilisation | 90 | engine |
+| 2 trees, 30–60 ft | 660 | engine (Wexford 330 each) |
+| 1 tree, 10–30 ft | 65 | engine (Matthew 2026-09-30) |
+| Driving, both days, ×2 crew | 1,260 | measured route above |
+| Loading, 3 × 25 min × 2 | 150 | assumed |
+| Hand-unloading at the yard, 3 × 30 min × 2 | 180 | Jeffco says about 30 min |
+| **Total** | **2,405 = 40.1 man-h** | **$4,009** |
+
+\+ dump $131 and 3 chains $60 (engine: one chain per removal), +15% handling = **$219**; + fuel **$147** at cost →
+**$4,376, rounded down to $4,375.**
+
+**Fuel is billed here, against the engine's rule** that fuel sits inside the man-hour overhead. Matthew asked for it; the job is
+~425 miles, far outside what that overhead was set for. If the engine rule should hold, take $147 off.
+
+**What the distance costs:** priced as if local (engine's 110 man-min loads + large-trailer floor), the same work is
+**~$2,258**. About **$2,100 of this quote is the drive to Bailey and three trips to Golden.** The market figure in the engine
+(Hawk, $500–1,000 per 30–60 ft tree) reads low against $4,375 for that reason.
+
+**Cheaper route worth raising with Joe (not priced):** his own note said chip on site. CSFS lists chipping as a treatment for
+infested material. Chipping the brush on site and hauling only the logs would cut two of the three Golden round trips
+(~$1,100 of crew time) against a chipper hire (engine preset $320/24 h) and chipping time. Logs of 12–16 in are beyond most
+rental chippers, so the logs still go.
+
+## Fact-check log
+
+**Verified (first-party, read 2026-10-12):**
+- Jeffco SLASH: $24 per load, load = 6 cu yd (162 cu ft), card only, hand-unload ~30 min, MPB logs only at Tincup Ridge outside
+  flight season — https://www.jeffco.us/2493/Slash-Collection
+- Tincup Ridge 2026 schedule Fri–Sun 9–4 through 25 Oct — Jeffco 2026 calendar (jeffco.us/slash), dates as reproduced by a
+  third-party page; **confirm on the county calendar**.
+- Bailey slash site "No Contractors Please!" — https://baileyslashsite.com/
+- Gas: AAA Colorado, 10/12/26: Denver metro regular $4.1704, diesel $6.3111 — https://gasprices.aaa.com/?state=CO
+- CSFS Mountain Pine Beetle fact sheet 5.528 (2024): remove/treat infested trees before adults fly in July; chipping, debarking,
+  solar treatment — https://csfs.colostate.edu/wp-content/uploads/2024/01/Mountain-Pine-Beetle-Fact-Sheet-5.528.pdf
+- Property in **Park County** (Census geocoder), so Jefferson County's 2026 beetle cost-share (CPR, 24 Sep 2026) does not apply.
+
+**Assumed, not verified:** tree heights; trailer size (7×14, heaped ~3 ft); truck mpg and fuel type; crew of two; load and unload
+times; that Tincup accepts a contractor's load (its page does not say).
+
+**Unresolved — before this goes to Joe:** (1) call Jeffco SLASH: contractor loads OK, and 12–16 in logs OK at Tincup? (2) measure
+the two heights; (3) Brandon: truck, trailer, crew size; (4) haul, or chip-and-haul-logs?
