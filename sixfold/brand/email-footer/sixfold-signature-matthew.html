@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matthew's Email Signature</title>
+<!-- Draft 2026-10-13, Matthew's ask: his own signature with his number and M.Sharpe@ address, in the ORIGINAL orange Sixfold
+     look (the ember mark and #B84C15 links the team footer carried before it went green, 4e07661). Name, title and number from
+     his printed business card (operations/business-card-print/README.md). Local file only (a person's number): not published. -->
+<style>
+:root{--ink:#0E1512;--soft:#5b6660;--line:#dcd6cb;--bg:#f6f3ee;--card:#ffffff;--go:#B84C15;--ok:#B84C15}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--go:#E4703A;--ok:#E4703A}}
+:root[data-theme="dark"]{--ink:#EDE7DC;--soft:#a9b0aa;--line:#2c3a33;--bg:#0E1512;--card:#16201b;--go:#E4703A;--ok:#E4703A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
+h1{font:600 28px/1.2 "Palatino Linotype","Book Antiqua",Palatino,serif;margin:0 0 6px}
+h2{font-size:17px;margin:30px 0 10px}
+.sub{color:var(--soft);margin:0 0 24px}
+.mail{background:#ffffff;color:#222;border:1px solid var(--line);border-radius:14px;padding:22px}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0}
+button{font:600 15px system-ui,sans-serif;border:0;border-radius:10px;padding:11px 16px;background:var(--go);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.ok{color:var(--ok);font-weight:600;align-self:center}
+ol{padding-left:22px;margin:0} ol li{margin:0 0 10px}
+code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:14px;word-break:break-all}
+.note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--soft);font-size:15px;margin:0 0 10px}
+.note b{color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Matthew's email signature</h1>
+  <p class="sub">The original orange Sixfold look, with your own number and email.</p>
+
+  <div class="mail">
+    <div id="sig">
+      <div style="font-family:Arial,Helvetica,sans-serif">
+        <img src="https://sixfoldcolorado.com/assets/email/sixfold-mark-email-64.png" width="52" height="60" alt="Sixfold" style="display:block;border:0;margin:0 0 8px">
+        <div style="font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;font-size:18px;font-weight:bold;color:#0E1512;line-height:1.2">Matthew Sharpe</div>
+        <div style="font-size:13px;color:#B84C15;font-weight:bold;line-height:1.5;margin-top:1px">Chief Technology Officer</div>
+        <div style="font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;font-size:15px;font-weight:bold;color:#0E1512;line-height:1.3;margin-top:6px">Sixfold Colorado</div>
+        <div style="font-size:13px;color:#5b6660;line-height:1.5;margin-top:2px">Lawn &amp; turf care · Landscaping · Land clearing · Fire mitigation</div>
+        <div style="font-size:13px;line-height:1.5;margin-top:4px"><a href="tel:+18032607359" style="color:#B84C15;text-decoration:none;font-weight:bold">(803) 260-7359</a> <span style="color:#b9b2a6">·</span> <a href="mailto:M.Sharpe@SixfoldColorado.com" style="color:#B84C15;text-decoration:none">M.Sharpe@SixfoldColorado.com</a> <span style="color:#b9b2a6">·</span> <a href="https://sixfoldcolorado.com" style="color:#B84C15;text-decoration:none">SixfoldColorado.com</a></div>
+        <div style="font-size:12px;color:#8a918c;line-height:1.5;margin-top:2px">Monument, CO · serving El Paso, Teller and Douglas counties</div>
+      </div>
+    </div>
+  </div>
+  <div class="btns">
+    <button type="button" id="copy">Copy signature</button>
+    <button type="button" class="alt" id="copytxt">Copy as plain text</button>
+    <span class="ok" id="msg" role="status"></span>
+  </div>
+
+  <h2>Putting it on your Gmail</h2>
+  <ol>
+    <li>Signed in as M.Sharpe@SixfoldColorado.com, open Gmail, then <b>Settings (gear) → See all settings → General</b>.</li>
+    <li>Under <b>Signature</b>, click <b>Create new</b> and name it <i>Sixfold</i>.</li>
+    <li>Click into the box and paste (Ctrl+V).</li>
+    <li>Under <b>Signature defaults</b>, pick it for <b>new emails</b> and for <b>replies</b>.</li>
+    <li>Scroll down and click <b>Save changes</b>. Send a test to a personal address to check the logo shows.</li>
+  </ol>
+
+  <h2>Before you turn it on</h2>
+  <p class="note"><b>The logo has to be on the website.</b> Gmail only shows a picture from a public address. Open <code>https://sixfoldcolorado.com/assets/email/sixfold-mark-email-64.png</code> in your browser: if the orange mark shows, you're set. If not, upload <code>sixfold-mark-email-64.png</code> and <code>sixfold-mark-email.png</code> from <code>sixfold\site\assets\email\</code> to <code>public_html/assets/email/</code>.</p>
+  <p class="note"><b>If the team footer is switched on</b>, your emails would show two Sixfold blocks: this one, then the green footer under it. Either keep the footer and use a shorter signature (just your name, title and number), or move yourself to your own organizational unit in the admin console with no footer rule.</p>
+</main>
+<script>
+(function () {
+  var msg = document.getElementById('msg');
+  function say(t) { msg.textContent = t; setTimeout(function () { msg.textContent = ''; }, 4000); }
+  var el = document.getElementById('sig'), html = el.innerHTML;
+  var lg = el.querySelector('img');
+  function local() { lg.src = '../../site/assets/email/sixfold-mark-email-64.png'; }
+  if (lg.complete && !lg.naturalWidth) local(); else lg.addEventListener('error', local);
+  var text = "Matthew Sharpe\nChief Technology Officer\nSixfold Colorado\nLawn & turf care · Landscaping · Land clearing · Fire mitigation\n(803) 260-7359 · M.Sharpe@SixfoldColorado.com · SixfoldColorado.com\nMonument, CO · serving El Paso, Teller and Douglas counties";
+  function selectCopy() { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} s.removeAllRanges(); return ok; }
+  document.getElementById('copy').addEventListener('click', function () {
+    var fall = function () { say(selectCopy() ? 'Copied. Paste it into the signature box.' : 'Select the signature and press Ctrl+C.'); };
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]).then(function () { say('Copied. Paste it into the signature box.'); }, fall);
+        return;
+      }
+    } catch (e) {}
+    fall();
+  });
+  document.getElementById('copytxt').addEventListener('click', function () {
+    try { navigator.clipboard.writeText(text).then(function () { say('Plain text copied.'); }, function () { say('Select the text and press Ctrl+C.'); }); } catch (e) { say('Select the text and press Ctrl+C.'); }
+  });
+})();
+</script>
+</body>
+</html>
