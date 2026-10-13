@@ -1,5 +1,31 @@
 # Joe Willis — tree removal and haul-off, 156 Old Corral Rd, Bailey (2026-10-12)
 
+> ## Rev 2, 2026-10-13: Brandon's figures. **$2,900, one day.** (Rev 1 below: $4,375 over two days, on trade times.)
+>
+> Brandon (via Matthew) looked at the photos and video: **4-5 hours on site** (about 45 minutes a tree, then cutting up and
+> loading), **3 haul loads**, **a one-day job**, **two trucks from Monument**.
+>
+> | Line | Man-min | |
+> |---|---|---|
+> | Two trucks Monument → job (103 min, +15% towing), one person each | 237 | OSRM |
+> | On site, 4.5 h × 2 (midpoint of Brandon's 4-5) | 540 | Brandon |
+> | Loads 1-2: both trucks job → Tincup → job (50 + 30 unload + 49 min, +15%) | 289 | OSRM, Jeffco unload |
+> | Load 3: one truck job → Tincup (+30) → home to Monument (73 min, +15%) | 172 | OSRM |
+> | The other truck job → Monument | 118 | OSRM |
+> | **Total 22.6 man-h × $100** | **1,356** | **$2,258** |
+>
+> \+ dump 3 × $43.56 and 3 chains, +15% handling = $219; + gas **$198** (474 mi at an assumed 10 mpg towing, AAA Denver metro
+> regular **$4.1761, 13 Oct 2026**; $302 if diesel) → **$2,675 → $2,650**. **Brandon and Brad's own haul floor ($300 a load, large
+> trailer, 2026-09-23)** sits above the hauling share of that ($625 for three loads), so the engine adds **$275 → $2,900**. With small
+> trailers the floor is $150 a load and doesn't bite: $2,650. **Range on Brandon's 4-5 hours: $2,800-$3,000 (large) or $2,550-$2,750.**
+> Each further load: $400 (two load it, one drives it). Split $1,450 / $1,450.
+>
+> **One day works only with an early start:** Tincup takes loads Fri-Sun 9-4, last arrival 3:30, through 25 Oct. Leave Monument 6:30;
+> fell and cut 8:30-10:45; load both trailers; both tip at Golden about 12:30; back on site about 1:55; load 3 leaves by 2:20 and
+> tips about 3:20; the other truck clears up and heads home. A slow morning pushes load 3 past the cut-off.
+>
+> **Still open:** contractor loads at Tincup (call Jeffco); trailer size (large → $2,900, small → $2,650); truck mpg/fuel type.
+
 **Status: DRAFT. Not sent. No agreement built.** Quote: [joe-willis-tree-removal.html](joe-willis-tree-removal.html) →
 `Sixfold-Quote-Tree-Removal-Joe-Willis.pdf` (1 page). Rebuild: `node quotes/build.mjs && node tools/html-to-pdf.mjs Joe-Willis`.
 
