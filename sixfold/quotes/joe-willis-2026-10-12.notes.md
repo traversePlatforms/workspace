@@ -1,6 +1,45 @@
-# Joe Willis — tree removal and haul-off, 156 Old Corral Rd, Bailey (2026-10-12)
+# Joe Willis — tree removal, 156 Old Corral Rd, Bailey (2026-10-12)
 
-> ## Rev 2, 2026-10-13: Brandon's figures. **$2,900, one day.** (Rev 1 below: $4,375 over two days, on trade times.)
+> ## Rev 3, 2026-10-13: chipped on site, November or December. **$2,400, one day.** This is the quote now.
+>
+> Matthew: "i dont think hauling will be an option no matter what." Rev 2 (haul-off, $2,900) is below and in git at `92e5f7c`.
+> One truck tows a rented chipper from Monument; two people; no slash yard, no dump fees, no haul floor.
+>
+> | Line | Person-min | Source |
+> |---|---|---|
+> | Monument ↔ job, 103 min each way +15% towing ≈ 237 min round trip × 2 people | 474 | OSRM |
+> | Fell three trees (Brandon ~45 min a tree) + chip ~2.5 h → 5 h on site × 2 | 600 | Brandon (felling); chipping time **assumed** |
+> | Pick up and return the rental chipper | 60 | **assumed** |
+> | **Labour 18.9 person-h × $100** | | **$1,890** |
+> | Chipper hire $320 (engine preset, 24 h) + 3 chains $60 + chipper fuel ~$19, +15% handling | | $459 |
+> | Gas: 166 mi at an assumed 10 mpg towing × $4.1761 (AAA Denver metro regular, 13 Oct 2026) | | $69 |
+> | **$2,418 → floor to 50** | | **$2,400** |
+>
+> Split $1,200 / $1,200. Price holds to 31 Dec 2026.
+>
+> **Margin (Brandon's 40% after overhead):** costs at the engine's stand-in rates (crew $28/h + overhead $20/person-hour) =
+> 18.9 × $48 = $907, + chipper, chains, fuel and gas $468 = **$1,375 → 43%**. At BLS-normal $24/h crew pay: $1,300 → **46%**.
+> 40% needs at least $2,292.
+>
+> **What the quote says about beetles, and what it rests on:**
+> - "CSFS lists chipping as a way to treat beetle-infested wood; deal with infested trees before the adults fly the following summer":
+>   CSFS fact sheet 5.528 (2024).
+> - "Fresh pine chips can draw other bark beetles to standing trees … chips kept off the base of your standing pines": Fettig et al.
+>   2007, USDA FS PSW-GTR-203 (ponderosa plots: 2.0% of trees attacked untreated vs 30.2% thinned in spring with all biomass chipped;
+>   authors suggest limiting chips in direct contact with residual trees). CSFS Ips page: freshly cut wood is a main Ips driver.
+> - "Done in November or December, when beetles are not flying": MPB adults emerge mid-June through September (CSFS 5.528); Ips fly
+>   when days reach 50–60°F (CSFS Ips fact sheet 5.558).
+> - **Not claimed:** that any source names Nov/Dec as the best month, or puts a number on how much lower the risk is than October.
+>   That is my reading of the guidance, and the quote doesn't say otherwise.
+>
+> **Open before it goes to Joe:**
+> 1. **Chipper capacity.** The trunks are about 12–16 in. Most towable rentals take 6–12 in, so this needs a 12 in+ machine, or the
+>    butt logs split down. The $320 is the engine preset, not a quote from a rental yard. A larger machine costs more.
+> 2. **Joe agrees to the chips staying on his lot**, a fair amount for three pines, spread thin.
+> 3. **Access in November/December** at about 8,000 ft (snow on Old Corral Rd and the driveway) for a truck towing a chipper.
+> 4. Brandon's real crew pay (the margin above is on stand-in rates). Bailey is still outside the 35-mile area (Brandon's call).
+
+> ## Rev 2, 2026-10-13 (SUPERSEDED by rev 3): haul-off on Brandon's figures. **$2,900, one day.** (Rev 1 below: $4,375 over two days, on trade times.)
 >
 > Brandon (via Matthew) looked at the photos and video: **4-5 hours on site** (about 45 minutes a tree, then cutting up and
 > loading), **3 haul loads**, **a one-day job**, **two trucks from Monument**.
@@ -48,7 +87,7 @@
 **Status: DRAFT. Not sent. No agreement built.** Quote: [joe-willis-tree-removal.html](joe-willis-tree-removal.html) →
 `Sixfold-Quote-Tree-Removal-Joe-Willis.pdf` (1 page). Rebuild: `node quotes/build.mjs && node tools/html-to-pdf.mjs Joe-Willis`.
 
-**$4,375.00 fixed, $2,187.50 / $2,187.50. Three trailer loads included; each further load $640, agreed before it is hauled.**
+**Rev 1 (superseded): $4,375.00 fixed, $2,187.50 / $2,187.50. Three trailer loads included; each further load $640, agreed before it is hauled.**
 
 ## What Matthew asked for
 
