@@ -1837,6 +1837,9 @@ if ($action === 'calfeed') {
         if ($e['kind'] === 'walk') { $sum = $visit . ': ' . $e['title']; $loc = $place; $uid = 'walk-' . $e['region'] . '-' . $e['id']; $len = 'PT1H'; }
         elseif ($e['kind'] === 'revisit') { $sum = 'Come back: ' . $e['title']; $loc = $place; $uid = 'back-' . $e['region'] . '-' . $e['id']; $len = 'PT30M'; }
         elseif ($e['kind'] === 'lead') { $sum = 'Follow up: ' . $e['title'] . (($e['need'] ?? '') !== '' ? ' (' . $e['need'] . ')' : ''); $loc = (string) ($e['town'] ?? ''); $uid = 'lead-' . $e['lead']; $len = 'PT30M'; }
+        /* 2026-10-13 (Fable review): a territory for the day (added 2026-10-12, after this feed) has no 'cid', so every one fell into the
+           entries branch with the same UID 'own-' and the calendar kept only one of them. Its own UID, by town and neighbourhood. */
+        elseif ($e['kind'] === 'terr') { $sum = 'Territory: ' . $e['title']; $loc = (string) ($e['town'] ?? ''); $uid = 'terr-' . $e['region'] . '-' . substr(md5((string) $e['area']), 0, 12); $len = 'PT30M'; }
         else { $sum = (string) $e['title']; $loc = ''; $uid = 'own-' . $e['cid']; $len = 'PT30M'; }
         $L[] = 'BEGIN:VEVENT';
         $L[] = 'UID:' . preg_replace('/[^A-Za-z0-9._-]/', '', $uid) . '@' . $host;
