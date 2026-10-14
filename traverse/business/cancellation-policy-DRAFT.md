@@ -41,7 +41,7 @@ We email your billing contact. If the payment is still not made 14 days after th
 
 For 30 days after your plan ends, you can download your customers, bookings and other records, or ask us for a copy. After that we delete them, and our backups are overwritten within 30 more days.
 
-Questions: **billing@traverseplatforms.com** or (803) 260-7359.
+Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 
 ---
 

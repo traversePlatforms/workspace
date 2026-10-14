@@ -67,7 +67,7 @@ footer a{color:#566476}
 ${DRAFT ? '<p class="draft"><b>Draft for review.</b> This page is being reviewed and is not yet in effect.</p>' : ''}
 ${html.replace(/<table>/g, '<div class="tw"><table>').replace(/<\/table>/g, '</table></div>')}
 </main>
-<footer>${PAGES.map((x) => x.dir === p.dir ? `<span>${x.title}</span>` : `<a href="../${x.dir}/">${x.title}</a>`).join('')}<a href="mailto:hello@traverseplatforms.com">hello@traverseplatforms.com</a><span>(803) 260-7359</span></footer>
+<footer>${PAGES.map((x) => x.dir === p.dir ? `<span>${x.title}</span>` : `<a href="../${x.dir}/">${x.title}</a>`).join('')}<a href="mailto:hello@traverseplatforms.com">hello@traverseplatforms.com</a><span>(303) 596-9515</span></footer>
 </body></html>
 `;
 

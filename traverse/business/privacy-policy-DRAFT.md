@@ -14,7 +14,7 @@ This policy explains what Traverse Platforms LLC ("Traverse", "we", "us") collec
 2. **Our clients and the people who use Traverse for them** (their admins, managers and crews).
 3. **Homeowners**, whose property information appears in the app.
 
-Questions or requests: **privacy@traverseplatforms.com**, or (803) 260-7359.
+Questions or requests: **privacy@traverseplatforms.com**, or (303) 596-9515.
 
 ### 1. Visitors to our website
 

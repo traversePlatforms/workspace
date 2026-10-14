@@ -21,7 +21,7 @@ const SITE_DEFAULTS = [
     'blocked_dates' => [],             /* 'YYYY-MM-DD' days off (the manage page adds to the file's own list) */
     'notify_to' => 'm.sharpe@traverseplatforms.com',
     'organizer_name' => 'Matthew Sharpe, Traverse Platforms',
-    'phone' => '(803) 260-7359',
+    'phone' => '(303) 596-9515',
     'smtp' => ['host' => 'smtp.gmail.com', 'port' => 587, 'user' => 'm.sharpe@traverseplatforms.com', 'pass' => '', 'from_name' => 'Traverse Platforms', 'timeout' => 15, 'ehlo' => 'traverseplatforms.com'],
     'manage_key' => '',
 ];
