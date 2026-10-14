@@ -1,0 +1,178 @@
+[
+  {
+    "file": "social/profile-1080.png",
+    "w": 1080,
+    "h": 1080,
+    "where": "Facebook, Instagram, TikTok, Nextdoor, Google Business Profile",
+    "how": "Profile picture / logo. Shows as a circle; the badge is sized to sit inside it."
+  },
+  {
+    "file": "social/profile-x-400.png",
+    "w": 400,
+    "h": 400,
+    "where": "X",
+    "how": "Edit profile › profile photo."
+  },
+  {
+    "file": "social/profile-youtube-800.png",
+    "w": 800,
+    "h": 800,
+    "where": "YouTube",
+    "how": "Customise channel › Branding › Picture."
+  },
+  {
+    "file": "social/profile-linkedin-400.png",
+    "w": 400,
+    "h": 400,
+    "where": "LinkedIn page",
+    "how": "Edit page › Logo."
+  },
+  {
+    "file": "social/facebook-cover-1702x630.png",
+    "w": 1702,
+    "h": 630,
+    "where": "Facebook page",
+    "how": "Edit cover photo › Upload. Phones crop the sides; the words sit in the middle so they stay."
+  },
+  {
+    "file": "social/x-header-1500x500.png",
+    "w": 1500,
+    "h": 500,
+    "where": "X",
+    "how": "Edit profile › header photo (3:1). The profile photo covers the lower left; nothing important is there."
+  },
+  {
+    "file": "social/linkedin-cover-1128x191.png",
+    "w": 1128,
+    "h": 191,
+    "where": "LinkedIn page",
+    "how": "Edit page › Cover image (about 4:1)."
+  },
+  {
+    "file": "social/youtube-banner-2560x1440.png",
+    "w": 2560,
+    "h": 1440,
+    "where": "YouTube",
+    "how": "Customise channel › Branding › Banner. Only the middle 1546×423 shows on every device; the words are inside it."
+  },
+  {
+    "file": "social/nextdoor-cover-1440x400.png",
+    "w": 1440,
+    "h": 400,
+    "where": "Nextdoor business page",
+    "how": "Page › Edit › Cover photo."
+  },
+  {
+    "file": "social/google-business-cover-1024x576.png",
+    "w": 1024,
+    "h": 576,
+    "where": "Google Business Profile",
+    "how": "Photos › Cover photo."
+  },
+  {
+    "file": "social/share-image-1200x630.png",
+    "w": 1200,
+    "h": 630,
+    "where": "Links shared anywhere (aeration365.com)",
+    "how": "Used by the website as its share picture."
+  },
+  {
+    "file": "social/post-intro-1080x1350.png",
+    "w": 1080,
+    "h": 1350,
+    "where": "Instagram / Facebook post",
+    "how": "Feed post (4:5)."
+  },
+  {
+    "file": "social/post-tip1-water-1080x1350.png",
+    "w": 1080,
+    "h": 1350,
+    "where": "Instagram / Facebook post",
+    "how": "Feed post (4:5). Source: CSU Extension PlantTalk 1505."
+  },
+  {
+    "file": "social/post-tip2-plugs-1080x1350.png",
+    "w": 1080,
+    "h": 1350,
+    "where": "Instagram / Facebook post",
+    "how": "Feed post (4:5). Source: UMass Amherst Extension."
+  },
+  {
+    "file": "social/post-tip3-season-1080x1350.png",
+    "w": 1080,
+    "h": 1350,
+    "where": "Instagram / Facebook post",
+    "how": "Feed post (4:5). Source: CSU Extension PlantTalk 1505."
+  },
+  {
+    "file": "social/story-quote-1080x1920.png",
+    "w": 1080,
+    "h": 1920,
+    "where": "Instagram / Facebook story",
+    "how": "Story (9:16). Add a link sticker to aeration365.com when posting."
+  },
+  {
+    "file": "social/highlight-quotes-1080x1920.png",
+    "w": 1080,
+    "h": 1920,
+    "where": "Instagram story highlight cover",
+    "how": "Edit highlight › Edit cover › pick from camera roll."
+  },
+  {
+    "file": "social/highlight-tips-1080x1920.png",
+    "w": 1080,
+    "h": 1920,
+    "where": "Instagram story highlight cover",
+    "how": "Edit highlight › Edit cover › pick from camera roll."
+  },
+  {
+    "file": "social/highlight-about-1080x1920.png",
+    "w": 1080,
+    "h": 1920,
+    "where": "Instagram story highlight cover",
+    "how": "Edit highlight › Edit cover › pick from camera roll."
+  },
+  {
+    "file": "square/square-logo-small-400x400.png",
+    "w": 400,
+    "h": 400,
+    "where": "Square: small logo",
+    "how": "Branding set › Small logo. Square asks for 400×400."
+  },
+  {
+    "file": "square/square-logo-full-1280x648.png",
+    "w": 1280,
+    "h": 648,
+    "where": "Square: full logo",
+    "how": "Branding set › Full logo. Square asks for at least 1280×648."
+  },
+  {
+    "file": "square/square-logo-full-transparent-1280x648.png",
+    "w": 1280,
+    "h": 648,
+    "where": "Square: full logo (clear background)",
+    "how": "Use instead of the white one if a page behind it is coloured.",
+    "transparent": true
+  },
+  {
+    "file": "square/square-logo-print-400x200.png",
+    "w": 400,
+    "h": 200,
+    "where": "Square: printed receipt logo",
+    "how": "Printed receipts are black only, so this is black type on white. Square asks for at least 400×200."
+  },
+  {
+    "file": "square/square-logo-print-800x400.png",
+    "w": 800,
+    "h": 400,
+    "where": "Square: printed receipt logo (sharper)",
+    "how": "The same at twice the size, if Square accepts it."
+  },
+  {
+    "file": "square/square-customer-display-2560x1600.png",
+    "w": 2560,
+    "h": 1600,
+    "where": "Square Register: customer display",
+    "how": "Square recommends 2560×1600 for the customer-facing screen."
+  }
+]
