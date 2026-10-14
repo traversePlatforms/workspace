@@ -838,6 +838,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       - **For the walker:** the walk goes on their calendar (and calendar feed) with everything for it, and their phone gets an alert when it is booked, moved, handed over or cancelled. Their home screen lists their walks, and they record Quote sent / Done / Nobody there.
       Switched on by `features.walkdesk` in Sixfold's company.json only. The editions carry the code switched off.
       **Call tries LIVE 2026-10-14 (d68cfa8):** No answer / Left voicemail / Talked to them on each lead, try again next day, 4 misses then a last text or email (opened on the caller's own phone, filled in), To call in groups.
+      **House lookup LIVE 2026-10-14 (4de73b1)** for 365 Aeration: address to lawn range plus confidence, lot, year built, water, miles; tied to leads with the customer's answers; Brad's lawn check. **Next:** quote generator (needs prices from Bryce's memo or Matthew), the customer quote page as 365 Aeration (needs the domain), and job scheduling to Brad. **Data:** 45 miles around 333 W Hampden Ave; phase 0 (Denver, Arvada, Boulder) running, phase 1 still to plan.
       **Matthew to do after upload:** make Jen's sign-in (role Office); tick Brandon and Brad "Does walks"; Brandon and Brad each turn on alerts on their phone.
 
 ## Surge
