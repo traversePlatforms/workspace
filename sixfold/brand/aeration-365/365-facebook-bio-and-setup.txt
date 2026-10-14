@@ -1,0 +1,33 @@
+365 AERATION & SEEDING CO. — FACEBOOK PAGE SETUP
+
+PAGE NAME
+365 Aeration & Seeding
+
+CATEGORY
+Lawn Care Service
+
+BIO (paste into "Bio", 101 characters max)
+Core aeration & overseeding for thicker, greener lawns across the Denver metro.
+
+PHONE
+(303) 915-1045
+
+ABOUT / DESCRIPTION (paste into "Details" or "About")
+365 Aeration & Seeding helps Denver-area homeowners grow healthier, thicker lawns all year long. We specialize in core aeration and overseeding, the two most effective ways to relieve compacted soil, fill in thin or patchy areas, and help your grass handle Colorado's dry summers and heavy clay soils.
+
+Fast scheduling, fair pricing, and results you can see.
+
+Call or text (303) 915-1045 to book your fall aeration, the best time of year to aerate and seed in Colorado.
+
+WHICH FILE GOES WHERE
+- Profile picture: 365-profile-picture-1080.png
+- Cover photo:     365-cover-photo-1702x630.png
+- Other logos (website, flyers, door hangers, shirts):
+    365-logo-badge-transparent.png       (full round badge)
+    365-logo-icon-transparent.png        ("365" only, good for small sizes)
+    365-logo-horizontal-transparent.png  (badge + name side by side)
+
+TIPS
+- Facebook shows the profile picture as a circle; the badge is sized to fit inside it.
+- The cover text is centered so it stays visible on phones, which crop the sides.
+- Add the phone number under Edit Page > Contact info so people can tap to call.

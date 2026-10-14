@@ -103,7 +103,10 @@ function company(): array {
                service. null = Colorado, as every install was before. Read through market(), never directly. */
             'market' => null,
             /* one phone and one computer per sign-in at a time (2026-10-12); false lets a code be used anywhere */
-            'oneDevice' => true];
+            'oneDevice' => true,
+            /* 365 Aeration & Seeding (2026-10-14, Sixfold's aeration brand): its name and phone for what customers see, and the base and radius
+               of its service area. null = no aeration brand (every other install) */
+            'a365' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -123,6 +126,9 @@ function company(): array {
     $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
     if (!is_array($c['market'])) $c['market'] = null;
     $c['oneDevice'] = $c['oneDevice'] !== false;
+    $a = is_array($c['a365']) ? $c['a365'] : null;
+    $c['a365'] = $a ? ['name' => mb_substr((string) ($a['name'] ?? ''), 0, 60), 'phone' => mb_substr((string) ($a['phone'] ?? ''), 0, 30),
+        'base' => (is_array($a['base'] ?? null) && count($a['base']) === 2) ? [(float) $a['base'][0], (float) $a['base'][1]] : null, 'radius' => (float) ($a['radius'] ?? 0)] : null;
     return $c;
 }
 /** the market this install sells in (2026-10-11): Colorado unless company.json names another. Every value checked, since the
@@ -3151,11 +3157,13 @@ if ($action === 'teamsave' || $action === 'teammember') {
  * {id, owner} and {id, follow: [date, time] | null}, alongside the existing status and note rows. */
 function leadsAll(): array {
     $leads = [];
-    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => []];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
+        if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
+        if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
         if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
         if (!empty($u['try'])) $leads[$u['id']]['tries'][] = ['o' => (string) $u['try'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* call tries (2026-10-14) */
         if (array_key_exists('owner', $u)) { $leads[$u['id']]['owner'] = (string) $u['owner']; $leads[$u['id']]['ownerBy'] = $u['by'] ?? null; }
@@ -3321,6 +3329,66 @@ if ($action === 'calsave') {
     out(['ok' => true, 'id' => $row['id']]);
 }
 
+/* ---- the house lookup (2026-10-14, 365 Aeration & Seeding; Matthew: when Jen gets an address on a call she must see everything about
+ * the property at once, with nobody measuring anything) ----
+ * One house with what matters for aeration: the lawn measured from the 2023 photo, the tree cover that throws that measurement
+ * (the page turns both into a range and a confidence), the lot, year built and house size where the county gives them. The office
+ * only; never shown to customers (Matthew: customers must not know we hold this). A lead can be tied to its house, and keep what the
+ * customer said about the lawn; Brad says on the day whether the size was right (lawncheck.log), which is how the ranges get better. */
+function sideDoor(string $kind, string $key, string $id) { $f = DATA_DIR . '/' . $kind . '-' . $key . '.json'; if (!is_readable($f)) return null; $j = json_decode((string) file_get_contents($f), true); return is_array($j) ? (($j['doors'] ?? $j)[$id] ?? null) : null; }
+function houseFacts(string $key, string $id): ?array {
+    if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) return null;
+    $key = doorHome($key, $id); $data = loadRegion($key); if (!$data) return null;
+    foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+        if ($d['id'] !== $id) continue;
+        $y = sideDoor('year', $key, $id);
+        return ['region' => $key, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($key), 'area' => (string) $a['name'], 'owner' => $d['owner'] ?? null,
+                'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
+                'yb' => is_array($y) ? ($y['yb'] ?? null) : null, 'bsf' => is_array($y) ? ($y['bsf'] ?? null) : null,
+                'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
+    }
+    return null;
+}
+if (in_array($action, ['a365house', 'leadhouse', 'leadask', 'lawncheck'], true) && !feature('walkdesk')) fail('Not here.', 404);
+if ($action === 'a365house') {
+    if (!desk()) fail('Not allowed.', 403);
+    $h = houseFacts((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''));
+    if (!$h) fail('No such house.', 404);
+    out(['ok' => true, 'house' => $h]);
+}
+if ($action === 'leadhouse' || $action === 'leadask') {
+    if (!desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    if ($action === 'leadhouse') {
+        if (!empty($body['clear'])) $row = ['id' => $id, 'house' => null, 'by' => $me, 'at' => time()];
+        else {
+            $h = houseFacts((string) ($body['region'] ?? ''), (string) ($body['door'] ?? ''));
+            if (!$h) fail('No such house.', 404);
+            $row = ['id' => $id, 'house' => ['region' => $h['region'], 'door' => $h['id'], 'address' => $h['address'], 'town' => $h['town']], 'by' => $me, 'at' => time()];
+        }
+    } else {
+        $ask = ['size' => $clean($body['size'] ?? '', 80), 'parts' => array_values(array_intersect((array) ($body['parts'] ?? []), ['front', 'back', 'side'])),
+                'water' => in_array($body['water'] ?? '', ['yes', 'no', 'some'], true) ? $body['water'] : '', 'last' => $clean($body['last'] ?? '', 60), 'note' => $clean($body['note'] ?? '', 300)];
+        if ($ask['size'] === '' && !$ask['parts'] && $ask['water'] === '' && $ask['last'] === '' && $ask['note'] === '') fail('Nothing to save.');
+        $row = ['id' => $id, 'ask' => $ask, 'by' => $me, 'at' => time()];
+    }
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+/* Brad on the day (or the office): was the lawn about the size we had? right / bigger / smaller, with his own figure if he has one */
+if ($action === 'lawncheck') {
+    if (!$isPost) fail('POST required', 405);
+    if (!desk() && !in_array($me, walkerList(), true)) fail('Not allowed.', 403);
+    $h = houseFacts((string) ($body['region'] ?? ''), (string) ($body['id'] ?? ''));
+    if (!$h) fail('No such house.', 404);
+    $v = (string) ($body['v'] ?? ''); if (!in_array($v, ['right', 'bigger', 'smaller'], true)) fail('Say whether it was right, bigger or smaller.');
+    $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 500000) fail('That lawn size does not look right.');
+    $row = ['id' => $h['id'], 'region' => $h['region'], 'v' => $v, 'sq' => $sq ?: null, 'ours' => $h['lawn']['sq'] ?? null, 'trees' => $h['trees'] ?? null, 'by' => $me, 'at' => time()];
+    if (!appendLine(DATA_DIR . '/lawncheck.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 /* ---- the walk desk (2026-10-14; Sixfold first, Matthew: "just a sixfold build atm") ----
  * The office (admins, and the office role) books a lead's or a door's walk with someone marked "Does walks" in Accounts.
  * The walk lands on that person's calendar with what they need for it (who, where, what they want, the notes), and their
@@ -3400,6 +3468,7 @@ function deskShow(array $w, ?array $leads = null): array {
     $o = array_intersect_key($w, array_flip(['id', 'kind', 'lead', 'region', 'door', 'title', 'walker', 'date', 'time', 'mins', 'addr', 'note', 'by', 'made', 'chg', 'done']));
     if ($w['kind'] === 'lead') {
         $l = ($leads ?? leadsAll())[$w['lead']] ?? null;
+        if ($l && !empty($l['house']['region'])) { $hf = houseFacts((string) $l['house']['region'], (string) $l['house']['door']); if ($hf) $o['house'] = $hf; }
         if ($l) $o['who'] = ['name' => (string) ($l['name'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'email' => (string) ($l['email'] ?? ''), 'town' => (string) ($l['town'] ?? ''),
                             'need' => (string) ($l['need'] ?? ''), 'msg' => (string) ($l['msg'] ?? ''), 'src' => (string) ($l['src'] ?? ''), 'status' => (string) $l['status'], 'notes' => $l['notes']];
     } else {
