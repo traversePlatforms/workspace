@@ -297,3 +297,6 @@ traverse/videos/tools/out/
 # 2026-10-14: meeting audio stays out of git (large, and private)
 sixfold/research/bryce-meeting/*.m4a
 sixfold/research/bryce-meeting/*.wav
+sixfold/research/bryce-meeting/transcript-raw.*
+sixfold/research/bryce-meeting/transcript-timed.txt
+sixfold/research/bryce-meeting/whisper.log
