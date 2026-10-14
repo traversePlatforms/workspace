@@ -46,7 +46,7 @@ const ED = {
     who: 'lawn care, landscaping, tree and wildfire-mitigation companies.',
     door: ['Lawn size, from large to none', 'Trees close to the house', 'Wildfire hazard around the property', 'The wildfire plan and HOA the house belongs to', 'The tax credit, insurance and grants that cover the work', 'The town’s watering and well rules', 'Frost dates and recent rain nearby', 'Owner, home value and the area’s figures'],
     rank: 'Large and medium lawns, fire hazard, trees against the house and lot size, then the owner’s ability to pay.',
-    tools: [['Plans', 'Monthly and quarterly plans, with the visits that are due.'], ['Fire check', 'A walk-around check with a printable homeowner report.'], ['Customers', 'Every customer with their visit history.'], ['Weather alerts', 'A phone alert for storms, freezes and frost in your towns.']],
+    tools: [['Plans', 'Monthly and quarterly plans, with the visits that are due.'], ['Fire check', 'A walk-around check with a printable homeowner report.'], ['Customers', 'Every customer with their visit history.'], ['Weather and fire alerts', 'Phone alerts for storms, freezes, frost, red-flag fire weather and wildfires nearby.']],
     sample: [['Lawn', 'Large · 6,200 sq ft'], ['Trees', 'Against the house'], ['Fire hazard', 'High'], ['Lot', '0.84 acres']], score: 9,
   },
   solar: {

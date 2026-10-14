@@ -87,9 +87,9 @@ const EDITIONS = {
       leadNeeds: ['Aeration', 'Lawn care plan', 'Yard cleanup', 'Trees or shrubs', 'Wildfire clearing', 'Question'],
       extraWork: [['thin', 'Thin or patchy lawn'], ['weeds', 'Weeds'], ['leaves', 'Leaves or debris'], ['shrubs', 'Overgrown shrubs'],
                   ['branches', 'Branches near the house'], ['fuel', 'Dry brush close to the house']],
-      // storm and tornado warnings for the crew's safety, and freeze and frost for the lawn; no fire alerts (Matthew 2026-10-06)
+      // storm and tornado warnings for the crew's safety, freeze and frost for the lawn, and fire weather + nearby wildfires for the fuel-reduction work (Matthew 2026-10-13: Yards still sells fire mitigation; reverses the 2026-10-06 'no fire alerts')
       best: 'yards',   // best doors first: this trade's walking order (2026-10-07)
-      alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'],
+      alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory', 'Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Wildfires'],
       townGroups: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial', 'south-denver', 'englewood', 'walden', 'aurora'],   // +Aurora 2026-10-12 (Matthew asked for it); +Walden 2026-10-12 (a Sixfold job's neighbourhood); +South Denver and Englewood 2026-10-12 (a Sixfold rep there);   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
