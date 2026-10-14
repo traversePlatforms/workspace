@@ -1872,6 +1872,66 @@ if ($action === 'calfeed') {
     exit;
 }
 
+/* ---- 365 Aeration & Seeding's website form (2026-10-14) ----
+ * The quote / information form on aeration365.com posts here from the visitor's browser. It becomes a lead in the Pipeline (source
+ * "365 website"), its house is found from the address when it is one of ours, and the office's phones get an alert. Only where the
+ * company has the aeration brand and the walk desk. Spam: a hidden field, a minimum time on the page, 5 a day from one address and
+ * 300 a day for the whole site. Nothing about the house is ever sent back to the visitor. */
+const A365_ORIGINS = ['https://aeration365.com', 'https://www.aeration365.com'];
+/** the same cleaning as $clean (defined further down, after the session check) */
+function a365Clean($v, int $max): string { $t = trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) $v))); return mb_substr($t, 0, $max, 'UTF-8'); }
+function a365Norm(string $a): string {
+    $w = array_values(array_filter(explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', strtoupper($a))), fn($x) => $x !== ''));
+    $out = []; foreach ($w as $x) { if (in_array($x, ['UNIT', 'APT', 'STE', 'SUITE', '#'], true)) break; $out[] = SEARCH_SYN[$x] ?? $x; }
+    return implode(' ', $out);
+}
+/** the one house on our lists at this street address (the city they gave breaks a tie); null when none or unsure */
+function a365Match(string $street, string $city): ?array {
+    $want = a365Norm($street); if (!preg_match('/^\d+ \S+/', $want)) return null;
+    $hits = [];
+    foreach (searchIndex() as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365Norm($p[4]) === $want) $hits[] = $p; }
+    if (count($hits) > 1 && $city !== '') { $c = strtoupper(trim($city)); $hits = array_values(array_filter($hits, fn($p) => str_contains(strtoupper($p[1]), $c) || str_contains($c, strtoupper($p[1])))); }
+    return count($hits) === 1 ? ['region' => $hits[0][0], 'door' => $hits[0][3], 'address' => $hits[0][4], 'town' => $hits[0][1]] : null;
+}
+/** an alert to everyone with the office role (their phones and computers that took alerts) */
+function a365Alert(string $title, string $text): void {
+    global $basePeople, $acct, $sessionKey;
+    try {
+        $v = pushVapid(false); if (!$v) return;
+        $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'a365-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'office') foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+    } catch (Throwable $e) { error_log('rounds a365 alert: ' . $e->getMessage()); }
+}
+if ($action === 'a365lead') {
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    if (in_array($origin, A365_ORIGINS, true) || (PHP_SAPI === 'cli-server' && preg_match('#^http://127\.0\.0\.1(:\d+)?$#D', $origin))) {
+        header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: POST'); header('Access-Control-Allow-Headers: Content-Type');
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
+    if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
+    if (!$isPost) fail('POST required', 405);
+    if (trim((string) ($body['hp'] ?? '')) !== '') out(['ok' => true]);   /* a bot filled the hidden field: thank it, keep nothing */
+    if ((int) ($body['t'] ?? 0) < 3000) fail('That was very quick. Please try again.');
+    $wants = ['aeration' => 'Aeration', 'both' => 'Aeration and overseeding', 'question' => 'A question'];
+    $want = (string) ($body['want'] ?? ''); if (!isset($wants[$want])) fail('Choose what you are looking for.');
+    $name = a365Clean($body['name'] ?? '', 120); $phone = a365Clean($body['phone'] ?? '', 40); $email = a365Clean($body['email'] ?? '', 160);
+    $street = a365Clean($body['street'] ?? '', 120); $city = a365Clean($body['city'] ?? '', 60); $zip = a365Clean($body['zip'] ?? '', 10);
+    $contact = in_array($body['contact'] ?? '', ['call', 'text', 'email'], true) ? (string) $body['contact'] : ''; $msg = a365Clean($body['msg'] ?? '', 1500);
+    if ($name === '') fail('Add your name.');
+    if ($phone === '' && $email === '') fail('Add a phone number or an email so we can reply.');
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+    if ($phone !== '' && strlen((string) preg_replace('/\D/', '', $phone)) < 10) fail('That phone number looks too short.');
+    if ($want !== 'question' && $street === '') fail('Add your street address so we can quote your lawn.');
+    if (!throttleTake(rateFile('a365lead|' . clientKey()), 5, 86400) || !throttleTake(rateFile('a365lead|site'), 300, 86400)) fail('We have had a lot of requests from here today. Please call or text us instead.', 429);
+    $lines = []; if ($contact !== '') $lines[] = 'Best way to reach them: ' . ['call' => 'a call', 'text' => 'a text', 'email' => 'email'][$contact]; if ($msg !== '') $lines[] = $msg;
+    $row = ['id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'a365web', 'at' => time(), 'need' => $wants[$want], 'name' => $name, 'phone' => $phone, 'email' => $email,
+            'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''];
+    if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
+    if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
+    a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want]);
+    out(['ok' => true]);
+}
+
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
@@ -3048,7 +3108,7 @@ if ($action === 'money') {
  * door bookings. Admin only: these are customers' names and numbers. Append-only, like the marks:
  *   leads/leads.log   one line per lead        { id, src, at, need, name, phone, email, town, msg, by? }
  *   leads/leadst.log  one line per update      { id, status?, note?, by, at }   last status wins */
-const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other'];
+const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web'];   /* messenger + the 365 Aeration site (2026-10-14) */
 const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost'];
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
 function readLines(string $f): array {
@@ -3974,7 +4034,7 @@ if ($action === 'leadadd') {
     if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $src = (string) ($body['src'] ?? '');
-    if (!in_array($src, LEAD_SRC, true) || $src === 'website') fail('Pick where the lead came from.');
+    if (!in_array($src, LEAD_SRC, true) || $src === 'website' || $src === 'a365web') fail('Pick where the lead came from.');
     $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => time(),
             'need' => $clean($body['need'] ?? '', 60), 'name' => $clean($body['name'] ?? '', 120), 'phone' => $clean($body['phone'] ?? '', 40),
             'email' => $clean($body['email'] ?? '', 160), 'town' => $clean($body['town'] ?? '', 160), 'msg' => $clean($body['msg'] ?? '', 2000), 'by' => $me];

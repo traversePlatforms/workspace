@@ -293,3 +293,7 @@ traverse/data-pipeline/door-territory/hail/se-cache/
 
 # video and screenshot tool scratch output (can hold unmasked test text)
 traverse/videos/tools/out/
+
+# 2026-10-14: meeting audio stays out of git (large, and private)
+sixfold/research/bryce-meeting/*.m4a
+sixfold/research/bryce-meeting/*.wav

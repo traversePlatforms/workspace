@@ -1767,6 +1767,9 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dwdonerow{opacity:.7}
   .dwhome{display:flex;gap:12px;align-items:center;width:100%;text-align:left;margin:0 0 12px;padding:14px;border-radius:18px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
   .dwhome.fresh{border-color:var(--booked)}
+  .viewas{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:14px;background:#1f3a2b;color:#fff;font:700 14px var(--sans)}
+  .viewas button{border:0;border-radius:10px;padding:8px 12px;background:#fff;color:#1f3a2b;font:800 13px var(--sans);cursor:pointer}
+  .dhome > .viewas{margin:12px 48px 0}
   .dh-walks:not(:empty){padding:24px 48px 0}.dh-walks .dwhome{margin:0;max-width:640px}
   .dwhome .ic{width:24px;height:24px;flex:none;color:var(--booked)}
   .dwhome span{display:grid;gap:2px}.dwhome b{font:800 15.5px var(--sans)}.dwhome small{font-size:13px;color:var(--soft)}
@@ -2523,7 +2526,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function devClass() { var ua = navigator.userAgent || ''; return (/iPhone|iPad|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'm' : 'c'; }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.walker = false; S.super = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3147,7 +3150,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.super = false; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -3201,13 +3204,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('tools', { title: CO.short, sub: 'Field tools', avatar: true });
     view.textContent = '';
     var box = q('div', 'choose');
+    if (S.viewAs) box.appendChild(viewAsBar());
     /* the greeting, with today's numbers filled in when they land */
     var hero = q('div', 'hero'), hr = new Date().getHours();
     hero.appendChild(q('div', 'hi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
     hero.appendChild(q('div', 'dt', new Date().toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' })));
     var hs = q('div', 'hs'), cells = {};
     [['doors', 'Doors today'], ['talked', 'Talked to'], ['booked', 'Quotes']].forEach(function (k) { var c = q('div'); cells[k[0]] = q('b', null, '–'); c.appendChild(cells[k[0]]); c.appendChild(q('span', null, k[1])); hs.appendChild(c); });
-    hero.appendChild(hs);
+    if (!asOffice()) hero.appendChild(hs);   /* door counts mean nothing to the office */
     box.appendChild(hero);
     box.appendChild(tipCard());
     api('stats', { params: { days: 1, who: S.me || '' } }).then(function (j) {
@@ -3248,9 +3252,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!standalone()) { var ih2 = q('div', 'insthost ontools'); box.appendChild(ih2); fillInstall(ih2); }
     var wkh = q('div'); box.appendChild(wkh); walkerCard(wkh);   /* the walk desk (2026-10-14) */
     var th = q('div', 'terrhost'); box.appendChild(th); territoryList(th);
+    if (asOffice()) {   /* first on the office home (2026-10-14): Jen works leads, not doors */   /* the office role (2026-10-14): leads, walks and everyone's calendar */
+      var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipelineView);
+      api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
+      grp('Office', [opt, tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
+    }
     grp('In the field', [
-      tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
-      tile('button', 'chart', 'My stats', 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
+      asOffice() ? null : tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
+      asOffice() ? null : tile('button', 'chart', 'My stats', 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
       tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView),
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colours mean.', null, function () { hailMapView(null, chooseView); }) : null,
@@ -3262,12 +3271,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'route', 'Territories', 'Assign neighbourhoods within your team.', 'Manager', territoriesView),
       tile('button', 'users', 'Team sign-ins', 'Add your crew, give a new code, sign out or remove.', 'Manager', accountsView),
       tile('button', 'chart', 'Office', 'Your team today and this week, the map of best doors left, walks and live radar.', 'Manager', officeView)]);
-    if (S.role === 'office' && feat('walkdesk')) {   /* the office role (2026-10-14): leads, walks and everyone's calendar */
-      var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipelineView);
-      api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
-      grp('Office', [opt, tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
-    }
-    if (S.role === 'admin') {
+    if (adminView()) {
       var pt = tile('button', 'clip', 'Pipeline', 'Door bookings and enquiries, call to won.', 'Admin only', pipelineView);
       api('leads', { params: { count: 1 } }).then(function (j) {
         var tg = pt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' · Admin only';
@@ -3278,7 +3282,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
          inside; the phone remembers which are open (Sales open the first time). The tiles stay in the page when folded. */
       box.appendChild(q('h2', 'tgrp', 'Office'));
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
-      var otl = q('div', 'tgrid'); otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
+      var otl = q('div', 'tgrid');
+      if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See the Office screen', 'Exactly what Jen sees: her leads, the house lookup and the calendars.', 'Admin only', function () { S.viewAs = 'office'; chooseView(); }));
+      otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
       officeGroup(box, 'sales', 'Sales', [pt, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         qt,
@@ -3956,7 +3962,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      One list for every channel. Website form leads arrive by themselves (api/submit.php files
      them); everything else is added by hand. Shown on the Pipeline beside the door bookings.
      Admin only. Names, numbers and messages are drawn with textContent. */
-  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other' };
+  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other', messenger: 'Facebook Messenger', a365web: '365 website' };
   var LEAD_ST = [];     /* setCompany(): the 'walk' step is named after the company's visit */
   var LEAD_NEED = [];   /* setCompany(): company.json leadNeeds */
   function ago(ts) {
@@ -3999,7 +4005,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       sb.appendChild(b);
     });
     c.appendChild(sb);
-    if (l.status === 'won' && S.role === 'admin') {
+    if (l.status === 'won' && adminView()) {
       var mcl = q('button', 'addlead mkcust', 'Make customer'); mcl.type = 'button';
       mcl.addEventListener('click', function () { makeCustomer({ lead: l.id }); });
       c.appendChild(mcl);
@@ -4017,6 +4023,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      ticked "Does walks" in Accounts go. They say how it went from the walk itself, which moves the lead along. */
   function wdOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
   function walkerOn() { return feat('walkdesk') && !!S.walker; }
+  /* an admin can look at the app as the office sees it (2026-10-14, Matthew: "as admin I can see exactly what Jen sees from my login"):
+     S.viewAs = 'office' changes only what is shown; the admin's own rights stay, and Back to admin ends it */
+  function asOffice() { return feat('walkdesk') && (S.role === 'office' || (S.role === 'admin' && S.viewAs === 'office')); }
+  function adminView() { return S.role === 'admin' && !S.viewAs; }
+  function viewAsBar() {
+    var b = q('div', 'viewas'); b.appendChild(q('span', null, 'You are seeing the Office screen: what Jen sees.'));
+    var x = q('button', null, 'Back to admin'); x.type = 'button'; x.addEventListener('click', function () { S.viewAs = null; chooseView(); }); b.appendChild(x);
+    return b;
+  }
   function dwFor(kind, a, b) { var m = S.dwalks || {}; return kind === 'lead' ? m['lead:' + a] : m['door:' + a + ':' + b]; }
   function dwWhen(w) { return dayName(w.date) + (w.time ? ', ' + fmtTime(w.time) : ''); }
   function dwEnd(t, mins) { var m = +t.slice(0, 2) * 60 + +t.slice(3, 5) + mins; return (m < 600 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60); }
@@ -4608,7 +4623,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function leadForm() {
     var f = q('div', 'phf');
     function field(label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; }
-    var src = q('select'); [['', 'Where did it come from?']].concat(Object.keys(LEAD_SRC).filter(function (k) { return k !== 'website'; }).map(function (k) { return [k, LEAD_SRC[k]]; }))
+    var src = q('select'); [['', 'Where did it come from?']].concat(Object.keys(LEAD_SRC).filter(function (k) { return k !== 'website' && k !== 'a365web' && (k !== 'messenger' || feat('walkdesk')); }).map(function (k) { return [k, LEAD_SRC[k]]; }))
       .forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; src.appendChild(op); });
     field('Source', src);
     var nm = field('Name', q('input')); nm.maxLength = 120;
@@ -5413,9 +5428,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function deskTools() {   /* the places, for the home's quiet row of tools */
     var t = [];
     if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
-    if (S.role === 'admin' && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
-    if (S.role === 'admin') { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
-    else if (S.role === 'office' && feat('walkdesk')) t.push(['Pipeline', pipelineView]);
+    if (adminView() && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
+    if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
+    else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push(['House lookup', function () { houseLookupView(null); }]); }
     else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
     if (walkerOn()) t.push(['My ' + vw() + 's', function () { myWalksView(); }]);
     t.push(['Calendar', function () { S.calWho = S.me; calendarView(); }]);
@@ -5424,7 +5439,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Office dashboard', officeView]);
     if (S.role === 'manager') t.push(['Team sign-ins', accountsView]);
     if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
-    if (S.role === 'admin') { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); }
+    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); if (feat('walkdesk')) t.push(['See the Office screen', function () { S.viewAs = 'office'; chooseView(); }]); }
     return t;
   }
   function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
@@ -5469,6 +5484,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var f = sug.querySelector('.dh-sg'); if (f && !f.classList.contains('addr') && sug.querySelectorAll('.dh-sg').length === 2) f.click(); else { S.searchQ = inp.value.trim(); searchView(chooseView); } } if (e.key === 'Escape') { sug.hidden = true; } });
     var chips = q('div', 'dh-chips'); hero.appendChild(chips);
     page.appendChild(hero);
+    if (S.viewAs) page.insertBefore(viewAsBar(), page.firstChild);
     var wkd = q('div', 'dh-walks'); page.appendChild(wkd); walkerCard(wkd);   /* the walk desk (2026-10-14): a computer shows the walks too */
     var grid = q('section', 'dh-grid'), c1 = q('div', 'dh-col'), c2 = q('div', 'dh-col'), c3 = q('div', 'dh-col');
     grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3); page.appendChild(grid);
@@ -5802,8 +5818,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dnavItems() {
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
-    if (S.role === 'admin' && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
-    if (S.role === 'admin' || (S.role === 'office' && feat('walkdesk'))) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip', 'deskbook', 'walk']]);
+    if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
+    if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip', 'deskbook', 'walk']]);
+    if (asOffice()) it.push(['house', 'House lookup', function () { houseLookupView(null); }, ['house']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     it.push(['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]);
@@ -8382,7 +8399,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var jb = feat('roof') ? q('a', 'adminlink', 'Booked doors for JobNimbus (CSV)') : q('a', 'adminlink', 'Door bookings for Jobber (CSV)');
     jb.href = API + (feat('roof') ? '?action=jobnimbus' : '?action=jobber'); jb.setAttribute('download', '');
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
-    if (S.role === 'admin') top.appendChild(jb);
+    if (adminView()) top.appendChild(jb);
     holder.appendChild(top);
     if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
@@ -11922,7 +11939,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      figure, score and filter is the card's own. A row opens its door in the neighbourhood, and Back comes here again. */
   var PLAN_CAP = 3000;
   var PLAN_NUM = { score: 1, hail: 1, roof: 1, built: 1, kwh: 1, panels: 1, acres: 1, value: 1 };   /* columns of figures, set to the right */
-  function planOk() { return S.role === 'admin' || S.role === 'manager'; }
+  function planOk() { return (S.role === 'admin' && !S.viewAs) || S.role === 'manager'; }
   function planTown() { return S.regions.filter(function (x) { return x.key === (S.plan && S.plan.key); })[0] || null; }
   function planWho(d) { if (d.rep) return d.rep; var r = planTown(), a = r && r.areas.filter(function (x) { return x.name === d._area; })[0]; return a && a.who ? a.who : ''; }
   function planStatus(d) { return d.cust ? 'Customer' : !d.mark ? 'To knock' : backOn(d) ? (d.mark.outcome === 'later' ? 'Due back' : 'Try again') : markName(d.mark); }
