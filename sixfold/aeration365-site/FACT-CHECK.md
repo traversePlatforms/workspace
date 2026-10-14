@@ -32,7 +32,7 @@ Test: scratchpad `ptest/a365site-test.mjs`, 20/20 checks.
 | The plugs stay on the lawn and break down back into the grass | UMass Amherst Extension, *Management of Compaction and Coring* (cores left on the surface and broken down as topdressing) | Verified 2026-09-25. "A week or two" of looking untidy is our own wording, not a source figure |
 | Spring and fall work best; any time the ground isn't frozen, but not when hot and dry | CSU PlantTalk 1505 | Verified 2026-09-25 |
 | "Denver metro" | Matthew's service area: 45 miles of 333 W Hampden Ave, Englewood. The Facebook kit says "Denver metro" too | Business fact |
-| Phone (303) 915-1045 | The 365 Facebook kit (365-facebook-bio-and-setup.txt) | Matthew's number for the brand |
+| Phone (720) 830-4553 | Matthew, 2026-10-14: "the point of contact for the site and other documents" (replaced (303) 915-1045 from the Facebook kit) | Matthew's number for the brand |
 | contact@aeration365.com | Matthew listed support, billing and contact aliases (2026-10-14) | **Matthew to confirm the exact alias** |
 | "We use what you send only to answer your request. We don't sell or share it." | How the app treats leads: they are held in the Sixfold app; nothing is sold or shared | **A promise. Keep it true**, or change it if leads are ever shared |
 

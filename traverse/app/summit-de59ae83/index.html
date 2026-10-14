@@ -4403,10 +4403,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return tryDue(l) <= Date.now() ? 'today' : 'wait';
   }
   function tryWhen(ts) { var d = new Date(ts * 1000), today = isoOf(new Date()) === isoOf(d); return (today ? 'today' : dayName(isoOf(d))) + ' ' + fmtTime((d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()); }
+  /* whose name and number a message carries (2026-10-14, Matthew: 365's customers never see Sixfold): the office, and leads from the
+     365 page (Facebook, Messenger, its website), get 365 Aeration's; everything else the company's own */
+  function leadBrand(l) {
+    var a = CO.a365 && wdOn() && (asOffice() || ['a365web', 'meta', 'messenger'].indexOf(l && l.src) >= 0) ? CO.a365 : null;
+    return { name: a ? a.name : CO.short, phone: a ? a.phone : CO.phone };
+  }
   function leadMsg(l, last) {
-    var nd = String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim().toLowerCase() || 'quote';
-    var me = String(S.me || '').split(' ')[0], hi = 'Hi ' + greetName(l.name) + ', this is ' + me + ' with ' + CO.short + '. ';
-    return last ? hi + 'We have tried you a few times about your ' + nd + ' request. If you would still like a quote, reply here' + (CO.phone ? ' or call us at ' + CO.phone : '') + '. If not, no problem, we will stop calling.'
+    var nd = String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim().toLowerCase() || 'quote', B = leadBrand(l);
+    var me = String(S.me || '').split(' ')[0], hi = 'Hi ' + greetName(l.name) + ', this is ' + me + ' with ' + B.name + '. ';
+    return last ? hi + 'We have tried you a few times about your ' + nd + ' request. If you would still like a quote, reply here' + (B.phone ? ' or call us at ' + B.phone : '') + '. If not, no problem, we will stop calling.'
       : hi + 'I just tried calling about your ' + nd + ' request. When is a good time to talk? You can also reply here.';
   }
   function callTries(l) {
@@ -4446,7 +4452,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var body = leadMsg(l, out);
       if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(body); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode(out ? 'Last text' : 'Text them too')); fu.appendChild(a); }
       if (l.email) {
-        var e = q('a'); e.href = 'mailto:' + l.email + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + CO.short) + '&body=' + encodeURIComponent(body + '\n\n' + S.me + '\n' + CO.short + (CO.phone ? '\n' + CO.phone : ''));
+        var e = q('a'); e.href = 'mailto:' + l.email + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + leadBrand(l).name) + '&body=' + encodeURIComponent(body + '\n\n' + S.me + '\n' + leadBrand(l).name + (leadBrand(l).phone ? '\n' + leadBrand(l).phone : ''));
         e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode(out ? 'Last email' : 'Email them too')); fu.appendChild(e);
       }
       box.appendChild(fu);
