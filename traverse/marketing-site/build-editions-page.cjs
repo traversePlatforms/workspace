@@ -21,7 +21,9 @@ const [hi] = cut('<header', '</header>'), hj = home.indexOf('</header>') + '</he
 const [fi] = cut('<footer', '</footer>');
 let head = home.slice(0, hi), header = home.slice(hi, hj), tail = home.slice(fi);
 /* the homepage's in-page links become links back to it */
-const homeLinks = (s) => s.replace(/href="#(top|product|trades|how|pricing|demo)"/g, 'href="../#$1"');
+const homeLinks = (s) => s.replace(/href="#(top|product|trades|how|pricing|demo|more|faq|contact)"/g, 'href="../#$1"')
+  /* 2026-10-13: the homepage's own folder links (booking page, legal pages) and its edition links, seen from /editions/ */
+  .replace(/href="(demo|terms|terms-of-use|privacy|cancellation)\/"/g, 'href="../$1/"').replace(/href="editions\/\?e=/g, 'href="?e=');
 header = homeLinks(header); tail = homeLinks(tail);
 head = head.replace(/<title>[^<]*<\/title>/, '<title>Traverse editions</title>');
 if (!/<title>Traverse editions<\/title>/.test(head)) throw new Error('title not set');
@@ -40,18 +42,18 @@ const ED = {
   },
   yards: {
     name: 'Yards', colour: '#2f7a3a', ink: '#ffffff', deep: '#2f7a3a',
-    line: 'See the lawn, the trees and the fire risk at every house before you pull up.',
+    line: 'See the lawn, the trees and the fire hazard around each house before you pull up.',
     who: 'lawn care, landscaping, tree and wildfire-mitigation companies.',
-    door: ['Lawn size and how green it is', 'Trees close to the house', 'Wildfire hazard for the property', 'The wildfire plan and HOA the house belongs to', 'The tax credit, insurance and grants that cover the work', 'The town’s watering and well rules', 'Frost dates and recent rain nearby', 'Owner, home value and the area’s figures'],
+    door: ['Lawn size, from large to none', 'Trees close to the house', 'Wildfire hazard around the property', 'The wildfire plan and HOA the house belongs to', 'The tax credit, insurance and grants that cover the work', 'The town’s watering and well rules', 'Frost dates and recent rain nearby', 'Owner, home value and the area’s figures'],
     rank: 'Large and medium lawns, fire hazard, trees against the house and lot size, then the owner’s ability to pay.',
-    tools: [['Plans', 'Monthly and quarterly plans, with the visits that are due.'], ['Fire check', 'A walk-around check with a printable homeowner report.'], ['Customers', 'Every customer with their visit history.'], ['Fire alerts', 'A phone alert for fire weather and fires nearby.']],
+    tools: [['Plans', 'Monthly and quarterly plans, with the visits that are due.'], ['Fire check', 'A walk-around check with a printable homeowner report.'], ['Customers', 'Every customer with their visit history.'], ['Weather alerts', 'A phone alert for storms, freezes and frost in your towns.']],
     sample: [['Lawn', 'Large · 6,200 sq ft'], ['Trees', 'Against the house'], ['Fire hazard', 'High'], ['Lot', '0.84 acres']], score: 9,
   },
   solar: {
     name: 'Solar', colour: '#f2a900', ink: '#0f1b2d', deep: '#8a5a00',
     line: 'Know how much sun a roof gets, and what it’s worth, before the first conversation.',
     who: 'residential solar installers and their sales teams.',
-    door: ['Sun-facing roof area, by direction', 'Shade from tall trees on the sunny side', 'Room for panels, the system size and a year’s output', 'The power company and its average price', 'Houses that already have solar, so you skip them', 'Roof size, pitch and year built', 'Owner, home value and the area’s figures'],
+    door: ['Sun-facing roof area, by direction', 'Shade from tall trees on the sunny side', 'Room for panels, the system size and a year’s output', 'The power company and its average price', 'Houses that already have solar, where it is on record, so you skip them', 'Roof size, pitch and year built', 'Owner, home value and the area’s figures'],
     rank: 'A year’s output and open sun, houses that already have solar moved down, then the owner’s ability to pay.',
     tools: [['Solar columns', 'Output, panels and shade in the planning table.'], ['Territories', 'Draw territories on the map and assign them.'], ['Follow-ups', 'Customers and the follow-ups that are due.'], ['Office dashboard', 'The whole team’s day on one screen.']],
     sample: [['Solar a year', '11,400 kWh'], ['Panels', '26 · 10.4 kW'], ['Shade', 'Open'], ['Power company', 'Xcel Energy']], score: 9,
@@ -139,7 +141,7 @@ const main = `
 </div>
 <p class="edl" id="edline"></p>
 <p class="edwho" id="edwho"></p>
-<div class="edcta"><a class="edb pri" href="../#demo">Book a demo</a></div>
+<div class="edcta"><a class="edb pri" href="../demo/">Book a demo</a></div>
 </div>
 <div class="edart" aria-hidden="true"><div class="edphone"><div class="edscreen"><div class="edbar"><b>Traverse<span id="edbarname">Roofing</span></b><small>Monument</small></div><div id="edmap"></div><div class="edchip"><div><small id="edchipk"></small><b id="edchipv"></b></div><span class="eds-sc" id="edchips">10</span></div></div></div></div>
 </div>

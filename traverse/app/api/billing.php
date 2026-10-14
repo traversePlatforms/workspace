@@ -188,6 +188,8 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
           'line_items' => [['price' => $price, 'quantity' => $qty]],
           'metadata' => ['install' => $c['install'], 'plan' => $plan, 'interval' => $iv],
           'subscription_data' => ['metadata' => ['install' => $c['install']]]];
+    /* the agreement, on Stripe's page under the pay button (2026-10-13; draft pages until the review is done) */
+    $f['custom_text'] = ['submit' => ['message' => 'By subscribing you agree to the Traverse Subscription Agreement (traverseplatforms.com/terms) and Privacy Policy (traverseplatforms.com/privacy).']];
     if ($addon) {
         if ($plan !== 'pro') return ['error' => 'A second edition goes with Pro.'];
         $ap = (string) ($c['prices']['addon'][$iv] ?? '');

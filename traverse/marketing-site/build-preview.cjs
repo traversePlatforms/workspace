@@ -33,7 +33,7 @@ let body = between(src, '</helmet>', '</x-dc>').trim();
 // Sixfold's own homepage. Every edition opens its app (build-editions.cjs, on the same hosting); Pest has none, so they stay on this page; Sign in goes to the editions so you pick which app.
 const APPS = ['tr-cb2e8587', 'ty-25604fff', 'ts-016064fc', 'tq-9cf8d9de', 'tg-3b0b89e7'];
 /* 2026-10-09: each edition card opens the editions page on that edition (build-editions-page.cjs); the page links on to the app */
-const links = { '/roofing': 'editions/?e=roofing', '/yards': 'editions/?e=yards', '/solar': 'editions/?e=solar', '/pest': 'editions/?e=pest', '/security': 'editions/?e=security', '/sign-in': '#trades' };
+const links = { '/roofing': 'editions/?e=roofing', '/yards': 'editions/?e=yards', '/solar': 'editions/?e=solar', '/pest': 'editions/?e=pest', '/security': 'editions/?e=security', '/demo': 'demo/', '/terms': 'terms/', '/terms-of-use': 'terms-of-use/', '/privacy': 'privacy/', '/cancellation': 'cancellation/' };   /* 2026-10-13: Sign in left the page; the booking page and legal pages are folders on this site */
 for (const [from, to] of Object.entries(links)) body = body.split('href="' + from + '"').join('href="' + to + '"');
 // the phone and tablet menu (the canvas has none): a button that opens the links in a panel. It sits BEFORE the
 // nav in the markup so the keyboard reaches the opened links with Tab (CSS `order` keeps it at the right end of the
@@ -122,7 +122,13 @@ html{scroll-behavior:smooth}
   .conds{grid-template-columns:1fr !important}
   .featstrip{grid-template-columns:1fr !important}
   .eds{grid-template-columns:1fr !important}
+  .lhform{grid-template-columns:1fr !important}
+  .seerow{grid-template-columns:minmax(0,1fr) !important}
+  .seerow figure:last-child{max-width:300px;margin:0 auto !important}
+  #more h2,#faq h2,#contact h2{font-size:32px !important}
 }
+@media (max-width:860px){.faqwrap{grid-template-columns:minmax(0,1fr) !important}}
+#faq summary::marker{color:#d6400c}
 /* small phones: the wordmark drops "Platforms" so the header stays on one row */
 @media (max-width:480px){
   h1{font-size:36px !important}
@@ -182,11 +188,27 @@ html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
 .eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
 .eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
 html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
-/* (the Find your edition button is the a[href="#trades"] with a border; the Sign in text links map to #trades too and stay still) */
-a[href="#demo"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
-a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
+/* (the Find your edition button is the a[href="#trades"] with a border) */
+a[href="demo/"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
+a[href="demo/"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>`;
+const linkJs = `<script>
+(function () {
+  var f = document.getElementById('linkhelp'); if (!f) return;
+  var T0 = Date.now(), msg = document.getElementById('lh-msg');
+  f.addEventListener('submit', function (e) {
+    e.preventDefault(); msg.style.color = '#0f1b2d';
+    var body = { name: f['lh-name'].value, company: f['lh-company'].value, email: f['lh-email'].value, phone: f['lh-phone'].value, hp: f.website.value, t: Date.now() - T0 };
+    if (!body.name.trim() || !body.company.trim() || !body.email.trim()) { msg.style.color = '#b3261e'; msg.textContent = 'Please add your name, company and email.'; return; }
+    var b = f.querySelector('button'); b.disabled = true; msg.textContent = 'Sending…';
+    fetch('demo/api.php?action=linkhelp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { b.disabled = false; if (j && j.ok) { f.reset(); msg.textContent = 'Thanks. We\\'ll email you your link once we\\'ve checked.'; } else { msg.style.color = '#b3261e'; msg.textContent = (j && j.error) || 'That did not go through. Please email support@traverseplatforms.com.'; } })
+      .catch(function () { b.disabled = false; msg.style.color = '#b3261e'; msg.textContent = 'No connection. Please try again.'; });
+  });
+})();
+</script>`;
 const motionJs = `<script>
 (function () {
   // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
@@ -230,7 +252,7 @@ const motionJs = `<script>
   function $(s) { return document.querySelectorAll(s); }
   try {
     // the hero
-    tag($('#top > div:first-child > *'), '', 0.09);
+    /* the hero's words are not faded in (2026-10-13): they must be there in the very first frame */
     var vis = document.querySelector('#top > div:last-child');
     if (vis) {
       var map = vis.firstElementChild, card = vis.lastElementChild, svg = map && map.querySelector('svg');
@@ -289,6 +311,16 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Traverse Platforms</title>
+<meta name="description" content="Traverse runs field sales from the first knock to the signed job: doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Traverse Platforms">
+<meta property="og:title" content="Traverse: work the real territory">
+<meta property="og:description" content="Doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.">
+<meta property="og:url" content="https://traverseplatforms.com/">
+<meta property="og:image" content="https://traverseplatforms.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(icon)}">
 ${head}
 ${phone}
@@ -297,6 +329,7 @@ ${motionHead}
 <body>
 ${body}
 ${menuJs}
+${linkJs}
 ${motionJs}
 </body>
 </html>

@@ -290,3 +290,6 @@ traverse/data-pipeline/door-territory/logs-walden/
 traverse/app/data/rounds/walden.json
 traverse/app/data/rounds/others-*.json
 traverse/data-pipeline/door-territory/hail/se-cache/
+
+# video and screenshot tool scratch output (can hold unmasked test text)
+traverse/videos/tools/out/

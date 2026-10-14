@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Traverse Platforms</title>
+<meta name="description" content="Traverse runs field sales from the first knock to the signed job: doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Traverse Platforms">
+<meta property="og:title" content="Traverse: work the real territory">
+<meta property="og:description" content="Doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.">
+<meta property="og:url" content="https://traverseplatforms.com/">
+<meta property="og:image" content="https://traverseplatforms.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2313294b%22%2F%3E%3Cg%20transform%3D%22translate(8.5%208.5)%20scale(0.734)%22%3E%3Cpolyline%20points%3D%229%2C47%2024%2C31%2037%2C40%2053%2C17%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%2247%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2231%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2237%22%20cy%3D%2240%22%20r%3D%225.2%22%20fill%3D%22%2313294b%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.6%22%2F%3E%3Ccircle%20cx%3D%2253%22%20cy%3D%2217%22%20r%3D%228%22%20fill%3D%22%23d6400c%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,7 +83,13 @@ html{scroll-behavior:smooth}
   .conds{grid-template-columns:1fr !important}
   .featstrip{grid-template-columns:1fr !important}
   .eds{grid-template-columns:1fr !important}
+  .lhform{grid-template-columns:1fr !important}
+  .seerow{grid-template-columns:minmax(0,1fr) !important}
+  .seerow figure:last-child{max-width:300px;margin:0 auto !important}
+  #more h2,#faq h2,#contact h2{font-size:32px !important}
 }
+@media (max-width:860px){.faqwrap{grid-template-columns:minmax(0,1fr) !important}}
+#faq summary::marker{color:#d6400c}
 /* small phones: the wordmark drops "Platforms" so the header stays on one row */
 @media (max-width:480px){
   h1{font-size:36px !important}
@@ -128,9 +144,9 @@ html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
 .eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
 .eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
 html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
-/* (the Find your edition button is the a[href="#trades"] with a border; the Sign in text links map to #trades too and stay still) */
-a[href="#demo"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
-a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
+/* (the Find your edition button is the a[href="#trades"] with a border) */
+a[href="demo/"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
+a[href="demo/"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>
 </head>
@@ -150,8 +166,8 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <a href="#trades" style="text-decoration: none;">Trades</a>
 <a href="#how" style="text-decoration: none;">How it works</a>
 <a href="#pricing" style="text-decoration: none;">Pricing</a>
-<a href="#trades" style="text-decoration: none;">Sign in</a>
-<a href="#demo" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 10px; background: #d6400c; color: #ffffff; text-decoration: none;">Book a demo</a>
+<a href="#contact" style="text-decoration: none;">Contact</a>
+<a href="demo/" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 10px; background: #d6400c; color: #ffffff; text-decoration: none;">Book a demo</a>
 </nav>
 </div>
 </header>
@@ -163,7 +179,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <h1 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 60px; line-height: 1.02; letter-spacing: -0.025em;">Stop guessing. Work the real territory.</h1>
 <p style="margin: 0; font-size: 19px; line-height: 30px; color: #566476; max-width: 46ch;">Traverse runs your sales from the first knock to the signed job: doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.</p>
 <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-<a href="#demo" style="display: inline-flex; align-items: center; height: 48px; padding: 0 22px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 16px; text-decoration: none;">Book a demo</a>
+<a href="demo/" style="display: inline-flex; align-items: center; height: 48px; padding: 0 22px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 16px; text-decoration: none;">Book a demo</a>
 <a href="#trades" style="display: inline-flex; align-items: center; height: 48px; padding: 0 22px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; font-size: 16px; text-decoration: none;">Find your edition</a>
 </div>
 </div>
@@ -204,7 +220,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <div class="daycol daycol-l" style="flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 56px;">
 <div class="dayitem" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; text-align: right;">
 <div style="display: flex; align-items: center; gap: 12px;"><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Doors</h3><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16"></path><circle cx="14.5" cy="13" r="1"></circle></svg></span></div>
-<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">Every house in your territory, in street order, with what you need to know before you knock. Mark each door in one tap: quote booked, or not now with a come-back date.</p>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 36ch;">The homes in your territory, in street order, with what you need to know before you knock. Mark each door in one tap: quote booked, or not now with a come-back date.</p>
 </div>
 <div class="dayitem" style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; text-align: right;">
 <div style="display: flex; align-items: center; gap: 12px;"><h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Phones</h3><span style="display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span></div>
@@ -241,6 +257,19 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 </div>
 </section>
 
+<!-- the real app (2026-10-13): a phone and a computer, homeowners' names and addresses masked -->
+<section id="see" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px 40px; display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #b83608;">The real app</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;">On the phone at the door, on the computer in the office</h2>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">The same doors and the same scores on both: the crew works the street, the office plans the next one.</p>
+</div>
+<div class="seerow" style="display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 28px; align-items: end;">
+<figure style="margin: 0; min-width: 0;"><div style="border-radius: 14px; overflow: hidden; border: 1px solid #dce2ea; box-shadow: 0 2px 4px rgba(15,27,45,0.06), 0 24px 48px -16px rgba(15,27,45,0.28); background: #ffffff;"><img src="shots/desk-workspace.png" width="1440" height="900" loading="lazy" alt="Traverse on a computer: a neighbourhood's doors in a list, on a map, and one door's roof, hail and wind details" style="display: block; width: 100%; height: auto;"></div><figcaption style="margin-top: 10px; font-size: 14px; color: #566476;">TraverseRoofing on a computer. Names and addresses changed. Map data &copy; OpenStreetMap contributors.</figcaption></figure>
+<figure style="margin: 0; min-width: 0;"><div style="border-radius: 28px; overflow: hidden; border: 8px solid #13294b; box-shadow: 0 24px 48px -16px rgba(15,27,45,0.35); background: #ffffff;"><img src="shots/phone-door.png" width="780" height="1688" loading="lazy" alt="Traverse on a phone: a neighbourhood's best doors for roofing, each with its score and the reason" style="display: block; width: 100%; height: auto;"></div><figcaption style="margin-top: 10px; font-size: 14px; color: #566476;">And on a phone.</figcaption></figure>
+</div>
+</section>
+
 <!-- editions -->
 <section id="trades" style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-direction: column; gap: 36px;">
 <div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
@@ -255,7 +284,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <li>A storm list: every door the hail or wind reached, by day</li>
 <li>Hail size and wind at every house, storm by storm</li>
 <li>Roof size, material and age</li>
-<li>A close-up photo of every roof</li>
+<li>A close-up photo of nearly every roof</li>
 <li>Booked doors sent straight into JobNimbus</li>
 </ul>
 <a href="editions/?e=roofing" style="margin-top: auto; font-weight: 700; font-size: 14px;">See TraverseRoofing &rarr;</a>
@@ -264,9 +293,9 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
 <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2f7a3a"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#2f7a3a" stroke="#ffffff" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#ffffff"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Yards</span></span></div>
 <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
-<li>Lawn size at every house</li>
+<li>Lawn size at nearly every house</li>
 <li>Trees close to the house</li>
-<li>Wildfire risk by property, for fuel-reduction work</li>
+<li>Wildfire hazard around each home, for fuel-reduction work</li>
 <li>Monthly plans and the visits that are due</li>
 <li>Frost dates and recent rain for each town</li>
 </ul>
@@ -276,7 +305,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <div style="background: #ffffff; border-radius: 16px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; box-shadow: 0 1px 2px rgba(15,27,45,0.08), 0 6px 16px rgba(15,27,45,0.06);">
 <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px;"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#f2a900"></rect><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#0f1b2d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline><circle cx="9" cy="47" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="24" cy="31" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="37" cy="40" r="5.2" fill="#f2a900" stroke="#0f1b2d" stroke-width="3.6"></circle><circle cx="53" cy="17" r="8" fill="#0f1b2d"></circle></g></svg><span style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px; letter-spacing: -0.015em; white-space: nowrap;"><b style="font-weight: 700;">Traverse</b><span style="font-weight: 500;">Solar</span></span></div>
 <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 20px; color: #0f1b2d;">
-<li>Sun-facing roof area at every house</li>
+<li>Sun-facing roof area at nearly every house</li>
 <li>Room for panels, and a year's output</li>
 <li>Shade from tall trees on the sunny side</li>
 <li>The household's power company and its prices</li>
@@ -326,7 +355,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
 <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #9fb3cf;">STATION 01</span>
 <h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.1; color: #ffffff;">Load your territory</h3>
-<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">Every house in the towns you work, grouped into neighbourhoods your crews can claim.</p>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #c9d6ea; max-width: 30ch;">The homes in the towns you work, grouped into neighbourhoods your crews can claim. Working somewhere new? We add towns every week.</p>
 </div>
 <div class="trav-st" style="flex: 1 1 25%; min-width: 0; padding: 56px 18px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;">
 <span style="width: 30px; height: 30px; border-radius: 50%; background: #13294b; border: 7px solid #ffffff; box-sizing: border-box; flex: none;"></span>
@@ -372,13 +401,31 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 </div>
 </section>
 
+<!-- more in every edition (2026-10-13): what the page never said -->
+<section id="more" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; gap: 32px;">
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 720px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #b83608;">In every edition</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;">More than a map of doors</h2>
+</div>
+<div class="moregrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 28px 36px;">
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14M5 12h10M5 16h6"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">English or Spanish</b><span style="font-size: 15px; line-height: 23px; color: #566476;">Each person picks their language. Crews read the app in the one they work in.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Plan on a computer</b><span style="font-size: 15px; line-height: 23px; color: #566476;">A map workspace, a planning table to sort and assign doors, and an office dashboard for the day.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">A score for every door</b><span style="font-size: 15px; line-height: 23px; color: #566476;">Each door scored 1 to 10 for your trade, with the reasons beside it.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">On your phone's calendar</b><span style="font-size: 15px; line-height: 23px; color: #566476;">Walks, call-backs and come-backs show up in Apple or Google Calendar.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Bring your customers</b><span style="font-size: 15px; line-height: 23px; color: #566476;">Import the customers you already have from a spreadsheet, and see them on the map.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M12 6l6 6-6 6"/><path d="M20 4v16"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Send it to your CRM</b><span style="font-size: 15px; line-height: 23px; color: #566476;">Booked doors go to JobNimbus, or out as a spreadsheet for Jobber.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Contracts kept on time</b><span style="font-size: 15px; line-height: 23px; color: #566476;">Roofing jobs show the homeowner's cancellation window from the day they sign.</span></div></div>
+<div style="display: flex; gap: 14px; align-items: flex-start; min-width: 0;"><span style="flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #d6400c;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d6400c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17l-5 3 1.5-5.5L4 11l5.7-.4L12 5l2.3 5.6 5.7.4-4.5 3.5L17 20z"/></svg></span><div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;"><b style="font-family: 'Familjen Grotesk', sans-serif; font-size: 19px;">Reviews that come in</b><span style="font-size: 15px; line-height: 23px; color: #566476;">When a job is won, ask for a review in one tap, with your own review link.</span></div></div>
+</div>
+</section>
+
 <!-- pricing: SAMPLE figures for the mockup only (Matthew 2026-10-06), shaped on what similar apps publish; Traverse pricing is not set -->
 <section id="pricing" style="background: #ffffff; border-top: 1px solid #dce2ea; border-bottom: 1px solid #dce2ea;">
 <div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; gap: 36px;">
 <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
 <div style="display: flex; flex-direction: column; gap: 12px; max-width: 640px;">
 <h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;">Pricing</h2>
-<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">Pay month to month, or save about 20% paying yearly. No contracts and no setup fee.</p>
+<p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476;">Month to month, cancel anytime. Pay yearly and save about 20%. No setup fee.</p>
 </div>
 <span style="display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; border: 1.5px dashed #b83608; color: #b83608; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;">Launch pricing</span>
 </div>
@@ -392,7 +439,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <li>Appointments and pipeline</li>
 <li>Your edition's data on every door</li>
 </ul>
-<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Book a demo</a>
+<a href="demo/" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Book a demo</a>
 </div>
 
 <div style="border: 1px solid #dce2ea; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px;">
@@ -404,7 +451,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <li>Pipeline and customers</li>
 <li>Training lessons</li>
 </ul>
-<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Book a demo</a>
+<a href="demo/" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Book a demo</a>
 </div>
 
 <div style="border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px; background: #13294b; color: #ffffff; box-shadow: 0 2px 4px rgba(15,27,45,0.12), 0 18px 40px -16px rgba(15,27,45,0.45);">
@@ -415,9 +462,9 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <li>Your edition's data on every door</li>
 <li>Phones, call-backs and follow-ups</li>
 <li>Teams, territories and goals</li>
-<li>Storm and fire alerts</li>
+<li>Weather alerts on every phone</li>
 </ul>
-<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; text-decoration: none;">Book a demo</a>
+<a href="demo/" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; text-decoration: none;">Book a demo</a>
 </div>
 
 <div style="border: 1px solid #dce2ea; border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 18px;">
@@ -430,7 +477,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <li>Your own lessons and services</li>
 <li>Nightly backups you can download</li>
 </ul>
-<a href="#demo" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Talk to us</a>
+<a href="demo/" style="margin-top: auto; display: inline-flex; justify-content: center; align-items: center; height: 46px; border-radius: 10px; border: 1.5px solid #13294b; color: #13294b; font-weight: 700; text-decoration: none;">Talk to us</a>
 </div>
 
 </div>
@@ -439,11 +486,60 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 </div>
 </section>
 
+<!-- questions (2026-10-13) -->
+<section id="faq" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 32px 56px;" class="faqwrap">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #b83608;">Questions</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;">What people ask</h2>
+<p style="margin: 0; font-size: 16px; line-height: 25px; color: #566476;">Something else? Ask us in your demo, or email <a href="mailto:hello@traverseplatforms.com" style="color: #b83608;">hello@traverseplatforms.com</a>.</p>
+</div>
+<div style="display: flex; flex-direction: column; border-top: 1px solid #dce2ea;">
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">Where does Traverse work?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">We started on Colorado's Front Range and add towns every week. Tell us where you work when you book a demo, and we'll build your towns for you.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">How accurate is the information on each door?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">Much of it is an estimate worked out from published sources, and the app says so where it is. Check anything that matters before you rely on it, and never present an estimate to a homeowner as a measurement.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">Does it work without signal?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">Yes. Doors, notes and photos are saved on the phone and sent the moment the signal returns.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">What do my crews need?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">A phone with a web browser. Traverse installs to the home screen from the browser, so there's no app store and nothing to update. It runs on computers and tablets too.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">Who owns our customers and notes?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">You do. Your company's records stay in your own copy of Traverse, are never shown to another company, and can be downloaded any time.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">How does setup work?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">We set up your company's app for you, with your name, colour and towns, then show your admin how to add the team.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">Can we cancel?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">Yes. Monthly plans cancel any time and run to the end of the month you've paid for. Yearly plans run to the end of the year. You can download your records before you go.</p></details>
+<details style="border-bottom: 1px solid #dce2ea; padding: 18px 0;"><summary style="cursor: pointer; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 19px; list-style-position: outside;">Can a team share one sign-in?</summary><p style="margin: 10px 0 0; font-size: 16px; line-height: 25px; color: #566476; max-width: 64ch;">No. Each person has their own, so you can see who did what. A sign-in works on one phone and one computer at a time.</p></details>
+</div>
+</section>
+
 <!-- closing call to action -->
 <section id="demo" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 20px;">
 <h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 48px; line-height: 1.05; letter-spacing: -0.02em; max-width: 18ch;">Traverse your day</h2>
 <p style="margin: 0; font-size: 18px; line-height: 28px; color: #566476; max-width: 52ch;">Book a demo and see how a full day runs: at the door, on the phone and in the office.</p>
-<a href="#demo" style="display: inline-flex; align-items: center; height: 52px; padding: 0 26px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 17px; text-decoration: none;">Book a demo</a>
+<a href="demo/" style="display: inline-flex; align-items: center; height: 52px; padding: 0 26px; border-radius: 10px; background: #d6400c; color: #ffffff; font-weight: 700; font-size: 17px; text-decoration: none;">Book a demo</a>
+</section>
+
+<!-- contact (2026-10-13): Sign in left the page; a client who lost their app's address asks here -->
+<section id="contact" style="background: #ffffff; border-top: 1px solid #dce2ea;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px 56px;">
+<div style="display: flex; flex-direction: column; gap: 14px; min-width: 0;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #b83608;">Contact</span>
+<h2 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;">Talk to us</h2>
+<p style="margin: 0; font-size: 17px; line-height: 27px; color: #566476;">Call or email. We answer ourselves.</p>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 17px;">
+<span><b>Phone</b> &middot; <a href="tel:+18032607359" style="color: #0f1b2d;">(803) 260-7359</a></span>
+<span><b>Sales and questions</b> &middot; <a href="mailto:hello@traverseplatforms.com" style="color: #0f1b2d;">hello@traverseplatforms.com</a></span>
+<span><b>Help for customers</b> &middot; <a href="mailto:support@traverseplatforms.com" style="color: #0f1b2d;">support@traverseplatforms.com</a></span>
+<span><b>Billing</b> &middot; <a href="mailto:billing@traverseplatforms.com" style="color: #0f1b2d;">billing@traverseplatforms.com</a></span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px; min-width: 0; background: #f4f6f9; border: 1px solid #dce2ea; border-radius: 16px; padding: 24px;">
+<h3 style="margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-weight: 600; font-size: 24px;">Forgot your app's link?</h3>
+<p style="margin: 0; font-size: 15px; line-height: 23px; color: #566476;">Each company has its own address for Traverse, from your admin. Can't find it? Tell us who you are and we'll send it once we've checked you're on your company's account.</p>
+<form id="linkhelp" novalidate style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;" class="lhform">
+<label style="display: flex; flex-direction: column; gap: 5px; font-size: 14px; font-weight: 700; min-width: 0;">Your name<input id="lh-name" name="lh-name" type="text" autocomplete="name" style="font: inherit; font-size: 16px; font-weight: 400; padding: 11px 12px; border: 1.5px solid #dce2ea; border-radius: 10px; background: #ffffff; color: #0f1b2d; width: 100%; box-sizing: border-box;"></label>
+<label style="display: flex; flex-direction: column; gap: 5px; font-size: 14px; font-weight: 700; min-width: 0;">Company<input id="lh-company" name="lh-company" type="text" autocomplete="organization" style="font: inherit; font-size: 16px; font-weight: 400; padding: 11px 12px; border: 1.5px solid #dce2ea; border-radius: 10px; background: #ffffff; color: #0f1b2d; width: 100%; box-sizing: border-box;"></label>
+<label style="display: flex; flex-direction: column; gap: 5px; font-size: 14px; font-weight: 700; min-width: 0;">Email<input id="lh-email" name="lh-email" type="email" autocomplete="email" style="font: inherit; font-size: 16px; font-weight: 400; padding: 11px 12px; border: 1.5px solid #dce2ea; border-radius: 10px; background: #ffffff; color: #0f1b2d; width: 100%; box-sizing: border-box;"></label>
+<label style="display: flex; flex-direction: column; gap: 5px; font-size: 14px; font-weight: 700; min-width: 0;">Phone (optional)<input id="lh-phone" name="lh-phone" type="tel" autocomplete="tel" style="font: inherit; font-size: 16px; font-weight: 400; padding: 11px 12px; border: 1.5px solid #dce2ea; border-radius: 10px; background: #ffffff; color: #0f1b2d; width: 100%; box-sizing: border-box;"></label>
+<input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position: absolute; left: -5000px; width: 1px; height: 1px;">
+<p id="lh-msg" role="status" style="grid-column: 1 / -1; margin: 0; font-size: 15px; font-weight: 700; min-height: 1px;"></p>
+<button type="submit" style="grid-column: 1 / -1; height: 48px; border: 0; border-radius: 10px; background: #13294b; color: #ffffff; font: 700 16px/1 'Atkinson Hyperlegible', sans-serif; cursor: pointer;">Send me my link</button>
+</form>
+</div>
+</div>
 </section>
 
 <!-- footer -->
@@ -465,8 +561,17 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 <b style="color: #ffffff; font-size: 14px;">Company</b>
 <a href="#product" style="color: #c9d6ea; text-decoration: none;">Product</a>
 <a href="#pricing" style="color: #c9d6ea; text-decoration: none;">Pricing</a>
-<a href="#trades" style="color: #c9d6ea; text-decoration: none;">Sign in</a>
+<a href="demo/" style="color: #c9d6ea; text-decoration: none;">Book a demo</a>
+<a href="#contact" style="color: #c9d6ea; text-decoration: none;">Contact</a>
 <a href="mailto:hello@traverseplatforms.com" style="color: #c9d6ea; text-decoration: none;">hello@traverseplatforms.com</a>
+<a href="tel:+18032607359" style="color: #c9d6ea; text-decoration: none;">(803) 260-7359</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+<b style="color: #ffffff; font-size: 14px;">Legal</b>
+<a href="terms/" style="color: #c9d6ea; text-decoration: none;">Subscription agreement</a>
+<a href="terms-of-use/" style="color: #c9d6ea; text-decoration: none;">Terms of use</a>
+<a href="privacy/" style="color: #c9d6ea; text-decoration: none;">Privacy</a>
+<a href="cancellation/" style="color: #c9d6ea; text-decoration: none;">Cancellation and refunds</a>
 </div>
 </div>
 <div style="max-width: 1200px; margin: 0 auto; padding: 16px 24px 32px; border-top: 1px solid #263243; font-size: 13px;">© 2026 Traverse Platforms</div>
@@ -483,6 +588,22 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
   // Escape closes it and puts the focus back on the button; a tap anywhere outside the header closes it
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) { set(false); b.focus(); } });
   document.addEventListener('click', function (e) { if (isOpen() && !(e.target.closest && e.target.closest('header'))) set(false); });
+})();
+</script>
+<script>
+(function () {
+  var f = document.getElementById('linkhelp'); if (!f) return;
+  var T0 = Date.now(), msg = document.getElementById('lh-msg');
+  f.addEventListener('submit', function (e) {
+    e.preventDefault(); msg.style.color = '#0f1b2d';
+    var body = { name: f['lh-name'].value, company: f['lh-company'].value, email: f['lh-email'].value, phone: f['lh-phone'].value, hp: f.website.value, t: Date.now() - T0 };
+    if (!body.name.trim() || !body.company.trim() || !body.email.trim()) { msg.style.color = '#b3261e'; msg.textContent = 'Please add your name, company and email.'; return; }
+    var b = f.querySelector('button'); b.disabled = true; msg.textContent = 'Sending…';
+    fetch('demo/api.php?action=linkhelp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { b.disabled = false; if (j && j.ok) { f.reset(); msg.textContent = 'Thanks. We\'ll email you your link once we\'ve checked.'; } else { msg.style.color = '#b3261e'; msg.textContent = (j && j.error) || 'That did not go through. Please email support@traverseplatforms.com.'; } })
+      .catch(function () { b.disabled = false; msg.style.color = '#b3261e'; msg.textContent = 'No connection. Please try again.'; });
+  });
 })();
 </script>
 <script>
@@ -528,7 +649,7 @@ a[href="#demo"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
   function $(s) { return document.querySelectorAll(s); }
   try {
     // the hero
-    tag($('#top > div:first-child > *'), '', 0.09);
+    /* the hero's words are not faded in (2026-10-13): they must be there in the very first frame */
     var vis = document.querySelector('#top > div:last-child');
     if (vis) {
       var map = vis.firstElementChild, card = vis.lastElementChild, svg = map && map.querySelector('svg');

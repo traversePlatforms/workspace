@@ -110,6 +110,8 @@ function company(): array {
     if (is_array($f) && is_array($loc)) {
         foreach (['name', 'short', 'tagline', 'phone', 'email', 'site'] as $k0) if (isset($loc[$k0]) && is_string($loc[$k0])) $f[$k0] = $loc[$k0];   /* COMPANY_LOCAL, listed here: a top-level const is not defined yet when company() first runs */
         if (!empty($loc['color']) && preg_match('/^#[0-9a-f]{6}$/', (string) $loc['color'])) { $f['colors'] = brandColors((string) $loc['color']); $f['brand'] = (string) $loc['color']; }
+        /* the company's Google review link (2026-10-13): the customer card's Ask for a review uses it */
+        if (isset($loc['review']) && is_string($loc['review'])) $f['links'] = array_merge(is_array($f['links'] ?? null) ? $f['links'] : [], ['googleReview' => $loc['review']]);
     }
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
@@ -4019,7 +4021,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         if (array_key_exists('plan', $in)) { $f['plan'] = (string) $in['plan']; if (!in_array($f['plan'], CUST_PLANS, true)) fail('Pick the plan.'); }
         if (array_key_exists('status', $in)) { $f['status'] = (string) $in['status']; if (!in_array($f['status'], CUST_STATUS, true)) fail('Pick active, paused or ended.'); }
         if (array_key_exists('price', $in)) { $p = $in['price']; if ($p === '' || $p === null) $f['price'] = null; elseif (!is_numeric($p) || $p < 0 || $p > 1000000) fail('The price should be a number of dollars.'); else $f['price'] = round((float) $p, 2); }
-        foreach (['start', 'next'] as $k) if (array_key_exists($k, $in)) { $d = (string) $in[$k]; if ($d !== '' && !dateOk($d)) fail('That is not a real date.'); $f[$k] = $d; }
+        foreach (['start', 'next', 'reviewAsked'] as $k) if (array_key_exists($k, $in)) { $d = (string) $in[$k]; if ($d !== '' && !dateOk($d)) fail('That is not a real date.'); $f[$k] = $d; }   /* reviewAsked 2026-10-13 */
         if (array_key_exists('agreement', $in)) { $u = trim((string) $in['agreement']); if ($u !== '' && !preg_match('#^https://[^\s<>"]{4,500}$#D', $u)) fail('The agreement link should start with https://'); $f['agreement'] = $u; }
         if ($isNew) $f += ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0]];
         return $f;
@@ -5329,7 +5331,7 @@ function brandColors(string $hex): array {
             'dark' => ['--bg' => $at(0.06, $s * 0.5), '--card' => $at(0.1, $s * 0.45), '--line' => $at(0.2, $s * 0.35), '--sunk' => $at(0.08, $s * 0.45), '--bar' => $at(0.12, $s * 0.5),
                        '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55)]];
 }
-const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site'];
+const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site', 'review'];
 if ($action === 'companyset') {
     if ($role !== 'admin' || !feature('company')) fail('Not allowed.', 403);   /* the Company screen: editions and clients (features.company), not Sixfold */
     if (!$isPost) fail('POST required', 405);
@@ -5342,6 +5344,7 @@ if ($action === 'companyset') {
     $loc['phone'] = $clean($body['phone'] ?? '', 30); if ($loc['phone'] !== '' && !preg_match('/^[0-9 ()+.\-]{7,30}$/', $loc['phone'])) fail('That phone number has characters a phone number does not.');
     $loc['email'] = $clean($body['email'] ?? '', 120); if ($loc['email'] !== '' && !filter_var($loc['email'], FILTER_VALIDATE_EMAIL)) fail('That email address does not look right.');
     $loc['site'] = strtolower($clean($body['site'] ?? '', 80)); if ($loc['site'] !== '' && !preg_match('#^(https?://)?[a-z0-9.-]+\.[a-z]{2,}(/[a-z0-9._~/-]*)?$#', $loc['site'])) fail('That website does not look right (like yourcompany.com).');
+    $loc['review'] = $clean($body['review'] ?? '', 300); if ($loc['review'] !== '' && !preg_match('#^https://[^\s<>"]{8,300}$#D', $loc['review'])) fail('The review link should start with https://');   /* 2026-10-13 */
     $color = strtolower(trim((string) ($body['color'] ?? '')));
     if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/', $color)) fail('Pick a colour.');
     if ($color !== '') $loc['color'] = $color;

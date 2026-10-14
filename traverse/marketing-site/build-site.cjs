@@ -52,6 +52,10 @@ fs.mkdirSync(path.join(OUT, 'editions'), { recursive: true });
 fs.writeFileSync(path.join(OUT, 'index.html'), home);
 fs.writeFileSync(path.join(OUT, 'editions', 'index.html'), eds);
 fs.writeFileSync(path.join(OUT, '.htaccess'), htaccess);
+/* 2026-10-13: the booking page (demo/, PHP), the legal pages (build-legal.cjs) and the link-preview picture, from site-src/ */
+const SRC = path.join(here, 'site-src'), EXTRA = ['demo', 'terms', 'terms-of-use', 'privacy', 'cancellation', 'og.png', 'shots'];
+for (const x of EXTRA) { if (!fs.existsSync(path.join(SRC, x))) throw new Error('site-src/' + x + ' is missing (run build-legal.cjs?)'); fs.cpSync(path.join(SRC, x), path.join(OUT, x), { recursive: true }); }
+for (const d of EXTRA.filter((x) => !x.includes('.'))) for (const f of fs.readdirSync(path.join(OUT, d))) { const t = /\.(html|php)$/.test(f) ? fs.readFileSync(path.join(OUT, d, f), 'utf8') : ''; const hit = APP_FOLDERS.find((a) => t.includes(a)); if (hit) throw new Error(d + '/' + f + ' names an app folder (' + hit + ')'); }
 /* bsdtar (Windows' own tar) writes forward-slash zips; Compress-Archive's backslash paths do not extract on the host */
-execFileSync('C:/Windows/System32/tar.exe', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess'], { cwd: OUT });
+execFileSync('C:/Windows/System32/tar.exe', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess', ...EXTRA], { cwd: OUT });
 console.log('wrote site/public_html and site/extract-in-traverseplatforms-public_html.zip');

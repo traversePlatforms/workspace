@@ -61,7 +61,7 @@ PLANS.forEach((p, i) => { portalProducts[i] = { product: productIds[i], prices: 
 const confs = await api('GET', '/billing_portal/configurations', { limit: 20 });
 const mine = confs.data.find((c) => c.metadata && c.metadata.traverse === '1');
 const portal = {
-  business_profile: { headline: 'Traverse: your plan, seats, card and invoices' },
+  business_profile: { headline: 'Traverse: your plan, seats, card and invoices', privacy_policy_url: 'https://traverseplatforms.com/privacy/', terms_of_service_url: 'https://traverseplatforms.com/terms/' },   /* 2026-10-13 */
   features: {
     payment_method_update: { enabled: true },
     invoice_history: { enabled: true },
