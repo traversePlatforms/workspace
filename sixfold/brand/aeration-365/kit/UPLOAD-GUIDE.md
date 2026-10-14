@@ -36,7 +36,7 @@ These are drafts. Post them when you choose to; nothing goes out from here.
 | File | Use |
 |---|---|
 | `social/post-intro-1080x1350.png` | A first post: who we are and how to reach us |
-| `social/post-tip1-water-1080x1350.png` | Tip 1: water a couple of days before (CSU Extension PlantTalk 1505) |
+| `social/post-tip1-water-1080x1350.png` | Tip 1: water if you can, or we run your sprinklers when we arrive (CSU Extension PlantTalk 1505) |
 | `social/post-tip2-plugs-1080x1350.png` | Tip 2: the plugs stay on the lawn (UMass Amherst Extension) |
 | `social/post-tip3-season-1080x1350.png` | Tip 3: spring and fall work best (CSU PlantTalk 1505) |
 | `social/story-quote-1080x1920.png` | A story; add a link sticker to aeration365.com when you post it |
