@@ -1034,6 +1034,15 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       upgrade as we get income in"). Today: NOAA radar MESH daily + hourly, NOAA Storm Events ground reports, NWS same-day spotter
       reports (all free). Later, priced per seat/month by quote: HailTrace, Interactive Hail Maps (HailStrike/ CoreLogic Weather
       Verification are the insurer-grade tier). They sharpen swaths and size near the house; compare one storm against ours first.
+- [ ] **TR-24 — Review the homepage FAQ (Matthew).** Added 2026-10-13. Eight questions live on traverseplatforms.com (#faq); add or
+      remove what he likes. Source: traverse/marketing-site/project/Main.dc.html (the faq list in the 2026-10-13 pass), then rebuild + upload.
+- [ ] **TR-25 — Review the homepage screenshots (Matthew).** Added 2026-10-13. "The real app" section: Roofing on a computer and a
+      phone, names and addresses masked (traverse/videos/tools/shots.mjs, local test copy only). The map still shows that
+      neighbourhood's real street names.
+- [ ] **TR-26 — Founder offer (Matthew to decide).** Added 2026-10-13. Today: a 14-day free pilot + 30% off Pro for 12 months.
+      Options raised: shorter trial, deeper discount, or a founder price locked for as long as they stay subscribed.
+- [~] **TR-27 — Booking emails need a Gmail app password + privacy@ alias (Matthew).** ✅ App password in place 2026-10-13, test email sent (Google accepted it); privacy@ alias still to add. Added 2026-10-13. Until the app password is in
+      traverse-site-private/site-config.php, demo bookings are saved and shown on the manage page but nobody is emailed.
 - [ ] **TR-18 — The client contract (Matthew + an attorney).** Added 2026-10-11. What a company signs before it gets an install:
       a licence to use the door data inside the app only; no bulk copying, export or resale; what happens to their data and access
       when they cancel; who owns what (their customers and notes are theirs; the door data is Traverse's); payment and seats; and the
