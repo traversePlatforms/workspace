@@ -1799,6 +1799,43 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .hpanel > .lnk{background:none;border:0;color:var(--accent);font:700 14px var(--sans);padding:12px 0 0;cursor:pointer}
   .hask .save{min-height:46px;border:0;border-radius:12px;background:var(--ink);color:var(--card);font:700 15px var(--sans);cursor:pointer}
   .hcheck{margin-top:6px;display:grid;gap:6px}.hcheck input{font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
+  /* the 365 office (2026-10-14): its colours, its home, the two-pane Pipeline */
+  body.a365{--bar:#21451f;--bar-soft:#b9cfb3;--ember:#4c9a3f;--ember-ink:#2e5e2c;--on-ember:#fff;--accent:#2e5e2c;--booked:#2e7a3c;--go:#2e5e2c;--moss-ink:#2e5e2c}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317}}
+  :root[data-theme="dark"] body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317}
+  .a365mk{width:38px;height:38px;display:block;border-radius:50%}.a365mk.dn{width:30px;height:30px}
+  body.owide .wrap{max-width:1240px}
+  .ohome{display:grid;gap:18px}
+  .ohero{background:var(--bar);color:#fff;border-radius:22px;padding:22px 22px 20px;box-shadow:var(--shadow)}
+  .ohi{font:600 26px/1.15 var(--serif,Georgia),serif}.odt{font-size:14px;opacity:.8;margin-top:4px}
+  .osearch{display:flex;align-items:center;gap:10px;margin-top:16px;background:#fff;border-radius:14px;padding:6px 6px 6px 14px;color:#1d2a1c}
+  .osearch .ic{width:20px;height:20px;flex:none;color:#2e5e2c}
+  .osearch input{flex:1;min-width:0;border:0;outline:0;font:16px var(--sans);padding:10px 0;background:transparent;color:#1d2a1c}
+  .osearch button{border:0;border-radius:10px;background:#2e5e2c;color:#fff;font:700 15px var(--sans);padding:0 18px;min-height:42px;cursor:pointer}
+  .ogrid{display:grid;gap:18px}
+  @media (min-width:900px){.ogrid{grid-template-columns:1.25fr 1fr}}
+  .ocol{display:grid;gap:18px;align-content:start}
+  .ocard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+  .ocard h2{font:800 13px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--soft);margin:0 0 12px}
+  .onums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+  .onum{border:1px solid var(--line);border-radius:14px;background:var(--bg);padding:10px 8px;text-align:left;cursor:pointer;color:var(--ink)}
+  .onum b{display:block;font:800 24px var(--sans)}.onum span{font-size:12px;color:var(--soft)}
+  .onum.ohot{border-color:var(--ember-ink);box-shadow:inset 0 0 0 1px var(--ember-ink)}
+  .oweb{font-size:13.5px;font-weight:700;color:var(--ember-ink);margin:0 2px 10px}
+  .olist{display:grid;gap:6px}
+  .orow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;cursor:pointer;color:var(--ink)}
+  .orow span:first-child{display:grid;gap:2px;flex:1;min-width:0}.orow b{font:700 15px var(--sans)}.orow small{font-size:12.5px;color:var(--soft)}
+  .otag{flex:none;font:800 11px var(--sans);padding:3px 9px;border-radius:999px;background:var(--ember-ink);color:#fff}.otag.again{background:#a16207}.otag.done{background:var(--soft)}
+  .otools{display:grid;grid-template-columns:1fr 1fr;gap:8px}.otools h2{grid-column:1/-1}
+  .otool{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:12px;font:700 14px var(--sans);color:var(--ink);cursor:pointer;text-align:left}
+  .otool .ic{width:18px;height:18px;flex:none;color:var(--ember-ink)}
+  .p2{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:18px;align-items:start;margin-top:12px}
+  .p2list{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto;display:grid;gap:6px;padding-right:4px}
+  .p2grp{font:800 12px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--soft);margin:10px 2px 2px}
+  .p2row{display:flex;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px;cursor:pointer;color:var(--ink)}
+  .p2row span{display:grid;gap:2px;min-width:0}.p2row b{font:700 15px var(--sans)}.p2row small{font-size:12.5px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .p2row.on{border-color:var(--ember-ink);box-shadow:inset 3px 0 0 var(--ember-ink);background:var(--bg)}
+  .p2det .door{margin:0}
 </style>
 </head>
 <body>
@@ -2370,7 +2407,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the logo goes home, the way people expect a logo to (Matthew, 2026-10-04); on the tools screen it goes to the top */
   function homeMark() {
     var h = q('button', 'mkbtn'); h.type = 'button'; h.setAttribute('aria-label', 'Home: field tools');
-    h.appendChild(ridge('mk'));
+    h.appendChild(asOffice() ? a365Mark() : ridge('mk'));
     h.addEventListener('click', function () { if (S.screen === 'tools') window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); else chooseView(); });
     return h;
   }
@@ -2411,7 +2448,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function setBar(mode, o) {
     o = o || {};
     hdr.hidden = false;
-    document.body.classList.remove('dk-on'); document.body.classList.remove('dk-top');   /* the workspace, the table and the dashboard hide this bar on a computer; every other screen shows it (2026-10-09) */
+    document.body.classList.remove('dk-on'); document.body.classList.remove('dk-top'); document.body.classList.remove('owide'); a365Brand();   /* the workspace, the table and the dashboard hide this bar on a computer; every other screen shows it (2026-10-09) */
     if (typeof dnavPaint === 'function') { dnavPaint(); setTimeout(dnavPaint, 0); }   /* the desktop top bar follows the screen */
     S.barArea = null;                             /* renderDoors re-claims it */
     var b = document.getElementById('barin');
@@ -3199,6 +3236,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     S.signin = null; S.screen = 'tools'; S.inOffice = false;
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
     S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
+    if (asOffice()) return officeHome();   /* the office has its own home, phone and computer (2026-10-14) */
     if (deskWide()) return deskHome();   /* on a computer: the desktop home (2026-10-09, mock-up E3) */
     foot.hidden = true; setDock(null);
     setBar('tools', { title: CO.short, sub: 'Field tools', avatar: true });
@@ -4534,7 +4572,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return box;
   }
   /* find the house: the address search every town shares, then the panel; from a lead, it can be tied to the lead */
-  function houseLookupView(lead, open) {
+  function houseLookupView(lead, open, typed) {
     hideToast(); S.signin = null; S.screen = 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
     setBar('back', { title: 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : 'Field tools' });
@@ -4577,7 +4615,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 350); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); } });
-    if (open) show(open.region, open.door); else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+    if (open) show(open.region, open.door); else if (typed) { inp.value = typed; run(); } else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
     window.scrollTo(0, 0);
   }
   /* on a lead in the Pipeline: its house, or the button to find it */
@@ -4609,6 +4647,111 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     box.appendChild(row); box.appendChild(fig);
     return box;
+  }
+  /* ---- the 365 office (2026-10-14, Matthew: Jen's screens in 365's colours, her own home, no doors or stats, and a Pipeline that
+     uses a computer's width) ---- */
+  function a365Brand() { var on = asOffice(); document.body.classList.toggle('a365', on); return on; }
+  function a365Mark(cls) { var i = q('img', cls || 'a365mk'); i.src = 'a365-badge.png'; i.alt = ''; return i; }
+  /* the office home: find a house, who to contact next, what is booked with Brad */
+  function officeHome() {
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'tools'; S.inOffice = false;
+    foot.hidden = true; setDock(null);
+    setBar('tools', { title: (CO.a365 && CO.a365.name) || '365 Aeration', sub: 'Lead desk', avatar: true });
+    document.body.classList.add('owide'); if (deskWide()) document.body.classList.add('dk-top');   /* a computer: the top bar is enough */
+    view.textContent = '';
+    var box = q('div', 'ohome');
+    if (S.viewAs) box.appendChild(viewAsBar());
+    var hr = new Date().getHours(), hero = q('div', 'ohero');
+    hero.appendChild(q('div', 'ohi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
+    hero.appendChild(q('div', 'odt', new Date().toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' })));
+    var sf = q('form', 'osearch'); var si = q('input'); si.type = 'search'; si.placeholder = 'Find a house: type the address they gave you'; si.setAttribute('aria-label', 'Find a house');
+    sf.appendChild(ico('search', 2.4)); sf.appendChild(si);
+    var sb = q('button', null, 'Find'); sb.type = 'submit'; sf.appendChild(sb);
+    sf.addEventListener('submit', function (e) { e.preventDefault(); houseLookupView(null, null, si.value); });
+    hero.appendChild(sf); box.appendChild(hero);
+    var grid = q('div', 'ogrid'), c1 = q('div', 'ocol'), c2 = q('div', 'ocol');
+    grid.appendChild(c1); grid.appendChild(c2); box.appendChild(grid);
+    /* who to contact */
+    var lc = q('section', 'ocard'); lc.appendChild(q('h2', null, 'Who to contact'));
+    var nums = q('div', 'onums'), list = q('div', 'olist'); lc.appendChild(nums); lc.appendChild(list); list.appendChild(q('div', 'skel'));
+    c1.appendChild(lc);
+    /* booked with Brad (or whoever does walks) */
+    var wc = q('section', 'ocard'); wc.appendChild(q('h2', null, 'Booked ' + vw() + 's')); var wl = q('div', 'olist'); wl.appendChild(q('div', 'skel')); wc.appendChild(wl);
+    c2.appendChild(wc);
+    var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
+    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['door', 'House lookup', function () { houseLookupView(null); }],
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].forEach(function (x) {
+      var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
+    });
+    c2.appendChild(tc);
+    view.appendChild(box);
+    api('leads').then(function (j) {
+      list.textContent = '';
+      if (!j || !j.ok) { list.appendChild(q('div', 'msg', 'The leads need signal.')); return; }
+      var open = j.leads.filter(function (l) { return ['new', 'contacted'].indexOf(l.status || 'new') >= 0; });
+      var G = { new: [], today: [], talked: [], wait: [], out: [] }; open.forEach(function (l) { G[callGroup(l)].push(l); });
+      var web = open.filter(function (l) { return l.src === 'a365web' && !(l.tries || []).length; }).length;
+      [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
+        var b = q('button', 'onum' + (k[0] === 'new' && G.new.length ? ' ohot' : '')); b.type = 'button';
+        b.appendChild(q('b', null, String(G[k[0]].length))); b.appendChild(q('span', null, k[1]));
+        b.addEventListener('click', function () { S.pipeStage = 'call'; pipelineView(); }); nums.appendChild(b);
+      });
+      if (web) list.appendChild(q('div', 'oweb', web + (web === 1 ? ' request' : ' requests') + ' from the website waiting for a first reply.'));
+      var next = G.new.concat(G.today).slice(0, 7);
+      if (!next.length) list.appendChild(q('div', 'msg soft', 'Nobody waiting. New Facebook and website requests show here as they come in.'));
+      next.forEach(function (l) {
+        var b = q('button', 'orow'); b.type = 'button';
+        var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
+        tx.appendChild(q('small', null, [l.need, LEAD_SRC[l.src] || l.src, ago(l.at)].filter(Boolean).join(' · '))); b.appendChild(tx);
+        b.appendChild(q('span', 'otag' + (callGroup(l) === 'today' ? ' again' : ''), callGroup(l) === 'today' ? 'Try again' : 'New'));
+        b.addEventListener('click', function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
+        list.appendChild(b);
+      });
+    }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'The leads need signal.')); });
+    api('deskwalks').then(function (j) {
+      wl.textContent = '';
+      if (!j || !j.ok) { wl.appendChild(q('div', 'msg', 'Could not load them.')); return; }
+      var today = todayISO(), up = j.walks.filter(function (w) { return w.date >= today; }).sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
+      if (!up.length) wl.appendChild(q('div', 'msg soft', 'Nothing booked. Book one from a lead in the Pipeline.'));
+      up.slice(0, 8).forEach(function (w) {
+        var b = q('button', 'orow'); b.type = 'button';
+        var tx = q('span'); tx.appendChild(q('b', null, dwWhen(w))); tx.appendChild(q('small', null, streetCase(w.title) + ' · ' + w.walker)); b.appendChild(tx);
+        if (w.done) b.appendChild(q('span', 'otag done', dwDoneName(w.done.o)));
+        b.addEventListener('click', function () { walkView(w.id, chooseView, w.walker); });
+        wl.appendChild(b);
+      });
+    }).catch(function () { wl.textContent = ''; wl.appendChild(q('div', 'msg', 'Could not load them.')); });
+    window.scrollTo(0, 0);
+  }
+  /* the Pipeline on a computer: the list on the left, the whole lead on the right (2026-10-14) */
+  function pipeKey(it) { return it.kind === 'door' ? 'door:' + it.x.region + ':' + it.x.id : 'lead:' + it.x.id; }
+  function pipeTwo(holder, groups, drawCard) {
+    document.body.classList.add('owide');
+    var all = []; groups.forEach(function (g) { all = all.concat(g[1]); });
+    if (!all.some(function (it) { return pipeKey(it) === S.pipeSel; })) S.pipeSel = all.length ? pipeKey(all[0]) : null;
+    var wrap = q('div', 'p2'), left = q('div', 'p2list'), right = q('div', 'p2det');
+    wrap.appendChild(left); wrap.appendChild(right); holder.appendChild(wrap);
+    var showDet = function () {
+      right.textContent = '';
+      var it = all.filter(function (x) { return pipeKey(x) === S.pipeSel; })[0];
+      if (it) drawCard(it, right); else right.appendChild(q('div', 'msg soft', 'Pick someone on the left.'));
+    };
+    groups.forEach(function (g) {
+      if (g[0]) left.appendChild(q('h3', 'p2grp', g[0] + ' · ' + g[1].length));
+      g[1].forEach(function (it) {
+        var x = it.x, k = pipeKey(it), b = q('button', 'p2row' + (k === S.pipeSel ? ' on' : '')); b.type = 'button';
+        var tx = q('span');
+        tx.appendChild(q('b', null, it.kind === 'door' ? streetCase(x.address) : (x.name || x.phone || x.email || 'No name')));
+        var w = it.kind === 'door' ? dwFor('door', x.region, x.id) : dwFor('lead', x.id), lt = it.kind === 'lead' ? lastTry(x) : null;
+        tx.appendChild(q('small', null, [it.kind === 'door' ? x.town : x.need, pipeSrcName(pipeSrc(it)), w ? VW() + ' ' + dwWhen(w) : lt ? TRY_N[lt.o] + ' ' + ago(lt.at) : ago(it.at)].filter(Boolean).join(' · ')));
+        b.appendChild(tx);
+        b.addEventListener('click', function () { S.pipeSel = k; [].forEach.call(left.querySelectorAll('.p2row.on'), function (r) { r.classList.remove('on'); }); b.classList.add('on'); showDet(); });
+        left.appendChild(b);
+      });
+    });
+    if (!all.length) left.appendChild(q('div', 'msg soft', 'Nothing at this stage.'));
+    showDet();
   }
   function saveLead(l, change, undoTo) {
     var body = { id: l.id }; for (var k in change) body[k] = change[k];
@@ -5816,6 +5959,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
+    if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']],
+      ['house', 'House lookup', function () { houseLookupView(null); }, ['house']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
     if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
@@ -5834,11 +5979,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var on = dnavOn();
     document.body.classList.toggle('dnav-on', on); dnav.hidden = !on;
     if (!on) return;
-    var items = dnavItems(), sig = [S.me, S.role, S.avatar || '', (CO && CO.name) || '', items.map(function (x) { return x[0]; }).join()].join('|');
+    a365Brand();
+    var items = dnavItems(), sig = [S.me, S.role, S.viewAs || '', S.avatar || '', (CO && CO.name) || '', items.map(function (x) { return x[0]; }).join()].join('|');
     if (dnav._sig !== sig) {
       dnav._sig = sig; dnav.textContent = '';
       var home = q('button', 'dnh'); home.type = 'button'; home.setAttribute('aria-label', 'Field tools');
-      home.appendChild(ridge('mk')); home.appendChild(q('b', null, (CO && CO.name) || 'Doors'));
+      if (asOffice()) { home.appendChild(a365Mark('a365mk dn')); home.appendChild(q('b', null, (CO.a365 && CO.a365.name) || '365 Aeration')); }
+      else { home.appendChild(ridge('mk')); home.appendChild(q('b', null, (CO && CO.name) || 'Doors')); }
       home.addEventListener('click', chooseView); dnav.appendChild(home);
       var links = q('div', 'dnl');
       items.forEach(function (x) { var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('data-k', x[0]); b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = x[0] === 'office'; x[2](); }); links.appendChild(b); });
@@ -8270,12 +8417,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!again) hideToast();
     S.signin = null; S.screen = 'pipeline';
     foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Pipeline', sub: 'Door bookings and enquiries, call to won', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', { title: 'Pipeline', sub: asOffice() ? 'Leads, calls and ' + vw() + 's' : 'Door bookings and enquiries, call to won', back: chooseView, backLabel: asOffice() ? 'Home' : 'Field tools' });
     var holder = S.qholder;
     if (!again) {
       view.textContent = '';
       /* Results lives here since the fold-up (2026-10-12): which doors turn into jobs, the end of this same pipeline */
-      var rs0 = q('button', 'lnk subnav', 'Results: which doors turn into jobs \u203a'); rs0.type = 'button'; rs0.addEventListener('click', function () { S.resultsBack = pipelineView; resultsView(); }); view.appendChild(rs0);
+      var rs0 = q('button', 'lnk subnav', 'Results: which doors turn into jobs \u203a'); rs0.type = 'button'; rs0.addEventListener('click', function () { S.resultsBack = pipelineView; resultsView(); }); if (!asOffice()) view.appendChild(rs0);
       holder = q('div'); holder.appendChild(q('div', 'skel')); holder.appendChild(q('div', 'skel'));
       view.appendChild(holder);
       S.qholder = holder;
@@ -8405,7 +8552,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
     if (S.metaPrev) holder.appendChild(metaPreview());
-    holder.appendChild(walksUp(S.qlist || []));
+    if (!asOffice()) holder.appendChild(walksUp(S.qlist || []));   /* the office sees booked walks on its home */
     /* stages */
     var seg = q('div', 'pipeseg');
     PIPE_ST.forEach(function (st) {
@@ -8432,23 +8579,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(q('div', 'msg', items.length ? 'Nothing at this stage' + (src === 'all' ? '' : ' from ' + pipeSrcName(src)) + '.'
         : 'Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent; website enquiries arrive by themselves; add the rest with + Add a lead.'));
     }
-    var drawCard = function (it) {
+    var drawCard = function (it, into) {
       var card = it.kind === 'door' ? quoteCard(it.x) : leadCard(it.x);
       card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild);
-      holder.appendChild(card);
+      (into || holder).appendChild(card);
     };
     /* To call in groups (2026-10-14, call tries): who to call first, then who is waiting */
+    var groups = [['', shown]];
     if (stage === 'call' && wdOn() && shown.length) {
       var gOf = function (it) { return it.kind === 'lead' ? callGroup(it.x) : 'new'; };
       var lt = function (it) { var x = it.kind === 'lead' ? lastTry(it.x) : null; return x ? x.at : 0; };
+      groups = [];
       [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
         var its = shown.filter(function (it) { return gOf(it) === g[0]; });
         if (!its.length) return;
         if (g[0] !== 'new') its.sort(function (a, b) { return lt(a) - lt(b); });
-        holder.appendChild(q('h2', 'pipegrp', g[1] + ' \u00b7 ' + its.length));
-        its.forEach(drawCard);
+        groups.push([g[1], its]);
       });
-    } else shown.forEach(drawCard);
+    }
+    if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
+    else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
+    if (S.pipeFocus && !deskWide()) { var fc = holder.querySelector('[data-id="' + S.pipeFocus + '"]'); if (fc) setTimeout(function () { fc.scrollIntoView({ block: 'start' }); }, 30); }
+    S.pipeFocus = null;
     window.scrollTo(0, y);
   }
   /* ---- address search (2026-10-04) ----
