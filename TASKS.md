@@ -830,6 +830,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       photo as a second look, show "mostly trees" on wooded lots, then a "Most lawn" sort and a
       per-door figure. **First true check: one lot Sixfold has measured on the ground.** Write-up:
       [LAWN-SIZE.md](traverse/data-pipeline/door-territory/LAWN-SIZE.md).
+- [ ] **SX-56 — Walk desk: book walks with Brandon or Brad from the leads (Sixfold only).** Asked 2026-10-14.
+      **Built and tested 2026-10-14 (74 checks).** It has four parts:
+      - **Office role:** for Jen (Pipeline, leads, calls and emails, booking walks, everyone's calendar; no accounts, downloads or settings).
+      - **"Does walks" switch** in Accounts.
+      - **"Book the walk with someone"** on every lead and door booking in the Pipeline. Both walkers' days show side by side with their free times, and a double booking is warned about.
+      - **For the walker:** the walk goes on their calendar (and calendar feed) with everything for it, and their phone gets an alert when it is booked, moved, handed over or cancelled. Their home screen lists their walks, and they record Quote sent / Done / Nobody there.
+      Switched on by `features.walkdesk` in Sixfold's company.json only. The editions carry the code switched off.
+      **Matthew to do after upload:** make Jen's sign-in (role Office); tick Brandon and Brad "Does walks"; Brandon and Brad each turn on alerts on their phone.
 
 ## Surge
 

@@ -1684,7 +1684,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -1837,7 +1837,11 @@ if ($action === 'calfeed') {
     foreach (calEventsFor($who, $from, $to) as $e) {
         $d = str_replace('-', '', (string) $e['date']); $t = (string) ($e['time'] ?? '');
         $place = trim((string) ($e['title'] ?? '') . (($e['town'] ?? '') !== '' ? ', ' . $e['town'] : '') . ', ' . market()['state'], ', ');   /* the market's state (2026-10-13, Fable review: it said CO in every market) */
-        if ($e['kind'] === 'walk') { $sum = $visit . ': ' . $e['title']; $loc = $place; $uid = 'walk-' . $e['region'] . '-' . $e['id']; $len = 'PT1H'; }
+        if ($e['kind'] === 'walk' && !empty($e['dw'])) {   /* the walk desk (2026-10-14) */
+            $sum = $visit . ': ' . $e['title']; $loc = (string) $e['addr']; $uid = 'dwalk-' . $e['dw']; $len = 'PT' . max(15, (int) $e['mins']) . 'M';
+            $e['note'] = implode("\n", array_filter([$e['phone'] !== '' ? 'Phone: ' . $e['phone'] : '', $e['need'] !== '' ? 'Wants: ' . $e['need'] : '', $e['note'] !== '' ? 'Note: ' . $e['note'] : '', 'Booked by ' . $e['by'] . '. Everything else is in the app.']));
+        }
+        elseif ($e['kind'] === 'walk') { $sum = $visit . ': ' . $e['title']; $loc = $place; $uid = 'walk-' . $e['region'] . '-' . $e['id']; $len = 'PT1H'; }
         elseif ($e['kind'] === 'revisit') { $sum = 'Come back: ' . $e['title']; $loc = $place; $uid = 'back-' . $e['region'] . '-' . $e['id']; $len = 'PT30M'; }
         elseif ($e['kind'] === 'lead') { $sum = 'Follow up: ' . $e['title'] . (($e['need'] ?? '') !== '' ? ' (' . $e['need'] . ')' : ''); $loc = (string) ($e['town'] ?? ''); $uid = 'lead-' . $e['lead']; $len = 'PT30M'; }
         /* 2026-10-13 (Fable review): a territory for the day (added 2026-10-12, after this feed) has no 'cid', so every one fell into the
@@ -1893,7 +1897,7 @@ function smsTarget(array $body, string $role, string $me): array {
     }
     if ($kind === 'lead') {
         $l = leadsAll()[$id] ?? null; if (!$l) return ['err' => 'No such lead.'];
-        if ($role !== 'admin' && $role !== 'manager' && (string) ($l['owner'] ?? '') !== $me) return ['err' => 'Not allowed.'];
+        if (!desk() && $role !== 'manager' && (string) ($l['owner'] ?? '') !== $me) return ['err' => 'Not allowed.'];
         return ['num' => smsE164((string) ($l['phone'] ?? '')), 'ref' => ['kind' => 'lead', 'id' => $id]];
     }
     if ($kind === 'customer') {
@@ -1962,12 +1966,13 @@ if ($action === 'taplogread') {
     usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
     out(['ok' => true, 'days' => $days, 'rows' => array_slice($rows, 0, 20000)]);
 }
-if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
 /* teams (2026-10-05): who is on whose team, worked out once per request; the functions and actions are further down */
-const ROLES = ['crew', 'manager', 'admin'];
+/* 'office' (2026-10-14, the walk desk): calls, emails and booking walks, nothing else of the admin's; only where features.walkdesk is on */
+define('ROLES', feature('walkdesk') ? ['crew', 'office', 'manager', 'admin'] : ['crew', 'manager', 'admin']);
 $TEAM = teamInfo($basePeople, $acct, $sessionKey);
 $myTeam = (string) ($TEAM['byName'][$me]['team'] ?? '');
 
@@ -3072,7 +3077,7 @@ function teamInfo(array $basePeople, array $acct, string $key): array {
         if ($r['off']) continue;
         $tid = (string) ($acct['member'][$r['id']] ?? '');
         if ($tid !== '' && !isset($acct['teams'][$tid])) $tid = '';
-        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid];
+        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid, 'walker' => !empty($acct['walker'][$r['id']])];
         if ($tid !== '') $members[$tid][] = $r['name'];
     }
     return ['byName' => $byName, 'members' => $members];
@@ -3081,7 +3086,9 @@ function sameTeam(string $who): bool { global $TEAM, $myTeam; return $myTeam !==
 /** may the signed-in person manage who's things (stats, calendar entries, goals, leads)? */
 function canManage(string $who): bool { global $role, $me; return $who === $me || $role === 'admin' || ($role === 'manager' && sameTeam($who)); }
 /** may they look at who's calendar? */
-function canViewCal(string $who): bool { global $role; return canManage($who) || ($role === 'crew' && sameTeam($who)); }
+function canViewCal(string $who): bool { global $role; return canManage($who) || desk() || ($role === 'crew' && sameTeam($who)); }
+/** the walk desk (2026-10-14): admins, and the office role where the company turns it on */
+function desk(): bool { global $role; return $role === 'admin' || ($role === 'office' && feature('walkdesk')); }
 function activeName(string $who): bool { global $TEAM; return $who !== '' && isset($TEAM['byName'][$who]); }
 /** whose figures a stats-style request is about: admins anyone (or everyone with ''), the rest themselves or someone they manage */
 function whoFor(string $req): string { global $role, $me; $req = trim($req); if ($role === 'admin') return $req; return ($req !== '' && canManage($req)) ? $req : $me; }
@@ -3162,13 +3169,13 @@ if ($action === 'myleads') {
     out(['ok' => true, 'who' => $who, 'leads' => $list]);
 }
 if ($action === 'leadassign') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if (!desk() && $role !== 'manager') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $owner = trim((string) ($body['owner'] ?? ''));
     $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     if ($owner !== '' && (!activeName($owner) || boardHidden($owner))) fail('Pick someone with a sign-in code.');
-    if (!mayAssign($all[$id]['owner'], $owner)) fail('A manager assigns leads within their own team.', 403);
+    if (!desk() && !mayAssign($all[$id]['owner'], $owner)) fail('A manager assigns leads within their own team.', 403);
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'owner' => $owner, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
@@ -3177,7 +3184,7 @@ if ($action === 'leadfollow') {
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     $own = $all[$id]['owner'];
-    if (!($role === 'admin' || ($own !== '' && canManage($own)))) fail('Not allowed.', 403);
+    if (!(desk() || ($own !== '' && canManage($own)))) fail('Not allowed.', 403);
     $date = (string) ($body['date'] ?? ''); $time = (string) ($body['time'] ?? '');
     if ($date !== '' && (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $mm) || !checkdate((int) $mm[2], (int) $mm[3], (int) $mm[1]))) fail('That is not a real date.');
     if ($time !== '' && !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', $time)) fail('That is not a real time.');
@@ -3212,7 +3219,7 @@ if ($action === 'calpeople') {
     foreach ($TEAM['byName'] as $n => $x) {
         if ($n !== $me && boardHidden($n)) continue;
         if (!canViewCal((string) $n)) continue;
-        $list[] = ['name' => (string) $n, 'role' => $x['role'], 'team' => $x['team'], 'edit' => canManage((string) $n), 'me' => $n === $me];
+        $list[] = ['name' => (string) $n, 'role' => $x['role'], 'team' => $x['team'], 'edit' => canManage((string) $n), 'me' => $n === $me, 'walker' => !empty($x['walker'])];
     }
     usort($list, fn($a, $b) => [!$a['me'], mb_strtolower($a['name'])] <=> [!$b['me'], mb_strtolower($b['name'])]);
     $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[(string) $tid] = (string) ($t[0] ?? '');
@@ -3221,7 +3228,9 @@ if ($action === 'calpeople') {
 /** everything on one person's calendar between two dates: walks they booked, their come-backs, lead follow-ups, their entries */
 function calEventsFor(string $who, string $from, string $to): array {
     $ev = [];
-    foreach (walksBetween($from, $to) as $w) if ($w['by'] === $who)
+    $dw = feature('walkdesk') ? deskWalks() : [];
+    $dwDoor = []; foreach ($dw as $x) if (!$x['off'] && $x['kind'] === 'door') $dwDoor[$x['region'] . ':' . $x['door']] = true;
+    foreach (walksBetween($from, $to) as $w) if ($w['by'] === $who && !isset($dwDoor[$w['region'] . ':' . $w['id']]))
         $ev[] = ['kind' => 'walk', 'date' => $w['date'], 'time' => $w['time'], 'title' => $w['address'], 'town' => $w['town'], 'region' => $w['region'], 'area' => $w['area'], 'id' => $w['id']];
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     foreach (($idx['regions'] ?? []) as $r) {
@@ -3250,6 +3259,16 @@ function calEventsFor(string $who, string $from, string $to): array {
         $dt = $l['follow']['date']; if ($dt < $from || $dt > $to) continue;
         $ev[] = ['kind' => 'lead', 'date' => $dt, 'time' => $l['follow']['time'], 'title' => trim(($l['name'] ?? '') ?: ($l['phone'] ?? '') ?: 'Lead'), 'need' => (string) ($l['need'] ?? ''),
                  'town' => (string) ($l['town'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'lead' => $l['id'], 'status' => $l['status']];
+    }
+    if ($dw) {
+        $leadsNow = leadsAll();
+        foreach ($dw as $x) {
+            if ($x['off'] || $x['walker'] !== $who || $x['date'] < $from || $x['date'] > $to) continue;
+            $l = $x['kind'] === 'lead' ? ($leadsNow[$x['lead']] ?? []) : [];
+            $ev[] = ['kind' => 'walk', 'dw' => $x['id'], 'date' => $x['date'], 'time' => $x['time'], 'mins' => (int) $x['mins'], 'title' => (string) $x['title'],
+                     'town' => $x['kind'] === 'lead' ? (string) ($l['town'] ?? '') : regionLabel((string) $x['region']), 'addr' => (string) $x['addr'], 'phone' => (string) ($l['phone'] ?? ''),
+                     'need' => (string) ($l['need'] ?? ''), 'by' => (string) $x['by'], 'done' => $x['done'], 'note' => (string) $x['note']];
+        }
     }
     foreach (calEntries() as $c) {
         if (($c['who'] ?? '') !== $who || $c['date'] < $from || $c['date'] > $to) continue;
@@ -3298,6 +3317,226 @@ if ($action === 'calsave') {
     $row = ['id' => $cid ?: 'c' . bin2hex(random_bytes(6)), 'who' => $who, 'date' => $date, 'time' => $time, 'title' => $title, 'note' => $note, 'by' => $me, 'at' => time()];
     if (!appendLine(DATA_DIR . '/calendar.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'id' => $row['id']]);
+}
+
+/* ---- the walk desk (2026-10-14; Sixfold first, Matthew: "just a sixfold build atm") ----
+ * The office (admins, and the office role) books a lead's or a door's walk with someone marked "Does walks" in Accounts.
+ * The walk lands on that person's calendar with what they need for it (who, where, what they want, the notes), and their
+ * phones get an alert when it is booked, moved, handed to someone else or cancelled. When they have done it they say how it
+ * went, which moves the lead along. deskwalks.log beside the door files, append-only: a booking line carries every field;
+ * later lines for the same id change it. Only where company.json features.walkdesk is on. */
+const DESK_MINS = [30, 45, 60, 90, 120];
+function deskWalks(): array {
+    $o = [];
+    foreach (readLines(DATA_DIR . '/deskwalks.log') as $r) {
+        $id = (string) $r['id'];
+        if (!isset($o[$id])) {
+            if (empty($r['walker']) || empty($r['kind'])) continue;
+            $o[$id] = $r + ['off' => false, 'done' => null, 'made' => (int) ($r['at'] ?? 0), 'chg' => (int) ($r['at'] ?? 0)];
+            continue;
+        }
+        $moved = false;
+        foreach (['walker', 'date', 'time', 'mins', 'addr', 'note'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['walker', 'date', 'time'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
+        if (!empty($r['del'])) { $o[$id]['off'] = true; $o[$id]['offBy'] = (string) ($r['by'] ?? ''); }
+        if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
+    }
+    return $o;
+}
+function deskTarget(array $w): string { return $w['kind'] === 'lead' ? 'lead:' . $w['lead'] : 'door:' . $w['region'] . ':' . $w['door']; }
+/** the live walk for each lead or door, keyed by deskTarget() */
+function deskLive(): array { $o = []; foreach (deskWalks() as $w) if (!$w['off']) $o[deskTarget($w)] = $w; return $o; }
+function deskMin(string $t): int { return (int) substr($t, 0, 2) * 60 + (int) substr($t, 3, 2); }
+function walkerList(): array {
+    global $TEAM; $o = [];
+    foreach ($TEAM['byName'] as $n => $x) if (!empty($x['walker'])) $o[] = (string) $n;
+    usort($o, fn($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
+    return $o;
+}
+function pushDevices(string $name): int { global $TEAM; $pid = (string) ($TEAM['byName'][$name]['id'] ?? ''); return $pid === '' ? 0 : count(pushSubs()[$pid] ?? []); }
+/** one alert to everything one person turned alerts on for; how many phones and computers took it */
+function pushName(string $name, string $title, string $text, string $url, string $tag): array {
+    global $TEAM;
+    $pid = (string) ($TEAM['byName'][$name]['id'] ?? ''); $devs = $pid === '' ? [] : (pushSubs()[$pid] ?? []);
+    if (!$devs) return ['devices' => 0, 'sent' => 0];
+    $v = pushVapid(false); if (!$v) return ['devices' => count($devs), 'sent' => 0];
+    $payload = json_encode(['title' => $title, 'body' => $text, 'url' => $url, 'tag' => $tag, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $ok = 0;
+    foreach ($devs as $d) { $r = webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']); if ($r['ok']) $ok++; }
+    return ['devices' => count($devs), 'sent' => $ok];
+}
+function deskWhen(string $date, string $time): string {
+    return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('D j M') . ($time !== '' ? ', ' . (new DateTime('2000-01-01 ' . $time))->format('g:i a') : '');
+}
+/** what's already on a walker's day that a booking would run into: anything with a time, other than this walk itself */
+function deskClashes(string $walker, string $date, string $time, int $mins, string $exceptId, string $exceptDoor): array {
+    $s = deskMin($time); $e = $s + $mins; $out = [];
+    foreach (calEventsFor($walker, $date, $date) as $ev) {
+        if (($ev['time'] ?? '') === '' || ($exceptId !== '' && ($ev['dw'] ?? '') === $exceptId)) continue;
+        if ($exceptDoor !== '' && $ev['kind'] === 'walk' && empty($ev['dw']) && ($ev['region'] ?? '') . ':' . ($ev['id'] ?? '') === $exceptDoor) continue;
+        $s2 = deskMin((string) $ev['time']); $e2 = $s2 + (int) ($ev['mins'] ?? ($ev['kind'] === 'walk' ? 60 : 30));
+        if ($s < $e2 && $s2 < $e) $out[] = ['time' => (string) $ev['time'], 'mins' => $e2 - $s2, 'title' => (string) $ev['title'], 'kind' => (string) $ev['kind']];
+    }
+    return $out;
+}
+/** the door a walk is for: where it is and what the crew learned there (a number only if the homeowner gave it) */
+function deskDoor(string $key, string $id): ?array {
+    if (!regionAvailable($key)) return null;
+    $data = loadRegion($key); if (!$data) return null;
+    foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+        if ($d['id'] !== $id) continue;
+        $ph = loadPhones($key)[$id] ?? null; $nt = loadNotes($key)[$id] ?? null; $em = loadEmails($key)[$id] ?? null;
+        return ['address' => (string) $d['address'], 'town' => regionLabel($key), 'area' => (string) $a['name'], 'owner' => $d['owner'] ?? null,
+                'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null, 'lawn' => $d['lawn'] ?? null,
+                'phone' => ($ph && ($ph['source'] ?? '') === 'door') ? (string) $ph['phone'] : '', 'email' => $em ? (string) ($em['email'] ?? '') : '',
+                'note' => $nt ? (string) ($nt['note'] ?? '') : ''];
+    }
+    return null;
+}
+/** a walk as the walker and the office see it, with the lead or the door filled in */
+function deskShow(array $w, ?array $leads = null): array {
+    $o = array_intersect_key($w, array_flip(['id', 'kind', 'lead', 'region', 'door', 'title', 'walker', 'date', 'time', 'mins', 'addr', 'note', 'by', 'made', 'chg', 'done']));
+    if ($w['kind'] === 'lead') {
+        $l = ($leads ?? leadsAll())[$w['lead']] ?? null;
+        if ($l) $o['who'] = ['name' => (string) ($l['name'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'email' => (string) ($l['email'] ?? ''), 'town' => (string) ($l['town'] ?? ''),
+                            'need' => (string) ($l['need'] ?? ''), 'msg' => (string) ($l['msg'] ?? ''), 'src' => (string) ($l['src'] ?? ''), 'status' => (string) $l['status'], 'notes' => $l['notes']];
+    } else {
+        $d = deskDoor((string) $w['region'], (string) $w['door']);
+        if ($d) $o['house'] = $d;
+    }
+    return $o;
+}
+function deskSeenFile(): string { return DATA_DIR . '/deskwalks-seen.json'; }
+
+if (in_array($action, ['deskwalks', 'deskday', 'deskwalk', 'mywalks', 'walkdone'], true) && !feature('walkdesk')) fail('Not here.', 404);
+/* the Pipeline's view: every live walk from a month back, and who does walks (with whether their phones take alerts) */
+if ($action === 'deskwalks') {
+    if (!desk()) fail('Not allowed.', 403);
+    $from = (new DateTime('today', new DateTimeZone(appTz())))->modify('-30 days')->format('Y-m-d');
+    $list = []; foreach (deskLive() as $w) if ($w['date'] >= $from) $list[] = array_intersect_key($w, array_flip(['id', 'kind', 'lead', 'region', 'door', 'title', 'walker', 'date', 'time', 'mins', 'addr', 'note', 'by', 'done']));
+    out(['ok' => true, 'walks' => $list, 'walkers' => array_map(fn($n) => ['name' => $n, 'alerts' => pushDevices($n) > 0], walkerList())]);
+}
+/* one day for every walker, side by side, to pick a time that is free */
+if ($action === 'deskday') {
+    if (!desk()) fail('Not allowed.', 403);
+    $date = (string) ($_GET['date'] ?? ''); if (!dateOk($date)) fail('That is not a real date.');
+    $cols = [];
+    foreach (walkerList() as $n) {
+        $ev = array_map(fn($e) => ['time' => (string) ($e['time'] ?? ''), 'mins' => (int) ($e['mins'] ?? ($e['kind'] === 'walk' ? 60 : 30)), 'title' => (string) $e['title'], 'kind' => (string) $e['kind'], 'dw' => (string) ($e['dw'] ?? ''),
+                                 'door' => $e['kind'] === 'walk' && empty($e['dw']) ? (string) ($e['region'] ?? '') . ':' . (string) ($e['id'] ?? '') : ''], calEventsFor($n, $date, $date));
+        $cols[] = ['name' => $n, 'alerts' => pushDevices($n) > 0, 'events' => $ev];
+    }
+    out(['ok' => true, 'date' => $date, 'walkers' => $cols, 'from' => '08:00', 'to' => '18:00']);
+}
+/* book, change, hand over or cancel a walk */
+if ($action === 'deskwalk') {
+    if (!desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $lk = @fopen(DATA_DIR . '/deskwalks.log.lock', 'c');
+    if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = deskWalks(); $id = (string) ($body['id'] ?? ''); $have = null;
+    if ($id !== '') { if (!preg_match('/^v[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such walk.', 404); $have = $all[$id]; }
+    $leads = leadsAll();
+    $vw = ucfirst((string) (company()['visitShort'] ?? 'Walk'));
+    if (!empty($body['del'])) {
+        if (!$have) fail('No such walk.', 404);
+        if (!appendLine(DATA_DIR . '/deskwalks.log', ['id' => $id, 'del' => 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        if ($have['kind'] === 'lead' && ($leads[$have['lead']]['status'] ?? '') === 'walk') appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'status' => 'contacted', 'by' => $me, 'at' => time()]);
+        $al = $have['walker'] !== $me ? pushName($have['walker'], $vw . ' cancelled: ' . deskWhen($have['date'], $have['time']), $have['title'] . ' · cancelled by ' . $me, './', 'dw-' . $id) : null;
+        out(['ok' => true, 'alert' => $al]);
+    }
+    /* what it is for: kept from the booking when changing one */
+    if ($have) { $kind = $have['kind']; $lead = (string) ($have['lead'] ?? ''); $key = (string) ($have['region'] ?? ''); $door = (string) ($have['door'] ?? ''); $title = (string) $have['title']; }
+    else {
+        $kind = (string) ($body['kind'] ?? ''); $lead = ''; $key = ''; $door = '';
+        if ($kind === 'lead') {
+            $lead = (string) ($body['lead'] ?? '');
+            if (!leadOk($lead) || !isset($leads[$lead])) fail('No such lead.', 404);
+            $title = trim((string) ($leads[$lead]['name'] ?? '')) ?: (trim((string) ($leads[$lead]['phone'] ?? '')) ?: 'Lead');
+        } elseif ($kind === 'door') {
+            $key = (string) ($body['region'] ?? ''); $door = (string) ($body['door'] ?? '');
+            if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $door)) fail('No such door.', 404);
+            $key = doorHome($key, $door); $dd = deskDoor($key, $door); if (!$dd) fail('No such door.', 404);
+            $title = $dd['address'];
+        } else fail('Say what the walk is for.');
+        $tgt = $kind === 'lead' ? 'lead:' . $lead : 'door:' . $key . ':' . $door;
+        foreach ($all as $w) if (!$w['off'] && deskTarget($w) === $tgt) fail('This already has a walk booked. Change that one.', 409);
+    }
+    $walker = trim((string) ($body['walker'] ?? ($have['walker'] ?? '')));
+    if (!in_array($walker, walkerList(), true)) fail('Pick someone who does walks. An admin marks them in Accounts.');
+    $date = (string) ($body['date'] ?? ($have['date'] ?? '')); $time = (string) ($body['time'] ?? ($have['time'] ?? ''));
+    if (!dateOk($date)) fail('That is not a real date.');
+    $tz = new DateTimeZone(appTz());
+    $diff = (int) round(((new DateTime($date . ' 00:00', $tz))->getTimestamp() - (new DateTime('today', $tz))->getTimestamp()) / 86400);
+    if ($diff < 0 && (!$have || $date !== $have['date'])) fail('That day has gone. Pick today or later.');
+    if ($diff > 180) fail('Pick a date within the next six months.');
+    if (!preg_match('/^(0[6-9]|1\d|20):(00|15|30|45)$/D', $time)) fail('Pick a time between 6 am and 8:45 pm.');
+    $mins = (int) ($body['mins'] ?? ($have['mins'] ?? 60)); if (!in_array($mins, DESK_MINS, true)) fail('Pick how long it takes.');
+    $addr = array_key_exists('addr', $body) ? $clean($body['addr'], 160) : (string) ($have['addr'] ?? '');
+    $note = array_key_exists('note', $body) ? $clean($body['note'], 500) : (string) ($have['note'] ?? '');
+    if ($kind === 'door' && $addr === '') $addr = $title . ', ' . regionLabel($key);
+    if ($addr === '') fail('Add the address, so ' . $walker . ' knows where to go.');
+    if (empty($body['force'])) {
+        $cl = deskClashes($walker, $date, $time, $mins, $have ? $id : '', $kind === 'door' ? $key . ':' . $door : '');
+        if ($cl) out(['ok' => false, 'clash' => $cl, 'error' => $walker . ' already has something then.']);
+    }
+    $nid = $have ? $id : 'v' . bin2hex(random_bytes(6));
+    if ($have) {
+        $row = ['id' => $id];
+        foreach (['walker' => $walker, 'date' => $date, 'time' => $time, 'mins' => $mins, 'addr' => $addr, 'note' => $note] as $k => $v) if ((string) $v !== (string) ($have[$k] ?? '')) $row[$k] = $v;
+        if (count($row) === 1) out(['ok' => true, 'id' => $id, 'alert' => null, 'same' => true]);
+        $row += ['by' => $me, 'at' => time()];
+    } else $row = ['id' => $nid, 'kind' => $kind] + ($kind === 'lead' ? ['lead' => $lead] : ['region' => $key, 'door' => $door])
+                 + ['title' => $title, 'walker' => $walker, 'date' => $date, 'time' => $time, 'mins' => $mins, 'addr' => $addr, 'note' => $note, 'by' => $me, 'at' => time()];
+    if (!appendLine(DATA_DIR . '/deskwalks.log', $row)) fail('Could not save that. Try again.', 500);
+    /* the lead moves to Walk booked; a door's own walk keeps step with the booking (still filed under whoever booked it at the door) */
+    if ($kind === 'lead' && in_array($leads[$lead]['status'] ?? 'new', ['new', 'contacted'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $lead, 'status' => 'walk', 'by' => $me, 'at' => time()]);
+    if ($kind === 'door') {
+        $cur = loadWalks($key)[$door] ?? null;
+        if (!$cur || $cur['date'] !== $date || $cur['time'] !== $time) appendWalk($key, ['id' => $door, 'date' => $date, 'time' => $time, 'by' => $cur ? $cur['by'] : $me, 'at' => time()]);
+    }
+    /* the alerts: never to the person doing the booking */
+    $when = deskWhen($date, $time); $where = $kind === 'lead' ? trim((string) ($leads[$lead]['town'] ?? '')) : '';
+    $txt = $title . ($where !== '' ? ' · ' . $where : '') . ' · booked by ' . $me;
+    $al = null;
+    if (!$have) $al = $walker !== $me ? pushName($walker, $vw . ' booked: ' . $when, $txt, './?walk=' . $nid, 'dw-' . $nid) : null;
+    elseif ($walker !== $have['walker']) {
+        if ($have['walker'] !== $me) pushName($have['walker'], $vw . ' handed to ' . $walker, $have['title'] . ' · ' . deskWhen($have['date'], $have['time']) . ' · by ' . $me, './', 'dw-' . $id);
+        $al = $walker !== $me ? pushName($walker, $vw . ' booked: ' . $when, $txt, './?walk=' . $id, 'dw-' . $id) : null;
+    } elseif ($date !== $have['date'] || $time !== $have['time']) $al = $walker !== $me ? pushName($walker, $vw . ' moved: ' . $when, $title . ' · was ' . deskWhen($have['date'], $have['time']) . ' · by ' . $me, './?walk=' . $id, 'dw-' . $id) : null;
+    out(['ok' => true, 'id' => $nid, 'alert' => $al]);
+}
+/* the walker's own list: today's and what is coming, with everything for each; the last two weeks' too, to say how they went */
+if ($action === 'mywalks') {
+    $who = trim((string) ($_GET['who'] ?? '')); if ($who === '' || !desk()) $who = $me;
+    $tz = new DateTimeZone(appTz()); $from = (new DateTime('today', $tz))->modify('-14 days')->format('Y-m-d');
+    $seenAll = json_decode((string) @file_get_contents(deskSeenFile()), true) ?: []; $seen = (int) ($seenAll[$who] ?? 0);
+    $leads = leadsAll(); $list = [];
+    foreach (deskWalks() as $w) if (!$w['off'] && $w['walker'] === $who && $w['date'] >= $from) $list[] = deskShow($w, $leads) + ['fresh' => $w['chg'] > $seen && ($w['by'] ?? '') !== $who];
+    usort($list, fn($a, $b) => [$a['date'], $a['time']] <=> [$b['date'], $b['time']]);
+    if ($who === $me && !empty($_GET['seen'])) { $seenAll[$me] = time(); @file_put_contents(deskSeenFile(), json_encode($seenAll, JSON_UNESCAPED_UNICODE), LOCK_EX); }
+    out(['ok' => true, 'who' => $who, 'walks' => $list]);
+}
+/* how it went, from the walker (or the office): a note, and Quote sent / Done / Nobody there */
+if ($action === 'walkdone') {
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = deskWalks();
+    if (!preg_match('/^v[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such walk.', 404);
+    $w = $all[$id];
+    if ($w['walker'] !== $me && !desk()) fail('Not allowed.', 403);
+    $o = (string) ($body['outcome'] ?? ''); $note = $clean($body['note'] ?? '', 500);
+    if (!in_array($o, ['', 'quoted', 'done', 'nobody', 'undo'], true)) fail('Bad outcome.');
+    if ($o === '' && $note === '') fail('Nothing to save.');
+    $vw = ucfirst((string) (company()['visitShort'] ?? 'Walk'));
+    if ($o !== '' && !appendLine(DATA_DIR . '/deskwalks.log', ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    if ($w['kind'] === 'lead') {
+        $say = ['quoted' => $vw . ' done, quote sent', 'done' => $vw . ' done', 'nobody' => 'Nobody there at the ' . strtolower($vw)][$o] ?? '';
+        $row = ['id' => $w['lead'], 'by' => $me, 'at' => time()];
+        if ($o === 'quoted') $row['status'] = 'quoted';
+        $txt = trim($say . ($say !== '' && $note !== '' ? ': ' : '') . $note); if ($txt !== '') $row['note'] = mb_substr($txt, 0, 500);
+        if (count($row) > 3) appendLine(leadsDir() . '/leadst.log', $row);
+    } elseif ($o === 'quoted') appendQuoted((string) $w['region'], ['id' => $w['door'], 'quoted' => true, 'by' => $me, 'at' => time()]);
+    out(['ok' => true]);
 }
 
 /* ---- personal goals (2026-10-05) ----
@@ -3649,10 +3888,10 @@ if ($action === 'pushcron') {
 }
 
 if ($action === 'leads') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if (!desk() && $role !== 'manager') fail('Not allowed.', 403);
     $leads = leadsAll();
     /* a manager sees the leads nobody owns yet and their own team's */
-    if ($role !== 'admin') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
+    if (!desk()) $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
@@ -3661,7 +3900,7 @@ if ($action === 'leads') {
 }
 
 if ($action === 'leadadd') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $src = (string) ($body['src'] ?? '');
     if (!in_array($src, LEAD_SRC, true) || $src === 'website') fail('Pick where the lead came from.');
@@ -3679,7 +3918,7 @@ if ($action === 'leadadd') {
    id ('ext'), so importing the same file twice adds nothing; someone already in the Pipeline by phone or email
    (a website form, a lead typed in) is counted, not added again. Same row shape as + Add a lead. */
 if ($action === 'leadimport') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $rows = $body['rows'] ?? null;
     if (!is_array($rows) || !$rows) fail('No leads in that file.');
@@ -3718,7 +3957,7 @@ if ($action === 'leadstatus') {
     $id = (string) ($body['id'] ?? '');
     if (!preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id)) fail('No such lead.', 404);
     $own = (string) (leadsAll()[$id]['owner'] ?? '');
-    if ($role !== 'admin' && !($own !== '' && canManage($own))) fail('Not allowed.', 403);
+    if (!desk() && !($own !== '' && canManage($own))) fail('Not allowed.', 403);
     $known = false; foreach (readLines(leadsDir() . '/leads.log') as $l) if ($l['id'] === $id) { $known = true; break; }
     if (!$known) fail('No such lead.', 404);
     $status = (string) ($body['status'] ?? ''); $note = $clean($body['note'] ?? '', 500);
@@ -4326,6 +4565,23 @@ function acctWeakCode(string $c): bool {
     for ($i = 1; $i < 6; $i++) { $d = ((int) $c[$i] - (int) $c[$i - 1] + 10) % 10; if ($d !== 1) $up = false; if ($d !== 9) $down = false; }
     return $up || $down;
 }
+/* who does walks (2026-10-14, the walk desk): an admin ticks them in Accounts; the desk books walks only with them */
+if ($action === 'walkerset') {
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $acctLock = @fopen(accountsFile() . '.lock', 'c');
+    if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
+    $id = (string) ($body['id'] ?? '');
+    if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if ($rows[$id]['role'] === 'super' || boardHidden($rows[$id]['name'])) fail('That sign-in does not do walks.');
+    $acct['walker'] = (array) ($acct['walker'] ?? []);
+    if (!empty($body['on'])) $acct['walker'][$id] = 1; else unset($acct['walker'][$id]);
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => !empty($body['on']) ? 'does walks' : 'no walks', 'name' => $rows[$id]['name'], 'id' => $id]);
+    out(['ok' => true]);
+}
 if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins'], true)) {
     /* managers (Matthew 2026-10-11: "they can remove people right? they should be able to"): the crew on their own team only.
        They add crew (who join their team), give a new code, sign out and remove; roles, teams, PINs and everyone else stay with admins. */
@@ -4345,7 +4601,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? '')];
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']])];
         }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
@@ -4379,7 +4635,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $name = acctName((string) ($body['name'] ?? '')); $r = $isMgr ? 'crew' : (string) ($body['role'] ?? 'crew');
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
-        if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
+        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office, manager or admin.' : 'Pick crew, manager or admin.');
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
@@ -4399,7 +4655,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['off']) fail('Turn the account back on first.');
         if (array_key_exists('name', $body) && !acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if ($name !== $t['name'] && acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');   /* renaming into one; an existing one keeps its name */
-        if (!in_array($r, ROLES, true)) fail('Pick crew, manager or admin.');
+        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office, manager or admin.' : 'Pick crew, manager or admin.');
         if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
         if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
         if ($t['role'] === 'admin' && $r !== 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin. Make someone else an admin first.');
@@ -4428,6 +4684,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['source'] === 'app') { $p = $acct['people'][$t['code']]; unset($acct['people'][$t['code']]); $acct['people'][$code] = $p; }
         else { $acct['off'][$id] = ['by' => $me, 'at' => time(), 'why' => 'new code']; $acct['people'][$code] = [$t['name'], $t['role'], $me, time()]; }
         if ($tidWas !== '') { $acct['member'][codeId($code, $sessionKey)] = $tidWas; unset($acct['member'][$id]); }   /* the team goes with the person to their new code */
+        if (!empty($acct['walker'][$id])) { $acct['walker'][codeId($code, $sessionKey)] = 1; unset($acct['walker'][$id]); }   /* and so does doing walks (2026-10-14) */
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
@@ -4893,7 +5150,7 @@ if ($action === 'firecheck') {
 }
 
 if ($action === 'result') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');
@@ -4918,7 +5175,7 @@ if ($action === 'result') {
  * trees, county value, town, extra work — and what became of it: talked to, booked, quote
  * sent, won, lost. No-soliciting doors are left out (nobody could knock). Admin only. */
 if ($action === 'results') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $blank = ['knocked' => 0, 'talked' => 0, 'booked' => 0, 'quoted' => 0, 'won' => 0, 'lost' => 0, 'value' => 0];
     $dims = ['fire' => [], 'lawn' => [], 'trees' => [], 'value' => [], 'town' => [], 'work' => []];
@@ -5007,7 +5264,7 @@ if ($action === 'areaflag') {
  * newest first, with everything the person building the quote needs: address,
  * owner, acres, fire hazard, coordinates, the number and its source, the note. */
 if ($action === 'quotes') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     $roofOn = feature('roof');
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $list = [];
@@ -5089,7 +5346,7 @@ if ($action === 'roofjob') {
 }
 
 if ($action === 'quoted') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     $id  = (string) ($body['id'] ?? '');

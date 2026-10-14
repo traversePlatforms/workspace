@@ -1723,6 +1723,53 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
 
   footer{margin:26px 4px 0;padding-top:14px;border-top:1px solid var(--line);font-size:12px;line-height:1.6;color:var(--soft)}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  /* the walk desk (2026-10-14) */
+  .dwblock{margin-top:10px;padding:10px 12px;border-radius:13px;background:var(--sunk)}
+  .dwblock.on{background:transparent;border:1.5px solid var(--booked)}
+  .dwline{display:flex;gap:7px;align-items:center;font-size:14.5px}.dwline .ic{width:17px;height:17px;flex:none;color:var(--booked)}
+  .dwsub{font-size:13px;color:var(--soft);margin-top:4px;line-height:1.4}
+  .dwdone{color:var(--booked);font-weight:700}
+  .dwacts{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
+  .dwacts .lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
+  .dwbookbtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:42px;border:0;border-radius:11px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;box-shadow:inset 0 0 0 1.5px var(--line)}
+  .dwbookbtn .ic{width:17px;height:17px}
+  .dwform{display:grid;gap:10px}
+  .dwfor{padding:2px 0 4px}.dwfor b{font:800 18px var(--sans)}
+  .dwh{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-top:6px}
+  .walkcard .dwh{margin-top:14px}
+  .dwwho,.dwlen{display:flex;gap:6px;flex-wrap:wrap}
+  .dwwho button,.dwlen button{min-height:42px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .dwwho button small{font:600 11px var(--sans);color:var(--soft)}
+  .dwwho button[aria-pressed="true"],.dwlen button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .dwwho button[aria-pressed="true"] small{color:var(--card);opacity:.8}
+  .dwwho .msg,.dwwho .dwsub{flex-basis:100%}
+  .dwday{display:flex;gap:6px;align-items:center}
+  .dwday input{flex:1;min-width:0}
+  .dwday button{flex:none;width:44px;min-height:44px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink);font:700 20px var(--sans);cursor:pointer}
+  .dwboard{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .dwcol{border:1.5px solid var(--line);border-radius:14px;padding:10px;background:var(--card)}
+  .dwcol.sel{border-color:var(--ink)}
+  .dwname{font:800 15px var(--sans);margin-bottom:6px}
+  .dwbusy{font-size:12.5px;padding:5px 8px;border-radius:8px;background:var(--sunk);color:var(--soft);margin-bottom:4px}
+  .dwbusy.allday{background:transparent;border:1px dashed var(--line)}
+  .dwslots{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .dwslots button{min-height:36px;min-width:64px;border:1px solid var(--line);border-radius:10px;padding:0 9px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  .dwslots button[aria-pressed="true"]{background:var(--booked);border-color:var(--booked);color:#fff}
+  .dwclash:empty{display:none}
+  .dwclash{padding:10px 12px;border-radius:12px;border:1.5px solid var(--ember,#c2410c);font-size:14px;display:grid;gap:3px}
+  .dwclash .lnk{justify-self:start;background:none;border:0;padding:6px 0 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
+  .dwcancel{background:none;border:0;padding:8px 0;font:700 14px var(--sans);cursor:pointer;justify-self:start}
+  .dwfacts{display:grid;gap:4px;margin-top:10px;font-size:14px}
+  .dwfacts div{display:flex;gap:8px}.dwfacts span{color:var(--soft);min-width:104px}
+  .dwquote{display:inline-flex;align-items:center;gap:6px;margin-top:12px;color:var(--accent);font:700 14px var(--sans);text-decoration:none}
+  .dwquote .ic{width:17px;height:17px}
+  .dwrow{position:relative}.dwnew{margin-left:auto;align-self:center;font:800 11px var(--sans);padding:3px 8px;border-radius:999px;background:var(--booked);color:#fff}
+  .dwdonerow{opacity:.7}
+  .dwhome{display:flex;gap:12px;align-items:center;width:100%;text-align:left;margin:0 0 12px;padding:14px;border-radius:18px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+  .dwhome.fresh{border-color:var(--booked)}
+  .dh-walks:not(:empty){padding:24px 48px 0}.dh-walks .dwhome{margin:0;max-width:640px}
+  .dwhome .ic{width:24px;height:24px;flex:none;color:var(--booked)}
+  .dwhome span{display:grid;gap:2px}.dwhome b{font:800 15.5px var(--sans)}.dwhome small{font-size:13px;color:var(--soft)}
 </style>
 </head>
 <body>
@@ -2450,7 +2497,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function devClass() { var ua = navigator.userAgent || ''; return (/iPhone|iPad|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'm' : 'c'; }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.super = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.walker = false; S.super = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -2489,7 +2536,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.role = j.role; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -2898,7 +2945,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .then(function (sub) { if (sub) return pushPost('pushunsubscribe', { endpoint: sub.endpoint }); }).catch(function () {});
     return Promise.race([go, new Promise(function (r) { setTimeout(r, 3000); })]);
   }
-  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open' && S.me) chooseView(); });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open' && S.me) { var wm = /[?&]walk=(v[0-9a-f]{12})/.exec(String(e.data.url || '')); if (wm && feat('walkdesk')) walkView(wm[1], chooseView); else chooseView(); } });
   /* the number an alert puts on the app icon goes when the app is opened, not only when the notification is tapped (Matthew 2026-10-05: a test alert left a 1 on his iPhone) */
   function clearBadge() { try { if (navigator.clearAppBadge) navigator.clearAppBadge().catch(function () {}); } catch (e) {} }
   clearBadge();
@@ -2975,7 +3022,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else big.textContent = initials(S.me);
     me.appendChild(big);
     var who = q('div', 'pfwho'); who.appendChild(q('b', null, S.me || ''));
-    who.appendChild(q('span', null, S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : 'Crew'));
+    who.appendChild(q('span', null, (S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : S.role === 'office' ? 'Office' : 'Crew') + (S.walker && feat('walkdesk') ? ' \u00b7 does ' + vw() + 's' : '')));
     var pa = q('div', 'pfacts');
     var pick = q('input'); pick.type = 'file'; pick.accept = 'image/*'; pick.hidden = true;
     var up = q('button', 'lnk', S.avatar ? 'Change photo' : 'Add a photo'); up.type = 'button';
@@ -3074,7 +3121,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.super = false; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.super = false; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -3173,6 +3220,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var g = q('div', 'tgrid'); tiles.forEach(function (t) { g.appendChild(t); }); box.appendChild(g);
     };
     if (!standalone()) { var ih2 = q('div', 'insthost ontools'); box.appendChild(ih2); fillInstall(ih2); }
+    var wkh = q('div'); box.appendChild(wkh); walkerCard(wkh);   /* the walk desk (2026-10-14) */
     var th = q('div', 'terrhost'); box.appendChild(th); territoryList(th);
     grp('In the field', [
       tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
@@ -3188,6 +3236,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'route', 'Territories', 'Assign neighbourhoods within your team.', 'Manager', territoriesView),
       tile('button', 'users', 'Team sign-ins', 'Add your crew, give a new code, sign out or remove.', 'Manager', accountsView),
       tile('button', 'chart', 'Office', 'Your team today and this week, the map of best doors left, walks and live radar.', 'Manager', officeView)]);
+    if (S.role === 'office' && feat('walkdesk')) {   /* the office role (2026-10-14): leads, walks and everyone's calendar */
+      var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipelineView);
+      api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
+      grp('Office', [opt, tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
+    }
     if (S.role === 'admin') {
       var pt = tile('button', 'clip', 'Pipeline', 'Door bookings and enquiries, call to won.', 'Admin only', pipelineView);
       api('leads', { params: { count: 1 } }).then(function (j) {
@@ -3910,6 +3963,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(nt);
     }
     leadOwnerRows(l, c);
+    if (wdOn() && S.screen === 'pipeline') c.appendChild(deskWalkBlock('lead', l));   /* the walk desk (2026-10-14) */
     var sb = q('div', 'lstat');
     LEAD_ST.forEach(function (x) {
       var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === x[0]));
@@ -3928,6 +3982,323 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     sv.addEventListener('click', function () { var v = inp.value.trim(); if (v) saveLead(l, { note: v }); });
     nr.appendChild(inp); nr.appendChild(sv); c.appendChild(nr);
     return c;
+  }
+  /* ---- the walk desk (2026-10-14, Sixfold first) ----
+     Matthew: whoever is working the leads books the walk with Brandon or Brad, sees their days to find a free slot, and the walk
+     lands on that person's calendar with an alert and everything they need for it. Admins and the office role book; the people
+     ticked "Does walks" in Accounts go. They say how it went from the walk itself, which moves the lead along. */
+  function wdOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
+  function walkerOn() { return feat('walkdesk') && !!S.walker; }
+  function dwFor(kind, a, b) { var m = S.dwalks || {}; return kind === 'lead' ? m['lead:' + a] : m['door:' + a + ':' + b]; }
+  function dwWhen(w) { return dayName(w.date) + (w.time ? ', ' + fmtTime(w.time) : ''); }
+  function dwEnd(t, mins) { var m = +t.slice(0, 2) * 60 + +t.slice(3, 5) + mins; return (m < 600 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60); }
+  function tMin(t) { return +String(t).slice(0, 2) * 60 + +String(t).slice(3, 5); }
+  function minT(m) { var h = Math.floor(m / 60), n = m % 60; return (h < 10 ? '0' : '') + h + ':' + (n < 10 ? '0' : '') + n; }
+  var DW_DONE = [['quoted', 'Quote sent'], ['done', 'Done, no quote yet'], ['nobody', 'Nobody there']];
+  function dwDoneName(o) { var x = DW_DONE.filter(function (d) { return d[0] === o; })[0]; return x ? x[1] : o; }
+  /* the Pipeline loads the live walks beside the leads and the door bookings */
+  function deskLoad() {
+    if (!wdOn()) return Promise.resolve(null);
+    return api('deskwalks').then(function (j) {
+      if (!j || !j.ok) return null;
+      S.dwalks = {}; j.walks.forEach(function (w) { S.dwalks[w.kind === 'lead' ? 'lead:' + w.lead : 'door:' + w.region + ':' + w.door] = w; });
+      S.dwalkers = j.walkers; return j;
+    }).catch(function () { return null; });
+  }
+  /* on a lead or a door booking in the Pipeline: the walk booked, or the button to book it */
+  function deskWalkBlock(kind, x) {
+    var w = kind === 'lead' ? dwFor('lead', x.id) : dwFor('door', x.region, x.id);
+    var box = q('div', 'dwblock' + (w ? ' on' : ''));
+    if (w) {
+      var top = q('div', 'dwline'); top.appendChild(ico('cal', 2.2));
+      top.appendChild(q('b', null, VW() + ' ' + dwWhen(w) + ' with ' + w.walker)); box.appendChild(top);
+      box.appendChild(q('div', 'dwsub', w.mins + ' min · ' + w.addr + ' · booked by ' + w.by));
+      if (w.done) box.appendChild(q('div', 'dwsub dwdone', dwDoneName(w.done.o) + ' · ' + w.done.by));
+      var row = q('div', 'dwacts');
+      var op = q('button', 'lnk', 'Open the ' + vw()); op.type = 'button'; op.addEventListener('click', function () { walkView(w.id, pipelineView, w.walker); });
+      var ch = q('button', 'lnk', 'Change or cancel'); ch.type = 'button'; ch.addEventListener('click', function () { deskBookView(kind, x, w); });
+      row.appendChild(op); row.appendChild(ch); box.appendChild(row);
+    } else {
+      var bk = q('button', 'dwbookbtn', 'Book the ' + vw() + ' with someone'); bk.type = 'button';
+      bk.insertBefore(ico('cal', 2.2), bk.firstChild);
+      bk.addEventListener('click', function () { deskBookView(kind, x, null); });
+      box.appendChild(bk);
+    }
+    return box;
+  }
+  /* book or change a walk: who goes, the day with everyone's bookings side by side and their free times, how long, where */
+  function deskBookView(kind, x, w) {
+    hideToast(); S.signin = null; S.screen = 'deskbook'; foot.hidden = true; setDock(null);
+    var back = function () { pipelineView(); };
+    var title = kind === 'lead' ? (x.name || x.phone || x.email || 'Lead') : streetCase(x.address);
+    setBar('back', { title: (w ? 'Change the ' : 'Book the ') + vw(), sub: title, back: back, backLabel: 'Pipeline' });
+    view.textContent = '';
+    var tom = new Date(); tom.setDate(tom.getDate() + 1);
+    var P = { walker: w ? w.walker : '', date: w ? w.date : isoOf(tom), time: w ? w.time : '', mins: w ? w.mins : 60, day: null };
+    var box = q('div', 'phf dwform');
+    var head = q('div', 'dwfor'); head.appendChild(q('b', null, title));
+    head.appendChild(q('div', 'dwsub', kind === 'lead' ? [x.need, x.town, digits(x.phone).length >= 10 ? fmtPhone(digits(x.phone)) : ''].filter(Boolean).join(' · ') : [x.town, x.area].filter(Boolean).join(' · ')));
+    box.appendChild(head);
+    box.appendChild(q('div', 'dwh', 'Who goes'));
+    var who = q('div', 'dwwho'); box.appendChild(who);
+    box.appendChild(q('div', 'dwh', 'Day'));
+    var dayRow = q('div', 'dwday');
+    var pv = q('button', null, '‹'); pv.type = 'button'; pv.setAttribute('aria-label', 'Day before');
+    var di = q('input'); di.type = 'date'; di.value = P.date; di.min = todayISO();
+    var nx = q('button', null, '›'); nx.type = 'button'; nx.setAttribute('aria-label', 'Day after');
+    var shift = function (n) { var p = P.date.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2] + n); var v = isoOf(d); if (v < todayISO()) return; P.date = v; di.value = v; loadDay(); };
+    pv.addEventListener('click', function () { shift(-1); }); nx.addEventListener('click', function () { shift(1); });
+    di.addEventListener('change', function () { if (di.value) { P.date = di.value; loadDay(); } });
+    dayRow.appendChild(pv); dayRow.appendChild(di); dayRow.appendChild(nx); box.appendChild(dayRow);
+    box.appendChild(q('div', 'dwh', 'How long'));
+    var lens = q('div', 'dwlen');
+    [30, 45, 60, 90, 120].forEach(function (m) {
+      var b = q('button', null, m < 60 ? m + ' min' : (m / 60) + (m === 60 ? ' hour' : ' hours')); b.type = 'button'; b.setAttribute('aria-pressed', String(P.mins === m));
+      b.addEventListener('click', function () { P.mins = m; [].forEach.call(lens.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); drawBoard(); });
+      lens.appendChild(b);
+    });
+    box.appendChild(lens);
+    box.appendChild(q('div', 'dwh', 'Free times'));
+    var board = q('div', 'dwboard'); box.appendChild(board);
+    var tl = q('label', null, 'Time'); var ti = q('input'); ti.type = 'time'; ti.step = 900; ti.min = '06:00'; ti.max = '20:45'; ti.value = P.time;
+    ti.addEventListener('change', function () { P.time = ti.value; drawBoard(); });
+    tl.appendChild(ti); box.appendChild(tl);
+    var al = q('label', null, 'Address'); var ai = q('input'); ai.maxLength = 160; ai.placeholder = 'House number, street and town';
+    ai.value = w ? w.addr : kind === 'lead' ? (x.town || '') : streetCase(x.address) + ', ' + x.town;
+    al.appendChild(ai); box.appendChild(al);
+    var nl = q('label', null, 'Note for whoever goes (optional)'); var nt = q('textarea'); nt.rows = 2; nt.maxLength = 500; nt.value = w ? w.note || '' : '';
+    nt.placeholder = 'Gate code, dog, what they asked about'; nl.appendChild(nt); box.appendChild(nl);
+    var clash = q('div', 'dwclash'); box.appendChild(clash);
+    var err = q('div', 'err'); box.appendChild(err);
+    var sv = q('button', 'save', w ? 'Save the change' : 'Book the ' + vw()); sv.type = 'button';
+    box.appendChild(sv);
+    if (w) {
+      var cx = q('button', 'lnk danger dwcancel', 'Cancel the ' + vw()); cx.type = 'button';
+      cx.addEventListener('click', function () {
+        if (!window.confirm('Cancel the ' + vw() + ' with ' + w.walker + ' on ' + dwWhen(w) + '? It comes off their calendar and they get an alert.')) return;
+        api('deskwalk', { body: { id: w.id, del: 1 } }).then(function (j) {
+          if (!j.ok) { err.textContent = j.error || 'Not cancelled. Try again.'; return; }
+          back(); toast(VW() + ' cancelled', title, null);
+        }).catch(function () { err.textContent = 'No signal. Try again.'; });
+      });
+      box.appendChild(cx);
+    }
+    view.appendChild(box);
+    function drawWho() {
+      who.textContent = '';
+      var list = (P.day && P.day.walkers) || (S.dwalkers || []).map(function (p) { return { name: p.name, alerts: p.alerts }; });
+      if (!list.length) { who.appendChild(q('div', 'msg', 'Nobody is marked as doing ' + vw() + 's yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); sv.disabled = true; return; }
+      sv.disabled = false;
+      if (!P.walker && list.length === 1) P.walker = list[0].name;
+      list.forEach(function (p) {
+        var b = q('button', null, p.name); b.type = 'button'; b.setAttribute('aria-pressed', String(P.walker === p.name));
+        if (!p.alerts) b.appendChild(q('small', null, 'alerts off'));
+        b.addEventListener('click', function () { P.walker = p.name; drawWho(); drawBoard(); });
+        who.appendChild(b);
+      });
+      var me = list.filter(function (p) { return p.name === P.walker; })[0];
+      if (me && !me.alerts) who.appendChild(q('div', 'dwsub', me.name + ' has not turned on alerts on a phone yet, so the ' + vw() + ' only shows on their calendar. They turn alerts on in the app: Profile, Alerts.'));
+    }
+    function busy(col) {   /* the timed things on that walker's day, minus this walk itself */
+      return col.events.filter(function (e) { return e.time && !(w && e.dw === w.id) && !(kind === 'door' && e.door === x.region + ':' + x.id); });
+    }
+    function drawBoard() {
+      board.textContent = '';
+      if (!P.day) { board.appendChild(q('div', 'skel')); return; }
+      if (!P.day.walkers.length) return;
+      var from = tMin(P.day.from), to = tMin(P.day.to);
+      P.day.walkers.forEach(function (col) {
+        var c = q('div', 'dwcol' + (col.name === P.walker ? ' sel' : ''));
+        c.appendChild(q('div', 'dwname', col.name));
+        var bz = busy(col), allDay = col.events.filter(function (e) { return !e.time; });
+        bz.forEach(function (e) { c.appendChild(q('div', 'dwbusy k-' + e.kind, fmtTime(e.time) + '–' + fmtTime(dwEnd(e.time, e.mins)) + ' · ' + (e.kind === 'own' ? e.title : streetCase(e.title)))); });
+        allDay.forEach(function (e) { c.appendChild(q('div', 'dwbusy allday', 'All day · ' + (e.kind === 'own' ? e.title : streetCase(e.title)))); });
+        var slots = q('div', 'dwslots'), n = 0;
+        for (var m = from; m + P.mins <= to; m += 30) {
+          var clashes = bz.some(function (e) { var s = tMin(e.time); return m < s + e.mins && s < m + P.mins; });
+          if (clashes) continue;
+          if (P.date === todayISO()) { var nw = new Date(); if (m <= nw.getHours() * 60 + nw.getMinutes()) continue; }
+          (function (t) {
+            var b = q('button', null, fmtTime(t)); b.type = 'button'; b.setAttribute('aria-pressed', String(col.name === P.walker && P.time === t));
+            b.addEventListener('click', function () { P.walker = col.name; P.time = t; ti.value = t; clash.textContent = ''; drawWho(); drawBoard(); });
+            slots.appendChild(b);
+          })(minT(m)); n++;
+        }
+        if (!n) slots.appendChild(q('div', 'dwsub', 'No free ' + (P.mins < 60 ? P.mins + '-minute' : P.mins / 60 + '-hour') + ' slot between ' + fmtTime(P.day.from) + ' and ' + fmtTime(P.day.to) + '.'));
+        c.appendChild(slots); board.appendChild(c);
+      });
+    }
+    function loadDay() {
+      P.day = null; drawBoard();
+      var asked = P.date;
+      api('deskday', { params: { date: P.date } }).then(function (j) {
+        if (asked !== P.date) return;
+        if (!j.ok) { board.textContent = ''; board.appendChild(q('div', 'msg bad', j.error || 'Could not load the day.')); return; }
+        P.day = j; drawWho(); drawBoard();
+      }).catch(function () { board.textContent = ''; board.appendChild(q('div', 'msg', 'Seeing who is free needs signal.')); });
+    }
+    function save(force) {
+      err.textContent = ''; clash.textContent = '';
+      if (!P.walker) { err.textContent = 'Pick who goes.'; return; }
+      if (!ti.value) { err.textContent = 'Pick a time: tap a free one above or type it.'; return; }
+      if (!ai.value.trim()) { err.textContent = 'Add the address, so ' + P.walker + ' knows where to go.'; return; }
+      var body = { walker: P.walker, date: P.date, time: ti.value, mins: P.mins, addr: ai.value, note: nt.value };
+      if (w) body.id = w.id; else if (kind === 'lead') { body.kind = 'lead'; body.lead = x.id; } else { body.kind = 'door'; body.region = x.region; body.door = x.id; }
+      if (force) body.force = 1;
+      sv.disabled = true;
+      api('deskwalk', { body: body }).then(function (j) {
+        sv.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (j.clash) {
+          clash.appendChild(q('b', null, P.walker + ' already has something then:'));
+          j.clash.forEach(function (c) { clash.appendChild(q('div', null, fmtTime(c.time) + '–' + fmtTime(dwEnd(c.time, c.mins)) + ' · ' + (c.kind === 'own' ? c.title : streetCase(c.title)))); });
+          var any = q('button', 'lnk', 'Book it anyway'); any.type = 'button'; any.addEventListener('click', function () { save(true); }); clash.appendChild(any);
+          return;
+        }
+        if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; return; }
+        if (j.same) { back(); toast('Nothing changed', title, null); return; }
+        var a = j.alert, nm = P.walker;
+        var said = !a ? 'On ' + nm + '’s calendar.' : a.sent ? 'On ' + nm + '’s calendar, and the alert went to ' + (a.sent === 1 ? 'their phone.' : a.sent + ' of their devices.')
+          : a.devices ? 'On ' + nm + '’s calendar. The alert did not go through.' : 'On ' + nm + '’s calendar. They have not turned on alerts yet.';
+        S.pipeStage = 'walk'; back();   /* the Pipeline clears the toast when it opens, so the toast comes after */
+        toast((w ? VW() + ' changed' : VW() + ' booked') + ' · ' + dayName(P.date) + ', ' + fmtTime(ti.value), said, null);
+      }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was booked; try again.'; });
+    }
+    sv.addEventListener('click', function () { save(false); });
+    drawWho(); loadDay();
+    window.scrollTo(0, 0);
+  }
+  /* one walk with everything for it: for the person going, and for the office */
+  function walkView(id, back, who) {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'walk'; foot.hidden = true; setDock(null);
+    back = back || chooseView;
+    setBar('back', { title: VW(), sub: '', back: back, backLabel: 'Back' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('mywalks', { params: who && who !== S.me ? { who: who } : { seen: 1 } }).then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load it.')); return; }
+      var w = j.walks.filter(function (x) { return x.id === id; })[0];
+      if (!w) { holder.appendChild(q('div', 'msg', 'This ' + vw() + ' is not on the list any more. It may have been cancelled or handed to someone else.')); return; }
+      setBar('back', { title: VW() + ' · ' + dwWhen(w), sub: w.mins + ' min · with ' + w.walker + ' · booked by ' + w.by, back: back, backLabel: 'Back' });
+      holder.appendChild(walkCard(w, function () { walkView(id, back, who); }));
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg', 'Opening a ' + vw() + ' needs signal.')); });
+    window.scrollTo(0, 0);
+  }
+  function walkCard(w, redraw) {
+    var L = w.who || null, H = w.house || null;
+    var c = q('div', 'door lead walkcard');
+    var name = L ? (L.name || L.phone || L.email || 'Lead') : H ? streetCase(H.address) : w.title;
+    c.appendChild(q('div', 'addr', name));
+    c.appendChild(q('div', 'meta', dwWhen(w) + '–' + fmtTime(dwEnd(w.time, w.mins)) + ' · ' + w.addr));
+    if (H && H.owner) c.appendChild(q('div', 'meta', 'Owner of record: ' + ownerText(H.owner)));
+    var ct = q('div', 'lcontact');
+    var tel = digits(L ? L.phone : H ? H.phone : '');
+    if (tel.length >= 10) {
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
+    }
+    var em = L ? L.email : H ? H.email : '';
+    if (em) { var a3 = q('a'); a3.href = 'mailto:' + em; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
+    var dest = H && H.lat ? H.lat + ',' + H.lon : w.addr;
+    var a4 = q('a'); a4.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest); a4.target = '_blank'; a4.rel = 'noopener';
+    a4.appendChild(ico('route', 2.2)); a4.appendChild(document.createTextNode('Directions')); ct.appendChild(a4);
+    c.appendChild(ct);
+    var facts = q('div', 'dwfacts');
+    var fact = function (k, v) { if (!v) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
+    if (L) { fact('Wants', L.need); fact('Town', L.town); fact('Came from', LEAD_SRC[L.src] || L.src); }
+    if (H) { fact('Neighbourhood', H.area + ', ' + H.town); if (H.lawn && H.lawn.sq) fact('Lawn', 'about ' + Number(H.lawn.sq).toLocaleString(LOCALE) + ' sq ft'); }
+    if (facts.children.length) c.appendChild(facts);
+    if (w.note) { c.appendChild(q('div', 'dwh', 'Note from ' + w.by)); c.appendChild(q('div', 'lmsg', w.note)); }
+    if (L && L.msg) { c.appendChild(q('div', 'dwh', 'What they said')); c.appendChild(q('div', 'lmsg', L.msg)); }
+    if (H && H.note) { c.appendChild(q('div', 'dwh', 'Note from the door')); c.appendChild(q('div', 'lmsg', H.note)); }
+    if (L && L.notes && L.notes.length) {
+      c.appendChild(q('div', 'dwh', 'Notes on the lead'));
+      var ns = q('div', 'lnotes'); L.notes.forEach(function (n) { ns.appendChild(q('div', null, n.note + ' — ' + n.by + ', ' + ago(n.at))); }); c.appendChild(ns);
+    }
+    if (feat('quote')) {
+      var bq = q('a', 'dwquote'); bq.appendChild(ico('calc', 2.2)); bq.appendChild(document.createTextNode('Build the quote'));
+      bq.href = 'quote.html?v=' + QUOTE_V + (H ? '&region=' + encodeURIComponent(w.region) + '&id=' + encodeURIComponent(w.door) + '&name=' + encodeURIComponent(H.address) + (H.lawn && H.lawn.sq ? '&lawn=' + H.lawn.sq + '&yr=' + (H.lawn.yr || '') : '')
+        : '&name=' + encodeURIComponent(name + (w.addr ? ', ' + w.addr : '')));
+      c.appendChild(bq);
+    }
+    c.appendChild(q('div', 'dwh', 'How did it go?'));
+    var st = q('div', 'lstat dwout');
+    DW_DONE.forEach(function (d) {
+      var on = !!(w.done && w.done.o === d[0]);
+      var b = q('button', null, d[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(on));
+      b.addEventListener('click', function () { done(on ? 'undo' : d[0], ''); });
+      st.appendChild(b);
+    });
+    c.appendChild(st);
+    if (w.done) c.appendChild(q('div', 'dwsub', dwDoneName(w.done.o) + ' · ' + w.done.by + ', ' + ago(w.done.at) + '. Tap it again to undo.'));
+    var nr = q('div', 'lnote'); var inp = q('input'); inp.type = 'text'; inp.maxLength = 500; inp.placeholder = 'Add a note for the office…';
+    var sv = q('button', null, 'Save'); sv.type = 'button'; sv.addEventListener('click', function () { var v = inp.value.trim(); if (v) done('', v); });
+    nr.appendChild(inp); nr.appendChild(sv); c.appendChild(nr);
+    function done(o, note) {
+      api('walkdone', { body: { id: w.id, outcome: o, note: note } }).then(function (j) {
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        toast(o === 'undo' ? 'Undone' : o ? dwDoneName(o) : 'Note saved', name, null); redraw();
+      }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
+    }
+    return c;
+  }
+  /* the walker's list: today's and what is coming first, then the last two weeks' */
+  function myWalksView(who) {
+    hideToast(); S.signin = null; S.screen = 'mywalks'; foot.hidden = true; setDock(null);
+    who = who || S.me;
+    setBar('back', { title: who === S.me ? 'My ' + vw() + 's' : who + '’s ' + vw() + 's', sub: 'Booked by the office, with everything for each', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = '';
+    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('mywalks', { params: who !== S.me ? { who: who } : {} }).then(function (j) {
+      holder.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load them.')); return; }
+      var today = todayISO(), up = j.walks.filter(function (w) { return w.date >= today; }), past = j.walks.filter(function (w) { return w.date < today; }).reverse();
+      if (!j.walks.length) { holder.appendChild(q('div', 'msg', 'No ' + vw() + 's booked yet. When the office books one, it shows here and on your calendar, and your phone gets an alert if alerts are on.')); return; }
+      var row = function (w) {
+        var b = q('button', 'calev k-walk dwrow' + (w.done ? ' dwdonerow' : '')); b.type = 'button';
+        b.appendChild(ico('cal', 2.2));
+        var tx = q('span');
+        tx.appendChild(q('b', null, dwWhen(w) + ' · ' + (w.who ? (w.who.name || w.who.phone || 'Lead') : streetCase(w.title))));
+        tx.appendChild(q('small', null, [w.addr, w.who && w.who.need, w.done ? dwDoneName(w.done.o) : ''].filter(Boolean).join(' · ')));
+        b.appendChild(tx);
+        if (w.fresh) b.appendChild(q('span', 'dwnew', 'New'));
+        b.addEventListener('click', function () { walkView(w.id, function () { myWalksView(who); }, who); });
+        return b;
+      };
+      if (up.length) { holder.appendChild(q('h2', 'calday', 'Coming up')); up.forEach(function (w) { holder.appendChild(row(w)); }); }
+      else holder.appendChild(q('div', 'msg', 'Nothing coming up.'));
+      if (past.length) { holder.appendChild(q('h2', 'calday', 'Last two weeks')); past.forEach(function (w) { holder.appendChild(row(w)); }); }
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg', 'Your ' + vw() + 's need signal.')); });
+    window.scrollTo(0, 0);
+  }
+  /* on the home screen of someone who does walks: what is coming, with the new ones marked */
+  function walkerCard(host) {
+    if (!walkerOn() || S.offline) return;
+    api('mywalks').then(function (j) {
+      if (!j || !j.ok || S.screen !== 'tools') return;
+      var today = todayISO(), up = j.walks.filter(function (w) { return w.date >= today; });
+      var fresh = up.filter(function (w) { return w.fresh; }).length;
+      var c = q('button', 'dwhome' + (fresh ? ' fresh' : '')); c.type = 'button';
+      c.appendChild(ico('cal', 2.4));
+      var tx = q('span');
+      tx.appendChild(q('b', null, up.length ? 'Your ' + vw() + 's: ' + up.length + ' coming up' + (fresh ? ' · ' + fresh + ' new' : '') : 'Your ' + vw() + 's'));
+      var nx = up[0];
+      tx.appendChild(q('small', null, nx ? 'Next: ' + dwWhen(nx) + ' · ' + (nx.who ? (nx.who.name || 'Lead') : streetCase(nx.title)) : 'Nothing booked. New ones show here and on your calendar.'));
+      c.appendChild(tx);
+      c.addEventListener('click', function () { myWalksView(); });
+      host.appendChild(c);
+    }).catch(function () {});
+  }
+  /* an alert tapped, or a link with ?walk=: open that walk once signed in */
+  function walkReturn() {
+    var m = /[?&]walk=(v[0-9a-f]{12})\b/.exec(location.search); if (!m || !feat('walkdesk')) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    walkView(m[1], chooseView);
+    return true;
   }
   function saveLead(l, change, undoTo) {
     var body = { id: l.id }; for (var k in change) body[k] = change[k];
@@ -4749,7 +5120,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
     if (S.role === 'admin' && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
     if (S.role === 'admin') { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
+    else if (S.role === 'office' && feat('walkdesk')) t.push(['Pipeline', pipelineView]);
     else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
+    if (walkerOn()) t.push(['My ' + vw() + 's', function () { myWalksView(); }]);
     t.push(['Calendar', function () { S.calWho = S.me; calendarView(); }]);
     t.push(['Training', trainingView]);
     t.push(planOk() ? ['Team stats', teamView] : ['My stats', function () { statsView(S.me, chooseView); }]);
@@ -4801,6 +5174,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var f = sug.querySelector('.dh-sg'); if (f && !f.classList.contains('addr') && sug.querySelectorAll('.dh-sg').length === 2) f.click(); else { S.searchQ = inp.value.trim(); searchView(chooseView); } } if (e.key === 'Escape') { sug.hidden = true; } });
     var chips = q('div', 'dh-chips'); hero.appendChild(chips);
     page.appendChild(hero);
+    var wkd = q('div', 'dh-walks'); page.appendChild(wkd); walkerCard(wkd);   /* the walk desk (2026-10-14): a computer shows the walks too */
     var grid = q('section', 'dh-grid'), c1 = q('div', 'dh-col'), c2 = q('div', 'dh-col'), c3 = q('div', 'dh-col');
     grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3); page.appendChild(grid);
     /* the tools row went (2026-10-11, Matthew: it repeated the top bar); what the top bar does not have sits with the chips */
@@ -5134,8 +5508,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
     if (S.role === 'admin' && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
-    if (S.role === 'admin') it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip']]);
+    if (S.role === 'admin' || (S.role === 'office' && feat('walkdesk'))) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip', 'deskbook', 'walk']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
+    if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     it.push(['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]);
     if (planOk()) it.push(['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]);
     else it.push(['team', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);
@@ -6133,7 +6508,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var r = q('button', 'calev k-' + e.kind); r.type = 'button';
           r.appendChild(ico(k[0], 2.2));
           var tx = q('span'); tx.appendChild(q('b', null, (e.time ? fmtTime(e.time) + ' \u00b7 ' : '') + (e.kind === 'own' ? e.title : streetCase(e.title))));
-          tx.appendChild(q('small', null, k[1] + (e.need ? ' \u00b7 ' + e.need : '') + (e.town ? ' \u00b7 ' + e.town : '')));
+          tx.appendChild(q('small', null, (e.dw ? k[1] + (e.mins ? ' \u00b7 ' + e.mins + ' min' : '') + (e.done ? ' \u00b7 ' + dwDoneName(e.done.o) : '') : k[1]) + (e.need ? ' \u00b7 ' + e.need : '') + (e.town ? ' \u00b7 ' + e.town : '')));
           r.appendChild(tx);
           r.addEventListener('click', function () { calOpen(e, j.edit, who); });
           dayBox.appendChild(r);
@@ -6145,6 +6520,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function fmtTime(t) { var p = String(t).split(':'), h = +p[0]; return (h % 12 || 12) + (p[1] !== '00' ? ':' + p[1] : '') + (h < 12 ? ' am' : ' pm'); }
   function calOpen(e, edit, who) {
+    if (e.dw) { walkView(e.dw, calendarView, who); return; }   /* the walk desk (2026-10-14) */
     if (e.kind === 'walk' || e.kind === 'revisit') {     /* opens the door itself, and Back comes here */
       S.region = e.region; S.flash = e.id; S.openDoor = e.id; S.returnTo = calendarView;
       var go = function () { openArea(e.area); };
@@ -6210,7 +6586,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* a lead's owner (admins and managers pick one) and follow-up date (the owner, their manager or an admin) */
   function leadOwnerRows(l, c) {
-    var mgr = S.role === 'admin' || S.role === 'manager';
+    var mgr = S.role === 'admin' || S.role === 'manager' || wdOn();
     if (mgr && S.leadPeople) {
       var ow = q('label', 'lowner'); ow.appendChild(q('span', null, 'Owner'));
       var sel = q('select');
@@ -7048,7 +7424,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function roleSeg(cur, onPick) {
     var seg = q('div', 'aseg');
-    [['crew', 'Crew'], ['manager', 'Manager'], ['admin', 'Admin']].forEach(function (o) {
+    [['crew', 'Crew']].concat(feat('walkdesk') ? [['office', 'Office']] : [], [['manager', 'Manager'], ['admin', 'Admin']]).forEach(function (o) {
       var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0]));
       b.addEventListener('click', function () { onPick(o[0]); [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
       seg.appendChild(b);
@@ -7059,7 +7435,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var fm = q('div', 'phf acf'), r = 'crew';
     var lb = q('label', null, 'Name'); var nm = q('input'); nm.maxLength = 40; nm.placeholder = 'First name and last initial'; nm.autocomplete = 'off'; lb.appendChild(nm); fm.appendChild(lb);
     if (S.role === 'manager') fm.appendChild(q('div', 'lsub', 'They join your team as crew, with their own code.'));
-    else { fm.appendChild(q('div', 'lsub', 'Crew mark doors. Admins also see the office tools, the export and these accounts.')); fm.appendChild(roleSeg('crew', function (v) { r = v; })); }
+    else { fm.appendChild(q('div', 'lsub', 'Crew mark doors. ' + (feat('walkdesk') ? 'Office work the leads and book ' + vw() + 's. ' : '') + 'Admins also see the office tools, the export and these accounts.')); fm.appendChild(roleSeg('crew', function (v) { r = v; })); }
     var err = q('div', 'err'); fm.appendChild(err);
     var sv = q('button', 'save', 'Make the sign-in'); sv.type = 'button';
     sv.addEventListener('click', function () {
@@ -7099,7 +7475,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(top);
     if (S.pins && S.pins[a.id]) c.appendChild(q('div', 'pin', 'PIN ' + S.pins[a.id].slice(0, 3) + ' ' + S.pins[a.id].slice(3)));
     var meta = q('div', 'meta');
-    meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'super' ? 'Traverse' : a.role === 'admin' ? 'Admin' : a.role === 'manager' ? 'Manager' : 'Crew'));
+    meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'super' ? 'Traverse' : a.role === 'admin' ? 'Admin' : a.role === 'manager' ? 'Manager' : a.role === 'office' ? 'Office' : 'Crew'));
+    if (a.walker && feat('walkdesk') && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Does ' + vw() + 's'));
     var tm = (S.acctTeams || []).filter(function (t) { return t.id === a.team; })[0];
     if (tm && !a.off) meta.appendChild(q('span', 'tag teamtag', tm.name));
     meta.appendChild(q('span', null, a.off ? 'Turned off · cannot sign in' : a.source === 'app' ? 'Added' + (a.by ? ' by ' + a.by : '') + (a.at ? ' · ' + fmtDay(a.at) : '') : 'Set up on the server'));
@@ -7137,6 +7514,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     } else {
       var adm = S.role === 'admin';
       if (adm) btn('Change', null, function () { S.acctEdit = a.id; drawAccounts(holder); });
+      if (adm && feat('walkdesk') && a.role !== 'super') btn(a.walker ? 'Stop ' + vw() + 's' : 'Does ' + vw() + 's', null, function () {   /* the walk desk (2026-10-14) */
+        acctCall('walkerset', { id: a.id, on: !a.walker }, function () { toast(a.walker ? a.name + ' no longer does ' + vw() + 's' : a.name + ' does ' + vw() + 's now', a.walker ? 'Walks already booked with them stay booked.' : 'The office can book ' + vw() + 's with them.', null); });
+      });
       /* a new code: an admin may pick it, and change their own (2026-10-11, Matthew); a manager gives their crew a random one */
       if (adm || !a.you) btn(a.you ? 'Change my code' : 'New code', null, function () {
         if (adm) { S.acctCode = S.acctCode === a.id ? null : a.id; drawAccounts(holder); return; }
@@ -7590,7 +7970,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     S.leadRedraw = pipelineView;
     if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { S.leadPeople = j.people.map(function (p) { return p.name; }); if (S.screen === 'pipeline') pipelineView(); } }).catch(function () {});
-    Promise.all([api('quotes'), api('leads')]).then(function (rs) {
+    Promise.all([api('quotes'), api('leads'), deskLoad()]).then(function (rs) {
       if (rs[0]._status === 401 || rs[1]._status === 401) return signinView('Signed out. Enter your code again.');
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
       S.qlist = rs[0].quotes || []; S.pleads = rs[1].leads || [];
@@ -7707,7 +8087,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var jb = feat('roof') ? q('a', 'adminlink', 'Booked doors for JobNimbus (CSV)') : q('a', 'adminlink', 'Door bookings for Jobber (CSV)');
     jb.href = API + (feat('roof') ? '?action=jobnimbus' : '?action=jobber'); jb.setAttribute('download', '');
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
-    top.appendChild(jb);
+    if (S.role === 'admin') top.appendChild(jb);
     holder.appendChild(top);
     if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
@@ -8916,7 +9296,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (x.work) c.appendChild(workChips(x.work, false));
     c.appendChild(q('div', 'meta', 'Booked by ' + (x.by || 'crew') + ' · ' + fmtDay(x.at)));
-    if (!x.result) c.appendChild(walkBlock(x, { region: x.region, redraw: drawPipe, phone: x.phone }));
+    if (!x.result) c.appendChild(wdOn() ? deskWalkBlock('door', x) : walkBlock(x, { region: x.region, redraw: drawPipe, phone: x.phone }));
     var tools = q('div', 'adds'); var sat = satLink(x, true); if (sat) tools.appendChild(sat);
     /* straight into Quote builder with the address as the job name and the county's funding picked (SX-3) */
     var bq = q('a', 'sat'); bq.appendChild(ico('calc', 2.2)); bq.appendChild(document.createTextNode('Build quote'));
@@ -11946,7 +12326,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.role = j.role; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -11954,7 +12334,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.role = j.role; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn())) chooseView(); }
+      if (j.ok) { S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn()) && !walkReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }
