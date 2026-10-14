@@ -837,6 +837,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       - **"Book the walk with someone"** on every lead and door booking in the Pipeline. Both walkers' days show side by side with their free times, and a double booking is warned about.
       - **For the walker:** the walk goes on their calendar (and calendar feed) with everything for it, and their phone gets an alert when it is booked, moved, handed over or cancelled. Their home screen lists their walks, and they record Quote sent / Done / Nobody there.
       Switched on by `features.walkdesk` in Sixfold's company.json only. The editions carry the code switched off.
+      **Call tries LIVE 2026-10-14 (d68cfa8):** No answer / Left voicemail / Talked to them on each lead, try again next day, 4 misses then a last text or email (opened on the caller's own phone, filled in), To call in groups.
       **Matthew to do after upload:** make Jen's sign-in (role Office); tick Brandon and Brad "Does walks"; Brandon and Brad each turn on alerts on their phone.
 
 ## Surge
