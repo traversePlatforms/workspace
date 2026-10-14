@@ -3151,11 +3151,13 @@ if ($action === 'teamsave' || $action === 'teammember') {
  * {id, owner} and {id, follow: [date, time] | null}, alongside the existing status and note rows. */
 function leadsAll(): array {
     $leads = [];
-    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => []];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
+        if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
+        if (!empty($u['try'])) $leads[$u['id']]['tries'][] = ['o' => (string) $u['try'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* call tries (2026-10-14) */
         if (array_key_exists('owner', $u)) { $leads[$u['id']]['owner'] = (string) $u['owner']; $leads[$u['id']]['ownerBy'] = $u['by'] ?? null; }
         if (array_key_exists('follow', $u)) $leads[$u['id']]['follow'] = is_array($u['follow']) ? ['date' => (string) $u['follow'][0], 'time' => (string) ($u['follow'][1] ?? '')] : null;
     }
@@ -3952,6 +3954,28 @@ if ($action === 'leadimport') {
     out(['ok' => true, 'added' => $added, 'already' => $already, 'skipped' => $skipped]);
 }
 
+/* how a call went (2026-10-14, Sixfold's lead desk): No answer, Left voicemail, Talked to them. Each try is kept with who and when;
+ * the page works out when to try again and when to give up (after 4). Talking to them moves a New lead to Contacted. */
+if ($action === 'leadtry') {
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $own = (string) $all[$id]['owner'];
+    if (!desk() && !($own !== '' && canManage($own))) fail('Not allowed.', 403);
+    $o = (string) ($body['o'] ?? '');
+    if ($o === 'undo') {
+        $mine = array_values(array_filter($all[$id]['tries'], fn($t) => $t['by'] === $me && $t['at'] > time() - 3600));
+        if (!$mine) fail('Nothing of yours to undo in the last hour.');
+        if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'untry' => end($mine)['at'], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    if (!in_array($o, ['none', 'vm', 'talk'], true)) fail('Say how the call went.');
+    $row = ['id' => $id, 'try' => $o, 'by' => $me, 'at' => time()];
+    if ($o === 'talk' && $all[$id]['status'] === 'new') $row['status'] = 'contacted';
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 if ($action === 'leadstatus') {
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? '');

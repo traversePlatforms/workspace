@@ -1770,6 +1770,18 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dh-walks:not(:empty){padding:24px 48px 0}.dh-walks .dwhome{margin:0;max-width:640px}
   .dwhome .ic{width:24px;height:24px;flex:none;color:var(--booked)}
   .dwhome span{display:grid;gap:2px}.dwhome b{font:800 15.5px var(--sans)}.dwhome small{font-size:13px;color:var(--soft)}
+  /* call tries (2026-10-14) */
+  .ltries{margin-top:10px;padding:10px 12px;border-radius:13px;background:var(--sunk)}
+  .ltrybtns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .ltrybtns span{font-size:12.5px;font-weight:700;color:var(--soft);margin-right:2px}
+  .ltrybtns button{min-height:38px;border:1.5px solid var(--line);border-radius:999px;padding:0 13px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  .ltryhist{font-size:13px;color:var(--ink);margin-top:8px;line-height:1.45}
+  .ltrydue{font-size:13px;color:var(--soft);margin-top:4px;line-height:1.4}
+  .lwarn{font-size:13px;font-weight:700;color:var(--ember-ink,#9a3412);margin-bottom:8px}
+  .lgiveup{font-size:13.5px;font-weight:700;margin-top:8px}
+  .ltryfu{margin-top:8px}.ltryfu a{background:var(--card)}
+  .ltrynote{font-size:12px;color:var(--soft);margin-top:6px}
+  .pipegrp{font:800 13px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:18px 2px 8px}
 </style>
 </head>
 <body>
@@ -3956,6 +3968,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
+    if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* call tries (2026-10-14) */
     if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
     if (l.notes && l.notes.length) {
       var nt = q('div', 'lnotes');
@@ -4299,6 +4312,78 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
     walkView(m[1], chooseView);
     return true;
+  }
+  /* ---- call tries (2026-10-14, Sixfold's lead desk) ----
+     Matthew: when Jen calls and nobody answers, the lead should say so and come back. Each lead keeps its tries (No answer, Left
+     voicemail, Talked to them) with who and when; after a miss it comes back the next day (Sunday skipped), and after four
+     misses in a row it says to send a last text or email and mark it Lost. The text and email open on the person's own phone,
+     filled in; nothing is sent by the app. */
+  var LEAD_TRIES = 4;
+  var TRY_N = { none: 'No answer', vm: 'Left voicemail', talk: 'Talked to them' };
+  function missCount(l) { var n = 0; (l.tries || []).forEach(function (t) { n = t.o === 'talk' ? 0 : n + 1; }); return n; }
+  function lastTry(l) { var t = l.tries || []; return t.length ? t[t.length - 1] : null; }
+  function tryDue(l) {
+    var last = lastTry(l); if (!last || last.o === 'talk') return null;
+    var d = new Date(last.at * 1000); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+    return d.getTime();
+  }
+  function callGroup(l) {
+    var last = lastTry(l); if (!last) return 'new';
+    if (last.o === 'talk') return 'talked';
+    if (missCount(l) >= LEAD_TRIES) return 'out';
+    return tryDue(l) <= Date.now() ? 'today' : 'wait';
+  }
+  function tryWhen(ts) { var d = new Date(ts * 1000), today = isoOf(new Date()) === isoOf(d); return (today ? 'today' : dayName(isoOf(d))) + ' ' + fmtTime((d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()); }
+  function leadMsg(l, last) {
+    var nd = String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim().toLowerCase() || 'quote';
+    var me = String(S.me || '').split(' ')[0], hi = 'Hi ' + greetName(l.name) + ', this is ' + me + ' with ' + CO.short + '. ';
+    return last ? hi + 'We have tried you a few times about your ' + nd + ' request. If you would still like a quote, reply here' + (CO.phone ? ' or call us at ' + CO.phone : '') + '. If not, no problem, we will stop calling.'
+      : hi + 'I just tried calling about your ' + nd + ' request. When is a good time to talk? You can also reply here.';
+  }
+  function callTries(l) {
+    var box = q('div', 'ltries'), t = l.tries || [], miss = missCount(l), last = lastTry(l);
+    if (last && last.by !== S.me && Date.now() / 1000 - last.at < 7200) box.appendChild(q('div', 'lwarn', last.by + ' called ' + ago(last.at) + ': ' + TRY_N[last.o].toLowerCase() + '.'));
+    var row = q('div', 'ltrybtns'); row.appendChild(q('span', null, 'Called?'));
+    ['none', 'vm', 'talk'].forEach(function (o) {
+      var b = q('button', null, TRY_N[o]); b.type = 'button';
+      b.addEventListener('click', function () {
+        if (b.disabled) return; b.disabled = true;
+        api('leadtry', { body: { id: l.id, o: o } }).then(function (j) {
+          b.disabled = false;
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+          (S.leadRedraw || pipelineView)();
+          var n = miss + 1;
+          toast(TRY_N[o] + ' \u00b7 ' + (l.name || l.phone || ''), o === 'talk' ? 'Logged. Book the ' + vw() + ' or move it on when you are ready.' : n >= LEAD_TRIES ? n + ' tries with no answer: send a last text or email, then mark it Lost.' : 'Try ' + n + ' of ' + LEAD_TRIES + '. It comes back to try again tomorrow.',
+            function () { api('leadtry', { body: { id: l.id, o: 'undo' } }).then(function () { (S.leadRedraw || pipelineView)(); }); });
+        }).catch(function () { b.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
+      });
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+    if (t.length) {
+      box.appendChild(q('div', 'ltryhist', 'Tried ' + t.length + '\u00d7 \u00b7 ' + t.slice(-3).reverse().map(function (x) { return tryWhen(x.at) + ' ' + TRY_N[x.o].toLowerCase() + ' (' + String(x.by).split(' ')[0] + ')'; }).join(' \u00b7 ') + (t.length > 3 ? ' \u00b7 \u2026' : '')));
+      var due = tryDue(l);
+      if (due && miss < LEAD_TRIES) {
+        var h = new Date(last.at * 1000).getHours();
+        box.appendChild(q('div', 'ltrydue', (due <= Date.now() ? 'Try again today' : 'Try again ' + dayName(isoOf(new Date(due)))) + (h < 12 ? ': the last try was in the morning, so try the afternoon or evening.' : ': the last try was in the afternoon, so try the morning.')));
+      }
+    }
+    var tel = digits(l.phone);
+    if (miss >= 1 && (tel.length >= 10 || l.email)) {
+      var out = miss >= LEAD_TRIES;
+      if (out) box.appendChild(q('div', 'lgiveup', miss + ' tries, no answer. Send a last text or email, then mark it Lost.'));
+      var fu = q('div', 'lcontact ltryfu');
+      var body = leadMsg(l, out);
+      if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(body); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode(out ? 'Last text' : 'Text them too')); fu.appendChild(a); }
+      if (l.email) {
+        var e = q('a'); e.href = 'mailto:' + l.email + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + CO.short) + '&body=' + encodeURIComponent(body + '\n\n' + S.me + '\n' + CO.short + (CO.phone ? '\n' + CO.phone : ''));
+        e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode(out ? 'Last email' : 'Email them too')); fu.appendChild(e);
+      }
+      box.appendChild(fu);
+      box.appendChild(q('div', 'ltrynote', 'Opens on this phone, filled in, from your own number or email. Nothing is sent until you press send.'));
+    }
+    return box;
   }
   function saveLead(l, change, undoTo) {
     var body = { id: l.id }; for (var k in change) body[k] = change[k];
@@ -8120,11 +8205,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(q('div', 'msg', items.length ? 'Nothing at this stage' + (src === 'all' ? '' : ' from ' + pipeSrcName(src)) + '.'
         : 'Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent; website enquiries arrive by themselves; add the rest with + Add a lead.'));
     }
-    shown.forEach(function (it) {
+    var drawCard = function (it) {
       var card = it.kind === 'door' ? quoteCard(it.x) : leadCard(it.x);
       card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild);
       holder.appendChild(card);
-    });
+    };
+    /* To call in groups (2026-10-14, call tries): who to call first, then who is waiting */
+    if (stage === 'call' && wdOn() && shown.length) {
+      var gOf = function (it) { return it.kind === 'lead' ? callGroup(it.x) : 'new'; };
+      var lt = function (it) { var x = it.kind === 'lead' ? lastTry(it.x) : null; return x ? x.at : 0; };
+      [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
+        var its = shown.filter(function (it) { return gOf(it) === g[0]; });
+        if (!its.length) return;
+        if (g[0] !== 'new') its.sort(function (a, b) { return lt(a) - lt(b); });
+        holder.appendChild(q('h2', 'pipegrp', g[1] + ' \u00b7 ' + its.length));
+        its.forEach(drawCard);
+      });
+    } else shown.forEach(drawCard);
     window.scrollTo(0, y);
   }
   /* ---- address search (2026-10-04) ----
