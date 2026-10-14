@@ -3217,11 +3217,12 @@ if ($action === 'teamsave' || $action === 'teammember') {
  * {id, owner} and {id, follow: [date, time] | null}, alongside the existing status and note rows. */
 function leadsAll(): array {
     $leads = [];
-    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null, 'quote' => null];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
+        if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, the quote generator */
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
         if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
@@ -3448,6 +3449,59 @@ if ($action === 'lawncheck') {
     $row = ['id' => $h['id'], 'region' => $h['region'], 'v' => $v, 'sq' => $sq ?: null, 'ours' => $h['lawn']['sq'] ?? null, 'trees' => $h['trees'] ?? null, 'by' => $me, 'at' => time()];
     if (!appendLine(DATA_DIR . '/lawncheck.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+/* ---- the quote generator (2026-10-14, 365 Aeration & Seeding; Brandon: "use Bryce's pricing, adjusted to Colorado") ----
+ * The price follows Bryce's ladder: $399 for about 2,500 sq ft of lawn, scaling with the square root of the lawn (his $1,200 acre lot,
+ * about 22,000 sq ft of grass, lands at $1,199), never under the minimum, rounded to his "...99" steps. Seed goes down at 2 to 4 lb per
+ * 1,000 sq ft (Bryce's range; CSU says 3 to 4 after aeration), more seed when the customer pays more. Costs and margins show once the
+ * bag prices are filled in. Kept in a365-pricing.json beside the door files: the office reads it, an admin changes it; never public. */
+const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 399, 'power' => 0.5, 'seedLow' => 2, 'seedBase' => 3, 'seedHigh' => 4,
+    'seedBagCost' => 128.83, 'seedBagLb' => null, 'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50];
+function a365Pricing(): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
+    $o = A365_PRICING; if (is_array($j)) foreach ($o as $k => $v) if (array_key_exists($k, $j) && ($j[$k] === null || is_int($j[$k]) || is_float($j[$k]))) $o[$k] = $j[$k];
+    return $o;
+}
+if (in_array($action, ['a365pricing', 'a365pricingset', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
+if ($action === 'a365pricing') {
+    if (!desk()) fail('Not allowed.', 403);
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
+    out(['ok' => true, 'pricing' => a365Pricing(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
+}
+if ($action === 'a365pricingset') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
+            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000]];
+    $p = a365Pricing();
+    foreach ($lim as $k => [$lo, $hi]) {
+        if (!array_key_exists($k, $body)) continue;
+        $v = $body[$k];
+        if ($v === null || $v === '') { if (in_array($k, ['seedBagLb', 'fertBagCost', 'fertBagLb', 'fertRate', 'aerateOnly'], true)) { $p[$k] = null; continue; } fail('Give ' . $k . ' a number.'); }
+        if (!is_numeric($v) || (float) $v < $lo || (float) $v > $hi) fail('That number for ' . $k . ' is out of range.');
+        $p[$k] = (float) $v == (int) $v ? (int) $v : round((float) $v, 4);
+    }
+    if (!($p['seedLow'] <= $p['seedBase'] && $p['seedBase'] <= $p['seedHigh'])) fail('Seed rates must go low, base, high.');
+    $p['_by'] = $me; $p['_at'] = time();
+    if (@file_put_contents(DATA_DIR . '/a365-pricing.json', json_encode($p, JSON_PRETTY_PRINT), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => '365 pricing changed']);
+    out(['ok' => true, 'pricing' => a365Pricing()]);
+}
+/* a quote kept on the lead; "sent" also moves an open lead to Quoted */
+if ($action === 'leadquote') {
+    if (!desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the quote a price.');
+    $pkg = (string) ($body['pkg'] ?? ''); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick the package.');
+    $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 2000000) fail('That lawn size does not look right.');
+    $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : null;
+    $q = ['price' => $price, 'pkg' => $pkg, 'sq' => $sq, 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
+    $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
+    if ($q['sent'] && in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'status' => $row['status'] ?? $all[$id]['status']]);
 }
 /* ---- the walk desk (2026-10-14; Sixfold first, Matthew: "just a sixfold build atm") ----
  * The office (admins, and the office role) books a lead's or a door's walk with someone marked "Does walks" in Accounts.
