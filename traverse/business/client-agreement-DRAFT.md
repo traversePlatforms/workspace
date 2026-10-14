@@ -229,7 +229,7 @@ Traverse will give notice before suspending where practical, will limit the susp
 
 ### 17. General
 
-**17.1 Law and venue.** Colorado law governs this Agreement, without regard to conflict-of-law rules. Courts in [El Paso / Denver] County, Colorado, have exclusive jurisdiction, except that Traverse may seek an injunction in any court to protect the Service or Door Data.
+**17.1 Law and venue.** Colorado law governs this Agreement, without regard to conflict-of-law rules. Courts in the City and County of Denver, Colorado, have exclusive jurisdiction, except that Traverse may seek an injunction in any court to protect the Service or Door Data.
 
 **17.2 Notices.** Notices go to the email addresses on the Order Form, and to Traverse at **support@traverseplatforms.com** (legal notices: **[legal@traverseplatforms.com]**). A notice is given when sent, unless the sender receives a bounce.
 
