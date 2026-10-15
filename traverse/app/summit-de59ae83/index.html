@@ -1868,6 +1868,11 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qcrow>div{display:grid;gap:1px;min-width:0}.qcrow small{color:var(--soft);font-size:12px;line-height:1.35}.qcrow>span{font-weight:700;white-space:nowrap}
   .qctot{background:var(--sunk)}.qcleft{background:var(--sunk)}.qcleft b,.qcleft>span{font-size:15.5px;color:var(--ember-ink)}
   .qsteph{margin-top:4px}
+  .qqrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.qqrow label{display:grid;gap:3px;font-size:12.5px;font-weight:700}
+  .qqrow input{font:15px var(--sans);padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);min-width:0}
+  @media (max-width:560px){.qqrow{grid-template-columns:1fr}}
+  .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
+  .hpmap{min-height:240px;margin:10px 0}
   .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
   .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
@@ -5239,6 +5244,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () {});
   }
   /* an alert tapped (?job=): open that job once signed in */
+  /* ./?quote: straight to the Quick quote (a bookmark beside her other tools) */
+  function quoteReturn() {
+    if (!/[?&]quote\b/.test(location.search) || !CO.a365 || !(asOffice() || S.role === 'admin')) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    quickQuoteView(); return true;
+  }
   function jobReturn() {
     var m = /[?&]job=(j[0-9a-f]{12})\b/.exec(location.search); if (!m || !feat('walkdesk')) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
@@ -5442,11 +5453,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!E || E.none) return '';
     return n > E.b * 1.15 ? 'They say bigger than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : n < E.a * 0.85 ? 'They say smaller than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : 'Matches our estimate.';
   }
-  function housePanel(h, lead, redraw) {
+  function housePanel(h, lead, redraw, quick) {
     var E = lawnEstimate(h), box = q('div', 'door hpanel');
     box.appendChild(q('div', 'addr', streetCase(h.address)));
     box.appendChild(q('div', 'meta', h.lookup ? h.town + ' · not on the door lists' + (h.rent ? ': the owner lives elsewhere (likely rented)' : '') : h.town + ' · ' + streetCase(h.area)));
     if (h.owner) box.appendChild(q('div', 'meta', (h.rent ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
+    if (h.lat != null) {   /* the 2023 photo with the property line, as on the lead card (Matthew 2026-10-15) */
+      var hp = q('div', 'lpmap hpmap'); hp.setAttribute('role', 'img'); hp.setAttribute('aria-label', 'Aerial photo of ' + streetCase(h.address)); box.appendChild(hp);
+      hp.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres }); });
+      setTimeout(function () { miniAerial(hp, h); }, 0);
+    }
     var big = q('div', 'hlawn c-' + E.conf.toLowerCase());
     if (E.none) big.appendChild(q('b', null, 'No lawn measured yet'));
     else {
@@ -5479,7 +5495,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(lk);
       box.appendChild(askBox(lead, h, E, redraw));
     }
-    box.appendChild(quoteBox(h, lead, E, redraw));   /* the quote generator (2026-10-14): after the questions, since Jen asks first */
+    box.appendChild(quoteBox(h, lead, E, redraw, quick));   /* the quote generator (2026-10-14): after the questions, since Jen asks first */
     return box;
   }
   /* "Check with them": the questions, their answers kept on the lead, compared with ours as they are typed */
@@ -5535,13 +5551,51 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (lead.msg) w.appendChild(q('div', 'lwhomsg', '\u201c' + lead.msg + '\u201d'));
     return w;
   }
-  function houseLookupView(lead, open, typed) {
-    hideToast(); S.signin = null; S.screen = 'house'; foot.hidden = true; setDock(null);
+  /* ---- the Quick quote (2026-10-15) ----
+     No lead in the app needed: the customer's name, number and email (kept on this screen only, never saved), the address, the house
+     and the whole quote; then copy a summary for Monday, ClickUp or wherever she keeps her leads, and a text for the customer (the
+     price only, never our figures). Not on our lists: quote by the lawn size they give. Its own link: ./?quote */
+  function quickQuoteView(typed) { houseLookupView(null, null, typed, true); }
+  function quickWhoBox() {
+    var Q = S.qq || (S.qq = { name: '', phone: '', email: '' });
+    var w = q('div', 'lwho qqwho'); w.appendChild(q('div', 'dwh', 'Who it\u2019s for (optional, not saved)'));
+    var row = q('div', 'qqrow');
+    [['name', 'Name', 'text', 'name'], ['phone', 'Phone', 'tel', 'tel'], ['email', 'Email', 'email', 'email']].forEach(function (x) {
+      var l = q('label', null, x[1]), i = q('input'); i.type = x[2]; i.autocomplete = x[3]; i.value = Q[x[0]]; i.maxLength = 120;
+      i.addEventListener('input', function () { Q[x[0]] = i.value.trim(); }); l.appendChild(i); row.appendChild(l);
+    });
+    w.appendChild(row);
+    var cl = q('button', 'lnk', 'Clear for the next customer'); cl.type = 'button'; cl.addEventListener('click', function () { S.qq = null; quickQuoteView(); }); w.appendChild(cl);
+    return w;
+  }
+  /* the summary for her own board, and the customer's text */
+  function quickSummary(h, st, E) {
+    var Q = S.qq || {}, sm = st.sum || {}, lines = [];
+    var co = (CO.a365 && CO.a365.name) || 'Aeration';
+    lines.push(co + ' quote, ' + new Date().toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', year: 'numeric' }));
+    var who = [Q.name, Q.phone, Q.email].filter(Boolean).join(' \u00b7 '); if (who) lines.push('Customer: ' + who);
+    if (h && h.address) lines.push('Address: ' + streetCase(h.address) + (h.town ? ', ' + h.town : ''));
+    lines.push('Service: ' + (st.pkg === 'aerate' ? 'Aerate only' : 'Aerate, seed & feed'));
+    if (st.sq) lines.push('Lawn priced at: ' + Number(st.sq).toLocaleString(LOCALE) + ' sq ft' + (E && !E.none ? ' (our estimate ' + Number(E.mid).toLocaleString(LOCALE) + ', likely ' + Number(E.a).toLocaleString(LOCALE) + '\u2013' + Number(E.b).toLocaleString(LOCALE) + ')' : ''));
+    lines.push('Price: ' + money0(st.cur.price) + (sm.ladder && sm.ladder !== st.cur.price ? ' (list ' + money0(sm.ladder) + ')' : ''));
+    var dep = Math.ceil(st.cur.price / 2); lines.push('Deposit (half): ' + money0(dep) + ' \u00b7 balance on the day: ' + money0(st.cur.price - dep));
+    (sm.rows || []).forEach(function (r) { if (r[2] && r[2] !== '\u2014') lines.push(r[0] + ': ' + r[1] + ' = ' + r[2]); });
+    if (sm.known && sm.rows && sm.rows.length) lines.push('Left before labour: ' + money0(st.cur.price - sm.cost));
+    return lines.join('\n');
+  }
+  function quickCustomerText(h, st) {
+    var Q = S.qq || {}, B = leadBrand({ src: 'a365web', name: Q.name }), first = greetName(Q.name), dep = Math.ceil(st.cur.price / 2);
+    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+  }
+  function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
+  function houseLookupView(lead, open, typed, quick) {
+    hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
-    setBar('back', { title: 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : 'Field tools' });
+    setBar('back', { title: quick ? 'Quick quote' : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     view.textContent = '';
     if (lead) view.appendChild(leadWhoBox(lead));
+    else if (quick) view.appendChild(quickWhoBox());
     var box = q('div', 'search hlook');
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'houseq';
     var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
@@ -5555,7 +5609,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!j.ok) { pan.appendChild(q('div', 'msg bad', j.error || 'Could not open that house.')); return; }
         var again = q('button', 'lnk subnav', '‹ Search again'); again.type = 'button'; again.addEventListener('click', function () { pan.textContent = ''; run(); try { inp.focus(); } catch (e) {} });
         pan.appendChild(again);
-        pan.appendChild(housePanel(j.house, lead, function () { show(region, id); }));
+        pan.appendChild(housePanel(j.house, lead, function () { show(region, id); }, quick));
       }).catch(function () { pan.textContent = ''; pan.appendChild(q('div', 'msg', 'Opening a house needs signal.')); });
     }
     function run() {
@@ -5566,6 +5620,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (my !== seq) return; res.textContent = '';
         if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work.')); return; }
         if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, e.g. “1840 Ponderosa”.')); return; }
+        if (!j.results.length && quick) res.appendChild(bySize(v));
         if (!j.results.length) { res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”. Check the spelling, or try just the number and street name. Towns we have not added yet, condos and apartments will not show.')); return; }
         j.results.forEach(function (r) {
           var b = q('button', 'door drow srow'); b.type = 'button';
@@ -5577,6 +5632,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (j.more) res.appendChild(q('div', 'msg soft', 'More match. Add more of the address.'));
       }).catch(function () { if (my === seq) { res.textContent = ''; res.appendChild(q('div', 'msg', 'Search needs signal.')); } });
     }
+    /* not on our lists (another town, a condo): the quote from the size they give */
+    function bySize(addr) {
+      var b = q('button', 'lnk qqsize', 'Quote it by the lawn size they give \u203a'); b.type = 'button';
+      b.addEventListener('click', function () { res.textContent = ''; pan.textContent = ''; var h = { address: addr || '', town: '' }; var w = q('div', 'door hpanel'); w.appendChild(q('div', 'addr', addr ? addr : 'An address not on our lists')); w.appendChild(q('div', 'meta', 'Not on our lists: no photo or measurements, and no drive cost. Ask them the lawn size.')); w.appendChild(quoteBox(h, null, { none: true }, function () {}, true)); pan.appendChild(w); });
+      return b;
+    }
+    if (quick) { var bs = bySize(''); bs.textContent = 'Not on our lists? Quote by lawn size \u203a'; box.insertBefore(bs, res); }
     inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 350); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); } });
     if (open) show(open.region, open.door); else if (typed) { inp.value = typed; run(); } else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
@@ -5715,7 +5777,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var wc = q('section', 'ocard'); wc.appendChild(q('h2', null, 'Forms out, not signed yet')); var wl = q('div', 'olist'); wl.appendChild(q('div', 'skel')); wc.appendChild(wl);   /* 2026-10-14: no walks for the office */
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
-    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', 'House lookup', function () { houseLookupView(null); }],
+    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', 'Quick quote', function () { quickQuoteView(); }],
      ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
@@ -5827,7 +5889,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function longDay(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); }
   function offerText(o) { return dayName(o.date) + ', arrive ' + SLOT_LABEL[o.slot] + ' \u00b7 ' + o.crew; }
   function quoteBody(l, extra) { var Q = l.quote; var b = { id: l.id, price: Q.price, pkg: Q.pkg, sq: Q.sq || 0, seedLb: Q.seedLb, fertLb: Q.fertLb || null, sent: !!Q.sent }; if (Q.note) b.note = Q.note; for (var k in extra) b[k] = extra[k]; return b; }
-  function quoteBox(h, lead, E, redraw) {
+  function quoteBox(h, lead, E, redraw, quick) {
     var box = q('div', 'qbox'); box.appendChild(q('div', 'dwh', 'Quote'));
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
     loadPricing(function (P) { hold.textContent = ''; if (!P) { hold.appendChild(q('div', 'msg', 'The price list needs signal.')); return; } draw(P); });
@@ -5913,7 +5975,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         detail.appendChild(tb);
         lines.forEach(function (t) { detail.appendChild(q('div', null, t)); });
         noteBox.textContent = ''; notes.forEach(function (t) { noteBox.appendChild(q('div', null, t)); });
-        st.cur = { price: price, seedLb: seedLb, fertLb: fertLb };
+        st.cur = { price: price, seedLb: seedLb, fertLb: fertLb }; st.sum = { rows: rows, cost: cost, known: known, ladder: ladder };
         drawActs();
       }
       function drawActs() {
@@ -5974,6 +6036,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           acts.appendChild(q('div', 'ltrynote', 'The text and email open on this phone, filled in. Nothing is sent until you press send. They carry the price only, never our lawn figures.'));
         }
         if (lead && wdOn()) { var bk = q('button', 'save jbook', 'Book the job ›'); bk.type = 'button'; bk.addEventListener('click', function () { jobBookView(lead, null, { price: st.cur.price, pkg: st.pkg, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null }); }); acts.appendChild(bk); }   /* the jobs board (2026-10-14) */
+        if (!lead && CO.a365) {   /* the Quick quote: copy it out */
+          var cp1 = q('button', 'save jbook', 'Copy for Monday, ClickUp or your notes'); cp1.type = 'button';
+          cp1.addEventListener('click', function () { copyText(quickSummary(h, st, E), 'The quote summary is ready to paste.'); });
+          var cp2 = q('button', 'lnk', 'Copy a text for the customer'); cp2.type = 'button';
+          cp2.addEventListener('click', function () { copyText(quickCustomerText(h, st), 'Paste it into a text or an email.'); });
+          acts.appendChild(cp1); acts.appendChild(cp2);
+          var Qx = S.qq || {}, tl = digits(Qx.phone), ct = q('div', 'lcontact');
+          if (tl.length >= 10) { var sa = q('a'); sa.href = 'sms:' + tl + '?&body=' + encodeURIComponent(quickCustomerText(h, st)); sa.appendChild(ico('chat', 2.2)); sa.appendChild(document.createTextNode('Text it to them')); ct.appendChild(sa); }
+          if (Qx.email) { var ea = q('a'); ea.href = 'mailto:' + encodeURIComponent(Qx.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + ((CO.a365 && CO.a365.name) || '')) + '&body=' + encodeURIComponent(quickCustomerText(h, st)); ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode('Email it')); ct.appendChild(ea); }
+          if (ct.children.length) acts.appendChild(ct);
+          acts.appendChild(q('div', 'ltrynote', 'The summary has our figures, for your own notes. The customer\u2019s text carries the price only. Nothing here is saved in the app.'));
+        }
         if (S.role === 'admin') { var pr = q('button', 'lnk', 'Pricing settings ›'); pr.type = 'button'; pr.addEventListener('click', function () { a365PricingView(); }); acts.appendChild(pr); }
       }
       paint();
@@ -6865,7 +6939,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
     if (adminView() && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
     if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
-    else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push(['House lookup', function () { houseLookupView(null); }]); }
+    else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push(['Quick quote', function () { quickQuoteView(); }]); }
     else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
     if (walkerOn()) t.push(['My ' + vw() + 's', function () { myWalksView(); }]);
     t.push(['Calendar', function () { S.calWho = S.me; calendarView(); }]);
@@ -7252,13 +7326,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', 'House lookup', function () { houseLookupView(null); }, ['house']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
+      ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
     if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
     if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip', 'deskbook', 'walk']]);
     if (adminView() && wdOn()) it.push(['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']]);   /* the jobs board (2026-10-14) */
-    if (asOffice()) it.push(['house', 'House lookup', function () { houseLookupView(null); }, ['house']]);
+    if (asOffice()) it.push(['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     if (walkerOn() && !wdOn()) it.push(['jobs', 'My jobs', function () { myJobsView(); }, ['myjobs', 'job']]);
@@ -14113,7 +14187,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }
