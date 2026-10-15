@@ -29,7 +29,7 @@ const save = () => {   /* retries while Windows holds the file a moment (2026-10
 };
 const started = Date.now(); let done = 0;
 
-for (const town of TOWNS) {
+for (const town of (ONLY && !TOWNS.includes(ONLY) ? [ONLY] : TOWNS)) {   /* also any other <town>-areas.json asked for by name, e.g. the office lookup's <town>-lookup (2026-10-14) */
   if (ONLY && town !== ONLY) continue;
   const p = join(DT, `${town}-areas.json`);
   if (!existsSync(p)) continue;

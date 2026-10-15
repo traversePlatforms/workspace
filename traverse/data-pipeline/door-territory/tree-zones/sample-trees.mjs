@@ -25,6 +25,7 @@ const CACHE = join(DT, 'tree-cache.json');
 const TOWNS = { walden: 'elpaso', monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas',
   'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'windsor': 'eastern-b1', 'erie': 'drcog2', 'commerce-city': 'drcog2',
   thornton: 'drcog2', centennial: 'drcog2', aurora: 'drcog2', 'south-denver': 'drcog2', englewood: 'drcog2',
+  denver: 'drcog2', arvada: 'drcog2', boulder: 'drcog1',   /* 2026-10-14: the 365 area; lidar.mjs already notes drcog2 covers Denver and Arvada, drcog1 Boulder */
   'cs-northeast': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southeast': 'elpaso', 'cs-southwest': 'elpaso', 'security-widefield': 'elpaso', fountain: 'elpaso' };   /* Springs (2026-10-12): El Paso county scan, as Monument; 8-door check before the overnight run */   /* Yards' new towns (2026-10-11): both read 8 of 8 sample doors in CO_DRCOG_2_2020 */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
@@ -54,7 +55,8 @@ function save() {
 }
 
 const started = Date.now(); let done = 0;
-for (const [town, county] of Object.entries(TOWNS)) {
+const BASE = (t) => t.replace(/-lookup$/, '');   /* a town's office-lookup list uses the town's own scan (2026-10-14) */
+for (const [town, county] of (ONLY && !TOWNS[ONLY] && TOWNS[BASE(ONLY)] ? [[ONLY, TOWNS[BASE(ONLY)]]] : Object.entries(TOWNS))) {
   if (ONLY && town !== ONLY) continue;
   const p = MAIL ? join(DT, 'mail', 'mail-properties.csv') : join(DT, `${town}-areas.json`);
   if (!existsSync(p)) continue;
