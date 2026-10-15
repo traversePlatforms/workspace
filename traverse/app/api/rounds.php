@@ -1933,6 +1933,55 @@ if ($action === 'a365lead') {
     out(['ok' => true]);
 }
 
+/* ---- the customer's quote page (2026-10-14): 365aeration.com/q/?q=<lead>-<key> ----
+ * Jen's quote text and email carry this link. The page shows their first name, the street, what is included and the price, and lets
+ * them say yes with the days and time of day that suit them; Jen then books the job on the jobs board. Never the lawn size, the seed,
+ * the photo or anything else we measured, and never Sixfold. The key is a keyed hash of the lead, so the same link always shows that
+ * lead's latest quote; a yes counts only for the price it was given to. */
+function a365QuoteKey(string $id): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365quote|' . $id, $sessionKey), 0, 16); }
+function a365QuoteLink(string $id): string { return 'https://365aeration.com/q/?q=' . $id . '-' . a365QuoteKey($id); }
+const A365_DAYS = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
+const A365_WHEN = ['morning' => 'mornings', 'midday' => 'midday', 'afternoon' => 'afternoons', 'any' => 'any time'];
+if ($action === 'a365quote' || $action === 'a365accept') {
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    if (in_array($origin, A365_ORIGINS, true) || (PHP_SAPI === 'cli-server' && preg_match('#^http://127\.0\.0\.1(:\d+)?$#D', $origin))) {
+        header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST'); header('Access-Control-Allow-Headers: Content-Type');
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
+    if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
+    header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
+    if (!throttleTake(rateFile('a365quote|' . clientKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
+    $q = (string) ($_GET['q'] ?? ($body['q'] ?? ''));
+    if (!preg_match('/^([wm]\d{14}[0-9a-f]{6})-([0-9a-f]{16})$/D', $q, $qm) || !hash_equals(a365QuoteKey($qm[1]), $qm[2])) fail('This link does not look right. Please call or text us and we will send it again.', 404);
+    $all = leadsAll(); $l = $all[$qm[1]] ?? null; $Q = $l['quote'] ?? null;
+    if (!$l || !$Q || $l['status'] === 'lost') fail('This quote is no longer open. Please call or text us for a fresh one.', 410);
+    $phone = (string) (company()['a365']['phone'] ?? '');
+    if ($action === 'a365quote') {
+        $h = $l['house'] ?? null;
+        $street = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : trim((string) ($l['town'] ?? ''));
+        $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
+        $booked = null;
+        foreach (jobsAll() as $j) if ($j['lead'] === $l['id'] && !$j['off'] && !$j['done'] && $j['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) {
+            $arrive = ['s1' => 'between 9:30 and 10:00', 's2' => 'around 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$j['slot']] ?? '';
+            $booked = ['day' => (new DateTime($j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'), 'arrive' => $arrive];
+        }
+        $acc = $l['accept'] ?? null; if ($acc && (int) ($acc['price'] ?? 0) !== (int) $Q['price']) $acc = null;   /* a yes to an older price */
+        out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
+             'accepted' => $acc ? ['days' => $acc['days'], 'when' => $acc['when']] : null, 'booked' => $booked, 'phone' => $phone]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    if (!throttleTake(rateFile('a365accept|' . clientKey()), 10, 86400)) fail('We have had a lot of answers from here today. Please call or text us.', 429);
+    $days = array_values(array_unique(array_filter(array_map('intval', is_array($body['days'] ?? null) ? $body['days'] : []), fn($d) => isset(A365_DAYS[$d])))); sort($days);
+    $when = (string) ($body['when'] ?? 'any'); if (!isset(A365_WHEN[$when])) $when = 'any';
+    $note = a365Clean($body['note'] ?? '', 300);
+    $pref = ($days ? implode(', ', array_map(fn($d) => A365_DAYS[$d], $days)) : 'any day') . ', ' . A365_WHEN[$when];
+    $row = ['id' => $l['id'], 'accept' => ['price' => (int) $Q['price'], 'days' => $days, 'when' => $when, 'note' => $note],
+            'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website. Prefers ' . $pref . '.' . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()];
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
+    a365Alert('Quote accepted', trim((string) ($l['name'] ?? '') ?: 'A customer') . ' · $' . $Q['price'] . ' · prefers ' . $pref);
+    out(['ok' => true, 'phone' => $phone]);
+}
+
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
@@ -3223,7 +3272,8 @@ function leadsAll(): array {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
-        if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, the quote generator */
+        if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365QuoteLink((string) $u['id'])];   /* 2026-10-14, the quote generator; the link is the customer's quote page */
+        if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
         if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
@@ -3463,7 +3513,8 @@ if ($action === 'lawncheck') {
  * 1,000 sq ft (Bryce's range; CSU says 3 to 4 after aeration), more seed when the customer pays more. Costs and margins show once the
  * bag prices are filled in. Kept in a365-pricing.json beside the door files: the office reads it, an admin changes it; never public. */
 const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 399, 'power' => 0.5, 'seedLow' => 2, 'seedBase' => 3, 'seedHigh' => 4,
-    'seedBagCost' => 128.83, 'seedBagLb' => null, 'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50];
+    'seedBagCost' => 128.89, 'seedBagLb' => 50,   /* SiteOne Englewood invoice 2026-07-24: 6 x LESCO Tuf-Turf 50 lb, $773.34 with tax */
+    'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50];
 function a365Pricing(): array {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     $o = A365_PRICING; if (is_array($j)) foreach ($o as $k => $v) if (array_key_exists($k, $j) && ($j[$k] === null || is_int($j[$k]) || is_float($j[$k]))) $o[$k] = $j[$k];
@@ -3508,7 +3559,7 @@ if ($action === 'leadquote') {
     $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
     if ($q['sent'] && in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
-    out(['ok' => true, 'status' => $row['status'] ?? $all[$id]['status']]);
+    out(['ok' => true, 'status' => $row['status'] ?? $all[$id]['status'], 'link' => a365QuoteLink($id)]);
 }
 /* ---- the jobs board (2026-10-14, 365 Aeration & Seeding; Matthew: keep it in our app, borrowing the structure of Randy's sheet) ----
  * Randy's scheduling sheet: each day, each crew, four arrival times (9:30-10:00, 12:00, 12-2, 3:00), the town that crew is working that

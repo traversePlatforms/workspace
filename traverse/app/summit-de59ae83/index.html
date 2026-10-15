@@ -1852,6 +1852,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
   .qacts .lnk{background:none;border:0;color:var(--accent);font:700 14px var(--sans);padding:8px 4px;cursor:pointer;text-align:left}
   .qline{margin-top:8px;font-size:13.5px;font-weight:700;color:var(--ember-ink)}
+  .qline.qyes,small.qyes{color:#2f5d2c}.qacts .qpage{text-decoration:none}
   .qform label small{font-weight:500;color:var(--soft)}
   .qexample{font-size:13px;color:var(--soft);margin-top:8px;line-height:1.5}
   /* the jobs board (2026-10-14) */
@@ -4085,6 +4086,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (ct.children.length) c.appendChild(ct);
     if (wdOn() && S.screen === 'pipeline') c.appendChild(leadHouseRow(l));   /* the house lookup (2026-10-14) */
     if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
+    if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
     if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* call tries (2026-10-14) */
     if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
     if (l.notes && l.notes.length) {
@@ -4504,7 +4506,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () {});
     api('leads').then(function (j) {
       if (!j || !j.ok) return;
-      var r = j.leads.filter(function (l) { return l.status === 'quoted'; });
+      var r = j.leads.filter(function (l) { return l.status === 'quoted'; }).sort(function (a, b) { return (acceptOf(b) ? 1 : 0) - (acceptOf(a) ? 1 : 0); });
       ready.appendChild(q('h2', null, 'Quoted, ready to book' + (r.length ? ' (' + r.length + ')' : '')));
       if (!r.length) { ready.appendChild(q('div', 'msg soft', 'Nobody waiting. A lead shows here once its quote is saved; book it from here or from the quote.')); return; }
       var list = q('div', 'olist');
@@ -4512,7 +4514,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var b = q('button', 'orow'); b.type = 'button';
         var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name'));
         tx.appendChild(q('small', null, [l.quote ? money0(l.quote.price) + ' · ' + JOB_PKG[l.quote.pkg] : '', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' · '))); b.appendChild(tx);
-        b.appendChild(q('span', 'otag', 'Book'));
+        if (acceptOf(l)) tx.appendChild(q('small', 'qyes', acceptText(acceptOf(l))));
+        b.appendChild(q('span', 'otag' + (acceptOf(l) ? ' ohot' : ''), acceptOf(l) ? 'Said yes' : 'Book'));
         b.addEventListener('click', function () { jobBookView(l, null, null); });
         list.appendChild(b);
       });
@@ -4612,7 +4615,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var P = job ? JSON.parse(JSON.stringify(job)) : {
       crew: pre.crew || '', date: pre.date || '', slot: pre.slot || '', price: pre.price || qt.price || '', pkg: pre.pkg || qt.pkg || 'full', scope: 'all',
       seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb != null ? qt.seedLb : '', fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb != null ? qt.fertLb : '',
-      pay: { s: 'unpaid' }, card: false, note: '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
+      pay: { s: 'unpaid' }, card: false, note: (acceptOf(lead) && acceptOf(lead).note) || '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
     };
     if (!P.date) { var t = new Date(); t.setDate(t.getDate() + 1); if (t.getDay() === 0) t.setDate(t.getDate() + 1); P.date = isoOf(t); }
     var W = { wk: jobMonday(P.date), data: null };
@@ -4639,6 +4642,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var numIn = function (lab, v, unit) { var l = q('label', null, lab); var i = q('input'); i.inputMode = 'decimal'; i.maxLength = 7; i.value = v === null || v === undefined ? '' : v; l.appendChild(i); if (unit) l.appendChild(q('small', null, ' ' + unit)); pr.appendChild(l); return i; };
     var priceIn = numIn('Price ($)', P.price), seedIn = numIn('Seed (lb)', P.seedLb), fertIn = numIn('Fertilizer (lb)', P.fertLb);
     box.appendChild(pr);
+    if (!job && acceptOf(lead)) box.appendChild(q('div', 'qline qyes', acceptText(acceptOf(lead))));
     if (qt.price && !job) box.appendChild(q('div', 'dwsub', 'From the quote: ' + money0(qt.price) + ' · ' + JOB_PKG[qt.pkg] + (qt.sq ? ' · ' + Number(qt.sq).toLocaleString(LOCALE) + ' sq ft' : '') + '. Front yard only? Lower the price and the seed here.'));
     box.appendChild(q('div', 'dwh', 'Payment'));
     var payRow = q('div', 'dwlen'); box.appendChild(payRow);
@@ -5295,6 +5299,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     api('a365pricing').then(function (j) { if (j && j.ok) { S.a365p = j.pricing; then(S.a365p); } else then(null); }).catch(function () { then(null); });
   }
   function money0(n) { return '$' + Math.round(n).toLocaleString(LOCALE); }
+  /* a yes on the customer's quote page (2026-10-14), only while it is for the quote's current price */
+  var ACC_DAY = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ACC_WHEN = { morning: 'mornings', midday: 'midday', afternoon: 'afternoons', any: 'any time' };
+  function acceptOf(l) { return l && l.accept && l.quote && l.accept.price === l.quote.price ? l.accept : null; }
+  function acceptText(a) { return 'Said yes online ' + ago(a.at) + ': ' + ((a.days || []).length ? a.days.map(function (d) { return ACC_DAY[d]; }).join(', ') : 'any day') + ', ' + (ACC_WHEN[a.when] || 'any time') + (a.note ? ' \u00b7 \u201c' + a.note + '\u201d' : ''); }
   function quoteBox(h, lead, E, redraw) {
     var box = q('div', 'qbox'); box.appendChild(q('div', 'dwh', 'Quote'));
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
@@ -5355,7 +5363,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var save = function (sent) {
             api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: sent } }).then(function (j) {
               if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
-              lead.quote = { price: st.cur.price, pkg: st.pkg, sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, sent: sent, by: S.me, at: Math.floor(Date.now() / 1000) };
+              lead.quote = { price: st.cur.price, pkg: st.pkg, sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, sent: sent, by: S.me, at: Math.floor(Date.now() / 1000), link: j.link || (lead.quote && lead.quote.link) };
               if (j.status) lead.status = j.status;
               toast(sent ? 'Quote marked sent' : 'Quote saved', money0(st.cur.price) + ' · ' + (lead.name || ''), null);
               drawActs();
@@ -5363,7 +5371,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           };
           var sv = q('button', 'save', 'Save quote'); sv.type = 'button'; sv.addEventListener('click', function () { save(false); }); acts.appendChild(sv);
           var B = leadBrand(lead), first = greetName(lead.name), street = h.address ? streetCase(h.address) : '';
-          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '. Would you like to get on the schedule?' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+          var is365 = !!(CO.a365 && B.name === CO.a365.name);   /* the page is 365's: only on a 365 message */
+          var lk = is365 && lead.quote && lead.quote.link && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg && lead.quote.link;   /* the customer's quote page, once this price is saved */
+          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? ' Your quote, where you can pick the days that suit you: ' + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }
@@ -5371,6 +5381,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row);
           if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
+          if (lk) { var pv = q('a', 'lnk qpage', 'Their quote page \u203a'); pv.href = lk; pv.target = '_blank'; pv.rel = 'noopener'; acts.appendChild(pv); }
+          else if (is365) acts.appendChild(q('div', 'ltrynote', 'Save the quote to put their quote page link in the text and email.'));
+          if (acceptOf(lead)) acts.appendChild(q('div', 'qline qyes', acceptText(acceptOf(lead))));
           acts.appendChild(q('div', 'ltrynote', 'The text and email open on this phone, filled in. Nothing is sent until you press send. They carry the price only, never our lawn figures.'));
         }
         if (lead && wdOn()) { var bk = q('button', 'save jbook', 'Book the job ›'); bk.type = 'button'; bk.addEventListener('click', function () { jobBookView(lead, null, { price: st.cur.price, pkg: st.pkg, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null }); }); acts.appendChild(bk); }   /* the jobs board (2026-10-14) */
@@ -5404,7 +5417,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       field('aerateOnly', 'Aerate only (% of the full price)', 'Empty = no aerate-only option yet', 'e.g. 60');
       f.appendChild(q('div', 'dwh', 'Seed'));
       field('seedLow', 'Least seed (lb per 1,000 sq ft)', 'Bryce: never below 2'); field('seedBase', 'Normal seed (lb per 1,000 sq ft)', 'At the list price. CSU: 3 to 4 after aeration'); field('seedHigh', 'Most seed (lb per 1,000 sq ft)', 'Bryce: rarely over 4');
-      field('seedBagCost', 'Seed bag cost ($)', 'Arkansas Valley Seed: $773 for 6 bags = $128.83'); field('seedBagLb', 'Seed bag weight (lb)', 'Needed for the cost line', 'e.g. 50');
+      field('seedBagCost', 'Seed bag cost ($)', 'SiteOne Englewood, July 2026: $773.34 for 6 bags with tax = $128.89'); field('seedBagLb', 'Seed bag weight (lb)', 'LESCO Tuf-Turf comes in 50 lb bags', 'e.g. 50');
       f.appendChild(q('div', 'dwh', 'Fertilizer'));
       field('fertRate', 'Fertilizer (lb per 1,000 sq ft)', 'From the bag label', 'e.g. 4'); field('fertBagCost', 'Fertilizer bag cost ($)'); field('fertBagLb', 'Fertilizer bag weight (lb)');
       f.appendChild(q('div', 'dwh', 'Jobs'));
