@@ -4632,7 +4632,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       week.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { week.appendChild(q('div', 'msg bad', j.error || 'Could not load the week.')); return; }
-      if (!j.crews.length) { week.appendChild(q('div', 'msg', 'Nobody is marked as doing jobs yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); return; }
+      if (!j.crews.length) { week.appendChild(q('div', 'msg', CO.a365 ? 'No jobs booked yet. Pick a lead under Ready to book and choose who does it; they get a row here from then on.' : 'Nobody is marked as doing jobs yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); return; }
       var wxEls = {};   /* the forecast per day, filled when it arrives (2026-10-15) */
       for (var i = 0; i < 7; i++) (function (iso) {
         var day = q('section', 'jday' + (iso === todayISO() ? ' today' : '') + (iso < todayISO() ? ' past' : ''));
