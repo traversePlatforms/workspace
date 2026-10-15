@@ -38,6 +38,7 @@ declare(strict_types=1);
    that in testing. Errors go to the log, never to the output. */
 @ini_set('display_errors', '0');
 @ini_set('log_errors', '1');
+@ini_set('serialize_precision', '-1');   /* the host sets 100: 10.4 went out as 10.40000000000000035... (2026-10-15) */
 
 /* ---- WHERE THE DOOR DATA LIVES, AND WHY IT MOVED ------------------------
  *
