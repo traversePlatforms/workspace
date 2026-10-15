@@ -2257,6 +2257,79 @@ function a365Agreement(array $l): array {
     $text = implode("\n", array_map(fn($x) => $x[0] . ': ' . $x[1], $facts)) . "\n" . implode("\n", $terms) . "\n" . $consent;
     return ['facts' => $facts, 'terms' => $terms, 'consent' => $consent, 'consents' => $consents, 'hash' => hash('sha256', A365_SIGN_VERSION . "\n" . $text)];
 }
+/* ---- the signed agreement by email (2026-10-15, Matthew: "it should also get sent to their email") ----
+ * From 365's own Google Workspace mailbox (365aeration.com's mail is Google; SPF and DKIM are set), through Gmail with an app
+ * password kept in sixfold-private/a365-mail.json {"user", "pass", "from_name", "bcc"}; never shown, never in git. No file = no email,
+ * and signing still works. The office inbox gets a hidden copy (bcc). Sending is the same as the Traverse demo emails (demo/_lib.php). */
+function a365MailCfg(): ?array {
+    $j = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/a365-mail.json'), true);
+    if (!is_array($j) || empty($j['user']) || empty($j['pass'])) return null;
+    $j['pass'] = (string) preg_replace('/\s+/', '', (string) $j['pass']); return $j;
+}
+function a365MimeH(string $s): string { return preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s; }
+/** one message through Gmail as 365's mailbox, text and HTML; never throws. [ok, stage, error] */
+function a365Mail(string $to, string $subject, string $text, string $html): array {
+    $c = a365MailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
+    if (!$c) return $fail('config', 'no 365 mailbox set up yet (sixfold-private/a365-mail.json)');
+    $fp = @stream_socket_client('tcp://smtp.gmail.com:587', $errno, $errstr, 20); if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
+    stream_set_timeout($fp, 20);
+    $read = function () use ($fp): array { $lines = []; while (true) { $l = @fgets($fp, 2048); if ($l === false) return [0, 'connection closed']; $lines[] = rtrim($l, "\r\n"); if (strlen($l) < 4 || $l[3] !== '-') break; } $last = (string) end($lines); return [(int) substr($last, 0, 3), implode(' | ', $lines)]; };
+    $w = function (string $cmd) use ($fp) { @fwrite($fp, $cmd . "\r\n"); };
+    $quit = function () use ($fp) { @fwrite($fp, "QUIT\r\n"); @fclose($fp); };
+    [$code, $rep] = $read(); if ($code !== 220) { $quit(); return $fail('greeting', $rep); }
+    $w('EHLO 365aeration.com'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('ehlo', $rep); }
+    $w('STARTTLS'); [$code, $rep] = $read(); if ($code !== 220) { $quit(); return $fail('starttls', $rep); }
+    $cm = STREAM_CRYPTO_METHOD_TLS_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+    if (@stream_socket_enable_crypto($fp, true, $cm) !== true) { $quit(); return $fail('starttls', 'TLS negotiation failed'); }
+    $w('EHLO 365aeration.com'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('ehlo-tls', $rep); }
+    $w('AUTH LOGIN'); [$code, $rep] = $read(); if ($code !== 334) { $quit(); return $fail('auth', $rep); }
+    $w(base64_encode((string) $c['user'])); [$code, $rep] = $read(); if ($code !== 334) { $quit(); return $fail('auth', $rep); }
+    $w(base64_encode((string) $c['pass'])); [$code, $rep] = $read(); if ($code !== 235) { $quit(); return $fail('auth', $rep); }
+    $w('MAIL FROM:<' . $c['user'] . '>'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('from', $rep); }
+    $w('RCPT TO:<' . $to . '>'); [$code, $rep] = $read(); if ($code !== 250 && $code !== 251) { $quit(); return $fail('to', $rep); }
+    $bcc = (string) ($c['bcc'] ?? ''); if ($bcc !== '' && filter_var($bcc, FILTER_VALIDATE_EMAIL) && strcasecmp($bcc, $to) !== 0) { $w('RCPT TO:<' . $bcc . '>'); $read(); }
+    $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
+    $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
+    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) ($c['from_name'] ?? '365 Aeration & Seeding')) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
+          'Message-ID: <' . bin2hex(random_bytes(12)) . '@365aeration.com>', 'MIME-Version: 1.0', 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
+    $payload = implode($eol, $h) . $eol . $eol
+        . '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
+        . '--' . $bd . $eol . 'Content-Type: text/html; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($html), 76, $eol)
+        . '--' . $bd . '--' . $eol;
+    $payload = preg_replace('/^\./m', '..', $payload);
+    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
+    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+}
+/** the signed agreement to the customer: what they saw, who signed and when, the link to view or print it; a note on the lead either way */
+function a365SendSigned(array $l, array $sg, string $by): array {
+    $to = trim((string) ($l['email'] ?? ''));
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'stage' => 'noemail', 'error' => 'No email on the lead.'];
+    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = (string) ($co['phone'] ?? '');
+    $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
+    $when = (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a');
+    $link = a365SignLink((string) $l['id'], (string) $l['sign']['key']);
+    $facts = (array) ($sg['facts'] ?? []); $terms = (array) ($sg['terms'] ?? []);
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+    $text = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for booking with " . $name . ". Here is a copy of the agreement you signed.\n\n"
+          . implode("\n", array_map(fn($f) => $f[0] . ': ' . $f[1], $facts)) . "\n\n" . implode("\n", array_map(fn($t, $i) => ($i + 1) . '. ' . $t, $terms, array_keys($terms)))
+          . "\n\nSigned electronically by " . $sg['name'] . ' on ' . $when . ".\n\nView or print it any time: " . $link . "\n\nQuestions or changes: call or text " . $ph . ".\n\n" . $name . "\n";
+    $rows = implode('', array_map(fn($f) => '<tr><td style="padding:6px 12px 6px 0;color:#5a6858;vertical-align:top">' . $e($f[0]) . '</td><td style="padding:6px 0;font-weight:700">' . $e($f[1]) . '</td></tr>', $facts));
+    $lis = implode('', array_map(fn($t) => '<li style="margin:0 0 6px">' . $e($t) . '</li>', $terms));
+    $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
+          . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
+          . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>'
+          . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for booking with ' . $e($name) . '. Here is a copy of the agreement you signed.</p>'
+          . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
+          . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
+          . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700;color:#21451f">' . $e($sg['name']) . '</div><div style="color:#5a6858;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
+          . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
+          . '<p style="margin:0;color:#5a6858;font-size:14px">Questions or changes: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
+          . '</div></body></html>';
+    $r = a365Mail($to, 'Your signed agreement with ' . $name, $text, $html);
+    appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
+    return $r + ['to' => $to];
+}
 if ($action === 'a365sign' || $action === 'a365signed') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true)) { header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST'); header('Access-Control-Allow-Headers: Content-Type'); }
@@ -2314,7 +2387,8 @@ if ($action === 'a365sign' || $action === 'a365signed') {
     $who = trim((string) ($l['name'] ?? '')) ?: $name;
     if ($jid && !$had) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
     a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''));
-    out(['ok' => true, 'signed' => $signedOut($sg), 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
+    $ml = a365SendSigned($l, $sg, 'website');   /* the signed copy by email (2026-10-15) */
+    out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
 }
 
 /* ---- the Sixfold website's contact form (2026-10-14) ----
@@ -3643,6 +3717,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
+        if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
         if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job', 'facts', 'terms']));
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
@@ -3858,6 +3933,15 @@ if ($action === 'a365house') {
 }
 /* change a lead's name, phone or email (2026-10-15: the Quick quote reused a lead by its phone number and sent the form to its old email);
    what changed goes on the lead as a note */
+if ($action === 'a365mailsigned') {   /* "Email them the signed copy" on a signed lead */
+    if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
+    $l = leadsAll()[(string) ($body['id'] ?? '')] ?? null;
+    if (!$l || empty($l['signed']) || empty($l['sign'])) fail('This lead has no signed form.', 404);
+    $sg = $l['signed'] + ['facts' => [], 'terms' => []];
+    $r = a365SendSigned($l, $sg, $me);
+    if (!$r['ok']) fail($r['stage'] === 'noemail' ? 'There is no email on the lead. Add it first.' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet.' : 'It did not send (' . $r['stage'] . '). Try again.'));
+    out(['ok' => true, 'to' => $r['to']]);
+}
 if ($action === 'leadcontact') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);

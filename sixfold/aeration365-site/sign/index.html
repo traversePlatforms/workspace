@@ -83,11 +83,12 @@
     var ol = el('ol'); A.terms.forEach(function (t) { ol.appendChild(el('li', null, t)); }); c.appendChild(ol);
     return c;
   }
-  function signedCard(sg, booked) {
+  function signedCard(sg, booked, mailed) {
     var c = el('div', 'card ok'); c.appendChild(el('h2', null, booked ? 'Signed. You’re booked' : 'Signed'));
     if (booked) c.appendChild(el('p', null, booked.day + (booked.arrive ? ', arriving ' + booked.arrive : '') + '.'));
     c.appendChild(el('p', 'sig', sg.name));
     c.appendChild(el('p', 'muted', 'Signed electronically on ' + sg.when + '.'));
+    if (mailed) c.appendChild(el('p', 'muted', 'A copy has been emailed to ' + mailed + '.'));   /* 2026-10-15 */
     var pr = el('button', 'btn ghost noprint', 'Print or save a copy'); pr.type = 'button'; pr.addEventListener('click', function () { window.print(); }); c.appendChild(pr);
     return c;
   }
@@ -119,7 +120,7 @@
       fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true, read: true }) })
         .then(function (r) { return r.json(); }).then(function (j) {
           if (!j || !j.ok) { go.disabled = false; go.textContent = 'Sign'; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
-          c.replaceWith(signedCard(j.signed, j.booked)); window.scrollTo(0, 0);
+          c.replaceWith(signedCard(j.signed, j.booked, j.mailed)); window.scrollTo(0, 0);
         }).catch(function () { go.disabled = false; go.textContent = 'Sign'; err.textContent = 'No connection. Try again, or call or text us.'; });
     });
     main.appendChild(c);

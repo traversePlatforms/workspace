@@ -5412,6 +5412,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var row = q('div', 'qlinks');
     var a = q('a', 'lnk', l.signed ? 'Their signed form \u203a' : 'Their form \u203a'); a.href = g.link; a.target = '_blank'; a.rel = 'noopener'; row.appendChild(a);
     if (!l.signed) { var r = q('button', 'lnk', 'Change or send again'); r.type = 'button'; r.addEventListener('click', function () { signSendView(l, null); }); row.appendChild(r); }
+    if (l.signed) {   /* the signed copy by email (2026-10-15): sent when they sign; again from here */
+      if (l.mailed && l.mailed.to) d.appendChild(q('div', 'dwsub', 'Signed copy emailed to ' + l.mailed.to + ', ' + ago(l.mailed.at)));
+      var em = q('button', 'lnk', l.mailed ? 'Email the signed copy again' : 'Email them the signed copy'); em.type = 'button';
+      em.addEventListener('click', function () { em.disabled = true; api('a365mailsigned', { body: { id: l.id } }).then(function (j) { em.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } l.mailed = { to: j.to, at: Math.floor(Date.now() / 1000) }; toast('Sent', 'The signed copy went to ' + j.to + '.', null); var nw = signLine(l); w.replaceWith(nw); }).catch(function () { em.disabled = false; toast('No signal', 'Not sent.', null); }); });
+      row.appendChild(em);
+    }
     if (!l.signed && g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order)) {   /* SX-58: ask Square now */
       var ck = q('button', 'lnk', 'Check the payment'); ck.type = 'button';
       ck.addEventListener('click', function () { ck.disabled = true; api('squarecheck', { body: { lead: l.id } }).then(function (j) { ck.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { l.sqpaid = { order: g.pay.order }; toast('Deposit paid', money0(g.deposit) + ' by Square', null); var nw = signLine(l); w.replaceWith(nw); } else toast('Not paid yet', 'Square has no payment on the link yet.', null); }).catch(function () { ck.disabled = false; toast('No signal', 'Try again.', null); }); });
