@@ -1867,6 +1867,13 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .lprop .lpopen{grid-column:1/-1}
   .lpfacts .htag{color:#fff;font-size:14px}   /* white on its colour, over the soft grey of the rows */
   @media (max-width:420px){.lprop{grid-template-columns:1fr}.lpmap{min-height:170px}}
+  /* the weather day and the forecast (2026-10-15) */
+  .jwx{font-size:11.5px;color:var(--soft);display:grid;gap:1px;line-height:1.3}.jwx b{font-size:12px}
+  .jwx.f-rain,.jwx.f-snow{color:#1e3a8a;background:#dbeafe;border-radius:8px;padding:4px 6px}.jwx.f-maybe{color:#92400e;background:#fef3c7;border-radius:8px;padding:4px 6px}.jwx.f-freeze{color:#155e75;background:#cffafe;border-radius:8px;padding:4px 6px}
+  .jwxbtn{border:1.5px dashed var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 12.5px var(--sans);padding:6px 8px;cursor:pointer}
+  .jwxform .jwxrow{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}.jwxrow small{color:var(--soft)}
+  .jwxpick{display:grid;grid-template-columns:1fr 1fr;gap:8px}.jwxpick label{display:grid;gap:4px;font-size:13px}.jwxpick input,.jwxpick select{font:15px var(--sans);padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .wxtxt.sent{opacity:.6}
   /* the phone quote (2026-10-14) */
   .pipeseg.four{grid-template-columns:repeat(4,1fr)}.pipeseg button[data-st="signed"] b{color:var(--go)}
   .lvm,.lout,.loutmore{display:grid;gap:8px;margin-top:8px}
@@ -4574,12 +4581,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { week.appendChild(q('div', 'msg bad', j.error || 'Could not load the week.')); return; }
       if (!j.crews.length) { week.appendChild(q('div', 'msg', 'Nobody is marked as doing jobs yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); return; }
+      var wxEls = {};   /* the forecast per day, filled when it arrives (2026-10-15) */
       for (var i = 0; i < 7; i++) (function (iso) {
         var day = q('section', 'jday' + (iso === todayISO() ? ' today' : '') + (iso < todayISO() ? ' past' : ''));
         var jobs = j.jobs.filter(function (x) { return x.date === iso; });
         var sum = jobs.reduce(function (a, x) { return a + x.price; }, 0);
         var hd = q('div', 'jdh'); hd.appendChild(q('b', null, dayName(iso))); if (jobs.length) hd.appendChild(q('span', null, jobs.length + (jobs.length === 1 ? ' job · ' : ' jobs · ') + money0(sum)));
         day.appendChild(hd);
+        if (iso >= todayISO()) { var wxEl = q('div', 'jwx'); day.appendChild(wxEl); wxEls[iso] = wxEl; }
+        if (jobs.length && iso >= todayISO()) { var wb = q('button', 'jwxbtn', 'Move this day for weather'); wb.type = 'button'; wb.addEventListener('click', function () { weatherDayView(iso); }); day.appendChild(wb); }
         if (j.closed.indexOf(jobDow(iso)) >= 0 && !jobs.length) { day.classList.add('closed'); day.appendChild(q('div', 'jclosed', 'Closed')); week.appendChild(day); return; }
         j.crews.forEach(function (crew) {
           var cr = q('div', 'jcrew');
@@ -4613,8 +4623,86 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         });
         week.appendChild(day);
       })(jobAdd(wk, i));
+      api('jobforecast').then(function (fc) {   /* the National Weather Service forecast, flagged days in colour */
+        if (!fc || !fc.ok || !fc.days) return;
+        Object.keys(wxEls).forEach(function (iso) {
+          var d = fc.days[iso], el = wxEls[iso]; if (!d || !el.isConnected) return;
+          el.textContent = '';
+          if (d.flag) { el.classList.add('f-' + d.flag.k); el.appendChild(q('b', null, ({ rain: 'Rain likely', snow: 'Snow likely', maybe: 'Chance of rain', freeze: 'Hard freeze' })[d.flag.k] || 'Weather')); el.title = d.flag.say; el.appendChild(q('span', null, d.flag.say)); }
+          else el.appendChild(q('span', null, (d.sky || '') + (d.hi != null ? ' \u00b7 ' + d.hi + '\u00b0' : '') + (d.pop ? ' \u00b7 ' + d.pop + '%' : '')));
+        });
+      }).catch(function () {});
     }).catch(function () { week.textContent = ''; week.appendChild(q('div', 'msg', 'The jobs board needs signal.')); });
     window.scrollTo(0, 0);
+  }
+  /* ---- the weather day (2026-10-15) ----
+     Every job on the day, each with a suggested new day and time (same crew, same arrival time if free, the next working day on); Jen
+     changes any she wants and saves once. The crews get one alert each; each lead and job gets a note; then each customer's text and
+     email open filled in, from her own phone, for her to send. */
+  function weatherDayView(iso) {
+    hideToast(); S.signin = null; S.screen = 'jobweather'; foot.hidden = true; setDock(null);
+    var back = function () { jobsView(); };
+    setBar('back', { title: 'Weather: ' + dayName(iso), sub: 'Move the day\u2019s jobs together', back: back, backLabel: 'Jobs' });
+    view.textContent = '';
+    var box = q('div', 'phf dwform jform jwxform'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('jobweathersuggest', { params: { date: iso } }).then(function (j) {
+      box.textContent = '';
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load the day.')); return; }
+      if (j.forecast && j.forecast.flag) box.appendChild(q('div', 'jwx f-' + j.forecast.flag.k, j.forecast.flag.say));
+      if (!j.jobs.length) { box.appendChild(q('div', 'msg', 'No jobs left on this day.')); return; }
+      box.appendChild(q('div', 'dwsub', j.jobs.length + (j.jobs.length === 1 ? ' job' : ' jobs') + '. Each has the next free time for the same crew filled in; change any of them.'));
+      var rows = [];
+      j.jobs.forEach(function (x) {
+        var r = q('div', 'jwxrow');
+        var head = q('div'); head.appendChild(q('b', null, jobName(x))); head.appendChild(q('small', null, x.slotLabel + ' \u00b7 ' + x.crew + ' \u00b7 ' + x.addr)); r.appendChild(head);
+        var dl = q('label', null, 'New day'), di = q('input'); di.type = 'date'; di.min = jobAdd(todayISO(), 0); di.value = x.suggest ? x.suggest.date : ''; dl.appendChild(di);
+        var sl = q('label', null, 'Arrival'), ss = q('select');
+        j.slots.forEach(function (o) { var op = q('option', null, o.label); op.value = o.k; if (x.suggest && x.suggest.slot === o.k) op.selected = true; ss.appendChild(op); });
+        sl.appendChild(ss);
+        var pk = q('div', 'jwxpick'); pk.appendChild(dl); pk.appendChild(sl); r.appendChild(pk);
+        if (!x.suggest) r.appendChild(q('div', 'err', 'No free time for ' + x.crew + ' in the next two weeks: pick a day.'));
+        rows.push({ x: x, di: di, ss: ss }); box.appendChild(r);
+      });
+      var err = q('div', 'err'); box.appendChild(err);
+      var sv = q('button', 'save', 'Move ' + (rows.length === 1 ? 'the job' : 'all ' + rows.length + ' jobs')); sv.type = 'button'; box.appendChild(sv);
+      sv.addEventListener('click', function () {
+        err.textContent = '';
+        var moves = rows.map(function (r) { return { id: r.x.id, date: r.di.value, slot: r.ss.value }; });
+        if (moves.some(function (m) { return !m.date; })) { err.textContent = 'Pick a new day for each job.'; return; }
+        if (moves.some(function (m) { return jobDow(m.date) === 0; })) { err.textContent = 'Sunday is closed: pick another day.'; return; }
+        sv.disabled = true;
+        api('jobweather', { body: { from: iso, moves: moves } }).then(function (r) {
+          sv.disabled = false;
+          if (r._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!r.ok && !(r.moved || []).length) { err.textContent = (r.errors || []).join(' \u00b7 ') || r.error || 'Nothing was moved. Try again.'; return; }
+          weatherTexts(iso, r);
+        }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was moved; try again.'; });
+      });
+    }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'The weather day needs signal.')); });
+    window.scrollTo(0, 0);
+  }
+  function weatherTexts(iso, r) {
+    hideToast(); S.screen = 'jobweather';
+    setBar('back', { title: 'Tell the customers', sub: (r.moved || []).length + ' moved from ' + dayName(iso), back: jobsView, backLabel: 'Jobs' });
+    view.textContent = '';
+    var box = q('div', 'phf dwform jform jwxform');
+    if ((r.errors || []).length) { box.appendChild(q('div', 'dwh', 'Not moved')); r.errors.forEach(function (e) { box.appendChild(q('div', 'err', e)); }); }
+    box.appendChild(q('div', 'dwh', 'Send each one'));
+    box.appendChild(q('div', 'ltrynote', 'Each text and email opens on this phone, filled in. Nothing is sent until you press send. The crew already has the new days.'));
+    (r.moved || []).forEach(function (m) {
+      var row = q('div', 'jwxrow');
+      row.appendChild(q('b', null, m.name || m.phone || 'Customer'));
+      row.appendChild(q('small', null, 'Now ' + m.day + ', arriving ' + m.arrive));
+      var B = leadBrand({ src: m.src, name: m.name }), me = String(S.me || '').split(' ')[0];
+      var msg = 'Hi ' + greetName(m.name) + ', this is ' + me + ' with ' + B.name + '. The weather won\u2019t let us aerate on ' + m.fromDay + ', so we\u2019ve moved you to ' + m.day + ', arriving ' + m.arrive + '. If that doesn\u2019t work, reply' + (B.phone ? ' or call ' + B.phone : '') + '.';
+      var ct = q('div', 'lcontact'), tel = digits(m.phone);
+      if (tel.length >= 10) { var a = q('a', 'wxtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text ' + (greetName(m.name) || ''))); a.addEventListener('click', function () { a.classList.add('sent'); }); ct.appendChild(a); }
+      if (m.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(m.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your aeration day has moved') + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); ct.appendChild(e); }
+      if (!ct.children.length) row.appendChild(q('div', 'err', 'No phone or email on the lead: call them.'));
+      row.appendChild(ct); box.appendChild(row);
+    });
+    var dn = q('button', 'save', 'Done'); dn.type = 'button'; dn.addEventListener('click', jobsView); box.appendChild(dn);
+    view.appendChild(box); window.scrollTo(0, 0);
   }
   function jobAreaAsk(iso, crew, area, then) {
     var v = window.prompt(crew + '’s town for ' + dayName(iso) + ' (leave it empty to clear it):', area);

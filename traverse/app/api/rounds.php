@@ -2114,7 +2114,8 @@ if ($action === 'a365sign' || $action === 'a365signed') {
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $signedOut = fn($sg) => $sg ? ['name' => (string) $sg['name'], 'when' => (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a')] : null;
     $sgd = $l['signed'] ?? null;   /* signed: the facts and terms as they were when signed (Fable review 2026-10-14) */
-    if ($action === 'a365sign') out(['ok' => true, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    $jn = jobForLead($l['id']); $moved = $jn && !empty($jn['wx']) && $jn['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') ? ['day' => a365Day($jn['date']), 'arrive' => a365Arrive((string) $jn['slot'])] : null;   /* moved for weather (2026-10-15) */
+    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
     $name = a365Clean($body['name'] ?? '', 120);
@@ -3792,7 +3793,7 @@ function jobsAll(): array {
         $id = (string) $r['id'];
         if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
         $moved = false;
-        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
         if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
         if (!empty($r['del'])) $o[$id]['off'] = true;
         if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -3900,6 +3901,43 @@ if ($action === 'myjobs') {
     out(['ok' => true, 'who' => $who, 'jobs' => $list]);
 }
 /* done, from the crew (or the office): done or could not; what was collected */
+if ($action === 'jobforecast') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    out(['ok' => true] + wxForecast());
+}
+if ($action === 'jobweathersuggest') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    $date = (string) ($_GET['date'] ?? ''); if (!dateOk($date)) fail('Pick the day.');
+    out(['ok' => true, 'date' => $date, 'jobs' => wxSuggest($date), 'slots' => array_map(fn($x) => ['k' => $x[0], 'label' => $x[1]], jobSlots()), 'crews' => walkerList(), 'forecast' => wxForecast()['days'][$date] ?? null]);
+}
+if ($action === 'jobweather') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $from = (string) ($body['from'] ?? ''); if (!dateOk($from)) fail('Pick the day being moved.');
+    $moves = is_array($body['moves'] ?? null) ? $body['moves'] : []; if (!$moves) fail('Nothing to move.');
+    $tz = new DateTimeZone(appTz()); $today = (new DateTime('today', $tz))->format('Y-m-d');
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = jobsAll(); $leads = leadsAll(); $done = []; $errs = []; $perCrew = [];
+    foreach ($moves as $m) {
+        $id = (string) ($m['id'] ?? ''); $nd = (string) ($m['date'] ?? ''); $ns = (string) ($m['slot'] ?? '');
+        $j = $all[$id] ?? null;
+        if (!$j || $j['off'] || $j['date'] !== $from) { $errs[] = $id . ': not a job on that day'; continue; }
+        if (!dateOk($nd) || $nd < $today || !jobSlot($ns)) { $errs[] = $j['title'] . ': pick a day and time'; continue; }
+        if (in_array((int) (new DateTime($nd . ' 12:00', $tz))->format('w'), jobClosed(), true)) { $errs[] = $j['title'] . ': that is a closed day'; continue; }
+        if ($why = slotFree($j['crew'], $nd, $ns, (string) $j['lead'], $id)) { $errs[] = $j['title'] . ': ' . $why; continue; }
+        $wx = ['from' => $from, 'fromSlot' => $j['slot'], 'at' => time(), 'by' => $me];
+        if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $id, 'date' => $nd, 'slot' => $ns, 'wx' => $wx, 'by' => $me, 'at' => time()])) { $errs[] = $j['title'] . ': not saved'; continue; }
+        $all[$id]['date'] = $nd; $all[$id]['slot'] = $ns;   /* the next move on the list sees this one */
+        appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => 'Moved for weather from ' . deskWhen($from, '') . ' to ' . deskWhen($nd, '') . ', ' . jobSlot($ns)[1] . '.', 'by' => $me, 'at' => time()]);
+        $perCrew[$j['crew']][] = $nd;
+        $L = $leads[$j['lead']] ?? [];
+        $done[] = ['id' => $id, 'lead' => $j['lead'], 'name' => (string) ($L['name'] ?? $j['title']), 'phone' => (string) ($L['phone'] ?? ''), 'email' => (string) ($L['email'] ?? ''), 'src' => (string) ($L['src'] ?? ''),
+                   'from' => $from, 'date' => $nd, 'slot' => $ns, 'day' => a365Day($nd), 'arrive' => a365Arrive($ns), 'fromDay' => a365Day($from)];
+    }
+    flock($lk, LOCK_UN);
+    foreach ($perCrew as $crew => $ds) { $u = array_values(array_unique($ds)); if ($crew !== $me) pushName($crew, count($ds) . (count($ds) === 1 ? ' job' : ' jobs') . ' moved for weather', 'From ' . deskWhen($from, '') . ' to ' . implode(', ', array_map(fn($x) => deskWhen($x, ''), $u)), './', 'wx-' . $from); }
+    out(['ok' => !$errs || $done, 'moved' => $done, 'errors' => $errs]);
+}
 if ($action === 'jobdone') {
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = jobsAll();
@@ -3911,6 +3949,59 @@ if ($action === 'jobdone') {
     if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
     if ($o !== 'undo' && ($note !== '' || $o === 'could not')) appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 500), 'by' => $me, 'at' => time()]);
     out(['ok' => true]);
+}
+/* ---- weather (2026-10-15, Matthew: "go ahead and build the weather day button and forecast flag") ----
+ * The forecast: the National Weather Service's 7-day forecast for the base (Englewood), cached an hour. A day is flagged when rain or snow
+ * is likely (60% or more by day), possible (40-59% with rain, snow or storms), or the night before drops to 28 F or colder (frozen ground
+ * in the morning; aeration needs ground that is not frozen, CSU Extension PlantTalk 1505). Jen decides; nothing moves by itself.
+ * The weather day: every job on a day, each with a suggested new day and time (same crew, same arrival time if free, the next working
+ * day on), moved together; one alert per crew; a note on each lead and job; the customers' texts come back for Jen to send. */
+function wxForecast(): array {
+    $cf = DATA_DIR . '/nws-forecast.json'; $c = json_decode((string) @file_get_contents($cf), true);
+    if (is_array($c) && time() - (int) ($c['got'] ?? 0) < 3600) return $c;
+    $b = company()['a365']['base'] ?? (company()['center'] ?? null);
+    if (!is_array($b) || count($b) < 2) return ['days' => [], 'got' => time(), 'none' => true];
+    $pt = httpJson('https://api.weather.gov/points/' . round((float) $b[0], 4) . ',' . round((float) $b[1], 4));
+    $url = (string) ($pt['properties']['forecast'] ?? ''); $fc = $url !== '' ? httpJson($url) : null;
+    if (!is_array($fc) || empty($fc['properties']['periods'])) return is_array($c) ? $c + ['stale' => true] : ['days' => [], 'got' => time(), 'down' => true];
+    $days = []; $tz = new DateTimeZone(appTz());
+    foreach ($fc['properties']['periods'] as $p) {
+        $t = new DateTime((string) $p['startTime']); $t->setTimezone($tz);
+        $pop = (int) ($p['probabilityOfPrecipitation']['value'] ?? 0); $sf = (string) ($p['shortForecast'] ?? ''); $temp = (int) ($p['temperature'] ?? 0);
+        if (!empty($p['isDaytime'])) {
+            $d = $t->format('Y-m-d'); $days[$d] = ($days[$d] ?? []) + ['hi' => $temp, 'pop' => $pop, 'sky' => $sf];
+            $wet = preg_match('/rain|snow|shower|storm|sleet|drizzle/i', $sf);
+            if ($pop >= 60 && $wet) $days[$d]['flag'] = ['k' => preg_match('/snow/i', $sf) ? 'snow' : 'rain', 'say' => $sf . ' (' . $pop . '%)'];
+            elseif ($pop >= 40 && $wet) $days[$d]['flag'] = $days[$d]['flag'] ?? ['k' => 'maybe', 'say' => $sf . ' (' . $pop . '%)'];
+        } else {
+            $d = (clone $t)->modify('+1 day')->format('Y-m-d');   /* tonight's low is tomorrow morning's ground */
+            $days[$d] = ($days[$d] ?? []) + ['lo' => $temp];
+            if ($temp <= 28 && empty($days[$d]['flag'])) $days[$d]['flag'] = ['k' => 'freeze', 'say' => 'Hard freeze the night before (' . $temp . '°F): the ground may be frozen in the morning'];
+        }
+    }
+    $out = ['days' => $days, 'got' => time()];
+    @file_put_contents($cf, json_encode($out, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    return $out;
+}
+/** the next free slots for a day's jobs: same crew, same time first, from the next working day on (14 days at most) */
+function wxSuggest(string $date): array {
+    $tz = new DateTimeZone(appTz()); $taken = []; $pick = []; $leads = leadsAll();
+    $jobs = array_values(array_filter(jobsAll(), fn($j) => !$j['off'] && !$j['done'] && $j['date'] === $date));
+    usort($jobs, fn($a, $b) => strcmp($a['slot'], $b['slot']));
+    $days = []; $d = new DateTime($date . ' 12:00', $tz);
+    while (count($days) < 12) { $d->modify('+1 day'); if (!in_array((int) $d->format('w'), jobClosed(), true)) $days[] = $d->format('Y-m-d'); }
+    $free = function ($j, $ds, $sl) use (&$taken) { return !isset($taken[$j['crew'] . '|' . $ds . '|' . $sl]) && slotFree($j['crew'], $ds, $sl, (string) $j['lead'], $j['id']) === null; };
+    /* first everyone keeps their own arrival time on the next working day where it is free... */
+    foreach ($jobs as $j) if ($free($j, $days[0], $j['slot'])) { $pick[$j['id']] = ['date' => $days[0], 'slot' => $j['slot']]; $taken[$j['crew'] . '|' . $days[0] . '|' . $j['slot']] = true; }
+    /* ...then the rest take the earliest free time, their own time first on each day */
+    foreach ($jobs as $j) {
+        if (isset($pick[$j['id']])) continue;
+        foreach ($days as $ds) {
+            $order = array_merge([$j['slot']], array_values(array_diff(array_map(fn($x) => $x[0], jobSlots()), [$j['slot']])));
+            foreach ($order as $sl) if ($free($j, $ds, $sl)) { $pick[$j['id']] = ['date' => $ds, 'slot' => $sl]; $taken[$j['crew'] . '|' . $ds . '|' . $sl] = true; break 2; }
+        }
+    }
+    return array_map(fn($j) => jobShow($j, $leads) + ['suggest' => $pick[$j['id']] ?? null], $jobs);
 }
 function streetCaseServer(string $s): string { return (string) preg_replace_callback('/(^|[\s-])([a-z])/', fn($m) => $m[1] . strtoupper($m[2]), strtolower($s)); }
 /* ---- the walk desk (2026-10-14; Sixfold first, Matthew: "just a sixfold build atm") ----

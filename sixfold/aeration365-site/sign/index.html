@@ -95,6 +95,7 @@
     if (!A || !A.ok) { sorry((A && A.error) || 'Something went wrong. Call or text us.'); return; }
     document.getElementById('hi').textContent = A.first ? A.first + ', here’s your agreement' : 'Your agreement';
     main.textContent = '';
+    if (A.moved) { var mv = el('div', 'card ok'); mv.appendChild(el('h2', null, 'Your day has moved')); mv.appendChild(el('p', 'big', A.moved.day + (A.moved.arrive ? ', arriving ' + A.moved.arrive : '') + '.')); mv.appendChild(el('p', 'muted', 'We moved it for the weather. The agreement below shows the day it was first set for. Questions? Call or text (720) 830-4553.')); main.appendChild(mv); }   /* 2026-10-15 */
     main.appendChild(details(A)); main.appendChild(terms(A));
     if (A.signed) { main.appendChild(signedCard(A.signed, null)); return; }
     var c = el('div', 'card noprint'); c.appendChild(el('h2', null, 'Sign'));
