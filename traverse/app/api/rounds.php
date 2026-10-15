@@ -2074,7 +2074,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
  * office. The wording is here, in one place, versioned: a signature keeps the version and a hash of exactly what was shown.
  * DRAFT wording until Brandon (or the attorney) approves it: facts from the call and the business only; no refund or cancellation
  * terms, because none are set. Never the lawn size, the seed or anything measured; never Sixfold. */
-const A365_SIGN_VERSION = 'v1-draft-2026-10-14';
+const A365_SIGN_VERSION = 'v2-draft-2026-10-15';   /* Matthew's answers to the seven questions; Brandon still to review */
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
 function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
 function a365Agreement(array $l): array {
@@ -2085,16 +2085,19 @@ function a365Agreement(array $l): array {
     $how = ['square' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how']] ?? $S2['how'];
     $day = $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set';
     $facts = [['Customer', trim((string) ($l['name'] ?? ''))], ['Address', $addr], ['Service', implode(', ', $inc)], ['Day', $day],
-              ['Price', '$' . number_format((int) $Q['price'])], ['Deposit paid', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
+              ['Price', '$' . number_format((int) $Q['price'])], ['Deposit paid (non-refundable)', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
               ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]];
+    $ph = (string) (company()['a365']['phone'] ?? '');
     $terms = ['We will do the work listed above at this address on the day shown, arriving in the time shown.',
-              'Please mark sprinkler heads, shallow pipes and invisible dog fence lines, or tell us where they are, so we can work around them.',
+              'Please let us know if there are sprinklers, shallow pipes or invisible dog fences, so they can be marked before we start.',
+              'On the day, please leave gates unlocked and keep pets inside.',
               'If the weather or the ground (frozen, waterlogged or very dry) stops us, we will contact you to move the day.',
-              'The balance is due when the work is done.',
-              'Questions or changes: call or text ' . (string) (company()['a365']['phone'] ?? '') . '.'];
-    $consent = 'By typing your name and tapping Sign, you agree to this and to signing it electronically.';
+              'To reschedule or cancel, call or text ' . $ph . ' at least 24 hours before your day.',
+              'The deposit is non-refundable.'];
+    $consents = ['I have read this agreement and I agree to its terms.', 'I agree to sign it electronically by typing my name.'];
+    $consent = implode(' ', $consents);
     $text = implode("\n", array_map(fn($x) => $x[0] . ': ' . $x[1], $facts)) . "\n" . implode("\n", $terms) . "\n" . $consent;
-    return ['facts' => $facts, 'terms' => $terms, 'consent' => $consent, 'hash' => hash('sha256', A365_SIGN_VERSION . "\n" . $text)];
+    return ['facts' => $facts, 'terms' => $terms, 'consent' => $consent, 'consents' => $consents, 'hash' => hash('sha256', A365_SIGN_VERSION . "\n" . $text)];
 }
 if ($action === 'a365sign' || $action === 'a365signed') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
@@ -2115,12 +2118,13 @@ if ($action === 'a365sign' || $action === 'a365signed') {
     $signedOut = fn($sg) => $sg ? ['name' => (string) $sg['name'], 'when' => (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a')] : null;
     $sgd = $l['signed'] ?? null;   /* signed: the facts and terms as they were when signed (Fable review 2026-10-14) */
     $jn = jobForLead($l['id']); $moved = $jn && !empty($jn['wx']) && $jn['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') ? ['day' => a365Day($jn['date']), 'arrive' => a365Arrive((string) $jn['slot'])] : null;   /* moved for weather (2026-10-15) */
-    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
     $name = a365Clean($body['name'] ?? '', 120);
     if (mb_strlen($name) < 3) fail('Type your full name to sign.');
     if (empty($body['agree'])) fail('Tick the box to agree.');
+    if (empty($body['read'])) fail('Tick the box to say you have read it.');   /* v2: two boxes (Matthew 2026-10-15) */
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Something went wrong. Please call or text us.', 500);
     /* Fable review 2026-10-14: everything read again inside the lock. A second Sign (double tap, a retry) returns the first signature; a job
        already on the board for this lead (booked from the quote page) is linked and given the deposit, not reported as "set a new day". */
@@ -3716,23 +3720,58 @@ if ($action === 'lawncheck') {
  * bag prices are filled in. Kept in a365-pricing.json beside the door files: the office reads it, an admin changes it; never public. */
 const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 399, 'power' => 0.5, 'seedLow' => 2, 'seedBase' => 3, 'seedHigh' => 4,
     'seedBagCost' => 128.89, 'seedBagLb' => 50,   /* SiteOne Englewood invoice 2026-07-24: 6 x LESCO Tuf-Turf 50 lb, $773.34 with tax */
-    'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50];
+    'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50,
+    /* 2026-10-15 (Matthew): fertilizer from the bag (price per lb x the lb its label says covers the lawn), Jen picks the brand of the day;
+       Bryce gave no rate per sq ft, only "$25 in fertilizer" on a $399 job. Travel: the drive from the storage at 333 W Hampden Ave,
+       there and back, at an 18 mpg truck and the week's Denver gas price (EIA). */
+    'fertDefault' => 'lesco', 'mpg' => 18, 'roadFactor' => 1.3];
+const A365_FERTS = [
+    ['k' => 'lesco', 'name' => 'LESCO 24-0-11 (SiteOne)', 'bagLb' => 50, 'bagCost' => 58.99, 'coverSq' => 12000,
+     'src' => 'Label: a 50 lb bag covers about 12,000 sq ft. Price: True Value list price $58.99 (October 2026); ask the SiteOne rep for Sixfold’s price.'],
+    ['k' => 'scotts', 'name' => 'Scotts Turf Builder Lawn Food 32-0-4', 'bagLb' => 12.5, 'bagCost' => 27.24, 'coverSq' => 5000,
+     'src' => 'Home Depot $27.24 for 12.5 lb (October 2026); the bag covers 5,000 sq ft.'],
+    ['k' => 'milorganite', 'name' => 'Milorganite 6-4-0', 'bagLb' => 32, 'bagCost' => 19.97, 'coverSq' => 2500,
+     'src' => 'Home Depot $19.97 for 32 lb (2026); the bag covers 2,500 sq ft. Has phosphorus.']];
 function a365Pricing(): array {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     $o = A365_PRICING; if (is_array($j)) foreach ($o as $k => $v) if (array_key_exists($k, $j) && ($j[$k] === null || is_int($j[$k]) || is_float($j[$k]))) $o[$k] = $j[$k];
+    $o['ferts'] = is_array($j) && !empty($j['ferts']) && is_array($j['ferts']) ? $j['ferts'] : A365_FERTS;
+    if (is_array($j) && is_string($j['fertDefault'] ?? null)) $o['fertDefault'] = $j['fertDefault'];
     return $o;
+}
+/** the week's Denver regular gasoline price (EIA's weekly retail survey, public), kept a day; the last good one if EIA cannot be reached */
+function a365Gas(): ?array {
+    $f = DATA_DIR . '/gas-denver.json'; $c = json_decode((string) @file_get_contents($f), true);
+    if (is_array($c) && ($c['fetched'] ?? 0) > time() - 86400) return $c;
+    $html = null;
+    if (function_exists('curl_init')) {
+        $h = curl_init('https://www.eia.gov/dnav/pet/pet_pri_gnd_dcus_yden_w.htm');
+        curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_FOLLOWLOCATION => true, CURLOPT_USERAGENT => 'Mozilla/5.0 (365 quote; gas price)']);
+        $html = curl_exec($h); if ((int) curl_getinfo($h, CURLINFO_HTTP_CODE) !== 200) $html = null; curl_close($h);
+    }
+    $flat = is_string($html) ? preg_replace('/\|+/', '|', preg_replace('/\s+/', '|', strip_tags(str_replace('<', '|<', $html)))) : '';
+    if ($flat !== '' && preg_match('/\|Regular\|((?:\d\.\d{3}\|){1,10})/', $flat, $m, PREG_OFFSET_CAPTURE)) {
+        $vals = array_values(array_filter(explode('|', $m[1][0]), 'strlen'));
+        preg_match_all('#\b(\d{2})/(\d{2})/(\d{2})\b#', substr($flat, 0, $m[0][1]), $d, PREG_SET_ORDER);
+        $d = array_slice($d, -count($vals));
+        $last = end($d);
+        $o = ['price' => (float) end($vals), 'week' => $last ? '20' . $last[3] . '-' . $last[1] . '-' . $last[2] : null, 'fetched' => time(),
+              'src' => 'U.S. Energy Information Administration, Denver regular gasoline, weekly'];
+        if ($o['price'] > 1 && $o['price'] < 10) { @file_put_contents($f, json_encode($o), LOCK_EX); return $o; }
+    }
+    return is_array($c) ? $c : null;
 }
 if (in_array($action, ['a365pricing', 'a365pricingset', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
 if ($action === 'a365pricing') {
     if (!desk()) fail('Not allowed.', 403);
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
-    out(['ok' => true, 'pricing' => a365Pricing(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
+    out(['ok' => true, 'pricing' => a365Pricing(), 'gas' => a365Gas(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
 }
 if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
-            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000]];
+            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3]];
     $p = a365Pricing();
     foreach ($lim as $k => [$lo, $hi]) {
         if (!array_key_exists($k, $body)) continue;
@@ -3742,6 +3781,21 @@ if ($action === 'a365pricingset') {
         $p[$k] = (float) $v == (int) $v ? (int) $v : round((float) $v, 4);
     }
     if (!($p['seedLow'] <= $p['seedBase'] && $p['seedBase'] <= $p['seedHigh'])) fail('Seed rates must go low, base, high.');
+    if (array_key_exists('ferts', $body)) {   /* the fertilizer brands: name, bag weight, bag price, what one bag covers */
+        if (!is_array($body['ferts']) || count($body['ferts']) > 12) fail('Check the fertilizer list.');
+        $fl = [];
+        foreach ($body['ferts'] as $i => $x) {
+            $nm = $clean($x['name'] ?? '', 60); if ($nm === '') continue;
+            $lb = (float) ($x['bagLb'] ?? 0); $co = (float) ($x['bagCost'] ?? -1); $cv = (int) ($x['coverSq'] ?? 0);
+            if ($lb <= 0 || $lb > 1000 || $co < 0 || $co > 10000 || $cv < 100 || $cv > 1000000) fail('Fill in the bag weight, price and coverage for ' . $nm . '.');
+            $k = preg_replace('/[^a-z0-9]+/', '-', strtolower((string) ($x['k'] ?? '') ?: $nm)); $k = trim($k, '-') ?: 'f' . $i;
+            $fl[] = ['k' => substr($k, 0, 30), 'name' => $nm, 'bagLb' => round($lb, 2), 'bagCost' => round($co, 2), 'coverSq' => $cv, 'src' => $clean($x['src'] ?? '', 200)];
+        }
+        if (!$fl) fail('Keep at least one fertilizer.');
+        $p['ferts'] = $fl;
+    }
+    if (array_key_exists('fertDefault', $body)) $p['fertDefault'] = (string) $body['fertDefault'];
+    if (!in_array($p['fertDefault'], array_column($p['ferts'], 'k'), true)) $p['fertDefault'] = $p['ferts'][0]['k'];
     $p['_by'] = $me; $p['_at'] = time();
     if (@file_put_contents(DATA_DIR . '/a365-pricing.json', json_encode($p, JSON_PRETTY_PRINT), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
     accountLog(['by' => $me, 'what' => '365 pricing changed']);
@@ -4816,6 +4870,10 @@ if ($action === 'signsend') {
     $pkg = (string) ($body['pkg'] ?? 'full'); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick what is included.');
     $how = (string) ($body['how'] ?? ''); if (!in_array($how, ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
+    if (isset($body['deposit']) && $body['deposit'] !== '' && $body['deposit'] !== null) {   /* Jen can change it (Matthew 2026-10-15) */
+        if (!is_numeric($body['deposit']) || (int) $body['deposit'] < 0 || (int) $body['deposit'] > $price) fail('The deposit has to be between $0 and the price.');
+        $dep = (int) $body['deposit'];
+    }
     $crew = (string) ($body['crew'] ?? ''); $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
     if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
     if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');

@@ -100,15 +100,15 @@
     if (A.signed) { main.appendChild(signedCard(A.signed, null)); return; }
     var c = el('div', 'card noprint'); c.appendChild(el('h2', null, 'Sign'));
     var nl = el('label', 'name', 'Type your full name'); var ni = el('input'); ni.autocomplete = 'name'; ni.maxLength = 120; nl.appendChild(ni); c.appendChild(nl);
-    var al = el('label', 'agree'); var ai = el('input'); ai.type = 'checkbox'; al.appendChild(ai); al.appendChild(el('span', null, A.consent)); c.appendChild(al);
+    var boxes = (A.consents && A.consents.length ? A.consents : [A.consent]).map(function (t) { var al = el('label', 'agree'); var ai = el('input'); ai.type = 'checkbox'; al.appendChild(ai); al.appendChild(el('span', null, t)); c.appendChild(al); return ai; });   /* v2: read and agree, and sign electronically */
     var go = el('button', 'btn', 'Sign'); go.type = 'button'; c.appendChild(go);
     var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
     go.addEventListener('click', function () {
       err.textContent = '';
       if (ni.value.trim().length < 3) { err.textContent = 'Type your full name to sign.'; ni.focus(); return; }
-      if (!ai.checked) { err.textContent = 'Tick the box to agree.'; return; }
+      if (boxes.some(function (b) { return !b.checked; })) { err.textContent = boxes.length > 1 ? 'Tick both boxes to agree.' : 'Tick the box to agree.'; return; }
       go.disabled = true; go.textContent = 'Signing…';
-      fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true }) })
+      fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true, read: true }) })
         .then(function (r) { return r.json(); }).then(function (j) {
           if (!j || !j.ok) { go.disabled = false; go.textContent = 'Sign'; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
           c.replaceWith(signedCard(j.signed, j.booked)); window.scrollTo(0, 0);

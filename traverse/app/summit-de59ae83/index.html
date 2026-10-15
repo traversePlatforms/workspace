@@ -1850,11 +1850,16 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qunit{font-size:13px;color:var(--soft)}
   .qchips{display:flex;gap:6px;flex-wrap:wrap}
   .qchips button{border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);font:600 12.5px var(--sans);padding:6px 10px;cursor:pointer}
+  .qferts{display:grid;gap:10px}.qfertrow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 8px;padding:10px;border:1px solid var(--line);border-radius:12px}
+  .qfertrow label{display:grid;gap:3px;font-size:12.5px}.qfertrow label.w{grid-column:1/-1}.qfertrow small{grid-column:1/-1;color:var(--soft);font-size:11.5px}
+  .qfertrow .qdef{display:flex;gap:6px;align-items:center;grid-column:1/3}.qfertrow .lnk{justify-self:end}
   .qprice{display:grid;gap:2px}.qprice b{font:800 34px var(--sans);color:var(--ember-ink)}.qprice span{font-size:13px;color:var(--soft)}
   .qsteps{display:flex;gap:6px;flex-wrap:wrap}
   .qsteps button{min-height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);padding:0 14px;cursor:pointer}
   .qsteps input{flex:1;min-width:120px;font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qdetail{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
+  .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
+  .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
   .qacts .lnk{background:none;border:0;color:var(--accent);font:700 14px var(--sans);padding:8px 4px;cursor:pointer;text-align:left}
   .qline{margin-top:8px;font-size:13.5px;font-weight:700;color:var(--ember-ink)}
@@ -4880,7 +4885,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       payMore.textContent = '';
       if (P.pay.s === 'deposit') {
         var l = q('label', null, 'Deposit ($)'); var i = q('input'); i.inputMode = 'numeric'; i.maxLength = 5;
-        if (!P.pay.amt) P.pay.amt = (S.a365p && S.a365p.deposit) || 50;
+        if (!P.pay.amt) P.pay.amt = Math.ceil((P.price || 0) / 2) || 50;   /* half the price (Matthew 2026-10-15) */
         i.value = P.pay.amt; i.addEventListener('input', function () { P.pay.amt = parseInt(i.value.replace(/\D/g, ''), 10) || 0; });
         l.appendChild(i); payMore.appendChild(l);
       }
@@ -4899,6 +4904,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       chips(pkRow, { full: JOB_PKG.full, aerate: JOB_PKG.aerate }, function () { return P.pkg === 'aerate' ? 'aerate' : 'full'; }, function (k) { P.pkg = k; });
       depBox = q('div', 'jdep');
       var pl = q('label', null, 'Price you quoted ($)'); dPrice = q('input'); dPrice.inputMode = 'numeric'; dPrice.maxLength = 6; dPrice.value = P.price || ''; pl.appendChild(dPrice); depBox.appendChild(pl);
+      var dl = q('label', null, 'Deposit ($)'), dDep = q('input'); dDep.inputMode = 'numeric'; dDep.maxLength = 6; dl.appendChild(dDep); depBox.appendChild(dl);
+      var depOwn = false; dDep.addEventListener('input', function () { depOwn = dDep.value.trim() !== ''; paint(); });
       depTxt = q('div', 'jdeptxt'); depBox.appendChild(depTxt);
       depBox.appendChild(q('div', 'dwsub', 'How they paid the deposit'));
       var hr = q('div', 'dwlen'); depBox.appendChild(hr);
@@ -4907,7 +4914,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       takenBtn = q('button', 'jtaken', ''); takenBtn.type = 'button'; takenBtn.setAttribute('aria-pressed', 'false');
       takenBtn.addEventListener('click', function () { takenBtn.setAttribute('aria-pressed', String(takenBtn.getAttribute('aria-pressed') !== 'true')); });
       depBox.appendChild(takenBtn);
-      var paint = function () { var p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, d = Math.ceil(p / 2); depTxt.textContent = p ? 'Deposit (half): ' + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
+      var paint = function () { var p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p / 2); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = d; depTxt.textContent = p ? (d === half ? 'Deposit is half: ' : 'Deposit changed from half (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
       dPrice.addEventListener('input', paint); paint();
       box.insertBefore(q('div', 'dwh', 'Deposit'), nl); box.insertBefore(depBox, nl);
     }
@@ -4993,8 +5000,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var sp = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0;
         if (sp < 1) { err.textContent = 'Type the price you quoted.'; return; }
         if (takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
+        if (S.depNow > sp) { err.textContent = 'The deposit cannot be more than the price.'; return; }
         sv.disabled = true;
-        api('signsend', { body: { id: lead.id, price: sp, pkg: P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb } }).then(function (j) {
+        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, pkg: P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb } }).then(function (j) {
           sv.disabled = false;
           if (j._status === 401) return signinView('Signed out. Enter your code again.');
           if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }
@@ -5723,8 +5731,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function seedRateFor(price, ladder, P) { return Math.max(P.seedLow, Math.min(P.seedHigh, P.seedBase * price / Math.max(ladder, 1))); }
   function loadPricing(then, fresh) {
     if (S.a365p && !fresh) return then(S.a365p);
-    api('a365pricing').then(function (j) { if (j && j.ok) { S.a365p = j.pricing; then(S.a365p); } else then(null); }).catch(function () { then(null); });
+    api('a365pricing').then(function (j) { if (j && j.ok) { S.a365p = j.pricing; S.a365p.gas = j.gas || null; then(S.a365p); } else then(null); }).catch(function () { then(null); });
   }
+  /* the drive (2026-10-15, Matthew): from the storage at 333 W Hampden Ave and back, road miles estimated from the straight line,
+     an 18 mpg truck, the week's Denver gas price (EIA). Null without an address or a gas price. */
+  function a365Travel(h, P) {
+    var mi = h ? milesFromBase(h) : null; if (mi == null || !P.gas || !P.gas.price) return null;
+    var rt = mi * (P.roadFactor || 1.3) * 2, gal = rt / (P.mpg || 18);
+    return { miles: rt, gal: gal, cost: gal * P.gas.price, gas: P.gas };
+  }
+  function fertOf(P, k) { var L = P.ferts || []; return L.filter(function (x) { return x.k === k; })[0] || L.filter(function (x) { return x.k === P.fertDefault; })[0] || L[0] || null; }
+  function money2(n) { return '$' + (Math.round(n * 100) / 100).toFixed(2); }
+  function weekText(iso) { if (!iso) return ''; var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }); }
   function money0(n) { return '$' + Math.round(n).toLocaleString(LOCALE); }
   /* a yes on the customer's quote page (2026-10-14), only while it is for the quote's current price */
   function acceptOf(l) { return l && l.accept && l.quote && l.accept.price === l.quote.price ? l.accept : null; }
@@ -5753,43 +5771,71 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var pk = q('div', 'dwlen');
       [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only']].forEach(function (o) {
         var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.pkg === o[0]));
-        if (o[0] === 'aerate' && !P.aerateOnly) { b.disabled = true; b.title = 'Set the aerate-only price under Pricing first'; }
         b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paint(); });
         pk.appendChild(b);
       });
       box.appendChild(pk);
+      /* the fertilizer of the day (2026-10-15): Jen picks the brand; this device remembers it */
+      var fk = ''; try { fk = localStorage.getItem('fertBrand') || ''; } catch (e) {}
+      st.fert = fertOf(P, fk) ? fertOf(P, fk).k : '';
+      var fRow = q('div', 'dwlen qfert');
+      if ((P.ferts || []).length > 1) {
+        P.ferts.forEach(function (x) {
+          var b = q('button', null, x.name); b.type = 'button'; b.setAttribute('aria-pressed', String(st.fert === x.k));
+          b.addEventListener('click', function () { st.fert = x.k; try { localStorage.setItem('fertBrand', x.k); } catch (e) {} [].forEach.call(fRow.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paint(); });
+          fRow.appendChild(b);
+        });
+        var fh = q('div', 'dwsub', 'Fertilizer today'); box.appendChild(fh); box.appendChild(fRow);
+      }
       var big = q('div', 'qprice'), steps = q('div', 'qsteps'), detail = q('div', 'qdetail');
       var dn = q('button', null, '− $100'), up = q('button', null, '+ $100'), own = q('input'); dn.type = up.type = 'button'; own.inputMode = 'numeric'; own.placeholder = 'Or type a price'; own.maxLength = 6;
       steps.appendChild(dn); steps.appendChild(up); steps.appendChild(own);
       box.appendChild(big); box.appendChild(steps); box.appendChild(detail);
-      var ladderFor = function () { var lp = a365Price(st.sq || 0, P); return st.pkg === 'aerate' ? Math.max(P.minPrice, Math.round(lp * P.aerateOnly / 100 / 10) * 10 - 1) : lp; };
-      dn.addEventListener('click', function () { st.price = Math.max(P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
-      up.addEventListener('click', function () { st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
+      var trv = a365Travel(h, P);
+      /* the list price: the ladder plus the drive (in whole dollars); aerate only has no list price, Jen types hers (Matthew 2026-10-15) */
+      var ladderFor = function () { return st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
+      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = Math.max(st.pkg === 'aerate' ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
+      up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
       own.addEventListener('input', function () { var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
       sqIn.addEventListener('input', function () { st.sq = parseInt(sqIn.value.replace(/\D/g, ''), 10) || 0; st.price = null; paint(); });
       var acts = q('div', 'qacts'); box.appendChild(acts);
       function paint() {
         var ladder = ladderFor(), price = st.price || ladder;
-        big.textContent = ''; big.appendChild(q('b', null, money0(price)));
-        big.appendChild(q('span', null, st.price && st.price !== ladder ? 'list price ' + money0(ladder) + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' : 'list price for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft'));
+        big.textContent = '';
+        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, 'Aerate only: type your price below')); }
+        else {
+          big.appendChild(q('b', null, money0(price)));
+          big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' + (trv ? ', drive included' : '')));
+        }
         detail.textContent = '';
-        var lines = [];
+        var lines = [], notes = [];   /* lines: the sums; notes: where the numbers come from */
         var seedLb = 0, fertLb = 0, cost = 0, known = true;
         if (st.pkg === 'full' && st.sq) {
           var rate = seedRateFor(price, ladder, P); seedLb = Math.round(st.sq / 1000 * rate * 10) / 10;
-          lines.push('Seed: ' + seedLb + ' lb (' + (Math.round(rate * 10) / 10) + ' lb per 1,000 sq ft' + (price > ladder ? ', more because the price is up' : price < ladder ? ', less because the price is down' : '') + ')');
-          if (P.seedBagLb) cost += seedLb * P.seedBagCost / P.seedBagLb; else known = false;
-          if (P.fertRate) { fertLb = Math.round(st.sq / 1000 * P.fertRate * 10) / 10; lines.push('Fertilizer: ' + fertLb + ' lb'); if (P.fertBagLb && P.fertBagCost != null) cost += fertLb * P.fertBagCost / P.fertBagLb; else known = false; }
-          else { lines.push('Fertilizer: set the rate under Pricing'); known = false; }
+          var seedPer = P.seedBagLb ? P.seedBagCost / P.seedBagLb : 0;
+          lines.push('Seed: ' + seedLb + ' lb (' + (Math.round(rate * 10) / 10) + ' lb per 1,000 sq ft' + (price > ladder ? ', more because the price is up' : price < ladder ? ', less because the price is down' : '') + ')' + (seedPer ? ' × ' + money2(seedPer) + '/lb = ' + money2(seedLb * seedPer) : ''));
+          if (seedPer) { cost += seedLb * seedPer; notes.push('Seed: 2 to 4 lb per 1,000 sq ft (Bryce), more seed when they pay more. Cost based on Brad’s SiteOne receipt, $' + P.seedBagCost + ' per ' + P.seedBagLb + ' lb bag.'); } else known = false;
+          var F = fertOf(P, st.fert);
+          if (F) {
+            var fRate = F.bagLb * 1000 / F.coverSq, fPer = F.bagCost / F.bagLb; fertLb = Math.round(st.sq / 1000 * fRate * 10) / 10;
+            lines.push('Fertilizer (' + F.name + '): ' + fertLb + ' lb (' + (Math.round(fRate * 10) / 10) + ' lb per 1,000 sq ft, the bag’s rate) × ' + money2(fPer) + '/lb = ' + money2(fertLb * fPer));
+            cost += fertLb * fPer; notes.push('Fertilizer: ' + (F.src || F.name) + ' Goes down at the bag’s rate whatever the price (too much burns the lawn).');
+          } else { lines.push('Fertilizer: add one under Pricing'); known = false; }
         }
-        if (st.pkg === 'full') lines.push(known ? 'Materials about ' + money0(cost) + ', leaving ' + money0(price - cost) + ' before labour and travel' : 'Materials cost shows once the seed bag weight and fertilizer are filled in under Pricing');
-        var mi = milesFromBase(h); if (mi != null && mi > 25) lines.push(Math.round(mi) + ' miles from Englewood: Bryce prices the drive in without mentioning it; a step up may be fair');
+        if (trv) {
+          lines.push('Drive: ' + Math.round(trv.miles) + ' miles there and back, ' + (Math.round(trv.gal * 10) / 10) + ' gal × ' + money2(trv.gas.price) + ' = ' + money2(trv.cost) + (ladder ? ' (in the list price)' : ''));
+          notes.push('Gas price: ' + money2(trv.gas.price) + '/gal, the Denver weekly average' + (trv.gas.week ? ' for the week of ' + weekText(trv.gas.week) : '') + ' (U.S. Energy Information Administration). Drive from the Englewood storage at 333 W Hampden Ave and back in an 18 mpg truck; road miles estimated at ' + (P.roadFactor || 1.3) + ' × the straight-line distance.');
+          cost += trv.cost;
+        } else lines.push(h && h.lat != null ? 'Drive: no gas price this week, so it is not in the price' : 'Drive: find the house to price the drive');
+        if (st.pkg === 'full' && price) lines.push(known ? 'Materials and drive about ' + money0(cost) + ', leaving ' + money0(price - cost) + ' before labour' : 'Materials cost shows once the seed bag is filled in under Pricing');
         lines.forEach(function (t) { detail.appendChild(q('div', null, t)); });
+        if (notes.length) { var nb = q('div', 'qnotes'); notes.forEach(function (t) { nb.appendChild(q('div', null, t)); }); detail.appendChild(nb); }
         st.cur = { price: price, seedLb: seedLb, fertLb: fertLb };
         drawActs();
       }
       function drawActs() {
         acts.textContent = '';
+        if (!st.cur.price) { acts.appendChild(q('div', 'ltrynote', 'Type the aerate-only price to save or book it.')); return; }
         if (lead && asOffice()) {   /* the phone-quote flow (2026-10-14): nothing goes to the customer until they said yes and paid the deposit */
           var sv0 = q('button', 'lnk', 'Save this quote on the lead'); sv0.type = 'button';
           sv0.addEventListener('click', function () {
@@ -5872,23 +5918,40 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       field('anchorPrice', 'Anchor price ($)', 'Bryce: $399 for about 2,500 sq ft of lawn');
       field('anchorSq', 'Anchor lawn size (sq ft)');
       field('power', 'Scaling (0.5 = square root)', 'How fast the price grows with size. 0.5 lands on Bryce’s $1,200 acre lot.');
-      field('aerateOnly', 'Aerate only (% of the full price)', 'Empty = no aerate-only option yet', 'e.g. 60');
       f.appendChild(q('div', 'dwh', 'Seed'));
       field('seedLow', 'Least seed (lb per 1,000 sq ft)', 'Bryce: never below 2'); field('seedBase', 'Normal seed (lb per 1,000 sq ft)', 'At the list price. CSU: 3 to 4 after aeration'); field('seedHigh', 'Most seed (lb per 1,000 sq ft)', 'Bryce: rarely over 4');
-      field('seedBagCost', 'Seed bag cost ($)', 'SiteOne Englewood, July 2026: $773.34 for 6 bags with tax = $128.89'); field('seedBagLb', 'Seed bag weight (lb)', 'LESCO Tuf-Turf comes in 50 lb bags', 'e.g. 50');
+      field('seedBagCost', 'Seed bag cost ($)', 'Brad’s SiteOne Englewood receipt, July 2026: $773.34 for 6 bags with tax = $128.89'); field('seedBagLb', 'Seed bag weight (lb)', 'LESCO Tuf-Turf comes in 50 lb bags', 'e.g. 50');
       f.appendChild(q('div', 'dwh', 'Fertilizer'));
-      field('fertRate', 'Fertilizer (lb per 1,000 sq ft)', 'From the bag label', 'e.g. 4'); field('fertBagCost', 'Fertilizer bag cost ($)'); field('fertBagLb', 'Fertilizer bag weight (lb)');
-      f.appendChild(q('div', 'dwh', 'Jobs'));
-      field('deposit', 'Deposit to book ($)', 'Randy’s sheet: $50');
+      f.appendChild(q('div', 'lsub', 'Jen picks the brand on each quote. Cost = the lb the lawn needs at the bag’s rate × the price per lb. Change prices as you buy in bulk.'));
+      var FL = (P.ferts || []).map(function (x) { var o = {}; for (var k in x) o[k] = x[k]; return o; }), fDef = P.fertDefault, fBox = q('div', 'qferts'); f.appendChild(fBox);
+      var drawFerts = function () {
+        fBox.textContent = '';
+        FL.forEach(function (x, i) {
+          var r = q('div', 'qfertrow');
+          var inp = function (k, label, wide) { var lb = q('label', wide ? 'w' : null, label), it = q('input'); it.value = x[k] == null ? '' : x[k]; if (!wide) it.inputMode = 'decimal'; it.addEventListener('input', function () { x[k] = it.value; }); lb.appendChild(it); r.appendChild(lb); };
+          inp('name', 'Brand', true); inp('bagLb', 'Bag (lb)'); inp('bagCost', 'Bag ($)'); inp('coverSq', 'Covers (sq ft)');
+          var dfl = q('label', 'qdef'), rb = q('input'); rb.type = 'radio'; rb.name = 'fdef'; rb.checked = x.k === fDef; rb.addEventListener('change', function () { fDef = x.k || x.name; }); dfl.appendChild(rb); dfl.appendChild(q('span', null, 'Default')); r.appendChild(dfl);
+          var rm = q('button', 'lnk danger', 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { FL.splice(i, 1); drawFerts(); }); r.appendChild(rm);
+          if (x.src) r.appendChild(q('small', null, x.src));
+          fBox.appendChild(r);
+        });
+        var ad = q('button', 'lnk', '+ Add a fertilizer'); ad.type = 'button'; ad.addEventListener('click', function () { FL.push({ name: '', bagLb: '', bagCost: '', coverSq: '' }); drawFerts(); }); fBox.appendChild(ad);
+      };
+      drawFerts();
+      f.appendChild(q('div', 'dwh', 'Travel'));
+      field('mpg', 'Truck miles per gallon', 'Matthew: 18 for now');
+      field('roadFactor', 'Road miles per straight-line mile', 'Roads are longer than the straight line; 1.3 is a usual allowance');
+      f.appendChild(q('div', 'lsub', 'The drive is from the storage at 333 W Hampden Ave, Englewood, there and back, at the Denver weekly gas price from the U.S. Energy Information Administration' + (P.gas ? ' (now ' + money2(P.gas.price) + '/gal' + (P.gas.week ? ', week of ' + weekText(P.gas.week) : '') + ')' : '') + '. It is added to the list price.'));
       var err = q('div', 'err'); f.appendChild(err);
       var sv = q('button', 'save', 'Save the price list'); sv.type = 'button';
       sv.addEventListener('click', function () {
         var body = {}; Object.keys(F).forEach(function (k) { body[k] = F[k].value.trim() === '' ? null : F[k].value.trim(); });
+        body.ferts = FL.filter(function (x) { return String(x.name || '').trim(); }); body.fertDefault = fDef;
         sv.disabled = true; err.textContent = '';
         api('a365pricingset', { body: body }).then(function (j) {
           sv.disabled = false;
           if (!j.ok) { err.textContent = j.error || 'Not saved.'; return; }
-          S.a365p = j.pricing; toast('Price list saved', 'New quotes use it straight away.', null);
+          var g = S.a365p && S.a365p.gas; S.a365p = j.pricing; S.a365p.gas = g; toast('Price list saved', 'New quotes use it straight away.', null);
         }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Try again.'; });
       });
       f.appendChild(sv);
