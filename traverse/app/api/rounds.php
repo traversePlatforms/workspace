@@ -1843,7 +1843,8 @@ if ($action === 'calfeed') {
     foreach (calEventsFor($who, $from, $to) as $e) {
         $d = str_replace('-', '', (string) $e['date']); $t = (string) ($e['time'] ?? '');
         $place = trim((string) ($e['title'] ?? '') . (($e['town'] ?? '') !== '' ? ', ' . $e['town'] : '') . ', ' . market()['state'], ', ');   /* the market's state (2026-10-13, Fable review: it said CO in every market) */
-        if ($e['kind'] === 'walk' && !empty($e['dw'])) {   /* the walk desk (2026-10-14) */
+        if ($e['kind'] === 'job') { $sum = 'Job: ' . $e['title']; $loc = (string) $e['addr']; $uid = 'job-' . $e['job']; $len = 'PT90M'; $e['note'] = trim($e['need'] . ($e['note'] !== '' ? "\n" . $e['note'] : '')); }
+        elseif ($e['kind'] === 'walk' && !empty($e['dw'])) {   /* the walk desk (2026-10-14) */
             $sum = $visit . ': ' . $e['title']; $loc = (string) $e['addr']; $uid = 'dwalk-' . $e['dw']; $len = 'PT' . max(15, (int) $e['mins']) . 'M';
             $e['note'] = implode("\n", array_filter([$e['phone'] !== '' ? 'Phone: ' . $e['phone'] : '', $e['need'] !== '' ? 'Wants: ' . $e['need'] : '', $e['note'] !== '' ? 'Note: ' . $e['note'] : '', 'Booked by ' . $e['by'] . '. Everything else is in the app.']));
         }
@@ -3331,6 +3332,12 @@ function calEventsFor(string $who, string $from, string $to): array {
         $ev[] = ['kind' => 'lead', 'date' => $dt, 'time' => $l['follow']['time'], 'title' => trim(($l['name'] ?? '') ?: ($l['phone'] ?? '') ?: 'Lead'), 'need' => (string) ($l['need'] ?? ''),
                  'town' => (string) ($l['town'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'lead' => $l['id'], 'status' => $l['status']];
     }
+    if (feature('walkdesk')) foreach (jobsAll() as $jb) {   /* the jobs board (2026-10-14) */
+        if ($jb['off'] || $jb['crew'] !== $who || $jb['date'] < $from || $jb['date'] > $to) continue;
+        $sl = jobSlot((string) $jb['slot']);
+        $ev[] = ['kind' => 'job', 'job' => $jb['id'], 'date' => $jb['date'], 'time' => $sl ? $sl[2] : '', 'mins' => 90, 'title' => (string) $jb['title'], 'town' => (string) $jb['addr'], 'addr' => (string) $jb['addr'],
+                 'need' => ($jb['pkg'] === 'aerate' ? 'Aerate only' : ($jb['pkg'] === 'plan' ? 'Service plan' : 'Aerate, seed & feed')) . ($sl ? ' · arrive ' . $sl[1] : ''), 'phone' => '', 'by' => (string) $jb['by'], 'done' => $jb['done'], 'note' => (string) $jb['note']];
+    }
     if ($dw) {
         $leadsNow = leadsAll();
         foreach ($dw as $x) {
@@ -3503,6 +3510,138 @@ if ($action === 'leadquote') {
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'status' => $row['status'] ?? $all[$id]['status']]);
 }
+/* ---- the jobs board (2026-10-14, 365 Aeration & Seeding; Matthew: keep it in our app, borrowing the structure of Randy's sheet) ----
+ * Randy's scheduling sheet: each day, each crew, four arrival times (9:30-10:00, 12:00, 12-2, 3:00), the town that crew is working that
+ * day, and per job the name, address, price, what is included, payment (paid / deposit and how / service plan), card on file, notes and
+ * where the lead came from; Sunday closed; the month's total at the top. Here: jobs.log beside the door files (append-only like the
+ * walks; a booking line carries every field, later lines change it), jobdays.json for each crew's area of the day. The crew are the
+ * people marked "Does walks"; each job goes on their calendar and their phones get an alert. Only where the walk desk is on. */
+function jobSlots(): array { return [['s1', '9:30-10:00', '09:30'], ['s2', '12:00', '12:00'], ['s3', '12-2', '12:00'], ['s4', '3:00', '15:00']]; }   /* functions, not consts: the calendar feed runs above this line */
+function jobClosed(): array { return [0]; }   /* Sunday */
+function jobsAll(): array {
+    $o = [];
+    foreach (readLines(DATA_DIR . '/jobs.log') as $r) {
+        $id = (string) $r['id'];
+        if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
+        $moved = false;
+        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
+        if (!empty($r['del'])) $o[$id]['off'] = true;
+        if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
+    }
+    return $o;
+}
+function jobSlot(string $k): ?array { foreach (jobSlots() as $s) if ($s[0] === $k) return $s; return null; }
+function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobdays.json'), true); return is_array($j) ? $j : []; }
+function jobShow(array $j, ?array $leads = null): array {
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done']));
+    $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
+    $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
+    if ($l) {
+        $o['who'] = ['name' => (string) ($l['name'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'email' => (string) ($l['email'] ?? ''), 'src' => (string) ($l['src'] ?? ''), 'notes' => $l['notes'], 'ask' => $l['ask'] ?? null];
+        if (!empty($l['house']['region'])) { $hf = houseFacts((string) $l['house']['region'], (string) $l['house']['door']); if ($hf) $o['house'] = $hf; }
+    }
+    return $o;
+}
+if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone'], true) && !feature('walkdesk')) fail('Not here.', 404);
+/* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
+if ($action === 'jobs') {
+    if (!desk()) fail('Not allowed.', 403);
+    $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
+    if (!dateOk($from) || !dateOk($to) || $to < $from) fail('Pick the dates.');
+    if (strtotime($to) - strtotime($from) > 62 * 86400) fail('Ask for two months at most.');
+    $leads = leadsAll(); $list = [];
+    foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to) $list[] = jobShow($j, $leads);
+    usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
+    $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
+    out(['ok' => true, 'jobs' => $list, 'days' => $days, 'crews' => walkerList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
+}
+/* each crew's area for a day ("the town of the day" in Randy's sheet) */
+if ($action === 'jobday') {
+    if (!desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $date = (string) ($body['date'] ?? ''); $crew = (string) ($body['crew'] ?? ''); $area = $clean($body['area'] ?? '', 40);
+    if (!dateOk($date)) fail('That is not a real date.');
+    if (!in_array($crew, walkerList(), true)) fail('Pick someone who does walks and jobs.');
+    $lk = @fopen(DATA_DIR . '/jobdays.json.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = jobDays(); if ($area === '') unset($all[$date][$crew]); else $all[$date][$crew] = $area;
+    if (isset($all[$date]) && !$all[$date]) unset($all[$date]);
+    if (@file_put_contents(DATA_DIR . '/jobdays.json', json_encode($all, JSON_UNESCAPED_UNICODE), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+/* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
+if ($action === 'jobsave') {
+    if (!desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = jobsAll(); $leads = leadsAll(); $id = (string) ($body['id'] ?? ''); $have = null;
+    if ($id !== '') { if (!preg_match('/^j[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such job.', 404); $have = $all[$id]; }
+    if (!empty($body['del'])) {
+        if (!$have) fail('No such job.', 404);
+        if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $id, 'del' => 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        if (($leads[$have['lead']]['status'] ?? '') === 'won') appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'status' => 'quoted', 'by' => $me, 'at' => time()]);
+        $sl = jobSlot((string) $have['slot']);
+        if ($have['crew'] !== $me) pushName($have['crew'], 'Job cancelled: ' . deskWhen($have['date'], '') . ($sl ? ', ' . $sl[1] : ''), $have['title'] . ' · cancelled by ' . $me, './', 'job-' . $id);
+        out(['ok' => true]);
+    }
+    $lead = $have ? (string) $have['lead'] : (string) ($body['lead'] ?? '');
+    if (!leadOk($lead) || !isset($leads[$lead])) fail('Book a job from a lead.', 404);
+    $crew = (string) ($body['crew'] ?? ($have['crew'] ?? ''));
+    if (!in_array($crew, walkerList(), true)) fail('Pick who does the job. An admin marks them in Accounts.');
+    $date = (string) ($body['date'] ?? ($have['date'] ?? '')); if (!dateOk($date)) fail('That is not a real date.');
+    $tz = new DateTimeZone(appTz());
+    if ($date < (new DateTime('today', $tz))->format('Y-m-d') && (!$have || $date !== $have['date'])) fail('That day has gone. Pick today or later.');
+    if (in_array((int) (new DateTime($date . ' 12:00', $tz))->format('w'), jobClosed(), true) && empty($body['force'])) fail('That is a closed day (Sunday).');
+    $slot = (string) ($body['slot'] ?? ($have['slot'] ?? '')); if (!jobSlot($slot)) fail('Pick an arrival time.');
+    foreach ($all as $o) if (!$o['off'] && $o['id'] !== $id && $o['crew'] === $crew && $o['date'] === $date && $o['slot'] === $slot) fail($crew . ' already has a job then: ' . $o['title'] . '.', 409);
+    $price = (int) ($body['price'] ?? ($have['price'] ?? 0)); if ($price < 1 || $price > 100000) fail('Give the job a price.');
+    $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, ['full', 'aerate', 'plan'], true)) fail('Pick what is included.');
+    $scope = (string) ($body['scope'] ?? ($have['scope'] ?? 'all')); if (!in_array($scope, ['all', 'front', 'back'], true)) fail('Pick front, back or all.');
+    $num = fn($k) => array_key_exists($k, $body) ? (is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= 5000 ? round((float) $body[$k], 1) : null) : ($have[$k] ?? null);
+    $payIn = is_array($body['pay'] ?? null) ? $body['pay'] : ($have['pay'] ?? ['s' => 'unpaid']);
+    $pay = ['s' => in_array($payIn['s'] ?? '', ['unpaid', 'deposit', 'paid', 'plan'], true) ? $payIn['s'] : 'unpaid'];
+    if ($pay['s'] === 'deposit') { $pay['amt'] = (int) ($payIn['amt'] ?? 0); if ($pay['amt'] < 1 || $pay['amt'] >= $price) fail('Give the deposit amount (less than the price).'); }
+    if (in_array($pay['s'], ['deposit', 'paid'], true)) $pay['how'] = in_array($payIn['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true) ? $payIn['how'] : 'other';
+    $card = array_key_exists('card', $body) ? !empty($body['card']) : (bool) ($have['card'] ?? false);
+    $note = array_key_exists('note', $body) ? $clean($body['note'], 300) : (string) ($have['note'] ?? '');
+    $l = $leads[$lead]; $house = $l['house'] ?? null;
+    $addr = array_key_exists('addr', $body) ? $clean($body['addr'], 160) : (string) ($have['addr'] ?? ($house ? streetCaseServer((string) $house['address']) . ', ' . $house['town'] : (string) ($l['town'] ?? '')));
+    if ($addr === '') fail('Add the address.');
+    $title = trim((string) ($l['name'] ?? '')) ?: (trim((string) ($l['phone'] ?? '')) ?: 'Job');
+    $fields = ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => $pkg, 'scope' => $scope, 'seedLb' => $num('seedLb'), 'fertLb' => $num('fertLb'), 'pay' => $pay, 'card' => $card, 'note' => $note, 'addr' => $addr];
+    if ($have) { $row = ['id' => $id]; foreach ($fields as $k => $v) if (json_encode($v) !== json_encode($have[$k] ?? null)) $row[$k] = $v; if (count($row) === 1) out(['ok' => true, 'id' => $id, 'same' => true]); $row += ['by' => $me, 'at' => time()]; }
+    else { $id = 'j' . bin2hex(random_bytes(6)); $row = ['id' => $id, 'lead' => $lead, 'title' => $title] + $fields + ['by' => $me, 'at' => time()]; }
+    if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
+    if (!$have && in_array($l['status'], ['new', 'contacted', 'walk', 'quoted'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $lead, 'status' => 'won', 'by' => $me, 'at' => time()]);
+    $sl = jobSlot($slot); $when = deskWhen($date, '') . ', ' . $sl[1];
+    $al = null;
+    if ($crew !== $me && (!$have || $crew !== $have['crew'] || $date !== $have['date'] || $slot !== $have['slot'])) $al = pushName($crew, ($have ? 'Job moved: ' : 'Job booked: ') . $when, $title . ' · ' . $addr . ' · $' . $price, './?job=' . $id, 'job-' . $id);
+    if ($have && $have['crew'] !== $crew && $have['crew'] !== $me) pushName($have['crew'], 'Job handed to ' . $crew, $title . ' · ' . deskWhen($have['date'], ''), './', 'job-' . $id);
+    out(['ok' => true, 'id' => $id, 'alert' => $al]);
+}
+/* the crew's own jobs, with everything for each */
+if ($action === 'myjobs') {
+    $who = trim((string) ($_GET['who'] ?? '')); if ($who === '' || !desk()) $who = $me;
+    $from = (new DateTime('today', new DateTimeZone(appTz())))->modify('-14 days')->format('Y-m-d');
+    $leads = leadsAll(); $list = [];
+    foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $who && $j['date'] >= $from) $list[] = jobShow($j, $leads);
+    usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
+    out(['ok' => true, 'who' => $who, 'jobs' => $list]);
+}
+/* done, from the crew (or the office): done or could not; what was collected */
+if ($action === 'jobdone') {
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = jobsAll();
+    if (!preg_match('/^j[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such job.', 404);
+    $j = $all[$id]; if ($j['crew'] !== $me && !desk()) fail('Not allowed.', 403);
+    $o = (string) ($body['outcome'] ?? ''); if (!in_array($o, ['done', 'could not', 'undo'], true)) fail('Say how it went.');
+    $note = $clean($body['note'] ?? '', 300); $got = (int) ($body['collected'] ?? 0);
+    $row = ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'note' => $note, 'collected' => max(0, $got), 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()];
+    if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
+    if ($o !== 'undo' && ($note !== '' || $o === 'could not')) appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 500), 'by' => $me, 'at' => time()]);
+    out(['ok' => true]);
+}
+function streetCaseServer(string $s): string { return (string) preg_replace_callback('/(^|[\s-])([a-z])/', fn($m) => $m[1] . strtoupper($m[2]), strtolower($s)); }
 /* ---- the walk desk (2026-10-14; Sixfold first, Matthew: "just a sixfold build atm") ----
  * The office (admins, and the office role) books a lead's or a door's walk with someone marked "Does walks" in Accounts.
  * The walk lands on that person's calendar with what they need for it (who, where, what they want, the notes), and their
