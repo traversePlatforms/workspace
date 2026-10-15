@@ -2416,7 +2416,7 @@ if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
 if (!defined('SIXFOLD_CLI') && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'schedview'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4173,7 +4173,27 @@ function jobShow(array $j, ?array $leads = null): array {
     }
     return $o;
 }
-if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone'], true) && !feature('walkdesk')) fail('Not here.', 404);
+if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'schedview'], true) && !feature('walkdesk')) fail('Not here.', 404);
+function schedPay(?array $p): string { $p = $p ?: ['s' => 'unpaid']; if ($p['s'] === 'deposit') return 'Deposit paid $' . (int) ($p['amt'] ?? 0); if ($p['s'] === 'paid') return 'Paid in full'; if ($p['s'] === 'plan') return 'Service plan'; return 'Not paid yet'; }
+/* the schedule, to look at only (2026-10-15, Matthew: Jen on a quote-only account "needs a way to view scheduling"; she "has a strong
+   attachment to that excel sheet"): each day's arrival times for each crew, booked / held / open, with the customer's name and town
+   only: no prices, phones, emails or streets, and nothing can be changed or downloaded from here */
+if ($action === 'schedview') {
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
+    if (!dateOk($from) || !dateOk($to) || $to < $from || strtotime($to) - strtotime($from) > 31 * 86400) fail('Pick the dates.');
+    $srcName = fn($s) => ['website' => 'Website', 'meta' => 'Facebook', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other', 'messenger' => 'Messenger', 'a365web' => 'Website'][$s] ?? '';
+    $leads = leadsAll(); $town = function ($lid, $addr) use ($leads) { $l = $leads[$lid] ?? null; if ($l && !empty($l['house']['town'])) return (string) $l['house']['town']; $p = array_map('trim', explode(',', (string) $addr)); return count($p) > 1 ? (string) end($p) : ''; };
+    $rows = [];
+    foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to)
+        $rows[] = ['date' => $j['date'], 'slot' => $j['slot'], 'crew' => $j['crew'], 'kind' => 'booked', 'name' => trim((string) ($leads[$j['lead']]['name'] ?? $j['title'] ?? '')) ?: 'A customer', 'town' => $town($j['lead'], $j['addr'] ?? ''),
+            'what' => (($j['pkg'] ?? 'full') === 'aerate' ? 'Aerate only' : (($j['pkg'] ?? '') === 'plan' ? 'Service plan' : 'Full')) . (($j['scope'] ?? 'all') === 'front' ? ', front yard only' : (($j['scope'] ?? 'all') === 'back' ? ', back yard only' : '')),
+            'pay' => schedPay($j['pay'] ?? null), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => !empty($j['card']) ? 'Card on file' : 'No card on file', 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
+    foreach (jobHolds($leads) as $h) if ($h['date'] >= $from && $h['date'] <= $to)
+        $rows[] = ['date' => $h['date'], 'slot' => $h['slot'], 'crew' => $h['crew'], 'kind' => 'held', 'name' => $h['name'], 'town' => $town($h['lead'], ''), 'what' => '', 'pay' => $h['paid'] ? 'Held: form sent, waiting to sign' : 'Held: offered with a quote', 'src' => $srcName((string) ($leads[$h['lead']]['src'] ?? '')), 'card' => '', 'done' => ''];
+    $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
+    out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
+}
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
 if ($action === 'jobs') {
     if (!desk()) fail('Not allowed.', 403);

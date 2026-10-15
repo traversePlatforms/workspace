@@ -1876,6 +1876,13 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qqcustbody{display:grid;gap:8px}.qqcustq{font:15px var(--sans);padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qqcustlist{display:grid;gap:8px;max-height:60vh;overflow:auto}.qqcrow{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
   .qqctop{display:grid;gap:1px}.qqctop small{color:var(--soft);font-size:12.5px}
+  .schedv{display:grid;gap:10px;max-width:1100px;margin:0 auto;padding:12px 16px}
+  .schednav{display:flex;justify-content:space-between;align-items:center;gap:8px}.schednav button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:700 13.5px var(--sans);cursor:pointer}
+  .schedonly{display:flex;gap:8px;align-items:center;font-size:14px}.schedonly input{width:18px;height:18px;accent-color:var(--accent)}
+  .schedwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .schedt{border-collapse:collapse;width:100%;font-size:14px;min-width:640px}.schedt th{position:sticky;top:0;background:var(--sunk);text-align:left;padding:8px 10px;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft)}
+  .schedt td{padding:7px 10px;border-top:1px solid var(--line);white-space:nowrap}.schedt tr.booked td{background:#eef6ea}.schedt tr.held td{background:#fff6e5}.schedt tr.open td:nth-child(4){color:var(--accent);font-weight:700}
+  .schedt tr.past td,.schedt tr.closed td{color:var(--soft)}.schedt tr.dayfirst td{border-top:2px solid var(--soft)}.schedt td.sdate{font-weight:700;white-space:pre-line;vertical-align:top}
   .qqsrc button{font-size:12.5px}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
@@ -5648,6 +5655,62 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (open) load(); else api('leads').then(function (j) { if (j && j.ok) { box._n = j.leads.filter(function (l) { return l.sign && l.status !== 'lost'; }).length; label(box._n); } }).catch(function () {});
     return box;
   }
+  /* the schedule, to look at (2026-10-15): one row per arrival time, like the spreadsheet she knows; booked, held or open; this week
+     and the next ones; nothing to change or download */
+  function schedView(wk) {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'sched'; foot.hidden = true; setDock(null);
+    var t0 = new Date(); var mon = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - ((t0.getDay() + 6) % 7));
+    wk = wk || isoOf(mon);
+    setBar('back', { title: 'Schedule', sub: 'Who is booked, and what is open', back: S.role === 'quote' ? function () { quickQuoteView(); } : chooseView, backLabel: S.role === 'quote' ? 'Quick quote' : 'Home' });
+    view.textContent = '';
+    var box = q('div', 'schedv');
+    var nav = q('div', 'schednav');
+    var pv = q('button', null, '\u2039 Week before'), nx = q('button', null, 'Week after \u203a'); pv.type = nx.type = 'button';
+    var end = jobAdd(wk, 6);
+    nav.appendChild(pv); nav.appendChild(q('b', null, dayName(wk) + ' \u2013 ' + dayName(end))); nav.appendChild(nx);
+    pv.addEventListener('click', function () { schedView(jobAdd(wk, -7)); }); nx.addEventListener('click', function () { schedView(jobAdd(wk, 7)); });
+    box.appendChild(nav);
+    var only = q('label', 'schedonly'), oc = q('input'); oc.type = 'checkbox'; oc.checked = !!S.schedOpenOnly; only.appendChild(oc); only.appendChild(q('span', null, 'Open times only')); box.appendChild(only);
+    var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
+    view.appendChild(box);
+    api('schedview', { params: { from: wk, to: end } }).then(function (j) {
+      hold.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j || !j.ok) { hold.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load the schedule.')); return; }
+      var draw = function () {
+        hold.textContent = '';
+        if (!j.crews.length) { hold.appendChild(q('div', 'msg', 'Nobody is on the schedule yet.')); return; }
+        var tb = q('table', 'schedt'), th = q('thead'), hr = q('tr');
+        ['Date', 'Time', 'Crew', 'Name', 'Details', 'Town', 'Service', 'Lead', 'Card'].forEach(function (h) { hr.appendChild(q('th', null, h)); }); th.appendChild(hr); tb.appendChild(th);   /* the columns of Randy's sheet, without price, address, phone or notes */
+        var bd = q('tbody'), today = todayISO(), n = 0;
+        for (var i = 0; i < 7; i++) {
+          var d = jobAdd(wk, i), closed = j.closed.indexOf(jobDow(d)) >= 0;
+          if (closed) { if (!S.schedOpenOnly) { var cr = q('tr', 'closed dayfirst'); cr.appendChild(q('td', null, dayName(d))); var cc = q('td', null, 'Closed'); cc.colSpan = 8; cr.appendChild(cc); bd.appendChild(cr); } continue; }
+          var firstOfDay = true;
+          j.crews.forEach(function (crew) {
+            var area = (j.days[d] || {})[crew] || '';
+            j.slots.forEach(function (s) {
+              var r = j.rows.filter(function (x) { return x.date === d && x.crew === crew && x.slot === s.k; })[0];
+              var past = d < today;
+              if (S.schedOpenOnly && (r || past)) return;
+              var tr = q('tr', (r ? r.kind : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
+              tr.appendChild(q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : '')); firstOfDay = false;   /* the date once per day, the crew's town under it, as in the sheet */
+              tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
+              if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(q('td', null, r.town || area)); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
+              else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
+              bd.appendChild(tr); n++;
+            });
+          });
+        }
+        tb.appendChild(bd);
+        if (!n) hold.appendChild(q('div', 'msg soft', 'No open times this week.')); else { var wrap = q('div', 'schedwrap'); wrap.appendChild(tb); hold.appendChild(wrap); }
+        hold.appendChild(q('div', 'ltrynote', 'Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. To look at only: Matthew books the jobs.'));
+      };
+      oc.addEventListener('change', function () { S.schedOpenOnly = oc.checked; draw(); });
+      draw();
+    }).catch(function () { hold.textContent = ''; hold.appendChild(q('div', 'msg', 'The schedule needs signal.')); });
+    window.scrollTo(0, 0);
+  }
   function quickQuoteView(typed) { hideSplash(); houseLookupView(null, null, typed, true); }   /* hideSplash: opened from the link or at sign-in, the logo screen stayed on top (2026-10-15) */
   function quickWhoBox() {
     var Q = S.qq || (S.qq = { name: '', phone: '', email: '' });
@@ -7478,7 +7541,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
-    if (S.role === 'quote') return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']]];
+    if (S.role === 'quote') return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
