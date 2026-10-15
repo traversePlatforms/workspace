@@ -4005,7 +4005,7 @@ if ($action === 'lawncheck') {
  * 1,000 sq ft (Bryce's range; CSU says 3 to 4 after aeration), more seed when the customer pays more. Costs and margins show once the
  * bag prices are filled in. Kept in a365-pricing.json beside the door files: the office reads it, an admin changes it; never public. */
 const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 399, 'power' => 0.5, 'seedLow' => 2, 'seedBase' => 3, 'seedHigh' => 4,
-    'seedBagCost' => 128.89, 'seedBagLb' => 50,   /* SiteOne Englewood invoice 2026-07-24: 6 x LESCO Tuf-Turf 50 lb, $773.34 with tax */
+    'seedBagCost' => 128.89, 'seedBagLb' => 50, 'seedName' => 'LESCO Tuf-Turf Seed Mixture',   /* SiteOne Englewood invoice 2026-07-24: 6 x LESCO Tuf-Turf 50 lb, $773.34 with tax */
     'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50,
     /* 2026-10-15 (Matthew): fertilizer from the bag (price per lb x the lb its label says covers the lawn), Jen picks the brand of the day;
        Bryce gave no rate per sq ft, only "$25 in fertilizer" on a $399 job. Travel: the drive from the storage at 333 W Hampden Ave,
@@ -4021,6 +4021,7 @@ const A365_FERTS = [
 function a365Pricing(): array {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     $o = A365_PRICING; if (is_array($j)) foreach ($o as $k => $v) if (array_key_exists($k, $j) && ($j[$k] === null || is_int($j[$k]) || is_float($j[$k]))) $o[$k] = $j[$k];
+    if (is_array($j) && is_string($j['seedName'] ?? null) && trim($j['seedName']) !== '') $o['seedName'] = trim($j['seedName']);   /* the seed in use, shown beside the fertilizer (2026-10-15) */
     $o['ferts'] = is_array($j) && !empty($j['ferts']) && is_array($j['ferts']) ? $j['ferts'] : A365_FERTS;
     if (is_array($j) && is_string($j['fertDefault'] ?? null)) $o['fertDefault'] = $j['fertDefault'];
     return $o;
@@ -4050,7 +4051,7 @@ function a365Gas(): ?array {
 if (in_array($action, ['a365pricing', 'a365pricingset', 'a365calc', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
 if ($action === 'a365pricing') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    if ($role === 'office' || $role === 'quote') { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])]]); }   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
+    if ($role === 'office' || $role === 'quote') { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'seedName' => $pp['seedName'], 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])]]); }   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     out(['ok' => true, 'pricing' => a365Pricing(), 'gas' => a365Gas(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
 }
@@ -4079,7 +4080,10 @@ if ($action === 'a365calc') {
         $fk = (string) ($_GET['fert'] ?? ''); $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $fk) $F = $f; if (!$F) foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null;
         if ($F && $F['coverSq'] > 0) { $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1); $fName = (string) $F['name']; }
     }
-    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive]);
+    /* what is left after seed, fertilizer and the drive, before paying the crew: the total only, never the parts (Matthew 2026-10-15) */
+    $cost = $drive + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0);
+    if ($fertLb > 0) foreach ($P['ferts'] as $f) if ($f['name'] === $fName && $f['bagLb'] > 0) $cost += $fertLb * $f['bagCost'] / $f['bagLb'];
+    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'left' => $price ? (int) round($price - $cost) : null]);
 }
 if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
@@ -4109,6 +4113,7 @@ if ($action === 'a365pricingset') {
         $p['ferts'] = $fl;
     }
     if (array_key_exists('fertDefault', $body)) $p['fertDefault'] = (string) $body['fertDefault'];
+    if (array_key_exists('seedName', $body)) { $sn = $clean($body['seedName'] ?? '', 80); if ($sn !== '') $p['seedName'] = $sn; }
     if (!in_array($p['fertDefault'], array_column($p['ferts'], 'k'), true)) $p['fertDefault'] = $p['ferts'][0]['k'];
     $p['_by'] = $me; $p['_at'] = time();
     if (@file_put_contents(DATA_DIR . '/a365-pricing.json', json_encode($p, JSON_PRETTY_PRINT), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
