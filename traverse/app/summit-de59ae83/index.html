@@ -4600,7 +4600,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             } else if (iso < todayISO()) { tx.appendChild(q('small', null, '—')); row.disabled = true; }
             else if ((j.holds || []).some(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })) {
               var hd2 = j.holds.filter(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })[0];
-              row.classList.add('held'); tx.appendChild(q('b', null, 'Held \u00b7 ' + hd2.name)); tx.appendChild(q('small', null, 'Offered with the quote; booked when they tap it'));
+              row.classList.add('held'); tx.appendChild(q('b', null, 'Held \u00b7 ' + hd2.name)); tx.appendChild(q('small', null, hd2.paid ? 'Deposit paid; waiting for them to sign' : 'Offered with the quote' + (hd2.until ? '; released ' + dayName(isoOf(new Date(hd2.until * 1000))) + ', ' + fmtTime(String(new Date(hd2.until * 1000).getHours()).padStart(2, '0') + ':' + String(new Date(hd2.until * 1000).getMinutes()).padStart(2, '0')) + ' if they don’t book' : '')));   /* the 72-hour hold (2026-10-15) */
               row.addEventListener('click', function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + hd2.lead; S.pipeFocus = hd2.lead; pipelineView(); });
             }
             else {

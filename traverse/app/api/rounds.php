@@ -1975,13 +1975,21 @@ function a365Day(string $date): string { return (new DateTime($date . ' 12:00', 
 /** the live job for a lead, if any */
 function jobForLead(string $lead): ?array { foreach (jobsAll() as $j) if ($j['lead'] === $lead && !$j['off']) return $j; return null; }
 /** day offers held on the board: a quoted lead's offered day, until it is booked, passes, or the lead is won or lost */
+/* a day offered with a quote (no deposit) is held 72 hours from when it was offered, then released (Matthew 2026-10-15); a day held after
+   the deposit was taken (the one-page form) stays held until the day, because that customer has paid */
+const OFFER_HOLD_SECS = 72 * 3600;
+function offerUntil(array $l): ?int {
+    $o = $l['quote']['offer'] ?? null; if (!is_array($o) || !empty($l['sign'])) return null;
+    return (int) ($o['at'] ?? ($l['quote']['at'] ?? 0)) + OFFER_HOLD_SECS;
+}
 function jobHolds(?array $leads = null): array {
     $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $out = [];
     $booked = []; foreach (jobsAll() as $j) if (!$j['off']) $booked[$j['lead']] = true;
     foreach (($leads ?? leadsAll()) as $l) {
         $o = $l['quote']['offer'] ?? null;
         if (!is_array($o) || $l['status'] !== 'quoted' || isset($booked[$l['id']]) || ($o['date'] ?? '') < $today) continue;
-        $out[] = ['lead' => $l['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot']];
+        $until = offerUntil($l); if ($until !== null && $until < time()) continue;   /* released after 72 hours */
+        $out[] = ['lead' => $l['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'], 'until' => $until, 'paid' => !empty($l['sign'])];
     }
     return $out;
 }
@@ -1995,6 +2003,7 @@ function slotFree(string $crew, string $date, string $slot, string $lead, string
 function offerLive(array $l): ?array {
     $o = $l['quote']['offer'] ?? null; if (!is_array($o)) return null;
     if (($o['date'] ?? '') < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') || !in_array($o['crew'] ?? '', walkerList(), true)) return null;
+    $until = offerUntil($l); if ($until !== null && $until < time()) return null;   /* the 72-hour hold has run out: the quote page asks them to say yes instead */
     return slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null ? $o : null;
 }
 if ($action === 'a365quote' || $action === 'a365accept') {
@@ -3761,7 +3770,7 @@ if ($action === 'leadquote') {
             if (in_array((int) (new DateTime($od . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
             if (!jobSlot($os)) fail('Pick an arrival time.');
             if ($why = slotFree($oc, $od, $os, $id)) fail($why, 409);
-            $q['offer'] = ['crew' => $oc, 'date' => $od, 'slot' => $os];
+            $q['offer'] = ['crew' => $oc, 'date' => $od, 'slot' => $os, 'at' => time()];   /* when it was offered: the 72-hour hold counts from here */
         }
     } elseif (is_array($prevOffer)) $q['offer'] = $prevOffer;
     $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
@@ -4703,7 +4712,7 @@ if ($action === 'signsend') {
     $q0 = is_array($L['quote'] ?? null) ? $L['quote'] : [];
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
-          'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot]];
+          'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
     $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
     $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
             'note' => mb_substr('Quoted $' . $price . ' by phone; deposit $' . $dep . ' taken (' . ucfirst($how) . '). Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
