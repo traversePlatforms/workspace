@@ -42,3 +42,7 @@ Sources:
 - <https://planttalk.colostate.edu/topics/lawns/1505-lawn-aeration/>
 - <https://extension.colostate.edu/topic-areas/yard-garden/renovating-the-home-lawn-7-241/>
 - UMass Amherst Extension, *Management of Compaction and Coring*
+
+## The customer quote page, /q/ (2026-10-14)
+
+Jen's quote text and email carry a private link (365aeration.com/q/?q=...). The page shows the first name, the street, what is included (Core aeration; Overseeding; Fertilizer) and the price, and takes a yes with days, time of day and a note. **No new claims:** the two tips under "Before we come" are the same wording as the home page (checked above). Left out on purpose: the lawn size, seed amounts and anything else we measured; Sixfold; a deposit ($50 is on Randy's sheet but not confirmed as a customer policy); how long a quote stays valid (no policy set); payment methods. The page is noindex and has no tracking. Test: ptest/cquote-test.mjs, 23/23.

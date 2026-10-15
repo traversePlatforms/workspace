@@ -85,6 +85,7 @@ He pays **by the sale, not by the yard** (52:36–54:24):
 ## 3. Seed and fertilizer
 
 - **What Sixfold paid** (said in the meeting): **6 bags of fescue for $773** from **Arkansas Valley Seed**, about $129 a bag. SiteOne was about $200 a bag (1:01:47–1:02:01). A bag of fescue was also quoted at about $140; Bryce gets his for about $120 by the pallet (1:01:21–1:01:41).
+  - **Corrected 2026-10-14 from the receipt Brad sent (photo, not kept in the repo):** the $773 was **SiteOne Landscape Supply, Englewood (2197 W College Ave)**, invoice dated 2026-07-24: 6 × **LESCO Tuf-Turf Seed Mixture, 50 lb** at $119.29 a bag = $715.72 + $57.62 tax = **$773.34** ($128.89 a bag with tax). Not Arkansas Valley Seed, and not $200 a bag at SiteOne. **It was sold to Bryce's company account** (Year Round Aeration and Seeding, Tomball TX; customer contact Bryce Bidegain), so $119.29 may be his account price. Ask SiteOne what Sixfold or 365 would pay on its own account.
 - **Negotiate volume.** In season he goes through **2,000 lb of seed a week**. Ask for weekly pallets and delivery (1:02:05–1:02:20). His Bermuda costs him $220–250 against $500 retail.
 - **Fertilizer:** a SiteOne rep offered to negotiate the price for Sixfold, and someone owes that rep a call (1:02:50–1:02:59).
 - **Phosphorus:** Matthew raised Colorado's clay soils, high phosphorus and a zero-phosphorus blend like 14-0-14. Bryce uses one fertilizer all year and says the new seed uses it anyway (2:42–3:37). **Not verified;** check CSU guidance before it goes into any advice.
