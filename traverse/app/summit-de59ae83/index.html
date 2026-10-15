@@ -1873,6 +1873,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   @media (max-width:560px){.qqrow{grid-template-columns:1fr}}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
+  .sendnote{font-size:12px;color:var(--soft);line-height:1.4}
   .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
   .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
@@ -4764,6 +4765,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if ((r.errors || []).length) { box.appendChild(q('div', 'dwh', 'Not moved')); r.errors.forEach(function (e) { box.appendChild(q('div', 'err', e)); }); }
     box.appendChild(q('div', 'dwh', 'Send each one'));
     box.appendChild(q('div', 'ltrynote', 'Each text and email opens on this phone, filled in. Nothing is sent until you press send. The crew already has the new days.'));
+    box.appendChild(q('div', 'ltrynote sendnote', 'Text opens the Messages app on this device; on a computer it only works if the computer is linked to a phone (an iPhone with a Mac, or Phone Link on Windows). Email opens the email app set up on this device. If either does not open, send it from your phone.'));
     (r.moved || []).forEach(function (m) {
       var row = q('div', 'jwxrow');
       row.appendChild(q('b', null, m.name || m.phone || 'Customer'));
@@ -5083,6 +5085,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); row.appendChild(a); }
     if (lead.email) { var e = q('a', 'sendmail'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your agreement with ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email it')); row.appendChild(e); }
     box.appendChild(row);
+    addSendNote(box, row);
     var cp = q('button', 'lnk', 'Copy the link'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); box.appendChild(cp);
     var pv = q('a', 'lnk', 'See the form \u203a'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; box.appendChild(pv);
     box.appendChild(q('div', 'ltrynote', 'The text and email open here, filled in, from your own number or email. Nothing is sent until you press send.'));
@@ -5150,6 +5153,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. Here is the link to pay the ' + money0(j.amt) + ' balance for your aeration: ' + j.url + ' Thank you!';
           if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); out.appendChild(a); }
           if (L && L.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(L.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your balance with ' + B.name) + '&body=' + encodeURIComponent(msg); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); out.appendChild(e); }
+          var sn = sendNote(out); if (sn) out.appendChild(sn);
           var op = q('a', 'lnk', 'Open the pay page \u203a'); op.href = j.url; op.target = '_blank'; op.rel = 'noopener'; out.appendChild(op);
         }).catch(function () { mk.disabled = false; toast('No signal', 'Try again.', null); });
       });
@@ -5588,6 +5592,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var Q = S.qq || {}, B = leadBrand({ src: 'a365web', name: Q.name }), first = greetName(Q.name), dep = Math.ceil(st.cur.price / 2);
     return 'Hi' + (first ? ' ' + first : '') + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
   }
+  /* under Text and Email buttons: what they open, and what to do when that does not work (Matthew 2026-10-15) */
+  function sendNote(el) {
+    var hasT = !!el.querySelector('a[href^="sms:"]'), hasM = !!el.querySelector('a[href^="mailto:"]');
+    if (!hasT && !hasM) return null;
+    return q('div', 'ltrynote sendnote', [hasT ? 'Text opens the Messages app on this device and sends from its number. On a computer it only works if the computer is linked to a phone (an iPhone with a Mac, or Phone Link on Windows); if not, copy the text and send it from your phone.' : '',
+      hasM ? 'Email opens the email app set up on this device (Outlook, Mail or the Gmail app). If none is set up, copy the text and paste it into an email.' : ''].filter(Boolean).join(' '));
+  }
+  function addSendNote(parent, el) { var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
   function houseLookupView(lead, open, typed, quick) {
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
@@ -6015,7 +6027,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }
           if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
-          row.appendChild(ms); acts.appendChild(row);
+          row.appendChild(ms); acts.appendChild(row); addSendNote(acts, row);
           if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
           if (lk && wdOn()) {   /* the day offered (2026-10-14): one tap on their page books it */
             var ob = q('div', 'qoffer');
@@ -6046,7 +6058,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var Qx = S.qq || {}, tl = digits(Qx.phone), ct = q('div', 'lcontact');
           if (tl.length >= 10) { var sa = q('a'); sa.href = 'sms:' + tl + '?&body=' + encodeURIComponent(quickCustomerText(h, st)); sa.appendChild(ico('chat', 2.2)); sa.appendChild(document.createTextNode('Text it to them')); ct.appendChild(sa); }
           if (Qx.email) { var ea = q('a'); ea.href = 'mailto:' + encodeURIComponent(Qx.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + ((CO.a365 && CO.a365.name) || '')) + '&body=' + encodeURIComponent(quickCustomerText(h, st)); ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode('Email it')); ct.appendChild(ea); }
-          if (ct.children.length) acts.appendChild(ct);
+          if (ct.children.length) { acts.appendChild(ct); addSendNote(acts, ct); }
           acts.appendChild(q('div', 'ltrynote', 'The summary has our figures, for your own notes. The customer\u2019s text carries the price only. Nothing here is saved in the app.'));
         }
         if (S.role === 'admin') { var pr = q('button', 'lnk', 'Pricing settings ›'); pr.type = 'button'; pr.addEventListener('click', function () { a365PricingView(); }); acts.appendChild(pr); }
