@@ -4844,9 +4844,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     pre = pre || {};
     var OFFER = !!pre.offer;   /* offer mode (2026-10-14): only the crew, day and time, saved on the quote */
     var SIGN = !!pre.sign;   /* the phone quote said yes (2026-10-14): price, half as deposit, the day, then the one-page form */
-    var back = SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
+    var back = SIGN && S.role === 'quote' ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
-    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: OFFER || SIGN ? 'Pipeline' : 'Jobs' });
+    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && S.role === 'quote' ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
@@ -5017,6 +5017,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         areaLine.appendChild(q('b', null, area || 'not set'));
         var ch = q('button', 'lnk', area ? 'Change' : 'Set it'); ch.type = 'button';
         ch.addEventListener('click', function () { jobAreaAsk(P.date, P.crew, area, function () { loadWeek(); }); });
+        if (S.role === 'quote') ch.hidden = true;   /* the crew's town is set by the office */
         areaLine.appendChild(ch);
       }
       W.data.slots.forEach(function (s) {
@@ -5586,7 +5587,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      price only, never our figures). Not on our lists: quote by the lawn size they give. Its own link: ./?quote */
   /* the Quick quote's yes (2026-10-15, Matthew: "how can she send over the document, can she do it from the quote builder"): it becomes
      a lead (or uses theirs, by phone or email), with the house and this quote, then the same deposit and one-page form as the Pipeline */
-  function quickCanBook() { return !!CO.a365 && wdOn() && (asOffice() || S.role === 'admin'); }
+  function quickCanBook() { return !!CO.a365 && feat('walkdesk') && (asOffice() || S.role === 'admin' || S.role === 'quote'); }   /* quote-only accounts book too (Matthew 2026-10-15) */
   function quickToLead(h, st, btn) {
     var Q = S.qq || {};
     if (!Q.name || !(digits(Q.phone).length >= 10 || Q.email)) { toast('Who is it for?', 'Add their name and a phone number or email at the top first.', null); window.scrollTo(0, 0); var i0 = document.querySelector('.qqwho input'); if (i0) i0.focus(); return; }
@@ -5599,7 +5600,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'Could not add the lead.');
       id = r.id;
-      return h && h.region && h.id ? api('leadhouse', { body: { id: id, region: h.region, door: h.id } }) : { ok: true };
+      if (r.had && !had) { had = true; return api('leadcontact', { body: { id: id, name: Q.name, phone: Q.phone || '', email: Q.email || '' } }).then(function (c) { if (c && c.changed && c.changed.length) had = 'updated'; return { ok: true, id: id }; }); }
+      return r;
+    }).then(function (r) {
+      return h && h.region && h.id ? api('leadhouse', { body: { id: id, region: h.region, door: h.id } }) : { ok: true };   /* (id set above) */
     }).then(function () {
       return api('leadquote', { body: { id: id, price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false } });
     }).then(function (qj) {

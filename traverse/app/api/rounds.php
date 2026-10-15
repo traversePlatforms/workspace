@@ -442,6 +442,8 @@ function geoDevice(string $who, string $acctId, string $role): void {
         adminAlert($who . ' signed in on a new device', $dev . ' · ' . ($p ? $p['place'] : 'place unknown'), 'geodev-' . $acctId);
     }
 }
+/** a lead the signed-in quote-only person made, or took on by phone or email (2026-10-15) */
+function qMine(array $l): bool { global $me; return (string) ($l['by'] ?? '') === $me || in_array($me, (array) ($l['qown'] ?? []), true); }
 function deviceName(): string {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
     if (stripos($ua, 'iPad') !== false) return 'iPad';
@@ -2416,7 +2418,11 @@ if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
 if (!defined('SIXFOLD_CLI') && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate'], true))   /* the schedule was taken back off this account (Matthew 2026-10-15: she gets one with the full app) */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true)) {   /* only her own leads (2026-10-15) */
+    $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
+    if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
+}
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs'], true))   /* the schedule was taken back off this account (Matthew 2026-10-15: she gets one with the full app) */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -3717,6 +3723,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
+        if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
         if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job', 'facts', 'terms']));
@@ -3934,7 +3941,7 @@ if ($action === 'a365house') {
 /* change a lead's name, phone or email (2026-10-15: the Quick quote reused a lead by its phone number and sent the form to its old email);
    what changed goes on the lead as a note */
 if ($action === 'a365mailsigned') {   /* "Email them the signed copy" on a signed lead */
-    if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
+    if (!feature('walkdesk') || (!desk() && $role !== 'quote') || !$isPost) fail('Not allowed.', 403);
     $l = leadsAll()[(string) ($body['id'] ?? '')] ?? null;
     if (!$l || empty($l['signed']) || empty($l['sign'])) fail('This lead has no signed form.', 404);
     $sg = $l['signed'] + ['facts' => [], 'terms' => []];
@@ -3943,7 +3950,7 @@ if ($action === 'a365mailsigned') {   /* "Email them the signed copy" on a signe
     out(['ok' => true, 'to' => $r['to']]);
 }
 if ($action === 'leadcontact') {
-    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!feature('walkdesk') || (!desk() && $role !== 'quote')) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
@@ -3960,7 +3967,7 @@ if ($action === 'leadcontact') {
     out(['ok' => true, 'changed' => array_keys($ch)]);
 }
 if ($action === 'leadhouse' || $action === 'leadask') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && !($role === 'quote' && $action === 'leadhouse')) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
@@ -4110,7 +4117,7 @@ if ($action === 'a365pricingset') {
 }
 /* a quote kept on the lead; "sent" also moves an open lead to Quoted */
 if ($action === 'leadquote') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
@@ -4196,7 +4203,7 @@ if ($action === 'schedview') {
 }
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
 if ($action === 'jobs') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from) || !dateOk($to) || $to < $from) fail('Pick the dates.');
     if (strtotime($to) - strtotime($from) > 62 * 86400) fail('Ask for two months at most.');
@@ -4205,6 +4212,10 @@ if ($action === 'jobs') {
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     $holds = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] >= $from && $h['date'] <= $to));
+    if ($role === 'quote') {   /* the day picker only: a taken time, never whose or for how much (2026-10-15) */
+        $list = array_map(fn($j) => ['id' => $j['id'], 'date' => $j['date'], 'crew' => $j['crew'], 'slot' => $j['slot'], 'slotLabel' => $j['slotLabel'] ?? '', 'title' => 'Booked', 'who' => ['name' => 'Booked'], 'price' => 0, 'pkg' => 'full', 'scope' => 'all', 'pay' => ['s' => 'unpaid'], 'card' => false, 'done' => null, 'lead' => qMine($leads[$j['lead']] ?? []) ? $j['lead'] : ''], $list);
+        $holds = array_map(fn($h) => qMine($leads[$h['lead']] ?? []) ? $h : ['lead' => '', 'name' => 'Held', 'crew' => $h['crew'], 'date' => $h['date'], 'slot' => $h['slot'], 'until' => $h['until'], 'paid' => $h['paid']], $holds);
+    }
     out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
 }
 /* each crew's area for a day ("the town of the day" in Randy's sheet) */
@@ -4982,10 +4993,11 @@ if ($action === 'pushcron') {
 }
 
 if ($action === 'leads') {
-    if (!desk() && $role !== 'manager') fail('Not allowed.', 403);
+    if (!desk() && $role !== 'manager' && $role !== 'quote') fail('Not allowed.', 403);
     $leads = leadsAll();
+    if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l));   /* her own customers only */
     /* a manager sees the leads nobody owns yet and their own team's */
-    if (!desk()) $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
+    if (!desk() && $role === 'manager') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
@@ -4994,7 +5006,14 @@ if ($action === 'leads') {
 }
 
 if ($action === 'leadadd') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if ($role === 'quote') {
+        $qd = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $qe = strtolower(trim((string) ($body['email'] ?? '')));
+        foreach (leadsAll() as $ex) if ($ex['status'] !== 'lost' && ((strlen($qd) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ex['phone'] ?? '')), -10) === $qd) || ($qe !== '' && strtolower((string) ($ex['email'] ?? '')) === $qe))) {
+            if (!qMine($ex)) appendLine(leadsDir() . '/leadst.log', ['id' => $ex['id'], 'qown' => $me, 'note' => 'Taken on by ' . $me . ' in the Quick quote.', 'by' => $me, 'at' => time()]);
+            out(['ok' => true, 'id' => $ex['id'], 'had' => true]);
+        }
+    }
     if (!$isPost) fail('POST required', 405);
     $src = (string) ($body['src'] ?? '');
     if (!in_array($src, LEAD_SRC, true) || $src === 'website' || $src === 'a365web') fail('Pick where the lead came from.');
@@ -5186,7 +5205,7 @@ if ($action === 'leadoutcome') {
     out(['ok' => true, 'status' => $row['status']]);
 }
 if ($action === 'signsend') {
-    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!feature('walkdesk') || (!desk() && $role !== 'quote')) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
@@ -5237,7 +5256,7 @@ if ($action === 'squarecheck') {
     if (!squareCfg()) fail('Square is not connected yet.');
     $lid = (string) ($body['lead'] ?? ''); $jid = (string) ($body['job'] ?? '');
     if ($lid !== '') {
-        if (!desk()) fail('Not allowed.', 403);
+        if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
         $l = leadsAll()[$lid] ?? null; if (!$l || ($l['sign']['how'] ?? '') !== 'link') fail('No Square link on this lead.', 404);
         out(['ok' => true, 'paid' => a365DepositPaid($l)]);
     }
