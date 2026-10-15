@@ -5560,7 +5560,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      No lead in the app needed: the customer's name, number and email (kept on this screen only, never saved), the address, the house
      and the whole quote; then copy a summary for Monday, ClickUp or wherever she keeps her leads, and a text for the customer (the
      price only, never our figures). Not on our lists: quote by the lawn size they give. Its own link: ./?quote */
-  function quickQuoteView(typed) { houseLookupView(null, null, typed, true); }
+  function quickQuoteView(typed) { hideSplash(); houseLookupView(null, null, typed, true); }   /* hideSplash: opened from the link or at sign-in, the logo screen stayed on top (2026-10-15) */
   function quickWhoBox() {
     var Q = S.qq || (S.qq = { name: '', phone: '', email: '' });
     var w = q('div', 'lwho qqwho'); w.appendChild(q('div', 'dwh', 'Who it\u2019s for (optional, not saved)'));
