@@ -98,10 +98,18 @@
     if (A.moved) { var mv = el('div', 'card ok'); mv.appendChild(el('h2', null, 'Your day has moved')); mv.appendChild(el('p', 'big', A.moved.day + (A.moved.arrive ? ', arriving ' + A.moved.arrive : '') + '.')); mv.appendChild(el('p', 'muted', 'We moved it for the weather. The agreement below shows the day it was first set for. Questions? Call or text (720) 830-4553.')); main.appendChild(mv); }   /* 2026-10-15 */
     main.appendChild(details(A)); main.appendChild(terms(A));
     if (A.signed) { main.appendChild(signedCard(A.signed, null)); return; }
+    if (A.pay && !A.pay.paid && A.pay.url) {   /* the deposit by Square: pay first, then sign (2026-10-15) */
+      var pc = el('div', 'card noprint'); pc.appendChild(el('h2', null, 'Pay your deposit'));
+      pc.appendChild(el('p', null, 'Pay the $' + A.pay.amount + ' deposit by card on Square’s secure page. You come straight back here to sign.'));
+      var pb = el('a', 'btn', 'Pay $' + A.pay.amount + ' deposit'); pb.href = A.pay.url; pc.appendChild(pb);
+      var rf = el('button', 'btn ghost', 'I paid: refresh'); rf.type = 'button'; rf.addEventListener('click', function () { location.reload(); }); pc.appendChild(rf);
+      main.appendChild(pc);
+    } else if (A.pay && A.pay.paid) { var ok = el('div', 'card ok'); ok.appendChild(el('h2', null, 'Deposit paid')); ok.appendChild(el('p', 'muted', 'Thank you. $' + A.pay.amount + ' received by Square. Now sign below.')); main.appendChild(ok); }
     var c = el('div', 'card noprint'); c.appendChild(el('h2', null, 'Sign'));
     var nl = el('label', 'name', 'Type your full name'); var ni = el('input'); ni.autocomplete = 'name'; ni.maxLength = 120; nl.appendChild(ni); c.appendChild(nl);
     var boxes = (A.consents && A.consents.length ? A.consents : [A.consent]).map(function (t) { var al = el('label', 'agree'); var ai = el('input'); ai.type = 'checkbox'; al.appendChild(ai); al.appendChild(el('span', null, t)); c.appendChild(al); return ai; });   /* v2: read and agree, and sign electronically */
     var go = el('button', 'btn', 'Sign'); go.type = 'button'; c.appendChild(go);
+    if (A.pay && !A.pay.paid) { go.disabled = true; c.appendChild(el('p', 'muted', 'Signing opens once the deposit is paid.')); }
     var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
     go.addEventListener('click', function () {
       err.textContent = '';

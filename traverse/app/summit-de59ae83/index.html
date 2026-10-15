@@ -1858,6 +1858,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qsteps button{min-height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);padding:0 14px;cursor:pointer}
   .qsteps input{flex:1;min-width:120px;font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qdetail{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
+  .sqbox{display:grid;gap:8px}.sqbox:empty{display:none}
   .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
   .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
@@ -4560,9 +4561,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function jobDow(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getDay(); }
   function jobName(j) { return j.who ? (j.who.name || j.who.phone || j.title) : j.title; }
   function jobWhen(j) { return dayName(j.date) + ', arrive ' + j.slotLabel; }
+  /* Square (SX-58, 2026-10-15): connected or not, asked once */
+  function sqState(then) { if (S.sq) return then(S.sq); api('squarestate').then(function (j) { S.sq = j && j.ok ? { on: !!j.on, env: j.env } : { on: false }; then(S.sq); }).catch(function () { then({ on: false }); }); }
   function jobPayText(j) {
     var p = j.pay || { s: 'unpaid' };
-    if (p.s === 'deposit') return 'Deposit $' + p.amt + ' paid' + (p.how ? ' (' + JOB_HOW[p.how] + ')' : '');
+    if (p.s === 'deposit') return 'Deposit $' + p.amt + ' paid' + (p.how ? ' (' + (JOB_HOW[p.how] || p.how) + ')' : '');
     if (p.s === 'paid') return 'Paid in full' + (p.how ? ' (' + JOB_HOW[p.how] + ')' : '');
     return JOB_PAY[p.s] || 'Not paid yet';
   }
@@ -4910,11 +4913,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       depBox.appendChild(q('div', 'dwsub', 'How they paid the deposit'));
       var hr = q('div', 'dwlen'); depBox.appendChild(hr);
       if (!P.how) P.how = 'square';
-      chips(hr, JOB_HOW, function () { return P.how; }, function (k) { P.how = k; });
+      var howMap = JOB_HOW, howRow = hr;
+      var drawHow = function () { howRow.textContent = ''; chips(howRow, howMap, function () { return P.how; }, function (k) { P.how = k; paint(); }); };
+      sqState(function (sq) {   /* SX-58: they pay on the form, by Square link */
+        if (!sq.on) return;
+        howMap = { link: 'Square link on the form' + (sq.env === 'sandbox' ? ' (test)' : '') }; for (var k in JOB_HOW) howMap[k] = JOB_HOW[k];
+        if (!(SIGN && lead.sign)) P.how = 'link';
+        drawHow(); if (typeof paint === 'function') paint();
+      });
+      drawHow();
       takenBtn = q('button', 'jtaken', ''); takenBtn.type = 'button'; takenBtn.setAttribute('aria-pressed', 'false');
       takenBtn.addEventListener('click', function () { takenBtn.setAttribute('aria-pressed', String(takenBtn.getAttribute('aria-pressed') !== 'true')); });
       depBox.appendChild(takenBtn);
-      var paint = function () { var p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p / 2); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = d; depTxt.textContent = p ? (d === half ? 'Deposit is half: ' : 'Deposit changed from half (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
+      var paint = function () { takenBtn.hidden = P.how === 'link'; var p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p / 2); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = d; depTxt.textContent = p ? (d === half ? 'Deposit is half: ' : 'Deposit changed from half (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
       dPrice.addEventListener('input', paint); paint();
       box.insertBefore(q('div', 'dwh', 'Deposit'), nl); box.insertBefore(depBox, nl);
     }
@@ -4999,7 +5010,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (SIGN) {
         var sp = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0;
         if (sp < 1) { err.textContent = 'Type the price you quoted.'; return; }
-        if (takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
+        if (P.how !== 'link' && takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
         if (S.depNow > sp) { err.textContent = 'The deposit cannot be more than the price.'; return; }
         sv.disabled = true;
         api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, pkg: P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb } }).then(function (j) {
@@ -5049,7 +5060,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = String(S.me || '').split(' ')[0];
-    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your one-page agreement to sign: ' + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + SLOT_SAY[x.slot] + '), the price and the ' + money0(j.deposit) + ' deposit you paid.' + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
+    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your one-page agreement to sign: ' + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + SLOT_SAY[x.slot] + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page before you sign.' : 'the ' + money0(j.deposit) + ' deposit you paid.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
     box.appendChild(q('div', 'dwh', 'The form is ready'));
     box.appendChild(q('div', null, money0(x.price) + ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) + ' \u00b7 ' + dayName(x.date) + ', ' + SLOT_LABEL[x.slot] + '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.'));
     var row = q('div', 'lcontact');
@@ -5101,11 +5112,40 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     fact('Price', money0(jb.price));
     fact('Payment', jobPayText(jb));
     fact('Collect', jobCollect(jb));
+    var sqBox = q('div', 'sqbox'); c.appendChild(sqBox);   /* SX-58: a Square pay link for the balance (filled below the facts) */
     if (jb.seedLb) fact('Seed', jb.seedLb + ' lb');
     if (jb.fertLb) fact('Fertilizer', jb.fertLb + ' lb');
     if (H && H.lawn && H.lawn.sq) fact('Our lawn estimate', 'about ' + Number(H.lawn.sq).toLocaleString(LOCALE) + ' sq ft');
     if (L) fact('Came from', LEAD_SRC[L.src] || L.src);
     c.appendChild(facts);
+    c.insertBefore(sqBox, facts.nextSibling);
+    sqState(function (sq) {
+      var owe0 = (jb.pay && (jb.pay.s === 'paid' || jb.pay.s === 'plan')) ? 0 : jb.price - ((jb.pay && jb.pay.s === 'deposit' && jb.pay.amt) || 0);
+      if (!sq.on || !CO.a365 || owe0 < 1) return;
+      sqBox.appendChild(q('div', 'dwh', 'Pay link for the balance' + (sq.env === 'sandbox' ? ' (test)' : '')));
+      var tel = digits(L && L.phone), first = greetName(L && L.name), B = leadBrand({ src: L && L.src, name: L && L.name });
+      var mk = q('button', 'save jbook', jb.sqlink ? 'Text the pay link again (' + money0(jb.sqlink.amt) + ')' : 'Make a pay link for ' + money0(owe0)); mk.type = 'button';
+      var out = q('div', 'lcontact');
+      mk.addEventListener('click', function () {
+        mk.disabled = true;
+        api('jobpaylink', { body: { id: jb.id } }).then(function (j) {
+          mk.disabled = false;
+          if (!j.ok) { toast('No pay link', j.error || 'Try again.', null); return; }
+          jb.sqlink = { url: j.url, amt: j.amt }; out.textContent = '';
+          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. Here is the link to pay the ' + money0(j.amt) + ' balance for your aeration: ' + j.url + ' Thank you!';
+          if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); out.appendChild(a); }
+          if (L && L.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(L.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your balance with ' + B.name) + '&body=' + encodeURIComponent(msg); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); out.appendChild(e); }
+          var op = q('a', 'lnk', 'Open the pay page \u203a'); op.href = j.url; op.target = '_blank'; op.rel = 'noopener'; out.appendChild(op);
+        }).catch(function () { mk.disabled = false; toast('No signal', 'Try again.', null); });
+      });
+      sqBox.appendChild(mk); sqBox.appendChild(out);
+      if (jb.sqlink) {
+        var ck = q('button', 'lnk', 'Check if it was paid'); ck.type = 'button';
+        ck.addEventListener('click', function () { api('squarecheck', { body: { job: jb.id } }).then(function (j) { if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid', 'The balance was paid by Square.', null); if (redraw) redraw(); } else toast('Not paid yet', 'Square has no payment on the link yet.', null); }).catch(function () { toast('No signal', 'Try again.', null); }); });
+        sqBox.appendChild(ck);
+      }
+      sqBox.appendChild(q('div', 'ltrynote', 'They pay by card on Square\u2019s page; it opens on their phone. The job shows paid once Square has it.'));
+    });
     if (H && H.region) c.appendChild(lawnCheckBox(H.region, H.id, H.lawn && H.lawn.sq));   /* Brad checks our measurement on the day */
     if (jb.note) { c.appendChild(q('div', 'dwh', 'Notes from ' + jb.by)); c.appendChild(q('div', 'lmsg', jb.note)); }
     if (L && L.notes && L.notes.length) {
@@ -5339,10 +5379,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var g = l.sign, d = q('div', 'qline' + (l.signed ? ' qyes' : ''));
     var o = l.quote && l.quote.offer;
     d.appendChild(document.createTextNode(l.signed ? 'Signed by ' + l.signed.name + ', ' + ago(l.signed.at) + (l.signed.job ? ' \u00b7 job booked' : ' \u00b7 the day was taken: set a new one on the Jobs board')
-      : 'Form sent ' + ago(g.at) + ', waiting for them to sign \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + SLOT_LABEL[o.slot] + ' with ' + o.crew : '')));
+      : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + SLOT_LABEL[o.slot] + ' with ' + o.crew : '')));
     var row = q('div', 'qlinks');
     var a = q('a', 'lnk', l.signed ? 'Their signed form \u203a' : 'Their form \u203a'); a.href = g.link; a.target = '_blank'; a.rel = 'noopener'; row.appendChild(a);
     if (!l.signed) { var r = q('button', 'lnk', 'Change or send again'); r.type = 'button'; r.addEventListener('click', function () { signSendView(l, null); }); row.appendChild(r); }
+    if (!l.signed && g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order)) {   /* SX-58: ask Square now */
+      var ck = q('button', 'lnk', 'Check the payment'); ck.type = 'button';
+      ck.addEventListener('click', function () { ck.disabled = true; api('squarecheck', { body: { lead: l.id } }).then(function (j) { ck.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { l.sqpaid = { order: g.pay.order }; toast('Deposit paid', money0(g.deposit) + ' by Square', null); var nw = signLine(l); w.replaceWith(nw); } else toast('Not paid yet', 'Square has no payment on the link yet.', null); }).catch(function () { ck.disabled = false; toast('No signal', 'Try again.', null); }); });
+      row.appendChild(ck);
+    }
     var w = q('div'); w.appendChild(d); w.appendChild(row); return w;
   }
   function signSendView(l, pre) { pre = pre || {}; pre.sign = true; jobBookView(l, null, pre); }
