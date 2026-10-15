@@ -2129,7 +2129,7 @@ if ($action === 'a365lead') {
  * of the lead, so the same link always shows that lead's latest quote; a yes counts only for the price it was given to. */
 function a365QuoteKey(string $id): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365quote|' . $id, $sessionKey), 0, 16); }
 function a365QuoteLink(string $id): string { return 'https://365aeration.com/q/?q=' . $id . '-' . a365QuoteKey($id); }
-function a365Arrive(string $slot): string { return ['s1' => 'between 9:30 and 10:00', 's2' => 'around 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; }
+function a365Arrive(string $slot): string { return ['s1' => 'between 9:30 and 10:00', 's2' => 'between 10:00 and 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; }
 function a365Day(string $date): string { return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); }
 /** the live job for a lead, if any */
 function jobForLead(string $lead): ?array { foreach (jobsAll() as $j) if ($j['lead'] === $lead && !$j['off']) return $j; return null; }
@@ -4158,7 +4158,7 @@ if ($action === 'leadquote') {
  * where the lead came from; Sunday closed; the month's total at the top. Here: jobs.log beside the door files (append-only like the
  * walks; a booking line carries every field, later lines change it), jobdays.json for each crew's area of the day. The crew are the
  * people marked "Does walks"; each job goes on their calendar and their phones get an alert. Only where the walk desk is on. */
-function jobSlots(): array { return [['s1', '9:30-10:00', '09:30'], ['s2', '12:00', '12:00'], ['s3', '12-2', '12:00'], ['s4', '3:00', '15:00']]; }   /* functions, not consts: the calendar feed runs above this line */
+function jobSlots(): array { return [['s1', '9:30-10:00', '09:30'], ['s2', '10-12', '10:00'], ['s3', '12-2', '12:00'], ['s4', '3:00', '15:00']]; }   /* functions, not consts: the calendar feed runs above this line */
 function jobClosed(): array { return [0]; }   /* Sunday */
 function jobsAll(): array {
     $o = [];

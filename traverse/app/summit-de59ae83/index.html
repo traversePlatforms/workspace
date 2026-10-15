@@ -1807,8 +1807,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .hcheck{margin-top:6px;display:grid;gap:6px}.hcheck input{font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
   /* the 365 office (2026-10-14): its colours, its home, the two-pane Pipeline */
   body.a365{--bar:#21451f;--bar-soft:#b9cfb3;--ember:#4c9a3f;--ember-ink:#2e5e2c;--on-ember:#fff;--accent:#2e5e2c;--booked:#2e7a3c;--go:#2e5e2c;--moss-ink:#2e5e2c}
-  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317}}
-  :root[data-theme="dark"] body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317;--ember-ink:#9ccc8c;--moss-ink:#9ccc8c;--go:#7fc195;--on-go:#0a1a10;--ember:#5aa84b;--on-ember:#0a1a10}}   /* 2026-10-15: every green readable on dark (buttons, the price, the lines) */
+  :root[data-theme="dark"] body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317;--ember-ink:#9ccc8c;--moss-ink:#9ccc8c;--go:#7fc195;--on-go:#0a1a10;--ember:#5aa84b;--on-ember:#0a1a10}
   .a365mk{width:38px;height:38px;display:block;border-radius:50%}.a365mk.dn{width:30px;height:30px}
   body.owide .wrap{max-width:1240px}
   .ohome{display:grid;gap:18px}
@@ -1897,7 +1897,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
   .qacts .lnk{background:none;border:0;color:var(--accent);font:700 14px var(--sans);padding:8px 4px;cursor:pointer;text-align:left}
   .qline{margin-top:8px;font-size:13.5px;font-weight:700;color:var(--ember-ink)}
-  .qline.qyes,small.qyes{color:#2f5d2c}.qacts .qpage{text-decoration:none}
+  .qline.qyes,small.qyes{color:var(--booked)}.qacts .qpage{text-decoration:none}
   .qoffer{display:grid;gap:6px;justify-items:start}
   /* a lead's house on its card (2026-10-14) */
   .ldetails{display:grid;gap:4px;margin-top:6px}
@@ -1929,7 +1929,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .loutmore label{display:grid;gap:4px;font-size:13px}
   .qlinks{display:flex;gap:10px;flex-wrap:wrap}.qlinks .lnk{background:none;border:0;color:var(--accent);font:700 13.5px var(--sans);padding:4px 0;cursor:pointer;text-decoration:none}
   .jdep{display:grid;gap:8px}.jdep input{font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);max-width:180px}
-  .jdeptxt{font-weight:700;color:#2f5d2c}
+  .jdeptxt{font-weight:700;color:var(--booked)}
+  .jform .lnk{background:none;border:0;padding:6px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;text-align:left;text-decoration:none;justify-self:start}
   .jtaken{min-height:46px;border:1.5px dashed var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14.5px var(--sans);cursor:pointer}
   .jtaken[aria-pressed="true"]{border-style:solid;border-color:#2f5d2c;background:#2f5d2c;color:#fff}.qoffer .jbook{justify-self:stretch}
   .jslot.held{background:#fdf6e3;border-color:#d9b44a;border-style:dashed}
@@ -5025,7 +5026,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var t = P.crew ? taken(P.date, P.crew, s.k) : null;
         var b = q('button', null, s.label); b.type = 'button'; b.setAttribute('aria-pressed', String(P.slot === s.k));
         if (t) { b.disabled = true; b.appendChild(q('small', null, jobName(t))); }
-        else if (P.date === todayISO() && !job) { var st0 = { s1: 570, s2: 720, s3: 720, s4: 900 }[s.k], nw = new Date(); if (st0 != null && nw.getHours() * 60 + nw.getMinutes() > st0) { b.disabled = true; b.appendChild(q('small', null, 'gone')); if (P.slot === s.k) P.slot = ''; } }   /* today's times that have passed (2026-10-14) */
+        else if (P.date === todayISO() && !job) { var st0 = { s1: 570, s2: 600, s3: 720, s4: 900 }[s.k], nw = new Date(); if (st0 != null && nw.getHours() * 60 + nw.getMinutes() > st0) { b.disabled = true; b.appendChild(q('small', null, 'gone')); if (P.slot === s.k) P.slot = ''; } }   /* today's times that have passed (2026-10-14) */
         b.addEventListener('click', function () { P.slot = s.k; drawSlots(); });
         slotRow.appendChild(b);
       });
@@ -6124,7 +6125,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function acceptOf(l) { return l && l.accept && l.quote && l.accept.price === l.quote.price ? l.accept : null; }
   function acceptText(a) { return (a.booked ? 'Booked online ' + ago(a.at) : 'Said yes online ' + ago(a.at) + (a.gone ? ': the day offered was gone, call them to set one' : ': call them to set a day')) + (a.note ? ' \u00b7 \u201c' + a.note + '\u201d' : ''); }
   /* the day offered with a quote (2026-10-14) */
-  var SLOT_LABEL = { s1: '9:30-10:00', s2: '12:00', s3: '12-2', s4: '3:00' }, SLOT_SAY = { s1: 'between 9:30 and 10:00', s2: 'around 12:00', s3: 'between 12:00 and 2:00', s4: 'around 3:00' };
+  var SLOT_LABEL = { s1: '9:30-10:00', s2: '10-12', s3: '12-2', s4: '3:00' }, SLOT_SAY = { s1: 'between 9:30 and 10:00', s2: 'between 10:00 and 12:00', s3: 'between 12:00 and 2:00', s4: 'around 3:00' };
   function longDay(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); }
   function offerText(o) { return dayName(o.date) + ', arrive ' + SLOT_LABEL[o.slot] + ' \u00b7 ' + o.crew; }
   function quoteBody(l, extra) { var Q = l.quote; var b = { id: l.id, price: Q.price, pkg: Q.pkg, sq: Q.sq || 0, seedLb: Q.seedLb, fertLb: Q.fertLb || null, sent: !!Q.sent }; if (Q.note) b.note = Q.note; for (var k in extra) b[k] = extra[k]; return b; }
