@@ -1855,6 +1855,14 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qline{margin-top:8px;font-size:13.5px;font-weight:700;color:var(--ember-ink)}
   .qline.qyes,small.qyes{color:#2f5d2c}.qacts .qpage{text-decoration:none}
   .qoffer{display:grid;gap:6px;justify-items:start}
+  /* a lead's house on its card (2026-10-14) */
+  .lprop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
+  .lpmap{min-height:150px;border-radius:10px;overflow:hidden;background:#2a332e;cursor:zoom-in;position:relative;z-index:0}
+  .lpfacts{display:grid;gap:4px;align-content:start;font-size:13px}
+  .lpfacts>div:not(.lpbig){display:flex;justify-content:space-between;gap:8px}.lpfacts>div span{color:var(--soft)}.lpfacts>div b{text-align:right;overflow-wrap:anywhere}
+  .lpbig{display:grid;gap:3px;justify-items:start;margin-bottom:4px}.lpbig b{font-size:16px}.lpbig span:not(.htag){font-size:12.5px;color:var(--soft)}
+  .lprop .lpopen{grid-column:1/-1}
+  @media (max-width:420px){.lprop{grid-template-columns:1fr}.lpmap{min-height:170px}}
   /* the phone quote (2026-10-14) */
   .pipeseg.four{grid-template-columns:repeat(4,1fr)}.pipeseg button[data-st="signed"] b{color:var(--go)}
   .lvm,.lout,.loutmore{display:grid;gap:8px;margin-top:8px}
@@ -4100,7 +4108,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
-    if (wdOn() && S.screen === 'pipeline') c.appendChild(leadHouseRow(l));   /* the house lookup (2026-10-14) */
+    if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house ? leadProperty(l) : leadHouseRow(l));   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (asOffice() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
@@ -5340,6 +5348,63 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (l.ask && l.ask.size) b.appendChild(q('small', null, 'They said: ' + l.ask.size));
     b.addEventListener('click', function () { houseLookupView(l, l.house || null); });
     return b;
+  }
+  /* a lead with its house (2026-10-14, Matthew: "For leads that come in with the address it should auto populate the image of the property
+     with the stats"): the 2023 aerial photo with the property line, and the numbers the quote starts from. Loaded when the card comes
+     into view, so a long Pipeline stays light. The office only ever: the customer never sees the photo or our figures. */
+  function leadProperty(l) {
+    var box = q('div', 'lprop');
+    var pic = q('div', 'lpmap'); pic.setAttribute('role', 'img'); pic.setAttribute('aria-label', 'Aerial photo of ' + streetCase(l.house.address));
+    var facts = q('div', 'lpfacts'); facts.appendChild(q('div', 'skel'));
+    box.appendChild(pic); box.appendChild(facts);
+    var open = leadHouseRow(l); open.classList.add('lpopen'); box.appendChild(open);
+    var go = function () {
+      api('a365house', { params: { region: l.house.region, id: l.house.door } }).then(function (j) {
+        facts.textContent = '';
+        if (!j || !j.ok) { facts.appendChild(q('div', 'msg', 'Could not load the house.')); return; }
+        var h = j.house, E = lawnEstimate(h);
+        var big = q('div', 'lpbig c-' + E.conf.toLowerCase());
+        big.appendChild(q('b', null, E.none ? 'No lawn measured yet' : 'Lawn about ' + fmtSq(E.mid)));
+        if (!E.none) big.appendChild(q('span', null, 'likely ' + fmtSq(E.a) + '\u2013' + fmtSq(E.b)));
+        big.appendChild(q('span', 'htag c-' + E.conf.toLowerCase(), E.conf === 'Good' ? 'Good to quote' : E.conf === 'Fair' ? 'Fair: ask them' : 'Check before quoting'));
+        facts.appendChild(big);
+        var row = function (k, v) { if (!v) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
+        if (typeof h.acres === 'number') row('Lot', h.acres.toFixed(2) + ' acres');
+        var mi = milesFromBase(h); if (mi != null) row('Distance', Math.round(mi) + ' mi from Englewood');
+        if (h.yb) row('Built', String(h.yb));
+        if (h.owner) row(h.rent ? 'Owner (landlord?)' : 'Owner', ownerText(h.owner));
+        if (h.lookup) row('Note', 'Not on the door lists' + (h.rent ? ': likely rented' : ''));
+        if (l.ask && l.ask.size) row('They said', l.ask.size);
+        if (h.lat != null) {
+          miniAerial(pic, h);
+          pic.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres }); });
+        } else pic.hidden = true;
+      }).catch(function () { facts.textContent = ''; facts.appendChild(q('div', 'msg', 'The house needs signal.')); });
+    };
+    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); go(); } }, { rootMargin: '200px' }); setTimeout(function () { io.observe(box); }, 0); }
+    else go();
+    return box;
+  }
+  /* the lot on the 2023 photo, small and still: the same photo and property line as the full aerial view (aerialView) */
+  function miniAerial(el, d) {
+    loadLeaflet(function () {
+      if (!document.body.contains(el) || !window.L) return;
+      var map = L.map(el, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, tap: false, attributionControl: false });
+      baseLayer(map, 21);
+      map.setView([d.lat, d.lon], zoomFor(d.acres));
+      fetch(PC_API + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collections: ['naip'], intersects: { type: 'Point', coordinates: [d.lon, d.lat] }, query: { 'naip:year': { eq: (MK().naip || MK_CO.naip).year } }, limit: 4 }) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var f = (j.features || []).sort(function (a, b) { return a.properties.gsd - b.properties.gsd; })[0]; if (!f) return;
+          L.tileLayer(PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(f.id) + '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png', { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
+        }).catch(function () {});
+      parcelAt(d.lon, d.lat, MK().parcels).then(function (geo) {
+        var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
+        var poly = L.polygon(ll, { color: '#FFE600', weight: 3, fillColor: '#FFE600', fillOpacity: 0.06, interactive: false }).addTo(map);
+        map.fitBounds(poly.getBounds(), { padding: [12, 12], maxZoom: 20 });
+      }).catch(function () { L.circleMarker([d.lat, d.lon], { radius: 7, color: '#fff', weight: 3, fillColor: '#E4703A', fillOpacity: 1, interactive: false }).addTo(map); });
+    });
   }
   /* Brad on the day: was our lawn size right? */
   function lawnCheckBox(region, id, sq) {

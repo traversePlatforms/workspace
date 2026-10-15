@@ -4475,6 +4475,8 @@ if ($action === 'leadadd') {
     if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Add at least a name, a phone number or an email.');
     if ($row['email'] !== '' && !filter_var($row['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
+    /* an address typed in finds its house (2026-10-14), as the website and Facebook leads do */
+    if (feature('walkdesk') && preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => $me, 'at' => time()]); }
     out(['ok' => true, 'id' => $row['id']]);
 }
 
