@@ -1871,6 +1871,11 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qqrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.qqrow label{display:grid;gap:3px;font-size:12.5px;font-weight:700}
   .qqrow input{font:15px var(--sans);padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);min-width:0}
   @media (max-width:560px){.qqrow{grid-template-columns:1fr}}
+  .qqcust{gap:8px}.qqcusthead{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;padding:0;cursor:pointer;color:var(--ink);font:inherit}
+  .qqcusthead b{font:800 16px var(--sans)}.qqcusthead span{color:var(--accent);font:700 13.5px var(--sans)}
+  .qqcustbody{display:grid;gap:8px}.qqcustq{font:15px var(--sans);padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .qqcustlist{display:grid;gap:8px;max-height:60vh;overflow:auto}.qqcrow{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .qqctop{display:grid;gap:1px}.qqctop small{color:var(--soft);font-size:12.5px}
   .qqsrc button{font-size:12.5px}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
@@ -5599,6 +5604,50 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       toast(had === 'updated' ? 'Using their lead, details updated' : had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + (lead.email ? ' \u00b7 ' + lead.email : '') + ' \u00b7 ' + money0(st.cur.price), null);
     }).catch(function (e) { btn.disabled = false; toast('Not done', (e && e.message) || 'Try again.', null); });
   }
+  /* her customers, in the Quick quote (2026-10-15, Matthew: "there should be a section for her customers there, and she can view that
+     signed document"): everyone sent the one-page form, Signed first, then Not signed yet; a search; each with the form's line (their
+     signed form, email the signed copy, change or send again). The office and admins only: quote-only accounts see no leads. */
+  function quickCustomers() {
+    var box = q('div', 'lwho qqcust'), head = q('button', 'qqcusthead'); head.type = 'button';
+    var open = !!S.qqCustOpen;
+    var body = q('div', 'qqcustbody'); body.hidden = !open;
+    var label = function (n) { head.textContent = ''; head.appendChild(q('b', null, 'Your customers' + (n != null ? ' (' + n + ')' : ''))); head.appendChild(q('span', null, open ? 'Hide' : 'Show')); };
+    label(null);
+    head.addEventListener('click', function () { open = !open; S.qqCustOpen = open; body.hidden = !open; label(box._n); if (open && !box._loaded) load(); });
+    box.appendChild(head); box.appendChild(body);
+    var srch = q('input', 'qqcustq'); srch.type = 'search'; srch.placeholder = 'Search name, phone, email or street';
+    var list = q('div', 'qqcustlist');
+    body.appendChild(srch); body.appendChild(list);
+    var all = [];
+    function draw() {
+      list.textContent = '';
+      var t = srch.value.trim().toLowerCase(), td = digits(t);
+      var hit = all.filter(function (l) { if (!t) return true; var hay = [l.name, l.email, l.house && l.house.address, l.town].join(' ').toLowerCase(); return hay.indexOf(t) >= 0 || (td.length >= 3 && digits(l.phone).indexOf(td) >= 0); });
+      var signed = hit.filter(function (l) { return l.signed; }), waiting = hit.filter(function (l) { return !l.signed; });
+      if (!hit.length) { list.appendChild(q('div', 'msg soft', t ? 'Nobody matches \u201c' + srch.value.trim() + '\u201d.' : 'Nobody has been sent a form yet.')); return; }
+      [['Signed', signed], ['Not signed yet', waiting]].forEach(function (g) {
+        if (!g[1].length) return;
+        list.appendChild(q('div', 'dwh', g[0] + ' (' + g[1].length + ')'));
+        g[1].forEach(function (l) {
+          var c = q('div', 'qqcrow');
+          var top = q('div', 'qqctop'); top.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
+          top.appendChild(q('small', null, [digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
+          c.appendChild(top); c.appendChild(signLine(l)); list.appendChild(c);
+        });
+      });
+    }
+    function load() {
+      box._loaded = true; list.textContent = ''; list.appendChild(q('div', 'skel'));
+      api('leads').then(function (j) {
+        if (!j || !j.ok) { list.textContent = ''; list.appendChild(q('div', 'msg', (j && j.error) || 'Could not load your customers.')); return; }
+        all = j.leads.filter(function (l) { return l.sign && l.status !== 'lost'; }).sort(function (a, b) { return ((b.signed && b.signed.at) || b.sign.at || 0) - ((a.signed && a.signed.at) || a.sign.at || 0); });
+        box._n = all.length; label(all.length); draw();
+      }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'Your customers need signal.')); });
+    }
+    srch.addEventListener('input', draw);
+    if (open) load(); else api('leads').then(function (j) { if (j && j.ok) { box._n = j.leads.filter(function (l) { return l.sign && l.status !== 'lost'; }).length; label(box._n); } }).catch(function () {});
+    return box;
+  }
   function quickQuoteView(typed) { hideSplash(); houseLookupView(null, null, typed, true); }   /* hideSplash: opened from the link or at sign-in, the logo screen stayed on top (2026-10-15) */
   function quickWhoBox() {
     var Q = S.qq || (S.qq = { name: '', phone: '', email: '' });
@@ -5671,7 +5720,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     view.textContent = '';
     if (lead) view.appendChild(leadWhoBox(lead));
-    else if (quick) view.appendChild(quickWhoBox());
+    else if (quick) { if (quickCanBook()) view.appendChild(quickCustomers()); view.appendChild(quickWhoBox()); }
     var box = q('div', 'search hlook');
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'houseq';
     var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
