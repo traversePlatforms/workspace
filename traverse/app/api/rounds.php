@@ -1897,7 +1897,9 @@ function relayIp(): ?string {
     static $ip = false; if ($ip !== false) return $ip;
     $k = trim((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/a365-relay-key.txt'));
     $ip = null;
-    if (strlen($k) >= 32 && hash_equals($k, (string) ($_SERVER['HTTP_X_SITE_KEY'] ?? ''))) { $c = trim((string) ($_SERVER['HTTP_X_CLIENT_IP'] ?? '')); $ip = filter_var($c, FILTER_VALIDATE_IP) ? $c : 'relay'; }
+    $sent = (string) ($_SERVER['HTTP_X_SITE_KEY'] ?? '');
+    if (strlen($k) >= 32 && hash_equals($k, $sent)) { $c = trim((string) ($_SERVER['HTTP_X_CLIENT_IP'] ?? '')); $ip = filter_var($c, FILTER_VALIDATE_IP) ? $c : 'relay'; }
+    elseif ($sent !== '' && isset($_SERVER['HTTP_X_CLIENT_IP'])) { error_log('rounds: 365 relay key missing or wrong'); fail('The site could not be checked. Please call or text us.', 403); }   /* Fable review 2026-10-14: never share one visitor bucket silently */
     return $ip;
 }
 function visitorKey(): string { $r = relayIp(); return $r !== null ? 'relay-' . $r : clientKey(); }
@@ -2029,6 +2031,9 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     $note = a365Clean($body['note'] ?? '', 300);
     $name = trim((string) ($l['name'] ?? '')) ?: 'A customer';
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Something went wrong. Please call or text us.', 500);
+    /* Fable review 2026-10-14: read again inside the lock, so a second tap after the first booked says "booked", not "the day was gone" */
+    $l = leadsAll()[$l['id']]; $Q = $l['quote'];
+    $job = jobForLead($l['id']); if ($job && !$job['done'] && $job['date'] >= $today) { flock($lk, LOCK_UN); out(['ok' => true, 'booked' => $bookedOut($job), 'phone' => $phone]); }
     $hadOffer = is_array($Q['offer'] ?? null); $off = offerLive($l);
     $acc = ['price' => (int) $Q['price'], 'note' => $note];
     if ($off) {   /* the day Jen offered: book it */
@@ -2099,29 +2104,39 @@ if ($action === 'a365sign' || $action === 'a365signed') {
     $A = a365Agreement($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $signedOut = fn($sg) => $sg ? ['name' => (string) $sg['name'], 'when' => (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a')] : null;
-    if ($action === 'a365sign') out(['ok' => true, 'first' => $first, 'facts' => $A['facts'], 'terms' => $A['terms'], 'consent' => $A['consent'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    $sgd = $l['signed'] ?? null;   /* signed: the facts and terms as they were when signed (Fable review 2026-10-14) */
+    if ($action === 'a365sign') out(['ok' => true, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
     $name = a365Clean($body['name'] ?? '', 120);
     if (mb_strlen($name) < 3) fail('Type your full name to sign.');
     if (empty($body['agree'])) fail('Tick the box to agree.');
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Something went wrong. Please call or text us.', 500);
-    $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $jid = null; $dayOk = false;
-    if ($o && !jobForLead($l['id'])) {
-        $dayOk = slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
-        if ($dayOk) {
-            $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
-            $jid = 'j' . bin2hex(random_bytes(6));
-            appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
-                'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
-                'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => (string) $S2['how']], 'card' => false, 'note' => (string) ($S2['note'] ?? ''), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()]);
-        }
+    /* Fable review 2026-10-14: everything read again inside the lock. A second Sign (double tap, a retry) returns the first signature; a job
+       already on the board for this lead (booked from the quote page) is linked and given the deposit, not reported as "set a new day". */
+    $l = leadsAll()[$l['id']];
+    if (!empty($l['signed'])) { flock($lk, LOCK_UN); out(['ok' => true, 'signed' => $signedOut($l['signed'])]); }
+    $A = a365Agreement($l);
+    $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $jid = null; $had = false;
+    $today0 = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $ex = jobForLead($l['id']);
+    if ($ex && !$ex['done']) {
+        $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => (string) $S2['how']], 'by' => 'website', 'at' => time()]);
+    } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= $today0) {
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $nj = 'j' . bin2hex(random_bytes(6));
+        if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
+            'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
+            'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => (string) $S2['how']], 'card' => false, 'note' => (string) ($S2['note'] ?? ''), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
     }
-    $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'ip' => (string) (relayIp() ?? ($_SERVER['REMOTE_ADDR'] ?? '')), 'ua' => mb_substr((string) (relayIp() !== null ? ($_SERVER['HTTP_X_CLIENT_UA'] ?? '') : ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200), 'job' => $jid];
-    appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'signed' => $sg, 'status' => 'won', 'note' => mb_substr('Signed by ' . $name . ($jid ? '; job booked.' : '; the day was no longer free, so set a new one.'), 0, 500), 'by' => 'website', 'at' => time()]);
+    /* what was shown is kept with the signature, so the signed page never changes if the quote does later */
+    $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'facts' => $A['facts'], 'terms' => $A['terms'],
+           'ip' => (string) (relayIp() ?? ($_SERVER['REMOTE_ADDR'] ?? '')), 'ua' => mb_substr((string) (relayIp() !== null ? ($_SERVER['HTTP_X_CLIENT_UA'] ?? '') : ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200), 'job' => $jid];
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'signed' => $sg, 'status' => 'won', 'note' => mb_substr('Signed by ' . $name . ($had ? '; it was already booked, deposit added to the job.' : ($jid ? '; job booked.' : '; the day was no longer free, so set a new one.')), 0, 500), 'by' => 'website', 'at' => time()])) { flock($lk, LOCK_UN); fail('Something went wrong saving that. Please call or text us.', 500); }
     flock($lk, LOCK_UN);
     $who = trim((string) ($l['name'] ?? '')) ?: $name;
-    if ($jid) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
+    if ($jid && !$had) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
     a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''));
     out(['ok' => true, 'signed' => $signedOut($sg), 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
 }
@@ -3439,7 +3454,7 @@ function leadsAll(): array {
         if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365QuoteLink((string) $u['id'])];   /* 2026-10-14, the quote generator; the link is the customer's quote page */
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
-        if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job']));
+        if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job', 'facts', 'terms']));
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
         if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
@@ -3728,6 +3743,7 @@ if ($action === 'leadquote') {
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    if (!empty($all[$id]['signed']) && $role !== 'admin') fail('They already signed for this price. Change the job on the Jobs board.', 409);   /* Fable review 2026-10-14 */
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the quote a price.');
     $pkg = (string) ($body['pkg'] ?? ''); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick the package.');
     $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 2000000) fail('That lawn size does not look right.');
@@ -3824,6 +3840,7 @@ if ($action === 'jobsave') {
         if (!$have) fail('No such job.', 404);
         if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $id, 'del' => 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
         if (($leads[$have['lead']]['status'] ?? '') === 'won') appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'status' => 'quoted', 'by' => $me, 'at' => time()]);
+        $sgx = $leads[$have['lead']]['signed'] ?? null; if ($sgx && ($sgx['job'] ?? '') === $id) appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'signed' => ['job' => null] + $sgx, 'by' => $me, 'at' => time()]);   /* Fable review 2026-10-14 */
         $sl = jobSlot((string) $have['slot']);
         if ($have['crew'] !== $me) pushName($have['crew'], 'Job cancelled: ' . deskWhen($have['date'], '') . ($sl ? ', ' . $sl[1] : ''), $have['title'] . ' · cancelled by ' . $me, './', 'job-' . $id);
         out(['ok' => true]);
@@ -3868,7 +3885,8 @@ if ($action === 'myjobs') {
     $who = trim((string) ($_GET['who'] ?? '')); if ($who === '' || !desk()) $who = $me;
     $from = (new DateTime('today', new DateTimeZone(appTz())))->modify('-14 days')->format('Y-m-d');
     $leads = leadsAll(); $list = [];
-    foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $who && $j['date'] >= $from) $list[] = jobShow($j, $leads);
+    $want = (string) ($_GET['id'] ?? '');   /* a link to one job opens it whatever its date (Fable review 2026-10-14) */
+    foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $who && ($j['date'] >= $from || $j['id'] === $want)) $list[] = jobShow($j, $leads);
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     out(['ok' => true, 'who' => $who, 'jobs' => $list]);
 }
@@ -4010,6 +4028,10 @@ if ($action === 'deskwalk') {
         if (!$have) fail('No such walk.', 404);
         if (!appendLine(DATA_DIR . '/deskwalks.log', ['id' => $id, 'del' => 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
         if ($have['kind'] === 'lead' && ($leads[$have['lead']]['status'] ?? '') === 'walk') appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'status' => 'contacted', 'by' => $me, 'at' => time()]);
+        if ($have['kind'] === 'door') {   /* Fable review 2026-10-14: the door's own walk goes too, so its card and calendars stop showing it */
+            $cw = loadWalks((string) $have['region'])[(string) $have['door']] ?? null;
+            if ($cw && $cw['date'] === (string) $have['date'] && $cw['time'] === (string) ($have['time'] ?? '')) appendWalk((string) $have['region'], ['id' => (string) $have['door'], 'date' => null, 'by' => $me, 'at' => time()]);
+        }
         $al = $have['walker'] !== $me ? pushName($have['walker'], $vw . ' cancelled: ' . deskWhen($have['date'], $have['time']), $have['title'] . ' · cancelled by ' . $me, './', 'dw-' . $id) : null;
         out(['ok' => true, 'alert' => $al]);
     }
@@ -4080,7 +4102,8 @@ if ($action === 'mywalks') {
     $tz = new DateTimeZone(appTz()); $from = (new DateTime('today', $tz))->modify('-14 days')->format('Y-m-d');
     $seenAll = json_decode((string) @file_get_contents(deskSeenFile()), true) ?: []; $seen = (int) ($seenAll[$who] ?? 0);
     $leads = leadsAll(); $list = [];
-    foreach (deskWalks() as $w) if (!$w['off'] && $w['walker'] === $who && $w['date'] >= $from) $list[] = deskShow($w, $leads) + ['fresh' => $w['chg'] > $seen && ($w['by'] ?? '') !== $who];
+    $want = (string) ($_GET['id'] ?? '');   /* a link to one walk opens it whatever its date (Fable review 2026-10-14) */
+    foreach (deskWalks() as $w) if (!$w['off'] && $w['walker'] === $who && ($w['date'] >= $from || $w['id'] === $want)) $list[] = deskShow($w, $leads) + ['fresh' => $w['chg'] > $seen && ($w['by'] ?? '') !== $who];
     usort($list, fn($a, $b) => [$a['date'], $a['time']] <=> [$b['date'], $b['time']]);
     if ($who === $me && !empty($_GET['seen'])) { $seenAll[$me] = time(); @file_put_contents(deskSeenFile(), json_encode($seenAll, JSON_UNESCAPED_UNICODE), LOCK_EX); }
     out(['ok' => true, 'who' => $who, 'walks' => $list]);
@@ -4538,7 +4561,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     }
     $added = []; $errors = [];
     foreach ($M['pages'] as $pi => $P) {
-        $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since;
+        $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since; $errBefore = count($errors);
         $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status', 'limit' => 100, 'access_token' => $P['token']]));
         if (isset($forms['error'])) { $errors[] = $P['name'] . ': ' . (string) ($forms['error']['message'] ?? '?'); continue; }
         foreach ((array) ($forms['data'] ?? []) as $F) {
@@ -4569,7 +4592,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
                 $url = (string) ($r['paging']['next'] ?? '');
             }
         }
-        $M['pages'][$pi]['last'] = max($since, $newest - 60);   /* a minute of overlap: Meta's clock and ours; the ids stop doubles */
+        if (count($errors) === $errBefore) $M['pages'][$pi]['last'] = max($since, $newest - 60);   /* a minute of overlap: Meta's clock and ours; the ids stop doubles. Fable review 2026-10-14: not past a form that failed */
     }
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
@@ -4665,6 +4688,7 @@ if ($action === 'signsend') {
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     $L = $all[$id];
+    if (!empty($L['signed'])) fail('They already signed. Change the job on the Jobs board instead.', 409);   /* Fable review 2026-10-14 */
     if (empty($body['taken'])) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
     $pkg = (string) ($body['pkg'] ?? 'full'); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick what is included.');

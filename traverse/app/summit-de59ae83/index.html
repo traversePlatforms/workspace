@@ -4110,7 +4110,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (smsOn()) ct.appendChild(smsButton({ kind: 'lead', id: l.id }, l.name || ''));
       else { var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     }
-    if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
+    if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
     if (l.email || tel.length >= 10) {   /* the details in full, to read back on the phone; a tap copies (2026-10-14) */
       var dt = q('div', 'ldetails');
@@ -4356,7 +4356,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('back', { title: VW(), sub: '', back: back, backLabel: 'Back' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
-    api('mywalks', { params: who && who !== S.me ? { who: who } : { seen: 1 } }).then(function (j) {
+    api('mywalks', { params: who && who !== S.me ? { who: who, id: id } : { seen: 1, id: id } }).then(function (j) {
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load it.')); return; }
@@ -4381,7 +4381,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
     }
     var em = L ? L.email : H ? H.email : '';
-    if (em) { var a3 = q('a'); a3.href = 'mailto:' + em; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
+    if (em) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(em).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     var dest = H && H.lat ? H.lat + ',' + H.lon : w.addr;
     var a4 = q('a'); a4.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest); a4.target = '_blank'; a4.rel = 'noopener';
     a4.appendChild(ico('route', 2.2)); a4.appendChild(document.createTextNode('Directions')); ct.appendChild(a4);
@@ -4899,7 +4899,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var row = q('div', 'lcontact');
     var tel = digits(lead.phone);
     if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); row.appendChild(a); }
-    if (lead.email) { var e = q('a', 'sendmail'); e.href = 'mailto:' + lead.email + '?subject=' + encodeURIComponent('Your agreement with ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email it')); row.appendChild(e); }
+    if (lead.email) { var e = q('a', 'sendmail'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your agreement with ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email it')); row.appendChild(e); }
     box.appendChild(row);
     var cp = q('button', 'lnk', 'Copy the link'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); box.appendChild(cp);
     var pv = q('a', 'lnk', 'See the form \u203a'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; box.appendChild(pv);
@@ -4914,7 +4914,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('back', { title: 'Job', sub: '', back: back, backLabel: 'Back' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
-    api('myjobs', { params: who && who !== S.me ? { who: who } : {} }).then(function (j) {
+    api('myjobs', { params: who && who !== S.me ? { who: who, id: id } : { id: id } }).then(function (j) {
       holder.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load it.')); return; }
@@ -5064,7 +5064,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* whose name and number a message carries (2026-10-14, Matthew: 365's customers never see Sixfold): the office, and leads from the
      365 page (Facebook, Messenger, its website), get 365 Aeration's; everything else the company's own */
   function leadBrand(l) {
-    var a = CO.a365 && wdOn() && (asOffice() || ['a365web', 'meta', 'messenger'].indexOf(l && l.src) >= 0) ? CO.a365 : null;
+    var src = l && l.src, a = CO.a365 && wdOn() && (['a365web', 'meta', 'messenger'].indexOf(src) >= 0 || (asOffice() && ['website', 'linktree', 'nextdoor'].indexOf(src) < 0)) ? CO.a365 : null;   /* Fable review 2026-10-14: a Sixfold-site enquiry never gets 365's name */
     return { name: a ? a.name : CO.short, phone: a ? a.phone : CO.phone };
   }
   function leadMsg(l, last) {
@@ -5123,7 +5123,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var body = leadMsg(l, out);
       if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(body); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode(out ? 'Last text' : 'Text them too')); fu.appendChild(a); }
       if (l.email) {
-        var e = q('a'); e.href = 'mailto:' + l.email + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + leadBrand(l).name) + '&body=' + encodeURIComponent(body + '\n\n' + S.me + '\n' + leadBrand(l).name + (leadBrand(l).phone ? '\n' + leadBrand(l).phone : ''));
+        var e = q('a'); e.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + leadBrand(l).name) + '&body=' + encodeURIComponent(body + '\n\n' + S.me + '\n' + leadBrand(l).name + (leadBrand(l).phone ? '\n' + leadBrand(l).phone : ''));
         e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode(out ? 'Last email' : 'Email them too')); fu.appendChild(e);
       }
       box.appendChild(fu);
@@ -5673,7 +5673,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }
-          if (lead.email) { var e = q('a'); e.href = 'mailto:' + lead.email + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
+          if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row);
           if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
@@ -9314,7 +9314,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (smsOn()) ct.appendChild(smsButton({ kind: 'customer', id: c.id }, c.name || ''));
       else { var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     }
-    if (c.email) { var a3 = q('a'); a3.href = 'mailto:' + c.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(c.email)); ct.appendChild(a3); }
+    if (c.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(c.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(c.email)); ct.appendChild(a3); }
     /* ask for a Google review (2026-10-04): the same words to every customer, sent from the admin's own phone.
        Shown once the review link is in money.json (links.googleReview); asked of everyone, never only the happy ones. */
     var rv = (CO.links && CO.links.googleReview) || (S.money && S.money.links && S.money.links.googleReview);
@@ -9326,7 +9326,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       a6.appendChild(ico('chat', 2.2)); a6.appendChild(document.createTextNode('Ask for a review')); a6.addEventListener('click', markAsked); ct.appendChild(a6);
     }
     if (rv && /^https:\/\//.test(rv) && c.email) {
-      var a7 = q('a'); a7.href = 'mailto:' + c.email + '?subject=' + encodeURIComponent('Thank you from ' + CO.name) + '&body=' + encodeURIComponent(askWords + '\n\nThank you,\n' + CO.name);
+      var a7 = q('a'); a7.href = 'mailto:' + encodeURIComponent(c.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Thank you from ' + CO.name) + '&body=' + encodeURIComponent(askWords + '\n\nThank you,\n' + CO.name);
       a7.appendChild(ico('mail', 2.2)); a7.appendChild(document.createTextNode('Ask for a review by email')); a7.addEventListener('click', markAsked); ct.appendChild(a7);
     }
     if (c.agreement) { var a4 = q('a'); a4.href = c.agreement; a4.target = '_blank'; a4.rel = 'noopener noreferrer'; a4.appendChild(ico('clip', 2.2)); a4.appendChild(document.createTextNode('Agreement')); ct.appendChild(a4); }
@@ -9894,7 +9894,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return box;
     }
     if (d.email.prev) { box.classList.add('old'); box.appendChild(q('span', 'oldl', "Previous owner's email")); }
-    var a = q(d.email.prev ? 'span' : 'a', 'num'); if (!d.email.prev) a.href = 'mailto:' + d.email.email;
+    var a = q(d.email.prev ? 'span' : 'a', 'num'); if (!d.email.prev) a.href = 'mailto:' + encodeURIComponent(d.email.email).replace(/%40/g, '@');
     a.appendChild(ico('mail', 2.2)); a.appendChild(document.createTextNode(d.email.email));
     box.appendChild(a);
     box.appendChild(q('span', 'src', 'Given at the door' + (d.email.at ? ' · ' + fmtDay(d.email.at) : '') + (d.email.by ? ' · ' + d.email.by : '')));
@@ -10769,7 +10769,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (x.email) {
       var em = q('div', 'ph em' + (x.email.prev ? ' old' : ''));
       if (x.email.prev) em.appendChild(q('span', 'oldl', "Previous owner's email"));
-      var ea = q(x.email.prev ? 'span' : 'a', 'num'); if (!x.email.prev) ea.href = 'mailto:' + x.email.email;
+      var ea = q(x.email.prev ? 'span' : 'a', 'num'); if (!x.email.prev) ea.href = 'mailto:' + encodeURIComponent(x.email.email).replace(/%40/g, '@');
       ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode(x.email.email)); em.appendChild(ea);
       em.appendChild(q('span', 'src', 'Given at the door · ' + fmtDay(x.email.at))); maybeNote(em, x.email); c.appendChild(em);
     }
