@@ -2054,6 +2054,78 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     out(['ok' => true, 'gone' => $hadOffer, 'phone' => $phone]);
 }
 
+/* ---- the one-page agreement (2026-10-14; Matthew: "I draft it, Brandon reviews") ----
+ * The customer opens 365aeration.com/sign/?s=<lead>-<key> (through the site's relay), reads what Jen agreed on the phone, types their
+ * name and signs; that books the job on the jobs board with the deposit recorded, marks the lead Won, and alerts the crew and the
+ * office. The wording is here, in one place, versioned: a signature keeps the version and a hash of exactly what was shown.
+ * DRAFT wording until Brandon (or the attorney) approves it: facts from the call and the business only; no refund or cancellation
+ * terms, because none are set. Never the lawn size, the seed or anything measured; never Sixfold. */
+const A365_SIGN_VERSION = 'v1-draft-2026-10-14';
+function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
+function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
+function a365Agreement(array $l): array {
+    $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
+    $h = $l['house'] ?? null;
+    $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : trim((string) ($l['town'] ?? ''));
+    $inc = $Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer'];
+    $how = ['square' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how']] ?? $S2['how'];
+    $day = $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set';
+    $facts = [['Customer', trim((string) ($l['name'] ?? ''))], ['Address', $addr], ['Service', implode(', ', $inc)], ['Day', $day],
+              ['Price', '$' . number_format((int) $Q['price'])], ['Deposit paid', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
+              ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]];
+    $terms = ['We will do the work listed above at this address on the day shown, arriving in the time shown.',
+              'Please mark sprinkler heads, shallow pipes and invisible dog fence lines, or tell us where they are, so we can work around them.',
+              'If the weather or the ground (frozen, waterlogged or very dry) stops us, we will contact you to move the day.',
+              'The balance is due when the work is done.',
+              'Questions or changes: call or text ' . (string) (company()['a365']['phone'] ?? '') . '.'];
+    $consent = 'By typing your name and tapping Sign, you agree to this and to signing it electronically.';
+    $text = implode("\n", array_map(fn($x) => $x[0] . ': ' . $x[1], $facts)) . "\n" . implode("\n", $terms) . "\n" . $consent;
+    return ['facts' => $facts, 'terms' => $terms, 'consent' => $consent, 'hash' => hash('sha256', A365_SIGN_VERSION . "\n" . $text)];
+}
+if ($action === 'a365sign' || $action === 'a365signed') {
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    if (in_array($origin, A365_ORIGINS, true)) { header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST'); header('Access-Control-Allow-Headers: Content-Type'); }
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
+    if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
+    header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
+    if (!isset($TEAM)) $TEAM = teamInfo($basePeople, $acct, $sessionKey);
+    if (!throttleTake(rateFile('a365sign|' . visitorKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
+    $sk = (string) ($_GET['s'] ?? ($body['s'] ?? ''));
+    $all = leadsAll();
+    if (!preg_match('/^([wm]\d{14}[0-9a-f]{6})-([0-9a-f]{16})$/D', $sk, $sm) || !isset($all[$sm[1]]) || empty($all[$sm[1]]['sign'])
+        || !hash_equals(a365SignKey($sm[1], (string) $all[$sm[1]]['sign']['key']), $sm[2])) fail('This link does not look right, or a newer form was sent. Please call or text us.', 404);
+    $l = $all[$sm[1]];
+    if ($l['status'] === 'lost') fail('This form is no longer open. Please call or text us.', 410);
+    $A = a365Agreement($l);
+    $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
+    $signedOut = fn($sg) => $sg ? ['name' => (string) $sg['name'], 'when' => (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a')] : null;
+    if ($action === 'a365sign') out(['ok' => true, 'first' => $first, 'facts' => $A['facts'], 'terms' => $A['terms'], 'consent' => $A['consent'], 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    if (!$isPost) fail('POST required', 405);
+    if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
+    $name = a365Clean($body['name'] ?? '', 120);
+    if (mb_strlen($name) < 3) fail('Type your full name to sign.');
+    if (empty($body['agree'])) fail('Tick the box to agree.');
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Something went wrong. Please call or text us.', 500);
+    $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $jid = null; $dayOk = false;
+    if ($o && !jobForLead($l['id'])) {
+        $dayOk = slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+        if ($dayOk) {
+            $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+            $jid = 'j' . bin2hex(random_bytes(6));
+            appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
+                'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
+                'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => (string) $S2['how']], 'card' => false, 'note' => (string) ($S2['note'] ?? ''), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()]);
+        }
+    }
+    $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'ip' => (string) (relayIp() ?? ($_SERVER['REMOTE_ADDR'] ?? '')), 'ua' => mb_substr((string) (relayIp() !== null ? ($_SERVER['HTTP_X_CLIENT_UA'] ?? '') : ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200), 'job' => $jid];
+    appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'signed' => $sg, 'status' => 'won', 'note' => mb_substr('Signed by ' . $name . ($jid ? '; job booked.' : '; the day was no longer free, so set a new one.'), 0, 500), 'by' => 'website', 'at' => time()]);
+    flock($lk, LOCK_UN);
+    $who = trim((string) ($l['name'] ?? '')) ?: $name;
+    if ($jid) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
+    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''));
+    out(['ok' => true, 'signed' => $signedOut($sg), 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
+}
+
 /* ---- the Sixfold website's contact form (2026-10-14) ----
  * Matthew: "make sure the website contact forms lead to the app". sixfoldcolorado.com's form used to write the lead straight into
  * the app's files, which only worked while the app lived on the same server; since the move to traverseplatforms.com (2026-10-09)
@@ -3366,6 +3438,8 @@ function leadsAll(): array {
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
         if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365QuoteLink((string) $u['id'])];   /* 2026-10-14, the quote generator; the link is the customer's quote page */
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
+        if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
+        if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job']));
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
         if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
@@ -4554,9 +4628,58 @@ if ($action === 'leadtry') {
     }
     if (!in_array($o, ['none', 'vm', 'talk'], true)) fail('Say how the call went.');
     $row = ['id' => $id, 'try' => $o, 'by' => $me, 'at' => time()];
+    /* 2026-10-14 (Matthew: "If she left a voicemail she should leave a note as to what the voicemail says incase someone else picks up
+       that lead later on"): required for a voicemail, and kept on the lead's notes */
+    $tn = $clean($body['note'] ?? '', 400);
+    if ($o === 'vm' && $tn === '') fail('Add what you said in the voicemail, for whoever calls next.');
+    if ($tn !== '') $row['note'] = mb_substr(($o === 'vm' ? 'Voicemail: ' : ($o === 'talk' ? 'Talked: ' : 'No answer: ')) . $tn, 0, 500);
     if ($o === 'talk' && $all[$id]['status'] === 'new') $row['status'] = 'contacted';
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+/* ---- the phone quote (2026-10-14, Matthew: Jen calls; no answer, voicemail or talked; she quotes from our lawn data; "the customer
+ * either denies it and nothing is sent over or that are good with the quote then she takes in half the deposit and sents over a short
+ * one page form for them to sign"). After a talk: No (closes the lead as no sale) or Call back (stays open); both need a note.
+ * Yes: signsend records the price, the deposit (half, taken by Jen herself) and the day held on the jobs board, and gives the
+ * signing link; signing books the job (a365signed, before the session check). */
+if ($action === 'leadoutcome') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $o = (string) ($body['o'] ?? ''); if (!in_array($o, ['no', 'later'], true)) fail('No, or call back later?');
+    $note = $clean($body['note'] ?? '', 400); if ($note === '') fail($o === 'no' ? 'Say why it did not go ahead.' : 'Add a note: what they said, and when to call back.');
+    $row = ['id' => $id, 'status' => $o === 'no' ? 'lost' : 'contacted', 'note' => mb_substr(($o === 'no' ? 'No sale: ' : 'Call back: ') . $note, 0, 500), 'by' => $me, 'at' => time()];
+    $fd = (string) ($body['follow'] ?? ''); if ($o === 'later' && dateOk($fd)) $row['follow'] = [$fd, ''];
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'status' => $row['status']]);
+}
+if ($action === 'signsend') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $L = $all[$id];
+    if (empty($body['taken'])) fail('The form goes out only after they said yes and you took the deposit.');
+    $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
+    $pkg = (string) ($body['pkg'] ?? 'full'); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick what is included.');
+    $how = (string) ($body['how'] ?? ''); if (!in_array($how, ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true)) fail('Say how they paid the deposit.');
+    $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
+    $crew = (string) ($body['crew'] ?? ''); $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
+    if (!in_array($crew, walkerList(), true)) fail('Pick who does the job.');
+    if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
+    if (in_array((int) (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
+    if (!jobSlot($slot)) fail('Pick an arrival time.');
+    if ($why = slotFree($crew, $date, $slot, $id)) fail($why, 409);
+    $q0 = is_array($L['quote'] ?? null) ? $L['quote'] : [];
+    $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
+    $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
+          'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot]];
+    $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
+    $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
+            'note' => mb_substr('Quoted $' . $price . ' by phone; deposit $' . $dep . ' taken (' . ucfirst($how) . '). Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep]);
 }
 if ($action === 'leadstatus') {
     if (!$isPost) fail('POST required', 405);
