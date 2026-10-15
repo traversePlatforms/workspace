@@ -8,6 +8,7 @@
 - From 1:46 to the end it repeats one line about 70 times. That stretch is a transcription glitch over background noise, after the meeting ended, and is ignored.
 - **Every number below is Bryce's own figure from his Houston business** (Bermuda and fescue, Houston suppliers), unless it says otherwise. None of it is verified, and Denver costs differ: he says our seed costs about twice his.
 - Jen's personal phone number was read out at 22:34. It is deliberately left out of these notes.
+- **Checked line by line on 2026-10-15:** every transcript line with a number in it was matched against the times cited here. 38 fell outside them; most were chatter ("this one", "that one"). The 10 with real content are in §10.
 
 ---
 
@@ -186,3 +187,23 @@ All are unverified. Keep them out of ads, posts and the website.
 5. **Arkansas Valley Seed:** ask for volume pricing and delivery. **Call the SiteOne rep** about fertilizer.
 6. **Get Randy's scheduling spreadsheet** (from Cai) into the workspace if it should shape the scheduler.
 7. **Water before the visit:** keep or change the landing-page tip (see §4).
+
+**Where these stand (2026-10-15):**
+- 1 is done: Brandon chose Bryce's pricing, adjusted to Colorado (2026-10-14). It's built into the app's quote, now with seed, fertilizer and drive costs.
+- 2 is open: crew pay isn't set in the app.
+- 3: the website is now **365aeration.com** (aeration365.com points to the same site). The rest is open.
+- 4 to 6 are open.
+- 7: the one-page agreement asks customers only to let us know about sprinklers, pipes and dog fences. It no longer asks them to water.
+
+## 10. Added on the full re-read (2026-10-15)
+
+- **Watering, cycle and soak** (0:00, the recording starts mid-sentence): on hard ground water runs off, so water about **7 minutes**, let it soak in, then water again. The aim is to keep the soil moist.
+- **Remaking an ad takes about 5 minutes** (32:32–32:41): trim the video and put it up again as a new ad rather than fixing the old one; "they'll all perform the same way". This is part of his never-edit-a-live-ad rule (§5).
+- **Use the video without the city names** (35:14–35:17): one version of the ad video names cities, and the team agreed not to use it.
+- **Upload videos straight from the phone** (38:05): it goes up "in like two minutes", faster than downloading and re-uploading.
+- **Pick a thumbnail where Brandon looks approachable** (49:59).
+- **Randy prices by eye** (48:45–49:05): he "can look at a yard within two seconds" and say $499, because so many yards have obstacles. Bryce's point: a generator using square footage alone won't see obstacles, so Jen should get good at it herself. The app's quote shows the measured lawn and a "Check before quoting" flag for this reason.
+- **Three bookings from one post** (1:08:10): someone on the call said "we just scheduled three drops already this morning, from the ad post yesterday". The transcript has no speaker names, so it's not clear who said it, or exactly what a "drop" is here.
+- **Gas prices** (1:31:22–1:31:45): Matthew said his program pulls gas prices daily and averages them along the route, because stations differ (Costco "like $3.30", Shell about $4). The car's fuel use wasn't worked out yet (1:31:45). *As built, 2026-10-15:* the app uses the U.S. Energy Information Administration's weekly Denver average and an 18 mpg truck.
+- **Crew timing** (1:34:02–1:34:22): an example of how timing could be used, e.g. "our average for the company is 57 minutes for that size yard, it took you 73". A slower crew member could be sent to smaller yards. These are example numbers, not measured ones.
+- **Water a day or two before** (1:39:14–1:39:34): Matthew had been adding this to the service agreement, partly to cover hard ground on arrival. Bryce: run it "for a month or two" and the numbers will settle (1:39:46).
