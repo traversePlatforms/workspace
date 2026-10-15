@@ -4424,9 +4424,12 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     $gget = function (string $url): array { $code = 0; $b = httpGetRaw($url, 25, $code); $j = $b !== null ? json_decode($b, true) : null; if (!is_array($j) && $code !== 200) { $raw = null; if (function_exists('curl_init')) { $c = curl_init($url); curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25]); $raw = curl_exec($c); curl_close($c); } $j = is_string($raw) ? json_decode($raw, true) : null; } return is_array($j) ? $j : ['error' => ['message' => 'no answer (HTTP ' . $code . ')']]; };
     if ($action === 'metasetup') {
         $sf = (string) ($_GET['file'] ?? ''); $S = json_decode((string) @file_get_contents($sf), true);
-        if (!is_array($S) || empty($S['app_id']) || empty($S['app_secret']) || empty($S['user_token'])) fail('The setup file needs app_id, app_secret and user_token.');
+        /* a system user's token (Business Settings > System users, "never expires"; 2026-10-14, the Graph API Explorer would not give a
+           user token) is used as it is; a user's token is first swapped for a long-lived one with the app id and secret */
+        if (!is_array($S) || (empty($S['system_token']) && (empty($S['app_id']) || empty($S['app_secret']) || empty($S['user_token'])))) fail('The setup file needs system_token, or app_id, app_secret and user_token.');
         $M = ['graph' => (string) ($S['graph'] ?? 'https://graph.facebook.com/v23.0')]; $g = $graphBase($M);
-        $x = $gget($g . '/oauth/access_token?' . http_build_query(['grant_type' => 'fb_exchange_token', 'client_id' => $S['app_id'], 'client_secret' => $S['app_secret'], 'fb_exchange_token' => $S['user_token']]));
+        if (!empty($S['system_token'])) $x = ['access_token' => (string) $S['system_token']];
+        else $x = $gget($g . '/oauth/access_token?' . http_build_query(['grant_type' => 'fb_exchange_token', 'client_id' => $S['app_id'], 'client_secret' => $S['app_secret'], 'fb_exchange_token' => $S['user_token']]));
         if (empty($x['access_token'])) fail('Meta did not swap the token: ' . (string) ($x['error']['message'] ?? 'no reason given'));
         $acc = $gget($g . '/me/accounts?' . http_build_query(['fields' => 'id,name,access_token,tasks', 'limit' => 100, 'access_token' => $x['access_token']]));
         if (empty($acc['data'])) fail('No pages came back: ' . (string) ($acc['error']['message'] ?? 'the token has no page permissions'));
