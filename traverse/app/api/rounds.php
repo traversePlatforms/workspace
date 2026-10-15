@@ -3642,7 +3642,8 @@ function leadsAll(): array {
         if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365QuoteLink((string) $u['id'])];   /* 2026-10-14, the quote generator; the link is the customer's quote page */
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
-        if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];   /* SX-58: the deposit paid by Square link */
+        if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
+        if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
         if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job', 'facts', 'terms']));
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
@@ -3854,6 +3855,25 @@ if ($action === 'a365house') {
     $h = houseFacts((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''));
     if (!$h) fail('No such house.', 404);
     out(['ok' => true, 'house' => $h]);
+}
+/* change a lead's name, phone or email (2026-10-15: the Quick quote reused a lead by its phone number and sent the form to its old email);
+   what changed goes on the lead as a note */
+if ($action === 'leadcontact') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $L = $all[$id]; $ch = []; $said = [];
+    foreach (['name' => 120, 'phone' => 40, 'email' => 160] as $k => $max) {
+        if (!array_key_exists($k, $body)) continue;
+        $v = $clean($body[$k] ?? '', $max); if ($v === '' || $v === (string) ($L[$k] ?? '')) continue;
+        if ($k === 'email' && !filter_var($v, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+        if ($k === 'phone' && strlen((string) preg_replace('/\D/', '', $v)) < 10) fail('That phone number looks too short.');
+        $ch[$k] = $v; $said[] = $k . ' ' . ((string) ($L[$k] ?? '') !== '' ? (string) $L[$k] . ' → ' : '') . $v;
+    }
+    if (!$ch) out(['ok' => true, 'same' => true]);
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'contact' => $ch, 'note' => mb_substr('Changed: ' . implode('; ', $said), 0, 500), 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'changed' => array_keys($ch)]);
 }
 if ($action === 'leadhouse' || $action === 'leadask') {
     if (!desk()) fail('Not allowed.', 403);

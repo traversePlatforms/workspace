@@ -5574,7 +5574,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tel = digits(Q.phone).slice(-10), em = String(Q.email || '').toLowerCase(), had = false, id = '';
     api('leads').then(function (L) {
       var ex = ((L && L.leads) || []).filter(function (l) { return l.status !== 'lost' && ((tel.length === 10 && digits(l.phone).slice(-10) === tel) || (em && String(l.email || '').toLowerCase() === em)); })[0];
-      if (ex) { had = true; return { ok: true, id: ex.id }; }
+      if (ex) { had = true; return api('leadcontact', { body: { id: ex.id, name: Q.name, phone: Q.phone || '', email: Q.email || '' } }).then(function (c) { if (c && !c.ok) throw new Error(c.error || 'Could not update their details.'); if (c && c.changed && c.changed.length) had = 'updated'; return { ok: true, id: ex.id }; }); }   /* what was typed on the quote wins (2026-10-15) */
       return api('leadadd', { body: { src: Q.src || 'phone', name: Q.name, phone: Q.phone || '', email: Q.email || '', town: h && h.address ? streetCase(h.address) + (h.town ? ', ' + h.town : '') : '', need: st.pkg === 'aerate' ? 'Aeration' : 'Aeration and overseeding', msg: 'Quoted in the Quick quote' } });
     }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'Could not add the lead.');
@@ -5590,7 +5590,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!lead) throw new Error('The lead did not come back. Find it in the Pipeline.');
       S.qq = null;
       signSendView(lead, { price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null });
-      toast(had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + ' \u00b7 ' + money0(st.cur.price), null);
+      toast(had === 'updated' ? 'Using their lead, details updated' : had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + (lead.email ? ' \u00b7 ' + lead.email : '') + ' \u00b7 ' + money0(st.cur.price), null);
     }).catch(function (e) { btn.disabled = false; toast('Not done', (e && e.message) || 'Try again.', null); });
   }
   function quickQuoteView(typed) { hideSplash(); houseLookupView(null, null, typed, true); }   /* hideSplash: opened from the link or at sign-in, the logo screen stayed on top (2026-10-15) */
