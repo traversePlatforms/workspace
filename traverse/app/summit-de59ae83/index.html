@@ -1859,6 +1859,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qsteps input{flex:1;min-width:120px;font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qdetail{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
   .sqbox{display:grid;gap:8px}.sqbox:empty{display:none}
+  .lpquote{grid-column:1/-1;margin-top:8px}
   .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
   .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
@@ -5574,6 +5575,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var facts = q('div', 'lpfacts'); facts.appendChild(q('div', 'skel'));
     box.appendChild(pic); box.appendChild(facts);
     var open = leadHouseRow(l); open.classList.add('lpopen'); box.appendChild(open);
+    if (CO.a365) {   /* the way in to the questions and the quote was only the address row (Matthew 2026-10-15: "to build a quote you have to click the address?") */
+      var bq = q('button', 'save jbook lpquote', l.quote ? 'Open the quote (' + money0(l.quote.price) + ') ›' : 'Build the quote ›'); bq.type = 'button';
+      bq.addEventListener('click', function () { houseLookupView(l, l.house); }); box.appendChild(bq);
+    }
     var go = function () {
       api('a365house', { params: { region: l.house.region, id: l.house.door } }).then(function (j) {
         facts.textContent = '';
