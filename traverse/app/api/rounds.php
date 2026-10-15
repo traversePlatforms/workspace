@@ -2002,7 +2002,7 @@ function slotFree(string $crew, string $date, string $slot, string $lead, string
 /** an offer the customer can still take: a day not gone, a crew still doing jobs, the slot still free */
 function offerLive(array $l): ?array {
     $o = $l['quote']['offer'] ?? null; if (!is_array($o)) return null;
-    if (($o['date'] ?? '') < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') || !in_array($o['crew'] ?? '', walkerList(), true)) return null;
+    if (($o['date'] ?? '') < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') || !in_array($o['crew'] ?? '', jobCrewList(), true)) return null;
     $until = offerUntil($l); if ($until !== null && $until < time()) return null;   /* the 72-hour hold has run out: the quote page asks them to say yes instead */
     return slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null ? $o : null;
 }
@@ -3700,7 +3700,7 @@ if ($action === 'leadhouse' || $action === 'leadask') {
 /* Brad on the day (or the office): was the lawn about the size we had? right / bigger / smaller, with his own figure if he has one */
 if ($action === 'lawncheck') {
     if (!$isPost) fail('POST required', 405);
-    if (!desk() && !in_array($me, walkerList(), true)) fail('Not allowed.', 403);
+    if (!desk() && !in_array($me, walkerList(), true) && !array_filter(jobsAll(), fn($j) => !$j['off'] && $j['crew'] === $me)) fail('Not allowed.', 403);   /* walkers, and whoever has been given a job */
     $h = houseFacts((string) ($body['region'] ?? ''), (string) ($body['id'] ?? ''));
     if (!$h) fail('No such house.', 404);
     $v = (string) ($body['v'] ?? ''); if (!in_array($v, ['right', 'bigger', 'smaller'], true)) fail('Say whether it was right, bigger or smaller.');
@@ -3766,7 +3766,7 @@ if ($action === 'leadquote') {
         if (!is_array($o)) $q['offer'] = null;
         else {
             $oc = (string) ($o['crew'] ?? ''); $od = (string) ($o['date'] ?? ''); $os = (string) ($o['slot'] ?? '');
-            if (!in_array($oc, walkerList(), true)) fail('Pick who does the job.');
+            if (!in_array($oc, jobCrewList(), true)) fail('Pick who does the job.');
             if (!dateOk($od) || $od < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
             if (in_array((int) (new DateTime($od . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
             if (!jobSlot($os)) fail('Pick an arrival time.');
@@ -3824,7 +3824,7 @@ if ($action === 'jobs') {
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     $holds = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] >= $from && $h['date'] <= $to));
-    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => walkerList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
+    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
 }
 /* each crew's area for a day ("the town of the day" in Randy's sheet) */
 if ($action === 'jobday') {
@@ -3832,7 +3832,7 @@ if ($action === 'jobday') {
     if (!$isPost) fail('POST required', 405);
     $date = (string) ($body['date'] ?? ''); $crew = (string) ($body['crew'] ?? ''); $area = $clean($body['area'] ?? '', 40);
     if (!dateOk($date)) fail('That is not a real date.');
-    if (!in_array($crew, walkerList(), true)) fail('Pick someone who does walks and jobs.');
+    if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the jobs that day.');
     $lk = @fopen(DATA_DIR . '/jobdays.json.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $all = jobDays(); if ($area === '') unset($all[$date][$crew]); else $all[$date][$crew] = $area;
     if (isset($all[$date]) && !$all[$date]) unset($all[$date]);
@@ -3858,7 +3858,7 @@ if ($action === 'jobsave') {
     $lead = $have ? (string) $have['lead'] : (string) ($body['lead'] ?? '');
     if (!leadOk($lead) || !isset($leads[$lead])) fail('Book a job from a lead.', 404);
     $crew = (string) ($body['crew'] ?? ($have['crew'] ?? ''));
-    if (!in_array($crew, walkerList(), true)) fail('Pick who does the job. An admin marks them in Accounts.');
+    if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
     $date = (string) ($body['date'] ?? ($have['date'] ?? '')); if (!dateOk($date)) fail('That is not a real date.');
     $tz = new DateTimeZone(appTz());
     if ($date < (new DateTime('today', $tz))->format('Y-m-d') && (!$have || $date !== $have['date'])) fail('That day has gone. Pick today or later.');
@@ -3908,7 +3908,7 @@ if ($action === 'jobforecast') {
 if ($action === 'jobweathersuggest') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     $date = (string) ($_GET['date'] ?? ''); if (!dateOk($date)) fail('Pick the day.');
-    out(['ok' => true, 'date' => $date, 'jobs' => wxSuggest($date), 'slots' => array_map(fn($x) => ['k' => $x[0], 'label' => $x[1]], jobSlots()), 'crews' => walkerList(), 'forecast' => wxForecast()['days'][$date] ?? null]);
+    out(['ok' => true, 'date' => $date, 'jobs' => wxSuggest($date), 'slots' => array_map(fn($x) => ['k' => $x[0], 'label' => $x[1]], jobSlots()), 'crews' => jobCrewList(), 'forecast' => wxForecast()['days'][$date] ?? null]);
 }
 if ($action === 'jobweather') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
@@ -4016,7 +4016,7 @@ function deskWalks(): array {
     foreach (readLines(DATA_DIR . '/deskwalks.log') as $r) {
         $id = (string) $r['id'];
         if (!isset($o[$id])) {
-            if (empty($r['walker']) || empty($r['kind'])) continue;
+            if (!array_key_exists('walker', $r) || empty($r['kind'])) continue;   /* walker '' = not given to anyone yet (2026-10-15) */
             $o[$id] = $r + ['off' => false, 'done' => null, 'made' => (int) ($r['at'] ?? 0), 'chg' => (int) ($r['at'] ?? 0)];
             continue;
         }
@@ -4037,6 +4037,25 @@ function walkerList(): array {
     foreach ($TEAM['byName'] as $n => $x) if (!empty($x['walker'])) $o[] = (string) $n;
     usort($o, fn($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
     return $o;
+}
+/** who can be given a job. Sixfold's 365 flow (2026-10-15, Matthew: Brad does the jobs, not walks; quotes and deposits are taken by
+    phone): anyone active who is not the office and not a check account, picked from a list. Everywhere else: whoever does walks. */
+function jobCrewList(): array {
+    global $TEAM;
+    if (empty(company()['a365'])) return walkerList();
+    $o = [];
+    foreach ($TEAM['byName'] as $n => $x) if (($x['role'] ?? '') !== 'office' && stripos((string) $n, 'Claude Check') !== 0) $o[] = (string) $n;
+    usort($o, fn($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
+    return $o;
+}
+/** the jobs board's rows: on the 365 flow, whoever has been given a job or a held day (until then, whoever does walks) */
+function jobBoardCrews(): array {
+    if (empty(company()['a365'])) return walkerList();
+    $all = jobCrewList(); $had = [];
+    foreach (jobsAll() as $j) if (!$j['off']) $had[(string) $j['crew']] = 1;
+    foreach (jobHolds() as $h) $had[(string) $h['crew']] = 1;
+    $o = array_values(array_filter($all, fn($n) => isset($had[$n])));
+    return $o ?: array_values(array_intersect($all, walkerList()));
 }
 function pushDevices(string $name): int { global $TEAM; $pid = (string) ($TEAM['byName'][$name]['id'] ?? ''); return $pid === '' ? 0 : count(pushSubs()[$pid] ?? []); }
 /** one alert to everything one person turned alerts on for; how many phones and computers took it */
@@ -4132,7 +4151,7 @@ if ($action === 'deskwalk') {
             $cw = loadWalks((string) $have['region'])[(string) $have['door']] ?? null;
             if ($cw && $cw['date'] === (string) $have['date'] && $cw['time'] === (string) ($have['time'] ?? '')) appendWalk((string) $have['region'], ['id' => (string) $have['door'], 'date' => null, 'by' => $me, 'at' => time()]);
         }
-        $al = $have['walker'] !== $me ? pushName($have['walker'], $vw . ' cancelled: ' . deskWhen($have['date'], $have['time']), $have['title'] . ' · cancelled by ' . $me, './', 'dw-' . $id) : null;
+        $al = $have['walker'] !== '' && $have['walker'] !== $me ? pushName($have['walker'], $vw . ' cancelled: ' . deskWhen($have['date'], $have['time']), $have['title'] . ' · cancelled by ' . $me, './', 'dw-' . $id) : null;
         out(['ok' => true, 'alert' => $al]);
     }
     /* what it is for: kept from the booking when changing one */
@@ -4153,20 +4172,22 @@ if ($action === 'deskwalk') {
         foreach ($all as $w) if (!$w['off'] && deskTarget($w) === $tgt) fail('This already has a walk booked. Change that one.', 409);
     }
     $walker = trim((string) ($body['walker'] ?? ($have['walker'] ?? '')));
-    if (!in_array($walker, walkerList(), true)) fail('Pick someone who does walks. An admin marks them in Accounts.');
+    /* 2026-10-15 (Matthew): a walk can be booked before anyone is given it ("Not given to anyone yet"), and for any time that day;
+       whoever is picked later from the list gets the alert then */
+    if ($walker !== '' && !in_array($walker, walkerList(), true)) fail('Pick someone who does walks. An admin marks them in Accounts.');
     $date = (string) ($body['date'] ?? ($have['date'] ?? '')); $time = (string) ($body['time'] ?? ($have['time'] ?? ''));
     if (!dateOk($date)) fail('That is not a real date.');
     $tz = new DateTimeZone(appTz());
     $diff = (int) round(((new DateTime($date . ' 00:00', $tz))->getTimestamp() - (new DateTime('today', $tz))->getTimestamp()) / 86400);
     if ($diff < 0 && (!$have || $date !== $have['date'])) fail('That day has gone. Pick today or later.');
     if ($diff > 180) fail('Pick a date within the next six months.');
-    if (!preg_match('/^(0[6-9]|1\d|20):(00|15|30|45)$/D', $time)) fail('Pick a time between 6 am and 8:45 pm.');
+    if (!preg_match('/^(0[6-9]|1\d|20):(00|15|30|45)$/D', $time) && $time !== '') fail('Pick a time between 6 am and 8:45 pm.');
     $mins = (int) ($body['mins'] ?? ($have['mins'] ?? 60)); if (!in_array($mins, DESK_MINS, true)) fail('Pick how long it takes.');
     $addr = array_key_exists('addr', $body) ? $clean($body['addr'], 160) : (string) ($have['addr'] ?? '');
     $note = array_key_exists('note', $body) ? $clean($body['note'], 500) : (string) ($have['note'] ?? '');
     if ($kind === 'door' && $addr === '') $addr = $title . ', ' . regionLabel($key);
-    if ($addr === '') fail('Add the address, so ' . $walker . ' knows where to go.');
-    if (empty($body['force'])) {
+    if ($addr === '') fail('Add the address, so ' . ($walker !== '' ? $walker : 'whoever goes') . ' knows where to go.');
+    if (empty($body['force']) && $walker !== '' && $time !== '') {
         $cl = deskClashes($walker, $date, $time, $mins, $have ? $id : '', $kind === 'door' ? $key . ':' . $door : '');
         if ($cl) out(['ok' => false, 'clash' => $cl, 'error' => $walker . ' already has something then.']);
     }
@@ -4183,15 +4204,16 @@ if ($action === 'deskwalk') {
     if ($kind === 'lead' && in_array($leads[$lead]['status'] ?? 'new', ['new', 'contacted'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $lead, 'status' => 'walk', 'by' => $me, 'at' => time()]);
     if ($kind === 'door') {
         $cur = loadWalks($key)[$door] ?? null;
-        if (!$cur || $cur['date'] !== $date || $cur['time'] !== $time) appendWalk($key, ['id' => $door, 'date' => $date, 'time' => $time, 'by' => $cur ? $cur['by'] : $me, 'at' => time()]);
+        if ($time !== '' && (!$cur || $cur['date'] !== $date || $cur['time'] !== $time)) appendWalk($key, ['id' => $door, 'date' => $date, 'time' => $time, 'by' => $cur ? $cur['by'] : $me, 'at' => time()]);
     }
     /* the alerts: never to the person doing the booking */
     $when = deskWhen($date, $time); $where = $kind === 'lead' ? trim((string) ($leads[$lead]['town'] ?? '')) : '';
     $txt = $title . ($where !== '' ? ' · ' . $where : '') . ' · booked by ' . $me;
     $al = null;
-    if (!$have) $al = $walker !== $me ? pushName($walker, $vw . ' booked: ' . $when, $txt, './?walk=' . $nid, 'dw-' . $nid) : null;
+    if ($walker === '') $al = null;
+    elseif (!$have) $al = $walker !== $me ? pushName($walker, $vw . ' booked: ' . $when, $txt, './?walk=' . $nid, 'dw-' . $nid) : null;
     elseif ($walker !== $have['walker']) {
-        if ($have['walker'] !== $me) pushName($have['walker'], $vw . ' handed to ' . $walker, $have['title'] . ' · ' . deskWhen($have['date'], $have['time']) . ' · by ' . $me, './', 'dw-' . $id);
+        if ($have['walker'] !== '' && $have['walker'] !== $me) pushName($have['walker'], $vw . ' handed to ' . $walker, $have['title'] . ' · ' . deskWhen($have['date'], $have['time']) . ' · by ' . $me, './', 'dw-' . $id);
         $al = $walker !== $me ? pushName($walker, $vw . ' booked: ' . $when, $txt, './?walk=' . $id, 'dw-' . $id) : null;
     } elseif ($date !== $have['date'] || $time !== $have['time']) $al = $walker !== $me ? pushName($walker, $vw . ' moved: ' . $when, $title . ' · was ' . deskWhen($have['date'], $have['time']) . ' · by ' . $me, './?walk=' . $id, 'dw-' . $id) : null;
     out(['ok' => true, 'id' => $nid, 'alert' => $al]);
@@ -4795,7 +4817,7 @@ if ($action === 'signsend') {
     $how = (string) ($body['how'] ?? ''); if (!in_array($how, ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
     $crew = (string) ($body['crew'] ?? ''); $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
-    if (!in_array($crew, walkerList(), true)) fail('Pick who does the job.');
+    if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
     if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
     if (in_array((int) (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
     if (!jobSlot($slot)) fail('Pick an arrival time.');

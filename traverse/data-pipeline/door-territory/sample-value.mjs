@@ -22,7 +22,7 @@ const LAYER = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/
    Windsor's Larimer side has no value). A town in two counties is listed under both: a parcel the other county answers for is
    left as it is (below). */
 const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'highlands-ranch', 'parker', 'castle-pines', 'aurora'], teller: ['woodland-park', 'divide', 'florissant', 'cripple-creek'],
-  jefferson: ['arvada', 'lakewood', 'wheat-ridge', 'edgewater', 'golden', 'littleton', 'westminster', 'superior'], adams: ['arvada', 'thornton', 'commerce-city', 'aurora', 'westminster', 'northglenn', 'federal-heights', 'brighton'],
+  jefferson: ['ken-caryl', 'columbine', 'arvada', 'lakewood', 'wheat-ridge', 'edgewater', 'golden', 'littleton', 'westminster', 'superior'], adams: ['arvada', 'thornton', 'commerce-city', 'aurora', 'westminster', 'northglenn', 'federal-heights', 'brighton'],
   arapahoe: ['centennial', 'englewood', 'aurora', 'littleton', 'greenwood-village', 'cherry-hills-village', 'sheridan'], weld: ['windsor', 'erie', 'thornton', 'brighton', 'longmont', 'northglenn'],
   boulder: ['erie', 'boulder', 'louisville', 'lafayette', 'superior', 'longmont'], denver: ['denver', 'south-denver'] };   /* + the 365 area towns 2026-10-15 */
 TOWNS.douglas.push('littleton', 'lone-tree');   /* +South Denver, Englewood, Aurora 2026-10-12 (left out when they were built) */

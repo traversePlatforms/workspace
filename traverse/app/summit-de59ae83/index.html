@@ -1730,6 +1730,11 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dwsub{font-size:13px;color:var(--soft);margin-top:4px;line-height:1.4}
   .dwdone{color:var(--booked);font-weight:700}
   .dwacts{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
+  .dwassign{margin-top:8px}.dwassign label{display:flex;gap:10px;align-items:center;font:700 13.5px var(--sans)}
+  .dwassign select{flex:1;min-width:0;font:15px var(--sans);padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .dwassign .lnk{background:none;border:0;padding:0;color:var(--accent);font:700 13px var(--sans);cursor:pointer}
+  .dwany{display:flex;gap:8px;align-items:center;font-size:14px}.dwany input{width:20px;height:20px;accent-color:var(--accent)}
+  .dwform label.off input{opacity:.45}
   .dwacts .lnk{background:none;border:0;padding:6px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
   .dwbookbtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:42px;border:0;border-radius:11px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;box-shadow:inset 0 0 0 1.5px var(--line)}
   .dwbookbtn .ic{width:17px;height:17px}
@@ -1870,6 +1875,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   /* the weather day and the forecast (2026-10-15) */
   .jwx{font-size:11.5px;color:var(--soft);display:grid;gap:1px;line-height:1.3}.jwx b{font-size:12px}
   .jwx.f-rain,.jwx.f-snow{color:#1e3a8a;background:#dbeafe;border-radius:8px;padding:4px 6px}.jwx.f-maybe{color:#92400e;background:#fef3c7;border-radius:8px;padding:4px 6px}.jwx.f-freeze{color:#155e75;background:#cffafe;border-radius:8px;padding:4px 6px}
+  .jcrewsel{width:100%;font:16px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
   .jwxbtn{border:1.5px dashed var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 12.5px var(--sans);padding:6px 8px;cursor:pointer}
   .jwxform .jwxrow{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}.jwxrow small{color:var(--soft)}
   .jwxpick{display:grid;grid-template-columns:1fr 1fr;gap:8px}.jwxpick label{display:grid;gap:4px;font-size:13px}.jwxpick input,.jwxpick select{font:15px var(--sans);padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
@@ -4142,7 +4148,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(nt);
     }
     if (!asOffice()) leadOwnerRows(l, c);   /* the office: leads from the ads and the website have no owner (2026-10-14) */
-    if (wdOn() && S.screen === 'pipeline' && !asOffice()) c.appendChild(deskWalkBlock('lead', l));   /* the walk desk (2026-10-14); the office quotes by phone */
+    if (wdOn() && S.screen === 'pipeline' && (!asOffice() || dwFor('lead', l.id))) c.appendChild(deskWalkBlock('lead', l));   /* the walk desk (2026-10-14); the office quotes by phone */
     var sb = q('div', 'lstat');
     LEAD_ST.forEach(function (x) {
       var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === x[0]));
@@ -4178,7 +4184,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return b;
   }
   function dwFor(kind, a, b) { var m = S.dwalks || {}; return kind === 'lead' ? m['lead:' + a] : m['door:' + a + ':' + b]; }
-  function dwWhen(w) { return dayName(w.date) + (w.time ? ', ' + fmtTime(w.time) : ''); }
+  function dwWhen(w) { return dayName(w.date) + (w.time ? ', ' + fmtTime(w.time) : ', any time'); }
   function dwEnd(t, mins) { var m = +t.slice(0, 2) * 60 + +t.slice(3, 5) + mins; return (m < 600 ? '0' : '') + Math.floor(m / 60) + ':' + (m % 60 < 10 ? '0' : '') + (m % 60); }
   function tMin(t) { return +String(t).slice(0, 2) * 60 + +String(t).slice(3, 5); }
   function minT(m) { var h = Math.floor(m / 60), n = m % 60; return (h < 10 ? '0' : '') + h + ':' + (n < 10 ? '0' : '') + n; }
@@ -4199,11 +4205,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var box = q('div', 'dwblock' + (w ? ' on' : ''));
     if (w) {
       var top = q('div', 'dwline'); top.appendChild(ico('cal', 2.2));
-      top.appendChild(q('b', null, VW() + ' ' + dwWhen(w) + ' with ' + w.walker)); box.appendChild(top);
+      top.appendChild(q('b', null, VW() + ' ' + dwWhen(w) + (w.walker ? ' with ' + w.walker : ''))); box.appendChild(top);
+      box.appendChild(dwAssign(w, pipelineView));
       box.appendChild(q('div', 'dwsub', w.mins + ' min · ' + w.addr + ' · booked by ' + w.by));
       if (w.done) box.appendChild(q('div', 'dwsub dwdone', dwDoneName(w.done.o) + ' · ' + w.done.by));
       var row = q('div', 'dwacts');
       var op = q('button', 'lnk', 'Open the ' + vw()); op.type = 'button'; op.addEventListener('click', function () { walkView(w.id, pipelineView, w.walker); });
+      if (!w.walker) op.hidden = true;   /* nobody's walk yet: nothing to open */
       var ch = q('button', 'lnk', 'Change or cancel'); ch.type = 'button'; ch.addEventListener('click', function () { deskBookView(kind, x, w); });
       row.appendChild(op); row.appendChild(ch); box.appendChild(row);
     } else {
@@ -4214,6 +4222,41 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     return box;
   }
+  /* who goes, picked from a list wherever a booked walk shows for the office and the admin (2026-10-15, Matthew: "for walks we can
+     assign Brandon or Brad"); the list is whoever is ticked Does walks. Changing it moves the walk to their calendar and alerts them. */
+  function dwAssign(w, after) {
+    var wrap = q('div', 'dwassign'), lb = q('label'), sel = q('select'), msg = q('div', 'dwsub');
+    lb.appendChild(q('span', null, 'Who goes')); lb.appendChild(sel); wrap.appendChild(lb); wrap.appendChild(msg);
+    function fill() {
+      sel.textContent = '';
+      var names = (S.dwalkers || []).map(function (p) { return p.name; });
+      if (w.walker && names.indexOf(w.walker) < 0) names.push(w.walker);
+      var o0 = q('option', null, 'Not given to anyone yet'); o0.value = ''; sel.appendChild(o0);
+      names.forEach(function (n) { var o = q('option', null, n); o.value = n; if (n === w.walker) o.selected = true; sel.appendChild(o); });
+    }
+    fill();
+    if (!S.dwalkers) deskLoad().then(fill);
+    function go(force) {
+      var nm = sel.value; msg.textContent = ''; sel.disabled = true;
+      api('deskwalk', { body: { id: w.id, walker: nm, force: force ? 1 : 0 } }).then(function (j) {
+        sel.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (j.clash) {
+          msg.appendChild(document.createTextNode(nm + ' already has something then: ' + j.clash.map(function (c) { return fmtTime(c.time) + ' ' + (c.kind === 'own' ? c.title : streetCase(c.title)); }).join(', ') + '. '));
+          var any = q('button', 'lnk', 'Give it to ' + nm + ' anyway'); any.type = 'button'; any.addEventListener('click', function () { go(true); }); msg.appendChild(any);
+          return;
+        }
+        if (!j.ok) { msg.textContent = j.error || 'Not saved. Try again.'; sel.value = w.walker || ''; return; }
+        w.walker = nm;
+        var a = j.alert;
+        if (after) after();
+        toast(nm ? VW() + ' given to ' + nm : VW() + ' not given to anyone yet',
+          !nm ? 'Pick who goes when you know.' : a && a.sent ? 'On ' + nm + '’s calendar, and the alert went to their phone.' : a && a.devices ? 'On ' + nm + '’s calendar. The alert did not go through.' : 'On ' + nm + '’s calendar. They have not turned on alerts yet.', null);
+      }).catch(function () { sel.disabled = false; sel.value = w.walker || ''; msg.textContent = 'No signal. Try again.'; });
+    }
+    sel.addEventListener('change', function () { go(false); });
+    return wrap;
+  }
   /* book or change a walk: who goes, the day with everyone's bookings side by side and their free times, how long, where */
   function deskBookView(kind, x, w) {
     hideToast(); S.signin = null; S.screen = 'deskbook'; foot.hidden = true; setDock(null);
@@ -4222,7 +4265,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('back', { title: (w ? 'Change the ' : 'Book the ') + vw(), sub: title, back: back, backLabel: 'Pipeline' });
     view.textContent = '';
     var tom = new Date(); tom.setDate(tom.getDate() + 1);
-    var P = { walker: w ? w.walker : '', date: w ? w.date : isoOf(tom), time: w ? w.time : '', mins: w ? w.mins : 60, day: null };
+    var P = { walker: w ? w.walker : '', date: w ? w.date : isoOf(tom), time: w ? w.time : '', mins: w ? w.mins : 60, day: null, nobody: !!(w && !w.walker), any: !!(w && !w.time) };
     var box = q('div', 'phf dwform');
     var head = q('div', 'dwfor'); head.appendChild(q('b', null, title));
     head.appendChild(q('div', 'dwsub', kind === 'lead' ? [x.need, x.town, digits(x.phone).length >= 10 ? fmtPhone(digits(x.phone)) : ''].filter(Boolean).join(' · ') : [x.town, x.area].filter(Boolean).join(' · ')));
@@ -4251,6 +4294,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tl = q('label', null, 'Time'); var ti = q('input'); ti.type = 'time'; ti.step = 900; ti.min = '06:00'; ti.max = '20:45'; ti.value = P.time;
     ti.addEventListener('change', function () { P.time = ti.value; drawBoard(); });
     tl.appendChild(ti); box.appendChild(tl);
+    var anyL = q('label', 'dwany'), anyI = q('input'); anyI.type = 'checkbox'; anyI.checked = P.any; anyL.appendChild(anyI); anyL.appendChild(q('span', null, 'Any time that day'));
+    var anyPaint = function () { ti.disabled = P.any; tl.classList.toggle('off', P.any); };
+    anyI.addEventListener('change', function () { P.any = anyI.checked; anyPaint(); });
+    box.appendChild(anyL); anyPaint();
     var al = q('label', null, 'Address'); var ai = q('input'); ai.maxLength = 160; ai.placeholder = 'House number, street and town';
     ai.value = w ? w.addr : kind === 'lead' ? (x.town || '') : streetCase(x.address) + ', ' + x.town;
     al.appendChild(ai); box.appendChild(al);
@@ -4277,13 +4324,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var list = (P.day && P.day.walkers) || (S.dwalkers || []).map(function (p) { return { name: p.name, alerts: p.alerts }; });
       if (!list.length) { who.appendChild(q('div', 'msg', 'Nobody is marked as doing ' + vw() + 's yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); sv.disabled = true; return; }
       sv.disabled = false;
-      if (!P.walker && list.length === 1) P.walker = list[0].name;
+      if (!P.walker && !P.nobody && list.length === 1) P.walker = list[0].name;
       list.forEach(function (p) {
-        var b = q('button', null, p.name); b.type = 'button'; b.setAttribute('aria-pressed', String(P.walker === p.name));
+        var b = q('button', null, p.name); b.type = 'button'; b.setAttribute('aria-pressed', String(!P.nobody && P.walker === p.name));
         if (!p.alerts) b.appendChild(q('small', null, 'alerts off'));
-        b.addEventListener('click', function () { P.walker = p.name; drawWho(); drawBoard(); });
+        b.addEventListener('click', function () { P.walker = p.name; P.nobody = false; drawWho(); drawBoard(); });
         who.appendChild(b);
       });
+      var nb = q('button', null, 'Nobody yet'); nb.type = 'button'; nb.setAttribute('aria-pressed', String(P.nobody));
+      nb.title = 'Book the day now and pick who goes later';
+      nb.addEventListener('click', function () { P.nobody = true; P.walker = ''; drawWho(); drawBoard(); });
+      who.appendChild(nb);
       var me = list.filter(function (p) { return p.name === P.walker; })[0];
       if (me && !me.alerts) who.appendChild(q('div', 'dwsub', me.name + ' has not turned on alerts on a phone yet, so the ' + vw() + ' only shows on their calendar. They turn alerts on in the app: Profile, Alerts.'));
     }
@@ -4308,7 +4359,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (P.date === todayISO()) { var nw = new Date(); if (m <= nw.getHours() * 60 + nw.getMinutes()) continue; }
           (function (t) {
             var b = q('button', null, fmtTime(t)); b.type = 'button'; b.setAttribute('aria-pressed', String(col.name === P.walker && P.time === t));
-            b.addEventListener('click', function () { P.walker = col.name; P.time = t; ti.value = t; clash.textContent = ''; drawWho(); drawBoard(); });
+            b.addEventListener('click', function () { P.walker = col.name; P.nobody = false; P.time = t; ti.value = t; P.any = false; anyI.checked = false; anyPaint(); clash.textContent = ''; drawWho(); drawBoard(); });
             slots.appendChild(b);
           })(minT(m)); n++;
         }
@@ -4327,10 +4378,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     function save(force) {
       err.textContent = ''; clash.textContent = '';
-      if (!P.walker) { err.textContent = 'Pick who goes.'; return; }
-      if (!ti.value) { err.textContent = 'Pick a time: tap a free one above or type it.'; return; }
-      if (!ai.value.trim()) { err.textContent = 'Add the address, so ' + P.walker + ' knows where to go.'; return; }
-      var body = { walker: P.walker, date: P.date, time: ti.value, mins: P.mins, addr: ai.value, note: nt.value };
+      if (!P.walker && !P.nobody) { err.textContent = 'Pick who goes, or Nobody yet.'; return; }
+      if (!ti.value && !P.any) { err.textContent = 'Pick a time: tap a free one above, type it, or tick Any time that day.'; return; }
+      if (!ai.value.trim()) { err.textContent = 'Add the address, so ' + (P.nobody ? 'whoever goes' : P.walker) + ' knows where to go.'; return; }
+      var body = { walker: P.nobody ? '' : P.walker, date: P.date, time: P.any ? '' : ti.value, mins: P.mins, addr: ai.value, note: nt.value };
       if (w) body.id = w.id; else if (kind === 'lead') { body.kind = 'lead'; body.lead = x.id; } else { body.kind = 'door'; body.region = x.region; body.door = x.id; }
       if (force) body.force = 1;
       sv.disabled = true;
@@ -4345,11 +4396,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }
         if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; return; }
         if (j.same) { back(); toast('Nothing changed', title, null); return; }
-        var a = j.alert, nm = P.walker;
-        var said = !a ? 'On ' + nm + '’s calendar.' : a.sent ? 'On ' + nm + '’s calendar, and the alert went to ' + (a.sent === 1 ? 'their phone.' : a.sent + ' of their devices.')
+        var a = j.alert, nm = P.nobody ? '' : P.walker;
+        var said = !nm ? 'Not given to anyone yet: pick who goes from the lead when you know.' : !a ? 'On ' + nm + '’s calendar.' : a.sent ? 'On ' + nm + '’s calendar, and the alert went to ' + (a.sent === 1 ? 'their phone.' : a.sent + ' of their devices.')
           : a.devices ? 'On ' + nm + '’s calendar. The alert did not go through.' : 'On ' + nm + '’s calendar. They have not turned on alerts yet.';
         S.pipeStage = 'walk'; back();   /* the Pipeline clears the toast when it opens, so the toast comes after */
-        toast((w ? VW() + ' changed' : VW() + ' booked') + ' · ' + dayName(P.date) + ', ' + fmtTime(ti.value), said, null);
+        toast((w ? VW() + ' changed' : VW() + ' booked') + ' · ' + dayName(P.date) + ', ' + (P.any ? 'any time' : fmtTime(ti.value)), said, null);
       }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was booked; try again.'; });
     }
     sv.addEventListener('click', function () { save(false); });
@@ -4379,7 +4430,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var c = q('div', 'door lead walkcard');
     var name = L ? (L.name || L.phone || L.email || 'Lead') : H ? streetCase(H.address) : w.title;
     c.appendChild(q('div', 'addr', name));
-    c.appendChild(q('div', 'meta', dwWhen(w) + '–' + fmtTime(dwEnd(w.time, w.mins)) + ' · ' + w.addr));
+    c.appendChild(q('div', 'meta', dwWhen(w) + (w.time ? '–' + fmtTime(dwEnd(w.time, w.mins)) : '') + ' · ' + w.addr));
+    if (wdOn()) c.appendChild(dwAssign(w, redraw));
     if (H && H.owner) c.appendChild(q('div', 'meta', 'Owner of record: ' + ownerText(H.owner)));
     var ct = q('div', 'lcontact');
     var tel = digits(L ? L.phone : H ? H.phone : '');
@@ -4861,7 +4913,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     function drawCrew() {
       crewRow.textContent = '';
-      var list = W.data ? W.data.crews : P.crew ? [P.crew] : [];
+      var list = W.data ? (W.data.pick || W.data.crews) : P.crew ? [P.crew] : [];
+      if (CO.a365 && W.data && list.length) {   /* 2026-10-15 (Matthew): a list to pick from, Brad for now; he hears once the customer has signed */
+        if (!P.crew) { var lc = ''; try { lc = localStorage.getItem('jobCrew') || ''; } catch (e) {} if (list.indexOf(lc) >= 0) P.crew = lc; else if (list.length === 1) P.crew = list[0]; }   /* the last one picked on this device */
+        if (P.crew && list.indexOf(P.crew) < 0) list = list.concat([P.crew]);
+        var cs = q('select', 'jcrewsel'), c0 = q('option', null, 'Pick who does the job'); c0.value = ''; cs.appendChild(c0);
+        list.forEach(function (n) { var o = q('option', null, n); o.value = n; if (n === P.crew) o.selected = true; cs.appendChild(o); });
+        cs.addEventListener('change', function () { P.crew = cs.value; try { localStorage.setItem('jobCrew', P.crew); } catch (e) {} drawStrip(); drawSlots(); });
+        sv.disabled = false; crewRow.appendChild(cs); return;
+      }
       if (W.data && !list.length) { crewRow.appendChild(q('div', 'msg', 'Nobody is marked as doing jobs yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); sv.disabled = true; return; }
       sv.disabled = false;
       if (!P.crew && list.length === 1) P.crew = list[0];
@@ -5103,9 +5163,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg', 'Your jobs need signal.')); });
     window.scrollTo(0, 0);
   }
-  /* on the home screen of someone who does jobs: what is coming */
+  /* on the home screen of someone who does jobs: what is coming (on the 365 flow anyone can be given a job, ticked or not) */
   function jobsHomeCard(host) {
-    if (!walkerOn() || S.offline) return;
+    if (!(walkerOn() || (CO.a365 && feat('walkdesk') && S.role !== 'office')) || S.offline) return;
     api('myjobs').then(function (j) {
       if (!j || !j.ok || S.screen !== 'tools') return;
       var today = todayISO(), up = j.jobs.filter(function (x) { return x.date >= today; });
