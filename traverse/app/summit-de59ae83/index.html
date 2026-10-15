@@ -1871,6 +1871,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qqrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.qqrow label{display:grid;gap:3px;font-size:12.5px;font-weight:700}
   .qqrow input{font:15px var(--sans);padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);min-width:0}
   @media (max-width:560px){.qqrow{grid-template-columns:1fr}}
+  .qqsrc button{font-size:12.5px}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
   .sendnote{font-size:12px;color:var(--soft);line-height:1.4}
@@ -5563,6 +5564,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      No lead in the app needed: the customer's name, number and email (kept on this screen only, never saved), the address, the house
      and the whole quote; then copy a summary for Monday, ClickUp or wherever she keeps her leads, and a text for the customer (the
      price only, never our figures). Not on our lists: quote by the lawn size they give. Its own link: ./?quote */
+  /* the Quick quote's yes (2026-10-15, Matthew: "how can she send over the document, can she do it from the quote builder"): it becomes
+     a lead (or uses theirs, by phone or email), with the house and this quote, then the same deposit and one-page form as the Pipeline */
+  function quickCanBook() { return !!CO.a365 && wdOn() && (asOffice() || S.role === 'admin'); }
+  function quickToLead(h, st, btn) {
+    var Q = S.qq || {};
+    if (!Q.name || !(digits(Q.phone).length >= 10 || Q.email)) { toast('Who is it for?', 'Add their name and a phone number or email at the top first.', null); window.scrollTo(0, 0); var i0 = document.querySelector('.qqwho input'); if (i0) i0.focus(); return; }
+    btn.disabled = true;
+    var tel = digits(Q.phone).slice(-10), em = String(Q.email || '').toLowerCase(), had = false, id = '';
+    api('leads').then(function (L) {
+      var ex = ((L && L.leads) || []).filter(function (l) { return l.status !== 'lost' && ((tel.length === 10 && digits(l.phone).slice(-10) === tel) || (em && String(l.email || '').toLowerCase() === em)); })[0];
+      if (ex) { had = true; return { ok: true, id: ex.id }; }
+      return api('leadadd', { body: { src: Q.src || 'phone', name: Q.name, phone: Q.phone || '', email: Q.email || '', town: h && h.address ? streetCase(h.address) + (h.town ? ', ' + h.town : '') : '', need: st.pkg === 'aerate' ? 'Aeration' : 'Aeration and overseeding', msg: 'Quoted in the Quick quote' } });
+    }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'Could not add the lead.');
+      id = r.id;
+      return h && h.region && h.id ? api('leadhouse', { body: { id: id, region: h.region, door: h.id } }) : { ok: true };
+    }).then(function () {
+      return api('leadquote', { body: { id: id, price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false } });
+    }).then(function (qj) {
+      if (!qj || !qj.ok) throw new Error((qj && qj.error) || 'Could not save the quote.');
+      return api('leads');
+    }).then(function (L2) {
+      var lead = ((L2 && L2.leads) || []).filter(function (l) { return l.id === id; })[0];
+      if (!lead) throw new Error('The lead did not come back. Find it in the Pipeline.');
+      S.qq = null;
+      signSendView(lead, { price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null });
+      toast(had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + ' \u00b7 ' + money0(st.cur.price), null);
+    }).catch(function (e) { btn.disabled = false; toast('Not done', (e && e.message) || 'Try again.', null); });
+  }
   function quickQuoteView(typed) { hideSplash(); houseLookupView(null, null, typed, true); }   /* hideSplash: opened from the link or at sign-in, the logo screen stayed on top (2026-10-15) */
   function quickWhoBox() {
     var Q = S.qq || (S.qq = { name: '', phone: '', email: '' });
@@ -5573,6 +5603,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       i.addEventListener('input', function () { Q[x[0]] = i.value.trim(); }); l.appendChild(i); row.appendChild(l);
     });
     w.appendChild(row);
+    if (quickCanBook()) {
+      if (!Q.src) Q.src = 'phone';
+      var sr = q('div', 'dwlen qqsrc'); w.appendChild(q('div', 'dwsub', 'Where they came from'));
+      [['phone', 'Phone call'], ['meta', 'Meta ad'], ['messenger', 'Messenger'], ['referral', 'Referral'], ['nextdoor', 'Nextdoor'], ['other', 'Other']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(Q.src === o[0]));
+        b.addEventListener('click', function () { Q.src = o[0]; [].forEach.call(sr.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); });
+        sr.appendChild(b);
+      });
+      w.appendChild(sr);
+    }
     var cl = q('button', 'lnk', 'Clear for the next customer'); cl.type = 'button'; cl.addEventListener('click', function () { S.qq = null; quickQuoteView(); }); w.appendChild(cl);
     return w;
   }
@@ -6088,6 +6128,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           acts.appendChild(q('div', 'ltrynote', 'The text and email open on this phone, filled in. Nothing is sent until you press send. They carry the price only, never our lawn figures.'));
         }
         if (lead && wdOn()) { var bk = q('button', 'save jbook', 'Book the job ›'); bk.type = 'button'; bk.addEventListener('click', function () { jobBookView(lead, null, { price: st.cur.price, pkg: st.pkg, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null }); }); acts.appendChild(bk); }   /* the jobs board (2026-10-14) */
+        if (!lead && CO.a365 && quickCanBook()) {   /* the Quick quote's yes: the deposit and the one-page form */
+          var yq = q('button', 'save jbook', 'They said yes: take the deposit \u203a'); yq.type = 'button';
+          yq.addEventListener('click', function () { quickToLead(h, st, yq); });
+          acts.appendChild(yq);
+          acts.appendChild(q('div', 'ltrynote', 'Adds them as a lead with this house and quote (or uses their lead if they already have one), then the deposit and the one-page form, the same as from the Pipeline.'));
+        }
         if (!lead && CO.a365) {   /* the Quick quote: copy it out */
           var cp1 = q('button', 'save jbook', 'Copy for Monday, ClickUp or your notes'); cp1.type = 'button';
           cp1.addEventListener('click', function () { copyText(quickSummary(h, st, E), 'The quote summary is ready to paste.'); });
