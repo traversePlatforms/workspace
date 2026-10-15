@@ -2525,7 +2525,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the logo goes home, the way people expect a logo to (Matthew, 2026-10-04); on the tools screen it goes to the top */
   function homeMark() {
     var h = q('button', 'mkbtn'); h.type = 'button'; h.setAttribute('aria-label', 'Home: field tools');
-    h.appendChild(asOffice() ? a365Mark() : ridge('mk'));
+    h.appendChild(asOffice() || S.role === 'quote' ? a365Mark() : ridge('mk'));
     h.addEventListener('click', function () { if (S.screen === 'tools') window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); else chooseView(); });
     return h;
   }
@@ -3206,7 +3206,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else big.textContent = initials(S.me);
     me.appendChild(big);
     var who = q('div', 'pfwho'); who.appendChild(q('b', null, S.me || ''));
-    who.appendChild(q('span', null, (S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : S.role === 'office' ? 'Office' : 'Crew') + (S.walker && feat('walkdesk') ? ' \u00b7 does ' + vw() + 's' : '')));
+    who.appendChild(q('span', null, (S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : S.role === 'office' ? 'Office' : S.role === 'quote' ? 'Quote only' : 'Crew') + (S.walker && feat('walkdesk') ? ' \u00b7 does ' + vw() + 's' : '')));
     var pa = q('div', 'pfacts');
     var pick = q('input'); pick.type = 'file'; pick.accept = 'image/*'; pick.hidden = true;
     var up = q('button', 'lnk', S.avatar ? 'Change photo' : 'Add a photo'); up.type = 'button';
@@ -3350,6 +3350,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(hd); box.appendChild(g);
   }
   function chooseView() {
+    if (S.role === 'quote') { quickQuoteView(); return; }   /* quote-only accounts: the Quick quote is all there is (2026-10-15) */
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools'; S.inOffice = false;
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
@@ -5246,7 +5247,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* an alert tapped (?job=): open that job once signed in */
   /* ./?quote: straight to the Quick quote (a bookmark beside her other tools) */
   function quoteReturn() {
-    if (!/[?&]quote\b/.test(location.search) || !CO.a365 || !(asOffice() || S.role === 'admin')) return false;
+    if (!/[?&]quote\b/.test(location.search) || !CO.a365 || !(asOffice() || S.role === 'admin' || S.role === 'quote')) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
     quickQuoteView(); return true;
   }
@@ -5747,7 +5748,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the 365 office (2026-10-14, Matthew: Jen's screens in 365's colours, her own home, no doors or stats, and a Pipeline that
      uses a computer's width) ---- */
-  function a365Brand() { var on = asOffice(); document.body.classList.toggle('a365', on); return on; }
+  function a365Brand() { var on = asOffice() || S.role === 'quote'; document.body.classList.toggle('a365', on); return on; }
   function a365Mark(cls) { var i = q('img', cls || 'a365mk'); i.src = 'a365-badge.png'; i.alt = ''; return i; }
   /* the office home: find a house, who to contact next, what is booked with Brad */
   function officeHome() {
@@ -7325,6 +7326,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
+    if (S.role === 'quote') return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']]];
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
@@ -7352,7 +7354,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (dnav._sig !== sig) {
       dnav._sig = sig; dnav.textContent = '';
       var home = q('button', 'dnh'); home.type = 'button'; home.setAttribute('aria-label', 'Field tools');
-      if (asOffice()) { home.appendChild(a365Mark('a365mk dn')); home.appendChild(q('b', null, (CO.a365 && CO.a365.name) || '365 Aeration')); }
+      if (asOffice() || S.role === 'quote') { home.appendChild(a365Mark('a365mk dn')); home.appendChild(q('b', null, (CO.a365 && CO.a365.name) || '365 Aeration')); }
       else { home.appendChild(ridge('mk')); home.appendChild(q('b', null, (CO && CO.name) || 'Doors')); }
       home.addEventListener('click', chooseView); dnav.appendChild(home);
       var links = q('div', 'dnl');
@@ -9252,7 +9254,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function roleSeg(cur, onPick) {
     var seg = q('div', 'aseg');
-    [['crew', 'Crew']].concat(feat('walkdesk') ? [['office', 'Office']] : [], [['manager', 'Manager'], ['admin', 'Admin']]).forEach(function (o) {
+    [['crew', 'Crew']].concat(feat('walkdesk') ? [['office', 'Office']] : [], feat('walkdesk') && CO.a365 ? [['quote', 'Quote only']] : [], [['manager', 'Manager'], ['admin', 'Admin']]).forEach(function (o) {
       var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0]));
       b.addEventListener('click', function () { onPick(o[0]); [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
       seg.appendChild(b);
@@ -9303,7 +9305,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(top);
     if (S.pins && S.pins[a.id]) c.appendChild(q('div', 'pin', 'PIN ' + S.pins[a.id].slice(0, 3) + ' ' + S.pins[a.id].slice(3)));
     var meta = q('div', 'meta');
-    meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'super' ? 'Traverse' : a.role === 'admin' ? 'Admin' : a.role === 'manager' ? 'Manager' : a.role === 'office' ? 'Office' : 'Crew'));
+    meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'super' ? 'Traverse' : a.role === 'admin' ? 'Admin' : a.role === 'manager' ? 'Manager' : a.role === 'office' ? 'Office' : a.role === 'quote' ? 'Quote only' : 'Crew'));
     if (a.walker && feat('walkdesk') && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Does ' + vw() + 's'));
     var tm = (S.acctTeams || []).filter(function (t) { return t.id === a.team; })[0];
     if (tm && !a.off) meta.appendChild(q('span', 'tag teamtag', tm.name));

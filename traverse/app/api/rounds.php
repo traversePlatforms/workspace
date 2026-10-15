@@ -2251,6 +2251,7 @@ if ($action === 'sitelead') {
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'squarestate'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -2353,7 +2354,8 @@ if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'walker
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
 /* teams (2026-10-05): who is on whose team, worked out once per request; the functions and actions are further down */
 /* 'office' (2026-10-14, the walk desk): calls, emails and booking walks, nothing else of the admin's; only where features.walkdesk is on */
-define('ROLES', feature('walkdesk') ? ['crew', 'office', 'manager', 'admin'] : ['crew', 'manager', 'admin']);
+define('ROLES', feature('walkdesk') ? (company()['a365'] ? ['crew', 'office', 'quote', 'manager', 'admin'] : ['crew', 'office', 'manager', 'admin']) : ['crew', 'manager', 'admin']);
+/* 'quote' (2026-10-15, Matthew: "an account that goes straight to the quote generator and only shows that"): the Quick quote and nothing else; the server refuses every other action */
 $TEAM = teamInfo($basePeople, $acct, $sessionKey);
 $myTeam = (string) ($TEAM['byName'][$me]['team'] ?? '');
 
@@ -3748,7 +3750,7 @@ function houseFacts(string $key, string $id): ?array {
 }
 if (in_array($action, ['a365house', 'leadhouse', 'leadask', 'lawncheck'], true) && !feature('walkdesk')) fail('Not here.', 404);
 if ($action === 'a365house') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     $h = houseFacts((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''));
     if (!$h) fail('No such house.', 404);
     out(['ok' => true, 'house' => $h]);
@@ -3836,7 +3838,7 @@ function a365Gas(): ?array {
 }
 if (in_array($action, ['a365pricing', 'a365pricingset', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
 if ($action === 'a365pricing') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     out(['ok' => true, 'pricing' => a365Pricing(), 'gas' => a365Gas(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
 }
@@ -4171,7 +4173,7 @@ function jobCrewList(): array {
     global $TEAM;
     if (empty(company()['a365'])) return walkerList();
     $o = [];
-    foreach ($TEAM['byName'] as $n => $x) if (($x['role'] ?? '') !== 'office' && stripos((string) $n, 'Claude Check') !== 0) $o[] = (string) $n;
+    foreach ($TEAM['byName'] as $n => $x) if (!in_array($x['role'] ?? '', ['office', 'quote'], true) && stripos((string) $n, 'Claude Check') !== 0) $o[] = (string) $n;
     usort($o, fn($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
     return $o;
 }
@@ -5700,7 +5702,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $name = acctName((string) ($body['name'] ?? '')); $r = $isMgr ? 'crew' : (string) ($body['role'] ?? 'crew');
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
-        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office, manager or admin.' : 'Pick crew, manager or admin.');
+        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.');
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
@@ -5720,7 +5722,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['off']) fail('Turn the account back on first.');
         if (array_key_exists('name', $body) && !acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if ($name !== $t['name'] && acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');   /* renaming into one; an existing one keeps its name */
-        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office, manager or admin.' : 'Pick crew, manager or admin.');
+        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.');
         if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
         if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
         if ($t['role'] === 'admin' && $r !== 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin. Make someone else an admin first.');
@@ -6038,7 +6040,7 @@ if ($action === 'search') {
     $words = array_values(array_filter($words, fn($w) => !in_array($w, ['CO', 'COLO', 'COLORADO', 'USA'], true) && !preg_match('/^\d{5}$/D', $w)));
     $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
-    $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && desk();
+    $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && (desk() || $role === 'quote');
     if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $hits = [];
     foreach (searchIndex() as $line) {
