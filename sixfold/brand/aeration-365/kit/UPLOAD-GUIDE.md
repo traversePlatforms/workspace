@@ -45,7 +45,7 @@ These are drafts. Post them when you choose to; nothing goes out from here.
 ## Instagram, step by step
 
 1. **Username:** **@365aeration** if it's free (it matches the website). If not, try @365aerationandseeding or @365aeration.co. Instagram shows whether a name is taken as you type it.
-2. **Profile photo:**  (Edit profile › Edit picture).
+2. **Profile photo:** `social/profile-1080.png` (Edit profile › Edit picture).
 3. **Name field:** 365 Aeration & Seeding. The name field is searchable, so people find you by it.
 4. **Bio** (Instagram allows 150 characters; this is 104):
    > Core aeration & overseeding across the Denver metro. Call or text (720) 830-4553 for a quote.
@@ -53,7 +53,7 @@ These are drafts. Post them when you choose to; nothing goes out from here.
 6. **Switch to a business account** (Settings › Account type and tools): category **Lawn care service**, contact button with (720) 830-4553 and contact@365aeration.com.
 7. **Connect it to the Facebook page** (Meta Business Suite › Settings › Instagram). Bryce: posts made on Instagram also post to Facebook, but not the other way round, and Instagram brings him about 40% of his customers.
 8. **First grid, three posts per row:** post the four drafts in this order, so the intro ends up top-left: tip 3, tip 2, tip 1, then intro. Instagram shows newest first.
-9. **Highlights:** post the story (), add it to a highlight called **Quotes**, and give it the Quotes cover. Do Tips and About as you have stories for them.
+9. **Highlights:** post the story (`social/story-quote-1080x1920.png`), add it to a highlight called **Quotes**, and give it the Quotes cover. Do Tips and About as you have stories for them.
 
 Posting is yours to do; nothing goes out from here.
 
