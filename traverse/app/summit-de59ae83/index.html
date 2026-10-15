@@ -5584,7 +5584,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (st.sq) lines.push('Lawn priced at: ' + Number(st.sq).toLocaleString(LOCALE) + ' sq ft' + (E && !E.none ? ' (our estimate ' + Number(E.mid).toLocaleString(LOCALE) + ', likely ' + Number(E.a).toLocaleString(LOCALE) + '\u2013' + Number(E.b).toLocaleString(LOCALE) + ')' : ''));
     lines.push('Price: ' + money0(st.cur.price) + (sm.ladder && sm.ladder !== st.cur.price ? ' (list ' + money0(sm.ladder) + ')' : ''));
     var dep = Math.ceil(st.cur.price / 2); lines.push('Deposit (half): ' + money0(dep) + ' \u00b7 balance on the day: ' + money0(st.cur.price - dep));
-    (sm.rows || []).forEach(function (r) { if (r[2] && r[2] !== '\u2014') lines.push(r[0] + ': ' + r[1] + ' = ' + r[2]); });
+    (sm.rows || []).forEach(function (r) { if (r[2] === '') lines.push(r[0] + ': ' + r[1]); else if (r[2] && r[2] !== '\u2014') lines.push(r[0] + ': ' + r[1] + ' = ' + r[2]); });
     if (sm.known && sm.rows && sm.rows.length) lines.push('Left before labour: ' + money0(st.cur.price - sm.cost));
     return lines.join('\n');
   }
@@ -5949,15 +5949,37 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       steps.appendChild(dn); steps.appendChild(up); steps.appendChild(own);
       var noteBox = q('div', 'qnotes');
       box.appendChild(big); box.appendChild(detail); box.appendChild(q('div', 'dwsub qsteph', 'Change the price')); box.appendChild(steps); box.appendChild(noteBox);   /* the numbers first, then the controls (Matthew 2026-10-15) */
-      var trv = a365Travel(h, P);
+      var HIDE = !!P.hidden || asOffice() || S.role === 'quote';   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
+      var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
       /* the list price: the ladder plus the drive (in whole dollars); aerate only has no list price, Jen types hers (Matthew 2026-10-15) */
-      var ladderFor = function () { return st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
-      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = Math.max(st.pkg === 'aerate' ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
+      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
+      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
       up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
       own.addEventListener('input', function () { var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
       sqIn.addEventListener('input', function () { st.sq = parseInt(sqIn.value.replace(/\D/g, ''), 10) || 0; st.price = null; paint(); });
       var acts = q('div', 'qacts'); box.appendChild(acts);
+      function paintHidden() {
+        var my = ++calcSeq; clearTimeout(calcT);
+        calcT = setTimeout(function () {
+          api('a365calc', { params: { sq: st.sq || 0, pkg: st.pkg, price: st.price || '', fert: st.fert || '', region: (h && h.region) || '', id: (h && h.id) || '' } }).then(function (j) {
+            if (my !== calcSeq) return;
+            if (!j || !j.ok) { big.textContent = ''; big.appendChild(q('div', 'msg', (j && j.error) || 'Could not work out the price.')); return; }
+            st.srvLadder = j.ladder; var price = j.price, ladder = j.ladder;
+            big.textContent = '';
+            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, 'Aerate only: type your price below')); }
+            else { big.appendChild(q('b', null, money0(price))); big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE))); }
+            detail.textContent = ''; noteBox.textContent = '';
+            var rows = [];
+            if (st.pkg === 'full' && st.sq) { rows.push(['Seed', j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', j.fertName + ' \u00b7 ' + j.fertLb + ' lb', '']); }
+            if (rows.length) { var tb = q('div', 'qcost'); rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); tb.appendChild(d); }); detail.appendChild(tb); }
+            if (st.pkg === 'full' && !st.sq) detail.appendChild(q('div', null, 'Type the lawn size to work out the seed and fertilizer.'));
+            st.cur = { price: price, seedLb: j.seedLb, fertLb: j.fertLb }; st.sum = { rows: rows, cost: 0, known: false, ladder: ladder };
+            drawActs();
+          }).catch(function () { if (my === calcSeq) { big.textContent = ''; big.appendChild(q('div', 'msg', 'Working out the price needs signal.')); } });
+        }, 200);
+      }
       function paint() {
+        if (HIDE) { if (!st.cur) st.cur = { price: 0, seedLb: 0, fertLb: 0 }; paintHidden(); return; }
         var ladder = ladderFor(), price = st.price || ladder;
         big.textContent = '';
         if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, 'Aerate only: type your price below')); }

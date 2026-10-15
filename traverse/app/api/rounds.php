@@ -2251,7 +2251,7 @@ if ($action === 'sitelead') {
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'squarestate'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -3836,11 +3836,39 @@ function a365Gas(): ?array {
     }
     return is_array($c) ? $c : null;
 }
-if (in_array($action, ['a365pricing', 'a365pricingset', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
+if (in_array($action, ['a365pricing', 'a365pricingset', 'a365calc', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
 if ($action === 'a365pricing') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if ($role === 'office' || $role === 'quote') { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])]]); }   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     out(['ok' => true, 'pricing' => a365Pricing(), 'gas' => a365Gas(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
+}
+/* the quote worked out here, for anyone who must not see how (the office, quote-only accounts, an admin looking as the office):
+   the price for the lawn and the drive, and the seed and fertilizer pounds; never the costs or the formula */
+function a365ListPrice(int $sq, array $P): int { $x = $P['anchorPrice'] * pow(max($sq, 1) / $P['anchorSq'], $P['power']); return (int) max($P['minPrice'], round($x / 100) * 100 - 1); }
+if ($action === 'a365calc') {
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    $P = a365Pricing(); $sq = max(0, min(1000000, (int) ($_GET['sq'] ?? 0))); $pkg = ($_GET['pkg'] ?? 'full') === 'aerate' ? 'aerate' : 'full';
+    $drive = 0.0; $hasDrive = false;
+    $reg = (string) ($_GET['region'] ?? ''); $hid = (string) ($_GET['id'] ?? '');
+    if ($reg !== '' && $hid !== '' && preg_match('/^[a-z0-9-]{1,80}$/D', $hid)) {
+        $hf = houseFacts($reg, $hid); $B = company()['a365']['base'] ?? null; $gas = a365Gas();
+        if ($hf && isset($hf['lat'], $hf['lon']) && $B && $gas && !empty($gas['price'])) {
+            $rad = M_PI / 180; $dl = ($hf['lat'] - $B[0]) * $rad; $dn = ($hf['lon'] - $B[1]) * $rad;
+            $a = sin($dl / 2) ** 2 + cos($B[0] * $rad) * cos($hf['lat'] * $rad) * sin($dn / 2) ** 2; $mi = 3958.8 * 2 * atan2(sqrt($a), sqrt(1 - $a));
+            $drive = $mi * (float) ($P['roadFactor'] ?: 1.3) * 2 / (float) ($P['mpg'] ?: 18) * (float) $gas['price']; $hasDrive = true;
+        }
+    }
+    $ladder = $pkg === 'aerate' ? 0 : a365ListPrice($sq, $P) + (int) ceil($drive);
+    $want = (int) ($_GET['price'] ?? 0); $price = $want > 0 ? min($want, 100000) : $ladder;
+    $seedLb = 0.0; $fertLb = 0.0; $fName = '';
+    if ($pkg === 'full' && $sq > 0) {
+        $rate = max($P['seedLow'], min($P['seedHigh'], $P['seedBase'] * $price / max($ladder, 1)));
+        $seedLb = round($sq / 1000 * $rate, 1);
+        $fk = (string) ($_GET['fert'] ?? ''); $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $fk) $F = $f; if (!$F) foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null;
+        if ($F && $F['coverSq'] > 0) { $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1); $fName = (string) $F['name']; }
+    }
+    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive]);
 }
 if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
