@@ -66,6 +66,10 @@ return [
     // this file; .htaccess blocks it from being served.
     'log_file'       => __DIR__ . '/submissions.log',
 
+    // The app's Pipeline (2026-10-14): each lead is posted to traverseplatforms.com with this key. Kept in secrets.php.
+    'app_lead_key'   => (string) ($secrets['app_lead_key'] ?? ''),
+    'app_lead_url'   => (string) ($secrets['app_lead_url'] ?? 'https://traverseplatforms.com/api/rounds.php?action=sitelead'),   /* the override is for the test copy only */
+
     // Where a no-JavaScript submit is redirected on success.
     'thank_you'      => '/thank-you/',
 

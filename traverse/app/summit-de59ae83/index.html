@@ -6730,7 +6730,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       dnav.appendChild(q('span', 'dnsp'));
       var lab = q('label', 'dns'); lab.appendChild(ico('search', 2.2));
       var inp = q('input'); inp.type = 'search'; inp.placeholder = 'Find an address'; inp.setAttribute('aria-label', 'Find an address'); inp.autocomplete = 'off';
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { S.searchQ = inp.value.trim(); inp.value = ''; inp.blur(); searchView(chooseView); } });
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var v = inp.value.trim(); inp.value = ''; inp.blur(); if (asOffice()) { houseLookupView(null, null, v); return; } S.searchQ = v; searchView(chooseView); } });   /* the office: its House lookup, rented homes too (2026-10-14) */
       lab.appendChild(inp); dnav.appendChild(lab);
       dnav.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
     }

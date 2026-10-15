@@ -216,15 +216,23 @@ $lines[] = 'Sent ' . date('c')
     . ' — IP ' . ($_SERVER['REMOTE_ADDR'] ?? '?');
 $body = implode("\n", $lines);
 
-// The door app's Leads screen (2026-10-03): the same lead, filed beside the door data and
-// outside public_html, so it shows up in the app with a status. Only where sixfold-data
-// exists (the host); a local checkout skips it. Never allowed to put the lead at risk.
-$leadsHome = dirname(__DIR__, 2) . '/sixfold-data';
-if (is_dir($leadsHome) && (is_dir($leadsHome . '/leads') || @mkdir($leadsHome . '/leads', 0750))) {
-    @file_put_contents($leadsHome . '/leads/leads.log', json_encode([
-        'id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => time(),
-        'need' => $needLabel, 'name' => $name, 'phone' => $phone, 'email' => $email, 'town' => $town, 'msg' => $message,
-    ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+// The door app's Leads screen (2026-10-03; 2026-10-14). The app moved to traverseplatforms.com on 2026-10-09, so writing the
+// lead beside this site stopped reaching it (that folder is gone here). Now this server posts the lead to the app with a shared
+// key (app_lead_key in sixfold-private/secrets.php), a few seconds at most. Never allowed to put the lead at risk: the email
+// and the backup log below go ahead whatever happens, and the log records whether the app took it.
+$appLead = 'no key';
+$appKey = (string) ($cfg['app_lead_key'] ?? '');
+if ($appKey !== '' && function_exists('curl_init')) {
+    $ch = curl_init((string) ($cfg['app_lead_url'] ?? 'https://traverseplatforms.com/api/rounds.php?action=sitelead'));
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_CONNECTTIMEOUT => 4,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'X-Site-Key: ' . $appKey],
+        CURLOPT_POSTFIELDS => (string) json_encode(['src' => $src, 'need' => $needLabel, 'name' => $name, 'phone' => $phone,
+            'email' => $email, 'town' => $town, 'msg' => $message], JSON_UNESCAPED_UNICODE),
+    ]);
+    $appRes = curl_exec($ch); $appCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+    $appJ = is_string($appRes) ? json_decode($appRes, true) : null;
+    $appLead = ($appCode === 200 && is_array($appJ) && !empty($appJ['ok'])) ? 'ok' : 'failed (HTTP ' . $appCode . ')';
 }
 
 // Backup log first, so a mail() failure never loses the lead.
@@ -233,7 +241,7 @@ if (is_dir($leadsHome) && (is_dir($leadsHome . '/leads') || @mkdir($leadsHome . 
     json_encode([
         'at' => date('c'), 'need' => $need, 'name' => $name, 'email' => $email,
         'phone' => $phone, 'town' => $town, 'message' => $message,
-        'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? null, 'app' => $appLead,
     ], JSON_UNESCAPED_UNICODE) . "\n",
     FILE_APPEND | LOCK_EX
 );

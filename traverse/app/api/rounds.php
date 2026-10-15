@@ -1811,7 +1811,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -2036,6 +2036,26 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website' . ($hadOffer ? ', but the day offered was gone. Call them to set a day.' : '. Call them to set a day.') . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()])) fail('Something went wrong saving that. Please call or text us.', 500);
     a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''));
     out(['ok' => true, 'gone' => $hadOffer, 'phone' => $phone]);
+}
+
+/* ---- the Sixfold website's contact form (2026-10-14) ----
+ * Matthew: "make sure the website contact forms lead to the app". sixfoldcolorado.com's form used to write the lead straight into
+ * the app's files, which only worked while the app lived on the same server; since the move to traverseplatforms.com (2026-10-09)
+ * its leads reached email only. Now the form's server posts each one here with a shared key (sixfold-private/site-lead-key.txt
+ * here, app_lead_key in the site's secrets), and it lands in the Pipeline like the 365 site's, with an alert to the office. */
+function siteLeadKey(): string { $k = trim((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/site-lead-key.txt')); return strlen($k) >= 32 ? $k : ''; }
+if ($action === 'sitelead') {
+    if (!$isPost) fail('POST required', 405);
+    $k = siteLeadKey(); if ($k === '' || !hash_equals($k, (string) ($_SERVER['HTTP_X_SITE_KEY'] ?? ''))) fail('Not here.', 404);
+    $src = (string) ($body['src'] ?? 'website'); if (!in_array($src, ['website', 'linktree', 'nextdoor', 'referral', 'phone', 'other'], true)) $src = 'website';   /* LEAD_SRC is defined further down */
+    $row = ['id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => time(), 'need' => a365Clean($body['need'] ?? '', 60),
+            'name' => a365Clean($body['name'] ?? '', 120), 'phone' => a365Clean($body['phone'] ?? '', 40), 'email' => a365Clean($body['email'] ?? '', 160),
+            'town' => a365Clean($body['town'] ?? '', 160), 'msg' => a365Clean($body['msg'] ?? '', 2000), 'by' => ''];
+    if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Empty.');
+    if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that.', 500);
+    if (preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
+    a365Alert('New website enquiry', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''));
+    out(['ok' => true, 'id' => $row['id']]);
 }
 
 /* everything past here needs a session */
@@ -4368,6 +4388,96 @@ if ($action === 'leadadd') {
     out(['ok' => true, 'id' => $row['id']]);
 }
 
+/* ---- Facebook lead forms, automatically (2026-10-14, Matthew: "make sure theres a way to constantly export leads from meta to the app") ----
+ * tools/meta-leads.php runs every 5 minutes (a SiteGround cron job) and asks the Graph API for each page's lead forms and the
+ * leads since the last run, with page tokens kept in sixfold-private/meta-leads.json (never shown, never in git). Each lead keeps
+ * Meta's id ('ext'), so it is never added twice, and someone already in the Pipeline by phone or email is not added again (the
+ * same rules as the file import below, which stays as the fallback). The office gets an alert. Setting up: the page's admin makes
+ * a Meta app (Business type), grants it leads_retrieval and the page permissions, and drops the app id, app secret and a user
+ * token in a file; tools/meta-leads.php --setup=<file> swaps them for page tokens that do not expire, and deletes the file. */
+function metaFile(): string { return dirname(__DIR__, 2) . '/sixfold-private/meta-leads.json'; }
+function metaFields(array $fd): array {
+    $v = []; foreach ($fd as $x) { $k = strtolower(trim((string) ($x['name'] ?? ''))); if ($k !== '') $v[$k] = trim(implode(', ', array_map('strval', (array) ($x['values'] ?? [])))); }
+    $pick = function (array $keys) use (&$v) { foreach ($keys as $k) if (($v[$k] ?? '') !== '') { $x = $v[$k]; return $x; } return ''; };
+    $name = $pick(['full_name', 'name']); if ($name === '') $name = trim($pick(['first_name']) . ' ' . $pick(['last_name']));
+    $known = ['full_name', 'name', 'first_name', 'last_name', 'phone_number', 'phone', 'email', 'street_address', 'address', 'city', 'zip_code', 'zip', 'post_code', 'postal_code', 'state', 'province', 'country'];
+    $street = $pick(['street_address', 'address']); $city = $pick(['city']); $zip = $pick(['zip_code', 'zip', 'post_code', 'postal_code']);
+    $extra = []; foreach ($v as $k => $x) if (!in_array($k, $known, true) && $x !== '') $extra[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . str_replace('_', ' ', $x);
+    return ['name' => $name, 'phone' => preg_replace('/^p:/i', '', $pick(['phone_number', 'phone'])), 'email' => $pick(['email']), 'street' => $street, 'city' => $city,
+            'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : ''), ', '), 'extra' => $extra];
+}
+if ($action === 'metasetup' || $action === 'metapoll') {
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    $graphBase = fn($M) => rtrim((string) ($M['graph'] ?? 'https://graph.facebook.com/v23.0'), '/');
+    $gget = function (string $url): array { $code = 0; $b = httpGetRaw($url, 25, $code); $j = $b !== null ? json_decode($b, true) : null; if (!is_array($j) && $code !== 200) { $raw = null; if (function_exists('curl_init')) { $c = curl_init($url); curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25]); $raw = curl_exec($c); curl_close($c); } $j = is_string($raw) ? json_decode($raw, true) : null; } return is_array($j) ? $j : ['error' => ['message' => 'no answer (HTTP ' . $code . ')']]; };
+    if ($action === 'metasetup') {
+        $sf = (string) ($_GET['file'] ?? ''); $S = json_decode((string) @file_get_contents($sf), true);
+        if (!is_array($S) || empty($S['app_id']) || empty($S['app_secret']) || empty($S['user_token'])) fail('The setup file needs app_id, app_secret and user_token.');
+        $M = ['graph' => (string) ($S['graph'] ?? 'https://graph.facebook.com/v23.0')]; $g = $graphBase($M);
+        $x = $gget($g . '/oauth/access_token?' . http_build_query(['grant_type' => 'fb_exchange_token', 'client_id' => $S['app_id'], 'client_secret' => $S['app_secret'], 'fb_exchange_token' => $S['user_token']]));
+        if (empty($x['access_token'])) fail('Meta did not swap the token: ' . (string) ($x['error']['message'] ?? 'no reason given'));
+        $acc = $gget($g . '/me/accounts?' . http_build_query(['fields' => 'id,name,access_token,tasks', 'limit' => 100, 'access_token' => $x['access_token']]));
+        if (empty($acc['data'])) fail('No pages came back: ' . (string) ($acc['error']['message'] ?? 'the token has no page permissions'));
+        $want = array_map('strtolower', (array) ($S['pages'] ?? []));
+        $M['pages'] = [];
+        foreach ($acc['data'] as $p) if (!empty($p['access_token']) && (!$want || in_array(strtolower((string) $p['name']), $want, true)))
+            $M['pages'][] = ['id' => (string) $p['id'], 'name' => (string) $p['name'], 'token' => (string) $p['access_token'], 'last' => time() - 30 * 86400];
+        if (!$M['pages']) fail('None of the pages asked for came back.');
+        $M['set'] = date('c');
+        if (!writeJsonAtomic(metaFile(), $M)) fail('Could not save the page tokens.', 500);
+        @chmod(metaFile(), 0600); @unlink($sf);
+        out(['ok' => true, 'pages' => array_map(fn($p) => $p['name'], $M['pages'])]);
+    }
+    $M = json_decode((string) @file_get_contents(metaFile()), true);
+    if (!is_array($M) || empty($M['pages'])) out(['ok' => true, 'added' => 0, 'note' => 'not set up']);
+    $g = $graphBase($M);
+    $digits = fn($p) => substr(preg_replace('/\D/', '', (string) $p), -10);
+    $seenExt = []; $seenWho = [];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) {
+        if (!empty($l['ext'])) $seenExt[preg_replace('/^l:/', '', (string) $l['ext'])] = true;   /* a file import keeps "l:<id>" */
+        $d = $digits($l['phone'] ?? ''); if (strlen($d) === 10) $seenWho['p' . $d] = true;
+        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
+    }
+    $added = []; $errors = [];
+    foreach ($M['pages'] as $pi => $P) {
+        $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since;
+        $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status', 'limit' => 100, 'access_token' => $P['token']]));
+        if (isset($forms['error'])) { $errors[] = $P['name'] . ': ' . (string) ($forms['error']['message'] ?? '?'); continue; }
+        foreach ((array) ($forms['data'] ?? []) as $F) {
+            $url = $g . '/' . rawurlencode((string) $F['id']) . '/leads?' . http_build_query(['fields' => 'id,created_time,field_data,ad_name', 'limit' => 100, 'access_token' => $P['token'],
+                'filtering' => json_encode([['field' => 'time_created', 'operator' => 'GREATER_THAN', 'value' => $since]])]);
+            for ($pg = 0; $pg < 10 && $url; $pg++) {
+                $r = $gget($url);
+                if (isset($r['error'])) { $errors[] = $P['name'] . ' / ' . (string) ($F['name'] ?? $F['id']) . ': ' . (string) ($r['error']['message'] ?? '?'); break; }
+                foreach ((array) ($r['data'] ?? []) as $L) {
+                    $ext = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', (string) ($L['id'] ?? '')), 0, 64); if ($ext === '') continue;
+                    $at = strtotime((string) ($L['created_time'] ?? '')) ?: time(); $newest = max($newest, $at);
+                    if (isset($seenExt[$ext])) continue;
+                    $fv = metaFields((array) ($L['field_data'] ?? []));
+                    $name = a365Clean($fv['name'], 120); $phone = a365Clean($fv['phone'], 40); $email = a365Clean($fv['email'], 160); if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $email = '';
+                    if ($name === '' && $phone === '' && $email === '') continue;
+                    $d = $digits($phone); $who = strlen($d) === 10 ? 'p' . $d : ($email !== '' ? 'e' . strtolower($email) : '');
+                    $seenExt[$ext] = true;
+                    if ($who !== '' && isset($seenWho[$who])) continue;
+                    $msg = implode("
+", array_merge($fv['extra'], !empty($L['ad_name']) ? ['Ad: ' . $L['ad_name']] : []));
+                    $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'meta', 'at' => $at, 'need' => a365Clean((string) ($F['name'] ?? ''), 60),
+                            'name' => $name, 'phone' => $phone, 'email' => $email, 'town' => a365Clean($fv['town'], 160), 'msg' => a365Clean($msg, 2000), 'by' => 'Facebook', 'ext' => $ext, 'page' => a365Clean((string) $P['name'], 80)];
+                    if (!appendLine(leadsDir() . '/leads.log', $row)) { $errors[] = 'could not save a lead'; continue; }
+                    if ($who !== '') $seenWho[$who] = true;
+                    if ($fv['street'] !== '') { $h = a365Match($fv['street'], $fv['city']); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'Facebook', 'at' => time()]); }
+                    $added[] = ($name ?: $phone) . ' (' . $P['name'] . ')';
+                }
+                $url = (string) ($r['paging']['next'] ?? '');
+            }
+        }
+        $M['pages'][$pi]['last'] = max($since, $newest - 60);   /* a minute of overlap: Meta's clock and ours; the ids stop doubles */
+    }
+    $M['ran'] = date('c'); $M['errors'] = $errors;
+    writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
+    if ($added) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)));
+    out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors]);
+}
 /* Meta Instant Form leads (2026-10-04). They land in Meta's Leads Center and never reach email, so an admin
    downloads them there as a file and the page reads it and sends the rows here. Each keeps Meta's own lead
    id ('ext'), so importing the same file twice adds nothing; someone already in the Pipeline by phone or email
@@ -5434,7 +5544,12 @@ if ($action === 'terrsave') {
 
 const SEARCH_TYPES = ['DR', 'RD', 'LN', 'CT', 'ST', 'AVE', 'AV', 'WAY', 'CIR', 'PL', 'TRL', 'BLVD', 'PKWY', 'HWY', 'LOOP', 'TER', 'PT', 'RUN', 'PASS', 'VW', 'HTS', 'N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'];
 if ($action === 'search') {
-    $q = strtoupper(trim((string) ($_GET['q'] ?? '')));
+    /* a line pasted from a lead list works too (2026-10-14: "Russ King: 7173 townsend dr 3039079919 rdkgoose@..."): emails and
+       phone numbers go, and with a house number in it, whatever comes before the number (a name) goes */
+    $raw = (string) ($_GET['q'] ?? '');
+    $raw = (string) preg_replace(['/\S+@\S+/', '/\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/'], ' ', $raw);
+    if (preg_match('/(?:^|[^0-9A-Za-z])(\d{1,6}[A-Za-z]?)\s+[A-Za-z]/', $raw, $hm, PREG_OFFSET_CAPTURE) && $hm[1][1] > 0) $raw = substr($raw, $hm[1][1]);
+    $q = strtoupper(trim($raw));
     $q = (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $q);
     $words = array_values(array_filter(explode(' ', $q), fn($w) => $w !== ''));
     if (strlen(implode('', $words)) < 3) out(['ok' => true, 'q' => $q, 'results' => []]);
