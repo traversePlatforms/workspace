@@ -1945,8 +1945,9 @@ if ($action === 'squarehook') {
     if (!$c || empty($c['sigKey']) || !$isPost) fail('Not here.', 404);
     $url = (string) ($c['hookUrl'] ?? ('https://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '')));
     $want = base64_encode(hash_hmac('sha256', $url . $raw, (string) $c['sigKey'], true));
-    if (!hash_equals($want, (string) ($_SERVER['HTTP_X_SQUARE_HMACSHA256_SIGNATURE'] ?? ''))) fail('Not allowed.', 403);
-    $ev = json_decode($raw, true) ?: []; $pay = $ev['data']['object']['payment'] ?? null;
+    $ev = json_decode($raw, true) ?: []; $sigOk = hash_equals($want, (string) ($_SERVER['HTTP_X_SQUARE_HMACSHA256_SIGNATURE'] ?? ''));
+    appendLine(DATA_DIR . '/squarehook.log', ['at' => time(), 'sig' => $sigOk, 'type' => mb_substr((string) ($ev['type'] ?? ''), 0, 40), 'event' => mb_substr((string) ($ev['event_id'] ?? ''), 0, 60), 'status' => mb_substr((string) ($ev['data']['object']['payment']['status'] ?? ''), 0, 20), 'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? '')]);   /* what arrived, never card details */
+    if (!$sigOk) fail('Not allowed.', 403); $pay = $ev['data']['object']['payment'] ?? null;
     if ($pay && ($pay['status'] ?? '') === 'COMPLETED' && !empty($pay['order_id'])) {
         $order = (string) $pay['order_id'];
         foreach (leadsAll() as $l) if (($l['sign']['pay']['order'] ?? '') === $order && ($l['sqpaid']['order'] ?? '') !== $order) { a365DepositPaid($l); a365Alert('Deposit paid', trim((string) ($l['name'] ?? '')) . ' · $' . (int) $l['sign']['deposit']); }
