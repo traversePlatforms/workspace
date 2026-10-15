@@ -1860,6 +1860,14 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qdetail{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
   .sqbox{display:grid;gap:8px}.sqbox:empty{display:none}
   .lpquote{grid-column:1/-1;margin-top:8px}
+  .lwho{display:grid;gap:6px;margin:0 0 12px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
+  .lwhotop{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.lwhotop b{font:800 20px var(--sans)}.lwhosrc{font-size:12.5px;color:var(--soft)}
+  .lwhomsg{font-size:13.5px;color:var(--soft);font-style:italic}
+  .qcost{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .qcrow{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 10px;border-top:1px solid var(--line)}.qcrow:first-child{border-top:0}
+  .qcrow>div{display:grid;gap:1px;min-width:0}.qcrow small{color:var(--soft);font-size:12px;line-height:1.35}.qcrow>span{font-weight:700;white-space:nowrap}
+  .qctot{background:var(--sunk)}.qcleft{background:var(--sunk)}.qcleft b,.qcleft>span{font-size:15.5px;color:var(--ember-ink)}
+  .qsteph{margin-top:4px}
   .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
   .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
@@ -5511,12 +5519,29 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return box;
   }
   /* find the house: the address search every town shares, then the panel; from a lead, it can be tied to the lead */
+  /* who Jen is talking to (Matthew 2026-10-15: "the quote builder needs to be able to reference who they are actually talking to"):
+     the lead's name, number and email above the house, never the owner of record in their place */
+  function leadWhoBox(lead) {
+    var w = q('div', 'lwho');
+    var top = q('div', 'lwhotop'); top.appendChild(q('b', null, lead.name || 'No name given'));
+    if (lead.src) top.appendChild(q('span', 'lwhosrc', LEAD_SRC[lead.src] || lead.src)); w.appendChild(top);
+    var ct = q('div', 'lcontact'), tel = digits(lead.phone);
+    if (tel.length >= 10) {
+      var c1 = q('a'); c1.href = 'tel:' + tel; c1.appendChild(ico('phone', 2.2)); c1.appendChild(document.createTextNode(fmtPhone(tel))); ct.appendChild(c1);
+      var c2 = q('a'); c2.href = 'sms:' + tel; c2.appendChild(ico('chat', 2.2)); c2.appendChild(document.createTextNode('Text')); ct.appendChild(c2);
+    } else if (lead.phone) ct.appendChild(q('span', null, lead.phone));
+    if (lead.email) { var c3 = q('a'); c3.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@'); c3.appendChild(ico('mail', 2.2)); c3.appendChild(document.createTextNode(lead.email)); ct.appendChild(c3); }
+    if (ct.children.length) w.appendChild(ct);
+    if (lead.msg) w.appendChild(q('div', 'lwhomsg', '\u201c' + lead.msg + '\u201d'));
+    return w;
+  }
   function houseLookupView(lead, open, typed) {
     hideToast(); S.signin = null; S.screen = 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
     setBar('back', { title: 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : 'Field tools' });
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     view.textContent = '';
+    if (lead) view.appendChild(leadWhoBox(lead));
     var box = q('div', 'search hlook');
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'houseq';
     var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
@@ -5840,7 +5865,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var big = q('div', 'qprice'), steps = q('div', 'qsteps'), detail = q('div', 'qdetail');
       var dn = q('button', null, '− $100'), up = q('button', null, '+ $100'), own = q('input'); dn.type = up.type = 'button'; own.inputMode = 'numeric'; own.placeholder = 'Or type a price'; own.maxLength = 6;
       steps.appendChild(dn); steps.appendChild(up); steps.appendChild(own);
-      box.appendChild(big); box.appendChild(steps); box.appendChild(detail);
+      var noteBox = q('div', 'qnotes');
+      box.appendChild(big); box.appendChild(detail); box.appendChild(q('div', 'dwsub qsteph', 'Change the price')); box.appendChild(steps); box.appendChild(noteBox);   /* the numbers first, then the controls (Matthew 2026-10-15) */
       var trv = a365Travel(h, P);
       /* the list price: the ladder plus the drive (in whole dollars); aerate only has no list price, Jen types hers (Matthew 2026-10-15) */
       var ladderFor = function () { return st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
@@ -5858,28 +5884,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' + (trv ? ', drive included' : '')));
         }
         detail.textContent = '';
-        var lines = [], notes = [];   /* lines: the sums; notes: where the numbers come from */
+        var lines = [], notes = [], rows = [];   /* rows: [what, how much of it, $]; lines: anything else; notes: where the numbers come from */
         var seedLb = 0, fertLb = 0, cost = 0, known = true;
         if (st.pkg === 'full' && st.sq) {
           var rate = seedRateFor(price, ladder, P); seedLb = Math.round(st.sq / 1000 * rate * 10) / 10;
           var seedPer = P.seedBagLb ? P.seedBagCost / P.seedBagLb : 0;
-          lines.push('Seed: ' + seedLb + ' lb (' + (Math.round(rate * 10) / 10) + ' lb per 1,000 sq ft' + (price > ladder ? ', more because the price is up' : price < ladder ? ', less because the price is down' : '') + ')' + (seedPer ? ' × ' + money2(seedPer) + '/lb = ' + money2(seedLb * seedPer) : ''));
+          rows.push(['Seed', seedLb + ' lb \u00b7 ' + (Math.round(rate * 10) / 10) + ' lb per 1,000 sq ft' + (price > ladder ? ' (more: the price is up)' : price < ladder ? ' (less: the price is down)' : '') + (seedPer ? ' \u00b7 ' + money2(seedPer) + '/lb' : ''), seedPer ? money2(seedLb * seedPer) : '\u2014']);
           if (seedPer) { cost += seedLb * seedPer; notes.push('Seed: 2 to 4 lb per 1,000 sq ft (Bryce), more seed when they pay more. Cost based on Brad’s SiteOne receipt, $' + P.seedBagCost + ' per ' + P.seedBagLb + ' lb bag.'); } else known = false;
           var F = fertOf(P, st.fert);
           if (F) {
             var fRate = F.bagLb * 1000 / F.coverSq, fPer = F.bagCost / F.bagLb; fertLb = Math.round(st.sq / 1000 * fRate * 10) / 10;
-            lines.push('Fertilizer (' + F.name + '): ' + fertLb + ' lb (' + (Math.round(fRate * 10) / 10) + ' lb per 1,000 sq ft, the bag’s rate) × ' + money2(fPer) + '/lb = ' + money2(fertLb * fPer));
+            rows.push(['Fertilizer', F.name + ' \u00b7 ' + fertLb + ' lb at the bag\u2019s rate (' + (Math.round(fRate * 10) / 10) + ' per 1,000 sq ft) \u00b7 ' + money2(fPer) + '/lb', money2(fertLb * fPer)]);
             cost += fertLb * fPer; notes.push('Fertilizer: ' + (F.src || F.name) + ' Goes down at the bag’s rate whatever the price (too much burns the lawn).');
-          } else { lines.push('Fertilizer: add one under Pricing'); known = false; }
+          } else { rows.push(['Fertilizer', 'add one under Pricing', '\u2014']); known = false; }
         }
         if (trv) {
-          lines.push('Drive: ' + Math.round(trv.miles) + ' miles there and back, ' + (Math.round(trv.gal * 10) / 10) + ' gal × ' + money2(trv.gas.price) + ' = ' + money2(trv.cost) + (ladder ? ' (in the list price)' : ''));
+          rows.push(['Drive', Math.round(trv.miles) + ' miles there and back \u00b7 ' + (Math.round(trv.gal * 10) / 10) + ' gal \u00d7 ' + money2(trv.gas.price) + (ladder ? ' \u00b7 in the list price' : ''), money2(trv.cost)]);
           notes.push('Gas price: ' + money2(trv.gas.price) + '/gal, the Denver weekly average' + (trv.gas.week ? ' for the week of ' + weekText(trv.gas.week) : '') + ' (U.S. Energy Information Administration). Drive from the Englewood storage at 333 W Hampden Ave and back in an 18 mpg truck; road miles estimated at ' + (P.roadFactor || 1.3) + ' × the straight-line distance.');
           cost += trv.cost;
-        } else lines.push(h && h.lat != null ? 'Drive: no gas price this week, so it is not in the price' : 'Drive: find the house to price the drive');
-        if (st.pkg === 'full' && price) lines.push(known ? 'Materials and drive about ' + money0(cost) + ', leaving ' + money0(price - cost) + ' before labour' : 'Materials cost shows once the seed bag is filled in under Pricing');
+        } else rows.push(['Drive', h && h.lat != null ? 'no gas price this week, so not in the price' : 'find the house to price the drive', '\u2014']);
+        if (st.pkg === 'full' && !st.sq) lines.push('Type the lawn size to work out the seed and fertilizer.');
+        var tb = q('div', 'qcost');
+        rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); d.appendChild(q('span', null, r[2])); tb.appendChild(d); });
+        if (price && rows.length) {
+          var t1 = q('div', 'qcrow qctot'); t1.appendChild(q('b', null, st.pkg === 'full' ? 'Seed, fertilizer and drive' : 'Drive')); t1.appendChild(q('span', null, known ? money2(cost) : '\u2014')); tb.appendChild(t1);
+          var t2 = q('div', 'qcrow qcleft'); t2.appendChild(q('b', null, 'Left before labour')); t2.appendChild(q('span', null, known ? money0(price - cost) : '\u2014')); tb.appendChild(t2);
+        }
+        detail.appendChild(tb);
         lines.forEach(function (t) { detail.appendChild(q('div', null, t)); });
-        if (notes.length) { var nb = q('div', 'qnotes'); notes.forEach(function (t) { nb.appendChild(q('div', null, t)); }); detail.appendChild(nb); }
+        noteBox.textContent = ''; notes.forEach(function (t) { noteBox.appendChild(q('div', null, t)); });
         st.cur = { price: price, seedLb: seedLb, fertLb: fertLb };
         drawActs();
       }
