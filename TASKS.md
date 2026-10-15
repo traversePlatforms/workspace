@@ -830,6 +830,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       photo as a second look, show "mostly trees" on wooded lots, then a "Most lawn" sort and a
       per-door figure. **First true check: one lot Sixfold has measured on the ground.** Write-up:
       [LAWN-SIZE.md](traverse/data-pipeline/door-territory/LAWN-SIZE.md).
+- [ ] **SX-57 — Facebook Messenger enquiries into the app (365 page).** Asked 2026-10-14, **not now** (Matthew: "add that to the list of stuff to do we dont need to do it right now").
+      Lead-form leads already arrive by themselves (every 5 min). Messages need `pages_messaging`, which Meta only offers after **App Review** on the "365 Aeration and Seeding leads" app (Business Verification likely too). Plan when it's time: add the messaging use case, record the screencast Meta asks for, submit; then a webhook or poll turns a new conversation into a lead (source Facebook Messenger). Until then Jen adds message enquiries with + Add a lead. Pairs with the Messages ad on Matthew's list.
 - [ ] **SX-56 — Walk desk: book walks with Brandon or Brad from the leads (Sixfold only).** Asked 2026-10-14.
       **LIVE 2026-10-14 (commit 796ed96, live check 13/13).** Built and tested the same day (74 checks). It has four parts:
       - **Office role:** for Jen (Pipeline, leads, calls and emails, booking walks, everyone's calendar; no accounts, downloads or settings).

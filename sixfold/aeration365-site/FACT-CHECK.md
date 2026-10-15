@@ -11,7 +11,7 @@ It posts from the visitor's browser to the Sixfold app (`traverseplatforms.com/a
 When a request comes in:
 - It becomes a **New** lead in the Pipeline, source **"365 website"**.
 - The house is found from the street address when it is one we have measured.
-- Everyone with the Office role (Jen) gets a phone alert.
+- No phone alert per lead (turned off 2026-10-14, Matthew: it could be 20 a day); it shows on Jen's home screen. A customer booking online or saying yes to a quote still alerts her.
 - Nothing about the house is sent back to the visitor.
 
 Spam protection:

@@ -1885,7 +1885,7 @@ if ($action === 'calfeed') {
 
 /* ---- 365 Aeration & Seeding's website form (2026-10-14) ----
  * The quote / information form on 365aeration.com (aeration365.com forwards there) posts here from the visitor's browser. It becomes a lead in the Pipeline (source
- * "365 website"), its house is found from the address when it is one of ours, and the office's phones get an alert. Only where the
+ * "365 website"), its house is found from the address when it is one of ours (phone alerts only if leadAlertsOn). Only where the
  * company has the aeration brand and the walk desk. Spam: a hidden field, a minimum time on the page, 5 a day from one address and
  * 300 a day for the whole site. Nothing about the house is ever sent back to the visitor. */
 const A365_ORIGINS = ['https://365aeration.com', 'https://www.365aeration.com', 'https://aeration365.com', 'https://www.aeration365.com'];   /* 365aeration.com is the main address since 2026-10-14 */   /* https only: the site redirects http there (certificate on 2026-10-14) */
@@ -1917,6 +1917,10 @@ function a365Match(string $street, string $city): ?array {
     return count($hits) === 1 ? ['region' => $hits[0][0], 'door' => $hits[0][3], 'address' => $hits[0][4], 'town' => $hits[0][1]] : null;
 }
 /** an alert to everyone with the office role (their phones and computers that took alerts) */
+/* new-lead alerts are off (2026-10-14, Matthew: "I dont think that we should alert jens phone every time theres a new lead, that could
+   alert 20 times per day"): a new lead shows on the office home and in the Pipeline count. A customer booking online or saying yes
+   to a quote still alerts. company.json a365.leadAlerts: true turns new-lead alerts back on. */
+function leadAlertsOn(): bool { return !empty(company()['a365']['leadAlerts']); }
 function a365Alert(string $title, string $text): void {
     global $basePeople, $acct, $sessionKey;
     try {
@@ -1951,7 +1955,7 @@ if ($action === 'a365lead') {
             'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''];
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
     if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want]);
+    if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want]);
     out(['ok' => true]);
 }
 
@@ -2054,7 +2058,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
  * Matthew: "make sure the website contact forms lead to the app". sixfoldcolorado.com's form used to write the lead straight into
  * the app's files, which only worked while the app lived on the same server; since the move to traverseplatforms.com (2026-10-09)
  * its leads reached email only. Now the form's server posts each one here with a shared key (sixfold-private/site-lead-key.txt
- * here, app_lead_key in the site's secrets), and it lands in the Pipeline like the 365 site's, with an alert to the office. */
+ * here, app_lead_key in the site's secrets), and it lands in the Pipeline like the 365 site's (no phone alert: leadAlertsOn). */
 function siteLeadKey(): string { $k = trim((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/site-lead-key.txt')); return strlen($k) >= 32 ? $k : ''; }
 if ($action === 'sitelead') {
     if (!$isPost) fail('POST required', 405);
@@ -2066,7 +2070,7 @@ if ($action === 'sitelead') {
     if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Empty.');
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that.', 500);
     if (preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    a365Alert('New website enquiry', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''));
+    if (leadAlertsOn()) a365Alert('New website enquiry', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''));
     out(['ok' => true, 'id' => $row['id']]);
 }
 
@@ -4404,7 +4408,7 @@ if ($action === 'leadadd') {
  * tools/meta-leads.php runs every 5 minutes (a SiteGround cron job) and asks the Graph API for each page's lead forms and the
  * leads since the last run, with page tokens kept in sixfold-private/meta-leads.json (never shown, never in git). Each lead keeps
  * Meta's id ('ext'), so it is never added twice, and someone already in the Pipeline by phone or email is not added again (the
- * same rules as the file import below, which stays as the fallback). The office gets an alert. Setting up: the page's admin makes
+ * same rules as the file import below, which stays as the fallback). No phone alert per lead (leadAlertsOn). Setting up: the page's admin makes
  * a Meta app (Business type), grants it leads_retrieval and the page permissions, and drops the app id, app secret and a user
  * token in a file; tools/meta-leads.php --setup=<file> swaps them for page tokens that do not expire, and deletes the file. */
 function metaFile(): string { return dirname(__DIR__, 2) . '/sixfold-private/meta-leads.json'; }
@@ -4490,7 +4494,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     }
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
-    if ($added) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)));
+    if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)));
     out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors]);
 }
 /* Meta Instant Form leads (2026-10-04). They land in Meta's Leads Center and never reach email, so an admin
