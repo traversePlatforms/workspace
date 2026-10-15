@@ -66,16 +66,27 @@ export const merc = (lon, lat) => proj4('EPSG:4326', 'EPSG:3857', [lon, lat]);
 const bboxOf = (pts) => [Math.min(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[1]))];
 
 /* ---- lots ---- */
+/* 2026-10-15: a big town is asked for in squares of about 2 miles, each paged on its own, lots that cross squares kept once (by OBJECTID).
+   One long paged list for a whole city (Denver, Lakewood, Littleton, Arvada, Boulder) failed partway on the state's service. */
 export async function townParcels(bbox) {
-  const out = []; let offset = 0;
-  for (;;) {
-    const j = await json(PARCELS + '?' + new URLSearchParams({ f: 'json', geometry: bbox.join(','), geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
-      spatialRel: 'esriSpatialRelIntersects', returnGeometry: 'true', outFields: 'OBJECTID', geometryPrecision: '6', resultOffset: String(offset), resultRecordCount: '2000', orderByFields: 'OBJECTID' }));
-    const fs = j.features || [];
-    for (const f of fs) if (f.geometry && f.geometry.rings) out.push({ rings: f.geometry.rings, bb: bboxOf(f.geometry.rings.flat()) });
-    if (fs.length < 2000 && !j.exceededTransferLimit) break;
-    offset += fs.length;
-    if (!fs.length) break;
+  const out = [], seen = new Set(), T = 0.03;
+  const nx = Math.max(1, Math.ceil((bbox[2] - bbox[0]) / T)), ny = Math.max(1, Math.ceil((bbox[3] - bbox[1]) / T));
+  for (let ix = 0; ix < nx; ix++) for (let iy = 0; iy < ny; iy++) {
+    const tb = [bbox[0] + ix * T, bbox[1] + iy * T, Math.min(bbox[2], bbox[0] + (ix + 1) * T), Math.min(bbox[3], bbox[1] + (iy + 1) * T)];
+    let offset = 0;
+    for (;;) {
+      const j = await json(PARCELS + '?' + new URLSearchParams({ f: 'json', geometry: tb.join(','), geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
+        spatialRel: 'esriSpatialRelIntersects', returnGeometry: 'true', outFields: 'OBJECTID', geometryPrecision: '6', resultOffset: String(offset), resultRecordCount: '2000', orderByFields: 'OBJECTID' }));
+      const fs = j.features || [];
+      for (const f of fs) {
+        const id = f.attributes && f.attributes.OBJECTID;
+        if (id != null) { if (seen.has(id)) continue; seen.add(id); }
+        if (f.geometry && f.geometry.rings) out.push({ rings: f.geometry.rings, bb: bboxOf(f.geometry.rings.flat()) });
+      }
+      if (fs.length < 2000 && !j.exceededTransferLimit) break;
+      offset += fs.length;
+      if (!fs.length) break;
+    }
   }
   return out;
 }
