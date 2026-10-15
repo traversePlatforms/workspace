@@ -1874,6 +1874,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
   .sendnote{font-size:12px;color:var(--soft);line-height:1.4}
+  .geov{display:grid;gap:8px}.georow{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.georow small{color:var(--soft);font-size:12.5px}
+  .georow.far{border-color:#e7b3a0;background:#fff5f1}.geolnk{background:none;border:0;padding:6px 0 10px;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .qnotes{display:grid;gap:3px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12px;color:var(--soft);line-height:1.4}
   .qfert button{font-size:12.5px}
   .qacts{display:grid;gap:8px}.qacts .save{min-height:46px;border:0;border-radius:12px;background:var(--ember-ink);color:var(--on-ember);font:700 15px var(--sans);cursor:pointer}
@@ -4775,6 +4777,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var ct = q('div', 'lcontact'), tel = digits(m.phone);
       if (tel.length >= 10) { var a = q('a', 'wxtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text ' + (greetName(m.name) || ''))); a.addEventListener('click', function () { a.classList.add('sent'); }); ct.appendChild(a); }
       if (m.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(m.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your aeration day has moved') + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); ct.appendChild(e); }
+      addGmail(ct);
       if (!ct.children.length) row.appendChild(q('div', 'err', 'No phone or email on the lead: call them.'));
       row.appendChild(ct); box.appendChild(row);
     });
@@ -5597,7 +5600,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var hasT = !!el.querySelector('a[href^="sms:"]'), hasM = !!el.querySelector('a[href^="mailto:"]');
     if (!hasT && !hasM) return null;
     return q('div', 'ltrynote sendnote', [hasT ? 'Text opens the Messages app on this device and sends from its number. On a computer it only works if the computer is linked to a phone (an iPhone with a Mac, or Phone Link on Windows); if not, copy the text and send it from your phone.' : '',
-      hasM ? 'Email opens the email app set up on this device (Outlook or Mail). If nothing opens, use Open in Gmail, which writes it in Gmail in your browser.' : ''].filter(Boolean).join(' '));
+      hasM ? (onPhone() ? 'Email opens the email app on this phone.' : 'Open in Gmail writes the email in Gmail in your browser, ready to send (sign in to Gmail there first).') : ''].filter(Boolean).join(' '));
   }
   /* the same email in Gmail in the browser: a mailto link does nothing on a computer with no email app set up (Matthew 2026-10-15) */
   function gmailHref(mailto) {
@@ -5605,7 +5608,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = {}; (m[2] || '').split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i)] = kv.slice(i + 1); });
     return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + m[1] + (p.subject ? '&su=' + p.subject : '') + (p.body ? '&body=' + p.body : '');
   }
-  function addGmail(el) { [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href^="mailto:"]') : null;
+    if (!a || onPhone()) return;
+    var g = gmailHref(a.getAttribute('href')); if (!g) return;
+    e.preventDefault(); window.open(g, '_blank', 'noopener');
+  });
+  function onPhone() { return /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent || ''); }
+  function addGmail(el) { if (onPhone()) return; [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { a.hidden = true; if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
   function addSendNote(parent, el) { addGmail(el); var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
   function houseLookupView(lead, open, typed, quick) {
@@ -9169,6 +9179,37 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     view.appendChild(f);
   }
+  /* where the office and quote-only accounts are used (2026-10-15): the alerts, each person's places and devices */
+  function geoView() {
+    hideToast(); S.signin = null; S.screen = 'geo'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Where accounts are used', sub: 'The office and quote-only accounts', back: accountsView, backLabel: 'Accounts' });
+    view.textContent = '';
+    var holder = q('div', 'phf geov'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('geolog').then(function (j) {
+      holder.textContent = '';
+      if (!j || !j.ok) { holder.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      var g = j.guard;
+      holder.appendChild(q('div', 'lsub', !g ? 'Off.' : g.mode === 'block' ? 'Blocking: outside ' + g.allow.map(function (k) { return k.split('|')[1] || k; }).join(', ') + ', these accounts are signed out, and you get an alert.' : 'Alerts only: you get an alert when one of these accounts is used outside ' + g.allow.map(function (k) { return k.split('|')[1] || k; }).join(', ') + ', or signs in on a new device. Nothing changes for them.'));
+      holder.appendChild(q('div', 'dwh', 'Alerts'));
+      if (!j.rows.length) holder.appendChild(q('div', 'msg soft', 'None yet.'));
+      j.rows.forEach(function (r) {
+        var d = q('div', 'georow' + (r.kind === 'place' ? ' far' : ''));
+        d.appendChild(q('b', null, r.kind === 'place' ? r.who + ': used from ' + r.place : r.who + ': a new device'));
+        d.appendChild(q('small', null, [new Date(r.at * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }), r.device, r.kind === 'device' ? r.place : '', r.ip, r.mode === 'block' && r.kind === 'place' ? 'signed out' : ''].filter(Boolean).join(' \u00b7 ')));
+        holder.appendChild(d);
+      });
+      holder.appendChild(q('div', 'dwh', 'Each person'));
+      if (!j.people.length) holder.appendChild(q('div', 'msg soft', 'Nobody has signed in since this started.'));
+      j.people.forEach(function (p) {
+        var c = q('div', 'georow'); c.appendChild(q('b', null, p.name));
+        c.appendChild(q('small', null, 'Places: ' + (p.places.map(function (x) { return x.place + (x.ok ? '' : ' (outside)'); }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') || 'none yet')));
+        c.appendChild(q('small', null, 'Devices: ' + (p.devices.map(function (d) { return d.what + ' (since ' + new Date(d.first * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + ')'; }).join('; ') || 'none yet')));
+        holder.appendChild(c);
+      });
+      holder.appendChild(q('div', 'ltrynote', 'Places are read from the internet address. Phone data can show up in a nearby state, and a VPN can hide where someone is. ' + j.src + '.'));
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg', 'This needs signal.')); });
+    window.scrollTo(0, 0);
+  }
   function accountsView() {
     if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; }   /* PINs hide whenever you leave the screen */
     hideToast(); S.signin = null; S.screen = 'accounts';
@@ -9182,6 +9223,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.textContent = '';
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the accounts.')); return; }
       S.accts = j.accounts; S.acctTracking = j.tracking || 0; S.acctTeams = j.teams || []; S.acctSeats = j.seats || null; S.acctMgr = j.manager || null; drawAccounts(holder);
+      if (S.role === 'admin' && feat('walkdesk')) { var gv = q('button', 'lnk geolnk', 'Where the office and quote-only accounts are used \u203a'); gv.type = 'button'; gv.addEventListener('click', geoView); holder.insertBefore(gv, holder.firstChild); }
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
   }
   function drawAccounts(holder) {

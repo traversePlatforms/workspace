@@ -354,6 +354,94 @@ function sessEnd(string $id): void {
     });
 }
 /** what kind of device, from the browser's own description; an iPad on Safari says it is a Mac */
+/* ---- where an account is used (2026-10-15, Matthew: the office and quote-only accounts, "I worry she might send it to Bryce and his
+ * wife in Houston") ----
+ * The address each request comes from is placed with DB-IP's free "IP to City Lite" (CC BY 4.0, db-ip.com), cut to country and US
+ * state and kept on this server (traverse-shared/geo, built by geo-build/geobuild.py); no address is sent anywhere to be looked up.
+ * DATA_DIR/geo-guard.json: {"mode": "alert" | "block", "allow": ["US|Colorado"], "roles": ["office", "quote"]}. Alert: the admins get
+ * a phone alert the first time an address outside the allowed places is used, and it is logged; nothing changes for the person.
+ * Block: the same, and the request is refused (signed out). New devices (a long-lived marker cookie) are alerted too. */
+function geoDir(): string { return dirname(__DIR__, 2) . '/traverse-shared/geo'; }
+function geoOf(string $ip): ?array {
+    static $keys = null;
+    $bin = @inet_pton($ip); if ($bin === false) return null;
+    if ($keys === null) { $j = json_decode((string) @file_get_contents(geoDir() . '/geo-keys.json'), true); $keys = is_array($j) ? ($j['keys'] ?? []) : []; }
+    if (!$keys) return null;
+    $v6 = strlen($bin) === 16; $rec = $v6 ? 34 : 10; $f = @fopen(geoDir() . ($v6 ? '/geo-v6.bin' : '/geo-v4.bin'), 'rb'); if (!$f) return null;
+    $n = (int) (filesize(geoDir() . ($v6 ? '/geo-v6.bin' : '/geo-v4.bin')) / $rec); $lo = 0; $hi = $n - 1; $hit = null;
+    while ($lo <= $hi) {
+        $mid = intdiv($lo + $hi, 2); fseek($f, $mid * $rec); $r = fread($f, $rec);
+        $a = substr($r, 0, $v6 ? 16 : 4); $b = substr($r, $v6 ? 16 : 4, $v6 ? 16 : 4);
+        if (strcmp($bin, $a) < 0) $hi = $mid - 1; elseif (strcmp($bin, $b) > 0) $lo = $mid + 1; else { $hit = unpack('n', substr($r, $v6 ? 32 : 8, 2))[1]; break; }
+    }
+    fclose($f);
+    if ($hit === null || !isset($keys[$hit])) return null;
+    [$cc, $reg] = array_pad(explode('|', (string) $keys[$hit], 2), 2, '');
+    return ['k' => (string) $keys[$hit], 'cc' => $cc, 'region' => $reg, 'place' => $reg !== '' ? $reg . ($cc === 'US' ? '' : ', ' . $cc) : ($cc === 'ZZ' ? 'a private or unknown network' : $cc)];
+}
+function geoGuard(): ?array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/geo-guard.json'), true);
+    if (!is_array($j) || !in_array($j['mode'] ?? '', ['alert', 'block'], true)) return null;
+    return ['mode' => $j['mode'], 'allow' => array_values(array_filter((array) ($j['allow'] ?? ['US|Colorado']), 'is_string')), 'roles' => array_values(array_filter((array) ($j['roles'] ?? ['office', 'quote']), 'is_string'))];
+}
+function geoBrowser(): string { $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''); foreach (['Edg/' => 'Edge', 'OPR/' => 'Opera', 'Firefox/' => 'Firefox', 'CriOS' => 'Chrome', 'Chrome/' => 'Chrome', 'Safari/' => 'Safari'] as $k => $v) if (strpos($ua, $k) !== false) return $v; return 'a browser'; }
+/** alert every admin's phones (the Traverse super admin too) */
+function adminAlert(string $title, string $text, string $tag): void {
+    global $basePeople, $acct, $sessionKey;
+    try {
+        $v = pushVapid(false); if (!$v) return;
+        $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => $tag, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true)) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+    } catch (Throwable $e) { error_log('rounds admin alert: ' . $e->getMessage()); }
+}
+function geoSeenEdit(callable $fn) {
+    $file = DATA_DIR . '/geo-seen.json'; $lk = @fopen($file . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return null;
+    $a = json_decode((string) @file_get_contents($file), true) ?: []; $r = $fn($a);
+    @file_put_contents($file, json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX); flock($lk, LOCK_UN); return $r;
+}
+/** each request from a guarded account: where is it? (an address is looked up once a day) */
+function geoCheck(string $who, string $acctId, string $role): void {
+    $g = geoGuard(); if (!$g || !in_array($role, $g['roles'], true) || $acctId === '') return;
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? ''); if ($ip === '') return;
+    $res = geoSeenEdit(function (&$a) use ($ip, $acctId, $who, $g) {
+        $row = $a[$acctId]['ip'][$ip] ?? null;
+        if ($row && ($row['at'] ?? 0) > time() - 86400) { $a[$acctId]['ip'][$ip]['last'] = time(); return [$row, false]; }
+        $p = geoOf($ip); $ok = !$p || $p['cc'] === 'ZZ' || in_array($p['k'], $g['allow'], true);
+        $new = !$row || ($row['ok'] ?? true) !== $ok;
+        $row = ['at' => time(), 'last' => time(), 'k' => $p ? $p['k'] : '', 'place' => $p ? $p['place'] : 'unknown', 'ok' => $ok];
+        $a[$acctId]['ip'][$ip] = $row; $a[$acctId]['name'] = $who;
+        if (count($a[$acctId]['ip']) > 200) { uasort($a[$acctId]['ip'], fn($x, $y) => ($y['last'] ?? 0) <=> ($x['last'] ?? 0)); $a[$acctId]['ip'] = array_slice($a[$acctId]['ip'], 0, 200, true); }
+        return [$row, $new];
+    });
+    if (!$res) return;
+    [$row, $new] = $res;
+    if (!$row['ok']) {
+        if ($new) {
+            appendLine(DATA_DIR . '/geoalert.log', ['kind' => 'place', 'who' => $who, 'place' => $row['place'], 'ip' => $ip, 'device' => deviceName() . ', ' . geoBrowser(), 'mode' => $g['mode'], 'at' => time()]);
+            adminAlert($who . '’s account used from ' . $row['place'], deviceName() . ', ' . geoBrowser() . ($g['mode'] === 'block' ? ' · signed out' : ' · not blocked (alerts only)'), 'geo-' . $acctId);
+        }
+        if ($g['mode'] === 'block') { http_response_code(401); header('Content-Type: application/json'); echo json_encode(['ok' => false, 'why' => 'place', 'error' => 'This account can only be used in Colorado. If you are in Colorado, call Matthew.']); exit; }
+    }
+}
+/** at sign-in: a device this account has not used before (a marker cookie kept two years) */
+function geoDevice(string $who, string $acctId, string $role): void {
+    $g = geoGuard(); if (!$g || !in_array($role, $g['roles'], true) || $acctId === '') return;
+    $did = (string) ($_COOKIE['sxdev'] ?? '');
+    if (!preg_match('/^[0-9a-f]{24}$/D', $did)) {
+        $did = bin2hex(random_bytes(12));
+        setcookie('sxdev', $did, ['expires' => time() + 730 * 86400, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off')]);
+    }
+    $p = geoOf((string) ($_SERVER['REMOTE_ADDR'] ?? '')); $dev = deviceName() . ', ' . geoBrowser();
+    $isNew = geoSeenEdit(function (&$a) use ($acctId, $did, $who, $dev) {
+        $had = $a[$acctId]['dev'] ?? []; $new = !isset($had[$did]);
+        $a[$acctId]['dev'][$did] = ['first' => $had[$did]['first'] ?? time(), 'last' => time(), 'what' => $dev]; $a[$acctId]['name'] = $who;
+        return $new && count($had) > 0;   /* the first device recorded is not news */
+    });
+    if ($isNew) {
+        appendLine(DATA_DIR . '/geoalert.log', ['kind' => 'device', 'who' => $who, 'place' => $p ? $p['place'] : 'unknown', 'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? ''), 'device' => $dev, 'mode' => $g['mode'], 'at' => time()]);
+        adminAlert($who . ' signed in on a new device', $dev . ' · ' . ($p ? $p['place'] : 'place unknown'), 'geodev-' . $acctId);
+    }
+}
 function deviceName(): string {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
     if (stripos($ua, 'iPad') !== false) return 'iPad';
@@ -1690,6 +1778,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
     ]);
     $cls = devClass(isset($GLOBALS['body']['dev']) ? (string) $GLOBALS['body']['dev'] : null);
     $line = [$payload['c'], $payload['exp'], time(), deviceName(), $cls];
+    if (!defined('SIXFOLD_CLI') && in_array($payload['r'], ['office', 'quote'], true)) { geoCheck((string) $payload['n'], (string) $payload['c'], (string) $payload['r']); geoDevice((string) $payload['n'], (string) $payload['c'], (string) $payload['r']); }   /* 2026-10-15 */
     $ended = [];
     sessEdit(function ($a) use ($tok, $line, $cls, &$ended) {
         $mine = sessionTag($tok);
@@ -2252,6 +2341,7 @@ if ($action === 'sitelead') {
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
+if (!defined('SIXFOLD_CLI') && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
 if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
@@ -2338,6 +2428,15 @@ if ($action === 'taplog') {
     }
     if ($lines !== '') @file_put_contents(DATA_DIR . '/taplog-' . date('Y-m') . '.log', $lines, FILE_APPEND | LOCK_EX);
     out(['ok' => true]);
+}
+if ($action === 'geolog') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $rows = []; foreach ((@file(DATA_DIR . '/geoalert.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []) as $ln) { $r = json_decode($ln, true); if (is_array($r)) $rows[] = $r; }   /* readLines() keeps only rows with an id */
+    $rows = array_reverse(array_slice($rows, -300));
+    $seen = json_decode((string) @file_get_contents(DATA_DIR . '/geo-seen.json'), true) ?: []; $people = [];
+    foreach ($seen as $id => $x) { $ips = array_values($x['ip'] ?? []); usort($ips, fn($a, $b) => ($b['last'] ?? 0) <=> ($a['last'] ?? 0));
+        $people[] = ['name' => (string) ($x['name'] ?? ''), 'places' => array_slice(array_map(fn($r) => ['place' => $r['place'], 'ok' => $r['ok'], 'last' => $r['last'] ?? $r['at']], $ips), 0, 12), 'devices' => array_values(array_map(fn($d) => ['what' => $d['what'], 'first' => $d['first'], 'last' => $d['last']], $x['dev'] ?? []))]; }
+    out(['ok' => true, 'guard' => geoGuard(), 'rows' => $rows, 'people' => $people, 'src' => 'Locations: DB-IP IP to City Lite (CC BY 4.0, db-ip.com)']);
 }
 if ($action === 'taplogread') {
     if ($role !== 'admin') fail('Not allowed.', 403);
