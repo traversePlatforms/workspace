@@ -2422,7 +2422,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs'], true))   /* the schedule was taken back off this account (Matthew 2026-10-15: she gets one with the full app) */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4191,7 +4191,7 @@ function schedPay(?array $p): string { $p = $p ?: ['s' => 'unpaid']; if ($p['s']
    attachment to that excel sheet"): each day's arrival times for each crew, booked / held / open, with the customer's name and town
    only: no prices, phones, emails or streets, and nothing can be changed or downloaded from here */
 if ($action === 'schedview') {
-    if (!desk()) fail('Not allowed.', 403);   /* the office and admins; kept for the full app */
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from) || !dateOk($to) || $to < $from || strtotime($to) - strtotime($from) > 31 * 86400) fail('Pick the dates.');
     $srcName = fn($s) => ['website' => 'Website', 'meta' => 'Facebook', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other', 'messenger' => 'Messenger', 'a365web' => 'Website'][$s] ?? '';
@@ -4202,7 +4202,15 @@ if ($action === 'schedview') {
             'what' => (($j['pkg'] ?? 'full') === 'aerate' ? 'Aerate only' : (($j['pkg'] ?? '') === 'plan' ? 'Service plan' : 'Full')) . (($j['scope'] ?? 'all') === 'front' ? ', front yard only' : (($j['scope'] ?? 'all') === 'back' ? ', back yard only' : '')),
             'pay' => schedPay($j['pay'] ?? null), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => !empty($j['card']) ? 'Card on file' : 'No card on file', 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
     foreach (jobHolds($leads) as $h) if ($h['date'] >= $from && $h['date'] <= $to)
-        $rows[] = ['date' => $h['date'], 'slot' => $h['slot'], 'crew' => $h['crew'], 'kind' => 'held', 'name' => $h['name'], 'town' => $town($h['lead'], ''), 'what' => '', 'pay' => $h['paid'] ? 'Held: form sent, waiting to sign' : 'Held: offered with a quote', 'src' => $srcName((string) ($leads[$h['lead']]['src'] ?? '')), 'card' => '', 'done' => ''];
+        $rows[] = ['lead' => $h['lead'], 'date' => $h['date'], 'slot' => $h['slot'], 'crew' => $h['crew'], 'kind' => 'held', 'name' => $h['name'], 'town' => $town($h['lead'], ''), 'what' => '', 'pay' => $h['paid'] ? 'Held: form sent, waiting to sign' : 'Held: offered with a quote', 'src' => $srcName((string) ($leads[$h['lead']]['src'] ?? '')), 'card' => '', 'done' => ''];
+    if ($role === 'quote') {   /* quote-only accounts: their own customers by name and movable; anyone else's slot only says taken (2026-10-15) */
+        $rows = array_map(function ($r) use ($leads) {
+            $lid = $r['kind'] === 'booked' ? (string) (jobsAll()[$r['id']]['lead'] ?? '') : (string) ($r['lead'] ?? '');
+            if ($lid !== '' && qMine($leads[$lid] ?? [])) { unset($r['lead']); $r['mine'] = true; return $r; }
+            return ['date' => $r['date'], 'slot' => $r['slot'], 'crew' => $r['crew'], 'kind' => $r['kind'], 'name' => $r['kind'] === 'held' ? 'Held' : 'Booked', 'town' => '', 'what' => '', 'pay' => '', 'src' => '', 'card' => '', 'done' => ''];
+        }, $rows);
+    }
+    foreach ($rows as &$rw) unset($rw['lead']); unset($rw);
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
 }
@@ -4238,7 +4246,12 @@ if ($action === 'jobday') {
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
 if ($action === 'jobsave') {
-    if (!desk()) fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if ($role === 'quote') {   /* from the schedule: move or cancel one of her own booked jobs, nothing else (2026-10-15) */
+        $qj = jobsAll()[(string) ($body['id'] ?? '')] ?? null;
+        if (!$qj || $qj['off'] || !qMine(leadsAll()[$qj['lead']] ?? [])) fail('Not allowed.', 403);
+        $body = array_intersect_key($body, array_flip(['id', 'date', 'slot', 'crew', 'del']));
+    }
     if (!$isPost) fail('POST required', 405);
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $all = jobsAll(); $leads = leadsAll(); $id = (string) ($body['id'] ?? ''); $have = null;

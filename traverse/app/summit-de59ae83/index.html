@@ -1809,6 +1809,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   body.a365{--bar:#21451f;--bar-soft:#b9cfb3;--ember:#4c9a3f;--ember-ink:#2e5e2c;--on-ember:#fff;--accent:#2e5e2c;--booked:#2e7a3c;--go:#2e5e2c;--moss-ink:#2e5e2c}
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317;--ember-ink:#9ccc8c;--moss-ink:#9ccc8c;--go:#7fc195;--on-go:#0a1a10;--ember:#5aa84b;--on-ember:#0a1a10}}   /* 2026-10-15: every green readable on dark (buttons, the price, the lines) */
   :root[data-theme="dark"] body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317;--ember-ink:#9ccc8c;--moss-ink:#9ccc8c;--go:#7fc195;--on-go:#0a1a10;--ember:#5aa84b;--on-ember:#0a1a10}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .schedt tr.booked td{background:#1d3320}:root:not([data-theme="light"]) .schedt tr.held td{background:#3a2e12}}:root[data-theme="dark"] .schedt tr.booked td{background:#1d3320}:root[data-theme="dark"] .schedt tr.held td{background:#3a2e12}   /* schedule rows on dark (2026-10-15) */
   .a365mk{width:38px;height:38px;display:block;border-radius:50%}.a365mk.dn{width:30px;height:30px}
   body.owide .wrap{max-width:1240px}
   .ohome{display:grid;gap:18px}
@@ -1881,7 +1882,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .schedonly{display:flex;gap:8px;align-items:center;font-size:14px}.schedonly input{width:18px;height:18px;accent-color:var(--accent)}
   .schedwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
   .schedt{border-collapse:collapse;width:100%;font-size:14px;min-width:640px}.schedt th{position:sticky;top:0;background:var(--sunk);text-align:left;padding:8px 10px;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft)}
-  .schedt td{padding:7px 10px;border-top:1px solid var(--line);white-space:nowrap}.schedt tr.booked td{background:#eef6ea}.schedt tr.held td{background:#fff6e5}.schedt tr.open td:nth-child(4){color:var(--accent);font-weight:700}
+  .schedt td{padding:7px 10px;border-top:1px solid var(--line);white-space:nowrap}.schedt tr.booked td{background:#eef6ea}.schedt tr.held td{background:#fff6e5}.schedt tr.smine td:nth-child(4){font-weight:800}.schedt th:first-child,.schedt td.sdate{width:120px}.schedt tr.open td:nth-child(4){color:var(--accent);font-weight:700}
   .schedt tr.past td,.schedt tr.closed td{color:var(--soft)}.schedt tr.edit{cursor:pointer}.schedt tr.edit:hover td{filter:brightness(.96)}.schedt td.sarea{cursor:pointer}.schedt td.sarea:hover{text-decoration:underline}
   .schedt tr.sedit td{background:var(--card);border-top:0;white-space:normal}.sedform{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:6px 0}.sedform>b{flex-basis:100%}.sedform label{display:grid;gap:3px;font-size:12.5px;font-weight:700}
   .sedform input,.sedform select{font:14px var(--sans);padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}.sedacts{display:flex;gap:12px;align-items:center}.sedacts .save{width:auto;padding:8px 16px;min-height:0}.sedform .ltrynote,.sedform .err{flex-basis:100%}.schedt tr.dayfirst td{border-top:2px solid var(--soft)}.schedt td.sdate{font-weight:700;white-space:pre-line;vertical-align:top}
@@ -5703,8 +5704,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (S.schedOpenOnly && (r || past)) return;
               var tr = q('tr', (r ? r.kind : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
-              if (!past) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
+              if (!past && S.role !== 'quote') { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
               tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
+              if (r && r.mine) tr.classList.add('smine');   /* not .mine: that is the chip style */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }
               if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(q('td', null, r.town || area)); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
@@ -5714,7 +5716,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }
         tb.appendChild(bd);
         if (!n) hold.appendChild(q('div', 'msg soft', 'No open times this week.')); else { var wrap = q('div', 'schedwrap'); wrap.appendChild(tb); hold.appendChild(wrap); }
-        hold.appendChild(q('div', 'ltrynote', 'Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap a booked job to move or cancel it; tap a date to set that crew\u2019s town for the day. The crew gets an alert when their job moves.'));
+        if (S.role === 'quote') hold.appendChild(q('div', 'ltrynote', 'Your customers show by name. Booked or Held with no name is someone else\u2019s time. Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap one of your booked jobs to move or cancel it; the crew gets an alert when it moves.'));
+        else hold.appendChild(q('div', 'ltrynote', 'Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap a booked job to move or cancel it; tap a date to set that crew\u2019s town for the day. The crew gets an alert when their job moves.'));
       };
       oc.addEventListener('change', function () { S.schedOpenOnly = oc.checked; draw(); });
       draw();
@@ -7597,7 +7600,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
-    if (S.role === 'quote') return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']]];   /* the schedule came back off (Matthew 2026-10-15) */
+    if (S.role === 'quote') return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
