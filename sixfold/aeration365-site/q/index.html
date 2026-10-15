@@ -74,8 +74,8 @@
 </div></footer>
 <script>
 (function () {
-  /* on 365aeration.com (or the old aeration365.com) the quote comes from the app's server; when testing, from this one */
-  var API = /(^|\.)(365aeration|aeration365)\.com$/i.test(location.hostname) ? 'https://traverseplatforms.com/api/rounds.php' : '/api/rounds.php';
+  /* the quote comes from the app */
+  var API = /^\/a365\//.test(location.pathname) ? '/api/rounds.php' : '/api/lead.php';   /* 2026-10-14: this site's own relay (api/lead.php) passes it to the app server to server; a browser posting to the app directly was stopped by its bot check. /a365/ is the test copy inside the app's test server */
   var key = (/[?&]q=([A-Za-z0-9-]+)/.exec(location.search) || [])[1] || '';
   var main = document.getElementById('main');
   var INC = { full: ['Core aeration', 'Overseeding', 'Fertilizer'], aerate: ['Core aeration'] };

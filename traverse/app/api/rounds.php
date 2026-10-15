@@ -1889,6 +1889,18 @@ if ($action === 'calfeed') {
  * company has the aeration brand and the walk desk. Spam: a hidden field, a minimum time on the page, 5 a day from one address and
  * 300 a day for the whole site. Nothing about the house is ever sent back to the visitor. */
 const A365_ORIGINS = ['https://365aeration.com', 'https://www.365aeration.com', 'https://aeration365.com', 'https://www.aeration365.com'];   /* 365aeration.com is the main address since 2026-10-14 */   /* https only: the site redirects http there (certificate on 2026-10-14) */
+/* the 365 site's relay (2026-10-14): a visitor's browser posting straight here from 365aeration.com was stopped by SiteGround's
+   bot check on this server ("Failed to fetch", found with a real browser), so the site's own server (api/lead.php there) passes the
+   form and the quote page on, server to server, with a key (sixfold-private/a365-relay-key.txt here, a365-private/relay.php there)
+   and the visitor's address, which the per-address limits then count instead of the relay's. */
+function relayIp(): ?string {
+    static $ip = false; if ($ip !== false) return $ip;
+    $k = trim((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/a365-relay-key.txt'));
+    $ip = null;
+    if (strlen($k) >= 32 && hash_equals($k, (string) ($_SERVER['HTTP_X_SITE_KEY'] ?? ''))) { $c = trim((string) ($_SERVER['HTTP_X_CLIENT_IP'] ?? '')); $ip = filter_var($c, FILTER_VALIDATE_IP) ? $c : 'relay'; }
+    return $ip;
+}
+function visitorKey(): string { $r = relayIp(); return $r !== null ? 'relay-' . $r : clientKey(); }
 /** the same cleaning as $clean (defined further down, after the session check) */
 function a365Clean($v, int $max): string { $t = trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) $v))); return mb_substr($t, 0, $max, 'UTF-8'); }
 function a365Norm(string $a): string {
@@ -1933,7 +1945,7 @@ if ($action === 'a365lead') {
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
     if ($phone !== '' && strlen((string) preg_replace('/\D/', '', $phone)) < 10) fail('That phone number looks too short.');
     if ($want !== 'question' && $street === '') fail('Add your street address so we can quote your lawn.');
-    if (!throttleTake(rateFile('a365lead|' . clientKey()), 5, 86400) || !throttleTake(rateFile('a365lead|site'), 300, 86400)) fail('We have had a lot of requests from here today. Please call or text us instead.', 429);
+    if (!throttleTake(rateFile('a365lead|' . visitorKey()), 5, 86400) || !throttleTake(rateFile('a365lead|site'), 300, 86400)) fail('We have had a lot of requests from here today. Please call or text us instead.', 429);
     $lines = []; if ($contact !== '') $lines[] = 'Best way to reach them: ' . ['call' => 'a call', 'text' => 'a text', 'email' => 'email'][$contact]; if ($msg !== '') $lines[] = $msg;
     $row = ['id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'a365web', 'at' => time(), 'need' => $wants[$want], 'name' => $name, 'phone' => $phone, 'email' => $email,
             'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''];
@@ -1988,7 +2000,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
     header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
     if (!isset($TEAM)) $TEAM = teamInfo($basePeople, $acct, $sessionKey);   /* the crew list (walkerList, pushName) is built after the session check; this page comes before it */
-    if (!throttleTake(rateFile('a365quote|' . clientKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
+    if (!throttleTake(rateFile('a365quote|' . visitorKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
     $q = (string) ($_GET['q'] ?? ($body['q'] ?? ''));
     if (!preg_match('/^([wm]\d{14}[0-9a-f]{6})-([0-9a-f]{16})$/D', $q, $qm) || !hash_equals(a365QuoteKey($qm[1]), $qm[2])) fail('This link does not look right. Please call or text us and we will send it again.', 404);
     $all = leadsAll(); $l = $all[$qm[1]] ?? null; $Q = $l['quote'] ?? null;
@@ -2008,7 +2020,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
              'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone]);
     }
     if (!$isPost) fail('POST required', 405);
-    if (!throttleTake(rateFile('a365accept|' . clientKey()), 10, 86400)) fail('We have had a lot of answers from here today. Please call or text us.', 429);
+    if (!throttleTake(rateFile('a365accept|' . visitorKey()), 10, 86400)) fail('We have had a lot of answers from here today. Please call or text us.', 429);
     if ($job) out(['ok' => true, 'booked' => $bookedOut($job), 'phone' => $phone]);   /* already booked: say so again */
     $note = a365Clean($body['note'] ?? '', 300);
     $name = trim((string) ($l['name'] ?? '')) ?: 'A customer';
