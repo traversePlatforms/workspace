@@ -5153,7 +5153,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. Here is the link to pay the ' + money0(j.amt) + ' balance for your aeration: ' + j.url + ' Thank you!';
           if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); out.appendChild(a); }
           if (L && L.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(L.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your balance with ' + B.name) + '&body=' + encodeURIComponent(msg); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); out.appendChild(e); }
-          var sn = sendNote(out); if (sn) out.appendChild(sn);
+          addGmail(out); var sn = sendNote(out); if (sn) out.appendChild(sn);
           var op = q('a', 'lnk', 'Open the pay page \u203a'); op.href = j.url; op.target = '_blank'; op.rel = 'noopener'; out.appendChild(op);
         }).catch(function () { mk.disabled = false; toast('No signal', 'Try again.', null); });
       });
@@ -5597,9 +5597,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var hasT = !!el.querySelector('a[href^="sms:"]'), hasM = !!el.querySelector('a[href^="mailto:"]');
     if (!hasT && !hasM) return null;
     return q('div', 'ltrynote sendnote', [hasT ? 'Text opens the Messages app on this device and sends from its number. On a computer it only works if the computer is linked to a phone (an iPhone with a Mac, or Phone Link on Windows); if not, copy the text and send it from your phone.' : '',
-      hasM ? 'Email opens the email app set up on this device (Outlook, Mail or the Gmail app). If none is set up, copy the text and paste it into an email.' : ''].filter(Boolean).join(' '));
+      hasM ? 'Email opens the email app set up on this device (Outlook or Mail). If nothing opens, use Open in Gmail, which writes it in Gmail in your browser.' : ''].filter(Boolean).join(' '));
   }
-  function addSendNote(parent, el) { var n = sendNote(el); if (n) parent.appendChild(n); }
+  /* the same email in Gmail in the browser: a mailto link does nothing on a computer with no email app set up (Matthew 2026-10-15) */
+  function gmailHref(mailto) {
+    var m = /^mailto:([^?]*)(?:\?(.*))?$/.exec(mailto || ''); if (!m) return '';
+    var p = {}; (m[2] || '').split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i)] = kv.slice(i + 1); });
+    return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + m[1] + (p.subject ? '&su=' + p.subject : '') + (p.body ? '&body=' + p.body : '');
+  }
+  function addGmail(el) { [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
+  function addSendNote(parent, el) { addGmail(el); var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
   function houseLookupView(lead, open, typed, quick) {
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
