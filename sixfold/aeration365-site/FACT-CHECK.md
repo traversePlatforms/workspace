@@ -33,7 +33,7 @@ Test: scratchpad `ptest/a365site-test.mjs`, 20/20 checks.
 | Spring and fall work best; any time the ground isn't frozen, but not when hot and dry | CSU PlantTalk 1505 | Verified 2026-09-25 |
 | "Denver metro" | Matthew's service area: 45 miles of 333 W Hampden Ave, Englewood. The Facebook kit says "Denver metro" too | Business fact |
 | Phone (720) 830-4553 | Matthew, 2026-10-14: "the point of contact for the site and other documents" (replaced (303) 915-1045 from the Facebook kit) | Matthew's number for the brand |
-| contact@aeration365.com | Matthew listed support, billing and contact aliases (2026-10-14) | **Matthew to confirm the exact alias** |
+| contact@365aeration.com | Alias on the 365 Google Workspace account; 365aeration.com is a user alias domain, so every alias works at both domains (Matthew tested hello@365aeration.com, 2026-10-14) | Confirmed |
 | "We use what you send only to answer your request. We don't sell or share it." | How the app treats leads: they are held in the Sixfold app; nothing is sold or shared | **A promise. Keep it true**, or change it if leads are ever shared |
 
 **Not used:** prices, months for the fall window (no CSU source names months), "fast scheduling" or "fair pricing" (from the Facebook bio; neither is checkable), and any claim that aeration or overseeding is "the most effective" anything.
