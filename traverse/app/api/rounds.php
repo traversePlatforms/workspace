@@ -1873,11 +1873,11 @@ if ($action === 'calfeed') {
 }
 
 /* ---- 365 Aeration & Seeding's website form (2026-10-14) ----
- * The quote / information form on aeration365.com posts here from the visitor's browser. It becomes a lead in the Pipeline (source
+ * The quote / information form on 365aeration.com (aeration365.com forwards there) posts here from the visitor's browser. It becomes a lead in the Pipeline (source
  * "365 website"), its house is found from the address when it is one of ours, and the office's phones get an alert. Only where the
  * company has the aeration brand and the walk desk. Spam: a hidden field, a minimum time on the page, 5 a day from one address and
  * 300 a day for the whole site. Nothing about the house is ever sent back to the visitor. */
-const A365_ORIGINS = ['https://aeration365.com', 'https://www.aeration365.com'];   /* https only: the site redirects http there (certificate on 2026-10-14) */
+const A365_ORIGINS = ['https://365aeration.com', 'https://www.365aeration.com', 'https://aeration365.com', 'https://www.aeration365.com'];   /* 365aeration.com is the main address since 2026-10-14 */   /* https only: the site redirects http there (certificate on 2026-10-14) */
 /** the same cleaning as $clean (defined further down, after the session check) */
 function a365Clean($v, int $max): string { $t = trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) $v))); return mb_substr($t, 0, $max, 'UTF-8'); }
 function a365Norm(string $a): string {

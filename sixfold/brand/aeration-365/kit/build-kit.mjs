@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url)), OUT = join(HERE, 'out'), TMP = join(HERE, '.tmp');
 const LOGO = (f) => pathToFileURL(join(HERE, '..', f)).href;
 const C = { green: '#2F5D2C', greenD: '#21451F', leaf: '#4C9A3F', sky: '#CDE9F6', soil: '#8A5A3B', plug: '#6E4329', cream: '#FFF8EC', sun: '#F2C14E', ink: '#1D2A1C' };
-const PHONE = '(720) 830-4553', SITE = 'aeration365.com', NAME = '365 Aeration & Seeding';
+const PHONE = '(720) 830-4553', SITE = '365aeration.com', NAME = '365 Aeration & Seeding';
 const BADGE = LOGO('365-logo-badge-transparent.png'), ICON = LOGO('365-logo-icon-transparent.png'), HORIZ = LOGO('365-logo-horizontal-transparent.png');
 const FONTS = '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@500;700&display=block" rel="stylesheet">';
 const BASE = `*{box-sizing:border-box;margin:0}body{overflow:hidden;font-family:'DM Sans',sans-serif;color:${C.ink}}.o{font-family:Outfit,sans-serif}`;
@@ -95,13 +95,13 @@ add('social/linkedin-cover-1128x191.png', 1128, 191, banner({ w: 1128, h: 191, m
 add('social/youtube-banner-2560x1440.png', 2560, 1440, banner({ w: 2560, h: 1440, safe: { w: 1546, h: 423 }, groundFrac: 0.26 }), 'YouTube', 'Customise channel › Branding › Banner. Only the middle 1546×423 shows on every device; the words are inside it.');
 add('social/nextdoor-cover-1440x400.png', 1440, 400, banner({ w: 1440, h: 400, mode: 'compact' }), 'Nextdoor business page', 'Page › Edit › Cover photo.');
 add('social/google-business-cover-1024x576.png', 1024, 576, banner({ w: 1024, h: 576 }), 'Google Business Profile', 'Photos › Cover photo.');
-add('social/share-image-1200x630.png', 1200, 630, banner({ w: 1200, h: 630 }), 'Links shared anywhere (aeration365.com)', 'Used by the website as its share picture.');
+add('social/share-image-1200x630.png', 1200, 630, banner({ w: 1200, h: 630 }), 'Links shared anywhere (365aeration.com)', 'Used by the website as its share picture.');
 /* posts, story, highlights */
 add('social/post-intro-1080x1350.png', 1080, 1350, post({ w: 1080, h: 1350, kicker: 'Denver metro', title: 'Pull a plug.<br>Grow a lawn.', body: 'Core aeration and overseeding. Ask for a quote online, or call or text us.' }), 'Instagram / Facebook post', 'Feed post (4:5).');
 add('social/post-tip1-water-1080x1350.png', 1080, 1350, post({ w: 1080, h: 1350, tip: 1, kicker: 'Good to know', title: 'Water if you can', body: 'A little water a day or two before helps the machine go deeper. If you can\u2019t, no problem: we can run your sprinklers for a few minutes when we arrive.' }), 'Instagram / Facebook post', 'Feed post (4:5). Source: CSU Extension PlantTalk 1505.');
 add('social/post-tip2-plugs-1080x1350.png', 1080, 1350, post({ w: 1080, h: 1350, tip: 2, kicker: 'Good to know', title: 'The plugs stay on the lawn', body: 'They look a little messy for a week or two, then break down back into the grass. That\u2019s part of the benefit.' }), 'Instagram / Facebook post', 'Feed post (4:5). Source: UMass Amherst Extension.');
 add('social/post-tip3-season-1080x1350.png', 1080, 1350, post({ w: 1080, h: 1350, tip: 3, kicker: 'Good to know', title: 'Spring and fall work best', body: 'Any time the ground isn\u2019t frozen, but not when it\u2019s hot and dry.' }), 'Instagram / Facebook post', 'Feed post (4:5). Source: CSU Extension PlantTalk 1505.');
-add('social/story-quote-1080x1920.png', 1080, 1920, story({ w: 1080, h: 1920 }), 'Instagram / Facebook story', 'Story (9:16). Add a link sticker to aeration365.com when posting.');
+add('social/story-quote-1080x1920.png', 1080, 1920, story({ w: 1080, h: 1920 }), 'Instagram / Facebook story', 'Story (9:16). Add a link sticker to 365aeration.com when posting.');
 for (const l of ['Quotes', 'Tips', 'About']) add(`social/highlight-${l.toLowerCase()}-1080x1920.png`, 1080, 1920, highlight(l), 'Instagram story highlight cover', 'Edit highlight › Edit cover › pick from camera roll.');
 /* Square (Dashboard › Settings › Account & Settings › My business › About › Branding) */
 add('square/square-logo-small-400x400.png', 400, 400, avatar(400, '#ffffff', BADGE, 0.04), 'Square: small logo', 'Branding set › Small logo. Square asks for 400×400.');

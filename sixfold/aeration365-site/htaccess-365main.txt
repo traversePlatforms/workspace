@@ -1,0 +1,9 @@
+# 365aeration.com is the main address (2026-10-14). The old aeration365.com forwards to it, keeping the path.
+# Let's Encrypt renewals (.well-known) are left alone on both names.
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{HTTP_HOST} ^(www\.)?aeration365\.com$ [NC]
+RewriteRule ^ https://365aeration.com%{REQUEST_URI} [L,R=301]
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

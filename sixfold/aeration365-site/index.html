@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/365-icon.png">
 <meta property="og:title" content="365 Aeration &amp; Seeding">
 <meta property="og:description" content="Core aeration and overseeding across the Denver metro. Pull a plug. Grow a lawn.">
-<meta property="og:image" content="https://aeration365.com/assets/share-1200x630.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://365aeration.com/"><meta property="og:url" content="https://365aeration.com/"><meta property="og:image" content="https://365aeration.com/assets/share-1200x630.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -175,8 +175,8 @@
 
 <script>
 (function () {
-  /* the form goes straight into the office's lead list; on aeration365.com that is the app's server, when testing it is this one */
-  var API = /(^|\.)aeration365\.com$/.test(location.hostname) ? 'https://traverseplatforms.com/api/rounds.php' : '/api/rounds.php';
+  /* the form goes straight into the office's lead list; on 365aeration.com (or the old aeration365.com) that is the app's server, when testing it is this one */
+  var API = /(^|\.)(365aeration|aeration365)\.com$/i.test(location.hostname) ? 'https://traverseplatforms.com/api/rounds.php' : '/api/rounds.php';
   var f = document.getElementById('qf'), err = document.getElementById('qerr'), btn = document.getElementById('qbtn'), t0 = Date.now();
   document.getElementById('yr').textContent = new Date().getFullYear();
   f.addEventListener('submit', function (e) {

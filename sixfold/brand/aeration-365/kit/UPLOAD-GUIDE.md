@@ -1,7 +1,7 @@
 # 365 Aeration & Seeding: brand kit upload guide
 
 **Made:** 2026-10-14. All the pictures are in `out/`. **Nothing has been uploaded or posted:** you upload them yourself. `out/review.html` shows every file on one page.
-**Contact on every asset:** (720) 830-4553 · aeration365.com. The old (303) 915-1045 is gone from everything in this kit.
+**Contact on every asset:** (720) 830-4553 · 365aeration.com (the main address since 2026-10-14; aeration365.com forwards to it). The old (303) 915-1045 is gone from everything in this kit.
 **Rebuild after any change:** run `node build-kit.mjs` in this folder. One design makes every size, so a change made once updates them all.
 
 ## Profile pictures (the round badge)
@@ -27,7 +27,7 @@
 | YouTube | `social/youtube-banner-2560x1440.png` | Customize channel › Branding › Banner. Only the middle part shows on every device, and the words are inside it. |
 | Nextdoor | `social/nextdoor-cover-1440x400.png` | Business page › Edit › Cover photo |
 | Google Business Profile | `social/google-business-cover-1024x576.png` | Photos › Cover photo |
-| Website share picture | `social/share-image-1200x630.png` | Already set as the picture that shows when someone shares aeration365.com |
+| Website share picture | `social/share-image-1200x630.png` | Already set as the picture that shows when someone shares 365aeration.com |
 
 ## Posts, story and highlights (ready when you want them)
 
@@ -39,7 +39,7 @@ These are drafts. Post them when you choose to; nothing goes out from here.
 | `social/post-tip1-water-1080x1350.png` | Tip 1: water if you can, or we run your sprinklers when we arrive (CSU Extension PlantTalk 1505) |
 | `social/post-tip2-plugs-1080x1350.png` | Tip 2: the plugs stay on the lawn (UMass Amherst Extension) |
 | `social/post-tip3-season-1080x1350.png` | Tip 3: spring and fall work best (CSU PlantTalk 1505) |
-| `social/story-quote-1080x1920.png` | A story; add a link sticker to aeration365.com when you post it |
+| `social/story-quote-1080x1920.png` | A story; add a link sticker to 365aeration.com when you post it |
 | `social/highlight-quotes / tips / about-1080x1920.png` | Instagram highlight covers: Edit highlight › Edit cover › pick from camera roll |
 
 ## Square
@@ -63,12 +63,12 @@ Invoices and receipts share the same logo; Square has no separate invoice logo. 
 **Page name:** 365 Aeration & Seeding
 **Category:** Lawn care service
 **Phone:** (720) 830-4553 (update it in Facebook › Edit Page › Contact info, and the same on every platform)
-**Website:** https://aeration365.com
+**Website:** https://365aeration.com
 **Short bio (under 100 characters):**
 > Core aeration and overseeding for lawns across the Denver metro. Call or text (720) 830-4553.
 
 **About (longer):**
-> 365 Aeration & Seeding does core aeration and overseeding for lawns across the Denver metro. Aeration pulls small plugs of soil so water and fertilizer reach the roots of a compacted lawn, and seeding straight after it helps thicken thin spots. Ask for a quote at aeration365.com, or call or text (720) 830-4553.
+> 365 Aeration & Seeding does core aeration and overseeding for lawns across the Denver metro. Aeration pulls small plugs of soil so water and fertilizer reach the roots of a compacted lawn, and seeding straight after it helps thicken thin spots. Ask for a quote at 365aeration.com, or call or text (720) 830-4553.
 
 Fact check on the text: plug depth, water and fertilizer reaching the roots, and seeding after aeration all come from CSU Extension PlantTalk 1505 and fact sheet 7.241 (see `../../../aeration365-site/FACT-CHECK.md`). The old Facebook bio's "fast scheduling, fair pricing" and "the two most effective ways" are **left out**: neither can be backed up.
 
