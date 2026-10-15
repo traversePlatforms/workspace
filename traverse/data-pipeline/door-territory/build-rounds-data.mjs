@@ -295,6 +295,26 @@ for (const { key, label, group, j, areas: raw } of built) {
 }
 writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');
 
+/* ---- the office lookup's extra homes (2026-10-14, build-lookup.mjs) ----
+ * Homes on a town's CSV but not its door list: rented ones, mostly. Written as <town>-lookup.json, a flat list the server reads
+ * only for the office's House lookup; door lists, the crew's search and every count above never see them. A home that is a door
+ * in any town (within 150 m) is left out, so nothing is listed twice. */
+const doorAt = new Map(); for (const b of built) for (const a of b.areas) for (const d of a.doors) (doorAt.get(d.id) || doorAt.set(d.id, []).get(d.id)).push(d);
+let lookTotal = 0;
+for (const { key } of built) {
+  const p = join(HERE, `${key}-lookup-areas.json`); if (!existsSync(p)) continue;
+  const j = JSON.parse(readFileSync(p, 'utf8')), seen = new Set(), doors = [];
+  for (const d of j.areas.flatMap((a) => a.doors)) {
+    const id = slug(d.a); if (seen.has(id)) continue;
+    if ((doorAt.get(id) || []).some((x) => x.lat == null || d.la == null || km(x.lat, x.lon, d.la, d.lo) < SAME_KM)) continue;
+    seen.add(id);
+    doors.push({ id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d), val: valueOf(d), ...(d.rent ? { rent: 1 } : {}) });
+  }
+  writeFileSync(join(OUT, `${key}-lookup.json`), JSON.stringify({ key, built: j.built, doors }), 'utf8');
+  lookTotal += doors.length;
+}
+if (lookTotal) console.log(`office lookup: ${lookTotal} homes not on the door lists (<town>-lookup.json)`);
+
 /* Kept only as a second line of defence. ⚑ On 2026-09-29 SiteGround did NOT honour
    this deny — the JSON was served at 200 while the .htaccess itself returned 403.
    The real protection is that these files now live outside the document root. */

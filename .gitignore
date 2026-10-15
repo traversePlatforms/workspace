@@ -300,3 +300,6 @@ sixfold/research/bryce-meeting/*.wav
 sixfold/research/bryce-meeting/transcript-raw.*
 sixfold/research/bryce-meeting/transcript-timed.txt
 sixfold/research/bryce-meeting/whisper.log
+
+# office lookup-only homes (owner names; 2026-10-14)
+traverse/app/data/rounds/*-lookup.json

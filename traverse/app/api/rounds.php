@@ -533,6 +533,14 @@ function siteAddrs(?string $add = null): int {
 
 
 /* ---- data -------------------------------------------------------------- */
+/* the office lookup's extra homes (2026-10-14): <town>-lookup.json, homes not on the door list (rented ones, mostly). Read only by the
+   search index (lines marked L, shown to the office's House lookup) and houseFacts; never a door list, never the crew's search. */
+function lookupDoors(string $key): array {
+    if (!preg_match('/^[a-z0-9-]{1,40}$/D', $key)) return [];
+    static $memo = [];
+    if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $key . '-lookup.json'), true); $memo[$key] = is_array($j['doors'] ?? null) ? $j['doors'] : []; }
+    return $memo[$key];
+}
 function regionFile(string $key): ?string {
     if (!preg_match('/^[a-z0-9-]{1,40}$/D', $key)) return null;   // never let a path in
     $f = DATA_DIR . '/' . $key . '.json';
@@ -997,7 +1005,7 @@ const SEARCH_SYN = ['DRIVE' => 'DR', 'ROAD' => 'RD', 'STREET' => 'ST', 'LANE' =>
 function searchIndex(): array {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $f = DATA_DIR . '/search-index.txt';
-    $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); }
+    $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); $newest = max($newest, (int) @filemtime(DATA_DIR . '/' . $r['key'] . '-lookup.json')); }
     if (!is_readable($f) || (int) @filemtime($f) < $newest) {
         $out = '';
         foreach (($idx['regions'] ?? []) as $r) {
@@ -1005,8 +1013,10 @@ function searchIndex(): array {
             $data = loadRegion($r['key']); if (!$data) continue;
             foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
                 $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
-                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '']) . "\n";
+                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', '']) . "\n";
             }
+            foreach (lookupDoors($r['key']) as $d) $out .= implode("\t", [$r['key'], $r['label'], 'Not on the door lists', $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
+                $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', 'L']) . "\n";   /* the office lookup (2026-10-14) */
         }
         $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp';
         if (@file_put_contents($tmp, $out, LOCK_EX) !== false) { if (!@rename($tmp, $f)) { @unlink($tmp); } }
@@ -1934,14 +1944,41 @@ if ($action === 'a365lead') {
 }
 
 /* ---- the customer's quote page (2026-10-14): 365aeration.com/q/?q=<lead>-<key> ----
- * Jen's quote text and email carry this link. The page shows their first name, the street, what is included and the price, and lets
- * them say yes with the days and time of day that suit them; Jen then books the job on the jobs board. Never the lawn size, the seed,
- * the photo or anything else we measured, and never Sixfold. The key is a keyed hash of the lead, so the same link always shows that
- * lead's latest quote; a yes counts only for the price it was given to. */
+ * Jen's quote text and email carry this link. The page shows their first name, the street, what is included and the price, and
+ * the day Jen offered (Matthew: "have jen get dates before hand so it can be added into the quote so when they want the service
+ * they can just click the one button"). One button books it: the job goes straight onto the jobs board for that crew, the lead is
+ * Won, and the crew and the office get alerts. With no day offered, or when the day has gone, the button says yes and Jen calls
+ * to set one. Never the lawn size, the seed, the photo or anything else we measured, and never Sixfold. The key is a keyed hash
+ * of the lead, so the same link always shows that lead's latest quote; a yes counts only for the price it was given to. */
 function a365QuoteKey(string $id): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365quote|' . $id, $sessionKey), 0, 16); }
 function a365QuoteLink(string $id): string { return 'https://365aeration.com/q/?q=' . $id . '-' . a365QuoteKey($id); }
-const A365_DAYS = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
-const A365_WHEN = ['morning' => 'mornings', 'midday' => 'midday', 'afternoon' => 'afternoons', 'any' => 'any time'];
+function a365Arrive(string $slot): string { return ['s1' => 'between 9:30 and 10:00', 's2' => 'around 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; }
+function a365Day(string $date): string { return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); }
+/** the live job for a lead, if any */
+function jobForLead(string $lead): ?array { foreach (jobsAll() as $j) if ($j['lead'] === $lead && !$j['off']) return $j; return null; }
+/** day offers held on the board: a quoted lead's offered day, until it is booked, passes, or the lead is won or lost */
+function jobHolds(?array $leads = null): array {
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $out = [];
+    $booked = []; foreach (jobsAll() as $j) if (!$j['off']) $booked[$j['lead']] = true;
+    foreach (($leads ?? leadsAll()) as $l) {
+        $o = $l['quote']['offer'] ?? null;
+        if (!is_array($o) || $l['status'] !== 'quoted' || isset($booked[$l['id']]) || ($o['date'] ?? '') < $today) continue;
+        $out[] = ['lead' => $l['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot']];
+    }
+    return $out;
+}
+/** is this crew / day / slot free for this lead: no job there, and no other lead's offer holding it */
+function slotFree(string $crew, string $date, string $slot, string $lead, string $exceptJob = ''): ?string {
+    foreach (jobsAll() as $j) if (!$j['off'] && $j['id'] !== $exceptJob && $j['crew'] === $crew && $j['date'] === $date && $j['slot'] === $slot) return $crew . ' already has a job then: ' . $j['title'] . '.';
+    foreach (jobHolds() as $h) if ($h['lead'] !== $lead && $h['crew'] === $crew && $h['date'] === $date && $h['slot'] === $slot) return 'That time is held for ' . $h['name'] . '\'s quote.';
+    return null;
+}
+/** an offer the customer can still take: a day not gone, a crew still doing jobs, the slot still free */
+function offerLive(array $l): ?array {
+    $o = $l['quote']['offer'] ?? null; if (!is_array($o)) return null;
+    if (($o['date'] ?? '') < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') || !in_array($o['crew'] ?? '', walkerList(), true)) return null;
+    return slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null ? $o : null;
+}
 if ($action === 'a365quote' || $action === 'a365accept') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true) || (PHP_SAPI === 'cli-server' && preg_match('#^http://127\.0\.0\.1(:\d+)?$#D', $origin))) {
@@ -1950,36 +1987,55 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
     if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
     header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
+    if (!isset($TEAM)) $TEAM = teamInfo($basePeople, $acct, $sessionKey);   /* the crew list (walkerList, pushName) is built after the session check; this page comes before it */
     if (!throttleTake(rateFile('a365quote|' . clientKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
     $q = (string) ($_GET['q'] ?? ($body['q'] ?? ''));
     if (!preg_match('/^([wm]\d{14}[0-9a-f]{6})-([0-9a-f]{16})$/D', $q, $qm) || !hash_equals(a365QuoteKey($qm[1]), $qm[2])) fail('This link does not look right. Please call or text us and we will send it again.', 404);
     $all = leadsAll(); $l = $all[$qm[1]] ?? null; $Q = $l['quote'] ?? null;
     if (!$l || !$Q || $l['status'] === 'lost') fail('This quote is no longer open. Please call or text us for a fresh one.', 410);
     $phone = (string) (company()['a365']['phone'] ?? '');
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $job = jobForLead($l['id']); if ($job && ($job['done'] || $job['date'] < $today)) $job = null;
+    $bookedOut = fn($j) => ['day' => a365Day($j['date']), 'arrive' => a365Arrive((string) $j['slot'])];
     if ($action === 'a365quote') {
         $h = $l['house'] ?? null;
         $street = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : trim((string) ($l['town'] ?? ''));
         $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
-        $booked = null;
-        foreach (jobsAll() as $j) if ($j['lead'] === $l['id'] && !$j['off'] && !$j['done'] && $j['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) {
-            $arrive = ['s1' => 'between 9:30 and 10:00', 's2' => 'around 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$j['slot']] ?? '';
-            $booked = ['day' => (new DateTime($j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'), 'arrive' => $arrive];
-        }
         $acc = $l['accept'] ?? null; if ($acc && (int) ($acc['price'] ?? 0) !== (int) $Q['price']) $acc = null;   /* a yes to an older price */
+        $off = $job ? null : offerLive($l);
         out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
-             'accepted' => $acc ? ['days' => $acc['days'], 'when' => $acc['when']] : null, 'booked' => $booked, 'phone' => $phone]);
+             'offer' => $off ? ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])] : null,
+             'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone]);
     }
     if (!$isPost) fail('POST required', 405);
     if (!throttleTake(rateFile('a365accept|' . clientKey()), 10, 86400)) fail('We have had a lot of answers from here today. Please call or text us.', 429);
-    $days = array_values(array_unique(array_filter(array_map('intval', is_array($body['days'] ?? null) ? $body['days'] : []), fn($d) => isset(A365_DAYS[$d])))); sort($days);
-    $when = (string) ($body['when'] ?? 'any'); if (!isset(A365_WHEN[$when])) $when = 'any';
+    if ($job) out(['ok' => true, 'booked' => $bookedOut($job), 'phone' => $phone]);   /* already booked: say so again */
     $note = a365Clean($body['note'] ?? '', 300);
-    $pref = ($days ? implode(', ', array_map(fn($d) => A365_DAYS[$d], $days)) : 'any day') . ', ' . A365_WHEN[$when];
-    $row = ['id' => $l['id'], 'accept' => ['price' => (int) $Q['price'], 'days' => $days, 'when' => $when, 'note' => $note],
-            'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website. Prefers ' . $pref . '.' . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()];
-    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
-    a365Alert('Quote accepted', trim((string) ($l['name'] ?? '') ?: 'A customer') . ' · $' . $Q['price'] . ' · prefers ' . $pref);
-    out(['ok' => true, 'phone' => $phone]);
+    $name = trim((string) ($l['name'] ?? '')) ?: 'A customer';
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Something went wrong. Please call or text us.', 500);
+    $hadOffer = is_array($Q['offer'] ?? null); $off = offerLive($l);
+    $acc = ['price' => (int) $Q['price'], 'note' => $note];
+    if ($off) {   /* the day Jen offered: book it */
+        $h = $l['house'] ?? null;
+        $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $jid = 'j' . bin2hex(random_bytes(6));
+        $row = ['id' => $jid, 'lead' => $l['id'], 'title' => $name, 'crew' => (string) $off['crew'], 'date' => (string) $off['date'], 'slot' => (string) $off['slot'], 'price' => (int) $Q['price'],
+                'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => $note, 'addr' => $addr ?: 'Ask the office',
+                'by' => 'website', 'at' => time()];
+        if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
+        $acc['booked'] = $jid;
+        appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'status' => 'won', 'note' => mb_substr('Booked online: ' . a365Day($off['date']) . ', arriving ' . a365Arrive((string) $off['slot']) . ', $' . $Q['price'] . '.' . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()]);
+        flock($lk, LOCK_UN);
+        $sl = jobSlot((string) $off['slot']);
+        pushName((string) $off['crew'], 'Job booked: ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : ''), $name . ' · ' . $addr . ' · $' . $Q['price'] . ' · booked online', './?job=' . $jid, 'job-' . $jid);
+        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price']);
+        out(['ok' => true, 'booked' => ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])], 'phone' => $phone]);
+    }
+    flock($lk, LOCK_UN);
+    if ($hadOffer) $acc['gone'] = 1;
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website' . ($hadOffer ? ', but the day offered was gone. Call them to set a day.' : '. Call them to set a day.') . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()])) fail('Something went wrong saving that. Please call or text us.', 500);
+    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''));
+    out(['ok' => true, 'gone' => $hadOffer, 'phone' => $phone]);
 }
 
 /* everything past here needs a session */
@@ -3456,13 +3512,21 @@ if ($action === 'calsave') {
 function sideDoor(string $kind, string $key, string $id) { $f = DATA_DIR . '/' . $kind . '-' . $key . '.json'; if (!is_readable($f)) return null; $j = json_decode((string) file_get_contents($f), true); return is_array($j) ? (($j['doors'] ?? $j)[$id] ?? null) : null; }
 function houseFacts(string $key, string $id): ?array {
     if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) return null;
-    $key = doorHome($key, $id); $data = loadRegion($key); if (!$data) return null;
+    $k0 = $key; $isDoor = isset(doorIds($key)[$id]); if (!$isDoor) foreach (sharedWith($key) as $p) if (isset(doorIds($p)[$id])) { $isDoor = true; break; }
+    if ($isDoor) { $key = doorHome($key, $id); $data = loadRegion($key); if (!$data) return null; } else $data = ['areas' => []];   /* not a door: the office lookup's list (2026-10-14) */
     foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
         if ($d['id'] !== $id) continue;
         $y = sideDoor('year', $key, $id);
         return ['region' => $key, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($key), 'area' => (string) $a['name'], 'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'yb' => is_array($y) ? ($y['yb'] ?? null) : null, 'bsf' => is_array($y) ? ($y['bsf'] ?? null) : null,
+                'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
+    }
+    foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
+        if ($d['id'] !== $id) continue;
+        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($k0), 'area' => 'Not on the door lists', 'owner' => $d['owner'] ?? null,
+                'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
+                'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']),
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
     }
     return null;
@@ -3556,6 +3620,21 @@ if ($action === 'leadquote') {
     $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 2000000) fail('That lawn size does not look right.');
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : null;
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => $sq, 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
+    /* the day offered with the quote (2026-10-14): kept across re-saves unless changed or cleared; it holds that slot on the board */
+    $prevOffer = $all[$id]['quote']['offer'] ?? null;
+    if (array_key_exists('offer', $body)) {
+        $o = $body['offer'];
+        if (!is_array($o)) $q['offer'] = null;
+        else {
+            $oc = (string) ($o['crew'] ?? ''); $od = (string) ($o['date'] ?? ''); $os = (string) ($o['slot'] ?? '');
+            if (!in_array($oc, walkerList(), true)) fail('Pick who does the job.');
+            if (!dateOk($od) || $od < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
+            if (in_array((int) (new DateTime($od . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
+            if (!jobSlot($os)) fail('Pick an arrival time.');
+            if ($why = slotFree($oc, $od, $os, $id)) fail($why, 409);
+            $q['offer'] = ['crew' => $oc, 'date' => $od, 'slot' => $os];
+        }
+    } elseif (is_array($prevOffer)) $q['offer'] = $prevOffer;
     $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
     if ($q['sent'] && in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
@@ -3605,7 +3684,8 @@ if ($action === 'jobs') {
     foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to) $list[] = jobShow($j, $leads);
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
-    out(['ok' => true, 'jobs' => $list, 'days' => $days, 'crews' => walkerList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
+    $holds = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] >= $from && $h['date'] <= $to));
+    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => walkerList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
 }
 /* each crew's area for a day ("the town of the day" in Randy's sheet) */
 if ($action === 'jobday') {
@@ -3644,7 +3724,7 @@ if ($action === 'jobsave') {
     if ($date < (new DateTime('today', $tz))->format('Y-m-d') && (!$have || $date !== $have['date'])) fail('That day has gone. Pick today or later.');
     if (in_array((int) (new DateTime($date . ' 12:00', $tz))->format('w'), jobClosed(), true) && empty($body['force'])) fail('That is a closed day (Sunday).');
     $slot = (string) ($body['slot'] ?? ($have['slot'] ?? '')); if (!jobSlot($slot)) fail('Pick an arrival time.');
-    foreach ($all as $o) if (!$o['off'] && $o['id'] !== $id && $o['crew'] === $crew && $o['date'] === $date && $o['slot'] === $slot) fail($crew . ' already has a job then: ' . $o['title'] . '.', 409);
+    if ($why = slotFree($crew, $date, $slot, $lead, $id)) fail($why, 409);   /* a job there, or another quote's offered day (2026-10-14) */
     $price = (int) ($body['price'] ?? ($have['price'] ?? 0)); if ($price < 1 || $price > 100000) fail('Give the job a price.');
     $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, ['full', 'aerate', 'plan'], true)) fail('Pick what is included.');
     $scope = (string) ($body['scope'] ?? ($have['scope'] ?? 'all')); if (!in_array($scope, ['all', 'front', 'back'], true)) fail('Pick front, back or all.');
@@ -4546,7 +4626,10 @@ if ($action === 'pestseason') {
 }
 
 if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget'], true)) {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    /* the office (Jen, 2026-10-14, Matthew: "in case she needs to call one or edit something she forgot to put in"): the list, editing a
+       customer, making one from a lead, adding and editing visits. Removing a visit, imports, the download and backups stay the admin's. */
+    $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave'], true);
+    if ($role !== 'admin' && !$officeCust) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
     /* the whole list, with each customer's visits and what is due */
@@ -4761,6 +4844,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         $cid = (string) ($body['cid'] ?? ''); if (!isset($cs[$cid])) fail('No such customer.', 404);
         $vid = (string) ($body['vid'] ?? '');
         if (!empty($body['del'])) {
+            if ($role !== 'admin') fail('An admin removes visits.', 403);
             if (!preg_match('/^v\d{14}[0-9a-f]{6}$/D', $vid)) fail('No such visit.', 404);
             if (!appendLine(custDir() . '/visits.log', ['vid' => $vid, 'cid' => $cid, 'del' => true, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
             out(['ok' => true]);
@@ -5359,21 +5443,29 @@ if ($action === 'search') {
        streets or house numbers, and a loop of them could pull every address in every town. A number with a
        street name ("1840 ponderosa") or a street name alone ("ponderosa") still works. Counted per person:
        60 searches in 10 minutes is far past what a driver needs, and far short of the whole list. */
+    /* 2026-10-14 (Matthew: "7173 townsend dr" was there, "..., highlands ranch" found nothing): "CO", "Colorado" and a ZIP are dropped,
+       and a word may match the town's name instead of the street */
+    $words = array_values(array_filter($words, fn($w) => !in_array($w, ['CO', 'COLO', 'COLORADO', 'USA'], true) && !preg_match('/^\d{5}$/D', $w)));
     $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
+    $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && desk();
     if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $hits = [];
     foreach (searchIndex() as $line) {
         $p = explode("\t", $line); if (count($p) < 9) continue;
+        $look = ($p[9] ?? '') === 'L'; if ($look && !$withLookup) continue;
         $aw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $p[4]));
-        $ok = true; $exactNo = false;
+        $tw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', strtoupper($p[1])));
+        $ok = true; $exactNo = false; $streetHit = false;
         foreach ($words as $w) {
-            $m = false; foreach ($aw as $i => $x) { if ($x !== '' && strncmp($x, $w, strlen($w)) === 0) { $m = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
+            $m = false; foreach ($aw as $i => $x) { if ($x !== '' && strncmp($x, $w, strlen($w)) === 0) { $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
+            if (!$m && !ctype_digit($w)) foreach ($tw as $x) if ($x !== '' && $x === $w) { $m = true; break; }   /* the town's name */
             if (!$m) { $ok = false; break; }
         }
+        if ($ok && !$streetHit) $ok = false;   /* the town alone is not an address */
         if (!$ok) continue;
         $hits[] = ['rank' => ($exactNo ? 0 : 1), 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
-                   'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null];
+                   'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : [])];
         if (count($hits) > 400) break;
     }
     usort($hits, fn($x, $y) => [$x['rank'], $x['address']] <=> [$y['rank'], $y['address']]);

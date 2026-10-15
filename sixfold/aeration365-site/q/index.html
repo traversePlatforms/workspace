@@ -34,6 +34,7 @@
   ul.inc li{display:flex;gap:10px;align-items:flex-start}
   ul.inc li::before{content:"";flex:none;width:22px;height:22px;margin-top:1px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/14px no-repeat}
   .muted{color:var(--soft);font-size:14px;margin:0}
+  .big{font:700 22px/1.3 'Outfit',sans-serif;color:var(--green-d);margin:0 0 8px}
   .h{font:700 14px 'DM Sans',sans-serif;color:#334132;margin:14px 0 8px}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chips button{min-height:44px;padding:0 16px;border-radius:999px;border:2px solid var(--line);background:#fff;color:var(--ink);font:700 15px 'DM Sans',sans-serif;cursor:pointer}
@@ -77,8 +78,6 @@
   var API = /(^|\.)(365aeration|aeration365)\.com$/i.test(location.hostname) ? 'https://traverseplatforms.com/api/rounds.php' : '/api/rounds.php';
   var key = (/[?&]q=([A-Za-z0-9-]+)/.exec(location.search) || [])[1] || '';
   var main = document.getElementById('main');
-  var DAYS = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat']];
-  var WHEN = [['morning', 'Morning'], ['midday', 'Midday'], ['afternoon', 'Afternoon'], ['any', 'Any time']];
   var INC = { full: ['Core aeration', 'Overseeding', 'Fertilizer'], aerate: ['Core aeration'] };
   function el(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t != null) e.textContent = t; return e; }
   function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
@@ -102,51 +101,47 @@
     var ul = el('ul', 'inc'); (INC[Q.pkg] || INC.full).forEach(function (x) { ul.appendChild(el('li', null, x)); }); q.appendChild(ul);
     var pr = el('div', 'price'); pr.appendChild(el('b', null, money(Q.price))); pr.appendChild(el('span', null, 'Quoted ' + Q.date)); q.appendChild(pr);
     main.appendChild(q);
-    if (Q.booked) {
-      var b = el('div', 'card ok'); b.appendChild(el('h2', null, 'You’re booked'));
-      b.appendChild(el('p', null, Q.booked.day + (Q.booked.arrive ? ', arriving ' + Q.booked.arrive : '') + '.'));
-      b.appendChild(el('p', 'muted', 'Need to change it? Call or text (720) 830-4553.'));
-      main.appendChild(b);
-    } else if (Q.accepted) main.appendChild(thanks(Q, true));
+    if (Q.booked) main.appendChild(booked(Q.booked));
+    else if (Q.accepted) main.appendChild(thanks(Q, true, false));
     else main.appendChild(book(Q));
     main.appendChild(tips());
   }).catch(function () { sorry('We could not reach our system just now. Try again in a minute, or call or text us.'); });
-  function thanks(Q, before) {
+  function booked(B) {
+    var c = el('div', 'card ok'); c.appendChild(el('h2', null, 'You’re booked'));
+    c.appendChild(el('p', 'big', B.day + (B.arrive ? ', arriving ' + B.arrive : '') + '.'));
+    c.appendChild(el('p', 'muted', 'Need to change it? Call or text (720) 830-4553.'));
+    return c;
+  }
+  function thanks(Q, before, gone) {
     var c = el('div', 'card ok');
     c.appendChild(el('h2', null, before ? 'You said yes' : 'Thanks' + (Q.first ? ', ' + Q.first : '') + '!'));
-    c.appendChild(el('p', null, 'We’ll call or text you to confirm your day.'));
+    c.appendChild(el('p', null, gone ? 'That time was just taken, sorry. We’ll call or text you with another day.' : 'We’ll call or text you to set your day.'));
     c.appendChild(el('p', 'muted', 'Need us sooner? Call or text (720) 830-4553.'));
     return c;
   }
+  /* the day is offered by the office; the customer only says yes (Matthew 2026-10-14: no picking dates here) */
   function book(Q) {
-    var st = { days: [], when: 'any' };
-    var c = el('div', 'card'); c.appendChild(el('h2', null, 'Ready to book?'));
-    c.appendChild(el('p', 'muted', 'Pick the days that suit you and we’ll call or text to confirm one.'));
-    c.appendChild(el('div', 'h', 'Days that work'));
-    var dc = el('div', 'chips'); c.appendChild(dc);
-    DAYS.forEach(function (d) {
-      var b = el('button', null, d[1]); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
-      b.addEventListener('click', function () { var i = st.days.indexOf(d[0]); if (i >= 0) st.days.splice(i, 1); else st.days.push(d[0]); b.setAttribute('aria-pressed', String(i < 0)); });
-      dc.appendChild(b);
-    });
-    c.appendChild(el('div', 'h', 'Time of day'));
-    var wc = el('div', 'chips'); c.appendChild(wc);
-    WHEN.forEach(function (w) {
-      var b = el('button', null, w[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.when === w[0]));
-      b.addEventListener('click', function () { st.when = w[0]; [].forEach.call(wc.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
-      wc.appendChild(b);
-    });
+    var c = el('div', 'card');
+    if (Q.offer) {
+      c.appendChild(el('h2', null, 'Your day'));
+      c.appendChild(el('p', 'big', Q.offer.day + (Q.offer.arrive ? ', arriving ' + Q.offer.arrive : '') + '.'));
+      c.appendChild(el('p', 'muted', 'Book it with the button below. Need a different day? Call or text (720) 830-4553.'));
+    } else {
+      c.appendChild(el('h2', null, 'Ready to book?'));
+      c.appendChild(el('p', 'muted', 'Say yes and we’ll call or text you to set your day.'));
+    }
     c.appendChild(el('div', 'h', 'Anything we should know? (optional)'));
     var nt = el('textarea'); nt.rows = 3; nt.maxLength = 300; nt.placeholder = 'Gate code, dogs, where the sprinklers are'; nt.setAttribute('aria-label', 'Anything we should know'); c.appendChild(nt);
-    var go = el('button', 'btn', 'Yes, book me in'); go.type = 'button'; c.appendChild(go);
+    var label = Q.offer ? 'Book it' : 'Yes, book me in';
+    var go = el('button', 'btn', label); go.type = 'button'; c.appendChild(go);
     var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
     go.addEventListener('click', function () {
       err.textContent = ''; go.disabled = true; go.textContent = 'Sending…';
-      fetch(API + '?action=a365accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key, days: st.days, when: st.when, note: nt.value }) })
+      fetch(API + '?action=a365accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key, note: nt.value }) })
         .then(function (r) { return r.json(); }).then(function (j) {
-          if (!j || !j.ok) { go.disabled = false; go.textContent = 'Yes, book me in'; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
-          c.replaceWith(thanks(Q, false)); window.scrollTo(0, 0);
-        }).catch(function () { go.disabled = false; go.textContent = 'Yes, book me in'; err.textContent = 'No connection. Try again, or call or text us.'; });
+          if (!j || !j.ok) { go.disabled = false; go.textContent = label; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
+          c.replaceWith(j.booked ? booked(j.booked) : thanks(Q, false, !!j.gone)); window.scrollTo(0, 0);
+        }).catch(function () { go.disabled = false; go.textContent = label; err.textContent = 'No connection. Try again, or call or text us.'; });
     });
     return c;
   }

@@ -1734,6 +1734,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dwbookbtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:42px;border:0;border-radius:11px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;box-shadow:inset 0 0 0 1.5px var(--line)}
   .dwbookbtn .ic{width:17px;height:17px}
   .dwform{display:grid;gap:10px}
+  .dwform>.save{min-height:48px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 15px var(--sans);cursor:pointer;margin-top:4px}.dwform>.save:disabled{opacity:.5;cursor:default}   /* the booking forms' main button (2026-10-14: it had no style) */
   .dwfor{padding:2px 0 4px}.dwfor b{font:800 18px var(--sans)}
   .dwh{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-top:6px}
   .walkcard .dwh{margin-top:14px}
@@ -1853,6 +1854,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qacts .lnk{background:none;border:0;color:var(--accent);font:700 14px var(--sans);padding:8px 4px;cursor:pointer;text-align:left}
   .qline{margin-top:8px;font-size:13.5px;font-weight:700;color:var(--ember-ink)}
   .qline.qyes,small.qyes{color:#2f5d2c}.qacts .qpage{text-decoration:none}
+  .qoffer{display:grid;gap:6px;justify-items:start}.qoffer .jbook{justify-self:stretch}
+  .jslot.held{background:#fdf6e3;border-color:#d9b44a;border-style:dashed}
   .qform label small{font-weight:500;color:var(--soft)}
   .qexample{font-size:13px;color:var(--soft);margin-top:8px;line-height:1.5}
   /* the jobs board (2026-10-14) */
@@ -3351,7 +3354,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (asOffice()) {   /* first on the office home (2026-10-14): Jen works leads, not doors */   /* the office role (2026-10-14): leads, walks and everyone's calendar */
       var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipelineView);
       api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
-      grp('Office', [opt, tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
+      grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
     }
     grp('In the field', [
       asOffice() ? null : tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
@@ -4550,6 +4553,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               tx.appendChild(q('small', null, [jb.addr, jb.pkg !== 'full' ? JOB_PKG[jb.pkg] : '', jb.scope !== 'all' ? JOB_SCOPE[jb.scope] : '', jobPayText(jb), jb.card ? 'card on file' : 'no card', jb.done ? (jb.done.o === 'done' ? 'Done' : 'Not done') : ''].filter(Boolean).join(' · ')));
               row.addEventListener('click', function () { jobView(jb.id, jobsView, jb.crew); });
             } else if (iso < todayISO()) { tx.appendChild(q('small', null, '—')); row.disabled = true; }
+            else if ((j.holds || []).some(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })) {
+              var hd2 = j.holds.filter(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })[0];
+              row.classList.add('held'); tx.appendChild(q('b', null, 'Held \u00b7 ' + hd2.name)); tx.appendChild(q('small', null, 'Offered with the quote; booked when they tap it'));
+              row.addEventListener('click', function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + hd2.lead; S.pipeFocus = hd2.lead; pipelineView(); });
+            }
             else {
               tx.appendChild(q('small', 'jopen', 'Open')); row.title = 'Book a lead in this slot';
               row.addEventListener('click', function () { jobPickView({ date: iso, crew: crew, slot: s.k, slotLabel: s.label }); });
@@ -4606,9 +4614,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function jobBookView(lead, job, pre) {
     hideToast(); S.signin = null; S.screen = 'jobbook'; foot.hidden = true; setDock(null);
     pre = pre || {};
-    var back = function () { jobsView(); };
+    var OFFER = !!pre.offer;   /* offer mode (2026-10-14): only the crew, day and time, saved on the quote */
+    var back = OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
-    setBar('back', { title: job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: 'Jobs' });
+    setBar('back', { title: OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: OFFER ? 'Pipeline' : 'Jobs' });
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
@@ -4617,6 +4626,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb != null ? qt.seedLb : '', fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb != null ? qt.fertLb : '',
       pay: { s: 'unpaid' }, card: false, note: (acceptOf(lead) && acceptOf(lead).note) || '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
     };
+    if (OFFER && qt.offer) { P.crew = qt.offer.crew; P.date = qt.offer.date; P.slot = qt.offer.slot; }
     if (!P.date) { var t = new Date(); t.setDate(t.getDate() + 1); if (t.getDay() === 0) t.setDate(t.getDate() + 1); P.date = isoOf(t); }
     var W = { wk: jobMonday(P.date), data: null };
     var box = q('div', 'phf dwform jform');
@@ -4650,7 +4660,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var cardRow = q('div', 'dwlen'); box.appendChild(cardRow);
     var nl = q('label', null, 'Notes for the crew (optional)'); var nt = q('textarea'); nt.rows = 2; nt.maxLength = 300; nt.value = P.note || ''; nt.placeholder = 'Gate code, dog, where the sprinklers are'; nl.appendChild(nt); box.appendChild(nl);
     var err = q('div', 'err'); box.appendChild(err);
-    var sv = q('button', 'save', job ? 'Save the change' : 'Book the job'); sv.type = 'button'; box.appendChild(sv);
+    var sv = q('button', 'save', OFFER ? 'Put this day in the quote' : job ? 'Save the change' : 'Book the job'); sv.type = 'button'; box.appendChild(sv);
+    if (OFFER) { [al, pkRow, scRow, pr, payRow, payMore, cardRow, nl].forEach(function (x) { x.hidden = true; }); [].forEach.call(box.querySelectorAll('.dwh'), function (x) { if (/What is included|Payment/.test(x.textContent)) x.hidden = true; }); [].forEach.call(box.querySelectorAll('.dwsub,.qline'), function (x) { if (x.parentNode === box) x.hidden = true; }); }
     if (job) {
       var cx = q('button', 'lnk danger dwcancel', 'Cancel the job'); cx.type = 'button';
       cx.addEventListener('click', function () {
@@ -4706,7 +4717,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         crewRow.appendChild(b);
       });
     }
-    function taken(iso, crew, slot) { return W.data ? W.data.jobs.filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && !(job && x.id === job.id); })[0] : null; }
+    var myLead = lead ? lead.id : job ? job.lead : '';
+    function taken(iso, crew, slot) {
+      if (!W.data) return null;
+      var t = W.data.jobs.filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && !(job && x.id === job.id); })[0];
+      if (t) return t;
+      var h = (W.data.holds || []).filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && x.lead !== myLead; })[0];
+      return h ? { title: 'Held: ' + h.name, who: { name: 'Held: ' + h.name } } : null;
+    }
     function drawStrip() {
       strip.textContent = '';
       if (!W.data) { strip.appendChild(q('div', 'skel')); return; }
@@ -4756,6 +4774,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       err.textContent = '';
       if (!P.crew) { err.textContent = 'Pick who does it.'; return; }
       if (!P.slot) { err.textContent = 'Pick an arrival time.'; return; }
+      if (OFFER) {
+        sv.disabled = true;
+        api('leadquote', { body: quoteBody(lead, { offer: { crew: P.crew, date: P.date, slot: P.slot } }) }).then(function (j) {
+          sv.disabled = false;
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }
+          lead.quote.offer = { crew: P.crew, date: P.date, slot: P.slot };
+          back(); toast('Day in the quote \u00b7 ' + dayName(P.date) + ', ' + SLOT_LABEL[P.slot], 'Held for them on the jobs board. Text or email the quote; one tap on their page books it.', null);
+        }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Not saved; try again.'; });
+        return;
+      }
       if (!ai.value.trim()) { err.textContent = 'Add the address.'; return; }
       var price = Math.round(num(priceIn) || 0); if (price < 1) { err.textContent = 'Give the job a price.'; return; }
       if (P.pay.s === 'deposit' && !(P.pay.amt > 0 && P.pay.amt < price)) { err.textContent = 'The deposit should be more than $0 and less than the price.'; return; }
@@ -5033,8 +5062,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function housePanel(h, lead, redraw) {
     var E = lawnEstimate(h), box = q('div', 'door hpanel');
     box.appendChild(q('div', 'addr', streetCase(h.address)));
-    box.appendChild(q('div', 'meta', h.town + ' · ' + streetCase(h.area)));
-    if (h.owner) box.appendChild(q('div', 'meta', 'Owner of record: ' + ownerText(h.owner)));
+    box.appendChild(q('div', 'meta', h.lookup ? h.town + ' · not on the door lists' + (h.rent ? ': the owner lives elsewhere (likely rented)' : '') : h.town + ' · ' + streetCase(h.area)));
+    if (h.owner) box.appendChild(q('div', 'meta', (h.rent ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
     var big = q('div', 'hlawn c-' + E.conf.toLowerCase());
     if (E.none) big.appendChild(q('b', null, 'No lawn measured yet'));
     else {
@@ -5133,14 +5162,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var v = inp.value.trim(); pan.textContent = ''; res.textContent = '';
       if (v.replace(/[^A-Za-z0-9]/g, '').length < 3) { res.appendChild(q('div', 'msg soft', 'Type the house number and street as they say it.')); return; }
       var my = ++seq; res.appendChild(q('div', 'msg soft', 'Searching…'));
-      api('search', { params: { q: v } }).then(function (j) {
+      api('search', { params: { q: v, lookup: 1 } }).then(function (j) {   /* lookup: rented homes too (2026-10-14) */
         if (my !== seq) return; res.textContent = '';
         if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work.')); return; }
         if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, e.g. “1840 Ponderosa”.')); return; }
-        if (!j.results.length) { res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”. Check the spelling, or try just the number and street name. Rented homes and towns we have not measured yet will not show.')); return; }
+        if (!j.results.length) { res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”. Check the spelling, or try just the number and street name. Towns we have not added yet, condos and apartments will not show.')); return; }
         j.results.forEach(function (r) {
           var b = q('button', 'door drow srow'); b.type = 'button';
-          b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town + ' · ' + r.area));
+          b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town + (r.lookup ? ' · not on the door lists' : ' · ' + r.area)));
           if (r.lawn) { var m = q('div', 'meta'); var lc = lawnChip({ lawn: r.lawn }, false); if (lc) m.appendChild(lc); b.appendChild(m); }
           b.addEventListener('click', function () { show(r.region, r.id); });
           res.appendChild(b);
@@ -5215,7 +5244,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var wc = q('section', 'ocard'); wc.appendChild(q('h2', null, 'Booked ' + vw() + 's')); var wl = q('div', 'olist'); wl.appendChild(q('div', 'skel')); wc.appendChild(wl);
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
-    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['door', 'House lookup', function () { houseLookupView(null); }],
+    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', 'House lookup', function () { houseLookupView(null); }],
      ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
@@ -5300,9 +5329,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function money0(n) { return '$' + Math.round(n).toLocaleString(LOCALE); }
   /* a yes on the customer's quote page (2026-10-14), only while it is for the quote's current price */
-  var ACC_DAY = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ACC_WHEN = { morning: 'mornings', midday: 'midday', afternoon: 'afternoons', any: 'any time' };
   function acceptOf(l) { return l && l.accept && l.quote && l.accept.price === l.quote.price ? l.accept : null; }
-  function acceptText(a) { return 'Said yes online ' + ago(a.at) + ': ' + ((a.days || []).length ? a.days.map(function (d) { return ACC_DAY[d]; }).join(', ') : 'any day') + ', ' + (ACC_WHEN[a.when] || 'any time') + (a.note ? ' \u00b7 \u201c' + a.note + '\u201d' : ''); }
+  function acceptText(a) { return (a.booked ? 'Booked online ' + ago(a.at) : 'Said yes online ' + ago(a.at) + (a.gone ? ': the day offered was gone, call them to set one' : ': call them to set a day')) + (a.note ? ' \u00b7 \u201c' + a.note + '\u201d' : ''); }
+  /* the day offered with a quote (2026-10-14) */
+  var SLOT_LABEL = { s1: '9:30-10:00', s2: '12:00', s3: '12-2', s4: '3:00' }, SLOT_SAY = { s1: 'between 9:30 and 10:00', s2: 'around 12:00', s3: 'between 12:00 and 2:00', s4: 'around 3:00' };
+  function longDay(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); }
+  function offerText(o) { return dayName(o.date) + ', arrive ' + SLOT_LABEL[o.slot] + ' \u00b7 ' + o.crew; }
+  function quoteBody(l, extra) { var Q = l.quote; var b = { id: l.id, price: Q.price, pkg: Q.pkg, sq: Q.sq || 0, seedLb: Q.seedLb, fertLb: Q.fertLb || null, sent: !!Q.sent }; if (Q.note) b.note = Q.note; for (var k in extra) b[k] = extra[k]; return b; }
   function quoteBox(h, lead, E, redraw) {
     var box = q('div', 'qbox'); box.appendChild(q('div', 'dwh', 'Quote'));
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
@@ -5373,7 +5406,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var B = leadBrand(lead), first = greetName(lead.name), street = h.address ? streetCase(h.address) : '';
           var is365 = !!(CO.a365 && B.name === CO.a365.name);   /* the page is 365's: only on a 365 message */
           var lk = is365 && lead.quote && lead.quote.link && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg && lead.quote.link;   /* the customer's quote page, once this price is saved */
-          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? ' Your quote, where you can pick the days that suit you: ' + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + SLOT_SAY[lead.quote.offer.slot] + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }
@@ -5381,6 +5414,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row);
           if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
+          if (lk && wdOn()) {   /* the day offered (2026-10-14): one tap on their page books it */
+            var ob = q('div', 'qoffer');
+            if (lead.quote.offer) {
+              ob.appendChild(q('div', 'qline qyes', 'Day offered: ' + offerText(lead.quote.offer)));
+              var oc = q('button', 'lnk', 'Change the day'); oc.type = 'button'; oc.addEventListener('click', function () { jobBookView(lead, null, { offer: true }); }); ob.appendChild(oc);
+              var orm = q('button', 'lnk', 'Take the day off the quote'); orm.type = 'button';
+              orm.addEventListener('click', function () { api('leadquote', { body: quoteBody(lead, { offer: null }) }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } lead.quote.offer = null; toast('Day taken off', 'The quote asks them to say yes, and you call to set a day.', null); drawActs(); }).catch(function () { toast('No signal', 'Not saved.', null); }); });
+              ob.appendChild(orm);
+            } else {
+              var oo = q('button', 'save jbook', 'Offer a day \u203a'); oo.type = 'button'; oo.addEventListener('click', function () { jobBookView(lead, null, { offer: true }); }); ob.appendChild(oo);
+              ob.appendChild(q('div', 'ltrynote', 'Pick the day and time from the jobs board. It goes in the text and on their quote page, and one tap there books it.'));
+            }
+            acts.appendChild(ob);
+          }
           if (lk) { var pv = q('a', 'lnk qpage', 'Their quote page \u203a'); pv.href = lk; pv.target = '_blank'; pv.rel = 'noopener'; acts.appendChild(pv); }
           else if (is365) acts.appendChild(q('div', 'ltrynote', 'Save the quote to put their quote page link in the text and email.'));
           if (acceptOf(lead)) acts.appendChild(q('div', 'qline qyes', acceptText(acceptOf(lead))));
@@ -6647,7 +6694,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
-    if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']],
+    if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', 'House lookup', function () { houseLookupView(null); }, ['house']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
@@ -8737,7 +8784,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function customersView() {
     hideToast(); S.signin = null; S.screen = 'customers';
     foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Customers', sub: 'Plans, visits and what is due', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', { title: 'Customers', sub: 'Plans, visits and what is due', back: chooseView, backLabel: asOffice() ? 'Home' : 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('customers').then(function (j) {
@@ -8865,7 +8912,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.custAdd) holder.appendChild(customerForm(null, function (id) { S.custAdd = false; customerView(id); }));
     var imp = q('button', 'addlead', S.custImport ? 'Close the import' : 'Import customers (spreadsheet)'); imp.type = 'button';
     imp.addEventListener('click', function () { S.custImport = !S.custImport; drawCustomers(holder); });
-    holder.appendChild(imp);
+    if (S.role === 'admin') holder.appendChild(imp);   /* imports are the admin's (2026-10-14) */
     if (S.custImport) holder.appendChild(customerImport(function () { S.custImport = false; customersView(); }));
     var all = S.custs || [];
     var due = all.filter(function (c) { return c.due; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
@@ -8894,8 +8941,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       shown.forEach(function (c) { listBox.appendChild(custRow(c)); });
     };
     find.addEventListener('input', fill); fill();
-    /* exports and the backup */
-    var ex = q('div', 'cexp');
+    /* exports and the backup (the admin's; the office sees the list only, 2026-10-14) */
+    var ex = q('div', 'cexp'); if (S.role !== 'admin') ex.hidden = true;
     ex.appendChild(q('div', 'wl', 'Keep a copy'));
     var a1 = q('a', 'adminlink', 'Download customers (spreadsheet)'); a1.href = API + '?action=customersexport'; a1.setAttribute('download', ''); ex.appendChild(a1);
     var a2 = q('a', 'adminlink', 'Download a full backup'); a2.href = API + '?action=backup'; a2.setAttribute('download', ''); ex.appendChild(a2);
@@ -9047,7 +9094,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       r.appendChild(q('div', 'meta', (v.status === 'booked' ? 'Booked' : 'Done') + (v.by ? ' · ' + v.by : '') + (v.note ? ' · ' + v.note : '')));
       var del = q('button', 'lnk danger', 'Remove'); del.type = 'button';
       del.addEventListener('click', function () { if (!window.confirm('Remove this visit from ' + c.name + '’s history?')) return; api('visitsave', { body: { cid: c.id, vid: v.vid, del: true } }).then(function (j) { if (!j.ok) { toast('Not removed', j.error || 'Try again.', null); return; } customerView(c.id); }).catch(function () { toast('No signal', 'Not removed. Try again when you have signal.', null); }); });
-      r.appendChild(del);
+      if (S.role === 'admin') r.appendChild(del);   /* removing a visit is the admin's */
       holder.appendChild(r);
     });
   }
