@@ -2416,7 +2416,7 @@ if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
 if (!defined('SIXFOLD_CLI') && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'schedview', 'jobsave', 'jobday'], true)) fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate'], true))   /* the schedule was taken back off this account (Matthew 2026-10-15: she gets one with the full app) */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4179,7 +4179,7 @@ function schedPay(?array $p): string { $p = $p ?: ['s' => 'unpaid']; if ($p['s']
    attachment to that excel sheet"): each day's arrival times for each crew, booked / held / open, with the customer's name and town
    only: no prices, phones, emails or streets, and nothing can be changed or downloaded from here */
 if ($action === 'schedview') {
-    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);   /* the office and admins; kept for the full app */
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from) || !dateOk($to) || $to < $from || strtotime($to) - strtotime($from) > 31 * 86400) fail('Pick the dates.');
     $srcName = fn($s) => ['website' => 'Website', 'meta' => 'Facebook', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other', 'messenger' => 'Messenger', 'a365web' => 'Website'][$s] ?? '';
@@ -4209,7 +4209,7 @@ if ($action === 'jobs') {
 }
 /* each crew's area for a day ("the town of the day" in Randy's sheet) */
 if ($action === 'jobday') {
-    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $date = (string) ($body['date'] ?? ''); $crew = (string) ($body['crew'] ?? ''); $area = $clean($body['area'] ?? '', 40);
     if (!dateOk($date)) fail('That is not a real date.');
@@ -4222,11 +4222,7 @@ if ($action === 'jobday') {
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
 if ($action === 'jobsave') {
-    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    if ($role === 'quote') {   /* the schedule (2026-10-15, Matthew: "give jen access to change and adjust and move things in the scheduler"): move or cancel an existing job, nothing else */
-        if (!preg_match('/^j[0-9a-f]{12}$/D', (string) ($body['id'] ?? ''))) fail('Pick a job on the schedule.');
-        $body = array_intersect_key($body, array_flip(['id', 'date', 'slot', 'crew', 'del']));
-    }
+    if (!desk()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $all = jobsAll(); $leads = leadsAll(); $id = (string) ($body['id'] ?? ''); $have = null;
