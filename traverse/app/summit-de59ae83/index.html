@@ -1790,7 +1790,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .hpanel .hlawn{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--sunk);display:grid;gap:3px}
   .hpanel .hlawn b{font:800 22px var(--sans)}.hpanel .hlawn > span{font-size:14px;color:var(--soft)}
   .hconf{display:grid;gap:4px;margin-top:6px}.hconf small{font-size:12.5px;color:var(--soft);line-height:1.4}
-  .htag{justify-self:start;font:800 12px var(--sans);padding:4px 10px;border-radius:999px;color:#fff;background:var(--booked)}
+  .htag{justify-self:start;font:700 14px/1.2 var(--sans);letter-spacing:.01em;padding:5px 12px;border-radius:999px;color:#fff;background:var(--booked)}   /* larger and plainer (2026-10-14: hard to read) */
   .htag.c-fair{background:#a16207}.htag.c-check{background:#9a3412}
   .hlink{margin:14px 0 0}
   .hask{margin-top:14px;display:grid;gap:9px}.hq{font-size:12.5px;font-weight:700;color:var(--soft)}
@@ -1856,12 +1856,16 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qline.qyes,small.qyes{color:#2f5d2c}.qacts .qpage{text-decoration:none}
   .qoffer{display:grid;gap:6px;justify-items:start}
   /* a lead's house on its card (2026-10-14) */
+  .ldetails{display:grid;gap:4px;margin-top:6px}
+  .lcopy{display:flex;gap:10px;align-items:baseline;text-align:left;border:0;background:none;padding:2px 0;cursor:copy;color:var(--ink);font:14px var(--sans)}
+  .lcopy span{flex:none;width:44px;color:var(--soft);font-size:12.5px}.lcopy b{font-weight:700;overflow-wrap:anywhere;user-select:all}
   .lprop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
   .lpmap{min-height:150px;border-radius:10px;overflow:hidden;background:#2a332e;cursor:zoom-in;position:relative;z-index:0}
   .lpfacts{display:grid;gap:4px;align-content:start;font-size:13px}
   .lpfacts>div:not(.lpbig){display:flex;justify-content:space-between;gap:8px}.lpfacts>div span{color:var(--soft)}.lpfacts>div b{text-align:right;overflow-wrap:anywhere}
   .lpbig{display:grid;gap:3px;justify-items:start;margin-bottom:4px}.lpbig b{font-size:16px}.lpbig span:not(.htag){font-size:12.5px;color:var(--soft)}
   .lprop .lpopen{grid-column:1/-1}
+  .lpfacts .htag{color:#fff;font-size:14px}   /* white on its colour, over the soft grey of the rows */
   @media (max-width:420px){.lprop{grid-template-columns:1fr}.lpmap{min-height:170px}}
   /* the phone quote (2026-10-14) */
   .pipeseg.four{grid-template-columns:repeat(4,1fr)}.pipeseg button[data-st="signed"] b{color:var(--go)}
@@ -4108,6 +4112,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + l.email; a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode('Email')); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
+    if (l.email || tel.length >= 10) {   /* the details in full, to read back on the phone; a tap copies (2026-10-14) */
+      var dt = q('div', 'ldetails');
+      [[l.email, 'Email'], [tel.length >= 10 ? fmtPhone(tel) : '', 'Phone']].forEach(function (x) {
+        if (!x[0]) return;
+        var b = q('button', 'lcopy'); b.type = 'button'; b.title = 'Copy the ' + x[1].toLowerCase();
+        b.appendChild(q('span', null, x[1])); b.appendChild(q('b', null, x[0]));
+        b.addEventListener('click', function () { try { navigator.clipboard.writeText(x[0]).then(function () { toast(x[1] + ' copied', x[0], null); }, function () {}); } catch (e) {} });
+        dt.appendChild(b);
+      });
+      c.appendChild(dt);
+    }
     if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house ? leadProperty(l) : leadHouseRow(l));   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (asOffice() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
@@ -5372,7 +5387,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (typeof h.acres === 'number') row('Lot', h.acres.toFixed(2) + ' acres');
         var mi = milesFromBase(h); if (mi != null) row('Distance', Math.round(mi) + ' mi from Englewood');
         if (h.yb) row('Built', String(h.yb));
+        if (h.bsf) row('House', fmtSq(h.bsf));
+        var T = h.trees; if (T && T.z2 != null) row('Trees', (T.z2 >= 0.35 ? 'Lots' : T.z2 >= 0.15 ? 'Some' : 'Few') + ' near the house' + (T.h ? ', tallest about ' + Math.round(T.h * 3.28) + ' ft' : ''));
+        if (h.cg) row('Lawn', 'Townhome lot: the grass may be the HOA\u2019s');
         if (h.owner) row(h.rent ? 'Owner (landlord?)' : 'Owner', ownerText(h.owner));
+        if (h.os) row('New owner', 'since about ' + shortDate(h.os));
+        if (h.val) row('County value', fmtVal(h.val));
+        var W = S.money && S.money.water && S.money.water.cards, wt = W && W.towns ? W.towns[h.region] : ''; if (wt) row('Water', wt);
+        if (h.place && (h.place.n || typeof h.place === 'string')) row('Neighbourhood', h.place.n || h.place);
+        if (h.fire >= 3) row('Wildfire', FIRE_WORD[h.fire]);
+        if (h.mark && h.mark.o) row('Door', 'Knocked by ' + String(h.mark.by).split(' ')[0] + ', ' + ago(h.mark.at) + ': ' + (OUT[h.mark.o] || h.mark.o));
+        if (h.checks && h.checks.length) row('On the day', h.checks.map(function (c) { return (c.v === 'right' ? 'about right' : c.v) + (c.sq ? ' (' + fmtSq(c.sq) + ')' : ''); }).join('; '));
         if (h.lookup) row('Note', 'Not on the door lists' + (h.rent ? ': likely rented' : ''));
         if (l.ask && l.ask.size) row('They said', l.ask.size);
         if (h.lat != null) {
