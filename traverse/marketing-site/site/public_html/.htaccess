@@ -19,3 +19,16 @@ Header always set X-Content-Type-Options "nosniff"
 Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
+
+# 2026-10-15 (Matthew: "put the traverseplatforms.com homepage and pages private for now"): the marketing pages need a password;
+# the apps (summit-de59ae83, the five editions), api/ and maps/ do not, so crews and the office are not affected.
+# The password file is outside public_html (traverse-site-private/.htpasswd); Matthew has the password.
+<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
+  AuthType Basic
+  AuthName "Traverse Platforms (private for now)"
+  AuthUserFile /home/customer/www/traverseplatforms.com/traverse-site-private/.htpasswd
+  Require valid-user
+</If>
+# Since 2026-10-15 the marketing pages are private: plain files are served by the host's front server, which skips
+# this password rule, so after uploading the site run on the server:
+#   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots -type f -exec chmod 600 {} \;
