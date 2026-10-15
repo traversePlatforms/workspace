@@ -56,6 +56,17 @@ const SOURCES = [
   ['aurora', 'Aurora', 'aurora-areas.json', 'aurora'],
   ['south-denver', 'South Denver', 'south-denver-areas.json', 'south-denver'],   /* 2026-10-12: 2.5 mi around S Pearl St & Iliff, Denver addresses (a Sixfold rep working there) */
   ['englewood', 'Englewood', 'englewood-areas.json', 'englewood'],
+  /* 2026-10-15: the 365 Aeration 45-mile area (Matthew: every town within 45 miles of Englewood); door lists by legal boundary, run-overnight-2026-10-14.sh */
+  ['littleton', 'Littleton', 'littleton-areas.json', 'littleton'],
+  ['lakewood', 'Lakewood', 'lakewood-areas.json', 'lakewood'],
+  ['greenwood-village', 'Greenwood Village', 'greenwood-village-areas.json', 'greenwood-village'],
+  ['cherry-hills-village', 'Cherry Hills Village', 'cherry-hills-village-areas.json', 'cherry-hills-village'],
+  ['sheridan', 'Sheridan', 'sheridan-areas.json', 'sheridan'],
+  ['lone-tree', 'Lone Tree', 'lone-tree-areas.json', 'lone-tree'],
+  ['wheat-ridge', 'Wheat Ridge', 'wheat-ridge-areas.json', 'wheat-ridge'],
+  ['edgewater', 'Edgewater', 'edgewater-areas.json', 'edgewater'],
+  ['golden', 'Golden', 'golden-areas.json', 'golden'],
+  ['westminster', 'Westminster', 'westminster-areas.json', 'westminster'],
   ['walden', 'Walden', 'walden-areas.json', 'walden'],   /* 2026-10-12: 0.75 mi around Deboodt Ct (Walden, Black Forest), a Sixfold job's neighbourhood; El Paso */   /* 2026-10-12: the city by its legal boundary, Arapahoe */   /* 2026-10-12: the largest untapped market (research/markets/yards-markets-2026-10.md); Arapahoe + Adams */
 ];
 for (const t of metroTowns()) SOURCES.push([t.key, t.label, t.areas, t.group]);   /* the metro builder: each metro is its own group */
@@ -181,7 +192,7 @@ const CENTRE = {
   franktown: [39.3894, -104.7519], 'woodland-park': [39.0000, -105.0569], divide: [38.9469, -105.1636],
   florissant: [38.9469, -105.2911], 'cripple-creek': [38.7466, -105.1783],
   'highlands-ranch': [39.540, -104.985], parker: [39.515, -104.765], 'castle-pines': [39.455, -104.895],
-  'aurora': [39.69, -104.78],   'south-denver': [39.676, -104.98],   'englewood': [39.648, -104.988],   'walden': [39.0858, -104.7567],   'cs-northeast': [38.95, -104.70],   'cs-southeast': [38.86, -104.71],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-northwest': [38.92, -104.82],   'cs-southwest': [38.81, -104.81],   'boulder': [40.015, -105.255],
+  'aurora': [39.69, -104.78],   'littleton': [39.605, -105.01],   'lakewood': [39.705, -105.1],   'greenwood-village': [39.615, -104.92],   'cherry-hills-village': [39.64, -104.955],   'sheridan': [39.647, -105.025],   'lone-tree': [39.54, -104.885],   'wheat-ridge': [39.77, -105.1],   'edgewater': [39.753, -105.064],   'golden': [39.745, -105.21],   'westminster': [39.865, -105.05],   'south-denver': [39.676, -104.98],   'englewood': [39.648, -104.988],   'walden': [39.0858, -104.7567],   'cs-northeast': [38.95, -104.70],   'cs-southeast': [38.86, -104.71],   'security-widefield': [38.75, -104.73],   'fountain': [38.69, -104.7],   'arvada': [39.83, -105.1],   'centennial': [39.59, -104.85],   'thornton': [39.9, -104.96],   'windsor': [40.48, -104.9],   'erie': [40.04, -105.05],   'commerce-city': [39.86, -104.85],   'denver': [39.72, -104.92],   'cs-northwest': [38.92, -104.82],   'cs-southwest': [38.81, -104.81],   'boulder': [40.015, -105.255],
 };
 for (const t of metroTowns()) if (t.center) CENTRE[t.key] = t.center;
 const METRO_TOWN = Object.fromEntries(metroTowns().map((t) => [t.key, t]));

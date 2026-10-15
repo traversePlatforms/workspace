@@ -5725,6 +5725,7 @@ if ($action === 'search') {
     $words = array_values(array_filter(explode(' ', $q), fn($w) => $w !== ''));
     if (strlen(implode('', $words)) < 3) out(['ok' => true, 'q' => $q, 'results' => []]);
     $words = array_slice(array_map(fn($w) => SEARCH_SYN[$w] ?? $w, $words), 0, 6);
+    $LONGW = array_flip(SEARCH_SYN);   /* 2026-10-15: "point" became PT and missed CANYON POINT CIR; the long form in the records matches too */
     /* a street name has to be in it (Fable 2026-10-04): "DRIVE" or "100" alone matched a whole class of
        streets or house numbers, and a loop of them could pull every address in every town. A number with a
        street name ("1840 ponderosa") or a street name alone ("ponderosa") still works. Counted per person:
@@ -5744,7 +5745,7 @@ if ($action === 'search') {
         $tw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', strtoupper($p[1])));
         $ok = true; $exactNo = false; $streetHit = false;
         foreach ($words as $w) {
-            $m = false; foreach ($aw as $i => $x) { if ($x !== '' && strncmp($x, $w, strlen($w)) === 0) { $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
+            $m = false; foreach ($aw as $i => $x) { if ($x !== '' && (strncmp($x, $w, strlen($w)) === 0 || (isset($LONGW[$w]) && $x === $LONGW[$w]))) { $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
             if (!$m && !ctype_digit($w)) foreach ($tw as $x) if ($x !== '' && $x === $w) { $m = true; break; }   /* the town's name */
             if (!$m) { $ok = false; break; }
         }
