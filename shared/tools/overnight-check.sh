@@ -46,7 +46,7 @@ up() { # label flag towns...
 }
 up towns-trees-2026-10-16 "$DT/logs-batch5/done.flag" $T40
 up towns-catchup-2026-10-16 "$DT/logs-batch5-fix/done.flag" $T40 $SIX
-up boulder-trees-2026-10-16 "$DT/logs-boulder-trees/done.flag" boulder
+up towns-final-2026-10-16 "$DT/logs-boulder-trees/done.flag" $T40 $SIX boulder
 
 # 3. The live server: app page, API answering, Sixfold town list readable, PHP fatal errors in the last hour
 SRV=$($SG "cd ~/www/traverseplatforms.com && \

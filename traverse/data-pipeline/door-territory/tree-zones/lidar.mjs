@@ -15,7 +15,7 @@
    that split into several returns. Canopy does that; a solid roof does not. These surveys
    leave roofs unclassified, so this is what keeps a roof edge from counting as a tree. */
 import { Las } from 'copc';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 
 const BASE = 'https://s3-us-west-2.amazonaws.com/usgs-lidar-public/';
@@ -101,7 +101,9 @@ async function loadTile(p, key, cacheDir) {
       mkdirSync(join(cacheDir, p), { recursive: true });
       const out = Buffer.alloc(4 + pts.n * 26); out.writeUInt32LE(pts.n, 0);
       Buffer.from(pts.xyz.buffer).copy(out, 4); Buffer.from(pts.cls.buffer).copy(out, 4 + pts.n * 24); Buffer.from(pts.nr.buffer).copy(out, 4 + pts.n * 25);
-      writeFileSync(f, out);
+      /* tmp + rename (2026-10-16): prefetch-lidar.mjs fills the same folder while a measuring run reads it; never a half-written tile */
+      const tmp = f + '.' + process.pid + '.tmp';
+      try { writeFileSync(tmp, out); renameSync(tmp, f); } catch { try { unlinkSync(tmp); } catch {} }
     }
   }
   return pts;
