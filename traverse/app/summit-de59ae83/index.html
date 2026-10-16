@@ -677,6 +677,13 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .door.crow::before,.door.cvisit::before{display:none}
   .door.crow .d-top > .ic{width:16px;height:16px;color:var(--soft);flex:none;align-self:center}
   .door.crow .swhere{font-size:12.5px;color:var(--soft);margin-top:2px}
+  /* compact (2026-10-16): one customer per short row */
+  .door.crow{display:grid;grid-template-columns:minmax(0,1fr) auto 16px;grid-template-areas:'name meta chev' 'where meta chev';align-items:center;column-gap:12px;padding:8px 14px;margin:0 0 6px;border-radius:12px}
+  .door.crow .d-top{display:contents}.door.crow .addr{grid-area:name;font-size:16px;line-height:1.25}.door.crow .swhere{grid-area:where;margin:0}.door.crow .d-top > .ic{grid-area:chev}
+  .door.crow .meta{grid-area:meta;margin:0;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:360px}.door.crow .meta .cplan{display:none}
+  @media (max-width:640px){.door.crow{grid-template-columns:minmax(0,1fr) 16px;grid-template-areas:'name chev' 'where chev' 'meta chev'}.door.crow .meta{justify-content:flex-start;margin-top:4px}}
+  .cfold{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:6px 0;margin:10px 0 4px;font:800 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);cursor:pointer;text-align:left}.cfold .ic{width:14px;height:14px;transition:transform .15s}.cfold[aria-expanded="true"] .ic{transform:rotate(90deg)}
+  .cmore{width:100%;margin:4px 0 10px;padding:9px;border:1px dashed var(--line);border-radius:12px;background:none;font:700 13px var(--sans);color:var(--accent);cursor:pointer}
   .tag.cplan{background:var(--go-tint);color:var(--go)}
   .tag.cdue{background:var(--later-tint);color:var(--later)}
   .tag.cover{background:var(--fire-h);color:var(--fire-on)}
@@ -5910,7 +5917,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var gh = q('div', 'dwh qqgrp', g[0] + ' (' + g[1].length + ')'); list.appendChild(gh);
         if (g[0] === 'Done' && !t) { var tg = q('button', 'lnk', S.qqDoneOpen ? 'Hide' : 'Show'); tg.type = 'button'; tg.addEventListener('click', function () { S.qqDoneOpen = !S.qqDoneOpen; draw(); }); gh.appendChild(tg); }
         if (!g[2]) return;
-        g[1].forEach(function (l) {
+        var cap = t || (S.qqAllG || {})[g[0]] ? g[1].length : 8;   /* the first 8, then Show all (2026-10-16) */
+        g[1].slice(0, cap).forEach(function (l) {
           var c = q('div', 'qqcrow');
           var top = q('div', 'qqctop'); top.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
           top.appendChild(q('small', null, [digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
@@ -5920,6 +5928,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (!l.signed && l.status !== 'won') c.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
           list.appendChild(c);
         });
+        if (g[1].length > cap) { var sm = q('button', 'cmore', 'Show all ' + g[1].length); sm.type = 'button'; sm.addEventListener('click', function () { S.qqAllG = S.qqAllG || {}; S.qqAllG[g[0]] = true; draw(); }); list.appendChild(sm); }
       });
     }
     function load() {
@@ -10232,23 +10241,38 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
          month of their job, newest month first */
       var F = S.custFilt || 'all', info = {}; shown.forEach(function (c) { info[c.id] = custJobInfo(c); });
       var head = function (txt, small) { var h = q('h2', 'cgrp', txt); if (small) h.appendChild(q('small', null, small)); listBox.appendChild(h); };
+      /* folding (2026-10-16, Matthew: not scroll and scroll): a group is one line until opened; searching opens what matches */
+      S.custOpenG = S.custOpenG || {};
+      var fold = function (key, label, items, openByDefault) {
+        var open = t ? true : (key in S.custOpenG ? S.custOpenG[key] : openByDefault);
+        var b = q('button', 'cfold'); b.type = 'button'; b.setAttribute('aria-expanded', String(open)); b.appendChild(ico('chev', 2.4)); b.appendChild(document.createTextNode(label + ' (' + items.length + ')'));
+        b.addEventListener('click', function () { S.custOpenG[key] = !open; fill(); });
+        listBox.appendChild(b);
+        if (open) items.forEach(function (c) { listBox.appendChild(custRow(c)); });
+      };
+      var capped = function (key, items) {   /* a long single list: the first 25, then Show all */
+        var all2 = t || (S.custAllL || {})[key], n = all2 ? items.length : Math.min(25, items.length);
+        items.slice(0, n).forEach(function (c) { listBox.appendChild(custRow(c)); });
+        if (n < items.length) { var mb = q('button', 'cmore', 'Show all ' + items.length); mb.type = 'button'; mb.addEventListener('click', function () { S.custAllL = S.custAllL || {}; S.custAllL[key] = true; fill(); }); listBox.appendChild(mb); }
+      };
       if (F === 'up') {
         var up = shown.filter(function (c) { return info[c.id].next; }).sort(function (a, b) { return info[a.id].next < info[b.id].next ? -1 : 1; });
         head('Upcoming jobs \u00b7 ' + up.length, 'soonest first'); if (!up.length) listBox.appendChild(q('div', 'msg soft', 'No jobs booked ahead.'));
-        up.forEach(function (c) { listBox.appendChild(custRow(c)); });
+        capped('up', up);
       } else if (F === 'owe') {
         var ow = shown.filter(function (c) { return info[c.id].owe > 0; }).sort(function (a, b) { return info[b.id].owe - info[a.id].owe; });
         head('Balance due \u00b7 ' + ow.length, money0(ow.reduce(function (n, c) { return n + info[c.id].owe; }, 0)) + ' in all'); if (!ow.length) listBox.appendChild(q('div', 'msg soft', 'Nothing owed on booked jobs.'));
-        ow.forEach(function (c) { listBox.appendChild(custRow(c)); });
+        capped('owe', ow);
       } else {
         var rec = shown.filter(function (c) { return c.plan && c.plan !== 'oneoff'; }), one = shown.filter(function (c) { return !c.plan || c.plan === 'oneoff'; });
-        if (F !== 'one' && rec.length) { head('Recurring \u00b7 ' + rec.length, 'on a plan'); rec.forEach(function (c) { listBox.appendChild(custRow(c)); }); }
+        if (F !== 'one' && rec.length) { head('Recurring \u00b7 ' + rec.length, 'on a plan'); fold('rec', 'Everyone on a plan', rec, rec.length <= 15); }
         if (F !== 'rec' && one.length) {
           head('One-off \u00b7 ' + one.length, 'single jobs, by the month of the job');
           var by = {}; one.forEach(function (c) { var d = info[c.id].next || info[c.id].last || c.start || ''; var k = d ? d.slice(0, 7) : 'none'; (by[k] = by[k] || []).push({ c: c, d: d }); });
+          var thisMonth = todayISO().slice(0, 7);
           Object.keys(by).sort(function (a, b) { return a === 'none' ? 1 : b === 'none' ? -1 : a < b ? 1 : -1; }).forEach(function (k) {
-            var p = k.split('-'); listBox.appendChild(q('div', 'dwh cmonth', (k === 'none' ? 'No job booked' : MONTHS[+p[1] - 1] + ' ' + p[0]) + ' (' + by[k].length + ')'));
-            by[k].sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; }).forEach(function (x) { listBox.appendChild(custRow(x.c)); });
+            var p = k.split('-'), items = by[k].sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; }).map(function (x) { return x.c; });
+            fold('m' + k, k === 'none' ? 'No job booked' : MONTHS[+p[1] - 1] + ' ' + p[0], items, k !== 'none' && k >= thisMonth);   /* this month and ahead open */
           });
         }
       }
