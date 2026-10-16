@@ -45,6 +45,9 @@ up() { # label flag towns...
   local label=$1 flag=$2; shift 2
   [ -f "$flag" ] || return 0
   if [ -f "$DT/logs-upload/$label.done" ]; then ok "upload $label done $(date -r "$DT/logs-upload/$label.done" '+%m-%d %H:%M')"; return; fi
+  case "$SSID" in *iPhone*) ok "upload $label held: on the phone hotspot"; return;; esac
+  [ -f "$DT/logs-paused.flag" ] && { ok "upload $label held: tree work paused"; return; }
+  [ -f "$flag" ] || return 0
   if [ -d "$DT/logs-upload/lock" ]; then ok "upload $label in progress"; return; fi
   r=$(bash "$DT/upload-towns-sixfold.sh" "$label" "$@" 2>&1 | tail -3 | tr '\n' ' ')
   [ -f "$DT/logs-upload/$label.done" ] && ok "upload $label run by this check: $r" || bad "upload $label failed: $r"
