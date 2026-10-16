@@ -17,7 +17,7 @@ age_min() { echo $(( ( $(date +%s) - $(stat -c %Y "$1") ) / 60 )); }
 say "== $(date '+%Y-%m-%d %H:%M')"
 
 # 1. Town builds: running, finished, or stopped part-way
-SSID=$(netsh wlan show interfaces 2>/dev/null | tr -d "" | awk -F": " "/^ *SSID/{print ; exit}")
+SSID=$(netsh wlan show interfaces 2>/dev/null | tr -d '' | awk -F': ' '/^ *SSID/{print $2; exit}')
 case "$SSID" in *iPhone*) say "  info  network: $SSID (phone hotspot: tree downloads stay paused)";; *) say "  info  network: ${SSID:-wired}";; esac
 if [ -f "$DT/logs-paused.flag" ]; then ok "tree work PAUSED since $(date -r "$DT/logs-paused.flag" "+%m-%d %H:%M") (hotspot); resume: bash traverse/data-pipeline/door-territory/resume-trees-2026-10-16.sh"; else
 NODES=$(tasklist //FI "IMAGENAME eq node.exe" 2>/dev/null | grep -c node.exe)
