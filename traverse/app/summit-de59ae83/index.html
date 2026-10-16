@@ -1984,6 +1984,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .jweek.tbl{display:block}.jweek.tbl .schedwrap{margin-top:8px}
   .mdgrp{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:8px 0 0;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;text-align:left;font:inherit}
   .mdgrp span{display:grid;gap:2px}.mdgrp small{color:var(--soft);font-size:12.5px}.mdgrp.on{border-color:var(--accent)}.mdgrp .mdcar{font-size:14px;color:var(--soft)}.mdgbody{padding:2px 0 4px 6px;border-left:3px solid var(--line);margin:4px 0 0 8px}
+  .wonpend{margin-top:22px;padding-top:6px;border-top:2px dashed var(--line)}
   .jtbd{display:flex;gap:8px;align-items:center;font-size:13.5px;margin:6px 0 0;color:var(--soft)}
   .jexact{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1.5px dashed var(--line);border-radius:10px;font:600 13.5px var(--sans);color:var(--soft)}.jexact.on{border-style:solid;border-color:#2f5d2c;color:var(--ink)}.jexact input{font:15px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.jexact b{color:var(--ink)}
   .jnums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -2326,7 +2327,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     LEAD_NEED = CO.leadNeeds.slice();
     WORK = CO.extraWork.map(function (p) { return [p[0], p[1]]; }); WORK_LABEL = {}; WORK.forEach(function (w) { WORK_LABEL[w[0]] = w[1]; });
     LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', VW() + ' booked'], ['quoted', 'Quoted'], ['won', 'Won'], ['lost', 'Lost']];
-    PIPE_ST = [['call', 'To call'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent'], ['won', 'Won'], ['lost', 'Lost']];
+    PIPE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent']];   /* no Won or Lost tabs (Matthew 2026-10-15): Won goes into Customers, Lost leaves the list; Person search finds both */
     CAP = [['walk', 'cal', 'Book the ' + vw()], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'], ['note', 'note', 'Note']];
     if (WORK.length) CAP.push(['work', 'list', 'Extra work']);
     if (feat('firecheck')) CAP.push(['fc', 'flame', 'Fire check']);
@@ -6187,7 +6188,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
         var b = q('button', 'onum' + (k[0] === 'new' && G.new.length ? ' ohot' : '')); b.type = 'button';
         b.appendChild(q('b', null, String(G[k[0]].length))); b.appendChild(q('span', null, k[1]));
-        b.addEventListener('click', function () { S.pipeStage = 'call'; pipelineView(); }); nums.appendChild(b);
+        b.addEventListener('click', function () { S.pipeStage = k[0] === 'vm' ? 'vm' : 'call'; pipelineView(); }); nums.appendChild(b);
       });
       if (web) list.appendChild(q('div', 'oweb', web + (web === 1 ? ' request' : ' requests') + ' from the website waiting for a first reply.'));
       wl.textContent = '';
@@ -10249,12 +10250,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function pipeStage(it) {
     if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
     var st = it.x.status || 'new';
-    if (asOffice()) return OFFICE_MAP[st] || 'call';   /* the phone-quote flow (2026-10-14) */
-    return st === 'new' || st === 'contacted' ? 'call' : st;
+    var cs = asOffice() ? (OFFICE_MAP[st] || 'call') : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
+    if (cs === 'call' && wdOn() && callGroup(it.x) === 'vm') return 'vm';   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
+    return cs;
   }
   /* the office's stages (2026-10-14, Matthew: no won/lost/quote/walk for Jen; she calls, quotes by phone, takes half as a deposit and
      sends a one-page form to sign) */
-  var OFFICE_ST = [['call', 'To call'], ['sent', 'Form sent'], ['signed', 'Signed'], ['nosale', 'No sale']];
+  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['sent', 'Form sent'], ['signed', 'Signed'], ['nosale', 'No sale']];
   var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale' };
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
@@ -10282,6 +10284,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
       S.qlist = rs[0].quotes || []; S.pleads = rs[1].leads || [];
       drawPipe();
+      if (!asOffice() && S.role === 'admin') api('customers').then(function (cj) { if (!cj || !cj.ok) return; var cl = {}, cd = {}; cj.customers.forEach(function (c) { if (c.lead) cl[c.lead] = 1; if (c.door) cd[c.door] = 1; }); S.custLinks = { lead: cl, door: cd }; if (S.screen === 'pipeline') drawPipe(); }).catch(function () {});
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
   /* ---- Meta leads (2026-10-04) ----
@@ -10381,6 +10384,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
     if (asOffice()) items = items.filter(function (it) { return it.kind === 'lead'; });   /* the office works the leads, not the crews' door bookings */
     var stage = S.pipeStage || 'call', src = S.pipeSrc || 'all';
+    if (!asOffice() && !PIPE_ST.some(function (x) { return x[0] === stage; })) stage = 'call';
     if (asOffice() && !OFFICE_ST.some(function (x) { return x[0] === stage; })) stage = OFFICE_MAP[stage] || ({ walk: 'call' })[stage] || 'call';
     /* top: add a lead, the walks coming up, the Jobber export */
     var top = q('div', 'pipetop');
@@ -10404,7 +10408,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.metaPrev) holder.appendChild(metaPreview());
     if (!asOffice()) holder.appendChild(walksUp(S.qlist || []));   /* the office sees booked walks on its home */
     /* stages */
-    var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : ''));
+    var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + (asOffice() ? OFFICE_ST : PIPE_ST).length + ',1fr)';
     (asOffice() ? OFFICE_ST : PIPE_ST).forEach(function (st) {
       var n = items.filter(function (it) { return pipeStage(it) === st[0] && (src === 'all' || pipeSrc(it) === src); }).length;
       var b = q('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(stage === st[0])); b.setAttribute('data-st', st[0]);
@@ -10425,7 +10429,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(sc);
     }
     var shown = items.filter(function (it) { return pipeStage(it) === stage && (src === 'all' || pipeSrc(it) === src); });
-    if (!shown.length) {
+    if (!shown.length && !(wdOn() && deskWide())) {
       holder.appendChild(q('div', 'msg', items.length ? 'Nothing at this stage' + (src === 'all' ? '' : ' from ' + pipeSrcName(src)) + '.'
         : 'Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent; website enquiries arrive by themselves; add the rest with + Add a lead.'));
     }
@@ -10440,15 +10444,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var gOf = function (it) { return it.kind === 'lead' ? callGroup(it.x) : 'new'; };
       var lt = function (it) { var x = it.kind === 'lead' ? lastTry(it.x) : null; return x ? x.at : 0; };
       groups = [];
-      [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
+      [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
         var its = shown.filter(function (it) { return gOf(it) === g[0]; });
         if (!its.length) return;
         if (g[0] !== 'new') its.sort(function (a, b) { return lt(a) - lt(b); });
         groups.push([g[1], its]);
       });
     }
+    if (stage === 'vm' && shown.length) {
+      var lt2 = function (it) { var x = lastTry(it.x); return x ? x.at : 0; };
+      var due = shown.filter(function (it) { return tryDue(it.x) <= Date.now(); }).sort(function (a, b) { return lt2(a) - lt2(b); }), later = shown.filter(function (it) { return tryDue(it.x) > Date.now(); }).sort(function (a, b) { return lt2(a) - lt2(b); });
+      groups = []; if (due.length) groups.push(['Call back today', due]); if (later.length) groups.push(['Voicemail left today, call back next', later]);
+    }
     if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
     else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
+    /* won, not in Customers yet (2026-10-15: no Won tab any more; a won door from the crew, or a lead won before Won made the customer) */
+    if (!asOffice() && S.custLinks) {
+      var pend = items.filter(function (it) { return pipeStage(it) === 'won' && (it.kind === 'lead' ? !S.custLinks.lead[it.x.id] : !S.custLinks.door[it.x.region + '/' + it.x.id]); });
+      if (pend.length) {
+        var wp = q('section', 'wonpend'); wp.appendChild(q('h2', 'pipegrp', 'Won, not in Customers yet \u00b7 ' + pend.length));
+        wp.appendChild(q('div', 'ltrynote', 'Tap Make customer on each to put them in Customers.'));
+        pend.forEach(function (it) { drawCard(it, wp); });
+        holder.appendChild(wp);
+      }
+    }
     if (S.pipeFocus && !deskWide()) { var fc = holder.querySelector('[data-id="' + S.pipeFocus + '"]'); if (fc) setTimeout(function () { fc.scrollIntoView({ block: 'start' }); }, 30); }
     S.pipeFocus = null;
     window.scrollTo(0, y);
@@ -10497,7 +10516,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var st = LEAD_ST.filter(function (x) { return x[0] === (l.status || 'new'); })[0];
         b.appendChild(q('div', 'addr', l.name || l.phone || l.email || 'No name'));
         b.appendChild(q('div', 'swhere', [st ? st[1] : l.status, digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
-        b.addEventListener('click', function () { S.pipeStage = pipeStage({ kind: 'lead', x: l }); S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
+        b.addEventListener('click', function () {
+          if (l.status === 'won' && !asOffice()) {   /* won: their customer page (2026-10-15) */
+            api('customers').then(function (cj) { var c = ((cj && cj.customers) || []).filter(function (x) { return x.lead === l.id; })[0]; if (c) customerView(c.id, function () { personView(inp.value, back); }, 'Back'); else { S.custFind = l.name || ''; customersView(); } }).catch(function () { toast('No signal', 'Try again.', null); });
+            return;
+          }
+          if (l.status === 'lost' && !asOffice()) {
+            if (!window.confirm((l.name || 'They') + ' are marked Lost. Put them back in the pipeline (To call)?')) return;
+            api('leadstatus', { body: { id: l.id, status: 'contacted', note: 'Back in the pipeline' } }).then(function (j2) { if (!j2.ok) { toast('Not saved', j2.error || 'Try again.', null); return; } S.pipeStage = 'call'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); }).catch(function () { toast('No signal', 'Try again.', null); });
+            return;
+          }
+          S.pipeStage = pipeStage({ kind: 'lead', x: l }); S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView();
+        });
         res.appendChild(b);
       });
       if (hit.length > 40) res.appendChild(q('div', 'msg soft', (hit.length - 40) + ' more. Type more of it.'));

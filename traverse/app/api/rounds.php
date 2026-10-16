@@ -5779,6 +5779,16 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
             $L = leadsAll()[$lid] ?? null;   /* the lead as it is now: changed details, its house and its quote (2026-10-15, Won makes the customer) */
             if (!$L) fail('No such lead.', 404);
             foreach ($cs as $c) if (($c['lead'] ?? '') === $lid && ($c['status'] ?? 'active') !== 'ended') out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
+            /* 2026-10-15 (Brian Skelton was a customer twice): someone already a customer, not yet linked to a lead, by phone, email or name */
+            $ld = substr(preg_replace('/\D/', '', (string) ($L['phone'] ?? '')), -10); $le = strtolower(trim((string) ($L['email'] ?? ''))); $ln = mb_strtolower(trim((string) ($L['name'] ?? '')));
+            foreach ($cs as $c) {
+                if (!empty($c['lead']) || ($c['status'] ?? 'active') === 'ended') continue;
+                $cd = substr(preg_replace('/\D/', '', (string) ($c['phone'] ?? '')), -10);
+                if ((strlen($ld) === 10 && $cd === $ld) || ($le !== '' && strtolower(trim((string) ($c['email'] ?? ''))) === $le) || ($ln !== '' && mb_strtolower(trim((string) ($c['name'] ?? ''))) === $ln)) {
+                    appendLine(custDir() . '/customers.log', ['id' => $c['id'], 'by' => $me, 'at' => time(), 'f' => ['lead' => $lid]]);
+                    out(['ok' => true, 'id' => $c['id'], 'existing' => true, 'linked' => true]);
+                }
+            }
             $LH = is_array($L['house'] ?? null) ? $L['house'] : null;
             $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($LH ? streetCaseServer((string) $LH['town']) : ($L['town'] ?? ''), 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
             if ($LH && !empty($LH['address'])) $f['address'] = streetCaseServer((string) $LH['address']);
