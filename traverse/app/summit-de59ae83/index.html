@@ -717,6 +717,12 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .cacts .lnk{background:none;border:0;padding:6px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .cacts .lnk.danger{color:var(--fire-h)}
   .door.cvisit{padding-left:16px}
+  .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
+  .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
+  .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
+  .caddr .cares button small{display:block;color:var(--muted)}
+  .cpay{margin:14px 0 6px;display:grid;gap:8px}.cpayrow{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .cpayrow .cpw{flex:1;min-width:0}.cpayrow b{display:block}.cpayrow small{display:block;color:var(--muted)}.cpayrow .cbal{font-weight:700;white-space:nowrap}.cpayrow .cbal.owe{color:var(--later)}.cpayrow .cbal.ok{color:var(--go)}
   .door.cvisit.booked{border:1.5px dashed var(--later)}
   .door.cvisit .vprice{font-weight:700;color:var(--go)}
   .door.cvisit .lnk{background:none;border:0;padding:6px 0 0;font:700 13px var(--sans);cursor:pointer}
@@ -10050,7 +10056,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var shown = all.filter(function (c) { return ((S.custShow || 'active') === 'all' || (c.status || 'active') === 'active') && (!t || ((c.name || '') + ' ' + (c.address || '') + ' ' + (c.town || '') + ' ' + (c.phone || '')).toLowerCase().indexOf(t) >= 0); });
       listBox.appendChild(q('div', 'sub2', shown.length + (shown.length === 1 ? ' customer' : ' customers') + ' · ' + money(shown.reduce(function (n, c) { return n + (c.spent || 0); }, 0)) + ' in visits logged'));
       if (!shown.length) listBox.appendChild(q('div', 'msg', all.length ? 'No customer matches.' : 'No customers yet. Add one with the button above, or tap Make customer on a won job in the Pipeline.'));
-      shown.forEach(function (c) { listBox.appendChild(custRow(c)); });
+      /* two sections (2026-10-16, Matthew): customers on a plan, and one-off jobs */
+      var rec = shown.filter(function (c) { return c.plan && c.plan !== 'oneoff'; }), one = shown.filter(function (c) { return !c.plan || c.plan === 'oneoff'; });
+      [['Recurring', rec, 'on a plan'], ['One-off', one, 'single jobs']].forEach(function (g) {
+        if (!g[1].length) return;
+        var h = q('h2', 'cgrp', g[0] + ' \u00b7 ' + g[1].length); h.appendChild(q('small', null, g[2])); listBox.appendChild(h);
+        g[1].forEach(function (c) { listBox.appendChild(custRow(c)); });
+      });
     };
     find.addEventListener('input', fill); fill();
     /* exports and the backup (the admin's; the office sees the list only, 2026-10-14) */
@@ -10185,12 +10197,76 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     return box;
   }
+  /* a customer won without an address (2026-10-16, Matthew: "take kirk for example i cant add his location in"): find the house on
+     our list, which attaches the property (lawn, trees, map), or save the address as typed. Either fills in their open jobs that
+     say "Ask the office". */
+  function custAddrFind(c, done) {
+    var box = q('div', 'caddr');
+    box.appendChild(q('h2', null, c.address ? 'Find their property' : 'Their address'));
+    box.appendChild(q('div', 'sub2', c.address ? 'The address is saved, but the house is not linked yet. Find it to show the lawn, trees and map here.' : 'Type the street address. Pick the house from the list to link the property, or save it as typed.'));
+    var inp = q('input'); inp.type = 'search'; inp.id = 'caddr-q'; inp.placeholder = 'e.g. 1234 Elm St'; inp.setAttribute('aria-label', 'Their address'); inp.value = c.address || ''; box.appendChild(inp);
+    var res = q('div', 'cares'); box.appendChild(res);
+    var typed = q('button', 'lnk', 'Save the address as typed'); typed.type = 'button'; box.appendChild(typed);
+    var save = function (body, what) {
+      body.id = c.id;
+      api('customersave', { body: body }).then(function (j) {
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        toast(what, (body.address || '') + (j.jobsFixed ? ' \u00b7 added to their job too' : ''), null); done();
+      }).catch(function () { toast('No signal', 'Not saved. Try again.', null); });
+    };
+    typed.addEventListener('click', function () { var v = inp.value.trim(); if (v.length < 4) { toast('Add the address', 'Type the street address first.', null); return; } save({ address: v }, 'Address saved'); });
+    var tm = null, seq = 0;
+    var look = function () {
+      var v = inp.value.trim(), my = ++seq; res.textContent = '';
+      if (v.length < 3) return;
+      api('search', { params: { q: v } }).then(function (j) {
+        if (my !== seq) return;
+        res.textContent = '';
+        var hits = (j && j.ok && j.results) || [];
+        if (!hits.length) { res.appendChild(q('div', 'msg soft', j && j.need === 'street' ? 'Add the street name too.' : 'Not on our list. Save it as typed below.')); return; }
+        hits.slice(0, 8).forEach(function (r) {
+          var b = q('button'); b.type = 'button'; b.appendChild(q('b', null, streetCase(r.address))); b.appendChild(q('small', null, r.town || ''));
+          b.addEventListener('click', function () { save({ door: r.region + '/' + r.id, address: streetCase(r.address), town: r.town || '' }, 'Address added'); });
+          res.appendChild(b);
+        });
+      }).catch(function () {});
+    };
+    inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(look, 350); });
+    if (inp.value.trim().length >= 3) look();
+    return box;
+  }
+  /* their jobs and what is paid (2026-10-16, Matthew: "theres not a slot for deposits ... how can we automate that"): read from the
+     jobs, so a Square deposit, the one-page form's deposit or one set on the Jobs page shows here by itself. Charging the balance
+     and pay links stay on the job, one tap away. */
+  function custPay(c) {
+    var box = q('div', 'cpay'), jobs = c.jobs || [];
+    box.appendChild(q('h2', null, 'Jobs and payments'));
+    var dep = 0, owe = 0;
+    jobs.forEach(function (j) {
+      var p = j.pay || { s: 'unpaid' }, d = p.s === 'deposit' ? (p.amt || 0) : 0;
+      var left = p.s === 'paid' || p.s === 'plan' ? 0 : Math.max(0, (j.price || 0) - d);
+      dep += d; owe += left;
+      var r = q('div', 'cpayrow'), w = q('div', 'cpw');
+      w.appendChild(q('b', null, fmtD(j.date) + (j.crew ? ' \u00b7 ' + j.crew.split(' ')[0] : '') + (j.done ? ' \u00b7 done' : '')));
+      w.appendChild(q('small', null, (j.price ? money0(j.price) : 'Price to confirm') + ' \u00b7 ' + jobPayText(j)));
+      r.appendChild(w);
+      r.appendChild(q('span', 'cbal ' + (left > 0 ? 'owe' : 'ok'), !j.price && p.s !== 'paid' ? '\u2013' : left > 0 ? money0(left) + ' due' : 'Paid'));
+      var ob = q('button', 'lnk', 'Open'); ob.type = 'button'; ob.addEventListener('click', function () { jobView(j.id, function () { customerView(c.id); }, j.crew); }); r.appendChild(ob);
+      box.appendChild(r);
+    });
+    if (!jobs.length) box.appendChild(q('div', 'msg soft', c.lead ? 'No job booked yet. When one is, its deposit and balance show here.' : 'Deposits show here for customers who came through the Pipeline. For this one, log payments with the visits below.'));
+    else box.appendChild(q('div', 'sub2', 'Deposits paid ' + money0(dep) + ' \u00b7 balance due ' + money0(owe) + (owe > 0 && c.cof ? ' \u00b7 open the job to charge it to their card' : '')));
+    if (c.cof) box.appendChild(q('div', 'sub2', 'Card on file: ' + (c.cof.brand || 'Card') + ' ending ' + c.cof.last4 + (c.cof.exp ? ' (exp ' + c.cof.exp + ')' : '') + ', saved in Square.'));
+    else if (c.inSquare) box.appendChild(q('div', 'sub2', 'In your Square customer list.'));
+    return box;
+  }
   function drawCustomer(holder0, c) {
     holder0.textContent = '';
     /* two columns on a computer (2026-10-15, Matthew: the page was "so dragged out"): the customer on the left at a readable width, their property on the right */
     var page = q('div', 'cpage'), holder = q('div', 'cmain'), side = q('div', 'cside'); page.appendChild(holder); page.appendChild(side); holder0.appendChild(page);
     if (c.door && /\//.test(c.door)) { var dp = c.door.split('/'); var pc = leadProperty({ id: 'cust-' + c.id, house: { region: dp[0], door: dp.slice(1).join('/'), address: c.address || '', town: c.town || '' } }); [].forEach.call(pc.querySelectorAll('.lpopen,.lpquote'), function (x) { x.remove(); }); side.appendChild(q('h2', null, 'The property')); side.appendChild(pc); }
-    else side.hidden = true;
+    else side.appendChild(custAddrFind(c, function () { customerView(c.id); }));   /* no property yet: find it (2026-10-16, Matthew: Kirk) */
     setBar('back', { title: c.name || 'Customer', sub: [c.address, c.town].filter(Boolean).join(' · '), back: S.custBack || customersView, backLabel: S.custBackLabel || 'Customers' });
     document.body.classList.add('owide');   /* the wide frame, as the Jobs page (setBar clears it); a phone keeps one column (the grid is for 1100px and up) */
     if (S.custEdit === c.id) { holder.appendChild(customerForm(c, function () { S.custEdit = null; customerView(c.id); })); var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custEdit = null; drawCustomer(holder0, c); }); holder.appendChild(cx); return; }
@@ -10207,6 +10283,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     head.appendChild(figs);
     holder.appendChild(head);
+    holder.appendChild(custPay(c));   /* their jobs, deposits and balances (2026-10-16) */
     /* contact */
     var ct = q('div', 'lcontact cct');
     var tel = digits(c.phone);

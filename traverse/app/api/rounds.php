@@ -2115,12 +2115,12 @@ function a365Match(string $street, string $city): ?array {
    alert 20 times per day"): a new lead shows on the office home and in the Pipeline count. A customer booking online or saying yes
    to a quote still alerts. company.json a365.leadAlerts: true turns new-lead alerts back on. */
 function leadAlertsOn(): bool { return !empty(company()['a365']['leadAlerts']); }
-function a365Alert(string $title, string $text): void {
+function a365Alert(string $title, string $text, bool $super = false): void {   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */
     global $basePeople, $acct, $sessionKey;
     try {
         $v = pushVapid(false); if (!$v) return;
         $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'a365-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'office') foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && ($r['role'] === 'office' || ($super && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
     } catch (Throwable $e) { error_log('rounds a365 alert: ' . $e->getMessage()); }
 }
 if ($action === 'a365lead') {
@@ -2250,13 +2250,13 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         flock($lk, LOCK_UN);
         $sl = jobSlot((string) $off['slot']);
         pushName((string) $off['crew'], 'Job booked: ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : ''), $name . ' · ' . $addr . ' · $' . $Q['price'] . ' · booked online', './?job=' . $jid, 'job-' . $jid);
-        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price']);
+        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price'], true);
         out(['ok' => true, 'booked' => ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])], 'phone' => $phone]);
     }
     flock($lk, LOCK_UN);
     if ($hadOffer) $acc['gone'] = 1;
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website' . ($hadOffer ? ', but the day offered was gone. Call them to set a day.' : '. Call them to set a day.') . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()])) fail('Something went wrong saving that. Please call or text us.', 500);
-    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''));
+    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''), true);
     out(['ok' => true, 'gone' => $hadOffer, 'phone' => $phone]);
 }
 
@@ -2436,7 +2436,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     flock($lk, LOCK_UN);
     $who = trim((string) ($l['name'] ?? '')) ?: $name;
     if ($jid && !$had) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
-    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''));
+    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true);
     $ml = a365SendSigned($l, $sg, 'website');   /* the signed copy by email (2026-10-15) */
     out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
 }
@@ -5649,7 +5649,15 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
             $c['last'] = $done[0]['date'] ?? null;
             $c['due'] = ($c['status'] ?? 'active') === 'active' && !empty($c['next']) && $c['next'] <= $soon;
             $c['overdue'] = $c['due'] && $c['next'] < $today;
-            if (!empty($c['lead'])) { static $lAll = null; $lAll = $lAll ?? leadsAll(); $cl = $lAll[$c['lead']] ?? null; if ($cl && !empty($cl['signed']) && !empty($cl['sign']['key'])) $c['signedLink'] = a365SignLink((string) $c['lead'], (string) $cl['sign']['key']); }   /* their signed 365 form (2026-10-15) */
+            if (!empty($c['lead'])) {   /* their jobs and payments (2026-10-16, Matthew: no slot for deposits on the customer) */
+                static $jByLead = null; if ($jByLead === null) { $jByLead = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $jByLead[(string) $j['lead']][] = $j; }
+                $c['jobs'] = array_map(fn($j) => ['id' => (string) $j['id'], 'date' => (string) $j['date'], 'slot' => (string) $j['slot'], 'crew' => (string) $j['crew'], 'price' => (int) ($j['price'] ?? 0),
+                    'pay' => $j['pay'] ?? ['s' => 'unpaid'], 'done' => $j['done'] ?? null, 'addr' => (string) ($j['addr'] ?? ''), 'sqcharge' => $j['sqcharge'] ?? null], $jByLead[(string) $c['lead']] ?? []);
+                usort($c['jobs'], fn($a, $b) => strcmp($b['date'], $a['date']));
+            }
+            if (!empty($c['lead'])) { static $lAll = null; $lAll = $lAll ?? leadsAll(); $cl = $lAll[$c['lead']] ?? null;
+                if ($cl && !empty($cl['sqcard']['last4'])) $c['cof'] = ['brand' => (string) ($cl['sqcard']['brand'] ?? ''), 'last4' => (string) $cl['sqcard']['last4'], 'exp' => (string) ($cl['sqcard']['exp'] ?? '')];
+                if ($cl && !empty($cl['sqcust'])) $c['inSquare'] = true; if ($cl && !empty($cl['signed']) && !empty($cl['sign']['key'])) $c['signedLink'] = a365SignLink((string) $c['lead'], (string) $cl['sign']['key']); }   /* their signed 365 form (2026-10-15) */
             $list[] = $c;
         }
         usort($list, fn($a, $b) => strcmp(mb_strtolower((string) ($a['name'] ?? '')), mb_strtolower((string) ($b['name'] ?? ''))));
@@ -5739,6 +5747,15 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         if (array_key_exists('phone', $in)) { $f['phone'] = $clean($in['phone'], 40); $dg = preg_replace('/\D/', '', $f['phone']); if ($f['phone'] !== '' && (strlen($dg) < 10 || strlen($dg) > 11)) fail('That phone number does not look right.'); }
         if (array_key_exists('email', $in)) { $f['email'] = $clean($in['email'], 160); if ($f['email'] !== '' && !filter_var($f['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.'); }
         foreach (['address' => 160, 'town' => 60, 'notes' => 2000] as $k => $max) if (array_key_exists($k, $in)) $f[$k] = $clean($in[$k], $max);
+        if (array_key_exists('door', $in)) {   /* their property, found by address on the customer page (2026-10-16, Matthew: a won job with no address, e.g. Kirk) */
+            $dv = (string) $in['door'];
+            if ($dv !== '') {
+                if (!preg_match('/^([a-z0-9-]{1,40})\/([a-z0-9-]{1,80})$/D', $dv, $dm)) fail('That property is not on our list.');
+                $rd = loadRegion($dm[1]); $hit = false; if ($rd) foreach ($rd['areas'] as $a) { foreach ($a['doors'] as $d) if ((string) $d['id'] === $dm[2]) { $hit = true; break; } if ($hit) break; }
+                if (!$hit) fail('That property is not on our list.');
+            }
+            $f['door'] = $dv;
+        }
         if (array_key_exists('service', $in)) { $f['service'] = (string) $in['service']; if (!in_array($f['service'], custServices(), true)) fail('Pick the service.'); }
         if (array_key_exists('plan', $in)) { $f['plan'] = (string) $in['plan']; if (!in_array($f['plan'], CUST_PLANS, true)) fail('Pick the plan.'); }
         if (array_key_exists('status', $in)) { $f['status'] = (string) $in['status']; if (!in_array($f['status'], CUST_STATUS, true)) fail('Pick active, paused or ended.'); }
@@ -5759,7 +5776,13 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         if (!$f) fail('Nothing to save.');
         if ($isNew) $id = 'c' . date('YmdHis') . bin2hex(random_bytes(3));
         $write($id, $f);
-        out(['ok' => true, 'id' => $id]);
+        $jobsFixed = 0;   /* an address added to the customer fills in their open jobs that had none (2026-10-16) */
+        $lead = (string) ($cs[$id]['lead'] ?? ''); $addr = trim((string) ($f['address'] ?? ''));
+        if (!$isNew && $lead !== '' && $addr !== '') {
+            $town = trim((string) ($f['town'] ?? ($cs[$id]['town'] ?? ''))); $full = $addr . ($town !== '' && stripos($addr, $town) === false ? ', ' . $town : '');
+            foreach (jobsAll() as $j) if (($j['lead'] ?? '') === $lead && !$j['off'] && empty($j['done']) && in_array(trim((string) ($j['addr'] ?? '')), ['', 'Ask the office'], true)) { appendLine(DATA_DIR . '/jobs.log', ['id' => $j['id'], 'addr' => $full, 'by' => $me, 'at' => time()]); $jobsFixed++; }
+        }
+        out(['ok' => true, 'id' => $id, 'jobsFixed' => $jobsFixed]);
     }
     /* customer import (2026-10-06): a company's existing customers from its old software, matched to doors by address so the
        pest card can say "3 neighbours on service" from day one. Up to 500 rows a call. A bad optional value is dropped, never
