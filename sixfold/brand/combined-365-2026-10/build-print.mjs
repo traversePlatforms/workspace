@@ -19,7 +19,7 @@ const URL = 'https://365aeration.com', PHONE = '(720) 830-4553', SITE = '365aera
 const SERVICES = 'Core aeration \u00b7 Overseeding \u00b7 Fertilizer';
 /* the QR, checked: a PNG of it must read back as the address */
 const QRS = {};
-for (const [d, l] of [['#1D2A1C', '#FFF8EC'], ['#0E1512', '#EDE7DC'], ['#1D2A1C', '#FFFFFF']]) QRS[d + l] = await QR.toString(URL, { type: 'svg', errorCorrectionLevel: 'M', margin: 4, color: { dark: d, light: l } });
+for (const [d, l] of [['#1D2A1C', '#FFF8EC'], ['#0E1512', '#EDE7DC'], ['#1D2A1C', '#EDE7DC']]) QRS[d + l] = await QR.toString(URL, { type: 'svg', errorCorrectionLevel: 'M', margin: 4, color: { dark: d, light: l } });
 const qrSvg = (dark, light) => QRS[dark + light];
 const pngPath = join(OUT, 'qr-check.png');
 await QR.toFile(pngPath, URL, { errorCorrectionLevel: 'M', margin: 4, width: 600 });
@@ -32,7 +32,7 @@ const badge = (k) => { const n = 'u' + (uid++); return readFileSync(join(HERE, `
 const T = {   /* per badge: the ground, the ink, the accent */
   a: { name: 'A \u00b7 365 green', bg: '#FFF8EC', ink: '#1D2A1C', head: '#2F5D2C', acc: '#2F5D2C', soft: '#5a6858', band: '#2F5D2C', bandInk: '#FFF8EC', qrD: '#1D2A1C', qrL: '#FFF8EC' },
   b: { name: 'B \u00b7 Sixfold dark', bg: '#1F2A25', ink: '#EDE7DC', head: '#E4703A', acc: '#E4703A', soft: '#a9b3a7', band: '#E4703A', bandInk: '#0E1512', qrD: '#0E1512', qrL: '#EDE7DC' },
-  c: { name: 'C \u00b7 Light', bg: '#FFFFFF', ink: '#1D2A1C', head: '#2F5D2C', acc: '#E4703A', soft: '#5a6858', band: '#2F5D2C', bandInk: '#FFFFFF', qrD: '#1D2A1C', qrL: '#FFFFFF' },
+  c: { name: 'C \u00b7 Light', bg: '#EDE7DC', ink: '#1D2A1C', head: '#2F5D2C', acc: '#E4703A', soft: '#5a6858', band: '#2F5D2C', bandInk: '#EDE7DC', qrD: '#1D2A1C', qrL: '#EDE7DC' },
 };
 const FONTS = '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=block" rel="stylesheet">';
 const page = (w, h, body, t) => `<!doctype html><html><head><meta charset="utf-8">${FONTS}<style>html,body{margin:0;padding:0}body{width:${w}px;height:${h}px;overflow:hidden;background:${t.bg};color:${t.ink};font-family:'DM Sans',sans-serif}*{box-sizing:border-box}.o{font-family:Outfit,sans-serif}</style></head><body>${body}</body></html>`;
