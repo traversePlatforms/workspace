@@ -733,6 +733,12 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qwon{margin:6px 0 0;display:grid;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qwon .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qwon select,.qwon input{width:100%;font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}.qwon label.chk{display:flex;gap:8px;align-items:center;font-weight:600}.qwon label.chk input{width:auto}
   .qqinbox{border:1.5px solid var(--accent)}.qqinhead{padding:10px 12px 4px}.qqinhead b{font:800 16px var(--sans)}.qqinlist{display:grid;gap:10px;padding:6px 12px 12px}.qqinrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qqinrow .qlinks{display:flex;gap:12px;align-items:center;margin-top:8px}.qqinrow .qlinks button.save{width:auto;margin:0;padding:10px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}.tojen{margin-top:6px}
   .cfilt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.cfilt button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font:700 13px var(--sans);color:var(--ink);cursor:pointer}.cfilt button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}.qqcrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}.cmonth{margin:12px 0 6px}.qqgrp{display:flex;justify-content:space-between;align-items:center}
+  .qqtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}.qqtabs button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;font:600 12.5px var(--sans);color:var(--ink)}.qqtabs button b{font:800 18px var(--sans);line-height:1.1}.qqtabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .qqr{border:1px solid var(--line);border-radius:12px;background:var(--card);margin:0 0 6px;overflow:hidden;padding:0}.qqrh{display:grid;grid-template-columns:minmax(0,1fr) auto 14px;align-items:center;gap:10px;width:100%;padding:10px 12px;background:none;border:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+  .qqrl{min-width:0}.qqrl b{display:block;font:700 15px var(--sans)}.qqrl small{display:block;color:var(--soft);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qqrh .ic{width:14px;height:14px;color:var(--soft);transition:transform .15s}.qqr.open .qqrh .ic{transform:rotate(90deg)}
+  .qqpill{font:700 11.5px var(--sans);padding:4px 10px;border-radius:999px;white-space:nowrap}.qqpill.ok{background:#e3f1df;color:#2f5d2c}.qqpill.warn{background:#fdf0d9;color:#8a5a00}.qqpill.muted{background:var(--bg);color:var(--soft);border:1px solid var(--line)}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .qqpill.ok{background:#1d3320;color:#9fd39a}:root:not([data-theme="light"]) .qqpill.warn{background:#3a2e12;color:#f0c46b}}:root[data-theme="dark"] .qqpill.ok{background:#1d3320;color:#9fd39a}:root[data-theme="dark"] .qqpill.warn{background:#3a2e12;color:#f0c46b}
+  .qqrd{padding:10px 12px 12px;border-top:1px solid var(--line);display:grid;gap:6px}.qqcustq{margin-bottom:2px}
   .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
   .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
   .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
@@ -5891,7 +5897,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function quickCustomers() {
     if (S.viewAs === 'quote' && !S.qNames) api('accounts').then(function (j) { S.qNames = ((j && j.accounts) || []).filter(function (a) { return a.role === 'quote'; }).map(function (a) { return a.name; }); if (S.screen === 'quickquote') quickQuoteView(); }).catch(function () {});
     var box = q('div', 'lwho qqcust'), head = q('button', 'qqcusthead'); head.type = 'button';
-    var open = !!S.qqCustOpen;
+    var open = S.qqCustOpen !== false;   /* open unless she closed it (2026-10-16) */
     var body = q('div', 'qqcustbody'); body.hidden = !open;
     var label = function (n) { head.textContent = ''; head.appendChild(q('b', null, 'Your customers' + (n != null ? ' (' + n + ')' : ''))); head.appendChild(q('span', null, open ? 'Hide' : 'Show')); };
     label(null);
@@ -5905,31 +5911,63 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       list.textContent = '';
       var t = srch.value.trim().toLowerCase(), td = digits(t);
       var hit = all.filter(function (l) { if (!t) return true; var hay = [l.name, l.email, l.house && l.house.address, l.town].join(' ').toLowerCase(); return hay.indexOf(t) >= 0 || (td.length >= 3 && digits(l.phone).indexOf(td) >= 0); });
-      /* organised (2026-10-16, Matthew: won without the form is a customer; and a way to organise a growing list): Upcoming = signed or won
-         with their day still ahead, soonest first; Not signed yet; Done = their day has passed, folded away unless searching */
+      /* revamped (2026-10-16, Matthew: organised, and looking better): one tab at a time. Upcoming = signed or won, their day ahead (no day
+         yet last); Waiting to sign; Done = their day has passed */
       var today = todayISO(), dayOf = function (l) { return (l.quote && l.quote.offer && l.quote.offer.date) || ''; }, isCust = function (l) { return !!l.signed || l.status === 'won'; };
-      var upcoming = hit.filter(function (l) { return isCust(l) && (!dayOf(l) || dayOf(l) >= today); }).sort(function (a, b) { var x = dayOf(a) || '9999', y = dayOf(b) || '9999'; return x < y ? -1 : x > y ? 1 : 0; });   /* no day yet: last */
-      var waiting = hit.filter(function (l) { return !isCust(l); });
-      var done = hit.filter(function (l) { return isCust(l) && dayOf(l) && dayOf(l) < today; }).sort(function (a, b) { return dayOf(a) > dayOf(b) ? -1 : dayOf(a) < dayOf(b) ? 1 : 0; });
-      if (!hit.length) { list.appendChild(q('div', 'msg soft', t ? 'Nobody matches \u201c' + srch.value.trim() + '\u201d.' : 'Nobody has been sent a form yet.')); return; }
-      [['Upcoming', upcoming, true], ['Not signed yet', waiting, true], ['Done', done, !!t || !!S.qqDoneOpen]].forEach(function (g) {
-        if (!g[1].length) return;
-        var gh = q('div', 'dwh qqgrp', g[0] + ' (' + g[1].length + ')'); list.appendChild(gh);
-        if (g[0] === 'Done' && !t) { var tg = q('button', 'lnk', S.qqDoneOpen ? 'Hide' : 'Show'); tg.type = 'button'; tg.addEventListener('click', function () { S.qqDoneOpen = !S.qqDoneOpen; draw(); }); gh.appendChild(tg); }
-        if (!g[2]) return;
-        var cap = t || (S.qqAllG || {})[g[0]] ? g[1].length : 8;   /* the first 8, then Show all (2026-10-16) */
-        g[1].slice(0, cap).forEach(function (l) {
-          var c = q('div', 'qqcrow');
-          var top = q('div', 'qqctop'); top.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
-          top.appendChild(q('small', null, [digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
-          c.appendChild(top);
-          if (l.status === 'won' && !l.signed) { var od = l.quote && l.quote.offer; c.appendChild(q('div', 'qline qyes', 'Won without the form' + (l.quote ? ' \u00b7 ' + money0(l.quote.price) : '') + (od ? ' \u00b7 ' + dayName(od.date) + ', ' + slotLabel(od.slot) + ' with ' + String(od.crew).split(' ')[0] : '') + ' \u00b7 in Customers')); }
-          else if (l.sign) c.appendChild(signLine(l)); else c.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent' + (l.quote.offer ? ' \u00b7 ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) + ' held with ' + String(l.quote.offer.crew).split(' ')[0] : '')));
-          if (!l.signed && l.status !== 'won') c.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
-          list.appendChild(c);
-        });
-        if (g[1].length > cap) { var sm = q('button', 'cmore', 'Show all ' + g[1].length); sm.type = 'button'; sm.addEventListener('click', function () { S.qqAllG = S.qqAllG || {}; S.qqAllG[g[0]] = true; draw(); }); list.appendChild(sm); }
+      var sentAt = function (l) { return (l.sign && l.sign.at) || (l.quote && l.quote.at) || l.at || 0; };
+      var G = {
+        up: hit.filter(function (l) { return isCust(l) && (!dayOf(l) || dayOf(l) >= today); }).sort(function (a, b) { var x = dayOf(a) || '9999', y = dayOf(b) || '9999'; return x < y ? -1 : x > y ? 1 : 0; }),
+        wait: hit.filter(function (l) { return !isCust(l); }).sort(function (a, b) { return sentAt(b) - sentAt(a); }),
+        done: hit.filter(function (l) { return isCust(l) && dayOf(l) && dayOf(l) < today; }).sort(function (a, b) { return dayOf(a) > dayOf(b) ? -1 : dayOf(a) < dayOf(b) ? 1 : 0; })
+      };
+      if (!all.length) { list.appendChild(q('div', 'msg soft', 'Nobody yet. Everyone you quote shows up here.')); return; }
+      var tab = S.qqTab && G[S.qqTab] ? S.qqTab : '';
+      if (!tab || !G[tab].length) tab = G.up.length ? 'up' : G.wait.length ? 'wait' : G.done.length ? 'done' : (tab || 'up');
+      var tabs = q('div', 'qqtabs');
+      [['up', 'Upcoming'], ['wait', 'Waiting to sign'], ['done', 'Done']].forEach(function (o) {
+        var b = q('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(tab === o[0]));
+        b.appendChild(q('b', null, String(G[o[0]].length))); b.appendChild(q('span', null, o[1]));
+        b.addEventListener('click', function () { S.qqTab = o[0]; S.qqOpenRow = null; draw(); });
+        tabs.appendChild(b);
       });
+      list.appendChild(tabs);
+      var rows = G[tab];
+      if (!rows.length) { list.appendChild(q('div', 'msg soft', t ? 'Nobody here matches \u201c' + srch.value.trim() + '\u201d.' : tab === 'up' ? 'Nobody booked ahead.' : tab === 'wait' ? 'Nobody waiting to sign.' : 'Nobody done yet.')); return; }
+      var cap = t || (S.qqAllG || {})[tab] ? rows.length : 12;
+      rows.slice(0, cap).forEach(function (l) { list.appendChild(qqRow(l, isCust(l))); });
+      if (rows.length > cap) { var sm = q('button', 'cmore', 'Show all ' + rows.length); sm.type = 'button'; sm.addEventListener('click', function () { S.qqAllG = S.qqAllG || {}; S.qqAllG[tab] = true; draw(); }); list.appendChild(sm); }
+    }
+    /* where they stand, at a glance */
+    function qqPill(l) {
+      if (l.signed) return q('span', 'qqpill ok', 'Signed');
+      if (l.status === 'won') return q('span', 'qqpill ok', 'Won \u00b7 no form');
+      if (l.sign && l.sqpaid && l.sign.pay && l.sqpaid.order === l.sign.pay.order) return q('span', 'qqpill warn', 'Paid \u00b7 not signed');
+      if (l.sign) return l.seen && l.seen.n ? q('span', 'qqpill warn', 'Opened ' + l.seen.n + '\u00d7') : q('span', 'qqpill muted', 'Not opened');
+      return q('span', 'qqpill muted', 'Quoted \u00b7 no form');
+    }
+    function qqRow(l, cust) {
+      var openRow = S.qqOpenRow === l.id, o = l.quote && l.quote.offer;
+      var c = q('div', 'qqcrow qqr' + (openRow ? ' open' : ''));
+      var hd = q('button', 'qqrh'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(openRow));
+      var left = q('span', 'qqrl'); left.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
+      left.appendChild(q('small', null, [o ? dayName(o.date) + ', ' + slotLabel(o.slot) : 'No day set', l.quote ? money0(l.quote.price) : '', o ? String(o.crew).split(' ')[0] : '', l.house ? streetCase(l.house.address) : ''].filter(Boolean).join(' \u00b7 ')));
+      hd.appendChild(left); hd.appendChild(qqPill(l)); hd.appendChild(ico('chev', 2.4));
+      hd.addEventListener('click', function () { S.qqOpenRow = openRow ? null : l.id; draw(); });
+      c.appendChild(hd);
+      if (openRow) {
+        var det = q('div', 'qqrd');
+        var ct = q('div', 'lcontact'), tel = digits(l.phone);
+        if (tel.length >= 10) { var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1); var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
+        if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(l.email)); ct.appendChild(a3); }
+        if (ct.children.length) det.appendChild(ct);
+        if (l.house) det.appendChild(q('div', 'dwsub', streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '')));
+        if (l.status === 'won' && !l.signed) det.appendChild(q('div', 'qline qyes', 'Won without the form \u00b7 in Customers'));
+        else if (l.sign) det.appendChild(signLine(l));
+        else det.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent'));
+        if (!cust) det.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
+        c.appendChild(det);
+      }
+      return c;
     }
     function load() {
       box._loaded = true; list.textContent = ''; list.appendChild(q('div', 'skel'));
