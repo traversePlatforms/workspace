@@ -2474,7 +2474,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4180,6 +4180,35 @@ if ($action === 'a365pricingset') {
     out(['ok' => true, 'pricing' => a365Pricing()]);
 }
 /* a quote kept on the lead; "sent" also moves an open lead to Quoted */
+/* a held time that is not signed yet, moved or taken off the schedule (2026-10-16, Matthew: Jen "needs to move someone who hasnt sign to
+   another spot, or remove him from the schedule because brandon is doing their lawn right now"). The hold is the quote's offered day:
+   moving changes it (the new time must be free; the 72-hour clock starts again for a quote with no form), clear takes it off. Jen
+   changes her own; the office and the admin any. Signed or booked: the Jobs board, not here. */
+if ($action === 'holdset') {
+    if ((!desk() && $role !== 'quote') || !$isPost) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
+    if (!$l || empty($l['quote']['offer'])) fail('That time is not held any more.', 404);
+    if ($role === 'quote' && !qMine($l)) fail('Not allowed.', 403);
+    if (!empty($l['signed'])) fail('They already signed: change it on the Jobs board.', 409);
+    if (jobForLead($id)) fail('That one is booked as a job: change it on the Jobs board.', 409);
+    $Q = $l['quote']; $was = $Q['offer']; $sl0 = jobSlot((string) $was['slot']);
+    $wasTxt = deskWhen((string) $was['date'], '') . ($sl0 ? ', ' . $sl0[1] : '') . ' with ' . $was['crew'];
+    if (!empty($body['clear'])) {
+        unset($Q['offer']);
+        $note = 'Taken off the schedule (was ' . $wasTxt . ').' . (($r = $clean($body['why'] ?? '', 200)) !== '' ? ' ' . $r : '');
+    } else {
+        $crew = (string) ($body['crew'] ?? ''); $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
+        if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
+        if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a day ahead.');
+        if (in_array((int) (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day.');
+        $sl = jobSlot($slot); if (!$sl) fail('Pick an arrival time.');
+        if (($why = slotFree($crew, $date, $slot, $id)) !== null) fail($why, 409);
+        $Q['offer'] = ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()];
+        $note = 'Held time moved: ' . $wasTxt . ' to ' . deskWhen($date, '') . ', ' . $sl[1] . ' with ' . $crew . '.';
+    }
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'quote' => $Q, 'note' => $note, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 if ($action === 'leadquote') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
@@ -4271,11 +4300,11 @@ if ($action === 'schedview') {
     if ($role === 'quote') {   /* quote-only accounts: their own customers by name and movable; anyone else's slot only says taken (2026-10-15) */
         $rows = array_map(function ($r) use ($leads) {
             $lid = $r['kind'] === 'booked' ? (string) (jobsAll()[$r['id']]['lead'] ?? '') : (string) ($r['lead'] ?? '');
-            if ($lid !== '' && qMine($leads[$lid] ?? [])) { unset($r['lead']); $r['mine'] = true; return $r; }
+            if ($lid !== '' && qMine($leads[$lid] ?? [])) { if ($r['kind'] !== 'held') unset($r['lead']); else $r['hold'] = $lid; $r['mine'] = true; return $r; }   /* her own held time keeps a handle to move it (2026-10-16) */
             return ['date' => $r['date'], 'slot' => $r['slot'], 'crew' => $r['crew'], 'kind' => $r['kind'], 'name' => $r['kind'] === 'held' ? 'Held' : 'Booked', 'town' => '', 'what' => '', 'pay' => '', 'src' => '', 'card' => '', 'done' => ''];
         }, $rows);
     }
-    foreach ($rows as &$rw) unset($rw['lead']); unset($rw);
+    foreach ($rows as &$rw) { if (desk() && ($rw['kind'] ?? '') === 'held' && !empty($rw['lead'])) $rw['hold'] = $rw['lead']; unset($rw['lead']); } unset($rw);   /* held: 'hold' = the lead, for move or take off (2026-10-16) */
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
 }

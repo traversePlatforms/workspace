@@ -5875,6 +5875,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
               tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
               if (r && r.mine) tr.classList.add('smine');   /* not .mine: that is the chip style */
+              if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }
               if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(q('td', null, r.town || area)); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
@@ -5898,24 +5899,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     [].forEach.call(document.querySelectorAll('.schedt tr.sedit'), function (x) { x.remove(); });
     var er = q('tr', 'sedit'), td = q('td'); td.colSpan = 9; er.appendChild(td);
     var f = q('div', 'sedform'); td.appendChild(f);
-    f.appendChild(q('b', null, 'Move ' + r.name));
+    var held = r.kind === 'held' && !r.id;   /* not signed yet (2026-10-16): the quote's held time */
+    f.appendChild(q('b', null, 'Move ' + r.name + (held ? ' (not signed yet)' : '')));
     var dl = q('label', null, 'Day'), di = q('input'); di.type = 'date'; di.value = r.date; di.min = todayISO(); dl.appendChild(di);
     var sl = q('label', null, 'Time'), ss = q('select'); J.slots.forEach(function (o) { var op = q('option', null, o.label); op.value = o.k; if (o.k === r.slot) op.selected = true; ss.appendChild(op); }); sl.appendChild(ss);
     var cl = q('label', null, 'Crew'), cs = q('select'); (J.pick && J.pick.length ? J.pick : J.crews).forEach(function (n) { var op = q('option', null, n); op.value = n; if (n === r.crew) op.selected = true; cs.appendChild(op); }); cl.appendChild(cs);
     f.appendChild(dl); f.appendChild(sl); f.appendChild(cl);
     var err = q('div', 'err'), row = q('div', 'sedacts');
     var sv = q('button', 'save', 'Move it'); sv.type = 'button';
-    var cx = q('button', 'lnk danger', 'Cancel the job'); cx.type = 'button';
+    var cx = q('button', 'lnk danger', held ? 'Take off the schedule' : 'Cancel the job'); cx.type = 'button';
     var no = q('button', 'lnk', 'Close'); no.type = 'button'; no.addEventListener('click', function () { er.remove(); });
     row.appendChild(sv); row.appendChild(cx); row.appendChild(no); f.appendChild(row); f.appendChild(err);
-    f.appendChild(q('div', 'ltrynote', 'The crew gets an alert. Let the customer know about the new day.'));
+    f.appendChild(q('div', 'ltrynote', held ? 'They have not signed. Moving changes the day on their form; taking it off frees the time (their form then says the day is to be set).' : 'The crew gets an alert. Let the customer know about the new day.'));
     sv.addEventListener('click', function () {
       err.textContent = '';
       if (!di.value) { err.textContent = 'Pick a day.'; return; }
       if (jobDow(di.value) === 0) { err.textContent = 'Sunday is closed: pick another day.'; return; }
       if (di.value === r.date && ss.value === r.slot && cs.value === r.crew) { er.remove(); return; }
       sv.disabled = true;
-      api('jobsave', { body: { id: r.id, date: di.value, slot: ss.value, crew: cs.value } }).then(function (j) {
+      api(held ? 'holdset' : 'jobsave', { body: held ? { id: r.hold, date: di.value, slot: ss.value, crew: cs.value } : { id: r.id, date: di.value, slot: ss.value, crew: cs.value } }).then(function (j) {
         sv.disabled = false;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { err.textContent = j.error || 'Not moved. Try again.'; return; }
@@ -5923,12 +5925,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was moved.'; });
     });
     cx.addEventListener('click', function () {
-      if (!window.confirm('Cancel ' + r.name + '\u2019s job on ' + dayName(r.date) + '? It comes off the schedule and the crew gets an alert.')) return;
+      if (!window.confirm(held ? 'Take ' + r.name + ' off ' + dayName(r.date) + '? The time is freed. Their quote stays in the Pipeline.' : 'Cancel ' + r.name + '\u2019s job on ' + dayName(r.date) + '? It comes off the schedule and the crew gets an alert.')) return;
       cx.disabled = true;
-      api('jobsave', { body: { id: r.id, del: 1 } }).then(function (j) {
+      api(held ? 'holdset' : 'jobsave', { body: held ? { id: r.hold, clear: 1 } : { id: r.id, del: 1 } }).then(function (j) {
         cx.disabled = false;
         if (!j.ok) { err.textContent = j.error || 'Not cancelled. Try again.'; return; }
-        toast('Cancelled', r.name + ' \u00b7 ' + dayName(r.date), null); done();
+        toast(held ? 'Taken off the schedule' : 'Cancelled', r.name + ' \u00b7 ' + dayName(r.date), null); done();
       }).catch(function () { cx.disabled = false; err.textContent = 'No signal. Nothing was cancelled.'; });
     });
     tr.parentNode.insertBefore(er, tr.nextSibling);
