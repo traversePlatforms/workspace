@@ -1976,6 +1976,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .jslots button{min-height:46px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;display:grid;justify-items:center;padding:4px}
   .jslots button[aria-pressed="true"]{border-color:#2f5d2c;background:#2f5d2c;color:#fff}.jslots button:disabled{opacity:.55;cursor:default}
   .jslots button small{font-weight:500;font-size:11px}
+  .jexact{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1.5px dashed var(--line);border-radius:10px;font:600 13.5px var(--sans);color:var(--soft)}.jexact.on{border-style:solid;border-color:#2f5d2c;color:var(--ink)}.jexact input{font:15px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.jexact b{color:var(--ink)}
   .jnums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .jnums input{width:100%}
   .jpaymore{display:grid;gap:6px}
@@ -4158,7 +4159,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      One list for every channel. Website form leads arrive by themselves (api/submit.php files
      them); everything else is added by hand. Shown on the Pipeline beside the door bookings.
      Admin only. Names, numbers and messages are drawn with textContent. */
-  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other', messenger: 'Facebook Messenger', a365web: '365 website' };
+  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other', messenger: 'Facebook Messenger', a365web: '365 website', inperson: 'In person' };
   var LEAD_ST = [];     /* setCompany(): the 'walk' step is named after the company's visit */
   var LEAD_NEED = [];   /* setCompany(): company.json leadNeeds */
   function ago(ts) {
@@ -4684,7 +4685,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         ready.appendChild(q('h2', null, 'Forms out, waiting to sign' + (fo.length ? ' (' + fo.length + ')' : '')));
         if (!fo.length) { ready.appendChild(q('div', 'msg soft', 'None waiting. When they sign, the job lands here on its day by itself.')); return; }
         var fl0 = q('div', 'olist');
-        fo.forEach(function (l) { var b = q('button', 'orow'); b.type = 'button'; var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name')); tx.appendChild(q('small', null, money0(l.quote.price) + (l.quote.offer ? ' \u00b7 held ' + dayName(l.quote.offer.date) + ', ' + SLOT_LABEL[l.quote.offer.slot] : ''))); b.appendChild(tx); b.appendChild(q('span', 'otag', 'Waiting')); b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); }); fl0.appendChild(b); });
+        fo.forEach(function (l) { var b = q('button', 'orow'); b.type = 'button'; var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name')); tx.appendChild(q('small', null, money0(l.quote.price) + (l.quote.offer ? ' \u00b7 held ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) : ''))); b.appendChild(tx); b.appendChild(q('span', 'otag', 'Waiting')); b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); }); fl0.appendChild(b); });
         ready.appendChild(fl0); return;
       }
       var r = j.leads.filter(function (l) { return l.status === 'quoted'; }).sort(function (a, b) { return (acceptOf(b) ? 1 : 0) - (acceptOf(a) ? 1 : 0); });
@@ -4724,7 +4725,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var ab = q('button', 'jarea' + (area ? '' : ' none'), area || 'Set the town'); ab.type = 'button'; ab.title = crew + '’s town for the day';
           ab.addEventListener('click', function () { jobAreaAsk(iso, crew, area, jobsView); });
           ch.appendChild(ab); cr.appendChild(ch);
-          j.slots.forEach(function (s) {
+          var rowsOf = j.slots.slice(); jobs.forEach(function (x) { if (x.crew === crew && !SLOT_LABEL[x.slot] && !rowsOf.some(function (r) { return r.k === x.slot; })) rowsOf.push({ k: x.slot, label: slotLabel(x.slot) }); });
+          rowsOf.sort(function (a, b) { return slotStart(a.k) - slotStart(b.k); });   /* exact times between the windows (2026-10-15) */
+          rowsOf.forEach(function (s) {
             var jb = jobs.filter(function (x) { return x.crew === crew && x.slot === s.k; })[0];
             var row = q('button', 'jslot' + (jb ? ' on' : '') + (jb && jb.done ? ' done' : '')); row.type = 'button';
             row.appendChild(q('span', 'jt', s.label));
@@ -5063,6 +5066,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.addEventListener('click', function () { P.slot = s.k; drawSlots(); });
         slotRow.appendChild(b);
       });
+      if (!qView()) {   /* or an exact time (2026-10-15): its own row on the board, so it never takes a window */
+        var ex = q('label', 'jexact' + (tSlot(P.slot) ? ' on' : '')); ex.appendChild(q('span', null, 'Or an exact time'));
+        var ti = q('input'); ti.type = 'time'; ti.min = '06:00'; ti.max = '20:59'; ti.step = 300; var tp = tSlot(P.slot); if (tp) ti.value = (tp[0] < 10 ? '0' : '') + tp[0] + ':' + tp[1];
+        ti.addEventListener('change', function () { var m = /^(\d\d):(\d\d)$/.exec(ti.value || ''); if (!m) return; if (+m[1] < 6 || +m[1] > 20) { toast('Pick a time between 6 am and 8 pm', '', null); return; } if (P.date === todayISO() && !job) { var nw0 = new Date(); if (+m[1] * 60 + +m[2] <= nw0.getHours() * 60 + nw0.getMinutes()) { toast('That time has gone', 'Pick a later time or another day.', null); ti.value = ''; return; } } var k = 't' + m[1] + m[2]; var t = P.crew ? taken(P.date, P.crew, k) : null; if (t) { toast('Taken', P.crew + ' already has ' + jobName(t) + ' then.', null); return; } P.slot = k; drawSlots(); });
+        ex.appendChild(ti); if (tp) ex.appendChild(q('b', null, 'Arrive ' + slotLabel(P.slot)));
+        slotRow.appendChild(ex);
+      }
     }
     function loadWeek() {
       W.data = null; drawStrip(); drawSlots();
@@ -5099,7 +5109,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (j._status === 401) return signinView('Signed out. Enter your code again.');
           if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }
           lead.quote.offer = { crew: P.crew, date: P.date, slot: P.slot };
-          back(); toast('Day in the quote \u00b7 ' + dayName(P.date) + ', ' + SLOT_LABEL[P.slot], 'Held for them on the jobs board. Text or email the quote; one tap on their page books it.', null);
+          back(); toast('Day in the quote \u00b7 ' + dayName(P.date) + ', ' + slotLabel(P.slot), 'Held for them on the jobs board. Text or email the quote; one tap on their page books it.', null);
         }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Not saved; try again.'; });
         return;
       }
@@ -5133,9 +5143,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = String(S.me || '').split(' ')[0];
-    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your one-page agreement to sign: ' + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + SLOT_SAY[x.slot] + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page before you sign.' : 'the ' + money0(j.deposit) + ' deposit you paid.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
+    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your one-page agreement to sign: ' + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + slotSay(x.slot) + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page before you sign.' : 'the ' + money0(j.deposit) + ' deposit you paid.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
     box.appendChild(q('div', 'dwh', 'The form is ready'));
-    box.appendChild(q('div', null, money0(x.price) + ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) + ' \u00b7 ' + dayName(x.date) + ', ' + SLOT_LABEL[x.slot] + '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.'));
+    box.appendChild(q('div', null, money0(x.price) + ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) + ' \u00b7 ' + dayName(x.date) + ', ' + slotLabel(x.slot) + '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.'));
     var row = q('div', 'lcontact');
     var tel = digits(lead.phone);
     if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); row.appendChild(a); }
@@ -5483,7 +5493,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var g = l.sign, d = q('div', 'qline' + (l.signed ? ' qyes' : ''));
     var o = l.quote && l.quote.offer;
     d.appendChild(document.createTextNode(l.signed ? 'Signed by ' + l.signed.name + ', ' + ago(l.signed.at) + (l.signed.job ? ' \u00b7 job booked' : ' \u00b7 the day was taken: set a new one on the Jobs board')
-      : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + SLOT_LABEL[o.slot] + ' with ' + o.crew : '')));
+      : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : '')));
     if (l.sqcard && l.sqcard.last4) d.appendChild(q('div', 'dwsub', 'Card saved for the balance: ' + (l.sqcard.brand || 'card') + ' ending ' + l.sqcard.last4));   /* 2026-10-15 */
     else if (l.savecard && l.savecard.yes && !(l.sqafter)) d.appendChild(q('div', 'dwsub', 'They chose to save their card for the balance'));
     var row = q('div', 'qlinks');
@@ -5762,7 +5772,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var firstOfDay = true;
           j.crews.forEach(function (crew) {
             var area = (j.days[d] || {})[crew] || '';
-            j.slots.forEach(function (s) {
+            var rowsOf = j.slots.slice(); j.rows.forEach(function (x) { if (x.date === d && x.crew === crew && !SLOT_LABEL[x.slot] && !rowsOf.some(function (r) { return r.k === x.slot; })) rowsOf.push({ k: x.slot, label: slotLabel(x.slot) }); });
+            rowsOf.sort(function (a, b) { return slotStart(a.k) - slotStart(b.k); });
+            rowsOf.forEach(function (s) {
               var r = j.rows.filter(function (x) { return x.date === d && x.crew === crew && x.slot === s.k; })[0];
               var past = d < today;
               if (S.schedOpenOnly && (r || past)) return;
@@ -6237,7 +6249,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the day offered with a quote (2026-10-14) */
   var SLOT_LABEL = { s1: '9:30-10:00', s2: '10-12', s3: '12-2', s4: '3:00' }, SLOT_SAY = { s1: 'between 9:30 and 10:00', s2: 'between 10:00 and 12:00', s3: 'between 12:00 and 2:00', s4: 'around 3:00' };
   function longDay(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); }
-  function offerText(o) { return dayName(o.date) + ', arrive ' + SLOT_LABEL[o.slot] + ' \u00b7 ' + o.crew; }
+  function tSlot(k) { var m = /^t(\d\d)(\d\d)$/.exec(k || ''); return m ? [+m[1], m[2]] : null; }   /* an exact time, t + HHMM (2026-10-15) */
+  function slotLabel(k) { if (SLOT_LABEL[k]) return SLOT_LABEL[k]; var t = tSlot(k); return t ? (t[0] % 12 || 12) + ':' + t[1] + (t[0] < 12 ? ' am' : ' pm') : (k || ''); }
+  function slotSay(k) { return SLOT_SAY[k] || (tSlot(k) ? 'at ' + slotLabel(k) : ''); }
+  function slotStart(k) { var w = { s1: 570, s2: 600, s3: 720, s4: 900 }[k]; if (w != null) return w; var t = tSlot(k); return t ? t[0] * 60 + +t[1] : 9999; }
+  function offerText(o) { return dayName(o.date) + ', arrive ' + slotLabel(o.slot) + ' \u00b7 ' + o.crew; }
   function quoteBody(l, extra) { var Q = l.quote; var b = { id: l.id, price: Q.price, pkg: Q.pkg, sq: Q.sq || 0, seedLb: Q.seedLb, fertLb: Q.fertLb || null, sent: !!Q.sent }; if (Q.note) b.note = Q.note; for (var k in extra) b[k] = extra[k]; return b; }
   function quoteBox(h, lead, E, redraw, quick) {
     var box = q('div', 'qbox'); box.appendChild(q('div', 'dwh', 'Quote'));
@@ -6383,7 +6399,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var B = leadBrand(lead), first = greetName(lead.name), street = h.address ? streetCase(h.address) : '';
           var is365 = !!(CO.a365 && B.name === CO.a365.name);   /* the page is 365's: only on a 365 message */
           var lk = is365 && lead.quote && lead.quote.link && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg && lead.quote.link;   /* the customer's quote page, once this price is saved */
-          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + SLOT_SAY[lead.quote.offer.slot] + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }

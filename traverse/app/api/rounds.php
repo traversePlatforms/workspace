@@ -2162,7 +2162,7 @@ if ($action === 'a365lead') {
  * of the lead, so the same link always shows that lead's latest quote; a yes counts only for the price it was given to. */
 function a365QuoteKey(string $id): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365quote|' . $id, $sessionKey), 0, 16); }
 function a365QuoteLink(string $id): string { return 'https://365aeration.com/q/?q=' . $id . '-' . a365QuoteKey($id); }
-function a365Arrive(string $slot): string { return ['s1' => 'between 9:30 and 10:00', 's2' => 'between 10:00 and 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; }
+function a365Arrive(string $slot): string { $w = ['s1' => 'between 9:30 and 10:00', 's2' => 'between 10:00 and 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; if ($w === '' && ($sl = jobSlot($slot))) $w = 'at ' . $sl[1]; return $w; }
 function a365Day(string $date): string { return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); }
 /** the live job for a lead, if any */
 function jobForLead(string $lead): ?array { foreach (jobsAll() as $j) if ($j['lead'] === $lead && !$j['off']) return $j; return null; }
@@ -3652,7 +3652,7 @@ if ($action === 'money') {
  * door bookings. Admin only: these are customers' names and numbers. Append-only, like the marks:
  *   leads/leads.log   one line per lead        { id, src, at, need, name, phone, email, town, msg, by? }
  *   leads/leadst.log  one line per update      { id, status?, note?, by, at }   last status wins */
-const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web'];   /* messenger + the 365 Aeration site (2026-10-14) */
+const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson'];   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
 const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost'];
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
 function readLines(string $f): array {
@@ -4227,7 +4227,12 @@ function jobsAll(): array {
     }
     return $o;
 }
-function jobSlot(string $k): ?array { foreach (jobSlots() as $s) if ($s[0] === $k) return $s; return null; }
+function jobSlot(string $k): ?array {
+    foreach (jobSlots() as $s) if ($s[0] === $k) return $s;
+    /* an exact arrival time, 't' + HHMM, 6 am to 8 pm (2026-10-15, Matthew: Brian 10:30, Russ 1:00, Erik 2:15): its own time on the board */
+    if (preg_match('/^t([01]\d|2[0-3])([0-5]\d)$/D', $k, $m) && (int) $m[1] >= 6 && (int) $m[1] <= 20) { $h = (int) $m[1]; return [$k, ($h % 12 ?: 12) . ':' . $m[2] . ($h < 12 ? ' am' : ' pm'), $m[1] . ':' . $m[2]]; }
+    return null;
+}
 function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobdays.json'), true); return is_array($j) ? $j : []; }
 function jobShow(array $j, ?array $leads = null): array {
     $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge']));
