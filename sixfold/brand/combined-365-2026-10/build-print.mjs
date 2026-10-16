@@ -111,3 +111,44 @@ section{background:#fff;border-radius:16px;padding:14px;display:grid;gap:14px;al
 <div class="note"><b>Before ordering magnets:</b> a magnet only holds on steel. Hold a fridge magnet against the spot on each vehicle first (front doors usually). Many newer vehicles, EVs especially, use aluminium or plastic panels in places, and a magnet sign will not stay on those; that would mean a vinyl decal there instead. These are drafts at true proportions; print-ready files with bleed come once you pick.</div>
 <div class="grid">${col('a')}${col('b')}${col('c')}</div></div></body></html>`);
 console.log('rendered', shots.length, 'pieces and print/print-mockups.html');
+
+/* PRINT-READY business cards for FedEx (2026-10-16, Matthew). Same format as the Sixfold cards that printed: a two-page PDF (front,
+   back), 3.75 x 2.25 in = the 3.5 x 2 in card plus 0.125 in bleed all round; text kept 0.125 in inside the trim. Brandon and Brad on
+   B (Sixfold dark), Matthew on C (light), his choice. Root lines thickened 1.6x on the card badge only: at 1.62 in the finest root is
+   ~0.09 mm, under the ~0.15 mm a digital press holds; x1.6 brings it to ~0.15 mm. Reversed type kept at 6.5 pt or more. */
+const PEOPLE = [
+  { file: 'Brandon-Long', k: 'b', name: 'Brandon Long', title: 'CEO', phone: '(303) 915-1045', email: 'B.Long@365Aeration.com' },
+  { file: 'Brad-McPherson', k: 'b', name: 'Brad McPherson', title: '', phone: '(303) 945-1514', email: 'B.McPherson@365Aeration.com' },
+  { file: 'Matthew-Sharpe', k: 'c', name: 'Matthew Sharpe', title: 'Chief Technology Officer', phone: '(303) 596-9515', email: 'M.Sharpe@SixfoldColorado.com' },
+];
+const PR = join(HERE, 'print-ready'); mkdirSync(PR, { recursive: true });
+const printBadge = (k) => badge(k).replace(/stroke-width="([\d.]+)"/g, (m, v) => (+v < 2 ? `stroke-width="${(+v * 1.6).toFixed(2)}"` : m));
+for (const p of PEOPLE) {
+  const t = T[p.k], q = qrSvg(t.qrD, t.qrL, GO.card).replace('<svg ', '<svg width="100%" height="100%" ');
+  const html = `<!doctype html><html><head><meta charset="utf-8">${FONTS}<style>
+@page { size: 3.75in 2.25in; margin: 0; }
+html, body { margin: 0; padding: 0; } * { box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.o { font-family: Outfit, sans-serif; }
+.page { width: 3.75in; height: 2.25in; background: ${t.bg}; color: ${t.ink}; position: relative; overflow: hidden; page-break-after: always; break-after: page; }
+.page:last-child { page-break-after: auto; break-after: auto; }
+.safe { position: absolute; inset: 0.25in; }
+</style></head><body>
+<div class="page"><div class="safe" style="display:flex;align-items:center;justify-content:center"><div style="width:1.62in;height:1.62in">${printBadge(p.k)}</div></div></div>
+<div class="page"><div class="safe" style="display:flex;align-items:center;gap:0.16in">
+  <div style="flex:1;display:flex;flex-direction:column;gap:0.035in;min-width:0">
+    <div class="o" style="font-weight:800;font-size:0.2in;color:${t.head};line-height:1.05;white-space:nowrap">${p.name}</div>
+    ${p.title ? `<div style="font-size:0.09in;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${t.soft};margin-bottom:0.05in">${p.title}</div>` : '<div style="height:0.04in"></div>'}
+    <div class="o" style="font-weight:700;font-size:0.15in;white-space:nowrap">${p.phone}</div>
+    <div style="font-size:0.1in;white-space:nowrap">${p.email}</div>
+    <div style="font-size:0.1in;font-weight:700;color:${t.acc}">${SITE}</div>
+    <div style="font-size:0.09in;color:${t.soft};margin-top:0.04in">${SERVICES}</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0.03in;flex:none"><div style="width:0.95in;height:0.95in">${q}</div><div class="o" style="font-weight:700;font-size:0.09in;color:${t.acc};white-space:nowrap">Scan for a quote</div></div>
+</div></div>
+</body></html>`;
+  const f = join(PR, `365-Card-${p.file}.html`), pdf = join(PR, `365-Card-${p.file}.pdf`);
+  writeFileSync(f, html);
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
+}
+console.log('print-ready cards:', PEOPLE.map((p) => `365-Card-${p.file}.pdf`).join(', '));
