@@ -37,7 +37,9 @@ const T = {   /* per badge: the ground, the ink, the accent */
 const FONTS = '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=block" rel="stylesheet">';
 const page = (w, h, body, t) => `<!doctype html><html><head><meta charset="utf-8">${FONTS}<style>html,body{margin:0;padding:0}body{width:${w}px;height:${h}px;overflow:hidden;background:${t.bg};color:${t.ink};font-family:'DM Sans',sans-serif}*{box-sizing:border-box}.o{font-family:Outfit,sans-serif}</style></head><body>${body}</body></html>`;
 /* each piece, in px at a scale (px per inch) */
-const card = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:${0.16 * s}px"><div style="width:${1.62 * s}px;height:${1.62 * s}px">${badge(k)}</div></div>`, t); };
+/* "by Sixfold" (2026-10-16, Matthew: the name, not only the mark): under the badge on the card front, under the headline elsewhere */
+const BY = (t, px) => `<div class="o" style="font-weight:700;font-size:${px}px;letter-spacing:.06em;color:${t.soft};white-space:nowrap">by <span style="color:${t.head}">SIXFOLD</span></div>`;
+const card = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:${0.12 * s}px;gap:${0.04 * s}px"><div style="width:${1.5 * s}px;height:${1.5 * s}px">${badge(k)}</div>${BY(t, 0.13 * s)}</div>`, t); };
 const cardBack = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div style="display:flex;width:100%;height:100%;padding:${0.2 * s}px;gap:${0.16 * s}px;align-items:center">
   <div style="flex:1;display:flex;flex-direction:column;gap:${0.035 * s}px">
     <div class="o" style="font-weight:800;font-size:${0.2 * s}px;color:${t.head};line-height:1.05">Name Here</div>
@@ -53,6 +55,7 @@ const yard = (k, s) => { const t = T[k]; return page(24 * s, 18 * s, `<div style
   <div style="width:${12.4 * s}px;height:${12.4 * s}px;flex:none">${badge(k)}</div>
   <div style="flex:1;display:flex;flex-direction:column;gap:${0.35 * s}px">
     <div class="o" style="font-weight:800;font-size:${1.45 * s}px;line-height:1.02;color:${t.head}">Aeration &amp;<br>Overseeding</div>
+    ${BY(t, 0.62 * s)}
     <div style="font-size:${0.62 * s}px;color:${t.soft}">Core aeration, seed and fertilizer</div>
     <div style="margin-top:${0.25 * s}px;font-size:${0.55 * s}px;font-weight:700">Call or text</div>
     <div class="o" style="font-weight:800;font-size:${0.98 * s}px;line-height:1;color:${t.acc};white-space:nowrap">${PHONE}</div>
@@ -62,6 +65,7 @@ const magnet = (k, s, w) => { const t = T[k]; const h = 12; return page(w * s, h
   <div style="width:${(w > 20 ? 10.4 : 8.6) * s}px;height:${(w > 20 ? 10.4 : 8.6) * s}px;flex:none">${badge(k)}</div>
   <div style="flex:1;display:flex;flex-direction:column;gap:${0.2 * s}px">
     <div class="o" style="font-weight:800;font-size:${(w > 20 ? 1.25 : 0.95) * s}px;line-height:1.02;color:${t.head}">Aeration &amp;<br>Overseeding</div>
+    ${BY(t, (w > 20 ? 0.6 : 0.46) * s)}
     <div class="o" style="font-weight:800;font-size:${(w > 20 ? 1.08 : 0.74) * s}px;line-height:1;color:${t.acc};margin-top:${0.25 * s}px;white-space:nowrap">${PHONE}</div>
     <div class="o" style="font-weight:700;font-size:${(w > 20 ? 0.7 : 0.55) * s}px">${SITE}</div>
     <div style="width:${(w > 20 ? 3.6 : 3) * s}px;height:${(w > 20 ? 3.6 : 3) * s}px;margin-top:${0.25 * s}px;flex:none">${qrSvg(t.qrD, t.qrL).replace('<svg ', '<svg width="100%" height="100%" ')}</div>
