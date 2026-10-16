@@ -5953,6 +5953,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
             $LH = is_array($L['house'] ?? null) ? $L['house'] : null;
             $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($LH ? streetCaseServer((string) $LH['town']) : ($L['town'] ?? ''), 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
             if ($LH && !empty($LH['address'])) $f['address'] = streetCaseServer((string) $LH['address']);
+            if ($LH && empty($LH['typed']) && preg_match('/^[a-z0-9-]{1,40}$/D', (string) ($LH['region'] ?? '')) && preg_match('/^[a-z0-9-]{1,80}$/D', (string) ($LH['door'] ?? ''))) $f['door'] = $LH['region'] . '/' . $LH['door'];   /* the lead's house becomes the customer's property (2026-10-16: Jeremy came over without it) */
             if (!empty($L['quote']['price'])) $f['price'] = (float) $L['quote']['price'];
             /* the service whose name the enquiry mentions ("Fire mitigation" -> fire), the most specific if several
                ("Lawn aeration" -> aeration, as before); else the first one */
