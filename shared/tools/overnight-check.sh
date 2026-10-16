@@ -17,6 +17,9 @@ age_min() { echo $(( ( $(date +%s) - $(stat -c %Y "$1") ) / 60 )); }
 say "== $(date '+%Y-%m-%d %H:%M')"
 
 # 1. Town builds: running, finished, or stopped part-way
+SSID=$(netsh wlan show interfaces 2>/dev/null | tr -d "" | awk -F": " "/^ *SSID/{print ; exit}")
+case "$SSID" in *iPhone*) say "  info  network: $SSID (phone hotspot: tree downloads stay paused)";; *) say "  info  network: ${SSID:-wired}";; esac
+if [ -f "$DT/logs-paused.flag" ]; then ok "tree work PAUSED since $(date -r "$DT/logs-paused.flag" "+%m-%d %H:%M") (hotspot); resume: bash traverse/data-pipeline/door-territory/resume-trees-2026-10-16.sh"; else
 NODES=$(tasklist //FI "IMAGENAME eq node.exe" 2>/dev/null | grep -c node.exe)
 for run in batch5:run-batch5-2026-10-15.sh batch5-fix:run-batch5-fix-2026-10-16.sh boulder-trees:boulder-trees-last-2026-10-16.sh; do
   name=${run%%:*}; L="$DT/logs-$name"
@@ -32,6 +35,8 @@ for run in batch5:run-batch5-2026-10-15.sh batch5-fix:run-batch5-fix-2026-10-16.
     else ok "build $name running, step $last (written $m min ago)"; fi
   else bad "build $name STOPPED before finishing (no node running; last step: $last). Restart it from its runner script."; fi
 done
+
+fi
 
 # 2. Uploads the builds owe the live app (only the ones Matthew asked for)
 T40="bow-mar columbine-valley glendale columbine ken-caryl dove-valley morrison twin-lakes foxfield stonegate sherrelwood welby federal-heights roxborough-park northglenn evergreen the-pinery broomfield superior watkins louisville brighton lafayette perry-park idaho-springs lochbuie elizabeth dacono gunbarrel frederick bennett fort-lupton niwot firestone hudson nederland kiowa longmont"
