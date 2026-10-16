@@ -5593,6 +5593,88 @@ if ($action === 'pestseason') {
     out(['ok' => true, 'month' => $mo, 'pests' => $now]);
 }
 
+/* ---- payments, for the books (2026-10-16, Matthew: "I am just mainly thinking about taxes, and having documentation we can print out
+   that can be used to do the taxes with") ----
+   Every payment received, rebuilt from the job log: each change of a job's payment status is a payment (or a correction) dated when it
+   was entered. Square references come from the job (balance charged to the saved card, a pay link paid) and from the lead (the deposit
+   paid by link, dated when Square took it). A Square deposit on a lead with no job yet is listed on its own. A job cancelled after a
+   deposit keeps the deposit (it is non-refundable) and says so. Square's fees are not taken off: Square's own reports list them. */
+const PAY_HOW = ['square' => 'Square', 'card' => 'Card', 'cash' => 'Cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'Check', 'other' => 'Other'];
+function paymentsAll(): array {
+    $leads = leadsAll(); $tz = new DateTimeZone(appTz()); $st = []; $used = []; $out = [];
+    foreach (readLines(DATA_DIR . '/jobs.log') as $r) {
+        $id = (string) $r['id'];
+        if (!isset($st[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $st[$id] = ['lead' => (string) ($r['lead'] ?? ''), 'title' => (string) ($r['title'] ?? ''), 'date' => '', 'price' => 0, 'addr' => '', 'pay' => ['s' => 'unpaid'], 'got' => 0, 'off' => false, 'evs' => []]; }
+        $j = &$st[$id];
+        foreach (['date', 'addr'] as $k) if (isset($r[$k])) $j[$k] = (string) $r[$k];
+        if (array_key_exists('price', $r)) $j['price'] = (int) $r['price'];
+        if (!empty($r['del'])) $j['off'] = true;
+        if (is_array($r['pay'] ?? null) || array_key_exists('price', $r)) {
+            if (is_array($r['pay'] ?? null)) $j['pay'] = $r['pay'];
+            $p = $j['pay']; $ps = (string) ($p['s'] ?? 'unpaid');
+            $now = $ps === 'paid' ? $j['price'] : ($ps === 'deposit' ? (int) ($p['amt'] ?? 0) : ($ps === 'plan' ? $j['got'] : 0));
+            $d = $now - $j['got'];
+            if ($d !== 0) {
+                $ref = (string) ($r['sqcharge']['payment'] ?? ($r['sqpaid']['payment'] ?? ''));
+                $at = (int) ($r['sqcharge']['at'] ?? ($r['sqpaid']['at'] ?? ($r['at'] ?? 0)));
+                $kind = $d < 0 ? 'Correction' : ($ps === 'deposit' ? 'Deposit' : ($j['got'] > 0 ? 'Balance' : 'Paid in full'));
+                $how = $d < 0 ? (string) ($j['lastHow'] ?? '') : (string) ($p['how'] ?? '');   /* a correction undoes the method it reverses */
+                if ($d > 0) $j['lastHow'] = $how;
+                $j['evs'][] = ['at' => $at, 'amt' => $d, 'how' => $how, 'kind' => $kind, 'ref' => $ref];
+                $j['got'] = $now;
+            }
+        }
+        unset($j);
+    }
+    $row = function (int $at, int $amt, string $how, string $kind, string $ref, string $name, string $addr, string $jid, string $jdate, bool $off, string $lead) use ($tz): array {
+        $dt = (new DateTime('@' . max(0, $at)))->setTimezone($tz);
+        return ['date' => $dt->format('Y-m-d'), 'at' => $at, 'customer' => $name, 'addr' => $addr, 'kind' => $kind, 'how' => $how, 'howL' => PAY_HOW[$how] ?? ($how !== '' ? ucfirst($how) : 'Not recorded'),
+                'amt' => $amt, 'ref' => $ref, 'job' => $jid, 'jobDate' => $jdate, 'cancelled' => $off, 'lead' => $lead];
+    };
+    foreach ($st as $jid => $j) {
+        $l = $j['lead'] !== '' ? ($leads[$j['lead']] ?? null) : null;
+        $name = trim((string) ($l['name'] ?? '')) ?: ($j['title'] ?: 'Customer');
+        foreach ($j['evs'] as $e) {
+            if ($e['kind'] === 'Deposit' && $e['how'] === 'square' && $e['ref'] === '' && $l && !empty($l['sqpaid']['payment']) && empty($used[$l['sqpaid']['payment']])) {
+                $e['ref'] = (string) $l['sqpaid']['payment']; $e['at'] = (int) ($l['sqpaid']['at'] ?? $e['at']);
+            }
+            if ($e['ref'] !== '') $used[$e['ref']] = true;
+            $out[] = $row($e['at'], $e['amt'], $e['how'], $e['kind'], $e['ref'], $name, $j['addr'], (string) $jid, $j['date'], $j['off'], $j['lead']);
+        }
+    }
+    foreach ($leads as $l) {   /* a deposit paid by link where no job was booked yet */
+        $pid = (string) ($l['sqpaid']['payment'] ?? '');
+        if ($pid === '' || !empty($used[$pid])) continue;
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $out[] = $row((int) ($l['sqpaid']['at'] ?? 0), (int) ($l['sqpaid']['amt'] ?? 0), 'square', 'Deposit (no job booked)', $pid, trim((string) ($l['name'] ?? '')) ?: 'Customer', $addr, '', '', false, (string) $l['id']);
+    }
+    usort($out, fn($a, $b) => $a['at'] <=> $b['at']);
+    return $out;
+}
+if ($action === 'payments' || $action === 'paymentsexport') {
+    if ($role !== 'admin') fail('Not allowed.', 403);   /* money records: the admin's */
+    $y = (new DateTime('today', new DateTimeZone(appTz())))->format('Y');
+    $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
+    if (!dateOk($from)) $from = $y . '-01-01';
+    if (!dateOk($to)) $to = $y . '-12-31';
+    if ($to < $from) [$from, $to] = [$to, $from];
+    $rows = array_values(array_filter(paymentsAll(), fn($p) => $p['date'] >= $from && $p['date'] <= $to));
+    if ($action === 'paymentsexport') {
+        exportLog(['what' => 'payments', 'from' => $from, 'to' => $to]);
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="payments-' . $from . '-to-' . $to . '.csv"');
+        $fh = fopen('php://output', 'w');
+        fputcsv($fh, ['Date', 'Customer', 'Address', 'For', 'Method', 'Amount', 'Square payment ID', 'Job date', 'Job cancelled'], ',', '"', '');
+        foreach ($rows as $p) fputcsv($fh, array_map('csvSafe', [$p['date'], $p['customer'], $p['addr'], $p['kind'], $p['howL'], number_format($p['amt'], 2, '.', ''), $p['ref'], $p['jobDate'], $p['cancelled'] ? 'yes' : '']), ',', '"', '');
+        fputcsv($fh, ['', '', '', '', 'Total', number_format(array_sum(array_column($rows, 'amt')), 2, '.', ''), '', '', ''], ',', '"', '');
+        fclose($fh); exit;
+    }
+    $byHow = []; $byMonth = [];
+    foreach ($rows as $p) { $byHow[$p['howL']] = ($byHow[$p['howL']] ?? 0) + $p['amt']; $m = substr($p['date'], 0, 7); $byMonth[$m] = ($byMonth[$m] ?? 0) + $p['amt']; }
+    arsort($byHow); ksort($byMonth);
+    out(['ok' => true, 'from' => $from, 'to' => $to, 'rows' => $rows, 'total' => array_sum(array_column($rows, 'amt')), 'count' => count($rows), 'byHow' => $byHow, 'byMonth' => $byMonth,
+         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i')]);
+}
 if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget', 'custdoc', 'custdocadd', 'custdocdel'], true)) {
     /* the office (Jen, 2026-10-14, Matthew: "in case she needs to call one or edit something she forgot to put in"): the list, editing a
        customer, making one from a lead, adding and editing visits. Removing a visit, imports, the download and backups stay the admin's. */

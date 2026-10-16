@@ -717,6 +717,10 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .cacts .lnk{background:none;border:0;padding:6px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .cacts .lnk.danger{color:var(--fire-h)}
   .door.cvisit{padding-left:16px}
+  .payctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 12px}.payctl select,.payctl input{font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .paysum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 12px}.paysum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.paysum b{display:block;font-size:20px}.paysum span{color:var(--muted);font-size:13px}
+  .paytbl{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border-radius:12px;overflow:hidden}.paytbl th,.paytbl td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.paytbl th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.paytbl td.n,.paytbl th.n{text-align:right;white-space:nowrap}.paytbl tr.neg td{color:var(--later)}.paytbl small{color:var(--muted)}
+  .payacts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.payacts button,.payacts a{flex:1;min-width:200px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 15px var(--sans);text-align:center;text-decoration:none;cursor:pointer}.payacts a{background:var(--card);color:var(--ink);border:1px solid var(--line)}
   .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
   .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
   .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
@@ -10031,6 +10035,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var imp = q('button', 'addlead', S.custImport ? 'Close the import' : 'Import customers (spreadsheet)'); imp.type = 'button';
     imp.addEventListener('click', function () { S.custImport = !S.custImport; drawCustomers(holder); });
     if (S.role === 'admin') holder.appendChild(imp);   /* imports are the admin's (2026-10-14) */
+    var pyb = q('button', 'addlead', 'Payments received (for taxes)'); pyb.type = 'button'; pyb.addEventListener('click', function () { paymentsView(); });
+    if (S.role === 'admin') holder.appendChild(pyb);   /* money records: the admin's (2026-10-16) */
     if (S.custImport) holder.appendChild(customerImport(function () { S.custImport = false; customersView(); }));
     var all = S.custs || [];
     var due = all.filter(function (c) { return c.due; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
@@ -10200,6 +10206,106 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* a customer won without an address (2026-10-16, Matthew: "take kirk for example i cant add his location in"): find the house on
      our list, which attaches the property (lawn, trees, map), or save the address as typed. Either fills in their open jobs that
      say "Ask the office". */
+  /* ---- payments received, for the books (2026-10-16, Matthew: "mainly thinking about taxes, and having documentation we can print
+     out") ---- every payment from the jobs and Square, by period; totals by month and by method; a printable report and a spreadsheet */
+  function payPeriod(k) {
+    var t = new Date(), y = t.getFullYear(), m = t.getMonth(), p2 = function (n) { return (n < 10 ? '0' : '') + n; }, ymd = function (d) { return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); };
+    var qs = Math.floor(m / 3) * 3;
+    if (k === 'lastyear') return [(y - 1) + '-01-01', (y - 1) + '-12-31'];
+    if (k === 'quarter') return [ymd(new Date(y, qs, 1)), ymd(new Date(y, qs + 3, 0))];
+    if (k === 'lastquarter') return [ymd(new Date(y, qs - 3, 1)), ymd(new Date(y, qs, 0))];
+    if (k === 'month') return [ymd(new Date(y, m, 1)), ymd(new Date(y, m + 1, 0))];
+    if (k === 'lastmonth') return [ymd(new Date(y, m - 1, 1)), ymd(new Date(y, m, 0))];
+    return [y + '-01-01', y + '-12-31'];
+  }
+  function paymentsView() {
+    hideToast(); S.signin = null; S.screen = 'payments'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Payments received', sub: 'Every payment, for the books', back: customersView, backLabel: 'Customers' });
+    view.textContent = '';
+    var wrap = q('div'); view.appendChild(wrap);
+    var ctl = q('div', 'payctl'); wrap.appendChild(ctl);
+    var per = q('select'); per.id = 'pay-period'; per.setAttribute('aria-label', 'Period');
+    [['year', 'This year'], ['lastyear', 'Last year'], ['quarter', 'This quarter'], ['lastquarter', 'Last quarter'], ['month', 'This month'], ['lastmonth', 'Last month'], ['custom', 'Pick dates']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; per.appendChild(op); });
+    per.value = S.payPer || 'year'; ctl.appendChild(per);
+    var f1 = q('input'); f1.type = 'date'; f1.id = 'pay-from'; f1.setAttribute('aria-label', 'From'); var f2 = q('input'); f2.type = 'date'; f2.id = 'pay-to'; f2.setAttribute('aria-label', 'To');
+    ctl.appendChild(f1); ctl.appendChild(q('span', null, 'to')); ctl.appendChild(f2);
+    var body = q('div'); wrap.appendChild(body);
+    var setDates = function () { if (per.value !== 'custom') { var r = payPeriod(per.value); f1.value = r[0]; f2.value = r[1]; } };
+    if (S.payFrom && per.value === 'custom') { f1.value = S.payFrom; f2.value = S.payTo; } else setDates();
+    var load = function () {
+      S.payPer = per.value; S.payFrom = f1.value; S.payTo = f2.value;
+      body.textContent = ''; body.appendChild(q('div', 'skel'));
+      api('payments', { params: { from: f1.value, to: f2.value } }).then(function (j) {
+        if (S.screen !== 'payments') return;
+        body.textContent = '';
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { body.appendChild(q('div', 'msg bad', j.error || 'Could not load the payments.')); return; }
+        drawPayments(body, j);
+      }).catch(function () { body.textContent = ''; body.appendChild(q('div', 'msg bad', 'Payments need signal.')); });
+    };
+    per.addEventListener('change', function () { setDates(); load(); });
+    [f1, f2].forEach(function (x) { x.addEventListener('change', function () { per.value = 'custom'; if (f1.value && f2.value) load(); }); });
+    load();
+  }
+  var payMoney = function (n) { return (n < 0 ? '\u2212$' : '$') + Math.abs(n).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var payMonth = function (ym) { var p = ym.split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; };
+  function drawPayments(body, j) {
+    var sum = q('div', 'paysum');
+    var card = function (big, small) { var d = q('div'); d.appendChild(q('b', null, big)); d.appendChild(q('span', null, small)); sum.appendChild(d); };
+    card(payMoney(j.total), 'received, ' + fmtD(j.from) + ' to ' + fmtD(j.to));
+    card(String(j.count), j.count === 1 ? 'payment' : 'payments');
+    Object.keys(j.byHow).forEach(function (k) { if (j.byHow[k]) card(payMoney(j.byHow[k]), k); });   /* a method that nets to nothing (all corrected) has no card */
+    body.appendChild(sum);
+    var acts = q('div', 'payacts');
+    var pr = q('button', 'save', 'Print the report'); pr.type = 'button'; pr.addEventListener('click', function () { printPayments(j); }); acts.appendChild(pr);
+    var dl = q('a', 'save', 'Download the spreadsheet'); dl.href = API + '?action=paymentsexport&from=' + encodeURIComponent(j.from) + '&to=' + encodeURIComponent(j.to); dl.setAttribute('download', ''); dl.style.textAlign = 'center'; acts.appendChild(dl);
+    body.appendChild(acts);
+    if (!j.rows.length) { body.appendChild(q('div', 'msg', 'No payments recorded in this period.')); }
+    else {
+      var mons = Object.keys(j.byMonth);
+      if (mons.length > 1) {
+        body.appendChild(q('h2', null, 'By month'));
+        var mt = q('table', 'paytbl'), mh = q('tr'); mh.appendChild(q('th', null, 'Month')); mh.appendChild(q('th', 'n', 'Received')); mt.appendChild(mh);
+        mons.forEach(function (m) { var tr = q('tr'); tr.appendChild(q('td', null, payMonth(m))); tr.appendChild(q('td', 'n', payMoney(j.byMonth[m]))); mt.appendChild(tr); });
+        body.appendChild(mt);
+      }
+      body.appendChild(q('h2', null, 'Every payment'));
+      var t = q('table', 'paytbl'), hd = q('tr');
+      ['Date', 'Customer', 'For', 'Method', 'Amount'].forEach(function (h, i) { hd.appendChild(q('th', i === 4 ? 'n' : null, h)); }); t.appendChild(hd);
+      j.rows.forEach(function (p) {
+        var tr = q('tr', p.amt < 0 ? 'neg' : null);
+        tr.appendChild(q('td', null, fmtD(p.date)));
+        var c = q('td'); c.appendChild(document.createTextNode(p.customer)); if (p.addr) { c.appendChild(document.createElement('br')); c.appendChild(q('small', null, p.addr)); } tr.appendChild(c);
+        var k = q('td'); k.appendChild(document.createTextNode(p.kind + (p.cancelled ? ' (job cancelled)' : ''))); if (p.jobDate) { k.appendChild(document.createElement('br')); k.appendChild(q('small', null, 'job ' + fmtD(p.jobDate))); } tr.appendChild(k);
+        var h = q('td'); h.appendChild(document.createTextNode(p.howL)); if (p.ref) { h.appendChild(document.createElement('br')); h.appendChild(q('small', null, 'Square ' + p.ref.slice(-8))); } tr.appendChild(h);
+        tr.appendChild(q('td', 'n', payMoney(p.amt)));
+        t.appendChild(tr);
+      });
+      var ft = q('tr'); ft.appendChild(q('td', null, '')); ft.appendChild(q('td', null, '')); ft.appendChild(q('td', null, '')); ft.appendChild(q('th', null, 'Total')); ft.appendChild(q('th', 'n', payMoney(j.total))); t.appendChild(ft);
+      body.appendChild(t);
+    }
+    body.appendChild(q('div', 'sub2', 'Built from the jobs: deposits and balances set on a job, deposits paid by Square link, and balances charged to a saved card. Square\u2019s card fees are not taken off these amounts; Square lists them in its own reports (Reports \u203a Sales summary). Visits logged on customers without a job are not included. This is a record of what was received, not tax advice: give it, with Square\u2019s reports, to whoever does the taxes.'));
+  }
+  /* a clean page to print: no app around it (2026-10-16) */
+  function printPayments(j) {
+    var esc = function (x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var rows = j.rows.map(function (p) { return '<tr' + (p.amt < 0 ? ' class="neg"' : '') + '><td>' + esc(p.date) + '</td><td>' + esc(p.customer) + (p.addr ? '<br><small>' + esc(p.addr) + '</small>' : '') + '</td><td>' + esc(p.kind) + (p.cancelled ? ' (job cancelled)' : '') + (p.jobDate ? '<br><small>job ' + esc(p.jobDate) + '</small>' : '') + '</td><td>' + esc(p.howL) + (p.ref ? '<br><small>Square ' + esc(p.ref) + '</small>' : '') + '</td><td class="n">' + esc(payMoney(p.amt)) + '</td></tr>'; }).join('');
+    var mons = Object.keys(j.byMonth).map(function (m) { return '<tr><td>' + esc(payMonth(m)) + '</td><td class="n">' + esc(payMoney(j.byMonth[m])) + '</td></tr>'; }).join('');
+    var hows = Object.keys(j.byHow).map(function (k) { return '<tr><td>' + esc(k) + '</td><td class="n">' + esc(payMoney(j.byHow[k])) + '</td></tr>'; }).join('');
+    var html = '<!doctype html><html><head><meta charset="utf-8"><title>Payments received ' + esc(j.from) + ' to ' + esc(j.to) + '</title><style>' +
+      '@page{size:letter;margin:0.6in}body{font:11pt/1.4 Arial,Helvetica,sans-serif;color:#111;margin:0}h1{font-size:18pt;margin:0 0 2px}h2{font-size:12pt;margin:18px 0 6px}.sub{color:#555;margin:0 0 12px}' +
+      'table{width:100%;border-collapse:collapse;margin:0 0 6px}th,td{border-bottom:1px solid #ccc;padding:5px 6px;text-align:left;vertical-align:top}th{font-size:9pt;text-transform:uppercase;color:#444}td.n,th.n{text-align:right;white-space:nowrap}small{color:#666;font-size:8.5pt}tr.neg td{color:#a33}.two{display:flex;gap:24px}.two table{width:auto;min-width:220px}.tot td{font-weight:bold;border-top:2px solid #111}.note{color:#555;font-size:9pt;margin-top:14px}' +
+      '</style></head><body>' +
+      '<h1>Payments received</h1><p class="sub">' + esc(j.company) + ' \u00b7 ' + esc(j.from) + ' to ' + esc(j.to) + ' \u00b7 ' + j.count + ' payment' + (j.count === 1 ? '' : 's') + ' \u00b7 total ' + esc(payMoney(j.total)) + ' \u00b7 made ' + esc(j.made) + '</p>' +
+      '<div class="two"><div><h2>By month</h2><table>' + mons + '<tr class="tot"><td>Total</td><td class="n">' + esc(payMoney(j.total)) + '</td></tr></table></div><div><h2>By method</h2><table>' + hows + '<tr class="tot"><td>Total</td><td class="n">' + esc(payMoney(j.total)) + '</td></tr></table></div></div>' +
+      '<h2>Every payment</h2><table><tr><th>Date</th><th>Customer</th><th>For</th><th>Method</th><th class="n">Amount</th></tr>' + rows + '<tr class="tot"><td></td><td></td><td></td><td>Total</td><td class="n">' + esc(payMoney(j.total)) + '</td></tr></table>' +
+      '<p class="note">Built from the job records: deposits and balances set on each job, deposits paid by Square link, and balances charged to a saved card. Square card fees are not taken off; Square\u2019s own reports list them. A correction (in red) is a payment status changed back on a job. This is a record of payments received, not tax advice.</p>' +
+      '</body></html>';
+    var w = window.open('', '_blank');
+    if (!w) { toast('Pop-up blocked', 'Allow pop-ups for this site, or use Download the spreadsheet.', null); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+    setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 300);
+  }
   function custAddrFind(c, done) {
     var box = q('div', 'caddr');
     box.appendChild(q('h2', null, c.address ? 'Find their property' : 'Their address'));
