@@ -28,12 +28,15 @@ const withMark = (svg, light) => {
     + `<g transform="translate(${x0 + (pad - 94 * sc) / 2 - 4 * sc} ${x0 + (pad - 99 * sc) / 2 - 14 * sc}) scale(${sc})">${ridge('#E4703A', '#4C7A3F')}</g></g></svg>`);
 };
 const QRS = {};
-for (const [d, l] of [['#1D2A1C', '#FFF8EC'], ['#0E1512', '#EDE7DC'], ['#1D2A1C', '#EDE7DC']]) QRS[d + l] = withMark(await QR.toString(URL, { type: 'svg', errorCorrectionLevel: 'H', margin: 4, color: { dark: d, light: l } }), l);
-const qrSvg = (dark, light) => QRS[dark + light];
+/* one address per piece (2026-10-16): each forwards from 365aeration.com/<piece>/ (api/go.php on the 365 site, counted), so where a
+   printed code leads can change later without reprinting. /sign is taken (the agreement page), hence /yard. */
+const GO = { card: URL + '/card/', yard: URL + '/yard/', truck: URL + '/truck/', car: URL + '/car/' };
+for (const u of Object.values(GO)) for (const [d, l] of [['#1D2A1C', '#FFF8EC'], ['#0E1512', '#EDE7DC'], ['#1D2A1C', '#EDE7DC']]) QRS[u + d + l] = withMark(await QR.toString(u, { type: 'svg', errorCorrectionLevel: 'H', margin: 4, color: { dark: d, light: l } }), l);
+const qrSvg = (dark, light, url) => QRS[url + dark + light];
 const pngPath = join(OUT, 'qr-check.png');
-await QR.toFile(pngPath, URL, { errorCorrectionLevel: 'H', margin: 4, width: 600 });
+await QR.toFile(pngPath, GO.yard, { errorCorrectionLevel: 'H', margin: 4, width: 600 });
 const png = PNG.sync.read(readFileSync(pngPath)); const dec = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
-if (!dec || dec.data !== URL) throw new Error('QR does not read back: ' + (dec && dec.data));
+if (!dec || dec.data !== GO.yard) throw new Error('QR does not read back: ' + (dec && dec.data));
 console.log('QR reads back as', dec.data);
 /* the badges as drawn by build.mjs, made safe to place more than once on a page */
 let uid = 0;
@@ -46,8 +49,9 @@ const T = {   /* per badge: the ground, the ink, the accent */
 const FONTS = '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=block" rel="stylesheet">';
 const page = (w, h, body, t) => `<!doctype html><html><head><meta charset="utf-8">${FONTS}<style>html,body{margin:0;padding:0}body{width:${w}px;height:${h}px;overflow:hidden;background:${t.bg};color:${t.ink};font-family:'DM Sans',sans-serif}*{box-sizing:border-box}.o{font-family:Outfit,sans-serif}</style></head><body>${body}</body></html>`;
 /* each piece, in px at a scale (px per inch) */
-/* the Sixfold name is inside the badge since 2026-10-16 (build.mjs); the "by Sixfold" line that came before it is gone */
-const BY = (t, px) => `<div class="o" style="font-weight:700;font-size:${px}px;letter-spacing:.06em;color:${t.soft};white-space:nowrap">by <span style="color:${t.head}">SIXFOLD</span></div>`;
+/* the Sixfold name is inside the badge (build.mjs). "Scan for a quote" beside every code (2026-10-16): true today (the homepage quote
+   request form) and after the link pages, whose top button is the quote. */
+const SCAN = (t, px) => `<div class="o" style="font-weight:800;font-size:${px}px;line-height:1.05;color:${t.acc}">Scan for<br>a quote</div>`;
 const card = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:${0.12 * s}px;gap:${0.04 * s}px"><div style="width:${1.62 * s}px;height:${1.62 * s}px">${badge(k)}</div></div>`, t); };
 const cardBack = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div style="display:flex;width:100%;height:100%;padding:${0.2 * s}px;gap:${0.16 * s}px;align-items:center">
   <div style="flex:1;display:flex;flex-direction:column;gap:${0.035 * s}px">
@@ -58,7 +62,7 @@ const cardBack = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div s
     <div style="font-size:${0.1 * s}px;font-weight:700;color:${t.acc}">${SITE}</div>
     <div style="font-size:${0.082 * s}px;color:${t.soft};margin-top:${0.05 * s}px">${SERVICES}</div>
   </div>
-  <div style="width:${0.95 * s}px;height:${0.95 * s}px;flex:none">${qrSvg(t.qrD, t.qrL).replace('<svg ', '<svg width="100%" height="100%" ')}</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:${0.03 * s}px;flex:none"><div style="width:${0.95 * s}px;height:${0.95 * s}px">${qrSvg(t.qrD, t.qrL, GO.card).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div class="o" style="font-weight:700;font-size:${0.075 * s}px;color:${t.acc};white-space:nowrap">Scan for a quote</div></div>
 </div>`, t); };
 const yard = (k, s) => { const t = T[k]; return page(24 * s, 18 * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${1.1 * s}px;gap:${0.9 * s}px">
   <div style="width:${12.4 * s}px;height:${12.4 * s}px;flex:none">${badge(k)}</div>
@@ -67,7 +71,7 @@ const yard = (k, s) => { const t = T[k]; return page(24 * s, 18 * s, `<div style
     <div style="font-size:${0.62 * s}px;color:${t.soft}">Core aeration, seed and fertilizer</div>
     <div style="margin-top:${0.25 * s}px;font-size:${0.55 * s}px;font-weight:700">Call or text</div>
     <div class="o" style="font-weight:800;font-size:${0.98 * s}px;line-height:1;color:${t.acc};white-space:nowrap">${PHONE}</div>
-    <div style="display:flex;align-items:center;gap:${0.35 * s}px;margin-top:${0.3 * s}px"><div style="width:${2.6 * s}px;height:${2.6 * s}px;flex:none">${qrSvg(t.qrD, t.qrL).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div class="o" style="font-weight:700;font-size:${0.7 * s}px">${SITE}</div></div>
+    <div style="display:flex;align-items:center;gap:${0.35 * s}px;margin-top:${0.3 * s}px"><div style="width:${4 * s}px;height:${4 * s}px;flex:none">${qrSvg(t.qrD, t.qrL, GO.yard).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div style="display:flex;flex-direction:column;gap:${0.25 * s}px">${SCAN(t, 0.62 * s)}<div class="o" style="font-weight:700;font-size:${0.45 * s}px;white-space:nowrap">${SITE}</div></div></div>
   </div></div>`, t); };
 const magnet = (k, s, w) => { const t = T[k]; const h = 12; return page(w * s, h * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${0.7 * s}px;gap:${0.6 * s}px">
   <div style="width:${(w > 20 ? 10.4 : 8.6) * s}px;height:${(w > 20 ? 10.4 : 8.6) * s}px;flex:none">${badge(k)}</div>
@@ -75,7 +79,7 @@ const magnet = (k, s, w) => { const t = T[k]; const h = 12; return page(w * s, h
     <div class="o" style="font-weight:800;font-size:${(w > 20 ? 1.25 : 0.95) * s}px;line-height:1.02;color:${t.head}">Aeration &amp;<br>Overseeding</div>
     <div class="o" style="font-weight:800;font-size:${(w > 20 ? 1.08 : 0.74) * s}px;line-height:1;color:${t.acc};margin-top:${0.25 * s}px;white-space:nowrap">${PHONE}</div>
     <div class="o" style="font-weight:700;font-size:${(w > 20 ? 0.7 : 0.55) * s}px">${SITE}</div>
-    <div style="width:${(w > 20 ? 3.6 : 3) * s}px;height:${(w > 20 ? 3.6 : 3) * s}px;margin-top:${0.25 * s}px;flex:none">${qrSvg(t.qrD, t.qrL).replace('<svg ', '<svg width="100%" height="100%" ')}</div>
+    <div style="display:flex;align-items:center;gap:${0.3 * s}px;margin-top:${0.25 * s}px"><div style="width:${(w > 20 ? 3.6 : 3) * s}px;height:${(w > 20 ? 3.6 : 3) * s}px;flex:none">${qrSvg(t.qrD, t.qrL, w > 20 ? GO.truck : GO.car).replace('<svg ', '<svg width="100%" height="100%" ')}</div>${SCAN(t, (w > 20 ? 0.6 : 0.48) * s)}</div>
   </div></div>`, t); };   /* QR on the magnets (2026-10-16, Matthew): 3.6 in / 3 in reads from a few steps away */
 const shots = [];
 const render = (name, html, w, h) => {
