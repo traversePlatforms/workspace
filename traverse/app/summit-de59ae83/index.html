@@ -1888,6 +1888,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .sedform input,.sedform select{font:14px var(--sans);padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}.sedacts{display:flex;gap:12px;align-items:center}.sedacts .save{width:auto;padding:8px 16px;min-height:0}.sedform .ltrynote,.sedform .err{flex-basis:100%}.schedt tr.dayfirst td{border-top:2px solid var(--soft)}.schedt td.sdate{font-weight:700;white-space:pre-line;vertical-align:top}
   .qseed button{font-size:12.5px}.qseed button:disabled{opacity:1;cursor:default}
   .qqsrc button{font-size:12.5px}
+  .qqwho{position:relative}.qqnew{position:absolute;top:10px;right:12px;min-height:34px;padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}.qqnew:hover{border-color:var(--accent)}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
   .sendnote{font-size:12px;color:var(--soft);line-height:1.4}
@@ -4592,13 +4593,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var JOB_SCOPE = { all: 'Whole lawn', front: 'Front yard only', back: 'Back yard only' };
   var JOB_PAY = { unpaid: 'Not paid yet', deposit: 'Deposit paid', paid: 'Paid in full', plan: 'Service plan' };
   var JOB_HOW = { square: 'Square', card: 'Card', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', check: 'Check', other: 'Other' };
+  var JOB_HOW_PICK = { square: 'Card (Square)', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', check: 'Check', other: 'Other' };   /* Square and Card were the same thing: a card is taken on Square (Matthew 2026-10-15); old jobs saved as card keep their label */
   function jobMonday(iso) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoOf(d); }
   function jobAdd(iso, n) { var p = iso.split('-'); return isoOf(new Date(+p[0], +p[1] - 1, +p[2] + n)); }
   function jobDow(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getDay(); }
   function jobName(j) { return j.who ? (j.who.name || j.who.phone || j.title) : j.title; }
   function jobWhen(j) { return dayName(j.date) + ', arrive ' + j.slotLabel; }
   /* Square (SX-58, 2026-10-15): connected or not, asked once */
-  function sqState(then) { if (S.sq) return then(S.sq); api('squarestate').then(function (j) { S.sq = j && j.ok ? { on: !!j.on, env: j.env } : { on: false }; then(S.sq); }).catch(function () { then({ on: false }); }); }
+  function sqState(then) { api('squarestate').then(function (j) { S.sq = j && j.ok ? { on: !!j.on, env: j.env } : (S.sq || { on: false }); then(S.sq); }).catch(function () { then(S.sq || { on: false }); }); }   /* asked fresh every time: a page opened before the keys changed kept the old answer until a reload (2026-10-15) */
   function jobPayText(j) {
     var p = j.pay || { s: 'unpaid' };
     if (p.s === 'deposit') return 'Deposit $' + p.amt + ' paid' + (p.how ? ' (' + (JOB_HOW[p.how] || p.how) + ')' : '');
@@ -4847,9 +4849,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     pre = pre || {};
     var OFFER = !!pre.offer;   /* offer mode (2026-10-14): only the crew, day and time, saved on the quote */
     var SIGN = !!pre.sign;   /* the phone quote said yes (2026-10-14): price, half as deposit, the day, then the one-page form */
-    var back = SIGN && S.role === 'quote' ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
+    var back = SIGN && qqFor(lead) ? quickBack : SIGN && S.role === 'quote' ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
-    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && S.role === 'quote' ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
+    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (S.role === 'quote' || qqFor(lead)) ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
@@ -4859,7 +4861,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       pay: { s: 'unpaid' }, card: false, note: (acceptOf(lead) && acceptOf(lead).note) || '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
     };
     if ((OFFER || SIGN) && qt.offer) { P.crew = qt.offer.crew; P.date = qt.offer.date; P.slot = qt.offer.slot; }
-    if (SIGN && lead.sign) { P.how = lead.sign.how; P.note = lead.sign.note || P.note; }
+    if (SIGN && lead.sign) { P.how = lead.sign.how === 'card' ? 'square' : lead.sign.how; P.note = lead.sign.note || P.note; }
     if (!P.date) { var t = new Date(); t.setDate(t.getDate() + 1); if (t.getDay() === 0) t.setDate(t.getDate() + 1); P.date = isoOf(t); }
     var W = { wk: jobMonday(P.date), data: null };
     var box = q('div', 'phf dwform jform');
@@ -4933,8 +4935,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (P.pay.s === 'deposit' || P.pay.s === 'paid') {
         payMore.appendChild(q('div', 'dwsub', 'Paid how'));
         var hr = q('div', 'dwlen'); payMore.appendChild(hr);
-        if (!P.pay.how) P.pay.how = 'square';
-        chips(hr, JOB_HOW, function () { return P.pay.how; }, function (k) { P.pay.how = k; });
+        if (!P.pay.how || P.pay.how === 'card') P.pay.how = 'square';
+        chips(hr, JOB_HOW_PICK, function () { return P.pay.how; }, function (k) { P.pay.how = k; });
       }
     }
     drawPay();
@@ -4947,21 +4949,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var pl = q('label', null, 'Price you quoted ($)'); dPrice = q('input'); dPrice.inputMode = 'numeric'; dPrice.maxLength = 6; dPrice.value = P.price || ''; pl.appendChild(dPrice); depBox.appendChild(pl);
       var dl = q('label', null, 'Deposit ($)'), dDep = q('input'); dDep.inputMode = 'numeric'; dDep.maxLength = 6; dl.appendChild(dDep); depBox.appendChild(dl);
       var depOwn = false; dDep.addEventListener('input', function () { depOwn = dDep.value.trim() !== ''; paint(); });
+      if (pre.deposit && pre.deposit !== Math.ceil((parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0) / 2)) { dDep.value = pre.deposit; depOwn = true; }
       depTxt = q('div', 'jdeptxt'); depBox.appendChild(depTxt);
       depBox.appendChild(q('div', 'dwsub', 'How they paid the deposit'));
       var hr = q('div', 'dwlen'); depBox.appendChild(hr);
       if (!P.how) P.how = 'square';
-      var howMap = JOB_HOW, howRow = hr;
+      var howMap = JOB_HOW_PICK, howRow = hr;
       var drawHow = function () { howRow.textContent = ''; chips(howRow, howMap, function () { return P.how; }, function (k) { P.how = k; paint(); }); };
       sqState(function (sq) {   /* SX-58: they pay on the form, by Square link */
         if (!sq.on) return;
-        howMap = { link: 'Square link on the form' + (sq.env === 'sandbox' ? ' (test)' : '') }; for (var k in JOB_HOW) howMap[k] = JOB_HOW[k];
+        howMap = { link: 'Square link on the form' + (sq.env === 'sandbox' ? ' (test)' : '') }; for (var k in JOB_HOW_PICK) howMap[k] = JOB_HOW_PICK[k];
         if (!(SIGN && lead.sign)) P.how = 'link';
         drawHow(); if (typeof paint === 'function') paint();
       });
       drawHow();
       takenBtn = q('button', 'jtaken', ''); takenBtn.type = 'button'; takenBtn.setAttribute('aria-pressed', 'false');
       takenBtn.addEventListener('click', function () { takenBtn.setAttribute('aria-pressed', String(takenBtn.getAttribute('aria-pressed') !== 'true')); });
+      if (lead.sign && lead.sign.how && lead.sign.how !== 'link') takenBtn.setAttribute('aria-pressed', 'true');   /* sent already: she took it then */
       depBox.appendChild(takenBtn);
       var paint = function () { takenBtn.hidden = P.how === 'link'; var p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p / 2); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = d; depTxt.textContent = p ? (d === half ? 'Deposit is half: ' : 'Deposit changed from half (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
       dPrice.addEventListener('input', paint); paint();
@@ -5095,7 +5099,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the form is ready: send it from this phone or computer, by text or email (opens filled in; nothing goes until Jen presses send) */
   function signSent(lead, j, x, back) {
     hideToast(); S.screen = 'jobbook';
-    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: 'Pipeline' });
+    var QB = qqFor(lead) ? S.qqBack : null;
+    if (QB) back = function () { api('leads').then(function (L) { var l2 = ((L && L.leads) || []).filter(function (x) { return x.id === lead.id; })[0]; if (!l2) return quickBack(); signSendView(l2, Object.assign({}, QB.pre, { price: x.price, deposit: j.deposit })); }).catch(function () { toast('No signal', 'Try Back again.', null); }); };   /* back one step, filled in (Matthew 2026-10-15) */
+    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : S.role === 'quote' ? 'Quick quote' : 'Pipeline' });
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = String(S.me || '').split(' ')[0];
@@ -5111,7 +5117,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var cp = q('button', 'lnk', 'Copy the link'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); box.appendChild(cp);
     var pv = q('a', 'lnk', 'See the form \u203a'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; box.appendChild(pv);
     box.appendChild(q('div', 'ltrynote', 'The text and email open here, filled in, from your own number or email. Nothing is sent until you press send.'));
-    var dn = q('button', 'save', 'Done'); dn.type = 'button'; dn.addEventListener('click', back); box.appendChild(dn);
+    var dn = q('button', 'save', QB || S.role === 'quote' ? 'Done: start a new search' : 'Done'); dn.type = 'button'; dn.addEventListener('click', QB || S.role === 'quote' ? quickNew : back); box.appendChild(dn);
     view.appendChild(box); window.scrollTo(0, 0);
   }
   /* one job with everything for it: for the crew, and for the office */
@@ -5615,8 +5621,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).then(function (L2) {
       var lead = ((L2 && L2.leads) || []).filter(function (l) { return l.id === id; })[0];
       if (!lead) throw new Error('The lead did not come back. Find it in the Pipeline.');
-      S.qq = null;
-      signSendView(lead, { price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null });
+      var pre = { price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null };
+      S.qqBack = { lead: id, h: { region: h && h.region, id: h && h.id, address: (h && h.address) || '' }, st: { sq: st.sq || 0, pkg: st.pkg, price: st.price != null ? st.price : null }, pre: pre };   /* Back from here returns to this quote, filled in (Matthew 2026-10-15) */
+      signSendView(lead, pre);
       toast(had === 'updated' ? 'Using their lead, details updated' : had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + (lead.email ? ' \u00b7 ' + lead.email : '') + ' \u00b7 ' + money0(st.cur.price), null);
     }).catch(function (e) { btn.disabled = false; toast('Not done', (e && e.message) || 'Try again.', null); });
   }
@@ -5765,6 +5772,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     tr.parentNode.insertBefore(er, tr.nextSibling);
   }
+  function quickNew() { S.qq = null; S.qqBack = null; quickQuoteView(); }   /* Start a new search: the only thing that clears it (2026-10-15) */
+  function quickBack() { var B = S.qqBack; if (!B) return quickQuoteView(); if (B.h.region && B.h.id) houseLookupView(null, { region: B.h.region, door: B.h.id }, null, true); else houseLookupView(null, null, null, true, B.h); }
+  function qqFor(lead) { return !!(S.qqBack && lead && S.qqBack.lead === lead.id); }
   function quickQuoteView(typed) { hideSplash(); houseLookupView(null, null, typed, true); }   /* hideSplash: opened from the link or at sign-in, the logo screen stayed on top (2026-10-15) */
   function quickWhoBox() {
     var Q = S.qq || (S.qq = { name: '', phone: '', email: '' });
@@ -5785,7 +5795,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       w.appendChild(sr);
     }
-    var cl = q('button', 'lnk', 'Clear for the next customer'); cl.type = 'button'; cl.addEventListener('click', function () { S.qq = null; quickQuoteView(); }); w.appendChild(cl);
+    var cl = q('button', 'qqnew', 'Start a new search'); cl.type = 'button'; cl.addEventListener('click', quickNew); w.insertBefore(cl, w.firstChild);   /* clears the name, the house and the quote (2026-10-15) */
     return w;
   }
   /* the summary for her own board, and the customer's text */
@@ -5831,7 +5841,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function addGmail(el) { if (onPhone()) return; [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { a.hidden = true; if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
   function addSendNote(parent, el) { addGmail(el); var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
-  function houseLookupView(lead, open, typed, quick) {
+  function houseLookupView(lead, open, typed, quick, sizeOpen) {
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
     setBar('back', { title: quick ? 'Quick quote' : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
@@ -5878,13 +5888,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* not on our lists (another town, a condo): the quote from the size they give */
     function bySize(addr) {
       var b = q('button', 'lnk qqsize', 'Quote it by the lawn size they give \u203a'); b.type = 'button';
-      b.addEventListener('click', function () { res.textContent = ''; pan.textContent = ''; var h = { address: addr || '', town: '' }; var w = q('div', 'door hpanel'); w.appendChild(q('div', 'addr', addr ? addr : 'An address not on our lists')); w.appendChild(q('div', 'meta', 'Not on our lists: no photo or measurements, and no drive cost. Ask them the lawn size.')); w.appendChild(quoteBox(h, null, { none: true }, function () {}, true)); pan.appendChild(w); });
+      b.addEventListener('click', function () { openSize(addr); });
       return b;
+    }
+    function openSize(addr) {
+      { res.textContent = ''; pan.textContent = ''; var h = { address: addr || '', town: '' }; var w = q('div', 'door hpanel'); w.appendChild(q('div', 'addr', addr ? addr : 'An address not on our lists')); w.appendChild(q('div', 'meta', 'Not on our lists: no photo or measurements, and no drive cost. Ask them the lawn size.')); w.appendChild(quoteBox(h, null, { none: true }, function () {}, true)); pan.appendChild(w); }
     }
     if (quick) { var bs = bySize(''); bs.textContent = 'Not on our lists? Quote by lawn size \u203a'; box.insertBefore(bs, res); }
     inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 350); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); } });
-    if (open) show(open.region, open.door); else if (typed) { inp.value = typed; run(); } else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+    if (open) show(open.region, open.door); else if (sizeOpen) openSize(sizeOpen.address); else if (typed) { inp.value = typed; run(); } else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
     window.scrollTo(0, 0);
   }
   /* on a lead in the Pipeline: its house, or the button to find it */
@@ -6137,7 +6150,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
     loadPricing(function (P) { hold.textContent = ''; if (!P) { hold.appendChild(q('div', 'msg', 'The price list needs signal.')); return; } draw(P); });
     function draw(P) {
-      var saved = lead && lead.quote;
+      var B0 = quick && !lead && S.qqBack, saved = (lead && lead.quote) || (B0 && (B0.h.id ? (B0.h.region === h.region && B0.h.id === h.id) : (!h.id && B0.h.address === (h.address || ''))) ? B0.st : null);   /* back from the deposit screen: her size, package and price (2026-10-15) */
       var said = lead && lead.ask && lead.ask.size ? (function () { var m = /([\d,.]+)/.exec(String(lead.ask.size).replace(/\b(a |one )?half( of)?( an?)?\b/i, '0.5 ')); if (!m) return 0; var n = parseFloat(m[1].replace(/,/g, '')); if (/acre/i.test(lead.ask.size)) n *= 43560; return n > 200 ? Math.round(n / 100) * 100 : 0; })() : 0;
       var st = { sq: saved && saved.sq ? saved.sq : (E.none ? said || 0 : E.mid), pkg: saved ? saved.pkg : 'full', price: saved ? saved.price : null };
       var basis = q('div', 'qbasis'); basis.appendChild(q('span', 'hq', 'Lawn size to price'));
