@@ -2266,7 +2266,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
  * office. The wording is here, in one place, versioned: a signature keeps the version and a hash of exactly what was shown.
  * DRAFT wording until Brandon (or the attorney) approves it: facts from the call and the business only; no refund or cancellation
  * terms, because none are set. Never the lawn size, the seed or anything measured; never Sixfold. */
-const A365_SIGN_VERSION = 'v3-draft-2026-10-15';   /* v3: "not confirmed until the deposit is paid" (Matthew 2026-10-15) */   /* Matthew's answers to the seven questions; Brandon still to review */
+const A365_SIGN_VERSION = 'v4-draft-2026-10-16';   /* v4: their phone and email on it (Matthew 2026-10-16); v3: "not confirmed until the deposit is paid" (Matthew 2026-10-15) */   /* Matthew's answers to the seven questions; Brandon still to review */
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
 function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
 function a365Agreement(array $l): array {
@@ -2277,9 +2277,15 @@ function a365Agreement(array $l): array {
     $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
     $day = $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set';
-    $facts = [['Customer', trim((string) ($l['name'] ?? ''))], ['Address', $addr], ['Service', implode(', ', $inc)], ['Day', $day],
+    $facts = [['Customer', trim((string) ($l['name'] ?? ''))]];
+    /* their phone and email when we have them (2026-10-16, Matthew: "all agreements going forward should include the person phone number and email") */
+    $pd = substr((string) preg_replace('/\D/', '', (string) ($l['phone'] ?? '')), -10);
+    if (strlen($pd) === 10) $facts[] = ['Phone', '(' . substr($pd, 0, 3) . ') ' . substr($pd, 3, 3) . '-' . substr($pd, 6)];
+    $em = trim((string) ($l['email'] ?? ''));
+    if ($em !== '' && filter_var($em, FILTER_VALIDATE_EMAIL)) $facts[] = ['Email', $em];
+    $facts = array_merge($facts, [['Address', $addr], ['Service', implode(', ', $inc)], ['Day', $day],
               ['Price', '$' . number_format((int) $Q['price'])], $due ? ['Deposit (non-refundable), to pay now', '$' . number_format((int) $S2['deposit'])] : ['Deposit paid (non-refundable)', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
-              ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]];
+              ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]]);
     if (($S2['how'] ?? '') === 'link' && !empty($l['savecard']['yes'])) $facts[] = ['Card on file', a365SaveText((int) $Q['price'] - (int) $S2['deposit'])];   /* their choice when they paid (2026-10-15) */
     $ph = (string) (company()['a365']['phone'] ?? '');
     $terms = ['We will do the work listed above at this address on the day shown, arriving in the time shown.',
