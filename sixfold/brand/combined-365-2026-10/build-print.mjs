@@ -64,7 +64,7 @@ const cardBack = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div s
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:${0.03 * s}px;flex:none"><div style="width:${0.95 * s}px;height:${0.95 * s}px">${qrSvg(t.qrD, t.qrL, GO.card).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div class="o" style="font-weight:700;font-size:${0.075 * s}px;color:${t.acc};white-space:nowrap">Scan for a quote</div></div>
 </div>`, t); };
-const yard = (k, s) => { const t = T[k]; return page(24 * s, 18 * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${1.1 * s}px;gap:${0.9 * s}px">
+const yard = (k, s, tt) => { const t = tt || T[k]; return page(24 * s, 18 * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${1.1 * s}px;gap:${0.9 * s}px">
   <div style="width:${12.4 * s}px;height:${12.4 * s}px;flex:none">${badge(k)}</div>
   <div style="flex:1;display:flex;flex-direction:column;gap:${0.35 * s}px">
     <div class="o" style="font-weight:800;font-size:${1.45 * s}px;line-height:1.02;color:${t.head}">Aeration &amp;<br>Overseeding</div>
@@ -152,3 +152,17 @@ body { font-family: 'DM Sans', sans-serif; -webkit-print-color-adjust: exact; pr
   execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
 }
 console.log('print-ready cards:', PEOPLE.map((p) => `365-Card-${p.file}.pdf`).join(', '));
+
+/* PRINT-READY yard sign (2026-10-16, Matthew picked C; the phone number in dark green, not orange: orange on bone measured 2.6:1,
+   too faint from the sidewalk; green is 6.3:1). 24 x 18 in plus 0.125 in bleed all round = 24.25 x 18.25 in; the sign laid out at 96 px
+   per inch so the PDF is true size. The same file serves both faces of a two-sided sign. */
+{
+  const tC = { ...T.c, acc: T.c.head };
+  let html = yard('c', 96, tC);
+  html = html.replace('<style>', '<style>@page{size:24.25in 18.25in;margin:0}html{background:' + tC.bg + ';-webkit-print-color-adjust:exact;print-color-adjust:exact}');
+  html = html.replace('html,body{margin:0;padding:0}', 'html,body{padding:0}html{margin:0}body{margin:0.125in}');
+  const f = join(PR, '365-Yard-Sign-C.html'), pdf = join(PR, '365-Yard-Sign-C.pdf');
+  writeFileSync(f, html);
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
+  console.log('print-ready yard sign: 365-Yard-Sign-C.pdf');
+}
