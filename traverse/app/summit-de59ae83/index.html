@@ -1894,6 +1894,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dnav .findsel{margin-right:6px;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)}.dnav .findsel option{color:#111}
   .handaddr label{display:grid;gap:4px;font-weight:700;font-size:13.5px;margin:10px 0 0}.handaddr input{font:15px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}.handaddr .save{margin-top:12px}
   .hrow small{display:block;flex-basis:100%;color:var(--soft);font-size:12.5px;font-weight:500}
+  .qqsched{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;margin:0 0 12px;padding:10px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:700 15px var(--sans);cursor:pointer;text-align:left}.qqsched:hover{border-color:var(--accent)}
   .qqwho{position:relative}.qqnew{position:absolute;top:10px;right:12px;min-height:34px;padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}.qqnew:hover{border-color:var(--accent)}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
@@ -2553,7 +2554,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the logo goes home, the way people expect a logo to (Matthew, 2026-10-04); on the tools screen it goes to the top */
   function homeMark() {
     var h = q('button', 'mkbtn'); h.type = 'button'; h.setAttribute('aria-label', 'Home: field tools');
-    h.appendChild(asOffice() || S.role === 'quote' ? a365Mark() : ridge('mk'));
+    h.appendChild(asOffice() || qView() ? a365Mark() : ridge('mk'));
     h.addEventListener('click', function () { if (S.screen === 'tools') window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); else chooseView(); });
     return h;
   }
@@ -3378,7 +3379,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(hd); box.appendChild(g);
   }
   function chooseView() {
-    if (S.role === 'quote') { quickQuoteView(); return; }   /* quote-only accounts: the Quick quote is all there is (2026-10-15) */
+    if (qView()) { quickQuoteView(); return; }   /* quote-only accounts: the Quick quote is all there is (2026-10-15) */
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools'; S.inOffice = false;
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
@@ -3477,7 +3478,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(q('h2', 'tgrp', 'Office'));
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
       var otl = q('div', 'tgrid');
-      if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See the Office screen', 'Exactly what Jen sees: her leads, the house lookup and the calendars.', 'Admin only', function () { S.viewAs = 'office'; chooseView(); }));
+      if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
+      if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See the Office screen', 'The full office account: leads, the house lookup and the calendars.', 'Admin only', function () { S.viewAs = 'office'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
       officeGroup(box, 'sales', 'Sales', [pt, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
@@ -4244,10 +4246,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* an admin can look at the app as the office sees it (2026-10-14, Matthew: "as admin I can see exactly what Jen sees from my login"):
      S.viewAs = 'office' changes only what is shown; the admin's own rights stay, and Back to admin ends it */
   function asOffice() { return feat('walkdesk') && (S.role === 'office' || (S.role === 'admin' && S.viewAs === 'office')); }
+  /* the quote-only screen (Jen's): her account, or an admin looking at it (2026-10-15, Matthew: "make it so i see the quick quote") */
+  function qView() { return S.role === 'quote' || (S.role === 'admin' && S.viewAs === 'quote' && feat('walkdesk')); }
   function adminView() { return S.role === 'admin' && !S.viewAs; }
   function viewAsBar() {
-    var b = q('div', 'viewas'); b.appendChild(q('span', null, 'You are seeing the Office screen: what Jen sees.'));
-    var x = q('button', null, 'Back to admin'); x.type = 'button'; x.addEventListener('click', function () { S.viewAs = null; chooseView(); }); b.appendChild(x);
+    var b = q('div', 'viewas'); b.appendChild(q('span', null, S.viewAs === 'quote' ? 'You are seeing Jen\u2019s screen: her quote-only account, the Quick quote and the schedule.' : 'You are seeing the Office screen (the full office account).'));
+    var x = q('button', null, 'Back to admin'); x.type = 'button'; x.addEventListener('click', function () { S.viewAs = null; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }); b.appendChild(x);
     return b;
   }
   function dwFor(kind, a, b) { var m = S.dwalks || {}; return kind === 'lead' ? m['lead:' + a] : m['door:' + a + ':' + b]; }
@@ -4873,9 +4877,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     pre = pre || {};
     var OFFER = !!pre.offer;   /* offer mode (2026-10-14): only the crew, day and time, saved on the quote */
     var SIGN = !!pre.sign;   /* the phone quote said yes (2026-10-14): price, half as deposit, the day, then the one-page form */
-    var back = SIGN && qqFor(lead) ? quickBack : SIGN && S.role === 'quote' ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
+    var back = SIGN && qqFor(lead) ? quickBack : SIGN && qView() ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
-    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (S.role === 'quote' || qqFor(lead)) ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
+    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (qView() || qqFor(lead)) ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
@@ -5048,7 +5052,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         areaLine.appendChild(q('b', null, area || 'not set'));
         var ch = q('button', 'lnk', area ? 'Change' : 'Set it'); ch.type = 'button';
         ch.addEventListener('click', function () { jobAreaAsk(P.date, P.crew, area, function () { loadWeek(); }); });
-        if (S.role === 'quote') ch.hidden = true;   /* the crew's town is set by the office */
+        if (qView()) ch.hidden = true;   /* the crew's town is set by the office */
         areaLine.appendChild(ch);
       }
       W.data.slots.forEach(function (s) {
@@ -5125,7 +5129,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     hideToast(); S.screen = 'jobbook';
     var QB = qqFor(lead) ? S.qqBack : null;
     if (QB) back = function () { api('leads').then(function (L) { var l2 = ((L && L.leads) || []).filter(function (x) { return x.id === lead.id; })[0]; if (!l2) return quickBack(); signSendView(l2, Object.assign({}, QB.pre, { price: x.price, deposit: j.deposit })); }).catch(function () { toast('No signal', 'Try Back again.', null); }); };   /* back one step, filled in (Matthew 2026-10-15) */
-    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : S.role === 'quote' ? 'Quick quote' : 'Pipeline' });
+    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : qView() ? 'Quick quote' : 'Pipeline' });
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = String(S.me || '').split(' ')[0];
@@ -5141,7 +5145,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var cp = q('button', 'lnk', 'Copy the link'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); box.appendChild(cp);
     var pv = q('a', 'lnk', 'See the form \u203a'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; box.appendChild(pv);
     box.appendChild(q('div', 'ltrynote', 'The text and email open here, filled in, from your own number or email. Nothing is sent until you press send.'));
-    var dn = q('button', 'save', QB || S.role === 'quote' ? 'Done: start a new search' : 'Done'); dn.type = 'button'; dn.addEventListener('click', QB || S.role === 'quote' ? quickNew : back); box.appendChild(dn);
+    var dn = q('button', 'save', QB || qView() ? 'Done: start a new search' : 'Done'); dn.type = 'button'; dn.addEventListener('click', QB || qView() ? quickNew : back); box.appendChild(dn);
     view.appendChild(box); window.scrollTo(0, 0);
   }
   /* one job with everything for it: for the crew, and for the office */
@@ -5319,7 +5323,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* an alert tapped (?job=): open that job once signed in */
   /* ./?quote: straight to the Quick quote (a bookmark beside her other tools) */
   function quoteReturn() {
-    if (!/[?&]quote\b/.test(location.search) || !CO.a365 || !(asOffice() || S.role === 'admin' || S.role === 'quote')) return false;
+    if (!/[?&]quote\b/.test(location.search) || !CO.a365 || !(asOffice() || S.role === 'admin' || qView())) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
     quickQuoteView(); return true;
   }
@@ -5639,7 +5643,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      price only, never our figures). Not on our lists: quote by the lawn size they give. Its own link: ./?quote */
   /* the Quick quote's yes (2026-10-15, Matthew: "how can she send over the document, can she do it from the quote builder"): it becomes
      a lead (or uses theirs, by phone or email), with the house and this quote, then the same deposit and one-page form as the Pipeline */
-  function quickCanBook() { return !!CO.a365 && feat('walkdesk') && (asOffice() || S.role === 'admin' || S.role === 'quote'); }   /* quote-only accounts book too (Matthew 2026-10-15) */
+  function quickCanBook() { return !!CO.a365 && feat('walkdesk') && (asOffice() || S.role === 'admin' || qView()); }   /* quote-only accounts book too (Matthew 2026-10-15) */
   function quickToLead(h, st, btn) {
     var Q = S.qq || {};
     if (!Q.name || !(digits(Q.phone).length >= 10 || Q.email)) { toast('Who is it for?', 'Add their name and a phone number or email at the top first.', null); window.scrollTo(0, 0); var i0 = document.querySelector('.qqwho input'); if (i0) i0.focus(); return; }
@@ -5674,6 +5678,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      signed document"): everyone sent the one-page form, Signed first, then Not signed yet; a search; each with the form's line (their
      signed form, email the signed copy, change or send again). The office and admins only: quote-only accounts see no leads. */
   function quickCustomers() {
+    if (S.viewAs === 'quote' && !S.qNames) api('accounts').then(function (j) { S.qNames = ((j && j.accounts) || []).filter(function (a) { return a.role === 'quote'; }).map(function (a) { return a.name; }); if (S.screen === 'quickquote') quickQuoteView(); }).catch(function () {});
     var box = q('div', 'lwho qqcust'), head = q('button', 'qqcusthead'); head.type = 'button';
     var open = !!S.qqCustOpen;
     var body = q('div', 'qqcustbody'); body.hidden = !open;
@@ -5706,7 +5711,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box._loaded = true; list.textContent = ''; list.appendChild(q('div', 'skel'));
       api('leads').then(function (j) {
         if (!j || !j.ok) { list.textContent = ''; list.appendChild(q('div', 'msg', (j && j.error) || 'Could not load your customers.')); return; }
-        all = j.leads.filter(function (l) { return l.sign && l.status !== 'lost'; }).sort(function (a, b) { return ((b.signed && b.signed.at) || b.sign.at || 0) - ((a.signed && a.signed.at) || a.sign.at || 0); });
+        var qn = S.qNames;   /* an admin on Jen's screen: the customers of the quote-only accounts, as she sees them */
+        all = j.leads.filter(function (l) { return l.sign && l.status !== 'lost' && (!(S.viewAs === 'quote' && qn) || qn.indexOf(l.by) >= 0 || (l.qown || []).some(function (n) { return qn.indexOf(n) >= 0; })); }).sort(function (a, b) { return ((b.signed && b.signed.at) || b.sign.at || 0) - ((a.signed && a.signed.at) || a.sign.at || 0); });
         box._n = all.length; label(all.length); draw();
       }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'Your customers need signal.')); });
     }
@@ -5720,7 +5726,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     hideSplash(); hideToast(); S.signin = null; S.screen = 'sched'; foot.hidden = true; setDock(null);
     var t0 = new Date(); var mon = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - ((t0.getDay() + 6) % 7));
     wk = wk || isoOf(mon);
-    setBar('back', { title: 'Schedule', sub: 'Who is booked, and what is open', back: S.role === 'quote' ? function () { quickQuoteView(); } : chooseView, backLabel: S.role === 'quote' ? 'Quick quote' : 'Home' });
+    if (S.viewAs) setTimeout(function () { if (S.screen === 'sched' && view.firstChild && !view.querySelector('.viewas')) view.insertBefore(viewAsBar(), view.firstChild); }, 0);
+    setBar('back', { title: 'Schedule', sub: 'Who is booked, and what is open', back: qView() ? function () { quickQuoteView(); } : chooseView, backLabel: qView() ? 'Quick quote' : 'Home' });
     view.textContent = '';
     var box = q('div', 'schedv');
     var nav = q('div', 'schednav');
@@ -5754,7 +5761,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (S.schedOpenOnly && (r || past)) return;
               var tr = q('tr', (r ? r.kind : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
-              if (!past && S.role !== 'quote') { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
+              if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
               tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
               if (r && r.mine) tr.classList.add('smine');   /* not .mine: that is the chip style */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }
@@ -5766,7 +5773,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }
         tb.appendChild(bd);
         if (!n) hold.appendChild(q('div', 'msg soft', 'No open times this week.')); else { var wrap = q('div', 'schedwrap'); wrap.appendChild(tb); hold.appendChild(wrap); }
-        if (S.role === 'quote') hold.appendChild(q('div', 'ltrynote', 'Your customers show by name. Booked or Held with no name is someone else\u2019s time. Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap one of your booked jobs to move or cancel it; the crew gets an alert when it moves.'));
+        if (qView()) hold.appendChild(q('div', 'ltrynote', 'Your customers show by name. Booked or Held with no name is someone else\u2019s time. Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap one of your booked jobs to move or cancel it; the crew gets an alert when it moves.'));
         else hold.appendChild(q('div', 'ltrynote', 'Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap a booked job to move or cancel it; tap a date to set that crew\u2019s town for the day. The crew gets an alert when their job moves.'));
       };
       oc.addEventListener('change', function () { S.schedOpenOnly = oc.checked; draw(); });
@@ -5891,7 +5898,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     view.textContent = '';
     if (lead) view.appendChild(leadWhoBox(lead));
-    else if (quick) { if (quickCanBook()) view.appendChild(quickCustomers()); view.appendChild(quickWhoBox()); }
+    else if (quick) {
+      if (S.viewAs) view.appendChild(viewAsBar());
+      if (quickCanBook()) { var sch = q('button', 'qqsched', 'Schedule: the days you booked ›'); sch.type = 'button'; sch.addEventListener('click', function () { schedView(); }); view.appendChild(sch); }   /* on the page itself: a phone has no top menu (2026-10-15, Matthew could not find it) */
+      if (quickCanBook()) view.appendChild(quickCustomers()); view.appendChild(quickWhoBox());
+    }
     var box = q('div', 'search hlook');
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'houseq';
     var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
@@ -6078,7 +6089,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the 365 office (2026-10-14, Matthew: Jen's screens in 365's colours, her own home, no doors or stats, and a Pipeline that
      uses a computer's width) ---- */
-  function a365Brand() { var on = asOffice() || S.role === 'quote'; document.body.classList.toggle('a365', on); return on; }
+  function a365Brand() { var on = asOffice() || qView(); document.body.classList.toggle('a365', on); return on; }
   function a365Mark(cls) { var i = q('img', cls || 'a365mk'); i.src = 'a365-badge.png'; i.alt = ''; return i; }
   /* the office home: find a house, who to contact next, what is booked with Brad */
   function officeHome() {
@@ -6262,7 +6273,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       steps.appendChild(dn); steps.appendChild(up); steps.appendChild(own);
       var noteBox = q('div', 'qnotes');
       box.appendChild(big); box.appendChild(detail); box.appendChild(q('div', 'dwsub qsteph', 'Change the price')); box.appendChild(steps); box.appendChild(noteBox);   /* the numbers first, then the controls (Matthew 2026-10-15) */
-      var HIDE = !!P.hidden || asOffice() || S.role === 'quote';   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
+      var HIDE = !!P.hidden || asOffice() || qView();   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
       var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
       /* the list price: the ladder plus the drive (in whole dollars); aerate only has no list price, Jen types hers (Matthew 2026-10-15) */
       var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
@@ -6409,7 +6420,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (tl.length >= 10) { var sa = q('a'); sa.href = 'sms:' + tl + '?&body=' + encodeURIComponent(quickCustomerText(h, st)); sa.appendChild(ico('chat', 2.2)); sa.appendChild(document.createTextNode('Text it to them')); ct.appendChild(sa); }
           if (Qx.email) { var ea = q('a'); ea.href = 'mailto:' + encodeURIComponent(Qx.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + ((CO.a365 && CO.a365.name) || '')) + '&body=' + encodeURIComponent(quickCustomerText(h, st)); ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode('Email it')); ct.appendChild(ea); }
           if (ct.children.length) { acts.appendChild(ct); addSendNote(acts, ct); }
-          acts.appendChild(q('div', 'ltrynote', ((P.hidden || asOffice() || S.role === 'quote') ? 'The summary is for your own notes.' : 'The summary has our figures, for your own notes.') + ' The customer\u2019s text carries the price only. Nothing here is saved in the app.'));
+          acts.appendChild(q('div', 'ltrynote', ((P.hidden || asOffice() || qView()) ? 'The summary is for your own notes.' : 'The summary has our figures, for your own notes.') + ' The customer\u2019s text carries the price only. Nothing here is saved in the app.'));
         }
         if (S.role === 'admin') { var pr = q('button', 'lnk', 'Pricing settings ›'); pr.type = 'button'; pr.addEventListener('click', function () { a365PricingView(); }); acts.appendChild(pr); }
       }
@@ -7313,7 +7324,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Office dashboard', officeView]);
     if (S.role === 'manager') t.push(['Team sign-ins', accountsView]);
     if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
-    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); if (feat('walkdesk')) t.push(['See the Office screen', function () { S.viewAs = 'office'; chooseView(); }]); }
+    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); t.push(['Office screen', function () { S.viewAs = 'office'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
   }
   function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
@@ -7696,7 +7707,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var dnav = document.createElement('nav'); dnav.id = 'dnav'; dnav.className = 'dnav'; dnav.setAttribute('aria-label', 'Main'); dnav.hidden = true;
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
-    if (S.role === 'quote') return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
+    if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
@@ -7724,7 +7735,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (dnav._sig !== sig) {
       dnav._sig = sig; dnav.textContent = '';
       var home = q('button', 'dnh'); home.type = 'button'; home.setAttribute('aria-label', 'Field tools');
-      if (asOffice() || S.role === 'quote') { home.appendChild(a365Mark('a365mk dn')); home.appendChild(q('b', null, (CO.a365 && CO.a365.name) || '365 Aeration')); }
+      if (asOffice() || qView()) { home.appendChild(a365Mark('a365mk dn')); home.appendChild(q('b', null, (CO.a365 && CO.a365.name) || '365 Aeration')); }
       else { home.appendChild(ridge('mk')); home.appendChild(q('b', null, (CO && CO.name) || 'Doors')); }
       home.addEventListener('click', chooseView); dnav.appendChild(home);
       var links = q('div', 'dnl');
@@ -10392,7 +10403,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Maybe a drop down that switches between them"): the admin and the office; everyone else keeps the address search */
   var FIND_KINDS = [['addr', 'Address'], ['cust', 'Customer'], ['person', 'Person']];
   var FIND_PH = { addr: 'Find an address', cust: 'Find a customer', person: 'Find a person: name, phone or email' };
-  function findMulti() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
+  function findMulti() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office') && !qView(); }
   function findKind() { if (!S.findKind) { try { S.findKind = localStorage.getItem('findKind') || 'addr'; } catch (e) { S.findKind = 'addr'; } } return findMulti() && FIND_PH[S.findKind] ? S.findKind : 'addr'; }
   function findSel(onChange) {
     var sel = q('select', 'findsel'); sel.setAttribute('aria-label', 'What to find');
