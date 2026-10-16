@@ -723,6 +723,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .payacts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.payacts button,.payacts a{flex:1;min-width:200px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 15px var(--sans);text-align:center;text-decoration:none;cursor:pointer}.payacts a{background:var(--card);color:var(--ink);border:1px solid var(--line)}
   .crewadd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;display:grid;gap:8px}.crewadd input,.crewadd select,.crewadd textarea{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
   .crewadd .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crewaddb{width:100%;text-align:left;border:1.5px dashed var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:10px 0}
+  .qwon{margin:6px 0 0;display:grid;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qwon .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qwon select,.qwon input{width:100%;font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}.qwon label.chk{display:flex;gap:8px;align-items:center;font-weight:600}.qwon label.chk input{width:auto}
   .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
   .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
   .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
@@ -5606,6 +5607,42 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var w = q('div'); w.appendChild(d); w.appendChild(row); return w;
   }
   function signSendView(l, pre) { pre = pre || {}; pre.sign = true; jobBookView(l, null, pre); }
+  /* won without the form (2026-10-16, Matthew: people Jen gets in person or by phone who do not want to sign): what they paid, their held
+     day booked as a job, the lead won, and a customer made */
+  function qWonBox(l, done) {
+    var w = q('div');
+    var b = q('button', 'lnk', 'Won without the form \u203a'); b.type = 'button'; w.appendChild(b);
+    b.addEventListener('click', function () {
+      if (w._open) { w._open.remove(); w._open = null; return; }
+      var f = q('div', 'qwon'); w._open = f; w.appendChild(f);
+      f.appendChild(q('div', 'dwsub', 'For someone who will not sign: books the job, records what they paid, and adds them to Customers.'));
+      var r2 = q('div', 'row2'), ps = q('select'); ps.setAttribute('aria-label', 'Paid');
+      [['paid', 'Paid in full (' + money0(l.quote.price) + ')'], ['deposit', 'Paid a deposit'], ['unpaid', 'Not paid yet']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; ps.appendChild(op); });
+      var hw = q('select'); hw.setAttribute('aria-label', 'How they paid');
+      [['cash', 'Cash'], ['square', 'Square'], ['card', 'Card'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['check', 'Check'], ['other', 'Other']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; hw.appendChild(op); });
+      r2.appendChild(ps); r2.appendChild(hw); f.appendChild(r2);
+      var am = q('input'); am.type = 'number'; am.min = '1'; am.step = '1'; am.inputMode = 'decimal'; am.placeholder = 'Deposit $'; am.setAttribute('aria-label', 'Deposit amount'); am.hidden = true; f.appendChild(am);
+      ps.addEventListener('change', function () { am.hidden = ps.value !== 'deposit'; hw.disabled = ps.value === 'unpaid'; });
+      var o = l.quote && l.quote.offer, bk = null;
+      if (o) { var lb = q('label', 'chk'); bk = q('input'); bk.type = 'checkbox'; bk.checked = true; lb.appendChild(bk); lb.appendChild(q('span', null, 'Book their day: ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + String(o.crew).split(' ')[0])); f.appendChild(lb); }
+      else f.appendChild(q('div', 'dwsub', 'No day is held for them. They go to Customers; book the day on the Jobs board.'));
+      var err = q('div', 'err'); f.appendChild(err);
+      var go = q('button', 'save', 'Make them a customer'); go.type = 'button'; f.appendChild(go);
+      go.addEventListener('click', function () {
+        if (go.disabled) return; err.textContent = '';
+        var pay = { s: ps.value }; if (ps.value !== 'unpaid') pay.how = hw.value; if (ps.value === 'deposit') pay.amt = +am.value || 0;
+        go.disabled = true; go.textContent = 'Saving\u2026';
+        api('qwon', { body: { id: l.id, book: !!(bk && bk.checked), pay: pay } }).then(function (j) {
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { go.disabled = false; go.textContent = 'Make them a customer'; err.textContent = j.error || 'Not saved. Try again.'; return; }
+          return api('customerfrom', { body: { lead: l.id } }).then(function (c) {
+            toast('Customer made', (l.name || 'They') + (j.job ? ' \u00b7 job booked' : '') + (c && c.ok ? '' : ' \u00b7 add them in Customers'), null); done();
+          });
+        }).catch(function () { go.disabled = false; go.textContent = 'Make them a customer'; err.textContent = 'No signal. Nothing was saved.'; });
+      });
+    });
+    return w;
+  }
   /* ---- the house lookup (2026-10-14, 365 Aeration & Seeding) ----
      Matthew: when Jen gets an address on a call she sees everything about the property at once and starts talking, with nobody
      measuring. The lawn measured from the 2023 photo becomes a range and a confidence: open lots read a little high, lawns under trees
@@ -5812,7 +5849,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var c = q('div', 'qqcrow');
           var top = q('div', 'qqctop'); top.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
           top.appendChild(q('small', null, [digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
-          c.appendChild(top); c.appendChild(signLine(l)); list.appendChild(c);
+          c.appendChild(top);
+          if (l.sign) c.appendChild(signLine(l)); else c.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent' + (l.quote.offer ? ' \u00b7 ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) + ' held with ' + String(l.quote.offer.crew).split(' ')[0] : '')));
+          if (!l.signed && l.status !== 'won') c.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
+          else if (l.status === 'won' && !l.signed) c.appendChild(q('div', 'dwsub', 'Won without the form \u00b7 in Customers'));
+          list.appendChild(c);
         });
       });
     }
@@ -5821,7 +5862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('leads').then(function (j) {
         if (!j || !j.ok) { list.textContent = ''; list.appendChild(q('div', 'msg', (j && j.error) || 'Could not load your customers.')); return; }
         var qn = S.qNames;   /* an admin on Jen's screen: the customers of the quote-only accounts, as she sees them */
-        all = j.leads.filter(function (l) { return l.sign && l.status !== 'lost' && (!(S.viewAs === 'quote' && qn) || qn.indexOf(l.by) >= 0 || (l.qown || []).some(function (n) { return qn.indexOf(n) >= 0; })); }).sort(function (a, b) { return ((b.signed && b.signed.at) || b.sign.at || 0) - ((a.signed && a.signed.at) || a.sign.at || 0); });
+        all = j.leads.filter(function (l) { return (l.sign || ((l.status === 'quoted' || l.status === 'won') && l.quote)) && l.status !== 'lost' && (!(S.viewAs === 'quote' && qn) || qn.indexOf(l.by) >= 0 || (l.qown || []).some(function (n) { return qn.indexOf(n) >= 0; })); }).sort(function (a, b) { return ((b.signed && b.signed.at) || (b.sign && b.sign.at) || (b.quote && b.quote.at) || b.at || 0) - ((a.signed && a.signed.at) || (a.sign && a.sign.at) || (a.quote && a.quote.at) || a.at || 0); });
         box._n = all.length; label(all.length); draw();
       }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'Your customers need signal.')); });
     }

@@ -2474,7 +2474,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4184,6 +4184,38 @@ if ($action === 'a365pricingset') {
    another spot, or remove him from the schedule because brandon is doing their lawn right now"). The hold is the quote's offered day:
    moving changes it (the new time must be free; the 72-hour clock starts again for a quote with no form), clear takes it off. Jen
    changes her own; the office and the admin any. Signed or booked: the Jobs board, not here. */
+/* won without the form (2026-10-16, Matthew: a way for Jen "to make a customer ... for those that shes getting in person and over the
+   phone that dont wanna sign"): their held day booked as a job (or their job given the payment), what they paid recorded on it, the
+   lead marked won. The page then makes the customer (customerfrom). Jen's own leads; the desk any. */
+if ($action === 'qwon') {
+    if ((!desk() && $role !== 'quote') || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
+    if (!$l) fail('No such lead.', 404);
+    if ($role === 'quote' && !qMine($l)) fail('Not allowed.', 403);
+    if (($l['status'] ?? '') === 'lost') fail('This lead is marked lost.');
+    $price = (int) ($l['quote']['price'] ?? 0); if ($price < 1) fail('Quote them first.');
+    $pin = is_array($body['pay'] ?? null) ? $body['pay'] : []; $ps = in_array($pin['s'] ?? '', ['unpaid', 'deposit', 'paid'], true) ? $pin['s'] : 'unpaid';
+    $pay = ['s' => $ps];
+    if ($ps === 'deposit') { $pay['amt'] = (int) ($pin['amt'] ?? 0); if ($pay['amt'] < 1 || $pay['amt'] >= $price) fail('Give the deposit amount (less than the $' . $price . ' price).'); }
+    if ($ps !== 'unpaid') $pay['how'] = in_array($pin['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true) ? $pin['how'] : 'other';
+    $payTxt = $ps === 'paid' ? 'Paid in full ($' . $price . ', ' . $pay['how'] . ').' : ($ps === 'deposit' ? 'Deposit $' . $pay['amt'] . ' (' . $pay['how'] . ').' : 'Not paid yet.');
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $jid = null; $ex = jobForLead($id);
+    if ($ex) { appendLine(DATA_DIR . '/jobs.log', ['id' => $ex['id'], 'pay' => $pay, 'by' => $me, 'at' => time()]); $jid = $ex['id']; }
+    elseif (!empty($body['book'])) {
+        $o = $l['quote']['offer'] ?? null; if (!is_array($o)) fail('No day is held for them: set one on the schedule, or untick Book their day.');
+        if ((string) $o['date'] < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Their held day has passed: move it on the schedule first.');
+        if (($why = slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], $id)) !== null) fail($why, 409);
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . (($h['town'] ?? '') !== '' ? ', ' . streetCaseServer((string) $h['town']) : '') : (string) ($l['town'] ?? '');
+        $nj = 'j' . bin2hex(random_bytes(6)); $name = trim((string) ($l['name'] ?? '')) ?: 'Customer';
+        if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $id, 'title' => $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
+            'price' => $price, 'pkg' => (string) ($l['quote']['pkg'] ?? 'full'), 'scope' => 'all', 'seedLb' => $l['quote']['seedLb'] ?? null, 'fertLb' => $l['quote']['fertLb'] ?? null,
+            'pay' => $pay, 'card' => false, 'note' => 'Won without the form (' . $me . ').', 'addr' => $addr !== '' ? $addr : 'Ask the office', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        $jid = $nj;
+    }
+    appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'won', 'note' => 'Won without the form by ' . $me . '. ' . $payTxt . ($jid ? ' Job ' . ($ex ? 'updated' : 'booked') . '.' : ''), 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'job' => $jid]);
+}
 if ($action === 'holdset') {
     if ((!desk() && $role !== 'quote') || !$isPost) fail('Not allowed.', 403);
     $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
@@ -5749,7 +5781,9 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
     /* the office (Jen, 2026-10-14, Matthew: "in case she needs to call one or edit something she forgot to put in"): the list, editing a
        customer, making one from a lead, adding and editing visits. Removing a visit, imports, the download and backups stay the admin's. */
     $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'custdoc', 'custdocadd'], true);
-    if ($role !== 'admin' && !$officeCust) fail('Not allowed.', 403);
+    /* the quote account makes a customer from one of her own leads (2026-10-16, won without the form), nothing else here */
+    $quoteCust = $role === 'quote' && feature('walkdesk') && $action === 'customerfrom' && qMine(leadsAll()[(string) ($body['lead'] ?? '')] ?? []);
+    if ($role !== 'admin' && !$officeCust && !$quoteCust) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
     /* the whole list, with each customer's visits and what is due */
