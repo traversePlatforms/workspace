@@ -11,7 +11,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 $action = (string) ($_GET['action'] ?? '');
-$ok = ['a365lead' => 'POST', 'a365quote' => 'GET', 'a365accept' => 'POST', 'a365sign' => 'GET', 'a365signed' => 'POST'];   /* + the one-page form (2026-10-14) */
+$ok = ['a365lead' => 'POST', 'a365quote' => 'GET', 'a365accept' => 'POST', 'a365sign' => 'GET', 'a365signed' => 'POST', 'a365savecard' => 'POST'];   /* + saving the card for the balance (2026-10-15) */   /* + the one-page form (2026-10-14) */
 $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');
 if (!isset($ok[$action]) || $ok[$action] !== $method) { http_response_code(404); echo '{"ok":false,"error":"Not here."}'; exit; }
 $cfgFile = dirname(__DIR__, 2) . '/a365-private/relay.php';

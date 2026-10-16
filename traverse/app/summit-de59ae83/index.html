@@ -5167,7 +5167,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.insertBefore(sqBox, facts.nextSibling);
     sqState(function (sq) {
       var owe0 = (jb.pay && (jb.pay.s === 'paid' || jb.pay.s === 'plan')) ? 0 : jb.price - ((jb.pay && jb.pay.s === 'deposit' && jb.pay.amt) || 0);
+      if (sq.on && CO.a365 && jb.sqcharge) sqBox.appendChild(q('div', 'qline qyes', 'Balance ' + money0(jb.sqcharge.amt) + ' charged to their ' + (jb.sqcharge.brand || 'card') + ' ending ' + jb.sqcharge.last4 + ', ' + ago(jb.sqcharge.at)));
       if (!sq.on || !CO.a365 || owe0 < 1) return;
+      if (jb.cof) {   /* the card they saved with the deposit (2026-10-15): one tap on the day */
+        sqBox.appendChild(q('div', 'dwh', 'Card on file'));
+        var cg = q('button', 'save jbook', 'Charge the ' + money0(owe0) + ' balance to their ' + (jb.cof.brand || 'card') + ' ending ' + jb.cof.last4); cg.type = 'button';
+        cg.addEventListener('click', function () {
+          if (!window.confirm('Charge ' + money0(owe0) + ' to ' + ((L && L.name) || 'their') + '\u2019s ' + (jb.cof.brand || 'card') + ' ending ' + jb.cof.last4 + ' now?')) return;
+          cg.disabled = true; cg.textContent = 'Charging\u2026';
+          api('jobcharge', { body: { id: jb.id, amount: owe0 } }).then(function (j) {
+            if (j._status === 401) return signinView('Signed out. Enter your code again.');
+            if (!j.ok) { cg.disabled = false; cg.textContent = 'Charge the ' + money0(owe0) + ' balance to their ' + (jb.cof.brand || 'card') + ' ending ' + jb.cof.last4; toast('Not charged', j.error || 'Try again.', null); return; }
+            toast('Charged', money0(j.amt) + ' to the ' + (j.brand || 'card') + ' ending ' + j.last4 + '. The job is paid.', null); if (redraw) redraw();
+          }).catch(function () { cg.disabled = false; cg.textContent = 'Charge the ' + money0(owe0) + ' balance to their ' + (jb.cof.brand || 'card') + ' ending ' + jb.cof.last4; toast('No signal', 'Nothing was charged. Try again.', null); });
+        });
+        sqBox.appendChild(cg);
+        sqBox.appendChild(q('div', 'ltrynote', 'They said yes to this when they paid the deposit. Charge it once the work is done. Or send a pay link instead:'));
+      }
       sqBox.appendChild(q('div', 'dwh', 'Pay link for the balance' + (sq.env === 'sandbox' ? ' (test)' : '')));
       var tel = digits(L && L.phone), first = greetName(L && L.name), B = leadBrand({ src: L && L.src, name: L && L.name });
       var mk = q('button', 'save jbook', jb.sqlink ? 'Text the pay link again (' + money0(jb.sqlink.amt) + ')' : 'Make a pay link for ' + money0(owe0)); mk.type = 'button';
@@ -5433,6 +5449,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var o = l.quote && l.quote.offer;
     d.appendChild(document.createTextNode(l.signed ? 'Signed by ' + l.signed.name + ', ' + ago(l.signed.at) + (l.signed.job ? ' \u00b7 job booked' : ' \u00b7 the day was taken: set a new one on the Jobs board')
       : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + SLOT_LABEL[o.slot] + ' with ' + o.crew : '')));
+    if (l.sqcard && l.sqcard.last4) d.appendChild(q('div', 'dwsub', 'Card saved for the balance: ' + (l.sqcard.brand || 'card') + ' ending ' + l.sqcard.last4));   /* 2026-10-15 */
+    else if (l.savecard && l.savecard.yes && !(l.sqafter)) d.appendChild(q('div', 'dwsub', 'They chose to save their card for the balance'));
     var row = q('div', 'qlinks');
     var a = q('a', 'lnk', l.signed ? 'Their signed form \u203a' : 'Their form \u203a'); a.href = g.link; a.target = '_blank'; a.rel = 'noopener'; row.appendChild(a);
     if (!l.signed) { var r = q('button', 'lnk', 'Change or send again'); r.type = 'button'; r.addEventListener('click', function () { signSendView(l, null); }); row.appendChild(r); }

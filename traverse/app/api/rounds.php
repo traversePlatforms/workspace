@@ -2028,8 +2028,41 @@ function a365DepositPaid(array $l, bool $ask = true): bool {
     if (($l['sqpaid']['order'] ?? '') === $order) return true;
     if (!$ask) return false;
     [$paid, $pid] = squareOrderPaid($order);
-    if ($paid) appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'sqpaid' => ['order' => $order, 'payment' => $pid, 'amt' => (int) $S2['deposit'], 'at' => time()], 'note' => 'Deposit $' . (int) $S2['deposit'] . ' paid by Square link.', 'by' => 'Square', 'at' => time()]);
+    if ($paid) { appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'sqpaid' => ['order' => $order, 'payment' => $pid, 'amt' => (int) $S2['deposit'], 'at' => time()], 'note' => 'Deposit $' . (int) $S2['deposit'] . ' paid by Square link.', 'by' => 'Square', 'at' => time()]); a365AfterPaid($l['id']); }
     return $paid;
+}
+/* the words they agree to when they tick the box (2026-10-15, Matthew: "is there a way for them to save their card on file, if they wanna use the card for the finished payment") */
+function a365SaveText(int $bal): string { return 'Save this card with Square and charge the $' . number_format(max(0, $bal)) . ' balance to it on the day of the service.'; }
+/* the customer in Square's customer list: found by email, then phone, else added (2026-10-15). Returns Square's customer id or ''. */
+function squareCustomer(array $l): string {
+    if (!empty($l['sqcust'])) return (string) $l['sqcust'];
+    $em = strtolower(trim((string) ($l['email'] ?? ''))); if (!filter_var($em, FILTER_VALIDATE_EMAIL)) $em = '';
+    $tel = preg_replace('/\D/', '', (string) ($l['phone'] ?? '')); if (strlen($tel) === 11 && $tel[0] === '1') $tel = substr($tel, 1); $e164 = strlen($tel) === 10 ? '+1' . $tel : '';
+    foreach ([$em ? ['email_address' => ['exact' => $em]] : null, $e164 ? ['phone_number' => ['exact' => $e164]] : null] as $f) if ($f) {
+        $r = squareApi('POST', '/v2/customers/search', ['query' => ['filter' => $f], 'limit' => 1]); if (!empty($r['customers'][0]['id'])) return (string) $r['customers'][0]['id']; }
+    $nm = preg_split('/\s+/', trim((string) ($l['name'] ?? ''))) ?: ['']; $given = (string) array_shift($nm);
+    $req = ['idempotency_key' => 'cust-' . $l['id'], 'given_name' => mb_substr($given, 0, 100), 'family_name' => mb_substr(implode(' ', $nm), 0, 100), 'reference_id' => (string) $l['id'], 'note' => 'Added by the 365 app when the deposit was paid.'];
+    if ($em) $req['email_address'] = $em; if ($e164) $req['phone_number'] = $e164;
+    $h = $l['house'] ?? null; if ($h && !empty($h['address'])) $req['address'] = ['address_line_1' => streetCaseServer((string) $h['address']), 'locality' => streetCaseServer((string) ($h['town'] ?? '')), 'administrative_district_level_1' => 'CO', 'country' => 'US'];
+    $r = squareApi('POST', '/v2/customers', $req);
+    if (empty($r['customer']['id']) && isset($req['email_address'])) { unset($req['email_address']); $req['idempotency_key'] = 'cust2-' . $l['id']; $r = squareApi('POST', '/v2/customers', $req); }   /* Square refuses some addresses */
+    return (string) ($r['customer']['id'] ?? '');
+}
+/* once per deposit payment: the customer list, then the card from that payment when they ticked the box (Square allows it within a day of the payment) */
+function a365AfterPaid(string $lid): void {
+    $l = leadsAll()[$lid] ?? null; $pid = (string) ($l['sqpaid']['payment'] ?? '');
+    if (!$l || $pid === '' || ($l['sqafter']['payment'] ?? '') === $pid) return;
+    $cid = squareCustomer($l); $card = null; $why = '';
+    if ($cid !== '' && !empty($l['savecard']['yes'])) {
+        $r = squareApi('POST', '/v2/cards', ['idempotency_key' => 'card-' . substr(sha1($pid), 0, 32), 'source_id' => $pid, 'card' => ['customer_id' => $cid, 'reference_id' => $lid]]);
+        $c = $r['card'] ?? null;
+        if ($c && !empty($c['id'])) $card = ['id' => (string) $c['id'], 'brand' => ucfirst(strtolower(str_replace('_', ' ', (string) ($c['card_brand'] ?? 'Card')))), 'last4' => (string) ($c['last_4'] ?? ''), 'exp' => sprintf('%02d/%02d', (int) ($c['exp_month'] ?? 0), (int) ($c['exp_year'] ?? 0) % 100), 'at' => time()];
+        else $why = (string) ($r['errors'][0]['detail'] ?? 'Square did not save it');
+    }
+    $note = ($cid !== '' ? 'Added to Square\'s customer list.' : 'Could not add them to Square\'s customer list.') . ($card ? ' Card saved for the balance: ' . $card['brand'] . ' ending ' . $card['last4'] . '.' : (!empty($l['savecard']['yes']) ? ' They asked to save the card, but it was not saved (' . mb_substr($why, 0, 120) . '); take the balance another way.' : ''));
+    $row = ['id' => $lid, 'sqafter' => ['payment' => $pid, 'at' => time()], 'note' => $note, 'by' => 'Square', 'at' => time()];
+    if ($cid !== '') $row['sqcust'] = $cid; if ($card) $row['sqcard'] = $card;
+    appendLine(leadsDir() . '/leadst.log', $row);
 }
 /* Square's payment webhook: a payment completed for one of our links marks it paid (signature checked with sigKey) */
 if ($action === 'squarehook') {
@@ -2247,6 +2280,7 @@ function a365Agreement(array $l): array {
     $facts = [['Customer', trim((string) ($l['name'] ?? ''))], ['Address', $addr], ['Service', implode(', ', $inc)], ['Day', $day],
               ['Price', '$' . number_format((int) $Q['price'])], $due ? ['Deposit (non-refundable), to pay now', '$' . number_format((int) $S2['deposit'])] : ['Deposit paid (non-refundable)', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
               ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]];
+    if (($S2['how'] ?? '') === 'link' && !empty($l['savecard']['yes'])) $facts[] = ['Card on file', a365SaveText((int) $Q['price'] - (int) $S2['deposit'])];   /* their choice when they paid (2026-10-15) */
     $ph = (string) (company()['a365']['phone'] ?? '');
     $terms = ['We will do the work listed above at this address on the day shown, arriving in the time shown.',
               'Please let us know if there are sprinklers, shallow pipes or invisible dog fences, so they can be marked before we start.',
@@ -2332,7 +2366,7 @@ function a365SendSigned(array $l, array $sg, string $by): array {
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
     return $r + ['to' => $to];
 }
-if ($action === 'a365sign' || $action === 'a365signed') {
+if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savecard') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true)) { header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST'); header('Access-Control-Allow-Headers: Content-Type'); }
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
@@ -2353,7 +2387,14 @@ if ($action === 'a365sign' || $action === 'a365signed') {
     $signedOut = fn($sg) => $sg ? ['name' => (string) $sg['name'], 'when' => (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a')] : null;
     $sgd = $l['signed'] ?? null;   /* signed: the facts and terms as they were when signed (Fable review 2026-10-14) */
     $jn = jobForLead($l['id']); $moved = $jn && !empty($jn['wx']) && $jn['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') ? ['day' => a365Day($jn['date']), 'arrive' => a365Arrive((string) $jn['slot'])] : null;   /* moved for weather (2026-10-15) */
-    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    if ($action === 'a365savecard') {   /* ticked or not, recorded before they go to Square to pay (2026-10-15) */
+        if (!$isPost) fail('POST required', 405);
+        if (!empty($l['signed']) || ($l['sign']['how'] ?? '') !== 'link' || a365DepositPaid($l, false)) out(['ok' => true, 'kept' => false]);
+        $bal = (int) $l['quote']['price'] - (int) $l['sign']['deposit'];
+        appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'savecard' => ['yes' => !empty($body['save']), 'text' => a365SaveText($bal), 'at' => time(), 'ip' => (string) (relayIp() ?? ($_SERVER['REMOTE_ADDR'] ?? '')), 'ua' => mb_substr((string) (relayIp() !== null ? ($_SERVER['HTTP_X_CLIENT_UA'] ?? '') : ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200)], 'by' => 'website', 'at' => time()]);
+        out(['ok' => true, 'kept' => true]);
+    }
+    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
     $name = a365Clean($body['name'] ?? '', 120);
@@ -2361,7 +2402,7 @@ if ($action === 'a365sign' || $action === 'a365signed') {
     if (empty($body['agree'])) fail('Tick the box to agree.');
     if (empty($body['read'])) fail('Tick the box to say you have read it.');   /* v2: two boxes (Matthew 2026-10-15) */
     if (($l['sign']['how'] ?? '') === 'link' && !a365DepositPaid($l)) fail('Pay the deposit first (the green button above), then sign.', 402);
-    if (($l['sign']['how'] ?? '') === 'link') $l = leadsAll()[$l['id']];
+    if (($l['sign']['how'] ?? '') === 'link') { a365AfterPaid($l['id']); $l = leadsAll()[$l['id']]; }
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Something went wrong. Please call or text us.', 500);
     /* Fable review 2026-10-14: everything read again inside the lock. A second Sign (double tap, a retry) returns the first signature; a job
        already on the board for this lead (booked from the quote page) is linked and given the deposit, not reported as "set a new day". */
@@ -3723,6 +3764,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -4166,7 +4208,7 @@ function jobsAll(): array {
         $id = (string) $r['id'];
         if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
         $moved = false;
-        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
         if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
         if (!empty($r['del'])) $o[$id]['off'] = true;
         if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -4176,10 +4218,11 @@ function jobsAll(): array {
 function jobSlot(string $k): ?array { foreach (jobSlots() as $s) if ($s[0] === $k) return $s; return null; }
 function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobdays.json'), true); return is_array($j) ? $j : []; }
 function jobShow(array $j, ?array $leads = null): array {
-    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink']));
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
     if ($l) {
+        if (!empty($l['sqcard']['id'])) { $o['cof'] = ['brand' => (string) ($l['sqcard']['brand'] ?? ''), 'last4' => (string) ($l['sqcard']['last4'] ?? ''), 'exp' => (string) ($l['sqcard']['exp'] ?? '')]; $o['card'] = true; }   /* saved on Square when they paid the deposit (2026-10-15) */
         $o['who'] = ['name' => (string) ($l['name'] ?? ''), 'phone' => (string) ($l['phone'] ?? ''), 'email' => (string) ($l['email'] ?? ''), 'src' => (string) ($l['src'] ?? ''), 'notes' => $l['notes'], 'ask' => $l['ask'] ?? null];
         if (!empty($l['house']['region'])) { $hf = houseFacts((string) $l['house']['region'], (string) $l['house']['door']); if ($hf) $o['house'] = $hf; }
     }
@@ -5285,6 +5328,37 @@ if ($action === 'squarecheck') {
     [$paid, $pid] = squareOrderPaid((string) $j['sqlink']['order']);
     if ($paid) appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['order' => (string) $j['sqlink']['order'], 'payment' => $pid, 'at' => time()], 'by' => 'Square', 'at' => time()]);
     out(['ok' => true, 'paid' => $paid]);
+}
+/* charge what is left on a job to the card they saved with the deposit (2026-10-15): the office, or the crew on the job. One at a time
+   (the jobs lock is held through Square's answer); a retry after no answer reuses the same key, so Square never charges twice. */
+if ($action === 'jobcharge') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    if (!squareFor()) fail('Square is not connected yet.');
+    $jid = (string) ($body['id'] ?? '');
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not do that. Try again.', 500);
+    $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!desk() && $j['crew'] !== $me) fail('Not allowed.', 403);
+    if (($j['pay']['s'] ?? '') === 'paid') fail('This job is already paid.');
+    $l = leadsAll()[$j['lead']] ?? null; $cc = $l['sqcard'] ?? null;
+    if (!$l || empty($cc['id']) || empty($l['sqcust'])) fail('No card is saved for this customer.');
+    $left = (int) $j['price'] - (($j['pay']['s'] ?? '') === 'deposit' ? (int) ($j['pay']['amt'] ?? 0) : 0);
+    if ($left < 1) fail('Nothing is left to pay.');
+    if ((int) ($body['amount'] ?? 0) !== $left) fail('The balance is now $' . $left . '. Open the job again.');
+    $tries = (int) ($j['chgfail']['n'] ?? 0);
+    $r = squareApi('POST', '/v2/payments', ['idempotency_key' => 'chg-' . substr(sha1($jid . '|' . $left . '|' . $tries), 0, 32), 'source_id' => (string) $cc['id'], 'customer_id' => (string) $l['sqcust'],
+        'amount_money' => ['amount' => $left * 100, 'currency' => 'USD'], 'location_id' => (string) squareCfg()['location'], 'autocomplete' => true, 'reference_id' => $jid,
+        'note' => mb_substr('Balance: ' . trim((string) ($l['name'] ?? '')) . ', ' . (string) $j['date'], 0, 500)]);
+    $p = $r['payment'] ?? null; $who = trim((string) ($l['name'] ?? ''));
+    if (!$p || ($p['status'] ?? '') !== 'COMPLETED') {
+        $why = (string) ($r['errors'][0]['detail'] ?? ($p ? 'Square says ' . strtolower((string) $p['status']) : 'No answer from Square'));
+        if ($p || !empty($r['errors'])) appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'chgfail' => ['n' => $tries + 1, 'why' => mb_substr($why, 0, 160), 'at' => time(), 'by' => $me], 'by' => $me, 'at' => time()]);   /* a real no: the next try is a new charge */
+        flock($lk, LOCK_UN); fail('The card was not charged: ' . $why . '. Take the balance another way, or try again.', 402);
+    }
+    appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqcharge' => ['payment' => (string) $p['id'], 'amt' => $left, 'last4' => (string) ($cc['last4'] ?? ''), 'brand' => (string) ($cc['brand'] ?? ''), 'at' => time(), 'by' => $me], 'by' => $me, 'at' => time()]);
+    flock($lk, LOCK_UN);
+    a365Alert('Balance charged', $who . ' · $' . $left . ' · ' . ($cc['brand'] ?? 'card') . ' ending ' . ($cc['last4'] ?? ''));
+    out(['ok' => true, 'amt' => $left, 'last4' => (string) ($cc['last4'] ?? ''), 'brand' => (string) ($cc['brand'] ?? '')]);
 }
 /* a pay link for what is left on a job (the office, or the crew on the day) */
 if ($action === 'jobpaylink') {

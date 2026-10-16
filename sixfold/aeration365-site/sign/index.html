@@ -102,7 +102,13 @@
     if (A.pay && !A.pay.paid && A.pay.url) {   /* the deposit by Square: pay first, then sign (2026-10-15) */
       var pc = el('div', 'card noprint'); pc.appendChild(el('h2', null, 'Pay your deposit'));
       pc.appendChild(el('p', null, 'Pay the $' + A.pay.amount + ' deposit by card on Square’s secure page. You come straight back here to sign.'));
+      var sv = null;
+      if (A.save) { var sl = el('label', 'agree save'); sv = el('input'); sv.type = 'checkbox'; sv.checked = !!A.save.on; sl.appendChild(sv); sl.appendChild(el('span', null, A.save.text + ' (Optional. Leave it unticked to pay the balance another way.)')); pc.appendChild(sl); }   /* card on file (2026-10-15) */
       var pb = el('a', 'btn', 'Pay $' + A.pay.amount + ' deposit'); pb.href = A.pay.url; pc.appendChild(pb);
+      if (sv) pb.addEventListener('click', function (e) {   /* their choice is kept first, then on to Square */
+        e.preventDefault(); var go2 = function () { location.href = A.pay.url; };
+        fetch(API + '?action=a365savecard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, save: sv.checked }) }).then(go2, go2);
+      });
       var rf = el('button', 'btn ghost', 'I paid: refresh'); rf.type = 'button'; rf.addEventListener('click', function () { location.reload(); }); pc.appendChild(rf);
       main.appendChild(pc);
     } else if (A.pay && A.pay.paid) { var ok = el('div', 'card ok'); ok.appendChild(el('h2', null, 'Deposit paid')); ok.appendChild(el('p', 'muted', 'Thank you. $' + A.pay.amount + ' received by Square. Now sign below.')); main.appendChild(ok); }
