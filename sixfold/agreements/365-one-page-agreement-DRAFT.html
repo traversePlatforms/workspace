@@ -17,24 +17,27 @@
   .sub{color:var(--soft);margin:0 0 18px}
   .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:16px}
   .card h3{font:700 20px 'Outfit',sans-serif;color:var(--green);margin:0 0 12px}
+  .card p{margin:0 0 10px}
   dl{margin:0;display:grid;grid-template-columns:minmax(150px,38%) 1fr;gap:8px 14px}
   dt{color:var(--soft)} dd{margin:0;font-weight:700}
   ol{margin:0;padding-left:22px;display:grid;gap:8px}
-  .sign{border:1.5px dashed var(--line);border-radius:12px;padding:14px;color:var(--soft)}
+  .sign,.pay{border:1.5px dashed var(--line);border-radius:12px;padding:14px;color:var(--soft)}
+  .new{outline:2px solid #f3c9ad;outline-offset:3px;border-radius:6px}
   .q{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 22px}
   .q h3{font:700 20px 'Outfit',sans-serif;margin:0 0 10px}
   .q li{margin-bottom:8px}
   .tag{display:inline-block;font:700 12px 'DM Sans',sans-serif;background:#eef4ec;color:var(--green);border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:1px}
-  @media print{body{background:#fff}.card,.q{break-inside:avoid}}
+  .tag.n{background:var(--warnbg);color:var(--warn)}
+  @media print{body{background:#fff;font-size:15px}.wrap{padding:8px 12px}.card,.q{break-inside:avoid}.card{padding:16px 20px;margin-bottom:12px}}
 </style>
 </head>
 <body><div class="wrap">
 
 <div class="note">
-  <h2>Draft for review, version 2 (15 Oct 2026): not approved wording</h2>
-  <p>This is the one-page agreement a 365 customer signs on 365aeration.com after Jen quotes by phone and takes half the price as a deposit. Signing it books the job. The customer types their name and ticks a box; the app keeps the time, the version and a fingerprint of exactly what they saw.</p>
+  <h2>Draft for review, version 3 (15 Oct 2026): not approved wording</h2>
+  <p>This is the one-page agreement a 365 customer signs on 365aeration.com after Jen quotes by phone and takes half the price as a deposit. Signing it books the job. The customer types their name and ticks two boxes; the app keeps the time, the version and a fingerprint of exactly what they saw.</p>
   <p>The wording was drafted from what the call agrees and how 365 works. It has <b>not</b> been reviewed by an attorney. The example below uses made-up details; the real form fills in each customer's own.</p>
-  <p><b>Version 2</b> takes in Matthew's answers to the first draft's questions (listed at the bottom), for Brandon to confirm or change.</p>
+  <p><b>Version 3</b> adds the optional card on file for the balance (outlined below, and item 8 at the bottom). Version 2 took in Matthew's answers to the first draft's questions. Both are for Brandon to confirm or change.</p>
 </div>
 
 <h1>Sample, here's your agreement</h1>
@@ -50,7 +53,9 @@
     <dt>Price</dt><dd>$449</dd>
     <dt>Deposit paid (non-refundable)</dt><dd>$225 (Square)</dd>
     <dt>Balance due when the work is done</dt><dd>$224</dd>
+    <dt class="new">Card on file</dt><dd class="new">Save this card with Square and charge the $224 balance to it on the day of the service.</dd>
   </dl>
+  <p style="margin:12px 0 0;color:var(--soft);font-size:14px">The Card on file line appears only when the customer ticked the box below before paying.</p>
 </div>
 
 <div class="card">
@@ -66,20 +71,37 @@
 </div>
 
 <div class="card">
+  <h3>Pay your deposit</h3>
+  <p>Pay the $225 deposit by card on Square's secure page. You come straight back here to sign.</p>
+  <div class="pay new">☐ Save this card with Square and charge the $224 balance to it on the day of the service. (Optional. Leave it unticked to pay the balance another way.)<br>[ Pay $225 deposit ]</div>
+  <p style="margin:10px 0 0;color:var(--soft);font-size:14px">Shown only when the deposit is paid by Square link on the form. The box starts unticked.</p>
+</div>
+
+<div class="card">
   <h3>Sign</h3>
   <div class="sign">Type your full name: ____________________<br>☐ I have read this agreement and I agree to its terms.<br>☐ I agree to sign it electronically by typing my name.<br>[ Sign ]</div>
 </div>
 
 <div class="q">
-  <h3>What changed from version 1 (Matthew's answers), for Brandon</h3>
+  <h3>What changed, for Brandon</h3>
+  <p style="margin:0 0 10px;color:var(--soft)">Items 1 to 7 came in with version 2 (Matthew's answers). Item 8 is new in version 3.</p>
   <ol>
     <li><b>Deposit:</b> non-refundable for now. <span class="tag">Brandon to confirm</span></li>
     <li><b>Reschedule or cancel:</b> by calling or texting, with 24 hours' notice.</li>
     <li><b>Sprinklers, pipes, dog fences:</b> the customer only lets us know, so they can be marked. They don't have to mark or list them.</li>
     <li><b>Gates and pets:</b> gates unlocked and pets inside on the day.</li>
     <li><b>Results:</b> left out. Jen can talk about results on the call if it comes up.</li>
-    <li><b>The balance:</b> the agreement doesn't say how it's paid. Jen settles that on the call (card on file, cash or a payment link, on the day).</li>
+    <li><b>The balance:</b> unless they save their card (item 8), the agreement doesn't say how the balance is paid. Jen settles that on the call (cash, a payment link or a card on the day).</li>
     <li><b>Signing:</b> a typed name and two boxes, one for "I have read this and agree" and one for signing electronically. The app keeps the time, the version and a fingerprint of what they saw.</li>
+    <li><b>Card on file for the balance:</b> <span class="tag n">new in v3</span> <span class="tag">Brandon to confirm</span>
+      <ul style="margin:6px 0 0;padding-left:18px">
+        <li>An optional box above the Pay button: "Save this card with Square and charge the $224 balance to it on the day of the service." It starts unticked.</li>
+        <li>Their choice is recorded before they go to Square to pay, with the time, their internet address and their device. If they tick it, the same sentence goes into "What we agreed" on the form they sign.</li>
+        <li>Square saves the card on their customer profile. The card number is held by Square, never by 365 or the app; the app only knows the brand and the last four digits.</li>
+        <li>Nothing is charged automatically. Brad or the office taps "Charge the balance" once the work is done, and only the balance shown can be charged, once.</li>
+        <li>Questions for Brandon: should the line also say what happens if the work can't be done that day, or that the card isn't charged for anything else? Does a card on file change the 24-hour cancellation wording?</li>
+      </ul>
+    </li>
   </ol>
   <p style="margin:12px 0 0;color:var(--soft)">Still open: whether any of this needs an attorney's look before real customers sign it.</p>
 </div>
