@@ -1976,6 +1976,13 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .jslots button{min-height:46px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer;display:grid;justify-items:center;padding:4px}
   .jslots button[aria-pressed="true"]{border-color:#2f5d2c;background:#2f5d2c;color:#fff}.jslots button:disabled{opacity:.55;cursor:default}
   .jslots button small{font-weight:500;font-size:11px}
+  .jobst tr.jdayrow td{background:var(--sunk);border-top:2px solid var(--line);padding:8px 10px}.jobst tr.jdayrow.today td{background:#e3efdf}.jobst tr.jdayrow.past td{opacity:.75}
+  .jdayhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.jdayhead b{font-size:15px}.jdayhead>span{color:var(--soft);font-size:13px}.jdayhead .jwx{margin:0;padding:3px 9px;border-radius:999px;font-size:12.5px}.jdayhead .jwxbtn{margin-left:auto;width:auto;min-height:0;padding:5px 12px;font-size:12.5px}
+  .jobst td.sopen{color:var(--accent);font-weight:700}.jobst tr.done td{opacity:.7}.jobst td.saddr{white-space:normal;min-width:180px}.jobst tr.booked td{background:#eef6ea}.jobst tr.held td{background:#fff6e5}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .jobst tr.jdayrow.today td{background:#1d3320}:root:not([data-theme="light"]) .jobst tr.booked td{background:#1d3320}:root:not([data-theme="light"]) .jobst tr.held td{background:#3a2e12}}:root[data-theme="dark"] .jobst tr.jdayrow.today td,:root[data-theme="dark"] .jobst tr.booked td{background:#1d3320}:root[data-theme="dark"] .jobst tr.held td{background:#3a2e12}
+  .jobst td.snone{color:var(--soft);font-weight:500;font-style:italic}
+  .jweek.tbl{display:block}.jweek.tbl .schedwrap{margin-top:8px}
+  .jtbd{display:flex;gap:8px;align-items:center;font-size:13.5px;margin:6px 0 0;color:var(--soft)}
   .jexact{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1.5px dashed var(--line);border-radius:10px;font:600 13.5px var(--sans);color:var(--soft)}.jexact.on{border-style:solid;border-color:#2f5d2c;color:var(--ink)}.jexact input{font:15px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.jexact b{color:var(--ink)}
   .jnums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .jnums input{width:100%}
@@ -4207,7 +4214,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       l.notes.forEach(function (n) { nt.appendChild(q('div', null, n.note + ' \u2014 ' + n.by + ', ' + ago(n.at))); });
       c.appendChild(nt);
     }
-    if (!asOffice()) leadOwnerRows(l, c);   /* the office: leads from the ads and the website have no owner (2026-10-14) */
+    /* the owner dropdown is tabled (Matthew 2026-10-15: "not needed at the moment"; TASKS.md keeps it): if (!asOffice()) leadOwnerRows(l, c); */
     if (wdOn() && S.screen === 'pipeline' && (!asOffice() || dwFor('lead', l.id)) && (dwFor('lead', l.id) || !(l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0))) c.appendChild(deskWalkBlock('lead', l));   /* quoted: no walk to book (Matthew 2026-10-15); a booked one still shows */   /* the walk desk (2026-10-14); the office quotes by phone */
     var sb = q('div', 'lstat');
     var quotedNow = !!l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0;   /* Won and Lost only once there is a quote (Matthew 2026-10-15) */
@@ -4640,6 +4647,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = j.pay || { s: 'unpaid' };
     if (p.s === 'paid') return 'Nothing: paid in full';
     if (p.s === 'plan') return 'Nothing at the door: service plan';
+    if (!j.price) return 'Price to confirm';   /* booked before the price was known (2026-10-15) */
     var owe = p.s === 'deposit' ? j.price - (p.amt || 0) : j.price;
     return money0(owe) + (j.card ? ' (card on file)' : ' (no card on file: call to pay)');
   }
@@ -4709,49 +4717,58 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!j.ok) { week.appendChild(q('div', 'msg bad', j.error || 'Could not load the week.')); return; }
       if (!j.crews.length) { week.appendChild(q('div', 'msg', CO.a365 ? 'No jobs booked yet. Pick a lead under Ready to book and choose who does it; they get a row here from then on.' : 'Nobody is marked as doing jobs yet. An admin ticks them in Accounts: Does ' + vw() + 's.')); return; }
       var wxEls = {};   /* the forecast per day, filled when it arrives (2026-10-15) */
+      week.classList.add('tbl');   /* one table, not seven columns */
+      var only = q('label', 'schedonly'), oc = q('input'); oc.type = 'checkbox'; oc.checked = !!S.jobOpenOnly; only.appendChild(oc); only.appendChild(q('span', null, 'Open times only'));
+      oc.addEventListener('change', function () { S.jobOpenOnly = oc.checked; jobsView(); });
+      week.appendChild(only);
+      var tb = q('table', 'schedt jobst'), th = q('thead'), hr = q('tr');
+      ['Town', 'Time', 'Crew', 'Name', 'Price and payment', 'Address', 'Service', 'Card'].forEach(function (h) { hr.appendChild(q('th', null, h)); }); th.appendChild(hr); tb.appendChild(th);
+      var bd = q('tbody'), today = todayISO();
       for (var i = 0; i < 7; i++) (function (iso) {
-        var day = q('section', 'jday' + (iso === todayISO() ? ' today' : '') + (iso < todayISO() ? ' past' : ''));
-        var jobs = j.jobs.filter(function (x) { return x.date === iso; });
-        var sum = jobs.reduce(function (a, x) { return a + x.price; }, 0);
-        var hd = q('div', 'jdh'); hd.appendChild(q('b', null, dayName(iso))); if (jobs.length) hd.appendChild(q('span', null, jobs.length + (jobs.length === 1 ? ' job · ' : ' jobs · ') + money0(sum)));
-        day.appendChild(hd);
-        if (iso >= todayISO()) { var wxEl = q('div', 'jwx'); day.appendChild(wxEl); wxEls[iso] = wxEl; }
-        if (jobs.length && iso >= todayISO()) { var wb = q('button', 'jwxbtn', 'Move this day for weather'); wb.type = 'button'; wb.addEventListener('click', function () { weatherDayView(iso); }); day.appendChild(wb); }
-        if (j.closed.indexOf(jobDow(iso)) >= 0 && !jobs.length) { day.classList.add('closed'); day.appendChild(q('div', 'jclosed', 'Closed')); week.appendChild(day); return; }
+        var jobs = j.jobs.filter(function (x) { return x.date === iso; }), closed = j.closed.indexOf(jobDow(iso)) >= 0 && !jobs.length, past = iso < today;
+        var sum = jobs.reduce(function (a, x) { return a + (x.price || 0); }, 0);
+        /* the day's own row: the date, the forecast, the jobs and the weather button */
+        var dr = q('tr', 'jdayrow' + (iso === today ? ' today' : '') + (past ? ' past' : '')), dc = q('td'); dc.colSpan = 8;
+        var dh = q('div', 'jdayhead'); dh.appendChild(q('b', null, dayName(iso)));
+        if (jobs.length) dh.appendChild(q('span', null, jobs.length + (jobs.length === 1 ? ' job · ' : ' jobs · ') + money0(sum)));
+        if (closed) dh.appendChild(q('span', null, 'Closed'));
+        if (!past && !closed) { var wxEl = q('span', 'jwx'); dh.appendChild(wxEl); wxEls[iso] = wxEl; }
+        if (jobs.length && !past) { var wb = q('button', 'jwxbtn', 'Move this day for weather'); wb.type = 'button'; wb.addEventListener('click', function () { weatherDayView(iso); }); dh.appendChild(wb); }
+        dc.appendChild(dh); dr.appendChild(dc); bd.appendChild(dr);
+        if (closed) return;
         j.crews.forEach(function (crew) {
-          var cr = q('div', 'jcrew');
-          var area = (j.days[iso] || {})[crew] || '';
-          var ch = q('div', 'jch'); ch.appendChild(q('b', null, crew));
-          var ab = q('button', 'jarea' + (area ? '' : ' none'), area || 'Set the town'); ab.type = 'button'; ab.title = crew + '’s town for the day';
-          ab.addEventListener('click', function () { jobAreaAsk(iso, crew, area, jobsView); });
-          ch.appendChild(ab); cr.appendChild(ch);
+          var area = (j.days[iso] || {})[crew] || '', first = true;
           var rowsOf = j.slots.slice(); jobs.forEach(function (x) { if (x.crew === crew && !SLOT_LABEL[x.slot] && !rowsOf.some(function (r) { return r.k === x.slot; })) rowsOf.push({ k: x.slot, label: slotLabel(x.slot) }); });
-          rowsOf.sort(function (a, b) { return slotStart(a.k) - slotStart(b.k); });   /* exact times between the windows (2026-10-15) */
+          rowsOf.sort(function (a, b) { return slotStart(a.k) - slotStart(b.k); });
           rowsOf.forEach(function (s) {
             var jb = jobs.filter(function (x) { return x.crew === crew && x.slot === s.k; })[0];
-            var row = q('button', 'jslot' + (jb ? ' on' : '') + (jb && jb.done ? ' done' : '')); row.type = 'button';
-            row.appendChild(q('span', 'jt', s.label));
-            var tx = q('span', 'jx');
+            var hd = !jb && (j.holds || []).filter(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })[0];
+            if (S.jobOpenOnly && (jb || hd || past)) return;
+            var tr = q('tr', jb ? 'booked edit' + (jb.done ? ' done' : '') : hd ? 'held edit' : past ? 'past' : 'open edit');
+            var c0 = q('td', 'sdate' + (first && !area ? ' snone' : ''), first ? (area || (past ? '' : 'Set the town')) : ''); tr.appendChild(c0);
+            if (first && !past) { c0.classList.add('sarea'); c0.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; c0.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(iso, crew, area, jobsView); }); }
+            first = false;
+            tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
             if (jb) {
-              tx.appendChild(q('b', null, jobName(jb) + ' · ' + money0(jb.price)));
-              tx.appendChild(q('small', null, [jb.addr, jb.pkg !== 'full' ? JOB_PKG[jb.pkg] : '', jb.scope !== 'all' ? JOB_SCOPE[jb.scope] : '', jobPayText(jb), jb.card ? 'card on file' : 'no card', jb.done ? (jb.done.o === 'done' ? 'Done' : 'Not done') : ''].filter(Boolean).join(' · ')));
-              row.addEventListener('click', function () { jobView(jb.id, jobsView, jb.crew); });
-            } else if (iso < todayISO()) { tx.appendChild(q('small', null, '—')); row.disabled = true; }
-            else if ((j.holds || []).some(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })) {
-              var hd2 = j.holds.filter(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })[0];
-              row.classList.add('held'); tx.appendChild(q('b', null, 'Held \u00b7 ' + hd2.name)); tx.appendChild(q('small', null, hd2.paid ? 'Deposit paid; waiting for them to sign' : 'Offered with the quote' + (hd2.until ? '; released ' + dayName(isoOf(new Date(hd2.until * 1000))) + ', ' + fmtTime(String(new Date(hd2.until * 1000).getHours()).padStart(2, '0') + ':' + String(new Date(hd2.until * 1000).getMinutes()).padStart(2, '0')) + ' if they don’t book' : '')));   /* the 72-hour hold (2026-10-15) */
-              row.addEventListener('click', function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + hd2.lead; S.pipeFocus = hd2.lead; pipelineView(); });
+              tr.appendChild(q('td', null, jobName(jb)));
+              tr.appendChild(q('td', null, (jb.price ? money0(jb.price) : 'Price to confirm') + ' \u00b7 ' + jobPayText(jb) + (jb.done ? ' \u00b7 ' + (jb.done.o === 'done' ? 'Done' : 'Not done') : '')));
+              tr.appendChild(q('td', 'saddr', jb.addr || '')); tr.appendChild(q('td', null, JOB_PKG[jb.pkg] + (jb.scope !== 'all' ? ' \u00b7 ' + JOB_SCOPE[jb.scope] : ''))); tr.appendChild(q('td', null, jb.card ? 'Card on file' : 'No card'));
+              tr.title = 'Open the job'; tr.addEventListener('click', function () { jobView(jb.id, jobsView, jb.crew); });
+            } else if (hd) {
+              tr.appendChild(q('td', null, hd.name)); tr.appendChild(q('td', null, hd.paid ? 'Held: deposit paid, waiting to sign' : 'Held: offered with the quote'));
+              ['', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); });
+              tr.title = 'Open the lead'; tr.addEventListener('click', function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + hd.lead; S.pipeFocus = hd.lead; pipelineView(); });
+            } else {
+              tr.appendChild(q('td', past ? null : 'sopen', past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); });
+              if (!past) { tr.title = 'Book a lead at this time'; tr.addEventListener('click', function () { jobPickView({ date: iso, crew: crew, slot: s.k, slotLabel: s.label }); }); }
             }
-            else {
-              tx.appendChild(q('small', 'jopen', 'Open')); row.title = 'Book a lead in this slot';
-              row.addEventListener('click', function () { jobPickView({ date: iso, crew: crew, slot: s.k, slotLabel: s.label }); });
-            }
-            row.appendChild(tx); cr.appendChild(row);
+            bd.appendChild(tr);
           });
-          day.appendChild(cr);
         });
-        week.appendChild(day);
       })(jobAdd(wk, i));
+      tb.appendChild(bd);
+      var wrap = q('div', 'schedwrap'); wrap.appendChild(tb); week.appendChild(wrap);
+      week.appendChild(q('div', 'ltrynote', 'Tap a job to open it, an open time to book a lead there, a held time to open the lead, a crew\u2019s name to set their town for the day. Booked = on the crew\u2019s calendar. Held = offered or sent and waiting.'));
       api('jobforecast').then(function (fc) {   /* the National Weather Service forecast, flagged days in colour */
         if (!fc || !fc.ok || !fc.days) return;
         Object.keys(wxEls).forEach(function (iso) {
@@ -4918,6 +4935,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var numIn = function (lab, v, unit) { var l = q('label', null, lab); var i = q('input'); i.inputMode = 'decimal'; i.maxLength = 7; i.value = v === null || v === undefined ? '' : v; l.appendChild(i); if (unit) l.appendChild(q('small', null, ' ' + unit)); pr.appendChild(l); return i; };
     var priceIn = numIn('Price ($)', P.price), seedIn = numIn('Seed (lb)', P.seedLb), fertIn = numIn('Fertilizer (lb)', P.fertLb);
     box.appendChild(pr);
+    var tbdL = q('label', 'jtbd'), tbdC = q('input'); tbdC.type = 'checkbox'; tbdC.checked = !!job && !job.price; tbdL.appendChild(tbdC); tbdL.appendChild(q('span', null, 'Price to confirm (book it now, add the price later)')); if (!SIGN && !OFFER) box.appendChild(tbdL);
     if (!job && acceptOf(lead)) box.appendChild(q('div', 'qline qyes', acceptText(acceptOf(lead))));
     if (qt.price && !job) box.appendChild(q('div', 'dwsub', 'From the quote: ' + money0(qt.price) + ' · ' + JOB_PKG[qt.pkg] + (qt.sq ? ' · ' + Number(qt.sq).toLocaleString(LOCALE) + ' sq ft' : '') + '. Front yard only? Lower the price and the seed here.'));
     box.appendChild(q('div', 'dwh', 'Payment'));
@@ -5114,9 +5132,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         return;
       }
       if (!ai.value.trim()) { err.textContent = 'Add the address.'; return; }
-      var price = Math.round(num(priceIn) || 0); if (price < 1) { err.textContent = 'Give the job a price.'; return; }
+      var price = Math.round(num(priceIn) || 0), tbd = tbdC.checked && price < 1; if (price < 1 && !tbd) { err.textContent = 'Give the job a price, or tick Price to confirm.'; return; }
       if (P.pay.s === 'deposit' && !(P.pay.amt > 0 && P.pay.amt < price)) { err.textContent = 'The deposit should be more than $0 and less than the price.'; return; }
-      var body = { crew: P.crew, date: P.date, slot: P.slot, price: price, pkg: P.pkg, scope: P.scope, seedLb: num(seedIn), fertLb: num(fertIn), pay: P.pay, card: P.card ? 1 : 0, note: nt.value, addr: ai.value };
+      var body = { tbd: tbd ? 1 : 0, crew: P.crew, date: P.date, slot: P.slot, price: tbd ? 0 : price, pkg: P.pkg, scope: P.scope, seedLb: num(seedIn), fertLb: num(fertIn), pay: P.pay, card: P.card ? 1 : 0, note: nt.value, addr: ai.value };
       if (job) body.id = job.id; else body.lead = lead.id;
       sv.disabled = true;
       api('jobsave', { body: body }).then(function (j) {
@@ -5193,7 +5211,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var facts = q('div', 'dwfacts');
     var fact = function (k, v) { if (!v && v !== 0) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
     fact('Doing', JOB_PKG[jb.pkg] + (jb.scope !== 'all' ? ' · ' + JOB_SCOPE[jb.scope] : ''));
-    fact('Price', money0(jb.price));
+    fact('Price', jb.price ? money0(jb.price) : 'To confirm');
     fact('Payment', jobPayText(jb));
     fact('Collect', jobCollect(jb));
     var sqBox = q('div', 'sqbox'); c.appendChild(sqBox);   /* SX-58: a Square pay link for the balance (filled below the facts) */
@@ -10362,7 +10380,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var jb = feat('roof') ? q('a', 'adminlink', 'Booked doors for JobNimbus (CSV)') : q('a', 'adminlink', 'Door bookings for Jobber (CSV)');
     jb.href = API + (feat('roof') ? '?action=jobnimbus' : '?action=jobber'); jb.setAttribute('download', '');
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
-    if (adminView()) top.appendChild(jb);
+    /* tabled 2026-10-15 (Matthew: "table the export to Jobber for now"; TASKS.md keeps it): if (adminView()) top.appendChild(jb); */
     holder.appendChild(top);
     if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */

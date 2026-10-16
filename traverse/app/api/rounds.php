@@ -2266,7 +2266,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
  * office. The wording is here, in one place, versioned: a signature keeps the version and a hash of exactly what was shown.
  * DRAFT wording until Brandon (or the attorney) approves it: facts from the call and the business only; no refund or cancellation
  * terms, because none are set. Never the lawn size, the seed or anything measured; never Sixfold. */
-const A365_SIGN_VERSION = 'v2-draft-2026-10-15';   /* Matthew's answers to the seven questions; Brandon still to review */
+const A365_SIGN_VERSION = 'v3-draft-2026-10-15';   /* v3: "not confirmed until the deposit is paid" (Matthew 2026-10-15) */   /* Matthew's answers to the seven questions; Brandon still to review */
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
 function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
 function a365Agreement(array $l): array {
@@ -2287,6 +2287,7 @@ function a365Agreement(array $l): array {
               'On the day, please leave gates unlocked and keep pets inside.',
               'If the weather or the ground (frozen, waterlogged or very dry) stops us, we will contact you to move the day.',
               'To reschedule or cancel, call or text ' . $ph . ' at least 24 hours before your day.',
+              'The appointment is not confirmed until the deposit is paid.',   /* Matthew 2026-10-15 */
               'The deposit is non-refundable.'];
     $consents = ['I have read this agreement and I agree to its terms.', 'I agree to sign it electronically by typing my name.'];
     $consent = implode(' ', $consents);
@@ -4335,7 +4336,8 @@ if ($action === 'jobsave') {
     if (in_array((int) (new DateTime($date . ' 12:00', $tz))->format('w'), jobClosed(), true) && empty($body['force'])) fail('That is a closed day (Sunday).');
     $slot = (string) ($body['slot'] ?? ($have['slot'] ?? '')); if (!jobSlot($slot)) fail('Pick an arrival time.');
     if ($why = slotFree($crew, $date, $slot, $lead, $id)) fail($why, 409);   /* a job there, or another quote's offered day (2026-10-14) */
-    $price = (int) ($body['price'] ?? ($have['price'] ?? 0)); if ($price < 1 || $price > 100000) fail('Give the job a price.');
+    $price = (int) ($body['price'] ?? ($have['price'] ?? 0)); $tbd = desk() && $price === 0 && (!empty($body['tbd']) || ($have && (int) ($have['price'] ?? 0) === 0 && !array_key_exists('price', $body)));   /* price to confirm (2026-10-15, Russ and Erik: Brandon gives the price) */
+    if (!$tbd && ($price < 1 || $price > 100000)) fail('Give the job a price.');
     $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, ['full', 'aerate', 'plan'], true)) fail('Pick what is included.');
     $scope = (string) ($body['scope'] ?? ($have['scope'] ?? 'all')); if (!in_array($scope, ['all', 'front', 'back'], true)) fail('Pick front, back or all.');
     $num = fn($k) => array_key_exists($k, $body) ? (is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= 5000 ? round((float) $body[$k], 1) : null) : ($have[$k] ?? null);
