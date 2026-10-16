@@ -3657,7 +3657,7 @@ if ($action === 'money') {
  * door bookings. Admin only: these are customers' names and numbers. Append-only, like the marks:
  *   leads/leads.log   one line per lead        { id, src, at, need, name, phone, email, town, msg, by? }
  *   leads/leadst.log  one line per update      { id, status?, note?, by, at }   last status wins */
-const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson'];   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
+const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
 const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost'];
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
 function readLines(string $f): array {
@@ -5089,6 +5089,26 @@ if ($action === 'leads') {
     out(['ok' => true, 'new' => $new, 'leads' => $list]);
 }
 
+/* a house that is not on our lists, added by the crew at the door (2026-10-16, Matthew: "is there a way for them to add a customer to
+   the pipeline for when they hit a property that isnt on our list?"). It lands in the Pipeline under To call, source At the door,
+   with who found it, the house matched if it is on a list after all, or typed. No alert (Matthew: Jen's alert tabled). */
+if ($action === 'crewlead') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    if (!in_array($role, ['crew', 'manager', 'admin', 'office'], true)) fail('Not allowed.', 403);
+    if (!throttleTake(rateFile('crewlead|' . $me), 30, 3600)) fail('That is a lot of houses in an hour. Try again later.', 429);
+    $addr = $clean($body['address'] ?? '', 120); $town = $clean($body['town'] ?? '', 60);
+    if (!preg_match('/^\d+\s+\S/', $addr)) fail('Type the house number and the street.');
+    $phone = $clean($body['phone'] ?? '', 40); $dg = preg_replace('/\D/', '', $phone);
+    if ($phone !== '' && (strlen($dg) < 10 || strlen($dg) > 11)) fail('That phone number does not look right.');
+    $wants = ['aeration' => 'Aeration', 'quote' => 'Wants a quote', 'later' => 'Call back later', 'other' => 'Something else'];
+    $want = (string) ($body['want'] ?? 'quote'); if (!isset($wants[$want])) $want = 'quote';
+    $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'door', 'at' => time(), 'need' => $wants[$want], 'name' => $clean($body['name'] ?? '', 120),
+            'phone' => $phone, 'email' => '', 'town' => $addr . ($town !== '' ? ', ' . $town : ''), 'msg' => $clean($body['note'] ?? '', 600), 'by' => $me];
+    if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
+    $h = a365Match($addr, $town);
+    appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h ?: ['address' => $addr, 'town' => $town, 'typed' => true], 'note' => 'Found at the door by ' . $me . ($h ? '.' : ' (not on our lists yet).'), 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'id' => $row['id'], 'onList' => (bool) $h]);
+}
 if ($action === 'leadadd') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     if ($role === 'quote') {

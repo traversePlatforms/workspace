@@ -721,6 +721,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .paysum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 12px}.paysum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.paysum b{display:block;font-size:20px}.paysum span{color:var(--muted);font-size:13px}
   .paytbl{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border-radius:12px;overflow:hidden}.paytbl th,.paytbl td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.paytbl th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.paytbl td.n,.paytbl th.n{text-align:right;white-space:nowrap}.paytbl tr.neg td{color:var(--later)}.paytbl small{color:var(--muted)}
   .payacts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.payacts button,.payacts a{flex:1;min-width:200px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 15px var(--sans);text-align:center;text-decoration:none;cursor:pointer}.payacts a{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  .crewadd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;display:grid;gap:8px}.crewadd input,.crewadd select,.crewadd textarea{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+  .crewadd .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crewaddb{width:100%;text-align:left;border:1.5px dashed var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:10px 0}
   .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
   .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
   .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
@@ -1725,6 +1727,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .freport .frfoot{margin-top:22px;font-size:12.5px;color:#5E6B60;border-top:1px solid #d8d0be;padding-top:10px}
   @media print { html,body.printing{background:#fff !important} body.printing > *:not(.freport){display:none !important} .freport{position:static;overflow:visible} .freport .frbar{display:none} .freport .frpage{padding:0;max-width:none} .freport .frtab tr,.freport .frphotos{break-inside:avoid} }
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
+  .updbar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:30;width:min(640px,calc(100% - 24px));display:flex;gap:10px;align-items:center;background:#1d2a1c;color:#fff;border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px var(--sans)}.updbar span{flex:1}.updbar button{flex:none;border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
     font-size:14px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);transform:translate(-50%,24px);opacity:0;pointer-events:none;
@@ -2865,6 +2868,43 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dayKey(a) { var t = todayISO(); return a.on === t ? 0 : (!a.on || a.on < t) ? 1 : 2; }
   function dayTag(a) { var t = todayISO(); return a.on === t ? 'Today' : (a.on && a.on > t) ? dayName(a.on) : ''; }
   function mineSort(x, y) { var kx = dayKey(x), ky = dayKey(y); return kx - ky || (kx === 2 ? String(x.on).localeCompare(String(y.on)) : 0) || mineRank(y) - mineRank(x) || areaLeft(y) - areaLeft(x); }
+  /* a house that is not on our lists (2026-10-16, Matthew: the crew hit a property that is not on the list): a short form that puts it
+     in the Pipeline, source At the door, with who found it. The office calls it like any lead. */
+  function crewAddOn() { return feat('walkdesk') && S.role !== 'quote'; }   /* the crew too (wdOn() is the desk's) */
+  function crewAddButton(redraw, town) {
+    if (!crewAddOn()) return document.createTextNode('');
+    if (S.crewAdd) return crewAddForm(redraw, town);
+    var b = q('button', 'crewaddb', '+ Not on the list? Add a house'); b.type = 'button';
+    b.addEventListener('click', function () { S.crewAdd = true; redraw(); });
+    return b;
+  }
+  function crewAddForm(redraw, town) {
+    var f = q('div', 'crewadd');
+    f.appendChild(q('h3', null, 'Add a house that is not on the list'));
+    f.appendChild(q('div', 'sub2', 'It goes to the Pipeline for the office to call. Add whatever you got.'));
+    var inp = function (id, ph, type) { var i = q('input'); i.type = type || 'text'; i.id = id; i.placeholder = ph; i.setAttribute('aria-label', ph); return i; };
+    var ad = inp('ca-addr', 'House number and street'), tw = inp('ca-town', 'Town'); tw.value = town || '';
+    var nm = inp('ca-name', 'Name (optional)'), ph = inp('ca-phone', 'Phone (optional)', 'tel');
+    var wt = q('select'); wt.id = 'ca-want'; wt.setAttribute('aria-label', 'What they want');
+    [['quote', 'Wants a quote'], ['aeration', 'Aeration'], ['later', 'Call back later'], ['other', 'Something else']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; wt.appendChild(op); });
+    var nt = q('textarea'); nt.id = 'ca-note'; nt.rows = 2; nt.maxLength = 600; nt.placeholder = 'Note (optional): best time, gate, what they said'; nt.setAttribute('aria-label', 'Note');
+    f.appendChild(ad); f.appendChild(tw); var r2 = q('div', 'row2'); r2.appendChild(nm); r2.appendChild(ph); f.appendChild(r2); f.appendChild(wt); f.appendChild(nt);
+    var err = q('div', 'err'); f.appendChild(err);
+    var go = q('button', 'save', 'Add to the Pipeline'); go.type = 'button'; f.appendChild(go);
+    var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.crewAdd = false; redraw(); }); f.appendChild(cx);
+    go.addEventListener('click', function () {
+      if (go.disabled) return; err.textContent = '';
+      if (!/^\d+\s+\S/.test(ad.value.trim())) { err.textContent = 'Type the house number and the street.'; ad.focus(); return; }
+      go.disabled = true; go.textContent = 'Adding\u2026';
+      api('crewlead', { body: { address: ad.value.trim(), town: tw.value.trim(), name: nm.value.trim(), phone: ph.value.trim(), want: wt.value, note: nt.value.trim() } }).then(function (j) {
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { go.disabled = false; go.textContent = 'Add to the Pipeline'; err.textContent = j.error || 'Could not add it.'; return; }
+        S.crewAdd = false; toast('Added to the Pipeline', ad.value.trim() + (j.onList ? '' : ' \u00b7 the office will follow up'), null); redraw();
+      }).catch(function () { go.disabled = false; go.textContent = 'Add to the Pipeline'; err.textContent = 'No signal. Nothing was added; try again.'; });
+    });
+    setTimeout(function () { try { ad.focus(); } catch (e) {} }, 50);
+    return f;
+  }
   function territoryList(host) {
     var draw = function () {
       host.textContent = '';
@@ -2881,6 +2921,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }));
       });
       host.appendChild(g);
+      host.appendChild(crewAddButton(draw, ''));   /* a house not on the list (2026-10-16) */
     };
     if (S.regions && S.regions.length) draw();
     else if (!S.offline) api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; if (host.isConnected) draw(); } }).catch(function () {});
@@ -4199,7 +4240,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      One list for every channel. Website form leads arrive by themselves (api/submit.php files
      them); everything else is added by hand. Shown on the Pipeline beside the door bookings.
      Admin only. Names, numbers and messages are drawn with textContent. */
-  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other', messenger: 'Facebook Messenger', a365web: '365 website', inperson: 'In person' };
+  var LEAD_SRC = { website: 'Website form', meta: 'Meta ad', nextdoor: 'Nextdoor', phone: 'Phone call', linktree: 'Linktree', referral: 'Referral', other: 'Other', messenger: 'Facebook Messenger', a365web: '365 website', inperson: 'In person', door: 'At the door' };
   var LEAD_ST = [];     /* setCompany(): the 'walk' step is named after the company's visit */
   var LEAD_NEED = [];   /* setCompany(): company.json leadNeeds */
   function ago(ts) {
@@ -14186,6 +14227,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         view.appendChild(row);
       });
     }
+    view.appendChild(crewAddButton(renderDoors, ((S.regions || []).filter(function (r) { return r.key === S.region; })[0] || {}).label || ''));   /* a house not on the list (2026-10-16) */
     if (!S.areaNosol) {
       var fl = q('button', 'nsflag'); fl.type = 'button';
       fl.appendChild(ico('flag', 2.2));
@@ -14949,6 +14991,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function start() { countPhotos(); S.region = null; flush().then(refresh); }   /* Matthew 2026-10-04: Door rounds opens on Colorado, every county and town */
   setInterval(function () { if (S.me && (queue().length || S.photoPending)) flush(); }, 60000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && S.me) flush(); });
+  /* a new version uploaded while the app is open (2026-10-16, Matthew: "maybe something like theres been an update, close and open"): the
+     page asks the server for its own headers only (HEAD, a few hundred bytes, past the service worker), when it comes back on screen
+     and every 10 minutes; a changed ETag or Last-Modified means a new upload, and a bar says so. Update now reloads; the save queue is
+     in localStorage, so nothing waiting to send is lost. */
+  var verTag = null;
+  function verCheck() {
+    if (document.hidden || !navigator.onLine) return;
+    fetch(location.pathname, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) return; var t = r.headers.get('ETag') || r.headers.get('Last-Modified') || r.headers.get('Content-Length'); if (!t) return;
+      if (verTag === null) { verTag = t; return; }
+      if (t !== verTag) showUpdateBar();
+    }).catch(function () {});
+  }
+  function showUpdateBar() {
+    if (document.getElementById('updbar')) return;
+    var b = q('div', 'updbar'); b.id = 'updbar'; b.setAttribute('role', 'status');
+    b.appendChild(q('span', null, 'There’s been an update. Close the app and open it again, or tap Update now.'));
+    var u = q('button', null, 'Update now'); u.type = 'button'; u.addEventListener('click', function () { location.reload(); }); b.appendChild(u);
+    document.body.appendChild(b);
+  }
+  setTimeout(verCheck, 4000); setInterval(verCheck, 10 * 60 * 1000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) verCheck(); });
 
   document.getElementById('toastUndo').addEventListener('click', function () { var f = toastUndo; hideToast(); if (f) f(); });
   document.addEventListener('keydown', function (e) {
