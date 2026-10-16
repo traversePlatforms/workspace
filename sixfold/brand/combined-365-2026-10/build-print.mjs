@@ -62,7 +62,7 @@ const cardBack = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div s
     <div style="font-size:${0.1 * s}px;font-weight:700;color:${t.acc}">${SITE}</div>
     <div style="font-size:${0.082 * s}px;color:${t.soft};margin-top:${0.05 * s}px">${SERVICES}</div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:${0.03 * s}px;flex:none"><div style="width:${0.95 * s}px;height:${0.95 * s}px">${qrSvg(t.qrD, t.qrL, GO.card).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div class="o" style="font-weight:700;font-size:${0.075 * s}px;color:${t.acc};white-space:nowrap">Scan for a quote</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:${0.03 * s}px;flex:none"><div style="width:${0.95 * s}px;height:${0.95 * s}px">${qrSvg(t.qrD, t.qrL, GO.card).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div class="o" style="font-weight:700;font-size:${0.075 * s}px;color:${t.acc};text-align:center;line-height:1.15">Scan for more<br>information</div></div>
 </div>`, t); };
 const yard = (k, s, tt) => { const t = tt || T[k]; return page(24 * s, 18 * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${1.1 * s}px;gap:${0.9 * s}px">
   <div style="width:${12.4 * s}px;height:${12.4 * s}px;flex:none">${badge(k)}</div>
@@ -144,7 +144,7 @@ body { font-family: 'DM Sans', sans-serif; -webkit-print-color-adjust: exact; pr
     <div style="font-size:0.1in;font-weight:700;color:${t.acc}">${SITE}</div>
     <div style="font-size:0.09in;color:${t.soft};margin-top:0.04in">${SERVICES}</div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0.03in;flex:none"><div style="width:0.95in;height:0.95in">${q}</div><div class="o" style="font-weight:700;font-size:0.09in;color:${t.acc};white-space:nowrap">Scan for a quote</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0.03in;flex:none"><div style="width:0.95in;height:0.95in">${q}</div><div class="o" style="font-weight:700;font-size:0.09in;color:${t.acc};text-align:center;line-height:1.15">Scan for more<br>information</div></div>
 </div></div>
 </body></html>`;
   const f = join(PR, `365-Card-${p.file}.html`), pdf = join(PR, `365-Card-${p.file}.pdf`);
