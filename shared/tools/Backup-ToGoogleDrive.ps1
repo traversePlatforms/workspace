@@ -55,6 +55,12 @@ $Log = Join-Path $LogDir "gdrive.log"
 function Say([string]$m) { $line = "{0:yyyy-MM-dd HH:mm:ss}  {1}" -f (Get-Date), $m; Add-Content -Path $Log -Value $line; Write-Host $line }
 
 try {
+    # 2026-10-15: after the 14 Oct restart Google Drive for desktop did not come back, and two nights failed. Start it and wait for it.
+    if (-not (Test-Path -LiteralPath $Drive)) {
+        $gd = Get-ChildItem "C:\Program Files\Google\Drive File Stream" -Recurse -Filter GoogleDriveFS.exe -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($gd -and -not (Get-Process -Name GoogleDriveFS -ErrorAction SilentlyContinue)) { Say "Google Drive was not running: starting it"; Start-Process -FilePath $gd.FullName }
+        for ($w = 0; $w -lt 36 -and -not (Test-Path -LiteralPath $Drive); $w++) { Start-Sleep -Seconds 5 }
+    }
     if (-not (Test-Path -LiteralPath $Drive)) { throw "Google Drive is not mounted at $Drive (is Google Drive for desktop running and signed in?)" }
     if (-not (Test-Path -LiteralPath $SevenZip)) { throw "7-Zip not found at $SevenZip" }
     if (-not (Test-Path -LiteralPath $PassFile)) { throw "Archive password file missing: $PassFile" }
