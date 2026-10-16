@@ -18,11 +18,20 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const URL = 'https://365aeration.com', PHONE = '(720) 830-4553', SITE = '365aeration.com', EMAIL = 'contact@365aeration.com';
 const SERVICES = 'Core aeration \u00b7 Overseeding \u00b7 Fertilizer';
 /* the QR, checked: a PNG of it must read back as the address */
+/* 2026-10-16 (Matthew): the Ridge mark (no wording, roots kept) in the middle of every QR. Error correction H (~30% of the code can be
+   lost); the mark's pad covers 9 x 9 modules, about a tenth of the code. Every finished piece is decoded again below. */
+const bsrc = readFileSync(join(HERE, 'build.mjs'), 'utf8');
+const ridge = eval(bsrc.slice(bsrc.indexOf('const ridge = '), bsrc.indexOf('`;', bsrc.indexOf('const ridge = ')) + 1).replace('const ridge = ', '(') + ')');
+const withMark = (svg, light) => {
+  const vb = +svg.match(/viewBox="0 0 (\d+) \d+"/)[1], pad = 9, x0 = (vb - pad) / 2, sc = (pad - 1.4) / 100;
+  return svg.replace('</svg>', `<g shape-rendering="geometricPrecision"><rect x="${x0}" y="${x0}" width="${pad}" height="${pad}" rx="1.2" fill="${light}"/>`
+    + `<g transform="translate(${x0 + (pad - 94 * sc) / 2 - 4 * sc} ${x0 + (pad - 99 * sc) / 2 - 14 * sc}) scale(${sc})">${ridge('#E4703A', '#4C7A3F')}</g></g></svg>`);
+};
 const QRS = {};
-for (const [d, l] of [['#1D2A1C', '#FFF8EC'], ['#0E1512', '#EDE7DC'], ['#1D2A1C', '#EDE7DC']]) QRS[d + l] = await QR.toString(URL, { type: 'svg', errorCorrectionLevel: 'M', margin: 4, color: { dark: d, light: l } });
+for (const [d, l] of [['#1D2A1C', '#FFF8EC'], ['#0E1512', '#EDE7DC'], ['#1D2A1C', '#EDE7DC']]) QRS[d + l] = withMark(await QR.toString(URL, { type: 'svg', errorCorrectionLevel: 'H', margin: 4, color: { dark: d, light: l } }), l);
 const qrSvg = (dark, light) => QRS[dark + light];
 const pngPath = join(OUT, 'qr-check.png');
-await QR.toFile(pngPath, URL, { errorCorrectionLevel: 'M', margin: 4, width: 600 });
+await QR.toFile(pngPath, URL, { errorCorrectionLevel: 'H', margin: 4, width: 600 });
 const png = PNG.sync.read(readFileSync(pngPath)); const dec = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
 if (!dec || dec.data !== URL) throw new Error('QR does not read back: ' + (dec && dec.data));
 console.log('QR reads back as', dec.data);
