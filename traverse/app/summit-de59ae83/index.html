@@ -725,6 +725,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .crewadd .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crewaddb{width:100%;text-align:left;border:1.5px dashed var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:10px 0}
   .qwon{margin:6px 0 0;display:grid;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qwon .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qwon select,.qwon input{width:100%;font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}.qwon label.chk{display:flex;gap:8px;align-items:center;font-weight:600}.qwon label.chk input{width:auto}
   .qqinbox{border:1.5px solid var(--accent)}.qqinhead{padding:10px 12px 4px}.qqinhead b{font:800 16px var(--sans)}.qqinlist{display:grid;gap:10px;padding:6px 12px 12px}.qqinrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qqinrow .qlinks{display:flex;gap:12px;align-items:center;margin-top:8px}.qqinrow .qlinks button.save{width:auto;margin:0;padding:10px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}.tojen{margin-top:6px}
+  .cfilt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.cfilt button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font:700 13px var(--sans);color:var(--ink);cursor:pointer}.cfilt button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}.qqcrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}.cmonth{margin:12px 0 6px}.qqgrp{display:flex;justify-content:space-between;align-items:center}
   .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
   .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
   .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
@@ -5897,19 +5898,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       list.textContent = '';
       var t = srch.value.trim().toLowerCase(), td = digits(t);
       var hit = all.filter(function (l) { if (!t) return true; var hay = [l.name, l.email, l.house && l.house.address, l.town].join(' ').toLowerCase(); return hay.indexOf(t) >= 0 || (td.length >= 3 && digits(l.phone).indexOf(td) >= 0); });
-      var signed = hit.filter(function (l) { return l.signed; }), waiting = hit.filter(function (l) { return !l.signed; });
+      /* organised (2026-10-16, Matthew: won without the form is a customer; and a way to organise a growing list): Upcoming = signed or won
+         with their day still ahead, soonest first; Not signed yet; Done = their day has passed, folded away unless searching */
+      var today = todayISO(), dayOf = function (l) { return (l.quote && l.quote.offer && l.quote.offer.date) || ''; }, isCust = function (l) { return !!l.signed || l.status === 'won'; };
+      var upcoming = hit.filter(function (l) { return isCust(l) && (!dayOf(l) || dayOf(l) >= today); }).sort(function (a, b) { var x = dayOf(a) || '9999', y = dayOf(b) || '9999'; return x < y ? -1 : x > y ? 1 : 0; });   /* no day yet: last */
+      var waiting = hit.filter(function (l) { return !isCust(l); });
+      var done = hit.filter(function (l) { return isCust(l) && dayOf(l) && dayOf(l) < today; }).sort(function (a, b) { return dayOf(a) > dayOf(b) ? -1 : dayOf(a) < dayOf(b) ? 1 : 0; });
       if (!hit.length) { list.appendChild(q('div', 'msg soft', t ? 'Nobody matches \u201c' + srch.value.trim() + '\u201d.' : 'Nobody has been sent a form yet.')); return; }
-      [['Signed', signed], ['Not signed yet', waiting]].forEach(function (g) {
+      [['Upcoming', upcoming, true], ['Not signed yet', waiting, true], ['Done', done, !!t || !!S.qqDoneOpen]].forEach(function (g) {
         if (!g[1].length) return;
-        list.appendChild(q('div', 'dwh', g[0] + ' (' + g[1].length + ')'));
+        var gh = q('div', 'dwh qqgrp', g[0] + ' (' + g[1].length + ')'); list.appendChild(gh);
+        if (g[0] === 'Done' && !t) { var tg = q('button', 'lnk', S.qqDoneOpen ? 'Hide' : 'Show'); tg.type = 'button'; tg.addEventListener('click', function () { S.qqDoneOpen = !S.qqDoneOpen; draw(); }); gh.appendChild(tg); }
+        if (!g[2]) return;
         g[1].forEach(function (l) {
           var c = q('div', 'qqcrow');
           var top = q('div', 'qqctop'); top.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
           top.appendChild(q('small', null, [digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
           c.appendChild(top);
-          if (l.sign) c.appendChild(signLine(l)); else c.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent' + (l.quote.offer ? ' \u00b7 ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) + ' held with ' + String(l.quote.offer.crew).split(' ')[0] : '')));
+          if (l.status === 'won' && !l.signed) { var od = l.quote && l.quote.offer; c.appendChild(q('div', 'qline qyes', 'Won without the form' + (l.quote ? ' \u00b7 ' + money0(l.quote.price) : '') + (od ? ' \u00b7 ' + dayName(od.date) + ', ' + slotLabel(od.slot) + ' with ' + String(od.crew).split(' ')[0] : '') + ' \u00b7 in Customers')); }
+          else if (l.sign) c.appendChild(signLine(l)); else c.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent' + (l.quote.offer ? ' \u00b7 ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) + ' held with ' + String(l.quote.offer.crew).split(' ')[0] : '')));
           if (!l.signed && l.status !== 'won') c.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
-          else if (l.status === 'won' && !l.signed) c.appendChild(q('div', 'dwsub', 'Won without the form \u00b7 in Customers'));
           list.appendChild(c);
         });
       });
@@ -10093,6 +10101,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
     return a;
   }
+  /* a customer's jobs at a glance (2026-10-16): the next job still ahead, the last one, and what is still owed */
+  function custJobInfo(c) {
+    var t = todayISO(), next = '', last = '', owe = 0;
+    (c.jobs || []).forEach(function (j) {
+      if (j.date >= t && !j.done && (!next || j.date < next)) next = j.date;
+      if (!last || j.date > last) last = j.date;
+      var p = j.pay || { s: 'unpaid' }; if (j.price > 0 && p.s !== 'paid' && p.s !== 'plan') owe += Math.max(0, j.price - (p.s === 'deposit' ? (p.amt || 0) : 0));
+    });
+    return { next: next, last: last, owe: owe };
+  }
   function custRow(c) {
     var b = q('button', 'door crow'); b.type = 'button';
     var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', c.name || 'Customer')); top.appendChild(ico('chev', 2.4)); b.appendChild(top);
@@ -10104,6 +10122,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else if (c.due) m.appendChild(q('span', 'tag cdue', 'Due ' + fmtD(c.next)));
     else if (c.next && c.status === 'active') m.appendChild(q('span', null, 'Next ' + fmtD(c.next)));
     if (c.spent) m.appendChild(q('span', null, money(c.spent) + ' so far'));
+    var ji = custJobInfo(c);   /* 2026-10-16 */
+    if (ji.next) m.appendChild(q('span', 'tag cdue', 'Job ' + fmtD(ji.next))); else if (ji.last && (!c.plan || c.plan === 'oneoff')) m.appendChild(q('span', null, 'Job ' + fmtD(ji.last)));
+    if (ji.owe > 0) m.appendChild(q('span', 'tag cover', money0(ji.owe) + ' due'));
     b.appendChild(m);
     b.addEventListener('click', function () { customerView(c.id, customersView, 'Customers'); });
     return b;
@@ -10196,6 +10217,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     [['active', 'Active'], ['all', 'Everyone']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String((S.custShow || 'active') === o[0])); b.addEventListener('click', function () { S.custShow = o[0]; drawCustomers(holder); }); seg.appendChild(b); });
     bar.appendChild(seg);
     holder.appendChild(bar);
+    /* organise a growing list (2026-10-16, Matthew): what to look at */
+    var fseg = q('div', 'aseg cfilt');
+    [['all', 'Everyone'], ['up', 'Upcoming jobs'], ['owe', 'Balance due'], ['rec', 'Recurring'], ['one', 'One-off']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String((S.custFilt || 'all') === o[0])); b.addEventListener('click', function () { S.custFilt = o[0]; drawCustomers(holder); }); fseg.appendChild(b); });
+    holder.appendChild(fseg);
     var listBox = q('div'); holder.appendChild(listBox);
     var fill = function () {
       listBox.textContent = '';
@@ -10203,13 +10228,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var shown = all.filter(function (c) { return ((S.custShow || 'active') === 'all' || (c.status || 'active') === 'active') && (!t || ((c.name || '') + ' ' + (c.address || '') + ' ' + (c.town || '') + ' ' + (c.phone || '')).toLowerCase().indexOf(t) >= 0); });
       listBox.appendChild(q('div', 'sub2', shown.length + (shown.length === 1 ? ' customer' : ' customers') + ' · ' + money(shown.reduce(function (n, c) { return n + (c.spent || 0); }, 0)) + ' in visits logged'));
       if (!shown.length) listBox.appendChild(q('div', 'msg', all.length ? 'No customer matches.' : 'No customers yet. Add one with the button above, or tap Make customer on a won job in the Pipeline.'));
-      /* two sections (2026-10-16, Matthew): customers on a plan, and one-off jobs */
-      var rec = shown.filter(function (c) { return c.plan && c.plan !== 'oneoff'; }), one = shown.filter(function (c) { return !c.plan || c.plan === 'oneoff'; });
-      [['Recurring', rec, 'on a plan'], ['One-off', one, 'single jobs']].forEach(function (g) {
-        if (!g[1].length) return;
-        var h = q('h2', 'cgrp', g[0] + ' \u00b7 ' + g[1].length); h.appendChild(q('small', null, g[2])); listBox.appendChild(h);
-        g[1].forEach(function (c) { listBox.appendChild(custRow(c)); });
-      });
+      /* organised (2026-10-16): Upcoming jobs (soonest first), Balance due (most first), or Recurring and One-off, the one-offs by the
+         month of their job, newest month first */
+      var F = S.custFilt || 'all', info = {}; shown.forEach(function (c) { info[c.id] = custJobInfo(c); });
+      var head = function (txt, small) { var h = q('h2', 'cgrp', txt); if (small) h.appendChild(q('small', null, small)); listBox.appendChild(h); };
+      if (F === 'up') {
+        var up = shown.filter(function (c) { return info[c.id].next; }).sort(function (a, b) { return info[a.id].next < info[b.id].next ? -1 : 1; });
+        head('Upcoming jobs \u00b7 ' + up.length, 'soonest first'); if (!up.length) listBox.appendChild(q('div', 'msg soft', 'No jobs booked ahead.'));
+        up.forEach(function (c) { listBox.appendChild(custRow(c)); });
+      } else if (F === 'owe') {
+        var ow = shown.filter(function (c) { return info[c.id].owe > 0; }).sort(function (a, b) { return info[b.id].owe - info[a.id].owe; });
+        head('Balance due \u00b7 ' + ow.length, money0(ow.reduce(function (n, c) { return n + info[c.id].owe; }, 0)) + ' in all'); if (!ow.length) listBox.appendChild(q('div', 'msg soft', 'Nothing owed on booked jobs.'));
+        ow.forEach(function (c) { listBox.appendChild(custRow(c)); });
+      } else {
+        var rec = shown.filter(function (c) { return c.plan && c.plan !== 'oneoff'; }), one = shown.filter(function (c) { return !c.plan || c.plan === 'oneoff'; });
+        if (F !== 'one' && rec.length) { head('Recurring \u00b7 ' + rec.length, 'on a plan'); rec.forEach(function (c) { listBox.appendChild(custRow(c)); }); }
+        if (F !== 'rec' && one.length) {
+          head('One-off \u00b7 ' + one.length, 'single jobs, by the month of the job');
+          var by = {}; one.forEach(function (c) { var d = info[c.id].next || info[c.id].last || c.start || ''; var k = d ? d.slice(0, 7) : 'none'; (by[k] = by[k] || []).push({ c: c, d: d }); });
+          Object.keys(by).sort(function (a, b) { return a === 'none' ? 1 : b === 'none' ? -1 : a < b ? 1 : -1; }).forEach(function (k) {
+            var p = k.split('-'); listBox.appendChild(q('div', 'dwh cmonth', (k === 'none' ? 'No job booked' : MONTHS[+p[1] - 1] + ' ' + p[0]) + ' (' + by[k].length + ')'));
+            by[k].sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; }).forEach(function (x) { listBox.appendChild(custRow(x.c)); });
+          });
+        }
+      }
     };
     find.addEventListener('input', fill); fill();
     /* exports and the backup (the admin's; the office sees the list only, 2026-10-14) */
