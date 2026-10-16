@@ -33,8 +33,9 @@ const BOTTOM = 'LAND \u00b7 AERATION & SEEDING';
 function badge(o) {
   const C = 500, R = 470, IN = 292, RIM = 16;
   const top = 338, bot = 432;   /* text paths: the top text sits outside its path, the bottom text inside its path */
-  const s = 3.75, x = C - 51 * s, y = C + 4 - 63.5 * s;   /* the mark drawn from x 4-98, y 14-113: centred on that */
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="${o.label}">
+  /* 2026-10-16 (Matthew + Brandon): SIXFOLD inside the disc above the peaks; the mark a little smaller, bottom-aligned, roots kept */
+  const s = 3.05, x = C - 51 * s, y = C + 268 - 113 * s;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="Sixfold 365: ${o.label}">
   <defs>
     <path id="top-${o.id}" d="M ${C - top} ${C} A ${top} ${top} 0 0 1 ${C + top} ${C}"/>
     <path id="bot-${o.id}" d="M ${C - bot} ${C} A ${bot} ${bot} 0 0 0 ${C + bot} ${C}"/>
@@ -46,6 +47,7 @@ function badge(o) {
   <circle cx="${C}" cy="${C}" r="${IN}" fill="${o.disc}"/>
   <g clip-path="url(#disc-${o.id})"><g transform="translate(${x} ${y}) scale(${s})">${ridge(o.ember, o.moss)}
   </g></g>
+  <text x="${C}" y="${C - 118}" text-anchor="middle" font-family="Outfit, 'DM Sans', sans-serif" font-weight="800" font-size="74" letter-spacing="16" fill="${o.inDisc}">SIXFOLD</text>
   <circle cx="${C - 388}" cy="${C}" r="20" fill="${o.dot}"/>
   <circle cx="${C + 388}" cy="${C}" r="20" fill="${o.dot}"/>
   <text font-family="Outfit, 'DM Sans', sans-serif" font-weight="800" font-size="150" letter-spacing="38" fill="${o.text}"><textPath href="#top-${o.id}" startOffset="50%" text-anchor="middle">365</textPath></text>
@@ -54,11 +56,11 @@ function badge(o) {
 }
 const OPTIONS = [
   { id: 'a', label: 'Option A: 365 green ring, Sixfold mark on cream', name: 'A · 365 green', note: 'The 365 badge colours: forest green ring, cream text, gold dots. The Ridge mark sits on cream in the middle.',
-    ring: '#2F5D2C', rim: '#FFF8EC', disc: '#FFF8EC', ember: '#E4703A', moss: '#4C7A3F', dot: '#F2C14E', text: '#FFF8EC' },
+    ring: '#2F5D2C', rim: '#FFF8EC', disc: '#FFF8EC', ember: '#E4703A', moss: '#4C7A3F', dot: '#F2C14E', text: '#FFF8EC', inDisc: '#2F5D2C' },
   { id: 'b', label: 'Option B: Sixfold dark ring with ember', name: 'B · Sixfold dark', note: 'Sixfold\u2019s own colours: pine black ring, bone text, ember dots. The Ridge mark on timber, exactly as on the Sixfold cards.',
-    ring: '#0E1512', rim: '#EDE7DC', disc: '#1F2A25', ember: '#E4703A', moss: '#8AA07A', dot: '#E4703A', text: '#EDE7DC', text2: '#E4703A' },
+    ring: '#0E1512', rim: '#EDE7DC', disc: '#1F2A25', ember: '#E4703A', moss: '#8AA07A', dot: '#E4703A', text: '#EDE7DC', text2: '#E4703A', inDisc: '#EDE7DC' },
   { id: 'c', label: 'Option C: light cream badge', name: 'C · Light (print)', note: 'Cream ring with forest green text and an ember outline. Lighter for shirts, yard signs and printing on white.',
-    ring: '#FFF8EC', ringLine: '#E4703A', rim: '#2F5D2C', disc: '#FFF8EC', ember: '#E4703A', moss: '#4C7A3F', dot: '#E4703A', text: '#2F5D2C' },
+    ring: '#FFF8EC', ringLine: '#E4703A', rim: '#2F5D2C', disc: '#FFF8EC', ember: '#E4703A', moss: '#4C7A3F', dot: '#E4703A', text: '#2F5D2C', inDisc: '#2F5D2C' },
 ];
 const FONT = '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&display=block" rel="stylesheet">';
 for (const o of OPTIONS) {
