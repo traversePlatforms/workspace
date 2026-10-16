@@ -64,7 +64,8 @@ const magnet = (k, s, w) => { const t = T[k]; const h = 12; return page(w * s, h
     <div class="o" style="font-weight:800;font-size:${(w > 20 ? 1.25 : 0.95) * s}px;line-height:1.02;color:${t.head}">Aeration &amp;<br>Overseeding</div>
     <div class="o" style="font-weight:800;font-size:${(w > 20 ? 1.08 : 0.74) * s}px;line-height:1;color:${t.acc};margin-top:${0.25 * s}px;white-space:nowrap">${PHONE}</div>
     <div class="o" style="font-weight:700;font-size:${(w > 20 ? 0.7 : 0.55) * s}px">${SITE}</div>
-  </div></div>`, t); };
+    <div style="width:${(w > 20 ? 3.6 : 3) * s}px;height:${(w > 20 ? 3.6 : 3) * s}px;margin-top:${0.25 * s}px;flex:none">${qrSvg(t.qrD, t.qrL).replace('<svg ', '<svg width="100%" height="100%" ')}</div>
+  </div></div>`, t); };   /* QR on the magnets (2026-10-16, Matthew): 3.6 in / 3 in reads from a few steps away */
 const shots = [];
 const render = (name, html, w, h) => {
   const f = join(OUT, name + '.html'), p = join(OUT, name + '.png');
