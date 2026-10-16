@@ -1982,6 +1982,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .jobst tr.jdayrow.today td{background:#1d3320}:root:not([data-theme="light"]) .jobst tr.booked td{background:#1d3320}:root:not([data-theme="light"]) .jobst tr.held td{background:#3a2e12}}:root[data-theme="dark"] .jobst tr.jdayrow.today td,:root[data-theme="dark"] .jobst tr.booked td{background:#1d3320}:root[data-theme="dark"] .jobst tr.held td{background:#3a2e12}
   .jobst td.snone{color:var(--soft);font-weight:500;font-style:italic}
   .jweek.tbl{display:block}.jweek.tbl .schedwrap{margin-top:8px}
+  .mdgrp{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:8px 0 0;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;text-align:left;font:inherit}
+  .mdgrp span{display:grid;gap:2px}.mdgrp small{color:var(--soft);font-size:12.5px}.mdgrp.on{border-color:var(--accent)}.mdgrp .mdcar{font-size:14px;color:var(--soft)}.mdgbody{padding:2px 0 4px 6px;border-left:3px solid var(--line);margin:4px 0 0 8px}
   .jtbd{display:flex;gap:8px;align-items:center;font-size:13.5px;margin:6px 0 0;color:var(--soft)}
   .jexact{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1.5px dashed var(--line);border-radius:10px;font:600 13.5px var(--sans);color:var(--soft)}.jexact.on{border-style:solid;border-color:#2f5d2c;color:var(--ink)}.jexact input{font:15px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.jexact b{color:var(--ink)}
   .jnums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -4059,10 +4061,24 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var shown = rows.filter(function (r) { return !r.gone && inRange(r) && (k === 'all' || kindOf(r) === k); });
         var nb = shown.filter(function (r) { return r.mine && r.mine.outcome === 'booked'; }).length;
         sum.textContent = shown.length ? shown.length + (shown.length === 1 ? ' door' : ' doors') + (nb ? ' · ' + nb + ' booked' : '') +
-          '. Newest first. Fix a mark here; open the door for notes, phone and photos.' : '';
+          '. By neighbourhood, newest first: tap one to open it. Fix a mark here; open the door for notes, phone and photos.' : '';
         list.textContent = '';
         if (!shown.length) { list.appendChild(q('div', 'msg', rows.length ? 'Nothing here for that filter. Try 7 days or 30 days.' : 'No doors in the last 30 days yet.')); return; }
-        shown.forEach(function (r) { list.appendChild(rowFor(r)); });
+        var groups = [], byKey = {};
+        shown.forEach(function (r) { var k = r.region + '|' + (r.area || ''); if (!byKey[k]) { byKey[k] = { k: k, region: r.region, area: r.area || 'Other doors', rows: [] }; groups.push(byKey[k]); } byKey[k].rows.push(r); });   /* newest first, so groups come newest first */
+        S.mdOpen = S.mdOpen || {};
+        groups.forEach(function (g) {
+          var town = ((S.regions || []).filter(function (x) { return x.key === g.region; })[0] || {}).label || '';
+          var gb = g.rows.filter(function (r) { return r.mine && r.mine.outcome === 'booked'; }).length;
+          var open = groups.length === 1 || !!S.mdOpen[g.k];
+          var head = q('button', 'mdgrp' + (open ? ' on' : '')); head.type = 'button'; head.setAttribute('aria-expanded', String(open));
+          var tx = q('span'); tx.appendChild(q('b', null, g.area)); tx.appendChild(q('small', null, [town, g.rows.length + (g.rows.length === 1 ? ' door' : ' doors'), gb ? gb + ' booked' : ''].filter(Boolean).join(' \u00b7 '))); head.appendChild(tx);
+          head.appendChild(q('span', 'mdcar', open ? '\u25b4' : '\u25be'));
+          var body = q('div', 'mdgbody'); body.hidden = !open;
+          if (open) g.rows.forEach(function (r) { body.appendChild(rowFor(r)); });
+          head.addEventListener('click', function () { S.mdOpen[g.k] = !S.mdOpen[g.k]; draw(); });
+          list.appendChild(head); list.appendChild(body);
+        });
       }
       function setMark(r, o, rv, quiet) {
         if (o === null && !quiet && r.now && r.now.outcome === 'nosolicit' &&
@@ -7494,7 +7510,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var ws = (j && j.ok ? j.walks : []).filter(function (w) { return planOk() || w.by === S.me; }).sort(function (a, b) { return String(a.time).localeCompare(String(b.time)); });
       var add = function (l1, l2, fn) { var r = q(fn ? 'button' : 'div', 'dh-trow'); if (fn) { r.type = 'button'; r.addEventListener('click', fn); } r.appendChild(q('b', null, l1)); r.appendChild(q('span', null, l2)); tc.appendChild(r); };
       ws.slice(0, 5).forEach(function (w) { add(w.time || 'Today', (feat('hail') ? 'Roof walk' : 'Walk') + ' \u00b7 ' + w.address + (planOk() && w.by ? ' \u00b7 ' + w.by : ''), function () { S.region = w.region; S.area = null; S.flash = w.id; S.openDoor = w.id; S.allClosed = false; S.returnTo = chooseView; openArea(w.area); }); });
-      withRegions(function () { var F = followups(); if (F.due) add('Due', F.due + (F.due === 1 ? ' door asked you back today' : ' doors asked you back today'), followupView); if (F.na) add('Again', F.na + (F.na === 1 ? ' no-answer back on the list' : ' no-answers back on the list'), followupView); if (!ws.length && !F.due && !F.na) tc.appendChild(q('span', 'dempty', 'Nothing booked for today. Walks, come-backs and new leads show here.')); });
+      withRegions(function () { var F = followups(); if (F.due) add('Due', F.due + (F.due === 1 ? ' door due back (asked us to come back by today)' : ' doors due back (asked us to come back by today)'), followupView); if (F.na) add('Again', F.na + (F.na === 1 ? ' no-answer back on the list' : ' no-answers back on the list'), followupView); if (!ws.length && !F.due && !F.na) tc.appendChild(q('span', 'dempty', 'Nothing booked for today. Walks, come-backs and new leads show here.')); });
       if (S.role === 'admin') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) add('Leads', l.new + (l.new === 1 ? ' new lead in the Pipeline' : ' new leads in the Pipeline'), pipelineView); }).catch(function () {});
     }).catch(function () {});
     /* storms and warnings */
