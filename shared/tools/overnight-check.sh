@@ -18,13 +18,14 @@ say "== $(date '+%Y-%m-%d %H:%M')"
 
 # 1. Town builds: running, finished, or stopped part-way
 NODES=$(tasklist //FI "IMAGENAME eq node.exe" 2>/dev/null | grep -c node.exe)
-for run in batch5:run-batch5-2026-10-15.sh batch5-fix:run-batch5-fix-2026-10-16.sh; do
+for run in batch5:run-batch5-2026-10-15.sh batch5-fix:run-batch5-fix-2026-10-16.sh boulder-trees:boulder-trees-last-2026-10-16.sh; do
   name=${run%%:*}; L="$DT/logs-$name"
   [ -d "$L" ] || continue
   if [ -f "$L/done.flag" ]; then ok "build $name finished $(date -r "$L/done.flag" '+%m-%d %H:%M')"; continue; fi
   newest=$(ls -t "$L"/*.log 2>/dev/null | head -1)
   last=$( [ -n "$newest" ] && basename "$newest" .log || echo none )
   if [ "$name" = batch5-fix ] && [ ! -f "$DT/logs-batch5/done.flag" ]; then ok "build $name waiting for batch5"
+  elif [ "$name" = boulder-trees ] && [ ! -f "$DT/logs-batch5-fix/done.flag" ]; then ok "build $name waiting for the catch-up"
   elif [ "$NODES" -gt 0 ]; then
     m=$( [ -n "$newest" ] && age_min "$newest" || echo 0 )
     if [ "$m" -gt 180 ]; then bad "build $name: node is running but nothing written for $m min (last step: $last)"
@@ -45,6 +46,7 @@ up() { # label flag towns...
 }
 up towns-trees-2026-10-16 "$DT/logs-batch5/done.flag" $T40
 up towns-catchup-2026-10-16 "$DT/logs-batch5-fix/done.flag" $T40 $SIX
+up boulder-trees-2026-10-16 "$DT/logs-boulder-trees/done.flag" boulder
 
 # 3. The live server: app page, API answering, Sixfold town list readable, PHP fatal errors in the last hour
 SRV=$($SG "cd ~/www/traverseplatforms.com && \
