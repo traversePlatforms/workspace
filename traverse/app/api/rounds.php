@@ -4015,7 +4015,12 @@ if ($action === 'leadhouse' || $action === 'leadask') {
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     if ($action === 'leadhouse') {
         if (!empty($body['clear'])) $row = ['id' => $id, 'house' => null, 'by' => $me, 'at' => time()];
-        else {
+        elseif (is_array($body['typed'] ?? null)) {   /* an address not on our property lists yet, typed by hand (2026-10-15, Matthew: Christopher's address) */
+            $ta = $clean($body['typed']['address'] ?? '', 120); $tt = $clean($body['typed']['town'] ?? '', 60);
+            if (!preg_match('/^\d{1,6}[A-Za-z]?\s+\S/', $ta)) fail('Type the house number and street, e.g. 1840 Ponderosa Dr.');
+            if (mb_strlen($tt) < 2) fail('Type the town.');
+            $row = ['id' => $id, 'house' => ['address' => $ta, 'town' => $tt, 'typed' => true], 'note' => 'Address added by hand (not on our property lists yet): ' . $ta . ', ' . $tt . '.', 'by' => $me, 'at' => time()];
+        } else {
             $h = houseFacts((string) ($body['region'] ?? ''), (string) ($body['door'] ?? ''));
             if (!$h) fail('No such house.', 404);
             $row = ['id' => $id, 'house' => ['region' => $h['region'], 'door' => $h['id'], 'address' => $h['address'], 'town' => $h['town']], 'by' => $me, 'at' => time()];
@@ -5757,10 +5762,13 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         $f = ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0], 'start' => $today];
         if (!empty($body['lead'])) {
             $lid = (string) $body['lead']; $L = null;
-            foreach (readLines(leadsDir() . '/leads.log') as $l) if (($l['id'] ?? '') === $lid) $L = $l;
+            $L = leadsAll()[$lid] ?? null;   /* the lead as it is now: changed details, its house and its quote (2026-10-15, Won makes the customer) */
             if (!$L) fail('No such lead.', 404);
             foreach ($cs as $c) if (($c['lead'] ?? '') === $lid && ($c['status'] ?? 'active') !== 'ended') out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
-            $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($L['town'] ?? '', 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
+            $LH = is_array($L['house'] ?? null) ? $L['house'] : null;
+            $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($LH ? streetCaseServer((string) $LH['town']) : ($L['town'] ?? ''), 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
+            if ($LH && !empty($LH['address'])) $f['address'] = streetCaseServer((string) $LH['address']);
+            if (!empty($L['quote']['price'])) $f['price'] = (float) $L['quote']['price'];
             /* the service whose name the enquiry mentions ("Fire mitigation" -> fire), the most specific if several
                ("Lawn aeration" -> aeration, as before); else the first one */
             $bestLen = 0;

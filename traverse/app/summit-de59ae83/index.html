@@ -1888,6 +1888,12 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .sedform input,.sedform select{font:14px var(--sans);padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}.sedacts{display:flex;gap:12px;align-items:center}.sedacts .save{width:auto;padding:8px 16px;min-height:0}.sedform .ltrynote,.sedform .err{flex-basis:100%}.schedt tr.dayfirst td{border-top:2px solid var(--soft)}.schedt td.sdate{font-weight:700;white-space:pre-line;vertical-align:top}
   .qseed button{font-size:12.5px}.qseed button:disabled{opacity:1;cursor:default}
   .qqsrc button{font-size:12.5px}
+  .findform{display:flex;align-items:center;gap:8px;cursor:text}.findform input{flex:1;min-width:0;border:0;background:none;font:inherit;color:var(--ink);outline:none}
+  .dh-sbox .findsel{margin-left:auto;flex:none}
+  .findsel{font:700 13px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer}
+  .dnav .findsel{margin-right:6px;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)}.dnav .findsel option{color:#111}
+  .handaddr label{display:grid;gap:4px;font-weight:700;font-size:13.5px;margin:10px 0 0}.handaddr input{font:15px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}.handaddr .save{margin-top:12px}
+  .hrow small{display:block;flex-basis:100%;color:var(--soft);font-size:12.5px;font-weight:500}
   .qqwho{position:relative}.qqnew{position:absolute;top:10px;right:12px;min-height:34px;padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}.qqnew:hover{border-color:var(--accent)}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .hpmap{min-height:240px;margin:10px 0}
@@ -3416,10 +3422,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         bs.appendChild(a);
       }).catch(function () {});
     }
+    if (findMulti()) {   /* Address, Customer or Person, from the home page too (2026-10-15) */
+      var ff = q('div', 'findbox findform'); ff.appendChild(ico('search', 2.4));
+      var fi = q('input'); fi.type = 'search'; fi.placeholder = FIND_PH[findKind()]; fi.setAttribute('aria-label', FIND_PH[findKind()]); fi.autocomplete = 'off';
+      fi.addEventListener('keydown', function (e) { if (e.key === 'Enter' && fi.value.trim()) findGo(fi.value.trim(), chooseView); });
+      ff.appendChild(fi); ff.appendChild(findSel(function (k) { fi.placeholder = FIND_PH[k]; fi.setAttribute('aria-label', FIND_PH[k]); var dn0 = document.getElementById('dnav'); if (dn0 && typeof dnavPaint === 'function') { dn0._sig = null; dnavPaint(); } try { fi.focus(); } catch (e) {} }));
+      box.appendChild(ff);
+    } else {
     var fs0 = q('button', 'findbox'); fs0.type = 'button';
     fs0.appendChild(ico('search', 2.4)); fs0.appendChild(q('span', null, 'Find an address'));
     fs0.addEventListener('click', function () { searchView(chooseView); });
     box.appendChild(fs0);
+    }
     /* the money sheet, loaded now so the door cards can say what each door qualifies for without a redraw */
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     /* In the field first, then Office; one line each. The office side is gated on ROLE, never on a
@@ -4179,7 +4193,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       c.appendChild(dt);
     }
-    if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house ? leadProperty(l) : leadHouseRow(l));   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
+    if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (asOffice() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
@@ -4191,11 +4205,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(nt);
     }
     if (!asOffice()) leadOwnerRows(l, c);   /* the office: leads from the ads and the website have no owner (2026-10-14) */
-    if (wdOn() && S.screen === 'pipeline' && (!asOffice() || dwFor('lead', l.id))) c.appendChild(deskWalkBlock('lead', l));   /* the walk desk (2026-10-14); the office quotes by phone */
+    if (wdOn() && S.screen === 'pipeline' && (!asOffice() || dwFor('lead', l.id)) && (dwFor('lead', l.id) || !(l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0))) c.appendChild(deskWalkBlock('lead', l));   /* quoted: no walk to book (Matthew 2026-10-15); a booked one still shows */   /* the walk desk (2026-10-14); the office quotes by phone */
     var sb = q('div', 'lstat');
+    var quotedNow = !!l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0;   /* Won and Lost only once there is a quote (Matthew 2026-10-15) */
     LEAD_ST.forEach(function (x) {
+      if ((x[0] === 'won' || x[0] === 'lost') && !quotedNow) return;
       var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === x[0]));
-      b.addEventListener('click', function () { if (l.status !== x[0]) saveLead(l, { status: x[0] }, l.status || 'new'); });
+      b.addEventListener('click', function () {
+        if (l.status === x[0]) return;
+        if (x[0] === 'won') {   /* Won = they have paid: straight into Customers (Matthew 2026-10-15) */
+          if (!window.confirm('Mark ' + (l.name || 'them') + ' won? Only once they have paid. They go into Customers.')) return;
+          saveLead(l, { status: 'won' }, null, function () { makeCustomer({ lead: l.id }); });
+          return;
+        }
+        saveLead(l, { status: x[0] }, l.status || 'new');
+      });
       sb.appendChild(b);
     });
     if (!asOffice()) c.appendChild(sb);   /* the office: no won/lost buttons; the calls and the form move the lead */
@@ -5323,6 +5347,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var last = lastTry(l); if (!last) return 'new';
     if (last.o === 'talk') return 'talked';
     if (missCount(l) >= LEAD_TRIES) return 'out';
+    if (last.o === 'vm') return 'vm';   /* its own section, not dropped to the bottom (Matthew 2026-10-15) */
     return tryDue(l) <= Date.now() ? 'today' : 'wait';
   }
   function tryWhen(ts) { var d = new Date(ts * 1000), today = isoOf(new Date()) === isoOf(d); return (today ? 'today' : dayName(isoOf(d))) + ' ' + fmtTime((d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()); }
@@ -5892,6 +5917,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work.')); return; }
         if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, e.g. “1840 Ponderosa”.')); return; }
         if (!j.results.length && quick) res.appendChild(bySize(v));
+        if (!j.results.length && lead && !quick) res.appendChild(byHand(v));
         if (!j.results.length) { res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”. Check the spelling, or try just the number and street name. Towns we have not added yet, condos and apartments will not show.')); return; }
         j.results.forEach(function (r) {
           var b = q('button', 'door drow srow'); b.type = 'button';
@@ -5913,9 +5939,39 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       { res.textContent = ''; pan.textContent = ''; var h = { address: addr || '', town: '' }; var w = q('div', 'door hpanel'); w.appendChild(q('div', 'addr', addr ? addr : 'An address not on our lists')); w.appendChild(q('div', 'meta', 'Not on our lists: no photo or measurements, and no drive cost. Ask them the lawn size.')); w.appendChild(quoteBox(h, null, { none: true }, function () {}, true)); pan.appendChild(w); }
     }
     if (quick) { var bs = bySize(''); bs.textContent = 'Not on our lists? Quote by lawn size \u203a'; box.insertBefore(bs, res); }
+    if (lead && !quick) box.insertBefore(byHand(''), res);   /* a lead's address that is not on our lists yet (2026-10-15, Matthew: Christopher's) */
+    function byHand(v) { var b = q('button', 'lnk qqsize', 'Not on our lists? Add the address by hand \u203a'); b.type = 'button'; b.addEventListener('click', function () { openHand(v, ''); }); return b; }
+    function openHand(v, town) {
+      res.textContent = ''; pan.textContent = '';
+      var w = q('div', 'door hpanel handaddr'); w.appendChild(q('div', 'addr', 'Add the address by hand'));
+      w.appendChild(q('div', 'meta', 'For an address not on our property lists yet. It goes on ' + (lead.name || 'the lead') + ' and the form; there is no photo or measurements, so the quote goes by the lawn size they give.'));
+      var al = q('label', null, 'House number and street'), ai = q('input'); ai.autocomplete = 'off'; ai.maxLength = 120; ai.placeholder = 'e.g. 1840 Ponderosa Dr'; ai.value = /^\d/.test(v || '') ? v : ''; al.appendChild(ai); w.appendChild(al);
+      var tl = q('label', null, 'Town'), ti = q('input'); ti.autocomplete = 'off'; ti.maxLength = 60; ti.placeholder = 'e.g. Centennial'; ti.value = town || ''; tl.appendChild(ti); w.appendChild(tl);
+      var er = q('div', 'err'), sv = q('button', 'save', 'Add it to ' + (lead.name || 'the lead')); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        er.textContent = ''; var ad = ai.value.trim(), tw = ti.value.trim();
+        if (!/^\d+[A-Za-z]?\s+\S/.test(ad)) { er.textContent = 'Type the house number and street.'; ai.focus(); return; }
+        if (tw.length < 2) { er.textContent = 'Type the town.'; ti.focus(); return; }
+        sv.disabled = true;
+        api('leadhouse', { body: { id: lead.id, typed: { address: ad, town: tw } } }).then(function (j) {
+          sv.disabled = false;
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { er.textContent = j.error || 'Not saved. Try again.'; return; }
+          lead.house = { address: ad, town: tw, typed: true }; toast('Address added', ad + ', ' + tw, null); openTyped(lead.house);
+        }).catch(function () { sv.disabled = false; er.textContent = 'No signal. Nothing was saved.'; });
+      });
+      w.appendChild(sv); w.appendChild(er); pan.appendChild(w); setTimeout(function () { try { (ai.value ? ti : ai).focus(); } catch (e) {} }, 60);
+    }
+    function openTyped(h) {
+      res.textContent = ''; pan.textContent = '';
+      var w = q('div', 'door hpanel'); w.appendChild(q('div', 'addr', streetCase(h.address) + (h.town ? ', ' + h.town : '')));
+      w.appendChild(q('div', 'meta', 'Added by hand, not on our property lists yet: no photo or measurements, and no drive cost. Ask them the lawn size.'));
+      var ch = q('button', 'lnk', 'Change the address'); ch.type = 'button'; ch.addEventListener('click', function () { openHand(h.address, h.town); }); w.appendChild(ch);
+      w.appendChild(quoteBox(h, lead, { none: true }, function () { openTyped(h); }, quick)); pan.appendChild(w);
+    }
     inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 350); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); } });
-    if (open) show(open.region, open.door); else if (sizeOpen) openSize(sizeOpen.address); else if (typed) { inp.value = typed; run(); } else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+    if (open && open.region) show(open.region, open.door); else if (open && lead) openTyped(open); else if (sizeOpen) openSize(sizeOpen.address); else if (typed) { inp.value = typed; run(); } else setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
     window.scrollTo(0, 0);
   }
   /* on a lead in the Pipeline: its house, or the button to find it */
@@ -5923,6 +5979,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var b = q('button', 'hrow' + (l.house ? ' on' : '')); b.type = 'button';
     b.appendChild(ico('door', 2.2));
     b.appendChild(q('span', null, l.house ? streetCase(l.house.address) + ', ' + l.house.town : 'Find their house'));
+    if (l.house && !l.house.region) b.appendChild(q('small', null, 'Not on our property lists yet \u00b7 quote by lawn size'));
     if (l.ask && l.ask.size) b.appendChild(q('small', null, 'They said: ' + l.ask.size));
     b.addEventListener('click', function () { houseLookupView(l, l.house || null); });
     return b;
@@ -6061,9 +6118,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       list.textContent = '';
       if (!j || !j.ok) { list.appendChild(q('div', 'msg', 'The leads need signal.')); return; }
       var open = j.leads.filter(function (l) { return ['new', 'contacted'].indexOf(l.status || 'new') >= 0; });
-      var G = { new: [], today: [], talked: [], wait: [], out: [] }; open.forEach(function (l) { G[callGroup(l)].push(l); });
+      var G = { new: [], today: [], vm: [], talked: [], wait: [], out: [] }; open.forEach(function (l) { G[callGroup(l)].push(l); });
       var web = open.filter(function (l) { return l.src === 'a365web' && !(l.tries || []).length; }).length;
-      [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
+      [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
         var b = q('button', 'onum' + (k[0] === 'new' && G.new.length ? ' ohot' : '')); b.type = 'button';
         b.appendChild(q('b', null, String(G[k[0]].length))); b.appendChild(q('span', null, k[1]));
         b.addEventListener('click', function () { S.pipeStage = 'call'; pipelineView(); }); nums.appendChild(b);
@@ -6079,13 +6136,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
         wl.appendChild(b);
       });
-      var next = G.new.concat(G.today).slice(0, 7);
+      var vmDue = G.vm.filter(function (l) { return tryDue(l) <= Date.now(); });
+      var next = G.new.concat(G.today, vmDue).slice(0, 7);
       if (!next.length) list.appendChild(q('div', 'msg soft', 'Nobody waiting. New Facebook and website requests show here as they come in.'));
       next.forEach(function (l) {
         var b = q('button', 'orow'); b.type = 'button';
         var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
         tx.appendChild(q('small', null, [l.need, LEAD_SRC[l.src] || l.src, ago(l.at)].filter(Boolean).join(' · '))); b.appendChild(tx);
-        b.appendChild(q('span', 'otag' + (callGroup(l) === 'today' ? ' again' : ''), callGroup(l) === 'today' ? 'Try again' : 'New'));
+        b.appendChild(q('span', 'otag' + (callGroup(l) !== 'new' ? ' again' : ''), callGroup(l) === 'vm' ? 'Voicemail' : callGroup(l) === 'today' ? 'Try again' : 'New'));
         b.addEventListener('click', function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
         list.appendChild(b);
       });
@@ -6425,7 +6483,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }, true);
     window.scrollTo(0, 0);
   }
-  function saveLead(l, change, undoTo) {
+  function saveLead(l, change, undoTo, then) {
     var body = { id: l.id }; for (var k in change) body[k] = change[k];
     api('leadstatus', { body: body }).then(function (j) {
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
@@ -6433,6 +6491,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       toast(change.status ? 'Marked ' + (LEAD_ST.filter(function (x) { return x[0] === change.status; })[0] || ['', change.status])[1] : 'Note saved', l.name || '',
         change.status && undoTo ? function () { saveLead(l, { status: undoTo }); } : null);   /* one tap saves, so one tap undoes (Fable) */
       (S.leadRedraw || pipelineView)();
+      if (then) then();
     }).catch(function () { toast('No signal', 'Not saved. Try again when you have signal.', null); });
   }
   function leadForm() {
@@ -7275,6 +7334,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'Find a door, a street, a neighbourhood or a town'; inp.setAttribute('aria-label', 'Find a door, a street, a neighbourhood or a town'); inp.autocomplete = 'off';
     lab.appendChild(inp); sw.appendChild(lab);
     var sug = q('div', 'dh-sug'); sug.hidden = true; sw.appendChild(sug);
+    var DH_PH = 'Find a door, a street, a neighbourhood or a town';
+    if (findMulti()) {   /* Address, Customer or Person (2026-10-15) */
+      var dset = function (k) { var p = k === 'addr' ? DH_PH : FIND_PH[k]; inp.placeholder = p; inp.setAttribute('aria-label', p); sug.hidden = true; };
+      lab.appendChild(findSel(function (k) { dset(k); var dn0 = document.getElementById('dnav'); if (dn0 && typeof dnavPaint === 'function') { dn0._sig = null; dnavPaint(); } try { inp.focus(); } catch (e) {} }));
+      dset(findKind());
+    }
     hero.appendChild(sw);
     var suggest = function () {
       var v = inp.value.trim().toUpperCase(); sug.textContent = '';
@@ -7295,8 +7360,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       b2.addEventListener('click', function () { S.searchQ = inp.value.trim(); searchView(chooseView); }); sug.appendChild(b2);
       sug.hidden = false;
     };
-    inp.addEventListener('input', suggest);
-    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var f = sug.querySelector('.dh-sg'); if (f && !f.classList.contains('addr') && sug.querySelectorAll('.dh-sg').length === 2) f.click(); else { S.searchQ = inp.value.trim(); searchView(chooseView); } } if (e.key === 'Escape') { sug.hidden = true; } });
+    inp.addEventListener('input', function () { if (findKind() === 'addr') suggest(); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim() && findKind() !== 'addr') { findGo(inp.value.trim(), chooseView); return; } if (e.key === 'Enter' && inp.value.trim()) { var f = sug.querySelector('.dh-sg'); if (f && !f.classList.contains('addr') && sug.querySelectorAll('.dh-sg').length === 2) f.click(); else { S.searchQ = inp.value.trim(); searchView(chooseView); } } if (e.key === 'Escape') { sug.hidden = true; } });
     var chips = q('div', 'dh-chips'); hero.appendChild(chips);
     page.appendChild(hero);
     if (S.viewAs) page.insertBefore(viewAsBar(), page.firstChild);
@@ -7667,8 +7732,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       dnav.appendChild(links);
       dnav.appendChild(q('span', 'dnsp'));
       var lab = q('label', 'dns'); lab.appendChild(ico('search', 2.2));
-      var inp = q('input'); inp.type = 'search'; inp.placeholder = 'Find an address'; inp.setAttribute('aria-label', 'Find an address'); inp.autocomplete = 'off';
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var v = inp.value.trim(); inp.value = ''; inp.blur(); if (asOffice()) { houseLookupView(null, null, v); return; } S.searchQ = v; searchView(chooseView); } });   /* the office: its House lookup, rented homes too (2026-10-14) */
+      var inp = q('input'); inp.type = 'search'; inp.placeholder = FIND_PH[findKind()]; inp.setAttribute('aria-label', FIND_PH[findKind()]); inp.autocomplete = 'off';
+      if (findMulti()) dnav.appendChild(findSel(function (k) { inp.placeholder = FIND_PH[k]; inp.setAttribute('aria-label', FIND_PH[k]); try { inp.focus(); } catch (e) {} }));   /* Address, Customer, Person (2026-10-15) */
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var v = inp.value.trim(); inp.value = ''; inp.blur(); findGo(v, chooseView); } });   /* the office: its House lookup, rented homes too (2026-10-14) */
       lab.appendChild(inp); dnav.appendChild(lab);
       dnav.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
     }
@@ -10306,7 +10372,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var gOf = function (it) { return it.kind === 'lead' ? callGroup(it.x) : 'new'; };
       var lt = function (it) { var x = it.kind === 'lead' ? lastTry(it.x) : null; return x ? x.at : 0; };
       groups = [];
-      [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
+      [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
         var its = shown.filter(function (it) { return gOf(it) === g[0]; });
         if (!its.length) return;
         if (g[0] !== 'new') its.sort(function (a, b) { return lt(a) - lt(b); });
@@ -10322,6 +10388,57 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- address search (2026-10-04) ----
      Matthew: someone driving past a property that needs us can type the address and get its card,
      with the chips and the money line, without knowing which neighbourhood it is in. Every town. */
+  /* one search box for addresses, customers and people (2026-10-15, Matthew: "a search for customer, or search for person option as well.
+     Maybe a drop down that switches between them"): the admin and the office; everyone else keeps the address search */
+  var FIND_KINDS = [['addr', 'Address'], ['cust', 'Customer'], ['person', 'Person']];
+  var FIND_PH = { addr: 'Find an address', cust: 'Find a customer', person: 'Find a person: name, phone or email' };
+  function findMulti() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
+  function findKind() { if (!S.findKind) { try { S.findKind = localStorage.getItem('findKind') || 'addr'; } catch (e) { S.findKind = 'addr'; } } return findMulti() && FIND_PH[S.findKind] ? S.findKind : 'addr'; }
+  function findSel(onChange) {
+    var sel = q('select', 'findsel'); sel.setAttribute('aria-label', 'What to find');
+    FIND_KINDS.forEach(function (k) { var o = q('option', null, k[1]); o.value = k[0]; if (k[0] === findKind()) o.selected = true; sel.appendChild(o); });
+    sel.addEventListener('change', function () { S.findKind = sel.value; try { localStorage.setItem('findKind', sel.value); } catch (e) {} if (onChange) onChange(sel.value); });
+    return sel;
+  }
+  function findGo(v, back) {
+    var k = findKind();
+    if (k === 'cust') { S.custFind = v; customersView(); return; }
+    if (k === 'person') { personView(v, back); return; }
+    if (asOffice()) { houseLookupView(null, null, v); return; }
+    S.searchQ = v; searchView(back || chooseView);
+  }
+  /* everyone in the app by name, phone, email or address: leads at any stage (won and lost too), each opening in the Pipeline */
+  function personView(v, back) {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'person'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Find a person', sub: 'Everyone who called, booked or filled in a form', back: back || chooseView, backLabel: 'Back' });
+    view.textContent = '';
+    var box = q('div', 'search');
+    var inp = q('input'); inp.type = 'search'; inp.id = 'personq'; inp.placeholder = FIND_PH.person; inp.autocomplete = 'off'; inp.value = v || '';
+    var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
+    var res = q('div', 'sres'); box.appendChild(res); view.appendChild(box);
+    res.appendChild(q('div', 'skel'));
+    var all = null;
+    var fill = function () {
+      res.textContent = ''; if (!all) return;
+      var t = inp.value.trim().toLowerCase(), td = digits(t);
+      if (t.length < 2) { res.appendChild(q('div', 'msg soft', 'Type a name, a phone number, an email or a street.')); return; }
+      var hit = all.filter(function (l) { var hay = [l.name, l.email, l.town, l.house && l.house.address, l.house && l.house.town].join(' ').toLowerCase(); return hay.indexOf(t) >= 0 || (td.length >= 3 && digits(l.phone).indexOf(td) >= 0); });
+      if (!hit.length) { res.appendChild(q('div', 'msg', 'Nobody matches \u201c' + inp.value.trim() + '\u201d.')); return; }
+      hit.slice(0, 40).forEach(function (l) {
+        var b = q('button', 'door drow srow prow'); b.type = 'button';
+        var st = LEAD_ST.filter(function (x) { return x[0] === (l.status || 'new'); })[0];
+        b.appendChild(q('div', 'addr', l.name || l.phone || l.email || 'No name'));
+        b.appendChild(q('div', 'swhere', [st ? st[1] : l.status, digits(l.phone).length >= 10 ? fmtPhone(digits(l.phone)) : l.phone, l.email, l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' \u00b7 ')));
+        b.addEventListener('click', function () { S.pipeStage = pipeStage({ kind: 'lead', x: l }); S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
+        res.appendChild(b);
+      });
+      if (hit.length > 40) res.appendChild(q('div', 'msg soft', (hit.length - 40) + ' more. Type more of it.'));
+    };
+    inp.addEventListener('input', fill);
+    api('leads').then(function (j) { if (j._status === 401) return signinView('Signed out. Enter your code again.'); all = (j && j.ok && j.leads) || []; fill(); }).catch(function () { res.textContent = ''; res.appendChild(q('div', 'msg', 'Finding people needs signal.')); });
+    setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+    window.scrollTo(0, 0);
+  }
   function searchView(back) {
     hideToast(); S.signin = null; S.screen = 'search';
     S.searchBack = back || S.searchBack || chooseView;
