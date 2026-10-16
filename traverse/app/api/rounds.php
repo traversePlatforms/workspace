@@ -5593,14 +5593,48 @@ if ($action === 'pestseason') {
     out(['ok' => true, 'month' => $mo, 'pests' => $now]);
 }
 
-if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget'], true)) {
+if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget', 'custdoc', 'custdocadd', 'custdocdel'], true)) {
     /* the office (Jen, 2026-10-14, Matthew: "in case she needs to call one or edit something she forgot to put in"): the list, editing a
        customer, making one from a lead, adding and editing visits. Removing a visit, imports, the download and backups stay the admin's. */
-    $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave'], true);
+    $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'custdoc', 'custdocadd'], true);
     if ($role !== 'admin' && !$officeCust) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
     /* the whole list, with each customer's visits and what is due */
+    /* documents on a customer (2026-10-15, Matthew: "customers should have their signed service agreement that people can click and it
+       can load up"): PDFs kept outside the web folder, shown only to people who may see customers */
+    if (in_array($action, ['custdoc', 'custdocadd', 'custdocdel'], true)) {
+        $cs = loadCustomers(); $cid = (string) ($_GET['id'] ?? ($body['id'] ?? '')); $c = $cs[$cid] ?? null;
+        if (!$c) fail('No such customer.', 404);
+        $dd = custDir() . '/docs'; if (!is_dir($dd)) @mkdir($dd, 0700, true);
+        $docs = array_values(array_filter((array) ($c['docs'] ?? []), 'is_array'));
+        if ($action === 'custdoc') {
+            $did = (string) ($_GET['doc'] ?? ''); $d = null; foreach ($docs as $x) if (($x['id'] ?? '') === $did) $d = $x;
+            if (!$d || !preg_match('/^d[0-9a-f]{10}$/D', $did)) fail('No such document.', 404);
+            $p = $dd . '/' . $cid . '-' . $did . '.pdf'; if (!is_file($p)) fail('That file is missing.', 404);
+            header('Content-Type: application/pdf'); header('Content-Disposition: inline; filename="' . preg_replace('/[^A-Za-z0-9 ._-]+/', '', (string) $d['name']) . '"'); header('Cache-Control: private, no-store'); header('X-Content-Type-Options: nosniff');
+            header('Content-Length: ' . filesize($p)); readfile($p); exit;
+        }
+        if (!$isPost) fail('POST required', 405);
+        if ($action === 'custdocadd') {
+            $name = $clean($body['name'] ?? '', 120); if ($name === '') $name = 'Agreement';
+            $bin = base64_decode((string) ($body['data'] ?? ''), true);
+            if ($bin === false || strncmp($bin, '%PDF', 4) !== 0) fail('Pick a PDF file.');
+            if (strlen($bin) > 15 * 1024 * 1024) fail('That PDF is over 15 MB.');
+            if (count($docs) >= 30) fail('This customer has 30 documents already.');
+            $did = 'd' . bin2hex(random_bytes(5));
+            if (@file_put_contents($dd . '/' . $cid . '-' . $did . '.pdf', $bin, LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+            @chmod($dd . '/' . $cid . '-' . $did . '.pdf', 0600);
+            $docs[] = ['id' => $did, 'name' => $name, 'size' => strlen($bin), 'at' => time(), 'by' => $me];
+        } else {
+            if ($role !== 'admin') fail('Not allowed.', 403);
+            $did = (string) ($body['doc'] ?? ''); $keep = array_values(array_filter($docs, fn($x) => ($x['id'] ?? '') !== $did));
+            if (count($keep) === count($docs)) fail('No such document.', 404);
+            @unlink($dd . '/' . $cid . '-' . preg_replace('/[^a-z0-9]/', '', $did) . '.pdf'); $docs = $keep;
+        }
+        if (!appendLine(custDir() . '/customers.log', ['id' => $cid, 'by' => $me, 'at' => time(), 'f' => ['docs' => $docs]])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'docs' => $docs]);
+    }
     if ($action === 'customers') {
         $cs = loadCustomers(); $vs = loadVisits();
         $byC = []; foreach ($vs as $v) $byC[(string) $v['cid']][] = $v;
@@ -5615,6 +5649,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
             $c['last'] = $done[0]['date'] ?? null;
             $c['due'] = ($c['status'] ?? 'active') === 'active' && !empty($c['next']) && $c['next'] <= $soon;
             $c['overdue'] = $c['due'] && $c['next'] < $today;
+            if (!empty($c['lead'])) { static $lAll = null; $lAll = $lAll ?? leadsAll(); $cl = $lAll[$c['lead']] ?? null; if ($cl && !empty($cl['signed']) && !empty($cl['sign']['key'])) $c['signedLink'] = a365SignLink((string) $c['lead'], (string) $cl['sign']['key']); }   /* their signed 365 form (2026-10-15) */
             $list[] = $c;
         }
         usort($list, fn($a, $b) => strcmp(mb_strtolower((string) ($a['name'] ?? '')), mb_strtolower((string) ($b['name'] ?? ''))));

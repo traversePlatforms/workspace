@@ -699,6 +699,12 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .vform .trow > *{flex:1;min-width:0}
   .vform input,.vform select{font:600 16px var(--sans);padding:9px 10px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-width:0}
   .vform .save{min-height:44px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14px var(--sans);cursor:pointer}
+  .cpage{display:block}@media (min-width:1100px){.cpage{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:24px;align-items:start;max-width:1200px;margin:0 auto}.cpage>.cside{position:sticky;top:76px}.cpage>.cside[hidden]{display:none}.cpage:has(>.cside[hidden]){grid-template-columns:minmax(0,760px);justify-content:center}}
+  .cmain{min-width:0}.cmain .vform{max-width:760px}.cside .lprop{margin:0}
+  .cdocs{margin:14px 0 6px}.cdoclist{display:grid;gap:8px}.cdoc{display:flex;align-items:center;gap:10px}.cdocopen{flex:1;display:flex;align-items:center;gap:10px;text-align:left;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;font:inherit}.cdocopen:hover{border-color:var(--accent)}.cdocopen span{display:grid;gap:1px}.cdocopen small{color:var(--soft);font-size:12.5px}
+  .cdocup{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:9px 14px;border:1.5px dashed var(--line);border-radius:12px;cursor:pointer;font-weight:700;font-size:14px;color:var(--accent)}
+  .docov{position:fixed;inset:0;z-index:60;background:rgba(10,14,12,.6);display:flex;align-items:center;justify-content:center;padding:24px}.docbox{width:min(1000px,100%);height:min(92vh,1200px);background:var(--card);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .dochd{display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--line)}.dochd b{flex:1}.docx{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}.docfr{flex:1;width:100%;border:0;background:#fff}
   .chead{border-radius:20px;padding:16px;color:var(--bar-ink);background:var(--topo) center/560px 360px,linear-gradient(150deg,#2B3B34 0%,var(--bar) 75%);margin-bottom:12px}
   .chead .cname{font:400 24px/1.15 var(--serif)}
   .chead .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
@@ -3490,7 +3496,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
       var otl = q('div', 'tgrid');
       if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
-      if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See the Office screen', 'The full office account: leads, the house lookup and the calendars.', 'Admin only', function () { S.viewAs = 'office'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
+      /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
       officeGroup(box, 'sales', 'Sales', [pt, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
@@ -7382,7 +7388,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Office dashboard', officeView]);
     if (S.role === 'manager') t.push(['Team sign-ins', accountsView]);
     if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
-    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); t.push(['Office screen', function () { S.viewAs = 'office'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
+    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); t.push(['Sample door', sampleView]); if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
   }
   function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
@@ -7771,8 +7777,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
     if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
-    if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'customers', 'customer', 'results', 'skip', 'deskbook', 'walk']]);
+    if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'results', 'skip', 'deskbook', 'walk']]);
     if (adminView() && wdOn()) it.push(['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']]);   /* the jobs board (2026-10-14) */
+    if (adminView()) it.push(['card', 'Customers', customersView, ['customers', 'customer']]);   /* in the top bar, not only under Office (Matthew 2026-10-15) */
     if (asOffice()) it.push(['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
@@ -10131,10 +10138,62 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       drawCustomer(holder, c);
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Customers need signal.')); });
   }
-  function drawCustomer(holder, c) {
-    holder.textContent = '';
+  /* a PDF or a signed form, opened inside the app (2026-10-15); a phone opens it in a new tab, where its own reader shows every page */
+  function docViewer(title, url) {
+    if (onPhone()) { window.open(url, '_blank', 'noopener'); return; }
+    var ov = q('div', 'docov'), bx = q('div', 'docbox'), hd = q('div', 'dochd');
+    hd.appendChild(q('b', null, title));
+    var nt = q('a', 'lnk', 'Open in a new tab \u203a'); nt.href = url; nt.target = '_blank'; nt.rel = 'noopener'; hd.appendChild(nt);
+    var x = q('button', 'docx', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); hd.appendChild(x);
+    var fr = document.createElement('iframe'); fr.className = 'docfr'; fr.src = url; fr.title = title;
+    bx.appendChild(hd); bx.appendChild(fr); ov.appendChild(bx); document.body.appendChild(ov);
+    var close = function () { ov.remove(); document.removeEventListener('keydown', esc); }, esc = function (e) { if (e.key === 'Escape') close(); };
+    x.addEventListener('click', close); ov.addEventListener('click', function (e) { if (e.target === ov) close(); }); document.addEventListener('keydown', esc);
+  }
+  function custDocs(c) {
+    var box = q('div', 'cdocs'); box.appendChild(q('h2', null, 'Agreements and documents'));
+    var list = q('div', 'cdoclist'); box.appendChild(list);
+    var row = function (name, sub, open, del) {
+      var r = q('div', 'cdoc'), b = q('button', 'cdocopen'); b.type = 'button'; b.appendChild(ico('clip', 2.2)); var tx = q('span'); tx.appendChild(q('b', null, name)); if (sub) tx.appendChild(q('small', null, sub)); b.appendChild(tx);
+      b.addEventListener('click', open); r.appendChild(b);
+      if (del) { var d = q('button', 'lnk danger', 'Remove'); d.type = 'button'; d.addEventListener('click', del); r.appendChild(d); }
+      list.appendChild(r);
+    };
+    if (c.signedLink) row('Signed agreement (365 form)', 'Signed online; opens their signed form', function () { docViewer('Signed agreement: ' + (c.name || ''), staffLink(c.signedLink)); });
+    if (c.agreement && /^https?:\/\//.test(c.agreement)) row('Agreement (link)', c.agreement.replace(/^https?:\/\//, '').slice(0, 60), function () { docViewer('Agreement: ' + (c.name || ''), c.agreement); });
+    (c.docs || []).forEach(function (d) {
+      var url = API + '?action=custdoc&id=' + encodeURIComponent(c.id) + '&doc=' + encodeURIComponent(d.id);
+      row(d.name, 'PDF \u00b7 ' + Math.max(1, Math.round(d.size / 1024)) + ' KB \u00b7 added ' + fmtDay(d.at) + (d.by ? ' by ' + String(d.by).split(' ')[0] : ''), function () { docViewer(d.name + ': ' + (c.name || ''), url); },
+        S.role === 'admin' ? function () { if (!window.confirm('Remove ' + d.name + ' from ' + (c.name || 'this customer') + '?')) return; api('custdocdel', { body: { id: c.id, doc: d.id } }).then(function (j) { if (!j.ok) { toast('Not removed', j.error || '', null); return; } c.docs = j.docs; box.replaceWith(custDocs(c)); }).catch(function () { toast('No signal', 'Try again.', null); }); } : null);
+    });
+    if (!list.children.length) list.appendChild(q('div', 'msg soft', 'No agreement here yet. Add the signed PDF (from DocuSign or a scan) and it opens right here.'));
+    var up = q('label', 'cdocup'), fi = q('input'); fi.type = 'file'; fi.accept = 'application/pdf,.pdf'; fi.hidden = true;
+    up.appendChild(ico('clip', 2.2)); up.appendChild(q('span', null, 'Add a signed agreement or other PDF')); up.appendChild(fi); box.appendChild(up);
+    fi.addEventListener('change', function () {
+      var file = fi.files && fi.files[0]; if (!file) return;
+      if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { toast('PDF only', 'Pick a PDF file.', null); return; }
+      if (file.size > 15 * 1024 * 1024) { toast('Too big', 'That PDF is over 15 MB.', null); return; }
+      var name = window.prompt('What is it? (shown on the customer)', /agree|signed|contract/i.test(file.name) ? 'Signed agreement' : file.name.replace(/\.pdf$/i, ''));
+      if (name === null) { fi.value = ''; return; }
+      var rd = new FileReader();
+      rd.onload = function () {
+        var b64 = String(rd.result).split(',')[1] || '';
+        toast('Uploading', file.name, null);
+        api('custdocadd', { body: { id: c.id, name: name.trim() || 'Agreement', data: b64 } }).then(function (j) { fi.value = ''; if (!j.ok) { toast('Not added', j.error || 'Try again.', null); return; } c.docs = j.docs; toast('Added', name, null); box.replaceWith(custDocs(c)); }).catch(function () { fi.value = ''; toast('No signal', 'Nothing was added.', null); });
+      };
+      rd.readAsDataURL(file);
+    });
+    return box;
+  }
+  function drawCustomer(holder0, c) {
+    holder0.textContent = '';
+    /* two columns on a computer (2026-10-15, Matthew: the page was "so dragged out"): the customer on the left at a readable width, their property on the right */
+    var page = q('div', 'cpage'), holder = q('div', 'cmain'), side = q('div', 'cside'); page.appendChild(holder); page.appendChild(side); holder0.appendChild(page);
+    if (c.door && /\//.test(c.door)) { var dp = c.door.split('/'); var pc = leadProperty({ id: 'cust-' + c.id, house: { region: dp[0], door: dp.slice(1).join('/'), address: c.address || '', town: c.town || '' } }); [].forEach.call(pc.querySelectorAll('.lpopen,.lpquote'), function (x) { x.remove(); }); side.appendChild(q('h2', null, 'The property')); side.appendChild(pc); }
+    else side.hidden = true;
     setBar('back', { title: c.name || 'Customer', sub: [c.address, c.town].filter(Boolean).join(' · '), back: S.custBack || customersView, backLabel: S.custBackLabel || 'Customers' });
-    if (S.custEdit === c.id) { holder.appendChild(customerForm(c, function () { S.custEdit = null; customerView(c.id); })); var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custEdit = null; drawCustomer(holder, c); }); holder.appendChild(cx); return; }
+    document.body.classList.add('owide');   /* the wide frame, as the Jobs page (setBar clears it); a phone keeps one column (the grid is for 1100px and up) */
+    if (S.custEdit === c.id) { holder.appendChild(customerForm(c, function () { S.custEdit = null; customerView(c.id); })); var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custEdit = null; drawCustomer(holder0, c); }); holder.appendChild(cx); return; }
     var head = q('div', 'chead');
     head.appendChild(q('div', 'cname', c.name || 'Customer'));
     var tags = q('div', 'meta');
@@ -10181,7 +10240,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else if (!(rv && /^https:\/\//.test(rv)) && S.role === 'admin' && feat('company')) holder.appendChild(q('div', 'sub2', 'To ask customers for reviews, add your Google review link on the Company screen.'));
     if (c.notes) holder.appendChild(q('div', 'lmsg', c.notes));
     var ed = q('div', 'aacts cacts');
-    var eb = q('button', 'lnk', 'Edit'); eb.type = 'button'; eb.addEventListener('click', function () { S.custEdit = c.id; drawCustomer(holder, c); }); ed.appendChild(eb);
+    var eb = q('button', 'lnk', 'Edit'); eb.type = 'button'; eb.addEventListener('click', function () { S.custEdit = c.id; drawCustomer(holder0, c); }); ed.appendChild(eb);
     var st = c.status || 'active';
     [['active', 'Make active'], ['paused', 'Pause'], ['ended', 'End']].forEach(function (o) {
       if (o[0] === st) return;
@@ -10190,6 +10249,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       ed.appendChild(b);
     });
     holder.appendChild(ed);
+    holder.appendChild(custDocs(c));
     /* visits */
     holder.appendChild(q('h2', null, 'Visits · ' + (c.visits || []).length));
     holder.appendChild(visitForm(c));
