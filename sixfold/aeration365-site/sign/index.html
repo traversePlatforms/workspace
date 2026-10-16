@@ -98,6 +98,11 @@
     main.textContent = '';
     if (A.moved) { var mv = el('div', 'card ok'); mv.appendChild(el('h2', null, 'Your day has moved')); mv.appendChild(el('p', 'big', A.moved.day + (A.moved.arrive ? ', arriving ' + A.moved.arrive : '') + '.')); mv.appendChild(el('p', 'muted', 'We moved it for the weather. The agreement below shows the day it was first set for. Questions? Call or text (720) 830-4553.')); main.appendChild(mv); }   /* 2026-10-15 */
     main.appendChild(details(A)); main.appendChild(terms(A));
+    if (A.view) {   /* view only (2026-10-16): the agreement as written, nothing to pay or sign */
+      var vc = el('div', 'card'); vc.appendChild(el('p', 'muted', 'Questions? Call or text (720) 830-4553.'));
+      var vp = el('button', 'btn ghost noprint', 'Print or save a copy'); vp.type = 'button'; vp.addEventListener('click', function () { window.print(); }); vc.appendChild(vp);
+      main.appendChild(vc); return;
+    }
     if (A.signed) { main.appendChild(signedCard(A.signed, null)); return; }
     if (A.pay && !A.pay.paid && A.pay.url) {   /* the deposit by Square: pay first, then sign (2026-10-15) */
       var pc = el('div', 'card noprint'); pc.appendChild(el('h2', null, 'Pay your deposit'));

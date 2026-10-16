@@ -2390,6 +2390,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $jn = jobForLead($l['id']); $moved = $jn && !empty($jn['wx']) && $jn['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d') ? ['day' => a365Day($jn['date']), 'arrive' => a365Arrive((string) $jn['slot'])] : null;   /* moved for weather (2026-10-15) */
     if ($action === 'a365savecard') {   /* ticked or not, recorded before they go to Square to pay (2026-10-15) */
         if (!$isPost) fail('POST required', 405);
+        if (!empty($l['signview']['facts']) && empty($l['signed'])) out(['ok' => true, 'kept' => false]);   /* view only: no payment */
         if (!empty($l['signed']) || ($l['sign']['how'] ?? '') !== 'link' || a365DepositPaid($l, false)) out(['ok' => true, 'kept' => false]);
         $bal = (int) $l['quote']['price'] - (int) $l['sign']['deposit'];
         appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'savecard' => ['yes' => !empty($body['save']), 'text' => a365SaveText($bal), 'at' => time(), 'ip' => (string) (relayIp() ?? ($_SERVER['REMOTE_ADDR'] ?? '')), 'ua' => mb_substr((string) (relayIp() !== null ? ($_SERVER['HTTP_X_CLIENT_UA'] ?? '') : ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200)], 'by' => 'website', 'at' => time()]);
@@ -2401,6 +2402,9 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
         $sn = (($l['seen']['key'] ?? '') === ($l['sign']['key'] ?? null)) ? $l['seen'] : null;
         if (!$sn || time() - (int) ($sn['last'] ?? 0) > 600) appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'seen' => ['key' => (string) $l['sign']['key'], 'first' => (int) ($sn['first'] ?? time()), 'last' => time(), 'n' => (int) ($sn['n'] ?? 0) + 1], 'by' => 'website', 'at' => time()]);
     }
+    $sv = !empty($l['signview']['facts']) && empty($l['signed']) ? $l['signview'] : null;   /* view only (2026-10-16): the agreement as the office wrote it, nothing to pay or sign */
+    if ($sv && $action === 'a365sign') out(['ok' => true, 'view' => true, 'moved' => null, 'first' => $first, 'facts' => $sv['facts'], 'terms' => $sv['terms'], 'consent' => '', 'consents' => [], 'pay' => null, 'save' => null]);
+    if ($sv) fail('This agreement is for reading only. Please call or text us at ' . (string) (company()['a365']['phone'] ?? '') . '.', 409);
     if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
@@ -3771,7 +3775,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -5593,6 +5597,23 @@ if ($action === 'pestseason') {
     out(['ok' => true, 'month' => $mo, 'pests' => $now]);
 }
 
+/* a view-only form for one customer (2026-10-16, Matthew, Jeremy Kaplan: he pays Brandon in person, so his link shows the agreement
+   as written, with no deposit, payment or signing). The admin writes the facts and terms; the price on the quote can be changed with
+   it. clear: back to the normal form. */
+if ($action === 'a365signview') {
+    if ($role !== 'admin' || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadsAll()[$id] ?? null;
+    if (!$l || empty($l['sign'])) fail('That lead has no form.', 404);
+    if (!empty($l['signed'])) fail('This form is already signed.');
+    if (!empty($body['clear'])) { appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'signview' => null, 'note' => 'Form back to the normal one (sign and pay).', 'by' => $me, 'at' => time()]); out(['ok' => true]); }
+    $facts = []; foreach ((array) ($body['facts'] ?? []) as $f) { if (!is_array($f) || count($f) !== 2) fail('Each line needs a label and a value.'); $a = a365Clean($f[0], 60); $b = a365Clean($f[1], 200); if ($a === '' || $b === '') fail('Each line needs a label and a value.'); $facts[] = [$a, $b]; }
+    $terms = []; foreach ((array) ($body['terms'] ?? []) as $t) { $t = a365Clean($t, 400); if ($t !== '') $terms[] = $t; }
+    if (count($facts) < 2 || count($facts) > 14 || count($terms) > 20) fail('Give 2 to 14 lines and up to 20 terms.');
+    $row = ['id' => $id, 'signview' => ['facts' => $facts, 'terms' => $terms, 'at' => time(), 'by' => $me], 'note' => 'Form switched to view only (no deposit, payment or signing).', 'by' => $me, 'at' => time()];
+    if (isset($body['price'])) { $p = (int) $body['price']; if ($p < 1 || $p > 100000) fail('The price should be a number of dollars.'); $row['quote'] = ['price' => $p] + (array) ($l['quote'] ?? []); $row['quote']['price'] = $p; $row['note'] .= ' Price $' . (int) ($l['quote']['price'] ?? 0) . ' changed to $' . $p . '.'; }
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 /* ---- payments, for the books (2026-10-16, Matthew: "I am just mainly thinking about taxes, and having documentation we can print out
    that can be used to do the taxes with") ----
    Every payment received, rebuilt from the job log: each change of a job's payment status is a payment (or a correction) dated when it
