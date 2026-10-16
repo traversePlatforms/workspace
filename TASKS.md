@@ -830,6 +830,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       photo as a second look, show "mostly trees" on wooded lots, then a "Most lawn" sort and a
       per-door figure. **First true check: one lot Sixfold has measured on the ground.** Write-up:
       [LAWN-SIZE.md](traverse/data-pipeline/door-territory/LAWN-SIZE.md).
+- [ ] **SX-62 — Facebook (Meta) lead import blocked (15 Oct).** "API access blocked": Meta developer account on hold for unusual activity; confirm it, then resume the import and pull the backlog. See the dated reminders.
+- [ ] **SX-63 — Contact@SixfoldColorado.com app password dead (15 Oct).** Morning email (hourly cron, to Contact@) and the Sixfold site form's email copies fail at sign-in. New app password from Matthew. See the dated reminders.
 - [ ] **SX-60 — Jobber export: TABLED, look into later.** Matthew 2026-10-15: "Table the export to Jobber for now, but keep it in the list as an option we wanna look into." The "Door bookings for Jobber (CSV)" link is hidden on the Pipeline (the `jobber` action still works). Revisit: whether Sixfold moves jobs into Jobber, or the app's own Jobs board is enough.
 - [ ] **SX-61 — Lead owner dropdown: TABLED.** Matthew 2026-10-15: "Remove the owner drop downs ... its not needed at the moment, can table it for now." Hidden on lead cards (`leadOwnerRows` kept in the code; server actions unchanged). Revisit when more than one person works the leads.
 - [ ] **SX-58 — Connect Square to the app (365).** Asked 2026-10-15 (Matthew: "Add connect square to the app to do list").
@@ -1194,6 +1196,9 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 
 | When | What |
 |---|---|
+| **16 Oct, first thing** | **SX-62 Facebook leads blocked:** Meta put the developer account on hold ("Account confirmation needed: unusual activity"; Confirm Account errored on 15 Oct). Matthew confirms it (clean browser / phone app / retry). Then: turn the 5-min import back on if paused, pull the backlog since **14 Oct ~10 pm**, check Jen has them. Until then: Leads Center CSV → Pipeline, Import leads from Meta. |
+| **16 Oct, first thing** | **SX-63 Morning email + Sixfold site form email:** the Contact@SixfoldColorado.com Gmail app password is dead (535, both servers; last morning email 7 Oct). Matthew makes a new app password, saves it in ~/.ssh; Claude puts it in both servers' api/config.php and sends a test. Ask whether the morning email should also go to Matthew. |
+| **16 Oct, 6 pm** | Check the Google Drive backup ran by itself (14 + 15 Oct failed: Drive did not restart after a reboot; script now starts it). |
 | **3 Oct** | **SX-1b(2)** — ask Matthew for the PPE counts and sizes back from Brandon and Brad |
 | **7 Oct** | **SX-3a** — last safe signing day for Kara to keep the 12 Oct start |
 | ~~8 Oct~~ | ~~SX-11 Karen on Nextdoor, SG-5 pull WhatsApp again~~ — both done 2026-10-08 |
