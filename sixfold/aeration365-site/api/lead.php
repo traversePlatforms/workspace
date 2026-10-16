@@ -19,7 +19,7 @@ $cfg = is_readable($cfgFile) ? (array) (require $cfgFile) : [];
 $key = (string) ($cfg['key'] ?? '');
 $app = (string) ($cfg['app'] ?? 'https://traverseplatforms.com/api/rounds.php');
 if (strlen($key) < 32 || !function_exists('curl_init')) { http_response_code(503); echo '{"ok":false,"error":"Something went wrong on our side. Please call or text us at (720) 830-4553."}'; exit; }
-$q = ['action' => $action]; if ($action === 'a365quote') $q['q'] = (string) ($_GET['q'] ?? ''); if ($action === 'a365sign') $q['s'] = (string) ($_GET['s'] ?? '');
+$q = ['action' => $action]; if ($action === 'a365quote') $q['q'] = (string) ($_GET['q'] ?? ''); if ($action === 'a365sign') { $q['s'] = (string) ($_GET['s'] ?? ''); if (!empty($_GET['staff'])) $q['staff'] = '1'; }   /* opened from the app: not counted as the customer opening it (2026-10-15) */
 $c = curl_init($app . '?' . http_build_query($q));
 $opt = [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CONNECTTIMEOUT => 6,
         CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'X-Site-Key: ' . $key, 'X-Client-IP: ' . (string) ($_SERVER['REMOTE_ADDR'] ?? ''), 'X-Client-UA: ' . substr(str_replace(["\r", "\n"], ' ', (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200), 'Origin: https://365aeration.com']];

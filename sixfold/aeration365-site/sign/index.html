@@ -92,7 +92,7 @@
     var pr = el('button', 'btn ghost noprint', 'Print or save a copy'); pr.type = 'button'; pr.addEventListener('click', function () { window.print(); }); c.appendChild(pr);
     return c;
   }
-  fetch(API + '?action=a365sign&s=' + encodeURIComponent(key), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (A) {
+  fetch(API + '?action=a365sign&s=' + encodeURIComponent(key) + (/[?&]staff=1\b/.test(location.search) ? '&staff=1' : ''), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (A) {
     if (!A || !A.ok) { sorry((A && A.error) || 'Something went wrong. Call or text us.'); return; }
     document.getElementById('hi').textContent = A.first ? A.first + ', here’s your agreement' : 'Your agreement';
     main.textContent = '';

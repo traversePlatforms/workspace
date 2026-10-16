@@ -4196,7 +4196,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(dt);
     }
     if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
-    if (asOffice() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));   /* the one-page form (2026-10-14) */
+    if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
     if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* call tries (2026-10-14) */
@@ -5143,7 +5143,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(row);
     addSendNote(box, row);
     var cp = q('button', 'lnk', 'Copy the link'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); box.appendChild(cp);
-    var pv = q('a', 'lnk', 'See the form \u203a'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; box.appendChild(pv);
+    var pv = q('a', 'lnk', 'See the form \u203a'); pv.href = staffLink(j.link); pv.target = '_blank'; pv.rel = 'noopener'; box.appendChild(pv);
     box.appendChild(q('div', 'ltrynote', 'The text and email open here, filled in, from your own number or email. Nothing is sent until you press send.'));
     var dn = q('button', 'save', QB || qView() ? 'Done: start a new search' : 'Done'); dn.type = 'button'; dn.addEventListener('click', QB || qView() ? quickNew : back); box.appendChild(dn);
     view.appendChild(box); window.scrollTo(0, 0);
@@ -5473,6 +5473,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(b); return box;
   }
   /* the form's state on a lead: sent (and when, and the day held), or signed */
+  function staffLink(u) { return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'staff=1'; }   /* our own look at their form is not them opening it */
+  function seenText(l) {   /* did they open the form? (2026-10-15) */
+    var sn = l.seen; if (!sn || !sn.n) return 'Not opened yet';
+    var at = function (ts) { var d = new Date(ts * 1000); return tryWhen(ts); };
+    return 'Opened ' + (sn.n === 1 ? 'once, ' + at(sn.first) : sn.n + ' times, last ' + at(sn.last)) + (l.savecard ? ' \u00b7 pressed Pay' : '');
+  }
   function signLine(l) {
     var g = l.sign, d = q('div', 'qline' + (l.signed ? ' qyes' : ''));
     var o = l.quote && l.quote.offer;
@@ -5481,7 +5487,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (l.sqcard && l.sqcard.last4) d.appendChild(q('div', 'dwsub', 'Card saved for the balance: ' + (l.sqcard.brand || 'card') + ' ending ' + l.sqcard.last4));   /* 2026-10-15 */
     else if (l.savecard && l.savecard.yes && !(l.sqafter)) d.appendChild(q('div', 'dwsub', 'They chose to save their card for the balance'));
     var row = q('div', 'qlinks');
-    var a = q('a', 'lnk', l.signed ? 'Their signed form \u203a' : 'Their form \u203a'); a.href = g.link; a.target = '_blank'; a.rel = 'noopener'; row.appendChild(a);
+    if (!l.signed) d.appendChild(q('div', 'dwsub seen' + (l.seen && l.seen.n ? ' on' : ''), seenText(l)));
+    var a = q('a', 'lnk', l.signed ? 'Their signed form \u203a' : 'Their form \u203a'); a.href = staffLink(g.link); a.target = '_blank'; a.rel = 'noopener'; row.appendChild(a);
     if (!l.signed) { var r = q('button', 'lnk', 'Change or send again'); r.type = 'button'; r.addEventListener('click', function () { signSendView(l, null); }); row.appendChild(r); }
     if (l.signed) {   /* the signed copy by email (2026-10-15): sent when they sign; again from here */
       if (l.mailed && l.mailed.to) d.appendChild(q('div', 'dwsub', 'Signed copy emailed to ' + l.mailed.to + ', ' + ago(l.mailed.at)));

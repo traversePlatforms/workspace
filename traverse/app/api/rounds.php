@@ -2394,6 +2394,12 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
         appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'savecard' => ['yes' => !empty($body['save']), 'text' => a365SaveText($bal), 'at' => time(), 'ip' => (string) (relayIp() ?? ($_SERVER['REMOTE_ADDR'] ?? '')), 'ua' => mb_substr((string) (relayIp() !== null ? ($_SERVER['HTTP_X_CLIENT_UA'] ?? '') : ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 200)], 'by' => 'website', 'at' => time()]);
         out(['ok' => true, 'kept' => true]);
     }
+    /* the customer opened it (2026-10-15, Matthew: "is there a way to know if he opened the link"): a visit counts once per 10 minutes;
+       opened from the app (staff=1) does not count. Link previews in a text or email do not run the page, so they do not count either. */
+    if ($action === 'a365sign' && empty($l['signed']) && empty($_GET['staff'])) {
+        $sn = (($l['seen']['key'] ?? '') === ($l['sign']['key'] ?? null)) ? $l['seen'] : null;
+        if (!$sn || time() - (int) ($sn['last'] ?? 0) > 600) appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'seen' => ['key' => (string) $l['sign']['key'], 'first' => (int) ($sn['first'] ?? time()), 'last' => time(), 'n' => (int) ($sn['n'] ?? 0) + 1], 'by' => 'website', 'at' => time()]);
+    }
     if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
@@ -3764,7 +3770,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -3776,6 +3782,7 @@ function leadsAll(): array {
         if (array_key_exists('owner', $u)) { $leads[$u['id']]['owner'] = (string) $u['owner']; $leads[$u['id']]['ownerBy'] = $u['by'] ?? null; }
         if (array_key_exists('follow', $u)) $leads[$u['id']]['follow'] = is_array($u['follow']) ? ['date' => (string) $u['follow'][0], 'time' => (string) ($u['follow'][1] ?? '')] : null;
     }
+    foreach ($leads as &$lx) if (!empty($lx['seen']) && ($lx['seen']['key'] ?? '') !== ($lx['sign']['key'] ?? null)) unset($lx['seen']); unset($lx);   /* opens of an older form do not count for a new one */
     return $leads;
 }
 function leadOk(string $id): bool { return (bool) preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id); }
