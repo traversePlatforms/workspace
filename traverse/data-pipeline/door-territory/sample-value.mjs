@@ -25,7 +25,8 @@ const TOWNS = { douglas: ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'hi
   jefferson: ['ken-caryl', 'columbine', 'arvada', 'lakewood', 'wheat-ridge', 'edgewater', 'golden', 'littleton', 'westminster', 'superior'], adams: ['arvada', 'thornton', 'commerce-city', 'aurora', 'westminster', 'northglenn', 'federal-heights', 'brighton'],
   arapahoe: ['centennial', 'englewood', 'aurora', 'littleton', 'greenwood-village', 'cherry-hills-village', 'sheridan'], weld: ['windsor', 'erie', 'thornton', 'brighton', 'longmont', 'northglenn'],
   boulder: ['erie', 'boulder', 'louisville', 'lafayette', 'superior', 'longmont'], denver: ['denver', 'south-denver'] };   /* + the 365 area towns 2026-10-15 */
-TOWNS.douglas.push('littleton', 'lone-tree');   /* +South Denver, Englewood, Aurora 2026-10-12 (left out when they were built) */
+TOWNS.douglas.push('littleton', 'lone-tree');
+TOWNS.arapahoe.push('bow-mar', 'columbine-valley', 'glendale', 'dove-valley', 'foxfield', 'watkins', 'bennett', 'strasburg', 'byers'); TOWNS.jefferson.push('bow-mar', 'morrison', 'evergreen'); TOWNS.adams.push('twin-lakes', 'sherrelwood', 'welby', 'watkins', 'lochbuie', 'bennett', 'strasburg'); TOWNS.douglas.push('stonegate', 'roxborough-park', 'the-pinery', 'perry-park'); TOWNS.weld.push('lochbuie', 'dacono', 'frederick', 'fort-lupton', 'firestone', 'hudson', 'platteville', 'mead', 'keenesburg'); TOWNS.boulder.push('gunbarrel', 'niwot', 'nederland', 'lyons');   /* batch 4, 2026-10-16 */   /* +South Denver, Englewood, Aurora 2026-10-12 (left out when they were built) */
 /* --only=a,b asks for just those towns; everything already in the cache stays */
 const ONLY = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 const COUNTY = { douglas: 'Douglas', teller: 'Teller', jefferson: 'JEFFERSON', adams: 'ADAMS', arapahoe: 'ARAPAHOE', weld: 'WELD', boulder: 'BOULDER', denver: 'DENVER' };

@@ -11,7 +11,7 @@ cd "$(dirname "$0")"
 L=logs-batch2; mkdir -p "$L"
 step() { local name=$1; shift; echo "$(date +%H:%M:%S) start $name"; ( "$@" ) > "$L/$name.log" 2>&1; echo "$(date +%H:%M:%S) end   $name (exit $?) $(tail -1 "$L/$name.log" | tr '\r' '\n' | tail -1 | cut -c1-150)"; }
 # 2026-10-15 restart: wait for the Greenwood Village tree run left going from the first try, then redo the big towns whose tree step failed (the parcel fetch is now tiled)
-while tasklist //FI "PID eq 3712" 2>/dev/null | grep -q node.exe; do sleep 60; done
+# (2026-10-15 evening restart: the leftover run is gone; nothing to wait for)
 NEW1="littleton lakewood greenwood-village cherry-hills-village sheridan lone-tree wheat-ridge edgewater golden westminster denver arvada boulder"
 for t in $NEW1; do step "trees-$t" bash -c "cd tree-zones && node sample-trees.mjs --town=$t --conc=6"; done
 pull() { node build-walklist-co.mjs --county=$1 --lat=$2 --lon=$3 --radius=$4 --min-acres=0.12 --municipality="$5" --out="$6"; }
