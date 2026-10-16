@@ -2474,7 +2474,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -3657,6 +3657,15 @@ if ($action === 'money') {
  * door bookings. Admin only: these are customers' names and numbers. Append-only, like the marks:
  *   leads/leads.log   one line per lead        { id, src, at, need, name, phone, email, town, msg, by? }
  *   leads/leadst.log  one line per update      { id, status?, note?, by, at }   last status wins */
+/* Jen's Leads to call (2026-10-16, Matthew: "starting now we should have non facebook message leads populate in her quick quote as people to
+   reach out to"): open leads (new or contacted, not quoted) that came in from now on, except Messenger messages; any lead sent to her
+   (tojen); and her own leads not quoted yet. $mine: count her own (the quote account asking). */
+const QUOTE_INBOX_FROM = 1792189222;
+function quoteInbox(array $l, bool $mine = false): bool {
+    if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) || !empty($l['quote'])) return false;
+    if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
+    return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;
+}
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
 const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost'];
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
@@ -3775,7 +3784,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -5140,7 +5149,8 @@ if ($action === 'pushcron') {
 if ($action === 'leads') {
     if (!desk() && $role !== 'manager' && $role !== 'quote') fail('Not allowed.', 403);
     $leads = leadsAll();
-    if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l));   /* her own customers only */
+    if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l) || quoteInbox($l));   /* her own customers, and her Leads to call (2026-10-16) */
+    foreach ($leads as &$ql) $ql['qinbox'] = quoteInbox($ql, $role === 'quote'); unset($ql);   /* in the quote account's Leads to call */
     /* a manager sees the leads nobody owns yet and their own team's */
     if (!desk() && $role === 'manager') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
@@ -5327,13 +5337,30 @@ if ($action === 'leadimport') {
 
 /* how a call went (2026-10-14, Sixfold's lead desk): No answer, Left voicemail, Talked to them. Each try is kept with who and when;
  * the page works out when to try again and when to give up (after 4). Talking to them moves a New lead to Contacted. */
+/* Send to Jen (2026-10-16): any open lead into her Leads to call, or back out (on false) */
+if ($action === 'tojen') {
+    if (!desk() || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null; if (!$l) fail('No such lead.', 404);
+    $on = !empty($body['on']);
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'tojen' => $on, 'note' => $on ? 'Sent to the Quick quote\'s Leads to call.' : 'Taken back from the Quick quote\'s Leads to call.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+/* Not interested, from Jen's Leads to call (2026-10-16): the lead is lost, with a note */
+if ($action === 'qdrop') {
+    if ((!desk() && $role !== 'quote') || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null; if (!$l) fail('No such lead.', 404);
+    if ($role === 'quote' && !qMine($l) && !quoteInbox($l)) fail('Not allowed.', 403);
+    $why = $clean($body['why'] ?? '', 200);
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'lost', 'note' => 'Not interested (' . $me . ')' . ($why !== '' ? ': ' . $why : '.'), 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 if ($action === 'leadtry') {
     if (!feature('walkdesk')) fail('Not here.', 404);
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     $own = (string) $all[$id]['owner'];
-    if (!desk() && !($own !== '' && canManage($own))) fail('Not allowed.', 403);
+    if (!desk() && !($own !== '' && canManage($own)) && !($role === 'quote' && (qMine($all[$id]) || quoteInbox($all[$id])))) fail('Not allowed.', 403);   /* + Jen's Leads to call (2026-10-16) */
     $o = (string) ($body['o'] ?? '');
     if ($o === 'undo') {
         $mine = array_values(array_filter($all[$id]['tries'], fn($t) => $t['by'] === $me && $t['at'] > time() - 3600));
@@ -5341,13 +5368,13 @@ if ($action === 'leadtry') {
         if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'untry' => end($mine)['at'], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
         out(['ok' => true]);
     }
-    if (!in_array($o, ['none', 'vm', 'talk'], true)) fail('Say how the call went.');
+    if (!in_array($o, ['none', 'vm', 'talk', 'email', 'text'], true)) fail('Say how it went.');   /* + emailed, texted (2026-10-16) */
     $row = ['id' => $id, 'try' => $o, 'by' => $me, 'at' => time()];
     /* 2026-10-14 (Matthew: "If she left a voicemail she should leave a note as to what the voicemail says incase someone else picks up
        that lead later on"): required for a voicemail, and kept on the lead's notes */
     $tn = $clean($body['note'] ?? '', 400);
     if ($o === 'vm' && $tn === '') fail('Add what you said in the voicemail, for whoever calls next.');
-    if ($tn !== '') $row['note'] = mb_substr(($o === 'vm' ? 'Voicemail: ' : ($o === 'talk' ? 'Talked: ' : 'No answer: ')) . $tn, 0, 500);
+    if ($tn !== '') $row['note'] = mb_substr(($o === 'vm' ? 'Voicemail: ' : ($o === 'talk' ? 'Talked: ' : ($o === 'email' ? 'Emailed: ' : ($o === 'text' ? 'Texted: ' : 'No answer: ')))) . $tn, 0, 500);
     if ($o === 'talk' && $all[$id]['status'] === 'new') $row['status'] = 'contacted';
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);

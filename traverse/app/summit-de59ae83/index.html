@@ -724,6 +724,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .crewadd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;display:grid;gap:8px}.crewadd input,.crewadd select,.crewadd textarea{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
   .crewadd .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crewaddb{width:100%;text-align:left;border:1.5px dashed var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:10px 0}
   .qwon{margin:6px 0 0;display:grid;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qwon .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qwon select,.qwon input{width:100%;font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}.qwon label.chk{display:flex;gap:8px;align-items:center;font-weight:600}.qwon label.chk input{width:auto}
+  .qqinbox{border:1.5px solid var(--accent)}.qqinhead{padding:10px 12px 4px}.qqinhead b{font:800 16px var(--sans)}.qqinlist{display:grid;gap:10px;padding:6px 12px 12px}.qqinrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qqinrow .qlinks{display:flex;gap:12px;align-items:center;margin-top:8px}.qqinrow .qlinks button.save{width:auto;margin:0;padding:10px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}.tojen{margin-top:6px}
   .cgrp{margin:18px 0 8px;font-size:15px}.cgrp small{font-weight:500;color:var(--muted);margin-left:6px}
   .caddr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}.caddr input{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}.caddr button.lnk,.cpayrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;justify-self:start}
   .caddr .cares{display:grid;gap:6px}.caddr .cares button{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;color:inherit;cursor:pointer}
@@ -2347,7 +2348,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     LEAD_NEED = CO.leadNeeds.slice();
     WORK = CO.extraWork.map(function (p) { return [p[0], p[1]]; }); WORK_LABEL = {}; WORK.forEach(function (w) { WORK_LABEL[w[0]] = w[1]; });
     LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', VW() + ' booked'], ['quoted', 'Quoted'], ['won', 'Won'], ['lost', 'Lost']];
-    PIPE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent']];   /* no Won or Lost tabs (Matthew 2026-10-15): Won goes into Customers, Lost leaves the list; Person search finds both */
+    PIPE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['email', 'Emailed'], ['text', 'Texted'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent']];   /* no Won or Lost tabs (Matthew 2026-10-15): Won goes into Customers, Lost leaves the list; Person search finds both */
     CAP = [['walk', 'cal', 'Book the ' + vw()], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'], ['note', 'note', 'Note']];
     if (WORK.length) CAP.push(['work', 'list', 'Extra work']);
     if (feat('firecheck')) CAP.push(['fc', 'flame', 'Fire check']);
@@ -4279,7 +4280,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(dt);
     }
     if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
-    if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
+    if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));
+    if (wdOn() && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
     if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* call tries (2026-10-14) */
@@ -5442,8 +5444,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      misses in a row it says to send a last text or email and mark it Lost. The text and email open on the person's own phone,
      filled in; nothing is sent by the app. */
   var LEAD_TRIES = 4;
-  var TRY_N = { none: 'No answer', vm: 'Left voicemail', talk: 'Talked to them' };
-  function missCount(l) { var n = 0; (l.tries || []).forEach(function (t) { n = t.o === 'talk' ? 0 : n + 1; }); return n; }
+  var TRY_N = { none: 'No answer', vm: 'Left voicemail', talk: 'Talked to them', email: 'Emailed them', text: 'Texted them' };   /* + emailed, texted (2026-10-16) */
+  function missCount(l) { var n = 0; (l.tries || []).forEach(function (t) { n = t.o === 'talk' ? 0 : (t.o === 'none' || t.o === 'vm') ? n + 1 : n; }); return n; }   /* an email or a text is not a missed call */
   function lastTry(l) { var t = l.tries || []; return t.length ? t[t.length - 1] : null; }
   function tryDue(l) {
     var last = lastTry(l); if (!last || last.o === 'talk') return null;
@@ -5453,6 +5455,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function callGroup(l) {
     var last = lastTry(l); if (!last) return 'new';
     if (last.o === 'talk') return 'talked';
+    if (last.o === 'email' || last.o === 'text') return last.o;   /* waiting on a reply: their own sections (2026-10-16) */
     if (missCount(l) >= LEAD_TRIES) return 'out';
     if (last.o === 'vm') return 'vm';   /* its own section, not dropped to the bottom (Matthew 2026-10-15) */
     return tryDue(l) <= Date.now() ? 'today' : 'wait';
@@ -5473,9 +5476,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function callTries(l) {
     var box = q('div', 'ltries'), t = l.tries || [], miss = missCount(l), last = lastTry(l);
     if (last && last.by !== S.me && Date.now() / 1000 - last.at < 7200) box.appendChild(q('div', 'lwarn', last.by + ' called ' + ago(last.at) + ': ' + TRY_N[last.o].toLowerCase() + '.'));
-    var row = q('div', 'ltrybtns'); row.appendChild(q('span', null, 'Called?'));
+    var row = q('div', 'ltrybtns'); row.appendChild(q('span', null, 'Reached out?'));
     var vmBox = q('div', 'lvm'); vmBox.hidden = true;
-    ['none', 'vm', 'talk'].forEach(function (o) {
+    ['none', 'vm', 'talk', 'email', 'text'].forEach(function (o) {
       var b = q('button', null, TRY_N[o]); b.type = 'button';
       b.addEventListener('click', function () {
         if (b.disabled) return;
@@ -5495,7 +5498,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
           (S.leadRedraw || pipelineView)();
           var n = miss + 1;
-          toast(TRY_N[o] + ' \u00b7 ' + (l.name || l.phone || ''), o === 'talk' ? (asOffice() ? 'Logged. Quote them from the house, then Yes, Call back or No.' : 'Logged. Book the ' + vw() + ' or move it on when you are ready.') : n >= LEAD_TRIES ? n + ' tries with no answer: send a last text or email, then mark it Lost.' : 'Try ' + n + ' of ' + LEAD_TRIES + '. It comes back to try again tomorrow.',
+          toast(TRY_N[o] + ' \u00b7 ' + (l.name || l.phone || ''), (o === 'email' || o === 'text') ? 'Logged. It waits under ' + (o === 'email' ? 'Emailed' : 'Texted') + ' until they reply.' : o === 'talk' ? (asOffice() ? 'Logged. Quote them from the house, then Yes, Call back or No.' : 'Logged. Book the ' + vw() + ' or move it on when you are ready.') : n >= LEAD_TRIES ? n + ' tries with no answer: send a last text or email, then mark it Lost.' : 'Try ' + n + ' of ' + LEAD_TRIES + '. It comes back to try again tomorrow.',
             function () { api('leadtry', { body: { id: l.id, o: 'undo' } }).then(function () { (S.leadRedraw || pipelineView)(); }); });
         }).catch(function () { b.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
       });
@@ -5607,6 +5610,60 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var w = q('div'); w.appendChild(d); w.appendChild(row); return w;
   }
   function signSendView(l, pre) { pre = pre || {}; pre.sign = true; jobBookView(l, null, pre); }
+  /* Send to Jen (2026-10-16): a lead into the Quick quote's Leads to call; new ones from the website, Facebook forms and the crew go there by themselves */
+  function toJenRow(l) {
+    var r = q('div', 'qlinks tojen');
+    if (l.qinbox) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to call')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
+    var b = q('button', 'lnk', 'Send to Jen \u203a'); b.type = 'button';
+    b.addEventListener('click', function () { b.disabled = true; api('tojen', { body: { id: l.id, on: true } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent to Jen', (l.name || l.phone || 'The lead') + ' is in her Leads to call.', null); (S.leadRedraw || pipelineView)(); }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); }); });
+    r.appendChild(b); return r;
+  }
+  /* Jen's Leads to call (2026-10-16, Matthew: give Jen leads without telling her over WhatsApp): who to reach, with Call / Text / Email,
+     the same Reached out? buttons as the Pipeline, Start the quote (her details filled in, the house opened), Not interested */
+  function quickInbox() {
+    var box = q('div', 'lwho qqinbox'), head = q('div', 'qqinhead'), hb = q('b', null, 'Leads to call'); head.appendChild(hb); box.appendChild(head);
+    var list = q('div', 'qqinlist'); list.appendChild(q('div', 'skel')); box.appendChild(list);
+    var load = function () {
+      api('leads').then(function (j) {
+        list.textContent = '';
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j || !j.ok) { list.appendChild(q('div', 'msg', (j && j.error) || 'Could not load your leads.')); return; }
+        var L = j.leads.filter(function (l) { return l.qinbox; });
+        var rank = function (l) { var g = callGroup(l); return g === 'new' ? 0 : g === 'today' ? 1 : g === 'talked' ? 2 : 3; };
+        L.sort(function (a, b) { return rank(a) - rank(b) || (b.at || 0) - (a.at || 0); });
+        hb.textContent = 'Leads to call (' + L.length + ')';
+        if (!L.length) { list.appendChild(q('div', 'msg soft', 'Nobody waiting. New enquiries from the websites, Facebook forms and the crew land here.')); return; }
+        L.forEach(function (l) { list.appendChild(quickInboxRow(l, load)); });
+      }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'Your leads need signal.')); });
+    };
+    S.leadRedraw = function () { if (S.screen === 'quickquote' && box.isConnected) load(); else pipelineView(); };
+    load();
+    return box;
+  }
+  function quickInboxRow(l, reload) {
+    var c = q('div', 'qqcrow qqinrow');
+    var top = q('div', 'qqctop'); top.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
+    var addr = l.house ? streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '') : (l.town || '');
+    top.appendChild(q('small', null, [l.need, addr, (LEAD_SRC[l.src] || l.src) + ' \u00b7 ' + ago(l.at)].filter(Boolean).join(' \u00b7 '))); c.appendChild(top);
+    if (l.msg) c.appendChild(q('div', 'dwsub', String(l.msg).slice(0, 240)));
+    var ct = q('div', 'lcontact'), tel = digits(l.phone);
+    if (tel.length >= 10) { var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1); var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
+    if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(l.email)); ct.appendChild(a3); }
+    if (ct.children.length) c.appendChild(ct);
+    c.appendChild(callTries(l));
+    var acts = q('div', 'qlinks');
+    var go = q('button', 'save', 'Start the quote \u203a'); go.type = 'button';
+    go.addEventListener('click', function () {
+      S.qq = { name: l.name || '', phone: l.phone || '', email: l.email || '' }; S.qqBack = null;
+      if (l.house && l.house.region && l.house.door) houseLookupView(null, { region: l.house.region, door: l.house.door }, null, true);
+      else { var ad = (l.house && l.house.address) || (/^\d+\s/.test(l.town || '') ? String(l.town).split(',')[0] : ''); houseLookupView(null, null, ad || null, true); }
+      window.scrollTo(0, 0);
+    });
+    var no = q('button', 'lnk danger', 'Not interested'); no.type = 'button';
+    no.addEventListener('click', function () { var why = window.prompt('Not interested: a word on why (optional)', ''); if (why === null) return; api('qdrop', { body: { id: l.id, why: why } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } toast('Closed', l.name || '', null); reload(); }).catch(function () { toast('No signal', 'Try again.', null); }); });
+    acts.appendChild(go); acts.appendChild(no); c.appendChild(acts);
+    return c;
+  }
   /* won without the form (2026-10-16, Matthew: people Jen gets in person or by phone who do not want to sign): what they paid, their held
      day booked as a job, the lead won, and a customer made */
   function qWonBox(l, done) {
@@ -6055,7 +6112,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else if (quick) {
       if (S.viewAs) view.appendChild(viewAsBar());
       if (quickCanBook()) { var sch = q('button', 'qqsched', 'Schedule: the days you booked ›'); sch.type = 'button'; sch.addEventListener('click', function () { schedView(); }); view.appendChild(sch); }   /* on the page itself: a phone has no top menu (2026-10-15, Matthew could not find it) */
-      if (quickCanBook()) view.appendChild(quickCustomers()); view.appendChild(quickWhoBox());
+      if (quickCanBook()) { view.appendChild(quickInbox()); view.appendChild(quickCustomers()); } view.appendChild(quickWhoBox());   /* Leads to call first (2026-10-16) */
     }
     var box = q('div', 'search hlook');
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'houseq';
@@ -10578,12 +10635,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
     var st = it.x.status || 'new';
     var cs = asOffice() ? (OFFICE_MAP[st] || 'call') : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
-    if (cs === 'call' && wdOn() && callGroup(it.x) === 'vm') return 'vm';   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
+    if (cs === 'call' && wdOn()) { var cg = callGroup(it.x); if (cg === 'vm' || cg === 'email' || cg === 'text') return cg; }   /* Left voicemail, Emailed, Texted (2026-10-15/16) */   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
     return cs;
   }
   /* the office's stages (2026-10-14, Matthew: no won/lost/quote/walk for Jen; she calls, quotes by phone, takes half as a deposit and
      sends a one-page form to sign) */
-  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['sent', 'Form sent'], ['signed', 'Signed'], ['nosale', 'No sale']];
+  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['email', 'Emailed'], ['text', 'Texted'], ['sent', 'Form sent'], ['signed', 'Signed'], ['nosale', 'No sale']];
   var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale' };
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
