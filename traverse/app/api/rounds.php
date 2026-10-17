@@ -4299,7 +4299,8 @@ if ($action === 'leadquote') {
         }
     } elseif (is_array($prevOffer)) $q['offer'] = $prevOffer;
     $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
-    if ($q['sent'] && in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
+    /* Jen quotes on the phone (2026-10-16, Matthew: the app's Quote sent should match what she did): her saved price is a quote given */
+    if (($q['sent'] || $role === 'quote' || $role === 'office') && in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'status' => $row['status'] ?? $all[$id]['status'], 'link' => a365QuoteLink($id)]);
 }

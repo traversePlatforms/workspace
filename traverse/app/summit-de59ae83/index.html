@@ -10786,13 +10786,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function pipeStage(it) {
     if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
     var st = it.x.status || 'new';
-    var cs = asOffice() ? (OFFICE_MAP[st] || 'call') : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
+    var cs = asOffice() ? (st === 'quoted' && !it.x.sign ? 'quoted' : (OFFICE_MAP[st] || 'call')) : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
     if (cs === 'call' && wdOn()) { var cg = callGroup(it.x); if (cg === 'vm' || cg === 'email' || cg === 'text') return cg; }   /* Left voicemail, Emailed, Texted (2026-10-15/16) */   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
     return cs;
   }
   /* the office's stages (2026-10-14, Matthew: no won/lost/quote/walk for Jen; she calls, quotes by phone, takes half as a deposit and
      sends a one-page form to sign) */
-  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['email', 'Emailed'], ['text', 'Texted'], ['sent', 'Form sent'], ['signed', 'Signed'], ['nosale', 'No sale']];
+  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['email', 'Emailed'], ['text', 'Texted'], ['quoted', 'Quoted'], ['sent', 'Form sent'], ['signed', 'Signed'], ['nosale', 'No sale']];   /* Quoted: a phone quote, no form yet (2026-10-16) */
   var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale' };
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
