@@ -1907,7 +1907,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -3794,7 +3794,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -5320,6 +5320,125 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
     if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)));
     out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors]);
+}
+/* ---- ClickUp (2026-10-16, Matthew: "attach clickup to our app to take the leads [Jen] is filing into our app"; "run a scan for
+ * duplicates after each pull") ----
+ * sixfold-tools/clickup-leads.php asks for this every 5 minutes (started by the Facebook job). One way only: ClickUp into the app,
+ * nothing is ever written back. Jen's list is named in sixfold-private/clickup.json (token, list, owner; never printed).
+ * Each task is matched once and for good: by its ClickUp id ('cu' on the lead), else by the same phone, email or full name already
+ * here, which is linked instead of added (so two tasks for one person make one lead). New people get a lead with her fields in the
+ * message, the house when the address is on our lists, and are hers (qown). Her status moves a lead forward only when it changed in
+ * ClickUp since the last look ('cus'), never back and never off Won, so a change made in the app is not undone. Then the whole
+ * Pipeline is checked for doubles (same phone, same email or same full name) into leads/dupes.json, with a push to the super admin
+ * when a new double appears. */
+function cuFile(): string { return dirname(__DIR__, 2) . '/sixfold-private/clickup.json'; }
+function cuName(string $n): string { return trim((string) preg_replace('/\s+/', ' ', (string) preg_replace('/[^a-z ]/', '', strtolower($n)))); }
+function leadDupes(array $leads): array {
+    $by = [];
+    foreach ($leads as $l) {
+        if (($l['status'] ?? '') === 'lost') continue;
+        $d = substr((string) preg_replace('/\D/', '', (string) ($l['phone'] ?? '')), -10); if (strlen($d) === 10) $by['phone ' . $d][$l['id']] = (string) ($l['name'] ?? '');
+        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $by['email ' . $e][$l['id']] = (string) ($l['name'] ?? '');
+        $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1) $by['name ' . $n][$l['id']] = (string) ($l['name'] ?? '');
+    }
+    $out = [];
+    foreach ($by as $k => $ids) if (count($ids) > 1) { ksort($ids); $out[implode(',', array_keys($ids))][] = ['why' => explode(' ', $k)[0], 'ids' => array_keys($ids), 'names' => array_values(array_unique($ids))]; }
+    return array_map(fn($g) => ['ids' => $g[0]['ids'], 'names' => $g[0]['names'], 'why' => implode(', ', array_unique(array_column($g, 'why')))], array_values($out));
+}
+function superAlert(string $title, string $text): void {
+    global $basePeople, $acct, $sessionKey;
+    try {
+        $v = pushVapid(false); if (!$v) return;
+        $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'dupes-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'super') foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'normal']);
+    } catch (Throwable $e) { error_log('rounds super alert: ' . $e->getMessage()); }
+}
+if ($action === 'clickuppoll') {
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    @ini_set('memory_limit', '1024M');   /* matching an address can rebuild the search index after a town upload */
+    $CU = json_decode((string) @file_get_contents(cuFile()), true);
+    if (!is_array($CU) || empty($CU['token']) || empty($CU['list'])) out(['ok' => true, 'added' => 0, 'note' => 'not set up']);
+    $base = rtrim((string) ($CU['api'] ?? 'https://api.clickup.com/api/v2'), '/');   /* the override is for the test copy only */
+    $cget = function (string $path) use ($CU, $base): ?array {
+        if (!function_exists('curl_init')) return null;
+        $h = curl_init($base . $path);
+        curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25, CURLOPT_HTTPHEADER => ['Authorization: ' . $CU['token'], 'Accept: application/json']]);
+        $raw = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); curl_close($h);
+        $j = is_string($raw) ? json_decode($raw, true) : null; return $code === 200 && is_array($j) ? $j : null;
+    };
+    $list = rawurlencode((string) $CU['list']); $owner = (string) ($CU['owner'] ?? '');
+    $F = $cget('/list/' . $list . '/field'); if (!$F) out(['ok' => false, 'error' => 'ClickUp did not answer (the list or the token).']);
+    $opt = []; foreach ((array) ($F['fields'] ?? []) as $f) foreach ((array) ($f['type_config']['options'] ?? []) as $o) $opt[$f['name']][(string) ($o['orderindex'] ?? '')] = (string) ($o['name'] ?? '');
+    $tasks = [];
+    for ($pg = 0; $pg < 20; $pg++) { $T = $cget('/list/' . $list . '/task?include_closed=true&subtasks=true&page=' . $pg); if (!$T) out(['ok' => false, 'error' => 'ClickUp did not send the tasks.']); $tasks = array_merge($tasks, (array) ($T['tasks'] ?? [])); if (!empty($T['last_page']) || count((array) ($T['tasks'] ?? [])) < 100) break; }
+    $STATUS = ['contacted - vm / sms' => 'contacted', 'contacted - fb messenger' => 'contacted', 'on hold' => 'contacted', 'quote sent' => 'quoted', 'scheduled' => 'won', 'completed' => 'won', 'lost' => 'lost'];
+    $RANK = ['new' => 0, 'contacted' => 1, 'walk' => 2, 'quoted' => 3, 'won' => 4];
+    $SRC = ['Referral' => 'referral', 'Website' => 'a365web', 'Facebook' => 'meta', 'Phone' => 'phone'];
+    $digits = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
+    $leads = leadsAll(); $byCu = []; $byPhone = []; $byEmail = []; $byName = [];
+    $index = function (array $l) use (&$byCu, &$byPhone, &$byEmail, &$byName, $digits) {
+        if (!empty($l['cu'])) $byCu[(string) $l['cu']] = $l['id'];
+        $d = $digits($l['phone'] ?? ''); if (strlen($d) === 10) $byPhone[$d] = $byPhone[$d] ?? $l['id'];
+        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $byEmail[$e] = $byEmail[$e] ?? $l['id'];
+        $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1) $byName[$n] = $byName[$n] ?? $l['id'];
+    };
+    foreach ($leads as $l) $index($l);
+    $added = []; $linked = []; $moved = []; $now = time();
+    foreach ($tasks as $t) {
+        $tid = (string) ($t['id'] ?? ''); if (!preg_match('/^[A-Za-z0-9]{3,20}$/D', $tid)) continue;
+        $cf = []; foreach ((array) ($t['custom_fields'] ?? []) as $c) $cf[(string) ($c['name'] ?? '')] = $c['value'] ?? null;
+        $pick = fn($k) => isset($cf[$k]) && $cf[$k] !== null && $cf[$k] !== '' ? ($opt[$k][(string) $cf[$k]] ?? '') : '';
+        $name = a365Clean((string) ($t['name'] ?? ''), 120); $phone = a365Clean((string) ($cf['Phone'] ?? ''), 40); $email = a365Clean((string) ($cf['Email'] ?? ''), 160);
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $email = '';
+        $addr = is_array($cf['Address'] ?? null) ? trim((string) preg_replace('/,\s*USA$/', '', (string) ($cf['Address']['formatted_address'] ?? ''))) : '';
+        $city = a365Clean((string) ($cf['City'] ?? ''), 60);
+        $cst = strtolower(trim((string) ($t['status']['status'] ?? ''))); $want = $STATUS[$cst] ?? '';
+        $deal = is_numeric($cf['Deal Value'] ?? null) ? (int) round((float) $cf['Deal Value']) : 0;
+        /* who is it: this task before, else the same phone, email or full name (a name only when the phones do not disagree) */
+        $id = $byCu[$tid] ?? '';
+        if ($id === '') { $d = $digits($phone); if (strlen($d) === 10 && isset($byPhone[$d])) $id = $byPhone[$d]; }
+        if ($id === '' && $email !== '' && isset($byEmail[strtolower($email)])) $id = $byEmail[strtolower($email)];
+        if ($id === '') { $n = cuName($name); if (substr_count($n, ' ') >= 1 && isset($byName[$n])) { $o = $leads[$byName[$n]]; $od = $digits($o['phone'] ?? ''); $d = $digits($phone); if (strlen($od) !== 10 || strlen($d) !== 10 || $od === $d) $id = $byName[$n]; } }
+        $lines = array_values(array_filter(['From Jen\'s ClickUp: ' . ($t['status']['status'] ?? ''), $deal ? 'Deal value $' . number_format($deal) : '', ($s = $pick('Service')) !== '' ? 'Service: ' . $s : '',
+            is_numeric($cf['Service Date'] ?? null) ? 'Service date: ' . (new DateTime('@' . intdiv((int) $cf['Service Date'], 1000)))->setTimezone(new DateTimeZone(appTz()))->format('D j M') : '',
+            ($s = $pick('Payment Status')) !== '' ? 'Payment: ' . $s : '', ($s = $pick('Card Status')) !== '' ? 'Card: ' . $s : '', ($s = a365Clean((string) ($cf['Next Step Summary'] ?? ''), 300)) !== '' ? 'Next step: ' . $s : '']));
+        if ($id === '') {   /* someone new */
+            if ($name === '' && $phone === '' && $email === '') continue;
+            $src = $cst === 'contacted - fb messenger' ? 'messenger' : ($SRC[$pick('Lead Source')] ?? 'other');
+            $at = is_numeric($t['date_created'] ?? null) ? intdiv((int) $t['date_created'], 1000) : $now;
+            $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => min($at, $now), 'need' => $pick('Service') ?: 'Aeration', 'name' => $name, 'phone' => $phone, 'email' => $email,
+                    'town' => $addr !== '' ? a365Clean($addr, 160) : $city, 'msg' => a365Clean(implode("\n", $lines), 2000), 'by' => 'ClickUp'];
+            if (!appendLine(leadsDir() . '/leads.log', $row)) continue;
+            $u = ['id' => $row['id'], 'cu' => $tid, 'cus' => $cst, 'cud' => $deal, 'by' => 'ClickUp', 'at' => $now];
+            if ($owner !== '') $u['qown'] = $owner;
+            if ($want !== '' && $want !== 'new') { $u['status'] = $want; $u['note'] = 'From Jen\'s ClickUp (' . ($t['status']['status'] ?? '') . ').'; }
+            appendLine(leadsDir() . '/leadst.log', $u);
+            if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr, $m)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
+            $row['cu'] = $tid; $row['status'] = $want ?: 'new'; $leads[$row['id']] = $row; $index($row);
+            $added[] = $name ?: $phone; continue;
+        }
+        /* someone already here: link once, fill what is missing, her status forward only when it changed in ClickUp */
+        $l = $leads[$id]; $u = ['id' => $id, 'by' => 'ClickUp', 'at' => $now]; $notes = [];
+        if (($l['cu'] ?? '') === '') { $u['cu'] = $tid; $notes[] = 'Linked to Jen\'s ClickUp task.'; $linked[] = (string) ($l['name'] ?? $name); $byCu[$tid] = $id; $leads[$id]['cu'] = $tid; }
+        if (($l['cu'] ?? '') !== '' && $l['cu'] !== $tid) continue;   /* a second task for someone already linked: the doubles check reports it */
+        $ct = []; if (trim((string) ($l['phone'] ?? '')) === '' && $phone !== '') $ct['phone'] = $phone; if (trim((string) ($l['email'] ?? '')) === '' && $email !== '') $ct['email'] = $email;
+        if ($ct) { $u['contact'] = $ct; $notes[] = 'From ClickUp: ' . implode(', ', array_values($ct)) . '.'; }
+        if ($owner !== '' && !in_array($owner, (array) ($l['qown'] ?? []), true) && ($l['by'] ?? '') !== $owner) $u['qown'] = $owner;
+        if ($cst !== '' && $cst !== (string) ($l['cus'] ?? '')) {
+            $u['cus'] = $cst; $st = (string) ($l['status'] ?? 'new');
+            if ($want === 'lost' ? !in_array($st, ['won', 'lost'], true) : ($want !== '' && $st !== 'lost' && ($RANK[$want] ?? 0) > ($RANK[$st] ?? 0))) { $u['status'] = $want; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $want . ')'; }
+        }
+        if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
+        if (empty($l['house']) && $addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
+        if (count($u) > 3) { if ($notes) $u['note'] = implode(' ', $notes); appendLine(leadsDir() . '/leadst.log', $u); }
+    }
+    /* the doubles check, every pull */
+    $dupes = leadDupes(leadsAll()); $df = leadsDir() . '/dupes.json';
+    $old = json_decode((string) @file_get_contents($df), true); $oldKeys = array_map(fn($g) => implode(',', $g['ids']), (array) ($old['groups'] ?? []));
+    $new = array_values(array_filter($dupes, fn($g) => !in_array(implode(',', $g['ids']), $oldKeys, true)));
+    writeJsonAtomic($df, ['at' => $now, 'groups' => $dupes]);
+    if ($new) superAlert(count($new) === 1 ? 'Possible double in the Pipeline' : count($new) . ' possible doubles in the Pipeline', implode('; ', array_map(fn($g) => implode(' / ', $g['names']) . ' (same ' . $g['why'] . ')', array_slice($new, 0, 3))));
+    out(['ok' => true, 'tasks' => count($tasks), 'added' => count($added), 'who' => $added, 'linked' => $linked, 'moved' => $moved, 'dupes' => $dupes]);
 }
 /* Meta Instant Form leads (2026-10-04). They land in Meta's Leads Center and never reach email, so an admin
    downloads them there as a file and the page reads it and sends the rows here. Each keeps Meta's own lead
