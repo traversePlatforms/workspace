@@ -5955,7 +5955,8 @@ function paymentsAll(): array {
         $l = $j['lead'] !== '' ? ($leads[$j['lead']] ?? null) : null;
         $name = trim((string) ($l['name'] ?? '')) ?: ($j['title'] ?: 'Customer');
         foreach ($j['evs'] as $e) {
-            if ($e['kind'] === 'Deposit' && $e['how'] === 'square' && $e['ref'] === '' && $l && !empty($l['sqpaid']['payment']) && empty($used[$l['sqpaid']['payment']])) {
+            /* the Square link payment behind it, so it is counted once: a deposit, or paid in full for the same amount (2026-10-16: Eric paid the whole $200 by the link) */
+            if (($e['kind'] === 'Deposit' || ($e['kind'] === 'Paid in full' && (int) ($l['sqpaid']['amt'] ?? 0) === (int) $e['amt'])) && $e['how'] === 'square' && $e['ref'] === '' && $l && !empty($l['sqpaid']['payment']) && empty($used[$l['sqpaid']['payment']])) {
                 $e['ref'] = (string) $l['sqpaid']['payment']; $e['at'] = (int) ($l['sqpaid']['at'] ?? $e['at']);
             }
             if ($e['ref'] !== '') $used[$e['ref']] = true;
