@@ -870,6 +870,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .teamsbox .tsub{font-size:12.5px;color:var(--soft);line-height:1.4}
   .teamsbox .trow span{flex:1;display:grid;gap:2px}.teamsbox .trow small{color:var(--soft);font-size:12.5px}
   .teamsbox .tform{display:flex;gap:8px;margin:6px 0}.teamsbox .tform input{flex:1;min-width:0}
+  .teamsbox .tpeople{background:var(--sunk);border-radius:12px;padding:8px 12px;margin:0 0 8px;display:grid;gap:2px}.teamsbox .tprow{display:flex;align-items:center;gap:10px;padding:5px 0}.teamsbox .tprow span{flex:1;font-weight:700}.teamsbox .tprow small{color:var(--soft);font-size:12.5px}.teamsbox .tpeople .tform select{flex:1;min-width:0;font:15px var(--sans);padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}.teamsbox .tpeople .tform .save{border:0;border-radius:12px;padding:9px 18px;background:var(--ink);color:var(--bg);font:700 14.5px var(--sans);cursor:pointer}.teamsbox .tpeople .tform .save:disabled{opacity:.5}
   .tag.teamtag{background:var(--sunk);color:var(--ink)}
   .tag.role-manager{background:var(--moss-ink);color:#fff}
   .goalbox{background:var(--card);border-radius:16px;padding:12px 14px;margin:0 0 14px;box-shadow:var(--shadow)}
@@ -8800,7 +8801,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       sv.addEventListener('click', function () { acctCall('teamsave', cur ? { id: cur.id, name: inp.value } : { name: inp.value }, done); });
       f.appendChild(inp); f.appendChild(sv); setTimeout(function () { try { inp.focus(); } catch (e) {} }, 30); return f;
     };
-    if (S.teamAdd) box.appendChild(form(null, function () { S.teamAdd = false; toast('Team added', 'Put people on it with Change on their row', null); }));
+    if (S.teamAdd) box.appendChild(form(null, function () { S.teamAdd = false; toast('Team added', 'Add people with People on the team', null); }));
     var teams = S.acctTeams || [];
     if (!teams.length && !S.teamAdd) box.appendChild(q('div', 'tsub', 'No teams yet. A team groups people under a manager: the manager sees the team\u2019s calendars and numbers, hands out its leads and assigns its territories.'));
     teams.forEach(function (t) {
@@ -8810,12 +8811,42 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var tx = q('span'); tx.appendChild(q('b', null, t.name));
       tx.appendChild(q('small', null, who.length + (who.length === 1 ? ' person' : ' people') + (mgr.length ? ' · managed by ' + mgr.join(', ') : ' · no manager yet')));
       row.appendChild(tx);
+      /* people from the team itself (2026-10-16, Matthew: "we should still have the ability to add people to the team obviously") */
+      var pp = q('button', 'lnk', S.teamOpen === t.id ? 'Done' : 'People'); pp.type = 'button'; pp.setAttribute('aria-expanded', String(S.teamOpen === t.id));
+      pp.addEventListener('click', function () { S.teamOpen = S.teamOpen === t.id ? null : t.id; S.teamRename = null; drawAccounts(holder); }); row.appendChild(pp);
       var rn = q('button', 'lnk', 'Rename'); rn.type = 'button'; rn.addEventListener('click', function () { S.teamRename = S.teamRename === t.id ? null : t.id; drawAccounts(holder); }); row.appendChild(rn);
       var dl = q('button', 'lnk bad', 'Delete'); dl.type = 'button';
       dl.addEventListener('click', function () { if (window.confirm('Delete the team ' + t.name + '? Its people stay; they just have no team.')) acctCall('teamsave', { id: t.id, del: 1 }, function () { toast('Team deleted', t.name, null); }); });
       row.appendChild(dl); box.appendChild(row);
       if (S.teamRename === t.id) box.appendChild(form(t, function () { S.teamRename = null; toast('Saved', '', null); }));
+      if (S.teamOpen === t.id) box.appendChild(teamPeople(t, who));
     });
+    function teamPeople(t, who) {
+      var p = q('div', 'tpeople');
+      if (!who.length) p.appendChild(q('div', 'tsub', 'Nobody on ' + t.name + ' yet.'));
+      who.slice().sort(function (a, b) { return (a.role !== 'manager') - (b.role !== 'manager') || a.name.localeCompare(b.name); }).forEach(function (a) {
+        var r = q('div', 'tprow'); r.appendChild(q('span', null, a.name)); r.appendChild(q('small', null, { manager: 'Manager', admin: 'Admin', super: 'Admin' }[a.role] || 'Crew'));
+        var off = q('button', 'lnk bad', 'Take off'); off.type = 'button';
+        off.addEventListener('click', function () { off.disabled = true; acctCall('teammember', { person: a.id, team: '' }, function () { toast('Taken off ' + t.name, a.name, null); }); });
+        r.appendChild(off); p.appendChild(r);
+      });
+      /* anyone in the field not on this team; someone on another team moves (one team per person) */
+      var names = {}; (S.acctTeams || []).forEach(function (x) { names[x.id] = x.name; });
+      var others = (S.accts || []).filter(function (a) { return !a.off && a.team !== t.id && a.role !== 'quote' && a.role !== 'office'; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+      if (!others.length) return p;
+      var ar = q('div', 'tform'), sel = q('select'); sel.setAttribute('aria-label', 'Add someone to ' + t.name);
+      var o0 = q('option', null, 'Add someone…'); o0.value = ''; sel.appendChild(o0);
+      others.forEach(function (a) { var op = q('option', null, a.name + (a.team && names[a.team] ? ' (moves from ' + names[a.team] + ')' : '')); op.value = a.id; sel.appendChild(op); });
+      var add = q('button', 'save', 'Add'); add.type = 'button';
+      add.addEventListener('click', function () {
+        if (!sel.value) { toast('Pick someone', 'Choose who to add first.', null); return; }
+        var a = others.filter(function (x) { return x.id === sel.value; })[0]; add.disabled = true;
+        acctCall('teammember', { person: sel.value, team: t.id }, function () { toast('Added to ' + t.name, a ? a.name : '', null); });
+      });
+      ar.appendChild(sel); ar.appendChild(add); p.appendChild(ar);
+      p.appendChild(q('div', 'tsub', 'A manager on the team sees its people’s calendars and numbers, hands out its leads and assigns its territories.'));
+      return p;
+    }
     return box;
   }
 
