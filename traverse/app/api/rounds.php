@@ -3794,7 +3794,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -5418,6 +5418,20 @@ if ($action === 'clickuppoll') {
     $opt = []; foreach ((array) ($F['fields'] ?? []) as $f) foreach ((array) ($f['type_config']['options'] ?? []) as $o) $opt[$f['name']][(string) ($o['orderindex'] ?? '')] = (string) ($o['name'] ?? '');
     $tasks = [];
     for ($pg = 0; $pg < 20; $pg++) { $T = $cget('/list/' . $list . '/task?include_closed=true&subtasks=true&page=' . $pg); if (!$T) out(['ok' => false, 'error' => 'ClickUp did not send the tasks.']); $tasks = array_merge($tasks, (array) ($T['tasks'] ?? [])); if (!empty($T['last_page']) || count((array) ($T['tasks'] ?? [])) < 100) break; }
+    /* her contact in ClickUp as a call try (2026-10-17, Matthew: "most of the people in our pipeline have been contacted via voicemail ... yet it
+       doesnt show up that way in our pipeline"): the Pipeline's Left voicemail and Texted tabs come from tries, so a ClickUp status that says
+       she left a voicemail or texted is logged once as one, dated when she changed it ('cutry' = the status it came from). Only while the lead
+       is still at the calling stage, and never older than a try already on it. */
+    $TRY = ['contacted - vm / sms' => 'vm', 'contacted - fb messenger' => 'text'];
+    $cuTry = function (array $l, string $id, string $cst, array $t) use ($TRY, $owner): void {
+        $now = time();
+        if (!isset($TRY[$cst]) || (string) ($l['cutry'] ?? '') === $cst) return;
+        $at = is_numeric($t['date_updated'] ?? null) ? min($now, intdiv((int) $t['date_updated'], 1000)) : $now;
+        $last = 0; foreach ((array) ($l['tries'] ?? []) as $x) $last = max($last, (int) ($x['at'] ?? 0));
+        $row = ['id' => $id, 'cutry' => $cst, 'by' => ($owner !== '' ? $owner : 'Jen') . ' (ClickUp)', 'at' => $at];
+        if (in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) && $at > $last) $row['try'] = $TRY[$cst];
+        appendLine(leadsDir() . '/leadst.log', $row);
+    };
     $STATUS = ['contacted - vm / sms' => 'contacted', 'contacted - fb messenger' => 'contacted', 'on hold' => 'contacted', 'quote sent' => 'quoted', 'scheduled' => 'won', 'completed' => 'won', 'lost' => 'lost'];
     $RANK = ['new' => 0, 'contacted' => 1, 'walk' => 2, 'quoted' => 3, 'won' => 4];
     $SRC = ['Referral' => 'referral', 'Website' => 'a365web', 'Facebook' => 'meta', 'Phone' => 'phone'];
@@ -5462,6 +5476,7 @@ if ($action === 'clickuppoll') {
             appendLine(leadsDir() . '/leadst.log', $u);
             if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr, $m)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
             $row['cu'] = $tid; $row['status'] = $want ?: 'new'; $leads[$row['id']] = $row; $index($row);
+            $cuTry(['status' => $row['status'], 'tries' => []], $row['id'], $cst, $t);
             $added[] = $name ?: $phone; continue;
         }
         /* someone already here: link once, fill what is missing, her status forward only when it changed in ClickUp */
@@ -5478,6 +5493,7 @@ if ($action === 'clickuppoll') {
         if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
         if ((empty($l['house']) || !empty($l['house']['typed'])) && $addr !== ''   /* a typed address gives way to the house on our lists */ && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
         if (count($u) > 3) { if ($notes) $u['note'] = implode(' ', $notes); appendLine(leadsDir() . '/leadst.log', $u); }
+        $cuTry(['status' => $u['status'] ?? ($l['status'] ?? 'new')] + $l, $id, $cst, $t);
     }
     /* the doubles check, every pull */
     $dupes = leadDupes(leadsAll()); $df = leadsDir() . '/dupes.json';

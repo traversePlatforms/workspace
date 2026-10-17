@@ -11052,11 +11052,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
     /* won, not in Customers yet (2026-10-15: no Won tab any more; a won door from the crew, or a lead won before Won made the customer) */
     if (!asOffice() && S.custLinks) {
-      var pend = items.filter(function (it) { return pipeStage(it) === 'won' && (it.kind === 'lead' ? !S.custLinks.lead[it.x.id] : !S.custLinks.door[it.x.region + '/' + it.x.id]); });
+      var pend = items.filter(function (it) { return pipeStage(it) === 'won' && (src === 'all' || pipeSrc(it) === src) && (it.kind === 'lead' ? !S.custLinks.lead[it.x.id] : !S.custLinks.door[it.x.region + '/' + it.x.id]); });
       if (pend.length) {
-        var wp = q('section', 'wonpend'); wp.appendChild(q('h2', 'pipegrp', 'Won, not in Customers yet \u00b7 ' + pend.length));
-        wp.appendChild(q('div', 'ltrynote', 'Tap Make customer on each to put them in Customers.'));
-        pend.forEach(function (it) { drawCard(it, wp); });
+        /* one line until opened, and by the source picked (2026-10-17, Matthew: the Pipeline "super stretched out" under Phone call and
+           the other tabs: these full cards sat under every view, whatever was picked) */
+        var wp = q('section', 'wonpend'), wOpen = !!S.wonPendOpen;
+        var wh = q('button', 'cfold'); wh.type = 'button'; wh.setAttribute('aria-expanded', String(wOpen)); wh.appendChild(ico('chev', 2.4));
+        wh.appendChild(document.createTextNode('Won, not in Customers yet (' + pend.length + ')'));
+        wh.addEventListener('click', function () { S.wonPendOpen = !wOpen; drawPipe(); });
+        wp.appendChild(wh);
+        if (wOpen) { wp.appendChild(q('div', 'ltrynote', 'Tap Make customer on each to put them in Customers.')); pend.forEach(function (it) { drawCard(it, wp); }); }
         holder.appendChild(wp);
       }
     }
