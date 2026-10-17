@@ -1893,6 +1893,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qfertrow label{display:grid;gap:3px;font-size:12.5px}.qfertrow label.w{grid-column:1/-1}.qfertrow small{grid-column:1/-1;color:var(--soft);font-size:11.5px}
   .qfertrow .qdef{display:flex;gap:6px;align-items:center;grid-column:1/3}.qfertrow .lnk{justify-self:end}
   .qprice{display:grid;gap:2px}.qprice b{font:800 34px var(--sans);color:var(--ember-ink)}.qprice span{font-size:13px;color:var(--soft)}
+  .qinfl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:8px 0 2px;padding:8px 10px;border:1px dashed var(--line);border-radius:12px}.qinflh{font:700 13.5px var(--sans)}.qinfl input{width:64px;font:700 15px var(--sans);padding:7px 8px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);text-align:right}.qinflp{font-weight:700}.qinfln{flex-basis:100%;color:var(--soft);font-size:12.5px}
   .qsteps{display:flex;gap:6px;flex-wrap:wrap}
   .qsteps button{min-height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);padding:0 14px;cursor:pointer}
   .qsteps input{flex:1;min-width:120px;font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
@@ -6574,7 +6575,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var pk = q('div', 'dwlen');
       [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only']].forEach(function (o) {
         var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.pkg === o[0]));
-        b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paint(); });
+        b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; clearInfl(); [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paint(); });
         pk.appendChild(b);
       });
       box.appendChild(pk);
@@ -6595,15 +6596,32 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var dn = q('button', null, '− $100'), up = q('button', null, '+ $100'), own = q('input'); dn.type = up.type = 'button'; own.inputMode = 'numeric'; own.placeholder = 'Or type a price'; own.maxLength = 6;
       steps.appendChild(dn); steps.appendChild(up); steps.appendChild(own);
       var noteBox = q('div', 'qnotes');
-      box.appendChild(big); box.appendChild(detail); box.appendChild(q('div', 'dwsub qsteph', 'Change the price')); box.appendChild(steps); box.appendChild(noteBox);   /* the numbers first, then the controls (Matthew 2026-10-15) */
+      box.appendChild(big); box.appendChild(detail); box.appendChild(q('div', 'dwsub qsteph', 'Change the price')); box.appendChild(steps); box.appendChild(noteBox);
+      /* the price inflator (2026-10-17, Matthew: "she can type in the percentage and the price will inflate based on the percentage"; internal, the
+         customer only ever gets the final price): a percentage on the price as it stood when she started typing; cleared by any other change */
+      var inflRow = q('div', 'qinfl'), inflIn = q('input'), inflNote = q('small', 'qinfln', 'Internal: the customer only sees the final price.');
+      inflIn.inputMode = 'decimal'; inflIn.placeholder = '0'; inflIn.maxLength = 5; inflIn.setAttribute('aria-label', 'Price inflator, percent');
+      inflRow.appendChild(q('span', 'qinflh', 'Price inflator')); inflRow.appendChild(inflIn); inflRow.appendChild(q('span', 'qinflp', '%')); inflRow.appendChild(inflNote);
+      box.insertBefore(inflRow, noteBox);
+      inflIn.addEventListener('input', function () {
+        var pct = parseFloat(inflIn.value.replace(/[^0-9.]/g, ''));
+        if (st.inflBase == null) st.inflBase = { price: st.price || ladderFor(), typed: !!st.price };
+        var b0 = st.inflBase.price; if (!b0) { inflNote.textContent = 'Set the price first, then inflate it.'; return; }
+        if (!(pct > 0)) { st.price = st.inflBase.typed ? b0 : null; inflNote.textContent = 'Internal: the customer only sees the final price.'; paint(); return; }
+        if (pct > 100) { pct = 100; inflIn.value = '100'; }
+        st.price = Math.round(b0 * (1 + pct / 100)); own.value = '';
+        inflNote.textContent = '+' + pct + '% on ' + money0(b0) + ' = ' + money0(st.price) + ' · internal, the customer only sees the price';
+        paint();
+      });
+      function clearInfl() { st.inflBase = null; if (inflIn) { inflIn.value = ''; inflNote.textContent = 'Internal: the customer only sees the final price.'; } }   /* the numbers first, then the controls (Matthew 2026-10-15) */
       var HIDE = !!P.hidden || asOffice() || qView();   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
       var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
       /* the list price: the ladder plus the drive (in whole dollars); aerate only has no list price, Jen types hers (Matthew 2026-10-15) */
       var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
-      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
-      up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
-      own.addEventListener('input', function () { var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
-      sqIn.addEventListener('input', function () { st.sq = parseInt(sqIn.value.replace(/\D/g, ''), 10) || 0; st.price = null; paint(); });
+      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
+      up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
+      own.addEventListener('input', function () { clearInfl(); var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
+      sqIn.addEventListener('input', function () { st.sq = parseInt(sqIn.value.replace(/\D/g, ''), 10) || 0; st.price = null; clearInfl(); paint(); });
       var acts = q('div', 'qacts'); box.appendChild(acts);
       function paintHidden() {
         var my = ++calcSeq; clearTimeout(calcT);
