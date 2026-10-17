@@ -5112,6 +5112,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       takenBtn.addEventListener('click', function () { takenBtn.setAttribute('aria-pressed', String(takenBtn.getAttribute('aria-pressed') !== 'true')); });
       if (lead.sign && lead.sign.how && lead.sign.how !== 'link') takenBtn.setAttribute('aria-pressed', 'true');   /* sent already: she took it then */
       depBox.appendChild(takenBtn);
+      /* signature or not (2026-10-17, Matthew: "she can choose to send one that requires signing and what that doesnt") */
+      if (P.nosign == null) P.nosign = !!(lead.sign && lead.sign.nosign);
+      depBox.appendChild(q('div', 'dwsub', 'The form'));
+      var nsRow = q('div', 'dwlen jnosign'), nsNote = q('div', 'ltrynote'); depBox.appendChild(nsRow); depBox.appendChild(nsNote);
+      var drawNs = function () {
+        nsRow.textContent = '';
+        chips(nsRow, { sign: 'Needs their signature', nosign: 'No signature needed' }, function () { return P.nosign ? 'nosign' : 'sign'; }, function (k) { P.nosign = k === 'nosign'; drawNs(); });
+        nsNote.textContent = P.nosign ? 'They get the same page to read and keep, and pay there if it is by Square link. No signing: the job is booked as soon as you send it, or when they pay the link.'
+          : 'They read it, pay there if it is by Square link, and sign. Signing books the job.';
+      };
+      drawNs();
       var paint = function () { takenBtn.hidden = P.how === 'link'; var p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p / 2); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = d; depTxt.textContent = p ? (d === half ? 'Deposit is half: ' : 'Deposit changed from half (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
       dPrice.addEventListener('input', paint); paint();
       box.insertBefore(q('div', 'dwh', 'Deposit'), nl); box.insertBefore(depBox, nl);
@@ -5208,7 +5219,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (P.how !== 'link' && takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
         if (S.depNow > sp) { err.textContent = 'The deposit cannot be more than the price.'; return; }
         sv.disabled = true;
-        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, pkg: P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb } }).then(function (j) {
+        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, nosign: P.nosign ? 1 : 0, pkg: P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb } }).then(function (j) {
           sv.disabled = false;
           if (j._status === 401) return signinView('Signed out. Enter your code again.');
           if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }
@@ -5257,9 +5268,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = myName();
-    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your one-page agreement to sign: ' + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + slotSay(x.slot) + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page before you sign.' : 'the ' + money0(j.deposit) + ' deposit you paid.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
+    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your ' + (j.nosign ? 'booking confirmation (no signature needed): ' : 'one-page agreement to sign: ') + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + slotSay(x.slot) + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page' + (j.nosign ? '; your day is booked once it is paid.' : ' before you sign.') : 'the ' + money0(j.deposit) + ' deposit you paid.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
     box.appendChild(q('div', 'dwh', 'The form is ready'));
-    box.appendChild(q('div', null, money0(x.price) + ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) + ' \u00b7 ' + dayName(x.date) + ', ' + slotLabel(x.slot) + '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.'));
+    box.appendChild(q('div', null, money0(x.price) + ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) + ' \u00b7 ' + dayName(x.date) + ', ' + slotLabel(x.slot) + (j.nosign ? (j.booked ? '. Booked on the Jobs board now, no signature needed.' : '. The day is held; it is booked when they pay the deposit (no signature needed).') : '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.')));
     var row = q('div', 'lcontact');
     var tel = digits(lead.phone);
     if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); row.appendChild(a); }
@@ -5612,7 +5623,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function signLine(l) {
     var g = l.sign, d = q('div', 'qline' + (l.signed ? ' qyes' : ''));
     var o = l.quote && l.quote.offer;
-    d.appendChild(document.createTextNode(l.signed ? 'Signed by ' + l.signed.name + ', ' + ago(l.signed.at) + (l.signed.job ? ' \u00b7 job booked' : ' \u00b7 the day was taken: set a new one on the Jobs board')
+    if (g.nosign && !l.signed) { d.className = 'qline' + (l.confirmed ? ' qyes' : ''); d.appendChild(document.createTextNode((l.confirmed ? 'Booked, no signature needed' : 'Form sent ' + ago(g.at) + ', no signature needed' + (g.how === 'link' ? ', waiting for the deposit' : '')) + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid ? ' paid by Square link' : ' by Square link') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : ''))); }   /* no signature needed (2026-10-17) */
+    else d.appendChild(document.createTextNode(l.signed ? 'Signed by ' + l.signed.name + ', ' + ago(l.signed.at) + (l.signed.job ? ' \u00b7 job booked' : ' \u00b7 the day was taken: set a new one on the Jobs board')
       : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : '')));
     if (l.sqcard && l.sqcard.last4) d.appendChild(q('div', 'dwsub', 'Card saved for the balance: ' + (l.sqcard.brand || 'card') + ' ending ' + l.sqcard.last4));   /* 2026-10-15 */
     else if (l.savecard && l.savecard.yes && !(l.sqafter)) d.appendChild(q('div', 'dwsub', 'They chose to save their card for the balance'));
@@ -5950,6 +5962,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* where they stand, at a glance */
     function qqPill(l) {
       if (l.signed) return q('span', 'qqpill ok', 'Signed');
+      if (l.confirmed) return q('span', 'qqpill ok', 'Booked \u00b7 no signature');   /* 2026-10-17 */
       if (l.status === 'won') return q('span', 'qqpill ok', 'Won \u00b7 no form');
       if (l.sign && l.sqpaid && l.sign.pay && l.sqpaid.order === l.sign.pay.order) return q('span', 'qqpill warn', 'Paid \u00b7 not signed');
       if (l.sign) return l.seen && l.seen.n ? q('span', 'qqpill warn', 'Opened ' + l.seen.n + '\u00d7') : q('span', 'qqpill muted', 'Not opened');
@@ -5971,7 +5984,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(l.email)); ct.appendChild(a3); }
         if (ct.children.length) det.appendChild(ct);
         if (l.house) det.appendChild(q('div', 'dwsub', streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '')));
-        if (l.status === 'won' && !l.signed) det.appendChild(q('div', 'qline qyes', 'Won without the form \u00b7 in Customers'));
+        if (l.status === 'won' && !l.signed && !l.confirmed) det.appendChild(q('div', 'qline qyes', 'Won without the form \u00b7 in Customers'));
         else if (l.sign) det.appendChild(signLine(l));
         else det.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent'));
         if (!cust) det.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */

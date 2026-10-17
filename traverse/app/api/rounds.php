@@ -2033,6 +2033,7 @@ function a365DepositPaid(array $l, bool $ask = true): bool {
     if (!$ask) return false;
     [$paid, $pid] = squareOrderPaid($order);
     if ($paid) { appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'sqpaid' => ['order' => $order, 'payment' => $pid, 'amt' => (int) $S2['deposit'], 'at' => time()], 'note' => 'Deposit $' . (int) $S2['deposit'] . ' paid by Square link.', 'by' => 'Square', 'at' => time()]); a365AfterPaid($l['id']); }
+    if ($paid && !empty($S2['nosign'])) a365BookNoSign((string) $l['id'], 'Square');   /* no signature needed: paid is booked (2026-10-17) */
     return $paid;
 }
 /* the words they agree to when they tick the box (2026-10-15, Matthew: "is there a way for them to save their card on file, if they wanna use the card for the finished payment") */
@@ -2415,6 +2416,14 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $sv = !empty($l['signview']['facts']) && empty($l['signed']) ? $l['signview'] : null;   /* view only (2026-10-16): the agreement as the office wrote it, nothing to pay or sign */
     if ($sv && $action === 'a365sign') out(['ok' => true, 'view' => true, 'moved' => null, 'first' => $first, 'facts' => $sv['facts'], 'terms' => $sv['terms'], 'consent' => '', 'consents' => [], 'pay' => null, 'save' => null]);
     if ($sv) fail('This agreement is for reading only. Please call or text us at ' . (string) (company()['a365']['phone'] ?? '') . '.', 409);
+    if (!empty($l['sign']['nosign']) && empty($l['signed'])) {   /* no signature needed (2026-10-17): the agreement, the deposit when by link, booked once it is in */
+        if (empty($l['confirmed']) && (($l['sign']['how'] ?? '') !== 'link' || a365DepositPaid($l, false))) { a365BookNoSign((string) $l['id'], 'website'); $l = leadsAll()[$l['id']]; }   /* catch-up */
+        if ($action !== 'a365sign') fail('This form needs no signature. Questions? Call or text us at ' . (string) (company()['a365']['phone'] ?? '') . '.', 409);
+        $cf = $l['confirmed'] ?? null; $jb = $cf && !empty($cf['job']) ? (jobsAll()[(string) $cf['job']] ?? null) : null;
+        out(['ok' => true, 'nosign' => true, 'moved' => $moved, 'first' => $first, 'facts' => $A['facts'], 'terms' => $A['terms'], 'consent' => '', 'consents' => [], 'pay' => $payOut,
+             'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null,
+             'confirmed' => (bool) $cf, 'booked' => $jb && !$jb['off'] ? ['day' => a365Day((string) $jb['date']), 'arrive' => a365Arrive((string) $jb['slot'])] : null, 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    }
     if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
@@ -3794,7 +3803,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -5603,6 +5612,36 @@ if ($action === 'leadoutcome') {
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'status' => $row['status']]);
 }
+/* a form that needs no signature (2026-10-17, Matthew: "when she sends out a quote she can choose to send one that requires signing and
+   what that doesnt"): booked the moment the deposit is in (taken when it is sent, or paid by the Square link), the same job a signature
+   would have booked; the lead gets 'confirmed' in place of 'signed' and is Won. Returns the job id, or null when nothing was booked. */
+function a365BookNoSign(string $lid, string $by): ?string {
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return null;
+    $l = leadsAll()[$lid] ?? null;
+    if (!$l || empty($l['sign']['nosign']) || !empty($l['confirmed']) || !empty($l['signed'])) { flock($lk, LOCK_UN); return null; }
+    $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $jid = null; $had = false;
+    $dep = (int) $S2['deposit']; $howP = $S2['how'] === 'link' ? 'square' : (string) $S2['how'];
+    $pay = $dep <= 0 ? ['s' => 'unpaid'] : ($dep >= (int) $Q['price'] ? ['s' => 'paid', 'how' => $howP] : ['s' => 'deposit', 'amt' => $dep, 'how' => $howP]);
+    $today0 = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $ex = jobForLead($lid);
+    if ($ex && !$ex['done']) {
+        $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => $pay, 'by' => $by, 'at' => time()]);
+    } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], $lid) === null && (string) $o['date'] >= $today0) {
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $nj = 'j' . bin2hex(random_bytes(6));
+        if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $lid, 'title' => trim((string) ($l['name'] ?? '')) ?: 'Customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
+            'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
+            'pay' => $pay, 'card' => false, 'note' => trim('Booked without a signature. ' . (string) ($S2['note'] ?? '')), 'addr' => $addr ?: 'Ask the office', 'by' => $by, 'at' => time()])) $jid = $nj;
+    }
+    appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'confirmed' => ['at' => time(), 'job' => $jid], 'status' => 'won',
+        'note' => 'Booked with no signature needed' . ($had ? '; the job was already on the board, deposit added.' : ($jid ? '; job booked.' : '; the day was taken: set a new one on the Jobs board.')), 'by' => $by, 'at' => time()]);
+    flock($lk, LOCK_UN);
+    $who = trim((string) ($l['name'] ?? '')) ?: 'A customer';
+    if ($jid && !$had && $o) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'], './?job=' . $jid, 'job-' . $jid); }
+    a365Alert($jid ? 'Booked (no signature)' : 'Booked (no signature): set a new day', $who . ' · $' . $Q['price'] . ($jid && $o ? ' · ' . deskWhen((string) $o['date'], '') : ''), true);
+    return $jid;
+}
 if ($action === 'signsend') {
     if (!feature('walkdesk') || (!desk() && $role !== 'quote')) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
@@ -5632,6 +5671,7 @@ if ($action === 'signsend') {
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
           'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
     $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
+    $nosign = !empty($body['nosign']); if ($nosign) $sign['nosign'] = true;   /* no signature needed (2026-10-17) */
     if ($byLink) {
         if ($dep < 1) fail('A Square link needs a deposit of at least $1.');
         $pl = squareLink('Deposit: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $dep * 100, a365SignLink($id, $sign['key']), (string) ($L['email'] ?? ''));
@@ -5640,8 +5680,10 @@ if ($action === 'signsend') {
     }
     $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
             'note' => mb_substr('Quoted $' . $price . ' by phone; deposit $' . $dep . ($byLink ? ' to pay by Square link on the form' : ' taken (' . ucfirst($how) . ')') . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
+    if ($nosign) $row['note'] = str_replace('Form sent;', 'Form sent (no signature needed);', $row['note']);
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
-    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink]);
+    $bookedJob = $nosign && !$byLink ? a365BookNoSign($id, $me) : null;   /* the deposit is in already: booked now */
+    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink, 'nosign' => $nosign, 'booked' => (bool) $bookedJob]);
 }
 /** may this person make pay links? With SANDBOX keys only an admin (testing): a test link sent to a real customer takes no money */
 function squareFor(): bool { global $role; $c = squareCfg(); return (bool) $c && ($c['env'] === 'production' || $role === 'admin'); }
