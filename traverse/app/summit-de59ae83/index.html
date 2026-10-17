@@ -1933,6 +1933,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qqsched{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;margin:0 0 12px;padding:10px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:700 15px var(--sans);cursor:pointer;text-align:left}.qqsched:hover{border-color:var(--accent)}
   .qqwho{position:relative}.qqnew{position:absolute;top:10px;right:12px;min-height:34px;padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}.qqnew:hover{border-color:var(--accent)}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
+  .pullbox{display:grid;gap:8px;margin:8px 0}.pullbox .row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px}.pullbox input{min-width:0;font:15px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}.pullbox .save{justify-self:start}
   .hpmap{min-height:240px;margin:10px 0}
   .sendnote{font-size:12px;color:var(--soft);line-height:1.4}
   .geov{display:grid;gap:8px}.georow{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.georow small{color:var(--soft);font-size:12.5px}
@@ -6211,9 +6212,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (my !== seq) return; res.textContent = '';
         if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work.')); return; }
         if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, e.g. “1840 Ponderosa”.')); return; }
-        if (!j.results.length && quick) res.appendChild(bySize(v));
-        if (!j.results.length && lead && !quick) res.appendChild(byHand(v));
-        if (!j.results.length) { res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”. Check the spelling, or try just the number and street name. Towns we have not added yet, condos and apartments will not show.')); return; }
+        if (!j.results.length) {
+          res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”. Check the spelling, or pull it in below.'));
+          if (/^\d+\s+\S/.test(v)) res.appendChild(pullBox(v));   /* pull it in (2026-10-16) */
+          if (quick) res.appendChild(bySize(v));
+          if (lead && !quick) res.appendChild(byHand(v));
+          return;
+        }
         j.results.forEach(function (r) {
           var b = q('button', 'door drow srow'); b.type = 'button';
           b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town + (r.lookup ? ' · not on the door lists' : ' · ' + r.area)));
@@ -6223,6 +6228,34 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         });
         if (j.more) res.appendChild(q('div', 'msg soft', 'More match. Add more of the address.'));
       }).catch(function () { if (my === seq) { res.textContent = ''; res.appendChild(q('div', 'msg', 'Search needs signal.')); } });
+    }
+    /* not on our lists: pull it in (2026-10-16, Matthew: "a button they can press and you'll pull that data and measure the lawns").
+       The server looks up the property record and measures the lawn from the 2023 photo (about 15 seconds); then it opens like any
+       house and is on our lists for everyone. */
+    function pullBox(v) {
+      var w = q('div', 'door pullbox');
+      w.appendChild(q('div', 'addr', 'Pull this property in'));
+      w.appendChild(q('div', 'meta', 'We look up the property record and measure the lawn from the aerial photo, about 15 seconds. Then it is on our lists for everyone.'));
+      var parts = String(v || '').split(','), r2 = q('div', 'row2');
+      var ai = q('input'); ai.value = parts[0].trim(); ai.placeholder = 'House number and street'; ai.setAttribute('aria-label', 'House number and street'); ai.maxLength = 120; ai.autocomplete = 'off';
+      var ti = q('input'); ti.value = (parts[1] || '').trim(); ti.placeholder = 'Town'; ti.setAttribute('aria-label', 'Town'); ti.maxLength = 60; ti.autocomplete = 'off';
+      r2.appendChild(ai); r2.appendChild(ti); w.appendChild(r2);
+      var er = q('div', 'err'), go = q('button', 'save', 'Pull it in and measure'); go.type = 'button';
+      go.addEventListener('click', function () {
+        er.textContent = '';
+        if (!/^\d+\s+\S/.test(ai.value.trim())) { er.textContent = 'Type the house number and the street.'; return; }
+        if (ti.value.trim().length < 2) { er.textContent = 'Add the town.'; try { ti.focus(); } catch (e) {} return; }
+        go.disabled = true; go.textContent = 'Looking it up and measuring…';
+        api('proppull', { body: { address: ai.value.trim(), town: ti.value.trim() } }).then(function (j) {
+          go.disabled = false; go.textContent = 'Pull it in and measure';
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { er.textContent = j.error || 'The lookup did not work. Try again.'; return; }
+          toast(j.had ? 'Already on our lists' : 'Pulled in', j.house.address + (j.house.town ? ', ' + j.house.town : ''), null);
+          show(j.house.region, j.house.id);
+        }).catch(function () { go.disabled = false; go.textContent = 'Pull it in and measure'; er.textContent = 'No signal. Try again.'; });
+      });
+      w.appendChild(er); w.appendChild(go);
+      return w;
     }
     /* not on our lists (another town, a condo): the quote from the size they give */
     function bySize(addr) {

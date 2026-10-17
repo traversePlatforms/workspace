@@ -1110,7 +1110,7 @@ function searchIndex(): array {
                 $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
                     $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', '']) . "\n";
             }
-            foreach (lookupDoors($r['key']) as $d) $out .= implode("\t", [$r['key'], $r['label'], 'Not on the door lists', $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
+            foreach (lookupDoors($r['key']) as $d) $out .= implode("\t", [$r['key'], ((string) ($d['town'] ?? '')) ?: $r['label'], $r['key'] === 'looked-up' ? 'Pulled in on request' : 'Not on the door lists',$d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
                 $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', 'L']) . "\n";   /* the office lookup (2026-10-14) */
         }
         $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp';
@@ -2484,7 +2484,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -2712,7 +2712,7 @@ if ($action === 'regions') {
     $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
-        if (!$data) continue;
+        if (!$data || empty($data['areas'])) continue;   /* no neighbourhoods (the pulled-in houses, 2026-10-16): search only, not a town */
         $marks = loadMarks($r['key']);
         $aflags = loadAreaFlags($r['key']);
         $lfix = loadLawnFix($r['key']); $custOpen ??= customerDoors();
@@ -3997,12 +3997,59 @@ function houseFacts(string $key, string $id): ?array {
     }
     foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
         if ($d['id'] !== $id) continue;
-        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($k0), 'area' => 'Not on the door lists', 'owner' => $d['owner'] ?? null,
+        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : 'Not on the door lists','owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']),
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
     }
     return null;
+}
+/* ---- a house pulled in on request (2026-10-16, Matthew: "build a one off search like we have for joe and just have it be a button
+ * they can press and you'll pull that data and measure the lawns"; "we definitely need to prioritize getting as much properties in our
+ * system as possible") ----
+ * Search found nothing: Pull this property runs sixfold-tools/prop-pull/pull-property.mjs here on the server (the state parcel map,
+ * the 2023 photo and the app's lawn classifier, the wildfire class; about 15 s) and keeps the house in the 'looked-up' town's lookup
+ * list, so it is found by search and opens in the quote builder like any house, and is never a town on anyone's list (that town has
+ * no neighbourhoods). An address already on our lists answers with that house instead. Each pull is logged in prop-pulls.log. */
+const LOOKED_UP = 'looked-up';
+if ($action === 'proppull') {
+    if (!feature('walkdesk') || !$isPost || !in_array($role, ['admin', 'office', 'quote', 'manager', 'crew'], true)) fail('Not allowed.', 403);
+    $street = $clean($body['address'] ?? '', 120); $town = $clean($body['town'] ?? '', 60);
+    if ($town === '' && strpos($street, ',') !== false) { $pp = array_map('trim', explode(',', $street)); $street = $pp[0]; $town = $pp[1] ?? ''; }
+    if (!preg_match('/^\d+\s+\S/', $street)) fail('Type the house number and the street.');
+    if (!preg_match("/^\\p{L}[\\p{L} .'-]{1,59}$/u", $town)) fail('Add the town.');
+    if ($h = a365Match($street, $town)) out(['ok' => true, 'had' => true, 'house' => ['region' => $h['region'], 'id' => $h['door'], 'address' => $h['address'], 'town' => $h['town']]]);
+    if (!throttleTake(rateFile('proppull|' . $me), 40, 3600)) fail('That is a lot of lookups in an hour. Try again later.', 429);
+    $script = dirname(__DIR__, 2) . '/sixfold-tools/prop-pull/pull-property.mjs';
+    if (!is_file($script) || !function_exists('proc_open')) fail('Property lookups are not set up on this server.', 503);
+    $node = is_file('/usr/local/bin/node') ? '/usr/local/bin/node' : 'node';
+    @set_time_limit(115);
+    $proc = @proc_open([$node, $script, '--address', $street, '--town', $town], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, dirname($script));
+    if (!is_resource($proc)) fail('The lookup did not start. Try again.', 500);
+    stream_set_blocking($pipes[1], false); $outTxt = ''; $t0 = time();
+    while (time() - $t0 < 95) { $r = [$pipes[1]]; $w = null; $e = null; if (@stream_select($r, $w, $e, 1) > 0) { $chunk = fread($pipes[1], 65536); if ($chunk === '' || $chunk === false) { if (feof($pipes[1])) break; } else $outTxt .= $chunk; } elseif (!proc_get_status($proc)['running']) { $outTxt .= (string) stream_get_contents($pipes[1]); break; } }
+    if (proc_get_status($proc)['running']) proc_terminate($proc);
+    fclose($pipes[1]); fclose($pipes[2]); proc_close($proc);
+    $lines = array_values(array_filter(explode("\n", trim($outTxt)))); $res = $lines ? json_decode((string) end($lines), true) : null;
+    appendLine(DATA_DIR . '/prop-pulls.log', ['by' => $me, 'at' => time(), 'address' => $street, 'town' => $town, 'ok' => !empty($res['ok']), 'error' => is_array($res) ? ($res['error'] ?? null) : 'no answer']);
+    if (!is_array($res)) fail('The lookup took too long. Try again in a minute.', 504);
+    if (empty($res['ok']) || !is_array($res['door'] ?? null)) fail((string) ($res['error'] ?? 'The lookup failed.'));
+    $D = $res['door']; $id = (string) ($D['id'] ?? '');
+    if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('The lookup came back without an address.');
+    $lw = is_array($D['lawn'] ?? null) && in_array($D['lawn']['lv'] ?? '', ['N', 'S', 'M', 'L', 'T'], true) ? ['lv' => $D['lawn']['lv'], 'sq' => (int) ($D['lawn']['sq'] ?? 0), 'yr' => (int) ($D['lawn']['yr'] ?? 0)] : null;
+    $door = ['id' => $id, 'address' => mb_substr((string) $D['address'], 0, 120), 'acres' => is_numeric($D['acres'] ?? null) ? (float) $D['acres'] : null, 'owner' => mb_substr((string) ($D['owner'] ?? ''), 0, 120),
+             'lat' => (float) ($D['lat'] ?? 0), 'lon' => (float) ($D['lon'] ?? 0), 'fire' => is_numeric($D['fire'] ?? null) ? (int) $D['fire'] : null, 'lawn' => $lw, 'trees' => null,
+             'val' => is_numeric($D['val'] ?? null) ? (int) $D['val'] : null, 'town' => mb_substr((string) (($D['town'] ?? '') ?: $town), 0, 60), 'pulled' => ['by' => $me, 'at' => time()]];
+    $rf = DATA_DIR . '/' . LOOKED_UP . '.json';
+    if (!is_file($rf)) writeJsonAtomic($rf, ['key' => LOOKED_UP, 'label' => 'Looked up', 'built' => date('Y-m-d'), 'areas' => []]);
+    $lf = DATA_DIR . '/' . LOOKED_UP . '-lookup.json'; $fh = @fopen($lf, 'c+');
+    if (!$fh || !flock($fh, LOCK_EX)) fail('Could not save that house. Try again.', 500);
+    $cur = json_decode((string) stream_get_contents($fh), true); if (!is_array($cur) || !is_array($cur['doors'] ?? null)) $cur = ['key' => LOOKED_UP, 'doors' => []];
+    $cur['doors'] = array_values(array_filter($cur['doors'], fn($d) => ($d['id'] ?? '') !== $id)); $cur['doors'][] = $door; $cur['built'] = date('Y-m-d');
+    ftruncate($fh, 0); rewind($fh); fwrite($fh, json_encode($cur, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); fflush($fh); flock($fh, LOCK_UN); fclose($fh);
+    $ixf = DATA_DIR . '/index.json'; $ix = json_decode((string) @file_get_contents($ixf), true);
+    if (is_array($ix) && !in_array(LOOKED_UP, array_column((array) ($ix['regions'] ?? []), 'key'), true)) { $ix['regions'][] = ['key' => LOOKED_UP, 'label' => 'Looked up', 'c' => [round($door['lat'], 4), round($door['lon'], 4)], 'areas' => 0, 'doors' => 0]; writeJsonAtomic($ixf, $ix); }
+    out(['ok' => true, 'house' => ['region' => LOOKED_UP, 'id' => $id, 'address' => $door['address'], 'town' => $door['town']], 'lawn' => $lw]);
 }
 if (in_array($action, ['a365house', 'leadhouse', 'leadask', 'lawncheck'], true) && !feature('walkdesk')) fail('Not here.', 404);
 if ($action === 'a365house') {
@@ -5429,7 +5476,7 @@ if ($action === 'clickuppoll') {
             if ($want === 'lost' ? !in_array($st, ['won', 'lost'], true) : ($want !== '' && $st !== 'lost' && ($RANK[$want] ?? 0) > ($RANK[$st] ?? 0))) { $u['status'] = $want; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $want . ')'; }
         }
         if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
-        if (empty($l['house']) && $addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
+        if ((empty($l['house']) || !empty($l['house']['typed'])) && $addr !== ''   /* a typed address gives way to the house on our lists */ && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
         if (count($u) > 3) { if ($notes) $u['note'] = implode(' ', $notes); appendLine(leadsDir() . '/leadst.log', $u); }
     }
     /* the doubles check, every pull */
