@@ -17,6 +17,8 @@ date_default_timezone_set('America/Denver');
 $mlArgs = array_slice($argv ?? [], 1);
 /* Jen's ClickUp leads ride on this cron (2026-10-16): their own process first, so a Facebook failure never stops them */
 if (!$mlArgs && is_file(__DIR__ . '/clickup-leads.php')) passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/clickup-leads.php'));
+/* the nightly Square check rides here too (2026-10-16): it runs once a night after 2 am and otherwise returns at once */
+if (!$mlArgs && is_file(__DIR__ . '/square-check.php')) passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/square-check.php'));
 $mlApi = getenv('SIXFOLD_API_DIR') ?: dirname(__DIR__) . '/public_html/api';   /* the override is for the test copy only */
 $mlSetup = '';
 foreach ($mlArgs as $a) if (strncmp($a, '--setup=', 8) === 0) $mlSetup = substr($a, 8);

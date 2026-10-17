@@ -1907,7 +1907,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -1997,7 +1997,7 @@ function squareCfg(): ?array {
 }
 function squareApi(string $method, string $path, ?array $body = null): array {
     $c = squareCfg(); if (!$c || !function_exists('curl_init')) return ['_status' => 0, 'errors' => [['detail' => 'Square is not connected.']]];
-    $h = curl_init(($c['env'] === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com') . $path);
+    $h = curl_init((!empty($c['api']) && $c['env'] === 'sandbox' ? rtrim((string) $c['api'], '/') : ($c['env'] === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com')) . $path);   /* api: a stand-in Square for the tests, sandbox only */
     curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CUSTOMREQUEST => $method,
         CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $c['token'], 'Square-Version: 2025-01-23', 'Content-Type: application/json']]);
     if ($body !== null) curl_setopt($h, CURLOPT_POSTFIELDS, json_encode($body, JSON_UNESCAPED_SLASHES));
@@ -5994,7 +5994,95 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     foreach ($rows as $p) { $byHow[$p['howL']] = ($byHow[$p['howL']] ?? 0) + $p['amt']; $m = substr($p['date'], 0, 7); $byMonth[$m] = ($byMonth[$m] ?? 0) + $p['amt']; }
     arsort($byHow); ksort($byMonth);
     out(['ok' => true, 'from' => $from, 'to' => $to, 'rows' => $rows, 'total' => array_sum(array_column($rows, 'amt')), 'count' => count($rows), 'byHow' => $byHow, 'byMonth' => $byMonth,
-         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i')]);
+         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]);
+}
+/* ---- the nightly Square check (2026-10-16, Matthew: "run scans from square to see who's paid ... just in case it's not updating
+ * properly"; "build the nightly square check") ----
+ * Every Square payment of the last 45 days at every location (pay links, the Square app, invoices) against the app's own payment
+ * records. Each payment is matched to a lead by its order or payment id, else Square's customer email or phone, else the full name;
+ * then per person what Square kept (refunds taken off) is set against what the app records as paid by Square or card. Anything that
+ * does not agree goes in square-check.json for the top of the Payments page, and a new one pushes to the super admin. Run once a
+ * night (sixfold-tools/square-check.php, started by the Facebook job's 5-minute cron, after 2 am) or now from the Payments page.
+ * Leave it keeps an item quiet (square-check-ok.json). Read only towards Square. */
+function squareCheckFile(): string { return DATA_DIR . '/square-check.json'; }
+function squareCheckOk(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/square-check-ok.json'), true); return is_array($j['keys'] ?? null) ? $j['keys'] : []; }
+function squareCheckShown(): ?array {
+    $j = json_decode((string) @file_get_contents(squareCheckFile()), true); if (!is_array($j)) return null;
+    $ok = array_flip(squareCheckOk());
+    return ['at' => (int) ($j['at'] ?? 0), 'items' => array_values(array_filter((array) ($j['items'] ?? []), fn($i) => !isset($ok[$i['key'] ?? '']))), 'payments' => (int) ($j['payments'] ?? 0), 'quiet' => count(array_filter((array) ($j['items'] ?? []), fn($i) => isset($ok[$i['key'] ?? ''])))];
+}
+function squareNightly(): array {
+    if (!squareCfg()) return ['ok' => false, 'error' => 'Square is not connected.'];
+    $since = gmdate('Y-m-d\TH:i:s\Z', max(time() - 45 * 86400, strtotime('2026-10-01T06:00:00Z')));
+    $locs = squareApi('GET', '/v2/locations'); if (($locs['_status'] ?? 0) !== 200) return ['ok' => false, 'error' => 'Square did not answer.'];
+    $locName = []; $pays = [];
+    foreach ((array) ($locs['locations'] ?? []) as $L) {
+        $locName[(string) $L['id']] = (string) ($L['name'] ?? ''); $cur = '';
+        for ($i = 0; $i < 20; $i++) {
+            $r = squareApi('GET', '/v2/payments?' . http_build_query(array_filter(['begin_time' => $since, 'location_id' => (string) $L['id'], 'limit' => 100, 'cursor' => $cur], fn($v) => $v !== '')));
+            if (($r['_status'] ?? 0) !== 200) return ['ok' => false, 'error' => 'Square did not send the payments.'];
+            foreach ((array) ($r['payments'] ?? []) as $p) $pays[] = $p;
+            $cur = (string) ($r['cursor'] ?? ''); if ($cur === '') break;
+        }
+    }
+    $cust = [];
+    foreach (array_unique(array_filter(array_map(fn($p) => (string) ($p['customer_id'] ?? ''), $pays))) as $cid) {
+        $cu = squareApi('GET', '/v2/customers/' . rawurlencode($cid))['customer'] ?? [];
+        $cust[$cid] = ['name' => trim(($cu['given_name'] ?? '') . ' ' . ($cu['family_name'] ?? '')), 'email' => strtolower(trim((string) ($cu['email_address'] ?? ''))), 'phone' => substr((string) preg_replace('/\D/', '', (string) ($cu['phone_number'] ?? '')), -10)];
+    }
+    $leads = leadsAll(); $rows = paymentsAll(); $d10 = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
+    $byOrder = []; $byPay = []; $byEmail = []; $byPhone = []; $byName = [];
+    foreach ($leads as $l) {
+        foreach ([$l['sign']['pay']['order'] ?? '', $l['sqpaid']['order'] ?? '', $l['sqafter']['order'] ?? ''] as $o) if ((string) $o !== '') $byOrder[(string) $o] = $l['id'];
+        if (!empty($l['sqpaid']['payment'])) $byPay[(string) $l['sqpaid']['payment']] = $l['id'];
+        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $byEmail[$e] = $byEmail[$e] ?? $l['id'];
+        $p = $d10($l['phone'] ?? ''); if (strlen($p) === 10) $byPhone[$p] = $byPhone[$p] ?? $l['id'];
+        $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1) $byName[$n] = $byName[$n] ?? $l['id'];
+    }
+    foreach (jobsAll() as $j) foreach (['sqcharge', 'sqpaid'] as $k) if (is_array($j[$k] ?? null)) { if (!empty($j[$k]['order'])) $byOrder[(string) $j[$k]['order']] = (string) $j['lead']; if (!empty($j[$k]['payment'])) $byPay[(string) $j[$k]['payment']] = (string) $j['lead']; }
+    foreach ($rows as $rw) if ($rw['ref'] !== '' && $rw['lead'] !== '') $byPay[$rw['ref']] = $rw['lead'];
+    $tz = new DateTimeZone(appTz()); $day = fn($ts) => (new DateTime('@' . $ts))->setTimezone($tz)->format('D j M');
+    $items = []; $sq = []; $n = 0;
+    foreach ($pays as $p) {
+        if (($p['status'] ?? '') !== 'COMPLETED') continue; $n++;
+        $amt = ((int) ($p['amount_money']['amount'] ?? 0)) / 100; $back = ((int) ($p['refunded_money']['amount'] ?? 0)) / 100;
+        $cu = $cust[(string) ($p['customer_id'] ?? '')] ?? ['name' => '', 'email' => '', 'phone' => ''];
+        $em = $cu['email'] !== '' ? $cu['email'] : strtolower(trim((string) ($p['buyer_email_address'] ?? '')));
+        $lid = $byOrder[(string) ($p['order_id'] ?? '')] ?? ($byPay[(string) $p['id']] ?? '');
+        if ($lid === '' && $em !== '' && isset($byEmail[$em])) $lid = $byEmail[$em];
+        if ($lid === '' && strlen($cu['phone']) === 10 && isset($byPhone[$cu['phone']])) $lid = $byPhone[$cu['phone']];
+        if ($lid === '' && ($nm = cuName($cu['name'])) !== '' && isset($byName[$nm])) $lid = $byName[$nm];
+        $at = (int) strtotime((string) ($p['created_at'] ?? '')); $card = trim((string) (($p['card_details']['card']['card_brand'] ?? '') . ' ' . ($p['card_details']['card']['last_4'] ?? '')));
+        $where = $locName[(string) ($p['location_id'] ?? '')] ?? 'Square';
+        if ($lid === '') { $items[] = ['key' => 'p:' . $p['id'], 'kind' => 'unmatched', 'text' => 'Square took $' . number_format($amt - $back, 2) . ' on ' . $day($at) . ' from ' . ($cu['name'] !== '' ? $cu['name'] : ($card !== '' ? 'a card ending ' . substr($card, -4) : 'someone')) . ' (' . $where . '), and nobody in the app matches it.']; continue; }
+        $sq[$lid][] = ['amt' => $amt, 'back' => $back, 'at' => $at];
+    }
+    $app = []; foreach ($rows as $rw) if ($rw['lead'] !== '' && in_array($rw['how'], ['square', 'card'], true) && $rw['at'] >= strtotime($since)) $app[$rw['lead']] = ($app[$rw['lead']] ?? 0) + $rw['amt'];
+    foreach (array_unique(array_merge(array_keys($sq), array_keys($app))) as $lid) {
+        $kept = array_sum(array_map(fn($x) => $x['amt'] - $x['back'], $sq[$lid] ?? [])); $rec = (float) ($app[$lid] ?? 0);
+        if (abs($kept - $rec) < 0.5) continue;
+        $who = trim((string) ($leads[$lid]['name'] ?? '')) ?: 'A customer'; $refund = array_sum(array_column($sq[$lid] ?? [], 'back'));
+        $items[] = ['key' => 'l:' . $lid . ':' . (int) round($kept * 100) . ':' . (int) round($rec * 100), 'kind' => $kept > $rec ? 'more' : 'less', 'lead' => $lid, 'name' => $who,
+                    'text' => $who . ': Square kept $' . number_format($kept, 2) . ($refund > 0 ? ' (after $' . number_format($refund, 2) . ' refunded)' : '') . ', the app records $' . number_format($rec, 2) . ' paid by Square or card.'];
+    }
+    $old = json_decode((string) @file_get_contents(squareCheckFile()), true); $oldKeys = array_column((array) ($old['items'] ?? []), 'key');
+    writeJsonAtomic(squareCheckFile(), ['at' => time(), 'payments' => $n, 'items' => $items]);
+    $ok = array_flip(squareCheckOk()); $new = array_values(array_filter($items, fn($i) => !in_array($i['key'], $oldKeys, true) && !isset($ok[$i['key']])));
+    if ($new) superAlert(count($new) === 1 ? 'Square check: one to look at' : 'Square check: ' . count($new) . ' to look at', implode(' ', array_map(fn($i) => $i['text'], array_slice($new, 0, 2))));
+    return ['ok' => true, 'payments' => $n, 'items' => count($items), 'new' => count($new)];
+}
+if ($action === 'squarenightly') {   /* sixfold-tools/square-check.php, command line only */
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    @ini_set('memory_limit', '512M'); @set_time_limit(300);
+    out(squareNightly());
+}
+if ($action === 'squarecheckrun' || $action === 'squareok') {   /* the Payments page: Check now, Leave it */
+    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    if ($action === 'squarecheckrun') { @set_time_limit(110); $r = squareNightly(); if (empty($r['ok'])) fail((string) ($r['error'] ?? 'The check did not run.'), 502); out(['ok' => true, 'sqcheck' => squareCheckShown()]); }
+    $k = (string) ($body['key'] ?? ''); if (!preg_match('/^[pl]:[A-Za-z0-9:_-]{1,120}$/D', $k)) fail('Nothing to leave.');
+    $keys = squareCheckOk(); if (!in_array($k, $keys, true)) $keys[] = $k;
+    writeJsonAtomic(DATA_DIR . '/square-check-ok.json', ['keys' => array_slice($keys, -500), 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'sqcheck' => squareCheckShown()]);
 }
 if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget', 'custdoc', 'custdocadd', 'custdocdel'], true)) {
     /* the office (Jen, 2026-10-14, Matthew: "in case she needs to call one or edit something she forgot to put in"): the list, editing a

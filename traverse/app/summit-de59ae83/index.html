@@ -725,6 +725,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .cacts .lnk.danger{color:var(--fire-h)}
   .door.cvisit{padding-left:16px}
   .payctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 12px}.payctl select,.payctl input{font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .sqcheck{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px;margin:0 0 14px;display:grid;gap:6px}.sqcheck.warn{border-color:#d9a441;background:#fdf6e6}.sqch{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.sqch b{font:800 15px var(--sans)}.sqch span{color:var(--soft);font-size:13px}.sqrow{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.sqcheck .lnk{justify-self:start}.sqrow .lnk{white-space:nowrap;flex:none}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sqcheck.warn{background:#3a2e12;border-color:#8a6a1c}}:root[data-theme="dark"] .sqcheck.warn{background:#3a2e12;border-color:#8a6a1c}
   .paysum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 12px}.paysum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.paysum b{display:block;font-size:20px}.paysum span{color:var(--muted);font-size:13px}
   .paytbl{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border-radius:12px;overflow:hidden}.paytbl th,.paytbl td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.paytbl th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.paytbl td.n,.paytbl th.n{text-align:right;white-space:nowrap}.paytbl tr.neg td{color:var(--later)}.paytbl small{color:var(--muted)}
   .payacts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.payacts button,.payacts a{flex:1;min-width:200px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 15px var(--sans);text-align:center;text-decoration:none;cursor:pointer}.payacts a{background:var(--card);color:var(--ink);border:1px solid var(--line)}
@@ -10575,7 +10577,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   var payMoney = function (n) { return (n < 0 ? '\u2212$' : '$') + Math.abs(n).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   var payMonth = function (ym) { var p = ym.split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; };
+  /* the nightly Square check (2026-10-16, Matthew): what Square took against what the app records; Leave it, Check now */
+  function sqCheckBox(c) {
+    var box = q('div', 'sqcheck' + (c && c.items && c.items.length ? ' warn' : ''));
+    var hd = q('div', 'sqch'); hd.appendChild(q('b', null, 'Square check'));
+    hd.appendChild(q('span', null, c && c.at ? 'checked ' + ago(c.at) + ' · ' + c.payments + ' Square payment' + (c.payments === 1 ? '' : 's') + ' in the last 45 days' : 'not run yet; it runs every night'));
+    box.appendChild(hd);
+    var list = q('div');
+    if (c && c.at && !c.items.length) list.appendChild(q('div', 'dwsub', 'Everything in Square matches the app.' + (c.quiet ? ' (' + c.quiet + ' left as they are.)' : '')));
+    (c && c.items || []).forEach(function (it) {
+      var r = q('div', 'sqrow'); r.appendChild(q('span', null, it.text));
+      var lv = q('button', 'lnk', 'Leave it'); lv.type = 'button';
+      lv.addEventListener('click', function () { lv.disabled = true; api('squareok', { body: { key: it.key } }).then(function (k) { if (!k.ok) { lv.disabled = false; toast('Not saved', k.error || 'Try again.', null); return; } box.replaceWith(sqCheckBox(k.sqcheck)); }).catch(function () { lv.disabled = false; toast('No signal', 'Try again.', null); }); });
+      r.appendChild(lv); list.appendChild(r);
+    });
+    box.appendChild(list);
+    var run = q('button', 'lnk', 'Check now'); run.type = 'button';
+    run.addEventListener('click', function () { run.disabled = true; run.textContent = 'Checking Square…'; api('squarecheckrun', { body: {} }).then(function (k) { if (!k.ok) { run.disabled = false; run.textContent = 'Check now'; toast('Not checked', k.error || 'Try again.', null); return; } box.replaceWith(sqCheckBox(k.sqcheck)); }).catch(function () { run.disabled = false; run.textContent = 'Check now'; toast('No signal', 'Try again.', null); }); });
+    box.appendChild(run);
+    return box;
+  }
   function drawPayments(body, j) {
+    body.appendChild(sqCheckBox(j.sqcheck));
     var sum = q('div', 'paysum');
     var card = function (big, small) { var d = q('div'); d.appendChild(q('b', null, big)); d.appendChild(q('span', null, small)); sum.appendChild(d); };
     card(payMoney(j.total), 'received, ' + fmtD(j.from) + ' to ' + fmtD(j.to));
