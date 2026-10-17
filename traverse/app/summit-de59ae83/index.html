@@ -11087,9 +11087,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (pend.length) {
         /* one line until opened, and by the source picked (2026-10-17, Matthew: the Pipeline "super stretched out" under Phone call and
            the other tabs: these full cards sat under every view, whatever was picked) */
+        /* open by itself when someone new is in it (2026-10-17, Matthew: a won lead sat out of sight here); this device remembers who it showed */
+        var pids = pend.map(function (it) { return it.kind === 'lead' ? 'l:' + it.x.id : 'd:' + it.x.region + '/' + it.x.id; }), seenW = [];
+        try { seenW = JSON.parse(localStorage.getItem('wonPendSeen') || '[]'); } catch (e) {}
+        var fresh = pids.filter(function (k) { return seenW.indexOf(k) < 0; }).length;
+        if (S.wonPendOpen == null && fresh > 0) S.wonPendOpen = true;   /* stays open this visit until closed */
         var wp = q('section', 'wonpend'), wOpen = !!S.wonPendOpen;
+        if (wOpen) { try { localStorage.setItem('wonPendSeen', JSON.stringify(seenW.concat(pids.filter(function (k) { return seenW.indexOf(k) < 0; })).slice(-300))); } catch (e) {} }
         var wh = q('button', 'cfold'); wh.type = 'button'; wh.setAttribute('aria-expanded', String(wOpen)); wh.appendChild(ico('chev', 2.4));
-        wh.appendChild(document.createTextNode('Won, not in Customers yet (' + pend.length + ')'));
+        wh.appendChild(document.createTextNode('Won, not in Customers yet (' + pend.length + ')' + (fresh && wOpen ? ' · ' + fresh + ' new' : '')));
         wh.addEventListener('click', function () { S.wonPendOpen = !wOpen; drawPipe(); });
         wp.appendChild(wh);
         if (wOpen) { wp.appendChild(q('div', 'ltrynote', 'Tap Make customer on each to put them in Customers.')); pend.forEach(function (it) { drawCard(it, wp); }); }

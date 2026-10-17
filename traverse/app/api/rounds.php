@@ -5441,6 +5441,7 @@ if ($action === 'clickuppoll') {
         if (in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) && $at > $last) $row['try'] = $TRY[$cst];
         appendLine(leadsDir() . '/leadst.log', $row);
     };
+    $SCHED_NOTE = 'Scheduled in Jen\'s ClickUp, not booked in the app: book the day on the Jobs board, or send the form.';
     $STATUS = ['contacted - vm / sms' => 'contacted', 'contacted - fb messenger' => 'contacted', 'on hold' => 'contacted', 'quote sent' => 'quoted', 'scheduled' => 'won', 'completed' => 'won', 'lost' => 'lost'];
     $RANK = ['new' => 0, 'contacted' => 1, 'walk' => 2, 'quoted' => 3, 'won' => 4];
     $SRC = ['Referral' => 'referral', 'Website' => 'a365web', 'Facebook' => 'meta', 'Phone' => 'phone'];
@@ -5482,6 +5483,7 @@ if ($action === 'clickuppoll') {
             $u = ['id' => $row['id'], 'cu' => $tid, 'cus' => $cst, 'cud' => $deal, 'by' => 'ClickUp', 'at' => $now];
             if ($owner !== '') $u['qown'] = $owner;
             if ($want !== '' && $want !== 'new') { $u['status'] = $want; $u['note'] = 'From Jen\'s ClickUp (' . ($t['status']['status'] ?? '') . ').'; }
+            if ($cst === 'scheduled') { $u['status'] = 'quoted'; $u['note'] = $SCHED_NOTE; $want = 'quoted'; }   /* nothing booked here yet (2026-10-17) */
             appendLine(leadsDir() . '/leadst.log', $u);
             if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr, $m)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
             $row['cu'] = $tid; $row['status'] = $want ?: 'new'; $leads[$row['id']] = $row; $index($row);
@@ -5497,6 +5499,9 @@ if ($action === 'clickuppoll') {
         if ($owner !== '' && !in_array($owner, (array) ($l['qown'] ?? []), true) && ($l['by'] ?? '') !== $owner) $u['qown'] = $owner;
         if ($cst !== '' && $cst !== (string) ($l['cus'] ?? '')) {
             $u['cus'] = $cst; $st = (string) ($l['status'] ?? 'new');
+            /* 'scheduled' in ClickUp with nothing booked in the app is a quote, not a win (2026-10-17, Matthew: a Won lead with no form and no job,
+               out of sight in the Pipeline); 'completed' still is: the work was done */
+            if ($want === 'won' && $cst === 'scheduled' && empty($l['signed']) && empty($l['confirmed']) && !jobForLead($id)) { $want = 'quoted'; $notes[] = $SCHED_NOTE; }
             if ($want === 'lost' ? !in_array($st, ['won', 'lost'], true) : ($want !== '' && $st !== 'lost' && ($RANK[$want] ?? 0) > ($RANK[$st] ?? 0))) { $u['status'] = $want; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $want . ')'; }
         }
         if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
