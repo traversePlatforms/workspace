@@ -1919,7 +1919,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .schedwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
   .schedt{border-collapse:collapse;width:100%;font-size:14px;min-width:640px}.schedt th{position:sticky;top:0;background:var(--sunk);text-align:left;padding:8px 10px;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft)}
   .schedt td{padding:7px 10px;border-top:1px solid var(--line);white-space:nowrap}.schedt tr.booked td{background:#eef6ea}.schedt tr.held td{background:#fff6e5}.schedt tr.smine td:nth-child(4){font-weight:800}.schedt th:first-child,.schedt td.sdate{width:120px}.schedt tr.open td:nth-child(4){color:var(--accent);font-weight:700}
-  .schedt tr.past td,.schedt tr.closed td{color:var(--soft)}.schedt tr.edit{cursor:pointer}.schedt tr.edit:hover td{filter:brightness(.96)}.schedt td.sarea{cursor:pointer}.schedt td.sarea:hover{text-decoration:underline}
+  .schedt tr.past td,.schedt tr.closed td{color:var(--soft)}.schedt tr.edit{cursor:pointer}.schedt tr.edit:hover td{filter:brightness(.96)}.schedt td.sarea{cursor:pointer}.schedt .stown{padding:0;font:700 13.5px var(--sans)}.schedt td.sarea:hover{text-decoration:underline}
   .schedt tr.sedit td{background:var(--card);border-top:0;white-space:normal}.sedform{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:6px 0}.sedform>b{flex-basis:100%}.sedform label{display:grid;gap:3px;font-size:12.5px;font-weight:700}
   .sedform input,.sedform select{font:14px var(--sans);padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}.sedacts{display:flex;gap:12px;align-items:center}.sedacts .save{width:auto;padding:8px 16px;min-height:0}.sedform .ltrynote,.sedform .err{flex-basis:100%}.schedt tr.dayfirst td{border-top:2px solid var(--soft)}.schedt td.sdate{font-weight:700;white-space:pre-line;vertical-align:top}
   .qseed button{font-size:12.5px}.qseed button:disabled{opacity:1;cursor:default}
@@ -2796,7 +2796,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -3478,7 +3478,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.viewAs) box.appendChild(viewAsBar());
     /* the greeting, with today's numbers filled in when they land */
     var hero = q('div', 'hero'), hr = new Date().getHours();
-    hero.appendChild(q('div', 'hi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
+    hero.appendChild(q('div', 'hi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (myName() || 'there')));
     hero.appendChild(q('div', 'dt', new Date().toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' })));
     var hs = q('div', 'hs'), cells = {};
     [['doors', 'Doors today'], ['talked', 'Talked to'], ['booked', 'Quotes']].forEach(function (k) { var c = q('div'); cells[k[0]] = q('b', null, '–'); c.appendChild(cells[k[0]]); c.appendChild(q('span', null, k[1])); hs.appendChild(c); });
@@ -4932,11 +4932,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var row = q('div', 'jwxrow');
       row.appendChild(q('b', null, m.name || m.phone || 'Customer'));
       row.appendChild(q('small', null, 'Now ' + m.day + ', arriving ' + m.arrive));
-      var B = leadBrand({ src: m.src, name: m.name }), me = String(S.me || '').split(' ')[0];
+      var B = leadBrand({ src: m.src, name: m.name }), me = myName();
       var msg = 'Hi ' + greetName(m.name) + ', this is ' + me + ' with ' + B.name + '. The weather won\u2019t let us aerate on ' + m.fromDay + ', so we\u2019ve moved you to ' + m.day + ', arriving ' + m.arrive + '. If that doesn\u2019t work, reply' + (B.phone ? ' or call ' + B.phone : '') + '.';
       var ct = q('div', 'lcontact'), tel = digits(m.phone);
       if (tel.length >= 10) { var a = q('a', 'wxtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text ' + (greetName(m.name) || ''))); a.addEventListener('click', function () { a.classList.add('sent'); }); ct.appendChild(a); }
-      if (m.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(m.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your aeration day has moved') + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); ct.appendChild(e); }
+      if (m.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(m.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your aeration day has moved') + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); ct.appendChild(e); }
       addGmail(ct);
       if (!ct.children.length) row.appendChild(q('div', 'err', 'No phone or email on the lead: call them.'));
       row.appendChild(ct); box.appendChild(row);
@@ -5252,14 +5252,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : qView() ? 'Quick quote' : 'Pipeline' });
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
-    var B = leadBrand(lead), first = greetName(lead.name), me = String(S.me || '').split(' ')[0];
+    var B = leadBrand(lead), first = greetName(lead.name), me = myName();
     var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your one-page agreement to sign: ' + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + slotSay(x.slot) + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page before you sign.' : 'the ' + money0(j.deposit) + ' deposit you paid.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
     box.appendChild(q('div', 'dwh', 'The form is ready'));
     box.appendChild(q('div', null, money0(x.price) + ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) + ' \u00b7 ' + dayName(x.date) + ', ' + slotLabel(x.slot) + '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.'));
     var row = q('div', 'lcontact');
     var tel = digits(lead.phone);
     if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); row.appendChild(a); }
-    if (lead.email) { var e = q('a', 'sendmail'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your agreement with ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email it')); row.appendChild(e); }
+    if (lead.email) { var e = q('a', 'sendmail'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your agreement with ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email it')); row.appendChild(e); }
     box.appendChild(row);
     addSendNote(box, row);
     var cp = q('button', 'lnk', 'Copy the link'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); box.appendChild(cp);
@@ -5342,9 +5342,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           mk.disabled = false;
           if (!j.ok) { toast('No pay link', j.error || 'Try again.', null); return; }
           jb.sqlink = { url: j.url, amt: j.amt }; out.textContent = '';
-          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. Here is the link to pay the ' + money0(j.amt) + ' balance for your aeration: ' + j.url + ' Thank you!';
+          var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. Here is the link to pay the ' + money0(j.amt) + ' balance for your aeration: ' + j.url + ' Thank you!';
           if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text it to them')); out.appendChild(a); }
-          if (L && L.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(L.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your balance with ' + B.name) + '&body=' + encodeURIComponent(msg); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); out.appendChild(e); }
+          if (L && L.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(L.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your balance with ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email')); out.appendChild(e); }
           addGmail(out); var sn = sendNote(out); if (sn) out.appendChild(sn);
           var op = q('a', 'lnk', 'Open the pay page \u203a'); op.href = j.url; op.target = '_blank'; op.rel = 'noopener'; out.appendChild(op);
         }).catch(function () { mk.disabled = false; toast('No signal', 'Try again.', null); });
@@ -5479,12 +5479,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* whose name and number a message carries (2026-10-14, Matthew: 365's customers never see Sixfold): the office, and leads from the
      365 page (Facebook, Messenger, its website), get 365 Aeration's; everything else the company's own */
   function leadBrand(l) {
-    var src = l && l.src, a = CO.a365 && wdOn() && (['a365web', 'meta', 'messenger'].indexOf(src) >= 0 || (asOffice() && ['website', 'linktree', 'nextdoor'].indexOf(src) < 0)) ? CO.a365 : null;   /* Fable review 2026-10-14: a Sixfold-site enquiry never gets 365's name */
-    return { name: a ? a.name : CO.short, phone: a ? a.phone : CO.phone };
+    /* the quote-only account too (2026-10-16: Jen's Copy a text said Sixfold and Brandon's number) */
+    var src = l && l.src, a = CO.a365 && (wdOn() || qView()) && (['a365web', 'meta', 'messenger'].indexOf(src) >= 0 || ((asOffice() || qView()) && ['website', 'linktree', 'nextdoor'].indexOf(src) < 0)) ? CO.a365 : null;   /* Fable review 2026-10-14: a Sixfold-site enquiry never gets 365's name */
+    return { name: a ? a.name : CO.short, phone: a ? a.phone : CO.phone, web: a ? (a.web || '') : '' };
   }
+  /* the name someone signs with (2026-10-16, Jen: "I usually go by Jenn"): company a365.signAs by account name, sent at sign-in as S.sign; first name unless full */
+  function myName(full) { var n = String(S.sign || S.me || ''); return full ? n : n.split(' ')[0]; }
+  /* one signature for every email (2026-10-16): the name, the company, its phone and website */
+  function mailSig(B) { return '\n\n' + myName() + '\n' + B.name + (B.phone ? '\n' + B.phone : '') + (B.web ? '\n' + B.web : ''); }
   function leadMsg(l, last) {
     var nd = String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim().toLowerCase() || 'quote', B = leadBrand(l);
-    var me = String(S.me || '').split(' ')[0], hi = 'Hi ' + greetName(l.name) + ', this is ' + me + ' with ' + B.name + '. ';
+    var me = myName(), hi = 'Hi ' + greetName(l.name) + ', this is ' + me + ' with ' + B.name + '. ';
     return last ? hi + 'We have tried you a few times about your ' + nd + ' request. If you would still like a quote, reply here' + (B.phone ? ' or call us at ' + B.phone : '') + '. If not, no problem, we will stop calling.'
       : hi + 'I just tried calling about your ' + nd + ' request. When is a good time to talk? You can also reply here.';
   }
@@ -5538,7 +5543,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var body = leadMsg(l, out);
       if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(body); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode(out ? 'Last text' : 'Text them too')); fu.appendChild(a); }
       if (l.email) {
-        var e = q('a'); e.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + leadBrand(l).name) + '&body=' + encodeURIComponent(body + '\n\n' + S.me + '\n' + leadBrand(l).name + (leadBrand(l).phone ? '\n' + leadBrand(l).phone : ''));
+        var e = q('a'); e.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your ' + (String(l.need || '').replace(/\s*20\d\d\s*$/, '').trim() || 'quote') + ' request with ' + leadBrand(l).name) + '&body=' + encodeURIComponent(body + mailSig(leadBrand(l)));
         e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode(out ? 'Last email' : 'Email them too')); fu.appendChild(e);
       }
       box.appendChild(fu);
@@ -6031,7 +6036,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (r && r.mine) tr.classList.add('smine');   /* not .mine: that is the chip style */
               if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }
-              if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(q('td', null, r.town || area)); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
+              if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { schedView(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               bd.appendChild(tr); n++;
             });
@@ -6048,6 +6053,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     window.scrollTo(0, 0);
   }
   /* move or cancel one booked job from the schedule (2026-10-15) */
+  /* the town cell (2026-10-16, Jen: "if there is no town listed can I add one? For Kirk"): Add town when the row has none */
+  function schedTownCell(r, area, done) {
+    var td = q('td'); if (r.town || !r.tl) { td.textContent = r.town || area || ''; return td; }
+    var b = q('button', 'lnk stown', 'Add town'); b.type = 'button';
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var t = window.prompt('Town for ' + r.name + '?', ''); if (t == null || !t.trim()) return;
+      b.disabled = true;
+      api('leadtown', { body: { id: r.tl, town: t.trim() } }).then(function (j) { b.disabled = false; if (j._status === 401) return signinView('Signed out. Enter your code again.'); if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Town saved', r.name + ': ' + j.town, null); done(); }).catch(function () { b.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
+    });
+    td.appendChild(b); return td;
+  }
   function schedEdit(tr, r, J, done) {
     var nx = tr.nextSibling; if (nx && nx.classList && nx.classList.contains('sedit')) { nx.remove(); return; }
     [].forEach.call(document.querySelectorAll('.schedt tr.sedit'), function (x) { x.remove(); });
@@ -6133,7 +6150,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function quickCustomerText(h, st) {
     var Q = S.qq || {}, B = leadBrand({ src: 'a365web', name: Q.name }), first = greetName(Q.name), dep = Math.ceil(st.cur.price / 2);
-    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
   }
   /* under Text and Email buttons: what they open, and what to do when that does not work (Matthew 2026-10-15) */
   function sendNote(el) {
@@ -6369,7 +6386,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var box = q('div', 'ohome');
     if (S.viewAs) box.appendChild(viewAsBar());
     var hr = new Date().getHours(), hero = q('div', 'ohero');
-    hero.appendChild(q('div', 'ohi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
+    hero.appendChild(q('div', 'ohi', (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (myName() || 'there')));
     hero.appendChild(q('div', 'odt', new Date().toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' })));
     var sf = q('form', 'osearch'); var si = q('input'); si.type = 'search'; si.placeholder = 'Find a house: type the address they gave you'; si.setAttribute('aria-label', 'Find a house');
     sf.appendChild(ico('search', 2.4)); sf.appendChild(si);
@@ -6647,11 +6664,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var B = leadBrand(lead), first = greetName(lead.name), street = h.address ? streetCase(h.address) : '';
           var is365 = !!(CO.a365 && B.name === CO.a365.name);   /* the page is 365's: only on a 365 message */
           var lk = is365 && lead.quote && lead.quote.link && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg && lead.quote.link;   /* the customer's quote page, once this price is saved */
-          var msg = 'Hi ' + first + ', this is ' + String(S.me || '').split(' ')[0] + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+          var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }
-          if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + '\n\n' + S.me + '\n' + B.name + (B.phone ? '\n' + B.phone : '')); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
+          if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row); addSendNote(acts, row);
           if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
@@ -6689,7 +6706,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           acts.appendChild(cp1); acts.appendChild(cp2);
           var Qx = S.qq || {}, tl = digits(Qx.phone), ct = q('div', 'lcontact');
           if (tl.length >= 10) { var sa = q('a'); sa.href = 'sms:' + tl + '?&body=' + encodeURIComponent(quickCustomerText(h, st)); sa.appendChild(ico('chat', 2.2)); sa.appendChild(document.createTextNode('Text it to them')); ct.appendChild(sa); }
-          if (Qx.email) { var ea = q('a'); ea.href = 'mailto:' + encodeURIComponent(Qx.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + ((CO.a365 && CO.a365.name) || '')) + '&body=' + encodeURIComponent(quickCustomerText(h, st)); ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode('Email it')); ct.appendChild(ea); }
+          if (Qx.email) { var ea = q('a'); ea.href = 'mailto:' + encodeURIComponent(Qx.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + ((CO.a365 && CO.a365.name) || '')) + '&body=' + encodeURIComponent(quickCustomerText(h, st) + mailSig(leadBrand({ src: 'a365web' }))); ea.appendChild(ico('mail', 2.2)); ea.appendChild(document.createTextNode('Email it')); ct.appendChild(ea); }
           if (ct.children.length) { acts.appendChild(ct); addSendNote(acts, ct); }
           acts.appendChild(q('div', 'ltrynote', ((P.hidden || asOffice() || qView()) ? 'The summary is for your own notes.' : 'The summary has our figures, for your own notes.') + ' The customer\u2019s text carries the price only. Nothing here is saved in the app.'));
         }
@@ -7609,7 +7626,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var page = q('div', 'dhome');
     var hero = q('section', 'dh-hero'), hr = new Date().getHours();
-    hero.appendChild(q('h1', null, (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (String(S.me || '').split(' ')[0] || 'there')));
+    hero.appendChild(q('h1', null, (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (myName() || 'there')));
     var sub = q('div', 'dh-sub', new Date().toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' })); hero.appendChild(sub);
     /* one search: towns and neighbourhoods as you type; Enter looks the address up */
     var sw = q('div', 'dh-search'), lab = q('label', 'dh-sbox'); lab.appendChild(ico('search', 2.4));
@@ -11127,7 +11144,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function longDay(iso) { var p = iso.split('-'), dt = new Date(+p[0], +p[1] - 1, +p[2]); return WDAY[dt.getDay()] + ', ' + MONTH_L[dt.getMonth()] + ' ' + dt.getDate(); }
   function titleAddr(a) { return String(a || '').toLowerCase().replace(/\b([a-z])/g, function (c) { return c.toUpperCase(); }); }
   function walkText(d) {
-    var first = String(S.me || '').split(' ')[0] || 'the crew';
+    var first = myName() || 'the crew';
     return 'Hi, this is ' + first + ' with ' + CO.name + '. Your ' + CO.visit + ' at ' + titleAddr(d.address) + ' is booked for ' + longDay(d.walk.date) +
       (d.walk.time ? ' at ' + t12(d.walk.time) : '; we will call to agree a time') + '. To change it, ' + (CO.phone ? 'call ' + CO.phone : 'reply to this text') + '.';
   }
@@ -15275,7 +15292,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -15283,7 +15300,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

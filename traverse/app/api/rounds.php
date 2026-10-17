@@ -129,7 +129,11 @@ function company(): array {
     $c['oneDevice'] = $c['oneDevice'] !== false;
     $a = is_array($c['a365']) ? $c['a365'] : null;
     $c['a365'] = $a ? ['name' => mb_substr((string) ($a['name'] ?? ''), 0, 60), 'phone' => mb_substr((string) ($a['phone'] ?? ''), 0, 30),
-        'base' => (is_array($a['base'] ?? null) && count($a['base']) === 2) ? [(float) $a['base'][0], (float) $a['base'][1]] : null, 'radius' => (float) ($a['radius'] ?? 0)] : null;
+        'base' => (is_array($a['base'] ?? null) && count($a['base']) === 2) ? [(float) $a['base'][0], (float) $a['base'][1]] : null, 'radius' => (float) ($a['radius'] ?? 0),
+        'web' => preg_match('/^[a-z0-9.-]{3,60}$/i', (string) ($a['web'] ?? '')) ? (string) $a['web'] : ''] : null;   /* the website, for email signatures (2026-10-16) */
+    /* the name each person signs with, by account name (2026-10-16, Jen: "I usually go by Jenn"); never sent with the company, only to that person */
+    $c['_signAs'] = [];
+    foreach ((array) ($a['signAs'] ?? []) as $k => $v) if (is_string($k) && is_string($v) && trim($v) !== '') $c['_signAs'][mb_substr($k, 0, 40)] = mb_substr(trim($v), 0, 40);
     return $c;
 }
 /** the market this install sells in (2026-10-11): Colorado unless company.json names another. Every value checked, since the
@@ -1766,7 +1770,7 @@ if ($action === 'billinghook') {
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
-if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1])]);   /* the market checked (2026-10-11) */
+if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1])]);   /* the market checked (2026-10-11) */
 
 /* a session for a person on this install's codes list: the cookie, the signed-in list, and the answer the page expects
    (sign-in, and since 2026-10-12 the super admin arriving from another install) */
@@ -1792,7 +1796,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2480,7 +2484,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -2586,7 +2590,7 @@ if ($action === 'taplogread') {
     usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
     out(['ok' => true, 'days' => $days, 'rows' => array_slice($rows, 0, 20000)]);
 }
-if ($action === 'me') out(['ok' => true, 'name' => $me, 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -3790,7 +3794,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -4231,6 +4235,18 @@ if ($action === 'qwon') {
     appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'won', 'note' => 'Won without the form by ' . $me . '. ' . $payTxt . ($jid ? ' Job ' . ($ex ? 'updated' : 'booked') . '.' : ''), 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'job' => $jid]);
 }
+/* a town for the schedule (2026-10-16, Jen: "if there is no town listed can I add one? For Kirk"): kept on the lead, so a held time and the
+   job it becomes both show it; the house's own town still wins when there is one. The desk, or the quote account on its own leads. */
+if ($action === 'leadtown') {
+    if ((!desk() && $role !== 'quote') || !$isPost) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
+    if (!$l) fail('No such lead.', 404);
+    if ($role === 'quote' && !qMine($l)) fail('Not allowed.', 403);
+    $t = $clean($body['town'] ?? '', 40);
+    if ($t !== '' && !preg_match("/^\\p{L}[\\p{L} .'-]{1,39}$/u", $t)) fail('Type the town name.');
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'stown' => $t, 'note' => $t !== '' ? 'Town for the schedule: ' . $t . '.' : 'Town for the schedule cleared.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'town' => $t]);
+}
 if ($action === 'holdset') {
     if ((!desk() && $role !== 'quote') || !$isPost) fail('Not allowed.', 403);
     $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
@@ -4336,7 +4352,7 @@ if ($action === 'schedview') {
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from) || !dateOk($to) || $to < $from || strtotime($to) - strtotime($from) > 31 * 86400) fail('Pick the dates.');
     $srcName = fn($s) => ['website' => 'Website', 'meta' => 'Facebook', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other', 'messenger' => 'Messenger', 'a365web' => 'Website'][$s] ?? '';
-    $leads = leadsAll(); $town = function ($lid, $addr) use ($leads) { $l = $leads[$lid] ?? null; if ($l && !empty($l['house']['town'])) return (string) $l['house']['town']; $p = array_map('trim', explode(',', (string) $addr)); return count($p) > 1 ? (string) end($p) : ''; };
+    $leads = leadsAll(); $town = function ($lid, $addr) use ($leads) { $l = $leads[$lid] ?? null; if ($l && !empty($l['house']['town'])) return (string) $l['house']['town']; if ($l && !empty($l['stown'])) return (string) $l['stown']; $p = array_map('trim', explode(',', (string) $addr)); return count($p) > 1 ? (string) end($p) : ''; };
     $rows = [];
     foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to)
         $rows[] = ['id' => $j['id'], 'date' => $j['date'], 'slot' => $j['slot'], 'crew' => $j['crew'], 'kind' => 'booked', 'name' => trim((string) ($leads[$j['lead']]['name'] ?? $j['title'] ?? '')) ?: 'A customer', 'town' => $town($j['lead'], $j['addr'] ?? ''),
@@ -4351,6 +4367,8 @@ if ($action === 'schedview') {
             return ['date' => $r['date'], 'slot' => $r['slot'], 'crew' => $r['crew'], 'kind' => $r['kind'], 'name' => $r['kind'] === 'held' ? 'Held' : 'Booked', 'town' => '', 'what' => '', 'pay' => '', 'src' => '', 'card' => '', 'done' => ''];
         }, $rows);
     }
+    $JA = jobsAll();   /* no town: 'tl' = the lead, to add one (2026-10-16, Jen); the quote account only on her own */
+    foreach ($rows as &$rw) { if (($rw['town'] ?? '') !== '') continue; $lid = ($rw['kind'] ?? '') === 'booked' ? (string) ($JA[$rw['id'] ?? '']['lead'] ?? '') : (string) ($rw['lead'] ?? ($rw['hold'] ?? '')); if ($lid !== '' && isset($leads[$lid]) && ($role !== 'quote' || qMine($leads[$lid]))) $rw['tl'] = $lid; } unset($rw);
     foreach ($rows as &$rw) { if (desk() && ($rw['kind'] ?? '') === 'held' && !empty($rw['lead'])) $rw['hold'] = $rw['lead']; unset($rw['lead']); } unset($rw);   /* held: 'hold' = the lead, for move or take off (2026-10-16) */
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
