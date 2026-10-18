@@ -7047,7 +7047,9 @@ if ($action === 'search') {
        60 searches in 10 minutes is far past what a driver needs, and far short of the whole list. */
     /* 2026-10-14 (Matthew: "7173 townsend dr" was there, "..., highlands ranch" found nothing): "CO", "Colorado" and a ZIP are dropped,
        and a word may match the town's name instead of the street */
-    $words = array_values(array_filter($words, fn($w) => !in_array($w, ['CO', 'COLO', 'COLORADO', 'USA'], true) && !preg_match('/^\d{5}$/D', $w)));
+    /* a ZIP is a Colorado one (80xxx or 81xxx) after the first word: a 5-digit house number leads, and stays (2026-10-17, Matthew:
+       "14705 columbine st" listed every Columbine St because 14705 was taken for a ZIP) */
+    $words = array_values(array_filter($words, fn($w, $i) => !in_array($w, ['CO', 'COLO', 'COLORADO', 'USA'], true) && !($i > 0 && preg_match('/^8[01]\d{3}$/D', $w)), ARRAY_FILTER_USE_BOTH));
     $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
     $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && (desk() || $role === 'quote');
