@@ -176,4 +176,13 @@ for (const [file, o] of [['365-Yard-Sign-C', {}],
   writeFileSync(f2, fx);
   execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf2}`, 'file:///' + f2.split('\\').join('/')], { stdio: 'ignore' });
   console.log('print-ready yard sign: ' + file + '-24x18.pdf');
+  /* the 12 x 18 in sign, FedEx's smaller size (2026-10-18, Matthew): the same layout at two thirds (16 x 12 in), centred on an 18 x 12 in
+     page with the ground colour running edge to edge */
+  let h12 = yard('c', 64, tC, o);
+  h12 = h12.replace('<style>', '<style>@page{size:18in 12in;margin:0}html{background:' + tC.bg + ';-webkit-print-color-adjust:exact;print-color-adjust:exact}');
+  h12 = h12.replace('html,body{margin:0;padding:0}', 'html,body{padding:0}html{margin:0}body{margin:0 auto}');
+  const f3 = join(PR, file + '-18x12.html'), pdf3 = join(PR, file + '-18x12.pdf');
+  writeFileSync(f3, h12);
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf3}`, 'file:///' + f3.split('\\').join('/')], { stdio: 'ignore' });
+  console.log('print-ready yard sign: ' + file + '-18x12.pdf');
 }
