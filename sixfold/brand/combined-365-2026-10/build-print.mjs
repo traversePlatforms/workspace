@@ -170,4 +170,10 @@ for (const [file, o] of [['365-Yard-Sign-C', {}],
   writeFileSync(f, html);
   execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
   console.log('print-ready yard sign: ' + file + '.pdf');
+  /* exactly 24 x 18 in, no bleed (2026-10-18: FedEx's sign tool fitted the 24.25 x 18.25 file inside its 24 x 18 and filled the gaps white) */
+  const fx = html.replace('@page{size:24.25in 18.25in;margin:0}', '@page{size:24in 18in;margin:0}').replace('body{margin:0.125in}', 'body{margin:0}');
+  const f2 = join(PR, file + '-24x18.html'), pdf2 = join(PR, file + '-24x18.pdf');
+  writeFileSync(f2, fx);
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf2}`, 'file:///' + f2.split('\\').join('/')], { stdio: 'ignore' });
+  console.log('print-ready yard sign: ' + file + '-24x18.pdf');
 }
