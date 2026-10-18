@@ -64,11 +64,13 @@ const cardBack = (k, s) => { const t = T[k]; return page(3.5 * s, 2 * s, `<div s
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:${0.03 * s}px;flex:none"><div style="width:${0.95 * s}px;height:${0.95 * s}px">${qrSvg(t.qrD, t.qrL, GO.card).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div class="o" style="font-weight:700;font-size:${0.075 * s}px;color:${t.acc};text-align:center;line-height:1.15">Scan for more<br>information</div></div>
 </div>`, t); };
-const yard = (k, s, tt) => { const t = tt || T[k]; return page(24 * s, 18 * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${1.1 * s}px;gap:${0.9 * s}px">
+/* o: the band, headline and line under it (2026-10-18: a second sign for while the crew is working there) */
+const yard = (k, s, tt, o = {}) => { const t = tt || T[k]; o = { band: 'Another lawn aerated by 365', head: 'Aeration &amp;<br>Overseeding', sub: 'Core aeration, seed and fertilizer', ...o }; return page(24 * s, 18 * s, `<div style="display:flex;width:100%;height:100%;align-items:center;padding:${1.1 * s}px;gap:${0.9 * s}px">
   <div style="width:${12.4 * s}px;height:${12.4 * s}px;flex:none">${badge(k)}</div>
   <div style="flex:1;display:flex;flex-direction:column;gap:${0.35 * s}px">
-    <div class="o" style="font-weight:800;font-size:${1.45 * s}px;line-height:1.02;color:${t.head}">Aeration &amp;<br>Overseeding</div>
-    <div style="font-size:${0.62 * s}px;color:${t.soft}">Core aeration, seed and fertilizer</div>
+    <div class="o" style="align-self:flex-start;font-weight:800;font-size:${0.6 * s}px;line-height:1;padding:${0.18 * s}px ${0.32 * s}px;border-radius:${0.14 * s}px;background:${t.band};color:${t.bandInk};white-space:nowrap">${o.band}</div>   <!-- 2026-10-18, Matthew: say why the sign is in this yard -->
+    <div class="o" style="font-weight:800;font-size:${(o.hs || 1.45) * s}px;line-height:1.02;color:${t.head};white-space:nowrap">${o.head}</div>
+    <div style="font-size:${0.62 * s}px;color:${t.soft}">${o.sub}</div>
     <div style="margin-top:${0.25 * s}px;font-size:${0.55 * s}px;font-weight:700">Call or text</div>
     <div class="o" style="font-weight:800;font-size:${0.98 * s}px;line-height:1;color:${t.acc};white-space:nowrap">${PHONE}</div>
     <div style="display:flex;align-items:center;gap:${0.35 * s}px;margin-top:${0.3 * s}px"><div style="width:${4 * s}px;height:${4 * s}px;flex:none">${qrSvg(t.qrD, t.qrL, GO.yard).replace('<svg ', '<svg width="100%" height="100%" ')}</div><div style="display:flex;flex-direction:column;gap:${0.25 * s}px">${SCAN(t, 0.62 * s)}<div class="o" style="font-weight:700;font-size:${0.45 * s}px;white-space:nowrap">${SITE}</div></div></div>
@@ -156,13 +158,16 @@ console.log('print-ready cards:', PEOPLE.map((p) => `365-Card-${p.file}.pdf`).jo
 /* PRINT-READY yard sign (2026-10-16, Matthew picked C; the phone number in dark green, not orange: orange on bone measured 2.6:1,
    too faint from the sidewalk; green is 6.3:1). 24 x 18 in plus 0.125 in bleed all round = 24.25 x 18.25 in; the sign laid out at 96 px
    per inch so the PDF is true size. The same file serves both faces of a two-sided sign. */
-{
+/* Two signs (2026-10-18): C, left in the yard after the job ("Another lawn aerated by 365"), and Working, out while the crew is there
+   (Matthew: "this property is currently being aerated by 365 or something along those lines"). Same layout, colours and QR. */
+for (const [file, o] of [['365-Yard-Sign-C', {}],
+  ['365-Yard-Sign-Working', { band: 'Aeration in progress', head: 'We\u2019re aerating<br>this lawn today', hs: 1.0, sub: 'Want yours done next? Core aeration, seed and fertilizer' }]]) {
   const tC = { ...T.c, acc: T.c.head };
-  let html = yard('c', 96, tC);
+  let html = yard('c', 96, tC, o);
   html = html.replace('<style>', '<style>@page{size:24.25in 18.25in;margin:0}html{background:' + tC.bg + ';-webkit-print-color-adjust:exact;print-color-adjust:exact}');
   html = html.replace('html,body{margin:0;padding:0}', 'html,body{padding:0}html{margin:0}body{margin:0.125in}');
-  const f = join(PR, '365-Yard-Sign-C.html'), pdf = join(PR, '365-Yard-Sign-C.pdf');
+  const f = join(PR, file + '.html'), pdf = join(PR, file + '.pdf');
   writeFileSync(f, html);
   execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
-  console.log('print-ready yard sign: 365-Yard-Sign-C.pdf');
+  console.log('print-ready yard sign: ' + file + '.pdf');
 }
