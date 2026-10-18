@@ -113,7 +113,7 @@ section{background:#fff;border-radius:16px;padding:14px;display:grid;gap:14px;al
 console.log('rendered', shots.length, 'pieces and print/print-mockups.html');
 
 /* PRINT-READY business cards for FedEx (2026-10-16, Matthew). Same format as the Sixfold cards that printed: a two-page PDF (front,
-   back), 3.75 x 2.25 in = the 3.5 x 2 in card plus 0.125 in bleed all round; text kept 0.125 in inside the trim. Brandon and Brad on
+   back), 3.75 x 2.25 in = the 3.5 x 2 in card plus 0.125 in bleed all round; text kept 0.1875 in inside the trim. Brandon and Brad on
    B (Sixfold dark), Matthew on C (light), his choice. Root lines thickened 1.6x on the card badge only: at 1.62 in the finest root is
    ~0.09 mm, under the ~0.15 mm a digital press holds; x1.6 brings it to ~0.15 mm. Reversed type kept at 6.5 pt or more. */
 const PEOPLE = [
@@ -132,7 +132,7 @@ body { font-family: 'DM Sans', sans-serif; -webkit-print-color-adjust: exact; pr
 .o { font-family: Outfit, sans-serif; }
 .page { width: 3.75in; height: 2.25in; background: ${t.bg}; color: ${t.ink}; position: relative; overflow: hidden; page-break-after: always; break-after: page; }
 .page:last-child { page-break-after: auto; break-after: auto; }
-.safe { position: absolute; inset: 0.25in; }
+.safe { position: absolute; inset: 0.3125in; }   /* 3/16 in inside the trim, not 1/8 (2026-10-18, Matthew: move it in slightly to be safe at FedEx) */
 </style></head><body>
 <div class="page"><div class="safe" style="display:flex;align-items:center;justify-content:center"><div style="width:1.62in;height:1.62in">${printBadge(p.k)}</div></div></div>
 <div class="page"><div class="safe" style="display:flex;align-items:center;gap:0.16in">
