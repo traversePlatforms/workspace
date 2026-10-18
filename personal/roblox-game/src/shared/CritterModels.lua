@@ -62,7 +62,7 @@ end
 function SHAPES.cat(model, body, def, s)
 	addEyes(model, body, s, 0.45, 0.3, 1.3, def)
 	for _, side in ipairs({ -1, 1 }) do
-		newPart(model, body, "Ear", Vector3.new(0.3, 1.0, 0.9) * s, def.earColor or def.body, CFrame.new(side * 0.75 * s, 1.55 * s, -0.2 * s) * CFrame.Angles(0, math.rad(90), 0), { wedge = true })
+		newPart(model, body, "Ear", Vector3.new(0.3, 1.0, 0.9) * s, def.earColor or def.body, CFrame.new(side * 0.75 * s, 1.55 * s, -0.2 * s) * CFrame.Angles(0, math.rad(90 * side), 0), { wedge = true }) -- mirrored, so both ears slope outward
 	end
 	if def.muzzle then -- a white chin and muzzle (Hammy)
 		newPart(model, body, "Muzzle", Vector3.new(1.1, 0.7, 0.5) * s, def.muzzle, CFrame.new(0, -0.35 * s, -1.38 * s), { ball = true })
@@ -77,10 +77,12 @@ function SHAPES.cat(model, body, def, s)
 		end
 	end
 	newPart(model, body, "Nose", Vector3.new(0.35, 0.25, 0.2) * s, Color3.fromRGB(255, 160, 175), CFrame.new(0, -0.05 * s, -1.55 * s), { ball = true })
-	local tail = newPart(model, body, "Tail", Vector3.new(2.6, 0.45, 0.45) * s, def.tailColor or def.accent, CFrame.new(0, 0.5 * s, 1.9 * s) * CFrame.Angles(0, math.rad(90), math.rad(-55)), { cylinder = true })
+	local tailAt = CFrame.new(0, 0.5 * s, 1.9 * s) * CFrame.Angles(0, math.rad(90), math.rad(-55))
+	newPart(model, body, "Tail", Vector3.new(2.6, 0.45, 0.45) * s, def.tailColor or def.accent, tailAt, { cylinder = true })
 	if def.tailStripes then -- dark rings down the tail (Hammy)
 		for i = -1, 1 do
-			newPart(model, body, "TailRing", Vector3.new(0.25, 0.5, 0.5) * s, def.accent, tail.CFrame * CFrame.new(i * 0.7 * s, 0, 0), { cylinder = true })
+			-- offsets are relative to the body (was tail.CFrame * ..., which put the rings far from Hammy away from the origin)
+			newPart(model, body, "TailRing", Vector3.new(0.25, 0.5, 0.5) * s, def.accent, tailAt * CFrame.new(i * 0.7 * s, 0, 0), { cylinder = true })
 		end
 	end
 	if def.stripes then
