@@ -56,7 +56,7 @@ if UserInputService.TouchEnabled then
 	label.Text = "SPRINT"
 	local btn = Instance.new("TextButton")
 	btn.AnchorPoint = Vector2.new(1, 1)
-	btn.Position = UDim2.new(1, -260, 1, -24)
+	btn.Position = UDim2.new(1, -295, 1, -50) -- left of PUNCH, clear of Jump (2026-10-18)
 	btn.Size = UDim2.fromOffset(110, 70)
 	btn.BackgroundColor3 = C.Blue
 	btn.Font = Enum.Font.FredokaOne

@@ -133,7 +133,7 @@ local function placeOnPedestal(base, slot, crit)
 	prompt.ObjectText = crit.name
 	prompt.HoldDuration = Config.StealHold
 	prompt.MaxActivationDistance = 9
-	prompt.RequiresLineOfSight = false
+	prompt.RequiresLineOfSight = true -- the walls and windows block it (2026-10-18)
 	prompt:SetAttribute("OwnerUserId", base.owner and base.owner.UserId or 0) -- the owner's own screen hides it
 	prompt.Enabled = base.shieldUntil <= now()
 	prompt.Parent = model.PrimaryPart
@@ -184,6 +184,11 @@ local function freeSlot(base)
 end
 
 -- ---------- carrying ----------
+local function insideBase(base, pos)
+	local p = base.cf:PointToObjectSpace(pos)
+	return math.abs(p.X) < base.halfW and math.abs(p.Z) < base.halfD
+end
+
 local function rootOf(player)
 	local ch = player.Character
 	return ch and ch:FindFirstChild("HumanoidRootPart")
@@ -286,7 +291,7 @@ local function bringHome(player)
 	refreshStats(player)
 	FX:FireAllClients("confetti", model:GetPivot().Position)
 	tell(player, c.crit.name .. " joined your base! +" .. addCommas(c.crit.income) .. " Stardust every second", "good")
-	if c.from and c.from.owner then
+	if c.from and c.from.owner and c.from.owner ~= player then
 		tell(c.from.owner, player.DisplayName .. " got away with your " .. c.crit.name .. "!", "bad")
 	end
 end
@@ -337,7 +342,11 @@ tryStealing = function(thief, base, slot)
 		return
 	end
 	if base.shieldUntil > now() then
-		tell(thief, "The airlock is closed! Wait for it to open.", "bad")
+		tell(thief, "Their door is locked! Wait for it to open.", "bad")
+		return
+	end
+	local thrp = rootOf(thief)
+	if not (thrp and insideBase(base, thrp.Position)) then -- no stealing through the walls (2026-10-18)
 		return
 	end
 	if st.carrying then
@@ -369,14 +378,30 @@ tryStealing = function(thief, base, slot)
 end
 
 -- ---------- airlock shield ----------
+-- the door (2026-10-18): locked = a solid red energy door nobody can pass, owner included; steal prompts off
 local function setShieldVisual(base, on)
-	base.shield.Transparency = on and 0.35 or 1
+	base.shield.Transparency = on and 0.25 or 1
+	base.shield.CanCollide = on
+	for _, lamp in ipairs(base.doorLamps or {}) do
+		lamp.Color = on and Color3.fromRGB(255, 70, 80) or Color3.fromRGB(80, 230, 120)
+	end
 	for _, rec in pairs(base.slots) do
 		rec.prompt.Enabled = not on
 	end
 end
 
-local function closeAirlock(player)
+local function unlockDoor(base, why)
+	base.shieldUntil = 0
+	base.cooldownUntil = now() + Config.ShieldCooldown -- the risk: no locking again for a while
+	base.root:SetAttribute("ShieldUntil", 0)
+	base.root:SetAttribute("CooldownUntil", base.cooldownUntil)
+	setShieldVisual(base, false)
+	if base.owner then
+		tell(base.owner, why == "timer" and "Your door opened by itself. Guard your critters!" or ("Door unlocked. You can lock it again in " .. Config.ShieldCooldown .. " seconds."), "info")
+	end
+end
+
+local function toggleDoor(player)
 	local st = state[player]
 	local base = st and st.base
 	if not base then
@@ -384,37 +409,40 @@ local function closeAirlock(player)
 	end
 	local t = now()
 	if base.shieldUntil > t then
-		tell(player, "Your airlock is already closed.", "info")
+		unlockDoor(base, "owner")
 		return
 	end
 	if base.cooldownUntil > t then
-		tell(player, "The airlock is recharging: " .. math.ceil(base.cooldownUntil - t) .. "s", "info")
+		tell(player, "You can lock the door again in " .. math.ceil(base.cooldownUntil - t) .. "s.", "info")
 		return
 	end
 	base.shieldUntil = t + Config.ShieldSeconds
-	base.cooldownUntil = base.shieldUntil + Config.ShieldCooldown
 	base.root:SetAttribute("ShieldUntil", base.shieldUntil)
-	base.root:SetAttribute("CooldownUntil", base.cooldownUntil)
 	setShieldVisual(base, true)
-	tell(player, "Airlock closed! Nobody can steal for " .. Config.ShieldSeconds .. " seconds.", "good")
+	-- anyone else inside is put out the door
+	for other in pairs(state) do
+		local hrp = other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart")
+		if hrp and insideBase(base, hrp.Position) then
+			other.Character:PivotTo(base.cf * CFrame.new(0, 4, -base.halfD - 8))
+			tell(other, "The door locked and you were put outside!", "info")
+		end
+	end
+	tell(player, "Door locked for " .. Config.ShieldSeconds .. " seconds. Nobody can get in, you included.", "good")
 	local myUntil = base.shieldUntil
 	task.delay(Config.ShieldSeconds, function()
 		if base.shieldUntil == myUntil then
-			setShieldVisual(base, false)
-			if base.owner == player then
-				tell(player, "Your airlock is open again. Guard your critters!", "info")
-			end
+			unlockDoor(base, "timer")
 		end
 	end)
 end
 
-ShieldRequest.OnServerEvent:Connect(closeAirlock)
+ShieldRequest.OnServerEvent:Connect(toggleDoor)
 for _, base in ipairs(map.bases) do
 	base.consolePrompt.Triggered:Connect(function(who)
 		if base.owner == who then
-			closeAirlock(who)
+			toggleDoor(who)
 		else
-			tell(who, "That's not your airlock.", "info")
+			tell(who, "That's not your door.", "info")
 		end
 	end)
 end
@@ -1087,6 +1115,339 @@ if Config.BlackHoleNight then
 	end)
 end
 
+-- ---------- punching, critters on the floor, patrol bots (2026-10-18, Matthew) ----------
+local Punch = remote("Punch")
+local floorItems = {} -- [model] = { crit, owner, slot, expires }
+local bots = {}
+
+local function sendHome(player)
+	local st = state[player]
+	if st and st.base and player.Character then
+		player.Character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
+	end
+end
+
+local function slotFor(base, want)
+	if want and want <= base.unlocked and not base.slots[want] then
+		return want
+	end
+	return freeSlot(base)
+end
+
+-- an unclaimed critter on the floor goes back to whoever it belonged to
+local function returnToOwner(item)
+	local owner = item.owner
+	local ost = owner and state[owner]
+	local od = owner and PlayerData.get(owner)
+	if not (ost and ost.base and od) then
+		return false
+	end
+	local slot = slotFor(ost.base, item.slot)
+	if not slot then
+		return false
+	end
+	placeOnPedestal(ost.base, slot, item.crit)
+	od.slots[tostring(slot)] = item.crit.key
+	refreshStats(owner)
+	tell(owner, "Your " .. item.crit.name .. " came back home!", "good")
+	return true
+end
+
+local function putOnFloor(model, crit, owner, slot, pos)
+	local body = model.PrimaryPart
+	local w = body:FindFirstChild("CarryWeld")
+	if w then
+		w:Destroy()
+	end
+	body.Anchored = true
+	model:PivotTo(CFrame.new(pos.X, 1.2 + radiusOf(crit.def), pos.Z))
+	CritterModels.setInfo(model, "Knocked loose! Grab it!")
+	local item = { model = model, crit = crit, owner = owner, slot = slot, expires = os.clock() + Config.Punch.floorSeconds }
+	floorItems[model] = item
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Grab"
+	prompt.ObjectText = crit.name
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = body
+	prompt.Triggered:Connect(function(who)
+		if floorItems[model] ~= item then
+			return
+		end
+		local st = state[who]
+		if not st then
+			return
+		end
+		if st.carrying then
+			tell(who, "Your hands are full!", "bad")
+			return
+		end
+		if who == item.owner and st.base then -- your own critter: straight back home
+			local s2 = slotFor(st.base, item.slot)
+			if s2 then
+				floorItems[model] = nil
+				local at = model:GetPivot().Position
+				model:Destroy()
+				placeOnPedestal(st.base, s2, crit)
+				local od = PlayerData.get(who)
+				if od then
+					od.slots[tostring(s2)] = crit.key
+				end
+				refreshStats(who)
+				FX:FireAllClients("confetti", at)
+				tell(who, "You got your " .. crit.name .. " back! It's home again.", "good")
+				return
+			end
+		end
+		if not (st.base and freeSlot(st.base)) then
+			tell(who, "Your base is full!", "bad")
+			return
+		end
+		floorItems[model] = nil
+		if not attach(who, model, crit, { owner = item.owner, slot = item.slot }) then
+			floorItems[model] = item
+			return
+		end
+		tell(who, "Grabbed " .. crit.name .. "! Get it to your base!", "good")
+	end)
+end
+
+-- returns true when the victim was carrying something and it fell
+local function knockOff(victim)
+	local st = state[victim]
+	local c = st and st.carrying
+	if not c then
+		return false
+	end
+	local hrp = rootOf(victim)
+	clearCarry(victim)
+	local owner = (c.from and c.from.owner) or victim -- a bought one still belongs to the buyer
+	local pos = hrp and (hrp.Position - hrp.CFrame.LookVector * 3) or c.model:GetPivot().Position
+	putOnFloor(c.model, c.crit, owner, c.from and c.from.slot or nil, pos)
+	return true
+end
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		local t = os.clock()
+		for model, item in pairs(floorItems) do
+			if t > item.expires then
+				floorItems[model] = nil
+				returnToOwner(item)
+				model:Destroy()
+			end
+		end
+	end
+end)
+
+local lastPunch = {}
+Punch.OnServerEvent:Connect(function(player)
+	local t = os.clock()
+	if (lastPunch[player] or 0) + Config.Punch.cooldown > t then
+		return
+	end
+	lastPunch[player] = t
+	local hrp = rootOf(player)
+	if not hrp or hidden[player] then
+		return
+	end
+	local look = hrp.CFrame.LookVector
+	local best, bestD, kind = nil, math.huge, nil
+	for other in pairs(state) do
+		local oh = other ~= player and not hidden[other] and rootOf(other)
+		if oh then
+			local v = oh.Position - hrp.Position
+			local d = v.Magnitude
+			if d <= Config.Punch.reach and d < bestD and (d < 1.5 or v.Unit:Dot(look) > 0.2) then
+				best, bestD, kind = other, d, "player"
+			end
+		end
+	end
+	for _, bot in ipairs(bots) do
+		local v = bot.pos - hrp.Position
+		local d = v.Magnitude
+		if d <= Config.Punch.reach + 2 and d < bestD and (d < 1.5 or v.Unit:Dot(look) > 0.1) then
+			best, bestD, kind = bot, d, "bot"
+		end
+	end
+	FX:FireAllClients("swing", hrp.Position + look * 3)
+	if not best then
+		return
+	end
+	if kind == "bot" then
+		best.stunUntil = t + Config.Bots.stunSeconds
+		FX:FireAllClients("pow", best.pos)
+		tell(player, "Bot stunned!", "good")
+		return
+	end
+	local oh = rootOf(best)
+	FX:FireAllClients("pow", oh.Position)
+	local dir = (oh.Position - hrp.Position) * Vector3.new(1, 0, 1)
+	if dir.Magnitude < 0.1 then
+		dir = look
+	end
+	FX:FireClient(best, "knock", dir.Unit)
+	if knockOff(best) then
+		tell(best, player.DisplayName .. " knocked your critter loose!", "bad")
+		tell(player, "Knocked it loose! Grab it!", "good")
+	end
+end)
+
+-- the patrol route: along both walkways, up and back down every lane to a base
+local route = {}
+local lanes = { -171, -57, 57, 171 }
+for _, side in ipairs({ 1, -1 }) do
+	local xs = side == 1 and lanes or { 171, 57, -57, -171 }
+	for _, x in ipairs(xs) do
+		table.insert(route, Vector3.new(x, 3.5, 22 * side))
+		table.insert(route, Vector3.new(x, 3.5, 62 * side))
+		table.insert(route, Vector3.new(x, 3.5, 22 * side))
+	end
+end
+
+local function buildBot(i, at)
+	local m = Instance.new("Model")
+	m.Name = "PatrolBot" .. i
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Size = Vector3.new(3, 3.2, 2.6)
+	body.Color = Color3.fromRGB(88, 96, 122)
+	body.Material = Enum.Material.Metal
+	body.Anchored = true
+	body.CanCollide = false
+	body.CanQuery = false
+	body.CFrame = CFrame.new(at)
+	body.Parent = m
+	m.PrimaryPart = body
+	local function bit(name, size, color, offset, opts)
+		opts = opts or {}
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Size = size
+		p.Color = color
+		p.Material = opts.neon and Enum.Material.Neon or Enum.Material.Metal
+		if opts.ball then
+			p.Shape = Enum.PartType.Ball
+		elseif opts.cyl then
+			p.Shape = Enum.PartType.Cylinder
+		end
+		p.Anchored = false
+		p.CanCollide = false
+		p.CanQuery = false
+		p.Massless = true
+		p.CFrame = body.CFrame * offset
+		local w = Instance.new("WeldConstraint")
+		w.Part0 = body
+		w.Part1 = p
+		w.Parent = p
+		p.Parent = m
+		return p
+	end
+	bit("Head", Vector3.new(2.4, 1.6, 2.2), Color3.fromRGB(110, 118, 146), CFrame.new(0, 2.4, 0))
+	local eye = bit("Visor", Vector3.new(2.0, 0.55, 0.2), Color3.fromRGB(255, 80, 80), CFrame.new(0, 2.5, -1.12), { neon = true })
+	bit("Antenna", Vector3.new(0.2, 1, 0.2), Color3.fromRGB(60, 64, 82), CFrame.new(0, 3.7, 0))
+	local siren = bit("Siren", Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(80, 140, 255), CFrame.new(0, 4.3, 0), { neon = true, ball = true })
+	bit("Badge", Vector3.new(1.2, 0.8, 0.12), Config.Colors.Orange, CFrame.new(0, 0.4, -1.32), { neon = true })
+	for _, side in ipairs({ -1, 1 }) do
+		bit("Arm", Vector3.new(0.6, 2.2, 0.6), Color3.fromRGB(70, 76, 98), CFrame.new(side * 1.85, 0, 0) * CFrame.Angles(0, 0, side * 0.2))
+	end
+	local jet = bit("Thruster", Vector3.new(0.6, 1.8, 1.8), Config.Colors.Blue, CFrame.new(0, -1.9, 0) * CFrame.Angles(0, 0, math.rad(90)), { neon = true, cyl = true })
+	local flame = Instance.new("ParticleEmitter")
+	flame.Color = ColorSequence.new(Config.Colors.Blue)
+	flame.LightEmission = 1
+	flame.Size = NumberSequence.new(0.8, 0)
+	flame.Lifetime = NumberRange.new(0.2, 0.4)
+	flame.Rate = 30
+	flame.Speed = NumberRange.new(4, 6)
+	flame.EmissionDirection = Enum.NormalId.Left -- after the quarter turn the cylinder's -X points down
+	flame.Parent = jet
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 90, 90)
+	light.Range = 14
+	light.Parent = siren
+	local tag = Instance.new("BillboardGui")
+	tag.Size = UDim2.fromOffset(160, 34)
+	tag.StudsOffsetWorldSpace = Vector3.new(0, 5.5, 0)
+	tag.MaxDistance = 70
+	tag.LightInfluence = 0
+	tag.Parent = body
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = Color3.fromRGB(255, 120, 120)
+	l.TextStrokeTransparency = 0.2
+	l.Text = "Patrol Bot"
+	l.Parent = tag
+	m.Parent = stationFolder
+	return { model = m, eye = eye, siren = siren, light = light, label = l }
+end
+
+for i = 1, Config.Bots.count do
+	local wp = math.floor((i - 1) * #route / Config.Bots.count) + 1
+	local b = buildBot(i, route[wp])
+	b.pos, b.wp, b.look, b.stunUntil, b.phase = route[wp], wp % #route + 1, Vector3.new(0, 0, -1), 0, i * 2
+	table.insert(bots, b)
+end
+
+RunService.Heartbeat:Connect(function(dt)
+	local t = os.clock()
+	for _, bot in ipairs(bots) do
+		local stunned = t < bot.stunUntil
+		local chasing = nil
+		if not stunned then
+			local goal, speed
+			local bd = Config.Bots.sight
+			for player, st in pairs(state) do
+				local hrp = rootOf(player)
+				if st.carrying and hrp and not hidden[player] then
+					local safe = false
+					for _, b in ipairs(map.bases) do
+						if insideBase(b, hrp.Position) then
+							safe = true
+						end
+					end
+					local d = (hrp.Position - bot.pos).Magnitude
+					if not safe and d < bd then
+						chasing, bd = player, d
+					end
+				end
+			end
+			if chasing then
+				local hp = rootOf(chasing).Position
+				goal, speed = Vector3.new(hp.X, 3.5, hp.Z), Config.Bots.chaseSpeed
+				if bd <= Config.Bots.reach then -- caught: it takes the critter and zaps them home
+					bot.stunUntil = t + 1.5
+					dropCarried(chasing, "bot")
+					sendHome(chasing)
+					FX:FireClient(chasing, "zapped")
+					tell(chasing, "A patrol bot took your critter and zapped you back to base!", "bad")
+				end
+			else
+				local wp = route[bot.wp]
+				goal, speed = wp, Config.Bots.speed
+				if (wp - bot.pos).Magnitude < 2 then
+					bot.wp = bot.wp % #route + 1
+				end
+			end
+			local step = goal - bot.pos
+			if step.Magnitude > 0.05 then
+				bot.pos += step.Unit * math.min(step.Magnitude, speed * dt)
+				bot.look = Vector3.new(step.X, 0, step.Z).Magnitude > 0.05 and Vector3.new(step.X, 0, step.Z).Unit or bot.look
+			end
+		end
+		local wobble = stunned and CFrame.Angles(math.sin(t * 20) * 0.15, 0, math.cos(t * 17) * 0.15) or CFrame.new()
+		bot.model:PivotTo(CFrame.lookAt(bot.pos + Vector3.new(0, math.sin(t * 3 + bot.phase) * 0.3, 0), bot.pos + bot.look) * wobble)
+		local red, blue = Color3.fromRGB(255, 60, 60), Color3.fromRGB(80, 140, 255)
+		bot.siren.Color = stunned and Color3.fromRGB(90, 90, 100) or (chasing and ((math.floor(t * 6) % 2 == 0) and red or blue) or blue)
+		bot.eye.Color = stunned and Color3.fromRGB(80, 80, 90) or red
+		bot.label.Text = stunned and "Patrol Bot (stunned!)" or (chasing and "Patrol Bot: STOP!" or "Patrol Bot")
+	end
+end)
+
 -- ---------- every second: income; four times a second: home and catch checks ----------
 task.spawn(function()
 	while true do
@@ -1112,7 +1473,7 @@ task.spawn(function()
 				local p = st.base.cf:PointToObjectSpace(hrp.Position)
 				if math.abs(p.X) < st.base.halfW and math.abs(p.Z) < st.base.halfD then
 					bringHome(player)
-				elseif c.from and c.from.owner then
+				elseif c.from and c.from.owner and c.from.owner ~= player then
 					local ohrp = rootOf(c.from.owner)
 					if ohrp and (ohrp.Position - hrp.Position).Magnitude <= Config.CatchDistance then
 						local owner = c.from.owner

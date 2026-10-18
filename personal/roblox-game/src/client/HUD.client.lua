@@ -7,6 +7,9 @@ local RunService = game:GetService("RunService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local Notify = remotes:WaitForChild("Notify")
+local UIS = game:GetService("UserInputService")
+-- a tablet or phone: Roblox puts its joystick bottom-left and Jump bottom-right, so our buttons move clear of both (2026-10-18)
+local TOUCH = UIS.TouchEnabled and not UIS.KeyboardEnabled
 local ShieldRequest = remotes:WaitForChild("ShieldRequest")
 
 local player = Players.LocalPlayer
@@ -69,15 +72,15 @@ refreshDust()
 
 -- ---------- airlock button (bottom right) ----------
 local shieldBtn = Instance.new("TextButton")
-shieldBtn.Name = "Airlock"
+shieldBtn.Name = "Door"
 shieldBtn.AnchorPoint = Vector2.new(1, 1)
-shieldBtn.Position = UDim2.new(1, -16, 1, -24)
+shieldBtn.Position = TOUCH and UDim2.new(1, -16, 1, -250) or UDim2.new(1, -16, 1, -24)
 shieldBtn.Size = UDim2.fromOffset(230, 70)
 shieldBtn.BackgroundColor3 = C.Blue
 shieldBtn.Font = Enum.Font.FredokaOne
 shieldBtn.TextScaled = true
 shieldBtn.TextColor3 = C.Dark
-shieldBtn.Text = "Close Airlock"
+shieldBtn.Text = "Lock Door"
 shieldBtn.Parent = gui
 corner(shieldBtn, 16)
 local pad = Instance.new("UIPadding")
@@ -95,7 +98,7 @@ local Expand = remotes:WaitForChild("Expand")
 local expandBtn = Instance.new("TextButton")
 expandBtn.Name = "ExpandBase"
 expandBtn.AnchorPoint = Vector2.new(1, 1)
-expandBtn.Position = UDim2.new(1, -16, 1, -104)
+expandBtn.Position = TOUCH and UDim2.new(1, -16, 1, -330) or UDim2.new(1, -16, 1, -104)
 expandBtn.Size = UDim2.fromOffset(230, 52)
 expandBtn.BackgroundColor3 = C.Orange
 expandBtn.Font = Enum.Font.FredokaOne
@@ -152,7 +155,7 @@ refreshDrop()
 dropBtn.Activated:Connect(function()
 	Drop:FireServer()
 end)
-game:GetService("UserInputService").InputBegan:Connect(function(input, typing)
+UIS.InputBegan:Connect(function(input, typing)
 	if not typing and input.KeyCode == Enum.KeyCode.G and player:GetAttribute("Carrying") then
 		Drop:FireServer()
 	end
@@ -192,19 +195,56 @@ local function updateMarker()
 	end
 end
 
+-- ---------- punch (2026-10-18): Q, a click, or the PUNCH button. Knocks a carried critter loose, stuns a patrol bot ----------
+local Punch = remotes:WaitForChild("Punch")
+local lastPunch = 0
+local function punch()
+	if os.clock() - lastPunch < Config.Punch.cooldown then
+		return
+	end
+	lastPunch = os.clock()
+	Punch:FireServer()
+end
+UIS.InputBegan:Connect(function(input, typing)
+	if typing then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.ButtonX or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		punch()
+	end
+end)
+if UIS.TouchEnabled then
+	local pb = Instance.new("TextButton")
+	pb.Name = "Punch"
+	pb.AnchorPoint = Vector2.new(1, 1)
+	pb.Position = UDim2.new(1, -180, 1, -40)
+	pb.Size = UDim2.fromOffset(100, 100)
+	pb.BackgroundColor3 = Color3.fromRGB(230, 90, 70)
+	pb.Font = Enum.Font.FredokaOne
+	pb.TextScaled = true
+	pb.TextColor3 = Color3.new(1, 1, 1)
+	pb.Text = "PUNCH"
+	pb.Parent = gui
+	corner(pb, 50)
+	local pp = Instance.new("UIPadding")
+	pp.PaddingLeft, pp.PaddingRight = UDim.new(0, 14), UDim.new(0, 14)
+	pp.Parent = pb
+	pb.Activated:Connect(punch)
+end
+
 RunService.Heartbeat:Connect(function()
 	local base = myBase()
 	local t = workspace:GetServerTimeNow()
 	if base then
 		local su, cu = base:GetAttribute("ShieldUntil") or 0, base:GetAttribute("CooldownUntil") or 0
 		if su > t then
-			shieldBtn.Text = "Airlock closed: " .. math.ceil(su - t) .. "s"
+			shieldBtn.Text = "Unlock Door (" .. math.ceil(su - t) .. "s)"
 			shieldBtn.BackgroundColor3 = C.Orange
 		elseif cu > t then
-			shieldBtn.Text = "Recharging: " .. math.ceil(cu - t) .. "s"
+			shieldBtn.Text = "Lock again in " .. math.ceil(cu - t) .. "s"
 			shieldBtn.BackgroundColor3 = Color3.fromRGB(120, 128, 150)
 		else
-			shieldBtn.Text = "Close Airlock"
+			shieldBtn.Text = "Lock Door"
 			shieldBtn.BackgroundColor3 = C.Blue
 		end
 	end

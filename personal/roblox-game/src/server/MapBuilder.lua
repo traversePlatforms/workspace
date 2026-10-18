@@ -140,7 +140,13 @@ local function buildBase(folder, index, position, facingRotation)
 		end
 	end
 	-- the airlock shield fills the doorway: visible only while it is on
-	local shield = part(root, { Name = "Shield", Size = Vector3.new(DOOR, WH - 1, 1), Color = C.Blue, Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 1 + (WH - 1) / 2, -D / 2 - 0.6) })
+	-- the door (2026-10-18): an energy door, red and solid while locked, open (invisible, walk-through) while unlocked
+	local shield = part(root, { Name = "Shield", Size = Vector3.new(DOOR, WH - 1, 1), Color = Color3.fromRGB(255, 70, 80), Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 1 + (WH - 1) / 2, -D / 2 - 0.6) })
+	-- status lamps either side of the door: green = open, red = locked (Main.server.lua sets them)
+	local lamps = {}
+	for _, side in ipairs({ -1, 1 }) do
+		table.insert(lamps, part(root, { Name = "DoorLamp", Shape = Enum.PartType.Ball, Size = Vector3.new(1.6, 1.6, 1.6), Color = Color3.fromRGB(80, 230, 120), Material = Enum.Material.Neon, CFrame = cf * CFrame.new(side * (DOOR / 2 + 2.2), 10, -D / 2 - 1.6) }))
+	end
 	-- the owner's name on the back wall and floating over the entrance
 	local signPart = part(root, { Name = "Sign", Size = Vector3.new(30, 5, 0.6), Color = C.Dark, CFrame = cf * CFrame.new(0, 10.5, D / 2 + 0.5) })
 	local signLabel = surfaceText(signPart, Enum.NormalId.Front, "Free base", C.Orange, 30)
@@ -161,8 +167,8 @@ local function buildBase(folder, index, position, facingRotation)
 	local console = part(root, { Name = "AirlockConsole", Size = Vector3.new(3, 4, 2), Color = C.Blue, Material = Enum.Material.SmoothPlastic, CFrame = cf * CFrame.new(-W / 2 + 4, 3, -D / 2 + 5) })
 	part(root, { Name = "ConsoleScreen", Size = Vector3.new(2.6, 1.4, 0.2), Color = C.Orange, Material = Enum.Material.Neon, CFrame = console.CFrame * CFrame.new(0, 1.2, -1.05) })
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Close Airlock"
-	prompt.ObjectText = "Airlock Shield"
+	prompt.ActionText = "Lock / Unlock"
+	prompt.ObjectText = "Base Door"
 	prompt.HoldDuration = 0.2
 	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight = false
@@ -170,7 +176,7 @@ local function buildBase(folder, index, position, facingRotation)
 	return {
 		index = index, root = root, cf = cf, halfW = W / 2, halfD = D / 2,
 		unlocked = Config.PedestalsPerBase, -- pedestals this base can use (more after Expand Base)
-		shield = shield, signLabel = signLabel, nameLabel = nameLabel,
+		shield = shield, doorLamps = lamps, signLabel = signLabel, nameLabel = nameLabel,
 		pedestals = pedestals, consolePrompt = prompt, slots = {}, owner = nil,
 		shieldUntil = 0, cooldownUntil = 0,
 	}

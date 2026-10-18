@@ -125,8 +125,16 @@ Config.SellBack = 0.4 -- selling a critter gives back 40% of its price
 Config.Sprint = { walk = 16, run = 27, drainPerSecond = 25, refillPerSecond = 14, refillDelay = 0.8 }
 Config.SpawnEvery = 2.5 -- seconds between critters landing on the pad
 Config.ConveyorSpeed = 7 -- studs per second
-Config.ShieldSeconds = 45
-Config.ShieldCooldown = 90
+-- the base door (2026-10-18, Matthew): locked = nobody gets in, owner included. A lock lasts up to ShieldSeconds, then it opens;
+-- after it opens (by itself or by you) you must wait ShieldCooldown before locking again: unlocking to get in is a risk
+Config.ShieldSeconds = 60
+Config.ShieldCooldown = 30
+
+-- punching (Q, a click, or the PUNCH button): knocks people back, knocks carried critters to the floor, stuns patrol bots
+Config.Punch = { reach = 7, cooldown = 0.6, knock = 55, floorSeconds = 20 }
+
+-- patrol bots on the walkways: chase anyone carrying a critter, take it, and zap them home
+Config.Bots = { count = 3, speed = 10, chaseSpeed = 20, sight = 45, reach = 4.5, stunSeconds = 3 }
 Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
 Config.AutosaveEvery = 60

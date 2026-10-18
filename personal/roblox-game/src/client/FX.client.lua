@@ -144,6 +144,23 @@ FX.OnClientEvent:Connect(function(kind, a, b)
 		alarm(a)
 	elseif kind == "shower" then
 		shout("METEOR SHOWER!", C.Blue, 3)
+	elseif kind == "swing" then
+		burst(a, Color3.fromRGB(255, 255, 255), 8)
+	elseif kind == "pow" then
+		burst(a, C.Orange, 40)
+		pop(a + Vector3.new(0, 3, 0), "POW!", C.Orange)
+	elseif kind == "knock" then -- you were punched: fly back a bit
+		local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			hrp.AssemblyLinearVelocity = a * Config.Punch.knock + Vector3.new(0, 28, 0)
+		end
+		flash.BackgroundColor3 = Color3.fromRGB(255, 160, 60)
+		flash.BackgroundTransparency = 0.6
+		local tw = TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1 })
+		tw:Play()
+		tw.Completed:Connect(function() flash.BackgroundColor3 = Color3.fromRGB(255, 40, 60) end)
+	elseif kind == "zapped" then
+		shout("ZAPPED!", Color3.fromRGB(255, 120, 120), 1.5)
 	elseif kind == "night" then
 		shout("BLACK HOLE NIGHT!", Color3.fromRGB(200, 140, 255), 3)
 	elseif kind == "booped" then

@@ -39,7 +39,13 @@ end
 local open = Instance.new("TextButton")
 open.Name = "BookButton"
 open.AnchorPoint = Vector2.new(0, 1)
-open.Position = UDim2.new(0, 16, 1, -24)
+local UIS = game:GetService("UserInputService")
+if UIS.TouchEnabled and not UIS.KeyboardEnabled then -- clear of the joystick on a tablet (2026-10-18)
+	open.AnchorPoint = Vector2.new(0, 0)
+	open.Position = UDim2.new(0, 16, 0, 156)
+else
+	open.Position = UDim2.new(0, 16, 1, -24)
+end
 open.Size = UDim2.fromOffset(190, 70)
 open.BackgroundColor3 = C.Orange
 open.Font = Enum.Font.FredokaOne
