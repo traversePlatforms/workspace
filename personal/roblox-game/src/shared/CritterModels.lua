@@ -34,11 +34,12 @@ local function newPart(model, body, name, size, color, offset, opts)
 end
 
 -- front of a critter faces -Z (Roblox's LookVector)
-local function addEyes(model, body, s, spread, height, depth)
+local function addEyes(model, body, s, spread, height, depth, def)
+	local iris = def and def.eyeColor -- real cats (Hammy, Zuzu): coloured eyes with a slit pupil
 	for _, side in ipairs({ -1, 1 }) do
-		newPart(model, body, "Eye", Vector3.new(0.75, 0.85, 0.4) * s, Color3.new(1, 1, 1),
+		newPart(model, body, "Eye", Vector3.new(0.75, 0.85, 0.4) * s, iris or Color3.new(1, 1, 1),
 			CFrame.new(side * spread * s, height * s, -depth * s), { ball = true })
-		newPart(model, body, "Pupil", Vector3.new(0.4, 0.5, 0.25) * s, Config.Colors.Dark,
+		newPart(model, body, "Pupil", (iris and Vector3.new(0.18, 0.6, 0.25) or Vector3.new(0.4, 0.5, 0.25)) * s, Config.Colors.Dark,
 			CFrame.new(side * spread * s, height * s, -(depth + 0.17) * s), { ball = true })
 	end
 end
@@ -59,12 +60,29 @@ function SHAPES.bunny(model, body, def, s)
 end
 
 function SHAPES.cat(model, body, def, s)
-	addEyes(model, body, s, 0.45, 0.3, 1.3)
+	addEyes(model, body, s, 0.45, 0.3, 1.3, def)
 	for _, side in ipairs({ -1, 1 }) do
-		newPart(model, body, "Ear", Vector3.new(0.3, 1.0, 0.9) * s, def.body, CFrame.new(side * 0.75 * s, 1.55 * s, -0.2 * s) * CFrame.Angles(0, math.rad(90), 0), { wedge = true })
+		newPart(model, body, "Ear", Vector3.new(0.3, 1.0, 0.9) * s, def.earColor or def.body, CFrame.new(side * 0.75 * s, 1.55 * s, -0.2 * s) * CFrame.Angles(0, math.rad(90), 0), { wedge = true })
 	end
-	newPart(model, body, "Nose", Vector3.new(0.35, 0.25, 0.2) * s, Color3.fromRGB(255, 160, 175), CFrame.new(0, -0.05 * s, -1.5 * s), { ball = true })
-	newPart(model, body, "Tail", Vector3.new(2.6, 0.45, 0.45) * s, def.accent, CFrame.new(0, 0.5 * s, 1.9 * s) * CFrame.Angles(0, math.rad(90), math.rad(-55)), { cylinder = true })
+	if def.muzzle then -- a white chin and muzzle (Hammy)
+		newPart(model, body, "Muzzle", Vector3.new(1.1, 0.7, 0.5) * s, def.muzzle, CFrame.new(0, -0.35 * s, -1.38 * s), { ball = true })
+	end
+	if def.chest then -- a fluffy chest ruff (Zuzu)
+		newPart(model, body, "Chest", Vector3.new(2.0, 1.6, 1.0) * s, def.chest, CFrame.new(0, -0.75 * s, -1.05 * s), { ball = true })
+	end
+	if def.cap then -- the coloured patch and stripes on top of the head (Zuzu)
+		newPart(model, body, "Cap", Vector3.new(1.8, 0.6, 1.6) * s, def.cap, CFrame.new(0, 1.3 * s, -0.5 * s) * CFrame.Angles(math.rad(-25), 0, 0), { ball = true })
+		for i, x in ipairs({ -0.3, 0, 0.3 }) do
+			newPart(model, body, "CapStripe" .. i, Vector3.new(0.14, 0.7, 0.14) * s, def.capStripe or def.accent, CFrame.new(x * s, 1.05 * s, -1.08 * s) * CFrame.Angles(math.rad(-20), 0, x * 0.6))
+		end
+	end
+	newPart(model, body, "Nose", Vector3.new(0.35, 0.25, 0.2) * s, Color3.fromRGB(255, 160, 175), CFrame.new(0, -0.05 * s, -1.55 * s), { ball = true })
+	local tail = newPart(model, body, "Tail", Vector3.new(2.6, 0.45, 0.45) * s, def.tailColor or def.accent, CFrame.new(0, 0.5 * s, 1.9 * s) * CFrame.Angles(0, math.rad(90), math.rad(-55)), { cylinder = true })
+	if def.tailStripes then -- dark rings down the tail (Hammy)
+		for i = -1, 1 do
+			newPart(model, body, "TailRing", Vector3.new(0.25, 0.5, 0.5) * s, def.accent, tail.CFrame * CFrame.new(i * 0.7 * s, 0, 0), { cylinder = true })
+		end
+	end
 	if def.stripes then
 		for i, x in ipairs({ -0.75, 0, 0.75 }) do
 			newPart(model, body, "Stripe" .. i, Vector3.new(0.28, 0.2, 2.4) * s, def.accent, CFrame.new(x * s, 1.42 * s - math.abs(x) * 0.35 * s, 0.1 * s) * CFrame.Angles(0, 0, -x * 0.5))
@@ -178,6 +196,41 @@ function SHAPES.octo(model, body, def, s)
 	newPart(model, body, "Spot", Vector3.new(0.7, 0.5, 0.15) * s, def.glow or def.accent, CFrame.new(0.6 * s, 1.0 * s, -1.0 * s), { ball = true, material = Enum.Material.Neon })
 end
 
+-- Nolan's own (2026-10-18, from photos of his toys): Matt the alien plush and Sunny Sprout the sunflower plush
+function SHAPES.matt(model, body, def, s)
+	-- big pale almond eyes with a light-green outline
+	for _, side in ipairs({ -1, 1 }) do
+		local tilt = CFrame.Angles(0, 0, side * math.rad(-28))
+		newPart(model, body, "EyeRim", Vector3.new(1.15, 0.8, 0.3) * s, def.glow, CFrame.new(side * 0.6 * s, 0.35 * s, -1.28 * s) * tilt, { ball = true, material = Enum.Material.Neon })
+		newPart(model, body, "Eye", Vector3.new(1.0, 0.68, 0.3) * s, def.accent, CFrame.new(side * 0.6 * s, 0.35 * s, -1.36 * s) * tilt, { ball = true })
+	end
+	newPart(model, body, "Smile", Vector3.new(0.5, 0.07, 0.08) * s, Config.Colors.Dark, CFrame.new(0, -0.25 * s, -1.47 * s))
+	newPart(model, body, "Belly", Vector3.new(1.6, 1.4, 0.5) * s, def.accent, CFrame.new(0, -0.75 * s, -1.15 * s), { ball = true })
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "HeadBump", Vector3.new(0.55, 0.6, 0.55) * s, def.accent, CFrame.new(side * 0.85 * s, 1.35 * s, 0), { ball = true })
+		newPart(model, body, "Arm", Vector3.new(0.6, 1.2, 0.6) * s, def.body, CFrame.new(side * 1.5 * s, -0.4 * s, -0.1 * s) * CFrame.Angles(0, 0, side * 0.5), { ball = true })
+		newPart(model, body, "Foot", Vector3.new(0.9, 0.7, 1.0) * s, def.body, CFrame.new(side * 0.65 * s, -1.4 * s, -0.4 * s), { ball = true })
+	end
+end
+
+function SHAPES.sunflower(model, body, def, s)
+	-- the round body is the lime-green plush; the flower head sits on top of it
+	local head = CFrame.new(0, 1.7 * s, -0.2 * s)
+	newPart(model, body, "FaceRim", Vector3.new(0.5, 2.5, 2.5) * s, def.rim or Color3.fromRGB(130, 70, 50), head * CFrame.Angles(0, math.rad(90), 0), { cylinder = true })
+	newPart(model, body, "Face", Vector3.new(0.55, 2.0, 2.0) * s, def.face or Color3.fromRGB(215, 145, 115), head * CFrame.new(0, 0, -0.05 * s) * CFrame.Angles(0, math.rad(90), 0), { cylinder = true })
+	for i = 0, 9 do
+		local a = i / 10 * math.pi * 2
+		local p = Vector3.new(math.cos(a), math.sin(a), 0) * 1.65 * s
+		newPart(model, body, "Petal", Vector3.new(0.9, 1.3, 0.3) * s, def.accent, head * CFrame.new(p) * CFrame.Angles(0, 0, a - math.pi / 2), { ball = true })
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "Eye", Vector3.new(0.28, 0.28, 0.12) * s, Config.Colors.Dark, head * CFrame.new(side * 0.4 * s, 0.25 * s, -0.33 * s), { ball = true })
+		newPart(model, body, "Arm", Vector3.new(0.5, 1.0, 0.5) * s, def.body, CFrame.new(side * 1.45 * s, -0.2 * s, 0) * CFrame.Angles(0, 0, side * 0.6), { ball = true })
+		newPart(model, body, "Foot", Vector3.new(0.95, 0.75, 1.1) * s, def.body, CFrame.new(side * 0.65 * s, -1.4 * s, -0.4 * s), { ball = true })
+	end
+	newPart(model, body, "Smile", Vector3.new(0.55, 0.07, 0.08) * s, Config.Colors.Dark, head * CFrame.new(0, -0.15 * s, -0.33 * s))
+end
+
 function CritterModels.scaleFor(def)
 	local order = Config.Rarities[def.rarity].order
 	return 0.8 + (order - 1) * 0.22
@@ -204,6 +257,15 @@ function CritterModels.build(def, cframe, mut)
 	body.Parent = model
 	model.PrimaryPart = body
 	;(SHAPES[def.shape] or SHAPES.blob)(model, body, def, s)
+
+	if def.material then -- Nolan's plush toys look fuzzy: Fabric on everything but the eyes, smile and glowing bits
+		local skip = { Eye = true, Pupil = true, Smile = true, Nose = true }
+		for _, p in ipairs(model:GetDescendants()) do
+			if p:IsA("BasePart") and not skip[p.Name] and p.Material ~= Enum.Material.Neon then
+				p.Material = Enum.Material[def.material]
+			end
+		end
+	end
 
 	local rarity = Config.Rarities[def.rarity]
 	if rarity.order >= 4 then -- Legendary and Cosmic glow

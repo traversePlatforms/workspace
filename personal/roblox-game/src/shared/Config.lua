@@ -90,8 +90,21 @@ Config.Critters = {
 	{ id = "quasarbot", name = "Quasar Robot", rarity = "Mythic", price = 14000, income = 220, shape = "robot",
 		body = Color3.fromRGB(255, 205, 70), accent = Color3.fromRGB(60, 50, 90), glow = Color3.fromRGB(190, 120, 255) },
 	-- Nolan's cat: a grey tabby with darker stripes
-	{ id = "hammy", name = "Hammy the Star Cat", rarity = "Cosmic", price = 25000, income = 400, shape = "cat",
-		body = Color3.fromRGB(150, 148, 145), accent = Color3.fromRGB(85, 82, 80), stripes = true, glow = Color3.fromRGB(255, 186, 125) },
+	-- Nolan's friends (2026-10-18, from photos): his cats Hammy and Zuzu, Matt the alien plush, and the sunflower plush.
+	-- family = true: a special announcement when one lands, and a spot by the Commander statue.
+	{ id = "hammy", name = "Hammy", rarity = "Cosmic", price = 25000, income = 400, shape = "cat", family = true,
+		body = Color3.fromRGB(128, 128, 136), accent = Color3.fromRGB(84, 84, 92), stripes = true, tailStripes = true,
+		eyeColor = Color3.fromRGB(205, 212, 130), muzzle = Color3.fromRGB(240, 238, 232), tailColor = Color3.fromRGB(118, 118, 126),
+		glow = Color3.fromRGB(255, 186, 125), material = "Fabric" },
+	{ id = "zuzu", name = "Zuzu", rarity = "Cosmic", price = 28000, income = 450, shape = "cat", family = true,
+		body = Color3.fromRGB(250, 246, 240), accent = Color3.fromRGB(236, 196, 160), earColor = Color3.fromRGB(232, 176, 138),
+		cap = Color3.fromRGB(240, 196, 150), capStripe = Color3.fromRGB(214, 140, 80), chest = Color3.fromRGB(255, 255, 252),
+		tailColor = Color3.fromRGB(240, 220, 200), eyeColor = Color3.fromRGB(90, 130, 190), glow = Color3.fromRGB(150, 210, 255), material = "Fabric" },
+	{ id = "matt", name = "Matt", rarity = "Mythic", price = 13000, income = 210, shape = "matt", family = true,
+		body = Color3.fromRGB(78, 190, 58), accent = Color3.fromRGB(236, 234, 214), glow = Color3.fromRGB(190, 255, 120), material = "Fabric" },
+	{ id = "sunnysprout", name = "Sunny Sprout", rarity = "Legendary", price = 7000, income = 120, shape = "sunflower", family = true,
+		body = Color3.fromRGB(150, 222, 92), accent = Color3.fromRGB(255, 196, 88), face = Color3.fromRGB(215, 145, 115), rim = Color3.fromRGB(128, 68, 48),
+		glow = Color3.fromRGB(255, 210, 100), material = "Fabric" },
 	-- Dad's surprise critter goes here: set enabled = true and fill it in when it's designed
 	{ id = "surprise", name = "???", rarity = "Cosmic", price = 30000, income = 500, shape = "blob",
 		body = Color3.fromRGB(150, 210, 255), accent = Color3.fromRGB(255, 186, 125), enabled = false },

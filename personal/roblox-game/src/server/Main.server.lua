@@ -602,7 +602,9 @@ local function spawnOnPad()
 	model.Parent = map.critterFolder
 	table.insert(conveyor, item)
 	local order = Config.Rarities[def.rarity].order
-	if crit.mut and crit.mut.id == "rainbow" then
+	if def.family then -- one of Nolan's own friends
+		tellAll("Nolan's friend " .. crit.name .. " landed on the launch pad! Quick, grab them!", "cosmic")
+	elseif crit.mut and crit.mut.id == "rainbow" then
 		tellAll("A RAINBOW critter landed on the launch pad: " .. crit.name .. "!", "cosmic")
 	elseif order >= 4 then
 		tellAll("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. crit.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")

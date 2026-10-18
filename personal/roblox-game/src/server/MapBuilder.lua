@@ -192,16 +192,23 @@ local function commanderStatue(folder, at)
 	part(m, { Name = "Badge", Shape = Enum.PartType.Ball, Size = Vector3.new(1, 1, 1), Color = glass, Material = Enum.Material.Neon, CFrame = at * CFrame.new(-1.2, 12.6, -1.25) })
 	part(m, { Name = "Helmet", Shape = Enum.PartType.Ball, Size = Vector3.new(4.4, 4.4, 4.4), Color = Color3.fromRGB(240, 240, 245), CFrame = at * CFrame.new(0, 16, 0) })
 	part(m, { Name = "Visor", Size = Vector3.new(3, 1.8, 0.6), Color = glass, Material = Enum.Material.Glass, Transparency = 0.2, CFrame = at * CFrame.new(0, 16.2, -1.9) })
-	-- Hammy sits at the Commander's feet
-	local hammy = Config.critterById("hammy")
-	if hammy then
-		local cat = CritterModels.build(hammy, at * CFrame.new(4.5, 5.6, -3) * CFrame.Angles(0, math.rad(200), 0))
-		cat.Name = "HammyStatue"
-		local tag = cat.PrimaryPart:FindFirstChild("Tag")
-		if tag then
-			tag:Destroy()
+	-- Nolan's friends gather round the Commander: Hammy and Zuzu on the plinth, Matt and Sunny Sprout on the deck in front
+	for _, spot in ipairs({ { "hammy", CFrame.new(4.6, 0, -3), 200 }, { "zuzu", CFrame.new(-4.6, 0, -3), 160 }, { "matt", CFrame.new(5, -4, -10), 190 }, { "sunnysprout", CFrame.new(-5, -4, -10), 170 } }) do
+		local def = Config.critterById(spot[1])
+		if def then
+			local r = 1.5 * CritterModels.scaleFor(def)
+			local friend = CritterModels.build(def, at * spot[2] * CFrame.new(0, 4 + r, 0) * CFrame.Angles(0, math.rad(spot[3]), 0))
+			friend.Name = def.name .. "Statue"
+			local tag = friend.PrimaryPart:FindFirstChild("Tag")
+			if tag then
+				tag.MaxDistance = 40
+				local info = tag:FindFirstChild("Info")
+				if info then
+					info.Text = "Nolan's friend"
+				end
+			end
+			friend.Parent = m
 		end
-		cat.Parent = m
 	end
 	return m
 end
