@@ -24,7 +24,7 @@ for t in englewood south-denver sheridan cherry-hills-village littleton columbin
   bash upload-towns-sixfold.sh fill-$t $t
 done
 for t in $(grep -o "upload-towns-sixfold.sh allsizes-[a-z-]*" run-fast-2026-10-16.sh | sed 's/.*allsizes-//' | grep -v '^denver$'); do
-  cat logs-fast-runner.log logs-fast2-runner.log logs-fast3-runner.log 2>/dev/null | grep -q "allsizes-$t uploaded" || continue
+  cat logs-fast-runner.log logs-fast2-runner.log logs-fast3-runner.log logs-fast4-runner.log logs-fast5-runner.log 2>/dev/null | grep -q "allsizes-$t uploaded" || continue
   echo "$(date +%T) == refine $t"
   step lawnfill-$t bash -c "cd lawn-trial && node lawn-fill.mjs --town=$t --conc=6"
   [ "$t" = broomfield ] && step value-broomfield node sample-value.mjs --only=broomfield
