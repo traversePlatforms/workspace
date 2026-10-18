@@ -76,6 +76,31 @@ Config.Critters = {
 		body = Color3.fromRGB(235, 235, 245), accent = Color3.fromRGB(255, 205, 70), glow = Color3.fromRGB(255, 220, 120) },
 	{ id = "blackholedragon", name = "Black Hole Dragon", rarity = "Mythic", price = 15000, income = 240, shape = "dragon",
 		body = Color3.fromRGB(55, 35, 85), accent = Color3.fromRGB(190, 120, 255), glow = Color3.fromRGB(190, 120, 255) },
+	-- wave 3 (2026-10-18): five new body types
+	{ id = "bloopjelly", name = "Bloop Jelly", rarity = "Common", price = 30, income = 1, shape = "jelly",
+		body = Color3.fromRGB(170, 225, 255), accent = Color3.fromRGB(110, 190, 255) },
+	{ id = "tinbot", name = "Tin Bot", rarity = "Common", price = 45, income = 2, shape = "robot",
+		body = Color3.fromRGB(175, 182, 196), accent = Color3.fromRGB(110, 118, 136), glow = Color3.fromRGB(150, 210, 255) },
+	{ id = "novachick", name = "Nova Chick", rarity = "Common", price = 50, income = 2, shape = "bird",
+		body = Color3.fromRGB(255, 225, 110), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "cometturtle", name = "Comet Turtle", rarity = "Rare", price = 200, income = 6, shape = "turtle",
+		body = Color3.fromRGB(110, 180, 120), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "astroowl", name = "Astro Owl", rarity = "Rare", price = 280, income = 8, shape = "bird",
+		body = Color3.fromRGB(150, 120, 210), accent = Color3.fromRGB(110, 85, 170) },
+	{ id = "octopop", name = "Octo-Pop", rarity = "Rare", price = 320, income = 9, shape = "octo",
+		body = Color3.fromRGB(255, 150, 190), accent = Color3.fromRGB(255, 110, 160) },
+	{ id = "mechapup", name = "Mecha Pup", rarity = "Epic", price = 1200, income = 26, shape = "robot",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(150, 210, 255), glow = Color3.fromRGB(255, 120, 60) },
+	{ id = "nebulajelly", name = "Nebula Jelly", rarity = "Epic", price = 1500, income = 30, shape = "jelly",
+		body = Color3.fromRGB(190, 130, 255), accent = Color3.fromRGB(130, 80, 220), glow = Color3.fromRGB(255, 160, 255) },
+	{ id = "orbitturtle", name = "Orbit Turtle", rarity = "Epic", price = 1800, income = 34, shape = "turtle",
+		body = Color3.fromRGB(110, 170, 255), accent = Color3.fromRGB(230, 240, 255), glow = Color3.fromRGB(150, 220, 200) },
+	{ id = "galaxyocto", name = "Galaxy Octopus", rarity = "Legendary", price = 8000, income = 140, shape = "octo",
+		body = Color3.fromRGB(40, 50, 110), accent = Color3.fromRGB(90, 110, 220), glow = Color3.fromRGB(150, 210, 255) },
+	{ id = "phoenixowl", name = "Phoenix Owl", rarity = "Legendary", price = 9000, income = 155, shape = "bird",
+		body = Color3.fromRGB(255, 110, 60), accent = Color3.fromRGB(255, 200, 80), glow = Color3.fromRGB(255, 160, 60) },
+	{ id = "quasarbot", name = "Quasar Robot", rarity = "Mythic", price = 14000, income = 220, shape = "robot",
+		body = Color3.fromRGB(255, 205, 70), accent = Color3.fromRGB(60, 50, 90), glow = Color3.fromRGB(190, 120, 255) },
 	-- Nolan's cat: a grey tabby with darker stripes
 	{ id = "hammy", name = "Hammy the Star Cat", rarity = "Cosmic", price = 25000, income = 400, shape = "cat",
 		body = Color3.fromRGB(150, 148, 145), accent = Color3.fromRGB(85, 82, 80), stripes = true, glow = Color3.fromRGB(255, 186, 125) },
@@ -89,8 +114,14 @@ Config.ExclusiveUserId = 0
 Config.ExclusiveCritters = {} -- e.g. { "surprise" }
 
 Config.StartStardust = 60
-Config.BaseCount = 6
-Config.PedestalsPerBase = 8
+Config.BaseCount = 8 -- 4 on each side (2026-10-18: bigger map). Set the place's Max Players to 8 in Game Settings.
+Config.PedestalsPerBase = 8 -- pedestals every base starts with
+Config.MaxPedestals = 12 -- after buying both expansions
+Config.ExpandCosts = { 2500, 10000 } -- each adds 2 pedestals
+Config.SellBack = 0.4 -- selling a critter gives back 40% of its price
+
+-- sprint: hold Shift (or the Sprint button on a phone); the energy bar drains while running and refills when you stop
+Config.Sprint = { walk = 16, run = 27, drainPerSecond = 25, refillPerSecond = 14, refillDelay = 0.8 }
 Config.SpawnEvery = 2.5 -- seconds between critters landing on the pad
 Config.ConveyorSpeed = 7 -- studs per second
 Config.ShieldSeconds = 45
@@ -297,6 +328,70 @@ function SHAPES.dragon(model, body, def, s)
 	newPart(model, body, "Tail", Vector3.new(2.4, 0.5, 0.5) * s, def.body, CFrame.new(0, -0.2 * s, 2.0 * s) * CFrame.Angles(0, math.rad(90), math.rad(-15)), { cylinder = true })
 end
 
+-- wave 3 body types (2026-10-18): jellyfish, robot, bird, turtle, octopus
+function SHAPES.jelly(model, body, def, s)
+	addEyes(model, body, s, 0.42, 0.35, 1.25)
+	newPart(model, body, "Rim", Vector3.new(3.4, 0.5, 3.4) * s, def.accent, CFrame.new(0, -0.6 * s, 0), { ball = true })
+	for i = 0, 5 do
+		local a = i / 6 * math.pi * 2
+		local x, z = math.cos(a) * 0.9 * s, math.sin(a) * 0.9 * s
+		newPart(model, body, "Tentacle", Vector3.new(2.2, 0.3, 0.3) * s, def.accent, CFrame.new(x, -1.7 * s, z) * CFrame.Angles(0, 0, math.rad(90 + (i % 2 == 0 and 8 or -8))), { cylinder = true })
+		newPart(model, body, "TentacleTip", Vector3.new(0.4, 0.4, 0.4) * s, def.glow or def.accent, CFrame.new(x, -2.8 * s, z), { ball = true, material = Enum.Material.Neon })
+	end
+end
+
+function SHAPES.robot(model, body, def, s)
+	body.Transparency = 1 -- the robot is all box: the round body only carries it
+	newPart(model, body, "Chassis", Vector3.new(2.8, 2.6, 2.4) * s, def.body, CFrame.new(0, 0, 0), { material = Enum.Material.Metal })
+	newPart(model, body, "Visor", Vector3.new(2.2, 1.1, 0.2) * s, Config.Colors.Dark, CFrame.new(0, 0.45 * s, -1.22 * s))
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "EyeLight", Vector3.new(0.45, 0.45, 0.15) * s, def.accent, CFrame.new(side * 0.5 * s, 0.45 * s, -1.34 * s), { ball = true, material = Enum.Material.Neon })
+		newPart(model, body, "Arm", Vector3.new(0.5, 1.6, 0.5) * s, def.accent, CFrame.new(side * 1.65 * s, -0.2 * s, 0) * CFrame.Angles(0, 0, side * 0.25), { material = Enum.Material.Metal })
+		newPart(model, body, "Foot", Vector3.new(0.9, 0.5, 1.2) * s, def.accent, CFrame.new(side * 0.7 * s, -1.5 * s, 0), { material = Enum.Material.Metal })
+	end
+	newPart(model, body, "Antenna", Vector3.new(1.2, 0.15, 0.15) * s, def.accent, CFrame.new(0, 1.8 * s, 0) * CFrame.Angles(0, 0, math.rad(90)), { cylinder = true })
+	newPart(model, body, "AntennaTip", Vector3.new(0.45, 0.45, 0.45) * s, def.glow or def.accent, CFrame.new(0, 2.45 * s, 0), { ball = true, material = Enum.Material.Neon })
+	newPart(model, body, "Badge", Vector3.new(0.7, 0.7, 0.12) * s, def.glow or Config.Colors.Orange, CFrame.new(0, -0.6 * s, -1.24 * s), { ball = true, material = Enum.Material.Neon })
+end
+
+function SHAPES.bird(model, body, def, s)
+	addEyes(model, body, s, 0.45, 0.4, 1.28)
+	newPart(model, body, "Beak", Vector3.new(0.5, 0.6, 0.8) * s, Color3.fromRGB(255, 170, 60), CFrame.new(0, 0.0, -1.6 * s) * CFrame.Angles(math.rad(90), 0, 0), { wedge = true })
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "Wing", Vector3.new(0.5, 1.8, 2.0) * s, def.accent, CFrame.new(side * 1.5 * s, 0, 0.2 * s) * CFrame.Angles(0, 0, side * 0.35), { ball = true })
+		newPart(model, body, "Foot", Vector3.new(0.6, 0.25, 0.7) * s, Color3.fromRGB(255, 170, 60), CFrame.new(side * 0.5 * s, -1.5 * s, -0.2 * s), { ball = true })
+	end
+	newPart(model, body, "Tuft", Vector3.new(0.4, 1.0, 0.4) * s, def.accent, CFrame.new(0, 1.7 * s, -0.2 * s) * CFrame.Angles(math.rad(-20), 0, 0), { ball = true })
+end
+
+function SHAPES.turtle(model, body, def, s)
+	-- the round body is the shell; a head pokes out the front
+	newPart(model, body, "ShellRim", Vector3.new(3.5, 0.6, 3.5) * s, def.accent, CFrame.new(0, -0.7 * s, 0), { ball = true })
+	for i, x in ipairs({ -0.7, 0, 0.7 }) do
+		newPart(model, body, "ShellSpot" .. i, Vector3.new(0.8, 0.3, 0.8) * s, def.accent, CFrame.new(x * s, 1.38 * s - math.abs(x) * 0.25 * s, 0.1 * s), { ball = true })
+	end
+	local skin = def.glow or Color3.fromRGB(150, 210, 140)
+	newPart(model, body, "Head", Vector3.new(1.4, 1.3, 1.4) * s, skin, CFrame.new(0, -0.2 * s, -1.9 * s), { ball = true })
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "Eye", Vector3.new(0.45, 0.5, 0.3) * s, Color3.new(1, 1, 1), CFrame.new(side * 0.32 * s, 0.05 * s, -2.5 * s), { ball = true })
+		newPart(model, body, "Pupil", Vector3.new(0.25, 0.3, 0.2) * s, Config.Colors.Dark, CFrame.new(side * 0.32 * s, 0.05 * s, -2.62 * s), { ball = true })
+		for _, fz in ipairs({ -0.9, 0.9 }) do
+			newPart(model, body, "Leg", Vector3.new(0.8, 0.6, 0.8) * s, skin, CFrame.new(side * 1.3 * s, -1.0 * s, fz * s), { ball = true })
+		end
+	end
+end
+
+function SHAPES.octo(model, body, def, s)
+	addEyes(model, body, s, 0.45, 0.2, 1.25)
+	for i = 0, 7 do
+		local a = i / 8 * math.pi * 2
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		local p = dir * 1.5 * s + Vector3.new(0, -1.3 * s, 0)
+		newPart(model, body, "Arm", Vector3.new(0.55, 0.45, 1.8) * s, def.accent, CFrame.lookAt(p, p + dir) * CFrame.Angles(math.rad(-15), 0, 0), { ball = true })
+	end
+	newPart(model, body, "Spot", Vector3.new(0.7, 0.5, 0.15) * s, def.glow or def.accent, CFrame.new(0.6 * s, 1.0 * s, -1.0 * s), { ball = true, material = Enum.Material.Neon })
+end
+
 function CritterModels.scaleFor(def)
 	local order = Config.Rarities[def.rarity].order
 	return 0.8 + (order - 1) * 0.22
@@ -472,7 +567,7 @@ local function glow(p, color, range, brightness)
 end
 
 -- ---------- the hangar shell: walls with windows, pillars, roof beams ----------
-local W, D, H = 380, 270, 34 -- deck size and wall height
+local W, D, H = 460, 300, 34 -- deck size and wall height (bigger 2026-10-18: 8 bases)
 
 local function wallRun(folder, from, to, inward)
 	local len = (to - from).Magnitude
@@ -512,8 +607,8 @@ local function shell(folder)
 		part(folder, { Name = "RoofCross", Size = Vector3.new(W, 2, 2), Color = METAL, CFrame = CFrame.new(0, H + 3.5, z) })
 	end
 	-- hanging lamps over the bases so the deck is lit
-	for _, x in ipairs({ -110, 0, 110 }) do
-		for _, z in ipairs({ -82, 82, -40, 40 }) do
+	for _, x in ipairs({ -171, -57, 57, 171 }) do
+		for _, z in ipairs({ -95, 95, -45, 45 }) do
 			local lamp = part(folder, { Name = "Lamp", Size = Vector3.new(6, 1, 6), Color = C.Trim, Material = Enum.Material.Neon, CFrame = CFrame.new(x, H - 1, z) })
 			local sl = Instance.new("SpotLight")
 			sl.Face = Enum.NormalId.Bottom
@@ -556,11 +651,11 @@ local function plating(folder)
 	walk(Vector3.new(-145, 0, 0), Vector3.new(-80, 0, 0), 12) -- from the rocket pad past the spawn to the tunnel mouth
 	walk(Vector3.new(80, 0, 0), Vector3.new(110, 0, 0), 12)
 	for _, z in ipairs({ -22, 22 }) do
-		walk(Vector3.new(-150, 0, z), Vector3.new(150, 0, z), 8)
+		walk(Vector3.new(-205, 0, z), Vector3.new(205, 0, z), 8)
 	end
-	for _, x in ipairs({ -110, 0, 110 }) do
-		walk(Vector3.new(x, 0, 26), Vector3.new(x, 0, 58), 10)
-		walk(Vector3.new(x, 0, -26), Vector3.new(x, 0, -58), 10)
+	for _, x in ipairs({ -171, -57, 57, 171 }) do
+		walk(Vector3.new(x, 0, 26), Vector3.new(x, 0, 71), 10)
+		walk(Vector3.new(x, 0, -26), Vector3.new(x, 0, -71), 10)
 	end
 end
 
@@ -812,8 +907,8 @@ local function lockers(folder)
 	f.Parent = folder
 	local list = {}
 	local spots = {}
-	for _, x in ipairs({ -56, 56 }) do
-		for _, z in ipairs({ -82, 82 }) do
+	for _, x in ipairs({ -114, 0, 114 }) do -- in the gaps between bases
+		for _, z in ipairs({ -95, 95 }) do
 			table.insert(spots, Vector3.new(x - 3, 0, z))
 			table.insert(spots, Vector3.new(x + 3, 0, z))
 		end
@@ -894,6 +989,7 @@ local Notify = remote("Notify")
 local ShieldRequest = remote("ShieldRequest")
 local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
 local SetPet = remote("SetPet") -- pick which of your critters follows you around
+local Expand = remote("Expand") -- buy two more pedestals
 
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
@@ -969,6 +1065,7 @@ local function refreshStats(player)
 			end
 		end
 	end
+	player:SetAttribute("NextExpand", (st.base and Config.ExpandCosts[(st.base.unlocked - Config.PedestalsPerBase) / 2 + 1]) or 0)
 	player:SetAttribute("Found", table.concat(found, ","))
 	player:SetAttribute("Owned", table.concat(owned, ","))
 	local pet = player:GetAttribute("Pet")
@@ -1005,13 +1102,42 @@ local function placeOnPedestal(base, slot, crit)
 	prompt.Triggered:Connect(function(who)
 		tryStealing(who, base, slot)
 	end)
+	-- the owner can sell it (F) to make room; only the owner's screen shows this one
+	local sell = Instance.new("ProximityPrompt")
+	sell.ActionText = "Sell (+" .. addCommas(math.floor(crit.price * Config.SellBack)) .. ")"
+	sell.ObjectText = crit.name
+	sell.KeyboardKeyCode = Enum.KeyCode.F
+	sell.GamepadKeyCode = Enum.KeyCode.ButtonY
+	sell.HoldDuration = 1
+	sell.MaxActivationDistance = 9
+	sell.RequiresLineOfSight = false
+	sell.UIOffset = Vector2.new(0, 70)
+	sell:SetAttribute("OnlyFor", base.owner and base.owner.UserId or 0)
+	sell.Parent = model.PrimaryPart
+	sell.Triggered:Connect(function(who)
+		if who ~= base.owner or base.slots[slot] == nil or base.slots[slot].model ~= model then
+			return
+		end
+		local d = PlayerData.get(who)
+		if not d then
+			return
+		end
+		local value = math.floor(crit.price * Config.SellBack)
+		base.slots[slot] = nil
+		d.slots[tostring(slot)] = nil
+		d.stardust += value
+		FX:FireAllClients("burst", model:GetPivot().Position, Config.Colors.Orange)
+		model:Destroy()
+		refreshStats(who)
+		tell(who, "Sold " .. crit.name .. " for " .. addCommas(value) .. " Stardust.", "info")
+	end)
 	model.Parent = map.critterFolder
 	base.slots[slot] = { model = model, crit = crit, prompt = prompt }
 	return model
 end
 
 local function freeSlot(base)
-	for i = 1, Config.PedestalsPerBase do
+	for i = 1, base.unlocked do
 		if not base.slots[i] then
 			return i
 		end
@@ -1254,10 +1380,21 @@ for _, base in ipairs(map.bases) do
 end
 
 -- ---------- bases: claim on join, free on leave ----------
-local function claimBase(player)
+local function pedestalLooks(base)
+	for i, ped in ipairs(base.pedestals) do
+		local locked = i > base.unlocked
+		ped.part.Transparency = locked and 0.8 or 0
+		ped.ring.Color = locked and Color3.fromRGB(90, 96, 116) or Config.Colors.Blue
+		ped.ring.Transparency = locked and 0.6 or 0
+	end
+end
+
+local function claimBase(player, d)
 	for _, base in ipairs(map.bases) do
 		if not base.owner then
 			base.owner = player
+			base.unlocked = d.pedestals
+			pedestalLooks(base)
 			base.shieldUntil, base.cooldownUntil = 0, 0
 			base.root:SetAttribute("OwnerUserId", player.UserId)
 			base.root:SetAttribute("ShieldUntil", 0)
@@ -1276,6 +1413,8 @@ local function freeBase(base)
 		base.slots[slot] = nil
 	end
 	base.owner = nil
+	base.unlocked = Config.PedestalsPerBase
+	pedestalLooks(base)
 	base.shieldUntil, base.cooldownUntil = 0, 0
 	setShieldVisual(base, false)
 	base.root:SetAttribute("OwnerUserId", 0)
@@ -1317,7 +1456,7 @@ local function onPlayerAdded(player)
 		PlayerData.release(player)
 		return
 	end
-	state[player] = { base = claimBase(player), carrying = nil }
+	state[player] = { base = claimBase(player, d), carrying = nil }
 	local st = state[player]
 	if st.base then
 		for k, key in pairs(d.slots) do
@@ -1467,7 +1606,7 @@ local rng = Random.new()
 
 local function freeSpot()
 	for _ = 1, 30 do
-		local x, z = rng:NextNumber(-178, 178), rng:NextNumber(-125, 125)
+		local x, z = rng:NextNumber(-218, 218), rng:NextNumber(-140, 140)
 		local ok = not (math.abs(z) < 12 and math.abs(x) < 72) -- not on the launch pad
 		for _, base in ipairs(map.bases) do
 			local p = base.cf:PointToObjectSpace(Vector3.new(x, 0, z))
@@ -1580,6 +1719,31 @@ task.spawn(function()
 		end
 		task.wait(Config.MeteorEvery)
 	end
+end)
+
+-- ---------- expand your base: two more pedestals at a time ----------
+Expand.OnServerEvent:Connect(function(player)
+	local st = state[player]
+	local d = PlayerData.get(player)
+	if not (st and d and st.base) then
+		return
+	end
+	local cost = Config.ExpandCosts[(st.base.unlocked - Config.PedestalsPerBase) / 2 + 1]
+	if not cost then
+		tell(player, "Your base is as big as it gets!", "info")
+		return
+	end
+	if d.stardust < cost then
+		tell(player, "Expanding costs " .. addCommas(cost) .. " Stardust. You need " .. addCommas(cost - d.stardust) .. " more.", "bad")
+		return
+	end
+	d.stardust -= cost
+	d.pedestals = math.min(Config.MaxPedestals, d.pedestals + 2)
+	st.base.unlocked = d.pedestals
+	pedestalLooks(st.base)
+	refreshStats(player)
+	FX:FireAllClients("confetti", st.base.cf.Position + Vector3.new(0, 4, 0))
+	tell(player, "Base expanded! You have " .. d.pedestals .. " pedestals now.", "good")
 end)
 
 -- ---------- the pet that follows you (each screen draws it; Pets.client.lua) ----------
@@ -1819,7 +1983,7 @@ local function blackHoleNight()
 			goal = Vector3.new(target.Position.X, 4.5, target.Position.Z)
 		else
 			if (wander - pos).Magnitude < 4 then
-				wander = Vector3.new(rng:NextNumber(-150, 150), 4.5, rng:NextNumber(-110, 110))
+				wander = Vector3.new(rng:NextNumber(-200, 200), 4.5, rng:NextNumber(-130, 130))
 			end
 			goal = wander
 		end
@@ -2070,13 +2234,13 @@ local function buildBase(folder, index, position, facingRotation)
 	-- eight pedestals in two rows at the back half
 	local pedestals = {}
 	local i = 0
-	for _, z in ipairs({ 6, 15 }) do
+	for _, z in ipairs({ 6, 15, -4 }) do -- the third (front) row is the expansion: pedestals 9 to 12
 		for _, x in ipairs({ -18, -6, 6, 18 }) do
 			i += 1
 			local base = cf * CFrame.new(x, 1, z)
-			part(root, { Name = "Pedestal" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 7, 7), Color = C.Trim, CFrame = base * CFrame.new(0, 1, 0) * CFrame.Angles(0, 0, math.rad(90)) })
-			part(root, { Name = "PedestalRing" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 7.4, 7.4), Color = C.Blue, Material = Enum.Material.Neon, CFrame = base * CFrame.new(0, 0.3, 0) * CFrame.Angles(0, 0, math.rad(90)) })
-			pedestals[i] = { top = base * CFrame.new(0, 2, 0) }   -- critters face the entrance
+			local ped = part(root, { Name = "Pedestal" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 7, 7), Color = C.Trim, CFrame = base * CFrame.new(0, 1, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+			local ring = part(root, { Name = "PedestalRing" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 7.4, 7.4), Color = C.Blue, Material = Enum.Material.Neon, CFrame = base * CFrame.new(0, 0.3, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+			pedestals[i] = { top = base * CFrame.new(0, 2, 0), part = ped, ring = ring }   -- critters face the entrance
 		end
 	end
 	-- the airlock console just inside the entrance
@@ -2091,6 +2255,7 @@ local function buildBase(folder, index, position, facingRotation)
 	prompt.Parent = console
 	return {
 		index = index, root = root, cf = cf, halfW = W / 2, halfD = D / 2,
+		unlocked = Config.PedestalsPerBase, -- pedestals this base can use (more after Expand Base)
 		shield = shield, signLabel = signLabel, nameLabel = nameLabel,
 		pedestals = pedestals, consolePrompt = prompt, slots = {}, owner = nil,
 		shieldUntil = 0, cooldownUntil = 0,
@@ -2133,7 +2298,7 @@ function MapBuilder.build()
 	local station = Instance.new("Folder")
 	station.Name = "Station"
 	station.Parent = workspace
-	part(station, { Name = "Deck", Size = Vector3.new(380, 2, 270), Color = C.Deck, Material = Enum.Material.Metal, CFrame = CFrame.new(0, -1, 0) }) -- tiles and walkways go on top (Decor.lua)
+	part(station, { Name = "Deck", Size = Vector3.new(460, 2, 300), Color = C.Deck, Material = Enum.Material.Metal, CFrame = CFrame.new(0, -1, 0) }) -- tiles and walkways go on top (Decor.lua)
 
 	-- the critter launch pad: a moving walkway down the middle
 	local padStart, padEnd, padY = -64, 64, 1
@@ -2146,8 +2311,8 @@ function MapBuilder.build()
 
 	local bases = {}
 	local i = 0
-	for _, row in ipairs({ { z = 82, rot = 0 }, { z = -82, rot = math.pi } }) do
-		for _, x in ipairs({ -110, 0, 110 }) do
+	for _, row in ipairs({ { z = 95, rot = 0 }, { z = -95, rot = math.pi } }) do
+		for _, x in ipairs({ -171, -57, 57, 171 }) do -- 8 bases (2026-10-18: bigger map)
 			i += 1
 			bases[i] = buildBase(station, i, Vector3.new(x, 0, row.z), row.rot)
 		end
@@ -2201,7 +2366,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil } -- found: the Collection Book; pet: the critter that follows you
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase } -- found: the Collection Book; pet: the critter that follows you
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -2223,13 +2388,16 @@ local function clean(d)
 			end
 		end
 	end
+	if typeof(d.pedestals) == "number" then
+		out.pedestals = math.clamp(math.floor(d.pedestals), Config.PedestalsPerBase, Config.MaxPedestals)
+	end
 	if typeof(d.pet) == "string" and Config.fromKey(d.pet) then
 		out.pet = d.pet
 	end
 	if typeof(d.slots) == "table" then
 		for k, id in pairs(d.slots) do
 			local n = tonumber(k)
-			if n and n >= 1 and n <= Config.PedestalsPerBase and Config.fromKey(id) then   -- "cometcat" or "cometcat:golden"
+			if n and n >= 1 and n <= Config.MaxPedestals and Config.fromKey(id) then   -- "cometcat" or "cometcat:golden"
 				out.slots[tostring(n)] = id
 			end
 		end
@@ -2943,6 +3111,39 @@ shieldBtn.Activated:Connect(function()
 	ShieldRequest:FireServer()
 end)
 
+-- ---------- expand base button (above the airlock) ----------
+local Expand = remotes:WaitForChild("Expand")
+local expandBtn = Instance.new("TextButton")
+expandBtn.Name = "ExpandBase"
+expandBtn.AnchorPoint = Vector2.new(1, 1)
+expandBtn.Position = UDim2.new(1, -16, 1, -104)
+expandBtn.Size = UDim2.fromOffset(230, 52)
+expandBtn.BackgroundColor3 = C.Orange
+expandBtn.Font = Enum.Font.FredokaOne
+expandBtn.TextScaled = true
+expandBtn.TextColor3 = C.Dark
+expandBtn.Parent = gui
+corner(expandBtn, 14)
+local ep = Instance.new("UIPadding")
+ep.PaddingLeft, ep.PaddingRight, ep.PaddingTop, ep.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+ep.Parent = expandBtn
+local function refreshExpand()
+	local cost = player:GetAttribute("NextExpand") or 0
+	if cost > 0 then
+		expandBtn.Text = "Expand Base: " .. commas(cost) .. " ★"
+		expandBtn.AutoButtonColor = true
+		expandBtn.BackgroundColor3 = C.Orange
+	else
+		expandBtn.Text = "Base is full size"
+		expandBtn.BackgroundColor3 = Color3.fromRGB(120, 128, 150)
+	end
+end
+player:GetAttributeChangedSignal("NextExpand"):Connect(refreshExpand)
+refreshExpand()
+expandBtn.Activated:Connect(function()
+	Expand:FireServer()
+end)
+
 local function myBase()
 	local station = workspace:FindFirstChild("Station")
 	if not station then
@@ -2998,8 +3199,14 @@ end)
 
 -- ---------- hide "Steal" on your own critters ----------
 local function checkPrompt(obj)
-	if obj:IsA("ProximityPrompt") and obj:GetAttribute("OwnerUserId") == player.UserId then
-		obj.MaxActivationDistance = 0 -- the server never changes this, so it stays hidden for you
+	if obj:IsA("ProximityPrompt") then
+		if obj:GetAttribute("OwnerUserId") == player.UserId then
+			obj.MaxActivationDistance = 0 -- no Steal on your own critters (the server never changes this, so it stays hidden)
+		end
+		local only = obj:GetAttribute("OnlyFor")
+		if only and only ~= player.UserId then
+			obj.MaxActivationDistance = 0 -- Sell shows only for the owner
+		end
 	end
 end
 for _, d in ipairs(workspace:GetDescendants()) do
@@ -3299,6 +3506,134 @@ task.spawn(function()
 			star:Destroy()
 		end)
 	end
+end)
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="18">
+          <Properties>
+            <string name="Name">Sprint</string>
+            <string name="Source"><![CDATA[-- Sprint (2026-10-18, Matthew: "a sprint feature that has a meter to it that drains and slowly brings back up").
+-- Hold Shift, or the Sprint button on a phone or tablet. The energy bar drains while you run and refills after you stop.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local S = Config.Sprint
+local C = Config.Colors
+local player = Players.LocalPlayer
+
+local energy, wantRun, lastRun = 1, false, 0
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "Sprint"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- the energy bar, bottom middle
+local bar = Instance.new("Frame")
+bar.AnchorPoint = Vector2.new(0.5, 1)
+bar.Position = UDim2.new(0.5, 0, 1, -28)
+bar.Size = UDim2.fromOffset(300, 26)
+bar.BackgroundColor3 = C.Dark
+bar.BackgroundTransparency = 0.15
+bar.Parent = gui
+local bc = Instance.new("UICorner")
+bc.CornerRadius = UDim.new(1, 0)
+bc.Parent = bar
+local bs = Instance.new("UIStroke")
+bs.Color = C.Blue
+bs.Thickness = 2
+bs.Parent = bar
+local fill = Instance.new("Frame")
+fill.Size = UDim2.fromScale(1, 1)
+fill.BackgroundColor3 = C.Blue
+fill.Parent = bar
+local fc = Instance.new("UICorner")
+fc.CornerRadius = UDim.new(1, 0)
+fc.Parent = fill
+local label = Instance.new("TextLabel")
+label.Size = UDim2.fromScale(1, 1)
+label.BackgroundTransparency = 1
+label.Font = Enum.Font.FredokaOne
+label.TextScaled = true
+label.TextColor3 = Color3.new(1, 1, 1)
+label.TextStrokeTransparency = 0.3
+label.Text = "SPRINT (Shift)"
+label.ZIndex = 2
+label.Parent = bar
+
+-- a Sprint button for touch screens
+if UserInputService.TouchEnabled then
+	label.Text = "SPRINT"
+	local btn = Instance.new("TextButton")
+	btn.AnchorPoint = Vector2.new(1, 1)
+	btn.Position = UDim2.new(1, -260, 1, -24)
+	btn.Size = UDim2.fromOffset(110, 70)
+	btn.BackgroundColor3 = C.Blue
+	btn.Font = Enum.Font.FredokaOne
+	btn.TextScaled = true
+	btn.TextColor3 = C.Dark
+	btn.Text = "Sprint"
+	btn.Parent = gui
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 16)
+	c.Parent = btn
+	btn.MouseButton1Down:Connect(function()
+		wantRun = true
+	end)
+	btn.MouseButton1Up:Connect(function()
+		wantRun = false
+	end)
+	btn.MouseLeave:Connect(function()
+		wantRun = false
+	end)
+end
+
+UserInputService.InputBegan:Connect(function(input, typing)
+	if typing then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift or input.KeyCode == Enum.KeyCode.ButtonL3 then
+		wantRun = true
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift or input.KeyCode == Enum.KeyCode.ButtonL3 then
+		wantRun = false
+	end
+end)
+
+local tired = false -- once empty, you have to let it refill a bit before running again
+RunService.Heartbeat:Connect(function(dt)
+	local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if not hum then
+		return
+	end
+	local moving = hum.MoveDirection.Magnitude > 0.1
+	local running = wantRun and moving and energy > 0 and not tired
+	if running then
+		energy = math.max(0, energy - S.drainPerSecond / 100 * dt)
+		lastRun = os.clock()
+		if energy <= 0 then
+			tired = true
+		end
+	elseif os.clock() - lastRun > S.refillDelay then
+		energy = math.min(1, energy + S.refillPerSecond / 100 * dt)
+		if tired and energy > 0.25 then
+			tired = false
+		end
+	end
+	hum.WalkSpeed = running and S.run or S.walk
+	fill.Size = UDim2.fromScale(math.max(energy, 0.001), 1)
+	fill.BackgroundColor3 = tired and Color3.fromRGB(150, 156, 176) or (running and C.Orange or C.Blue)
+end)
+
+player.CharacterAdded:Connect(function()
+	energy, tired = 1, false
 end)
 ]]></string>
           </Properties>

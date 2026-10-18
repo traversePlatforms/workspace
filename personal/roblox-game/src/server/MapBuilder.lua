@@ -148,13 +148,13 @@ local function buildBase(folder, index, position, facingRotation)
 	-- eight pedestals in two rows at the back half
 	local pedestals = {}
 	local i = 0
-	for _, z in ipairs({ 6, 15 }) do
+	for _, z in ipairs({ 6, 15, -4 }) do -- the third (front) row is the expansion: pedestals 9 to 12
 		for _, x in ipairs({ -18, -6, 6, 18 }) do
 			i += 1
 			local base = cf * CFrame.new(x, 1, z)
-			part(root, { Name = "Pedestal" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 7, 7), Color = C.Trim, CFrame = base * CFrame.new(0, 1, 0) * CFrame.Angles(0, 0, math.rad(90)) })
-			part(root, { Name = "PedestalRing" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 7.4, 7.4), Color = C.Blue, Material = Enum.Material.Neon, CFrame = base * CFrame.new(0, 0.3, 0) * CFrame.Angles(0, 0, math.rad(90)) })
-			pedestals[i] = { top = base * CFrame.new(0, 2, 0) }   -- critters face the entrance
+			local ped = part(root, { Name = "Pedestal" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 7, 7), Color = C.Trim, CFrame = base * CFrame.new(0, 1, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+			local ring = part(root, { Name = "PedestalRing" .. i, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 7.4, 7.4), Color = C.Blue, Material = Enum.Material.Neon, CFrame = base * CFrame.new(0, 0.3, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+			pedestals[i] = { top = base * CFrame.new(0, 2, 0), part = ped, ring = ring }   -- critters face the entrance
 		end
 	end
 	-- the airlock console just inside the entrance
@@ -169,6 +169,7 @@ local function buildBase(folder, index, position, facingRotation)
 	prompt.Parent = console
 	return {
 		index = index, root = root, cf = cf, halfW = W / 2, halfD = D / 2,
+		unlocked = Config.PedestalsPerBase, -- pedestals this base can use (more after Expand Base)
 		shield = shield, signLabel = signLabel, nameLabel = nameLabel,
 		pedestals = pedestals, consolePrompt = prompt, slots = {}, owner = nil,
 		shieldUntil = 0, cooldownUntil = 0,
@@ -211,7 +212,7 @@ function MapBuilder.build()
 	local station = Instance.new("Folder")
 	station.Name = "Station"
 	station.Parent = workspace
-	part(station, { Name = "Deck", Size = Vector3.new(380, 2, 270), Color = C.Deck, Material = Enum.Material.Metal, CFrame = CFrame.new(0, -1, 0) }) -- tiles and walkways go on top (Decor.lua)
+	part(station, { Name = "Deck", Size = Vector3.new(460, 2, 300), Color = C.Deck, Material = Enum.Material.Metal, CFrame = CFrame.new(0, -1, 0) }) -- tiles and walkways go on top (Decor.lua)
 
 	-- the critter launch pad: a moving walkway down the middle
 	local padStart, padEnd, padY = -64, 64, 1
@@ -224,8 +225,8 @@ function MapBuilder.build()
 
 	local bases = {}
 	local i = 0
-	for _, row in ipairs({ { z = 82, rot = 0 }, { z = -82, rot = math.pi } }) do
-		for _, x in ipairs({ -110, 0, 110 }) do
+	for _, row in ipairs({ { z = 95, rot = 0 }, { z = -95, rot = math.pi } }) do
+		for _, x in ipairs({ -171, -57, 57, 171 }) do -- 8 bases (2026-10-18: bigger map)
 			i += 1
 			bases[i] = buildBase(station, i, Vector3.new(x, 0, row.z), row.rot)
 		end

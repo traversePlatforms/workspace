@@ -39,7 +39,7 @@ local function glow(p, color, range, brightness)
 end
 
 -- ---------- the hangar shell: walls with windows, pillars, roof beams ----------
-local W, D, H = 380, 270, 34 -- deck size and wall height
+local W, D, H = 460, 300, 34 -- deck size and wall height (bigger 2026-10-18: 8 bases)
 
 local function wallRun(folder, from, to, inward)
 	local len = (to - from).Magnitude
@@ -79,8 +79,8 @@ local function shell(folder)
 		part(folder, { Name = "RoofCross", Size = Vector3.new(W, 2, 2), Color = METAL, CFrame = CFrame.new(0, H + 3.5, z) })
 	end
 	-- hanging lamps over the bases so the deck is lit
-	for _, x in ipairs({ -110, 0, 110 }) do
-		for _, z in ipairs({ -82, 82, -40, 40 }) do
+	for _, x in ipairs({ -171, -57, 57, 171 }) do
+		for _, z in ipairs({ -95, 95, -45, 45 }) do
 			local lamp = part(folder, { Name = "Lamp", Size = Vector3.new(6, 1, 6), Color = C.Trim, Material = Enum.Material.Neon, CFrame = CFrame.new(x, H - 1, z) })
 			local sl = Instance.new("SpotLight")
 			sl.Face = Enum.NormalId.Bottom
@@ -123,11 +123,11 @@ local function plating(folder)
 	walk(Vector3.new(-145, 0, 0), Vector3.new(-80, 0, 0), 12) -- from the rocket pad past the spawn to the tunnel mouth
 	walk(Vector3.new(80, 0, 0), Vector3.new(110, 0, 0), 12)
 	for _, z in ipairs({ -22, 22 }) do
-		walk(Vector3.new(-150, 0, z), Vector3.new(150, 0, z), 8)
+		walk(Vector3.new(-205, 0, z), Vector3.new(205, 0, z), 8)
 	end
-	for _, x in ipairs({ -110, 0, 110 }) do
-		walk(Vector3.new(x, 0, 26), Vector3.new(x, 0, 58), 10)
-		walk(Vector3.new(x, 0, -26), Vector3.new(x, 0, -58), 10)
+	for _, x in ipairs({ -171, -57, 57, 171 }) do
+		walk(Vector3.new(x, 0, 26), Vector3.new(x, 0, 71), 10)
+		walk(Vector3.new(x, 0, -26), Vector3.new(x, 0, -71), 10)
 	end
 end
 
@@ -379,8 +379,8 @@ local function lockers(folder)
 	f.Parent = folder
 	local list = {}
 	local spots = {}
-	for _, x in ipairs({ -56, 56 }) do
-		for _, z in ipairs({ -82, 82 }) do
+	for _, x in ipairs({ -114, 0, 114 }) do -- in the gaps between bases
+		for _, z in ipairs({ -95, 95 }) do
 			table.insert(spots, Vector3.new(x - 3, 0, z))
 			table.insert(spots, Vector3.new(x + 3, 0, z))
 		end

@@ -26,6 +26,7 @@ local Notify = remote("Notify")
 local ShieldRequest = remote("ShieldRequest")
 local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
 local SetPet = remote("SetPet") -- pick which of your critters follows you around
+local Expand = remote("Expand") -- buy two more pedestals
 
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
@@ -101,6 +102,7 @@ local function refreshStats(player)
 			end
 		end
 	end
+	player:SetAttribute("NextExpand", (st.base and Config.ExpandCosts[(st.base.unlocked - Config.PedestalsPerBase) / 2 + 1]) or 0)
 	player:SetAttribute("Found", table.concat(found, ","))
 	player:SetAttribute("Owned", table.concat(owned, ","))
 	local pet = player:GetAttribute("Pet")
@@ -137,13 +139,42 @@ local function placeOnPedestal(base, slot, crit)
 	prompt.Triggered:Connect(function(who)
 		tryStealing(who, base, slot)
 	end)
+	-- the owner can sell it (F) to make room; only the owner's screen shows this one
+	local sell = Instance.new("ProximityPrompt")
+	sell.ActionText = "Sell (+" .. addCommas(math.floor(crit.price * Config.SellBack)) .. ")"
+	sell.ObjectText = crit.name
+	sell.KeyboardKeyCode = Enum.KeyCode.F
+	sell.GamepadKeyCode = Enum.KeyCode.ButtonY
+	sell.HoldDuration = 1
+	sell.MaxActivationDistance = 9
+	sell.RequiresLineOfSight = false
+	sell.UIOffset = Vector2.new(0, 70)
+	sell:SetAttribute("OnlyFor", base.owner and base.owner.UserId or 0)
+	sell.Parent = model.PrimaryPart
+	sell.Triggered:Connect(function(who)
+		if who ~= base.owner or base.slots[slot] == nil or base.slots[slot].model ~= model then
+			return
+		end
+		local d = PlayerData.get(who)
+		if not d then
+			return
+		end
+		local value = math.floor(crit.price * Config.SellBack)
+		base.slots[slot] = nil
+		d.slots[tostring(slot)] = nil
+		d.stardust += value
+		FX:FireAllClients("burst", model:GetPivot().Position, Config.Colors.Orange)
+		model:Destroy()
+		refreshStats(who)
+		tell(who, "Sold " .. crit.name .. " for " .. addCommas(value) .. " Stardust.", "info")
+	end)
 	model.Parent = map.critterFolder
 	base.slots[slot] = { model = model, crit = crit, prompt = prompt }
 	return model
 end
 
 local function freeSlot(base)
-	for i = 1, Config.PedestalsPerBase do
+	for i = 1, base.unlocked do
 		if not base.slots[i] then
 			return i
 		end
@@ -386,10 +417,21 @@ for _, base in ipairs(map.bases) do
 end
 
 -- ---------- bases: claim on join, free on leave ----------
-local function claimBase(player)
+local function pedestalLooks(base)
+	for i, ped in ipairs(base.pedestals) do
+		local locked = i > base.unlocked
+		ped.part.Transparency = locked and 0.8 or 0
+		ped.ring.Color = locked and Color3.fromRGB(90, 96, 116) or Config.Colors.Blue
+		ped.ring.Transparency = locked and 0.6 or 0
+	end
+end
+
+local function claimBase(player, d)
 	for _, base in ipairs(map.bases) do
 		if not base.owner then
 			base.owner = player
+			base.unlocked = d.pedestals
+			pedestalLooks(base)
 			base.shieldUntil, base.cooldownUntil = 0, 0
 			base.root:SetAttribute("OwnerUserId", player.UserId)
 			base.root:SetAttribute("ShieldUntil", 0)
@@ -408,6 +450,8 @@ local function freeBase(base)
 		base.slots[slot] = nil
 	end
 	base.owner = nil
+	base.unlocked = Config.PedestalsPerBase
+	pedestalLooks(base)
 	base.shieldUntil, base.cooldownUntil = 0, 0
 	setShieldVisual(base, false)
 	base.root:SetAttribute("OwnerUserId", 0)
@@ -449,7 +493,7 @@ local function onPlayerAdded(player)
 		PlayerData.release(player)
 		return
 	end
-	state[player] = { base = claimBase(player), carrying = nil }
+	state[player] = { base = claimBase(player, d), carrying = nil }
 	local st = state[player]
 	if st.base then
 		for k, key in pairs(d.slots) do
@@ -599,7 +643,7 @@ local rng = Random.new()
 
 local function freeSpot()
 	for _ = 1, 30 do
-		local x, z = rng:NextNumber(-178, 178), rng:NextNumber(-125, 125)
+		local x, z = rng:NextNumber(-218, 218), rng:NextNumber(-140, 140)
 		local ok = not (math.abs(z) < 12 and math.abs(x) < 72) -- not on the launch pad
 		for _, base in ipairs(map.bases) do
 			local p = base.cf:PointToObjectSpace(Vector3.new(x, 0, z))
@@ -712,6 +756,31 @@ task.spawn(function()
 		end
 		task.wait(Config.MeteorEvery)
 	end
+end)
+
+-- ---------- expand your base: two more pedestals at a time ----------
+Expand.OnServerEvent:Connect(function(player)
+	local st = state[player]
+	local d = PlayerData.get(player)
+	if not (st and d and st.base) then
+		return
+	end
+	local cost = Config.ExpandCosts[(st.base.unlocked - Config.PedestalsPerBase) / 2 + 1]
+	if not cost then
+		tell(player, "Your base is as big as it gets!", "info")
+		return
+	end
+	if d.stardust < cost then
+		tell(player, "Expanding costs " .. addCommas(cost) .. " Stardust. You need " .. addCommas(cost - d.stardust) .. " more.", "bad")
+		return
+	end
+	d.stardust -= cost
+	d.pedestals = math.min(Config.MaxPedestals, d.pedestals + 2)
+	st.base.unlocked = d.pedestals
+	pedestalLooks(st.base)
+	refreshStats(player)
+	FX:FireAllClients("confetti", st.base.cf.Position + Vector3.new(0, 4, 0))
+	tell(player, "Base expanded! You have " .. d.pedestals .. " pedestals now.", "good")
 end)
 
 -- ---------- the pet that follows you (each screen draws it; Pets.client.lua) ----------
@@ -951,7 +1020,7 @@ local function blackHoleNight()
 			goal = Vector3.new(target.Position.X, 4.5, target.Position.Z)
 		else
 			if (wander - pos).Magnitude < 4 then
-				wander = Vector3.new(rng:NextNumber(-150, 150), 4.5, rng:NextNumber(-110, 110))
+				wander = Vector3.new(rng:NextNumber(-200, 200), 4.5, rng:NextNumber(-130, 130))
 			end
 			goal = wander
 		end

@@ -114,6 +114,70 @@ function SHAPES.dragon(model, body, def, s)
 	newPart(model, body, "Tail", Vector3.new(2.4, 0.5, 0.5) * s, def.body, CFrame.new(0, -0.2 * s, 2.0 * s) * CFrame.Angles(0, math.rad(90), math.rad(-15)), { cylinder = true })
 end
 
+-- wave 3 body types (2026-10-18): jellyfish, robot, bird, turtle, octopus
+function SHAPES.jelly(model, body, def, s)
+	addEyes(model, body, s, 0.42, 0.35, 1.25)
+	newPart(model, body, "Rim", Vector3.new(3.4, 0.5, 3.4) * s, def.accent, CFrame.new(0, -0.6 * s, 0), { ball = true })
+	for i = 0, 5 do
+		local a = i / 6 * math.pi * 2
+		local x, z = math.cos(a) * 0.9 * s, math.sin(a) * 0.9 * s
+		newPart(model, body, "Tentacle", Vector3.new(2.2, 0.3, 0.3) * s, def.accent, CFrame.new(x, -1.7 * s, z) * CFrame.Angles(0, 0, math.rad(90 + (i % 2 == 0 and 8 or -8))), { cylinder = true })
+		newPart(model, body, "TentacleTip", Vector3.new(0.4, 0.4, 0.4) * s, def.glow or def.accent, CFrame.new(x, -2.8 * s, z), { ball = true, material = Enum.Material.Neon })
+	end
+end
+
+function SHAPES.robot(model, body, def, s)
+	body.Transparency = 1 -- the robot is all box: the round body only carries it
+	newPart(model, body, "Chassis", Vector3.new(2.8, 2.6, 2.4) * s, def.body, CFrame.new(0, 0, 0), { material = Enum.Material.Metal })
+	newPart(model, body, "Visor", Vector3.new(2.2, 1.1, 0.2) * s, Config.Colors.Dark, CFrame.new(0, 0.45 * s, -1.22 * s))
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "EyeLight", Vector3.new(0.45, 0.45, 0.15) * s, def.accent, CFrame.new(side * 0.5 * s, 0.45 * s, -1.34 * s), { ball = true, material = Enum.Material.Neon })
+		newPart(model, body, "Arm", Vector3.new(0.5, 1.6, 0.5) * s, def.accent, CFrame.new(side * 1.65 * s, -0.2 * s, 0) * CFrame.Angles(0, 0, side * 0.25), { material = Enum.Material.Metal })
+		newPart(model, body, "Foot", Vector3.new(0.9, 0.5, 1.2) * s, def.accent, CFrame.new(side * 0.7 * s, -1.5 * s, 0), { material = Enum.Material.Metal })
+	end
+	newPart(model, body, "Antenna", Vector3.new(1.2, 0.15, 0.15) * s, def.accent, CFrame.new(0, 1.8 * s, 0) * CFrame.Angles(0, 0, math.rad(90)), { cylinder = true })
+	newPart(model, body, "AntennaTip", Vector3.new(0.45, 0.45, 0.45) * s, def.glow or def.accent, CFrame.new(0, 2.45 * s, 0), { ball = true, material = Enum.Material.Neon })
+	newPart(model, body, "Badge", Vector3.new(0.7, 0.7, 0.12) * s, def.glow or Config.Colors.Orange, CFrame.new(0, -0.6 * s, -1.24 * s), { ball = true, material = Enum.Material.Neon })
+end
+
+function SHAPES.bird(model, body, def, s)
+	addEyes(model, body, s, 0.45, 0.4, 1.28)
+	newPart(model, body, "Beak", Vector3.new(0.5, 0.6, 0.8) * s, Color3.fromRGB(255, 170, 60), CFrame.new(0, 0.0, -1.6 * s) * CFrame.Angles(math.rad(90), 0, 0), { wedge = true })
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "Wing", Vector3.new(0.5, 1.8, 2.0) * s, def.accent, CFrame.new(side * 1.5 * s, 0, 0.2 * s) * CFrame.Angles(0, 0, side * 0.35), { ball = true })
+		newPart(model, body, "Foot", Vector3.new(0.6, 0.25, 0.7) * s, Color3.fromRGB(255, 170, 60), CFrame.new(side * 0.5 * s, -1.5 * s, -0.2 * s), { ball = true })
+	end
+	newPart(model, body, "Tuft", Vector3.new(0.4, 1.0, 0.4) * s, def.accent, CFrame.new(0, 1.7 * s, -0.2 * s) * CFrame.Angles(math.rad(-20), 0, 0), { ball = true })
+end
+
+function SHAPES.turtle(model, body, def, s)
+	-- the round body is the shell; a head pokes out the front
+	newPart(model, body, "ShellRim", Vector3.new(3.5, 0.6, 3.5) * s, def.accent, CFrame.new(0, -0.7 * s, 0), { ball = true })
+	for i, x in ipairs({ -0.7, 0, 0.7 }) do
+		newPart(model, body, "ShellSpot" .. i, Vector3.new(0.8, 0.3, 0.8) * s, def.accent, CFrame.new(x * s, 1.38 * s - math.abs(x) * 0.25 * s, 0.1 * s), { ball = true })
+	end
+	local skin = def.glow or Color3.fromRGB(150, 210, 140)
+	newPart(model, body, "Head", Vector3.new(1.4, 1.3, 1.4) * s, skin, CFrame.new(0, -0.2 * s, -1.9 * s), { ball = true })
+	for _, side in ipairs({ -1, 1 }) do
+		newPart(model, body, "Eye", Vector3.new(0.45, 0.5, 0.3) * s, Color3.new(1, 1, 1), CFrame.new(side * 0.32 * s, 0.05 * s, -2.5 * s), { ball = true })
+		newPart(model, body, "Pupil", Vector3.new(0.25, 0.3, 0.2) * s, Config.Colors.Dark, CFrame.new(side * 0.32 * s, 0.05 * s, -2.62 * s), { ball = true })
+		for _, fz in ipairs({ -0.9, 0.9 }) do
+			newPart(model, body, "Leg", Vector3.new(0.8, 0.6, 0.8) * s, skin, CFrame.new(side * 1.3 * s, -1.0 * s, fz * s), { ball = true })
+		end
+	end
+end
+
+function SHAPES.octo(model, body, def, s)
+	addEyes(model, body, s, 0.45, 0.2, 1.25)
+	for i = 0, 7 do
+		local a = i / 8 * math.pi * 2
+		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
+		local p = dir * 1.5 * s + Vector3.new(0, -1.3 * s, 0)
+		newPart(model, body, "Arm", Vector3.new(0.55, 0.45, 1.8) * s, def.accent, CFrame.lookAt(p, p + dir) * CFrame.Angles(math.rad(-15), 0, 0), { ball = true })
+	end
+	newPart(model, body, "Spot", Vector3.new(0.7, 0.5, 0.15) * s, def.glow or def.accent, CFrame.new(0.6 * s, 1.0 * s, -1.0 * s), { ball = true, material = Enum.Material.Neon })
+end
+
 function CritterModels.scaleFor(def)
 	local order = Config.Rarities[def.rarity].order
 	return 0.8 + (order - 1) * 0.22

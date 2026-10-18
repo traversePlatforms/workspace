@@ -90,6 +90,39 @@ shieldBtn.Activated:Connect(function()
 	ShieldRequest:FireServer()
 end)
 
+-- ---------- expand base button (above the airlock) ----------
+local Expand = remotes:WaitForChild("Expand")
+local expandBtn = Instance.new("TextButton")
+expandBtn.Name = "ExpandBase"
+expandBtn.AnchorPoint = Vector2.new(1, 1)
+expandBtn.Position = UDim2.new(1, -16, 1, -104)
+expandBtn.Size = UDim2.fromOffset(230, 52)
+expandBtn.BackgroundColor3 = C.Orange
+expandBtn.Font = Enum.Font.FredokaOne
+expandBtn.TextScaled = true
+expandBtn.TextColor3 = C.Dark
+expandBtn.Parent = gui
+corner(expandBtn, 14)
+local ep = Instance.new("UIPadding")
+ep.PaddingLeft, ep.PaddingRight, ep.PaddingTop, ep.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+ep.Parent = expandBtn
+local function refreshExpand()
+	local cost = player:GetAttribute("NextExpand") or 0
+	if cost > 0 then
+		expandBtn.Text = "Expand Base: " .. commas(cost) .. " ★"
+		expandBtn.AutoButtonColor = true
+		expandBtn.BackgroundColor3 = C.Orange
+	else
+		expandBtn.Text = "Base is full size"
+		expandBtn.BackgroundColor3 = Color3.fromRGB(120, 128, 150)
+	end
+end
+player:GetAttributeChangedSignal("NextExpand"):Connect(refreshExpand)
+refreshExpand()
+expandBtn.Activated:Connect(function()
+	Expand:FireServer()
+end)
+
 local function myBase()
 	local station = workspace:FindFirstChild("Station")
 	if not station then
@@ -145,8 +178,14 @@ end)
 
 -- ---------- hide "Steal" on your own critters ----------
 local function checkPrompt(obj)
-	if obj:IsA("ProximityPrompt") and obj:GetAttribute("OwnerUserId") == player.UserId then
-		obj.MaxActivationDistance = 0 -- the server never changes this, so it stays hidden for you
+	if obj:IsA("ProximityPrompt") then
+		if obj:GetAttribute("OwnerUserId") == player.UserId then
+			obj.MaxActivationDistance = 0 -- no Steal on your own critters (the server never changes this, so it stays hidden)
+		end
+		local only = obj:GetAttribute("OnlyFor")
+		if only and only ~= player.UserId then
+			obj.MaxActivationDistance = 0 -- Sell shows only for the owner
+		end
 	end
 end
 for _, d in ipairs(workspace:GetDescendants()) do

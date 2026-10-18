@@ -64,6 +64,31 @@ Config.Critters = {
 		body = Color3.fromRGB(235, 235, 245), accent = Color3.fromRGB(255, 205, 70), glow = Color3.fromRGB(255, 220, 120) },
 	{ id = "blackholedragon", name = "Black Hole Dragon", rarity = "Mythic", price = 15000, income = 240, shape = "dragon",
 		body = Color3.fromRGB(55, 35, 85), accent = Color3.fromRGB(190, 120, 255), glow = Color3.fromRGB(190, 120, 255) },
+	-- wave 3 (2026-10-18): five new body types
+	{ id = "bloopjelly", name = "Bloop Jelly", rarity = "Common", price = 30, income = 1, shape = "jelly",
+		body = Color3.fromRGB(170, 225, 255), accent = Color3.fromRGB(110, 190, 255) },
+	{ id = "tinbot", name = "Tin Bot", rarity = "Common", price = 45, income = 2, shape = "robot",
+		body = Color3.fromRGB(175, 182, 196), accent = Color3.fromRGB(110, 118, 136), glow = Color3.fromRGB(150, 210, 255) },
+	{ id = "novachick", name = "Nova Chick", rarity = "Common", price = 50, income = 2, shape = "bird",
+		body = Color3.fromRGB(255, 225, 110), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "cometturtle", name = "Comet Turtle", rarity = "Rare", price = 200, income = 6, shape = "turtle",
+		body = Color3.fromRGB(110, 180, 120), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "astroowl", name = "Astro Owl", rarity = "Rare", price = 280, income = 8, shape = "bird",
+		body = Color3.fromRGB(150, 120, 210), accent = Color3.fromRGB(110, 85, 170) },
+	{ id = "octopop", name = "Octo-Pop", rarity = "Rare", price = 320, income = 9, shape = "octo",
+		body = Color3.fromRGB(255, 150, 190), accent = Color3.fromRGB(255, 110, 160) },
+	{ id = "mechapup", name = "Mecha Pup", rarity = "Epic", price = 1200, income = 26, shape = "robot",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(150, 210, 255), glow = Color3.fromRGB(255, 120, 60) },
+	{ id = "nebulajelly", name = "Nebula Jelly", rarity = "Epic", price = 1500, income = 30, shape = "jelly",
+		body = Color3.fromRGB(190, 130, 255), accent = Color3.fromRGB(130, 80, 220), glow = Color3.fromRGB(255, 160, 255) },
+	{ id = "orbitturtle", name = "Orbit Turtle", rarity = "Epic", price = 1800, income = 34, shape = "turtle",
+		body = Color3.fromRGB(110, 170, 255), accent = Color3.fromRGB(230, 240, 255), glow = Color3.fromRGB(150, 220, 200) },
+	{ id = "galaxyocto", name = "Galaxy Octopus", rarity = "Legendary", price = 8000, income = 140, shape = "octo",
+		body = Color3.fromRGB(40, 50, 110), accent = Color3.fromRGB(90, 110, 220), glow = Color3.fromRGB(150, 210, 255) },
+	{ id = "phoenixowl", name = "Phoenix Owl", rarity = "Legendary", price = 9000, income = 155, shape = "bird",
+		body = Color3.fromRGB(255, 110, 60), accent = Color3.fromRGB(255, 200, 80), glow = Color3.fromRGB(255, 160, 60) },
+	{ id = "quasarbot", name = "Quasar Robot", rarity = "Mythic", price = 14000, income = 220, shape = "robot",
+		body = Color3.fromRGB(255, 205, 70), accent = Color3.fromRGB(60, 50, 90), glow = Color3.fromRGB(190, 120, 255) },
 	-- Nolan's cat: a grey tabby with darker stripes
 	{ id = "hammy", name = "Hammy the Star Cat", rarity = "Cosmic", price = 25000, income = 400, shape = "cat",
 		body = Color3.fromRGB(150, 148, 145), accent = Color3.fromRGB(85, 82, 80), stripes = true, glow = Color3.fromRGB(255, 186, 125) },
@@ -77,8 +102,14 @@ Config.ExclusiveUserId = 0
 Config.ExclusiveCritters = {} -- e.g. { "surprise" }
 
 Config.StartStardust = 60
-Config.BaseCount = 6
-Config.PedestalsPerBase = 8
+Config.BaseCount = 8 -- 4 on each side (2026-10-18: bigger map). Set the place's Max Players to 8 in Game Settings.
+Config.PedestalsPerBase = 8 -- pedestals every base starts with
+Config.MaxPedestals = 12 -- after buying both expansions
+Config.ExpandCosts = { 2500, 10000 } -- each adds 2 pedestals
+Config.SellBack = 0.4 -- selling a critter gives back 40% of its price
+
+-- sprint: hold Shift (or the Sprint button on a phone); the energy bar drains while running and refills when you stop
+Config.Sprint = { walk = 16, run = 27, drainPerSecond = 25, refillPerSecond = 14, refillDelay = 0.8 }
 Config.SpawnEvery = 2.5 -- seconds between critters landing on the pad
 Config.ConveyorSpeed = 7 -- studs per second
 Config.ShieldSeconds = 45
