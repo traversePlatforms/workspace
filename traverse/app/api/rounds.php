@@ -3681,8 +3681,7 @@ if ($action === 'money') {
    (tojen); and her own leads not quoted yet. $mine: count her own (the quote account asking). */
 const QUOTE_INBOX_FROM = 1792189222;
 function quoteInbox(array $l, bool $mine = false): bool {
-    if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) || !empty($l['quote'])) return false;
-    if (str_ends_with((string) ($l['by'] ?? ''), '(ClickUp)')) return false;   /* her own ClickUp tasks are hers to work in ClickUp: never sent back to her (2026-10-17, Matthew) */
+    if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold'], true) || !empty($l['quote'])) return false;   /* + hold: On hold is our Pipeline's stage; her list shows them as before (2026-10-17, Matthew: Jim was on there) */
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
     return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;   /* new leads only, since 16 Oct: back as it was (2026-10-17, Matthew: don't send Jen anything she didn't populate herself unless it is a new lead) */
 }
