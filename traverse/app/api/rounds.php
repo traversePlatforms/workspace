@@ -448,6 +448,7 @@ function geoDevice(string $who, string $acctId, string $role): void {
 }
 /** a lead the signed-in quote-only person made, or took on by phone or email (2026-10-15) */
 function qMine(array $l): bool { global $me; return (string) ($l['by'] ?? '') === $me || in_array($me, (array) ($l['qown'] ?? []), true); }
+const QUOTE_INBOX_FROM = 1792189222;   /* quoteInbox()'s cut-off (2026-10-16); up here because the role gate below the session check calls it before line 3690 has run (2026-10-18, Fable review) */
 function deviceName(): string {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
     if (stripos($ua, 'iPad') !== false) return 'iPad';
@@ -2184,7 +2185,9 @@ function jobHolds(?array $leads = null): array {
     $booked = []; foreach (jobsAll() as $j) if (!$j['off']) $booked[$j['lead']] = true;
     foreach (($leads ?? leadsAll()) as $l) {
         $o = $l['quote']['offer'] ?? null;
-        if (!is_array($o) || $l['status'] !== 'quoted' || isset($booked[$l['id']]) || ($o['date'] ?? '') < $today) continue;
+        /* held whatever the stage (2026-10-18, Fable review): the ClickUp pull moves a quoted lead to contacted / on hold / won every five
+           minutes, and the day it still names was freed for anyone. Only lost, booked, released (72 h, taken off) or passed ends a hold. */
+        if (!is_array($o) || $l['status'] === 'lost' || isset($booked[$l['id']]) || ($o['date'] ?? '') < $today) continue;
         $until = offerUntil($l); if ($until !== null && $until < time()) continue;   /* released after 72 hours */
         $out[] = ['lead' => $l['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'], 'until' => $until, 'paid' => !empty($l['sign'])];
     }
@@ -2491,7 +2494,10 @@ $role = (string) ($session['r'] ?? 'crew');
 if (!defined('SIXFOLD_CLI') && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
 if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true)) {   /* only her own leads (2026-10-15) */
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
-    if (!$qL || !qMine($qL)) fail('Not allowed.', 403);
+    /* + her Leads to call (2026-10-18, Fable review): "They said yes" on a lead she did not make died here with Not allowed, while Reached out?
+       and Not interested on the same lead were fine. Quoting it makes it hers (qown), as the Quick quote's own leadadd does. */
+    if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
+    if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
 if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
@@ -3679,7 +3685,7 @@ if ($action === 'money') {
 /* Jen's Leads to call (2026-10-16, Matthew: "starting now we should have non facebook message leads populate in her quick quote as people to
    reach out to"): open leads (new or contacted, not quoted) that came in from now on, except Messenger messages; any lead sent to her
    (tojen); and her own leads not quoted yet. $mine: count her own (the quote account asking). */
-const QUOTE_INBOX_FROM = 1792189222;
+/* QUOTE_INBOX_FROM (16 Oct 2026) is declared beside qMine() near the top (2026-10-18) */
 function quoteInbox(array $l, bool $mine = false): bool {
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold'], true) || !empty($l['quote'])) return false;   /* + hold: On hold is our Pipeline's stage; her list shows them as before (2026-10-17, Matthew: Jim was on there) */
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
@@ -4288,7 +4294,9 @@ if ($action === 'qwon') {
             'pay' => $pay, 'card' => false, 'note' => 'Won without the form (' . $me . ').', 'addr' => $addr !== '' ? $addr : 'Ask the office', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
         $jid = $nj;
     }
-    appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'won', 'note' => 'Won without the form by ' . $me . '. ' . $payTxt . ($jid ? ' Job ' . ($ex ? 'updated' : 'booked') . '.' : ''), 'by' => $me, 'at' => time()]);
+    $wrow = ['id' => $id, 'status' => 'won', 'note' => 'Won without the form by ' . $me . '. ' . $payTxt . ($jid ? ' Job ' . ($ex ? 'updated' : 'booked') . '.' : ''), 'by' => $me, 'at' => time()];
+    if (!$jid && is_array($l['quote']['offer'] ?? null)) { $wrow['quote'] = array_diff_key($l['quote'], ['offer' => 1, 'by' => 1, 'at' => 1, 'link' => 1]); $wrow['note'] .= ' Their held day was taken off the schedule (Book their day was unticked).'; }   /* a hold no longer ends with the stage (2026-10-18, Fable review): untick means release it */
+    appendLine(leadsDir() . '/leadst.log', $wrow);
     out(['ok' => true, 'job' => $jid]);
 }
 /* a town for the schedule (2026-10-16, Jen: "if there is no town listed can I add one? For Kirk"): kept on the lead, so a held time and the
@@ -5687,14 +5695,22 @@ if ($action === 'signsend') {
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     $L = $all[$id];
     if (!empty($L['signed'])) fail('They already signed. Change the job on the Jobs board instead.', 409);   /* Fable review 2026-10-14 */
-    $byLink = ($body['how'] ?? '') === 'link';   /* SX-58: the customer pays the deposit on the form, by Square link */
-    if ($byLink && !squareFor()) fail('Square is not connected yet.');
-    if (empty($body['taken']) && !$byLink) fail('The form goes out only after they said yes and you took the deposit.');
+    /* the deposit is already in (2026-10-18, Fable review): Change or send again used to mint a new Square order, so a customer who had paid
+       was asked to pay again and the app said "not paid yet". A paid Square order (or a booking confirmed without a signature) is kept, with
+       its amount and method; a deposit taken by hand cannot be turned into a pay link. The price and the day can still change. */
+    $S0 = is_array($L['sign'] ?? null) ? $L['sign'] : null;
+    $linkPaid = $S0 && ($S0['how'] ?? '') === 'link' && a365DepositPaid($L, false);
+    $depIn = $S0 && (!empty($L['confirmed']) || $linkPaid);
+    $byLink = $depIn ? ($S0['how'] ?? '') === 'link' : ($body['how'] ?? '') === 'link';   /* SX-58: the customer pays the deposit on the form, by Square link */
+    if ($S0 && !$depIn && ($S0['how'] ?? '') !== 'link' && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
+    if ($byLink && !$depIn && !squareFor()) fail('Square is not connected yet.');
+    if (empty($body['taken']) && !$byLink && !$depIn) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
     $pkg = (string) ($body['pkg'] ?? 'full'); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick what is included.');
-    $how = (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true)) fail('Say how they paid the deposit.');
+    $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
-    if (isset($body['deposit']) && $body['deposit'] !== '' && $body['deposit'] !== null) {   /* Jen can change it (Matthew 2026-10-15) */
+    if ($depIn) { $dep = (int) $S0['deposit']; if ($dep > $price) fail('The $' . $dep . ' deposit is already ' . ($linkPaid ? 'paid' : 'in') . '; the price cannot be less than that.'); }
+    elseif (isset($body['deposit']) && $body['deposit'] !== '' && $body['deposit'] !== null) {   /* Jen can change it (Matthew 2026-10-15) */
         if (!is_numeric($body['deposit']) || (int) $body['deposit'] < 0 || (int) $body['deposit'] > $price) fail('The deposit has to be between $0 and the price.');
         $dep = (int) $body['deposit'];
     }
@@ -5703,25 +5719,29 @@ if ($action === 'signsend') {
     if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
     if (in_array((int) (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
     if (!jobSlot($slot)) fail('Pick an arrival time.');
-    if ($why = slotFree($crew, $date, $slot, $id)) fail($why, 409);
+    /* booked without a signature already (2026-10-18): the job stays where it is; a new day is set on the Jobs board, as for a signed form */
+    $exJob = !empty($L['confirmed']) ? jobForLead($id) : null;
+    if ($exJob && !$exJob['done'] && ($exJob['crew'] !== $crew || $exJob['date'] !== $date || $exJob['slot'] !== $slot)) fail('They are booked already. Change the day on the Jobs board instead.', 409);
+    if ($why = slotFree($crew, $date, $slot, $id, $exJob ? (string) $exJob['id'] : '')) fail($why, 409);
     $q0 = is_array($L['quote'] ?? null) ? $L['quote'] : [];
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
           'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
     $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
     $nosign = !empty($body['nosign']); if ($nosign) $sign['nosign'] = true;   /* no signature needed (2026-10-17) */
-    if ($byLink) {
+    if ($byLink && $depIn && is_array($S0['pay'] ?? null)) $sign['pay'] = $S0['pay'];   /* the paid order stays, so sqpaid still matches it (2026-10-18) */
+    elseif ($byLink) {
         if ($dep < 1) fail('A Square link needs a deposit of at least $1.');
         $pl = squareLink('Deposit: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $dep * 100, a365SignLink($id, $sign['key']), (string) ($L['email'] ?? ''));
         if (!empty($pl['err'])) fail($pl['err'], 502);
         $sign['pay'] = $pl;
     }
     $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
-            'note' => mb_substr('Quoted $' . $price . ' by phone; deposit $' . $dep . ($byLink ? ' to pay by Square link on the form' : ' taken (' . ucfirst($how) . ')') . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
+            'note' => mb_substr('Quoted $' . $price . ' by phone; deposit $' . $dep . ($byLink ? ($depIn ? ' already paid by Square link' : ' to pay by Square link on the form') : ($depIn ? ' already in (' : ' taken (') . ucfirst($how) . ')') . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
     if ($nosign) $row['note'] = str_replace('Form sent;', 'Form sent (no signature needed);', $row['note']);
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
-    $bookedJob = $nosign && !$byLink ? a365BookNoSign($id, $me) : null;   /* the deposit is in already: booked now */
-    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink, 'nosign' => $nosign, 'booked' => (bool) $bookedJob]);
+    $bookedJob = $nosign && (!$byLink || $depIn) ? a365BookNoSign($id, $me) : null;   /* the deposit is in already: booked now */
+    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink && !$depIn, 'paid' => $depIn, 'nosign' => $nosign, 'booked' => (bool) $bookedJob]);
 }
 /** may this person make pay links? With SANDBOX keys only an admin (testing): a test link sent to a real customer takes no money */
 function squareFor(): bool { global $role; $c = squareCfg(); return (bool) $c && ($c['env'] === 'production' || $role === 'admin'); }
