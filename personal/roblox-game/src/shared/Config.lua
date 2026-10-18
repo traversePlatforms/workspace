@@ -67,6 +67,26 @@ Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
 Config.AutosaveEvery = 60
 
+-- Mutations (2026-10-18): any critter can land Golden or Rainbow; they cost a bit more and earn a lot more
+Config.Mutations = {
+	{ id = "rainbow", name = "Rainbow", chance = 0.015, income = 5, price = 3 },
+	{ id = "golden", name = "Golden", chance = 0.08, income = 2, price = 1.5, color = Color3.fromRGB(255, 205, 70) },
+}
+
+-- Stardust stars floating around the station to run and grab
+Config.Stars = {
+	count = 24, -- how many are out at once
+	value = 5, -- the least a star is worth
+	incomeFactor = 3, -- or 3 seconds of your base's income, whichever is more
+	respawnMin = 3, respawnMax = 7,
+	pickupDistance = 5,
+}
+Config.MeteorFirst = 180 -- seconds until the first Meteor Shower
+Config.MeteorEvery = 600 -- then every 10 minutes
+Config.MeteorSeconds = 30
+Config.MeteorPerSecond = 3
+Config.MeteorStarBonus = 2 -- shower stars are worth double
+
 function Config.critterById(id)
 	for _, c in ipairs(Config.Critters) do
 		if c.id == id then
@@ -74,6 +94,44 @@ function Config.critterById(id)
 		end
 	end
 	return nil
+end
+
+function Config.mutationById(id)
+	for _, m in ipairs(Config.Mutations) do
+		if m.id == id then
+			return m
+		end
+	end
+	return nil
+end
+
+-- a saved critter is "cometcat" or "cometcat:golden"
+function Config.keyOf(defId, mutId)
+	return mutId and (defId .. ":" .. mutId) or defId
+end
+
+function Config.fromKey(key)
+	if typeof(key) ~= "string" then
+		return nil, nil
+	end
+	local id, mutId = key:match("^([%w_]+):?([%w_]*)$")
+	local def = id and Config.critterById(id)
+	if not def then
+		return nil, nil
+	end
+	local mut = (mutId and mutId ~= "") and Config.mutationById(mutId) or nil
+	if mutId and mutId ~= "" and not mut then
+		return nil, nil
+	end
+	return def, mut
+end
+
+-- the name, price and income of a critter with its mutation
+function Config.statsOf(def, mut)
+	local name = mut and (mut.name .. " " .. def.name) or def.name
+	local price = math.floor(def.price * (mut and mut.price or 1))
+	local income = math.floor(def.income * (mut and mut.income or 1))
+	return name, price, income
 end
 
 return Config

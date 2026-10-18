@@ -120,10 +120,11 @@ function CritterModels.scaleFor(def)
 end
 
 -- returns a Model whose PrimaryPart ("Body") is anchored at `cframe`; every other part is welded to it
-function CritterModels.build(def, cframe)
+-- mut (optional): a Config.Mutations entry; Golden repaints the critter gold, Rainbow is colour-cycled on each screen
+function CritterModels.build(def, cframe, mut)
 	local s = CritterModels.scaleFor(def)
 	local model = Instance.new("Model")
-	model.Name = def.name
+	model.Name = mut and (mut.name .. " " .. def.name) or def.name
 	local body = Instance.new("Part")
 	body.Name = "Body"
 	body.Shape = Enum.PartType.Ball
@@ -173,7 +174,7 @@ function CritterModels.build(def, cframe)
 	nameL.TextScaled = true
 	nameL.TextColor3 = rarity.color
 	nameL.TextStrokeTransparency = 0.3
-	nameL.Text = def.name
+	nameL.Text = model.Name
 	nameL.Parent = tag
 	local infoL = Instance.new("TextLabel")
 	infoL.Name = "Info"
@@ -188,6 +189,36 @@ function CritterModels.build(def, cframe)
 	infoL.Parent = tag
 
 	model:SetAttribute("CritterId", def.id)
+
+	if mut then
+		model:SetAttribute("Mutation", mut.id)
+		local keep = { Eye = true, Pupil = true, Nose = true }
+		if mut.id == "golden" then
+			for _, p in ipairs(model:GetDescendants()) do
+				if p:IsA("BasePart") and not keep[p.Name] then
+					p.Color = (p == body) and mut.color or mut.color:Lerp(Color3.fromRGB(200, 140, 30), 0.35)
+					p.Material = Enum.Material.Foil
+				end
+			end
+			nameL.TextColor3 = mut.color
+		elseif mut.id == "rainbow" then
+			model:SetAttribute("Rainbow", true) -- FX.client.lua cycles the colours
+		end
+		local shine = Instance.new("ParticleEmitter")
+		shine.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		shine.Color = mut.id == "rainbow" and ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 120)),
+			ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 230, 120)),
+			ColorSequenceKeypoint.new(0.66, Color3.fromRGB(120, 220, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 140, 255)),
+		}) or ColorSequence.new(mut.color)
+		shine.Rate = 10
+		shine.Lifetime = NumberRange.new(0.6, 1.2)
+		shine.Speed = NumberRange.new(0.5, 2)
+		shine.Size = NumberSequence.new(0.3)
+		shine.LightEmission = 1
+		shine.Parent = body
+	end
 	return model
 end
 

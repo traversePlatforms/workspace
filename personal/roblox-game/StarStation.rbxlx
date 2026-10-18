@@ -79,6 +79,26 @@ Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
 Config.AutosaveEvery = 60
 
+-- Mutations (2026-10-18): any critter can land Golden or Rainbow; they cost a bit more and earn a lot more
+Config.Mutations = {
+	{ id = "rainbow", name = "Rainbow", chance = 0.015, income = 5, price = 3 },
+	{ id = "golden", name = "Golden", chance = 0.08, income = 2, price = 1.5, color = Color3.fromRGB(255, 205, 70) },
+}
+
+-- Stardust stars floating around the station to run and grab
+Config.Stars = {
+	count = 24, -- how many are out at once
+	value = 5, -- the least a star is worth
+	incomeFactor = 3, -- or 3 seconds of your base's income, whichever is more
+	respawnMin = 3, respawnMax = 7,
+	pickupDistance = 5,
+}
+Config.MeteorFirst = 180 -- seconds until the first Meteor Shower
+Config.MeteorEvery = 600 -- then every 10 minutes
+Config.MeteorSeconds = 30
+Config.MeteorPerSecond = 3
+Config.MeteorStarBonus = 2 -- shower stars are worth double
+
 function Config.critterById(id)
 	for _, c in ipairs(Config.Critters) do
 		if c.id == id then
@@ -86,6 +106,44 @@ function Config.critterById(id)
 		end
 	end
 	return nil
+end
+
+function Config.mutationById(id)
+	for _, m in ipairs(Config.Mutations) do
+		if m.id == id then
+			return m
+		end
+	end
+	return nil
+end
+
+-- a saved critter is "cometcat" or "cometcat:golden"
+function Config.keyOf(defId, mutId)
+	return mutId and (defId .. ":" .. mutId) or defId
+end
+
+function Config.fromKey(key)
+	if typeof(key) ~= "string" then
+		return nil, nil
+	end
+	local id, mutId = key:match("^([%w_]+):?([%w_]*)$")
+	local def = id and Config.critterById(id)
+	if not def then
+		return nil, nil
+	end
+	local mut = (mutId and mutId ~= "") and Config.mutationById(mutId) or nil
+	if mutId and mutId ~= "" and not mut then
+		return nil, nil
+	end
+	return def, mut
+end
+
+-- the name, price and income of a critter with its mutation
+function Config.statsOf(def, mut)
+	local name = mut and (mut.name .. " " .. def.name) or def.name
+	local price = math.floor(def.price * (mut and mut.price or 1))
+	local income = math.floor(def.income * (mut and mut.income or 1))
+	return name, price, income
 end
 
 return Config
@@ -217,10 +275,11 @@ function CritterModels.scaleFor(def)
 end
 
 -- returns a Model whose PrimaryPart ("Body") is anchored at `cframe`; every other part is welded to it
-function CritterModels.build(def, cframe)
+-- mut (optional): a Config.Mutations entry; Golden repaints the critter gold, Rainbow is colour-cycled on each screen
+function CritterModels.build(def, cframe, mut)
 	local s = CritterModels.scaleFor(def)
 	local model = Instance.new("Model")
-	model.Name = def.name
+	model.Name = mut and (mut.name .. " " .. def.name) or def.name
 	local body = Instance.new("Part")
 	body.Name = "Body"
 	body.Shape = Enum.PartType.Ball
@@ -270,7 +329,7 @@ function CritterModels.build(def, cframe)
 	nameL.TextScaled = true
 	nameL.TextColor3 = rarity.color
 	nameL.TextStrokeTransparency = 0.3
-	nameL.Text = def.name
+	nameL.Text = model.Name
 	nameL.Parent = tag
 	local infoL = Instance.new("TextLabel")
 	infoL.Name = "Info"
@@ -285,6 +344,36 @@ function CritterModels.build(def, cframe)
 	infoL.Parent = tag
 
 	model:SetAttribute("CritterId", def.id)
+
+	if mut then
+		model:SetAttribute("Mutation", mut.id)
+		local keep = { Eye = true, Pupil = true, Nose = true }
+		if mut.id == "golden" then
+			for _, p in ipairs(model:GetDescendants()) do
+				if p:IsA("BasePart") and not keep[p.Name] then
+					p.Color = (p == body) and mut.color or mut.color:Lerp(Color3.fromRGB(200, 140, 30), 0.35)
+					p.Material = Enum.Material.Foil
+				end
+			end
+			nameL.TextColor3 = mut.color
+		elseif mut.id == "rainbow" then
+			model:SetAttribute("Rainbow", true) -- FX.client.lua cycles the colours
+		end
+		local shine = Instance.new("ParticleEmitter")
+		shine.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		shine.Color = mut.id == "rainbow" and ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 120)),
+			ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 230, 120)),
+			ColorSequenceKeypoint.new(0.66, Color3.fromRGB(120, 220, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 140, 255)),
+		}) or ColorSequence.new(mut.color)
+		shine.Rate = 10
+		shine.Lifetime = NumberRange.new(0.6, 1.2)
+		shine.Speed = NumberRange.new(0.5, 2)
+		shine.Size = NumberSequence.new(0.3)
+		shine.LightEmission = 1
+		shine.Parent = body
+	end
 	return model
 end
 
@@ -617,10 +706,11 @@ return Decor
           <string name="Name">Main</string>
           <token name="RunContext">0</token>
           <string name="Source"><![CDATA[-- Captain Nolan's Star Station: the game rules. Grab critters off the launch pad, carry them home, earn Stardust,
--- steal from friends, close your airlock, and catch thieves before they get home.
+-- grab Stardust stars, steal from friends, close your airlock, and catch thieves before they get home.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local CritterModels = require(ReplicatedStorage.Shared.CritterModels)
@@ -628,19 +718,23 @@ local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerData = require(script.Parent.PlayerData)
 
 local map = MapBuilder.build()
+local stationFolder = map.critterFolder.Parent
 
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
 remotes.Parent = ReplicatedStorage
-local Notify = Instance.new("RemoteEvent")
-Notify.Name = "Notify"
-Notify.Parent = remotes
-local ShieldRequest = Instance.new("RemoteEvent")
-ShieldRequest.Name = "ShieldRequest"
-ShieldRequest.Parent = remotes
+local function remote(name)
+	local r = Instance.new("RemoteEvent")
+	r.Name = name
+	r.Parent = remotes
+	return r
+end
+local Notify = remote("Notify")
+local ShieldRequest = remote("ShieldRequest")
+local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
 
-local state = {} -- [player] = { base = base, carrying = { model, def, from = { owner, slot } | nil } }
-local conveyor = {} -- critters riding the launch pad
+local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
+local conveyor = {}
 
 local function now()
 	return workspace:GetServerTimeNow()
@@ -656,17 +750,33 @@ local function tellAll(text, kind)
 	Notify:FireAllClients(text, kind or "info")
 end
 
-local function radiusOf(def)
-	return 1.5 * CritterModels.scaleFor(def)
-end
-
 local function addCommas(n)
 	local s = tostring(math.floor(n))
 	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
 	return (out:gsub("^,", ""))
 end
 
--- ---------- leaderboard and income ----------
+-- a critter as the game counts it: its kind, its mutation, and what that makes it worth
+local function makeCrit(def, mut)
+	local name, price, income = Config.statsOf(def, mut)
+	return { key = Config.keyOf(def.id, mut and mut.id), def = def, mut = mut, name = name, price = price, income = income }
+end
+
+local function radiusOf(def)
+	return 1.5 * CritterModels.scaleFor(def)
+end
+
+-- ---------- stats ----------
+local function incomeOf(st)
+	local income = 0
+	if st and st.base then
+		for _, rec in pairs(st.base.slots) do
+			income += rec.crit.income
+		end
+	end
+	return income
+end
+
 local function refreshStats(player)
 	local d = PlayerData.get(player)
 	local st = state[player]
@@ -682,26 +792,21 @@ local function refreshStats(player)
 		end
 		ls.Critters.Value = n
 	end
-	local income = 0
-	if st.base then
-		for _, rec in pairs(st.base.slots) do
-			income += rec.def.income
-		end
-	end
-	player:SetAttribute("Income", income)
+	player:SetAttribute("Income", incomeOf(st))
 	player:SetAttribute("Stardust", d.stardust)
 end
 
 -- ---------- pedestals ----------
-local tryStealing -- defined below
+local tryStealing
 
-local function placeOnPedestal(base, slot, def)
+local function placeOnPedestal(base, slot, crit)
 	local ped = base.pedestals[slot]
-	local model = CritterModels.build(def, ped.top * CFrame.new(0, radiusOf(def) + 0.3, 0))
-	CritterModels.setInfo(model, "+" .. addCommas(def.income) .. " Stardust/s")
+	local model = CritterModels.build(crit.def, ped.top * CFrame.new(0, radiusOf(crit.def) + 0.3, 0), crit.mut)
+	CritterModels.setInfo(model, "+" .. addCommas(crit.income) .. " Stardust/s")
+	model:SetAttribute("OnPedestal", true) -- each screen makes it bob
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Steal"
-	prompt.ObjectText = def.name
+	prompt.ObjectText = crit.name
 	prompt.HoldDuration = Config.StealHold
 	prompt.MaxActivationDistance = 9
 	prompt.RequiresLineOfSight = false
@@ -712,7 +817,8 @@ local function placeOnPedestal(base, slot, def)
 		tryStealing(who, base, slot)
 	end)
 	model.Parent = map.critterFolder
-	base.slots[slot] = { model = model, def = def, prompt = prompt }
+	base.slots[slot] = { model = model, crit = crit, prompt = prompt }
+	return model
 end
 
 local function freeSlot(base)
@@ -730,7 +836,7 @@ local function rootOf(player)
 	return ch and ch:FindFirstChild("HumanoidRootPart")
 end
 
-local function attach(player, model, def, from)
+local function attach(player, model, crit, from)
 	local hrp = rootOf(player)
 	if not hrp then
 		return false
@@ -740,18 +846,30 @@ local function attach(player, model, def, from)
 			d:Destroy()
 		end
 	end
+	model:SetAttribute("OnPedestal", nil)
 	local body = model.PrimaryPart
+	model:PivotTo(hrp.CFrame * CFrame.new(0, 3.2 + radiusOf(crit.def), 0))
 	body.Anchored = false
 	body.Massless = true
-	model:PivotTo(hrp.CFrame * CFrame.new(0, 3.2 + radiusOf(def), 0))
 	local w = Instance.new("WeldConstraint")
 	w.Name = "CarryWeld"
 	w.Part0 = hrp
 	w.Part1 = body
 	w.Parent = body
 	CritterModels.setInfo(model, from and "STOLEN! Run home!" or "Take it home!")
-	state[player].carrying = { model = model, def = def, from = from }
+	state[player].carrying = { model = model, crit = crit, from = from }
+	player:SetAttribute("Carrying", crit.name) -- the guide beam home
 	return true
+end
+
+local function clearCarry(player)
+	local st = state[player]
+	if st then
+		st.carrying = nil
+	end
+	if player.Parent then
+		player:SetAttribute("Carrying", nil)
+	end
 end
 
 -- a carried critter that never made it home: a stolen one goes back to its owner, a bought one is refunded
@@ -761,7 +879,7 @@ local function dropCarried(player, reason)
 	if not c then
 		return
 	end
-	st.carrying = nil
+	clearCarry(player)
 	if c.model then
 		c.model:Destroy()
 	end
@@ -775,22 +893,22 @@ local function dropCarried(player, reason)
 				slot = freeSlot(ost.base) -- its old pedestal was filled meanwhile: any free one
 			end
 			if slot then
-				placeOnPedestal(ost.base, slot, c.def)
-				od.slots[tostring(slot)] = c.def.id
+				placeOnPedestal(ost.base, slot, c.crit)
+				od.slots[tostring(slot)] = c.crit.key
 				refreshStats(owner)
-				tell(owner, "Your " .. c.def.name .. " came back home!", "good")
+				tell(owner, "Your " .. c.crit.name .. " came back home!", "good")
 			end
 		end
 		if reason == "caught" then
-			tell(player, "Caught! " .. c.def.name .. " went back to its owner.", "bad")
+			tell(player, "Caught! " .. c.crit.name .. " went back to its owner.", "bad")
 		end
 	else
 		local d = PlayerData.get(player)
 		if d then
-			d.stardust += c.def.price
+			d.stardust += c.crit.price
 			refreshStats(player)
 			if player.Parent then
-				tell(player, "You dropped " .. c.def.name .. ". Stardust refunded.", "info")
+				tell(player, "You dropped " .. c.crit.name .. ". Stardust refunded.", "info")
 			end
 		end
 	end
@@ -804,15 +922,16 @@ local function bringHome(player)
 	if not (c and d and slot) then
 		return
 	end
-	st.carrying = nil
+	clearCarry(player)
 	c.model:Destroy()
-	placeOnPedestal(st.base, slot, c.def)
-	d.slots[tostring(slot)] = c.def.id
+	local model = placeOnPedestal(st.base, slot, c.crit)
+	d.slots[tostring(slot)] = c.crit.key
 	d.caught += 1
 	refreshStats(player)
-	tell(player, c.def.name .. " joined your base! +" .. addCommas(c.def.income) .. " Stardust every second", "good")
+	FX:FireAllClients("confetti", model:GetPivot().Position)
+	tell(player, c.crit.name .. " joined your base! +" .. addCommas(c.crit.income) .. " Stardust every second", "good")
 	if c.from and c.from.owner then
-		tell(c.from.owner, player.DisplayName .. " got away with your " .. c.def.name .. "!", "bad")
+		tell(c.from.owner, player.DisplayName .. " got away with your " .. c.crit.name .. "!", "bad")
 	end
 end
 
@@ -823,6 +942,7 @@ local function tryBuy(player, item)
 	if item.taken or not (st and d) then
 		return
 	end
+	local crit = item.crit
 	if not st.base then
 		tell(player, "The station is full right now: no free base for you yet.", "bad")
 		return
@@ -831,8 +951,8 @@ local function tryBuy(player, item)
 		tell(player, "Your hands are full! Take your critter home first.", "bad")
 		return
 	end
-	if d.stardust < item.def.price then
-		tell(player, "You need " .. addCommas(item.def.price - d.stardust) .. " more Stardust for " .. item.def.name .. ".", "bad")
+	if d.stardust < crit.price then
+		tell(player, "You need " .. addCommas(crit.price - d.stardust) .. " more Stardust for " .. crit.name .. ".", "bad")
 		return
 	end
 	if not freeSlot(st.base) then
@@ -840,15 +960,17 @@ local function tryBuy(player, item)
 		return
 	end
 	item.taken = true
-	d.stardust -= item.def.price
+	d.stardust -= crit.price
 	refreshStats(player)
-	if not attach(player, item.model, item.def, nil) then
-		d.stardust += item.def.price
+	local at = item.model:GetPivot().Position
+	if not attach(player, item.model, crit, nil) then
+		d.stardust += crit.price
 		refreshStats(player)
 		item.model:Destroy()
 		return
 	end
-	tell(player, "Got " .. item.def.name .. "! Carry it to your base.", "good")
+	FX:FireAllClients("burst", at, Config.Rarities[crit.def.rarity].color)
+	tell(player, "Got " .. crit.name .. "! Carry it to your base.", "good")
 end
 
 -- ---------- stealing ----------
@@ -878,14 +1000,16 @@ tryStealing = function(thief, base, slot)
 	base.slots[slot] = nil
 	od.slots[tostring(slot)] = nil
 	refreshStats(owner)
-	if not attach(thief, rec.model, rec.def, { owner = owner, slot = slot }) then
-		placeOnPedestal(base, slot, rec.def)
-		od.slots[tostring(slot)] = rec.def.id
+	if not attach(thief, rec.model, rec.crit, { owner = owner, slot = slot }) then
+		rec.model:Destroy()
+		placeOnPedestal(base, slot, rec.crit)
+		od.slots[tostring(slot)] = rec.crit.key
 		refreshStats(owner)
 		return
 	end
-	tell(thief, "You grabbed " .. rec.def.name .. "! Run to your base before they catch you!", "good")
-	tell(owner, "THIEF! " .. thief.DisplayName .. " is stealing your " .. rec.def.name .. ". Catch them!", "bad")
+	FX:FireClient(owner, "alarm", base.index)
+	tell(thief, "You grabbed " .. rec.crit.name .. "! Run to your base before they catch you!", "good")
+	tell(owner, "THIEF! " .. thief.DisplayName .. " is stealing your " .. rec.crit.name .. ". Catch them!", "bad")
 end
 
 -- ---------- airlock shield ----------
@@ -976,9 +1100,8 @@ local function onCharacter(player, character)
 			dropCarried(player, "died")
 		end)
 	end
-	-- start each life at your own base
 	local st = state[player]
-	if st and st.base then
+	if st and st.base then -- start each life at your own base
 		task.defer(function()
 			local hrp = character:WaitForChild("HumanoidRootPart", 5)
 			if hrp then
@@ -1007,10 +1130,10 @@ local function onPlayerAdded(player)
 	state[player] = { base = claimBase(player), carrying = nil }
 	local st = state[player]
 	if st.base then
-		for k, id in pairs(d.slots) do
-			local def = Config.critterById(id)
+		for k, key in pairs(d.slots) do
+			local def, mut = Config.fromKey(key)
 			if def then
-				placeOnPedestal(st.base, tonumber(k), def)
+				placeOnPedestal(st.base, tonumber(k), makeCrit(def, mut))
 			end
 		end
 	end
@@ -1051,8 +1174,7 @@ local function pickCritter()
 	for _, id in ipairs(Config.ExclusiveCritters) do
 		exclusive[id] = true
 	end
-	local pool = {}
-	local total = 0
+	local pool, total = {}, 0
 	for name, r in pairs(Config.Rarities) do
 		local list = {}
 		for _, c in ipairs(Config.Critters) do
@@ -1076,17 +1198,29 @@ local function pickCritter()
 	return last.list[math.random(1, #last.list)]
 end
 
+local function rollMutation()
+	local r = math.random()
+	for _, m in ipairs(Config.Mutations) do -- rarest first
+		if r < m.chance then
+			return m
+		end
+		r -= m.chance
+	end
+	return nil
+end
+
 local FACING = CFrame.Angles(0, math.rad(-90), 0) -- critters face the way the pad moves
 
 local function spawnOnPad()
 	local def = pickCritter()
+	local crit = makeCrit(def, rollMutation())
 	local y = map.padY + radiusOf(def) + 0.4
-	local model = CritterModels.build(def, CFrame.new(map.padStart, y, 0) * FACING)
-	CritterModels.setInfo(model, addCommas(def.price) .. " Stardust")
-	local item = { model = model, def = def, x = map.padStart, y = y, t = 0, taken = false }
+	local model = CritterModels.build(def, CFrame.new(map.padStart, y, 0) * FACING, crit.mut)
+	CritterModels.setInfo(model, addCommas(crit.price) .. " Stardust")
+	local item = { model = model, crit = crit, x = map.padStart, y = y, t = 0, taken = false }
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Grab (" .. addCommas(def.price) .. ")"
-	prompt.ObjectText = def.name
+	prompt.ActionText = "Grab (" .. addCommas(crit.price) .. ")"
+	prompt.ObjectText = crit.name
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight = false
@@ -1096,8 +1230,11 @@ local function spawnOnPad()
 	end)
 	model.Parent = map.critterFolder
 	table.insert(conveyor, item)
-	if Config.Rarities[def.rarity].order >= 4 then
-		tellAll("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. def.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")
+	local order = Config.Rarities[def.rarity].order
+	if crit.mut and crit.mut.id == "rainbow" then
+		tellAll("A RAINBOW critter landed on the launch pad: " .. crit.name .. "!", "cosmic")
+	elseif order >= 4 then
+		tellAll("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. crit.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")
 	end
 end
 
@@ -1126,21 +1263,140 @@ task.spawn(function()
 	end
 end)
 
+-- ---------- Stardust stars and the Meteor Shower ----------
+local starFolder = Instance.new("Folder")
+starFolder.Name = "Stars"
+starFolder.Parent = stationFolder
+local stars = {} -- [part] = { bonus = n, shower = bool }
+local rng = Random.new()
+
+local function freeSpot()
+	for _ = 1, 30 do
+		local x, z = rng:NextNumber(-178, 178), rng:NextNumber(-125, 125)
+		local ok = not (math.abs(z) < 12 and math.abs(x) < 72) -- not on the launch pad
+		for _, base in ipairs(map.bases) do
+			local p = base.cf:PointToObjectSpace(Vector3.new(x, 0, z))
+			if math.abs(p.X) < base.halfW + 3 and math.abs(p.Z) < base.halfD + 3 then
+				ok = false
+			end
+		end
+		if ok then
+			return Vector3.new(x, 2.6, z)
+		end
+	end
+	return Vector3.new(rng:NextNumber(-60, 60), 2.6, 30)
+end
+
+local function makeStar(pos, shower)
+	local s = Instance.new("Part")
+	s.Name = "Star"
+	s.Shape = Enum.PartType.Ball
+	s.Size = shower and Vector3.new(2.6, 2.6, 2.6) or Vector3.new(2.1, 2.1, 2.1)
+	s.Color = shower and Config.Colors.Blue or Config.Colors.Orange
+	s.Material = Enum.Material.Neon
+	s.Anchored = true
+	s.CanCollide = false
+	s.CanQuery = false
+	s.CanTouch = false
+	s.CFrame = CFrame.new(pos)
+	local light = Instance.new("PointLight")
+	light.Color = s.Color
+	light.Range = 9
+	light.Brightness = 1.6
+	light.Parent = s
+	s.Parent = starFolder
+	return s
+end
+
+local function spawnStar()
+	local s = makeStar(freeSpot(), false)
+	s:SetAttribute("Ready", true)
+	stars[s] = { bonus = 1, shower = false }
+end
+
+for _ = 1, Config.Stars.count do
+	spawnStar()
+end
+
+local function collect(player, s, info)
+	stars[s] = nil
+	local d = PlayerData.get(player)
+	local st = state[player]
+	if d then
+		local value = math.max(Config.Stars.value, math.floor(incomeOf(st) * Config.Stars.incomeFactor)) * info.bonus
+		d.stardust += value
+		refreshStats(player)
+		FX:FireClient(player, "pop", s.Position, "+" .. addCommas(value) .. " ★")
+	end
+	FX:FireAllClients("burst", s.Position, s.Color)
+	s:Destroy()
+	if not info.shower then
+		task.delay(rng:NextNumber(Config.Stars.respawnMin, Config.Stars.respawnMax), spawnStar)
+	end
+end
+
+task.spawn(function()
+	local reach = Config.Stars.pickupDistance
+	while true do
+		task.wait(0.12)
+		for player in pairs(state) do
+			local hrp = rootOf(player)
+			if hrp then
+				local p = hrp.Position
+				for s, info in pairs(stars) do
+					if s.Parent and s:GetAttribute("Ready") and (s.Position - p).Magnitude <= reach then
+						collect(player, s, info)
+					end
+				end
+			end
+		end
+	end
+end)
+
+local function meteorStar()
+	local land = freeSpot()
+	local s = makeStar(land + Vector3.new(rng:NextNumber(-40, 40), 160, rng:NextNumber(-40, 40)), true)
+	stars[s] = { bonus = Config.MeteorStarBonus, shower = true }
+	local tw = TweenService:Create(s, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { CFrame = CFrame.new(land) })
+	tw:Play()
+	tw.Completed:Connect(function()
+		if s.Parent then
+			s:SetAttribute("Ready", true)
+			FX:FireAllClients("burst", land, Config.Colors.Blue)
+			task.delay(25, function() -- uncollected shower stars fade away
+				if s.Parent then
+					stars[s] = nil
+					s:Destroy()
+				end
+			end)
+		end
+	end)
+end
+
+task.spawn(function()
+	task.wait(Config.MeteorFirst)
+	while true do
+		tellAll("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
+		FX:FireAllClients("shower", Config.MeteorSeconds)
+		local t0 = os.clock()
+		while os.clock() - t0 < Config.MeteorSeconds do
+			meteorStar()
+			task.wait(1 / Config.MeteorPerSecond)
+		end
+		task.wait(Config.MeteorEvery)
+	end
+end)
+
 -- ---------- every second: income; four times a second: home and catch checks ----------
 task.spawn(function()
 	while true do
 		task.wait(1)
 		for player, st in pairs(state) do
 			local d = PlayerData.get(player)
-			if d and st.base then
-				local income = 0
-				for _, rec in pairs(st.base.slots) do
-					income += rec.def.income
-				end
-				if income > 0 then
-					d.stardust += income
-					refreshStats(player)
-				end
+			local income = incomeOf(st)
+			if d and income > 0 then
+				d.stardust += income
+				refreshStats(player)
 			end
 		end
 	end
@@ -1460,7 +1716,7 @@ local function clean(d)
 	if typeof(d.slots) == "table" then
 		for k, id in pairs(d.slots) do
 			local n = tonumber(k)
-			if n and n >= 1 and n <= Config.PedestalsPerBase and typeof(id) == "string" and Config.critterById(id) then
+			if n and n >= 1 and n <= Config.PedestalsPerBase and Config.fromKey(id) then   -- "cometcat" or "cometcat:golden"
 				out.slots[tostring(n)] = id
 			end
 		end
@@ -1536,6 +1792,297 @@ return PlayerData
           <string name="Name">Client</string>
         </Properties>
         <Item class="LocalScript" referent="13">
+          <Properties>
+            <string name="Name">FX</string>
+            <string name="Source"><![CDATA[-- The "juice", drawn on this player's screen only: sparkles and confetti, pop-up numbers, the steal alarm, a guide beam
+-- home while carrying, "+income" over your base, bobbing critters, spinning stars, and rainbow critters cycling colour.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local FX = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("FX")
+local player = Players.LocalPlayer
+local C = Config.Colors
+
+local station = workspace:WaitForChild("Station", 30)
+if not station then
+	return
+end
+local critters = station:WaitForChild("Critters", 30)
+local starsFolder = station:WaitForChild("Stars", 30)
+
+local fxFolder = Instance.new("Folder")
+fxFolder.Name = "LocalFX"
+fxFolder.Parent = workspace
+
+local function anchorAt(pos)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.Transparency = 1
+	p.Size = Vector3.new(1, 1, 1)
+	p.CFrame = CFrame.new(pos)
+	p.Parent = fxFolder
+	return p
+end
+
+local function burst(pos, color, count, colors)
+	local p = anchorAt(pos)
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	e.Color = colors or ColorSequence.new(color or C.Orange)
+	e.LightEmission = 1
+	e.Size = NumberSequence.new(0.6, 0)
+	e.Lifetime = NumberRange.new(0.5, 1)
+	e.Speed = NumberRange.new(8, 16)
+	e.SpreadAngle = Vector2.new(180, 180)
+	e.Rate = 0
+	e.Parent = p
+	e:Emit(count or 30)
+	Debris:AddItem(p, 2)
+end
+
+local function pop(pos, text, color)
+	local p = anchorAt(pos)
+	local g = Instance.new("BillboardGui")
+	g.Size = UDim2.fromOffset(160, 50)
+	g.AlwaysOnTop = true
+	g.LightInfluence = 0
+	g.Parent = p
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = color or C.Orange
+	l.TextStrokeTransparency = 0.2
+	l.Text = text
+	l.Parent = g
+	TweenService:Create(p, TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = CFrame.new(pos + Vector3.new(0, 6, 0)) }):Play()
+	TweenService:Create(l, TweenInfo.new(1.1), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	Debris:AddItem(p, 1.2)
+end
+
+-- ---------- screen overlays: the steal alarm and the meteor shower ----------
+local gui = Instance.new("ScreenGui")
+gui.Name = "FXOverlay"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 5
+gui.Parent = player:WaitForChild("PlayerGui")
+local flash = Instance.new("Frame")
+flash.Size = UDim2.fromScale(1, 1)
+flash.BackgroundColor3 = Color3.fromRGB(255, 40, 60)
+flash.BackgroundTransparency = 1
+flash.BorderSizePixel = 0
+flash.Parent = gui
+local big = Instance.new("TextLabel")
+big.AnchorPoint = Vector2.new(0.5, 0.5)
+big.Position = UDim2.fromScale(0.5, 0.3)
+big.Size = UDim2.fromScale(0.6, 0.12)
+big.BackgroundTransparency = 1
+big.Font = Enum.Font.FredokaOne
+big.TextScaled = true
+big.TextColor3 = Color3.new(1, 1, 1)
+big.TextStrokeTransparency = 0
+big.TextTransparency = 1
+big.TextStrokeTransparency = 1
+big.Parent = gui
+
+local function shout(text, color, seconds)
+	big.Text = text
+	big.TextColor3 = color
+	big.TextTransparency = 0
+	big.TextStrokeTransparency = 0
+	task.delay(seconds or 2, function()
+		TweenService:Create(big, TweenInfo.new(0.5), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	end)
+end
+
+local function alarm(baseIndex)
+	shout("THIEF!", Color3.fromRGB(255, 90, 100), 2.5)
+	for i = 1, 4 do
+		task.delay((i - 1) * 0.5, function()
+			flash.BackgroundTransparency = 0.6
+			TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1 }):Play()
+		end)
+	end
+	for _, m in ipairs(station:GetChildren()) do
+		if m:IsA("Model") and m:GetAttribute("BaseIndex") == baseIndex then
+			local shield = m:FindFirstChild("Shield")
+			if shield then
+				local red = shield:Clone()
+				red.Name = "AlarmGlow"
+				red.Color = Color3.fromRGB(255, 50, 70)
+				red.Material = Enum.Material.Neon
+				red.Transparency = 0.6
+				red.Parent = fxFolder
+				TweenService:Create(red, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 4, true), { Transparency = 1 }):Play()
+				Debris:AddItem(red, 4.5)
+			end
+		end
+	end
+end
+
+FX.OnClientEvent:Connect(function(kind, a, b)
+	if kind == "burst" then
+		burst(a, b)
+	elseif kind == "confetti" then
+		burst(a, nil, 60, ColorSequence.new({ ColorSequenceKeypoint.new(0, C.Orange), ColorSequenceKeypoint.new(0.5, C.Blue), ColorSequenceKeypoint.new(1, C.Orange) }))
+	elseif kind == "pop" then
+		pop(a, b)
+	elseif kind == "alarm" then
+		alarm(a)
+	elseif kind == "shower" then
+		shout("METEOR SHOWER!", C.Blue, 3)
+	end
+end)
+
+-- ---------- your base: where it is, a guide beam home, "+income" above it ----------
+local function myBase()
+	for _, m in ipairs(station:GetChildren()) do
+		if m:IsA("Model") and m:GetAttribute("OwnerUserId") == player.UserId then
+			return m
+		end
+	end
+	return nil
+end
+
+local beam, a0, a1 = nil, nil, nil
+local function updateBeam()
+	local carrying = player:GetAttribute("Carrying")
+	local base = myBase()
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if carrying and base and base.PrimaryPart and hrp then
+		if not beam then
+			a0 = Instance.new("Attachment")
+			a0.Name = "GuideFrom"
+			a1 = Instance.new("Attachment")
+			a1.Name = "GuideTo"
+			beam = Instance.new("Beam")
+			beam.Color = ColorSequence.new(C.Orange, C.Blue)
+			beam.LightEmission = 1
+			beam.Width0, beam.Width1 = 0.8, 2.4
+			beam.FaceCamera = true
+			beam.Transparency = NumberSequence.new(0.2, 0.5)
+			beam.TextureSpeed = 2
+			beam.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+			beam.Parent = fxFolder
+		end
+		a0.Parent = hrp
+		a1.Parent = base.PrimaryPart
+		a1.Position = Vector3.new(0, 2, 0)
+		beam.Attachment0, beam.Attachment1 = a0, a1
+		beam.Enabled = true
+	elseif beam then
+		beam.Enabled = false
+	end
+end
+player:GetAttributeChangedSignal("Carrying"):Connect(updateBeam)
+player.CharacterAdded:Connect(function()
+	task.wait(0.5)
+	updateBeam()
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		local income = player:GetAttribute("Income") or 0
+		local base = myBase()
+		if income > 0 and base and base.PrimaryPart then
+			local s = tostring(income):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+			pop(base.PrimaryPart.Position + Vector3.new(0, 9, 8), "+" .. s .. " ★", C.Orange)
+		end
+	end
+end)
+
+-- ---------- moving things: bobbing critters, spinning stars, rainbow colours ----------
+local bobbers = {} -- [model] = { origin = CFrame, phase = number }
+local starOrigins = {} -- [part] = CFrame
+local rainbows = {} -- [model] = true
+
+local function track(m)
+	if not m:IsA("Model") then
+		return
+	end
+	if m:GetAttribute("Rainbow") then
+		rainbows[m] = true
+	end
+end
+for _, m in ipairs(critters:GetChildren()) do
+	track(m)
+end
+critters.ChildAdded:Connect(track)
+
+local keep = { Eye = true, Pupil = true, Nose = true }
+local t = 0
+RunService.RenderStepped:Connect(function(dt)
+	t += dt
+	-- critters on pedestals bob gently (left alone the moment the server moves them)
+	for _, m in ipairs(critters:GetChildren()) do
+		local body = m:IsA("Model") and m.PrimaryPart
+		if body and body.Anchored and m:GetAttribute("OnPedestal") then
+			local rec = bobbers[m]
+			if not rec then
+				rec = { origin = m:GetPivot(), phase = math.random() * 6 }
+				bobbers[m] = rec
+			end
+			m:PivotTo(rec.origin * CFrame.new(0, math.sin(t * 2 + rec.phase) * 0.35, 0) * CFrame.Angles(0, math.sin(t * 0.8 + rec.phase) * 0.25, 0))
+		elseif bobbers[m] then
+			bobbers[m] = nil
+		end
+	end
+	for m in pairs(bobbers) do
+		if not m.Parent then
+			bobbers[m] = nil
+		end
+	end
+	-- stars spin and bob once they've landed
+	if starsFolder then
+		for _, s in ipairs(starsFolder:GetChildren()) do
+			if s:IsA("BasePart") and s:GetAttribute("Ready") then
+				local o = starOrigins[s]
+				if not o then
+					o = s.CFrame
+					starOrigins[s] = o
+				end
+				s.CFrame = o * CFrame.new(0, math.sin(t * 3 + o.Position.X) * 0.4, 0)
+			end
+		end
+		for s in pairs(starOrigins) do
+			if not s.Parent then
+				starOrigins[s] = nil
+			end
+		end
+	end
+	-- rainbow critters cycle through the colours
+	for m in pairs(rainbows) do
+		if m.Parent then
+			local h = (t * 0.25) % 1
+			for _, p in ipairs(m:GetDescendants()) do
+				if p:IsA("BasePart") and not keep[p.Name] then
+					p.Color = Color3.fromHSV((h + (p.Name == "Body" and 0 or 0.15)) % 1, 0.55, 1)
+				end
+			end
+			local tag = m.PrimaryPart and m.PrimaryPart:FindFirstChild("Tag")
+			local nameL = tag and tag:FindFirstChild("CritterName")
+			if nameL then
+				nameL.TextColor3 = Color3.fromHSV(h, 0.6, 1)
+			end
+		else
+			rainbows[m] = nil
+		end
+	end
+end)
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="14">
           <Properties>
             <string name="Name">HUD</string>
             <string name="Source"><![CDATA[-- What each player sees: the title screen, their Stardust, the airlock button, messages, and a marker over their own base.
@@ -1792,7 +2339,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="14">
+        <Item class="LocalScript" referent="15">
           <Properties>
             <string name="Name">Spin</string>
             <string name="Source"><![CDATA[-- Turns everything marked with a "SpinSpeed" attribute (degrees per second) on this player's screen only,

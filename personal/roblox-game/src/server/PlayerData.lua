@@ -30,7 +30,7 @@ local function clean(d)
 	if typeof(d.slots) == "table" then
 		for k, id in pairs(d.slots) do
 			local n = tonumber(k)
-			if n and n >= 1 and n <= Config.PedestalsPerBase and typeof(id) == "string" and Config.critterById(id) then
+			if n and n >= 1 and n <= Config.PedestalsPerBase and Config.fromKey(id) then   -- "cometcat" or "cometcat:golden"
 				out.slots[tostring(n)] = id
 			end
 		end

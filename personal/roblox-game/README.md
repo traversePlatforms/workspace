@@ -18,6 +18,10 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - Walk into a friend's base and **hold E** on a critter to steal it. If the owner catches you (gets close) before you get home, it goes back.
 - **Close Airlock** (button bottom-right, or the console in your base) stops stealing for 45 seconds, then recharges for 90.
 - Rarities: Common, Rare, Epic, Legendary, **Cosmic**. Hammy the Star Cat is Cosmic, the rarest.
+- **Mutations:** any critter can land **Golden** (8%: costs 1.5x, earns 2x) or **Rainbow** (1.5%: costs 3x, earns 5x).
+- **Stardust stars** float around the deck: run through one to grab it (worth 5, or 3 seconds of your income, whichever is more).
+- **Meteor Shower:** 3 minutes in, then every 10 minutes, blue stars rain down for 30 seconds, worth double.
+- Feel: critters bob on their pedestals, sparkles when you grab one, confetti when it lands home, "+income" over your base, a red THIEF! alarm when you're robbed, and a glowing beam guiding you home while you carry.
 
 ## Changing things
 
