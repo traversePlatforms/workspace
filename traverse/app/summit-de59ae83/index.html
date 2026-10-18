@@ -733,7 +733,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .crewadd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;display:grid;gap:8px}.crewadd input,.crewadd select,.crewadd textarea{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
   .crewadd .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crewaddb{width:100%;text-align:left;border:1.5px dashed var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:10px 0}
   .qwon{margin:6px 0 0;display:grid;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qwon .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qwon select,.qwon input{width:100%;font:600 15px var(--sans);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}.qwon label.chk{display:flex;gap:8px;align-items:center;font-weight:600}.qwon label.chk input{width:auto}
-  .qqinbox{border:1.5px solid var(--accent)}.qqinhead{padding:10px 12px 4px}.qqinhead b{font:800 16px var(--sans)}.qqinlist{display:grid;gap:10px;padding:6px 12px 12px}.qqinrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qqinrow .qlinks{display:flex;gap:12px;align-items:center;margin-top:8px}.qqinrow .qlinks button.save{width:auto;margin:0;padding:10px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}.tojen{margin-top:6px}
+  .qqinbox{border:1.5px solid var(--accent)}.qqinhead{padding:0;display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;cursor:pointer;color:var(--ink);font:inherit}.qqinhead b{font:800 16px var(--sans)}.qqinhead span{color:var(--accent);font:700 13.5px var(--sans)}.qqinhead b{font:800 16px var(--sans)}.qqinlist{display:grid;gap:10px;padding:6px 12px 12px}.qqinrow{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.qqinrow .qlinks{display:flex;gap:12px;align-items:center;margin-top:8px}.qqinrow .qlinks button.save{width:auto;margin:0;padding:10px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}.tojen{margin-top:6px}
   .cfilt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.cfilt button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font:700 13px var(--sans);color:var(--ink);cursor:pointer}.cfilt button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}.qqcrow button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}.cmonth{margin:12px 0 6px}.qqgrp{display:flex;justify-content:space-between;align-items:center}
   .qqtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}.qqtabs button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;font:600 12.5px var(--sans);color:var(--ink)}.qqtabs button b{font:800 18px var(--sans);line-height:1.1}.qqtabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
   .qqcrow.qqr{display:block;border:1px solid var(--line);border-radius:12px;background:var(--card);margin:0;padding:0}.qqrh{display:grid;grid-template-columns:minmax(0,1fr) auto 14px;align-items:center;gap:10px;width:100%;padding:10px 12px;background:none;border:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
@@ -5657,8 +5657,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Jen's Leads to call (2026-10-16, Matthew: give Jen leads without telling her over WhatsApp): who to reach, with Call / Text / Email,
      the same Reached out? buttons as the Pipeline, Start the quote (her details filled in, the house opened), Not interested */
   function quickInbox() {
-    var box = q('div', 'lwho qqinbox'), head = q('div', 'qqinhead'), hb = q('b', null, 'Leads to call'); head.appendChild(hb); box.appendChild(head);
-    var list = q('div', 'qqinlist'); list.appendChild(q('div', 'skel')); box.appendChild(list);
+    /* folded until opened (2026-10-17, Matthew: both lists hidden by default, opened when needed, not remembered across a refresh or a return) */
+    var box = q('div', 'lwho qqinbox'), head = q('button', 'qqinhead'), open = !!S.qqInboxOpen, n = null; head.type = 'button';
+    var label = function () { head.textContent = ''; head.appendChild(q('b', null, 'Leads to call' + (n != null ? ' (' + n + ')' : ''))); head.appendChild(q('span', null, open ? 'Hide' : 'Show')); };
+    label(); box.appendChild(head);
+    var list = q('div', 'qqinlist'); list.appendChild(q('div', 'skel')); list.hidden = !open; box.appendChild(list);
+    head.addEventListener('click', function () { open = !open; S.qqInboxOpen = open; list.hidden = !open; label(); });
     var load = function () {
       api('leads').then(function (j) {
         list.textContent = '';
@@ -5667,7 +5671,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var L = j.leads.filter(function (l) { return l.qinbox; });
         var rank = function (l) { var g = callGroup(l); return g === 'new' ? 0 : g === 'today' ? 1 : g === 'talked' ? 2 : 3; };
         L.sort(function (a, b) { return rank(a) - rank(b) || (b.at || 0) - (a.at || 0); });
-        hb.textContent = 'Leads to call (' + L.length + ')';
+        n = L.length; label();
         if (!L.length) { list.appendChild(q('div', 'msg soft', 'Nobody waiting. New enquiries from the websites, Facebook forms and the crew land here.')); return; }
         L.forEach(function (l) { list.appendChild(quickInboxRow(l, load)); });
       }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'Your leads need signal.')); });
@@ -5919,7 +5923,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function quickCustomers() {
     if (S.viewAs === 'quote' && !S.qNames) api('accounts').then(function (j) { S.qNames = ((j && j.accounts) || []).filter(function (a) { return a.role === 'quote'; }).map(function (a) { return a.name; }); if (S.screen === 'quickquote') quickQuoteView(); }).catch(function () {});
     var box = q('div', 'lwho qqcust'), head = q('button', 'qqcusthead'); head.type = 'button';
-    var open = S.qqCustOpen !== false;   /* open unless she closed it (2026-10-16) */
+    var open = !!S.qqCustOpen;   /* folded until opened (2026-10-17, Matthew) */
     var body = q('div', 'qqcustbody'); body.hidden = !open;
     var label = function (n) { head.textContent = ''; head.appendChild(q('b', null, 'Your customers' + (n != null ? ' (' + n + ')' : ''))); head.appendChild(q('span', null, open ? 'Hide' : 'Show')); };
     label(null);
@@ -6193,6 +6197,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function addSendNote(parent, el) { addGmail(el); var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
   function houseLookupView(lead, open, typed, quick, sizeOpen) {
+    if (quick && S.screen !== 'quickquote') { S.qqInboxOpen = false; S.qqCustOpen = false; }   /* coming to the Quick quote: both lists start folded (2026-10-17) */
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
     setBar('back', { title: quick ? 'Quick quote' : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
