@@ -52,11 +52,12 @@ case "$SSID" in *iPhone*|*iphone*) echo "on the hotspot ($SSID) - not starting";
 echo "$(date +%T) network: \${SSID:-wired}"
 bash hotspot-watchdog2.sh run-batch6 > "$L/watchdog.log" 2>&1 &
 rows() { [ -s "$1" ] && echo $(( $(wc -l < "$1") - 1 )) || echo 0; }
-cp shared-towns.json "$L/shared-towns.before.json"
+[ -s "$L/shared-towns.before.json" ] || cp shared-towns.json "$L/shared-towns.before.json"
 echo "== 1: door lists, neighbourhoods, lawns, lookup"
 `;
 for (const [slug, label, cs, lat, lon, r, , d] of P) {
-  sh += `# ${label}, ${d.toFixed(1)} mi\necho "$(date +%T) == ${slug}"\n`;
+  /* a resume skips a place that finished (2026-10-18: stopped on the hotspot after Acres Green's lawns) */
+  sh += `# ${label}, ${d.toFixed(1)} mi\nif [ -s ${slug}-areas.json ] && [ -s ${slug}-lookup-areas.json ]; then echo "$(date +%T) have  ${slug}"; else\necho "$(date +%T) == ${slug}"\n`;
   const outs = [];
   cs.forEach((c, i) => {
     const out = cs.length > 1 ? `${slug}-${c.toLowerCase().replace(/ /g, '-')}.csv` : `${slug}.csv`; outs.push(out);
@@ -64,7 +65,7 @@ for (const [slug, label, cs, lat, lon, r, , d] of P) {
   });
   if (outs.length > 1) sh += `node merge-walklists.mjs ${slug}.csv $(ls ${outs.join(' ')} 2>/dev/null) > "$L/merge-${slug}.log" 2>&1\n`;
   sh += `echo "$(date +%T) ${slug}: $(rows ${slug}.csv) doors"\n`;
-  sh += `if [ "$(rows ${slug}.csv)" -gt 0 ]; then step areas-${slug} node build-walklist-pdf.mjs ${slug}.csv --no-pdf; step lawn-${slug} bash -c "cd lawn-trial && node sample-lawn.mjs --town=${slug} --conc=16"; step lawnfill-${slug} bash -c "cd lawn-trial && node lawn-fill.mjs --town=${slug} --conc=6"; step lookup-${slug} node build-lookup.mjs ${slug}; else echo "$(date +%T) skip  ${slug} (no doors)"; fi\n`;
+  sh += `if [ "$(rows ${slug}.csv)" -gt 0 ]; then step areas-${slug} node build-walklist-pdf.mjs ${slug}.csv --no-pdf; step lawn-${slug} bash -c "cd lawn-trial && node sample-lawn.mjs --town=${slug} --conc=16"; step lawnfill-${slug} bash -c "cd lawn-trial && node lawn-fill.mjs --town=${slug} --conc=6"; step lookup-${slug} node build-lookup.mjs ${slug}; else echo "$(date +%T) skip  ${slug} (no doors)"; fi\nfi\n`;
 }
 const vals = P.map((x) => x[0]).join(',');
 sh += `echo "== 2: values, rebuild, upload"
