@@ -1065,6 +1065,7 @@ local ShieldRequest = remote("ShieldRequest")
 local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
 local SetPet = remote("SetPet") -- pick which of your critters follows you around
 local Expand = remote("Expand") -- buy two more pedestals
+local Drop = remote("Drop") -- put down what you are carrying (2026-10-18: to grab something better)
 
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
@@ -1291,6 +1292,8 @@ local function dropCarried(player, reason)
 		end
 		if reason == "caught" then
 			tell(player, "Caught! " .. c.crit.name .. " went back to its owner.", "bad")
+		elseif reason == "dropped" then
+			tell(player, "You put " .. c.crit.name .. " down. It went back to its owner.", "info")
 		end
 	else
 		local d = PlayerData.get(player)
@@ -1298,7 +1301,7 @@ local function dropCarried(player, reason)
 			d.stardust += c.crit.price
 			refreshStats(player)
 			if player.Parent then
-				tell(player, "You dropped " .. c.crit.name .. ". Stardust refunded.", "info")
+				tell(player, "You dropped " .. c.crit.name .. ". All " .. addCommas(c.crit.price) .. " Stardust back.", "info")
 			end
 		end
 	end
@@ -1795,6 +1798,17 @@ task.spawn(function()
 			task.wait(1 / Config.MeteorPerSecond)
 		end
 		task.wait(Config.MeteorEvery)
+	end
+end)
+
+Drop.OnServerEvent:Connect(function(player)
+	local st = state[player]
+	if st and st.carrying then
+		local at = st.carrying.model and st.carrying.model.PrimaryPart and st.carrying.model:GetPivot().Position
+		dropCarried(player, "dropped")
+		if at then
+			FX:FireAllClients("burst", at, Config.Colors.Blue)
+		end
 	end
 end)
 
@@ -3226,6 +3240,41 @@ player:GetAttributeChangedSignal("NextExpand"):Connect(refreshExpand)
 refreshExpand()
 expandBtn.Activated:Connect(function()
 	Expand:FireServer()
+end)
+
+-- ---------- drop what you are carrying (G), to grab something better (2026-10-18) ----------
+local Drop = remotes:WaitForChild("Drop")
+local dropBtn = Instance.new("TextButton")
+dropBtn.Name = "Drop"
+dropBtn.AnchorPoint = Vector2.new(0.5, 1)
+dropBtn.Position = UDim2.new(0.5, 0, 1, -66)
+dropBtn.Size = UDim2.fromOffset(240, 54)
+dropBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 60)
+dropBtn.Font = Enum.Font.FredokaOne
+dropBtn.TextScaled = true
+dropBtn.TextColor3 = Color3.new(1, 1, 1)
+dropBtn.Visible = false
+dropBtn.Parent = gui
+corner(dropBtn, 14)
+local dp = Instance.new("UIPadding")
+dp.PaddingLeft, dp.PaddingRight, dp.PaddingTop, dp.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+dp.Parent = dropBtn
+local function refreshDrop()
+	local c = player:GetAttribute("Carrying")
+	dropBtn.Visible = c ~= nil
+	if c then
+		dropBtn.Text = "Drop " .. c .. " (G)"
+	end
+end
+player:GetAttributeChangedSignal("Carrying"):Connect(refreshDrop)
+refreshDrop()
+dropBtn.Activated:Connect(function()
+	Drop:FireServer()
+end)
+game:GetService("UserInputService").InputBegan:Connect(function(input, typing)
+	if not typing and input.KeyCode == Enum.KeyCode.G and player:GetAttribute("Carrying") then
+		Drop:FireServer()
+	end
 end)
 
 local function myBase()

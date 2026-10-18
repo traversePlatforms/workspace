@@ -123,6 +123,41 @@ expandBtn.Activated:Connect(function()
 	Expand:FireServer()
 end)
 
+-- ---------- drop what you are carrying (G), to grab something better (2026-10-18) ----------
+local Drop = remotes:WaitForChild("Drop")
+local dropBtn = Instance.new("TextButton")
+dropBtn.Name = "Drop"
+dropBtn.AnchorPoint = Vector2.new(0.5, 1)
+dropBtn.Position = UDim2.new(0.5, 0, 1, -66)
+dropBtn.Size = UDim2.fromOffset(240, 54)
+dropBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 60)
+dropBtn.Font = Enum.Font.FredokaOne
+dropBtn.TextScaled = true
+dropBtn.TextColor3 = Color3.new(1, 1, 1)
+dropBtn.Visible = false
+dropBtn.Parent = gui
+corner(dropBtn, 14)
+local dp = Instance.new("UIPadding")
+dp.PaddingLeft, dp.PaddingRight, dp.PaddingTop, dp.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+dp.Parent = dropBtn
+local function refreshDrop()
+	local c = player:GetAttribute("Carrying")
+	dropBtn.Visible = c ~= nil
+	if c then
+		dropBtn.Text = "Drop " .. c .. " (G)"
+	end
+end
+player:GetAttributeChangedSignal("Carrying"):Connect(refreshDrop)
+refreshDrop()
+dropBtn.Activated:Connect(function()
+	Drop:FireServer()
+end)
+game:GetService("UserInputService").InputBegan:Connect(function(input, typing)
+	if not typing and input.KeyCode == Enum.KeyCode.G and player:GetAttribute("Carrying") then
+		Drop:FireServer()
+	end
+end)
+
 local function myBase()
 	local station = workspace:FindFirstChild("Station")
 	if not station then

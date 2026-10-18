@@ -27,6 +27,7 @@ local ShieldRequest = remote("ShieldRequest")
 local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
 local SetPet = remote("SetPet") -- pick which of your critters follows you around
 local Expand = remote("Expand") -- buy two more pedestals
+local Drop = remote("Drop") -- put down what you are carrying (2026-10-18: to grab something better)
 
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
@@ -253,6 +254,8 @@ local function dropCarried(player, reason)
 		end
 		if reason == "caught" then
 			tell(player, "Caught! " .. c.crit.name .. " went back to its owner.", "bad")
+		elseif reason == "dropped" then
+			tell(player, "You put " .. c.crit.name .. " down. It went back to its owner.", "info")
 		end
 	else
 		local d = PlayerData.get(player)
@@ -260,7 +263,7 @@ local function dropCarried(player, reason)
 			d.stardust += c.crit.price
 			refreshStats(player)
 			if player.Parent then
-				tell(player, "You dropped " .. c.crit.name .. ". Stardust refunded.", "info")
+				tell(player, "You dropped " .. c.crit.name .. ". All " .. addCommas(c.crit.price) .. " Stardust back.", "info")
 			end
 		end
 	end
@@ -757,6 +760,17 @@ task.spawn(function()
 			task.wait(1 / Config.MeteorPerSecond)
 		end
 		task.wait(Config.MeteorEvery)
+	end
+end)
+
+Drop.OnServerEvent:Connect(function(player)
+	local st = state[player]
+	if st and st.carrying then
+		local at = st.carrying.model and st.carrying.model.PrimaryPart and st.carrying.model:GetPivot().Position
+		dropCarried(player, "dropped")
+		if at then
+			FX:FireAllClients("burst", at, Config.Colors.Blue)
+		end
 	end
 end)
 
