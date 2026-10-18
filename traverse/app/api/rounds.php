@@ -3683,10 +3683,10 @@ const QUOTE_INBOX_FROM = 1792189222;
 function quoteInbox(array $l, bool $mine = false): bool {
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) || !empty($l['quote'])) return false;
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
-    return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;
+    return ($l['src'] ?? '') !== 'messenger';   /* everyone at the calling stage, not only since 16 Oct (2026-10-17, Matthew: Jon Eckhard was missing) */
 }
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
-const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost'];
+const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost', 'hold'];   /* + hold: on hold, parked on purpose (2026-10-17) */
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
 function readLines(string $f): array {
     $out = [];
@@ -5238,7 +5238,14 @@ if ($action === 'leads') {
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
     if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
-    out(['ok' => true, 'new' => $new, 'leads' => $list]);
+    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' ? ['cucheck' => cuCheckShown()] : []));   /* the ClickUp sync check (2026-10-17) */
+}
+if ($action === 'cucheckok') {   /* Leave it, on the Pipeline's ClickUp check */
+    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $k = (string) ($body['key'] ?? ''); if (!preg_match('/^[a-z]+:[A-Za-z0-9:_ .\/-]{1,160}$/D', $k)) fail('Nothing to leave.');
+    $keys = cuCheckOk(); if (!in_array($k, $keys, true)) $keys[] = $k;
+    writeJsonAtomic(DATA_DIR . '/clickup-check-ok.json', ['keys' => array_slice($keys, -500), 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'cucheck' => cuCheckShown()]);
 }
 
 /* a house that is not on our lists, added by the crew at the door (2026-10-16, Matthew: "is there a way for them to add a customer to
@@ -5388,6 +5395,14 @@ if ($action === 'metasetup' || $action === 'metapoll') {
  * Pipeline is checked for doubles (same phone, same email or same full name) into leads/dupes.json, with a push to the super admin
  * when a new double appears. */
 function cuFile(): string { return dirname(__DIR__, 2) . '/sixfold-private/clickup.json'; }
+const LEAD_SRC_NAME = ['website' => 'Sixfold website', 'meta' => 'Facebook', 'nextdoor' => 'Nextdoor', 'phone' => 'phone', 'linktree' => 'Linktree', 'referral' => 'referral', 'other' => 'other', 'messenger' => 'Messenger', 'a365web' => '365 website', 'inperson' => 'in person', 'door' => 'at the door'];
+function cuCheckOk(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/clickup-check-ok.json'), true); return is_array($j['keys'] ?? null) ? $j['keys'] : []; }
+/** the sync check for the Pipeline: what still does not match, less what was left as it is */
+function cuCheckShown(): ?array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/clickup-check.json'), true); if (!is_array($j)) return null;
+    $ok = array_flip(cuCheckOk());
+    return ['at' => (int) ($j['at'] ?? 0), 'items' => array_values(array_filter((array) ($j['items'] ?? []), fn($i) => !isset($ok[$i['key'] ?? '']))), 'quiet' => count(array_filter((array) ($j['items'] ?? []), fn($i) => isset($ok[$i['key'] ?? ''])))];
+}
 function cuName(string $n): string { return trim((string) preg_replace('/\s+/', ' ', (string) preg_replace('/[^a-z ]/', '', strtolower($n)))); }
 function leadDupes(array $leads): array {
     $by = [];
@@ -5442,7 +5457,7 @@ if ($action === 'clickuppoll') {
         appendLine(leadsDir() . '/leadst.log', $row);
     };
     $SCHED_NOTE = 'Scheduled in Jen\'s ClickUp, not booked in the app: book the day on the Jobs board, or send the form.';
-    $STATUS = ['contacted - vm / sms' => 'contacted', 'contacted - fb messenger' => 'contacted', 'on hold' => 'contacted', 'quote sent' => 'quoted', 'scheduled' => 'won', 'completed' => 'won', 'lost' => 'lost'];
+    $STATUS = ['contacted - vm / sms' => 'contacted', 'contacted - fb messenger' => 'contacted', 'on hold' => 'hold', 'quote sent' => 'quoted', 'scheduled' => 'won', 'completed' => 'won', 'lost' => 'lost'];
     $RANK = ['new' => 0, 'contacted' => 1, 'walk' => 2, 'quoted' => 3, 'won' => 4];
     $SRC = ['Referral' => 'referral', 'Website' => 'a365web', 'Facebook' => 'meta', 'Phone' => 'phone'];
     $digits = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
@@ -5454,7 +5469,7 @@ if ($action === 'clickuppoll') {
         $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1) $byName[$n] = $byName[$n] ?? $l['id'];
     };
     foreach ($leads as $l) $index($l);
-    $added = []; $linked = []; $moved = []; $now = time();
+    $added = []; $linked = []; $moved = []; $now = time(); $syncState = []; $taskOf = []; $taskDup = [];
     foreach ($tasks as $t) {
         $tid = (string) ($t['id'] ?? ''); if (!preg_match('/^[A-Za-z0-9]{3,20}$/D', $tid)) continue;
         $cf = []; foreach ((array) ($t['custom_fields'] ?? []) as $c) $cf[(string) ($c['name'] ?? '')] = $c['value'] ?? null;
@@ -5488,27 +5503,44 @@ if ($action === 'clickuppoll') {
             if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr, $m)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
             $row['cu'] = $tid; $row['status'] = $want ?: 'new'; $leads[$row['id']] = $row; $index($row);
             $cuTry(['status' => $row['status'], 'tries' => []], $row['id'], $cst, $t);
-            $added[] = $name ?: $phone; continue;
+            $taskOf[$tid] = $row['id']; $added[] = $name ?: $phone; continue;
         }
         /* someone already here: link once, fill what is missing, her status forward only when it changed in ClickUp */
         $l = $leads[$id]; $u = ['id' => $id, 'by' => 'ClickUp', 'at' => $now]; $notes = [];
         if (($l['cu'] ?? '') === '') { $u['cu'] = $tid; $notes[] = 'Linked to Jen\'s ClickUp task.'; $linked[] = (string) ($l['name'] ?? $name); $byCu[$tid] = $id; $leads[$id]['cu'] = $tid; }
-        if (($l['cu'] ?? '') !== '' && $l['cu'] !== $tid) continue;   /* a second task for someone already linked: the doubles check reports it */
+        if (($l['cu'] ?? '') !== '' && $l['cu'] !== $tid) { $taskDup[] = ['tid' => $tid, 'name' => $name, 'lead' => (string) ($l['name'] ?? '')]; continue; }   /* a second task for someone already linked: the sync check lists it */
+        $taskOf[$tid] = $id;
         $ct = []; if (trim((string) ($l['phone'] ?? '')) === '' && $phone !== '') $ct['phone'] = $phone; if (trim((string) ($l['email'] ?? '')) === '' && $email !== '') $ct['email'] = $email;
         if ($ct) { $u['contact'] = $ct; $notes[] = 'From ClickUp: ' . implode(', ', array_values($ct)) . '.'; }
         if ($owner !== '' && !in_array($owner, (array) ($l['qown'] ?? []), true) && ($l['by'] ?? '') !== $owner) $u['qown'] = $owner;
-        if ($cst !== '' && $cst !== (string) ($l['cus'] ?? '')) {
-            $u['cus'] = $cst; $st = (string) ($l['status'] ?? 'new');
-            /* 'scheduled' in ClickUp with nothing booked in the app is a quote, not a win (2026-10-17, Matthew: a Won lead with no form and no job,
-               out of sight in the Pipeline); 'completed' still is: the work was done */
-            if ($want === 'won' && $cst === 'scheduled' && empty($l['signed']) && empty($l['confirmed']) && !jobForLead($id)) { $want = 'quoted'; $notes[] = $SCHED_NOTE; }
-            if ($want === 'lost' ? !in_array($st, ['won', 'lost'], true) : ($want !== '' && $st !== 'lost' && ($RANK[$want] ?? 0) > ($RANK[$st] ?? 0))) { $u['status'] = $want; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $want . ')'; }
-        }
+        /* ClickUp decides the stage (2026-10-17, Matthew: "make sure everything is synced right in the meantime"): her status every pull, forward
+           or back, so a stage changed some other way here comes back in line. What the app can prove wins: a signed form, a booking confirmed,
+           a job on the board or a deposit paid make it Won whatever ClickUp says (the mismatch check lists those for her). A walk booked here
+           is further along than her "contacted". "Scheduled" with nothing booked here stays a quote, with a note. */
+        $st = (string) ($l['status'] ?? 'new'); $cusChanged = $cst !== '' && $cst !== (string) ($l['cus'] ?? '');
+        if ($cusChanged) $u['cus'] = $cst;
+        $proof = !empty($l['signed']) || !empty($l['confirmed']) || !empty($l['sqpaid']) || (bool) jobForLead($id);
+        $tgt = $want;
+        if ($tgt === 'won' && $cst === 'scheduled' && !$proof) { $tgt = 'quoted'; if ($cusChanged) $notes[] = $SCHED_NOTE; }
+        if ($proof && $tgt !== '') $tgt = 'won';
+        if ($tgt === 'contacted' && $st === 'walk') $tgt = 'walk';
+        if ($tgt !== '' && $tgt !== $st) { $u['status'] = $tgt; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $tgt . ')'; }
+        $syncState[$id] = ['cst' => $cst, 'proof' => $proof, 'tgt' => $tgt, 'name' => (string) ($l['name'] ?? $name)];
         if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
         if ((empty($l['house']) || !empty($l['house']['typed'])) && $addr !== ''   /* a typed address gives way to the house on our lists */ && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
         if (count($u) > 3) { if ($notes) $u['note'] = implode(' ', $notes); appendLine(leadsDir() . '/leadst.log', $u); }
         $cuTry(['status' => $u['status'] ?? ($l['status'] ?? 'new')] + $l, $id, $cst, $t);
     }
+    /* the sync check, every pull (2026-10-17): whatever still does not match between ClickUp and the app */
+    $cuItems = []; $leadsNow = leadsAll();
+    foreach ($tasks as $t) { $tid = (string) ($t['id'] ?? ''); if ($tid !== '' && !isset($taskOf[$tid]) && !in_array($tid, array_column($taskDup, 'tid'), true)) $cuItems[] = ['key' => 'cu:' . $tid, 'text' => 'In ClickUp, not in the app: ' . (a365Clean((string) ($t['name'] ?? ''), 80) ?: 'a task with no name') . ' (' . ($t['status']['status'] ?? '') . '). It has no name, phone or email the app can use.']; }
+    foreach ($taskDup as $d) $cuItems[] = ['key' => 'dup:' . $d['tid'], 'text' => 'A second ClickUp task for ' . ($d['lead'] ?: $d['name']) . ': only the first is followed. Jen can delete the extra one.'];
+    foreach ($syncState as $lid => $x) if ($x['proof'] && $x['cst'] !== '' && !in_array($x['cst'], ['scheduled', 'completed'], true)) $cuItems[] = ['key' => 'proof:' . $lid . ':' . $x['cst'], 'text' => $x['name'] . ': ClickUp says ' . $x['cst'] . ', but the app has them booked or paid, so they stay Won. Jen can move the ClickUp task on.'];
+    foreach ($leadsNow as $l) if (empty($l['cu']) && !in_array((string) ($l['status'] ?? 'new'), ['lost', 'won'], true) && ($l['src'] ?? '') !== 'messenger') $cuItems[] = ['key' => 'app:' . $l['id'], 'text' => 'In the app, not in Jen\'s ClickUp: ' . (trim((string) ($l['name'] ?? '')) ?: (string) ($l['phone'] ?? 'a lead')) . ' (' . ((string) ($l['status'] ?? 'new')) . ', ' . (LEAD_SRC_NAME[$l['src'] ?? ''] ?? (string) ($l['src'] ?? '')) . ').'];
+    $cf2 = DATA_DIR . '/clickup-check.json'; $old2 = json_decode((string) @file_get_contents($cf2), true); $oldK = array_column((array) ($old2['items'] ?? []), 'key');
+    writeJsonAtomic($cf2, ['at' => $now, 'items' => $cuItems]);
+    $okK = array_flip(cuCheckOk()); $newI = array_values(array_filter($cuItems, fn($i) => !in_array($i['key'], $oldK, true) && !isset($okK[$i['key']])));
+    if ($newI && $old2) superAlert(count($newI) === 1 ? 'ClickUp and the app: one to look at' : 'ClickUp and the app: ' . count($newI) . ' to look at', $newI[0]['text']);
     /* the doubles check, every pull */
     $dupes = leadDupes(leadsAll()); $df = leadsDir() . '/dupes.json';
     $old = json_decode((string) @file_get_contents($df), true); $oldKeys = array_map(fn($g) => implode(',', $g['ids']), (array) ($old['groups'] ?? []));
