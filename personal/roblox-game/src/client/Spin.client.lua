@@ -32,6 +32,25 @@ for _, obj in ipairs(decor:GetChildren()) do -- asteroids are models in the fold
 	end
 end
 
+-- the belt stripes in the launch tunnel travel with the critters and loop back to the start
+local belt = {}
+for _, obj in ipairs(decor:GetDescendants()) do
+	if obj:IsA("BasePart") and obj:GetAttribute("Belt") then
+		table.insert(belt, obj)
+	end
+end
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+RunService.RenderStepped:Connect(function(dt)
+	for _, s in ipairs(belt) do
+		local p = s.Position
+		local x = p.X + Config.ConveyorSpeed * dt
+		if x > 64 then
+			x -= 129
+		end
+		s.CFrame = CFrame.new(x, p.Y, p.Z)
+	end
+end)
+
 -- turn around the world's up axis through the object's own centre, keeping its tilt
 local function turn(cf, a)
 	return CFrame.new(cf.Position) * CFrame.Angles(0, a, 0) * (cf - cf.Position)

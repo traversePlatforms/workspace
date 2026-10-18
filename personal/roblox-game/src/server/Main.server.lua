@@ -25,6 +25,7 @@ end
 local Notify = remote("Notify")
 local ShieldRequest = remote("ShieldRequest")
 local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
+local SetPet = remote("SetPet") -- pick which of your critters follows you around
 
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
@@ -87,6 +88,33 @@ local function refreshStats(player)
 	end
 	player:SetAttribute("Income", incomeOf(st))
 	player:SetAttribute("Stardust", d.stardust)
+	-- the Collection Book (every critter you have ever had) and what is in your base now, for the screens
+	local found, owned, ownedSet = {}, {}, {}
+	for key in pairs(d.found) do
+		table.insert(found, key)
+	end
+	if st.base then
+		for _, rec in pairs(st.base.slots) do
+			if not ownedSet[rec.crit.key] then
+				ownedSet[rec.crit.key] = true
+				table.insert(owned, rec.crit.key)
+			end
+		end
+	end
+	player:SetAttribute("Found", table.concat(found, ","))
+	player:SetAttribute("Owned", table.concat(owned, ","))
+	local pet = player:GetAttribute("Pet")
+	if pet and not ownedSet[pet] then -- your pet was stolen: it stops following you
+		player:SetAttribute("Pet", nil)
+	end
+end
+
+local function markFound(player, crit)
+	local d = PlayerData.get(player)
+	if d and not d.found[crit.key] then
+		d.found[crit.key] = true
+		tell(player, "NEW! " .. crit.name .. " is in your Collection Book!", "rare")
+	end
 end
 
 -- ---------- pedestals ----------
@@ -220,6 +248,7 @@ local function bringHome(player)
 	local model = placeOnPedestal(st.base, slot, c.crit)
 	d.slots[tostring(slot)] = c.crit.key
 	d.caught += 1
+	markFound(player, c.crit)
 	refreshStats(player)
 	FX:FireAllClients("confetti", model:GetPivot().Position)
 	tell(player, c.crit.name .. " joined your base! +" .. addCommas(c.crit.income) .. " Stardust every second", "good")
@@ -426,9 +455,14 @@ local function onPlayerAdded(player)
 		for k, key in pairs(d.slots) do
 			local def, mut = Config.fromKey(key)
 			if def then
-				placeOnPedestal(st.base, tonumber(k), makeCrit(def, mut))
+				local crit = makeCrit(def, mut)
+				placeOnPedestal(st.base, tonumber(k), crit)
+				d.found[crit.key] = true
 			end
 		end
+	end
+	if d.pet then
+		player:SetAttribute("Pet", d.pet) -- refreshStats clears it if that critter is no longer in the base
 	end
 	refreshStats(player)
 	player.CharacterAdded:Connect(function(ch)
@@ -679,6 +713,294 @@ task.spawn(function()
 		task.wait(Config.MeteorEvery)
 	end
 end)
+
+-- ---------- the pet that follows you (each screen draws it; Pets.client.lua) ----------
+SetPet.OnServerEvent:Connect(function(player, key)
+	local st = state[player]
+	local d = PlayerData.get(player)
+	if not (st and d) then
+		return
+	end
+	if key == nil or key == "" then
+		player:SetAttribute("Pet", nil)
+		d.pet = nil
+		return
+	end
+	if typeof(key) ~= "string" or not st.base then
+		return
+	end
+	for _, rec in pairs(st.base.slots) do
+		if rec.crit.key == key then
+			player:SetAttribute("Pet", key)
+			d.pet = key
+			tell(player, rec.crit.name .. " is following you now!", "good")
+			return
+		end
+	end
+	tell(player, "That critter needs to be in your base to be your pet.", "info")
+end)
+
+-- ---------- Black Hole Night: lights out, the Void Creeper roams, hide in a locker ----------
+local Lighting = game:GetService("Lighting")
+local hidden = {} -- [player] = locker
+local lockerUser = {} -- [locker] = player
+
+local function unhide(player)
+	local lk = hidden[player]
+	if not lk then
+		return
+	end
+	hidden[player] = nil
+	lockerUser[lk] = nil
+	lk.strip.Color = Config.Colors.Blue
+	lk.prompt.ActionText = "Hide"
+	local ch = player.Character
+	local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		hrp.Anchored = false
+		ch:PivotTo(lk.front)
+	end
+end
+
+for _, lk in ipairs(map.lockers or {}) do
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Hide"
+	prompt.ObjectText = "Locker"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 7
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = lk.body
+	lk.prompt = prompt
+	prompt.Triggered:Connect(function(player)
+		if hidden[player] == lk then
+			unhide(player)
+			return
+		end
+		if lockerUser[lk] then
+			tell(player, "Someone's already hiding in there!", "info")
+			return
+		end
+		if hidden[player] then
+			unhide(player)
+		end
+		local ch = player.Character
+		local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+		if not hrp then
+			return
+		end
+		hidden[player] = lk
+		lockerUser[lk] = player
+		ch:PivotTo(lk.inside)
+		hrp.Anchored = true
+		lk.strip.Color = Config.Colors.Orange
+		prompt.ActionText = "Come out"
+		tell(player, "You're hiding! Press E again to come out.", "info")
+	end)
+end
+
+task.spawn(function() -- a hider who reset or respawned frees their locker
+	while true do
+		task.wait(1)
+		for player, lk in pairs(hidden) do
+			local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+			if not (hrp and hrp.Anchored) then
+				hidden[player] = nil
+				lockerUser[lk] = nil
+				lk.strip.Color = Config.Colors.Blue
+				lk.prompt.ActionText = "Hide"
+			end
+		end
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	local lk = hidden[player]
+	if lk then
+		lockerUser[lk] = nil
+		hidden[player] = nil
+		lk.strip.Color = Config.Colors.Blue
+		lk.prompt.ActionText = "Hide"
+	end
+end)
+
+local function buildCreeper(at)
+	local m = Instance.new("Model")
+	m.Name = "VoidCreeper"
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Shape = Enum.PartType.Ball
+	body.Size = Vector3.new(7, 7, 7)
+	body.Color = Color3.fromRGB(40, 20, 60)
+	body.Material = Enum.Material.SmoothPlastic
+	body.Anchored = true
+	body.CanCollide = false
+	body.CanQuery = false
+	body.CFrame = at
+	body.Parent = m
+	m.PrimaryPart = body
+	local function bit(name, size, color, offset, neon)
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Shape = Enum.PartType.Ball
+		p.Size = size
+		p.Color = color
+		p.Material = neon and Enum.Material.Neon or Enum.Material.SmoothPlastic
+		p.Anchored = false
+		p.CanCollide = false
+		p.CanQuery = false
+		p.Massless = true
+		p.CFrame = body.CFrame * offset
+		local w = Instance.new("WeldConstraint")
+		w.Part0 = body
+		w.Part1 = p
+		w.Parent = p
+		p.Parent = m
+	end
+	for _, side in ipairs({ -1, 1 }) do -- big goofy glowing eyes
+		bit("Eye", Vector3.new(1.8, 2.2, 1), Color3.fromRGB(240, 255, 255), CFrame.new(side * 1.3, 0.9, -3.0), true)
+		bit("Pupil", Vector3.new(0.7, 0.9, 0.4), Color3.fromRGB(150, 60, 255), CFrame.new(side * 1.3, 0.8, -3.45), true)
+	end
+	bit("Mouth", Vector3.new(3, 0.8, 0.6), Color3.fromRGB(150, 60, 255), CFrame.new(0, -1.4, -3.1), true)
+	for i = 1, 3 do -- a wobbly tail of shrinking blobs
+		bit("Tail" .. i, Vector3.new(4.5, 4.5, 4.5) * (1 - i * 0.22), Color3.fromRGB(55, 28, 80), CFrame.new(0, -0.8 * i, 3 + i * 2.2))
+	end
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(170, 80, 255)
+	light.Range = 22
+	light.Brightness = 3
+	light.Parent = body
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Color = ColorSequence.new(Color3.fromRGB(90, 40, 140), Color3.fromRGB(20, 10, 30))
+	smoke.Size = NumberSequence.new(2.5, 5)
+	smoke.Transparency = NumberSequence.new(0.4, 1)
+	smoke.Lifetime = NumberRange.new(1, 1.8)
+	smoke.Rate = 20
+	smoke.Speed = NumberRange.new(1, 3)
+	smoke.Parent = body
+	local tag = Instance.new("BillboardGui")
+	tag.Size = UDim2.fromOffset(220, 40)
+	tag.StudsOffsetWorldSpace = Vector3.new(0, 6, 0)
+	tag.LightInfluence = 0
+	tag.Parent = body
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = Color3.fromRGB(200, 140, 255)
+	l.TextStrokeTransparency = 0.2
+	l.Text = "Void Creeper"
+	l.Parent = tag
+	m.Parent = stationFolder
+	return m
+end
+
+local nightLighting = { Ambient = Color3.fromRGB(28, 16, 48), OutdoorAmbient = Color3.fromRGB(34, 20, 60), Brightness = 0.25 }
+local function setNight(on)
+	local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+	if on then
+		Lighting:SetAttribute("DayAmbient", Lighting.Ambient)
+		Lighting:SetAttribute("DayOutdoor", Lighting.OutdoorAmbient)
+		Lighting:SetAttribute("DayBrightness", Lighting.Brightness)
+		TweenService:Create(Lighting, TweenInfo.new(2.5), nightLighting):Play()
+		if cc then
+			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.fromRGB(190, 160, 255) }):Play()
+		end
+	else
+		TweenService:Create(Lighting, TweenInfo.new(2.5), {
+			Ambient = Lighting:GetAttribute("DayAmbient") or Color3.fromRGB(70, 80, 115),
+			OutdoorAmbient = Lighting:GetAttribute("DayOutdoor") or Color3.fromRGB(90, 100, 140),
+			Brightness = Lighting:GetAttribute("DayBrightness") or 1.2,
+		}):Play()
+		if cc then
+			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.new(1, 1, 1) }):Play()
+		end
+	end
+end
+
+local function blackHoleNight()
+	workspace:SetAttribute("BlackHoleUntil", now() + Config.NightSeconds)
+	tellAll("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
+	FX:FireAllClients("night", Config.NightSeconds)
+	setNight(true)
+	local creeper = buildCreeper(CFrame.new(-60, 40, 0))
+	local pos = Vector3.new(-60, 40, 0)
+	local ignore = {} -- [player] = time it can chase them again
+	local pauseUntil = 0
+	local wander = Vector3.new(0, 5, 0)
+	local t0 = os.clock()
+	local conn
+	conn = RunService.Heartbeat:Connect(function(dt)
+		if os.clock() - t0 > Config.NightSeconds then
+			return
+		end
+		local t = os.clock()
+		-- chase the nearest player who isn't hiding
+		local target, best = nil, math.huge
+		for player in pairs(state) do
+			local hrp = rootOf(player)
+			if hrp and not hidden[player] and (ignore[player] or 0) < t then
+				local dist = (hrp.Position - pos).Magnitude
+				if dist < best then
+					target, best = hrp, dist
+				end
+			end
+		end
+		local goal
+		if target and best < 160 then
+			goal = Vector3.new(target.Position.X, 4.5, target.Position.Z)
+		else
+			if (wander - pos).Magnitude < 4 then
+				wander = Vector3.new(rng:NextNumber(-150, 150), 4.5, rng:NextNumber(-110, 110))
+			end
+			goal = wander
+		end
+		if t > pauseUntil then
+			local step = goal - pos
+			local speed = (pos.Y > 6) and 30 or Config.CreeperSpeed -- swoops down fast at the start
+			if step.Magnitude > 0.1 then
+				pos += step.Unit * math.min(step.Magnitude, speed * dt)
+			end
+		end
+		local look = target and Vector3.new(target.Position.X, pos.Y, target.Position.Z) or (pos + Vector3.new(0, 0, -1))
+		if (look - pos).Magnitude < 0.1 then
+			look = pos + Vector3.new(0, 0, -1)
+		end
+		creeper:PivotTo(CFrame.lookAt(pos + Vector3.new(0, math.sin(t * 4) * 0.6, 0), look))
+		-- boop! anyone it reaches drops what they carry and is sent back to their base
+		for player, st in pairs(state) do
+			local hrp = rootOf(player)
+			if hrp and not hidden[player] and (ignore[player] or 0) < t and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
+				ignore[player] = t + 6
+				pauseUntil = t + 1.5
+				if st.carrying then
+					dropCarried(player, "creeper")
+				end
+				FX:FireClient(player, "booped")
+				tell(player, "The Void Creeper booped you back to your base!", "bad")
+				if st.base and player.Character then
+					player.Character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
+				end
+			end
+		end
+	end)
+	task.wait(Config.NightSeconds)
+	conn:Disconnect()
+	creeper:Destroy()
+	setNight(false)
+	workspace:SetAttribute("BlackHoleUntil", 0)
+	tellAll("The lights are back on. The Void Creeper has gone... for now.", "good")
+end
+
+if Config.BlackHoleNight then
+	task.spawn(function()
+		task.wait(Config.NightFirst)
+		while true do
+			blackHoleNight()
+			task.wait(Config.NightEvery)
+		end
+	end)
+end
 
 -- ---------- every second: income; four times a second: home and catch checks ----------
 task.spawn(function()

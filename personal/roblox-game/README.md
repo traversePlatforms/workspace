@@ -23,6 +23,11 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - **Meteor Shower:** 3 minutes in, then every 10 minutes, blue stars rain down for 30 seconds, worth double.
 - Feel: critters bob on their pedestals, sparkles when you grab one, confetti when it lands home, "+income" over your base, a red THIEF! alarm when you're robbed, and a glowing beam guiding you home while you carry.
 
+- **Collection Book** (button bottom-left): every critter, found ones in colour, the rest as ???, plus which Golden/Rainbow versions you have had.
+- **Pets:** in the Book, tap **Make my pet** on any critter in your base and it floats along beside you (everyone sees it).
+- **Black Hole Night** (6 minutes in, then every 8): the lights go purple and the **Void Creeper** roams. It chases the nearest player (a bit slower than you), and a boop sends you home and drops what you carry. Hide in a **locker** (E) and it ignores you. Switch it off with `Config.BlackHoleNight = false`.
+- 19 critters across Common, Rare, Epic, Legendary, **Mythic** and Cosmic, plus the surprise slot.
+
 ## Changing things
 
 Everything to tune is in `src/shared/Config.lua`: critter names, colours, prices, income, how often they spawn, shield timings.

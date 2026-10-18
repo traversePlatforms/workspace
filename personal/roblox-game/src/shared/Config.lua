@@ -20,7 +20,8 @@ Config.Rarities = {
 	Rare = { order = 2, color = Color3.fromRGB(110, 190, 255), weight = 26 },
 	Epic = { order = 3, color = Color3.fromRGB(190, 120, 255), weight = 10 },
 	Legendary = { order = 4, color = Color3.fromRGB(255, 200, 70), weight = 3.5 },
-	Cosmic = { order = 5, color = Color3.fromRGB(255, 120, 200), weight = 0.5 },
+	Mythic = { order = 5, color = Color3.fromRGB(255, 105, 85), weight = 1.2 }, -- added 2026-10-18
+	Cosmic = { order = 6, color = Color3.fromRGB(255, 120, 200), weight = 0.4 },
 }
 
 -- shape: blob | bunny | cat | pup | alien | bear | dragon
@@ -44,6 +45,25 @@ Config.Critters = {
 		body = Color3.fromRGB(90, 160, 255), accent = Color3.fromRGB(255, 186, 125) },
 	{ id = "sunbeamsnoot", name = "Sunbeam Snoot", rarity = "Legendary", price = 6500, income = 110, shape = "pup",
 		body = Color3.fromRGB(255, 210, 90), accent = Color3.fromRGB(255, 140, 60) },
+	-- wave 2 (2026-10-18): nine more, and the Mythic tier
+	{ id = "puffball", name = "Puffball", rarity = "Common", price = 25, income = 1, shape = "blob",
+		body = Color3.fromRGB(255, 175, 210), accent = Color3.fromRGB(255, 120, 170) },
+	{ id = "craterbunny", name = "Crater Bunny", rarity = "Common", price = 35, income = 2, shape = "bunny",
+		body = Color3.fromRGB(172, 172, 184), accent = Color3.fromRGB(120, 120, 136) },
+	{ id = "zapblob", name = "Zap Blob", rarity = "Rare", price = 180, income = 6, shape = "alien",
+		body = Color3.fromRGB(255, 235, 110), accent = Color3.fromRGB(255, 170, 60) },
+	{ id = "rocketbunny", name = "Rocket Bunny", rarity = "Rare", price = 260, income = 8, shape = "bunny",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(150, 210, 255) },
+	{ id = "galaxypup", name = "Galaxy Pup", rarity = "Epic", price = 1100, income = 24, shape = "pup",
+		body = Color3.fromRGB(110, 85, 200), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "saturnbear", name = "Saturn Bear", rarity = "Epic", price = 1600, income = 32, shape = "bear",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(150, 210, 255) },
+	{ id = "supernovacat", name = "Supernova Cat", rarity = "Legendary", price = 7500, income = 130, shape = "cat",
+		body = Color3.fromRGB(255, 110, 80), accent = Color3.fromRGB(255, 220, 120) },
+	{ id = "moonkingbear", name = "Moon King Bear", rarity = "Mythic", price = 12000, income = 200, shape = "bear",
+		body = Color3.fromRGB(235, 235, 245), accent = Color3.fromRGB(255, 205, 70), glow = Color3.fromRGB(255, 220, 120) },
+	{ id = "blackholedragon", name = "Black Hole Dragon", rarity = "Mythic", price = 15000, income = 240, shape = "dragon",
+		body = Color3.fromRGB(55, 35, 85), accent = Color3.fromRGB(190, 120, 255), glow = Color3.fromRGB(190, 120, 255) },
 	-- Nolan's cat: a grey tabby with darker stripes
 	{ id = "hammy", name = "Hammy the Star Cat", rarity = "Cosmic", price = 25000, income = 400, shape = "cat",
 		body = Color3.fromRGB(150, 148, 145), accent = Color3.fromRGB(85, 82, 80), stripes = true, glow = Color3.fromRGB(255, 186, 125) },
@@ -86,6 +106,14 @@ Config.MeteorEvery = 600 -- then every 10 minutes
 Config.MeteorSeconds = 30
 Config.MeteorPerSecond = 3
 Config.MeteorStarBonus = 2 -- shower stars are worth double
+
+-- Black Hole Night: the lights go out and the Void Creeper roams; hide in a locker. Set to false to switch it off.
+Config.BlackHoleNight = true
+Config.NightFirst = 360 -- seconds until the first one
+Config.NightEvery = 480 -- then every 8 minutes
+Config.NightSeconds = 60
+Config.CreeperSpeed = 13 -- a little slower than a player (16), so you can always get away
+Config.CreeperReach = 5
 
 function Config.critterById(id)
 	for _, c in ipairs(Config.Critters) do

@@ -144,6 +144,17 @@ FX.OnClientEvent:Connect(function(kind, a, b)
 		alarm(a)
 	elseif kind == "shower" then
 		shout("METEOR SHOWER!", C.Blue, 3)
+	elseif kind == "night" then
+		shout("BLACK HOLE NIGHT!", Color3.fromRGB(200, 140, 255), 3)
+	elseif kind == "booped" then
+		shout("BOOP!", Color3.fromRGB(200, 140, 255), 1.5)
+		flash.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+		flash.BackgroundTransparency = 0.4
+		local tw = TweenService:Create(flash, TweenInfo.new(0.8), { BackgroundTransparency = 1 })
+		tw:Play()
+		tw.Completed:Connect(function()
+			flash.BackgroundColor3 = Color3.fromRGB(255, 40, 60)
+		end)
 	end
 end)
 

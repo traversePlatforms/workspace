@@ -12,7 +12,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0 }
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil } -- found: the Collection Book; pet: the critter that follows you
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -26,6 +26,16 @@ local function clean(d)
 	end
 	if typeof(d.caught) == "number" then
 		out.caught = math.floor(d.caught)
+	end
+	if typeof(d.found) == "table" then
+		for key, v in pairs(d.found) do
+			if v == true and Config.fromKey(key) then
+				out.found[key] = true
+			end
+		end
+	end
+	if typeof(d.pet) == "string" and Config.fromKey(d.pet) then
+		out.pet = d.pet
 	end
 	if typeof(d.slots) == "table" then
 		for k, id in pairs(d.slots) do

@@ -151,7 +151,7 @@ function CritterModels.build(def, cframe, mut)
 		local sparkle = Instance.new("ParticleEmitter")
 		sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 		sparkle.Color = ColorSequence.new(def.glow or rarity.color)
-		sparkle.Rate = rarity.order == 5 and 18 or 8
+		sparkle.Rate = def.rarity == "Cosmic" and 18 or (def.rarity == "Mythic" and 12 or 8)
 		sparkle.Lifetime = NumberRange.new(0.8, 1.4)
 		sparkle.Speed = NumberRange.new(1, 3)
 		sparkle.Size = NumberSequence.new(0.35)

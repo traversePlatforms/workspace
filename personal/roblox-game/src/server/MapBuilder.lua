@@ -110,13 +110,37 @@ local function buildBase(folder, index, position, facingRotation)
 		part(root, { Name = "EdgeSide", Size = Vector3.new(0.6, 0.3, D), Color = C.Orange, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(side * W / 2, 1.1, 0) })
 		part(root, { Name = "EdgeFront", Size = Vector3.new((W - 18) / 2, 0.3, 0.6), Color = C.Orange, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(side * (W / 4 + 4.5), 1.1, -D / 2) })
 	end
-	-- low glass walls at the back and sides, open at the front
-	part(root, { Name = "WallBack", Size = Vector3.new(W, 7, 1), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.55, CFrame = cf * CFrame.new(0, 4.5, D / 2 + 0.5) })
-	for _, side in ipairs({ -1, 1 }) do
-		part(root, { Name = "WallSide", Size = Vector3.new(1, 7, D), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.55, CFrame = cf * CFrame.new(side * (W / 2 + 0.5), 4.5, 0) })
+	-- solid walls up to the roof (2026-10-18, Matthew: "the bases need some walls"): metal below, a window band above,
+	-- and a front wall either side of an 18-stud doorway with big windows so friends can see your critters
+	local WH, DOOR = 14, 18
+	local metal, metalDark = Color3.fromRGB(128, 136, 156), Color3.fromRGB(72, 78, 98)
+	local function wall(name, size, at, windowed)
+		part(root, { Name = name, Size = Vector3.new(size.X, 6, size.Z), Color = metal, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 3 + 1, 0) })
+		part(root, { Name = name .. "Trim", Size = Vector3.new(size.X + 0.05, 0.5, size.Z + 0.1), Color = C.Orange, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 7.2, 0) })
+		if windowed then
+			part(root, { Name = name .. "Window", Size = Vector3.new(size.X, WH - 8, size.Z * 0.5), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.65, CastShadow = false, CFrame = at * CFrame.new(0, 7.5 + (WH - 8) / 2, 0) })
+		else
+			part(root, { Name = name .. "Upper", Size = Vector3.new(size.X, WH - 8, size.Z), Color = metalDark, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 7.5 + (WH - 8) / 2, 0) })
+		end
+		part(root, { Name = name .. "Cap", Size = Vector3.new(size.X + 0.2, 0.8, size.Z + 0.3), Color = metalDark, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, WH + 1.4, 0) })
 	end
-	-- the airlock shield across the whole front: visible only while it is on
-	local shield = part(root, { Name = "Shield", Size = Vector3.new(W, 12, 1), Color = C.Blue, Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 6.5, -D / 2) })
+	wall("WallBack", Vector3.new(W + 2, 0, 1.2), cf * CFrame.new(0, 0, D / 2 + 0.6), true)
+	for _, side in ipairs({ -1, 1 }) do
+		wall("WallSide", Vector3.new(1.2, 0, D + 2), cf * CFrame.new(side * (W / 2 + 0.6), 0, 0), side == 1)
+		local segW = (W - DOOR) / 2 + 1
+		wall("WallFront", Vector3.new(segW, 0, 1.2), cf * CFrame.new(side * (DOOR / 2 + segW / 2), 0, -D / 2 - 0.6), true)
+	end
+	-- light strips along the inside of the back wall
+	part(root, { Name = "WallGlow", Size = Vector3.new(W - 4, 0.4, 0.3), Color = C.Blue, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(0, 2.2, D / 2 - 0.1) })
+	-- tiled floor with an orange border
+	for tx = -2, 1 do
+		for tz = -2, 1 do
+			part(root, { Name = "FloorTile", Size = Vector3.new(W / 4 - 0.4, 0.1, D / 4 - 0.4), Color = ((tx + tz) % 2 == 0) and Color3.fromRGB(150, 158, 178) or Color3.fromRGB(138, 146, 166),
+				Material = Enum.Material.Metal, CFrame = cf * CFrame.new((tx + 0.5) * W / 4, 1.05, (tz + 0.5) * D / 4) })
+		end
+	end
+	-- the airlock shield fills the doorway: visible only while it is on
+	local shield = part(root, { Name = "Shield", Size = Vector3.new(DOOR, WH - 1, 1), Color = C.Blue, Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 1 + (WH - 1) / 2, -D / 2 - 0.6) })
 	-- the owner's name on the back wall and floating over the entrance
 	local signPart = part(root, { Name = "Sign", Size = Vector3.new(30, 5, 0.6), Color = C.Dark, CFrame = cf * CFrame.new(0, 10.5, D / 2 + 0.5) })
 	local signLabel = surfaceText(signPart, Enum.NormalId.Front, "Free base", C.Orange, 30)
@@ -187,10 +211,7 @@ function MapBuilder.build()
 	local station = Instance.new("Folder")
 	station.Name = "Station"
 	station.Parent = workspace
-	part(station, { Name = "Deck", Size = Vector3.new(380, 2, 270), Color = C.Deck, Material = Enum.Material.DiamondPlate, CFrame = CFrame.new(0, -1, 0) })
-	for _, z in ipairs({ -45, 45 }) do
-		part(station, { Name = "DeckLine", Size = Vector3.new(380, 0.2, 1), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(0, 0.1, z) })
-	end
+	part(station, { Name = "Deck", Size = Vector3.new(380, 2, 270), Color = C.Deck, Material = Enum.Material.Metal, CFrame = CFrame.new(0, -1, 0) }) -- tiles and walkways go on top (Decor.lua)
 
 	-- the critter launch pad: a moving walkway down the middle
 	local padStart, padEnd, padY = -64, 64, 1
@@ -198,8 +219,7 @@ function MapBuilder.build()
 	for _, z in ipairs({ -6.4, 6.4 }) do
 		part(station, { Name = "PadLight", Size = Vector3.new(padEnd - padStart + 6, 0.4, 0.6), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(0, 1.2, z) })
 	end
-	part(station, { Name = "LaunchTube", Shape = Enum.PartType.Cylinder, Size = Vector3.new(8, 14, 14), Color = C.Orange, Material = Enum.Material.Neon, Transparency = 0.35, CanCollide = false, CFrame = CFrame.new(padStart - 2, 5, 0) })
-	billboard(station, Vector3.new(0, 22, 0), "CRITTER LAUNCH PAD", C.Blue, 520, 70)
+	billboard(station, Vector3.new(0, 33, 0), "CRITTER LAUNCH TUNNEL", C.Blue, 520, 70) -- the tunnel itself is built in Decor.lua
 	billboard(station, Vector3.new(0, 48, 0), Config.GameTitle, C.Orange, 900, 130)
 
 	local bases = {}
@@ -233,9 +253,9 @@ function MapBuilder.build()
 	critters.Name = "Critters"
 	critters.Parent = station
 
-	require(script.Parent.Decor).build(station, bases) -- the hangar shell, dome, props and asteroids (2026-10-18)
+	local lockers = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
 
-	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters }
+	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers }
 end
 
 return MapBuilder

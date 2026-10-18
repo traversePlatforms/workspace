@@ -32,7 +32,8 @@ Config.Rarities = {
 	Rare = { order = 2, color = Color3.fromRGB(110, 190, 255), weight = 26 },
 	Epic = { order = 3, color = Color3.fromRGB(190, 120, 255), weight = 10 },
 	Legendary = { order = 4, color = Color3.fromRGB(255, 200, 70), weight = 3.5 },
-	Cosmic = { order = 5, color = Color3.fromRGB(255, 120, 200), weight = 0.5 },
+	Mythic = { order = 5, color = Color3.fromRGB(255, 105, 85), weight = 1.2 }, -- added 2026-10-18
+	Cosmic = { order = 6, color = Color3.fromRGB(255, 120, 200), weight = 0.4 },
 }
 
 -- shape: blob | bunny | cat | pup | alien | bear | dragon
@@ -56,6 +57,25 @@ Config.Critters = {
 		body = Color3.fromRGB(90, 160, 255), accent = Color3.fromRGB(255, 186, 125) },
 	{ id = "sunbeamsnoot", name = "Sunbeam Snoot", rarity = "Legendary", price = 6500, income = 110, shape = "pup",
 		body = Color3.fromRGB(255, 210, 90), accent = Color3.fromRGB(255, 140, 60) },
+	-- wave 2 (2026-10-18): nine more, and the Mythic tier
+	{ id = "puffball", name = "Puffball", rarity = "Common", price = 25, income = 1, shape = "blob",
+		body = Color3.fromRGB(255, 175, 210), accent = Color3.fromRGB(255, 120, 170) },
+	{ id = "craterbunny", name = "Crater Bunny", rarity = "Common", price = 35, income = 2, shape = "bunny",
+		body = Color3.fromRGB(172, 172, 184), accent = Color3.fromRGB(120, 120, 136) },
+	{ id = "zapblob", name = "Zap Blob", rarity = "Rare", price = 180, income = 6, shape = "alien",
+		body = Color3.fromRGB(255, 235, 110), accent = Color3.fromRGB(255, 170, 60) },
+	{ id = "rocketbunny", name = "Rocket Bunny", rarity = "Rare", price = 260, income = 8, shape = "bunny",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(150, 210, 255) },
+	{ id = "galaxypup", name = "Galaxy Pup", rarity = "Epic", price = 1100, income = 24, shape = "pup",
+		body = Color3.fromRGB(110, 85, 200), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "saturnbear", name = "Saturn Bear", rarity = "Epic", price = 1600, income = 32, shape = "bear",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(150, 210, 255) },
+	{ id = "supernovacat", name = "Supernova Cat", rarity = "Legendary", price = 7500, income = 130, shape = "cat",
+		body = Color3.fromRGB(255, 110, 80), accent = Color3.fromRGB(255, 220, 120) },
+	{ id = "moonkingbear", name = "Moon King Bear", rarity = "Mythic", price = 12000, income = 200, shape = "bear",
+		body = Color3.fromRGB(235, 235, 245), accent = Color3.fromRGB(255, 205, 70), glow = Color3.fromRGB(255, 220, 120) },
+	{ id = "blackholedragon", name = "Black Hole Dragon", rarity = "Mythic", price = 15000, income = 240, shape = "dragon",
+		body = Color3.fromRGB(55, 35, 85), accent = Color3.fromRGB(190, 120, 255), glow = Color3.fromRGB(190, 120, 255) },
 	-- Nolan's cat: a grey tabby with darker stripes
 	{ id = "hammy", name = "Hammy the Star Cat", rarity = "Cosmic", price = 25000, income = 400, shape = "cat",
 		body = Color3.fromRGB(150, 148, 145), accent = Color3.fromRGB(85, 82, 80), stripes = true, glow = Color3.fromRGB(255, 186, 125) },
@@ -98,6 +118,14 @@ Config.MeteorEvery = 600 -- then every 10 minutes
 Config.MeteorSeconds = 30
 Config.MeteorPerSecond = 3
 Config.MeteorStarBonus = 2 -- shower stars are worth double
+
+-- Black Hole Night: the lights go out and the Void Creeper roams; hide in a locker. Set to false to switch it off.
+Config.BlackHoleNight = true
+Config.NightFirst = 360 -- seconds until the first one
+Config.NightEvery = 480 -- then every 8 minutes
+Config.NightSeconds = 60
+Config.CreeperSpeed = 13 -- a little slower than a player (16), so you can always get away
+Config.CreeperReach = 5
 
 function Config.critterById(id)
 	for _, c in ipairs(Config.Critters) do
@@ -306,7 +334,7 @@ function CritterModels.build(def, cframe, mut)
 		local sparkle = Instance.new("ParticleEmitter")
 		sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 		sparkle.Color = ColorSequence.new(def.glow or rarity.color)
-		sparkle.Rate = rarity.order == 5 and 18 or 8
+		sparkle.Rate = def.rarity == "Cosmic" and 18 or (def.rarity == "Mythic" and 12 or 8)
 		sparkle.Lifetime = NumberRange.new(0.8, 1.4)
 		sparkle.Speed = NumberRange.new(1, 3)
 		sparkle.Size = NumberSequence.new(0.35)
@@ -498,45 +526,131 @@ local function shell(folder)
 	end
 end
 
--- ---------- the deck: panel seams and walkway edging ----------
+-- ---------- the deck: real floor tiles and walkways (2026-10-18, Matthew: "flooring needs to actually be floor") ----------
+local TILE_A, TILE_B = Color3.fromRGB(112, 120, 142), Color3.fromRGB(102, 110, 132)
+local WALK = Color3.fromRGB(160, 168, 188)
+
 local function plating(folder)
-	for x = -W / 2 + 20, W / 2 - 20, 20 do
-		part(folder, { Name = "Seam", Size = Vector3.new(0.3, 0.05, D), Color = METAL_DARK, Material = Enum.Material.SmoothPlastic, CanCollide = false, CastShadow = false, CFrame = CFrame.new(x, 0.03, 0) })
+	local tiles = Instance.new("Folder")
+	tiles.Name = "FloorTiles"
+	tiles.Parent = folder
+	local n = 0
+	for x = -W / 2 + 10, W / 2 - 10, 20 do
+		for z = -D / 2 + 10, D / 2 - 10, 20 do
+			n += 1
+			local tile = part(tiles, { Name = "Tile", Size = Vector3.new(19.6, 0.2, 19.6), Color = (n % 2 == 0) and TILE_A or TILE_B, Material = Enum.Material.Metal, CastShadow = false, CFrame = CFrame.new(x, 0.1, z) })
+			if (math.floor(x / 20) + math.floor(z / 20)) % 3 == 0 then -- a few tiles carry a grille panel
+				part(tiles, { Name = "Grille", Size = Vector3.new(6, 0.05, 6), Color = METAL_DARK, Material = Enum.Material.DiamondPlate, CanCollide = false, CastShadow = false, CFrame = tile.CFrame * CFrame.new(0, 0.12, 0) })
+			end
+		end
 	end
-	for z = -D / 2 + 20, D / 2 - 20, 20 do
-		part(folder, { Name = "Seam", Size = Vector3.new(W, 0.05, 0.3), Color = METAL_DARK, Material = Enum.Material.SmoothPlastic, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, 0.03, z) })
+	-- walkways: spawn to the tunnel, along both sides of it, and out to every base
+	local function walk(a, b, width)
+		local mid, len = (a + b) / 2, (b - a).Magnitude
+		local cf = CFrame.lookAt(mid, b)
+		part(folder, { Name = "Walkway", Size = Vector3.new(width, 0.15, len), Color = WALK, Material = Enum.Material.SmoothPlastic, CastShadow = false, CFrame = cf * CFrame.new(0, 0.28, 0) })
+		for _, side in ipairs({ -1, 1 }) do
+			part(folder, { Name = "WalkEdge", Size = Vector3.new(0.5, 0.17, len), Color = C.Orange, Material = Enum.Material.Neon, CastShadow = false, CFrame = cf * CFrame.new(side * (width / 2 - 0.25), 0.3, 0) })
+		end
+	end
+	walk(Vector3.new(-145, 0, 0), Vector3.new(-80, 0, 0), 12) -- from the rocket pad past the spawn to the tunnel mouth
+	walk(Vector3.new(80, 0, 0), Vector3.new(110, 0, 0), 12)
+	for _, z in ipairs({ -22, 22 }) do
+		walk(Vector3.new(-150, 0, z), Vector3.new(150, 0, z), 8)
+	end
+	for _, x in ipairs({ -110, 0, 110 }) do
+		walk(Vector3.new(x, 0, 26), Vector3.new(x, 0, 58), 10)
+		walk(Vector3.new(x, 0, -26), Vector3.new(x, 0, -58), 10)
 	end
 end
 
--- ---------- the launch pad: hazard stripes, arrows, glass dome, hologram ----------
+-- ---------- the launch tunnel (2026-10-18, Matthew: "tunnel needs to be developed more") ----------
+-- a glass tube on metal ribs over a moving belt, a glowing portal the critters come out of, and a chute they drop into
+local TUNNEL_R = 13
+
+local function rib(folder, x, color)
+	local segs = 9
+	for i = 0, segs - 1 do -- a half-circle of short beams from one side of the belt, over the top, to the other
+		local a0, a1 = math.pi * i / segs, math.pi * (i + 1) / segs
+		local p0 = Vector3.new(x, math.sin(a0) * TUNNEL_R, math.cos(a0) * TUNNEL_R)
+		local p1 = Vector3.new(x, math.sin(a1) * TUNNEL_R, math.cos(a1) * TUNNEL_R)
+		part(folder, { Name = "Rib", Size = Vector3.new(1.4, 1.4, (p1 - p0).Magnitude + 0.5), Color = METAL_DARK, CanCollide = false, CFrame = CFrame.lookAt((p0 + p1) / 2, p1) })
+		part(folder, { Name = "RibLight", Size = Vector3.new(0.4, 0.4, (p1 - p0).Magnitude * 0.7), Color = color, Material = Enum.Material.Neon, CanCollide = false, CastShadow = false,
+			CFrame = CFrame.lookAt((p0 + p1) / 2, p1) * CFrame.new(0, -0.8, 0) })
+	end
+	for _, side in ipairs({ -1, 1 }) do -- feet where the rib meets the deck
+		part(folder, { Name = "RibFoot", Size = Vector3.new(2.4, 1.6, 2.4), Color = METAL, CFrame = CFrame.new(x, 0.8, side * TUNNEL_R) })
+	end
+end
+
 local function launchPad(folder)
+	local tunnel = Instance.new("Folder")
+	tunnel.Name = "Tunnel"
+	tunnel.Parent = folder
+	-- hazard edging either side of the belt
 	for x = -66, 66, 4 do
 		local color = ((x / 4) % 2 == 0) and HAZARD or C.Dark
 		for _, z in ipairs({ -7.6, 7.6 }) do
-			part(folder, { Name = "Hazard", Size = Vector3.new(4, 0.2, 1.6), Color = color, Material = Enum.Material.SmoothPlastic, CanCollide = false, CFrame = CFrame.new(x, 0.11, z) })
+			part(tunnel, { Name = "Hazard", Size = Vector3.new(4, 0.2, 1.6), Color = color, Material = Enum.Material.SmoothPlastic, CanCollide = false, CFrame = CFrame.new(x, 0.3, z) })
 		end
 	end
-	for x = -54, 54, 18 do -- chevrons pointing the way the pad moves
+	-- the belt: rollers along each side and stripes that travel with the critters (Spin.client.lua moves them)
+	for x = -64, 64, 2.5 do
+		for _, z in ipairs({ -5.9, 5.9 }) do
+			part(tunnel, { Name = "Roller", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 1, 1), Color = METAL, CanCollide = false, CastShadow = false, CFrame = CFrame.new(x, 1.2, z) * CFrame.Angles(0, math.rad(90), 0) })
+		end
+	end
+	for x = -64, 63, 3 do
+		local s = part(tunnel, { Name = "BeltStripe", Size = Vector3.new(0.5, 0.06, 10.6), Color = Color3.fromRGB(60, 66, 86), Material = Enum.Material.SmoothPlastic, CanCollide = false, CastShadow = false, CFrame = CFrame.new(x, 1.04, 0) })
+		s:SetAttribute("Belt", true)
+	end
+	for x = -54, 54, 18 do -- chevrons pointing the way the belt moves
 		for _, side in ipairs({ -1, 1 }) do
-			part(folder, { Name = "Arrow", Size = Vector3.new(0.6, 0.12, 4.2), Color = C.Orange, Material = Enum.Material.Neon, CanCollide = false, CastShadow = false,
-				CFrame = CFrame.new(x, 1.06, side * 1.4) * CFrame.Angles(0, side * math.rad(-40), 0) })
+			part(tunnel, { Name = "Arrow", Size = Vector3.new(0.6, 0.12, 4.2), Color = C.Orange, Material = Enum.Material.Neon, CanCollide = false, CastShadow = false,
+				CFrame = CFrame.new(x, 1.08, side * 1.4) * CFrame.Angles(0, side * math.rad(-40), 0) })
 		end
 	end
-	-- the dome: half a glass egg over the pad
-	local dome = part(folder, { Name = "Dome", Size = Vector3.new(160, 46, 52), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.86, CanCollide = false, CanQuery = false, CastShadow = false, CFrame = CFrame.new(0, 0, 0) })
-	local mesh = Instance.new("SpecialMesh")
-	mesh.MeshType = Enum.MeshType.Sphere
-	mesh.Parent = dome
-	for _, x in ipairs({ -76, 76 }) do
-		part(folder, { Name = "DomeRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.2, 46, 46), Color = C.Orange, Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.2, CFrame = CFrame.new(x, 0, 0) })
+	-- the glass tube and its ribs
+	part(tunnel, { Name = "TubeGlass", Shape = Enum.PartType.Cylinder, Size = Vector3.new(132, TUNNEL_R * 2, TUNNEL_R * 2), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.88,
+		CanCollide = false, CanQuery = false, CastShadow = false, CFrame = CFrame.new(0, 0, 0) })
+	local n = 0
+	for x = -64, 64, 8 do
+		n += 1
+		rib(tunnel, x, (n % 2 == 0) and C.Orange or C.Blue)
 	end
-	-- the hologram planet floating over the middle of the pad
-	local holo = part(folder, { Name = "HoloPlanet", Shape = Enum.PartType.Ball, Size = Vector3.new(9, 9, 9), Color = C.Blue, Material = Enum.Material.ForceField, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, 14, 0) })
+	for _, z in ipairs({ -4, 4 }) do -- light strips along the top
+		part(tunnel, { Name = "TopLight", Size = Vector3.new(128, 0.4, 0.6), Color = C.Trim, Material = Enum.Material.Neon, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, TUNNEL_R - 0.9, z) })
+	end
+	-- the portal the critters come out of
+	local portalAt = CFrame.new(-69, 0, 0)
+	part(tunnel, { Name = "PortalFrame", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3, TUNNEL_R * 2 + 6, TUNNEL_R * 2 + 6), Color = METAL_DARK, CFrame = portalAt })
+	part(tunnel, { Name = "PortalRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.2, TUNNEL_R * 2 + 1, TUNNEL_R * 2 + 1), Color = C.Orange, Material = Enum.Material.Neon, CFrame = portalAt })
+	local swirl = part(tunnel, { Name = "PortalSwirl", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.4, TUNNEL_R * 2 - 2, TUNNEL_R * 2 - 2), Color = C.Blue, Material = Enum.Material.ForceField, CFrame = portalAt })
+	swirl:SetAttribute("SpinSpeed", 0) -- ForceField material shimmers by itself
+	glow(swirl, C.Blue, 30, 3)
+	local spark = Instance.new("ParticleEmitter")
+	spark.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	spark.Color = ColorSequence.new(C.Blue, C.Orange)
+	spark.LightEmission = 1
+	spark.Rate = 25
+	spark.Speed = NumberRange.new(3, 8)
+	spark.Lifetime = NumberRange.new(0.6, 1.2)
+	spark.EmissionDirection = Enum.NormalId.Top
+	spark.Size = NumberSequence.new(0.5, 0)
+	spark.Parent = swirl
+	-- the chute at the far end
+	local chuteAt = CFrame.new(69, 0, 0)
+	part(tunnel, { Name = "ChuteFrame", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3, TUNNEL_R * 2 + 6, TUNNEL_R * 2 + 6), Color = METAL_DARK, CFrame = chuteAt })
+	part(tunnel, { Name = "ChuteRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.2, TUNNEL_R * 2 + 1, TUNNEL_R * 2 + 1), Color = C.Blue, Material = Enum.Material.Neon, CFrame = chuteAt })
+	part(tunnel, { Name = "ChuteHole", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.4, TUNNEL_R * 2 - 2, TUNNEL_R * 2 - 2), Color = C.Dark, Material = Enum.Material.SmoothPlastic, CFrame = chuteAt })
+	-- the hologram planet, projected from the top of the tunnel
+	local holo = part(folder, { Name = "HoloPlanet", Shape = Enum.PartType.Ball, Size = Vector3.new(9, 9, 9), Color = C.Blue, Material = Enum.Material.ForceField, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, TUNNEL_R + 9, 0) })
 	holo:SetAttribute("SpinSpeed", 25)
 	glow(holo, C.Blue, 24, 2)
-	local ring = part(folder, { Name = "HoloRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 16, 16), Color = C.Orange, Material = Enum.Material.Neon, Transparency = 0.3, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, 14, 0) * CFrame.Angles(0, 0, math.rad(80)) })
+	local ring = part(folder, { Name = "HoloRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 16, 16), Color = C.Orange, Material = Enum.Material.Neon, Transparency = 0.3, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, TUNNEL_R + 9, 0) * CFrame.Angles(0, 0, math.rad(80)) })
 	ring:SetAttribute("SpinSpeed", -40)
-	part(folder, { Name = "HoloBase", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1, 6, 6), Color = METAL, CFrame = CFrame.new(0, 1.4, 9.5) * CFrame.Angles(0, 0, math.rad(90)) })
+	part(folder, { Name = "HoloBase", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.2, 7, 7), Color = METAL, CanCollide = false, CFrame = CFrame.new(0, TUNNEL_R + 0.4, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+	part(folder, { Name = "HoloBeam", Shape = Enum.PartType.Cylinder, Size = Vector3.new(5, 3, 3), Color = C.Blue, Material = Enum.Material.Neon, Transparency = 0.6, CanCollide = false, CastShadow = false, CFrame = CFrame.new(0, TUNNEL_R + 3.5, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 end
 
 -- ---------- bases: pillars, a roof with light trim, an entrance arch, wall lights ----------
@@ -544,16 +658,23 @@ local function hangar(folder, base)
 	local cf, hw, hd = base.cf, base.halfW, base.halfD
 	for _, sx in ipairs({ -1, 1 }) do
 		for _, sz in ipairs({ -1, 1 }) do
-			part(folder, { Name = "BasePillar", Size = Vector3.new(2.4, 14, 2.4), Color = METAL_DARK, CFrame = cf * CFrame.new(sx * hw, 7, sz * hd) })
+			part(folder, { Name = "BasePillar", Size = Vector3.new(2.6, 16, 2.6), Color = METAL_DARK, CFrame = cf * CFrame.new(sx * (hw + 0.6), 8, sz * (hd + 0.6)) })
 		end
 	end
-	-- roof over the pedestals (the back half) with an orange edge
-	part(folder, { Name = "BaseRoof", Size = Vector3.new(hw * 2 + 3, 1, hd + 4), Color = METAL, CFrame = cf * CFrame.new(0, 14.5, hd / 2) })
-	part(folder, { Name = "BaseRoofEdge", Size = Vector3.new(hw * 2 + 3.4, 0.6, 0.8), Color = C.Orange, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(0, 14.2, -1.6) })
+	-- a glass roof on a metal frame over the whole base, so you can still see in from above
+	local RY = 16.2
+	part(folder, { Name = "BaseRoofGlass", Size = Vector3.new(hw * 2 + 2, 0.4, hd * 2 + 2), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.7, CastShadow = false, CFrame = cf * CFrame.new(0, RY, 0) })
+	for _, sz in ipairs({ -1, 0, 1 }) do
+		part(folder, { Name = "BaseRoofBeam", Size = Vector3.new(hw * 2 + 3, 1.2, 1.4), Color = METAL_DARK, CFrame = cf * CFrame.new(0, RY + 0.4, sz * hd) })
+	end
+	for _, sx in ipairs({ -1, -0.33, 0.33, 1 }) do
+		part(folder, { Name = "BaseRoofBeam", Size = Vector3.new(1.4, 1.2, hd * 2 + 3), Color = METAL_DARK, CFrame = cf * CFrame.new(sx * hw, RY + 0.4, 0) })
+	end
+	part(folder, { Name = "BaseRoofEdge", Size = Vector3.new(hw * 2 + 3.4, 0.6, 0.8), Color = C.Orange, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(0, RY - 0.2, -hd - 1) })
 	for i = -2, 2 do -- strip lights under the roof
-		local strip = part(folder, { Name = "BaseRoofLight", Size = Vector3.new(0.6, 0.3, hd - 2), Color = C.Blue, Material = Enum.Material.Neon, CastShadow = false, CFrame = cf * CFrame.new(i * 10, 13.9, hd / 2) })
+		local strip = part(folder, { Name = "BaseRoofLight", Size = Vector3.new(0.6, 0.3, hd * 2 - 4), Color = C.Blue, Material = Enum.Material.Neon, CastShadow = false, CFrame = cf * CFrame.new(i * 10, RY - 0.5, 0) })
 		if i == 0 then
-			glow(strip, C.Blue, 30, 1.2)
+			glow(strip, C.Blue, 34, 1.3)
 		end
 	end
 	-- the entrance arch
@@ -669,6 +790,45 @@ local function asteroids(folder)
 	end
 end
 
+-- ---------- hiding lockers for Black Hole Night ----------
+local function locker(folder, at)
+	local m = Instance.new("Model")
+	m.Name = "Locker"
+	m.Parent = folder
+	local body = part(m, { Name = "LockerBody", Size = Vector3.new(4.6, 9, 3.6), Color = Color3.fromRGB(96, 110, 150), Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 4.5, 0) })
+	part(m, { Name = "Door", Size = Vector3.new(4.0, 8.2, 0.3), Color = Color3.fromRGB(110, 126, 170), Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 4.5, -1.9) })
+	for i = 1, 3 do
+		part(m, { Name = "Vent", Size = Vector3.new(2.4, 0.25, 0.1), Color = C.Dark, Material = Enum.Material.SmoothPlastic, CFrame = at * CFrame.new(0, 7 + i * 0.5, -2.06) })
+	end
+	local strip = part(m, { Name = "DoorLight", Size = Vector3.new(0.3, 6, 0.1), Color = C.Blue, Material = Enum.Material.Neon, CFrame = at * CFrame.new(1.6, 4.5, -2.08) })
+	part(m, { Name = "Handle", Size = Vector3.new(0.3, 1.2, 0.3), Color = C.Orange, Material = Enum.Material.Neon, CFrame = at * CFrame.new(-1.4, 4.5, -2.15) })
+	m.PrimaryPart = body
+	return { model = m, body = body, strip = strip, inside = at * CFrame.new(0, 3.2, 0), front = at * CFrame.new(0, 3.2, -5) }
+end
+
+local function lockers(folder)
+	local f = Instance.new("Folder")
+	f.Name = "Lockers"
+	f.Parent = folder
+	local list = {}
+	local spots = {}
+	for _, x in ipairs({ -56, 56 }) do
+		for _, z in ipairs({ -82, 82 }) do
+			table.insert(spots, Vector3.new(x - 3, 0, z))
+			table.insert(spots, Vector3.new(x + 3, 0, z))
+		end
+	end
+	for _, z in ipairs({ -40, 40 }) do
+		table.insert(spots, Vector3.new(-140, 0, z))
+		table.insert(spots, Vector3.new(140, 0, z * 0.75))
+	end
+	for _, p in ipairs(spots) do
+		local facing = CFrame.lookAt(p, Vector3.new(p.X, 0, 0)) -- doors face the middle of the station
+		table.insert(list, locker(f, facing))
+	end
+	return list
+end
+
 local function colour()
 	local cc = Instance.new("ColorCorrectionEffect")
 	cc.Saturation = 0.15
@@ -695,6 +855,7 @@ function Decor.build(station, bases)
 	satelliteDish(folder, CFrame.new(160, 0, 0))
 	asteroids(folder)
 	colour()
+	return lockers(folder)
 end
 
 return Decor
@@ -732,6 +893,7 @@ end
 local Notify = remote("Notify")
 local ShieldRequest = remote("ShieldRequest")
 local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on each player's screen)
+local SetPet = remote("SetPet") -- pick which of your critters follows you around
 
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
@@ -794,6 +956,33 @@ local function refreshStats(player)
 	end
 	player:SetAttribute("Income", incomeOf(st))
 	player:SetAttribute("Stardust", d.stardust)
+	-- the Collection Book (every critter you have ever had) and what is in your base now, for the screens
+	local found, owned, ownedSet = {}, {}, {}
+	for key in pairs(d.found) do
+		table.insert(found, key)
+	end
+	if st.base then
+		for _, rec in pairs(st.base.slots) do
+			if not ownedSet[rec.crit.key] then
+				ownedSet[rec.crit.key] = true
+				table.insert(owned, rec.crit.key)
+			end
+		end
+	end
+	player:SetAttribute("Found", table.concat(found, ","))
+	player:SetAttribute("Owned", table.concat(owned, ","))
+	local pet = player:GetAttribute("Pet")
+	if pet and not ownedSet[pet] then -- your pet was stolen: it stops following you
+		player:SetAttribute("Pet", nil)
+	end
+end
+
+local function markFound(player, crit)
+	local d = PlayerData.get(player)
+	if d and not d.found[crit.key] then
+		d.found[crit.key] = true
+		tell(player, "NEW! " .. crit.name .. " is in your Collection Book!", "rare")
+	end
 end
 
 -- ---------- pedestals ----------
@@ -927,6 +1116,7 @@ local function bringHome(player)
 	local model = placeOnPedestal(st.base, slot, c.crit)
 	d.slots[tostring(slot)] = c.crit.key
 	d.caught += 1
+	markFound(player, c.crit)
 	refreshStats(player)
 	FX:FireAllClients("confetti", model:GetPivot().Position)
 	tell(player, c.crit.name .. " joined your base! +" .. addCommas(c.crit.income) .. " Stardust every second", "good")
@@ -1133,9 +1323,14 @@ local function onPlayerAdded(player)
 		for k, key in pairs(d.slots) do
 			local def, mut = Config.fromKey(key)
 			if def then
-				placeOnPedestal(st.base, tonumber(k), makeCrit(def, mut))
+				local crit = makeCrit(def, mut)
+				placeOnPedestal(st.base, tonumber(k), crit)
+				d.found[crit.key] = true
 			end
 		end
+	end
+	if d.pet then
+		player:SetAttribute("Pet", d.pet) -- refreshStats clears it if that critter is no longer in the base
 	end
 	refreshStats(player)
 	player.CharacterAdded:Connect(function(ch)
@@ -1387,6 +1582,294 @@ task.spawn(function()
 	end
 end)
 
+-- ---------- the pet that follows you (each screen draws it; Pets.client.lua) ----------
+SetPet.OnServerEvent:Connect(function(player, key)
+	local st = state[player]
+	local d = PlayerData.get(player)
+	if not (st and d) then
+		return
+	end
+	if key == nil or key == "" then
+		player:SetAttribute("Pet", nil)
+		d.pet = nil
+		return
+	end
+	if typeof(key) ~= "string" or not st.base then
+		return
+	end
+	for _, rec in pairs(st.base.slots) do
+		if rec.crit.key == key then
+			player:SetAttribute("Pet", key)
+			d.pet = key
+			tell(player, rec.crit.name .. " is following you now!", "good")
+			return
+		end
+	end
+	tell(player, "That critter needs to be in your base to be your pet.", "info")
+end)
+
+-- ---------- Black Hole Night: lights out, the Void Creeper roams, hide in a locker ----------
+local Lighting = game:GetService("Lighting")
+local hidden = {} -- [player] = locker
+local lockerUser = {} -- [locker] = player
+
+local function unhide(player)
+	local lk = hidden[player]
+	if not lk then
+		return
+	end
+	hidden[player] = nil
+	lockerUser[lk] = nil
+	lk.strip.Color = Config.Colors.Blue
+	lk.prompt.ActionText = "Hide"
+	local ch = player.Character
+	local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		hrp.Anchored = false
+		ch:PivotTo(lk.front)
+	end
+end
+
+for _, lk in ipairs(map.lockers or {}) do
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Hide"
+	prompt.ObjectText = "Locker"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 7
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = lk.body
+	lk.prompt = prompt
+	prompt.Triggered:Connect(function(player)
+		if hidden[player] == lk then
+			unhide(player)
+			return
+		end
+		if lockerUser[lk] then
+			tell(player, "Someone's already hiding in there!", "info")
+			return
+		end
+		if hidden[player] then
+			unhide(player)
+		end
+		local ch = player.Character
+		local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+		if not hrp then
+			return
+		end
+		hidden[player] = lk
+		lockerUser[lk] = player
+		ch:PivotTo(lk.inside)
+		hrp.Anchored = true
+		lk.strip.Color = Config.Colors.Orange
+		prompt.ActionText = "Come out"
+		tell(player, "You're hiding! Press E again to come out.", "info")
+	end)
+end
+
+task.spawn(function() -- a hider who reset or respawned frees their locker
+	while true do
+		task.wait(1)
+		for player, lk in pairs(hidden) do
+			local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+			if not (hrp and hrp.Anchored) then
+				hidden[player] = nil
+				lockerUser[lk] = nil
+				lk.strip.Color = Config.Colors.Blue
+				lk.prompt.ActionText = "Hide"
+			end
+		end
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	local lk = hidden[player]
+	if lk then
+		lockerUser[lk] = nil
+		hidden[player] = nil
+		lk.strip.Color = Config.Colors.Blue
+		lk.prompt.ActionText = "Hide"
+	end
+end)
+
+local function buildCreeper(at)
+	local m = Instance.new("Model")
+	m.Name = "VoidCreeper"
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Shape = Enum.PartType.Ball
+	body.Size = Vector3.new(7, 7, 7)
+	body.Color = Color3.fromRGB(40, 20, 60)
+	body.Material = Enum.Material.SmoothPlastic
+	body.Anchored = true
+	body.CanCollide = false
+	body.CanQuery = false
+	body.CFrame = at
+	body.Parent = m
+	m.PrimaryPart = body
+	local function bit(name, size, color, offset, neon)
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Shape = Enum.PartType.Ball
+		p.Size = size
+		p.Color = color
+		p.Material = neon and Enum.Material.Neon or Enum.Material.SmoothPlastic
+		p.Anchored = false
+		p.CanCollide = false
+		p.CanQuery = false
+		p.Massless = true
+		p.CFrame = body.CFrame * offset
+		local w = Instance.new("WeldConstraint")
+		w.Part0 = body
+		w.Part1 = p
+		w.Parent = p
+		p.Parent = m
+	end
+	for _, side in ipairs({ -1, 1 }) do -- big goofy glowing eyes
+		bit("Eye", Vector3.new(1.8, 2.2, 1), Color3.fromRGB(240, 255, 255), CFrame.new(side * 1.3, 0.9, -3.0), true)
+		bit("Pupil", Vector3.new(0.7, 0.9, 0.4), Color3.fromRGB(150, 60, 255), CFrame.new(side * 1.3, 0.8, -3.45), true)
+	end
+	bit("Mouth", Vector3.new(3, 0.8, 0.6), Color3.fromRGB(150, 60, 255), CFrame.new(0, -1.4, -3.1), true)
+	for i = 1, 3 do -- a wobbly tail of shrinking blobs
+		bit("Tail" .. i, Vector3.new(4.5, 4.5, 4.5) * (1 - i * 0.22), Color3.fromRGB(55, 28, 80), CFrame.new(0, -0.8 * i, 3 + i * 2.2))
+	end
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(170, 80, 255)
+	light.Range = 22
+	light.Brightness = 3
+	light.Parent = body
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Color = ColorSequence.new(Color3.fromRGB(90, 40, 140), Color3.fromRGB(20, 10, 30))
+	smoke.Size = NumberSequence.new(2.5, 5)
+	smoke.Transparency = NumberSequence.new(0.4, 1)
+	smoke.Lifetime = NumberRange.new(1, 1.8)
+	smoke.Rate = 20
+	smoke.Speed = NumberRange.new(1, 3)
+	smoke.Parent = body
+	local tag = Instance.new("BillboardGui")
+	tag.Size = UDim2.fromOffset(220, 40)
+	tag.StudsOffsetWorldSpace = Vector3.new(0, 6, 0)
+	tag.LightInfluence = 0
+	tag.Parent = body
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = Color3.fromRGB(200, 140, 255)
+	l.TextStrokeTransparency = 0.2
+	l.Text = "Void Creeper"
+	l.Parent = tag
+	m.Parent = stationFolder
+	return m
+end
+
+local nightLighting = { Ambient = Color3.fromRGB(28, 16, 48), OutdoorAmbient = Color3.fromRGB(34, 20, 60), Brightness = 0.25 }
+local function setNight(on)
+	local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+	if on then
+		Lighting:SetAttribute("DayAmbient", Lighting.Ambient)
+		Lighting:SetAttribute("DayOutdoor", Lighting.OutdoorAmbient)
+		Lighting:SetAttribute("DayBrightness", Lighting.Brightness)
+		TweenService:Create(Lighting, TweenInfo.new(2.5), nightLighting):Play()
+		if cc then
+			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.fromRGB(190, 160, 255) }):Play()
+		end
+	else
+		TweenService:Create(Lighting, TweenInfo.new(2.5), {
+			Ambient = Lighting:GetAttribute("DayAmbient") or Color3.fromRGB(70, 80, 115),
+			OutdoorAmbient = Lighting:GetAttribute("DayOutdoor") or Color3.fromRGB(90, 100, 140),
+			Brightness = Lighting:GetAttribute("DayBrightness") or 1.2,
+		}):Play()
+		if cc then
+			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.new(1, 1, 1) }):Play()
+		end
+	end
+end
+
+local function blackHoleNight()
+	workspace:SetAttribute("BlackHoleUntil", now() + Config.NightSeconds)
+	tellAll("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
+	FX:FireAllClients("night", Config.NightSeconds)
+	setNight(true)
+	local creeper = buildCreeper(CFrame.new(-60, 40, 0))
+	local pos = Vector3.new(-60, 40, 0)
+	local ignore = {} -- [player] = time it can chase them again
+	local pauseUntil = 0
+	local wander = Vector3.new(0, 5, 0)
+	local t0 = os.clock()
+	local conn
+	conn = RunService.Heartbeat:Connect(function(dt)
+		if os.clock() - t0 > Config.NightSeconds then
+			return
+		end
+		local t = os.clock()
+		-- chase the nearest player who isn't hiding
+		local target, best = nil, math.huge
+		for player in pairs(state) do
+			local hrp = rootOf(player)
+			if hrp and not hidden[player] and (ignore[player] or 0) < t then
+				local dist = (hrp.Position - pos).Magnitude
+				if dist < best then
+					target, best = hrp, dist
+				end
+			end
+		end
+		local goal
+		if target and best < 160 then
+			goal = Vector3.new(target.Position.X, 4.5, target.Position.Z)
+		else
+			if (wander - pos).Magnitude < 4 then
+				wander = Vector3.new(rng:NextNumber(-150, 150), 4.5, rng:NextNumber(-110, 110))
+			end
+			goal = wander
+		end
+		if t > pauseUntil then
+			local step = goal - pos
+			local speed = (pos.Y > 6) and 30 or Config.CreeperSpeed -- swoops down fast at the start
+			if step.Magnitude > 0.1 then
+				pos += step.Unit * math.min(step.Magnitude, speed * dt)
+			end
+		end
+		local look = target and Vector3.new(target.Position.X, pos.Y, target.Position.Z) or (pos + Vector3.new(0, 0, -1))
+		if (look - pos).Magnitude < 0.1 then
+			look = pos + Vector3.new(0, 0, -1)
+		end
+		creeper:PivotTo(CFrame.lookAt(pos + Vector3.new(0, math.sin(t * 4) * 0.6, 0), look))
+		-- boop! anyone it reaches drops what they carry and is sent back to their base
+		for player, st in pairs(state) do
+			local hrp = rootOf(player)
+			if hrp and not hidden[player] and (ignore[player] or 0) < t and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
+				ignore[player] = t + 6
+				pauseUntil = t + 1.5
+				if st.carrying then
+					dropCarried(player, "creeper")
+				end
+				FX:FireClient(player, "booped")
+				tell(player, "The Void Creeper booped you back to your base!", "bad")
+				if st.base and player.Character then
+					player.Character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
+				end
+			end
+		end
+	end)
+	task.wait(Config.NightSeconds)
+	conn:Disconnect()
+	creeper:Destroy()
+	setNight(false)
+	workspace:SetAttribute("BlackHoleUntil", 0)
+	tellAll("The lights are back on. The Void Creeper has gone... for now.", "good")
+end
+
+if Config.BlackHoleNight then
+	task.spawn(function()
+		task.wait(Config.NightFirst)
+		while true do
+			blackHoleNight()
+			task.wait(Config.NightEvery)
+		end
+	end)
+end
+
 -- ---------- every second: income; four times a second: home and catch checks ----------
 task.spawn(function()
 	while true do
@@ -1549,13 +2032,37 @@ local function buildBase(folder, index, position, facingRotation)
 		part(root, { Name = "EdgeSide", Size = Vector3.new(0.6, 0.3, D), Color = C.Orange, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(side * W / 2, 1.1, 0) })
 		part(root, { Name = "EdgeFront", Size = Vector3.new((W - 18) / 2, 0.3, 0.6), Color = C.Orange, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(side * (W / 4 + 4.5), 1.1, -D / 2) })
 	end
-	-- low glass walls at the back and sides, open at the front
-	part(root, { Name = "WallBack", Size = Vector3.new(W, 7, 1), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.55, CFrame = cf * CFrame.new(0, 4.5, D / 2 + 0.5) })
-	for _, side in ipairs({ -1, 1 }) do
-		part(root, { Name = "WallSide", Size = Vector3.new(1, 7, D), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.55, CFrame = cf * CFrame.new(side * (W / 2 + 0.5), 4.5, 0) })
+	-- solid walls up to the roof (2026-10-18, Matthew: "the bases need some walls"): metal below, a window band above,
+	-- and a front wall either side of an 18-stud doorway with big windows so friends can see your critters
+	local WH, DOOR = 14, 18
+	local metal, metalDark = Color3.fromRGB(128, 136, 156), Color3.fromRGB(72, 78, 98)
+	local function wall(name, size, at, windowed)
+		part(root, { Name = name, Size = Vector3.new(size.X, 6, size.Z), Color = metal, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 3 + 1, 0) })
+		part(root, { Name = name .. "Trim", Size = Vector3.new(size.X + 0.05, 0.5, size.Z + 0.1), Color = C.Orange, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 7.2, 0) })
+		if windowed then
+			part(root, { Name = name .. "Window", Size = Vector3.new(size.X, WH - 8, size.Z * 0.5), Color = C.Blue, Material = Enum.Material.Glass, Transparency = 0.65, CastShadow = false, CFrame = at * CFrame.new(0, 7.5 + (WH - 8) / 2, 0) })
+		else
+			part(root, { Name = name .. "Upper", Size = Vector3.new(size.X, WH - 8, size.Z), Color = metalDark, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 7.5 + (WH - 8) / 2, 0) })
+		end
+		part(root, { Name = name .. "Cap", Size = Vector3.new(size.X + 0.2, 0.8, size.Z + 0.3), Color = metalDark, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, WH + 1.4, 0) })
 	end
-	-- the airlock shield across the whole front: visible only while it is on
-	local shield = part(root, { Name = "Shield", Size = Vector3.new(W, 12, 1), Color = C.Blue, Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 6.5, -D / 2) })
+	wall("WallBack", Vector3.new(W + 2, 0, 1.2), cf * CFrame.new(0, 0, D / 2 + 0.6), true)
+	for _, side in ipairs({ -1, 1 }) do
+		wall("WallSide", Vector3.new(1.2, 0, D + 2), cf * CFrame.new(side * (W / 2 + 0.6), 0, 0), side == 1)
+		local segW = (W - DOOR) / 2 + 1
+		wall("WallFront", Vector3.new(segW, 0, 1.2), cf * CFrame.new(side * (DOOR / 2 + segW / 2), 0, -D / 2 - 0.6), true)
+	end
+	-- light strips along the inside of the back wall
+	part(root, { Name = "WallGlow", Size = Vector3.new(W - 4, 0.4, 0.3), Color = C.Blue, Material = Enum.Material.Neon, CFrame = cf * CFrame.new(0, 2.2, D / 2 - 0.1) })
+	-- tiled floor with an orange border
+	for tx = -2, 1 do
+		for tz = -2, 1 do
+			part(root, { Name = "FloorTile", Size = Vector3.new(W / 4 - 0.4, 0.1, D / 4 - 0.4), Color = ((tx + tz) % 2 == 0) and Color3.fromRGB(150, 158, 178) or Color3.fromRGB(138, 146, 166),
+				Material = Enum.Material.Metal, CFrame = cf * CFrame.new((tx + 0.5) * W / 4, 1.05, (tz + 0.5) * D / 4) })
+		end
+	end
+	-- the airlock shield fills the doorway: visible only while it is on
+	local shield = part(root, { Name = "Shield", Size = Vector3.new(DOOR, WH - 1, 1), Color = C.Blue, Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 1 + (WH - 1) / 2, -D / 2 - 0.6) })
 	-- the owner's name on the back wall and floating over the entrance
 	local signPart = part(root, { Name = "Sign", Size = Vector3.new(30, 5, 0.6), Color = C.Dark, CFrame = cf * CFrame.new(0, 10.5, D / 2 + 0.5) })
 	local signLabel = surfaceText(signPart, Enum.NormalId.Front, "Free base", C.Orange, 30)
@@ -1626,10 +2133,7 @@ function MapBuilder.build()
 	local station = Instance.new("Folder")
 	station.Name = "Station"
 	station.Parent = workspace
-	part(station, { Name = "Deck", Size = Vector3.new(380, 2, 270), Color = C.Deck, Material = Enum.Material.DiamondPlate, CFrame = CFrame.new(0, -1, 0) })
-	for _, z in ipairs({ -45, 45 }) do
-		part(station, { Name = "DeckLine", Size = Vector3.new(380, 0.2, 1), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(0, 0.1, z) })
-	end
+	part(station, { Name = "Deck", Size = Vector3.new(380, 2, 270), Color = C.Deck, Material = Enum.Material.Metal, CFrame = CFrame.new(0, -1, 0) }) -- tiles and walkways go on top (Decor.lua)
 
 	-- the critter launch pad: a moving walkway down the middle
 	local padStart, padEnd, padY = -64, 64, 1
@@ -1637,8 +2141,7 @@ function MapBuilder.build()
 	for _, z in ipairs({ -6.4, 6.4 }) do
 		part(station, { Name = "PadLight", Size = Vector3.new(padEnd - padStart + 6, 0.4, 0.6), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(0, 1.2, z) })
 	end
-	part(station, { Name = "LaunchTube", Shape = Enum.PartType.Cylinder, Size = Vector3.new(8, 14, 14), Color = C.Orange, Material = Enum.Material.Neon, Transparency = 0.35, CanCollide = false, CFrame = CFrame.new(padStart - 2, 5, 0) })
-	billboard(station, Vector3.new(0, 22, 0), "CRITTER LAUNCH PAD", C.Blue, 520, 70)
+	billboard(station, Vector3.new(0, 33, 0), "CRITTER LAUNCH TUNNEL", C.Blue, 520, 70) -- the tunnel itself is built in Decor.lua
 	billboard(station, Vector3.new(0, 48, 0), Config.GameTitle, C.Orange, 900, 130)
 
 	local bases = {}
@@ -1672,9 +2175,9 @@ function MapBuilder.build()
 	critters.Name = "Critters"
 	critters.Parent = station
 
-	require(script.Parent.Decor).build(station, bases) -- the hangar shell, dome, props and asteroids (2026-10-18)
+	local lockers = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
 
-	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters }
+	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers }
 end
 
 return MapBuilder
@@ -1698,7 +2201,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0 }
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil } -- found: the Collection Book; pet: the critter that follows you
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -1712,6 +2215,16 @@ local function clean(d)
 	end
 	if typeof(d.caught) == "number" then
 		out.caught = math.floor(d.caught)
+	end
+	if typeof(d.found) == "table" then
+		for key, v in pairs(d.found) do
+			if v == true and Config.fromKey(key) then
+				out.found[key] = true
+			end
+		end
+	end
+	if typeof(d.pet) == "string" and Config.fromKey(d.pet) then
+		out.pet = d.pet
 	end
 	if typeof(d.slots) == "table" then
 		for k, id in pairs(d.slots) do
@@ -1792,6 +2305,248 @@ return PlayerData
           <string name="Name">Client</string>
         </Properties>
         <Item class="LocalScript" referent="13">
+          <Properties>
+            <string name="Name">Book</string>
+            <string name="Source"><![CDATA[-- The Critter Collection Book: every critter in the game, the ones you've found in colour and the rest as "???",
+-- which Golden and Rainbow versions you've had, and a button to make one of your critters your pet.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local CritterModels = require(ReplicatedStorage.Shared.CritterModels)
+local SetPet = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SetPet")
+
+local player = Players.LocalPlayer
+local C = Config.Colors
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "CollectionBook"
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 3
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 12)
+	c.Parent = o
+end
+
+local function text(parent, props)
+	local l = Instance.new("TextLabel")
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = Color3.new(1, 1, 1)
+	for k, v in pairs(props) do
+		l[k] = v
+	end
+	l.Parent = parent
+	return l
+end
+
+-- the button that opens it (bottom left)
+local open = Instance.new("TextButton")
+open.Name = "BookButton"
+open.AnchorPoint = Vector2.new(0, 1)
+open.Position = UDim2.new(0, 16, 1, -24)
+open.Size = UDim2.fromOffset(190, 70)
+open.BackgroundColor3 = C.Orange
+open.Font = Enum.Font.FredokaOne
+open.TextScaled = true
+open.TextColor3 = C.Dark
+open.Text = "Collection Book"
+open.Parent = gui
+corner(open, 16)
+local op = Instance.new("UIPadding")
+op.PaddingLeft, op.PaddingRight, op.PaddingTop, op.PaddingBottom = UDim.new(0, 12), UDim.new(0, 12), UDim.new(0, 10), UDim.new(0, 10)
+op.Parent = open
+
+local panel = Instance.new("Frame")
+panel.Name = "Book"
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+panel.Position = UDim2.fromScale(0.5, 0.5)
+panel.Size = UDim2.fromScale(0.86, 0.82)
+panel.BackgroundColor3 = C.Dark
+panel.Visible = false
+panel.Parent = gui
+corner(panel, 18)
+local limit = Instance.new("UISizeConstraint")
+limit.MaxSize = Vector2.new(1000, 680)
+limit.Parent = panel
+local stroke = Instance.new("UIStroke")
+stroke.Color = C.Blue
+stroke.Thickness = 3
+stroke.Parent = panel
+
+text(panel, { Position = UDim2.new(0, 20, 0, 12), Size = UDim2.new(0.6, 0, 0, 44), TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = C.Orange, Text = "Critter Collection" })
+local counter = text(panel, { Position = UDim2.new(0, 20, 0, 56), Size = UDim2.new(0.6, 0, 0, 26), TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = C.Blue, Font = Enum.Font.GothamBold, Text = "" })
+local close = Instance.new("TextButton")
+close.AnchorPoint = Vector2.new(1, 0)
+close.Position = UDim2.new(1, -16, 0, 16)
+close.Size = UDim2.fromOffset(110, 46)
+close.BackgroundColor3 = C.Blue
+close.Font = Enum.Font.FredokaOne
+close.TextScaled = true
+close.TextColor3 = C.Dark
+close.Text = "Close"
+close.Parent = panel
+corner(close, 12)
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Position = UDim2.new(0, 16, 0, 96)
+scroll.Size = UDim2.new(1, -32, 1, -112)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 8
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.CanvasSize = UDim2.new()
+scroll.Parent = panel
+local grid = Instance.new("UIGridLayout")
+grid.CellSize = UDim2.fromOffset(170, 236)
+grid.CellPadding = UDim2.fromOffset(12, 12)
+grid.SortOrder = Enum.SortOrder.LayoutOrder
+grid.Parent = scroll
+
+local function setOf(attr)
+	local s = {}
+	for key in string.gmatch(player:GetAttribute(attr) or "", "[^,]+") do
+		s[key] = true
+	end
+	return s
+end
+
+local function viewport(parent, def, mut, silhouette)
+	local vp = Instance.new("ViewportFrame")
+	vp.Size = UDim2.new(1, -12, 0, 118)
+	vp.Position = UDim2.new(0, 6, 0, 6)
+	vp.BackgroundColor3 = Color3.fromRGB(28, 34, 56)
+	vp.Ambient = Color3.fromRGB(190, 195, 215)
+	vp.LightColor = Color3.fromRGB(255, 245, 230)
+	vp.LightDirection = Vector3.new(-1, -1, 1)
+	vp.Parent = parent
+	corner(vp, 10)
+	local s = CritterModels.scaleFor(def)
+	local m = CritterModels.build(def, CFrame.Angles(0, math.rad(25), 0), mut)
+	local tag = m.PrimaryPart:FindFirstChild("Tag")
+	if tag then
+		tag:Destroy()
+	end
+	if silhouette then
+		for _, p in ipairs(m:GetDescendants()) do
+			if p:IsA("BasePart") then
+				p.Color = Color3.fromRGB(14, 16, 26)
+				p.Material = Enum.Material.SmoothPlastic
+			elseif p:IsA("Light") or p:IsA("ParticleEmitter") then
+				p:Destroy()
+			end
+		end
+	end
+	m.Parent = vp
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 40
+	cam.CFrame = CFrame.lookAt(Vector3.new(0, 1.6 * s, -9 * s), Vector3.new(0, 0.5 * s, 0))
+	cam.Parent = vp
+	vp.CurrentCamera = cam
+end
+
+local function species()
+	local list = {}
+	for _, def in ipairs(Config.Critters) do
+		if def.enabled ~= false then
+			table.insert(list, def)
+		end
+	end
+	table.sort(list, function(a, b)
+		local ra, rb = Config.Rarities[a.rarity].order, Config.Rarities[b.rarity].order
+		if ra ~= rb then
+			return ra < rb
+		end
+		return a.price < b.price
+	end)
+	return list
+end
+
+local function refresh()
+	for _, ch in ipairs(scroll:GetChildren()) do
+		if ch:IsA("Frame") then
+			ch:Destroy()
+		end
+	end
+	local found, owned = setOf("Found"), setOf("Owned")
+	local pet = player:GetAttribute("Pet")
+	local list = species()
+	local nFound = 0
+	for i, def in ipairs(list) do
+		local has = found[def.id] or found[def.id .. ":golden"] or found[def.id .. ":rainbow"]
+		if has then
+			nFound += 1
+		end
+		local rarity = Config.Rarities[def.rarity]
+		local card = Instance.new("Frame")
+		card.LayoutOrder = i
+		card.BackgroundColor3 = Color3.fromRGB(36, 42, 66)
+		card.Parent = scroll
+		corner(card, 12)
+		local cs = Instance.new("UIStroke")
+		cs.Color = has and rarity.color or Color3.fromRGB(70, 76, 96)
+		cs.Thickness = 2
+		cs.Parent = card
+		-- show the best version they've had: Rainbow, then Golden, then plain
+		local showMut = found[def.id .. ":rainbow"] and Config.mutationById("rainbow") or (found[def.id .. ":golden"] and Config.mutationById("golden") or nil)
+		viewport(card, def, showMut, not has)
+		text(card, { Position = UDim2.new(0, 6, 0, 128), Size = UDim2.new(1, -12, 0, 24), Text = has and def.name or "???" })
+		text(card, { Position = UDim2.new(0, 6, 0, 152), Size = UDim2.new(1, -12, 0, 18), Font = Enum.Font.GothamBold, TextColor3 = rarity.color, Text = def.rarity .. (has and ("  ·  +" .. def.income .. "/s") or "") })
+		-- which special versions they've had
+		for j, mid in ipairs({ "golden", "rainbow" }) do
+			local got = found[def.id .. ":" .. mid]
+			local chip = text(card, { Position = UDim2.new((j - 1) * 0.5, 6, 0, 174), Size = UDim2.new(0.5, -9, 0, 20), Font = Enum.Font.GothamBold,
+				TextColor3 = got and C.Dark or Color3.fromRGB(110, 116, 136), BackgroundTransparency = 0,
+				BackgroundColor3 = got and (mid == "golden" and Color3.fromRGB(255, 205, 70) or Color3.fromRGB(200, 150, 255)) or Color3.fromRGB(46, 52, 76),
+				Text = mid == "golden" and "Golden" or "Rainbow" })
+			corner(chip, 8)
+		end
+		-- make it your pet, if one is in your base right now
+		local ownKey = owned[def.id .. ":rainbow"] and (def.id .. ":rainbow") or (owned[def.id .. ":golden"] and (def.id .. ":golden") or (owned[def.id] and def.id or nil))
+		if ownKey then
+			local isPet = pet and Config.fromKey(pet) == def
+			local b = Instance.new("TextButton")
+			b.Position = UDim2.new(0, 6, 0, 200)
+			b.Size = UDim2.new(1, -12, 0, 28)
+			b.BackgroundColor3 = isPet and C.Orange or C.Blue
+			b.Font = Enum.Font.FredokaOne
+			b.TextScaled = true
+			b.TextColor3 = C.Dark
+			b.Text = isPet and "Following you (tap to stop)" or "Make my pet"
+			b.Parent = card
+			corner(b, 8)
+			b.Activated:Connect(function()
+				SetPet:FireServer(isPet and "" or ownKey)
+			end)
+		end
+	end
+	counter.Text = "Found " .. nFound .. " of " .. #list .. " critters"
+end
+
+open.Activated:Connect(function()
+	panel.Visible = not panel.Visible
+	if panel.Visible then
+		refresh()
+	end
+end)
+close.Activated:Connect(function()
+	panel.Visible = false
+end)
+for _, attr in ipairs({ "Found", "Owned", "Pet" }) do
+	player:GetAttributeChangedSignal(attr):Connect(function()
+		if panel.Visible then
+			refresh()
+		end
+	end)
+end
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="14">
           <Properties>
             <string name="Name">FX</string>
             <string name="Source"><![CDATA[-- The "juice", drawn on this player's screen only: sparkles and confetti, pop-up numbers, the steal alarm, a guide beam
@@ -1940,6 +2695,17 @@ FX.OnClientEvent:Connect(function(kind, a, b)
 		alarm(a)
 	elseif kind == "shower" then
 		shout("METEOR SHOWER!", C.Blue, 3)
+	elseif kind == "night" then
+		shout("BLACK HOLE NIGHT!", Color3.fromRGB(200, 140, 255), 3)
+	elseif kind == "booped" then
+		shout("BOOP!", Color3.fromRGB(200, 140, 255), 1.5)
+		flash.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+		flash.BackgroundTransparency = 0.4
+		local tw = TweenService:Create(flash, TweenInfo.new(0.8), { BackgroundTransparency = 1 })
+		tw:Play()
+		tw.Completed:Connect(function()
+			flash.BackgroundColor3 = Color3.fromRGB(255, 40, 60)
+		end)
 	end
 end)
 
@@ -2082,7 +2848,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="14">
+        <Item class="LocalScript" referent="15">
           <Properties>
             <string name="Name">HUD</string>
             <string name="Source"><![CDATA[-- What each player sees: the title screen, their Stardust, the airlock button, messages, and a marker over their own base.
@@ -2339,7 +3105,101 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="15">
+        <Item class="LocalScript" referent="16">
+          <Properties>
+            <string name="Name">Pets</string>
+            <string name="Source"><![CDATA[-- Draws every player's pet (the critter they picked in the Collection Book) floating along beside them.
+-- Purely on each screen: it costs the server nothing and never affects the game.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local CritterModels = require(ReplicatedStorage.Shared.CritterModels)
+
+local folder = Instance.new("Folder")
+folder.Name = "Pets"
+folder.Parent = workspace
+
+local pets = {} -- [player] = { key, model, phase }
+
+local function buildPet(key, owner)
+	local def, mut = Config.fromKey(key)
+	if not def then
+		return nil
+	end
+	local m = CritterModels.build(def, CFrame.new(0, -500, 0), mut)
+	local body = m.PrimaryPart
+	local tag = body:FindFirstChild("Tag")
+	if tag then
+		local nameL = tag:FindFirstChild("CritterName")
+		local info = tag:FindFirstChild("Info")
+		if info then
+			info.Text = owner.DisplayName .. "'s pet"
+		end
+		if nameL then
+			nameL.Text = m.Name
+		end
+		tag.MaxDistance = 40
+		tag.StudsOffsetWorldSpace = Vector3.new(0, 3, 0)
+	end
+	pcall(function()
+		m:ScaleTo(0.6)
+	end)
+	m.Parent = folder
+	return m
+end
+
+local keep = { Eye = true, Pupil = true, Nose = true }
+local t = 0
+RunService.RenderStepped:Connect(function(dt)
+	t += dt
+	for _, p in ipairs(Players:GetPlayers()) do
+		local key = p:GetAttribute("Pet")
+		local rec = pets[p]
+		if (rec and rec.key) ~= key then
+			if rec and rec.model then
+				rec.model:Destroy()
+			end
+			pets[p] = nil
+			rec = nil
+			if key then
+				rec = { key = key, model = buildPet(key, p), phase = math.random() * 6 }
+				pets[p] = rec
+			end
+		end
+		local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+		if rec and rec.model and hrp then
+			local target = hrp.CFrame * CFrame.new(3.4, 1.4 + math.sin(t * 3 + rec.phase) * 0.45, 3)
+			local current = rec.model:GetPivot()
+			if (current.Position - target.Position).Magnitude > 40 then
+				rec.model:PivotTo(target) -- teleported: catch up at once
+			else
+				rec.model:PivotTo(current:Lerp(target, math.clamp(dt * 7, 0, 1)))
+			end
+			if rec.model:GetAttribute("Rainbow") then
+				local h = (t * 0.25) % 1
+				for _, part in ipairs(rec.model:GetDescendants()) do
+					if part:IsA("BasePart") and not keep[part.Name] then
+						part.Color = Color3.fromHSV(h, 0.55, 1)
+					end
+				end
+			end
+		end
+	end
+	for p, rec in pairs(pets) do
+		if not p.Parent then
+			if rec.model then
+				rec.model:Destroy()
+			end
+			pets[p] = nil
+		end
+	end
+end)
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="17">
           <Properties>
             <string name="Name">Spin</string>
             <string name="Source"><![CDATA[-- Turns everything marked with a "SpinSpeed" attribute (degrees per second) on this player's screen only,
@@ -2375,6 +3235,25 @@ for _, obj in ipairs(decor:GetChildren()) do -- asteroids are models in the fold
 		end
 	end
 end
+
+-- the belt stripes in the launch tunnel travel with the critters and loop back to the start
+local belt = {}
+for _, obj in ipairs(decor:GetDescendants()) do
+	if obj:IsA("BasePart") and obj:GetAttribute("Belt") then
+		table.insert(belt, obj)
+	end
+end
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+RunService.RenderStepped:Connect(function(dt)
+	for _, s in ipairs(belt) do
+		local p = s.Position
+		local x = p.X + Config.ConveyorSpeed * dt
+		if x > 64 then
+			x -= 129
+		end
+		s.CFrame = CFrame.new(x, p.Y, p.Z)
+	end
+end)
 
 -- turn around the world's up axis through the object's own centre, keeping its tilt
 local function turn(cf, a)
