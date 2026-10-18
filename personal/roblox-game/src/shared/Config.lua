@@ -1,0 +1,79 @@
+-- Captain Nolan's Star Station: every number and name in one place, so the game is easy to tune.
+local Config = {}
+
+Config.GameTitle = "Captain Nolan's Star Station"
+Config.CommanderName = "Captain Nolan"
+
+-- Nolan's colours: light orange and light blue, on a dark space-station deck
+Config.Colors = {
+	Orange = Color3.fromRGB(255, 186, 125),
+	Blue = Color3.fromRGB(150, 210, 255),
+	Deck = Color3.fromRGB(38, 44, 64),
+	DeckLine = Color3.fromRGB(62, 72, 102),
+	Trim = Color3.fromRGB(232, 238, 248),
+	Dark = Color3.fromRGB(16, 18, 28),
+}
+
+-- weight = how often a critter of that rarity lands on the pad (out of the total)
+Config.Rarities = {
+	Common = { order = 1, color = Color3.fromRGB(200, 210, 220), weight = 60 },
+	Rare = { order = 2, color = Color3.fromRGB(110, 190, 255), weight = 26 },
+	Epic = { order = 3, color = Color3.fromRGB(190, 120, 255), weight = 10 },
+	Legendary = { order = 4, color = Color3.fromRGB(255, 200, 70), weight = 3.5 },
+	Cosmic = { order = 5, color = Color3.fromRGB(255, 120, 200), weight = 0.5 },
+}
+
+-- shape: blob | bunny | cat | pup | alien | bear | dragon
+-- price in Stardust; income = Stardust per second while it sits in your base
+Config.Critters = {
+	{ id = "blipblob", name = "Blip Blob", rarity = "Common", price = 20, income = 1, shape = "blob",
+		body = Color3.fromRGB(140, 230, 170), accent = Color3.fromRGB(90, 180, 120) },
+	{ id = "moonbunny", name = "Moon Bunny", rarity = "Common", price = 30, income = 1, shape = "bunny",
+		body = Color3.fromRGB(235, 235, 245), accent = Color3.fromRGB(255, 186, 200) },
+	{ id = "glorp", name = "Glorp", rarity = "Common", price = 40, income = 2, shape = "alien",
+		body = Color3.fromRGB(150, 210, 255), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "cometcat", name = "Comet Cat", rarity = "Rare", price = 150, income = 5, shape = "cat",
+		body = Color3.fromRGB(255, 186, 125), accent = Color3.fromRGB(255, 240, 220) },
+	{ id = "rocketpup", name = "Rocket Pup", rarity = "Rare", price = 220, income = 7, shape = "pup",
+		body = Color3.fromRGB(196, 150, 110), accent = Color3.fromRGB(150, 210, 255) },
+	{ id = "starbear", name = "Star Bear", rarity = "Epic", price = 900, income = 20, shape = "bear",
+		body = Color3.fromRGB(120, 110, 200), accent = Color3.fromRGB(255, 230, 120) },
+	{ id = "nebulafox", name = "Nebula Fox", rarity = "Epic", price = 1300, income = 28, shape = "cat",
+		body = Color3.fromRGB(200, 120, 230), accent = Color3.fromRGB(150, 210, 255) },
+	{ id = "stardragon", name = "Star Dragon", rarity = "Legendary", price = 5000, income = 90, shape = "dragon",
+		body = Color3.fromRGB(90, 160, 255), accent = Color3.fromRGB(255, 186, 125) },
+	{ id = "sunbeamsnoot", name = "Sunbeam Snoot", rarity = "Legendary", price = 6500, income = 110, shape = "pup",
+		body = Color3.fromRGB(255, 210, 90), accent = Color3.fromRGB(255, 140, 60) },
+	-- Nolan's cat: a grey tabby with darker stripes
+	{ id = "hammy", name = "Hammy the Star Cat", rarity = "Cosmic", price = 25000, income = 400, shape = "cat",
+		body = Color3.fromRGB(150, 148, 145), accent = Color3.fromRGB(85, 82, 80), stripes = true, glow = Color3.fromRGB(255, 186, 125) },
+	-- Dad's surprise critter goes here: set enabled = true and fill it in when it's designed
+	{ id = "surprise", name = "???", rarity = "Cosmic", price = 30000, income = 500, shape = "blob",
+		body = Color3.fromRGB(150, 210, 255), accent = Color3.fromRGB(255, 186, 125), enabled = false },
+}
+
+-- only this Roblox user can ever get exclusive critters (Nolan's user ID, a number; 0 = nobody yet)
+Config.ExclusiveUserId = 0
+Config.ExclusiveCritters = {} -- e.g. { "surprise" }
+
+Config.StartStardust = 60
+Config.BaseCount = 6
+Config.PedestalsPerBase = 8
+Config.SpawnEvery = 2.5 -- seconds between critters landing on the pad
+Config.ConveyorSpeed = 7 -- studs per second
+Config.ShieldSeconds = 45
+Config.ShieldCooldown = 90
+Config.StealHold = 1.5 -- seconds to hold E to steal
+Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
+Config.AutosaveEvery = 60
+
+function Config.critterById(id)
+	for _, c in ipairs(Config.Critters) do
+		if c.id == id then
+			return c
+		end
+	end
+	return nil
+end
+
+return Config
