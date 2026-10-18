@@ -7971,7 +7971,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       baseLayer(map, 19);
       var pts = r.areas.filter(function (a) { return typeof a.la === 'number'; }).map(function (a) { return [a.la, a.lo]; });
       if (pts.length) map.fitBounds(pts, { padding: [24, 24], maxZoom: 15 }); else map.setView([39.1, -104.85], 10);
-      satSwitch(map, false);
+      satSwitch(map, true);   /* photos first (2026-10-18) */
       r.areas.forEach(function (a) {
         if (typeof a.la !== 'number') return;
         var v = typeof a.sc === 'number' ? hoodTier(a) : null, l = areaLeft(a);
@@ -11806,19 +11806,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      is slow and the street map shows instead. It is a free PREVIEW service, so tiles that keep failing switch back to the map.
      The choice is remembered on this device. */
   var SAT_FALLBACK = 'fe04cec383767467e9a31d04fab20050';   /* the id Planetary Computer gave this search on 2026-10-09 */
-  function satSet(v) { try { localStorage.setItem('sixfold.rounds.sat', v === true ? '1' : v === false ? '0' : String(v)); } catch (e) {} }
+  function satSet(v) { try { localStorage.setItem('sixfold.rounds.sat2', v === true ? '1' : v === false ? '0' : String(v)); } catch (e) {} }
   function satSearch(cb) {
     if (S.satId) return cb(S.satId);
     fetch(PC_API + '/data/v1/mosaic/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 'filter-lang': 'cql2-json', filter: { op: 'and', args: [{ op: '=', args: [{ property: 'collection' }, 'naip'] }, { op: '=', args: [{ property: 'naip:state' }, (MK().naip || MK_CO.naip).state] }, { op: '=', args: [{ property: 'naip:year' }, (MK().naip || MK_CO.naip).year] }] },
         sortby: [{ field: 'properties.gsd', direction: 'asc' }] }) })
-      .then(function (r) { return r.json(); }).then(function (j) { S.satId = (j && /^[a-f0-9]{16,64}$/.test(j.searchid || '')) ? j.searchid : (inCO() ? SAT_FALLBACK : null); }, function () { S.satId = inCO() ? SAT_FALLBACK : null; })
+      .then(function (r) { return r.json(); }).then(function (j) { var sid = j && (j.id || j.searchid); S.satId = /^[a-f0-9]{16,64}$/.test(sid || '') ? sid : (inCO() ? SAT_FALLBACK : null);   /* the reply's field is "id" now (2026-10-18) */ }, function () { S.satId = inCO() ? SAT_FALLBACK : null; })
       .then(function () { cb(S.satId); });
   }
   /* the map's look, three ways (2026-10-09): Map (the street map), Hybrid (the photos with the streets and their names drawn on
      top, from our own map file) and Photo. Stored as '0', '2' or '1' under sixfold.rounds.sat. The street map stays underneath for
      zoomed-out views and gaps. Hybrid needs the map file, so without it the choice is Map or Photo. */
-  function satMode(def) { var v = null; try { v = localStorage.getItem('sixfold.rounds.sat'); } catch (e) {} if (v === null) return def ? '1' : '0'; return v === '2' || v === '1' ? v : '0'; }
+  function satMode(def) { var v = null; try { v = localStorage.getItem('sixfold.rounds.sat2'); }   /* sat2 (2026-10-18): a slow spell had saved "street map" on phones for good */ catch (e) {} if (v === null) return def ? '1' : '0'; return v === '2' || v === '1' ? v : '0'; }
   function hybridOk() { return !!(BASEMAP.ok && window.protomapsL); }
   /* the street map's own roads, borders and names, with no land or water under them, so the photos show through */
   function hybridLayer() {
@@ -11829,9 +11829,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     } catch (e) { return null; }
   }
   function satSwitch(map, def) {
-    var photo = null, lines = null, fails = 0, box = null;
+    var photo = null, lines = null, fails = 0, box = null, gaveUp = false;   /* gaveUp: photos failed on this map, this time only */
     var ctl = L.control({ position: 'topright' });
-    var mode = function () { var m = satMode(def); return m === '2' && !hybridOk() ? '1' : m; };
+    var mode = function () { if (gaveUp) return '0'; var m = satMode(def); return m === '2' && !hybridOk() ? '1' : m; };
     var paint = function () { if (!box) return; var m = mode(); [].forEach.call(box.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === m)); }); };
     var apply = function () {
       var m = mode();
@@ -11839,7 +11839,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (photo || mode() === '0' || !map._container || !document.body.contains(map._container)) return;
         photo = L.tileLayer(PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png',
           { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP 2023 aerial photos (public domain), Microsoft Planetary Computer' });
-        photo.on('tileerror', function () { if (++fails === 8 && photo) { map.removeLayer(photo); photo = null; satSet('0'); paint(); apply(); toast('Aerial photos are not loading right now', 'Showing the street map'); } });
+        photo.on('tileerror', function () { if (++fails === 15 && photo) { map.removeLayer(photo); photo = null; gaveUp = true; paint(); apply(); toast('Aerial photos are slow right now', 'Showing the street map. Tap Photo to try again.'); } });   /* not remembered (2026-10-18) */
         photo.on('tileload', function () { fails = 0; });
         photo.addTo(map);
       });
@@ -11852,7 +11852,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       [['0', 'Map', 'The street map'], ['2', 'Hybrid', 'The aerial photos with the streets and their names'], ['1', 'Photo', 'The 2023 aerial photos']].forEach(function (x) {
         if (x[0] === '2' && !hybridOk()) return;
         var b = L.DomUtil.create('button', '', box); b.type = 'button'; b.textContent = x[1]; b.title = x[2]; b.setAttribute('data-m', x[0]);
-        b.addEventListener('click', function () { satSet(x[0]); fails = 0; paint(); apply(); });
+        b.addEventListener('click', function () { satSet(x[0]); fails = 0; gaveUp = false; paint(); apply(); });
       });
       L.DomEvent.disableClickPropagation(box);
       paint(); return box;
@@ -11882,8 +11882,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         grp.addLayer(m); n++;
       });
     });
-    /* far out the rings pile into blobs: they show from town level in (2026-10-09) */
-    var fit = function () { var on = map.getZoom() >= 12; if (on && !map.hasLayer(grp)) grp.addTo(map); if (!on && map.hasLayer(grp)) map.removeLayer(grp); };
+    /* zoomed out (2026-10-18, Matthew: the circles weren't showing properly): every town as one bubble sized by the doors left, a tap
+       zooms into it; from town level in, the neighbourhood rings as before (far out they piled into blobs) */
+    var towns = L.layerGroup();
+    S.regions.forEach(function (r) {
+      var pts = (r.areas || []).filter(function (a) { return typeof a.la === 'number' && typeof a.lo === 'number'; });
+      if (!pts.length) return;
+      var la = 0, lo = 0, left = 0;
+      pts.forEach(function (a) { la += a.la; lo += a.lo; left += Math.max(0, (a.total || 0) - (a.done || 0) - (a.noanswer || 0)); });
+      la /= pts.length; lo /= pts.length;
+      var mine = r.key === S.region;
+      var tb = L.circleMarker([la, lo], { radius: 10 + Math.min(26, Math.sqrt(left) * 0.12), color: mine ? '#d6400c' : ink, weight: mine ? 3 : 2, fillColor: mine ? '#d6400c' : ink, fillOpacity: 0.18 });
+      tb.bindTooltip(q('span', null, r.label + ' \u00b7 ' + left.toLocaleString() + ' to knock \u00b7 tap to zoom in'), { direction: 'top' });
+      tb.on('click', function (e) { L.DomEvent.stopPropagation(e); map.fitBounds(pts.map(function (a) { return [a.la, a.lo]; }), { padding: [30, 30], maxZoom: 13 }); });
+      towns.addLayer(tb);
+    });
+    var fit = function () {
+      var on = map.getZoom() >= 12;
+      if (on && !map.hasLayer(grp)) grp.addTo(map); if (!on && map.hasLayer(grp)) map.removeLayer(grp);
+      if (!on && !map.hasLayer(towns)) towns.addTo(map); if (on && map.hasLayer(towns)) map.removeLayer(towns);
+    };
     map.on('zoomend', fit); fit();
     return n;
   }
@@ -12334,7 +12352,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.mapView && S.mapView.area === S.area) map.setView(S.mapView.c, S.mapView.z);
       else if (pts.length) map.fitBounds(pts, { padding: [36, 36], maxZoom: 18 });
       map.on('moveend', function () { var c = map.getCenter(); S.mapView = { area: S.area, c: [c.lat, c.lng], z: map.getZoom() }; });
-      satSwitch(map, false);   /* after the view, as on the desktop map (2026-10-09) */
+      satSwitch(map, true);   /* after the view, as on the desktop map (2026-10-09); photos first on the phone too (2026-10-18, Matthew) */
       hoodRings(map, function (k, n) { S.keepMap = true; openHood(k, n); });   /* opened from the map, the next one opens on its map too */
       othersLayer(map, S.region);   /* the homes not on the list, in grey (2026-10-12) */
       if (S.mapSel && markers[S.mapSel]) select(markers[S.mapSel].d);
