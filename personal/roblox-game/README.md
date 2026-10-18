@@ -18,7 +18,7 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - Walk into a friend's base and **hold E** on a critter to steal it. If the owner catches you (gets close) before you get home, it goes back.
 - **Base door** (Lock Door button, or the console in your base): a red energy door that keeps everyone out, you included, for 60 seconds. Unlock it any time to get in, but then it cannot lock again for 30 seconds. Stealing only works from inside a base whose door is open.
 - **Punch** (Q, a click, or the PUNCH button on a tablet): hit someone carrying a critter and it drops on the floor. Anyone can grab it; the owner's grab sends it straight home, and after 20 seconds it goes home by itself.
-- **Patrol bots** (3 hover drones) cruise the walkways. Carry a critter outside a base and they chase you: a catch sends you home and the critter back. Punch one to stun it for 3 seconds.
+- **Parker Bots** (3 hover drones) cruise the walkways. Carry a critter outside a base and they chase you: a catch sends you home and the critter back. Punch one to stun it for 3 seconds.
 - **Tablet:** the joystick is bottom-left and Jump bottom-right, so PUNCH and Sprint sit next to Jump, the door and expand buttons stack above them, and the Book button moves under the Stardust counter.
 - Rarities: Common, Rare, Epic, Legendary, **Cosmic**. Hammy the Star Cat is Cosmic, the rarest.
 - **Mutations:** any critter can land **Golden** (8%: costs 1.5x, earns 2x) or **Rainbow** (1.5%: costs 3x, earns 5x).
@@ -54,7 +54,7 @@ The game lives as code files in `src/`; **Rojo** syncs them into Studio live.
 | `src/shared/Config.lua` | All names, colours, prices and timings |
 | `src/shared/CritterModels.lua` | Builds each critter from shapes (Hammy's tabby stripes are here) |
 | `src/server/MapBuilder.lua` | Builds the station: deck, launch pad, 6 bases, Commander statue, planets |
-| `src/server/Main.server.lua` | The rules: buying, carrying, stealing, catching, door, punching, patrol bots, income |
+| `src/server/Main.server.lua` | The rules: buying, carrying, stealing, catching, door, punching, Parker Bots, income |
 | `src/server/PlayerData.lua` | Saves Stardust and critters |
 | `src/client/HUD.client.lua` | Title screen, Stardust counter, door button, punch, messages |
 

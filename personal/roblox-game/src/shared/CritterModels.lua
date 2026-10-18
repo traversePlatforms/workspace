@@ -44,6 +44,12 @@ local function addEyes(model, body, s, spread, height, depth, def)
 	end
 end
 
+-- a spot on the round body's surface: yaw turns from the front (-Z) around to the sides, pitch climbs toward the top.
+-- The part's local Y runs up the head and local Z is the thin direction, so flat markings lie on the fur (2026-10-18)
+local function onHead(s, yaw, pitch, lift)
+	return CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0) * CFrame.new(0, 0, -(1.5 + (lift or 0)) * s)
+end
+
 local SHAPES = {}
 
 function SHAPES.blob(model, body, def, s)
@@ -71,9 +77,11 @@ function SHAPES.cat(model, body, def, s)
 		newPart(model, body, "Chest", Vector3.new(2.0, 1.6, 1.0) * s, def.chest, CFrame.new(0, -0.75 * s, -1.05 * s), { ball = true })
 	end
 	if def.cap then -- the coloured patch and stripes on top of the head (Zuzu)
-		newPart(model, body, "Cap", Vector3.new(1.8, 0.6, 1.6) * s, def.cap, CFrame.new(0, 1.3 * s, -0.5 * s) * CFrame.Angles(math.rad(-25), 0, 0), { ball = true })
-		for i, x in ipairs({ -0.3, 0, 0.3 }) do
-			newPart(model, body, "CapStripe" .. i, Vector3.new(0.14, 0.7, 0.14) * s, def.capStripe or def.accent, CFrame.new(x * s, 1.05 * s, -1.08 * s) * CFrame.Angles(math.rad(-20), 0, x * 0.6))
+		-- a smaller ball sunk into the head, peeking out on top: a patch that follows the curve instead of sitting on it like a hat
+		local up = CFrame.Angles(math.rad(-28), 0, 0) -- leaning toward the forehead
+		newPart(model, body, "Cap", Vector3.new(2.6, 2.6, 2.6) * s, def.cap, up * CFrame.new(0, 0.26 * s, 0), { ball = true })
+		for i, yaw in ipairs({ -0.22, 0, 0.22 }) do
+			newPart(model, body, "CapStripe" .. i, Vector3.new(0.13, 0.6, 0.1) * s, def.capStripe or def.accent, onHead(s, yaw, math.rad(42), 0.05), { ball = true })
 		end
 	end
 	newPart(model, body, "Nose", Vector3.new(0.35, 0.25, 0.2) * s, Color3.fromRGB(255, 160, 175), CFrame.new(0, -0.05 * s, -1.55 * s), { ball = true })
@@ -85,12 +93,18 @@ function SHAPES.cat(model, body, def, s)
 			newPart(model, body, "TailRing", Vector3.new(0.25, 0.5, 0.5) * s, def.accent, tailAt * CFrame.new(i * 0.7 * s, 0, 0), { cylinder = true })
 		end
 	end
-	if def.stripes then
-		for i, x in ipairs({ -0.75, 0, 0.75 }) do
-			newPart(model, body, "Stripe" .. i, Vector3.new(0.28, 0.2, 2.4) * s, def.accent, CFrame.new(x * s, 1.42 * s - math.abs(x) * 0.35 * s, 0.1 * s) * CFrame.Angles(0, 0, -x * 0.5))
+	if def.stripes then -- tabby markings drawn flat on the fur (2026-10-18; were blocks standing up off the head)
+		for i, yaw in ipairs({ -0.42, 0, 0.42 }) do -- stripes running back over the top of the head
+			newPart(model, body, "Stripe" .. i, Vector3.new(0.2, 0.95, 0.1) * s, def.accent, onHead(s, yaw, math.rad(62)), { ball = true })
 		end
-		for i, x in ipairs({ -0.25, 0.25 }) do -- the little "M" on a tabby's forehead
-			newPart(model, body, "Brow" .. i, Vector3.new(0.12, 0.55, 0.12) * s, def.accent, CFrame.new(x * s, 0.95 * s, -1.25 * s) * CFrame.Angles(0, 0, x * 1.2))
+		for _, side in ipairs({ -1, 1 }) do -- a pair of cheek stripes on each side
+			for j, pitch in ipairs({ 0.05, -0.2 }) do
+				newPart(model, body, "Cheek" .. j, Vector3.new(0.14, 0.7, 0.1) * s, def.accent,
+					onHead(s, side * -1.05, pitch) * CFrame.Angles(0, 0, math.rad(90 + side * 10)), { ball = true })
+			end
+		end
+		for i, side in ipairs({ -1, 1 }) do -- the little "M" on a tabby's forehead
+			newPart(model, body, "Brow" .. i, Vector3.new(0.12, 0.5, 0.1) * s, def.accent, onHead(s, side * -0.16, math.rad(36)) * CFrame.Angles(0, 0, side * 0.45), { ball = true })
 		end
 	end
 end
@@ -217,7 +231,7 @@ end
 
 function SHAPES.sunflower(model, body, def, s)
 	-- the round body is the lime-green plush; the flower head sits on top of it
-	local head = CFrame.new(0, 1.7 * s, -0.2 * s)
+	local head = CFrame.new(0, 2.3 * s, -0.7 * s) -- up and forward, so the body no longer hides the bottom of the face (2026-10-18)
 	newPart(model, body, "FaceRim", Vector3.new(0.5, 2.5, 2.5) * s, def.rim or Color3.fromRGB(130, 70, 50), head * CFrame.Angles(0, math.rad(90), 0), { cylinder = true })
 	newPart(model, body, "Face", Vector3.new(0.55, 2.0, 2.0) * s, def.face or Color3.fromRGB(215, 145, 115), head * CFrame.new(0, 0, -0.05 * s) * CFrame.Angles(0, math.rad(90), 0), { cylinder = true })
 	for i = 0, 9 do
@@ -290,7 +304,7 @@ function CritterModels.build(def, cframe, mut)
 	local tag = Instance.new("BillboardGui")
 	tag.Name = "Tag"
 	tag.Size = UDim2.fromOffset(220, 60)
-	tag.StudsOffsetWorldSpace = Vector3.new(0, 2.6 * s + 1.5, 0)
+	tag.StudsOffsetWorldSpace = Vector3.new(0, (def.shape == "sunflower" and 4.9 or 2.6) * s + 1.5, 0) -- clear of Sunny Sprout's petals
 	tag.AlwaysOnTop = false
 	tag.MaxDistance = 80
 	tag.Parent = body
@@ -320,7 +334,7 @@ function CritterModels.build(def, cframe, mut)
 
 	if mut then
 		model:SetAttribute("Mutation", mut.id)
-		local keep = { Eye = true, Pupil = true, Nose = true }
+		local keep = { Eye = true, Pupil = true, Nose = true, Smile = true }
 		if mut.id == "golden" then
 			for _, p in ipairs(model:GetDescendants()) do
 				if p:IsA("BasePart") and not keep[p.Name] then

@@ -130,11 +130,12 @@ Config.ConveyorSpeed = 7 -- studs per second
 Config.ShieldSeconds = 60
 Config.ShieldCooldown = 30
 
--- punching (Q, a click, or the PUNCH button): knocks people back, knocks carried critters to the floor, stuns patrol bots
+-- punching (Q, a click, or the PUNCH button): knocks people back, knocks carried critters to the floor, stuns Parker Bots
 Config.Punch = { reach = 7, cooldown = 0.6, knock = 55, floorSeconds = 20 }
 
--- patrol bots on the walkways: chase anyone carrying a critter, take it, and zap them home
-Config.Bots = { count = 3, speed = 10, chaseSpeed = 20, sight = 45, reach = 4.5, stunSeconds = 3 }
+-- Parker Bots patrol the walkways: chase anyone carrying a critter, take it, and zap them home
+Config.Bots = { count = 3, speed = 8, chaseSpeed = 17, -- a bit slower (2026-10-18): walking is 16, sprinting 27
+	sight = 45, reach = 4.5, stunSeconds = 3 }
 Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
 Config.AutosaveEvery = 60

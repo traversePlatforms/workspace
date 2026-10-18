@@ -1115,7 +1115,7 @@ if Config.BlackHoleNight then
 	end)
 end
 
--- ---------- punching, critters on the floor, patrol bots (2026-10-18, Matthew) ----------
+-- ---------- punching, critters on the floor, Parker Bots (2026-10-18, Matthew; named Parker Bots the same day) ----------
 local Punch = remote("Punch")
 local floorItems = {} -- [model] = { crit, owner, slot, expires }
 local bots = {}
@@ -1279,7 +1279,7 @@ Punch.OnServerEvent:Connect(function(player)
 	if kind == "bot" then
 		best.stunUntil = t + Config.Bots.stunSeconds
 		FX:FireAllClients("pow", best.pos)
-		tell(player, "Bot stunned!", "good")
+		tell(player, "Parker Bot stunned!", "good")
 		return
 	end
 	local oh = rootOf(best)
@@ -1309,7 +1309,7 @@ end
 
 local function buildBot(i, at)
 	local m = Instance.new("Model")
-	m.Name = "PatrolBot" .. i
+	m.Name = "ParkerBot" .. i
 	local body = Instance.new("Part")
 	body.Name = "Body"
 	body.Size = Vector3.new(3, 3.2, 2.6)
@@ -1380,7 +1380,7 @@ local function buildBot(i, at)
 	l.TextScaled = true
 	l.TextColor3 = Color3.fromRGB(255, 120, 120)
 	l.TextStrokeTransparency = 0.2
-	l.Text = "Patrol Bot"
+	l.Text = "Parker Bot"
 	l.Parent = tag
 	m.Parent = stationFolder
 	return { model = m, eye = eye, siren = siren, light = light, label = l }
@@ -1424,7 +1424,7 @@ RunService.Heartbeat:Connect(function(dt)
 					dropCarried(chasing, "bot")
 					sendHome(chasing)
 					FX:FireClient(chasing, "zapped")
-					tell(chasing, "A patrol bot took your critter and zapped you back to base!", "bad")
+					tell(chasing, "A Parker Bot took your critter and zapped you back to base!", "bad")
 				end
 			else
 				local wp = route[bot.wp]
@@ -1444,7 +1444,7 @@ RunService.Heartbeat:Connect(function(dt)
 		local red, blue = Color3.fromRGB(255, 60, 60), Color3.fromRGB(80, 140, 255)
 		bot.siren.Color = stunned and Color3.fromRGB(90, 90, 100) or (chasing and ((math.floor(t * 6) % 2 == 0) and red or blue) or blue)
 		bot.eye.Color = stunned and Color3.fromRGB(80, 80, 90) or red
-		bot.label.Text = stunned and "Patrol Bot (stunned!)" or (chasing and "Patrol Bot: STOP!" or "Patrol Bot")
+		bot.label.Text = stunned and "Parker Bot (stunned!)" or (chasing and "Parker Bot: STOP!" or "Parker Bot")
 	end
 end)
 

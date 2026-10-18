@@ -251,7 +251,7 @@ for _, m in ipairs(critters:GetChildren()) do
 end
 critters.ChildAdded:Connect(track)
 
-local keep = { Eye = true, Pupil = true, Nose = true }
+local keep = { Eye = true, Pupil = true, Nose = true, Smile = true }
 local t = 0
 RunService.RenderStepped:Connect(function(dt)
 	t += dt
@@ -296,9 +296,12 @@ RunService.RenderStepped:Connect(function(dt)
 	for m in pairs(rainbows) do
 		if m.Parent then
 			local h = (t * 0.25) % 1
+			local body = m.PrimaryPart
+			local by, bh = body and body.Position.Y or 0, body and body.Size.Y or 1
 			for _, p in ipairs(m:GetDescendants()) do
 				if p:IsA("BasePart") and not keep[p.Name] then
-					p.Color = Color3.fromHSV((h + (p.Name == "Body" and 0 or 0.15)) % 1, 0.55, 1)
+					-- the hue shifts with height, so a Rainbow critter wears a whole rainbow at once, top to bottom (2026-10-18)
+					p.Color = Color3.fromHSV((h + (p.Position.Y - by) / bh * 0.35) % 1, 0.55, 1)
 				end
 			end
 			local tag = m.PrimaryPart and m.PrimaryPart:FindFirstChild("Tag")

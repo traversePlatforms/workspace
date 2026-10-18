@@ -195,7 +195,7 @@ local function updateMarker()
 	end
 end
 
--- ---------- punch (2026-10-18): Q, a click, or the PUNCH button. Knocks a carried critter loose, stuns a patrol bot ----------
+-- ---------- punch (2026-10-18): Q, a click, or the PUNCH button. Knocks a carried critter loose, stuns a Parker Bot ----------
 local Punch = remotes:WaitForChild("Punch")
 local lastPunch = 0
 local function punch()
