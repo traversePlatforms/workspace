@@ -6051,8 +6051,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         for (var i = 0; i < 7; i++) {
           var d = jobAdd(wk, i), closed = j.closed.indexOf(jobDow(d)) >= 0;
           if (closed) { if (!S.schedOpenOnly) { var cr = q('tr', 'closed dayfirst'); cr.appendChild(q('td', null, dayName(d))); var cc = q('td', null, 'Closed'); cc.colSpan = 8; cr.appendChild(cc); bd.appendChild(cr); } continue; }
-          var firstOfDay = true, sRows = [], sB = 0, sH = 0, sO = 0, sPast = d < today;   /* the day folds (2026-10-17, Matthew) */
-          var shr = q('tr', 'sdayrow'), shc = q('td'); shc.colSpan = 9; shr.appendChild(shc); bd.appendChild(shr);
+          var firstOfDay = true;
           j.crews.forEach(function (crew) {
             var area = (j.days[d] || {})[crew] || '';
             var rowsOf = j.slots.slice(); j.rows.forEach(function (x) { if (x.date === d && x.crew === crew && !SLOT_LABEL[x.slot] && !rowsOf.some(function (r) { return r.k === x.slot; })) rowsOf.push({ k: x.slot, label: slotLabel(x.slot) }); });
@@ -6061,8 +6060,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               var r = j.rows.filter(function (x) { return x.date === d && x.crew === crew && x.slot === s.k; })[0];
               var past = d < today;
               if (S.schedOpenOnly && (r || past)) return;
-              if (past && !r) return;   /* a past day: what was booked (2026-10-17) */
-              if (r) { if (r.kind === 'held') sH++; else sB++; } else sO++;
               var tr = q('tr', (r ? r.kind : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
               if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
@@ -6072,12 +6069,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }
               if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { schedView(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
-              tr.hidden = !S.schedOpenOnly; sRows.push(tr); bd.appendChild(tr); n++;
+              bd.appendChild(tr); n++;
             });
           });
-          (function (hc, hr, rows, dd) { var o2 = !!S.schedOpenOnly; hc.appendChild(ico('chev', 2.4)); hc.appendChild(q('b', null, dayName(dd)));
-            var su = [sB ? sB + ' booked' : '', sH ? sH + ' held' : '', !sPast ? sO + ' open' : '', sPast && !rows.length ? 'No jobs' : ''].filter(Boolean).join(' \u00b7 '); if (su) hc.appendChild(q('span', null, su));
-            if (rows.length) { hr.classList.add('jfold'); if (o2) hr.classList.add('open'); hr.addEventListener('click', function () { o2 = !o2; rows.forEach(function (x) { x.hidden = !o2; }); hr.classList.toggle('open', o2); }); } })(shc, shr, sRows, d);
         }
         tb.appendChild(bd);
         if (!n) hold.appendChild(q('div', 'msg soft', 'No open times this week.')); else { var wrap = q('div', 'schedwrap'); wrap.appendChild(tb); hold.appendChild(wrap); }

@@ -3682,8 +3682,9 @@ if ($action === 'money') {
 const QUOTE_INBOX_FROM = 1792189222;
 function quoteInbox(array $l, bool $mine = false): bool {
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) || !empty($l['quote'])) return false;
+    if (str_ends_with((string) ($l['by'] ?? ''), '(ClickUp)')) return false;   /* her own ClickUp tasks are hers to work in ClickUp: never sent back to her (2026-10-17, Matthew) */
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
-    return ($l['src'] ?? '') !== 'messenger';   /* everyone at the calling stage, not only since 16 Oct (2026-10-17, Matthew: Jon Eckhard was missing) */
+    return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;   /* new leads only, since 16 Oct: back as it was (2026-10-17, Matthew: don't send Jen anything she didn't populate herself unless it is a new lead) */
 }
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
 const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost', 'hold'];   /* + hold: on hold, parked on purpose (2026-10-17) */
