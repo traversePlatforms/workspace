@@ -1387,7 +1387,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dhome .tipcard{margin:0}
   .dbrowse .db-town .dtc{font:700 12.5px var(--sans);color:var(--soft);font-variant-numeric:tabular-nums}
   .dbrowse .db-ctyb{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;cursor:pointer;text-align:left;padding:6px 4px;font:800 11.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}.dbrowse .db-ctyb span{flex:1}.dbrowse .db-ctyb small{font-weight:700;letter-spacing:0}.dbrowse .db-ctyb .ic{width:12px;height:12px;transition:transform .15s}.dbrowse .db-ctyb[aria-expanded="true"] .ic{transform:rotate(90deg)}
-  tr.jfold{cursor:pointer}tr.jfold .ic{width:13px;height:13px;margin-right:6px;vertical-align:-1px;transition:transform .15s}tr.jfold.open .ic{transform:rotate(90deg)}.jdaysum{color:var(--soft);font-weight:600}tr.sdayrow td{background:var(--sunk);font-weight:700;padding:8px 10px}tr.sdayrow td span{margin-left:10px;color:var(--soft);font-weight:600}.jready{font-size:13px}
+  tr.jfold{cursor:pointer}tr.jfold .ic{width:13px;height:13px;margin-right:6px;vertical-align:-1px;transition:transform .15s}tr.jfold.open .ic{transform:rotate(90deg)}.jdaysum{color:var(--soft);font-weight:600}tr.sdayrow td{background:var(--sunk);font-weight:700;padding:8px 10px}tr.sdayrow td span{margin-left:10px;color:var(--soft);font-weight:600}.jready{font-size:13px}.jboard{display:block;margin:14px 0 4px}
   .dbrowse .db-tlegend{display:block;font:600 11.5px var(--sans);color:var(--soft);margin:2px 10px 2px;text-align:right}
   .planhead .plsearch{min-height:38px;min-width:230px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:500 14px var(--sans)}
   .planfilt2{margin-top:-6px}
@@ -4750,7 +4750,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function jobsGet(from, to) { return api('jobs', { params: { from: from, to: to } }); }
 
   /* the board: the week, day by day, each crew's town and four arrival times; the month's total; quoted leads ready to book */
-  function jobsView() {
+  function jobsView() { schedView(S.jobWeek || null, true); }   /* Jobs = Jen's schedule (2026-10-18, Matthew); the old board is jobsBoard */
+  function jobsBoard() {
     hideSplash(); hideToast(); S.signin = null; S.screen = 'jobs'; foot.hidden = true; setDock(null);
     var wk = S.jobWeek || jobMonday(todayISO()); S.jobWeek = wk;
     setBar('back', { title: 'Jobs', sub: 'The week, with each crew’s town and arrival times', back: chooseView, backLabel: 'Home' });
@@ -4762,9 +4763,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var nav = q('div', 'jnav');
     var pv = q('button', null, '‹ Week before'), tw = q('button', null, 'This week'), nx = q('button', null, 'Week after ›');
     pv.type = tw.type = nx.type = 'button';
-    pv.addEventListener('click', function () { S.jobWeek = jobAdd(wk, -7); jobsView(); });
-    nx.addEventListener('click', function () { S.jobWeek = jobAdd(wk, 7); jobsView(); });
-    tw.addEventListener('click', function () { S.jobWeek = null; jobsView(); });
+    pv.addEventListener('click', function () { S.jobWeek = jobAdd(wk, -7); jobsBoard(); });
+    nx.addEventListener('click', function () { S.jobWeek = jobAdd(wk, 7); jobsBoard(); });
+    tw.addEventListener('click', function () { S.jobWeek = null; jobsBoard(); });
     nav.appendChild(pv); nav.appendChild(tw); nav.appendChild(nx); box.appendChild(nav);
     var ready = q('section', 'ocard jready'); box.appendChild(ready);
     var week = q('div', 'jweek'); week.appendChild(q('div', 'skel')); box.appendChild(week);
@@ -4782,34 +4783,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       top.appendChild(nums);
     }).catch(function () {});
-    api('leads').then(function (j) {
-      if (!j || !j.ok) return;
-      if (asOffice()) {   /* 2026-10-14: signing books the job; the office sees who has the form */
-        var fo = j.leads.filter(function (l) { return l.status === 'quoted' && l.sign && !l.signed; });
-        var fh = q('button', 'cfold jready'); fh.type = 'button'; fh.setAttribute('aria-expanded', 'false'); fh.appendChild(ico('chev', 2.4)); fh.appendChild(document.createTextNode('Forms out, waiting to sign (' + fo.length + ')')); ready.appendChild(fh);
-        if (!fo.length) { ready.appendChild(q('div', 'msg soft', 'None waiting. When they sign, the job lands here on its day by itself.')); return; }
-        var fl0 = q('div', 'olist'); fl0.hidden = true; fh.addEventListener('click', function () { fl0.hidden = !fl0.hidden; fh.setAttribute('aria-expanded', String(!fl0.hidden)); });
-        fo.forEach(function (l) { var b = q('button', 'orow'); b.type = 'button'; var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name')); tx.appendChild(q('small', null, money0(l.quote.price) + (l.quote.offer ? ' \u00b7 held ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) : ''))); b.appendChild(tx); b.appendChild(q('span', 'otag', 'Waiting')); b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); }); fl0.appendChild(b); });
-        ready.appendChild(fl0); return;
-      }
-      var r = j.leads.filter(function (l) { return l.status === 'quoted'; }).sort(function (a, b) { return (acceptOf(b) ? 1 : 0) - (acceptOf(a) ? 1 : 0); });
-      /* folded until opened, and everyone in it (2026-10-17, Matthew: it pushed the week down; it drew only 12 of 13) */
-      var rh = q('button', 'cfold jready'); rh.type = 'button'; var rOpen = !!S.jobsReadyOpen; rh.setAttribute('aria-expanded', String(rOpen)); rh.appendChild(ico('chev', 2.4)); rh.appendChild(document.createTextNode('Quoted, ready to book (' + r.length + ')'));
-      ready.appendChild(rh);
-      if (!r.length) { ready.appendChild(q('div', 'msg soft', 'Nobody waiting. A lead shows here once its quote is saved; book it from here or from the quote.')); return; }
-      var list = q('div', 'olist'); list.hidden = !rOpen;
-      rh.addEventListener('click', function () { S.jobsReadyOpen = !S.jobsReadyOpen; list.hidden = !S.jobsReadyOpen; rh.setAttribute('aria-expanded', String(!!S.jobsReadyOpen)); });
-      r.forEach(function (l) {
-        var b = q('button', 'orow'); b.type = 'button';
-        var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name'));
-        tx.appendChild(q('small', null, [l.quote ? money0(l.quote.price) + ' · ' + JOB_PKG[l.quote.pkg] : '', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' · '))); b.appendChild(tx);
-        if (acceptOf(l)) tx.appendChild(q('small', 'qyes', acceptText(acceptOf(l))));
-        b.appendChild(q('span', 'otag' + (acceptOf(l) ? ' ohot' : ''), acceptOf(l) ? 'Said yes' : 'Book'));
-        b.addEventListener('click', function () { jobBookView(l, null, null); });
-        list.appendChild(b);
-      });
-      ready.appendChild(list);
-    }).catch(function () {});
+    jobsReady(ready);
     jobsGet(wk, jobAdd(wk, 6)).then(function (j) {
       week.textContent = '';
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
@@ -4818,7 +4792,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var wxEls = {};   /* the forecast per day, filled when it arrives (2026-10-15) */
       week.classList.add('tbl');   /* one table, not seven columns */
       var only = q('label', 'schedonly'), oc = q('input'); oc.type = 'checkbox'; oc.checked = !!S.jobOpenOnly; only.appendChild(oc); only.appendChild(q('span', null, 'Open times only'));
-      oc.addEventListener('change', function () { S.jobOpenOnly = oc.checked; jobsView(); });
+      oc.addEventListener('change', function () { S.jobOpenOnly = oc.checked; jobsBoard(); });
       week.appendChild(only);
       var tb = q('table', 'schedt jobst'), th = q('thead'), hr = q('tr');
       ['Town', 'Time', 'Crew', 'Name', 'Price and payment', 'Address', 'Service', 'Card'].forEach(function (h) { hr.appendChild(q('th', null, h)); }); th.appendChild(hr); tb.appendChild(th);
@@ -4890,6 +4864,37 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Every job on the day, each with a suggested new day and time (same crew, same arrival time if free, the next working day on); Jen
      changes any she wants and saves once. The crews get one alert each; each lead and job gets a note; then each customer's text and
      email open filled in, from her own phone, for her to send. */
+  /* Quoted, ready to book (or, for the office, Forms out): the Jobs screen and the old board both use it */
+  function jobsReady(ready) {
+    api('leads').then(function (j) {
+      if (!j || !j.ok) return;
+      if (asOffice()) {   /* 2026-10-14: signing books the job; the office sees who has the form */
+        var fo = j.leads.filter(function (l) { return l.status === 'quoted' && l.sign && !l.signed; });
+        var fh = q('button', 'cfold jready'); fh.type = 'button'; fh.setAttribute('aria-expanded', 'false'); fh.appendChild(ico('chev', 2.4)); fh.appendChild(document.createTextNode('Forms out, waiting to sign (' + fo.length + ')')); ready.appendChild(fh);
+        if (!fo.length) { ready.appendChild(q('div', 'msg soft', 'None waiting. When they sign, the job lands here on its day by itself.')); return; }
+        var fl0 = q('div', 'olist'); fl0.hidden = true; fh.addEventListener('click', function () { fl0.hidden = !fl0.hidden; fh.setAttribute('aria-expanded', String(!fl0.hidden)); });
+        fo.forEach(function (l) { var b = q('button', 'orow'); b.type = 'button'; var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name')); tx.appendChild(q('small', null, money0(l.quote.price) + (l.quote.offer ? ' \u00b7 held ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) : ''))); b.appendChild(tx); b.appendChild(q('span', 'otag', 'Waiting')); b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); }); fl0.appendChild(b); });
+        ready.appendChild(fl0); return;
+      }
+      var r = j.leads.filter(function (l) { return l.status === 'quoted'; }).sort(function (a, b) { return (acceptOf(b) ? 1 : 0) - (acceptOf(a) ? 1 : 0); });
+      /* folded until opened, and everyone in it (2026-10-17, Matthew: it pushed the week down; it drew only 12 of 13) */
+      var rh = q('button', 'cfold jready'); rh.type = 'button'; var rOpen = !!S.jobsReadyOpen; rh.setAttribute('aria-expanded', String(rOpen)); rh.appendChild(ico('chev', 2.4)); rh.appendChild(document.createTextNode('Quoted, ready to book (' + r.length + ')'));
+      ready.appendChild(rh);
+      if (!r.length) { ready.appendChild(q('div', 'msg soft', 'Nobody waiting. A lead shows here once its quote is saved; book it from here or from the quote.')); return; }
+      var list = q('div', 'olist'); list.hidden = !rOpen;
+      rh.addEventListener('click', function () { S.jobsReadyOpen = !S.jobsReadyOpen; list.hidden = !S.jobsReadyOpen; rh.setAttribute('aria-expanded', String(!!S.jobsReadyOpen)); });
+      r.forEach(function (l) {
+        var b = q('button', 'orow'); b.type = 'button';
+        var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name'));
+        tx.appendChild(q('small', null, [l.quote ? money0(l.quote.price) + ' · ' + JOB_PKG[l.quote.pkg] : '', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' · '))); b.appendChild(tx);
+        if (acceptOf(l)) tx.appendChild(q('small', 'qyes', acceptText(acceptOf(l))));
+        b.appendChild(q('span', 'otag' + (acceptOf(l) ? ' ohot' : ''), acceptOf(l) ? 'Said yes' : 'Book'));
+        b.addEventListener('click', function () { jobBookView(l, null, null); });
+        list.appendChild(b);
+      });
+      ready.appendChild(list);
+    }).catch(function () {});
+  }
   function weatherDayView(iso) {
     hideToast(); S.signin = null; S.screen = 'jobweather'; foot.hidden = true; setDock(null);
     var back = function () { jobsView(); };
@@ -6021,22 +6026,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the schedule, to look at (2026-10-15): one row per arrival time, like the spreadsheet she knows; booked, held or open; this week
      and the next ones; nothing to change or download */
-  function schedView(wk) {
-    hideSplash(); hideToast(); S.signin = null; S.screen = 'sched'; foot.hidden = true; setDock(null);
+  function schedView(wk, asJobs) {
+    hideSplash(); hideToast(); S.signin = null; S.screen = asJobs ? 'jobs' : 'sched';
+    var again = function (w) { schedView(w, asJobs); };   /* as Jobs, it stays Jobs (2026-10-18) */ foot.hidden = true; setDock(null);
     var t0 = new Date(); var mon = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - ((t0.getDay() + 6) % 7));
     wk = wk || isoOf(mon);
-    if (S.viewAs) setTimeout(function () { if (S.screen === 'sched' && view.firstChild && !view.querySelector('.viewas')) view.insertBefore(viewAsBar(), view.firstChild); }, 0);
-    setBar('back', { title: 'Schedule', sub: 'Who is booked, and what is open', back: qView() ? function () { quickQuoteView(); } : chooseView, backLabel: qView() ? 'Quick quote' : 'Home' });
+    if (S.viewAs) setTimeout(function () { if ((S.screen === 'sched' || S.screen === 'jobs') && view.firstChild && !view.querySelector('.viewas')) view.insertBefore(viewAsBar(), view.firstChild); }, 0);
+    if (asJobs) S.jobWeek = wk;
+    setBar('back', { title: asJobs ? 'Jobs' : 'Schedule', sub: 'Who is booked, and what is open', back: qView() ? function () { quickQuoteView(); } : chooseView, backLabel: qView() ? 'Quick quote' : 'Home' });
     view.textContent = '';
     var box = q('div', 'schedv');
     var nav = q('div', 'schednav');
     var pv = q('button', null, '\u2039 Week before'), nx = q('button', null, 'Week after \u203a'); pv.type = nx.type = 'button';
     var end = jobAdd(wk, 6);
     nav.appendChild(pv); nav.appendChild(q('b', null, dayName(wk) + ' \u2013 ' + dayName(end))); nav.appendChild(nx);
-    pv.addEventListener('click', function () { schedView(jobAdd(wk, -7)); }); nx.addEventListener('click', function () { schedView(jobAdd(wk, 7)); });
+    pv.addEventListener('click', function () { again(jobAdd(wk, -7)); }); nx.addEventListener('click', function () { again(jobAdd(wk, 7)); });
+    if (asJobs) { var ready = q('section', 'ocard jready'); box.appendChild(ready); jobsReady(ready); }   /* the office books from here */
     box.appendChild(nav);
     var only = q('label', 'schedonly'), oc = q('input'); oc.type = 'checkbox'; oc.checked = !!S.schedOpenOnly; only.appendChild(oc); only.appendChild(q('span', null, 'Open times only')); box.appendChild(only);
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
+    if (asJobs) { var ob = q('button', 'lnk jboard', 'The old board: prices, addresses and the weather'); ob.type = 'button'; ob.addEventListener('click', function () { jobsBoard(); }); box.appendChild(ob); }
     view.appendChild(box);
     api('schedview', { params: { from: wk, to: end } }).then(function (j) {
       hold.textContent = '';
@@ -6062,12 +6071,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (S.schedOpenOnly && (r || past)) return;
               var tr = q('tr', (r ? r.kind : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
-              if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { schedView(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
+              if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { again(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
               tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
               if (r && r.mine) tr.classList.add('smine');   /* not .mine: that is the chip style */
-              if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
-              if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { schedView(wk); }); }); })(tr, r); }
-              if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { schedView(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
+              if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
+              if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }
+              if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { again(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               bd.appendChild(tr); n++;
             });
