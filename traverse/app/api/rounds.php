@@ -5456,7 +5456,7 @@ if ($action === 'clickuppoll') {
         if (in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted'], true) && $at > $last) $row['try'] = $TRY[$cst];
         appendLine(leadsDir() . '/leadst.log', $row);
     };
-    $SCHED_NOTE = 'Scheduled in Jen\'s ClickUp, not booked in the app: book the day on the Jobs board, or send the form.';
+    $SCHED_NOTE = 'Scheduled in Jen\'s ClickUp (a sale): no job on the board yet, book the day on the Jobs board.';
     $STATUS = ['contacted - vm / sms' => 'contacted', 'contacted - fb messenger' => 'contacted', 'on hold' => 'hold', 'quote sent' => 'quoted', 'scheduled' => 'won', 'completed' => 'won', 'lost' => 'lost'];
     $RANK = ['new' => 0, 'contacted' => 1, 'walk' => 2, 'quoted' => 3, 'won' => 4];
     $SRC = ['Referral' => 'referral', 'Website' => 'a365web', 'Facebook' => 'meta', 'Phone' => 'phone'];
@@ -5498,7 +5498,7 @@ if ($action === 'clickuppoll') {
             $u = ['id' => $row['id'], 'cu' => $tid, 'cus' => $cst, 'cud' => $deal, 'by' => 'ClickUp', 'at' => $now];
             if ($owner !== '') $u['qown'] = $owner;
             if ($want !== '' && $want !== 'new') { $u['status'] = $want; $u['note'] = 'From Jen\'s ClickUp (' . ($t['status']['status'] ?? '') . ').'; }
-            if ($cst === 'scheduled') { $u['status'] = 'quoted'; $u['note'] = $SCHED_NOTE; $want = 'quoted'; }   /* nothing booked here yet (2026-10-17) */
+            if ($cst === 'scheduled') $u['note'] = $SCHED_NOTE;   /* a sale, nothing booked here yet: Won, and a note to book it (2026-10-17) */
             appendLine(leadsDir() . '/leadst.log', $u);
             if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr, $m)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
             $row['cu'] = $tid; $row['status'] = $want ?: 'new'; $leads[$row['id']] = $row; $index($row);
@@ -5521,7 +5521,7 @@ if ($action === 'clickuppoll') {
         if ($cusChanged) $u['cus'] = $cst;
         $proof = !empty($l['signed']) || !empty($l['confirmed']) || !empty($l['sqpaid']) || (bool) jobForLead($id);
         $tgt = $want;
-        if ($tgt === 'won' && $cst === 'scheduled' && !$proof) { $tgt = 'quoted'; if ($cusChanged) $notes[] = $SCHED_NOTE; }
+        if ($cst === 'scheduled' && !jobForLead($id) && $cusChanged) $notes[] = $SCHED_NOTE;   /* a sale: Won, but nothing booked here yet */
         if ($proof && $tgt !== '') $tgt = 'won';
         if ($tgt === 'contacted' && $st === 'walk') $tgt = 'walk';
         if ($tgt !== '' && $tgt !== $st) { $u['status'] = $tgt; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $tgt . ')'; }
@@ -5535,6 +5535,7 @@ if ($action === 'clickuppoll') {
     $cuItems = []; $leadsNow = leadsAll();
     foreach ($tasks as $t) { $tid = (string) ($t['id'] ?? ''); if ($tid !== '' && !isset($taskOf[$tid]) && !in_array($tid, array_column($taskDup, 'tid'), true)) $cuItems[] = ['key' => 'cu:' . $tid, 'text' => 'In ClickUp, not in the app: ' . (a365Clean((string) ($t['name'] ?? ''), 80) ?: 'a task with no name') . ' (' . ($t['status']['status'] ?? '') . '). It has no name, phone or email the app can use.']; }
     foreach ($taskDup as $d) $cuItems[] = ['key' => 'dup:' . $d['tid'], 'text' => 'A second ClickUp task for ' . ($d['lead'] ?: $d['name']) . ': only the first is followed. Jen can delete the extra one.'];
+    foreach ($syncState as $lid => $x) if ($x['cst'] === 'scheduled' && !jobForLead((string) $lid)) $cuItems[] = ['key' => 'nojob:' . $lid, 'text' => $x['name'] . ': scheduled in ClickUp, so Won here, but there is no job on the board yet. Book the day on the Jobs board.'];
     foreach ($syncState as $lid => $x) if ($x['proof'] && $x['cst'] !== '' && !in_array($x['cst'], ['scheduled', 'completed'], true)) $cuItems[] = ['key' => 'proof:' . $lid . ':' . $x['cst'], 'text' => $x['name'] . ': ClickUp says ' . $x['cst'] . ', but the app has them booked or paid, so they stay Won. Jen can move the ClickUp task on.'];
     foreach ($leadsNow as $l) if (empty($l['cu']) && !in_array((string) ($l['status'] ?? 'new'), ['lost', 'won'], true) && ($l['src'] ?? '') !== 'messenger') $cuItems[] = ['key' => 'app:' . $l['id'], 'text' => 'In the app, not in Jen\'s ClickUp: ' . (trim((string) ($l['name'] ?? '')) ?: (string) ($l['phone'] ?? 'a lead')) . ' (' . ((string) ($l['status'] ?? 'new')) . ', ' . (LEAD_SRC_NAME[$l['src'] ?? ''] ?? (string) ($l['src'] ?? '')) . ').'];
     $cf2 = DATA_DIR . '/clickup-check.json'; $old2 = json_decode((string) @file_get_contents($cf2), true); $oldK = array_column((array) ($old2['items'] ?? []), 'key');
