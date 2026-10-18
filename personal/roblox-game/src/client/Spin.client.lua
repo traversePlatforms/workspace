@@ -1,0 +1,79 @@
+-- Turns everything marked with a "SpinSpeed" attribute (degrees per second) on this player's screen only,
+-- and sends a shooting star across the sky now and then. Nothing here touches the game rules.
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local station = workspace:WaitForChild("Station", 30)
+if not station then
+	return
+end
+local decor = station:WaitForChild("Decor", 30)
+if not decor then
+	return
+end
+
+local spinners = {}
+for _, obj in ipairs(decor:GetDescendants()) do
+	if (obj:IsA("BasePart") or obj:IsA("Model")) and obj:GetAttribute("SpinSpeed") then
+		table.insert(spinners, { obj = obj, speed = math.rad(obj:GetAttribute("SpinSpeed")) })
+	end
+end
+for _, obj in ipairs(decor:GetChildren()) do -- asteroids are models in the folder itself
+	if obj:IsA("Model") and obj:GetAttribute("SpinSpeed") and obj.PrimaryPart then
+		local seen = false
+		for _, s in ipairs(spinners) do
+			if s.obj == obj then
+				seen = true
+			end
+		end
+		if not seen then
+			table.insert(spinners, { obj = obj, speed = math.rad(obj:GetAttribute("SpinSpeed")) })
+		end
+	end
+end
+
+-- turn around the world's up axis through the object's own centre, keeping its tilt
+local function turn(cf, a)
+	return CFrame.new(cf.Position) * CFrame.Angles(0, a, 0) * (cf - cf.Position)
+end
+
+RunService.RenderStepped:Connect(function(dt)
+	for _, s in ipairs(spinners) do
+		local o = s.obj
+		if o.Parent then
+			if o:IsA("Model") then
+				o:PivotTo(turn(o:GetPivot(), s.speed * dt))
+			else
+				o.CFrame = turn(o.CFrame, s.speed * dt)
+			end
+		end
+	end
+end)
+
+-- shooting stars
+local rng = Random.new()
+task.spawn(function()
+	while true do
+		task.wait(rng:NextNumber(4, 9))
+		local angle = rng:NextNumber(0, math.pi * 2)
+		local start = Vector3.new(math.cos(angle) * 450, rng:NextNumber(120, 220), math.sin(angle) * 450)
+		local dir = Vector3.new(-math.sin(angle), rng:NextNumber(-0.25, -0.05), math.cos(angle)).Unit
+		local star = Instance.new("Part")
+		star.Name = "ShootingStar"
+		star.Anchored = true
+		star.CanCollide = false
+		star.CanQuery = false
+		star.CanTouch = false
+		star.CastShadow = false
+		star.Material = Enum.Material.Neon
+		star.Color = Color3.fromRGB(255, 240, 220)
+		star.Size = Vector3.new(0.6, 0.6, 18)
+		star.CFrame = CFrame.lookAt(start, start + dir)
+		star.Parent = workspace
+		local tw = TweenService:Create(star, TweenInfo.new(1.3, Enum.EasingStyle.Linear), { CFrame = CFrame.lookAt(start + dir * 320, start + dir * 321), Transparency = 1 })
+		tw:Play()
+		tw.Completed:Connect(function()
+			star:Destroy()
+		end)
+	end
+end)

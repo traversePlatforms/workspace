@@ -233,6 +233,8 @@ function MapBuilder.build()
 	critters.Name = "Critters"
 	critters.Parent = station
 
+	require(script.Parent.Decor).build(station, bases) -- the hangar shell, dome, props and asteroids (2026-10-18)
+
 	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters }
 end
 
