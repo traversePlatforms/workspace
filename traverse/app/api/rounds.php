@@ -2509,14 +2509,14 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
     if ($isPost && !in_array($action, ['area', 'signout'], true)) out(['ok' => false, 'why' => 'viewing', 'error' => 'Looking only: this is ' . $me . '\'s screen, so nothing is saved. Go back to your own screen to make changes.'], 409);
 }
 if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
-if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true)) {   /* only her own leads (2026-10-15) */
+if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true) && !($action === 'squarecheck' && !empty($body['job']))) {   /* only her own leads (2026-10-15); a job's pay link is checked against the job (2026-10-19) */
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     /* + her Leads to call (2026-10-18, Fable review): "They said yes" on a lead she did not make died here with Not allowed, while Reached out?
        and Not interested on the same lead were fine. Quoting it makes it hers (qown), as the Quick quote's own leadadd does. */
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4415,7 +4415,7 @@ function jobsAll(): array {
         $id = (string) $r['id'];
         if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
         $moved = false;
-        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
         if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
         if (!empty($r['del'])) $o[$id]['off'] = true;
         if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -4430,7 +4430,7 @@ function jobSlot(string $k): ?array {
 }
 function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobdays.json'), true); return is_array($j) ? $j : []; }
 function jobShow(array $j, ?array $leads = null): array {
-    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge']));
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
@@ -4442,6 +4442,16 @@ function jobShow(array $j, ?array $leads = null): array {
     return $o;
 }
 if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'schedview'], true) && !feature('walkdesk')) fail('Not here.', 404);
+/* paid, and what is left (2026-10-19): "Deposit $50 paid · $249 left", "Paid in full (card charged)" */
+function payLine(array $j): string {
+    $p = $j['pay'] ?? ['s' => 'unpaid']; $s0 = (string) ($p['s'] ?? 'unpaid');
+    if ($s0 === 'paid') return 'Paid in full' . (!empty($j['sqcharge']) ? ' (card charged)' : (!empty($j['sqpaid']) ? ' (pay link)' : (($p['how'] ?? '') !== '' ? ' (' . $p['how'] . ')' : '')));
+    if ($s0 === 'plan') return 'Service plan';
+    if ((int) ($j['price'] ?? 0) < 1) return 'Price to confirm';
+    $owed = jobOwed($j);
+    return $s0 === 'deposit' ? 'Deposit $' . (int) ($p['amt'] ?? 0) . ' paid · $' . $owed . ' left' : 'Not paid yet · $' . $owed . ' due';
+}
+function cardLine(array $j, ?array $l): string { $cc = $l['sqcard'] ?? null; if (!empty($cc['id'])) return 'Card on file (' . trim((string) ($cc['brand'] ?? 'card') . ' ' . (string) ($cc['last4'] ?? '')) . ')'; return !empty($j['card']) ? 'Card on file' : 'No card on file'; }
 function schedPay(?array $p): string { $p = $p ?: ['s' => 'unpaid']; if ($p['s'] === 'deposit') return 'Deposit paid $' . (int) ($p['amt'] ?? 0); if ($p['s'] === 'paid') return 'Paid in full'; if ($p['s'] === 'plan') return 'Service plan'; return 'Not paid yet'; }
 /* the schedule, to look at only (2026-10-15, Matthew: Jen on a quote-only account "needs a way to view scheduling"; she "has a strong
    attachment to that excel sheet"): each day's arrival times for each crew, booked / held / open, with the customer's name and town
@@ -4456,7 +4466,7 @@ if ($action === 'schedview') {
     foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to)
         $rows[] = ['id' => $j['id'], 'date' => $j['date'], 'slot' => $j['slot'], 'crew' => $j['crew'], 'kind' => 'booked', 'name' => trim((string) ($leads[$j['lead']]['name'] ?? $j['title'] ?? '')) ?: 'A customer', 'town' => $town($j['lead'], $j['addr'] ?? ''),
             'what' => (($j['pkg'] ?? 'full') === 'aerate' ? 'Aerate only' : (($j['pkg'] ?? '') === 'plan' ? 'Service plan' : 'Full')) . (($j['scope'] ?? 'all') === 'front' ? ', front yard only' : (($j['scope'] ?? 'all') === 'back' ? ', back yard only' : '')),
-            'pay' => schedPay($j['pay'] ?? null), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => !empty($j['card']) ? 'Card on file' : 'No card on file', 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
+            'pay' => payLine($j), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => cardLine($j, $leads[$j['lead']] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
     foreach (jobHolds($leads) as $h) if ($h['date'] >= $from && $h['date'] <= $to)
         $rows[] = ['lead' => $h['lead'], 'date' => $h['date'], 'slot' => $h['slot'], 'crew' => $h['crew'], 'kind' => 'held', 'name' => $h['name'], 'town' => $town($h['lead'], ''), 'what' => '', 'pay' => $h['paid'] ? 'Held: form sent, waiting to sign' : 'Held: offered with a quote', 'src' => $srcName((string) ($leads[$h['lead']]['src'] ?? '')), 'card' => '', 'done' => ''];
     if ($role === 'quote') {   /* quote-only accounts: their own customers by name and movable; anyone else's slot only says taken (2026-10-15) */
@@ -4566,6 +4576,11 @@ if ($action === 'jobsave') {
 }
 /* the crew's own jobs, with everything for each */
 if ($action === 'myjobs') {
+    if ($role === 'quote') {   /* Jen opens one of her own customers' jobs from her schedule (2026-10-19) */
+        $qj = jobsAll()[(string) ($_GET['id'] ?? '')] ?? null;
+        if (!$qj || $qj['off'] || !qMine(leadsAll()[$qj['lead']] ?? [])) fail('Not allowed.', 403);
+        out(['ok' => true, 'who' => $me, 'jobs' => [jobShow($qj)]]);
+    }
     $who = trim((string) ($_GET['who'] ?? '')); if ($who === '' || !desk()) $who = $me;
     $from = (new DateTime('today', new DateTimeZone(appTz())))->modify('-14 days')->format('Y-m-d');
     $leads = leadsAll(); $list = [];
@@ -4626,6 +4641,80 @@ function jobPhotosAll(): array {
 }
 function jobPhotos(string $jid): array { return array_values(jobPhotosAll()[$jid] ?? []); }
 function jobMine(array $j): bool { global $me; return $j['crew'] === $me || desk(); }
+/* who may settle a job's balance and send its aftercare: the crew on it, the desk, or Jen on her own customer (2026-10-19) */
+function jobOpen(array $j): bool { global $role; return jobMine($j) || ($role === 'quote' && qMine(leadsAll()[$j['lead']] ?? [])); }
+function jobOwed(array $j): int { $p = $j['pay'] ?? ['s' => 'unpaid']; if (in_array($p['s'] ?? '', ['paid', 'plan'], true)) return 0; return max(0, (int) $j['price'] - (($p['s'] ?? '') === 'deposit' ? (int) ($p['amt'] ?? 0) : 0)); }
+/* the aftercare email (2026-10-19, Matthew: "follow up with aftercare and a reminder to pay if he hasn't already ... how can we automate that
+   email out"; "ask first" before any card is charged). Sent once per job, after it is marked Done, when the balance is settled: the card
+   charged, marked paid, paid on Square, or a pay link made (the link goes in it); with nothing owed it goes at Done. A 365 job only, from the
+   365 mailbox; until that mailbox is set up it records why it did not go. The tips are CSU Extension's own words, logged in
+   sixfold/aeration365-site/FACT-CHECK.md: PlantTalk 1505 Lawn Aeration (leave the cores; water soon after) and 1516 Seeding a Lawn (keep the
+   surface moist, up to two weeks, then less often and deeper); the seed lines only when seed went down. Nothing about mowing: CSU does not say. */
+function jobIs365(array $j): bool {
+    if (empty(company()['a365'])) return false;
+    $l = leadsAll()[$j['lead']] ?? [];
+    global $TEAM; $byQuote = (($TEAM['byName'][(string) ($l['by'] ?? '')]['role'] ?? '') === 'quote');   /* made in Jen's Quick quote */
+    return in_array((string) ($l['src'] ?? ''), ['a365web', 'meta', 'messenger'], true) || !empty($l['sign']) || !empty($l['qown']) || !empty($l['quote']) || $byQuote;
+}
+function jobAftercare(string $jid, string $why, bool $again = false): array {
+    global $me;
+    $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) return ['ok' => false, 'stage' => 'nojob', 'error' => 'No such job.'];
+    if (!$again && !empty($j['aftercare']['ok'])) return ['ok' => true, 'stage' => 'already', 'error' => ''];
+    if (($j['done']['o'] ?? '') !== 'done') return ['ok' => false, 'stage' => 'notdone', 'error' => 'The job is not marked done yet.'];
+    if (!jobIs365($j)) return ['ok' => false, 'stage' => 'brand', 'error' => 'This is not a 365 job.'];
+    $l = leadsAll()[$j['lead']] ?? [];
+    $to = trim((string) ($l['email'] ?? ''));
+    $rec = function (array $r) use ($jid, $j, $to, $why) {
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'aftercare' => ['ok' => $r['ok'], 'stage' => $r['stage'], 'to' => $to, 'why' => $why, 'at' => time()], 'by' => 'aftercare', 'at' => time()]);
+        appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $j['lead'], 'job' => $jid, 'what' => 'aftercare', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
+        appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => $r['ok'] ? 'Aftercare emailed to ' . $to . '.' : 'Aftercare NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : ($r['stage'] === 'noemail' ? 'no email address' : $r['stage'])) . ').', 'by' => 'aftercare', 'at' => time()]);
+        return $r + ['to' => $to];
+    };
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
+    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = (string) ($co['phone'] ?? '');
+    $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
+    $owed = jobOwed($j); $cg = $j['sqcharge'] ?? null; $link = (string) ($j['sqlink']['url'] ?? '');
+    $tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
+    if (($j['pkg'] ?? 'full') !== 'aerate') { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.'; }
+    $bal = $cg && $owed < 1 ? 'Your $' . (int) $cg['amt'] . ' balance went on your ' . ((string) ($cg['brand'] ?? '') ?: 'card') . ' ending ' . (string) ($cg['last4'] ?? '') . ', so you are all set.'
+         : ($owed < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is $' . $owed . '.' . ($link !== '' ? ' You can pay it here: ' . $link : ''));
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    $text = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for having us! Your lawn is done. A few tips for the next couple of weeks:\n\n"
+          . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . "\n\nAny questions: call or text " . $ph . ".\n\n" . $name . "\n";
+    $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
+          . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
+          . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>'
+          . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for having us! Your lawn is done. A few tips for the next couple of weeks:</p>'
+          . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><ul style="margin:0;padding-left:20px;font-size:15px">' . implode('', array_map(fn($t) => '<li style="margin:0 0 8px">' . $e($t) . '</li>', $tips)) . '</ul></div>'
+          . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:15px">' . $e($cg || $owed < 1 || $link === '' ? $bal : 'Your remaining balance is $' . $owed . '.') . '</div>'
+          . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 18px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Pay the $' . $owed . ' balance</a></p>' : '')
+          . '<p style="margin:0;color:#5a6858;font-size:14px">Any questions: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
+          . '</div></body></html>';
+    return $rec(a365Mail($to, 'Your lawn after today: a few tips from ' . $name, $text, $html));
+}
+/* marked paid another way (cash, check, Zelle): the desk, or Jen on her own customer */
+if ($action === 'jobpaid') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!desk() && !($role === 'quote' && jobOpen($j))) fail('Not allowed.', 403);
+    if (jobOwed($j) < 1) fail('This job is already paid.');
+    $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
+    if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => $how], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Balance of $' . jobOwed($j) . ' marked paid (' . $how . ') by ' . $me . '.', 'by' => $me, 'at' => time()]);
+    $af = jobAftercare($jid, 'paid');
+    out(['ok' => true, 'aftercare' => $af['stage']]);
+}
+/* send (or send again) the aftercare email by hand */
+if ($action === 'aftercare') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!jobOpen($j)) fail('Not allowed.', 403);
+    $r = jobAftercare($jid, 'by hand: ' . $me, true);
+    out(['ok' => $r['ok'], 'stage' => $r['stage'], 'to' => $r['to'] ?? '', 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : $r['error'])]);
+}
 if ($action === 'jobphoto') {
     if (!$isPost) fail('POST required', 405);
     $jid = (string) ($_GET['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
@@ -4675,7 +4764,7 @@ if ($action === 'myschedule') {
         $rows[] = ['kind' => 'job', 'id' => $j['id'], 'date' => $j['date'], 'start' => $sl ? $sl[2] : '12:00', 'time' => $sl ? $sl[1] : (string) $j['slot'],
                    'name' => trim((string) ($l['name'] ?? ($j['title'] ?? ''))) ?: 'A customer', 'where' => $town,
                    'what' => (($j['pkg'] ?? 'full') === 'aerate' ? 'Aerate only' : (($j['pkg'] ?? '') === 'plan' ? 'Service plan' : 'Aerate, seed & feed')) . (($j['scope'] ?? 'all') === 'front' ? ', front only' : (($j['scope'] ?? 'all') === 'back' ? ', back only' : '')),
-                   'pay' => schedPay($j['pay'] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
+                   'pay' => payLine($j), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
     }
     $vw = ucfirst((string) (company()['visitShort'] ?? 'Walk'));
     foreach (deskWalks() as $w) {
@@ -4744,20 +4833,21 @@ if ($action === 'jobdone') {
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = jobsAll();
     if (!preg_match('/^j[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such job.', 404);
-    $j = $all[$id]; if ($j['crew'] !== $me && !desk()) fail('Not allowed.', 403);
+    $j = $all[$id]; if (!jobOpen($j)) fail('Not allowed.', 403);   /* + Jen on her own customer, from her schedule (2026-10-19) */
     $o = (string) ($body['outcome'] ?? ''); if (!in_array($o, ['done', 'could not', 'undo'], true)) fail('Say how it went.');
     $note = $clean($body['note'] ?? '', 1000); $got = (int) ($body['collected'] ?? 0); $mins = max(0, min(960, (int) ($body['mins'] ?? 0)));
     /* 2026-10-19 (Matthew): Done asks about how long it took ("this is going to help us track how long it takes to do the job, how long it
        takes to do certain sized lawns"); Could not do it needs what happened, "so we know exactly what happened, why and how". The office
        marking a job for someone may leave the time out. */
-    if ($o === 'done' && !desk() && $mins < 5) fail('Add about how long the job took, in hours and minutes.');
-    if ($o === 'could not' && mb_strlen($note) < 5) fail('Say what happened, so the office knows why and can rebook it.');
+    if ($o === 'done' && !desk() && $role !== 'quote' && $mins < 5) fail('Add about how long the job took, in hours and minutes.');
+    if ($o === 'could not' && $role !== 'quote' && mb_strlen($note) < 5) fail('Say what happened, so the office knows why and can rebook it.');
     $took = $mins > 0 ? trim(($mins >= 60 ? intdiv($mins, 60) . ' h ' : '') . ($mins % 60 ? ($mins % 60) . ' min' : '')) : '';
     $row = ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'note' => $note, 'collected' => max(0, $got), 'mins' => $o === 'done' ? $mins : 0, 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()];
     if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
     if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
-    out(['ok' => true]);
+    $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ['stage' => 'waiting'];   /* nothing owed: the aftercare email now */
+    out(['ok' => true, 'aftercare' => $af['stage']]);
 }
 /* ---- weather (2026-10-15, Matthew: "go ahead and build the weather day button and forecast flag") ----
  * The forecast: the National Weather Service's 7-day forecast for the base (Englewood), cached an hour. A day is flagged when rain or snow
@@ -5414,6 +5504,8 @@ if ($action === 'leads') {
     $leads = leadsAll();
     if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l) || quoteInbox($l));   /* her own customers, and her Leads to call (2026-10-16) */
     foreach ($leads as &$ql) $ql['qinbox'] = quoteInbox($ql, $role === 'quote'); unset($ql);   /* in the quote account's Leads to call */
+    $jobOf = []; foreach (jobsAll() as $jj) if (!$jj['off']) $jobOf[$jj['lead']] = $jj;   /* each lead's job and its money (2026-10-19, Jen checks before charging) */
+    foreach ($leads as &$ql) if (isset($jobOf[$ql['id']])) { $jj = $jobOf[$ql['id']]; $ql['job'] = ['id' => $jj['id'], 'date' => $jj['date'], 'crew' => $jj['crew'], 'price' => (int) $jj['price'], 'owed' => jobOwed($jj), 'pay' => payLine($jj), 'card' => cardLine($jj, $ql), 'done' => $jj['done'] ? (string) $jj['done']['o'] : '']; } unset($ql);
     /* a manager sees the leads nobody owns yet and their own team's */
     if (!desk() && $role === 'manager') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
@@ -5944,10 +6036,10 @@ if ($action === 'squarecheck') {
     }
     $all = jobsAll(); $j = $all[$jid] ?? null;
     if (!$j || $j['off'] || empty($j['sqlink']['order'])) fail('No Square link on this job.', 404);
-    if (!desk() && $j['crew'] !== $me) fail('Not allowed.', 403);
+    if (!jobOpen($j)) fail('Not allowed.', 403);
     if (($j['pay']['s'] ?? '') === 'paid') out(['ok' => true, 'paid' => true]);
     [$paid, $pid] = squareOrderPaid((string) $j['sqlink']['order']);
-    if ($paid) appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['order' => (string) $j['sqlink']['order'], 'payment' => $pid, 'at' => time()], 'by' => 'Square', 'at' => time()]);
+    if ($paid) { appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['order' => (string) $j['sqlink']['order'], 'payment' => $pid, 'at' => time()], 'by' => 'Square', 'at' => time()]); jobAftercare($jid, 'paid'); }
     out(['ok' => true, 'paid' => $paid]);
 }
 /* charge what is left on a job to the card they saved with the deposit (2026-10-15): the office, or the crew on the job. One at a time
@@ -5960,13 +6052,21 @@ if ($action === 'jobcharge') {
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not do that. Try again.', 500);
     $j = jobsAll()[$jid] ?? null;
     if (!$j || $j['off']) fail('No such job.', 404);
-    if (!desk() && $j['crew'] !== $me) fail('Not allowed.', 403);
+    if (!jobOpen($j)) fail('Not allowed.', 403);
     if (($j['pay']['s'] ?? '') === 'paid') fail('This job is already paid.');
     $l = leadsAll()[$j['lead']] ?? null; $cc = $l['sqcard'] ?? null;
     if (!$l || empty($cc['id']) || empty($l['sqcust'])) fail('No card is saved for this customer.');
     $left = (int) $j['price'] - (($j['pay']['s'] ?? '') === 'deposit' ? (int) ($j['pay']['amt'] ?? 0) : 0);
     if ($left < 1) fail('Nothing is left to pay.');
     if ((int) ($body['amount'] ?? 0) !== $left) fail('The balance is now $' . $left . '. Open the job again.');
+    if (!empty($j['sqlink']['order'])) {   /* 2026-10-19: a pay link sent earlier may already be paid; ask Square before charging the card */
+        [$lp, $lpid] = squareOrderPaid((string) $j['sqlink']['order']);
+        if ($lp) {
+            appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['order' => (string) $j['sqlink']['order'], 'payment' => $lpid, 'at' => time()], 'by' => 'Square', 'at' => time()]);
+            flock($lk, LOCK_UN); jobAftercare($jid, 'paid');
+            fail('They already paid the balance on the pay link, so nothing was charged. The job now shows paid.', 409);
+        }
+    }
     $tries = (int) ($j['chgfail']['n'] ?? 0);
     $r = squareApi('POST', '/v2/payments', ['idempotency_key' => 'chg-' . substr(sha1($jid . '|' . $left . '|' . $tries), 0, 32), 'source_id' => (string) $cc['id'], 'customer_id' => (string) $l['sqcust'],
         'amount_money' => ['amount' => $left * 100, 'currency' => 'USD'], 'location_id' => (string) squareCfg()['location'], 'autocomplete' => true, 'reference_id' => $jid,
@@ -5980,7 +6080,8 @@ if ($action === 'jobcharge') {
     appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqcharge' => ['payment' => (string) $p['id'], 'amt' => $left, 'last4' => (string) ($cc['last4'] ?? ''), 'brand' => (string) ($cc['brand'] ?? ''), 'at' => time(), 'by' => $me], 'by' => $me, 'at' => time()]);
     flock($lk, LOCK_UN);
     a365Alert('Balance charged', $who . ' · $' . $left . ' · ' . ($cc['brand'] ?? 'card') . ' ending ' . ($cc['last4'] ?? ''));
-    out(['ok' => true, 'amt' => $left, 'last4' => (string) ($cc['last4'] ?? ''), 'brand' => (string) ($cc['brand'] ?? '')]);
+    $af = jobAftercare($jid, 'charged');   /* settled: the aftercare email, if the job is done (2026-10-19) */
+    out(['ok' => true, 'amt' => $left, 'last4' => (string) ($cc['last4'] ?? ''), 'brand' => (string) ($cc['brand'] ?? ''), 'aftercare' => $af['stage']]);
 }
 /* a pay link for what is left on a job (the office, or the crew on the day) */
 if ($action === 'jobpaylink') {
@@ -5989,7 +6090,7 @@ if ($action === 'jobpaylink') {
     if (!squareFor()) fail('Square is not connected yet.');
     $jid = (string) ($body['id'] ?? ''); $all = jobsAll(); $j = $all[$jid] ?? null;
     if (!$j || $j['off']) fail('No such job.', 404);
-    if (!desk() && $j['crew'] !== $me) fail('Not allowed.', 403);
+    if (!jobOpen($j)) fail('Not allowed.', 403);
     if (($j['pay']['s'] ?? '') === 'paid') fail('This job is already paid.');
     $left = (int) $j['price'] - (in_array($j['pay']['s'] ?? '', ['deposit'], true) ? (int) ($j['pay']['amt'] ?? 0) : 0);
     if (isset($body['amount']) && is_numeric($body['amount'])) { $a = (int) $body['amount']; if ($a < 1 || $a > (int) $j['price']) fail('Pick an amount between $1 and the price.'); $left = $a; }
@@ -5999,7 +6100,8 @@ if ($action === 'jobpaylink') {
     $pl = squareLink('Balance: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $left * 100, '', (string) ($l['email'] ?? ''));
     if (!empty($pl['err'])) fail($pl['err'], 502);
     if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'sqlink' => $pl, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
-    out(['ok' => true, 'url' => $pl['url'], 'amt' => $left]);
+    $af = jobAftercare($jid, 'link');   /* the aftercare email carries the link, if the job is done (2026-10-19) */
+    out(['ok' => true, 'url' => $pl['url'], 'amt' => $left, 'aftercare' => $af['stage']]);
 }
 if ($action === 'leadstatus') {
     if (!$isPost) fail('POST required', 405);

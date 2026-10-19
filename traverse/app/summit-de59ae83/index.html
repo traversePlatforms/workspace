@@ -1875,6 +1875,10 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .jpx .ic{width:14px;height:14px}
   .jpadd{display:inline-flex;align-items:center;gap:6px}
   .joblot{margin:12px 0 4px}
+  .jafter{margin:14px 0 4px}
+  .jpaid{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+  .jpaid select{font:16px var(--sans);padding:10px 12px;border:1.5px solid #cfd6d1;border-radius:12px;background:#fff;color:#16201C}
+  .sedform .sedopen{display:block;margin:0 0 8px;font-weight:800}
   .cstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 18px}
   .cstats > div{background:var(--card,#fff);border:1px solid var(--line,#e2e6e3);border-radius:16px;padding:14px}
   .cstats b{display:block;font:400 28px/1.1 var(--serif);color:var(--ember)}
@@ -5256,12 +5260,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (lead.sign && lead.sign.how && lead.sign.how !== 'link') takenBtn.setAttribute('aria-pressed', 'true');   /* sent already: she took it then */
       depBox.appendChild(takenBtn);
       /* signature or not (2026-10-17, Matthew: "she can choose to send one that requires signing and what that doesnt") */
-      if (P.nosign == null) P.nosign = !!(lead.sign && lead.sign.nosign);
+      if (P.nosign == null) P.nosign = lead.sign ? !!lead.sign.nosign : true;   /* no signature is the default; signing is for big jobs (2026-10-19) */
       depBox.appendChild(q('div', 'dwsub', 'The form'));
       var nsRow = q('div', 'dwlen jnosign'), nsNote = q('div', 'ltrynote'); depBox.appendChild(nsRow); depBox.appendChild(nsNote);
       var drawNs = function () {
         nsRow.textContent = '';
-        chips(nsRow, { sign: 'Needs their signature', nosign: 'No signature needed' }, function () { return P.nosign ? 'nosign' : 'sign'; }, function (k) { P.nosign = k === 'nosign'; drawNs(); });
+        chips(nsRow, { nosign: 'No signature (most jobs)', sign: 'Needs their signature (big jobs)' }, function () { return P.nosign ? 'nosign' : 'sign'; }, function (k) { P.nosign = k === 'nosign'; drawNs(); });
         nsNote.textContent = P.nosign ? 'They get the same page to read and keep, and pay there if it is by Square link. No signing: the job is booked as soon as you send it, or when they pay the link.'
           : 'They read it, pay there if it is by Square link, and sign. Signing books the job.';
       };
@@ -5605,6 +5609,45 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'Your stats need signal.')); });
     window.scrollTo(0, 0);
   }
+  /* the balance and the aftercare (2026-10-19, Matthew: Jen "doesn't have a job done section"; "how can we automate that email out"). Mark it
+     paid for money taken another way; the aftercare email goes by itself once the job is done and the balance settled, or by hand here; or
+     as a text from her phone. Same tips as the email (CSU PlantTalk 1505 and 1516, see aeration365-site/FACT-CHECK.md) */
+  function afWhy(st) { return st === 'config' ? 'the 365 mailbox is not set up yet' : st === 'noemail' ? 'there is no email address for them' : st === 'brand' ? 'this is not a 365 job' : st === 'notdone' ? 'the job is not marked done' : (st || 'try again'); }
+  function aftercareText(jb, owe) {
+    var L = jb.who || {}, B = leadBrand({ src: L.src, name: L.name }), first = greetName(L.name);
+    var t = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. Thanks for having us! A few tips for the next couple of weeks:\nLeave the plugs on the lawn. They work back into the grass on their own.\nGive the lawn a good watering soon.';
+    if (jb.pkg !== 'aerate') t += '\nWhile the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.\nOnce the new grass is up and rooting, water less often but more deeply.';
+    var bal = jb.sqcharge && owe < 1 ? 'Your ' + money0(jb.sqcharge.amt) + ' balance went on your card ending ' + jb.sqcharge.last4 + ', so you are all set.' : owe < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is ' + money0(owe) + '.' + (jb.sqlink ? ' You can pay it here: ' + jb.sqlink.url : '');
+    return t + '\n' + bal + ' Any questions, just text me here.';
+  }
+  function jobAfterBox(jb, owe, redraw) {
+    var w = q('div', 'jafter');
+    if (owe > 0) {
+      w.appendChild(q('div', 'dwh', 'Balance ' + money0(owe)));
+      var row = q('div', 'jpaid'), sel = q('select'), pb = q('button', 'save', 'Mark it paid'); pb.type = 'button'; sel.setAttribute('aria-label', 'How they paid');
+      [['cash', 'Cash'], ['check', 'Check'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['card', 'Card'], ['other', 'Other']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sel.appendChild(op); });
+      pb.addEventListener('click', function () {
+        if (!window.confirm('Mark the ' + money0(owe) + ' balance paid by ' + sel.options[sel.selectedIndex].text.toLowerCase() + '?')) return;
+        pb.disabled = true;
+        api('jobpaid', { body: { id: jb.id, how: sel.value } }).then(function (j) { pb.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Marked paid', money0(owe) + (j.aftercare === 'sent' ? ' \u00b7 aftercare emailed' : ''), null); redraw(); }).catch(function () { pb.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
+      });
+      row.appendChild(sel); row.appendChild(pb); w.appendChild(row);
+      w.appendChild(q('div', 'ltrynote', 'For money taken another way.' + ((S.pays || wdOn()) ? ' The card on file and the pay link are above.' : ' An admin can let you charge cards and make pay links (Takes payments, in Accounts).')));
+    }
+    w.appendChild(q('div', 'dwh', 'Aftercare'));
+    var A = jb.aftercare, isDone = !!(jb.done && jb.done.o === 'done');
+    w.appendChild(q('div', 'qline' + (A && A.ok ? ' qyes' : ''), A ? (A.ok ? 'Aftercare emailed to ' + A.to + ', ' + ago(A.at) : 'Aftercare email not sent: ' + afWhy(A.stage) + '.') : isDone ? (owe > 0 ? 'The aftercare email goes once the balance is settled: the card charged, marked paid, or a pay link made (the link goes in it).' : 'The aftercare email goes now that it is done.') : 'The aftercare email goes after the job is marked done and the balance is settled.'));
+    if (isDone) {
+      var r2 = q('div', 'lcontact');
+      var se = q('button', 'lnk', A && A.ok ? 'Email it again' : 'Send the aftercare email now'); se.type = 'button';
+      se.addEventListener('click', function () { se.disabled = true; api('aftercare', { body: { id: jb.id } }).then(function (j) { se.disabled = false; if (!j.ok) toast('Not emailed', j.error || afWhy(j.stage), null); else toast('Aftercare emailed', j.to, null); redraw(); }).catch(function () { se.disabled = false; toast('No signal', 'Try again.', null); }); });
+      r2.appendChild(se);
+      var tel = digits(jb.who && jb.who.phone);
+      if (tel.length >= 10) { var at = q('a'); at.href = 'sms:' + tel + '?&body=' + encodeURIComponent(aftercareText(jb, owe)); at.appendChild(ico('chat', 2.2)); at.appendChild(document.createTextNode('Text it instead')); r2.appendChild(at); }
+      w.appendChild(r2);
+    }
+    return w;
+  }
   /* photos on a job (2026-10-19, Matthew: "there also should be a spot to add photos") */
   function jobPhotoBox(jb, redraw) {
     var w = q('div', 'jphotos'); w.appendChild(q('div', 'dwh', 'Photos'));
@@ -5713,13 +5756,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       sqBox.appendChild(q('div', 'ltrynote', 'They pay by card on Square\u2019s page; it opens on their phone. The job shows paid once Square has it.'));
     });
-    if (H && H.region) c.appendChild(lawnCheckBox(H.region, H.id, H.lawn && H.lawn.sq));   /* Brad checks our measurement on the day */
+    if (H && H.region && !qView()) c.appendChild(lawnCheckBox(H.region, H.id, H.lawn && H.lawn.sq));   /* Brad checks our measurement on the day */
     if (jb.note) { c.appendChild(q('div', 'dwh', 'Notes from ' + jb.by)); c.appendChild(q('div', 'lmsg', jb.note)); }
     if (L && L.notes && L.notes.length) {
       c.appendChild(q('div', 'dwh', 'Notes on the lead'));
       var ns = q('div', 'lnotes'); L.notes.forEach(function (n) { ns.appendChild(q('div', null, n.note + ' — ' + n.by + ', ' + ago(n.at))); }); c.appendChild(ns);
     }
-    c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19) */
+    if (!qView()) c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19); Jen's account cannot open them */
     c.appendChild(q('div', 'dwh', 'How did it go?'));
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
     var panel = null;
@@ -5729,17 +5772,33 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var un = q('button', 'lnk', 'Undo this'); un.type = 'button';
       un.addEventListener('click', function () { if (window.confirm('Undo \u201c' + (jb.done.o === 'done' ? 'Done' : 'Could not do it') + '\u201d?')) done('undo', {}); });
       c.appendChild(un);
+      if (jb.done.o === 'done' && !jb.done.mins && jb.crew === S.me && !qView()) {   /* done without a time: the crew adds theirs */
+        var tw = q('div', 'jdone'); tw.appendChild(q('div', 'jdq', 'Add how long it took (an estimate)'));
+        var trow = q('div', 'jdtime'), th = q('select'), tmn = q('select');
+        for (var h2 = 0; h2 <= 10; h2++) { var o2 = q('option', null, h2 + (h2 === 1 ? ' hour' : ' hours')); o2.value = String(h2); th.appendChild(o2); }
+        for (var m2 = 0; m2 < 60; m2 += 5) { var o3 = q('option', null, m2 + ' min'); o3.value = String(m2); tmn.appendChild(o3); }
+        th.setAttribute('aria-label', 'Hours'); tmn.setAttribute('aria-label', 'Minutes'); trow.appendChild(th); trow.appendChild(tmn); tw.appendChild(trow);
+        var terr = q('div', 'err'); tw.appendChild(terr);
+        var tsv = q('button', 'save', 'Save my time'); tsv.type = 'button'; tw.appendChild(tsv);
+        tsv.addEventListener('click', function () { var mm = (+th.value) * 60 + (+tmn.value); if (mm < 5) { terr.textContent = 'Add about how long it took.'; return; } done('done', { mins: mm, note: jb.done.note || '', collected: jb.done.collected || 0 }, tsv, terr); });
+        c.appendChild(tw);
+      }
+      if (jb.done.o === 'done' && owe > 0) c.appendChild(q('div', 'ltrynote', 'Balance ' + money0(owe) + ' still owing' + ((S.pays || wdOn()) ? (jb.cof ? ': charge the card on file above, or make a pay link.' : ': make a pay link above, or the office follows up.') : ': the office follows up.') + ' The aftercare email goes once it is settled.'));   /* ask first: nothing is charged by itself */
     } else {
       /* 2026-10-19 (Matthew): each one opens its own notes. Done asks about how long it took, an estimate in hours and minutes ("this is going
          to help us track how long it takes to do the job, how long it takes to do certain sized lawns"); Could not do it needs what happened */
       var st = q('div', 'lstat dwout'); panel = q('div', 'jdone');
       [['done', 'Done'], ['could not', 'Could not do it']].forEach(function (d) {
         var b = q('button', null, d[1]); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
-        b.addEventListener('click', function () { [].forEach.call(st.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); openPanel(d[0]); });
+        b.addEventListener('click', function () {
+          if (qView()) { if (window.confirm(d[0] === 'done' ? 'Mark ' + name + ' done?' : 'Mark ' + name + ' as could not be done?')) done(d[0], {}); return; }   /* Jen: one tap, no time or reason (2026-10-19) */
+          [].forEach.call(st.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); openPanel(d[0]);
+        });
         st.appendChild(b);
       });
       c.appendChild(st); c.appendChild(panel);
     }
+    if (qView() || wdOn()) c.appendChild(jobAfterBox(jb, owe, redraw));   /* the balance and the aftercare (2026-10-19) */
     if (wdOn()) {
       var ch = q('button', 'lnk', 'Change the booking ›'); ch.type = 'button';
       ch.addEventListener('click', function () { jobBookView(null, jb, null); });
@@ -5749,7 +5808,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       panel.textContent = '';
       var err = q('div', 'err'), gi = null;
       if (o === 'done') {
-        panel.appendChild(q('div', 'jdq', 'About how long did it take? (an estimate)'));
+        panel.appendChild(q('div', 'jdq', 'About how long did it take? (an estimate' + (wdOn() ? ', optional for the office)' : ')')));
         var row = q('div', 'jdtime'), hs = q('select'), ms = q('select');
         for (var h = 0; h <= 10; h++) { var oh = q('option', null, h + (h === 1 ? ' hour' : ' hours')); oh.value = String(h); hs.appendChild(oh); }
         for (var m = 0; m < 60; m += 5) { var om = q('option', null, m + ' min'); om.value = String(m); ms.appendChild(om); }
@@ -5761,7 +5820,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var sv = q('button', 'save', 'Save: job done'); sv.type = 'button'; panel.appendChild(sv);
         sv.addEventListener('click', function () {
           var mins = (+hs.value) * 60 + (+ms.value);
-          if (mins < 5 && !wdOn()) { err.textContent = 'Add about how long it took (hours and minutes).'; return; }
+          if (mins < 5 && !wdOn() && !qView()) { err.textContent = 'Add about how long it took (hours and minutes).'; return; }
           done('done', { mins: mins, note: nt.value.trim(), collected: gi ? parseInt(String(gi.value).replace(/\D/g, ''), 10) || 0 : 0 }, sv, err);
         });
       } else {
@@ -6371,6 +6430,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (l.status === 'won' && !l.signed && !l.confirmed) det.appendChild(q('div', 'qline qyes', 'Won without the form \u00b7 in Customers'));
         else if (l.sign) det.appendChild(signLine(l));
         else det.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent'));
+        if (l.job) {   /* the job and where its money stands (2026-10-19, Matthew: check before charging) */
+          var jl = q('div', 'qline' + (l.job.owed < 1 ? ' qyes' : ''), 'Job ' + dayName(l.job.date) + ' \u00b7 ' + (l.job.price ? money0(l.job.price) + ' \u00b7 ' : '') + l.job.pay + ' \u00b7 ' + l.job.card + (l.job.done === 'done' ? ' \u00b7 done' : l.job.done ? ' \u00b7 not done' : ''));
+          det.appendChild(jl);
+          var oj2 = q('button', 'lnk', 'Open the job: mark done, payment and aftercare \u203a'); oj2.type = 'button'; oj2.addEventListener('click', function () { jobView(l.job.id, function () { quickQuoteView(); }); }); det.appendChild(oj2);
+        }
         if (!cust) det.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
         c.appendChild(det);
       }
@@ -6476,6 +6540,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var er = q('tr', 'sedit'), td = q('td'); td.colSpan = 9; er.appendChild(td);
     var f = q('div', 'sedform'); td.appendChild(f);
     var held = r.kind === 'held' && !r.id;   /* not signed yet (2026-10-16): the quote's held time */
+    if (r.id && (qView() || wdOn())) { var oj = q('button', 'lnk sedopen', 'Open the job: mark done, payment and aftercare \u203a'); oj.type = 'button'; oj.addEventListener('click', function () { jobView(r.id, function () { done(); }); }); f.appendChild(oj); }   /* 2026-10-19 */
     f.appendChild(q('b', null, 'Move ' + r.name + (held ? ' (not signed yet)' : '')));
     var dl = q('label', null, 'Day'), di = q('input'); di.type = 'date'; di.value = r.date; di.min = todayISO(); dl.appendChild(di);
     var sl = q('label', null, 'Time'), ss = q('select'); J.slots.forEach(function (o) { var op = q('option', null, o.label); op.value = o.k; if (o.k === r.slot) op.selected = true; ss.appendChild(op); }); sl.appendChild(ss);
