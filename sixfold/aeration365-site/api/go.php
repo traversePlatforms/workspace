@@ -30,38 +30,38 @@ header('X-Content-Type-Options: nosniff');
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>365 Aeration &amp; Seeding</title>
+<title>Sixfold 365 · Aeration &amp; Overseeding</title>
 <meta name="description" content="Core aeration and overseeding across the Denver metro. Get a quote, or call or text <?= $h($PHONE_SHOWN) ?>.">
 <meta name="robots" content="noindex">
-<link rel="icon" href="/assets/365-icon.png">
+<link rel="icon" href="/assets/365-sixfold-badge.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{--green:#2e5e2c;--green-d:#21451f;--grass:#4c9a3f;--soil:#8a5a3b;--soil-d:#6b3f22;--sky:#cfe7f4;--cream:#fdf8ee;--ink:#1d2a1c;--soft:#5a6858;--line:#dfe6da}
+  /* the combined Sixfold x 365 look, as printed on the business cards (badge option C, Light): Bone ground, forest green, ember accent */
+  :root{--bone:#EDE7DC;--cream:#FFF8EC;--ink:#1D2A1C;--head:#2F5D2C;--green:#4C7A3F;--ember:#E4703A;--soft:#5a6858}
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;background:var(--sky);color:var(--ink);font:16px/1.5 'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column}
-  main{flex:1;width:100%;max-width:460px;margin:0 auto;padding:36px 20px 28px;text-align:center}
-  .logo{width:132px;height:auto;display:block;margin:0 auto 14px}
-  h1{font:800 30px/1.1 'Outfit',sans-serif;color:var(--green-d);margin:0 0 6px;letter-spacing:-.01em}
-  .tag{font:500 17px/1.4 'DM Sans',sans-serif;color:#2d3b2c;margin:0 0 4px}
+  body{margin:0;min-height:100vh;background:var(--bone);color:var(--ink);font:16px/1.5 'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column}
+  main{flex:1;width:100%;max-width:460px;margin:0 auto;padding:32px 20px 28px;text-align:center}
+  .badge{width:168px;height:168px;display:block;margin:0 auto 16px}
+  h1{font:800 30px/1.1 'Outfit',sans-serif;color:var(--head);margin:0 0 10px;letter-spacing:-.01em}
+  h1::after{content:"";display:block;width:44px;height:3px;border-radius:2px;background:var(--ember);margin:12px auto 0}
+  .tag{font:500 16px/1.4 'DM Sans',sans-serif;color:var(--ink);margin:0 0 4px}
   .from{font-size:14px;color:var(--soft);margin:0 0 24px}
   .links{display:grid;gap:12px}
-  .btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 20px;border-radius:999px;font:700 17px 'Outfit',sans-serif;text-decoration:none;background:#fff;color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:0 20px;border-radius:999px;font:700 17px 'Outfit',sans-serif;text-decoration:none;background:var(--cream);color:var(--head);box-shadow:inset 0 0 0 2px var(--head)}
   .btn svg{width:20px;height:20px;flex:none}
-  .btn.main{min-height:68px;font-size:21px;background:var(--green);color:#fff;box-shadow:0 6px 16px rgba(33,69,31,.28)}
-  .btn.main:active{background:var(--green-d)}
-  .site{display:inline-block;margin-top:20px;color:var(--green);font-weight:700}
-  .ground{height:46px;background:var(--soil);position:relative}
-  .ground::before{content:"";position:absolute;left:0;right:0;top:-9px;height:12px;background:var(--grass);border-radius:50% 50% 0 0/100% 100% 0 0}
-  footer{background:var(--soil);color:#f4e8dc;text-align:center;font-size:13px;padding:0 20px 16px}
-  footer a{color:#fff}
+  .btn.main{min-height:68px;font-size:21px;background:var(--head);color:var(--cream);box-shadow:0 6px 16px rgba(29,42,28,.25)}
+  .btn.main:active{background:#244a22}
+  .site{display:inline-block;margin-top:20px;color:var(--head);font-weight:700}
+  footer{background:var(--head);color:var(--bone);text-align:center;font-size:14px;padding:18px 20px;border-top:4px solid var(--ember)}
+  footer a{color:#fff;font-weight:700}
 </style>
 </head>
 <body>
 <main>
-  <img class="logo" src="/assets/365-badge.png" alt="365 Aeration &amp; Seeding">
-  <h1>365 Aeration &amp; Seeding</h1>
-  <p class="tag">Core aeration and overseeding across the Denver metro.</p>
+  <img class="badge" src="/assets/365-sixfold-badge.svg" alt="Sixfold 365: Land, Aeration &amp; Seeding">
+  <h1>Aeration &amp; Overseeding</h1>
+  <p class="tag">Core aeration · Overseeding · Fertilizer</p>
   <p class="from">Thanks for scanning our <?= $h($FROM[$piece]) ?>.</p>
   <div class="links">
     <a class="btn main" href="/<?= $q ?>#quote">Get a quote</a>
@@ -75,7 +75,6 @@ header('X-Content-Type-Options: nosniff');
   </div>
   <a class="site" href="/<?= $q ?>">Visit our website</a>
 </main>
-<div class="ground" aria-hidden="true"></div>
 <footer>Call or text <a href="tel:<?= $h($PHONE) ?>"><?= $h($PHONE_SHOWN) ?></a></footer>
 </body>
 </html>
