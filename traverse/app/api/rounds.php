@@ -4419,7 +4419,7 @@ function jobsAll(): array {
         $id = (string) $r['id'];
         if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
         $moved = false;
-        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
         if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
         if (!empty($r['del'])) $o[$id]['off'] = true;
         if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -5890,6 +5890,14 @@ if ($action === 'clickuppoll') {
         if ((empty($l['house']) || !empty($l['house']['typed'])) && $addr !== ''   /* a typed address gives way to the house on our lists */ && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
         if (count($u) > 3) { if ($notes) $u['note'] = implode(' ', $notes); appendLine(leadsDir() . '/leadst.log', $u); }
         $cuTry(['status' => $u['status'] ?? ($l['status'] ?? 'new')] + $l, $id, $cst, $t);
+        /* completed in her ClickUp: the job done here (2026-10-19, Matthew). Once per job ('cudone'), so an Undo here is not fought every pull;
+           only a job whose day has come. The crew can still add their time to it. */
+        if ($cst === 'completed' && ($cj = jobForLead($id)) && empty($cj['done']) && empty($cj['cudone']) && (string) $cj['date'] <= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) {
+            appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $cj['id'], 'done' => ['o' => 'done', 'note' => 'Marked completed in Jen\'s ClickUp.', 'collected' => 0, 'mins' => 0, 'by' => 'ClickUp', 'at' => $now], 'cudone' => $now, 'by' => 'ClickUp', 'at' => $now]);
+            appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'note' => 'Job done (completed in Jen\'s ClickUp).', 'by' => 'ClickUp', 'at' => $now]);
+            if (jobOwed($cj) < 1) jobAftercare((string) $cj['id'], 'done');
+            $moved[] = (string) ($l['name'] ?? $name) . ' (job done)';
+        }
     }
     /* the sync check, every pull (2026-10-17): whatever still does not match between ClickUp and the app */
     $cuItems = []; $leadsNow = leadsAll();

@@ -1860,7 +1860,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   /* the field crew (2026-10-19) */
   .crewadd{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:6px 0 16px}
   button.save.crewadd{min-height:50px;border:0;border-radius:14px;background:var(--go);color:var(--on-go);font:800 15px var(--sans);box-shadow:none}
-  .crewup .dwrow,.crewstats .dwrow{width:100%}
+  .crewup .dwrow,.crewstats .dwrow,.crewneed .dwrow{width:100%}
+  .crewneed .dwrow{border-left:4px solid var(--ember)}
   .schedv button.crewaddl{display:inline-flex;width:auto;margin:0 0 12px;padding:9px 16px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:800 14px var(--sans);text-decoration:none;cursor:pointer}
   .crewsched tr.stoday td{background:color-mix(in srgb,var(--ember) 9%,transparent)}
   .crewform label.cwf{display:grid;gap:6px;margin:0 0 12px;font-weight:700;font-size:14px}
@@ -5495,6 +5496,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     fs0.appendChild(ico('search', 2.4)); fs0.appendChild(q('span', null, 'Look up a property'));
     fs0.addEventListener('click', function () { searchView(chooseView); });
     box.appendChild(fs0);
+    var need = q('section', 'crewneed'); box.appendChild(need);   /* finished jobs still missing his time (2026-10-19) */
+    api('mystats').then(function (j) {
+      var rows = j && j.ok ? j.past.filter(function (x) { return x.o === 'done' && !x.mins; }) : [];
+      if (!rows.length) return;
+      need.appendChild(q('h2', 'tgrp', 'Add your time: ' + rows.length + (rows.length === 1 ? ' job' : ' jobs')));
+      need.appendChild(q('div', 'ltrynote', 'These are marked done but have no time yet. Tap one and add about how long it took.'));
+      rows.slice(0, 6).forEach(function (x) {
+        var b = q('button', 'calev k-job dwrow crewrow'); b.type = 'button'; b.appendChild(ico('clock', 2.2));
+        var tx = q('span'); tx.appendChild(q('b', null, dayName(x.date) + ' \u00b7 ' + x.name)); tx.appendChild(q('small', null, [x.town, x.sq ? Number(x.sq).toLocaleString(LOCALE) + ' sq ft' : '', 'needs your time'].filter(Boolean).join(' \u00b7 ')));
+        b.appendChild(tx); b.addEventListener('click', function () { jobView(x.id, chooseView); }); need.appendChild(b);
+      });
+    }).catch(function () {});
     var up = q('section', 'crewup'); up.appendChild(q('h2', 'tgrp', 'Coming up')); var list = q('div'); list.appendChild(q('div', 'skel')); up.appendChild(list); box.appendChild(up);
     var add = q('button', 'save crewadd'); add.type = 'button'; add.appendChild(ico('route', 2.2)); add.appendChild(document.createTextNode('Add a ' + vw()));
     add.addEventListener('click', function () { crewWalkView(chooseView); }); box.appendChild(add);
