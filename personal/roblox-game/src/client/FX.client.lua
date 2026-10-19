@@ -167,52 +167,86 @@ end
 
 -- ---------- arm animations (2026-10-18, Matthew: "a punching animation", "animations to the weapons") ----------
 -- Every screen moves the puncher's shoulder joint itself, so everyone sees the swing without any uploaded animations.
-local restC0 = {} -- [Motor6D] = its normal C0
-local armTweens = {} -- [Motor6D] = the tween playing on it
-local function joint(char, r15Part, r15Name, r6Name)
-	local p = char:FindFirstChild(r15Part)
-	local m = p and p:FindFirstChild(r15Name)
-	if m and m:IsA("Motor6D") then
-		return m, true
+local restC0 = {} -- [joint] = its resting frame
+local armTweens = {} -- [joint] = which swing owns it right now
+-- Finds a body joint and the property that bends it. Older avatars join parts with a Motor6D (bend its C0); newer ones
+-- (Roblox's avatar joint upgrade, 2026-10-18 fix: the arm didn't move) use an AnimationConstraint, which bends by
+-- turning the attachment it hangs from on the body.
+local function joint(char, name, r6Name, bodyPart)
+	local m
+	for _, d in ipairs(char:GetDescendants()) do
+		if (d.Name == name or d.Name == r6Name) and (d:IsA("Motor6D") or d:IsA("AnimationConstraint")) then
+			m = d
+			break
+		end
 	end
-	local torso = char:FindFirstChild("Torso")
-	m = torso and torso:FindFirstChild(r6Name)
-	if m and m:IsA("Motor6D") then
-		return m, false
+	if not m then
+		return nil
+	end
+	local r15 = m.Name == name
+	if m:IsA("Motor6D") then
+		return m, "C0", r15
+	end
+	-- turn the attachment on the body side (UpperTorso for the shoulder); if that one is Attachment1, turn it the other way
+	local a0, a1 = m.Attachment0, m.Attachment1
+	if a1 and a1.Parent and a1.Parent.Name == bodyPart then
+		return a1, "CFrame", r15, true
+	end
+	if a0 then
+		return a0, "CFrame", r15, false
 	end
 	return nil
 end
 
+local warned = false
 -- steps: a list of { angle forward (radians), twist of the body, seconds }; ends back at rest
 local function animate(char, steps)
-	local shoulder, r15 = joint(char, "RightUpperArm", "RightShoulder", "Right Shoulder")
-	local waist = r15 and select(1, joint(char, "UpperTorso", "Waist", "")) or nil
+	local shoulder, prop, r15, flipS = joint(char, "RightShoulder", "Right Shoulder", "UpperTorso")
 	if not shoulder then
+		if not warned then
+			warned = true
+			local seen = {}
+			for _, d in ipairs(char:GetDescendants()) do
+				if d:IsA("JointInstance") or d:IsA("Constraint") then
+					table.insert(seen, d.Name .. " (" .. d.ClassName .. ")")
+				end
+			end
+			warn("[Star Station] no shoulder joint found for the punch animation. Joints: " .. table.concat(seen, ", "))
+		end
 		return
 	end
-	restC0[shoulder] = restC0[shoulder] or shoulder.C0
+	local waist, wprop, flipW = nil, nil, false
+	if r15 then
+		waist, wprop, _, flipW = joint(char, "Waist", "", "LowerTorso")
+	end
+	local function turn(rot, flip)
+		return flip and rot:Inverse() or rot
+	end
+	restC0[shoulder] = restC0[shoulder] or shoulder[prop]
 	if waist then
-		restC0[waist] = restC0[waist] or waist.C0
+		restC0[waist] = restC0[waist] or waist[wprop]
 	end
 	local token = {}
 	armTweens[shoulder] = token
+	local function go(obj, p, goal, secs)
+		TweenService:Create(obj, TweenInfo.new(secs, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { [p] = goal }):Play()
+	end
 	task.spawn(function()
 		for _, st in ipairs(steps) do
 			if armTweens[shoulder] ~= token or not shoulder.Parent then
 				return
 			end
 			local angle, twist, secs = st[1], st[2], st[3]
-			local goal = r15 and (restC0[shoulder] * CFrame.Angles(angle, 0, 0)) or (restC0[shoulder] * CFrame.Angles(0, 0, angle))
-			TweenService:Create(shoulder, TweenInfo.new(secs, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = goal }):Play()
+			go(shoulder, prop, restC0[shoulder] * turn(r15 and CFrame.Angles(angle, 0, 0) or CFrame.Angles(0, 0, angle), flipS), secs)
 			if waist then
-				TweenService:Create(waist, TweenInfo.new(secs, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = restC0[waist] * CFrame.Angles(0, twist, 0) }):Play()
+				go(waist, wprop, restC0[waist] * turn(CFrame.Angles(0, twist, 0), flipW), secs)
 			end
 			task.wait(secs)
 		end
 		if armTweens[shoulder] == token and shoulder.Parent then
-			TweenService:Create(shoulder, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = restC0[shoulder] }):Play()
+			go(shoulder, prop, restC0[shoulder], 0.25)
 			if waist then
-				TweenService:Create(waist, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = restC0[waist] }):Play()
+				go(waist, wprop, restC0[waist], 0.25)
 			end
 		end
 	end)
@@ -264,7 +298,7 @@ local function swing(pos, who, style)
 	else
 		sfx("swing", pos)
 		if char then
-			animate(char, { { -0.45, -0.3, 0.07 }, { 1.65, 0.35, 0.08 }, { 1.65, 0.35, 0.06 } }) -- pull back, jab, hold
+			animate(char, { { -0.5, -0.3, 0.09 }, { 1.65, 0.4, 0.09 }, { 1.65, 0.4, 0.12 } }) -- pull back, jab, hold
 		end
 		burst(pos, Color3.fromRGB(255, 255, 255), 8)
 	end
