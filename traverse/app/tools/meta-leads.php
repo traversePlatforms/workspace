@@ -19,6 +19,14 @@ $mlArgs = array_slice($argv ?? [], 1);
 if (!$mlArgs && is_file(__DIR__ . '/clickup-leads.php')) passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/clickup-leads.php'));
 /* the nightly Square check rides here too (2026-10-16): it runs once a night after 2 am and otherwise returns at once */
 if (!$mlArgs && is_file(__DIR__ . '/square-check.php')) passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/square-check.php'));
+/* a setup still waiting on Meta (2026-10-19: the app was "API access restricted" after the developer-account check, so the new token
+   could not be swapped): retried once an hour by itself; the setup deletes the file when it works, and this run then polls as usual */
+$mlPend = (getenv('SIXFOLD_PRIVATE_DIR') ?: dirname(__DIR__) . '/sixfold-private') . '/meta-setup.json';
+$mlTry = dirname($mlPend) . '/meta-setup-try.txt';
+if (!$mlArgs && is_file($mlPend) && time() - (int) @file_get_contents($mlTry) >= 3600) {
+    @file_put_contents($mlTry, (string) time());
+    passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__FILE__) . ' ' . escapeshellarg('--setup=' . $mlPend));
+}
 $mlApi = getenv('SIXFOLD_API_DIR') ?: dirname(__DIR__) . '/public_html/api';   /* the override is for the test copy only */
 $mlSetup = '';
 foreach ($mlArgs as $a) if (strncmp($a, '--setup=', 8) === 0) $mlSetup = substr($a, 8);
