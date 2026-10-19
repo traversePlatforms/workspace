@@ -1314,6 +1314,13 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .desk .dkc-x .ic{width:20px;height:20px}
   .desk .dkc-why{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--ink) 5%,transparent);font-weight:700;font-size:14px}
   .desk .dkc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 4px}
+  /* the lot in the door card (2026-10-19): a photo with the property line on a computer, a big button on a phone */
+  .dkc-lot{position:relative;height:210px;margin:12px 0 0;border-radius:14px;overflow:hidden;cursor:pointer;background:#2b3326;border:1px solid var(--line)}
+  .dkc-lot:focus-visible{outline:3px solid #d6400c;outline-offset:2px}
+  .dkc-lotmap{position:absolute;inset:0;background:#2b3326}
+  .dkc-lotmap.leaflet-container{background:#2b3326;cursor:pointer}
+  .dkc-lotcap{position:absolute;left:8px;bottom:8px;z-index:500;padding:4px 9px;border-radius:9px;background:rgba(20,22,28,.78);color:#fff;font-size:12.5px;font-weight:700;pointer-events:none}
+  .lotbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:10px 0 4px;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink) 6%,transparent);color:inherit;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
   .desk .dkc-tile{padding:9px 12px;border-radius:12px;border:1px solid var(--line)}
   .desk .dkc-tile small{display:block;font-size:12.5px;color:var(--soft)}
   .desk .dkc-tile span{font:500 13px/1.35 var(--mono,ui-monospace,monospace)}
@@ -7447,6 +7454,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      hides while its form is open in the capture panel, so an untouched card stays short. */
   function extras(d) {
     var wrap = q('div', 'xt');
+    if (!deskOn() && typeof d.lat === 'number' && typeof d.lon === 'number') {   /* phones: one tap to the lot and its property line (2026-10-19; it was a small chip at the bottom) */
+      var lb = q('button', 'lotbtn'); lb.type = 'button';
+      lb.appendChild(ico('globe', 2.4)); lb.appendChild(document.createTextNode('See the lot: photo and property line'));
+      lb.addEventListener('click', function () { aerialView(d); });
+      wrap.appendChild(lb);
+    }
     if (d.com) wrap.appendChild(fold(comBlock(d), d.id + ':com'));   /* commercial test buildings: what it is and who to ask for */
     if (d.mark && d.mark.outcome === 'booked' && S.walkPrompt !== d.id && S.editWalk !== d.id) wrap.appendChild(walkBlock(d, { region: S.region, redraw: renderDoors, phone: d.phone }));
     if (d.phone && S.editPhone !== d.id) wrap.appendChild(phoneBlock(d));
@@ -8207,6 +8220,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     x.addEventListener('click', closeDoor); top.appendChild(x);
     box.appendChild(top);
     var why = scoreWhy(d); if (why) { why.classList.add('dkc-why'); box.appendChild(why); }
+    if (typeof d.lat === 'number' && typeof d.lon === 'number') box.appendChild(lotPreview(d));   /* the lot with its property line (2026-10-19) */
     var tl = deskTiles(d);
     if (tl.length) { var g = q('div', 'dkc-tiles'); tl.forEach(function (x) { var c = q('div', 'dkc-tile'); c.appendChild(q('small', null, x[0])); c.appendChild(q('span', null, x[1])); g.appendChild(c); }); box.appendChild(g); }
     return box;
@@ -13974,6 +13988,71 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (a) { a.parentNode.removeChild(a); document.body.style.overflow = ''; }
   }
   window.addEventListener('popstate', function () { if (document.getElementById('aerial')) closeAerial(); });
+  /* ---- the lot in the door card (2026-10-19, Matthew: "the image of that specific property... that has the property lines
+     drawn out, in the specific door card") ----
+     On a computer a small photo of the lot with its property line sits under the score; a click opens the full aerial view.
+     Same sources as the aerial view: the 2023 USDA photo through Planetary Computer and the line from the parcel service.
+     The card redraws often, so the preview for the open door is kept and moved back in, not rebuilt. */
+  var LOT = { id: null, el: null, map: null };
+  var naipItems = {};
+  function naipItem(d) {
+    var k = d.lat.toFixed(3) + ',' + d.lon.toFixed(3);   /* one photo covers miles; one search per few hundred feet is plenty */
+    if (!naipItems[k]) {
+      naipItems[k] = fetch(PC_API + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collections: ['naip'], intersects: { type: 'Point', coordinates: [d.lon, d.lat] }, query: { 'naip:year': { eq: (MK().naip || MK_CO.naip).year } }, limit: 4 }) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var f = (j.features || []).sort(function (a, b) { return a.properties.gsd - b.properties.gsd; })[0];
+          if (!f) throw new Error('no photo');
+          return { id: f.id, year: String(f.properties.datetime).slice(0, 4) };
+        });
+      naipItems[k].catch(function () { delete naipItems[k]; });
+    }
+    return naipItems[k];
+  }
+  function lotPreview(d) {
+    if (LOT.id === d.id && LOT.el) { setTimeout(function () { if (LOT.map) LOT.map.invalidateSize(); }, 0); return LOT.el; }
+    if (LOT.map) { try { LOT.map.remove(); } catch (e) {} }
+    var el = q('div', 'dkc-lot'), mapEl = q('div', 'dkc-lotmap'), cap = q('div', 'dkc-lotcap', 'Loading the lot\u2026');
+    el.appendChild(mapEl); el.appendChild(cap);
+    el.setAttribute('role', 'button'); el.tabIndex = 0;
+    el.setAttribute('aria-label', 'Open the aerial view of ' + (d.address || 'this lot') + ' with the property line');
+    el.addEventListener('click', function () { aerialView(d); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); aerialView(d); } });
+    var mine = { id: d.id, el: el, map: null }; LOT = mine;
+    var got = { photo: null, line: null, year: '' };
+    function say() {
+      if (got.photo === false) cap.textContent = 'Photo unavailable right now \u00b7 click for the full view';
+      else if (got.line === true) cap.textContent = (got.year ? got.year + ' photo \u00b7 ' : '') + 'yellow = property line \u00b7 click to open';
+      else if (got.line === false) cap.textContent = 'Property line unavailable \u00b7 click to open';
+    }
+    loadLeaflet(function () {
+      setTimeout(function () {   /* after the card is on the page, so the map knows its size */
+        if (LOT !== mine || !window.L || !document.body.contains(mapEl)) return;
+        var map = L.map(mapEl, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, tap: false });
+        mine.map = map;
+        map.setView([d.lat, d.lon], zoomFor(d.acres));
+        naipItem(d).then(function (it) {
+          if (LOT !== mine) return;
+          L.tileLayer(PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(it.id) +
+            '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png', { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
+          got.photo = true; got.year = it.year; say();
+        }).catch(function () { got.photo = false; say(); });
+        parcelAt(d.lon, d.lat, MK().parcels).then(function (geo) {
+          if (LOT !== mine) return;
+          var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
+          L.polygon(ll, { color: '#000', weight: 5, opacity: 0.5, fill: false, interactive: false }).addTo(map);
+          var poly = L.polygon(ll, { color: '#FFE600', weight: 3, fillColor: '#FFE600', fillOpacity: 0.07, interactive: false }).addTo(map);
+          map.fitBounds(poly.getBounds(), { padding: [16, 16], maxZoom: 20 });
+          got.line = true; say();
+        }).catch(function () {
+          L.circleMarker([d.lat, d.lon], { radius: 7, color: '#fff', weight: 3, fillColor: '#E4703A', fillOpacity: 1, interactive: false }).addTo(map);
+          got.line = false; say();
+        });
+      }, 0);
+    });
+    return el;
+  }
   function aerialView(d, opts) {
     opts = opts || {};
     closeAerial();
@@ -14875,6 +14954,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     x.addEventListener('click', function () { P.peek = null; planDraw(); }); top.appendChild(x);
     box.appendChild(top);
     var why = scoreWhy(d); if (why) { why.classList.add('dkc-why'); box.appendChild(why); }
+    if (typeof d.lat === 'number' && typeof d.lon === 'number') box.appendChild(lotPreview(d));   /* the lot with its property line (2026-10-19) */
     var tl = deskTiles(d);
     if (tl.length) { var g = q('div', 'dkc-tiles'); tl.forEach(function (t) { var c = q('div', 'dkc-tile'); c.appendChild(q('small', null, t[0])); c.appendChild(q('span', null, t[1])); g.appendChild(c); }); box.appendChild(g); }
     var bt = q('div', 'plpk-b');
