@@ -5645,6 +5645,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var sl = q('button', 'lnk', 'Check Square for a payment'); sl.type = 'button';   /* paid straight in Square (2026-10-19, Kirk) */
       sl.addEventListener('click', function () { sl.disabled = true; api('squarelook', { body: { id: jb.id } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') : 'The job now shows paid.', null); redraw(); } else toast('No payment found', j.why || 'Nothing in Square covers the ' + money0(owe) + ' balance yet.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); }); });
       w.appendChild(sl);
+      var slSay = q('div', 'ltrynote'); w.appendChild(slSay);
+      if (jb.cof && !S.viewing) {   /* a card on file means a Square customer: ask Square by itself when the job opens (2026-10-19) */
+        slSay.textContent = 'Checking Square for a payment\u2026';
+        api('squarelook', { body: { id: jb.id } }).then(function (j) {
+          if (j && j.ok && j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') + '. The job now shows paid.' : 'The job now shows paid.', null); redraw(); return; }
+          slSay.textContent = j && j.ok ? 'Checked Square just now: nothing covers the ' + money0(owe) + ' balance yet.' : '';
+        }).catch(function () { slSay.textContent = ''; });
+      }
       w.appendChild(q('div', 'ltrynote', 'For money taken another way.' + ((S.pays || wdOn()) ? ' The card on file and the pay link are above.' : ' An admin can let you charge cards and make pay links (Takes payments, in Accounts).')));
     }
     w.appendChild(q('div', 'dwh', 'Aftercare'));
@@ -5815,7 +5823,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       c.appendChild(st); c.appendChild(panel);
     }
-    if (qView() || wdOn()) c.appendChild(jobAfterBox(jb, owe, redraw));   /* the balance and the aftercare (2026-10-19) */
+    if (qView() || wdOn()) { var afb = jobAfterBox(jb, owe, redraw); if (qView()) c.insertBefore(afb, sqBox.nextSibling); else c.appendChild(afb); }   /* the balance and the aftercare (2026-10-19); for Jen up under the price, not at the bottom */
     if (wdOn()) {
       var ch = q('button', 'lnk', 'Change the booking ›'); ch.type = 'button';
       ch.addEventListener('click', function () { jobBookView(null, jb, null); });
