@@ -5642,6 +5642,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('jobpaid', { body: { id: jb.id, how: sel.value } }).then(function (j) { pb.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Marked paid', money0(owe) + (j.aftercare === 'sent' ? ' \u00b7 aftercare emailed' : ''), null); redraw(); }).catch(function () { pb.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
       });
       row.appendChild(sel); row.appendChild(pb); w.appendChild(row);
+      var sl = q('button', 'lnk', 'Check Square for a payment'); sl.type = 'button';   /* paid straight in Square (2026-10-19, Kirk) */
+      sl.addEventListener('click', function () { sl.disabled = true; api('squarelook', { body: { id: jb.id } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') : 'The job now shows paid.', null); redraw(); } else toast('No payment found', j.why || 'Nothing in Square covers the ' + money0(owe) + ' balance yet.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); }); });
+      w.appendChild(sl);
       w.appendChild(q('div', 'ltrynote', 'For money taken another way.' + ((S.pays || wdOn()) ? ' The card on file and the pay link are above.' : ' An admin can let you charge cards and make pay links (Takes payments, in Accounts).')));
     }
     w.appendChild(q('div', 'dwh', 'Aftercare'));

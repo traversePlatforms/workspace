@@ -2077,12 +2077,16 @@ if ($action === 'squarehook') {
     if (!isset($TEAM)) $TEAM = teamInfo($basePeople, $acct, $sessionKey);   /* a paid no-signature form books the job here, and pushName needs the crew list: Brad got no "Job booked" (2026-10-18, Fable review) */
     $url = (string) ($c['hookUrl'] ?? ('https://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '')));
     $want = base64_encode(hash_hmac('sha256', $url . $raw, (string) $c['sigKey'], true));
-    $ev = json_decode($raw, true) ?: []; $sigOk = hash_equals($want, (string) ($_SERVER['HTTP_X_SQUARE_HMACSHA256_SIGNATURE'] ?? ''));
-    appendLine(DATA_DIR . '/squarehook.log', ['at' => time(), 'sig' => $sigOk, 'type' => mb_substr((string) ($ev['type'] ?? ''), 0, 40), 'event' => mb_substr((string) ($ev['event_id'] ?? ''), 0, 60), 'status' => mb_substr((string) ($ev['data']['object']['payment']['status'] ?? ''), 0, 20), 'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? '')]);   /* what arrived, never card details */
+    $ev = json_decode($raw, true) ?: []; $sigIn = (string) ($_SERVER['HTTP_X_SQUARE_HMACSHA256_SIGNATURE'] ?? '');
+    /* also the address the event came to (2026-10-19): a second subscription without &env=live was failing every event; same key, other URL */
+    $sigOk = hash_equals($want, $sigIn) || hash_equals(base64_encode(hash_hmac('sha256', 'https://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '') . $raw, (string) $c['sigKey'], true)), $sigIn);
+    appendLine(DATA_DIR . '/squarehook.log', ['at' => time(), 'sig' => $sigOk, 'uri' => mb_substr((string) ($_SERVER['REQUEST_URI'] ?? ''), 0, 120), 'type' => mb_substr((string) ($ev['type'] ?? ''), 0, 40), 'event' => mb_substr((string) ($ev['event_id'] ?? ''), 0, 60), 'status' => mb_substr((string) ($ev['data']['object']['payment']['status'] ?? ''), 0, 20), 'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? '')]);   /* what arrived, never card details */
     if (!$sigOk) fail('Not allowed.', 403); $pay = $ev['data']['object']['payment'] ?? null;
     if ($pay && ($pay['status'] ?? '') === 'COMPLETED' && !empty($pay['order_id'])) {
         $order = (string) $pay['order_id'];
         foreach (leadsAll() as $l) if (($l['sign']['pay']['order'] ?? '') === $order && ($l['sqpaid']['order'] ?? '') !== $order) { a365DepositPaid($l); a365Alert('Deposit paid', trim((string) ($l['name'] ?? '')) . ' · $' . (int) $l['sign']['deposit']); }
+        $cust0 = (string) ($pay['customer_id'] ?? '');   /* a payment made straight in Square for a customer whose job still owes (2026-10-19) */
+        if ($cust0 !== '') foreach (leadsAll() as $l0) if (($l0['sqcust'] ?? '') === $cust0 && ($l0['sign']['pay']['order'] ?? '') !== $order && ($j0 = jobForLead((string) $l0['id'])) && jobOwed($j0) > 0 && ($j0['sqlink']['order'] ?? '') !== $order) { $f0 = squareBalancePaid($j0, $l0); if ($f0) jobSquareFound((string) $j0['id'], $f0, 'by the Square webhook'); }
         foreach (jobsAll() as $j) if (!$j['off'] && ($j['sqlink']['order'] ?? '') === $order && ($j['pay']['s'] ?? '') !== 'paid') appendLine(DATA_DIR . '/jobs.log', ['id' => $j['id'], 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['order' => $order, 'payment' => (string) ($pay['id'] ?? ''), 'at' => time()], 'by' => 'Square', 'at' => time()]);
     }
     out(['ok' => true]);
@@ -2516,7 +2520,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4643,6 +4647,41 @@ function jobPhotos(string $jid): array { return array_values(jobPhotosAll()[$jid
 function jobMine(array $j): bool { global $me; return $j['crew'] === $me || desk(); }
 /* who may settle a job's balance and send its aftercare: the crew on it, the desk, or Jen on her own customer (2026-10-19) */
 function jobOpen(array $j): bool { global $role; return jobMine($j) || ($role === 'quote' && qMine(leadsAll()[$j['lead']] ?? [])); }
+/* a balance paid straight in Square (2026-10-19: Jen charged Kirk's card in the Square dashboard; the app only knew its own links and charges).
+   Payments from this customer's Square profile, completed, that are not the deposit, not the job's pay link and not a charge the app already
+   made; together they must cover what is owed. Returns the newest one, or null. */
+function jobKnownPays(array $j, array $l): array {
+    $ids = array_filter([(string) ($l['sqpaid']['payment'] ?? ''), (string) ($l['sqafter']['payment'] ?? ''), (string) ($j['sqcharge']['payment'] ?? ''), (string) ($j['sqpaid']['payment'] ?? '')]);
+    $orders = array_filter([(string) ($l['sign']['pay']['order'] ?? ''), (string) ($j['sqlink']['order'] ?? '')]);
+    return [$ids, $orders];
+}
+function squareBalancePaid(array $j, array $l): ?array {
+    $cust = (string) ($l['sqcust'] ?? ''); $owed = jobOwed($j); $cfg = squareCfg();
+    if ($cust === '' || $owed < 1 || !$cfg) return null;
+    [$ids, $orders] = jobKnownPays($j, $l);
+    $since = gmdate('Y-m-d\TH:i:s\Z', max(0, (int) ($j['at'] ?? time()) - 3 * 86400)); $cur = ''; $sum = 0; $hit = null;
+    for ($pg = 0; $pg < 4; $pg++) {
+        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . '&location_id=' . rawurlencode((string) $cfg['location']) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
+        foreach (($r['payments'] ?? []) as $py) {
+            if (($py['status'] ?? '') !== 'COMPLETED' || (string) ($py['customer_id'] ?? '') !== $cust) continue;
+            if (in_array((string) $py['id'], $ids, true) || in_array((string) ($py['order_id'] ?? ''), $orders, true)) continue;
+            $sum += (int) ($py['amount_money']['amount'] ?? 0) - (int) ($py['refunded_money']['amount'] ?? 0);
+            if (!$hit || strcmp((string) $py['created_at'], (string) $hit['created_at']) > 0) $hit = $py;
+        }
+        $cur = (string) ($r['cursor'] ?? ''); if ($cur === '') break;
+    }
+    if (!$hit || $sum < $owed * 100) return null;
+    return ['payment' => (string) $hit['id'], 'amt' => intdiv($sum, 100), 'last4' => (string) ($hit['card_details']['card']['last_4'] ?? ''), 'brand' => (string) ($hit['card_details']['card']['card_brand'] ?? ''), 'when' => (string) $hit['created_at']];
+}
+/* record it: the job paid by Square, a note, the office told, the aftercare */
+function jobSquareFound(string $jid, array $f, string $how): void {
+    $j = jobsAll()[$jid] ?? null; if (!$j || $j['off'] || jobOwed($j) < 1) return;
+    appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['payment' => $f['payment'], 'amt' => $f['amt'], 'found' => $how, 'at' => time()], 'by' => 'Square', 'at' => time()]);
+    $who = trim((string) (leadsAll()[$j['lead']]['name'] ?? ($j['title'] ?? '')));
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Balance paid in Square: $' . $f['amt'] . ($f['last4'] !== '' ? ' on the ' . ($f['brand'] ?: 'card') . ' ending ' . $f['last4'] : '') . ' (found ' . $how . ').', 'by' => 'Square', 'at' => time()]);
+    a365Alert('Balance paid in Square', $who . ' · $' . $f['amt']);
+    jobAftercare($jid, 'paid');
+}
 function jobOwed(array $j): int { $p = $j['pay'] ?? ['s' => 'unpaid']; if (in_array($p['s'] ?? '', ['paid', 'plan'], true)) return 0; return max(0, (int) $j['price'] - (($p['s'] ?? '') === 'deposit' ? (int) ($p['amt'] ?? 0) : 0)); }
 /* the aftercare email (2026-10-19, Matthew: "follow up with aftercare and a reminder to pay if he hasn't already ... how can we automate that
    email out"; "ask first" before any card is charged). Sent once per job, after it is marked Done, when the balance is settled: the card
@@ -4705,6 +4744,20 @@ if ($action === 'jobpaid') {
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Balance of $' . jobOwed($j) . ' marked paid (' . $how . ') by ' . $me . '.', 'by' => $me, 'at' => time()]);
     $af = jobAftercare($jid, 'paid');
     out(['ok' => true, 'aftercare' => $af['stage']]);
+}
+/* Check Square for a payment: a balance paid straight in Square shows on the job (2026-10-19) */
+if ($action === 'squarelook') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!jobOpen($j)) fail('Not allowed.', 403);
+    if (jobOwed($j) < 1) out(['ok' => true, 'paid' => true, 'already' => true]);
+    if (!squareCfg()) fail('Square is not connected yet.');
+    $l = leadsAll()[$j['lead']] ?? [];
+    if (empty($l['sqcust'])) out(['ok' => true, 'paid' => false, 'why' => 'They are not in your Square customer list, so their payments cannot be matched. Mark it paid if they paid.']);
+    $f = squareBalancePaid($j, $l);
+    if ($f) jobSquareFound($jid, $f, 'by Check Square');
+    out(['ok' => true, 'paid' => (bool) $f, 'amt' => $f['amt'] ?? 0, 'last4' => $f['last4'] ?? '']);
 }
 /* send (or send again) the aftercare email by hand */
 if ($action === 'aftercare') {
@@ -6066,6 +6119,10 @@ if ($action === 'jobcharge') {
             flock($lk, LOCK_UN); jobAftercare($jid, 'paid');
             fail('They already paid the balance on the pay link, so nothing was charged. The job now shows paid.', 409);
         }
+    }
+    if ($f = squareBalancePaid($j, $l)) {   /* already paid straight in Square (2026-10-19, Kirk) */
+        flock($lk, LOCK_UN); jobSquareFound($jid, $f, 'before a card charge');
+        fail('They already paid $' . $f['amt'] . ' in Square' . ($f['last4'] !== '' ? ' on the card ending ' . $f['last4'] : '') . ', so nothing was charged. The job now shows paid.', 409);
     }
     $tries = (int) ($j['chgfail']['n'] ?? 0);
     $r = squareApi('POST', '/v2/payments', ['idempotency_key' => 'chg-' . substr(sha1($jid . '|' . $left . '|' . $tries), 0, 32), 'source_id' => (string) $cc['id'], 'customer_id' => (string) $l['sqcust'],
