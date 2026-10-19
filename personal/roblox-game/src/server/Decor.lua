@@ -109,7 +109,7 @@ local function plating(folder)
 	for x = -W / 2 + 10, W / 2 - 10, 20 do
 		for z = -D / 2 + 10, D / 2 - 10, 20 do
 			n += 1
-			local tile = part(tiles, { Name = "Tile", Size = Vector3.new(19.6, 0.2, 19.6), Color = (n % 2 == 0) and TILE_A or TILE_B, Material = Enum.Material.Metal, CastShadow = false, CFrame = CFrame.new(x, 0.1, z) })
+			local tile = part(tiles, { Name = "Tile", Size = Vector3.new(19.6, 0.2, 19.6), Color = (n % 2 == 0) and TILE_A or TILE_B, Material = Enum.Material.Plastic, CastShadow = false, CFrame = CFrame.new(x, 0.1, z) }) -- matte Plastic, not shiny Metal (2026-10-18)
 			if (math.floor(x / 20) + math.floor(z / 20)) % 3 == 0 then -- a few tiles carry a grille panel
 				part(tiles, { Name = "Grille", Size = Vector3.new(6, 0.05, 6), Color = METAL_DARK, Material = Enum.Material.DiamondPlate, CanCollide = false, CastShadow = false, CFrame = tile.CFrame * CFrame.new(0, 0.12, 0) })
 			end
@@ -119,7 +119,7 @@ local function plating(folder)
 	local function walk(a, b, width)
 		local mid, len = (a + b) / 2, (b - a).Magnitude
 		local cf = CFrame.lookAt(mid, b)
-		part(folder, { Name = "Walkway", Size = Vector3.new(width, 0.15, len), Color = WALK, Material = Enum.Material.SmoothPlastic, CastShadow = false, CFrame = cf * CFrame.new(0, 0.28, 0) })
+		part(folder, { Name = "Walkway", Size = Vector3.new(width, 0.15, len), Color = WALK, Material = Enum.Material.Plastic, CastShadow = false, CFrame = cf * CFrame.new(0, 0.28, 0) })
 		for _, side in ipairs({ -1, 1 }) do
 			part(folder, { Name = "WalkEdge", Size = Vector3.new(0.5, 0.17, len), Color = C.Orange, Material = Enum.Material.Neon, CastShadow = false, CFrame = cf * CFrame.new(side * (width / 2 - 0.25), 0.3, 0) })
 		end
@@ -779,9 +779,9 @@ end
 
 local function colour()
 	local cc = Instance.new("ColorCorrectionEffect")
-	cc.Saturation = 0.2
-	cc.Contrast = 0.06
-	cc.Brightness = 0.06
+	cc.Saturation = 0.15
+	cc.Contrast = 0.08
+	cc.Brightness = 0.02
 	cc.Parent = Lighting
 end
 

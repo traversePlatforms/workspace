@@ -63,10 +63,12 @@ end
 
 local function setupSky()
 	Lighting.ClockTime = 0
-	Lighting.Brightness = 2 -- brighter (2026-10-18, Matthew)
-	Lighting.Ambient = Color3.fromRGB(122, 130, 168)
-	Lighting.OutdoorAmbient = Color3.fromRGB(140, 150, 190)
-	Lighting.ExposureCompensation = 0.25
+	Lighting.Brightness = 1.6 -- brighter than the first build, toned back down the same day (Matthew: "everything comes off reflective")
+	Lighting.Ambient = Color3.fromRGB(110, 118, 154)
+	Lighting.OutdoorAmbient = Color3.fromRGB(126, 136, 174)
+	Lighting.ExposureCompensation = 0
+	Lighting.EnvironmentSpecularScale = 0.2 -- the glare: metal and plastic mirrored the sky and lights
+	Lighting.EnvironmentDiffuseScale = 0.6
 	Lighting.GlobalShadows = true
 	Lighting.FogEnd = 100000
 	for _, c in ipairs(Lighting:GetChildren()) do
@@ -79,9 +81,9 @@ local function setupSky()
 	sky.CelestialBodiesShown = false
 	sky.Parent = Lighting
 	local bloom = Instance.new("BloomEffect")
-	bloom.Intensity = 0.6
+	bloom.Intensity = 0.35
 	bloom.Size = 30
-	bloom.Threshold = 1.4
+	bloom.Threshold = 1.7
 	bloom.Parent = Lighting
 end
 
