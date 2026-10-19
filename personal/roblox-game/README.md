@@ -23,6 +23,7 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - **Gear Bay** (beside the launch tunnel, on the side away from the spawn): buy once with Stardust, keep for good. **Boing Glove** (250): a boxing glove on a spring, long reach, big knock-back. **Star Blaster** (2,000): shoots a star bolt at whoever is in front of you; walls and locked doors stop it. **Jet Boots** (900): always on, jump higher and press jump again in the air for a rocket boost. Weapons sit in the backpack bar; hold one and Q, a click or the PUNCH button (now BOING or ZAP) uses it.
 - **Animations:** punches pull back and jab, the glove winds up and its spring shoots out, the blaster kicks. No uploaded animations: every screen moves the arm itself.
 - **Sound:** music (with a Music button top right), a spooky drone for Black Hole Night, and effects for buying, stars, the alarm, punches, weapons, doors, selling and the bots. Every id is in `Config.Sounds`: swap any you don't like.
+- **Moon Rover** (parked near the spawn): press E or tap **Drive**, steer with WASD or the joystick, Jump to get out. Faster than sprinting, can't run anyone over, rides over walkways but not into bases. No critters in the rover. Left alone away from its spot, it goes home after 30 seconds.
 - **Looks:** brighter lighting and floors, two proper rockets (main one with boosters and a launch tower), a moon rover, a UFO beaming up crates, and Earth, Mars and a striped giant outside the windows.
 - Rarities: Common, Rare, Epic, Legendary, **Cosmic**. Hammy the Star Cat is Cosmic, the rarest.
 - **Mutations:** any critter can land **Golden** (8%: costs 1.5x, earns 2x) or **Rainbow** (1.5%: costs 3x, earns 5x).
@@ -61,6 +62,7 @@ The game lives as code files in `src/`; **Rojo** syncs them into Studio live.
 | `src/server/Main.server.lua` | The rules: buying, carrying, stealing, catching, door, punching, Parker Bots, income |
 | `src/server/PlayerData.lua` | Saves Stardust and critters |
 | `src/server/GearTools.lua` | The Boing Glove, Star Blaster and Jet Boots, built from parts |
+| `src/client/Rover.client.lua` | Steering the Moon Rover while you drive |
 | `src/client/Audio.client.lua` | Music and the Music button |
 | `src/client/Gear.client.lua` | Jet Boots boost and flames, Gear Bay prompt labels |
 | `src/client/HUD.client.lua` | Title screen, Stardust counter, door button, punch, messages |

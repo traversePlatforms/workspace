@@ -309,9 +309,9 @@ function MapBuilder.build()
 	critters.Name = "Critters"
 	critters.Parent = station
 
-	local lockers, gearStands = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
+	local lockers, gearStands, rover = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
 
-	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers, gearStands = gearStands }
+	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers, gearStands = gearStands, rover = rover }
 end
 
 return MapBuilder

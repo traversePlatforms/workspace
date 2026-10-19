@@ -549,8 +549,8 @@ local function rover(folder, at)
 		end
 	end
 	part(m, { Name = "SolarPanel", Size = Vector3.new(6.5, 0.2, 4.5), Color = Color3.fromRGB(40, 60, 130), Material = Enum.Material.Glass, CFrame = at * CFrame.new(0, 3.6, 1.8) * CFrame.Angles(math.rad(-12), 0, 0) })
-	part(m, { Name = "Mast", Size = Vector3.new(0.4, 3.4, 0.4), Color = METAL, CFrame = at * CFrame.new(0, 5.1, -3) })
-	local cam = part(m, { Name = "CameraHead", Size = Vector3.new(1.6, 1, 1), Color = C.Trim, CFrame = at * CFrame.new(0, 7.1, -3) })
+	part(m, { Name = "Mast", Size = Vector3.new(0.4, 3.4, 0.4), Color = METAL, CFrame = at * CFrame.new(1.9, 5.1, -3.6) }) -- front corner, out of the driver's way
+	local cam = part(m, { Name = "CameraHead", Size = Vector3.new(1.6, 1, 1), Color = C.Trim, CFrame = at * CFrame.new(1.9, 7.1, -3.6) })
 	for _, side in ipairs({ -1, 1 }) do
 		part(m, { Name = "Lens", Shape = Enum.PartType.Ball, Size = Vector3.new(0.5, 0.5, 0.5), Color = C.Blue, Material = Enum.Material.Neon, CFrame = cam.CFrame * CFrame.new(side * 0.4, 0, -0.5) })
 	end
@@ -558,6 +558,64 @@ local function rover(folder, at)
 	local dm = Instance.new("SpecialMesh")
 	dm.MeshType = Enum.MeshType.Sphere
 	dm.Parent = dish
+
+	-- drivable (2026-10-18, Matthew: "make it so you can drive the rover"): everything welds to one invisible hull that
+	-- floats just off the deck. Hover height, heading and speed come from three constraints; while someone drives, their
+	-- own screen sets them (Rover.client.lua), otherwise the server holds it still. Its underside is 0.9 up, so it rides
+	-- over walkways but bumps off base floors, the launch pad and walls.
+	local hull = part(m, { Name = "Hull", Size = Vector3.new(6.2, 2, 9.8), Transparency = 1, CanCollide = true, Material = Enum.Material.SmoothPlastic,
+		CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.2), CFrame = at * CFrame.new(0, 1.9, 0) })
+	local seat = Instance.new("VehicleSeat")
+	seat.Name = "DriverSeat"
+	seat.Size = Vector3.new(2.2, 0.6, 2.2)
+	seat.Color = C.Orange
+	seat.Material = Enum.Material.Fabric
+	seat.HeadsUpDisplay = false
+	seat.TopSurface = Enum.SurfaceType.Smooth
+	seat.CFrame = at * CFrame.new(0, 3.7, -1.2)
+	seat:SetAttribute("Rover", true)
+	seat.Parent = m
+	part(m, { Name = "SeatBack", Size = Vector3.new(2.2, 1.8, 0.4), Color = C.Orange, Material = Enum.Material.Fabric, CFrame = at * CFrame.new(0, 4.6, -0.05) })
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored = false
+			if p ~= hull then
+				p.CanCollide = false
+				p.Massless = true
+				local w = Instance.new("WeldConstraint")
+				w.Part0 = hull
+				w.Part1 = p
+				w.Parent = p
+			end
+		end
+	end
+	local att = Instance.new("Attachment")
+	att.Name = "Drive"
+	att.Parent = hull
+	local lv = Instance.new("LinearVelocity")
+	lv.Attachment0 = att
+	lv.RelativeTo = Enum.ActuatorRelativeTo.World
+	lv.ForceLimitMode = Enum.ForceLimitMode.PerAxis
+	lv.MaxAxesForce = Vector3.new(60000, 0, 60000) -- sideways only: the hover holds the height
+	lv.VectorVelocity = Vector3.zero
+	lv.Parent = hull
+	local hover = Instance.new("AlignPosition")
+	hover.Mode = Enum.PositionAlignmentMode.OneAttachment
+	hover.Attachment0 = att
+	hover.ForceLimitMode = Enum.ForceLimitMode.PerAxis
+	hover.MaxAxesForce = Vector3.new(0, 200000, 0)
+	hover.Responsiveness = 40
+	hover.Position = hull.Position
+	hover.Parent = hull
+	local turn = Instance.new("AlignOrientation")
+	turn.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	turn.Attachment0 = att
+	turn.MaxTorque = 1e7
+	turn.Responsiveness = 25
+	turn.CFrame = hull.CFrame - hull.Position
+	turn.Parent = hull
+	m.PrimaryPart = hull
+	return m
 end
 
 local function ufo(folder, at, beamTo)
@@ -706,7 +764,7 @@ function Decor.build(station, bases)
 	rocket(folder, CFrame.new(-160, 0, 0) * CFrame.Angles(0, math.rad(-90), 0), 1, true) -- front (name, windows) toward the spawn
 	rocket(folder, CFrame.new(200, 0, 0) * CFrame.Angles(0, math.rad(90), 0), 0.65, false)
 	local stands = gearBay(folder, CFrame.lookAt(Vector3.new(0, 0, -48), Vector3.new(0, 0, 0))) -- beside the tunnel, open side facing it
-	rover(folder, CFrame.new(-104, 0, -46) * CFrame.Angles(0, math.rad(25), 0))
+	local roverModel = rover(folder, CFrame.new(-104, 0, -46) * CFrame.Angles(0, math.rad(25), 0))
 	ufo(folder, CFrame.new(165, 22, 45), Vector3.new(165, 0, 45))
 	fuelTanks(folder, CFrame.new(-150, 0, 40) * CFrame.Angles(0, math.rad(90), 0))
 	crates(folder, CFrame.new(-150, 0, -40), 1)
@@ -715,7 +773,7 @@ function Decor.build(station, bases)
 	satelliteDish(folder, CFrame.new(160, 0, 0))
 	asteroids(folder)
 	colour()
-	return lockers(folder), stands
+	return lockers(folder), stands, roverModel
 end
 
 return Decor

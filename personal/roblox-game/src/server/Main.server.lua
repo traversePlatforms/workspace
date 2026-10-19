@@ -1625,6 +1625,129 @@ RunService.Heartbeat:Connect(function(dt)
 	end
 end)
 
+-- ---------- the Moon Rover (2026-10-18, Matthew: "make it so you can drive the rover") ----------
+-- Walk up and press E (or tap Drive) to get in; WASD or the joystick drives, Jump gets out. The driver's own screen steers it
+-- (Rover.client.lua), so it feels instant. No critters in the rover: it's faster than the Parker Bots, so stealing by rover
+-- would be too easy. Left alone away from its spot, it drives itself home after a while.
+local PhysicsService = game:GetService("PhysicsService")
+pcall(function()
+	PhysicsService:RegisterCollisionGroup("Rover")
+	PhysicsService:RegisterCollisionGroup("Players")
+	PhysicsService:CollisionGroupSetCollidable("Rover", "Players", false) -- it never runs anyone over
+end)
+local function playerGroup(ch)
+	for _, p in ipairs(ch:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.CollisionGroup = "Players"
+		end
+	end
+	ch.DescendantAdded:Connect(function(p)
+		if p:IsA("BasePart") then
+			p.CollisionGroup = "Players"
+		end
+	end)
+end
+local function hookGroup(player)
+	player.CharacterAdded:Connect(playerGroup)
+	if player.Character then
+		playerGroup(player.Character)
+	end
+end
+Players.PlayerAdded:Connect(hookGroup)
+for _, p in ipairs(Players:GetPlayers()) do
+	hookGroup(p)
+end
+
+local rover = map.rover
+local roverSeat = rover and rover:FindFirstChild("DriverSeat")
+if rover and roverSeat and rover.PrimaryPart then
+	local hull = rover.PrimaryPart
+	local home = rover:GetPivot()
+	local lv = hull:FindFirstChildOfClass("LinearVelocity")
+	local turn = hull:FindFirstChildOfClass("AlignOrientation")
+	for _, p in ipairs(rover:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.CollisionGroup = "Rover"
+		end
+	end
+	pcall(function()
+		hull:SetNetworkOwner(nil)
+	end)
+	local lastUsed = os.clock()
+
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Drive"
+	prompt.ObjectText = "Moon Rover"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = roverSeat
+	prompt.Triggered:Connect(function(player)
+		local st = state[player]
+		local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if not hum or roverSeat.Occupant then
+			return
+		end
+		if st and st.carrying then
+			tell(player, "No critters in the rover! Take it to your base first.", "bad")
+			return
+		end
+		roverSeat:Sit(hum)
+	end)
+
+	local function stop()
+		if lv then
+			lv.VectorVelocity = Vector3.zero
+		end
+		if turn then
+			local _, yaw = hull.CFrame:ToEulerAnglesYXZ()
+			turn.CFrame = CFrame.Angles(0, yaw, 0)
+		end
+	end
+	roverSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		local hum = roverSeat.Occupant
+		local player = hum and Players:GetPlayerFromCharacter(hum.Parent)
+		if player then
+			prompt.Enabled = false
+			pcall(function()
+				hull:SetNetworkOwner(player)
+			end)
+			tell(player, "You're driving the Moon Rover! Steer with WASD or the joystick. Jump to get out.", "good")
+		else
+			prompt.Enabled = true
+			lastUsed = os.clock()
+			pcall(function()
+				hull:SetNetworkOwner(nil)
+			end)
+			stop()
+		end
+	end)
+
+	task.spawn(function()
+		while true do
+			task.wait(0.5)
+			local hum = roverSeat.Occupant
+			local player = hum and Players:GetPlayerFromCharacter(hum.Parent)
+			if player and state[player] and state[player].carrying then -- picked something up while driving
+				hum.Sit = false
+				tell(player, "No critters in the rover! Out you hop.", "bad")
+			end
+			local far = (hull.Position - home.Position).Magnitude > 8
+			if hull.Position.Y < -30 or (not hum and far and os.clock() - lastUsed > 30) then
+				stop()
+				rover:PivotTo(home)
+				hull.AssemblyLinearVelocity = Vector3.zero
+				hull.AssemblyAngularVelocity = Vector3.zero
+				local _, yaw = home:ToEulerAnglesYXZ()
+				if turn then
+					turn.CFrame = CFrame.Angles(0, yaw, 0)
+				end
+				lastUsed = os.clock()
+			end
+		end
+	end)
+end
+
 -- ---------- every second: income; four times a second: home and catch checks ----------
 task.spawn(function()
 	while true do
