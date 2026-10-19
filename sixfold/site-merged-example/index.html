@@ -1,0 +1,323 @@
+<!doctype html>
+<!--
+  Sixfold 365: ONE-PAGE EXAMPLE of the two sites merged (2026-10-19, Matthew: "since we are merging brands ... the two sites
+  should be rebranded and merged. Can you just create a one page example for me to look at").
+  A look-and-feel example only. Not deployed, the form sends nothing, and nothing here changes either live site.
+  Copy is lifted from the two live pages (sixfold/site/index.html and sixfold/aeration365-site/index.html) and keeps
+  their fact-checks; nothing new is claimed. Brand: the combined badge (option C, light) as printed on the cards and
+  yard signs: Bone #EDE7DC, forest #2F5D2C, moss #4C7A3F, ember #E4703A, cream #FFF8EC; Outfit + DM Sans.
+  Open questions for Matthew are listed in the reply, not on the page: which phone number, which domain, the service area.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixfold 365 · Land, Aeration &amp; Seeding</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bone:#EDE7DC;--cream:#FFF8EC;--ink:#1D2A1C;--forest:#2F5D2C;--forest-d:#244a22;--moss:#4C7A3F;--ember:#E4703A;--ember-d:#c95a27;--soft:#5a6858;--line:#d9d1c2}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bone);color:var(--ink);font:17px/1.55 'DM Sans',system-ui,sans-serif}
+  a{color:var(--forest)}
+  img{display:block;max-width:100%}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  .ribbon{background:var(--ink);color:#fff;text-align:center;font:600 13px/1.3 'DM Sans',sans-serif;padding:8px 16px;letter-spacing:.02em}
+  .ribbon b{color:var(--ember)}
+
+  /* header */
+  header{background:var(--cream);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  header .wrap{display:flex;align-items:center;gap:14px;height:76px}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--forest);margin-right:auto}
+  .brand svg{width:56px;height:56px;flex:none}
+  .brand b{display:block;font:800 22px/1 'Outfit',sans-serif;letter-spacing:.01em}
+  .brand small{display:block;font:700 11px/1.2 'Outfit',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--moss);margin-top:4px}
+  nav{display:flex;gap:22px}
+  nav a{font:600 15px 'DM Sans',sans-serif;text-decoration:none;color:var(--ink)}
+  nav a:hover{color:var(--forest)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;border-radius:999px;font:700 16px 'Outfit',sans-serif;text-decoration:none;border:0;cursor:pointer}
+  .btn svg{width:18px;height:18px}
+  .btn.main{background:var(--ember);color:#fff}.btn.main:hover{background:var(--ember-d)}
+  .btn.green{background:var(--forest);color:var(--cream)}.btn.green:hover{background:var(--forest-d)}
+  .btn.ghost{background:transparent;color:var(--forest);box-shadow:inset 0 0 0 2px var(--forest)}
+  header .btn{min-height:44px;padding:0 18px;font-size:15px}
+
+  /* hero */
+  .hero{padding:56px 0 64px;position:relative;overflow:hidden}
+  .hero .wrap{display:grid;grid-template-columns:1.25fr .9fr;gap:40px;align-items:center}
+  .kicker{font:700 13px/1.2 'Outfit',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ember);margin:0 0 12px}
+  h1{font:800 clamp(40px,5.6vw,66px)/1.02 'Outfit',sans-serif;color:var(--forest);margin:0 0 18px;letter-spacing:-.015em}
+  .hero p.say{font-size:clamp(18px,2vw,21px);line-height:1.45;margin:0 0 26px;max-width:560px;color:#2d3b2c}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .badge-big{width:100%;max-width:400px;justify-self:center;filter:drop-shadow(0 14px 30px rgba(29,42,28,.16))}
+  .strip{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0;padding:0;list-style:none}
+  .strip li{font:700 14px 'Outfit',sans-serif;color:var(--forest);background:var(--cream);border:1.5px solid var(--line);border-radius:999px;padding:7px 14px}
+  .strip li.f{color:var(--ember-d)}
+
+  section{padding:64px 0}
+  h2{font:800 clamp(30px,3.8vw,42px)/1.1 'Outfit',sans-serif;color:var(--forest);margin:0 0 12px;letter-spacing:-.01em}
+  h2::after{content:"";display:block;width:48px;height:4px;border-radius:2px;background:var(--ember);margin-top:14px}
+  .lede{color:var(--soft);margin:0 0 30px;max-width:660px;font-size:18px}
+
+  /* the lawn (leads) */
+  .lawn{background:var(--cream);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .lawn-top{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+  .photo{border-radius:20px;overflow:hidden;aspect-ratio:16/10;background:#cfd8c4}
+  .photo img{width:100%;height:100%;object-fit:cover;filter:saturate(.92)}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px}
+  .card h3{font:700 22px 'Outfit',sans-serif;margin:0 0 8px;color:var(--forest)}
+  .card p{margin:0;color:#334132}
+  .tags{margin-top:12px!important;font-size:14px;color:var(--soft)!important}
+  .tips{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:34px;padding-top:30px;border-top:1px dashed var(--line)}
+  .tip{display:flex;gap:14px;align-items:flex-start}
+  .tip .n{flex:none;width:40px;height:40px;border-radius:50%;background:var(--forest);color:var(--cream);display:grid;place-items:center;font:800 18px 'Outfit',sans-serif}
+  .tip b{display:block;font:700 18px 'Outfit',sans-serif;margin-bottom:2px}
+  .tip span{color:var(--soft);font-size:15px}
+
+  /* land & trees */
+  .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .job{background:var(--cream);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
+  .job .photo{border-radius:0;aspect-ratio:3/2}
+  .job .body{padding:22px 22px 24px;display:flex;flex-direction:column;flex:1}
+  .job h3{font:700 22px 'Outfit',sans-serif;margin:0 0 8px;color:var(--forest)}
+  .job p{margin:0;color:#334132}
+  .job .more{margin-top:auto;padding-top:14px;font:700 15px 'Outfit',sans-serif}
+  .job .more a{text-decoration:none}
+  .job.fire{border-top:5px solid var(--ember)}
+  .job.fire h3{color:var(--ember-d)}
+
+  /* fire money */
+  .money{background:var(--forest);color:var(--cream)}
+  .money .wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+  .money h2{color:#fff}.money .kicker{color:#f3a77f}
+  .money p{color:#dfe8d9;margin:0 0 14px}
+  .stat{background:rgba(255,248,236,.08);border:1px solid rgba(255,248,236,.18);border-radius:20px;padding:26px}
+  .stat .big{font:800 72px/1 'Outfit',sans-serif;color:var(--ember)}
+  .stat .src{font-size:13px;color:#b9c9b2;margin:10px 0 0}
+
+  /* how + where */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+  .step{background:var(--cream);border:1px solid var(--line);border-radius:20px;padding:22px}
+  .step::before{counter-increment:s;content:counter(s);display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ember);color:#fff;font:800 17px 'Outfit',sans-serif;margin-bottom:10px}
+  .step b{display:block;font:700 19px 'Outfit',sans-serif;margin-bottom:4px}
+  .step span{color:var(--soft);font-size:15px}
+  .where{margin-top:26px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .where div{border-left:4px solid var(--moss);padding:4px 0 4px 16px}
+  .where b{display:block;font:700 17px 'Outfit',sans-serif;color:var(--forest)}
+  .where span{color:var(--soft);font-size:15px}
+
+  /* quote */
+  .quote{background:var(--cream);border-top:1px solid var(--line)}
+  .qgrid{display:grid;grid-template-columns:1fr 1.25fr;gap:36px;align-items:start}
+  .side p{color:var(--soft);margin:0 0 14px}
+  form{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;display:grid;gap:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{display:grid;gap:6px;font:700 14px 'DM Sans',sans-serif;color:#334132}
+  input,textarea{font:16px 'DM Sans',sans-serif;padding:12px 13px;border:1.5px solid #cfd8ca;border-radius:12px;background:#fff;color:var(--ink);width:100%}
+  fieldset{border:0;padding:0;margin:0}
+  legend{font:700 14px 'DM Sans',sans-serif;color:#334132;margin-bottom:8px}
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg label{display:flex;align-items:center;gap:8px;font-weight:500;border:1.5px solid #cfd8ca;border-radius:999px;padding:9px 14px;cursor:pointer}
+  .seg input{width:auto;margin:0;accent-color:var(--forest)}
+  .seg label:has(input:checked){border-color:var(--forest);background:#eef3e8}
+  .fine{font-size:13px;color:var(--soft);margin:0}
+  .note{font-size:13px;color:var(--ember-d);font-weight:700;margin:0;text-align:center}
+
+  footer{background:var(--forest);color:#d5e1cf;padding:36px 0;font-size:15px;border-top:5px solid var(--ember)}
+  footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+  footer .fb{display:flex;gap:14px;align-items:center}
+  footer svg{width:70px;height:70px}
+  footer b{color:#fff;font:700 19px 'Outfit',sans-serif}
+  footer a{color:#fff}
+
+  @media (max-width:900px){
+    nav{display:none}
+    .hero .wrap,.money .wrap,.qgrid{grid-template-columns:1fr}
+    .badge-big{max-width:260px;order:-1}
+    .three,.jobs,.tips,.steps{grid-template-columns:1fr}
+    .lawn-top,.where,.row{grid-template-columns:1fr}
+    .lawn-top .photo:nth-child(2){display:none}
+  }
+  @media (max-width:520px){
+    header .wrap{height:66px}
+    .brand svg{width:44px;height:44px}
+    .brand b{font-size:19px}
+    header .btn .long{display:none}
+    header .btn{white-space:nowrap;padding:0 14px;font-size:14px}
+    .brand small{display:none}
+    section{padding:48px 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- the combined badge, option C light, from aeration365-site/assets/365-sixfold-badge.svg; inlined so the page's Outfit font draws its lettering -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="badge" viewBox="0 0 1000 1000">
+    <defs>
+      <path id="b-top" d="M 162 500 A 338 338 0 0 1 838 500"/>
+      <path id="b-bot" d="M 68 500 A 432 432 0 0 0 932 500"/>
+      <clipPath id="b-disc"><circle cx="500" cy="500" r="292"/></clipPath>
+    </defs>
+    <circle cx="500" cy="500" r="470" fill="#FFF8EC"/>
+    <circle cx="500" cy="500" r="458" fill="none" stroke="#E4703A" stroke-width="4"/>
+    <circle cx="500" cy="500" r="308" fill="#2F5D2C"/>
+    <circle cx="500" cy="500" r="292" fill="#FFF8EC"/>
+    <g clip-path="url(#b-disc)"><g transform="translate(344.45 423.35) scale(3.05)">
+      <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+      <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+      <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+      <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+      <g fill="#4C7A3F"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g>
+      <rect x="4" y="86" width="92" height="5" fill="#4C7A3F"/>
+      <g fill="none" stroke="#4C7A3F" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="2.56"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="2.16"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.76"/>
+        <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.84"/>
+        <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.68"/>
+        <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="1.44"/>
+        <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="1.36"/>
+        <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="1.28"/>
+        <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="1.20"/>
+        <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="1.36"/>
+      </g>
+    </g></g>
+    <text x="500" y="382" text-anchor="middle" font-family="Outfit, 'DM Sans', sans-serif" font-weight="800" font-size="74" letter-spacing="16" fill="#2F5D2C">SIXFOLD</text>
+    <circle cx="112" cy="500" r="20" fill="#E4703A"/>
+    <circle cx="888" cy="500" r="20" fill="#E4703A"/>
+    <text font-family="Outfit, 'DM Sans', sans-serif" font-weight="800" font-size="150" letter-spacing="38" fill="#2F5D2C"><textPath href="#b-top" startOffset="50%" text-anchor="middle">365</textPath></text>
+    <text font-family="Outfit, 'DM Sans', sans-serif" font-weight="700" font-size="56" letter-spacing="7" fill="#2F5D2C"><textPath href="#b-bot" startOffset="50%" text-anchor="middle">LAND · AERATION &amp; SEEDING</textPath></text>
+  </symbol>
+</svg>
+
+<div class="ribbon"><b>Example layout</b> · not live · the form on this page sends nothing</div>
+
+<header><div class="wrap">
+  <a class="brand" href="#top"><svg role="img" aria-label="Sixfold 365 badge"><use href="#badge"/></svg><span><b>Sixfold 365</b><small>Land · Aeration &amp; Seeding</small></span></a>
+  <nav><a href="#lawn">Lawn</a><a href="#land">Land &amp; trees</a><a href="#fire">Fire mitigation</a><a href="#quote">Get a quote</a></nav>
+  <a class="btn main" href="tel:+17208304553"><span class="long">Call or text&nbsp;</span>(720) 830-4553</a>
+</div></header>
+
+<main id="top">
+
+<div class="hero"><div class="wrap">
+  <div>
+    <p class="kicker">Lawn, land &amp; trees</p>
+    <h1>From the lawn to the treeline, all year long.</h1>
+    <p class="say">Core aeration and overseeding across the Denver metro. Landscaping, land clearing and fire mitigation from Monument. Each one stands on its own: book any one of them, or all of it.</p>
+    <div class="cta"><a class="btn main" href="#quote">Get a quote</a><a class="btn ghost" href="sms:+17208304553">Text us</a></div>
+    <ul class="strip"><li>Core aeration</li><li>Overseeding</li><li>Fertilizer</li><li>Landscaping</li><li>Land clearing</li><li class="f">Fire mitigation</li></ul>
+  </div>
+  <svg class="badge-big" viewBox="0 0 1000 1000" role="img" aria-label="Sixfold 365: Land, Aeration &amp; Seeding"><use href="#badge"/></svg>
+</div></div>
+
+<section class="lawn" id="lawn"><div class="wrap">
+  <p class="kicker">The lawn</p>
+  <h2>Pull a plug. Grow a lawn.</h2>
+  <p class="lede">Core aeration and overseeding, usually on the same visit, and the regular keeping that goes with them.</p>
+  <div class="lawn-top">
+    <div class="photo"><img src="img/hero.png" alt="Soil plugs lying on a lawn after core aeration"></div>
+    <div class="photo"><img src="img/aerate.png" alt="A core aerator pulling plugs from a lawn"></div>
+  </div>
+  <div class="three">
+    <div class="card"><h3>Core aeration</h3><p>A machine pulls small plugs of soil out of the lawn, about two to three inches deep. On compacted ground, that lets water and fertilizer reach the roots instead of running off.</p></div>
+    <div class="card"><h3>Overseeding</h3><p>We spread grass seed straight after aerating, the order Colorado State University Extension describes for thickening a thin lawn.</p></div>
+    <div class="card"><h3>Keeping it</h3><p>Fertilizing, mowing and edging: the regular work that keeps a lawn the way you want it.</p><p class="tags">Fertilizer · Mowing · Edging</p></div>
+  </div>
+  <div class="tips">
+    <div class="tip"><span class="n">1</span><div><b>Water if you can</b><span>A little water a day or two before helps the machine go deeper. If you can't, we can run your sprinklers for a few minutes when we arrive.</span></div></div>
+    <div class="tip"><span class="n">2</span><div><b>The plugs stay on the lawn</b><span>They look a little messy for a week or two, then break down back into the grass. That's part of the benefit.</span></div></div>
+    <div class="tip"><span class="n">3</span><div><b>Spring and fall work best</b><span>Any time the ground isn't frozen, but not when it's hot and dry.</span></div></div>
+  </div>
+</div></section>
+
+<section id="land"><div class="wrap">
+  <p class="kicker">Land &amp; trees</p>
+  <h2>Each one is a job in its own right.</h2>
+  <p class="lede">No felling or clearing has to come first. Book one, or book them together.</p>
+  <div class="jobs">
+    <div class="job">
+      <div class="photo"><img src="img/beds.webp" alt="A gravel bed with ornamental grasses alongside a concrete path"></div>
+      <div class="body"><h3>Landscaping</h3><p>Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away.</p><p class="tags">Shrubs &amp; hedges · Plant removal · Bed clean-up · Haul-away</p><p class="more"><a href="#quote">Ask about landscaping →</a></p></div>
+    </div>
+    <div class="job">
+      <div class="photo"><img src="img/haul-truck.webp" alt="A truck bed loaded with slash and cut limbs, ready to haul off site"></div>
+      <div class="body"><h3>Land clearing</h3><p>A lot, a pasture or an easement taken back to usable ground, and left ready for whatever comes next.</p><p class="tags">Brush removal · Undergrowth · Dead fall · Chip, haul, or leave</p><p class="more"><a href="#quote">Ask about land clearing →</a></p></div>
+    </div>
+    <div class="job fire" id="fire">
+      <div class="photo"><img src="img/crew-felling.webp" alt="Two of the Sixfold crew taking down a pine with a rope"></div>
+      <div class="body"><h3>Fire mitigation</h3><p>Defensible space and fuel breaks around what you want protected, worked to Colorado State Forest Service standards for spacing and clearance.</p><p class="tags">Felling · Trimming · Slash &amp; chip · Defensible space</p><p class="more"><a href="#quote">Ask about fire mitigation →</a></p></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="money"><div class="wrap">
+  <div>
+    <p class="kicker">If it's fire mitigation</p>
+    <h2>There is money for this work, and almost nobody claims it.</h2>
+    <p>A state tax credit covers what you pay a contractor for qualifying vegetation work, and since 1 July 2026 an insurer that scores your wildfire risk has to show you the score and discount it for mitigation you can document.</p>
+  </div>
+  <div class="stat">
+    <div class="big">~450</div>
+    <p>property owners in the entire state claimed the credit in tax year 2023. The legislature's own evaluation says the binding constraint is awareness.</p>
+    <p class="src">2026 legislative evaluation of C.R.S. 39-22-543</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <p class="kicker">How it works</p>
+  <h2>Three steps, whatever the job.</h2>
+  <div class="steps" style="margin-top:26px">
+    <div class="step"><b>Ask for a quote</b><span>Fill in the form below, or call or text us.</span></div>
+    <div class="step"><b>Get your price</b><span>We get back to you with a price. Bigger land and tree jobs get a walk of the property first.</span></div>
+    <div class="step"><b>Pick a day</b><span>We book a day that suits you and let you know before we come.</span></div>
+  </div>
+  <div class="where">
+    <div><b>Lawns</b><span>Core aeration and overseeding across the Denver metro.</span></div>
+    <div><b>Land, trees &amp; fire</b><span>From Monument: El Paso, Teller and southern Douglas counties, including Colorado Springs, Black Forest, Palmer Lake, Woodland Park, Larkspur and Castle Rock.</span></div>
+  </div>
+</div></section>
+
+<section class="quote" id="quote"><div class="wrap qgrid">
+  <div class="side">
+    <p class="kicker">Get a quote</p>
+    <h2>Tell us about the property.</h2>
+    <p>Where it is and what you're after. Questions are welcome too.</p>
+    <p>Rather talk? Call or text us.</p>
+    <a class="btn green" href="tel:+17208304553">(720) 830-4553</a>
+  </div>
+  <form onsubmit="return false">
+    <fieldset><legend>What are you looking for? (pick any)</legend>
+      <div class="seg">
+        <label><input type="checkbox" checked> Aeration &amp; overseeding</label>
+        <label><input type="checkbox"> Lawn keeping</label>
+        <label><input type="checkbox"> Landscaping</label>
+        <label><input type="checkbox"> Land clearing</label>
+        <label><input type="checkbox"> Fire mitigation</label>
+        <label><input type="checkbox"> Just a question</label>
+      </div>
+    </fieldset>
+    <label>Your name<input autocomplete="off"></label>
+    <div class="row"><label>Phone<input type="tel" autocomplete="off"></label><label>Email<input type="email" autocomplete="off"></label></div>
+    <label>Street address<input autocomplete="off" placeholder="e.g. 1234 Elm St"></label>
+    <div class="row"><label>City<input autocomplete="off"></label><label>ZIP<input autocomplete="off" inputmode="numeric"></label></div>
+    <label>Anything we should know? (optional)<textarea rows="3" placeholder="Lawn size if you know it, gate codes, dogs, questions"></textarea></label>
+    <button class="btn main" type="button">Send my request</button>
+    <p class="note">Example only: this button does nothing.</p>
+    <p class="fine">We use what you send only to answer your request. We don't sell or share it.</p>
+  </form>
+</div></section>
+
+</main>
+
+<footer><div class="wrap">
+  <div class="fb"><svg aria-hidden="true"><use href="#badge"/></svg><div><b>Sixfold 365</b><br>Land · Aeration &amp; Seeding</div></div>
+  <div><a href="tel:+17208304553">(720) 830-4553</a> · <a href="mailto:contact@365aeration.com">contact@365aeration.com</a><br><span style="font-size:13px">Not tax or insurance advice: confirm your own position with your accountant and your carrier.</span></div>
+</div></footer>
+
+</body>
+</html>
