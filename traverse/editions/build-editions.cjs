@@ -210,7 +210,7 @@ function page(E) {
 
   // the API and the phone's saved state
   html = rep(html, "'../api/rounds.php'", "'../api/" + E.api + "-rounds.php'", 1, 'api');
-  html = html.replace(/'sixfold\.([a-zA-Z.]+)'/g, "'" + E.store + "$1'").replace(/'doorapp\.([a-zA-Z.]+)'/g, "'" + E.storeApp + "$1'");
+  html = html.replace(/'sixfold\.([a-zA-Z0-9.]+)'/g, "'" + E.store + "$1'").replace(/'doorapp\.([a-zA-Z0-9.]+)'/g, "'" + E.storeApp + "$1'");   // digits too (2026-10-19): 'sixfold.rounds.sat2' stopped the build
   html = rep(html, "indexedDB.open('sixfold-rounds'", "indexedDB.open('" + E.idb + "'", 1, 'indexeddb');
   html = rep(html, "'X-Sixfold-Offline'", "'X-Traverse-Offline'", 1, 'offline header');
   // the name sw.js keeps answers under: Cache Storage is shared by every install on the domain, so a sign-out here
@@ -235,7 +235,7 @@ function page(E) {
   html = rep(html, '<meta name="theme-color" content="#1F2A25">', '<meta name="theme-color" content="' + c.bar + '">', 1, 'theme-color');
   html = rep(html, 'linear-gradient(160deg,#2E3F37,#16201C);color:#EDE7DC', 'linear-gradient(160deg,' + c.card1 + ',' + c.bar + ');color:#ffffff', 1, 'addinfo');
   html = rep(html, "['#E4703A', '#F2A35E', '#8AA07A', '#EDE7DC', '#B84C15']", "['#d6400c', '#f2a900', '" + c.accent + "', '#ffffff', '" + c.bar + "']", 1, 'confetti');
-  html = rep(html, "fillColor: '#E4703A'", "fillColor: '#d6400c'", 1, 'map pin');
+  html = rep(html, "fillColor: '#E4703A'", "fillColor: '#d6400c'", undefined, 'map pin');   // every pin (2026-10-19: the lot preview has its own)
   html = rep(html, "color: '#16201C', weight: 3", "color: '#0f1b2d', weight: 3", 1, 'map ring');
   html = rep(html, '.legend i.c{background:transparent;border:2.5px solid #16201C', '.legend i.c{background:transparent;border:2.5px solid #0f1b2d', 1, 'legend');
   // Sixfold's dark greens, hard-coded in the bar, card and tile gradients
@@ -289,7 +289,7 @@ function page(E) {
   .signin .tvlock svg{width:22px;height:22px}
 </style>
 </head>`;
-  html = rep(html, '</head>', tokens, 1, 'head');
+  html = rep(html, '\n</head>', '\n' + tokens, 1, 'head');   // the page's own, on its line (2026-10-19: a printed receipt carries '</style></head><body>' in a string)
   html = rep(html, '<meta name="viewport"', '<meta name="robots" content="noindex, nofollow">\n<meta name="viewport"', 1, 'robots');
   // last, after every swap and check above has seen the source as written: comments, whitespace and local names out of the
   // copy that ships (2026-10-09, speed: 820 KB -> 570 KB, 226 KB -> 164 KB gzipped). The source keeps its record.
