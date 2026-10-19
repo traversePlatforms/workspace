@@ -6158,7 +6158,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Send to Jen (2026-10-16): a lead into the Quick quote's Leads to call; new ones from the website, Facebook forms and the crew go there by themselves */
   function toJenRow(l) {
     var r = q('div', 'qlinks tojen');
-    if (l.qinbox) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to call')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
+    if (l.qinbox) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to follow up')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
     var b = q('button', 'lnk', 'Send to Jen \u203a'); b.type = 'button';
     b.addEventListener('click', function () { b.disabled = true; api('tojen', { body: { id: l.id, on: true } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent to Jen', (l.name || l.phone || 'The lead') + ' is in her Leads to call.', null); (S.leadRedraw || pipelineView)(); }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); }); });
     r.appendChild(b); return r;
@@ -6168,7 +6168,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function quickInbox() {
     /* folded until opened (2026-10-17, Matthew: both lists hidden by default, opened when needed, not remembered across a refresh or a return) */
     var box = q('div', 'lwho qqinbox'), head = q('button', 'qqinhead'), open = !!S.qqInboxOpen, n = null; head.type = 'button';
-    var label = function () { head.textContent = ''; head.appendChild(q('b', null, 'Leads to call' + (n != null ? ' (' + n + ')' : ''))); head.appendChild(q('span', null, open ? 'Hide' : 'Show')); };
+    var label = function () { head.textContent = ''; head.appendChild(q('b', null, 'Leads to follow up' + (n != null ? ' (' + n + ')' : ''))); head.appendChild(q('span', null, open ? 'Hide' : 'Show')); };
     label(); box.appendChild(head);
     var list = q('div', 'qqinlist'); list.appendChild(q('div', 'skel')); list.hidden = !open; box.appendChild(list);
     head.addEventListener('click', function () { open = !open; S.qqInboxOpen = open; list.hidden = !open; label(); });
@@ -6182,9 +6182,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         L.sort(function (a, b) { return rank(a) - rank(b) || (b.at || 0) - (a.at || 0); });
         n = L.length; label();
         if (!L.length) { list.appendChild(q('div', 'msg soft', 'Nobody waiting. New enquiries from the websites, Facebook forms and the crew land here.')); return; }
-        /* grouped by where each one stands (2026-10-19, Matthew: "so it's not just a 17 long list"); the ones nobody has reached open first */
-        var GRP = [['new', 'Not reached yet', true], ['talked', 'Talked to', true], ['noans', 'No answer yet', false], ['vm', 'Left a voicemail', false], ['text', 'Texted or messaged', false], ['email', 'Emailed', false], ['hold', 'On hold', false]];
-        var keyOf = function (l) { if (l.status === 'hold') return 'hold'; var g = callGroup(l); return g === 'today' || g === 'wait' || g === 'out' ? 'noans' : g; };
+        /* grouped by where each one stands (2026-10-19, Matthew: "so it's not just a 17 long list"); every group starts closed (2026-10-19, Matthew); renamed from Leads to call: she texts and emails too */
+        var GRP = [['new', 'Not reached yet', false], ['talked', 'Talked to', false], ['noans', 'No answer yet', false], ['vm', 'Left a voicemail', false], ['text', 'Texted or messaged', false], ['email', 'Emailed', false], ['hold', 'On hold', false]];
+        var keyOf = function (l) { if (l.status === 'hold') return 'hold'; var t = lastTry(l); if (t && t.o === 'vm') return 'vm'; var g = callGroup(l);   /* a 4th voicemail stays under Left a voicemail */ return g === 'today' || g === 'wait' || g === 'out' ? 'noans' : g; };
         var by = {}; L.forEach(function (l) { var k = keyOf(l); (by[k] = by[k] || []).push(l); });
         GRP.forEach(function (g) {
           var rows = by[g[0]]; if (!rows || !rows.length) return;
