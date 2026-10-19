@@ -203,6 +203,43 @@ local function heldTool()
 	local ch = player.Character
 	return ch and ch:FindFirstChildOfClass("Tool")
 end
+-- the arm swing (2026-10-18, Matthew: still no arm movement): Roblox's own sword slash and lunge, the animations its default
+-- avatar code uses, played on your character. Your character's animations show for everyone, so nothing else is needed.
+local ARM_ANIMS = {
+	R15 = { slash = 522635514, lunge = 522638767 },
+	R6 = { slash = 129967390, lunge = 129967478 },
+}
+local armTracks = {} -- [Animator] = { slash = track, lunge = track }
+local function swingArm(kind, speed)
+	local ch = player.Character
+	local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+	local animator = hum and hum:FindFirstChildOfClass("Animator")
+	if not animator then
+		return
+	end
+	local set = armTracks[animator]
+	if not set then
+		set = {}
+		armTracks[animator] = set
+	end
+	local track = set[kind]
+	if not track then
+		local ids = hum.RigType == Enum.HumanoidRigType.R15 and ARM_ANIMS.R15 or ARM_ANIMS.R6
+		local anim = Instance.new("Animation")
+		anim.AnimationId = "rbxassetid://" .. ids[kind]
+		local ok, t = pcall(function()
+			return animator:LoadAnimation(anim)
+		end)
+		if not ok then
+			return
+		end
+		track = t
+		track.Priority = Enum.AnimationPriority.Action
+		set[kind] = track
+	end
+	track:Play(0.05, 1, speed or 1)
+end
+
 local function punch()
 	local tool = heldTool()
 	if os.clock() - lastPunch < (tool and tool:GetAttribute("Cooldown") or Config.Punch.cooldown) then
@@ -210,6 +247,12 @@ local function punch()
 	end
 	lastPunch = os.clock()
 	Punch:FireServer()
+	local gid = tool and tool:GetAttribute("GearId")
+	if gid == "glove" then
+		swingArm("lunge", 1.4)
+	elseif gid ~= "blaster" then
+		swingArm("slash", 1.7)
+	end
 end
 UIS.InputBegan:Connect(function(input, typing)
 	if typing then
@@ -287,7 +330,21 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- ---------- hide "Steal" on your own critters ----------
+-- the Captain's control panel shows only for the Captain (2026-10-18)
+local captainPrompts = {}
+local function captainReach(obj)
+	obj.MaxActivationDistance = player:GetAttribute("Captain") and (obj:GetAttribute("Reach") or 9) or 0
+end
+player:GetAttributeChangedSignal("Captain"):Connect(function()
+	for _, p in ipairs(captainPrompts) do
+		captainReach(p)
+	end
+end)
 local function checkPrompt(obj)
+	if obj:IsA("ProximityPrompt") and obj:GetAttribute("CaptainOnly") then
+		table.insert(captainPrompts, obj)
+		captainReach(obj)
+	end
 	if obj:IsA("ProximityPrompt") then
 		if obj:GetAttribute("OwnerUserId") == player.UserId then
 			obj.MaxActivationDistance = 0 -- no Steal on your own critters (the server never changes this, so it stays hidden)

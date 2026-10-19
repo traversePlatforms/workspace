@@ -76,7 +76,11 @@ local function shell(folder)
 		part(folder, { Name = "RoofLight", Size = Vector3.new(1, 0.4, D - 10), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(x, H - 0.2, 0) })
 	end
 	for _, z in ipairs({ -hz, -hz / 2, 0, hz / 2, hz }) do
-		part(folder, { Name = "RoofCross", Size = Vector3.new(W, 2, 2), Color = METAL, CFrame = CFrame.new(0, H + 3.5, z) })
+		-- the middle beam runs right over both rockets: leave a gap above each so they can launch (2026-10-18)
+		local runs = z == 0 and { { -hx, -176 }, { -144, 189 }, { 211, hx } } or { { -hx, hx } }
+		for _, r in ipairs(runs) do
+			part(folder, { Name = "RoofCross", Size = Vector3.new(r[2] - r[1], 2, 2), Color = METAL, CFrame = CFrame.new((r[1] + r[2]) / 2, H + 3.5, z) })
+		end
 	end
 	-- hanging lamps over the bases so the deck is lit
 	for _, x in ipairs({ -171, -57, 57, 171 }) do
@@ -293,6 +297,7 @@ end
 local function flame(parent, scale)
 	local f = Instance.new("ParticleEmitter")
 	f.Color = ColorSequence.new(Color3.fromRGB(255, 230, 150), Color3.fromRGB(255, 110, 50))
+	f.Texture = "rbxasset://textures/particles/fire_main.dds"
 	f.LightEmission = 1
 	f.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.6 * scale), NumberSequenceKeypoint.new(1, 0) })
 	f.Lifetime = NumberRange.new(0.3, 0.6)
@@ -422,6 +427,35 @@ local function rocket(folder, at, s, full)
 			sl.Parent = lamp
 		end
 	end
+	-- the LAUNCH console beside the pad (2026-10-18, Matthew: "can the rockets launch into the sky?")
+	local console = part(m, { Name = "LaunchConsole", Size = Vector3.new(2.4, 3.4, 1.8), Color = METAL_DARK, CFrame = at * CFrame.new(7 * s + 2, 1.7, -(12 * s + 2)) })
+	local button = part(m, { Name = "LaunchButton", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 1.4, 1.4), Color = Color3.fromRGB(255, 60, 60), Material = Enum.Material.Neon,
+		CFrame = console.CFrame * CFrame.new(0, 1.9, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+	glow(button, Color3.fromRGB(255, 60, 60), 8, 1.5)
+	local sign = part(m, { Name = "LaunchSign", Size = Vector3.new(2.3, 0.8, 0.1), Color = C.Dark, CFrame = console.CFrame * CFrame.new(0, 0.9, -0.95) })
+	local sg = Instance.new("SurfaceGui")
+	sg.Face = Enum.NormalId.Front
+	sg.LightInfluence = 0
+	sg.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	sg.PixelsPerStud = 50
+	sg.Parent = sign
+	local sl2 = Instance.new("TextLabel")
+	sl2.Size = UDim2.fromScale(1, 1)
+	sl2.BackgroundTransparency = 1
+	sl2.Font = Enum.Font.FredokaOne
+	sl2.TextScaled = true
+	sl2.TextColor3 = Color3.fromRGB(255, 90, 90)
+	sl2.Text = "LAUNCH"
+	sl2.Parent = sg
+	-- what stays behind when it launches: the pad, the tower, the lights and this console; everything else flies
+	local STAY = { LaunchPadBase = true, PadRing = true, PadInner = true, Clamp = true, TowerPost = true, Brace = true, AccessArm = true,
+		ArmRail = true, Beacon = true, Floodlight = true, LaunchConsole = true, LaunchButton = true, LaunchSign = true }
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") and STAY[p.Name] then
+			p:SetAttribute("Stays", true)
+		end
+	end
+	m:SetAttribute("Launchable", true)
 	return m
 end
 
@@ -761,8 +795,10 @@ function Decor.build(station, bases)
 	for _, base in ipairs(bases) do
 		hangar(folder, base)
 	end
-	rocket(folder, CFrame.new(-160, 0, 0) * CFrame.Angles(0, math.rad(-90), 0), 1, true) -- front (name, windows) toward the spawn
-	rocket(folder, CFrame.new(200, 0, 0) * CFrame.Angles(0, math.rad(90), 0), 0.65, false)
+	local rockets = {
+		rocket(folder, CFrame.new(-160, 0, 0) * CFrame.Angles(0, math.rad(-90), 0), 1, true), -- front (name, windows) toward the spawn
+		rocket(folder, CFrame.new(200, 0, 0) * CFrame.Angles(0, math.rad(90), 0), 0.65, false),
+	}
 	local stands = gearBay(folder, CFrame.lookAt(Vector3.new(0, 0, -48), Vector3.new(0, 0, 0))) -- beside the tunnel, open side facing it
 	local roverModel = rover(folder, CFrame.new(-104, 0, -46) * CFrame.Angles(0, math.rad(25), 0))
 	ufo(folder, CFrame.new(165, 22, 45), Vector3.new(165, 0, 45))
@@ -773,7 +809,7 @@ function Decor.build(station, bases)
 	satelliteDish(folder, CFrame.new(160, 0, 0))
 	asteroids(folder)
 	colour()
-	return lockers(folder), stands, roverModel
+	return lockers(folder), stands, roverModel, rockets
 end
 
 return Decor

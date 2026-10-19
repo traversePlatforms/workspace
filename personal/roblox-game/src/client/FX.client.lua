@@ -166,7 +166,8 @@ local function sfx(name, pos)
 end
 
 -- ---------- arm animations (2026-10-18, Matthew: "a punching animation", "animations to the weapons") ----------
--- Every screen moves the puncher's shoulder joint itself, so everyone sees the swing without any uploaded animations.
+-- Punch and glove swings are Roblox animations played by the puncher's own screen (HUD.client.lua); this joint code is
+-- kept for the blaster's small recoil.
 local restC0 = {} -- [joint] = its resting frame
 local armTweens = {} -- [joint] = which swing owns it right now
 -- Finds a body joint and the property that bends it. Older avatars join parts with a Motor6D (bend its C0); newer ones
@@ -288,7 +289,6 @@ local function swing(pos, who, style)
 	if style == "glove" then
 		sfx("glove", pos)
 		if char then
-			animate(char, { { -0.6, -0.35, 0.1 }, { 0.35, 0.4, 0.09 }, { 0.35, 0.4, 0.14 } }) -- wind up, thrust, hold
 			local tool = heldTool(char, "glove")
 			if tool then
 				springGlove(tool)
@@ -297,9 +297,6 @@ local function swing(pos, who, style)
 		burst(pos + (char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.CFrame.LookVector * 4 or Vector3.zero), Color3.fromRGB(255, 255, 255), 12)
 	else
 		sfx("swing", pos)
-		if char then
-			animate(char, { { -0.5, -0.3, 0.09 }, { 1.65, 0.4, 0.09 }, { 1.65, 0.4, 0.12 } }) -- pull back, jab, hold
-		end
 		burst(pos, Color3.fromRGB(255, 255, 255), 8)
 	end
 end
@@ -370,6 +367,130 @@ local function blast(who, from, to, landed)
 	end)
 end
 
+-- ---------- rocket launches (2026-10-18): countdown, liftoff with fire and smoke, up through the roof and away ----------
+-- Only this screen moves the parts, so it's smooth for everyone; the server says when to launch and when it's back.
+local rocketHome = {} -- [part] = { cframe, transparency }
+local rocketFlights = {} -- [model] = true while flying
+local function flyingParts(m)
+	local list = {}
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") and not p:GetAttribute("Stays") then
+			rocketHome[p] = rocketHome[p] or { p.CFrame, p.Transparency }
+			table.insert(list, p)
+		end
+	end
+	return list
+end
+
+local function launch(m, countdown)
+	if not (m and m.Parent) or rocketFlights[m] then
+		return
+	end
+	rocketFlights[m] = true
+	local parts = flyingParts(m)
+	local pad = m:FindFirstChild("LaunchPadBase")
+	local padPos = pad and pad.Position or m:GetPivot().Position
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	local near = hrp and (hrp.Position - padPos).Magnitude < 260
+	task.spawn(function()
+		for i = countdown, 1, -1 do
+			if near then
+				shout(tostring(i), C.Orange, 0.7)
+			end
+			sfx("countdown", padPos)
+			task.wait(1)
+		end
+		if not rocketFlights[m] then
+			return
+		end
+		if near then
+			shout("LIFTOFF!", Color3.fromRGB(255, 120, 90), 2)
+		end
+		sfx("liftoff", padPos)
+		sfx("roar", padPos)
+		-- engines to full, and a cloud of smoke rolling out across the pad
+		local emitters = {}
+		for _, p in ipairs(parts) do
+			for _, e in ipairs(p:GetChildren()) do
+				if e:IsA("ParticleEmitter") then
+					emitters[e] = { e.Rate, e.Speed, e.Lifetime }
+					e.Rate = 260
+					e.Speed = NumberRange.new(18, 30)
+					e.Lifetime = NumberRange.new(0.5, 0.9)
+				end
+			end
+		end
+		local smokeAt = anchorAt(padPos + Vector3.new(0, 1.5, 0))
+		local smoke = Instance.new("ParticleEmitter")
+		smoke.Texture = "rbxasset://textures/particles/smoke_main.dds"
+		smoke.Color = ColorSequence.new(Color3.fromRGB(235, 235, 240))
+		smoke.Size = NumberSequence.new(4, 12)
+		smoke.Transparency = NumberSequence.new(0.3, 1)
+		smoke.Lifetime = NumberRange.new(2, 3.5)
+		smoke.Speed = NumberRange.new(10, 18)
+		smoke.SpreadAngle = Vector2.new(80, 10)
+		smoke.EmissionDirection = Enum.NormalId.Front
+		smoke.Rate = 0
+		smoke.Parent = smokeAt
+		for k = 0, 7 do -- puff it out in every direction
+			smokeAt.CFrame = CFrame.new(smokeAt.Position) * CFrame.Angles(0, k * math.pi / 4, 0)
+			smoke:Emit(12)
+		end
+		smoke.Rate = 40
+		task.delay(3, function()
+			smoke.Rate = 0
+		end)
+		Debris:AddItem(smokeAt, 7)
+		-- climb: slow at first, then faster and faster, with a little shake on the way off the pad
+		local t0, flight = os.clock(), 7
+		local conn
+		conn = RunService.RenderStepped:Connect(function()
+			local t = os.clock() - t0
+			if not rocketFlights[m] then
+				conn:Disconnect()
+				return
+			end
+			local h = 14 * t * t
+			local shake = t < 1.5 and Vector3.new(math.sin(t * 60) * 0.15, 0, math.cos(t * 53) * 0.15) or Vector3.zero
+			for _, p in ipairs(parts) do
+				p.CFrame = rocketHome[p][1] + Vector3.new(0, h, 0) + shake
+			end
+			if t >= flight then
+				conn:Disconnect()
+				for _, p in ipairs(parts) do
+					p.Transparency = 1
+				end
+				for e, old in pairs(emitters) do
+					e.Rate, e.Speed, e.Lifetime = old[1], old[2], old[3]
+					e.Enabled = false
+				end
+			end
+		end)
+	end)
+end
+
+local function rocketBack(m)
+	if not m then
+		return
+	end
+	rocketFlights[m] = nil
+	local pad = m:FindFirstChild("LaunchPadBase")
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") and rocketHome[p] then
+			p.CFrame = rocketHome[p][1]
+			p.Transparency = rocketHome[p][2]
+			for _, e in ipairs(p:GetChildren()) do
+				if e:IsA("ParticleEmitter") then
+					e.Enabled = true
+				end
+			end
+		end
+	end
+	if pad then
+		burst(pad.Position + Vector3.new(0, 8, 0), C.Blue, 40)
+	end
+end
+
 FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 	if kind == "burst" then
 		burst(a, b)
@@ -391,6 +512,13 @@ FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 		blast(a, b, c, d)
 	elseif kind == "sfx" then
 		sfx(a, b)
+	elseif kind == "launch" then
+		launch(a, b)
+	elseif kind == "rocketback" then
+		rocketBack(a)
+	elseif kind == "captain" then
+		shout("CAPTAIN ON DECK!", C.Orange, 3)
+		sfx("captain")
 	elseif kind == "pow" then
 		burst(a, C.Orange, 40)
 		pop(a + Vector3.new(0, 3, 0), "POW!", C.Orange)

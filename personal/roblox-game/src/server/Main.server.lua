@@ -790,16 +790,28 @@ local function meteorStar()
 	end)
 end
 
+-- a Meteor Shower: on its timer, or when the Captain presses the button (returns false if one is already falling)
+local showerOn = false
+local function meteorShower()
+	if showerOn then
+		return false
+	end
+	showerOn = true
+	tellAll("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
+	FX:FireAllClients("shower", Config.MeteorSeconds)
+	local t0 = os.clock()
+	while os.clock() - t0 < Config.MeteorSeconds do
+		meteorStar()
+		task.wait(1 / Config.MeteorPerSecond)
+	end
+	showerOn = false
+	return true
+end
+
 task.spawn(function()
 	task.wait(Config.MeteorFirst)
 	while true do
-		tellAll("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
-		FX:FireAllClients("shower", Config.MeteorSeconds)
-		local t0 = os.clock()
-		while os.clock() - t0 < Config.MeteorSeconds do
-			meteorStar()
-			task.wait(1 / Config.MeteorPerSecond)
-		end
+		meteorShower()
 		task.wait(Config.MeteorEvery)
 	end
 end)
@@ -1745,6 +1757,271 @@ if rover and roverSeat and rover.PrimaryPart then
 				lastUsed = os.clock()
 			end
 		end
+	end)
+end
+
+-- ---------- rocket launches (2026-10-18, Matthew: "can the rockets launch into the sky?") ----------
+-- Anyone can press LAUNCH. Every screen counts down and flies the rocket itself (FX.client.lua); the server only keeps
+-- time, so a new rocket is back on the pad Config.RocketBackAfter seconds after liftoff.
+local rocketBusy = {}
+local function launchRocket(m)
+	if rocketBusy[m] then
+		return false
+	end
+	rocketBusy[m] = true
+	FX:FireAllClients("launch", m, Config.RocketCountdown)
+	task.delay(Config.RocketCountdown + Config.RocketBackAfter, function()
+		FX:FireAllClients("rocketback", m)
+		rocketBusy[m] = nil
+	end)
+	return true
+end
+for _, m in ipairs(map.rockets or {}) do
+	local button = m:FindFirstChild("LaunchConsole")
+	if button then
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.ActionText = "Launch!"
+		prompt.ObjectText = "Rocket"
+		prompt.HoldDuration = 0.3
+		prompt.MaxActivationDistance = 10
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = button
+		prompt.Triggered:Connect(function(player)
+			if launchRocket(m) then
+				tellAll(player.DisplayName .. " is launching a rocket! " .. Config.RocketCountdown .. "... ", "cosmic")
+			else
+				tell(player, "That rocket is already on its way. A new one will be on the pad soon!", "info")
+			end
+		end)
+	end
+end
+
+-- ---------- Captain Nolan (2026-10-18): hat, name tag, a greeting, and his control panel ----------
+local function isCaptain(player)
+	if Config.ExclusiveUserId ~= 0 and player.UserId == Config.ExclusiveUserId then
+		return true
+	end
+	return Config.CaptainInStudio and RunService:IsStudio()
+end
+
+local function captainHat(ch, real)
+	local head = ch:WaitForChild("Head", 10)
+	if not head or ch:FindFirstChild("CaptainHat") then
+		return
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "CaptainHat"
+	folder.Parent = ch
+	local hs = head.Size.Y / 1.2 -- the hat fits the head it sits on
+	local function bit(name, size, color, offset, opts)
+		opts = opts or {}
+		local p = Instance.new("Part")
+		p.Name = name
+		p.Size = size * hs
+		p.Color = color
+		p.Material = opts.neon and Enum.Material.Neon or Enum.Material.SmoothPlastic
+		p.CanCollide = false
+		p.CanQuery = false
+		p.CanTouch = false
+		p.Massless = true
+		p.CastShadow = false
+		if opts.cyl then
+			p.Shape = Enum.PartType.Cylinder
+		end
+		if opts.ball then
+			local mesh = Instance.new("SpecialMesh")
+			mesh.MeshType = Enum.MeshType.Sphere
+			mesh.Parent = p
+		end
+		p.CFrame = head.CFrame * offset
+		local w = Instance.new("WeldConstraint")
+		w.Part0 = head
+		w.Part1 = p
+		w.Parent = p
+		p.Parent = folder
+		return p
+	end
+	local up = CFrame.Angles(0, 0, math.rad(90)) -- stand a cylinder upright
+	local y = 0.62 * hs
+	bit("Crown", Vector3.new(0.5, 1.3, 1.3), Color3.fromRGB(28, 40, 86), CFrame.new(0, y + 0.1 * hs, 0) * up, { cyl = true })
+	bit("CapTop", Vector3.new(0.16, 1.5, 1.5), Color3.fromRGB(245, 246, 252), CFrame.new(0, y + 0.42 * hs, -0.05 * hs) * CFrame.Angles(math.rad(-8), 0, 0) * up, { cyl = true })
+	bit("CapBand", Vector3.new(0.14, 1.34, 1.34), Config.Colors.Orange, CFrame.new(0, y - 0.05 * hs, 0) * up, { cyl = true, neon = true })
+	bit("Brim", Vector3.new(1.2, 0.12, 0.75), Color3.fromRGB(20, 22, 34), CFrame.new(0, y - 0.12 * hs, -0.58 * hs) * CFrame.Angles(math.rad(12), 0, 0), { ball = true })
+	bit("Badge", Vector3.new(0.34, 0.34, 0.1), Color3.fromRGB(255, 205, 70), CFrame.new(0, y + 0.12 * hs, -0.66 * hs), { ball = true, neon = true })
+	local tag = Instance.new("BillboardGui")
+	tag.Name = "CaptainTag"
+	tag.Size = UDim2.fromOffset(240, 40)
+	tag.StudsOffsetWorldSpace = Vector3.new(0, 3.2, 0)
+	tag.MaxDistance = 120
+	tag.LightInfluence = 0
+	tag.Parent = head
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = Config.Colors.Orange
+	l.TextStrokeTransparency = 0.2
+	l.Text = real and ("★ " .. Config.CommanderName .. " ★") or "★ Captain (Studio test) ★"
+	l.Parent = tag
+end
+
+local function hookCaptain(player)
+	if not isCaptain(player) then
+		return
+	end
+	local real = player.UserId == Config.ExclusiveUserId
+	player:SetAttribute("Captain", true)
+	player.CharacterAdded:Connect(function(ch)
+		captainHat(ch, real)
+	end)
+	if player.Character then
+		task.spawn(captainHat, player.Character, real)
+	end
+	task.delay(3, function() -- after the title screen
+		if player.Parent then
+			FX:FireAllClients("captain", real and Config.CommanderName or "Captain")
+			if real then
+				tellAll(Config.CommanderName .. " has arrived on the station! Captain on deck!", "cosmic")
+			end
+		end
+	end)
+end
+Players.PlayerAdded:Connect(hookCaptain)
+for _, p in ipairs(Players:GetPlayers()) do
+	hookCaptain(p)
+end
+
+-- the light themes the Captain can switch between
+local themes = {
+	{ name = "Normal", tint = Color3.new(1, 1, 1) },
+	{ name = "Sunset Orange", tint = Color3.fromRGB(255, 214, 178) },
+	{ name = "Ocean Blue", tint = Color3.fromRGB(186, 218, 255) },
+	{ name = "Party Pink", tint = Color3.fromRGB(255, 196, 232) },
+	{ name = "Alien Green", tint = Color3.fromRGB(200, 255, 200) },
+}
+local themeIndex = 1
+
+-- the control panel in front of his statue: five big buttons, only the Captain sees or can press them
+local panelAt = CFrame.new(140, 0, 0) * CFrame.Angles(0, math.rad(90), 0) -- its front faces the statue
+local panel = Instance.new("Model")
+panel.Name = "CaptainPanel"
+panel.Parent = stationFolder
+local function panelPart(props)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	p.Material = Enum.Material.Metal
+	for k, v in pairs(props) do
+		p[k] = v
+	end
+	p.Parent = panel
+	return p
+end
+panelPart({ Name = "Desk", Size = Vector3.new(14, 3.2, 3.4), Color = Color3.fromRGB(70, 78, 104), CFrame = panelAt * CFrame.new(0, 1.6, 0) })
+panelPart({ Name = "DeskTop", Size = Vector3.new(14.4, 0.4, 3.8), Color = Color3.fromRGB(40, 44, 62), CFrame = panelAt * CFrame.new(0, 3.3, 0) * CFrame.Angles(math.rad(-12), 0, 0) })
+local screen = panelPart({ Name = "Screen", Size = Vector3.new(12, 3.2, 0.4), Color = Config.Colors.Dark, CFrame = panelAt * CFrame.new(0, 6, 1.4) })
+local sg = Instance.new("SurfaceGui")
+sg.Face = Enum.NormalId.Front
+sg.LightInfluence = 0
+sg.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+sg.PixelsPerStud = 40
+sg.Parent = screen
+local sl = Instance.new("TextLabel")
+sl.Size = UDim2.fromScale(1, 1)
+sl.BackgroundTransparency = 1
+sl.Font = Enum.Font.FredokaOne
+sl.TextScaled = true
+sl.TextColor3 = Config.Colors.Orange
+sl.Text = "CAPTAIN'S CONTROLS"
+sl.Parent = sg
+
+local lastUse = {}
+local buttons = {
+	{ id = "shower", label = "Meteor Shower", key = Enum.KeyCode.E, color = Config.Colors.Blue },
+	{ id = "night", label = "Black Hole Night", key = Enum.KeyCode.R, color = Color3.fromRGB(170, 110, 255) },
+	{ id = "lights", label = "Change Lights", key = Enum.KeyCode.T, color = Color3.fromRGB(255, 220, 90) },
+	{ id = "rain", label = "Rain Stardust", key = Enum.KeyCode.Y, color = Config.Colors.Orange },
+	{ id = "launch", label = "Launch Rockets", key = Enum.KeyCode.U, color = Color3.fromRGB(255, 70, 70) },
+}
+local function press(player, id)
+	if not isCaptain(player) then
+		return
+	end
+	local t = os.clock()
+	local cd = Config.CaptainCooldowns[id] or 5
+	if (lastUse[id] or 0) + cd > t then
+		tell(player, "Recharging: " .. math.ceil(lastUse[id] + cd - t) .. "s", "info")
+		return
+	end
+	if id == "shower" then
+		if showerOn then
+			tell(player, "Stars are already falling!", "info")
+			return
+		end
+		task.spawn(meteorShower)
+	elseif id == "night" then
+		if (workspace:GetAttribute("BlackHoleUntil") or 0) > now() then
+			tell(player, "It's already Black Hole Night!", "info")
+			return
+		end
+		task.spawn(blackHoleNight)
+	elseif id == "lights" then
+		if (workspace:GetAttribute("BlackHoleUntil") or 0) > now() then
+			tell(player, "Wait for Black Hole Night to end first.", "info")
+			return
+		end
+		themeIndex = themeIndex % #themes + 1
+		local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+		if cc then
+			TweenService:Create(cc, TweenInfo.new(1.2), { TintColor = themes[themeIndex].tint }):Play()
+		end
+		tellAll("Captain's orders: " .. themes[themeIndex].name .. " lights!", "good")
+	elseif id == "rain" then
+		tellAll("The Captain made it rain Stardust! Grab them!", "cosmic")
+		FX:FireAllClients("sfx", "shower")
+		task.spawn(function()
+			for _ = 1, 24 do
+				meteorStar()
+				task.wait(0.15)
+			end
+		end)
+	elseif id == "launch" then
+		local any = false
+		for _, m in ipairs(map.rockets or {}) do
+			any = launchRocket(m) or any
+		end
+		if not any then
+			tell(player, "The rockets are already flying!", "info")
+			return
+		end
+		tellAll("Captain's orders: launch all rockets!", "cosmic")
+	end
+	lastUse[id] = t
+end
+for i, b in ipairs(buttons) do
+	local x = (i - 3) * 2.7
+	local btn = panelPart({ Name = "Button_" .. b.id, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 2, 2), Color = b.color, Material = Enum.Material.Neon,
+		CFrame = panelAt * CFrame.new(x, 3.6, -0.3) * CFrame.Angles(math.rad(-12), 0, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+	local light = Instance.new("PointLight")
+	light.Color = b.color
+	light.Range = 6
+	light.Parent = btn
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = b.label
+	prompt.ObjectText = "Captain's Controls"
+	prompt.KeyboardKeyCode = b.key
+	prompt.HoldDuration = 0.2
+	prompt.MaxActivationDistance = 9
+	prompt.RequiresLineOfSight = false
+	prompt.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow -- all five show at once (tap them on a tablet)
+	prompt.UIOffset = Vector2.new(0, (i - 3) * -58)
+	prompt:SetAttribute("CaptainOnly", true)
+	prompt:SetAttribute("Reach", 9)
+	prompt.Parent = btn
+	prompt.Triggered:Connect(function(player)
+		press(player, b.id)
 	end)
 end
 

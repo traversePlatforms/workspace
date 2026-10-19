@@ -110,8 +110,14 @@ Config.Critters = {
 		body = Color3.fromRGB(150, 210, 255), accent = Color3.fromRGB(255, 186, 125), enabled = false },
 }
 
--- only this Roblox user can ever get exclusive critters (Nolan's user ID, a number; 0 = nobody yet)
-Config.ExclusiveUserId = 0
+-- Nolan's Roblox user ID (a number, never his username; set 2026-10-18). He is the Captain: captain's hat and tag, the
+-- CAPTAIN ON DECK greeting, and the control panel by his statue. Only he can ever get exclusive critters.
+Config.ExclusiveUserId = 4290657201
+Config.CaptainInStudio = true -- in Studio play-tests everyone is the Captain, so the panel can be tried
+-- seconds before the Captain can press the same control-panel button again
+Config.CaptainCooldowns = { shower = 60, night = 90, lights = 2, rain = 20, launch = 5 }
+Config.RocketCountdown = 5 -- seconds counted down before liftoff
+Config.RocketBackAfter = 25 -- seconds after liftoff until a new rocket stands on the pad
 Config.ExclusiveCritters = {} -- e.g. { "surprise" }
 
 Config.StartStardust = 60
@@ -184,6 +190,10 @@ Config.Sounds = {
 	gear = { id = 1839901345, volume = 0.6 },
 	boost = { id = 9120006514, volume = 0.45, stopAfter = 1 },
 	bot = { id = 9119100090, volume = 0.6 },
+	captain = { id = 1836473422, volume = 0.5 }, -- APM "Victory Fanfare Sting", when the Captain arrives
+	countdown = { id = 9117060347, volume = 0.6 },
+	liftoff = { id = 12222065, volume = 0.8 }, -- Roblox "Launching rocket"
+	roar = { id = 9119414091, volume = 0.6, stopAfter = 8 },
 }
 Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
