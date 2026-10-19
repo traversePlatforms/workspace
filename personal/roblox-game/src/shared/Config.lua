@@ -115,7 +115,7 @@ Config.Critters = {
 Config.ExclusiveUserId = 4290657201
 Config.CaptainInStudio = true -- in Studio play-tests everyone is the Captain, so the panel can be tried
 -- seconds before the Captain can press the same control-panel button again
-Config.CaptainCooldowns = { shower = 60, night = 90, lights = 2, rain = 20, launch = 5 }
+Config.CaptainCooldowns = { shower = 60, night = 90, lights = 2, rain = 20, launch = 5, lowgrav = 60 }
 Config.RocketCountdown = 5 -- seconds counted down before liftoff
 Config.RocketBackAfter = 25 -- seconds after liftoff until a new rocket stands on the pad
 Config.ExclusiveCritters = {} -- e.g. { "surprise" }
@@ -133,8 +133,8 @@ Config.SpawnEvery = 2.5 -- seconds between critters landing on the pad
 Config.ConveyorSpeed = 7 -- studs per second
 -- the base door (2026-10-18, Matthew): locked = nobody gets in, owner included. A lock lasts up to ShieldSeconds, then it opens;
 -- after it opens (by itself or by you) you must wait ShieldCooldown before locking again: unlocking to get in is a risk
-Config.ShieldSeconds = 60
-Config.ShieldCooldown = 30
+Config.ShieldSeconds = 30 -- halved 2026-10-18 (Matthew)
+Config.ShieldCooldown = 15
 
 -- punching (Q, a click, or the PUNCH button): knocks people back, knocks carried critters to the floor, stuns Parker Bots
 Config.Punch = { reach = 7, cooldown = 0.6, knock = 55, floorSeconds = 20 }
@@ -190,11 +190,63 @@ Config.Sounds = {
 	gear = { id = 1839901345, volume = 0.6 },
 	boost = { id = 9120006514, volume = 0.45, stopAfter = 1 },
 	bot = { id = 9119100090, volume = 0.6 },
+	gate = { id = 9116907550, volume = 0.5 }, -- the metal gate landing
+	bounce = { id = 1841185443, volume = 0.5, stopAfter = 1.2 }, -- APM "Whizzing About", the trampoline
+	arcade = { id = 9119218533, volume = 0.5 },
+	lowgrav = { id = 9116385087, volume = 0.6 },
+	upgrade = { id = 1839901345, volume = 0.6 },
+	comet = { id = 12222095, volume = 0.35 },
 	captain = { id = 1836473422, volume = 0.5 }, -- APM "Victory Fanfare Sting", when the Captain arrives
 	countdown = { id = 9117060347, volume = 0.6 },
 	liftoff = { id = 12222065, volume = 0.8 }, -- Roblox "Launching rocket"
 	roar = { id = 9119414091, volume = 0.6, stopAfter = 8 },
 }
+-- Character upgrades (2026-10-18, Matthew: "character upgrade, slightly faster speed, maybe double jump, long stun on hits").
+-- Bought at the Upgrade Lab by the spawn, kept for good; prices are per level.
+Config.Upgrades = {
+	{ id = "speed", name = "Turbo Legs", prices = { 500, 2000, 6000 }, blurb = "Run a little faster every level." },
+	{ id = "jump", name = "Double Jump", prices = { 1500 }, blurb = "Press jump again in the air." },
+	{ id = "stun", name = "Stun Power", prices = { 400, 1500, 5000 }, blurb = "Your hits stun people and Parker Bots for longer." },
+}
+Config.SpeedPerLevel = { walk = 1.5, run = 2 } -- added to walking (16) and sprinting (27) per Turbo Legs level
+Config.StunBase = 0.6 -- seconds a punched player is slowed, before Stun Power
+Config.StunPerLevel = 0.5 -- more seconds per Stun Power level (Parker Bots get a whole second per level)
+function Config.upgradeById(id)
+	for _, u in ipairs(Config.Upgrades) do
+		if u.id == id then
+			return u
+		end
+	end
+	return nil
+end
+
+-- Furniture (2026-10-18, Matthew: "furniture in the base you can interact with, maybe a furniture store"). Bought at the
+-- Space Furniture shop across the tunnel from the Gear Bay; it appears in your base wherever you are given one.
+Config.Furniture = {
+	{ id = "beanbag", name = "Bean Bag", price = 150, blurb = "Flop down and relax." },
+	{ id = "bed", name = "Rocket Bed", price = 350, blurb = "A bed shaped like a rocket. Take a nap." },
+	{ id = "disco", name = "Disco Ball", price = 400, blurb = "Party lights in your base." },
+	{ id = "trampoline", name = "Moon Trampoline", price = 500, blurb = "Bounce sky high." },
+	{ id = "telescope", name = "Telescope", price = 600, blurb = "Take a close look at the planets." },
+	{ id = "arcade", name = "Arcade Machine", price = 800, blurb = "Play for a Stardust prize every 90 seconds." },
+}
+Config.ArcadeCooldown = 90
+function Config.furnitureById(id)
+	for _, f in ipairs(Config.Furniture) do
+		if f.id == id then
+			return f
+		end
+	end
+	return nil
+end
+
+-- Low Gravity (2026-10-18): every so often gravity drops and everyone floats. Set to false to switch it off.
+Config.LowGravity = true
+Config.LowGravityFirst = 240 -- seconds until the first one
+Config.LowGravityEvery = 420
+Config.LowGravitySeconds = 40
+Config.LowGravityValue = 55 -- normal is 196.2
+Config.CometEvery = { 100, 170 } -- seconds between comets flying over (random in this range)
 Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
 Config.AutosaveEvery = 60

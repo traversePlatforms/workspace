@@ -112,7 +112,15 @@ RunService.Heartbeat:Connect(function(dt)
 			tired = false
 		end
 	end
-	hum.WalkSpeed = running and S.run or S.walk
+	-- Turbo Legs adds speed; a hit stuns you for a moment (2026-10-18)
+	local ch = player.Character
+	local lvl = ch:GetAttribute("SpeedLevel") or 0
+	local stunned = (ch:GetAttribute("StunnedUntil") or 0) > workspace:GetServerTimeNow()
+	if stunned then
+		hum.WalkSpeed = 4
+	else
+		hum.WalkSpeed = running and (S.run + lvl * Config.SpeedPerLevel.run) or (S.walk + lvl * Config.SpeedPerLevel.walk)
+	end
 	fill.Size = UDim2.fromScale(math.max(energy, 0.001), 1)
 	fill.BackgroundColor3 = tired and Color3.fromRGB(150, 156, 176) or (running and C.Orange or C.Blue)
 end)

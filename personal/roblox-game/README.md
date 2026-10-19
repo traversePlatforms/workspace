@@ -27,6 +27,13 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - **Rocket launches:** press **Launch!** at the red console by either rocket: a 5-second countdown, then it lifts off through a gap in the roof with fire, smoke and engine noise. A new rocket stands on the pad 25 seconds later.
 - **Captain Nolan** (his Roblox user ID is `Config.ExclusiveUserId`): a captain's hat and name tag, a CAPTAIN ON DECK fanfare when he joins, and the **Captain's Controls** in front of his statue: Meteor Shower, Black Hole Night, Change Lights, Rain Stardust, Launch Rockets. Only he sees them. In Studio everyone is the Captain so it can be tested (`Config.CaptainInStudio`).
 - **Arm swings:** punches play Roblox's own slash animation and the Boing Glove its lunge, so everyone sees them.
+- **Metal gate:** locking your door rolls a metal shutter down over the doorway; unlocking rolls it up. Locks last 30 seconds, then 15 seconds before you can lock again.
+- **Space Furniture** (across the tunnel from the Gear Bay): Bean Bag and Rocket Bed (sit on them), Disco Ball (party lights), Moon Trampoline (bounce), Telescope (a camera tour of the planets), Arcade Machine (a Stardust prize every 90 seconds, 1 in 10 a jackpot). Bought once; it appears in whichever base you get.
+- **Upgrade Lab** (by the spawn): Turbo Legs (3 levels of speed), Double Jump, Stun Power (3 levels: your hits stun people and Parker Bots longer). Every punch now slows the person hit for a moment, with stars round their head.
+- **Low Gravity:** every 7 minutes (first at 4), gravity drops for 40 seconds. Nolan has a button for it too. An invisible lid keeps everyone inside the station.
+- **Open roof:** no roof beams, more planets overhead, twinkling stars, and a comet every couple of minutes. The lights hover as drones.
+- **Stars:** your own screen grabs a Stardust star the moment you touch it, so pickups feel instant even with lag.
+- **Void Creeper** can't go into bases, and anyone inside a base is safe from it.
 - **Looks:** brighter lighting and floors, two proper rockets (main one with boosters and a launch tower), a moon rover, a UFO beaming up crates, and Earth, Mars and a striped giant outside the windows.
 - Rarities: Common, Rare, Epic, Legendary, **Cosmic**. Hammy the Star Cat is Cosmic, the rarest.
 - **Mutations:** any critter can land **Golden** (8%: costs 1.5x, earns 2x) or **Rainbow** (1.5%: costs 3x, earns 5x).
@@ -65,6 +72,8 @@ The game lives as code files in `src/`; **Rojo** syncs them into Studio live.
 | `src/server/Main.server.lua` | The rules: buying, carrying, stealing, catching, door, punching, Parker Bots, income |
 | `src/server/PlayerData.lua` | Saves Stardust and critters |
 | `src/server/GearTools.lua` | The Boing Glove, Star Blaster and Jet Boots, built from parts |
+| `src/server/Furniture.lua` | The six furniture pieces and where each sits in a base |
+| `src/client/Station.client.lua` | Gates, disco balls, trampolines, comets, extra stars |
 | `src/client/Rover.client.lua` | Steering the Moon Rover while you drive |
 | `src/client/Audio.client.lua` | Music and the Music button |
 | `src/client/Gear.client.lua` | Jet Boots boost and flames, Gear Bay prompt labels |

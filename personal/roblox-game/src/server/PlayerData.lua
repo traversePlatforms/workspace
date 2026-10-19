@@ -12,7 +12,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {} } -- found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {}, furniture = {}, upgrades = {} } -- found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -41,6 +41,21 @@ local function clean(d)
 		for id, v in pairs(d.gear) do
 			if v == true and Config.gearById(id) then
 				out.gear[id] = true
+			end
+		end
+	end
+	if typeof(d.furniture) == "table" then
+		for id, v in pairs(d.furniture) do
+			if v == true and Config.furnitureById(id) then
+				out.furniture[id] = true
+			end
+		end
+	end
+	if typeof(d.upgrades) == "table" then -- levels, capped at what each upgrade has
+		for id, lv in pairs(d.upgrades) do
+			local u = Config.upgradeById(id)
+			if u and typeof(lv) == "number" then
+				out.upgrades[id] = math.clamp(math.floor(lv), 0, #u.prices)
 			end
 		end
 	end

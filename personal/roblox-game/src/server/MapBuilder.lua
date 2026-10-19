@@ -41,23 +41,39 @@ local function surfaceText(target, face, text, color, size)
 	return l
 end
 
+-- a floating sign (2026-10-18, Matthew: "a better way to do the labels... more visual clarity"): a dark rounded panel with a
+-- coloured outline, sized in studs so it shrinks with distance instead of crowding the screen. w and h are as before (pixels
+-- at the old size); 24 of them make a stud.
 local function billboard(parent, offset, text, color, w, h)
 	local holder = part(parent, { Name = "BillboardHolder", Size = Vector3.new(1, 1, 1), Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CFrame = CFrame.new(offset) })
 	local g = Instance.new("BillboardGui")
-	g.Size = UDim2.fromOffset(w or 600, h or 120)
+	g.Size = UDim2.fromScale((w or 600) / 24, (h or 120) / 24)
 	g.LightInfluence = 0
-	g.MaxDistance = 500
+	g.MaxDistance = 600
 	g.Parent = holder
+	local panel = Instance.new("Frame")
+	panel.Size = UDim2.fromScale(1, 1)
+	panel.BackgroundColor3 = C.Dark
+	panel.BackgroundTransparency = 0.15
+	panel.Parent = g
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.3, 0)
+	corner.Parent = panel
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color
+	stroke.Thickness = 3
+	stroke.Parent = panel
 	local l = Instance.new("TextLabel")
 	l.Name = "Label"
-	l.Size = UDim2.fromScale(1, 1)
+	l.AnchorPoint = Vector2.new(0.5, 0.5)
+	l.Position = UDim2.fromScale(0.5, 0.5)
+	l.Size = UDim2.fromScale(0.9, 0.78)
 	l.BackgroundTransparency = 1
 	l.Font = Enum.Font.FredokaOne
 	l.TextScaled = true
 	l.TextColor3 = color
-	l.TextStrokeTransparency = 0.2
 	l.Text = text
-	l.Parent = g
+	l.Parent = panel
 	return l, holder
 end
 
@@ -133,6 +149,17 @@ local function planets(folder)
 			CFrame = CFrame.new(gasAt + Vector3.new(0, y, 0)) * CFrame.Angles(0, 0, math.rad(90)) })
 	end
 	blob(folder, gasAt, gr + 1.5, Vector3.new(1, -0.25, 0.35).Unit, Vector3.new(34, 18, 6), Color3.fromRGB(200, 90, 60)) -- the big red spot
+
+	-- overhead, now the roof is open (2026-10-18): a ringed planet, a small purple one and a far blue one
+	local satAt = CFrame.new(380, 230, 260)
+	part(folder, { Name = "RingedPlanet", Shape = Enum.PartType.Ball, Size = Vector3.new(110, 110, 110), Color = Color3.fromRGB(236, 210, 150), CFrame = satAt, CanCollide = false })
+	for i, r in ipairs({ 250, 215, 185 }) do
+		part(folder, { Name = "PlanetRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1, r, r), Color = (i == 2) and Color3.fromRGB(210, 180, 130) or Color3.fromRGB(245, 228, 190),
+			Material = Enum.Material.Neon, Transparency = 0.45 + i * 0.1, CanCollide = false, CastShadow = false, CFrame = satAt * CFrame.Angles(0, 0, math.rad(90)) * CFrame.Angles(math.rad(22), 0, math.rad(12)) })
+	end
+	part(folder, { Name = "PurplePlanet", Shape = Enum.PartType.Ball, Size = Vector3.new(64, 64, 64), Color = Color3.fromRGB(170, 120, 230), CFrame = CFrame.new(-260, 280, -380), CanCollide = false })
+	part(folder, { Name = "PurpleMoon", Shape = Enum.PartType.Ball, Size = Vector3.new(16, 16, 16), Color = Color3.fromRGB(220, 210, 240), Material = Enum.Material.Slate, CFrame = CFrame.new(-205, 300, -360), CanCollide = false })
+	part(folder, { Name = "FarBluePlanet", Shape = Enum.PartType.Ball, Size = Vector3.new(50, 50, 50), Color = Color3.fromRGB(90, 160, 255), Material = Enum.Material.Neon, CFrame = CFrame.new(-60, 380, 420), CanCollide = false })
 end
 
 -- a base faces the launch pad: its front (local -Z) points at z = 0
@@ -186,6 +213,16 @@ local function buildBase(folder, index, position, facingRotation)
 	-- the airlock shield fills the doorway: visible only while it is on
 	-- the door (2026-10-18): an energy door, red and solid while locked, open (invisible, walk-through) while unlocked
 	local shield = part(root, { Name = "Shield", Size = Vector3.new(DOOR, WH - 1, 1), Color = Color3.fromRGB(255, 70, 80), Material = Enum.Material.ForceField, Transparency = 1, CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, 1 + (WH - 1) / 2, -D / 2 - 0.6) })
+	-- the metal gate (2026-10-18, Matthew: "a metal gate that drops down from the top when the door gets locked"): a rolling
+	-- shutter stored in a housing over the doorway; every screen rolls it down or up when the base's ShieldUntil changes
+	-- (Station.client.lua). The invisible Shield above is what actually blocks the way.
+	local gateTop = WH - 0.4
+	part(root, { Name = "GateHousing", Size = Vector3.new(DOOR + 1.6, 2.2, 2.4), Color = metalDark, Material = Enum.Material.Metal, CFrame = cf * CFrame.new(0, gateTop + 1.1, -D / 2 - 0.6) })
+	local shutter = part(root, { Name = "Shutter", Size = Vector3.new(DOOR, 0.2, 0.35), Color = Color3.fromRGB(158, 164, 178), Material = Enum.Material.CorrugatedSteel,
+		CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, gateTop - 0.1, -D / 2 - 0.6) })
+	shutter:SetAttribute("Full", gateTop - 1)
+	part(root, { Name = "ShutterBar", Size = Vector3.new(DOOR, 0.5, 0.55), Color = Color3.fromRGB(255, 196, 60), CanCollide = false, CanQuery = false,
+		CFrame = cf * CFrame.new(0, gateTop - 0.45, -D / 2 - 0.6) })
 	-- status lamps either side of the door: green = open, red = locked (Main.server.lua sets them)
 	local lamps = {}
 	for _, side in ipairs({ -1, 1 }) do
@@ -194,7 +231,7 @@ local function buildBase(folder, index, position, facingRotation)
 	-- the owner's name on the back wall and floating over the entrance
 	local signPart = part(root, { Name = "Sign", Size = Vector3.new(30, 5, 0.6), Color = C.Dark, CFrame = cf * CFrame.new(0, 10.5, D / 2 + 0.5) })
 	local signLabel = surfaceText(signPart, Enum.NormalId.Front, "Free base", C.Orange, 30)
-	local nameLabel = billboard(root, (cf * CFrame.new(0, 16, -D / 2)).Position, "Free base", C.Blue, 420, 80)
+	local nameLabel = billboard(root, (cf * CFrame.new(0, 19.5, -D / 2)).Position, "Free base", C.Blue, 420, 80) -- above the gate housing
 	-- eight pedestals in two rows at the back half
 	local pedestals = {}
 	local i = 0
@@ -311,9 +348,14 @@ function MapBuilder.build()
 	critters.Name = "Critters"
 	critters.Parent = station
 
-	local lockers, gearStands, rover, rockets = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
+	local lockers, gearStands, rover, rockets, furnitureStands, upgradePads = require(script.Parent.Decor).build(station, bases)
+	-- signs over the places to go (2026-10-18)
+	billboard(station, Vector3.new(0, 21, -38), "GEAR BAY", C.Orange, 300, 64)
+	billboard(station, Vector3.new(0, 21, 38), "SPACE FURNITURE", Color3.fromRGB(255, 150, 210), 380, 64)
+	billboard(station, Vector3.new(-104, 17, 40), "UPGRADE LAB", Color3.fromRGB(140, 255, 170), 320, 64)
+	billboard(station, Vector3.new(-104, 12, -46), "MOON ROVER", C.Blue, 300, 60) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
 
-	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers, gearStands = gearStands, rover = rover, rockets = rockets }
+	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers, gearStands = gearStands, rover = rover, rockets = rockets, furnitureStands = furnitureStands, upgradePads = upgradePads }
 end
 
 return MapBuilder

@@ -491,6 +491,124 @@ local function rocketBack(m)
 	end
 end
 
+-- ---------- grabbing stars on your own screen first (2026-10-18, Matthew: pickups were delayed and laggy) ----------
+-- The moment you touch a star it vanishes with a sparkle and a ding here, and the server is told; it checks and pays.
+-- If the server says no (someone else got it), it comes back after two seconds.
+local GrabStar = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GrabStar", 30)
+local claimed = {} -- [star] = os.clock() when we grabbed it
+local function hideStar(s, hide)
+	s.LocalTransparencyModifier = hide and 1 or 0
+	for _, d in ipairs(s:GetDescendants()) do
+		if d:IsA("ParticleEmitter") or d:IsA("Light") or d:IsA("BillboardGui") then
+			d.Enabled = not hide
+		end
+	end
+end
+RunService.Heartbeat:Connect(function()
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not (hrp and starsFolder and GrabStar) then
+		return
+	end
+	local reach, now0 = Config.Stars.pickupDistance, os.clock()
+	for _, s in ipairs(starsFolder:GetChildren()) do
+		local c = claimed[s]
+		if c then
+			if now0 - c > 2 and s.Parent then -- the server didn't take it: show it again
+				claimed[s] = nil
+				hideStar(s, false)
+			end
+		elseif s:IsA("BasePart") and s:GetAttribute("Ready") and (s.Position - hrp.Position).Magnitude <= reach then
+			claimed[s] = now0
+			hideStar(s, true)
+			burst(s.Position, s.Color, 24)
+			sfx("star", s.Position)
+			GrabStar:FireServer(s)
+		end
+	end
+	for s in pairs(claimed) do
+		if not s.Parent then
+			claimed[s] = nil
+		end
+	end
+end)
+
+-- ---------- dizzy stars over a stunned player's head ----------
+local function dizzy(who, secs)
+	local head = who and who.Character and who.Character:FindFirstChild("Head")
+	if not head then
+		return
+	end
+	local g = Instance.new("BillboardGui")
+	g.Size = UDim2.fromScale(4, 1.4)
+	g.StudsOffsetWorldSpace = Vector3.new(0, 2.2, 0)
+	g.LightInfluence = 0
+	g.AlwaysOnTop = true
+	g.Parent = head
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = Color3.fromRGB(255, 230, 90)
+	l.TextStrokeTransparency = 0.3
+	l.Text = "★  ★  ★"
+	l.Parent = g
+	TweenService:Create(l, TweenInfo.new(0.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Rotation = 12 }):Play()
+	Debris:AddItem(g, secs)
+end
+
+-- ---------- Low Gravity on this screen: a shout, a whoosh, and sparkles drifting up round you ----------
+local function lowGrav(secs)
+	shout("LOW GRAVITY!", Color3.fromRGB(140, 255, 170), 3)
+	sfx("lowgrav")
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		local e = Instance.new("ParticleEmitter")
+		e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		e.Color = ColorSequence.new(Color3.fromRGB(140, 255, 170), C.Blue)
+		e.LightEmission = 1
+		e.Size = NumberSequence.new(0.4, 0)
+		e.Lifetime = NumberRange.new(1.5, 2.5)
+		e.Speed = NumberRange.new(1, 3)
+		e.Acceleration = Vector3.new(0, 3, 0)
+		e.SpreadAngle = Vector2.new(180, 180)
+		e.Rate = 14
+		e.Parent = hrp
+		Debris:AddItem(e, secs)
+	end
+end
+
+-- ---------- the telescope: the camera flies out to Earth and the ringed planet, then comes back ----------
+local function telescope()
+	local cam = workspace.CurrentCamera
+	if cam.CameraType == Enum.CameraType.Scriptable then
+		return
+	end
+	local space = station:FindFirstChild("Space")
+	local function at(name, fallback)
+		local p = space and space:FindFirstChild(name)
+		return p and p.Position or fallback
+	end
+	local stops = { at("Earth", Vector3.new(-90, 75, -520)), at("RingedPlanet", Vector3.new(380, 230, 260)), at("GasGiant", Vector3.new(-560, 110, -120)) }
+	local start, fov = cam.CFrame, cam.FieldOfView
+	cam.CameraType = Enum.CameraType.Scriptable
+	shout("TELESCOPE", C.Blue, 1.5)
+	task.spawn(function()
+		for _, target in ipairs(stops) do
+			local from = cam.CFrame.Position
+			local eye = target + (from - target).Unit * 260
+			local tw = TweenService:Create(cam, TweenInfo.new(1.6, Enum.EasingStyle.Sine), { CFrame = CFrame.lookAt(eye, target), FieldOfView = 40 })
+			tw:Play()
+			tw.Completed:Wait()
+			task.wait(1.6)
+		end
+		local back = TweenService:Create(cam, TweenInfo.new(1.2, Enum.EasingStyle.Sine), { CFrame = start, FieldOfView = fov })
+		back:Play()
+		back.Completed:Wait()
+		cam.CameraType = Enum.CameraType.Custom
+	end)
+end
+
 FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 	if kind == "burst" then
 		burst(a, b)
@@ -498,8 +616,7 @@ FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 		sfx("home", a)
 		burst(a, nil, 60, ColorSequence.new({ ColorSequenceKeypoint.new(0, C.Orange), ColorSequenceKeypoint.new(0.5, C.Blue), ColorSequenceKeypoint.new(1, C.Orange) }))
 	elseif kind == "pop" then
-		pop(a, b)
-		sfx("star", a)
+		pop(a, b) -- the ding plays when you grab the star, not when the server answers
 	elseif kind == "alarm" then
 		alarm(a)
 		sfx("alarm")
@@ -516,6 +633,12 @@ FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 		launch(a, b)
 	elseif kind == "rocketback" then
 		rocketBack(a)
+	elseif kind == "dizzy" then
+		dizzy(a, b)
+	elseif kind == "lowgrav" then
+		lowGrav(a)
+	elseif kind == "telescope" then
+		telescope()
 	elseif kind == "captain" then
 		shout("CAPTAIN ON DECK!", C.Orange, 3)
 		sfx("captain")

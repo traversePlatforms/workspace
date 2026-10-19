@@ -34,7 +34,8 @@ end
 
 UserInputService.JumpRequest:Connect(function()
 	local ch = player.Character
-	local power = ch and ch:GetAttribute("JetBoots")
+	-- Jet Boots give a rocket boost; Double Jump (an upgrade) a plain second jump (2026-10-18)
+	local power = ch and (ch:GetAttribute("JetBoots") or (ch:GetAttribute("DoubleJump") and 52))
 	local hum = ch and ch:FindFirstChildOfClass("Humanoid")
 	local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 	if not (power and hum and hrp) or boosted then
@@ -47,7 +48,7 @@ UserInputService.JumpRequest:Connect(function()
 	local v = hrp.AssemblyLinearVelocity
 	hrp.AssemblyLinearVelocity = Vector3.new(v.X * 1.2, power, v.Z * 1.2)
 	ch:SetAttribute("BoostedAt", os.clock()) -- only this screen reads it; others see the flames from the speed
-	local def = Config.Sounds.boost
+	local def = ch:GetAttribute("JetBoots") and Config.Sounds.boost or Config.Sounds.swing
 	if def then
 		local s = Instance.new("Sound")
 		s.SoundId = "rbxassetid://" .. def.id
@@ -99,6 +100,22 @@ end)
 
 -- ---------- Gear Bay prompts: "Take" for gear you own ----------
 ProximityPromptService.PromptShown:Connect(function(prompt)
+	-- the Upgrade Lab: your next level and its price, or MAXED
+	local uid = prompt:GetAttribute("UpgradeId")
+	local u = uid and Config.upgradeById(uid)
+	if u then
+		local lv = player:GetAttribute("Up_" .. uid) or 0
+		if lv >= #u.prices then
+			prompt.ActionText = "MAXED"
+		else
+			local n = tostring(u.prices[lv + 1]):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+			prompt.ActionText = (#u.prices > 1 and ("Level " .. (lv + 1) .. " ") or "Buy ") .. "(" .. n .. " ★)"
+		end
+	end
+	local fid = prompt:GetAttribute("FurnitureId")
+	if fid and player:GetAttribute("OwnsF_" .. fid) then
+		prompt.ActionText = "In your base"
+	end
 	local id = prompt:GetAttribute("GearId")
 	local def = id and Config.gearById(id)
 	if def and player:GetAttribute("Owns_" .. id) then

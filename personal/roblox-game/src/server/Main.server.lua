@@ -391,7 +391,7 @@ end
 -- ---------- airlock shield ----------
 -- the door (2026-10-18): locked = a solid red energy door nobody can pass, owner included; steal prompts off
 local function setShieldVisual(base, on)
-	base.shield.Transparency = on and 0.25 or 1
+	base.shield.Transparency = 1 -- the metal gate shows it now (Station.client.lua); this only blocks the way
 	base.shield.CanCollide = on
 	for _, lamp in ipairs(base.doorLamps or {}) do
 		lamp.Color = on and Color3.fromRGB(255, 70, 80) or Color3.fromRGB(80, 230, 120)
@@ -745,7 +745,11 @@ local function collect(player, s, info)
 		refreshStats(player)
 		FX:FireClient(player, "pop", s.Position, "+" .. addCommas(value) .. " ★")
 	end
-	FX:FireAllClients("burst", s.Position, s.Color)
+	for _, p in ipairs(Players:GetPlayers()) do -- the grabber already saw it burst on their own screen
+		if p ~= player then
+			FX:FireClient(p, "burst", s.Position, s.Color)
+		end
+	end
 	s:Destroy()
 	if not info.shower then
 		task.delay(rng:NextNumber(Config.Stars.respawnMin, Config.Stars.respawnMax), spawnStar)
@@ -1056,6 +1060,17 @@ local function setNight(on)
 	end
 end
 
+-- inside any base, with some room to spare (2026-10-18, Matthew: "Void creepers should not be allowed in your base")
+local function inAnyBase(pos, margin)
+	for _, b in ipairs(map.bases) do
+		local p = b.cf:PointToObjectSpace(pos)
+		if math.abs(p.X) < b.halfW + margin and math.abs(p.Z) < b.halfD + margin then
+			return true
+		end
+	end
+	return false
+end
+
 local function blackHoleNight()
 	workspace:SetAttribute("BlackHoleUntil", now() + Config.NightSeconds)
 	tellAll("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
@@ -1077,7 +1092,7 @@ local function blackHoleNight()
 		local target, best = nil, math.huge
 		for player in pairs(state) do
 			local hrp = rootOf(player)
-			if hrp and not hidden[player] and (ignore[player] or 0) < t then
+			if hrp and not hidden[player] and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) then
 				local dist = (hrp.Position - pos).Magnitude
 				if dist < best then
 					target, best = hrp, dist
@@ -1088,7 +1103,7 @@ local function blackHoleNight()
 		if target and best < 160 then
 			goal = Vector3.new(target.Position.X, 4.5, target.Position.Z)
 		else
-			if (wander - pos).Magnitude < 4 then
+			if (wander - pos).Magnitude < 4 or inAnyBase(wander, 4) then
 				wander = Vector3.new(rng:NextNumber(-200, 200), 4.5, rng:NextNumber(-130, 130))
 			end
 			goal = wander
@@ -1097,7 +1112,17 @@ local function blackHoleNight()
 			local step = goal - pos
 			local speed = (pos.Y > 6) and 30 or Config.CreeperSpeed -- swoops down fast at the start
 			if step.Magnitude > 0.1 then
-				pos += step.Unit * math.min(step.Magnitude, speed * dt)
+				local move = step.Unit * math.min(step.Magnitude, speed * dt)
+				-- never into a base: slide along its wall instead, or turn away
+				if not inAnyBase(pos + move, 3) then
+					pos += move
+				elseif not inAnyBase(pos + Vector3.new(move.X, 0, 0), 3) then
+					pos += Vector3.new(move.X, 0, 0)
+				elseif not inAnyBase(pos + Vector3.new(0, 0, move.Z), 3) then
+					pos += Vector3.new(0, 0, move.Z)
+				else
+					wander = Vector3.new(rng:NextNumber(-200, 200), 4.5, rng:NextNumber(-130, 130))
+				end
 			end
 		end
 		local look = target and Vector3.new(target.Position.X, pos.Y, target.Position.Z) or (pos + Vector3.new(0, 0, -1))
@@ -1108,7 +1133,7 @@ local function blackHoleNight()
 		-- boop! anyone it reaches drops what they carry and is sent back to their base
 		for player, st in pairs(state) do
 			local hrp = rootOf(player)
-			if hrp and not hidden[player] and (ignore[player] or 0) < t and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
+			if hrp and not hidden[player] and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
 				ignore[player] = t + 6
 				pauseUntil = t + 1.5
 				if st.carrying then
@@ -1402,7 +1427,10 @@ end
 
 -- what a landed hit does, from a fist, the glove or a star bolt
 local function hit(player, hrp, best, kind, knockMul, stun)
+	local d = PlayerData.get(player)
+	local power = d and d.upgrades.stun or 0 -- Stun Power level (2026-10-18)
 	if kind == "bot" then
+		stun += power
 		best.stunUntil = os.clock() + stun
 		FX:FireAllClients("pow", best.pos)
 		tell(player, "Parker Bot stunned!", "good")
@@ -1418,6 +1446,12 @@ local function hit(player, hrp, best, kind, knockMul, stun)
 		dir = hrp.CFrame.LookVector
 	end
 	FX:FireClient(best, "knock", dir.Unit * knockMul)
+	local och = best.Character
+	if och then -- slowed for a moment, with stars round their head; longer with Stun Power
+		local secs = Config.StunBase + power * Config.StunPerLevel
+		och:SetAttribute("StunnedUntil", now() + secs)
+		FX:FireAllClients("dizzy", best, secs)
+	end
 	if knockOff(best) then
 		tell(best, player.DisplayName .. " knocked your critter loose!", "bad")
 		tell(player, "Knocked it loose! Grab it!", "good")
@@ -1760,6 +1794,35 @@ if rover and roverSeat and rover.PrimaryPart then
 	end)
 end
 
+-- ---------- Low Gravity (2026-10-18, Matthew: "add a low gravity event, like we have the meteor shower and the black hole") ----------
+local NORMAL_GRAVITY = workspace.Gravity
+local lowGravOn = false
+local function lowGravity()
+	if lowGravOn then
+		return false
+	end
+	lowGravOn = true
+	workspace.Gravity = Config.LowGravityValue
+	workspace:SetAttribute("LowGravityUntil", now() + Config.LowGravitySeconds)
+	tellAll("LOW GRAVITY! Everyone floats. Jump!", "cosmic")
+	FX:FireAllClients("lowgrav", Config.LowGravitySeconds)
+	task.delay(Config.LowGravitySeconds, function()
+		workspace.Gravity = NORMAL_GRAVITY
+		lowGravOn = false
+		tellAll("Gravity is back to normal.", "info")
+	end)
+	return true
+end
+if Config.LowGravity then
+	task.spawn(function()
+		task.wait(Config.LowGravityFirst)
+		while true do
+			lowGravity()
+			task.wait(Config.LowGravityEvery)
+		end
+	end)
+end
+
 -- ---------- rocket launches (2026-10-18, Matthew: "can the rockets launch into the sky?") ----------
 -- Anyone can press LAUNCH. Every screen counts down and flies the rocket itself (FX.client.lua); the server only keeps
 -- time, so a new rocket is back on the pad Config.RocketBackAfter seconds after liftoff.
@@ -1944,6 +2007,7 @@ local buttons = {
 	{ id = "lights", label = "Change Lights", key = Enum.KeyCode.T, color = Color3.fromRGB(255, 220, 90) },
 	{ id = "rain", label = "Rain Stardust", key = Enum.KeyCode.Y, color = Config.Colors.Orange },
 	{ id = "launch", label = "Launch Rockets", key = Enum.KeyCode.U, color = Color3.fromRGB(255, 70, 70) },
+	{ id = "lowgrav", label = "Low Gravity", key = Enum.KeyCode.H, color = Color3.fromRGB(140, 255, 170) },
 }
 local function press(player, id)
 	if not isCaptain(player) then
@@ -1987,6 +2051,11 @@ local function press(player, id)
 				task.wait(0.15)
 			end
 		end)
+	elseif id == "lowgrav" then
+		if not lowGravity() then
+			tell(player, "Everyone is already floating!", "info")
+			return
+		end
 	elseif id == "launch" then
 		local any = false
 		for _, m in ipairs(map.rockets or {}) do
@@ -2001,7 +2070,7 @@ local function press(player, id)
 	lastUse[id] = t
 end
 for i, b in ipairs(buttons) do
-	local x = (i - 3) * 2.7
+	local x = (i - 3.5) * 2.3
 	local btn = panelPart({ Name = "Button_" .. b.id, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 2, 2), Color = b.color, Material = Enum.Material.Neon,
 		CFrame = panelAt * CFrame.new(x, 3.6, -0.3) * CFrame.Angles(math.rad(-12), 0, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 	local light = Instance.new("PointLight")
@@ -2016,12 +2085,239 @@ for i, b in ipairs(buttons) do
 	prompt.MaxActivationDistance = 9
 	prompt.RequiresLineOfSight = false
 	prompt.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow -- all five show at once (tap them on a tablet)
-	prompt.UIOffset = Vector2.new(0, (i - 3) * -58)
+	prompt.UIOffset = Vector2.new(0, (i - 3.5) * -52)
 	prompt:SetAttribute("CaptainOnly", true)
 	prompt:SetAttribute("Reach", 9)
 	prompt.Parent = btn
 	prompt.Triggered:Connect(function(player)
 		press(player, b.id)
+	end)
+end
+
+-- ---------- quicker star pickups (2026-10-18, Matthew: "picking up the stars was delayed and laggy" in the Roblox app) ----------
+-- Your own screen grabs a star the moment you touch it (FX.client.lua) and tells the server, which checks you were close
+-- (with room for lag) and pays out. The four-times-a-second check above still catches anything this misses.
+local GrabStar = remote("GrabStar")
+GrabStar.OnServerEvent:Connect(function(player, s)
+	if typeof(s) ~= "Instance" then
+		return
+	end
+	local info = stars[s]
+	local hrp = rootOf(player)
+	if info and hrp and s.Parent and s:GetAttribute("Ready") and (s.Position - hrp.Position).Magnitude <= Config.Stars.pickupDistance + 8 then
+		collect(player, s, info)
+	end
+end)
+
+-- ---------- character upgrades at the Upgrade Lab (2026-10-18) ----------
+local function applyUpgrades(player)
+	local d = PlayerData.get(player)
+	local ch = player.Character
+	if not d then
+		return
+	end
+	for _, u in ipairs(Config.Upgrades) do
+		player:SetAttribute("Up_" .. u.id, d.upgrades[u.id] or 0) -- the Upgrade Lab prompts read these on your screen
+	end
+	for _, f in ipairs(Config.Furniture) do
+		player:SetAttribute("OwnsF_" .. f.id, d.furniture[f.id] == true)
+	end
+	if ch then
+		ch:SetAttribute("SpeedLevel", d.upgrades.speed or 0) -- Sprint.client.lua adds the speed
+		ch:SetAttribute("DoubleJump", (d.upgrades.jump or 0) > 0) -- Gear.client.lua allows the extra jump
+	end
+end
+local function hookUpgrades(player)
+	player.CharacterAdded:Connect(function()
+		task.spawn(function()
+			local t0 = os.clock()
+			while player.Parent and not PlayerData.get(player) and os.clock() - t0 < 10 do
+				task.wait(0.25)
+			end
+			applyUpgrades(player)
+		end)
+	end)
+	if player.Character then
+		task.spawn(function()
+			local t0 = os.clock()
+			while player.Parent and not PlayerData.get(player) and os.clock() - t0 < 10 do
+				task.wait(0.25)
+			end
+			applyUpgrades(player)
+		end)
+	end
+end
+Players.PlayerAdded:Connect(hookUpgrades)
+for _, p in ipairs(Players:GetPlayers()) do
+	hookUpgrades(p)
+end
+
+for id, pad in pairs(map.upgradePads or {}) do
+	local u = Config.upgradeById(id)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Upgrade"
+	prompt.ObjectText = u.name
+	prompt.HoldDuration = 0.4
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt:SetAttribute("UpgradeId", id)
+	prompt.Parent = pad
+	prompt.Triggered:Connect(function(player)
+		local d = PlayerData.get(player)
+		if not d then
+			return
+		end
+		local lv = d.upgrades[id] or 0
+		if lv >= #u.prices then
+			tell(player, u.name .. " is already maxed out!", "info")
+			return
+		end
+		local price = u.prices[lv + 1]
+		if d.stardust < price then
+			tell(player, u.name .. (#u.prices > 1 and (" level " .. (lv + 1)) or "") .. " costs " .. addCommas(price) .. " Stardust. Keep collecting!", "bad")
+			return
+		end
+		d.stardust -= price
+		d.upgrades[id] = lv + 1
+		refreshStats(player)
+		applyUpgrades(player)
+		sfx("upgrade", nil, player)
+		FX:FireAllClients("confetti", pad.Position + Vector3.new(0, 5, 0))
+		if id == "jump" then
+			tell(player, "Double Jump! Press jump again in the air.", "good")
+		else
+			tell(player, u.name .. " level " .. (lv + 1) .. "!" .. (lv + 1 < #u.prices and "" or " That's the top level."), "good")
+		end
+	end)
+end
+
+-- ---------- furniture (2026-10-18): bought at Space Furniture, placed in your base wherever you get one ----------
+local Furniture = require(script.Parent.Furniture)
+local arcadeLast = {} -- [player] = os.clock() of their last prize
+
+local function furnitureFolder(base)
+	local f = base.root:FindFirstChild("Furniture")
+	if not f then
+		f = Instance.new("Folder")
+		f.Name = "Furniture"
+		f.Parent = base.root
+	end
+	return f
+end
+
+local function useFurniture(base, id, player, key)
+	if id == "telescope" then
+		FX:FireClient(player, "telescope")
+	elseif id == "disco" then
+		if player ~= base.owner then
+			tell(player, "Only " .. base.owner.DisplayName .. " can start the party here!", "info")
+			return
+		end
+		base.root:SetAttribute("Disco", not base.root:GetAttribute("Disco"))
+		sfx("click", key.Position)
+	elseif id == "arcade" then
+		if player ~= base.owner then
+			tell(player, "This is " .. base.owner.DisplayName .. "'s arcade. Get your own at Space Furniture!", "info")
+			return
+		end
+		local t = os.clock()
+		if (arcadeLast[player] or 0) + Config.ArcadeCooldown > t then
+			tell(player, "The arcade is recharging: " .. math.ceil(arcadeLast[player] + Config.ArcadeCooldown - t) .. "s", "info")
+			return
+		end
+		arcadeLast[player] = t
+		local d = PlayerData.get(player)
+		if not d then
+			return
+		end
+		local jackpot = math.random() < 0.1
+		local prize = math.max(15, math.floor(incomeOf(state[player]) * math.random(5, 20))) * (jackpot and 3 or 1)
+		d.stardust += prize
+		refreshStats(player)
+		sfx("arcade", key.Position)
+		FX:FireClient(player, "pop", key.Position + Vector3.new(0, 4, 0), (jackpot and "JACKPOT! +" or "+") .. addCommas(prize) .. " ★")
+		if jackpot then
+			FX:FireAllClients("confetti", key.Position + Vector3.new(0, 5, 0))
+		end
+	end
+end
+
+local PROMPTS = { arcade = "Play", telescope = "Look", disco = "Party lights" }
+local function placeFurniture(base)
+	local f = furnitureFolder(base)
+	f:ClearAllChildren()
+	base.root:SetAttribute("Disco", false)
+	local d = base.owner and PlayerData.get(base.owner)
+	if not d then
+		return
+	end
+	for _, def in ipairs(Config.Furniture) do
+		if d.furniture[def.id] and Furniture.SLOTS[def.id] then
+			local _, key = Furniture.build(def.id, base.cf * Furniture.SLOTS[def.id], f, false)
+			if key and PROMPTS[def.id] then
+				local p = Instance.new("ProximityPrompt")
+				p.ActionText = PROMPTS[def.id]
+				p.ObjectText = def.name
+				p.HoldDuration = 0
+				p.MaxActivationDistance = def.id == "disco" and 14 or 9
+				p.RequiresLineOfSight = false
+				p.Parent = key
+				p.Triggered:Connect(function(player)
+					useFurniture(base, def.id, player, key)
+				end)
+			end
+		end
+	end
+end
+
+for _, base in ipairs(map.bases) do
+	base.root:GetAttributeChangedSignal("OwnerUserId"):Connect(function()
+		if base.owner then
+			placeFurniture(base)
+		else
+			furnitureFolder(base):ClearAllChildren()
+			base.root:SetAttribute("Disco", false)
+		end
+	end)
+	if base.owner then
+		placeFurniture(base)
+	end
+end
+
+for id, stand in pairs(map.furnitureStands or {}) do
+	local def = Config.furnitureById(id)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Buy (" .. addCommas(def.price) .. " ★)"
+	prompt.ObjectText = def.name
+	prompt.HoldDuration = 0.4
+	prompt.MaxActivationDistance = 9
+	prompt.RequiresLineOfSight = false
+	prompt:SetAttribute("FurnitureId", id)
+	prompt.Parent = stand
+	prompt.Triggered:Connect(function(player)
+		local d = PlayerData.get(player)
+		local st = state[player]
+		if not d then
+			return
+		end
+		if d.furniture[id] then
+			tell(player, "Your " .. def.name .. " is already in your base!", "info")
+			return
+		end
+		if d.stardust < def.price then
+			tell(player, "The " .. def.name .. " costs " .. addCommas(def.price) .. " Stardust. Keep collecting!", "bad")
+			return
+		end
+		d.stardust -= def.price
+		d.furniture[id] = true
+		refreshStats(player)
+		applyUpgrades(player)
+		if st and st.base then
+			placeFurniture(st.base)
+		end
+		sfx("gear", nil, player)
+		FX:FireAllClients("confetti", stand.Position + Vector3.new(0, 5, 0))
+		tell(player, "The " .. def.name .. " is in your base now! " .. def.blurb, "good")
 	end)
 end
 

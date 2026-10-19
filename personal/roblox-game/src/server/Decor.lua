@@ -70,30 +70,35 @@ local function shell(folder)
 	wallRun(folder, Vector3.new(-hx, 0, -hz), Vector3.new(hx, 0, -hz), Vector3.new(0, 0, 1))
 	wallRun(folder, Vector3.new(hx, 0, -hz), Vector3.new(hx, 0, hz), Vector3.new(-1, 0, 0))
 	wallRun(folder, Vector3.new(-hx, 0, -hz), Vector3.new(-hx, 0, hz), Vector3.new(1, 0, 0))
-	-- the roof frame: beams across, with light strips underneath; open between them so the stars show
-	for x = -hx, hx, 38 do
-		part(folder, { Name = "RoofBeam", Size = Vector3.new(3, 3, D), Color = METAL_DARK, CFrame = CFrame.new(x, H + 1.5, 0) })
-		part(folder, { Name = "RoofLight", Size = Vector3.new(1, 0.4, D - 10), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(x, H - 0.2, 0) })
-	end
-	for _, z in ipairs({ -hz, -hz / 2, 0, hz / 2, hz }) do
-		-- the middle beam runs right over both rockets: leave a gap above each so they can launch (2026-10-18)
-		local runs = z == 0 and { { -hx, -176 }, { -144, 189 }, { 211, hx } } or { { -hx, hx } }
-		for _, r in ipairs(runs) do
-			part(folder, { Name = "RoofCross", Size = Vector3.new(r[2] - r[1], 2, 2), Color = METAL, CFrame = CFrame.new((r[1] + r[2]) / 2, H + 3.5, z) })
-		end
-	end
-	-- hanging lamps over the bases so the deck is lit
+	-- no roof any more (2026-10-18, Matthew: "do away with the bars on the roof, maybe make it completely open"): the sky,
+	-- planets and comets show straight overhead. The lights that hung from it are hovering light drones now.
 	for _, x in ipairs({ -171, -57, 57, 171 }) do
 		for _, z in ipairs({ -95, 95, -45, 45 }) do
-			local lamp = part(folder, { Name = "Lamp", Size = Vector3.new(6, 1, 6), Color = C.Trim, Material = Enum.Material.Neon, CFrame = CFrame.new(x, H - 1, z) })
+			local m = Instance.new("Model")
+			m.Name = "LightDrone"
+			m.Parent = folder
+			local disc = part(m, { Name = "DroneDisc", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.9, 6, 6), Color = METAL, CanCollide = false, CFrame = CFrame.new(x, H - 1, z) * CFrame.Angles(0, 0, math.rad(90)) })
+			part(m, { Name = "DroneRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 6.4, 6.4), Color = (z > 0) and C.Orange or C.Blue, Material = Enum.Material.Neon, CanCollide = false,
+				CFrame = CFrame.new(x, H - 1.4, z) * CFrame.Angles(0, 0, math.rad(90)) })
+			local lamp = part(m, { Name = "Lamp", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2, 4, 4), Color = C.Trim, Material = Enum.Material.Neon, CanCollide = false,
+				CFrame = CFrame.new(x, H - 1.55, z) * CFrame.Angles(0, 0, math.rad(90)) })
 			local sl = Instance.new("SpotLight")
-			sl.Face = Enum.NormalId.Bottom
+			sl.Face = Enum.NormalId.Left -- a quarter-turned cylinder's -X faces down
 			sl.Range = 45
 			sl.Angle = 80
-			sl.Brightness = 2.4
+			sl.Brightness = 2.2
 			sl.Color = Color3.fromRGB(255, 240, 220)
 			sl.Parent = lamp
+			m.PrimaryPart = disc
+			m:SetAttribute("Bob", 0.5)
 		end
+	end
+	-- an invisible lid over the whole hangar, so nobody floats off into space in Low Gravity or with Jet Boots
+	local lidY = 95
+	part(folder, { Name = "SkyLid", Size = Vector3.new(W + 20, 2, D + 20), Transparency = 1, CanQuery = false, CastShadow = false, CFrame = CFrame.new(0, lidY, 0) })
+	for _, spec in ipairs({ { Vector3.new(W + 20, lidY - H, 2), Vector3.new(0, 0, D / 2 + 1) }, { Vector3.new(W + 20, lidY - H, 2), Vector3.new(0, 0, -D / 2 - 1) },
+		{ Vector3.new(2, lidY - H, D + 20), Vector3.new(W / 2 + 1, 0, 0) }, { Vector3.new(2, lidY - H, D + 20), Vector3.new(-W / 2 - 1, 0, 0) } }) do
+		part(folder, { Name = "SkyWall", Size = spec[1], Transparency = 1, CanQuery = false, CastShadow = false, CFrame = CFrame.new(spec[2] + Vector3.new(0, H + (lidY - H) / 2, 0)) })
 	end
 end
 
@@ -569,6 +574,123 @@ local function gearBay(folder, at)
 	return stands
 end
 
+-- ---------- the Space Furniture shop (2026-10-18): across the tunnel from the Gear Bay, six pieces on spinning stands ----------
+local function standTag(m, at, title, price, color)
+	local tag = part(m, { Name = "StandTag", Size = Vector3.new(6, 1.6, 0.3), Color = C.Dark, CFrame = at * CFrame.Angles(math.rad(-20), 0, 0) })
+	local tg = Instance.new("SurfaceGui")
+	tg.Face = Enum.NormalId.Front
+	tg.LightInfluence = 0
+	tg.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	tg.PixelsPerStud = 50
+	tg.Parent = tag
+	local tl = Instance.new("TextLabel")
+	tl.Size = UDim2.fromScale(1, 1)
+	tl.BackgroundTransparency = 1
+	tl.Font = Enum.Font.FredokaOne
+	tl.TextScaled = true
+	tl.TextColor3 = C.Trim
+	tl.RichText = true
+	tl.Text = title .. "\n<font color=\"#" .. color:ToHex() .. "\">" .. price .. "</font>"
+	tl.Parent = tg
+	return tag
+end
+
+local function shopShell(m, at, width, accent, title)
+	local FLOOR = Color3.fromRGB(176, 184, 204)
+	part(m, { Name = "ShopFloor", Size = Vector3.new(width, 0.5, 22), Color = FLOOR, Material = Enum.Material.Plastic, CFrame = at * CFrame.new(0, 0.45, 0) })
+	part(m, { Name = "ShopEdge", Size = Vector3.new(width, 0.2, 0.6), Color = accent, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 0.75, -10.8) })
+	part(m, { Name = "ShopBackWall", Size = Vector3.new(width, 16, 1.5), Color = METAL, CFrame = at * CFrame.new(0, 8, 11) })
+	part(m, { Name = "ShopWallStripe", Size = Vector3.new(width, 0.6, 1.7), Color = accent, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 4, 11) })
+	for _, side in ipairs({ -1, 1 }) do
+		part(m, { Name = "ShopSideWall", Size = Vector3.new(1.5, 16, 12), Color = METAL, CFrame = at * CFrame.new(side * width / 2, 8, 5.6) })
+		part(m, { Name = "ShopPostLight", Size = Vector3.new(0.5, 14, 0.5), Color = accent, Material = Enum.Material.Neon, CFrame = at * CFrame.new(side * width / 2, 8, -0.4) })
+	end
+	local roof = part(m, { Name = "ShopRoof", Size = Vector3.new(width + 2, 0.8, 13), Color = METAL_DARK, CFrame = at * CFrame.new(0, 16.6, 4.6) })
+	for x = -width / 2 + 8, width / 2 - 8, 12 do
+		local lamp = part(m, { Name = "ShopLamp", Size = Vector3.new(5, 0.3, 2), Color = C.Trim, Material = Enum.Material.Neon, CFrame = roof.CFrame * CFrame.new(x, -0.5, -4) })
+		local sl = Instance.new("SpotLight")
+		sl.Face = Enum.NormalId.Bottom
+		sl.Angle = 70
+		sl.Range = 24
+		sl.Brightness = 2.2
+		sl.Parent = lamp
+	end
+	local sign = part(m, { Name = "ShopSign", Size = Vector3.new(26, 3.6, 0.4), Color = C.Dark, CFrame = at * CFrame.new(0, 13.4, 10.1) })
+	local g = Instance.new("SurfaceGui")
+	g.Face = Enum.NormalId.Front
+	g.LightInfluence = 0
+	g.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	g.PixelsPerStud = 40
+	g.Parent = sign
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = accent
+	l.Text = title
+	l.Parent = g
+end
+
+local function furnitureShop(folder, at)
+	local Furniture = require(script.Parent.Furniture)
+	local m = Instance.new("Model")
+	m.Name = "FurnitureShop"
+	m.Parent = folder
+	local PINK = Color3.fromRGB(255, 150, 210)
+	shopShell(m, at, 48, PINK, "SPACE FURNITURE")
+	local stands = {}
+	for i, def in ipairs(Config.Furniture) do
+		local x = (i - 3.5) * 7.4
+		local stand = part(m, { Name = "FurnitureStand", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1.2, 5.6, 5.6), Color = METAL_DARK, CFrame = at * CFrame.new(x, 1.3, -1) * CFrame.Angles(0, 0, math.rad(90)) })
+		part(m, { Name = "StandRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.25, 5.9, 5.9), Color = PINK, Material = Enum.Material.Neon, CFrame = at * CFrame.new(x, 1.95, -1) * CFrame.Angles(0, 0, math.rad(90)) })
+		local show = Furniture.build(def.id, CFrame.new(), m, true)
+		show:ScaleTo(def.id == "bed" and 0.62 or 0.9)
+		show:PivotTo(at * CFrame.new(x, 1.95, -1)) -- its origin is floor level, so it stands on the stand
+		show:SetAttribute("SpinSpeed", 30)
+		standTag(m, at * CFrame.new(x, 1.3, -4.4), def.name, def.price .. " ★", PINK)
+		stands[def.id] = stand
+	end
+	return stands
+end
+
+-- ---------- the Upgrade Lab (2026-10-18, Matthew: "character upgrade, slightly faster speed, maybe double jump, long stun") ----------
+-- three glowing pods by the spawn; the level and price for you show on the prompt (Gear.client.lua)
+local function upgradeLab(folder, at)
+	local m = Instance.new("Model")
+	m.Name = "UpgradeLab"
+	m.Parent = folder
+	local GREEN = Color3.fromRGB(140, 255, 170)
+	shopShell(m, at, 32, GREEN, "UPGRADE LAB")
+	local pads = {}
+	local icons = { speed = "»", jump = "⇈", stun = "★" }
+	for i, def in ipairs(Config.Upgrades) do
+		local x = (i - 2) * 9
+		local pad = part(m, { Name = "UpgradePod", Shape = Enum.PartType.Cylinder, Size = Vector3.new(1, 6, 6), Color = METAL_DARK, CFrame = at * CFrame.new(x, 1.2, -1) * CFrame.Angles(0, 0, math.rad(90)) })
+		part(m, { Name = "PodRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.25, 6.3, 6.3), Color = GREEN, Material = Enum.Material.Neon, CFrame = at * CFrame.new(x, 1.75, -1) * CFrame.Angles(0, 0, math.rad(90)) })
+		local beam = part(m, { Name = "PodBeam", Shape = Enum.PartType.Cylinder, Size = Vector3.new(7, 5, 5), Color = GREEN, Material = Enum.Material.Neon, Transparency = 0.82, CanCollide = false, CastShadow = false,
+			CFrame = at * CFrame.new(x, 5.5, -1) * CFrame.Angles(0, 0, math.rad(90)) })
+		glow(beam, GREEN, 14, 1.4)
+		local g = Instance.new("BillboardGui") -- a big floating symbol in each pod
+		g.Size = UDim2.fromScale(4, 4)
+		g.LightInfluence = 0
+		g.MaxDistance = 120
+		g.Parent = beam
+		local l = Instance.new("TextLabel")
+		l.Size = UDim2.fromScale(1, 1)
+		l.BackgroundTransparency = 1
+		l.Font = Enum.Font.FredokaOne
+		l.TextScaled = true
+		l.TextColor3 = GREEN
+		l.TextStrokeTransparency = 0.3
+		l.Text = icons[def.id] or "+"
+		l.Parent = g
+		standTag(m, at * CFrame.new(x, 1.3, -4.6), def.name, #def.prices == 1 and (def.prices[1] .. " ★") or (#def.prices .. " levels"), GREEN)
+		pads[def.id] = pad
+	end
+	return pads
+end
+
 -- ---------- a moon rover parked near the spawn, and a UFO beaming up crates ----------
 local function rover(folder, at)
 	local m = Instance.new("Model")
@@ -801,6 +923,8 @@ function Decor.build(station, bases)
 	}
 	local stands = gearBay(folder, CFrame.lookAt(Vector3.new(0, 0, -48), Vector3.new(0, 0, 0))) -- beside the tunnel, open side facing it
 	local roverModel = rover(folder, CFrame.new(-104, 0, -46) * CFrame.Angles(0, math.rad(25), 0))
+	local furnitureStands = furnitureShop(folder, CFrame.lookAt(Vector3.new(0, 0, 48), Vector3.new(0, 0, 0))) -- across the tunnel from the Gear Bay
+	local upgradePads = upgradeLab(folder, CFrame.lookAt(Vector3.new(-104, 0, 48), Vector3.new(-104, 0, 0))) -- by the spawn, facing the walkway
 	ufo(folder, CFrame.new(165, 22, 45), Vector3.new(165, 0, 45))
 	fuelTanks(folder, CFrame.new(-150, 0, 40) * CFrame.Angles(0, math.rad(90), 0))
 	crates(folder, CFrame.new(-150, 0, -40), 1)
@@ -809,7 +933,7 @@ function Decor.build(station, bases)
 	satelliteDish(folder, CFrame.new(160, 0, 0))
 	asteroids(folder)
 	colour()
-	return lockers(folder), stands, roverModel, rockets
+	return lockers(folder), stands, roverModel, rockets, furnitureStands, upgradePads
 end
 
 return Decor
