@@ -4922,6 +4922,12 @@ if ($action === 'jobdone') {
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
     if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
     $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ['stage' => 'waiting'];   /* nothing owed: the aftercare email now */
+    if ($o === 'done' && jobOwed($j) > 0 && $got < jobOwed($j)) {   /* a balance to collect: tell whoever quoted them (2026-10-19) */
+        $L0 = leadsAll()[$j['lead']] ?? []; $own = '';
+        if ((($TEAM['byName'][(string) ($L0['by'] ?? '')]['role'] ?? '') === 'quote')) $own = (string) $L0['by'];
+        elseif (!empty($L0['qown'])) $own = (string) ((array) $L0['qown'])[0];
+        if ($own !== '' && $own !== $me) pushName($own, 'Job done: balance to collect', explode(' ', $me)[0] . ' finished ' . (trim((string) ($L0['name'] ?? $j['title'] ?? '')) ?: 'a job') . ' · $' . (jobOwed($j) - max(0, $got)) . ' to collect', './?job=' . $id, 'jobowe-' . $id);
+    }
     out(['ok' => true, 'aftercare' => $af['stage']]);
 }
 /* ---- weather (2026-10-15, Matthew: "go ahead and build the weather day button and forecast flag") ----
