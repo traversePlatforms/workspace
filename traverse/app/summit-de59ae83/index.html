@@ -5641,22 +5641,29 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      paid for money taken another way; the aftercare email goes by itself once the job is done and the balance settled, or by hand here; or
      as a text from her phone. Same tips as the email (CSU PlantTalk 1505 and 1516, see aeration365-site/FACT-CHECK.md) */
   function afWhy(st) { return st === 'config' ? 'the 365 mailbox is not set up yet' : st === 'noemail' ? 'there is no email address for them' : st === 'brand' ? 'this is not a 365 job' : st === 'notdone' ? 'the job is not marked done' : (st || 'try again'); }
-  function afParts(jb, owe) {   /* the same tips and balance line as the automatic email */
-    var tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
-    if (jb.pkg !== 'aerate') tips.push('While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.', 'Once the new grass is up and rooting, water less often but more deeply.');
-    var bal = jb.sqcharge && owe < 1 ? 'Your ' + money0(jb.sqcharge.amt) + ' balance went on your card ending ' + jb.sqcharge.last4 + ', so you are all set.' : owe < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is ' + money0(owe) + '.' + (jb.sqlink ? ' You can pay it here: ' + jb.sqlink.url : '');
+  function afParts(jb, owe) {   /* the same tips and balance line in the text and the email (2026-10-19: Jen's blend, CSU-checked) */
+    var seeded = jb.pkg !== 'aerate';
+    var did = seeded ? 'core aeration, overseeding, and a seed, root and soil conditioner' : 'core aeration';
+    var tips = ['Leave the plugs on the lawn. They break down back into the grass on their own.'];
+    if (seeded) tips.push('Give the lawn a good watering soon, then water lightly and often enough to keep the soil surface moist while the new seed comes up. That can take up to two weeks.',
+      'Once the new grass is up and rooting, water less often but more deeply.',
+      'Hold off on weed killer, including weed-and-feed and crabgrass preventer, until the new grass has been mowed three times. It can stop new seed from coming up.');
+    else tips.push('Give the lawn a good watering soon.');
+    tips.push('Keep up the basics: pull weeds, clear away debris, and water when you can.');
+    var fill = seeded ? 'How quickly it fills in depends on how thin the lawn was. It can take a few months.' : '';
+    var bal = jb.sqcharge && owe < 1 ? 'You\u2019ll see the ' + money0(jb.sqcharge.amt) + ' balance on your card ending ' + jb.sqcharge.last4 + '.' : owe < 1 ? 'Your balance is paid.' : 'Your remaining balance is ' + money0(owe) + '.' + (jb.sqlink ? ' You can pay it here: ' + jb.sqlink.url : '');
     var L = jb.who || {};
-    return { tips: tips, bal: bal, B: leadBrand({ src: L.src, name: L.name }), first: greetName(L.name) };
+    return { did: did, tips: tips, fill: fill, bal: bal, B: leadBrand({ src: L.src, name: L.name }), first: greetName(L.name) };
   }
   function aftercareText(jb, owe) {
     var a = afParts(jb, owe);
-    return 'Hi ' + a.first + ', this is ' + myName() + ' with ' + a.B.name + '. Thanks for having us! A few tips for the next couple of weeks:\n' + a.tips.join('\n') + '\n' + a.bal + ' Any questions, just text me here.';
+    return 'Hi ' + a.first + ', this is ' + myName() + ' with ' + a.B.name + '. Thanks for having us! We did ' + a.did + '.\n\nA few notes for the next few weeks:\n' + a.tips.join('\n') + (a.fill ? '\n' + a.fill : '') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn!';
   }
-  /* the email version, sent from her own mailbox until the 365 one is set up (2026-10-19) */
+  /* the email version, sent from her own mailbox (2026-10-19) */
   function aftercareMail(jb, owe) {
     var a = afParts(jb, owe);
-    return { subject: 'Your lawn after today: a few tips from ' + a.B.name,
-             body: 'Hi ' + a.first + ',\n\nThanks for having us! Your lawn is done. A few tips for the next couple of weeks:\n\n' + a.tips.map(function (t) { return '- ' + t; }).join('\n') + '\n\n' + a.bal + '\n\nAny questions, just reply here or call or text us.' + mailSig(a.B) };
+    return { subject: 'Your lawn after today: a few notes from ' + a.B.name,
+             body: 'Hi ' + a.first + ',\n\nThanks for having us! We did ' + a.did + '.\n\nA few notes for the next few weeks:\n\n' + a.tips.map(function (t) { return '- ' + t; }).join('\n') + (a.fill ? '\n\n' + a.fill : '') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn!' + mailSig(a.B) };
   }
   function jobAfterBox(jb, owe, redraw) {
     var w = q('div', 'jafter');
