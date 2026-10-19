@@ -1125,6 +1125,14 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       scheduled jobs re-created on Traverse and deleted on Sixfold, crew reinstall. **After: delete both SSH keys** in
       SSH Keys Manager. Sixfold's own website stays on Sixfold's account.
 
+- [ ] **TR-28 — Roofs: finish the laser-scan fix after the property refine.** 2026-10-19: Microsoft's building outlines miss some
+      houses, so their roof was read off a shed (3246 Lakefront Dr, Monument: 1.6 squares; really 26.6). The 295 shed-sized roofs
+      are fixed and live in Roofing and Solar (121 re-measured from the scan). **Still to run, after the refine pass finishes**
+      (it is parcel-heavy on the same state service): `node sample-roofs.mjs --fix=all` in
+      `traverse/data-pipeline/door-territory/roofs/` for the ~20,800 doors with no outline and ~9,300 whose outline the scan said
+      was off, then build and patch the live roof files the same way (only changed doors). Also re-run Columbine's lawn shapes
+      (1,580 failed in the 2026-10-18 internet drop).
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
