@@ -6473,7 +6473,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (l.job) {   /* the job and where its money stands (2026-10-19, Matthew: check before charging) */
           var jl = q('div', 'qline' + (l.job.owed < 1 ? ' qyes' : ''), 'Job ' + dayName(l.job.date) + ' \u00b7 ' + (l.job.price ? money0(l.job.price) + ' \u00b7 ' : '') + l.job.pay + ' \u00b7 ' + l.job.card + (l.job.done === 'done' ? ' \u00b7 done' : l.job.done ? ' \u00b7 not done' : ''));
           det.appendChild(jl);
-          var oj2 = q('button', 'lnk', 'Open the job: mark done, payment and aftercare \u203a'); oj2.type = 'button'; oj2.addEventListener('click', function () { jobView(l.job.id, function () { quickQuoteView(); }); }); det.appendChild(oj2);
+          if (!(l.job.done === 'done' && l.job.owed < 1)) { var oj2 = q('button', 'lnk', 'Open the job: mark done, payment and aftercare \u203a'); oj2.type = 'button'; oj2.addEventListener('click', function () { jobView(l.job.id, function () { quickQuoteView(); }); }); det.appendChild(oj2); }   /* done and paid: nothing left to do (2026-10-19) */
         }
         if (!cust) det.appendChild(qWonBox(l, function () { load(); }));   /* won without the form (2026-10-16) */
         c.appendChild(det);
@@ -6580,7 +6580,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var er = q('tr', 'sedit'), td = q('td'); td.colSpan = 9; er.appendChild(td);
     var f = q('div', 'sedform'); td.appendChild(f);
     var held = r.kind === 'held' && !r.id;   /* not signed yet (2026-10-16): the quote's held time */
-    if (r.id && (qView() || wdOn())) { var oj = q('button', 'lnk sedopen', 'Open the job: mark done, payment and aftercare \u203a'); oj.type = 'button'; oj.addEventListener('click', function () { jobView(r.id, function () { done(); }); }); f.appendChild(oj); }   /* 2026-10-19 */
+    if (r.id && (qView() || wdOn()) && !(r.done === 'Done' && r.owed === 0)) { var oj = q('button', 'lnk sedopen', 'Open the job: mark done, payment and aftercare \u203a'); oj.type = 'button'; oj.addEventListener('click', function () { jobView(r.id, function () { done(); }); }); f.appendChild(oj); }   /* 2026-10-19 */
     f.appendChild(q('b', null, 'Move ' + r.name + (held ? ' (not signed yet)' : '')));
     var dl = q('label', null, 'Day'), di = q('input'); di.type = 'date'; di.value = r.date; di.min = todayISO(); dl.appendChild(di);
     var sl = q('label', null, 'Time'), ss = q('select'); J.slots.forEach(function (o) { var op = q('option', null, o.label); op.value = o.k; if (o.k === r.slot) op.selected = true; ss.appendChild(op); }); sl.appendChild(ss);
