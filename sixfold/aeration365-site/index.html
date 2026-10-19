@@ -188,7 +188,8 @@
     if (want !== 'question' && !v('street')) { err.textContent = 'Please add your street address so we can quote your lawn.'; f.elements.street.focus(); return; }
     btn.disabled = true; btn.textContent = 'Sending…';
     var body = { want: want, name: v('name'), phone: v('phone'), email: v('email'), street: v('street'), city: v('city'), zip: v('zip'),
-      contact: (f.querySelector('input[name=contact]:checked') || {}).value || '', msg: v('msg'), hp: v('hp'), t: Date.now() - t0 };
+      contact: (f.querySelector('input[name=contact]:checked') || {}).value || '', msg: v('msg'), hp: v('hp'), t: Date.now() - t0,
+      from: (/[?&]from=(card|yard|truck|car)/.exec(location.search) || [])[1] || '' };   /* which printed QR brought them (2026-10-19) */
     fetch(API + '?action=a365lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
       .then(function (j) {

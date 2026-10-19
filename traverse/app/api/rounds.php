@@ -2152,8 +2152,9 @@ if ($action === 'a365lead') {
     if ($want !== 'question' && $street === '') fail('Add your street address so we can quote your lawn.');
     if (!throttleTake(rateFile('a365lead|' . visitorKey()), 5, 86400) || !throttleTake(rateFile('a365lead|site'), 300, 86400)) fail('We have had a lot of requests from here today. Please call or text us instead.', 429);
     $lines = []; if ($contact !== '') $lines[] = 'Best way to reach them: ' . ['call' => 'a call', 'text' => 'a text', 'email' => 'email'][$contact]; if ($msg !== '') $lines[] = $msg;
+    $qrFrom = in_array($body['from'] ?? '', ['card', 'yard', 'truck', 'car'], true) ? (string) $body['from'] : '';   /* which printed QR code brought them (2026-10-19) */
     $row = ['id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'a365web', 'at' => time(), 'need' => $wants[$want], 'name' => $name, 'phone' => $phone, 'email' => $email,
-            'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''];
+            'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''] + ($qrFrom !== '' ? ['qr' => $qrFrom] : []);   /* kept with the lead; not shown in the Pipeline yet */
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
     if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
     if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want]);
