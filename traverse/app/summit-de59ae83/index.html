@@ -1208,7 +1208,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .leaflet-bar.mapsw button{border-radius:0!important;box-shadow:none!important;min-width:0!important;padding:0 11px!important}
   .mapsw button + button{border-left:1px solid #d6dbe2}
   .mapsw button[aria-pressed="true"]{background:#13294b;color:#fff}
-  .legend i.ring{background:transparent!important;border:2px dashed #13294b!important;box-shadow:none}
+  .legend i.ring{background:rgba(255,255,255,.55)!important;border:2.5px dashed #13294b!important;box-shadow:0 0 0 2px #fff}
   :root[data-theme="dark"] .legend i.ring{border-color:#fff!important}
   /* the desk map's Hail layer and Draw a territory (2026-10-09): white panels under their buttons, like the map's other controls */
   .dkctl{max-width:260px}
@@ -1297,6 +1297,18 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dkpin .pin.plain{background:#2563A8}
   .dkpin .pin.back{background:#2F7A4F}
   .dkpin .pin.miss{background:#fff;box-shadow:0 0 0 2px #55635B}
+  /* a door to come back to (2026-10-19): a thick blue ring and a clock badge, whatever its score colour */
+  .dkpin .pin{position:relative}
+  .dkpin .pin.cb{box-shadow:0 0 0 2px #fff,0 0 0 5.5px #1d6fe0,0 1px 6px rgba(0,0,0,.35)}
+  .dkpin .pin.cb::after{content:"\21BB";position:absolute;top:-9px;right:-9px;width:16px;height:16px;border-radius:50%;background:#1d6fe0;color:#fff;font:800 11px/16px var(--sans);text-align:center;box-shadow:0 0 0 1.5px #fff}
+  .cbadge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:999px;background:#1d6fe0;color:#fff;font-size:12px;font-weight:800;letter-spacing:.01em;white-space:nowrap;vertical-align:middle}
+  .cbadge svg{width:14px;height:14px}
+  .dkr-m .cbadge{margin:3px 0 2px;align-self:flex-start}
+  .dkc-t .cbadge{margin:6px 0 2px}
+  .d-top .cbadge{margin-left:8px}
+  .strh.cbanner{display:flex;flex-direction:column;gap:2px;margin:12px 0 10px;padding:12px 14px;border-radius:14px;background:#1d6fe0;color:#fff;font-size:17px;letter-spacing:0;text-transform:none}
+  .strh.cbanner small{font-size:13px;font-weight:600;opacity:.92}
+  .legend i.cbk{background:transparent!important;border:3px solid #1d6fe0!important;box-shadow:0 0 0 1.5px #fff}
   .dkpin .pin.done{background:#8A948E;opacity:.75}
   .dkpin .pin.sel{box-shadow:0 0 0 3px #13294b,0 0 0 7px rgba(214,64,12,.35)}
   :root[data-theme="dark"] .dkpin .pin.sel{box-shadow:0 0 0 3px #fff,0 0 0 7px rgba(214,64,12,.45)}
@@ -7656,7 +7668,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, false); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) { tc.disabled = true; tc.tabIndex = -1; meta.appendChild(tc); }
-    if (d.mark && backOn(d)) meta.appendChild(q('span', 'tag again', d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
+    var bb1 = backBadge(d); if (bb1) meta.insertBefore(bb1, meta.firstChild);
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }   /* worth knowing before the knock */
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));   /* from the planning table (2026-10-08) */
@@ -8153,6 +8165,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the desk list's rows (2026-10-09): one line of what makes the door worth it, and its score ---- */
   var FIRE_WORD = ['', 'Very low fire hazard', 'Low fire hazard', 'Moderate fire hazard', 'High fire hazard', 'Very high fire hazard'];
+  /* "Due back" (a Not now on its date) or "Try again" (a no-answer after its rest): a blue badge with a clock (2026-10-19) */
+  function backBadge(d) {
+    if (!(d.mark && backOn(d))) return null;
+    var b = q('span', 'cbadge'); b.appendChild(ico('clock', 2.2));
+    b.appendChild(document.createTextNode(d.mark.outcome === 'later' ? 'Due back' : 'Try again'));
+    return b;
+  }
   function deskFacts(d) {
     var sp = scoreParts(d), out = [];
     if (sp && sp.f && sp.f.length) out = sp.f.filter(function (x) { return x[0] > 0; }).sort(function (a, b) { return b[0] - a[0]; }).slice(0, 3).map(function (x) { return x[1]; });
@@ -8163,7 +8182,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (cardOn('fire') && FIRE_WORD[d.fire] && d.fire >= 4) out.push(FIRE_WORD[d.fire]);
       if (!out.length && d.acres) out.push(d.acres.toFixed(2) + ' acres');
     }
-    if (d.mark && backOn(d)) out.unshift(d.mark.outcome === 'later' ? 'Due back' : 'Try again');
     if (d.os) out.push('New owner');
     if (d.rep) out.push(d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep);
     if (d.cust) out.push('Customer');
@@ -8173,6 +8191,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var row = q('div', 'door drow dkrow ' + fireClass(d.fire)); row.setAttribute('data-id', d.id);
     row.setAttribute('role', 'button'); row.tabIndex = 0;
     var m = q('span', 'dkr-m'); m.appendChild(q('b', null, d.address));
+    var bb0 = backBadge(d); if (bb0) m.appendChild(bb0);
     var fx = deskFacts(d); if (fx) m.appendChild(q('small', null, fx));
     row.appendChild(m);
     var dl = distLabel(d); if (dl) row.appendChild(q('span', 'dist', dl));
@@ -8213,6 +8232,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var box = q('div', 'dkc-head');
     var top = q('div', 'dkc-top'), tt = q('div', 'dkc-t');
     tt.appendChild(q('h2', null, d.address));
+    var bb3 = backBadge(d); if (bb3) tt.appendChild(bb3);
     tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), 'Owner: ' + ownerText(d.owner)].join(' \u00b7 ')));
     top.appendChild(tt);
     var sc = scoreChip(d); if (sc) { sc.classList.add('big'); top.appendChild(sc); }
@@ -8333,6 +8353,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var sc = st === 'k' || st === 'd' ? doorScore(d) : null;
     var cls = st === 'x' ? 'done' : st === 'a' ? 'miss' : sc === null ? (st === 'd' ? 'back' : 'plain') : sc === 10 ? 'top' : sc >= 7 ? 'hi' : sc >= 4 ? 'mid' : 'lo';
     var size = st === 'x' || st === 'a' ? 14 : sc === 10 ? 32 : sc === null ? 18 : 28;
+    if (st === 'd') cls += ' cb';   /* a door to come back to: blue ring + clock (2026-10-19) */
     if (sel) { cls += ' sel'; size += 4; } if (dim) cls += ' dim';
     return { cls: cls, txt: sc === null ? '' : String(sc), size: size };
   }
@@ -8348,6 +8369,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       : [[MAPC.k, '#fff', 'To knock'], [MAPC.d, '#fff', 'Back on the list']];
     keys = keys.concat([['#ffffff', '#55635B', 'No answer'], ['#8A948E', '#fff', 'Knocked']]);
     keys.forEach(function (x) { var sp = q('span'), i = q('i'); i.style.background = x[0]; i.style.borderColor = x[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(x[2])); lg.appendChild(sp); });
+    if (S.doors.some(function (d) { return statusOf(d) === 'd'; })) { var cbs = q('span'); cbs.appendChild(q('i', 'cbk')); cbs.appendChild(document.createTextNode('Come back to')); lg.appendChild(cbs); }
     var hs = q('span'), hi = q('i', 'ring'); hs.appendChild(hi); hs.appendChild(document.createTextNode('Other neighbourhoods')); lg.appendChild(hs);
     return lg;
   }
@@ -11890,7 +11912,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (r.key === S.region && a.name === S.area) return;
         if (r.key !== S.region && !near(a)) return;
         var left = Math.max(0, a.total - a.done - (a.noanswer || 0));
-        var m = L.circleMarker([a.la, a.lo], { radius: 7 + Math.min(14, Math.sqrt(left) * 0.8), color: a.nosol ? '#c8372d' : ink, weight: 2, dashArray: '4 4', fillColor: ink, fillOpacity: 0.1 });
+        var rad = 7 + Math.min(14, Math.sqrt(left) * 0.8);
+        grp.addLayer(L.circleMarker([a.la, a.lo], { radius: rad, color: darkUI() ? '#13294b' : '#ffffff', weight: 6, opacity: 0.9, fill: false, interactive: false }));   /* the halo (2026-10-19: "too dim") */
+        var m = L.circleMarker([a.la, a.lo], { radius: rad, color: a.nosol ? '#c8372d' : ink, weight: 2.5, dashArray: '5 4', fillColor: darkUI() ? ink : '#ffffff', fillOpacity: 0.35 });
         m.bindTooltip(q('span', null, a.name + (r.key !== S.region ? ' · ' + r.label : '') + ' · ' + left + ' to knock' + (bestTrade() && a.bestN ? ', ' + a.bestN + ' worth it first' : '') + ' · tap to open'), { direction: 'top' });
         m.on('click', function (e) { L.DomEvent.stopPropagation(e); onOpen(r.key, a.name); });
         grp.addLayer(m); n++;
@@ -12303,15 +12327,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(el);
     var lg = q('div', 'legend');
     /* "you" is near-black, never blue: blue is To knock */
-    var keys = [['k', 'To knock'], ['d', 'Back on the list'], ['a', 'No answer, waiting'], ['x', 'Done']];
+    var keys = [['k', 'To knock'], ['d', 'Come back to'], ['a', 'No answer, waiting'], ['x', 'Done']];
     if (cardOn('fire')) keys.push(['h', 'High fire hazard']);
     if (S.doors.some(function (d) { return d.cust; })) keys.push(['c', 'Customer']);   /* where we already work (2026-10-04) */
     if (S.here) keys.push(['u', 'You']);
     keys.push(['r', 'Other neighbourhoods: tap one']);   /* 2026-10-09 */
     keys.push(['g', 'Grey: not a door to knock (rental, business, PO box)']);   /* 2026-10-12 */
     keys.forEach(function (x) {
-      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : x[0] === 'c' ? 'c' : x[0] === 'r' ? 'ring' : x[0] === 'g' ? 'gdot' : null);
-      if (x[0] !== 'h' && x[0] !== 'c' && x[0] !== 'r' && x[0] !== 'g') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
+      var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : x[0] === 'c' ? 'c' : x[0] === 'r' ? 'ring' : x[0] === 'g' ? 'gdot' : x[0] === 'd' ? 'cbk' : null);
+      if (x[0] !== 'h' && x[0] !== 'c' && x[0] !== 'r' && x[0] !== 'g' && x[0] !== 'd') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
       sp.appendChild(i); sp.appendChild(document.createTextNode(x[1])); lg.appendChild(sp);
     });
     box.appendChild(lg);
@@ -12341,6 +12365,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var x = markers[k], st = statusOf(x.d), hot = x.d.fire === 4 || x.d.fire === 5;
           x.m.setStyle({ fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95, color: hot ? '#9E2A1C' : '#ffffff' });
           x.m.setRadius(base(x.d) + (k === S.mapSel ? 4 : 0));
+          if (x.ring) { x.ring.setStyle({ opacity: st === 'd' ? 1 : 0 }); x.ring.setRadius(base(x.d) + (k === S.mapSel ? 4 : 0) + 6); }
         });
       }
       S.liveMap = { el: el, box: box, area: S.area, restyle: restyle,
@@ -12352,7 +12377,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95 }).addTo(map);
         m.on('click', function (e) { L.DomEvent.stopPropagation(e); select(d); });
         if (d.cust) L.circleMarker([d.lat, d.lon], { radius: base(d) + 6, color: '#16201C', weight: 3, fill: false, interactive: false }).addTo(map);
-        markers[d.id] = { m: m, d: d };
+        var ring = st === 'd' ? L.circleMarker([d.lat, d.lon], { radius: base(d) + 6, color: '#1d6fe0', weight: 4, fill: false, interactive: false }).addTo(map) : null;   /* come back to (2026-10-19) */
+        markers[d.id] = { m: m, d: d, ring: ring };
         pts.push([d.lat, d.lon]);
       });
       map.on('click', function () {
@@ -14413,6 +14439,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     var top = q('div', 'd-top');
     top.appendChild(q('div', 'addr', d.address));
+    var bb2 = backBadge(d); if (bb2) top.appendChild(bb2);   /* the open card too (2026-10-19) */
     var dl = distLabel(d); if (dl) top.appendChild(q('span', 'dist', dl));
     var scr = scoreChip(d); if (scr) top.appendChild(scr);   /* the door score, 1 to 10 (2026-10-08) */
     if (!full) {   /* close this card (2026-10-08) */
@@ -14648,7 +14675,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.backFirst && S.dview !== 'near' && S.dview !== 'route') {   /* Best first too (2026-10-08): the doors promised a come-back still lead */
       lead = todo.filter(backOn); todo = todo.filter(function (d) { return !backOn(d); });
       if (lead.length) {
-        view.appendChild(q('h3', 'strh', 'Come back to \u00b7 ' + lead.length));
+        var cbn = q('h3', 'strh cbanner', 'Come back to \u00b7 ' + lead.length);   /* a banner, not a small grey heading (2026-10-19) */
+        cbn.appendChild(q('small', null, (lead.length === 1 ? 'This door is' : 'These doors are') + ' back on the list: asked us to come back, or nobody was home last time. Marked blue on the map.'));
+        view.appendChild(cbn);
         lead.forEach(function (d) { view.appendChild(doorCardFor(d)); });
       }
     }
