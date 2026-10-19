@@ -218,7 +218,7 @@ local function buildBase(folder, index, position, facingRotation)
 	-- (Station.client.lua). The invisible Shield above is what actually blocks the way.
 	local gateTop = WH - 0.4
 	part(root, { Name = "GateHousing", Size = Vector3.new(DOOR + 1.6, 2.2, 2.4), Color = metalDark, Material = Enum.Material.Metal, CFrame = cf * CFrame.new(0, gateTop + 1.1, -D / 2 - 0.6) })
-	local shutter = part(root, { Name = "Shutter", Size = Vector3.new(DOOR, 0.2, 0.35), Color = Color3.fromRGB(158, 164, 178), Material = Enum.Material.CorrugatedSteel,
+	local shutter = part(root, { Name = "Shutter", Size = Vector3.new(DOOR, 0.2, 0.35), Color = Color3.fromRGB(158, 164, 178), Material = Enum.Material.Metal, -- (was CorrugatedSteel, which Roblox does not have: it stopped the whole server)
 		CanCollide = false, CanQuery = false, CFrame = cf * CFrame.new(0, gateTop - 0.1, -D / 2 - 0.6) })
 	shutter:SetAttribute("Full", gateTop - 1)
 	part(root, { Name = "ShutterBar", Size = Vector3.new(DOOR, 0.5, 0.55), Color = Color3.fromRGB(255, 196, 60), CanCollide = false, CanQuery = false,
