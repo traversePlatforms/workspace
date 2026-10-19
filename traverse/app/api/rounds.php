@@ -7131,23 +7131,39 @@ if ($action === 'search') {
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
     $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && (desk() || $role === 'quote');
     if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
-    $hits = [];
-    foreach (searchIndex() as $line) {
-        $p = explode("\t", $line); if (count($p) < 9) continue;
-        $look = ($p[9] ?? '') === 'L'; if ($look && !$withLookup) continue;
-        $aw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $p[4]));
-        $tw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', strtoupper($p[1])));
-        $ok = true; $exactNo = false; $streetHit = false;
-        foreach ($words as $w) {
-            $m = false; foreach ($aw as $i => $x) { if ($x !== '' && (strncmp($x, $w, strlen($w)) === 0 || (isset($LONGW[$w]) && $x === $LONGW[$w]))) { $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
-            if (!$m && !ctype_digit($w)) foreach ($tw as $x) if ($x !== '' && $x === $w) { $m = true; break; }   /* the town's name */
-            if (!$m) { $ok = false; break; }
+    $find = function (array $words) use ($withLookup, $LONGW): array {
+        $hits = [];
+        foreach (searchIndex() as $line) {
+            $p = explode("\t", $line); if (count($p) < 9) continue;
+            $look = ($p[9] ?? '') === 'L'; if ($look && !$withLookup) continue;
+            $aw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $p[4]));
+            $tw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', strtoupper($p[1])));
+            $ok = true; $exactNo = false; $streetHit = false;
+            foreach ($words as $w) {
+                $m = false; foreach ($aw as $i => $x) { if ($x !== '' && (strncmp($x, $w, strlen($w)) === 0 || (isset($LONGW[$w]) && $x === $LONGW[$w]))) { $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
+                if (!$m && !ctype_digit($w)) foreach ($tw as $x) if ($x !== '' && $x === $w) { $m = true; break; }   /* the town's name */
+                if (!$m) { $ok = false; break; }
+            }
+            if ($ok && !$streetHit) $ok = false;   /* the town alone is not an address */
+            if (!$ok) continue;
+            $hits[] = ['rank' => ($exactNo ? 0 : 1), 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
+                       'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : [])];
+            if (count($hits) > 400) break;
         }
-        if ($ok && !$streetHit) $ok = false;   /* the town alone is not an address */
-        if (!$ok) continue;
-        $hits[] = ['rank' => ($exactNo ? 0 : 1), 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
-                   'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : [])];
-        if (count($hits) > 400) break;
+        return $hits;
+    };
+    $hits = $find($words);
+    /* 2026-10-18 (Matthew: an address pasted from Facebook found nothing, typed it did): a paste often carries words that are
+       not on our list: a flat ("Apt 2", "Unit B", "#5"), a mailing town that is not the town we file the house under
+       ("Littleton" for a Columbine house), or the rest of the message. With nothing found, try again with only the house number
+       and the street, up to its street type (DR, ST, AVE...). */
+    if (!$hits) {
+        $cut = []; $typed = false;
+        foreach ($words as $w) {
+            $cut[] = $w;
+            if (in_array($w, SEARCH_TYPES, true) && !in_array($w, ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW'], true) && array_filter($cut, fn($x) => strlen($x) >= 3 && !ctype_digit($x) && !in_array($x, SEARCH_TYPES, true))) { $typed = true; break; }
+        }
+        if ($typed && count($cut) < count($words)) $hits = $find($cut);
     }
     usort($hits, fn($x, $y) => [$x['rank'], $x['address']] <=> [$y['rank'], $y['address']]);
     $more = count($hits) > 25;
