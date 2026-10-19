@@ -1797,7 +1797,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2635,7 +2635,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -4432,6 +4432,7 @@ function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DI
 function jobShow(array $j, ?array $leads = null): array {
     $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
+    $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
     if ($l) {
         if (!empty($l['sqcard']['id'])) { $o['cof'] = ['brand' => (string) ($l['sqcard']['brand'] ?? ''), 'last4' => (string) ($l['sqcard']['last4'] ?? ''), 'exp' => (string) ($l['sqcard']['exp'] ?? '')]; $o['card'] = true; }   /* saved on Square when they paid the deposit (2026-10-15) */
@@ -4611,16 +4612,151 @@ if ($action === 'jobweather') {
     foreach ($perCrew as $crew => $ds) { $u = array_values(array_unique($ds)); if ($crew !== $me) pushName($crew, count($ds) . (count($ds) === 1 ? ' job' : ' jobs') . ' moved for weather', 'From ' . deskWhen($from, '') . ' to ' . implode(', ', array_map(fn($x) => deskWhen($x, ''), $u)), './', 'wx-' . $from); }
     out(['ok' => !$errs || $done, 'moved' => $done, 'errors' => $errs]);
 }
+/* ---- the field crew (2026-10-19, Matthew, looking through Brad's eyes) ----
+ * Photos on a job; the crew's own week, to look at (only the office changes it); a walk added on the spot ("in case people get
+ * approached to do something while working on something else"); and stats about the work instead of the doors. */
+const JOB_PHOTO_MAX = 20;
+function jobPhotosAll(): array {
+    static $c = null; if ($c !== null) return $c; $c = [];
+    foreach (readLines(DATA_DIR . '/jobphotos.log') as $r) {
+        $j = (string) ($r['id'] ?? ''); $f = (string) ($r['f'] ?? '');   /* 'id' = the job: readLines keeps only lines with an id */ if ($j === '' || $f === '') continue;
+        if (!empty($r['del'])) unset($c[$j][$f]); else $c[$j][$f] = ['f' => $f, 'by' => (string) ($r['by'] ?? ''), 'at' => (int) ($r['at'] ?? 0)];
+    }
+    return $c;
+}
+function jobPhotos(string $jid): array { return array_values(jobPhotosAll()[$jid] ?? []); }
+function jobMine(array $j): bool { global $me; return $j['crew'] === $me || desk(); }
+if ($action === 'jobphoto') {
+    if (!$isPost) fail('POST required', 405);
+    $jid = (string) ($_GET['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!preg_match('/^j[0-9a-f]{12}$/D', $jid) || !$j || $j['off']) fail('No such job.', 404);
+    if (!jobMine($j)) fail('Not allowed.', 403);
+    if (!throttleTake(rateFile('photo|' . (string) ($session['c'] ?? $me)), 120, 3600)) fail('That is a lot of photos in an hour. Wait a little and try again.', 429);
+    $bin = $raw ?? '';
+    if (strlen($bin) < 100) fail('No photo received.');
+    if (strlen($bin) > PHOTO_MAX_BYTES) fail('That photo is too big to send.', 413);
+    $info = @getimagesizefromstring($bin);
+    if (!$info || ($info['mime'] ?? '') !== 'image/jpeg' || $info[0] > 6000 || $info[1] > 6000) fail('That is not a JPEG photo.');
+    if (count(jobPhotos($jid)) >= JOB_PHOTO_MAX) fail('This job already has ' . JOB_PHOTO_MAX . ' photos. Remove one first.');
+    $dir = DATA_DIR . '/jobphotos/' . $jid;
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true)) fail('Could not save that. Try again.', 500);
+    $f = (new DateTime('now', new DateTimeZone(appTz())))->format('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '.jpg';
+    if (@file_put_contents($dir . '/' . $f, $bin, LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    if (!appendLine(DATA_DIR . '/jobphotos.log', ['id' => $jid, 'f' => $f, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'f' => $f]);
+}
+if ($action === 'jobphotoget') {
+    $jid = (string) ($_GET['job'] ?? ''); $f = (string) ($_GET['f'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || !jobMine($j) || !validPhotoName($f) || !isset(jobPhotosAll()[$jid][$f])) fail('No such photo.', 404);
+    $path = DATA_DIR . '/jobphotos/' . $jid . '/' . $f;
+    if (!is_readable($path)) fail('No such photo.', 404);
+    header('Content-Type: image/jpeg'); header('Cache-Control: no-store'); header('Content-Length: ' . filesize($path));
+    readfile($path); exit;
+}
+if ($action === 'jobphotodel') {
+    if (!$isPost) fail('POST required', 405);
+    $jid = (string) ($body['job'] ?? ''); $f = (string) ($body['f'] ?? ''); $j = jobsAll()[$jid] ?? null; $p = jobPhotosAll()[$jid][$f] ?? null;
+    if (!$j || !$p) fail('No such photo.', 404);
+    if ($p['by'] !== $me && !desk()) fail('Only whoever added it, or the office, removes a photo.', 403);
+    if (!appendLine(DATA_DIR . '/jobphotos.log', ['id' => $jid, 'f' => $f, 'del' => 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
+/* the crew's own week: their jobs and walks, nobody else's, nothing to change */
+if ($action === 'myschedule') {
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
+    if (!dateOk($from) || !dateOk($to) || $to < $from || strtotime($to) - strtotime($from) > 31 * 86400) fail('Pick the dates.');
+    $leads = leadsAll(); $rows = [];
+    foreach (jobsAll() as $j) {
+        if ($j['off'] || $j['crew'] !== $me || $j['date'] < $from || $j['date'] > $to) continue;
+        $sl = jobSlot((string) $j['slot']); $l = $leads[$j['lead']] ?? null;
+        $town = (string) ($l['house']['town'] ?? ($l['stown'] ?? ''));
+        if ($town === '') { $p = array_map('trim', explode(',', (string) ($j['addr'] ?? ''))); $town = count($p) > 1 ? (string) end($p) : ''; }
+        $rows[] = ['kind' => 'job', 'id' => $j['id'], 'date' => $j['date'], 'start' => $sl ? $sl[2] : '12:00', 'time' => $sl ? $sl[1] : (string) $j['slot'],
+                   'name' => trim((string) ($l['name'] ?? ($j['title'] ?? ''))) ?: 'A customer', 'where' => $town,
+                   'what' => (($j['pkg'] ?? 'full') === 'aerate' ? 'Aerate only' : (($j['pkg'] ?? '') === 'plan' ? 'Service plan' : 'Aerate, seed & feed')) . (($j['scope'] ?? 'all') === 'front' ? ', front only' : (($j['scope'] ?? 'all') === 'back' ? ', back only' : '')),
+                   'pay' => schedPay($j['pay'] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
+    }
+    $vw = ucfirst((string) (company()['visitShort'] ?? 'Walk'));
+    foreach (deskWalks() as $w) {
+        if ($w['off'] || $w['walker'] !== $me || $w['date'] < $from || $w['date'] > $to) continue;
+        $t = (string) ($w['time'] ?? '');
+        $rows[] = ['kind' => 'walk', 'id' => $w['id'], 'date' => $w['date'], 'start' => $t !== '' ? $t : '23:59', 'time' => $t !== '' ? (new DateTime('2000-01-01 ' . $t))->format('g:i a') : 'Any time',
+                   'name' => (string) $w['title'], 'where' => (string) ($w['addr'] ?? ''), 'what' => $vw . ', about ' . (int) ($w['mins'] ?? 60) . ' min', 'pay' => '', 'done' => !empty($w['done']) ? 'Done' : ''];
+    }
+    usort($rows, fn($a, $b) => [$a['date'], $a['start']] <=> [$b['date'], $b['start']]);
+    out(['ok' => true, 'rows' => $rows, 'closed' => jobClosed()]);
+}
+/* a walk the crew adds on the spot: a lead (In person, by them) and the walk on their own day; the office gets an alert */
+if ($action === 'crewwalk') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    if (empty($acct['walker'][(string) ($session['c'] ?? '')])) fail('Only people who do walks add them. An admin marks them in Accounts.', 403);
+    $name = $clean($body['name'] ?? '', 120); $phone = $clean($body['phone'] ?? '', 40); $addr = $clean($body['addr'] ?? '', 160); $note = $clean($body['note'] ?? '', 500);
+    if ($name === '' && $phone === '') fail('Add their name or phone number.');
+    if (!preg_match('/^\d+ \S/', $addr)) fail('Add the street address: the house number and the street.');
+    $date = (string) ($body['date'] ?? ''); $time = (string) ($body['time'] ?? ''); $mins = (int) ($body['mins'] ?? 60);
+    if (!dateOk($date)) fail('Pick the day.');
+    $tz = new DateTimeZone(appTz());
+    $diff = (int) round(((new DateTime($date . ' 00:00', $tz))->getTimestamp() - (new DateTime('today', $tz))->getTimestamp()) / 86400);
+    if ($diff < 0) fail('That day has gone. Pick today or later.');
+    if ($diff > 180) fail('Pick a date within the next six months.');
+    if (!preg_match('/^(0[6-9]|1\d|20):(00|15|30|45)$/D', $time) && $time !== '') fail('Pick a time between 6 am and 8:45 pm.');
+    if (!in_array($mins, [30, 45, 60, 90, 120], true)) fail('Pick how long it takes.');   /* DESK_MINS: that const is defined further down the file */
+    if (empty($body['force']) && $time !== '') { $cl = deskClashes($me, $date, $time, $mins, '', ''); if ($cl) out(['ok' => false, 'clash' => $cl, 'error' => 'You already have something then.']); }
+    $lid = 'm' . date('YmdHis') . bin2hex(random_bytes(3));
+    if (!appendLine(leadsDir() . '/leads.log', ['id' => $lid, 'src' => 'inperson', 'at' => time(), 'need' => 'A walk', 'name' => $name, 'phone' => $phone, 'email' => '', 'town' => $addr, 'msg' => $note, 'by' => $me])) fail('Could not save that. Try again.', 500);
+    $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? '');
+    if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'house' => $h, 'by' => $me, 'at' => time()]);
+    $vid = 'v' . bin2hex(random_bytes(6)); $title = $name !== '' ? $name : $phone;
+    if (!appendLine(DATA_DIR . '/deskwalks.log', ['id' => $vid, 'kind' => 'lead', 'lead' => $lid, 'title' => $title, 'walker' => $me, 'date' => $date, 'time' => $time, 'mins' => $mins, 'addr' => $addr, 'note' => $note, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'status' => 'walk', 'note' => 'Walk added in the field by ' . $me . ': ' . deskWhen($date, $time) . '.', 'by' => $me, 'at' => time()]);
+    if (!empty(company()['a365'])) a365Alert('Walk added by ' . $me, $title . ' · ' . deskWhen($date, $time));
+    out(['ok' => true, 'id' => $vid, 'lead' => $lid]);
+}
+/* stats about the work (Matthew: "number of jobs done, number of hours worked, number of sq footage worked on, fun and cool stuff"):
+   the lawn size is the crew's own measurement on the day when there is one, else our estimate; the time is their own estimate on Done */
+if ($action === 'mystats') {
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz);
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days')->format('Y-m-d'); $m1 = $today->format('Y-m-01');
+    $leads = leadsAll(); $past = [];
+    $st = ['done' => 0, 'week' => 0, 'month' => 0, 'not' => 0, 'mins' => 0, 'timed' => 0, 'sq' => 0, 'sqJobs' => 0, 'rateMins' => 0, 'rateSq' => 0, 'biggest' => 0, 'walks' => 0];
+    foreach (jobsAll() as $j) {
+        if ($j['off'] || $j['crew'] !== $me || !$j['done']) continue;
+        $d = $j['done']; $l = $leads[$j['lead']] ?? null; $sq = 0;
+        if ($l && !empty($l['house']['region'])) {
+            $hf = houseFacts((string) $l['house']['region'], (string) $l['house']['door']);
+            if ($hf) { $ck = $hf['checks'] ?? []; $last = $ck ? end($ck) : null; $sq = (int) ($last['sq'] ?? 0) ?: (int) ($hf['lawn']['sq'] ?? 0); }
+        }
+        $mn = (int) ($d['mins'] ?? 0);
+        if ($d['o'] === 'done') {
+            $st['done']++; if ($j['date'] >= $mon) $st['week']++; if ($j['date'] >= $m1) $st['month']++;
+            if ($mn > 0) { $st['mins'] += $mn; $st['timed']++; }
+            if ($sq > 0) { $st['sq'] += $sq; $st['sqJobs']++; $st['biggest'] = max($st['biggest'], $sq); if ($mn > 0) { $st['rateMins'] += $mn; $st['rateSq'] += $sq; } }
+        } else $st['not']++;
+        $past[] = ['id' => $j['id'], 'date' => $j['date'], 'name' => trim((string) ($l['name'] ?? ($j['title'] ?? ''))) ?: 'A customer', 'town' => (string) ($l['house']['town'] ?? ''), 'o' => (string) $d['o'], 'mins' => $mn, 'sq' => $sq];
+    }
+    foreach (deskWalks() as $w) if (!$w['off'] && $w['walker'] === $me && !empty($w['done'])) $st['walks']++;
+    usort($past, fn($a, $b) => strcmp($b['date'], $a['date']));
+    out(['ok' => true, 'stats' => $st, 'past' => array_slice($past, 0, 60)]);
+}
 if ($action === 'jobdone') {
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = jobsAll();
     if (!preg_match('/^j[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such job.', 404);
     $j = $all[$id]; if ($j['crew'] !== $me && !desk()) fail('Not allowed.', 403);
     $o = (string) ($body['outcome'] ?? ''); if (!in_array($o, ['done', 'could not', 'undo'], true)) fail('Say how it went.');
-    $note = $clean($body['note'] ?? '', 300); $got = (int) ($body['collected'] ?? 0);
-    $row = ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'note' => $note, 'collected' => max(0, $got), 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()];
+    $note = $clean($body['note'] ?? '', 1000); $got = (int) ($body['collected'] ?? 0); $mins = max(0, min(960, (int) ($body['mins'] ?? 0)));
+    /* 2026-10-19 (Matthew): Done asks about how long it took ("this is going to help us track how long it takes to do the job, how long it
+       takes to do certain sized lawns"); Could not do it needs what happened, "so we know exactly what happened, why and how". The office
+       marking a job for someone may leave the time out. */
+    if ($o === 'done' && !desk() && $mins < 5) fail('Add about how long the job took, in hours and minutes.');
+    if ($o === 'could not' && mb_strlen($note) < 5) fail('Say what happened, so the office knows why and can rebook it.');
+    $took = $mins > 0 ? trim(($mins >= 60 ? intdiv($mins, 60) . ' h ' : '') . ($mins % 60 ? ($mins % 60) . ' min' : '')) : '';
+    $row = ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'note' => $note, 'collected' => max(0, $got), 'mins' => $o === 'done' ? $mins : 0, 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()];
     if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
-    if ($o !== 'undo' && ($note !== '' || $o === 'could not')) appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 500), 'by' => $me, 'at' => time()]);
+    if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
+    if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
     out(['ok' => true]);
 }
 /* ---- weather (2026-10-15, Matthew: "go ahead and build the weather day button and forecast flag") ----
@@ -5818,6 +5954,7 @@ if ($action === 'squarecheck') {
    (the jobs lock is held through Square's answer); a retry after no answer reuses the same key, so Square never charges twice. */
 if ($action === 'jobcharge') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    if (!canTakePay()) fail('Taking payments is switched on per person by an admin, in Accounts.', 403);
     if (!squareFor()) fail('Square is not connected yet.');
     $jid = (string) ($body['id'] ?? '');
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not do that. Try again.', 500);
@@ -5848,6 +5985,7 @@ if ($action === 'jobcharge') {
 /* a pay link for what is left on a job (the office, or the crew on the day) */
 if ($action === 'jobpaylink') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    if (!canTakePay()) fail('Taking payments is switched on per person by an admin, in Accounts.', 403);
     if (!squareFor()) fail('Square is not connected yet.');
     $jid = (string) ($body['id'] ?? ''); $all = jobsAll(); $j = $all[$jid] ?? null;
     if (!$j || $j['off']) fail('No such job.', 404);
@@ -6748,6 +6886,26 @@ function acctWeakCode(string $c): bool {
     for ($i = 1; $i < 6; $i++) { $d = ((int) $c[$i] - (int) $c[$i - 1] + 10) % 10; if ($d !== 1) $up = false; if ($d !== 9) $down = false; }
     return $up || $down;
 }
+/* takes payments (2026-10-19, Matthew: "taking a payment should be a trusted feature for certain employees, the admin should overall
+   decide as to who gets that permission"). Charging a saved card and making a Square pay link need it; the office and admins always have
+   it. Until an admin first sets it for anyone, everyone who does walks has it (Brad: "he's a trusted worker"), so nothing changes the day
+   it lands; the first change copies that list and from then on it is only what the admin set. Cash collected is still recorded by anyone. */
+function paysOn(string $id): bool { global $acct; if (!isset($acct['pays'])) return !empty($acct['walker'][$id]); return !empty($acct['pays'][$id]); }
+function canTakePay(): bool { global $session; return desk() || paysOn((string) ($session['c'] ?? '')); }
+if ($action === 'paysset') {
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $acctLock = @fopen(accountsFile() . '.lock', 'c');
+    if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
+    $id = (string) ($body['id'] ?? '');
+    if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if (!isset($acct['pays'])) $acct['pays'] = array_map(fn($v) => 1, (array) ($acct['walker'] ?? []));   /* the first change keeps everyone who had it */
+    if (!empty($body['on'])) $acct['pays'][$id] = 1; else unset($acct['pays'][$id]);
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => !empty($body['on']) ? 'takes payments' : 'no payments', 'name' => $rows[$id]['name'], 'id' => $id]);
+    out(['ok' => true]);
+}
 /* who does walks (2026-10-14, the walk desk): an admin ticks them in Accounts; the desk books walks only with them */
 if ($action === 'walkerset') {
     if (!feature('walkdesk')) fail('Not here.', 404);
@@ -6784,7 +6942,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']])];
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id'])];
         }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
