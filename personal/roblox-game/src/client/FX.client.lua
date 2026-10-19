@@ -1,4 +1,4 @@
--- The "juice", drawn on this player's screen only: sparkles and confetti, pop-up numbers, the steal alarm, a guide beam
+-- The "juice", drawn on this player's screen only: sounds, punch and weapon animations, sparkles and confetti, pop-up numbers, the steal alarm, a guide beam
 -- home while carrying, "+income" over your base, bobbing critters, spinning stars, and rainbow critters cycling colour.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -133,22 +133,234 @@ local function alarm(baseIndex)
 	end
 end
 
-FX.OnClientEvent:Connect(function(kind, a, b)
+-- ---------- sounds (2026-10-18): ids and volumes live in Config.Sounds ----------
+local SoundService = game:GetService("SoundService")
+local function sfx(name, pos)
+	local def = Config.Sounds[name]
+	if not def then
+		return
+	end
+	local s = Instance.new("Sound")
+	s.SoundId = "rbxassetid://" .. def.id
+	s.Volume = def.volume or 0.5
+	s.PlaybackSpeed = def.pitch or 1
+	local holder = s
+	if pos then -- in the world: louder close by
+		local p = anchorAt(pos)
+		s.RollOffMinDistance = 14
+		s.RollOffMaxDistance = 160
+		s.Parent = p
+		holder = p
+	else
+		s.Parent = SoundService
+	end
+	s:Play()
+	if def.stopAfter then
+		task.delay(def.stopAfter, function()
+			if s.Parent then
+				s:Stop()
+			end
+		end)
+	end
+	Debris:AddItem(holder, math.max(def.stopAfter or 0, 8))
+end
+
+-- ---------- arm animations (2026-10-18, Matthew: "a punching animation", "animations to the weapons") ----------
+-- Every screen moves the puncher's shoulder joint itself, so everyone sees the swing without any uploaded animations.
+local restC0 = {} -- [Motor6D] = its normal C0
+local armTweens = {} -- [Motor6D] = the tween playing on it
+local function joint(char, r15Part, r15Name, r6Name)
+	local p = char:FindFirstChild(r15Part)
+	local m = p and p:FindFirstChild(r15Name)
+	if m and m:IsA("Motor6D") then
+		return m, true
+	end
+	local torso = char:FindFirstChild("Torso")
+	m = torso and torso:FindFirstChild(r6Name)
+	if m and m:IsA("Motor6D") then
+		return m, false
+	end
+	return nil
+end
+
+-- steps: a list of { angle forward (radians), twist of the body, seconds }; ends back at rest
+local function animate(char, steps)
+	local shoulder, r15 = joint(char, "RightUpperArm", "RightShoulder", "Right Shoulder")
+	local waist = r15 and select(1, joint(char, "UpperTorso", "Waist", "")) or nil
+	if not shoulder then
+		return
+	end
+	restC0[shoulder] = restC0[shoulder] or shoulder.C0
+	if waist then
+		restC0[waist] = restC0[waist] or waist.C0
+	end
+	local token = {}
+	armTweens[shoulder] = token
+	task.spawn(function()
+		for _, st in ipairs(steps) do
+			if armTweens[shoulder] ~= token or not shoulder.Parent then
+				return
+			end
+			local angle, twist, secs = st[1], st[2], st[3]
+			local goal = r15 and (restC0[shoulder] * CFrame.Angles(angle, 0, 0)) or (restC0[shoulder] * CFrame.Angles(0, 0, angle))
+			TweenService:Create(shoulder, TweenInfo.new(secs, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = goal }):Play()
+			if waist then
+				TweenService:Create(waist, TweenInfo.new(secs, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = restC0[waist] * CFrame.Angles(0, twist, 0) }):Play()
+			end
+			task.wait(secs)
+		end
+		if armTweens[shoulder] == token and shoulder.Parent then
+			TweenService:Create(shoulder, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = restC0[shoulder] }):Play()
+			if waist then
+				TweenService:Create(waist, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { C0 = restC0[waist] }):Play()
+			end
+		end
+	end)
+end
+
+local function heldTool(char, id)
+	local t = char and char:FindFirstChildOfClass("Tool")
+	return t and t:GetAttribute("GearId") == id and t or nil
+end
+
+-- the glove shoots out on its spring and snaps back
+local function springGlove(tool)
+	local handle = tool:FindFirstChild("Handle")
+	local gj = handle and handle:FindFirstChild("GloveJoint")
+	local sj = handle and handle:FindFirstChild("SpringJoint")
+	local rod = sj and sj.Part1
+	if not (gj and sj and rod) then
+		return
+	end
+	restC0[gj] = restC0[gj] or gj.C0
+	restC0[sj] = restC0[sj] or sj.C0
+	restC0[rod] = restC0[rod] or rod.Size
+	local reach = 4.2
+	local out = TweenInfo.new(0.09, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local back = TweenInfo.new(0.28, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+	task.delay(0.1, function()
+		TweenService:Create(gj, out, { C0 = CFrame.new(0, 0, -reach) * restC0[gj] }):Play()
+		TweenService:Create(sj, out, { C0 = CFrame.new(0, 0, -reach / 2) * restC0[sj] }):Play()
+		TweenService:Create(rod, out, { Size = restC0[rod] + Vector3.new(reach, 0, 0) }):Play()
+		task.wait(0.16)
+		TweenService:Create(gj, back, { C0 = restC0[gj] }):Play()
+		TweenService:Create(sj, back, { C0 = restC0[sj] }):Play()
+		TweenService:Create(rod, back, { Size = restC0[rod] }):Play()
+	end)
+end
+
+local function swing(pos, who, style)
+	local char = who and who.Character
+	if style == "glove" then
+		sfx("glove", pos)
+		if char then
+			animate(char, { { -0.6, -0.35, 0.1 }, { 0.35, 0.4, 0.09 }, { 0.35, 0.4, 0.14 } }) -- wind up, thrust, hold
+			local tool = heldTool(char, "glove")
+			if tool then
+				springGlove(tool)
+			end
+		end
+		burst(pos + (char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.CFrame.LookVector * 4 or Vector3.zero), Color3.fromRGB(255, 255, 255), 12)
+	else
+		sfx("swing", pos)
+		if char then
+			animate(char, { { -0.45, -0.3, 0.07 }, { 1.65, 0.35, 0.08 }, { 1.65, 0.35, 0.06 } }) -- pull back, jab, hold
+		end
+		burst(pos, Color3.fromRGB(255, 255, 255), 8)
+	end
+end
+
+-- the Star Blaster: kick, a flash at the muzzle, a glowing bolt flying to where it lands
+local function blast(who, from, to, landed)
+	local char = who and who.Character
+	sfx("blaster", from)
+	if char then
+		animate(char, { { 0.4, 0, 0.05 }, { 0.4, 0, 0.08 } }) -- recoil
+		local tool = heldTool(char, "blaster")
+		local crystal = tool and tool:FindFirstChild("Crystal")
+		local flashLight = crystal and crystal:FindFirstChild("Flash")
+		if flashLight then
+			flashLight.Brightness = 6
+			TweenService:Create(flashLight, TweenInfo.new(0.25), { Brightness = 0 }):Play()
+		end
+	end
+	burst(from, C.Orange, 10)
+	local dist = (to - from).Magnitude
+	local bolt = Instance.new("Part")
+	bolt.Name = "StarBolt"
+	bolt.Shape = Enum.PartType.Ball
+	bolt.Size = Vector3.new(1.1, 1.1, 1.1)
+	bolt.Color = C.Orange
+	bolt.Material = Enum.Material.Neon
+	bolt.Anchored = true
+	bolt.CanCollide = false
+	bolt.CanQuery = false
+	bolt.CanTouch = false
+	bolt.CFrame = CFrame.new(from)
+	bolt.Parent = fxFolder
+	local glowLight = Instance.new("PointLight")
+	glowLight.Color = C.Orange
+	glowLight.Range = 10
+	glowLight.Brightness = 3
+	glowLight.Parent = bolt
+	local trail = Instance.new("Part") -- a streak behind it that stretches as it flies
+	trail.Anchored = true
+	trail.CanCollide = false
+	trail.CanQuery = false
+	trail.CanTouch = false
+	trail.Material = Enum.Material.Neon
+	trail.Color = C.Blue
+	trail.Transparency = 0.3
+	trail.Size = Vector3.new(0.35, 0.35, 0.1)
+	trail.Parent = fxFolder
+	local secs = math.max(0.08, dist / 220)
+	local t0 = os.clock()
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		local a = math.clamp((os.clock() - t0) / secs, 0, 1)
+		local at = from:Lerp(to, a)
+		bolt.CFrame = CFrame.new(at)
+		local tail = from:Lerp(to, math.max(0, a - 0.35))
+		local len = (at - tail).Magnitude
+		if len > 0.05 then
+			trail.Size = Vector3.new(0.35, 0.35, len)
+			trail.CFrame = CFrame.lookAt((at + tail) / 2, at)
+		end
+		if a >= 1 then
+			conn:Disconnect()
+			bolt:Destroy()
+			trail:Destroy()
+			burst(to, landed and C.Orange or C.Blue, landed and 30 or 14)
+			sfx("bolt", to)
+		end
+	end)
+end
+
+FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 	if kind == "burst" then
 		burst(a, b)
 	elseif kind == "confetti" then
+		sfx("home", a)
 		burst(a, nil, 60, ColorSequence.new({ ColorSequenceKeypoint.new(0, C.Orange), ColorSequenceKeypoint.new(0.5, C.Blue), ColorSequenceKeypoint.new(1, C.Orange) }))
 	elseif kind == "pop" then
 		pop(a, b)
+		sfx("star", a)
 	elseif kind == "alarm" then
 		alarm(a)
+		sfx("alarm")
 	elseif kind == "shower" then
 		shout("METEOR SHOWER!", C.Blue, 3)
+		sfx("shower")
 	elseif kind == "swing" then
-		burst(a, Color3.fromRGB(255, 255, 255), 8)
+		swing(a, b, c)
+	elseif kind == "blast" then
+		blast(a, b, c, d)
+	elseif kind == "sfx" then
+		sfx(a, b)
 	elseif kind == "pow" then
 		burst(a, C.Orange, 40)
 		pop(a + Vector3.new(0, 3, 0), "POW!", C.Orange)
+		sfx("pow", a)
 	elseif kind == "knock" then -- you were punched: fly back a bit
 		local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 		if hrp then
@@ -161,10 +373,12 @@ FX.OnClientEvent:Connect(function(kind, a, b)
 		tw.Completed:Connect(function() flash.BackgroundColor3 = Color3.fromRGB(255, 40, 60) end)
 	elseif kind == "zapped" then
 		shout("ZAPPED!", Color3.fromRGB(255, 120, 120), 1.5)
+		sfx("zapped")
 	elseif kind == "night" then
 		shout("BLACK HOLE NIGHT!", Color3.fromRGB(200, 140, 255), 3)
 	elseif kind == "booped" then
 		shout("BOOP!", Color3.fromRGB(200, 140, 255), 1.5)
+		sfx("booped")
 		flash.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
 		flash.BackgroundTransparency = 0.4
 		local tw = TweenService:Create(flash, TweenInfo.new(0.8), { BackgroundTransparency = 1 })

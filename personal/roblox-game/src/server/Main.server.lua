@@ -29,6 +29,15 @@ local SetPet = remote("SetPet") -- pick which of your critters follows you aroun
 local Expand = remote("Expand") -- buy two more pedestals
 local Drop = remote("Drop") -- put down what you are carrying (2026-10-18: to grab something better)
 
+-- a sound from Config.Sounds: at a spot in the world for everyone nearby, or just for one player (2026-10-18)
+local function sfx(name, pos, player)
+	if player then
+		FX:FireClient(player, "sfx", name, pos)
+	else
+		FX:FireAllClients("sfx", name, pos)
+	end
+end
+
 local state = {} -- [player] = { base = base, carrying = { model, crit, from = { owner, slot } | nil } }
 local conveyor = {}
 
@@ -165,6 +174,7 @@ local function placeOnPedestal(base, slot, crit)
 		d.slots[tostring(slot)] = nil
 		d.stardust += value
 		FX:FireAllClients("burst", model:GetPivot().Position, Config.Colors.Orange)
+		sfx("sell", model:GetPivot().Position)
 		model:Destroy()
 		refreshStats(who)
 		tell(who, "Sold " .. crit.name .. " for " .. addCommas(value) .. " Stardust.", "info")
@@ -331,6 +341,7 @@ local function tryBuy(player, item)
 		return
 	end
 	FX:FireAllClients("burst", at, Config.Rarities[crit.def.rarity].color)
+	sfx("buy", at)
 	tell(player, "Got " .. crit.name .. "! Carry it to your base.", "good")
 end
 
@@ -396,6 +407,7 @@ local function unlockDoor(base, why)
 	base.root:SetAttribute("ShieldUntil", 0)
 	base.root:SetAttribute("CooldownUntil", base.cooldownUntil)
 	setShieldVisual(base, false)
+	sfx("unlock", base.cf.Position)
 	if base.owner then
 		tell(base.owner, why == "timer" and "Your door opened by itself. Guard your critters!" or ("Door unlocked. You can lock it again in " .. Config.ShieldCooldown .. " seconds."), "info")
 	end
@@ -419,6 +431,7 @@ local function toggleDoor(player)
 	base.shieldUntil = t + Config.ShieldSeconds
 	base.root:SetAttribute("ShieldUntil", base.shieldUntil)
 	setShieldVisual(base, true)
+	sfx("lock", base.cf.Position)
 	-- anyone else inside is put out the door
 	for other in pairs(state) do
 		local hrp = other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart")
@@ -1242,10 +1255,175 @@ task.spawn(function()
 	end
 end)
 
+-- ---------- the Gear Bay: buying gear, and handing it out every time you spawn (2026-10-18, Matthew) ----------
+local GearTools = require(script.Parent.GearTools)
+
+local function hasTool(player, id)
+	for _, holder in ipairs({ player:FindFirstChildOfClass("Backpack"), player.Character }) do
+		if holder then
+			for _, t in ipairs(holder:GetChildren()) do
+				if t:IsA("Tool") and t:GetAttribute("GearId") == id then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+local function giveGear(player)
+	local d = PlayerData.get(player)
+	local ch = player.Character
+	if not (d and ch) then
+		return
+	end
+	for _, g in ipairs(Config.Gear) do
+		if d.gear[g.id] then
+			player:SetAttribute("Owns_" .. g.id, true) -- the Gear Bay prompts read this on your screen
+			if g.kind == "weapon" then
+				local backpack = player:FindFirstChildOfClass("Backpack")
+				if backpack and not hasTool(player, g.id) then
+					local t = GearTools.tool(g.id)
+					if t then
+						t.Parent = backpack
+					end
+				end
+			elseif g.id == "boots" then
+				ch:SetAttribute("JetBoots", g.boost) -- every screen draws the flames; your own screen does the boost
+				local hum = ch:FindFirstChildOfClass("Humanoid")
+				if hum then
+					hum.UseJumpPower = false
+					hum.JumpHeight = g.jumpHeight
+				end
+				GearTools.fitBoots(ch)
+			end
+		end
+	end
+end
+
+local function onGearCharacter(player, ch)
+	task.spawn(function()
+		ch:WaitForChild("Humanoid", 10)
+		local t0 = os.clock()
+		while player.Parent and ch.Parent and os.clock() - t0 < 10 and not (PlayerData.get(player) and player:HasAppearanceLoaded()) do
+			task.wait(0.25) -- wait for the save to load and the avatar's body parts to settle, so the boots stay on
+		end
+		if player.Parent and ch.Parent then
+			giveGear(player)
+		end
+	end)
+end
+local function hookGear(player)
+	player.CharacterAdded:Connect(function(ch)
+		onGearCharacter(player, ch)
+	end)
+	if player.Character then
+		onGearCharacter(player, player.Character)
+	end
+end
+Players.PlayerAdded:Connect(hookGear)
+for _, p in ipairs(Players:GetPlayers()) do
+	hookGear(p)
+end
+
+for id, stand in pairs(map.gearStands or {}) do
+	local def = Config.gearById(id)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Buy (" .. addCommas(def.price) .. " ★)"
+	prompt.ObjectText = def.name
+	prompt.HoldDuration = 0.4
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt:SetAttribute("GearId", id)
+	prompt.Parent = stand
+	prompt.Triggered:Connect(function(player)
+		local d = PlayerData.get(player)
+		if not d then
+			return
+		end
+		if d.gear[id] then
+			giveGear(player)
+			tell(player, def.kind == "weapon" and ("Your " .. def.name .. " is in your backpack.") or ("Your " .. def.name .. " are on!"), "info")
+			return
+		end
+		if d.stardust < def.price then
+			tell(player, "The " .. def.name .. " costs " .. addCommas(def.price) .. " Stardust. Keep collecting!", "bad")
+			return
+		end
+		d.stardust -= def.price
+		d.gear[id] = true
+		refreshStats(player)
+		giveGear(player)
+		sfx("gear", nil, player)
+		FX:FireAllClients("confetti", stand.Position + Vector3.new(0, 5, 0))
+		if def.kind == "weapon" then
+			tell(player, "You got the " .. def.name .. "! Pick it in your backpack, then use it with Q, a click, or the " .. def.button .. " button.", "good")
+		else
+			tell(player, "You got the " .. def.name .. "! Jump, then jump again in the air for a rocket boost.", "good")
+		end
+	end)
+end
+
+-- the nearest player or Parker Bot within reach and roughly in front
+local function findTarget(player, hrp, reach, minDot)
+	local look = hrp.CFrame.LookVector
+	local best, bestD, kind, pos = nil, math.huge, nil, nil
+	for other in pairs(state) do
+		local oh = other ~= player and not hidden[other] and rootOf(other)
+		if oh then
+			local v = oh.Position - hrp.Position
+			local d = v.Magnitude
+			if d <= reach and d < bestD and (d < 1.5 or v.Unit:Dot(look) > minDot) then
+				best, bestD, kind, pos = other, d, "player", oh.Position
+			end
+		end
+	end
+	for _, bot in ipairs(bots) do
+		local v = bot.pos - hrp.Position
+		local d = v.Magnitude
+		if d <= reach + 2 and d < bestD and (d < 1.5 or v.Unit:Dot(look) > minDot - 0.1) then
+			best, bestD, kind, pos = bot, d, "bot", bot.pos
+		end
+	end
+	return best, kind, pos
+end
+
+-- what a landed hit does, from a fist, the glove or a star bolt
+local function hit(player, hrp, best, kind, knockMul, stun)
+	if kind == "bot" then
+		best.stunUntil = os.clock() + stun
+		FX:FireAllClients("pow", best.pos)
+		tell(player, "Parker Bot stunned!", "good")
+		return
+	end
+	local oh = rootOf(best)
+	if not oh then
+		return
+	end
+	FX:FireAllClients("pow", oh.Position)
+	local dir = (oh.Position - hrp.Position) * Vector3.new(1, 0, 1)
+	if dir.Magnitude < 0.1 then
+		dir = hrp.CFrame.LookVector
+	end
+	FX:FireClient(best, "knock", dir.Unit * knockMul)
+	if knockOff(best) then
+		tell(best, player.DisplayName .. " knocked your critter loose!", "bad")
+		tell(player, "Knocked it loose! Grab it!", "good")
+	end
+end
+
 local lastPunch = {}
 Punch.OnServerEvent:Connect(function(player)
+	local ch = player.Character
+	local tool = ch and ch:FindFirstChildOfClass("Tool")
+	local gid = tool and tool:GetAttribute("GearId")
+	local g = gid and Config.gearById(gid)
+	local d = PlayerData.get(player)
+	if g and not (d and d.gear[gid]) then
+		g, gid = nil, nil
+	end
 	local t = os.clock()
-	if (lastPunch[player] or 0) + Config.Punch.cooldown > t then
+	if (lastPunch[player] or 0) + (g and g.cooldown or Config.Punch.cooldown) > t then
 		return
 	end
 	lastPunch[player] = t
@@ -1254,44 +1432,39 @@ Punch.OnServerEvent:Connect(function(player)
 		return
 	end
 	local look = hrp.CFrame.LookVector
-	local best, bestD, kind = nil, math.huge, nil
-	for other in pairs(state) do
-		local oh = other ~= player and not hidden[other] and rootOf(other)
-		if oh then
-			local v = oh.Position - hrp.Position
-			local d = v.Magnitude
-			if d <= Config.Punch.reach and d < bestD and (d < 1.5 or v.Unit:Dot(look) > 0.2) then
-				best, bestD, kind = other, d, "player"
+
+	if gid == "blaster" then -- a star bolt at whoever is in front, stopped by walls and locked doors
+		local best, kind, pos = findTarget(player, hrp, g.range, 0.85)
+		local muzzle = tool:FindFirstChild("Handle") and tool.Handle:FindFirstChild("Muzzle")
+		local from = muzzle and muzzle.WorldPosition or (hrp.Position + look * 3)
+		local to = pos or (from + look * g.range)
+		local ignore = { map.critterFolder }
+		for p in pairs(state) do
+			if p.Character then
+				table.insert(ignore, p.Character)
 			end
 		end
-	end
-	for _, bot in ipairs(bots) do
-		local v = bot.pos - hrp.Position
-		local d = v.Magnitude
-		if d <= Config.Punch.reach + 2 and d < bestD and (d < 1.5 or v.Unit:Dot(look) > 0.1) then
-			best, bestD, kind = bot, d, "bot"
+		for _, bot in ipairs(bots) do
+			table.insert(ignore, bot.model)
 		end
-	end
-	FX:FireAllClients("swing", hrp.Position + look * 3)
-	if not best then
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = ignore
+		local ray = workspace:Raycast(from, to - from, params)
+		if ray then
+			to, best = ray.Position, nil
+		end
+		FX:FireAllClients("blast", player, from, to, best ~= nil)
+		if best then
+			hit(player, hrp, best, kind, g.knock, g.stun)
+		end
 		return
 	end
-	if kind == "bot" then
-		best.stunUntil = t + Config.Bots.stunSeconds
-		FX:FireAllClients("pow", best.pos)
-		tell(player, "Parker Bot stunned!", "good")
-		return
-	end
-	local oh = rootOf(best)
-	FX:FireAllClients("pow", oh.Position)
-	local dir = (oh.Position - hrp.Position) * Vector3.new(1, 0, 1)
-	if dir.Magnitude < 0.1 then
-		dir = look
-	end
-	FX:FireClient(best, "knock", dir.Unit)
-	if knockOff(best) then
-		tell(best, player.DisplayName .. " knocked your critter loose!", "bad")
-		tell(player, "Knocked it loose! Grab it!", "good")
+
+	local best, kind = findTarget(player, hrp, g and g.reach or Config.Punch.reach, 0.2)
+	FX:FireAllClients("swing", hrp.Position + look * 3, player, gid or "fist")
+	if best then
+		hit(player, hrp, best, kind, g and g.knock or 1, g and g.stun or Config.Bots.stunSeconds)
 	end
 end)
 
@@ -1416,6 +1589,10 @@ RunService.Heartbeat:Connect(function(dt)
 					end
 				end
 			end
+			if chasing and bot.target ~= chasing then
+				sfx("bot", bot.pos)
+			end
+			bot.target = chasing
 			if chasing then
 				local hp = rootOf(chasing).Position
 				goal, speed = Vector3.new(hp.X, 3.5, hp.Z), Config.Bots.chaseSpeed

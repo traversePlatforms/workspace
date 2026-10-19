@@ -136,6 +136,55 @@ Config.Punch = { reach = 7, cooldown = 0.6, knock = 55, floorSeconds = 20 }
 -- Parker Bots patrol the walkways: chase anyone carrying a critter, take it, and zap them home
 Config.Bots = { count = 3, speed = 8, chaseSpeed = 17, -- a bit slower (2026-10-18): walking is 16, sprinting 27
 	sight = 45, reach = 4.5, stunSeconds = 3 }
+-- the Gear Bay beside the launch tunnel (2026-10-18, Matthew: "equipment and weapons, maybe 2 offensive weapons").
+-- Bought once with Stardust and kept. Weapons go in your backpack (number keys, or tap the icon on a tablet); use them with
+-- Q, a click, or the PUNCH button, which turns into the weapon's button while you hold one.
+Config.Gear = {
+	{ id = "glove", name = "Boing Glove", kind = "weapon", price = 250, button = "BOING",
+		reach = 13, cooldown = 0.9, knock = 1.8, stun = 4,
+		blurb = "A boxing glove on a spring. Hits from far away and sends people flying." },
+	{ id = "blaster", name = "Star Blaster", kind = "weapon", price = 2000, button = "ZAP",
+		range = 70, cooldown = 1.4, knock = 0.7, stun = 6,
+		blurb = "Shoots a star bolt at whoever is in front of you. Knocks critters loose and stuns Parker Bots." },
+	{ id = "boots", name = "Jet Boots", kind = "equipment", price = 900,
+		jumpHeight = 12, boost = 58,
+		blurb = "Always on once bought: jump higher, and press jump again in the air for a rocket boost." },
+}
+function Config.gearById(id)
+	for _, g in ipairs(Config.Gear) do
+		if g.id == id then
+			return g
+		end
+	end
+	return nil
+end
+
+-- sounds (2026-10-18). Ids from the Roblox Creator Store: Roblox's own sounds and the ProSoundEffects and APM Music
+-- libraries, which Roblox licenses free for every game. Picked by title, not by ear: swap any id you don't like.
+Config.Sounds = {
+	music = { id = 1844643755, volume = 0.25 }, -- APM "Space Adventures", loops
+	night = { id = 140269757258221, volume = 0.5 }, -- APM "Eerie Drone", during Black Hole Night
+	click = { id = 6042053626, volume = 0.4 },
+	buy = { id = 127645268874265, volume = 0.6 }, -- Roblox CoinTransfer_01
+	star = { id = 9126073001, volume = 0.35 },
+	home = { id = 9116394545, volume = 0.6 },
+	alarm = { id = 9125898704, volume = 0.5, stopAfter = 2.5 },
+	shower = { id = 12222095, volume = 0.6 }, -- Roblox "Rocket whoosh 01"
+	booped = { id = 9117841338, volume = 0.7 },
+	swing = { id = 9113305311, volume = 0.5 },
+	glove = { id = 9113305619, volume = 0.6 },
+	pow = { id = 9117969717, volume = 0.6 },
+	zapped = { id = 9114277757, volume = 0.6 },
+	blaster = { id = 1836246284, volume = 0.5, stopAfter = 1.2 }, -- APM "Laser Short"
+	bolt = { id = 9117841516, volume = 0.6 },
+	lock = { id = 9117297453, volume = 0.5 },
+	unlock = { id = 9117297453, volume = 0.5, pitch = 0.7 },
+	sell = { id = 9113728042, volume = 0.5 },
+	expand = { id = 1839901345, volume = 0.5 },
+	gear = { id = 1839901345, volume = 0.6 },
+	boost = { id = 9120006514, volume = 0.45, stopAfter = 1 },
+	bot = { id = 9119100090, volume = 0.6 },
+}
 Config.StealHold = 1.5 -- seconds to hold E to steal
 Config.CatchDistance = 7 -- owner this close to a thief takes their critter back
 Config.AutosaveEvery = 60

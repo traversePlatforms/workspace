@@ -131,7 +131,7 @@ local Drop = remotes:WaitForChild("Drop")
 local dropBtn = Instance.new("TextButton")
 dropBtn.Name = "Drop"
 dropBtn.AnchorPoint = Vector2.new(0.5, 1)
-dropBtn.Position = UDim2.new(0.5, 0, 1, -66)
+dropBtn.Position = UDim2.new(0.5, 0, 1, -122) -- above the sprint bar and the backpack bar (2026-10-18)
 dropBtn.Size = UDim2.fromOffset(240, 54)
 dropBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 60)
 dropBtn.Font = Enum.Font.FredokaOne
@@ -198,8 +198,14 @@ end
 -- ---------- punch (2026-10-18): Q, a click, or the PUNCH button. Knocks a carried critter loose, stuns a Parker Bot ----------
 local Punch = remotes:WaitForChild("Punch")
 local lastPunch = 0
+-- holding a Gear Bay weapon turns a punch into that weapon (2026-10-18): the server checks what is in your hand
+local function heldTool()
+	local ch = player.Character
+	return ch and ch:FindFirstChildOfClass("Tool")
+end
 local function punch()
-	if os.clock() - lastPunch < Config.Punch.cooldown then
+	local tool = heldTool()
+	if os.clock() - lastPunch < (tool and tool:GetAttribute("Cooldown") or Config.Punch.cooldown) then
 		return
 	end
 	lastPunch = os.clock()
@@ -230,6 +236,35 @@ if UIS.TouchEnabled then
 	pp.PaddingLeft, pp.PaddingRight = UDim.new(0, 14), UDim.new(0, 14)
 	pp.Parent = pb
 	pb.Activated:Connect(punch)
+	-- the button says what it does: PUNCH, or BOING / ZAP while you hold a weapon
+	local function relabel()
+		local tool = heldTool()
+		pb.Text = tool and (tool:GetAttribute("Button") or "USE") or "PUNCH"
+		pb.BackgroundColor3 = (tool and tool:GetAttribute("GearId") == "blaster") and Color3.fromRGB(70, 140, 230) or Color3.fromRGB(230, 90, 70)
+	end
+	local function watch(ch)
+		ch.ChildAdded:Connect(relabel)
+		ch.ChildRemoved:Connect(relabel)
+		relabel()
+	end
+	player.CharacterAdded:Connect(watch)
+	if player.Character then
+		watch(player.Character)
+	end
+end
+-- a tap on the screen while holding a weapon (how tablets use tools) fires it too
+local hooked = {}
+local function hookTools(ch)
+	ch.ChildAdded:Connect(function(t)
+		if t:IsA("Tool") and not hooked[t] then
+			hooked[t] = true
+			t.Activated:Connect(punch)
+		end
+	end)
+end
+player.CharacterAdded:Connect(hookTools)
+if player.Character then
+	hookTools(player.Character)
 end
 
 RunService.Heartbeat:Connect(function()

@@ -12,7 +12,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase } -- found: the Collection Book; pet: the critter that follows you
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {} } -- found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -36,6 +36,13 @@ local function clean(d)
 	end
 	if typeof(d.pedestals) == "number" then
 		out.pedestals = math.clamp(math.floor(d.pedestals), Config.PedestalsPerBase, Config.MaxPedestals)
+	end
+	if typeof(d.gear) == "table" then
+		for id, v in pairs(d.gear) do
+			if v == true and Config.gearById(id) then
+				out.gear[id] = true
+			end
+		end
 	end
 	if typeof(d.pet) == "string" and Config.fromKey(d.pet) then
 		out.pet = d.pet

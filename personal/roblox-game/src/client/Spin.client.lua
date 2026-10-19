@@ -69,6 +69,31 @@ RunService.RenderStepped:Connect(function(dt)
 	end
 end)
 
+-- things that bob up and down (the UFO) and lights that blink (rocket beacons) (2026-10-18)
+local bobbers, blinkers = {}, {}
+for _, obj in ipairs(decor:GetDescendants()) do
+	if obj:IsA("Model") and obj:GetAttribute("Bob") then
+		table.insert(bobbers, { obj = obj, h = obj:GetAttribute("Bob"), last = 0 })
+	elseif obj:IsA("BasePart") and obj:GetAttribute("Blink") then
+		table.insert(blinkers, obj)
+	end
+end
+local clock = 0
+RunService.RenderStepped:Connect(function(dt)
+	clock += dt
+	for _, b in ipairs(bobbers) do
+		if b.obj.Parent then
+			local y = math.sin(clock * 1.6) * b.h
+			b.obj:PivotTo(b.obj:GetPivot() + Vector3.new(0, y - b.last, 0))
+			b.last = y
+		end
+	end
+	local on = math.floor(clock * 1.5) % 2 == 0
+	for _, p in ipairs(blinkers) do
+		p.Transparency = on and 0 or 0.85
+	end
+end)
+
 -- shooting stars
 local rng = Random.new()
 task.spawn(function()

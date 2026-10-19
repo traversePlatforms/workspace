@@ -63,9 +63,10 @@ end
 
 local function setupSky()
 	Lighting.ClockTime = 0
-	Lighting.Brightness = 1.2
-	Lighting.Ambient = Color3.fromRGB(70, 80, 115)
-	Lighting.OutdoorAmbient = Color3.fromRGB(90, 100, 140)
+	Lighting.Brightness = 2 -- brighter (2026-10-18, Matthew)
+	Lighting.Ambient = Color3.fromRGB(122, 130, 168)
+	Lighting.OutdoorAmbient = Color3.fromRGB(140, 150, 190)
+	Lighting.ExposureCompensation = 0.25
 	Lighting.GlobalShadows = true
 	Lighting.FogEnd = 100000
 	for _, c in ipairs(Lighting:GetChildren()) do
@@ -89,6 +90,47 @@ local function planets(folder)
 	local blue = part(folder, { Name = "BluePlanet", Shape = Enum.PartType.Ball, Size = Vector3.new(110, 110, 110), Color = C.Blue, Material = Enum.Material.Neon, CFrame = CFrame.new(460, 120, -360), CanCollide = false })
 	part(folder, { Name = "Ring", Shape = Enum.PartType.Cylinder, Size = Vector3.new(2, 220, 220), Color = C.Trim, Material = Enum.Material.Neon, Transparency = 0.4, CFrame = blue.CFrame * CFrame.Angles(0, 0, math.rad(80)) * CFrame.Angles(math.rad(15), 0, 0), CanCollide = false })
 	part(folder, { Name = "Moon", Shape = Enum.PartType.Ball, Size = Vector3.new(50, 50, 50), Color = Color3.fromRGB(205, 205, 215), Material = Enum.Material.Slate, CFrame = CFrame.new(150, 140, 420), CanCollide = false })
+
+	-- more space out the windows (2026-10-18, Matthew: "a little more space related things"): Earth, Mars, a striped giant
+	local function blob(parent, center, radius, dir, size, color, material, transparency)
+		local p = part(parent, { Name = "Patch", Size = size, Color = color, Material = material or Enum.Material.SmoothPlastic, Transparency = transparency or 0, CanCollide = false, CastShadow = false,
+			CFrame = CFrame.lookAt(center, center + dir) * CFrame.new(0, 0, -(radius - size.Z * 0.3)) })
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Sphere
+		mesh.Parent = p
+		return p
+	end
+	local rng = Random.new(2026)
+	local earthAt, er = Vector3.new(-90, 75, -520), 70
+	part(folder, { Name = "Earth", Shape = Enum.PartType.Ball, Size = Vector3.new(er * 2, er * 2, er * 2), Color = Color3.fromRGB(40, 110, 225), CFrame = CFrame.new(earthAt), CanCollide = false })
+	for _ = 1, 9 do -- green and sandy continents, then white clouds, mostly on the side facing the station
+		local dir = (Vector3.new(rng:NextNumber(-1, 1), rng:NextNumber(-0.8, 0.8), rng:NextNumber(0.2, 1))).Unit
+		blob(folder, earthAt, er, dir, Vector3.new(rng:NextNumber(28, 52), rng:NextNumber(20, 40), 10), rng:NextNumber() < 0.75 and Color3.fromRGB(70, 170, 80) or Color3.fromRGB(210, 190, 120))
+	end
+	for _ = 1, 8 do
+		local dir = (Vector3.new(rng:NextNumber(-1, 1), rng:NextNumber(-1, 1), rng:NextNumber(0, 1))).Unit
+		blob(folder, earthAt, er + 2, dir, Vector3.new(rng:NextNumber(24, 44), rng:NextNumber(6, 12), 6), Color3.fromRGB(250, 252, 255), Enum.Material.SmoothPlastic, 0.15)
+	end
+	part(folder, { Name = "EarthGlow", Shape = Enum.PartType.Ball, Size = Vector3.new(er * 2 + 8, er * 2 + 8, er * 2 + 8), Color = Color3.fromRGB(150, 210, 255), Material = Enum.Material.Neon, Transparency = 0.88, CFrame = CFrame.new(earthAt), CanCollide = false })
+
+	local marsAt, mr = Vector3.new(540, 50, 140), 34
+	part(folder, { Name = "Mars", Shape = Enum.PartType.Ball, Size = Vector3.new(mr * 2, mr * 2, mr * 2), Color = Color3.fromRGB(205, 92, 58), Material = Enum.Material.Slate, CFrame = CFrame.new(marsAt), CanCollide = false })
+	for _ = 1, 7 do
+		local dir = (Vector3.new(rng:NextNumber(-1, 0), rng:NextNumber(-0.8, 0.8), rng:NextNumber(-1, 1))).Unit
+		blob(folder, marsAt, mr, dir, Vector3.new(rng:NextNumber(6, 14), rng:NextNumber(6, 14), 3), Color3.fromRGB(150, 62, 40), Enum.Material.Slate)
+	end
+	blob(folder, marsAt, mr + 0.5, Vector3.new(0, 1, 0), Vector3.new(26, 26, 4), Color3.fromRGB(245, 245, 250)) -- the ice cap
+
+	-- the striped giant: thin discs a touch wider than the planet at each height show as bands round it
+	local gasAt, gr = Vector3.new(-560, 110, -120), 95
+	part(folder, { Name = "GasGiant", Shape = Enum.PartType.Ball, Size = Vector3.new(gr * 2, gr * 2, gr * 2), Color = Color3.fromRGB(226, 196, 150), CFrame = CFrame.new(gasAt), CanCollide = false })
+	local bands = { Color3.fromRGB(196, 140, 96), Color3.fromRGB(240, 222, 190), Color3.fromRGB(176, 120, 84), Color3.fromRGB(232, 206, 160) }
+	for i, y in ipairs({ -60, -38, -16, 8, 30, 52, 70 }) do
+		local r = math.sqrt(gr * gr - y * y) + 0.8
+		part(folder, { Name = "Band", Shape = Enum.PartType.Cylinder, Size = Vector3.new(9, r * 2, r * 2), Color = bands[(i - 1) % #bands + 1], CanCollide = false, CastShadow = false,
+			CFrame = CFrame.new(gasAt + Vector3.new(0, y, 0)) * CFrame.Angles(0, 0, math.rad(90)) })
+	end
+	blob(folder, gasAt, gr + 1.5, Vector3.new(1, -0.25, 0.35).Unit, Vector3.new(34, 18, 6), Color3.fromRGB(200, 90, 60)) -- the big red spot
 end
 
 -- a base faces the launch pad: its front (local -Z) points at z = 0
@@ -251,7 +293,7 @@ function MapBuilder.build()
 	spawn.Name = "Spawn"
 	spawn.Anchored = true
 	spawn.Size = Vector3.new(12, 1, 12)
-	spawn.CFrame = CFrame.new(-112, 0.5, 0)
+	spawn.CFrame = CFrame.new(-112, 0.5, 0) * CFrame.Angles(0, math.rad(-90), 0) -- you arrive facing the launch tunnel (2026-10-18)
 	spawn.Color = C.Blue
 	spawn.Material = Enum.Material.Neon
 	spawn.Duration = 0
@@ -267,9 +309,9 @@ function MapBuilder.build()
 	critters.Name = "Critters"
 	critters.Parent = station
 
-	local lockers = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
+	local lockers, gearStands = require(script.Parent.Decor).build(station, bases) -- the hangar shell, tunnel, props, asteroids and the hiding lockers (2026-10-18)
 
-	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers }
+	return { bases = bases, padStart = padStart, padEnd = padEnd, padY = padY, critterFolder = critters, lockers = lockers, gearStands = gearStands }
 end
 
 return MapBuilder

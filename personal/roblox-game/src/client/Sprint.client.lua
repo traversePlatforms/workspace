@@ -21,7 +21,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 -- the energy bar, bottom middle
 local bar = Instance.new("Frame")
 bar.AnchorPoint = Vector2.new(0.5, 1)
-bar.Position = UDim2.new(0.5, 0, 1, -28)
+bar.Position = UDim2.new(0.5, 0, 1, -84) -- above Roblox's backpack bar, where weapons show up (2026-10-18)
 bar.Size = UDim2.fromOffset(300, 26)
 bar.BackgroundColor3 = C.Dark
 bar.BackgroundTransparency = 0.15
