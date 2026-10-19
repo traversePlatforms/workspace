@@ -62,6 +62,7 @@ SRV=$($SG "cd ~/www/traverseplatforms.com && \
   echo api \$(curl -s -o /dev/null -w '%{http_code}' 'https://traverseplatforms.com/api/rounds.php?action=regions'); \
   echo towns \$(python3 -c \"import json;print(len(json.load(open('sixfold-data/rounds/index.json'))['regions']))\" 2>/dev/null || echo unreadable); \
   echo fatal \$(find public_html/api/php_errorlog -mmin -60 2>/dev/null | xargs -r tail -200 | grep -c 'PHP Fatal'); \
+  echo fbsetup \$([ -f sixfold-private/meta-setup.json ] && echo waiting || echo done); \
   echo disk \$(df -P ~ | awk 'NR==2{print \$5}')" < /dev/null 2>/dev/null)
 v() { echo "$SRV" | awk -v k="$1" '$1==k{print $2}'; }
 [ -z "$SRV" ] && bad "could not reach the server over SSH (internet down?)" || {
@@ -70,6 +71,8 @@ v() { echo "$SRV" | awk -v k="$1" '$1==k{print $2}'; }
   [ "$(v towns)" -ge 84 ] 2>/dev/null && ok "Sixfold town list readable: $(v towns) towns" || bad "Sixfold town list: $(v towns) (expected 84 or more)"
   [ "$(v fatal)" = 0 ] && ok "no PHP fatal errors in the last hour" || bad "$(v fatal) PHP fatal error lines in the API log in the last hour"
   say "  info  server disk used $(v disk)"
+  # SX-62 (2026-10-19): the Facebook lead setup retries hourly on the server until Meta lifts the app restriction
+  [ "$(v fbsetup)" = waiting ] && say "  info  Facebook leads: still waiting on Meta (app restricted); the server retries every hour" || say "  ok    Facebook leads: CONNECTED (setup done; tell Matthew, check the backlog came in)"
 }
 
 # 4. Windows tasks on this computer (backups)
