@@ -1908,7 +1908,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -4655,23 +4655,45 @@ function jobKnownPays(array $j, array $l): array {
     $orders = array_filter([(string) ($l['sign']['pay']['order'] ?? ''), (string) ($j['sqlink']['order'] ?? '')]);
     return [$ids, $orders];
 }
-function squareBalancePaid(array $j, array $l): ?array {
+function squarePaymentsSince(int $from, int $pages = 4): ?array {   /* the payments at our location since a time; null when Square does not answer */
+    $cfg = squareCfg(); if (!$cfg) return null;
+    $since = gmdate('Y-m-d\TH:i:s\Z', $from); $cur = ''; $out = [];
+    for ($pg = 0; $pg < $pages; $pg++) {
+        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . '&location_id=' . rawurlencode((string) $cfg['location']) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
+        if (($r['_status'] ?? 0) !== 200 && empty($r['payments'])) return $pg ? $out : null;
+        foreach (($r['payments'] ?? []) as $py) $out[] = $py;
+        $cur = (string) ($r['cursor'] ?? ''); if ($cur === '') break;
+    }
+    return $out;
+}
+function squareBalancePaid(array $j, array $l, ?array $pays = null): ?array {
     $cust = (string) ($l['sqcust'] ?? ''); $owed = jobOwed($j); $cfg = squareCfg();
     if ($cust === '' || $owed < 1 || !$cfg) return null;
     [$ids, $orders] = jobKnownPays($j, $l);
-    $since = gmdate('Y-m-d\TH:i:s\Z', max(0, (int) ($j['at'] ?? time()) - 3 * 86400)); $cur = ''; $sum = 0; $hit = null;
-    for ($pg = 0; $pg < 4; $pg++) {
-        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . '&location_id=' . rawurlencode((string) $cfg['location']) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
-        foreach (($r['payments'] ?? []) as $py) {
+    if ($pays === null) $pays = squarePaymentsSince(max(0, (int) ($j['at'] ?? time()) - 3 * 86400)) ?? [];
+    $sum = 0; $hit = null;
+    for ($pg = 0; $pg < 1; $pg++) {
+        foreach ($pays as $py) {
             if (($py['status'] ?? '') !== 'COMPLETED' || (string) ($py['customer_id'] ?? '') !== $cust) continue;
             if (in_array((string) $py['id'], $ids, true) || in_array((string) ($py['order_id'] ?? ''), $orders, true)) continue;
             $sum += (int) ($py['amount_money']['amount'] ?? 0) - (int) ($py['refunded_money']['amount'] ?? 0);
             if (!$hit || strcmp((string) $py['created_at'], (string) $hit['created_at']) > 0) $hit = $py;
         }
-        $cur = (string) ($r['cursor'] ?? ''); if ($cur === '') break;
     }
     if (!$hit || $sum < $owed * 100) return null;
     return ['payment' => (string) $hit['id'], 'amt' => intdiv($sum, 100), 'last4' => (string) ($hit['card_details']['card']['last_4'] ?? ''), 'brand' => (string) ($hit['card_details']['card']['card_brand'] ?? ''), 'when' => (string) $hit['created_at']];
+}
+/* the sweep: every job still owing from a customer in Square, against one fetch of Square's recent payments (2026-10-19) */
+function squareSweep(): array {
+    if (!squareCfg()) return ['ok' => false, 'error' => 'Square is not connected.'];
+    $leads = leadsAll(); $owing = []; $from = time();
+    foreach (jobsAll() as $j) { if ($j['off'] || jobOwed($j) < 1) continue; $l = $leads[$j['lead']] ?? null; if (!$l || empty($l['sqcust'])) continue; $owing[] = [$j, $l]; $from = min($from, (int) ($j['at'] ?? time())); }
+    if (!$owing) return ['ok' => true, 'owing' => 0, 'paid' => 0];
+    $pays = squarePaymentsSince(max(time() - 45 * 86400, $from - 3 * 86400), 10);
+    if ($pays === null) return ['ok' => false, 'error' => 'Square did not answer.'];
+    $paid = 0;
+    foreach ($owing as [$j, $l]) { $f = squareBalancePaid($j, $l, $pays); if ($f) { jobSquareFound((string) $j['id'], $f, 'by the Square check'); $paid++; } }
+    return ['ok' => true, 'owing' => count($owing), 'paid' => $paid];
 }
 /* record it: the job paid by Square, a note, the office told, the aftercare */
 function jobSquareFound(string $jid, array $f, string $how): void {
@@ -6540,7 +6562,13 @@ function squareNightly(): array {
 if ($action === 'squarenightly') {   /* sixfold-tools/square-check.php, command line only */
     if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
     @ini_set('memory_limit', '512M'); @set_time_limit(300);
-    out(squareNightly());
+    $sw = squareSweep();   /* balances paid straight in Square (2026-10-19) */
+    out(squareNightly() + ['swept' => $sw]);
+}
+if ($action === 'squaresweep') {   /* sixfold-tools/square-check.php every 15 minutes, command line only (2026-10-19) */
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    @set_time_limit(120);
+    out(squareSweep());
 }
 if ($action === 'squarecheckrun' || $action === 'squareok') {   /* the Payments page: Check now, Leave it */
     if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);

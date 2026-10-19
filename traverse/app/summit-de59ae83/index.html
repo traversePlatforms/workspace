@@ -1840,6 +1840,9 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   #vabar b{font-weight:800}
   #vabar button{border:0;border-radius:10px;padding:8px 12px;background:#fff;color:#1d6fe0;font:800 13px var(--sans);cursor:pointer}
   #vabar button.alt{background:rgba(255,255,255,.2);color:#fff}
+  #vabar.vawrite{background:#c2410c}
+  #vabar.vawrite button{color:#c2410c}
+  #vabar.vawrite button.alt{color:#fff}
   body.dk-on #vabar{bottom:86px}
   body.va-on{padding-bottom:72px}
   .vapick{position:fixed;inset:0;z-index:9001;background:rgba(10,20,15,.55);display:grid;place-items:center;padding:16px}
@@ -2476,10 +2479,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var VA_KEY = 'viewas:' + location.pathname;
   function vaId() { try { return sessionStorage.getItem(VA_KEY) || ''; } catch (e) { return ''; } }
   function vaSet(id) { try { if (id) sessionStorage.setItem(VA_KEY, id); else sessionStorage.removeItem(VA_KEY); } catch (e) {} }
-  function vaHeaders(action, h) { var v = vaId(); if (v && action !== 'viewaslist' && action !== 'signin') h['X-View-As'] = v; return h; }
+  /* Make changes (2026-10-19): a save is sent as the super admin himself, not as the person looked through; reading stays theirs */
+  function vaWriteOn() { try { return !!vaId() && sessionStorage.getItem(VA_KEY + ':write') === '1'; } catch (e) { return false; } }
+  function vaWriteSet(on) { try { if (on) sessionStorage.setItem(VA_KEY + ':write', '1'); else sessionStorage.removeItem(VA_KEY + ':write'); } catch (e) {} }
+  function vaHeaders(action, h) { var v = vaId(); if (v && action !== 'viewaslist' && action !== 'signin' && !(vaWriteOn() && h['Content-Type'])) h['X-View-As'] = v; return h; }
   function vaGo(id) {   /* switch to someone, or back to your own ('') */
     if (S.viewing) { var n = S.viewing.name; setQueue(queue().filter(function (x) { return x.who !== n; })); }   /* nothing left waiting in their name */
-    vaSet(id); location.reload();
+    vaSet(id); vaWriteSet(false); location.reload();
   }
   var VA_TABS = [['office', 'Office'], ['quote', 'Quote only'], ['manager', 'Manager'], ['rep', 'Door reps'], ['jobcrew', 'Job crew']];
   function vaGroup(p) { return p.role === 'office' || p.role === 'quote' || p.role === 'manager' ? p.role : (p.jobs || p.walker) ? 'jobcrew' : 'rep'; }
@@ -2489,8 +2495,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     document.body.classList.toggle('va-on', !!S.viewing);
     if (!S.viewing) return;
     var b = q('div'); b.id = 'vabar'; b.setAttribute('role', 'status');
-    var t = q('span'); t.appendChild(document.createTextNode('Seeing ')); t.appendChild(q('b', null, S.viewing.name)); t.appendChild(document.createTextNode(' \u00b7 ' + vaRoleName(S.viewing.role) + ' \u00b7 looking only'));
+    var wr = vaWriteOn();
+    var t = q('span'); t.appendChild(document.createTextNode('Seeing ')); t.appendChild(q('b', null, S.viewing.name)); t.appendChild(document.createTextNode(' \u00b7 ' + vaRoleName(S.viewing.role) + ' \u00b7 ' + (wr ? 'changes save as you' : 'looking only')));
     b.appendChild(t);
+    if (wr) b.classList.add('vawrite');
+    var mc = q('button', wr ? null : 'alt', wr ? 'Stop changes' : 'Make changes'); mc.type = 'button';
+    mc.addEventListener('click', function () {
+      if (!wr && !window.confirm('Make changes from ' + S.viewing.name + '\u2019s screen?\n\nWhatever you do here is saved under your own name, with your own rights, not as ' + S.viewing.name + '. Use it to fix something urgent or to test.')) return;
+      vaWriteSet(!wr); vaBar(); if (!wr) toast('Changes on', 'What you do now is saved as you, from ' + S.viewing.name + '\u2019s screen.', null);
+    });
+    b.appendChild(mc);
     var sw = q('button', null, 'Switch'); sw.type = 'button'; sw.addEventListener('click', vaPicker); b.appendChild(sw);
     var bk = q('button', 'alt', 'Back to mine'); bk.type = 'button'; bk.addEventListener('click', function () { vaGo(''); }); b.appendChild(bk);
     document.body.appendChild(b);
@@ -2542,6 +2556,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         .then(function (j) {
           j._status = r.status; if (fromSaved) j._saved = true;
           if (j.why === 'viewgone') { vaSet(''); location.reload(); }   /* the account looked through was switched off or removed */
+          if (j.why === 'viewing') { j.error = 'Looking only. To save from here, tap Make changes on the blue bar.'; setTimeout(function () { toast('Looking only', 'To save from ' + ((S.viewing && S.viewing.name) || 'their') + '\u2019s screen, tap Make changes on the blue bar. It saves as you.', null); }, 0); }
           if (r.status === 401 && j.why === 'elsewhere') S.outWhy = j.error;   /* one device at a time (2026-10-12): say why, on the sign-in screen */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(areaFill);   /* before trimCard, which takes away the parts an edition does not have */
           if (TRIM_ACTIONS[action]) trimCard(j);
@@ -2567,7 +2582,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function mine(x) { return !x.who || x.who === S.me; }       /* items from before 'who' existed go with whoever is signed in */
   var flushing = null;
   function flush() {
-    if (S.viewing) return Promise.resolve();   /* looking through someone else's eyes: nothing sends (2026-10-19) */
+    if (S.viewing && !vaWriteOn()) return Promise.resolve();   /* looking through someone else's eyes: nothing sends, unless Make changes is on (2026-10-19) */
     if (flushing) return flushing;
     var skip = 0;
     flushing = (function step() {
@@ -5646,7 +5661,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       sl.addEventListener('click', function () { sl.disabled = true; api('squarelook', { body: { id: jb.id } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') : 'The job now shows paid.', null); redraw(); } else toast('No payment found', j.why || 'Nothing in Square covers the ' + money0(owe) + ' balance yet.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); }); });
       w.appendChild(sl);
       var slSay = q('div', 'ltrynote'); w.appendChild(slSay);
-      if (jb.cof && !S.viewing) {   /* a card on file means a Square customer: ask Square by itself when the job opens (2026-10-19) */
+      if (jb.cof && (!S.viewing || vaWriteOn())) {   /* a card on file means a Square customer: ask Square by itself when the job opens (2026-10-19) */
         slSay.textContent = 'Checking Square for a payment\u2026';
         api('squarelook', { body: { id: jb.id } }).then(function (j) {
           if (j && j.ok && j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') + '. The job now shows paid.' : 'The job now shows paid.', null); redraw(); return; }
