@@ -2950,7 +2950,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -5685,14 +5685,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     w.appendChild(q('div', 'dwh', 'Aftercare'));
     var A = jb.aftercare, isDone = !!(jb.done && jb.done.o === 'done');
-    w.appendChild(q('div', 'qline' + (A && A.ok ? ' qyes' : ''), A ? (A.ok ? 'Aftercare emailed to ' + A.to + ', ' + ago(A.at) : 'Aftercare email not sent: ' + afWhy(A.stage) + '.') : isDone ? (owe > 0 ? 'The aftercare email goes once the balance is settled: the card charged, marked paid, or a pay link made (the link goes in it).' : 'The aftercare email goes now that it is done.') : 'The aftercare email goes after the job is marked done and the balance is settled.'));
+    if (!S.a365mail) w.appendChild(q('div', 'ltrynote', isDone ? 'Send the care tips from your own email or as a text. The balance line is filled in for you.' : 'The aftercare buttons show once the job is marked done.'));   /* no mailbox: by hand, like the quotes (2026-10-19) */
+    else w.appendChild(q('div', 'qline' + (A && A.ok ? ' qyes' : ''), A ? (A.ok ? 'Aftercare emailed to ' + A.to + ', ' + ago(A.at) : 'Aftercare email not sent: ' + afWhy(A.stage) + '.') : isDone ? (owe > 0 ? 'The aftercare email goes once the balance is settled: the card charged, marked paid, or a pay link made (the link goes in it).' : 'The aftercare email goes now that it is done.') : 'The aftercare email goes after the job is marked done and the balance is settled.'));
     if (isDone) {
       var r2 = q('div', 'lcontact');
       var se = q('button', 'lnk', A && A.ok ? 'Email it again' : 'Send the aftercare email now'); se.type = 'button';
       se.addEventListener('click', function () { se.disabled = true; api('aftercare', { body: { id: jb.id } }).then(function (j) { se.disabled = false; if (!j.ok) toast('Not emailed', j.error || afWhy(j.stage), null); else toast('Aftercare emailed', j.to, null); redraw(); }).catch(function () { se.disabled = false; toast('No signal', 'Try again.', null); }); });
-      r2.appendChild(se);
+      if (S.a365mail) r2.appendChild(se);
       var tel = digits(jb.who && jb.who.phone);
-      if (tel.length >= 10) { var at = q('a'); at.href = 'sms:' + tel + '?&body=' + encodeURIComponent(aftercareText(jb, owe)); at.appendChild(ico('chat', 2.2)); at.appendChild(document.createTextNode('Text it instead')); r2.appendChild(at); }
+      if (tel.length >= 10) { var at = q('a'); at.href = 'sms:' + tel + '?&body=' + encodeURIComponent(aftercareText(jb, owe)); at.appendChild(ico('chat', 2.2)); at.appendChild(document.createTextNode(S.a365mail ? 'Text it instead' : 'Text it')); r2.appendChild(at); }
       var em = aftercareMail(jb, owe), to = (jb.who && jb.who.email) || '';
       if (to) { var am = q('a'); am.href = 'mailto:' + encodeURIComponent(to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(em.subject) + '&body=' + encodeURIComponent(em.body); am.appendChild(ico('mail', 2.2)); am.appendChild(document.createTextNode('Email it from my email')); r2.appendChild(am); }
       var cpb = q('button', 'lnk', 'Copy the email'); cpb.type = 'button'; cpb.addEventListener('click', function () { copyText(em.subject + '\n\n' + em.body, 'The aftercare email: paste it into your own email'); }); r2.appendChild(cpb);
@@ -5836,7 +5837,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tsv.addEventListener('click', function () { var mm = (+th.value) * 60 + (+tmn.value); if (mm < 5) { terr.textContent = 'Add about how long it took.'; return; } done('done', { mins: mm, note: jb.done.note || '', collected: jb.done.collected || 0 }, tsv, terr); });
         c.appendChild(tw);
       }
-      if (jb.done.o === 'done' && owe > 0) c.appendChild(q('div', 'ltrynote', 'Balance ' + money0(owe) + ' still owing' + ((S.pays || wdOn()) ? (jb.cof ? ': charge the card on file above, or make a pay link.' : ': make a pay link above, or the office follows up.') : ': the office follows up.') + ' The aftercare email goes once it is settled.'));   /* ask first: nothing is charged by itself */
+      if (jb.done.o === 'done' && owe > 0) c.appendChild(q('div', 'ltrynote', 'Balance ' + money0(owe) + ' still owing' + ((S.pays || wdOn()) ? (jb.cof ? ': charge the card on file above, or make a pay link.' : ': make a pay link above, or the office follows up.') : ': the office follows up.') + (S.a365mail ? ' The aftercare email goes once it is settled.' : '')));   /* ask first: nothing is charged by itself */
     } else {
       /* 2026-10-19 (Matthew): each one opens its own notes. Done asks about how long it took, an estimate in hours and minutes ("this is going
          to help us track how long it takes to do the job, how long it takes to do certain sized lawns"); Could not do it needs what happened */
@@ -16032,7 +16033,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -16040,7 +16041,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

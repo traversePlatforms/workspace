@@ -1797,7 +1797,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2639,7 +2639,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -4724,6 +4724,7 @@ function jobAftercare(string $jid, string $why, bool $again = false): array {
     if (!$again && !empty($j['aftercare']['ok'])) return ['ok' => true, 'stage' => 'already', 'error' => ''];
     if (($j['done']['o'] ?? '') !== 'done') return ['ok' => false, 'stage' => 'notdone', 'error' => 'The job is not marked done yet.'];
     if (!jobIs365($j)) return ['ok' => false, 'stage' => 'brand', 'error' => 'This is not a 365 job.'];
+    if (!a365MailCfg()) return ['ok' => false, 'stage' => 'config', 'error' => 'No 365 mailbox: aftercare goes from Jen\'s own email or phone.'];   /* 2026-10-19: nothing tried, nothing noted */
     $l = leadsAll()[$j['lead']] ?? [];
     $to = trim((string) ($l['email'] ?? ''));
     $rec = function (array $r) use ($jid, $j, $to, $why) {
