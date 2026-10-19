@@ -79,8 +79,8 @@ end
 function BUILD.disco(m, at, display)
 	-- hangs from the base roof; on a shop stand it sits on a short pole
 	local ballY = display and 3.4 or 10
-	local top = display and 1.2 or 15.1
-	newPart(m, at, "Chain", Vector3.new(top - ballY, 0.18, 0.18), Color3.fromRGB(180, 186, 200), CFrame.new(0, (top + ballY) / 2, 0) * UP, { cyl = true, collide = false })
+	local top = display and 0.2 or 15.1 -- on a stand it's a pole up from the stand, in a base a chain down from the roof
+	newPart(m, at, "Chain", Vector3.new(math.abs(top - ballY), 0.18, 0.18), Color3.fromRGB(180, 186, 200), CFrame.new(0, (top + ballY) / 2, 0) * UP, { cyl = true, collide = false })
 	local ball = newPart(m, at, "DiscoBall", Vector3.new(2.6, 2.6, 2.6), Color3.fromRGB(225, 230, 245), CFrame.new(0, ballY, 0), { ball = true, material = Enum.Material.Foil, collide = false })
 	ball:SetAttribute("Disco", true)
 	for i, col in ipairs({ Color3.fromRGB(255, 90, 160), Color3.fromRGB(90, 200, 255), Color3.fromRGB(255, 220, 90), Color3.fromRGB(140, 255, 140) }) do
