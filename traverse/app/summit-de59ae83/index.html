@@ -1879,6 +1879,14 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .jpx .ic{width:14px;height:14px}
   .jpadd{display:inline-flex;align-items:center;gap:6px}
   .joblot{margin:12px 0 4px}
+  .qqlg{border:1px solid var(--line,#dfe5e1);border-radius:14px;margin:0 0 10px;background:var(--card,#fff);overflow:hidden}
+  .qqlg > summary{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none;font-size:15px}
+  .qqlg > summary::-webkit-details-marker{display:none}
+  .qqlg > summary::after{content:"\203a";margin-left:auto;font-weight:800;transition:transform .15s}
+  .qqlg[open] > summary::after{transform:rotate(90deg)}
+  .qqlg .qqgn{min-width:24px;padding:1px 8px;border-radius:999px;background:var(--forest,#2F5D2C);color:#fff;font-size:12px;font-weight:800;text-align:center}
+  .qqlg > summary small{color:#55635B;font-size:12px}
+  .qqlg > .qqinrow{margin:0 10px 10px}
   .jafter{margin:14px 0 4px}
   .jpaid{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
   .jpaid select{font:16px var(--sans);padding:10px 12px;border:1.5px solid #cfd6d1;border-radius:12px;background:#fff;color:#16201C}
@@ -5641,25 +5649,31 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      paid for money taken another way; the aftercare email goes by itself once the job is done and the balance settled, or by hand here; or
      as a text from her phone. Same tips as the email (CSU PlantTalk 1505 and 1516, see aeration365-site/FACT-CHECK.md) */
   function afWhy(st) { return st === 'config' ? 'the 365 mailbox is not set up yet' : st === 'noemail' ? 'there is no email address for them' : st === 'brand' ? 'this is not a 365 job' : st === 'notdone' ? 'the job is not marked done' : (st || 'try again'); }
-  function afParts(jb, owe) {   /* Randy's aftercare notes, as he wrote them (2026-10-19, Matthew: Brandon wants 365 to match Randy's company) */
+  function afParts(jb, owe) {   /* our notes and Randy's together; where they disagree, Randy's (2026-10-19, Matthew; see sixfold/content/aftercare-365-2026-10-19.md) */
     var seeded = jb.pkg !== 'aerate';
-    var did = seeded ? ['We core aerated', 'Spot sprayed large weeds', 'Laid seed', 'Laid seed, root and soil conditioner'] : ['We core aerated'];
-    var notes = seeded ? ['Don\u2019t mow for 4-7 days', 'The fertilizers are active for 60 days!', 'Germination... Don\u2019t lay any fertilizer or weed killer for 2 months', 'Bag clippings if possible'] : [];
-    notes.push('Rehabilitation of lawns depends on the damage of the individual lawn and can take months',
-      'Don\u2019t forget to follow your basic lawn care rules, this is an addition to your lawn so be sure to care for it, pull your weeds, clean up debris regularly, and be sure to water if possible');
+    var did = seeded ? ['Core aerated the lawn', 'Spot sprayed the large weeds', 'Laid seed with a root and soil conditioner'] : ['Core aerated the lawn'];
+    var notes = ['Leave the plugs on the lawn. They break down back into the grass on their own.'];
+    if (seeded) notes.push('Give the lawn a good watering soon, then water lightly and often enough to keep the soil surface moist while the new seed comes up. Germination can take up to two weeks.',
+      'Once the new grass is up and rooting, water less often but more deeply.',
+      'Don\u2019t mow for 4 to 7 days.',
+      'The fertilizer we put down stays active for about 60 days, so don\u2019t lay any fertilizer or weed killer for 2 months while the seed comes in.',
+      'Bag your clippings if you can.');
+    else notes.push('Give the lawn a good watering soon.');
+    notes.push('How quickly the lawn recovers depends on how much damage it had, and it can take a few months.',
+      'This adds to your regular lawn care, so keep up the basics: pull weeds, clean up debris regularly, and water when you can.');
     var bal = jb.sqcharge && owe < 1 ? 'You\u2019ll see a charge on your card ending in ' + jb.sqcharge.last4 + ' for the remaining balance of ' + money0(jb.sqcharge.amt) + '.' : owe < 1 ? 'Your balance is paid.' : 'Your remaining balance is ' + money0(owe) + '.' + (jb.sqlink ? ' You can pay it here: ' + jb.sqlink.url : '');
     var L = jb.who || {};
     return { did: did, notes: notes, bal: bal, B: leadBrand({ src: L.src, name: L.name }), first: greetName(L.name) };
   }
   function aftercareText(jb, owe) {
     var a = afParts(jb, owe);
-    return 'Hi ' + a.first + ', this is ' + myName() + ' with ' + a.B.name + '. Thanks for having us!\n\nOk so what did we do?\n\n' + a.did.join('\n') + '\n\nNotes:\n\n' + a.notes.join('\n\n') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn! \uD83C\uDF31';
+    return 'Hi ' + a.first + ', this is ' + myName() + ' with ' + a.B.name + '. Thanks for having us!\n\nHere\u2019s what we did:\n' + a.did.join('\n') + '\n\nA few notes:\n\n' + a.notes.join('\n\n') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn! \uD83C\uDF31';
   }
   /* the email version, sent from her own mailbox (2026-10-19) */
   function aftercareMail(jb, owe) {
     var a = afParts(jb, owe);
     return { subject: 'Your lawn after today: notes from ' + a.B.name,
-             body: 'Hi ' + a.first + ',\n\nThanks for having us! Ok so what did we do?\n\n' + a.did.map(function (t) { return '- ' + t; }).join('\n') + '\n\nNotes:\n\n' + a.notes.map(function (t) { return '- ' + t; }).join('\n') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn!' + mailSig(a.B) };
+             body: 'Hi ' + a.first + ',\n\nThanks for having us! Here\u2019s what we did:\n\n' + a.did.map(function (t) { return '- ' + t; }).join('\n') + '\n\nA few notes:\n\n' + a.notes.map(function (t) { return '- ' + t; }).join('\n') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn!' + mailSig(a.B) };
   }
   function jobAfterBox(jb, owe, redraw) {
     var w = q('div', 'jafter');
@@ -6168,7 +6182,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         L.sort(function (a, b) { return rank(a) - rank(b) || (b.at || 0) - (a.at || 0); });
         n = L.length; label();
         if (!L.length) { list.appendChild(q('div', 'msg soft', 'Nobody waiting. New enquiries from the websites, Facebook forms and the crew land here.')); return; }
-        L.forEach(function (l) { list.appendChild(quickInboxRow(l, load)); });
+        /* grouped by where each one stands (2026-10-19, Matthew: "so it's not just a 17 long list"); the ones nobody has reached open first */
+        var GRP = [['new', 'Not reached yet', true], ['talked', 'Talked to', true], ['noans', 'No answer yet', false], ['vm', 'Left a voicemail', false], ['text', 'Texted or messaged', false], ['email', 'Emailed', false], ['hold', 'On hold', false]];
+        var keyOf = function (l) { if (l.status === 'hold') return 'hold'; var g = callGroup(l); return g === 'today' || g === 'wait' || g === 'out' ? 'noans' : g; };
+        var by = {}; L.forEach(function (l) { var k = keyOf(l); (by[k] = by[k] || []).push(l); });
+        GRP.forEach(function (g) {
+          var rows = by[g[0]]; if (!rows || !rows.length) return;
+          var d = q('details', 'qqlg'); if (g[2]) d.open = true;
+          var sm = q('summary'); sm.appendChild(q('b', null, g[1])); sm.appendChild(q('span', 'qqgn', String(rows.length)));
+          var last = rows.reduce(function (m, l) { var t = lastTry(l); return t && t.at > m ? t.at : m; }, 0);
+          if (last) sm.appendChild(q('small', null, 'last try ' + ago(last)));
+          d.appendChild(sm);
+          rows.forEach(function (l) { d.appendChild(quickInboxRow(l, load)); });
+          list.appendChild(d);
+        });
       }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'Your leads need signal.')); });
     };
     S.leadRedraw = function () { if (S.screen === 'quickquote' && box.isConnected) load(); else pipelineView(); };
