@@ -4449,7 +4449,7 @@ if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'schedv
 /* paid, and what is left (2026-10-19): "Deposit $50 paid · $249 left", "Paid in full (card charged)" */
 function payLine(array $j): string {
     $p = $j['pay'] ?? ['s' => 'unpaid']; $s0 = (string) ($p['s'] ?? 'unpaid');
-    if ($s0 === 'paid') return 'Paid in full' . (!empty($j['sqcharge']) ? ' (card charged)' : (!empty($j['sqpaid']) ? ' (pay link)' : (($p['how'] ?? '') !== '' ? ' (' . $p['how'] . ')' : '')));
+    if ($s0 === 'paid') return 'Paid in full' . (!empty($j['sqcharge']) ? ' (card charged)' : (!empty($j['sqpaid']['found']) ? ' (paid in Square)' : (!empty($j['sqpaid']) ? ' (pay link)' : (($p['how'] ?? '') !== '' ? ' (' . $p['how'] . ')' : ''))));
     if ($s0 === 'plan') return 'Service plan';
     if ((int) ($j['price'] ?? 0) < 1) return 'Price to confirm';
     $owed = jobOwed($j);
