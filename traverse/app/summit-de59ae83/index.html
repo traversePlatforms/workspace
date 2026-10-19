@@ -1835,6 +1835,25 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .viewas{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border-radius:14px;background:#1f3a2b;color:#fff;font:700 14px var(--sans)}
   .viewas button{border:0;border-radius:10px;padding:8px 12px;background:#fff;color:#1f3a2b;font:800 13px var(--sans);cursor:pointer}
   .dhome > .viewas{margin:12px 48px 0}
+  /* see through their eyes (2026-10-19): the bar that stays on every screen, and the picker */
+  #vabar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9000;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 24px);padding:8px 8px 8px 14px;border-radius:16px;background:#1d6fe0;color:#fff;font:700 13px/1.3 var(--sans);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+  #vabar b{font-weight:800}
+  #vabar button{border:0;border-radius:10px;padding:8px 12px;background:#fff;color:#1d6fe0;font:800 13px var(--sans);cursor:pointer}
+  #vabar button.alt{background:rgba(255,255,255,.2);color:#fff}
+  body.dk-on #vabar{bottom:86px}
+  body.va-on{padding-bottom:72px}
+  .vapick{position:fixed;inset:0;z-index:9001;background:rgba(10,20,15,.55);display:grid;place-items:center;padding:16px}
+  .vapick .vbox{background:#fff;color:#16201C;border-radius:18px;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:20px}
+  .vapick h3{margin:0 0 4px;font:800 20px var(--sans)}
+  .vapick p{margin:0 0 14px;color:#55635B;font-size:14px}
+  .vapick .vx{float:right;border:0;background:none;font:800 24px/1 var(--sans);cursor:pointer;color:#55635B;padding:0 0 0 10px}
+  .vatabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+  .vatabs button{border:1.5px solid #cfd6d1;background:#fff;border-radius:999px;padding:8px 13px;font:700 13px var(--sans);cursor:pointer;color:#16201C}
+  .vatabs button[aria-pressed="true"]{background:#16201C;color:#fff;border-color:#16201C}
+  .vappl{display:grid;gap:8px}
+  .vappl button{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid #dfe5e1;background:#f7f9f8;border-radius:12px;padding:12px 14px;font:700 15px var(--sans);cursor:pointer;color:#16201C}
+  .vappl button.cur{border-color:#1d6fe0;background:#eaf2fd}
+  .vappl small{font-weight:600;color:#55635B;font-size:12px;text-align:right}
   .dh-walks:not(:empty){padding:24px 48px 0}.dh-walks .dwhome{margin:0;max-width:640px}
   .dwhome .ic{width:24px;height:24px;flex:none;color:var(--booked)}
   .dwhome span{display:grid;gap:2px}.dwhome b{font:800 15.5px var(--sans)}.dwhome small{font-size:13px;color:var(--soft)}
@@ -2416,6 +2435,62 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       for (var k = 0; k < AREA_NULL.length; k++) if (!(AREA_NULL[k] in a)) a[AREA_NULL[k]] = null;
     });
   }
+  /* ---- see through their eyes (2026-10-19, Matthew: "tabs ... where i can click office, worker, crew, manager, etc so i can just mess with
+     the app through their eyes instead of having to logout and login"). The super admin picks an account; this browser tab then asks the
+     server as that account (X-View-As), so every screen is theirs exactly, and the server saves nothing while it lasts. Kept for this tab
+     only (sessionStorage): closing the tab, or Back to mine, ends it. */
+  var VA_KEY = 'viewas:' + location.pathname;
+  function vaId() { try { return sessionStorage.getItem(VA_KEY) || ''; } catch (e) { return ''; } }
+  function vaSet(id) { try { if (id) sessionStorage.setItem(VA_KEY, id); else sessionStorage.removeItem(VA_KEY); } catch (e) {} }
+  function vaHeaders(action, h) { var v = vaId(); if (v && action !== 'viewaslist' && action !== 'signin') h['X-View-As'] = v; return h; }
+  function vaGo(id) {   /* switch to someone, or back to your own ('') */
+    if (S.viewing) { var n = S.viewing.name; setQueue(queue().filter(function (x) { return x.who !== n; })); }   /* nothing left waiting in their name */
+    vaSet(id); location.reload();
+  }
+  var VA_TABS = [['office', 'Office'], ['quote', 'Quote only'], ['manager', 'Manager'], ['rep', 'Door reps'], ['jobcrew', 'Job crew']];
+  function vaGroup(p) { return p.role === 'office' || p.role === 'quote' || p.role === 'manager' ? p.role : (p.jobs || p.walker) ? 'jobcrew' : 'rep'; }
+  function vaRoleName(r) { return r === 'office' ? 'Office' : r === 'quote' ? 'Quote only' : r === 'manager' ? 'Manager' : 'Crew'; }
+  function vaBar() {
+    var old = document.getElementById('vabar'); if (old) old.remove();
+    document.body.classList.toggle('va-on', !!S.viewing);
+    if (!S.viewing) return;
+    var b = q('div'); b.id = 'vabar'; b.setAttribute('role', 'status');
+    var t = q('span'); t.appendChild(document.createTextNode('Seeing ')); t.appendChild(q('b', null, S.viewing.name)); t.appendChild(document.createTextNode(' \u00b7 ' + vaRoleName(S.viewing.role) + ' \u00b7 looking only'));
+    b.appendChild(t);
+    var sw = q('button', null, 'Switch'); sw.type = 'button'; sw.addEventListener('click', vaPicker); b.appendChild(sw);
+    var bk = q('button', 'alt', 'Back to mine'); bk.type = 'button'; bk.addEventListener('click', function () { vaGo(''); }); b.appendChild(bk);
+    document.body.appendChild(b);
+  }
+  function vaPicker() {
+    var ov = q('div', 'vapick'), box = q('div', 'vbox'); ov.appendChild(box); document.body.appendChild(ov);
+    var close = function () { ov.remove(); };
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    var x = q('button', 'vx', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', close); box.appendChild(x);
+    box.appendChild(q('h3', null, 'See through their eyes'));
+    box.appendChild(q('p', null, 'The app opens exactly as their account sees it: same screens, same leads, same limits. Looking only: nothing you tap is saved, and nobody is signed out.'));
+    var tabs = q('div', 'vatabs'), list = q('div', 'vappl'); box.appendChild(tabs); box.appendChild(list);
+    list.appendChild(q('p', null, 'Loading\u2026'));
+    api('viewaslist').then(function (j) {
+      if (!j.ok) { list.innerHTML = ''; list.appendChild(q('p', null, j.error || 'Not available.')); return; }
+      var by = {}; (j.people || []).forEach(function (p) { var g = vaGroup(p); (by[g] = by[g] || []).push(p); });
+      var have = VA_TABS.filter(function (t) { return by[t[0]]; });
+      if (!have.length) { list.innerHTML = ''; list.appendChild(q('p', null, 'No other accounts yet.')); return; }
+      var cur = S.viewing ? (j.people || []).filter(function (p) { return p.id === vaId(); })[0] : null;
+      var pick = cur ? vaGroup(cur) : have[0][0];
+      var draw = function () {
+        tabs.innerHTML = ''; list.innerHTML = '';
+        have.forEach(function (t) { var tb = q('button', null, t[1] + ' (' + by[t[0]].length + ')'); tb.type = 'button'; tb.setAttribute('aria-pressed', String(t[0] === pick)); tb.addEventListener('click', function () { pick = t[0]; draw(); }); tabs.appendChild(tb); });
+        by[pick].forEach(function (p) {
+          var pb = q('button', cur && cur.id === p.id ? 'cur' : null); pb.type = 'button';
+          pb.appendChild(q('span', null, p.name));
+          pb.appendChild(q('small', null, [vaRoleName(p.role), p.walker ? 'does walks' : '', p.jobs ? 'on the jobs board' : '', cur && cur.id === p.id ? 'now' : ''].filter(Boolean).join(' \u00b7 ')));
+          pb.addEventListener('click', function () { vaGo(p.id); });
+          list.appendChild(pb);
+        });
+      };
+      draw();
+    }).catch(function () { list.innerHTML = ''; list.appendChild(q('p', null, 'No signal. Try again.')); });
+  }
   function api(action, opts) {
     opts = opts || {};
     var fake = sampleAnswer(action, opts); if (fake) return Promise.resolve(fake);
@@ -2423,7 +2498,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (opts.params) for (var k in opts.params) url += '&' + k + '=' + encodeURIComponent(opts.params[k]);
     return fetch(url, {
       method: opts.body ? 'POST' : 'GET',
-      headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+      headers: vaHeaders(action, opts.body ? { 'Content-Type': 'application/json' } : {}),
       body: opts.body ? JSON.stringify(opts.body) : undefined,
       credentials: 'same-origin'
     }).then(function (r) {
@@ -2432,6 +2507,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return r.json().catch(function () { return { ok: false, error: 'Server did not answer properly.', _notOurs: true }; })
         .then(function (j) {
           j._status = r.status; if (fromSaved) j._saved = true;
+          if (j.why === 'viewgone') { vaSet(''); location.reload(); }   /* the account looked through was switched off or removed */
           if (r.status === 401 && j.why === 'elsewhere') S.outWhy = j.error;   /* one device at a time (2026-10-12): say why, on the sign-in screen */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(areaFill);   /* before trimCard, which takes away the parts an edition does not have */
           if (TRIM_ACTIONS[action]) trimCard(j);
@@ -2457,6 +2533,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function mine(x) { return !x.who || x.who === S.me; }       /* items from before 'who' existed go with whoever is signed in */
   var flushing = null;
   function flush() {
+    if (S.viewing) return Promise.resolve();   /* looking through someone else's eyes: nothing sends (2026-10-19) */
     if (flushing) return flushing;
     var skip = 0;
     flushing = (function step() {
@@ -2819,7 +2896,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     function go() {
       if (S.busy) return;
       S.busy = true; boxes.className = 'boxes busy'; say.className = 'say'; say.textContent = 'Checking…';
-      api('signin', { body: { code: code, dev: devClass() } }).then(function (j) {
+      (vaSet(''), S.viewing = null, vaBar(), api('signin', { body: { code: code, dev: devClass() } })).then(function (j) {
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
@@ -3586,7 +3663,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(q('h2', 'tgrp', 'Office'));
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
       var otl = q('div', 'tgrid');
-      if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
+      if (S.super) otl.appendChild(tile('button', 'users', 'See through their eyes', 'Open the app as the office, Jen, a manager, a door rep or a crew, looking only. No signing out and in.', 'Traverse only', vaPicker));
+      else if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
       officeGroup(box, 'sales', 'Sales', [pt, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
@@ -7727,7 +7805,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Office dashboard', officeView]);
     if (S.role === 'manager') t.push(['Team sign-ins', accountsView]);
     if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
-    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample door', sampleView]);   /* not on Sixfold (2026-10-17) */ if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
+    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample door', sampleView]);   /* not on Sixfold (2026-10-17) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
   }
   function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
@@ -15572,7 +15650,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

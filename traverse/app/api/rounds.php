@@ -2493,7 +2493,22 @@ if ($action === 'sitelead') {
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
 $role = (string) ($session['r'] ?? 'crew');
-if (!defined('SIXFOLD_CLI') && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
+/* see through their eyes (2026-10-19, Matthew: "tabs similar to (view jens screen) where i can click office, worker, crew, manager, etc so
+   i can just mess with the app through their eyes instead of having to logout and login to multiple accounts"). The super admin only.
+   The X-View-As header names an account (its row id) and every request is answered AS that account: its name, role and Does walks, so
+   each screen is exactly what they get, filtering included (the old See Jen's screen only changed what was drawn). Looking only:
+   anything that would save is refused, so nothing is ever done in someone else's name; loading doors still works. */
+$realMe = $me; $realC = (string) ($session['c'] ?? ''); $realSuper = $isSuper; $viewing = null;
+$vaId = (string) ($_SERVER['HTTP_X_VIEW_AS'] ?? '');
+if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
+    $vaRow = acctRows($basePeople, $acct, $sessionKey)[$vaId] ?? null;
+    if (!$vaRow || $vaRow['off'] || in_array($vaRow['role'], ['admin', 'super'], true)) out(['ok' => false, 'why' => 'viewgone', 'error' => 'That account is not there any more. Back to your own screen.'], 409);
+    $viewing = ['by' => $realMe, 'name' => $vaRow['name'], 'role' => $vaRow['role']];
+    $me = $vaRow['name']; $role = $vaRow['role']; $session['c'] = $vaId; $isSuper = false;
+    if ($action === 'taplog') out(['ok' => true, 'kept' => 0]);   /* their tap log stays theirs */
+    if ($isPost && !in_array($action, ['area', 'signout'], true)) out(['ok' => false, 'why' => 'viewing', 'error' => 'Looking only: this is ' . $me . '\'s screen, so nothing is saved. Go back to your own screen to make changes.'], 409);
+}
+if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
 if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true)) {   /* only her own leads (2026-10-15) */
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     /* + her Leads to call (2026-10-18, Fable review): "They said yes" on a lead she did not make died here with Not allowed, while Reached out?
@@ -2508,7 +2523,7 @@ if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) 
     if (isset($sessNow['x'][$tagNow])) out(['ok' => false, 'why' => 'elsewhere', 'error' => 'Signed out: your code was used to sign in on another ' . (devClass() === 'm' ? 'phone or tablet' : 'computer') . '. Each code works on one phone and one computer at a time. If that was not you, tell your manager.'], 401);
     $lineNow = $sessNow['s'][$tagNow] ?? null;
     if (!is_array($lineNow) || (int) ($lineNow[2] ?? 0) < time() - SEEN_EVERY) {
-        $fresh = [(string) ($session['c'] ?? ''), (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName(), is_array($lineNow) ? devClassOf($lineNow) : devClass()];
+        $fresh = [$realC, (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName(), is_array($lineNow) ? devClassOf($lineNow) : devClass()];
         sessEdit(function ($a) use ($tagNow, $fresh) { $a['s'][$tagNow] = $fresh; return $a; });
     }
 }
@@ -2607,7 +2622,20 @@ if ($action === 'taplogread') {
     usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
     out(['ok' => true, 'days' => $days, 'rows' => array_slice($rows, 0, 20000)]);
 }
-if ($action === 'me') out(['ok' => true, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+/* the accounts the super admin can look through (2026-10-19): everyone but admins, switched-off and check accounts. "Job crew" is a crew
+   account named on the jobs board (Brad); the rest of the crew role are door reps. */
+if ($action === 'viewaslist') {
+    if (!$realSuper) fail('Not allowed.', 403);
+    $onJobs = []; if (feature('walkdesk')) foreach (jobsAll() as $j) if (!$j['off']) $onJobs[(string) $j['crew']] = true;
+    $list = [];
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) {
+        if ($r['off'] || in_array($r['role'], ['admin', 'super'], true) || boardHidden($r['name']) || trim($r['name']) === '') continue;
+        $list[] = ['id' => $r['id'], 'name' => $r['name'], 'role' => $r['role'], 'walker' => !empty($acct['walker'][$r['id']]), 'jobs' => isset($onJobs[$r['name']])];
+    }
+    usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+    out(['ok' => true, 'people' => $list]);
+}
+if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
