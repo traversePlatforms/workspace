@@ -1160,9 +1160,10 @@ function loadVisits(): array {
 }
 /* the customer's next visit already happened (2026-10-19, Matthew: Eric and Russ said Overdue though their jobs were done): a visit, or a
    job for their lead, marked done on or after that date. A one-off customer's next date is the job day and nothing moves it on, so without
-   this they show Overdue forever. "Could not do it" does not count. */
+   this they show Overdue forever. "Could not do it" does not count. One-off customers only: a recurring plan's next date already moves on
+   when a visit is logged, so a next date someone set by hand on a recurring customer stands (customers-test, 2026-10-19 night). */
 function custNextDone(array $c, array $visits = []): bool {
-    $n = (string) ($c['next'] ?? ''); if ($n === '') return false;
+    $n = (string) ($c['next'] ?? ''); if ($n === '' || ($c['plan'] ?? 'oneoff') !== 'oneoff') return false;
     foreach ($visits as $v) if (($v['status'] ?? 'done') === 'done' && (string) ($v['date'] ?? '') >= $n) return true;
     if (empty($c['lead'])) return false;
     static $doneByLead = null;
