@@ -1,0 +1,75 @@
+/* Sixfold 365 — the merged site's layer over Sixfold's site.css (2026-10-20).
+   Loaded after site.css on every page. It changes only what the merger changes:
+   - the brand fonts (Outfit for headings and labels, DM Sans for text), served from this site, so the page still makes no
+     third-party request (Sixfold's site had none; Google Fonts would be one);
+   - the combined badge in the header and footer in place of the Ridge mark;
+   - the homepage pieces (hero, service tiles, the quote form) that site.css never had. */
+
+@font-face { font-family: "Outfit"; src: url("/assets/fonts/Outfit.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/assets/fonts/DMSans.ttf") format("truetype"); font-weight: 100 1000; font-display: swap; }
+
+:root, body.paper {
+  --serif: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --sans:  "DM Sans", ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:  "Outfit", "Segoe UI", system-ui, sans-serif;
+}
+h1, h2, h3 { letter-spacing: -0.01em; }
+
+/* the badge where the Ridge mark was */
+.brand svg.badge-mark { width: 46px; height: 46px; }
+.site-foot .foot-mark svg.badge-mark { width: 64px; height: 64px; }
+.brand b { font-family: var(--serif); font-weight: 800; }
+
+/* ---------- homepage ---------- */
+.h365-hero { padding: 48px 0 40px; }
+.h365-hero .grid { display: grid; grid-template-columns: 1.3fr .8fr; gap: 36px; align-items: center; }
+.h365-hero h1 { font: 800 clamp(38px, 5.4vw, 62px)/1.03 var(--serif); margin: 0 0 16px; color: var(--ink); }
+.h365-hero .say { font-size: clamp(18px, 2vw, 21px); line-height: 1.45; margin: 0 0 24px; max-width: 34em; }
+.h365-hero .badge-big { width: 100%; max-width: 360px; justify-self: center; filter: drop-shadow(0 14px 28px rgba(22, 32, 28, .16)); }
+.h365-hero .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 8px 0 0; }
+.tile { display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 16px; border-radius: 16px; background: #fffaf2; border: 1px solid rgba(22, 32, 28, .14); text-decoration: none; color: inherit; transition: border-color .15s, transform .15s; }
+.tile:hover, .tile:focus-visible { border-color: var(--accent); transform: translateY(-1px); }
+.tile b { font: 700 19px/1.2 var(--serif); }
+.tile span { font-size: 15px; line-height: 1.4; opacity: .82; }
+.tile i { font-style: normal; margin-top: auto; padding-top: 6px; font: 700 14px var(--serif); color: var(--accent); }
+.tile.t-fire i { color: #A6421A; }
+
+.steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: s; margin-top: 10px; }
+.steps3 div { padding: 16px 18px; border-left: 4px solid var(--accent); background: #fffaf2; border-radius: 0 14px 14px 0; }
+.steps3 div::before { counter-increment: s; content: counter(s) "."; font: 800 18px var(--serif); color: var(--accent); margin-right: 6px; }
+.steps3 b { font: 700 17px var(--serif); }
+.steps3 p { margin: 4px 0 0; font-size: 15px; }
+
+.steps3 + .cta { margin-top: 22px; }
+.form fieldset:not(.need) { border: 0; padding: 0; margin: 0; }
+.form fieldset:not(.need) legend { padding: 0; margin-bottom: 8px; }
+.where2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; font-size: 15px; }
+
+/* the quote form (the 365 form, in Sixfold's form styles) */
+#quote .qgrid { display: grid; grid-template-columns: .85fr 1.4fr; gap: 34px; align-items: start; }
+.form .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+.form .seg label { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; border: 1.5px solid rgba(22, 32, 28, .22); border-radius: 999px; padding: 9px 14px; cursor: pointer; margin: 0; }
+.form .seg input { width: auto; margin: 0; accent-color: var(--accent); }
+.form .seg label:has(input:checked) { border-color: var(--accent); background: rgba(47, 93, 44, .08); }
+.form .row.three { display: grid; grid-template-columns: 2fr 1.2fr .8fr; gap: 12px; }
+.form .q-err { color: #a1361b; font-weight: 700; min-height: 1px; margin: 0; }
+.form .q-done { text-align: center; padding: 28px 8px; }
+.form .q-done b { display: block; font: 800 26px var(--serif); color: var(--accent); margin-bottom: 6px; }
+.form div.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.preview-ribbon { background: #16201C; color: #fff; text-align: center; font: 600 13px/1.35 var(--sans); padding: 8px 16px; }
+.preview-ribbon b { color: #E4703A; }
+
+@media (max-width: 900px) {
+  .h365-hero .grid, #quote .qgrid, .where2 { grid-template-columns: 1fr; }
+  .h365-hero .badge-big { max-width: 220px; order: -1; }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .steps3 { grid-template-columns: 1fr; }
+  .form .row.three { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+  .tiles { grid-template-columns: 1fr; }
+  .form .row.three { grid-template-columns: 1fr; }
+  .brand svg.badge-mark { width: 38px; height: 38px; }
+}

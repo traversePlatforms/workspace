@@ -2157,7 +2157,9 @@ if ($action === 'a365lead') {
     if (!$isPost) fail('POST required', 405);
     if (trim((string) ($body['hp'] ?? '')) !== '') out(['ok' => true]);   /* a bot filled the hidden field: thank it, keep nothing */
     if ((int) ($body['t'] ?? 0) < 3000) fail('That was very quick. Please try again.');
-    $wants = ['aeration' => 'Aeration', 'both' => 'Aeration and overseeding', 'question' => 'A question'];
+    $wants = ['aeration' => 'Aeration', 'both' => 'Aeration and overseeding', 'question' => 'A question',
+              /* the merged Sixfold 365 site's form adds Sixfold's services (2026-10-20, Matthew: one site at 365aeration.com) */
+              'lawn' => 'Lawn care', 'landscaping' => 'Landscaping', 'clearing' => 'Land clearing', 'fire' => 'Fire mitigation', 'multiple' => 'More than one service'];
     $want = (string) ($body['want'] ?? ''); if (!isset($wants[$want])) fail('Choose what you are looking for.');
     $name = a365Clean($body['name'] ?? '', 120); $phone = a365Clean($body['phone'] ?? '', 40); $email = a365Clean($body['email'] ?? '', 160);
     $street = a365Clean($body['street'] ?? '', 120); $city = a365Clean($body['city'] ?? '', 60); $zip = a365Clean($body['zip'] ?? '', 10);
@@ -2166,7 +2168,7 @@ if ($action === 'a365lead') {
     if ($phone === '' && $email === '') fail('Add a phone number or an email so we can reply.');
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
     if ($phone !== '' && strlen((string) preg_replace('/\D/', '', $phone)) < 10) fail('That phone number looks too short.');
-    if ($want !== 'question' && $street === '') fail('Add your street address so we can quote your lawn.');
+    if ($want !== 'question' && $street === '') fail('Add the street address so we can quote it.');
     if (!throttleTake(rateFile('a365lead|' . visitorKey()), 5, 86400) || !throttleTake(rateFile('a365lead|site'), 300, 86400)) fail('We have had a lot of requests from here today. Please call or text us instead.', 429);
     $lines = []; if ($contact !== '') $lines[] = 'Best way to reach them: ' . ['call' => 'a call', 'text' => 'a text', 'email' => 'email'][$contact]; if ($msg !== '') $lines[] = $msg;
     $qrFrom = in_array($body['from'] ?? '', ['card', 'yard', 'truck', 'car'], true) ? (string) $body['from'] : '';   /* which printed QR code brought them (2026-10-19) */
