@@ -18,3 +18,5 @@ fact-check log; this file only records the decisions.
 - **Colorado Springs door-to-door rules for charities:** not found. Ask the City Clerk before any door work.
 - **RESTRICTED.md applies.** Peak is never named as a Surge client in public copy, and no Peak logos or branded gear
   appear in Surge photos.
+
+**Sales plan (20 Oct 2026):** two pages for Brandon covering both sides, filed with the sponsorship work: `matthew/peak-pickleball-sponsorship/Peak-Sales-Plan.pdf` (page 2 is the membership part: online and in person).
