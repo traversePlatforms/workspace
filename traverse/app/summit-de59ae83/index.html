@@ -1857,6 +1857,12 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .vappl button{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid #dfe5e1;background:#f7f9f8;border-radius:12px;padding:12px 14px;font:700 15px var(--sans);cursor:pointer;color:#16201C}
   .vappl button.cur{border-color:#1d6fe0;background:#eaf2fd}
   .vappl small{font-weight:600;color:#55635B;font-size:12px;text-align:right}
+  /* a person's territories (2026-10-20) */
+  .pterr .ptrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(22,32,28,.1)}
+  .pterr .ptrow small{display:block;color:#55635B;font-size:12px}
+  .pterr .ptform{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
+  .pterr .ptform select{flex:1 1 160px;min-height:44px;border-radius:10px;border:1px solid rgba(22,32,28,.22);padding:0 10px;font:600 14px var(--sans);background:#fff}
+  .pterr .ptform .save{min-height:44px}
   /* the Messenger preview (2026-10-20, Traverse only, look only) */
   .mpv .vbox{max-width:640px;background:var(--paper,#fff)}
   .mpv .mpsum{font:700 14px var(--sans);margin:0 0 12px;color:#16201C}
@@ -4192,14 +4198,45 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; draw(); } else { body.textContent = ''; } }).catch(function () { if (S.regions) draw(); else body.textContent = ''; });
     return box;
   }
+  /* a person's territories on their page (2026-10-20, Matthew: "when she clicks on one of her teams accounts she should be able to assign them
+     territories from there (This should apply to everyone managing a team)"): the neighbourhoods they hold, each to take off, and a free one to
+     assign. The server allows it for an admin, or the person running their team; otherwise the box does not show. */
+  function personTerritories(name, back) {
+    var box = q('section', 'stoday pterr'); box.appendChild(q('h3', null, 'Assign or take off territories'));
+    var body = q('div'); body.appendChild(q('div', 'skel')); box.appendChild(body);
+    var draw = function () {
+      api('territories').then(function (j) {
+        body.textContent = '';
+        if (!j || !j.ok || (j.names || []).indexOf(name) < 0) { box.remove(); return; }
+        var held = []; (j.towns || []).forEach(function (t) { t.areas.forEach(function (a) { if (a.who === name) held.push([t, a]); }); });
+        if (!held.length) body.appendChild(q('div', 'tsub', 'No neighbourhoods assigned yet.'));
+        held.forEach(function (x) {
+          var row = q('div', 'ptrow'); var tx = q('span'); tx.appendChild(q('b', null, x[1].name)); tx.appendChild(q('small', null, x[0].label + ' \u00b7 ' + x[1].total + ' doors \u00b7 ' + x[1].knocked + ' knocked' + (x[1].on ? ' \u00b7 for ' + dayName(x[1].on) : ''))); row.appendChild(tx);
+          var off = q('button', 'lnk bad', 'Take off'); off.type = 'button';
+          off.addEventListener('click', function () { off.disabled = true; api('assign', { body: { region: x[0].key, area: x[1].name, who: '' } }).then(function (r) { if (!r.ok) { off.disabled = false; toast('Not done', r.error || 'Try again.', null); return; } toast('Taken off', x[1].name, null); statsView(name, back); }).catch(function () { off.disabled = false; toast('No signal', 'Try again.', null); }); });
+          row.appendChild(off); body.appendChild(row);
+        });
+        var towns = (j.towns || []).filter(function (t) { return t.areas.some(function (a) { return !a.who; }); });
+        if (!towns.length) { body.appendChild(q('div', 'tsub', 'Every neighbourhood is assigned already.')); return; }
+        var f = q('div', 'ptform'), ts = q('select'), as = q('select'), go = q('button', 'save', 'Assign to ' + (name.split(' ')[0] || name)); go.type = 'button';
+        ts.setAttribute('aria-label', 'Town'); as.setAttribute('aria-label', 'Neighbourhood');
+        towns.forEach(function (t) { var o = q('option', null, t.label); o.value = t.key; ts.appendChild(o); });
+        var fill = function () { as.textContent = ''; var t = towns.filter(function (x) { return x.key === ts.value; })[0]; (t ? t.areas : []).filter(function (a) { return !a.who; }).sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { var o = q('option', null, a.name + ' (' + a.total + ' doors)'); o.value = a.name; as.appendChild(o); }); };
+        ts.addEventListener('change', fill); fill();
+        go.addEventListener('click', function () { go.disabled = true; api('assign', { body: { region: ts.value, area: as.value, who: name } }).then(function (r) { go.disabled = false; if (!r.ok) { toast('Not assigned', r.error || 'Try again.', null); return; } toast('Assigned', as.value + ' \u00b7 ' + name, null); statsView(name, back); }).catch(function () { go.disabled = false; toast('No signal', 'Try again.', null); }); });
+        f.appendChild(ts); f.appendChild(as); f.appendChild(go); body.appendChild(f);
+        var all = q('button', 'lnk', 'All territories \u203a'); all.type = 'button'; all.addEventListener('click', territoriesView); body.appendChild(all);
+      }).catch(function () { body.textContent = ''; body.appendChild(q('div', 'tsub', 'Territories need signal.')); });
+    };
+    draw(); return box;
+  }
   function statsView(name, back) {
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
     setBar('back', { title: name === S.me ? 'My stats' : name, sub: S.statTab === 'doors' ? 'Doors you worked, last 30 days' : 'Last 30 days · chart: last 14', back: back || chooseView, backLabel: 'Back' });
     view.textContent = '';
     view.appendChild(statTabs(name, back));
-    if (S.statTab === 'doors') return myDoors(name, back);
-    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    if (S.statTab === 'doors') return myDoors(name, back);    var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     var params = { days: 30, who: name };   /* the server answers with yours unless you may see theirs (an admin, or their manager) */
     api('stats', { params: params }).then(function (j) {
       holder.textContent = '';
@@ -4232,6 +4269,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       card.appendChild(cmp);
       holder.appendChild(card);
       holder.appendChild(terrCard(name, back));
+      if (adminView() || mgrOn()) holder.appendChild(personTerritories(name, back));   /* assign or take off their neighbourhoods from here (2026-10-20) */
       holder.appendChild(goalBox(name, back, j, T, talked));
       holder.appendChild(tipsCard(p.days, name === S.me));
       /* last 14 days, drawn to one scale */
@@ -4527,7 +4565,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       l.notes.forEach(function (n) { nt.appendChild(q('div', null, n.note + ' \u2014 ' + n.by + ', ' + ago(n.at))); });
       c.appendChild(nt);
     }
-    if (S.role === 'office' && S.runsTeam && S.screen === 'pipeline') leadOwnerRows(l, c);   /* an office account that runs a team hands leads to its people (2026-10-20) */
+    if (S.role === 'office' && S.runsTeam && S.screen === 'pipeline') leadOwnerRows(l, c);
+    else if (adminView() && S.screen === 'pipeline' && l.src === 'a365web') leadOwnerRows(l, c);   /* website forms are Matthew's to hand out (2026-10-20) */   /* an office account that runs a team hands leads to its people (2026-10-20) */
     /* the owner dropdown is tabled (Matthew 2026-10-15: "not needed at the moment"; TASKS.md keeps it): if (!asOffice()) leadOwnerRows(l, c); */
     if (wdOn() && S.screen === 'pipeline' && (!asOffice() || dwFor('lead', l.id)) && (dwFor('lead', l.id) || !(l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0))) c.appendChild(deskWalkBlock('lead', l));   /* quoted: no walk to book (Matthew 2026-10-15); a booked one still shows */   /* the walk desk (2026-10-14); the office quotes by phone */
     var sb = q('div', 'lstat');
@@ -4564,6 +4603,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      lands on that person's calendar with an alert and everything they need for it. Admins and the office role book; the people
      ticked "Does walks" in Accounts go. They say how it went from the walk itself, which moves the lead along. */
   /* an Office account that also runs a team (2026-10-20, Nneka): a manager's powers over their own team, everything else the office's */
+  function qqName() { return S.role === 'office' && S.runsTeam ? 'Quote builder' : 'Quick quote'; }   /* Matthew 2026-10-20: "just call it quote builder on her page" */
   function mgrOn() { return S.role === 'manager' || (S.role === 'office' && !!S.runsTeam); }
   function wdOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
   function walkerOn() { return feat('walkdesk') && !!S.walker; }
@@ -6797,7 +6837,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (quick && S.screen !== 'quickquote') { S.qqInboxOpen = false; S.qqCustOpen = false; }   /* coming to the Quick quote: both lists start folded (2026-10-17) */
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
-    setBar('back', { title: quick ? 'Quick quote' : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
+    setBar('back', { title: quick ? qqName() : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     view.textContent = '';
     if (lead) view.appendChild(leadWhoBox(lead));
@@ -7054,7 +7094,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var wc = q('section', 'ocard'); wc.appendChild(q('h2', null, 'Forms out, not signed yet')); var wl = q('div', 'olist'); wl.appendChild(q('div', 'skel')); wc.appendChild(wl);   /* 2026-10-14: no walks for the office */
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
-    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', 'Quick quote', function () { quickQuoteView(); }],
+    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', qqName(), function () { quickQuoteView(); }],
      ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
@@ -7516,9 +7556,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         return { name: p.name, t: t, w: w, m: m };
       });
       var have = {}; rows.forEach(function (r) { have[r.name] = r; });
-      var teamOf = {}, myTeam = '';
+      var teamOf = {}, myTeam = '', leadOf = {}, isLead = {};
+      var onlyMine = mgrOn(), meT = ((cp.ok ? cp.people : []).filter(function (x) { return x.me; })[0] || {}).team || '';   /* someone running a team sees theirs only (2026-10-20) */
       (cp.ok ? cp.people : []).forEach(function (p) {
+        if (onlyMine && !p.me && (p.team || '') !== meT) return;
         teamOf[p.name] = p.team || ''; if (p.me) myTeam = p.team || '';
+        if (p.lead && p.team) { (leadOf[p.team] = leadOf[p.team] || []).push(p.name); isLead[p.name] = true; }   /* 2026-10-20: the manager heads the team */
         if (!have[p.name]) { var z = sumDays([]); var r0 = { name: p.name, t: z, w: z, m: z, none: true }; rows.push(r0); have[p.name] = r0; }
       });
       rows.sort(function (a, b) { return b.w.doors - a.w.doors || b.m.doors - a.m.doors || (a.none ? 1 : 0) - (b.none ? 1 : 0) || a.name.localeCompare(b.name); });
@@ -7528,7 +7571,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var tn = (cp.ok && cp.teams) || {}, groups = [];
       if (Object.keys(tn).length) {
         var ids = Object.keys(tn).sort(function (a, b) { return (a === myTeam ? -1 : b === myTeam ? 1 : 0) || String(tn[a]).localeCompare(String(tn[b])); });
-        ids.forEach(function (id) { var g = rows.filter(function (r) { return teamOf[r.name] === id; }); if (g.length) groups.push([(id === myTeam ? 'Your team: ' : '') + tn[id], g]); });
+        ids.forEach(function (id) { var g = rows.filter(function (r) { return teamOf[r.name] === id && !isLead[r.name]; }); if (g.length || leadOf[id]) groups.push([(id === myTeam ? 'Your team: ' : '') + tn[id] + (leadOf[id] ? ' \u00b7 Manager: ' + leadOf[id].join(', ') : ''), g]); });
         var rest = rows.filter(function (r) { return !teamOf[r.name] || !tn[teamOf[r.name]]; }); if (rest.length) groups.push(['No team', rest]);
       } else groups.push(['', rows]);
       groups.forEach(function (grp) {
@@ -8277,7 +8320,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
     if (adminView() && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
     if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
-    else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push(['Quick quote', function () { quickQuoteView(); }]); }
+    else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push([qqName(), function () { quickQuoteView(); }]); }
     else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
     if (walkerOn()) t.push(['My ' + vw() + 's', function () { myWalksView(); }]);
     t.push(['Calendar', function () { S.calWho = S.me; calendarView(); }]);
@@ -8674,7 +8717,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dnavItems() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]].concat(mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
+      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]].concat(mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]];   /* the field crew (2026-10-19): no doors, no sales */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
@@ -8682,7 +8725,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'results', 'skip', 'deskbook', 'walk']]);
     if (adminView() && wdOn()) it.push(['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']]);   /* the jobs board (2026-10-14) */
     if (adminView()) it.push(['card', 'Customers', customersView, ['customers', 'customer']]);   /* in the top bar, not only under Office (Matthew 2026-10-15) */
-    if (asOffice()) it.push(['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']]);
+    if (asOffice()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     if (walkerOn() && !wdOn()) it.push(['jobs', 'My jobs', function () { myJobsView(); }, ['myjobs', 'job']]);
@@ -9510,7 +9553,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!teams.length && !S.teamAdd) box.appendChild(q('div', 'tsub', 'No teams yet. A team groups people under a manager: the manager sees the team\u2019s calendars and numbers, hands out its leads and assigns its territories.'));
     teams.forEach(function (t) {
       var who = (S.accts || []).filter(function (a) { return !a.off && a.team === t.id; });
-      var mgr = who.filter(function (a) { return a.role === 'manager'; }).map(function (a) { return a.name; });
+      var mgr = who.filter(function (a) { return a.role === 'manager' || a.runsteam; }).map(function (a) { return a.name; });
       var row = q('div', 'trow');
       var tx = q('span'); tx.appendChild(q('b', null, t.name));
       tx.appendChild(q('small', null, who.length + (who.length === 1 ? ' person' : ' people') + (mgr.length ? ' · managed by ' + mgr.join(', ') : ' · no manager yet')));
@@ -9528,8 +9571,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     function teamPeople(t, who) {
       var p = q('div', 'tpeople');
       if (!who.length) p.appendChild(q('div', 'tsub', 'Nobody on ' + t.name + ' yet.'));
-      who.slice().sort(function (a, b) { return (a.role !== 'manager') - (b.role !== 'manager') || a.name.localeCompare(b.name); }).forEach(function (a) {
-        var r = q('div', 'tprow'); r.appendChild(q('span', null, a.name)); r.appendChild(q('small', null, { manager: 'Manager', admin: 'Admin', super: 'Admin' }[a.role] || 'Crew'));
+      who.slice().sort(function (a, b) { return (a.role !== 'manager' && !a.runsteam) - (b.role !== 'manager' && !b.runsteam) || a.name.localeCompare(b.name); }).forEach(function (a) {
+        var r = q('div', 'tprow'); r.appendChild(q('span', null, a.name)); r.appendChild(q('small', null, a.runsteam ? 'Manager (office)' : ({ manager: 'Manager', admin: 'Admin', super: 'Admin' }[a.role] || 'Crew')));
         var off = q('button', 'lnk bad', 'Take off'); off.type = 'button';
         off.addEventListener('click', function () { off.disabled = true; acctCall('teammember', { person: a.id, team: '' }, function () { toast('Taken off ' + t.name, a.name, null); }); });
         r.appendChild(off); p.appendChild(r);
@@ -15861,10 +15904,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var it = [['Today', officeView, false, null, ['office']],
       ['Plan the doors', function () { withRegions(function () { var k = first(); if (k) planView(k); else start(); }); }, false, null, ['plan']],
       ['Territories', territoriesView, false, null, ['territories']],
-      S.role === 'admin' && feat('communities') ? ['Communities', communitiesView, false, null, ['communities']] : null,   /* 2026-10-12: was on the phone's tools only */
+      (S.role === 'admin' || (S.role === 'office' && S.runsTeam)) && feat('communities') ? ['Communities', communitiesView, false, null, ['communities']] : null,   /* 2026-10-12: was on the phone's tools only */
       S.role === 'admin' && feat('hail') && cardOn('hail') ? ['Storm list', stormView, false, null, ['storm', 'stormday', 'hail']] : null,
-      S.role === 'admin' ? ['Pipeline', pipelineView, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
-      S.role === 'admin' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
+      S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipelineView, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
+      S.role === 'admin' || S.role === 'office' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
       ['Team stats', teamView, false, null, ['team', 'stats']],
       ['Leaderboard', boardView, false, null, ['board']],

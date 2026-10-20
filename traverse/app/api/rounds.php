@@ -447,7 +447,7 @@ function geoDevice(string $who, string $acctId, string $role): void {
     }
 }
 /** a lead the signed-in quote-only person made, or took on by phone or email (2026-10-15) */
-function qMine(array $l): bool { global $me; return (string) ($l['by'] ?? '') === $me || in_array($me, (array) ($l['qown'] ?? []), true); }
+function qMine(array $l): bool { global $me; return (string) ($l['by'] ?? '') === $me || in_array($me, (array) ($l['qown'] ?? []), true) || ((string) ($l['owner'] ?? '') !== '' && (string) $l['owner'] === $me); }   /* + a lead handed to her as its owner (2026-10-20) */
 const QUOTE_INBOX_FROM = 1792189222;   /* quoteInbox()'s cut-off (2026-10-16); up here because the role gate below the session check calls it before line 3690 has run (2026-10-18, Fable review) */
 function deviceName(): string {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
@@ -2139,12 +2139,12 @@ function a365Match(string $street, string $city): ?array {
    alert 20 times per day"): a new lead shows on the office home and in the Pipeline count. A customer booking online or saying yes
    to a quote still alerts. company.json a365.leadAlerts: true turns new-lead alerts back on. */
 function leadAlertsOn(): bool { return !empty(company()['a365']['leadAlerts']); }
-function a365Alert(string $title, string $text, bool $super = false): void {   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */
+function a365Alert(string $title, string $text, bool $super = false, bool $newLead = false): void {   /* $newLead (2026-10-20): not to an office account that runs a team, which does not see new leads until someone has called */   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */
     global $basePeople, $acct, $sessionKey;
     try {
         $v = pushVapid(false); if (!$v) return;
         $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'a365-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && ($r['role'] === 'office' || ($super && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !($newLead && acctFlag('runsteam', $r['id']))) || ($super && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
     } catch (Throwable $e) { error_log('rounds a365 alert: ' . $e->getMessage()); }
 }
 if ($action === 'a365lead') {
@@ -2174,9 +2174,28 @@ if ($action === 'a365lead') {
     $qrFrom = in_array($body['from'] ?? '', ['card', 'yard', 'truck', 'car'], true) ? (string) $body['from'] : '';   /* which printed QR code brought them (2026-10-19) */
     $row = ['id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'a365web', 'at' => time(), 'need' => $wants[$want], 'name' => $name, 'phone' => $phone, 'email' => $email,
             'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''] + ($qrFrom !== '' ? ['qr' => $qrFrom] : []);   /* kept with the lead; not shown in the Pipeline yet */
+    /* someone already in the Pipeline (2026-10-20, Matthew: "double check when a website lead comes in that it hasnt been made via messenger or meta
+       ad lead"): an open lead with the same phone, email or full name keeps them, Facebook and Messenger ones first; the form goes on it as a note,
+       so the person stays where they are (Jen's Facebook flow) and is not doubled. A lost or finished lead does not count: that is a new enquiry. */
+    $wd = substr((string) preg_replace('/\D/', '', $phone), -10); $we = strtolower($email); $wn = nameKey($name); $hits = [];
+    foreach (leadsAll() as $x) {
+        if (!in_array((string) ($x['status'] ?? 'new'), ['new', 'contacted', 'walk', 'quoted', 'hold'], true)) continue;
+        $xd = substr((string) preg_replace('/\D/', '', (string) ($x['phone'] ?? '')), -10);
+        if ((strlen($wd) === 10 && $xd === $wd) || ($we !== '' && strtolower((string) ($x['email'] ?? '')) === $we) || (substr_count($wn, ' ') >= 1 && nameKey((string) ($x['name'] ?? '')) === $wn)) $hits[] = $x;
+    }
+    usort($hits, fn($a, $b) => (int) !in_array($a['src'] ?? '', ['meta', 'messenger'], true) <=> (int) !in_array($b['src'] ?? '', ['meta', 'messenger'], true));
+    if ($hits) {
+        $x = $hits[0]; $now = time();
+        appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'note' => 'Also sent the 365 website form: ' . $wants[$want] . ($street !== '' ? ', ' . $street . ($city !== '' ? ', ' . $city : '') : '') . ($lines ? '. ' . implode(' ', $lines) : '') . ' (as ' . ($name ?: 'no name') . ($phone !== '' ? ', ' . $phone : '') . ($email !== '' ? ', ' . $email : '') . ')', 'by' => 'website', 'at' => $now]);
+        $fill = []; if (trim((string) ($x['phone'] ?? '')) === '' && $phone !== '') $fill['phone'] = $phone; if (trim((string) ($x['email'] ?? '')) === '' && $email !== '') $fill['email'] = $email;
+        if ($fill) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'contact' => $fill, 'by' => 'website', 'at' => $now]);
+        if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
+        if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (LEAD_SRC_NAME[$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true);
+        out(['ok' => true]);
+    }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
     if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want]);
+    if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], true, true);   /* + Matthew's phones: website forms are his to hand out (2026-10-20) */
     out(['ok' => true]);
 }
 
@@ -2509,7 +2528,7 @@ if ($action === 'sitelead') {
     if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Empty.');
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that.', 500);
     if (preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    if (leadAlertsOn()) a365Alert('New website enquiry', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''));
+    if (leadAlertsOn()) a365Alert('New website enquiry', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''), false, true);
     out(['ok' => true, 'id' => $row['id']]);
 }
 
@@ -3417,7 +3436,7 @@ if ($action === 'others') {
     out(['ok' => true, 'homes' => $o]);
 }
 if ($action === 'communities') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !($role === 'office' && mgr())) fail('Not allowed.', 403);   /* + an office account that runs a team (2026-10-20) */
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $hoa = json_decode((string) @file_get_contents(DATA_DIR . '/hoa-communities.json'), true)['places'] ?? [];
     $cwpp = cwppPlaces();
@@ -3743,6 +3762,7 @@ if ($action === 'money') {
 function quoteInbox(array $l, bool $mine = false): bool {
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold'], true) || !empty($l['quote'])) return false;   /* + hold: On hold is our Pipeline's stage; her list shows them as before (2026-10-17, Matthew: Jim was on there) */
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
+    if (($l['src'] ?? '') === 'a365web') { global $me; foreach ((array) ($l['tries'] ?? []) as $tr) if (($tr['by'] ?? '') === $me) return true; return false; }   /* the 365 website's forms are Matthew's to hand out (2026-10-20); one she has already reached out to stays hers (David Marshall: she texted him that day) */
     return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;   /* new leads only, since 16 Oct: back as it was (2026-10-17, Matthew: don't send Jen anything she didn't populate herself unless it is a new lead) */
 }
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
@@ -3942,7 +3962,7 @@ if ($action === 'calpeople') {
     foreach ($TEAM['byName'] as $n => $x) {
         if ($n !== $me && boardHidden($n)) continue;
         if (!canViewCal((string) $n)) continue;
-        $list[] = ['name' => (string) $n, 'role' => $x['role'], 'team' => $x['team'], 'edit' => canManage((string) $n), 'me' => $n === $me, 'walker' => !empty($x['walker'])];
+        $list[] = ['name' => (string) $n, 'role' => $x['role'], 'team' => $x['team'], 'lead' => $x['role'] === 'manager' || ($x['role'] === 'office' && acctFlag('runsteam', (string) $x['id'])), 'edit' => canManage((string) $n), 'me' => $n === $me, 'walker' => !empty($x['walker'])];
     }
     usort($list, fn($a, $b) => [!$a['me'], mb_strtolower($a['name'])] <=> [!$b['me'], mb_strtolower($b['name'])]);
     $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) $tn[(string) $tid] = (string) ($t[0] ?? '');
@@ -5662,8 +5682,8 @@ if ($action === 'leads') {
     /* an office account that runs a team (Nneka) sees the whole Pipeline except the people nobody has contacted yet: those are Jen's first
        call (2026-10-20, Matthew: "make sure that shes not seeing people (to call) that jen hasn't already contacted yet"). A lead shows once it
        has a call try (hers in the app, or her ClickUp status), or when it is this person's or their team's (added by or handed to them). */
-    if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => ($l['status'] ?? 'new') !== 'new' || !empty($l['tries'])
-        || in_array((string) ($l['by'] ?? ''), [$me], true) || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by'])));
+    if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => (string) ($l['by'] ?? '') === $me || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by']))
+        || (($l['src'] ?? '') !== 'a365web' && (($l['status'] ?? 'new') !== 'new' || !empty($l['tries']))));   /* + the 365 website's forms only when handed to them (2026-10-20) */
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
@@ -5908,7 +5928,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     }
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
-    if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)));
+    if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)), false, true);
     out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors, 'mnotes' => $mnotes]);
 }
 /* ---- ClickUp (2026-10-16, Matthew: "attach clickup to our app to take the leads [Jen] is filing into our app"; "run a scan for
@@ -7523,7 +7543,8 @@ if ($action === 'territories') {
         $ks = townKnockStats($rg['key']); if (!$ks) continue;   /* cached per town (2026-10-11) */
         $assign = loadAssign($rg['key']); $aday = assignDays($rg['key']);
         $areas = [];
-        foreach ($ks['areas'] as $ar) $areas[] = ['name' => $ar[0], 'total' => $ar[1], 'knocked' => $ar[2], 'who' => $assign[$ar[0]] ?? null, 'on' => $aday[$ar[0]] ?? null];
+        $whoOf = function ($w) use ($role, $me) { if ($w === null || $w === '' || $role === 'admin' || $w === $me || sameTeam((string) $w)) return $w; return 'another team'; };   /* 2026-10-20: a team's manager sees only their team */
+        foreach ($ks['areas'] as $ar) $areas[] = ['name' => $ar[0], 'total' => $ar[1], 'knocked' => $ar[2], 'who' => $whoOf($assign[$ar[0]] ?? null), 'on' => $aday[$ar[0]] ?? null];
         $towns[] = ['key' => $rg['key'], 'label' => $rg['label'], 'areas' => $areas];
     }
     $names = [];
