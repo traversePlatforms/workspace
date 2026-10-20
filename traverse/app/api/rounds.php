@@ -3858,7 +3858,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -5726,6 +5726,72 @@ function metaFields(array $fd, array $labels = []): array {
     return ['name' => $name, 'phone' => preg_replace('/^p:/i', '', $pick(['phone_number', 'phone'])), 'email' => $pick(['email']), 'street' => $street, 'city' => $city,
             'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : ''), ', '), 'extra' => $extra];
 }
+/* ---- Facebook Messenger into the Pipeline (2026-10-20, Matthew: build it "for our app ... and test it", not live; "i dont want it affect
+ * the pipeline currently"). OFF unless the company feature 'fbmessenger' is on, and it needs the page key to carry pages_messaging (on
+ * 2026-10-20 it did not: Meta answered "(#200) Requires permission: pages_messaging"). Every 5 minutes, with the form leads: the Page's
+ * Messenger conversations updated since the last look. A message from someone new makes a New lead (source Messenger, "Facebook message",
+ * what they wrote, a phone or email typed in the messages picked out); someone already in the Pipeline (open lead, same phone, email or full
+ * name) gets the message as a note instead; later messages in a known conversation are notes on its lead. Only the customer's messages count,
+ * never the Page's replies. Switched on, it starts from that moment: older chats are not brought in. A failure here never holds up form leads. */
+function metaMsgContact(string $text): array {
+    $ph = preg_match('/(?<!\d)(?:\+?1[\s.-]?)?\(?([2-9]\d{2})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})(?!\d)/', $text, $m) ? '(' . $m[1] . ') ' . $m[2] . '-' . $m[3] : '';
+    $em = preg_match('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $text, $m2) && filter_var($m2[0], FILTER_VALIDATE_EMAIL) ? strtolower($m2[0]) : '';
+    return [$ph, $em];
+}
+function metaMessenger(string $g, callable $gget, array $P, callable $digits): array {
+    $res = ['page' => $P, 'added' => [], 'notes' => 0, 'error' => ''];
+    $since = (int) ($P['mlast'] ?? 0);
+    if ($since === 0) { $res['page']['mlast'] = time(); return $res; }   /* first run after switching on: start now, bring in no old chats */
+    $pid = (string) $P['id']; $newest = $since; $convs = []; $seen = array_flip((array) ($P['mseen'] ?? [])); $took = [];   /* message ids already handled: the runs overlap a minute */
+    $url = $g . '/' . rawurlencode($pid) . '/conversations?' . http_build_query(['platform' => 'messenger', 'fields' => 'id,updated_time,participants,messages.limit(15){id,message,from,created_time}', 'limit' => 25, 'access_token' => $P['token']]);
+    for ($pg = 0; $pg < 8 && $url !== ''; $pg++) {
+        $r = $gget($url);
+        if (isset($r['error'])) { $res['error'] = (string) ($r['error']['message'] ?? '?'); return $res; }   /* mlast kept: tried again next run */
+        $stop = false;
+        foreach ((array) ($r['data'] ?? []) as $c) { $u = strtotime((string) ($c['updated_time'] ?? '')) ?: 0; if ($u <= $since) { $stop = true; break; } $convs[] = $c; $newest = max($newest, $u); }
+        $url = $stop ? '' : (string) ($r['paging']['next'] ?? '');
+    }
+    $leads = leadsAll(); $byConv = []; $byPhone = []; $byEmail = []; $byName = [];
+    foreach ($leads as $l) {
+        if (!empty($l['mconv'])) $byConv[(string) $l['mconv']] = $l['id'];
+        if (str_starts_with((string) ($l['ext'] ?? ''), 'mc:')) $byConv[substr((string) $l['ext'], 3)] = $l['id'];
+        if (in_array($l['status'] ?? '', ['lost', 'won'], true)) continue;   /* a new chat from an old customer is a new enquiry */
+        $d = $digits($l['phone'] ?? ''); if (strlen($d) === 10) $byPhone[$d] = $byPhone[$d] ?? $l['id'];
+        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $byEmail[$e] = $byEmail[$e] ?? $l['id'];
+        $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1) $byName[$n] = $byName[$n] ?? $l['id'];
+    }
+    foreach (array_reverse($convs) as $c) {   /* oldest first */
+        $cid = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', (string) ($c['id'] ?? '')), 0, 80); if ($cid === '') continue;
+        $who = null; foreach ((array) ($c['participants']['data'] ?? []) as $pp) if ((string) ($pp['id'] ?? '') !== $pid) { $who = $pp; break; }
+        $name = a365Clean((string) ($who['name'] ?? ''), 120);
+        $mine = []; $allText = '';
+        foreach ((array) ($c['messages']['data'] ?? []) as $m) {
+            if ((string) ($m['from']['id'] ?? '') === $pid) continue;   /* the Page's own replies */
+            $txt = a365Clean((string) ($m['message'] ?? ''), 600); $allText .= ' ' . $txt;
+            $at = strtotime((string) ($m['created_time'] ?? '')) ?: 0; $mid = (string) ($m['id'] ?? '');
+            if ($at > $since - 120 && $txt !== '' && ($mid === '' || !isset($seen[$mid]))) { $mine[] = ['t' => $txt, 'at' => $at]; if ($mid !== '') $took[] = $mid; }
+        }
+        if (!$mine) continue;   /* only the Page wrote, or a sticker or photo with no words */
+        usort($mine, fn($a, $b) => $a['at'] <=> $b['at']);
+        [$phone, $email] = metaMsgContact($allText);
+        $lid = $byConv[$cid] ?? '';
+        if ($lid === '' && strlen($digits($phone)) === 10) $lid = $byPhone[$digits($phone)] ?? '';
+        if ($lid === '' && $email !== '') $lid = $byEmail[$email] ?? '';
+        if ($lid === '') { $n = cuName($name); if (substr_count($n, ' ') >= 1) $lid = $byName[$n] ?? ''; }
+        if ($lid !== '') {   /* someone we have: their messages as notes, the conversation tied to them */
+            if (!isset($byConv[$cid])) { appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'mconv' => $cid, 'by' => 'Messenger', 'at' => time()]); $byConv[$cid] = $lid; }
+            foreach (array_slice($mine, -5) as $m) { appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'note' => 'Facebook message: ' . $m['t'], 'by' => 'Messenger', 'at' => $m['at']]); $res['notes']++; }
+            continue;
+        }
+        $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'messenger', 'at' => $mine[0]['at'], 'need' => 'Facebook message', 'name' => $name, 'phone' => $phone, 'email' => $email,
+                'town' => '', 'msg' => a365Clean(implode("\n", array_map(fn($m) => $m['t'], array_slice($mine, -5))), 2000), 'by' => 'Facebook', 'ext' => 'mc:' . $cid, 'page' => a365Clean((string) $P['name'], 80)];
+        if (!appendLine(leadsDir() . '/leads.log', $row)) { $res['error'] = 'could not save a Messenger lead'; return $res; }
+        $byConv[$cid] = $row['id']; $res['added'][] = ($name ?: 'Someone') . ' (Messenger)';
+    }
+    $res['page']['mlast'] = max($since, $newest - 60);
+    $res['page']['mseen'] = array_slice(array_merge((array) ($P['mseen'] ?? []), $took), -500);
+    return $res;
+}
 if ($action === 'metasetup' || $action === 'metapoll') {
     if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
     $graphBase = fn($M) => rtrim((string) ($M['graph'] ?? 'https://graph.facebook.com/v23.0'), '/');
@@ -5761,7 +5827,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
         $d = $digits($l['phone'] ?? ''); if (strlen($d) === 10) $seenWho['p' . $d] = true;
         $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
     }
-    $added = []; $errors = [];
+    $added = []; $errors = []; $mnotes = 0;
     foreach ($M['pages'] as $pi => $P) {
         $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since; $errBefore = count($errors);
         $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status,questions{key,label}', 'limit' => 100, 'access_token' => $P['token']]));
@@ -5796,11 +5862,12 @@ if ($action === 'metasetup' || $action === 'metapoll') {
             }
         }
         if (count($errors) === $errBefore) $M['pages'][$pi]['last'] = max($since, $newest - 60);   /* a minute of overlap: Meta's clock and ours; the ids stop doubles. Fable review 2026-10-14: not past a form that failed */
+        if (feature('fbmessenger')) { $mr = metaMessenger($g, $gget, $P, $digits); $M['pages'][$pi] = $mr['page']; $added = array_merge($added, $mr['added']); $mnotes += $mr['notes']; if ($mr['error'] !== '') $errors[] = $P['name'] . ' / Messenger: ' . $mr['error']; }
     }
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
     if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)));
-    out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors]);
+    out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors, 'mnotes' => $mnotes]);
 }
 /* ---- ClickUp (2026-10-16, Matthew: "attach clickup to our app to take the leads [Jen] is filing into our app"; "run a scan for
  * duplicates after each pull") ----

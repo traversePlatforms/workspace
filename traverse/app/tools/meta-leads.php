@@ -39,5 +39,6 @@ if (!is_array($mlOut) || empty($mlOut['ok'])) { fwrite(STDERR, 'facebook leads: 
 if ($mlSetup !== '') { echo 'facebook leads: set up for ', implode(', ', (array) $mlOut['pages']), "\n"; exit(0); }
 if (!empty($mlOut['note'])) echo 'facebook leads: ', $mlOut['note'], "\n";
 if (!empty($mlOut['added'])) echo 'facebook leads: added ', $mlOut['added'], ': ', implode(', ', (array) $mlOut['who']), "\n";
+if (!empty($mlOut['mnotes'])) echo 'facebook messages: ', (int) $mlOut['mnotes'], " added as notes on leads already here\n";   /* Messenger (2026-10-20, off unless fbmessenger) */
 foreach ((array) ($mlOut['errors'] ?? []) as $e) fwrite(STDERR, 'facebook leads: ' . $e . "\n");
 exit(empty($mlOut['errors']) ? 0 : 1);
