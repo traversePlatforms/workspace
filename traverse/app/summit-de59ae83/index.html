@@ -1857,6 +1857,18 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .vappl button{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid #dfe5e1;background:#f7f9f8;border-radius:12px;padding:12px 14px;font:700 15px var(--sans);cursor:pointer;color:#16201C}
   .vappl button.cur{border-color:#1d6fe0;background:#eaf2fd}
   .vappl small{font-weight:600;color:#55635B;font-size:12px;text-align:right}
+  /* the Messenger preview (2026-10-20, Traverse only, look only) */
+  .mpv .vbox{max-width:640px;background:var(--paper,#fff)}
+  .mpv .mpsum{font:700 14px var(--sans);margin:0 0 12px;color:#16201C}
+  .mpv .mplist{display:grid;gap:12px}
+  .mpv .mpitem{display:grid;gap:6px}
+  .mpv .mpwill{font:800 12px var(--sans);letter-spacing:.02em;text-transform:uppercase;color:#1d6fe0}
+  .mpv .mpwill.note{color:#7a5a12}
+  .mpv .mpcard{pointer-events:none}
+  .mpv .mpcard .lnote{display:none}
+  .mpv .mpnote{border:1px dashed #cdb67a;background:#fffbef;border-radius:12px;padding:10px 12px;font-size:14px;color:#16201C}
+  .mpv .mpnote b{display:block;margin-bottom:4px}
+  .mpv .mpnote div{color:#55635B;margin-top:2px}
   /* the field crew (2026-10-19) */
   .crewadd{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:6px 0 16px}
   button.save.crewadd{min-height:50px;border:0;border-radius:14px;background:var(--go);color:var(--on-go);font:800 15px var(--sans);box-shadow:none}
@@ -2517,6 +2529,46 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var sw = q('button', null, 'Switch'); sw.type = 'button'; sw.addEventListener('click', vaPicker); b.appendChild(sw);
     var bk = q('button', 'alt', 'Back to mine'); bk.type = 'button'; bk.addEventListener('click', function () { vaGo(''); }); b.appendChild(bk);
     document.body.appendChild(b);
+  }
+  /* the Messenger preview (2026-10-20, Matthew: "show me this on our app but only for my account ... just so i can see what it looks like"):
+     Traverse's sign-in only. The Page's recent Messenger chats as they would land in the Pipeline if Messenger were switched on: a new lead
+     drawn with the real lead card (look only: nothing on it can be tapped), or the note it would add to a lead already here. Nothing is saved. */
+  function msgPreview() {
+    var ov = q('div', 'vapick mpv'), box = q('div', 'vbox'); ov.appendChild(box); document.body.appendChild(ov);
+    var close = function () { ov.remove(); };
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    var x = q('button', 'vx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', close); box.appendChild(x);
+    box.appendChild(q('h3', null, 'Messenger preview'));
+    box.appendChild(q('p', null, 'Facebook messages to the Page, shown the way they would come into the Pipeline if Messenger were switched on. Only your sign-in sees this, and nothing here is saved.'));
+    var tabs = q('div', 'vatabs'), sum = q('div', 'mpsum'), list = q('div', 'mplist'); box.appendChild(tabs); box.appendChild(sum); box.appendChild(list);
+    var days = 7;
+    var load = function () {
+      tabs.innerHTML = ''; sum.textContent = ''; list.innerHTML = ''; list.appendChild(q('p', null, 'Asking Facebook…'));
+      [[1, 'Today'], [3, '3 days'], [7, '7 days'], [14, '14 days']].forEach(function (d) { var b = q('button', null, d[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(d[0] === days)); b.addEventListener('click', function () { days = d[0]; load(); }); tabs.appendChild(b); });
+      api('msgpreview', { params: { days: days } }).then(function (j) {
+        list.innerHTML = '';
+        if (!j.ok) { list.appendChild(q('p', null, j.error || 'Not available.')); return; }
+        var plan = j.plan || [], nNew = plan.filter(function (p) { return p.do === 'new'; }).length;
+        var nNote = plan.length - nNew;
+        sum.textContent = plan.length ? plan.length + (plan.length === 1 ? ' chat: ' : ' chats: ') + (nNew === 1 ? '1 would be a new lead' : nNew + ' would be new leads') + ', ' + (nNote === 1 ? '1 would be a note on a lead already here.' : nNote + ' would be notes on leads already here.') + (j.skipped ? ' ' + j.skipped + ' left out (only the Page wrote, or a photo or sticker).' : '') : 'No messages from customers in this time.';
+        (j.errors || []).forEach(function (e) { list.appendChild(q('p', null, 'Facebook said: ' + e)); });
+        plan.forEach(function (p, i) {
+          var it = q('div', 'mpitem');
+          if (p.do === 'new') {
+            it.appendChild(q('div', 'mpwill', 'Would be a new lead'));
+            var card = leadCard({ id: 'preview-' + i, name: p.name, phone: p.phone, email: p.email, src: 'messenger', need: 'Facebook message', town: '', msg: p.texts.join('\n'), at: p.first, status: 'new', notes: [], tries: [], owner: '' });
+            card.classList.add('mpcard'); card.setAttribute('inert', ''); card.setAttribute('aria-label', 'Preview only'); it.appendChild(card);
+          } else {
+            it.appendChild(q('div', 'mpwill note', 'Would be a note on a lead already here'));
+            var nb = q('div', 'mpnote'); nb.appendChild(q('b', null, (p.leadName || 'A lead') + (p.leadStatus ? ' · ' + (LEAD_ST.filter(function (s) { return s[0] === p.leadStatus; })[0] || [0, p.leadStatus])[1] : '') + ' · matched by ' + p.why));
+            p.texts.forEach(function (t) { nb.appendChild(q('div', null, 'Facebook message: ' + t + ' — Messenger, ' + ago(p.at))); });
+            it.appendChild(nb);
+          }
+          list.appendChild(it);
+        });
+      }).catch(function () { list.innerHTML = ''; list.appendChild(q('p', null, 'No signal. Try again.')); });
+    };
+    load();
   }
   function vaPicker() {
     var ov = q('div', 'vapick'), box = q('div', 'vbox'); ov.appendChild(box); document.body.appendChild(ov);
@@ -3723,6 +3775,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
       var otl = q('div', 'tgrid');
       if (S.super) otl.appendChild(tile('button', 'users', 'See through their eyes', 'Open the app as the office, Jen, a manager, a door rep or a crew, looking only. No signing out and in.', 'Traverse only', vaPicker));
+      if (S.super && !S.viewing && CO.a365) otl.appendChild(tile('button', 'chat', 'Messenger preview', 'Facebook messages as they would come into the Pipeline. Looking only: nothing is saved.', 'Traverse only', msgPreview));   /* 2026-10-20 */
       else if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
@@ -15802,7 +15855,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' ? ['Results', resultsView, false, null, ['results']] : null,
       S.role === 'admin' ? ['Usage', usageView, false, null, ['usage']] : null,   /* the tap log (2026-10-12) */
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : S.role === 'manager' ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
-      S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null].filter(Boolean);
+      S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
+      S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
     it.forEach(function (x) {
       var lit = x[4].indexOf(S.screen) >= 0;
       var b = q('button', lit ? 'on' : null, x[0]); b.type = 'button'; if (lit) b.setAttribute('aria-current', 'page');

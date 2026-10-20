@@ -5738,8 +5738,8 @@ function metaMsgContact(string $text): array {
     $em = preg_match('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $text, $m2) && filter_var($m2[0], FILTER_VALIDATE_EMAIL) ? strtolower($m2[0]) : '';
     return [$ph, $em];
 }
-function metaMessenger(string $g, callable $gget, array $P, callable $digits): array {
-    $res = ['page' => $P, 'added' => [], 'notes' => 0, 'error' => ''];
+function metaMessenger(string $g, callable $gget, array $P, callable $digits, bool $dry = false): array {   /* $dry: the preview, the same matching with nothing saved (2026-10-20) */
+    $res = ['page' => $P, 'added' => [], 'notes' => 0, 'error' => '', 'plan' => [], 'skipped' => 0];
     $since = (int) ($P['mlast'] ?? 0);
     if ($since === 0) { $res['page']['mlast'] = time(); return $res; }   /* first run after switching on: start now, bring in no old chats */
     $pid = (string) $P['id']; $newest = $since; $convs = []; $seen = array_flip((array) ($P['mseen'] ?? [])); $took = [];   /* message ids already handled: the runs overlap a minute */
@@ -5771,13 +5771,14 @@ function metaMessenger(string $g, callable $gget, array $P, callable $digits): a
             $at = strtotime((string) ($m['created_time'] ?? '')) ?: 0; $mid = (string) ($m['id'] ?? '');
             if ($at > $since - 120 && $txt !== '' && ($mid === '' || !isset($seen[$mid]))) { $mine[] = ['t' => $txt, 'at' => $at]; if ($mid !== '') $took[] = $mid; }
         }
-        if (!$mine) continue;   /* only the Page wrote, or a sticker or photo with no words */
+        if (!$mine) { $res['skipped']++; continue; }   /* only the Page wrote, or a sticker or photo with no words */
         usort($mine, fn($a, $b) => $a['at'] <=> $b['at']);
         [$phone, $email] = metaMsgContact($allText);
-        $lid = $byConv[$cid] ?? '';
-        if ($lid === '' && strlen($digits($phone)) === 10) $lid = $byPhone[$digits($phone)] ?? '';
-        if ($lid === '' && $email !== '') $lid = $byEmail[$email] ?? '';
-        if ($lid === '') { $n = cuName($name); if (substr_count($n, ' ') >= 1) $lid = $byName[$n] ?? ''; }
+        $lid = $byConv[$cid] ?? ''; $why = $lid !== '' ? 'this chat' : '';
+        if ($lid === '' && strlen($digits($phone)) === 10) { $lid = $byPhone[$digits($phone)] ?? ''; $why = 'same phone'; }
+        if ($lid === '' && $email !== '') { $lid = $byEmail[$email] ?? ''; $why = 'same email'; }
+        if ($lid === '') { $n = cuName($name); if (substr_count($n, ' ') >= 1) { $lid = $byName[$n] ?? ''; $why = 'same name'; } }
+        if ($dry) { $res['plan'][] = ['name' => $name, 'phone' => $phone, 'email' => $email, 'at' => end($mine)['at'], 'first' => $mine[0]['at'], 'texts' => array_map(fn($m) => $m['t'], array_slice($mine, -5)), 'do' => $lid !== '' ? 'note' : 'new', 'lead' => $lid, 'leadName' => $lid !== '' ? (string) ($leads[$lid]['name'] ?? '') : '', 'leadStatus' => $lid !== '' ? (string) ($leads[$lid]['status'] ?? '') : '', 'why' => $lid !== '' ? $why : '']; continue; }
         if ($lid !== '') {   /* someone we have: their messages as notes, the conversation tied to them */
             if (!isset($byConv[$cid])) { appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'mconv' => $cid, 'by' => 'Messenger', 'at' => time()]); $byConv[$cid] = $lid; }
             foreach (array_slice($mine, -5) as $m) { appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'note' => 'Facebook message: ' . $m['t'], 'by' => 'Messenger', 'at' => $m['at']]); $res['notes']++; }
@@ -5791,6 +5792,31 @@ function metaMessenger(string $g, callable $gget, array $P, callable $digits): a
     $res['page']['mlast'] = max($since, $newest - 60);
     $res['page']['mseen'] = array_slice(array_merge((array) ($P['mseen'] ?? []), $took), -500);
     return $res;
+}
+/* the Messenger preview (2026-10-20, Matthew: "show me this on our app but only for my account ... just so i can see what it looks like"):
+   Traverse's own sign-in only. The last few days of the Page's Messenger chats, run through the same matching, showing what each would become
+   (a New lead, or a note on a lead already here). Nothing is saved, nothing is marked handled. Uses its own key file,
+   sixfold-private/meta-messenger.json (system_token; the system user's key WITH pages_messaging), so the live form-lead key is not touched. */
+if ($action === 'msgpreview') {
+    if (!$realSuper) fail('Not allowed.', 403);
+    $S = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/meta-messenger.json'), true);
+    if (!is_array($S) || empty($S['system_token'])) fail('The Messenger key is not on the server.');
+    $g = rtrim((string) ($S['graph'] ?? 'https://graph.facebook.com/v23.0'), '/');
+    $gget = function (string $url): array { $code = 0; $b = httpGetRaw($url, 25, $code); $j = $b !== null ? json_decode($b, true) : null; if (!is_array($j) && $code !== 200) { $raw = null; if (function_exists('curl_init')) { $c = curl_init($url); curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25]); $raw = curl_exec($c); curl_close($c); } $j = is_string($raw) ? json_decode($raw, true) : null; } return is_array($j) ? $j : ['error' => ['message' => 'no answer (HTTP ' . $code . ')']]; };
+    $acc = $gget($g . '/me/accounts?' . http_build_query(['fields' => 'id,name,access_token', 'limit' => 50, 'access_token' => (string) $S['system_token']]));
+    if (empty($acc['data'])) fail('Facebook did not answer: ' . (string) ($acc['error']['message'] ?? 'no pages'));
+    $days = max(1, min(14, (int) ($_GET['days'] ?? 7)));
+    $digits = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
+    $plan = []; $skipped = 0; $errs = [];
+    foreach ($acc['data'] as $p) {
+        if (empty($p['access_token'])) continue;
+        $r = metaMessenger($g, $gget, ['id' => (string) $p['id'], 'name' => (string) $p['name'], 'token' => (string) $p['access_token'], 'mlast' => time() - $days * 86400], $digits, true);
+        if ($r['error'] !== '') $errs[] = $p['name'] . ': ' . $r['error'];
+        foreach ($r['plan'] as $x) $plan[] = $x + ['page' => (string) $p['name']];
+        $skipped += $r['skipped'];
+    }
+    usort($plan, fn($a, $b) => $b['at'] <=> $a['at']);
+    out(['ok' => true, 'days' => $days, 'plan' => $plan, 'skipped' => $skipped, 'errors' => $errs, 'on' => feature('fbmessenger')]);
 }
 if ($action === 'metasetup' || $action === 'metapoll') {
     if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
