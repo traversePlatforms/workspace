@@ -2971,7 +2971,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function devClass() { var ua = navigator.userAgent || ''; return (/iPhone|iPad|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'm' : 'c'; }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3010,7 +3010,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -3534,7 +3534,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else big.textContent = initials(S.me);
     me.appendChild(big);
     var who = q('div', 'pfwho'); who.appendChild(q('b', null, S.me || ''));
-    who.appendChild(q('span', null, (S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : S.role === 'office' ? 'Office' : S.role === 'quote' ? 'Quote only' : 'Crew') + (S.walker && feat('walkdesk') ? ' \u00b7 does ' + vw() + 's' : '')));
+    who.appendChild(q('span', null, (S.role === 'admin' ? 'Admin' : S.role === 'manager' ? 'Manager' : S.role === 'office' ? (S.runsTeam ? 'Office · runs a team' : 'Office') : S.role === 'quote' ? 'Quote only' : 'Crew') + (S.walker && feat('walkdesk') ? ' \u00b7 does ' + vw() + 's' : '')));
     var pa = q('div', 'pfacts');
     var pick = q('input'); pick.type = 'file'; pick.accept = 'image/*'; pick.hidden = true;
     var up = q('button', 'lnk', S.avatar ? 'Change photo' : 'Add a photo'); up.type = 'button';
@@ -3633,7 +3633,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -3756,7 +3756,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colours mean.', null, function () { hailMapView(null, chooseView); }) : null,
       feat('security') && crewSees() ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', crewTag(), crimeMapView) : null].filter(Boolean));
     /* a manager is crew plus their own team (Matthew 2026-10-05): leads to hand out, the team's numbers and territories */
-    if (S.role === 'manager') grp('Your team', [
+    if (mgrOn()) grp('Your team', [
       tile('button', 'clip', 'Leads', 'New enquiries to hand out, and your team\u2019s.', 'Manager', teamLeadsView),
       tile('button', 'users', 'Team stats', 'Your team\u2019s numbers, and the leaderboard.', 'Manager', teamView),
       tile('button', 'route', 'Territories', 'Assign neighbourhoods within your team.', 'Manager', territoriesView),
@@ -4512,13 +4512,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (wdOn() && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
-    if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* call tries (2026-10-14) */
+    /* the deposit and the one-page form straight from the card (2026-10-20, Matthew: Joseph Barnes said yes on the phone, "how can i build a quote
+       and send it to him from my super admin page"): an open lead with no form yet; the office also has it after a logged talk */
+    if (wdOn() && S.screen === 'pipeline' && CO.a365 && !l.sign && !l.signed && ['won', 'lost'].indexOf(l.status || 'new') < 0 && (adminView() || asOffice())) {
+      var sfb = q('button', 'save jbook', 'They said yes: deposit and form ›'); sfb.type = 'button';
+      sfb.addEventListener('click', function () { signSendView(l, l.quote ? { price: l.quote.price, pkg: l.quote.pkg, sq: l.quote.sq || 0, seedLb: l.quote.seedLb, fertLb: l.quote.fertLb || null } : null); });
+      c.appendChild(sfb);
+    }
+    if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));
+    else if (feat('walkdesk') && S.screen === 'calendar' && l.owner === S.me && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* a rep calling the leads handed to them (2026-10-20) */   /* call tries (2026-10-14) */
     if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
     if (l.notes && l.notes.length) {
       var nt = q('div', 'lnotes');
       l.notes.forEach(function (n) { nt.appendChild(q('div', null, n.note + ' \u2014 ' + n.by + ', ' + ago(n.at))); });
       c.appendChild(nt);
     }
+    if (S.role === 'office' && S.runsTeam && S.screen === 'pipeline') leadOwnerRows(l, c);   /* an office account that runs a team hands leads to its people (2026-10-20) */
     /* the owner dropdown is tabled (Matthew 2026-10-15: "not needed at the moment"; TASKS.md keeps it): if (!asOffice()) leadOwnerRows(l, c); */
     if (wdOn() && S.screen === 'pipeline' && (!asOffice() || dwFor('lead', l.id)) && (dwFor('lead', l.id) || !(l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0))) c.appendChild(deskWalkBlock('lead', l));   /* quoted: no walk to book (Matthew 2026-10-15); a booked one still shows */   /* the walk desk (2026-10-14); the office quotes by phone */
     var sb = q('div', 'lstat');
@@ -4537,8 +4546,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       sb.appendChild(b);
     });
-    if (!asOffice()) c.appendChild(sb);   /* the office: no won/lost buttons; the calls and the form move the lead */
-    if (l.status === 'won' && adminView()) {
+    if (!asOffice() || (S.role === 'office' && S.wonlost)) c.appendChild(sb);   /* + an office account ticked Marks won and lost (2026-10-20) */   /* the office: no won/lost buttons; the calls and the form move the lead */
+    if (l.status === 'won' && (adminView() || (S.role === 'office' && S.wonlost))) {
       var mcl = q('button', 'addlead mkcust', 'Make customer'); mcl.type = 'button';
       mcl.addEventListener('click', function () { makeCustomer({ lead: l.id }); });
       c.appendChild(mcl);
@@ -4554,6 +4563,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Matthew: whoever is working the leads books the walk with Brandon or Brad, sees their days to find a free slot, and the walk
      lands on that person's calendar with an alert and everything they need for it. Admins and the office role book; the people
      ticked "Does walks" in Accounts go. They say how it went from the walk itself, which moves the lead along. */
+  /* an Office account that also runs a team (2026-10-20, Nneka): a manager's powers over their own team, everything else the office's */
+  function mgrOn() { return S.role === 'manager' || (S.role === 'office' && !!S.runsTeam); }
   function wdOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
   function walkerOn() { return feat('walkdesk') && !!S.walker; }
   /* an admin can look at the app as the office sees it (2026-10-14, Matthew: "as admin I can see exactly what Jen sees from my login"):
@@ -7044,7 +7055,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
     [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', 'Quick quote', function () { quickQuoteView(); }],
-     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].forEach(function (x) {
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
     c2.appendChild(tc);
@@ -7053,7 +7064,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       list.textContent = '';
       if (!j || !j.ok) { list.appendChild(q('div', 'msg', 'The leads need signal.')); return; }
       var open = j.leads.filter(function (l) { return ['new', 'contacted'].indexOf(l.status || 'new') >= 0; });
-      var G = { new: [], today: [], vm: [], talked: [], wait: [], out: [] }; open.forEach(function (l) { G[callGroup(l)].push(l); });
+      var G = { new: [], today: [], vm: [], talked: [], wait: [], out: [], email: [], text: [] }; open.forEach(function (l) { (G[callGroup(l)] || G.wait).push(l); });   /* emailed and texted are groups since 2026-10-16; one lead in them emptied this box (found 2026-10-20) */
       var web = open.filter(function (l) { return l.src === 'a365web' && !(l.tries || []).length; }).length;
       [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
         var b = q('button', 'onum' + (k[0] === 'new' && G.new.length ? ' ohot' : '')); b.type = 'button';
@@ -7490,10 +7501,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* the leaderboard lives here since the fold-up (2026-10-12): it was its own tile beside this one */
     var lb = q('button', 'lnk subnav', 'Leaderboard: rankings and the daily goal \u203a'); lb.type = 'button'; lb.addEventListener('click', function () { S.boardBack = teamView; boardView(); }); view.appendChild(lb);
     /* adding people (2026-10-11, Matthew: how do managers add people to their team?) */
-    if (S.role === 'admin' || S.role === 'manager') { var ad = q('button', 'addlead', S.role === 'manager' ? '+ Add someone to your team' : '+ Add a person'); ad.type = 'button'; ad.addEventListener('click', function () { S.acctAdd = true; accountsView(); }); view.appendChild(ad); }
+    if (S.role === 'admin' || mgrOn()) { var ad = q('button', 'addlead', mgrOn() ? '+ Add someone to your team' : '+ Add a person'); ad.type = 'button'; ad.addEventListener('click', function () { S.acctAdd = true; accountsView(); }); view.appendChild(ad); }
     var holder = q('div'); holder.appendChild(q('div', 'skel s2')); view.appendChild(holder);
     /* everyone on the team, not only who knocked lately (2026-10-12): the people list says who the viewer may see and their team */
-    Promise.all([api('stats', { params: S.role === 'manager' ? { days: 30, team: 1 } : { days: 30 } }), api('calpeople').catch(function () { return {}; })]).then(function (rs) {
+    Promise.all([api('stats', { params: mgrOn() ? { days: 30, team: 1 } : { days: 30 } }), api('calpeople').catch(function () { return {}; })]).then(function (rs) {
       var j = rs[0], cp = rs[1] || {};
       holder.textContent = '';
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the stats.')); return; }
@@ -7546,7 +7557,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     hideToast(); S.signin = null; S.screen = 'board';
     foot.hidden = true; setDock(null);
     var bk = S.boardBack || chooseView; S.boardBack = null;
-    setBar('back', { title: 'Leaderboard', sub: S.role === 'manager' ? 'Your team' : 'In testing · admins only', back: bk, backLabel: bk === chooseView ? 'Field tools' : 'Team stats' });
+    setBar('back', { title: 'Leaderboard', sub: mgrOn() ? 'Your team' : 'In testing · admins only', back: bk, backLabel: bk === chooseView ? 'Field tools' : 'Team stats' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel s2')); view.appendChild(holder);
     api('board').then(function (j) {
@@ -7565,7 +7576,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     holder.appendChild(seg);
     holder.appendChild(goalCard(holder));
-    if (S.role === 'admin' || S.role === 'manager') holder.appendChild(funnelCard((j.people || []).filter(function (r) { return r[per] && (r[per].doors || r[per].won); }), per));
+    if (S.role === 'admin' || mgrOn()) holder.appendChild(funnelCard((j.people || []).filter(function (r) { return r[per] && (r[per].doors || r[per].won); }), per));
     var g = j.goals || {};
     var rows = (j.people || []).filter(function (r) { return r[per].doors || r[per].won; })
       .sort(function (a, b) { return b[per].booked - a[per].booked || b[per].talked - a[per].talked || b[per].doors - a[per].doors || (a.name < b.name ? -1 : 1); });
@@ -7576,7 +7587,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (key !== last) { rank = i + 1; last = key; }   /* a tie shares the place */
       var row = q('div', 'brow' + (rank <= 3 ? ' top r' + rank : ''));
       /* Matthew 2026-10-05: tap a name for that person's stats (admins; a team manager later, for their own reps) */
-      if (S.role === 'admin' || S.role === 'manager') { row.classList.add('tap'); row.setAttribute('role', 'button'); row.tabIndex = 0;
+      if (S.role === 'admin' || mgrOn()) { row.classList.add('tap'); row.setAttribute('role', 'button'); row.tabIndex = 0;
         var openStats = function () { statsView(r.name, boardView); };
         row.addEventListener('click', openStats); row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openStats(); } }); }
       row.appendChild(q('div', 'brk', String(rank)));
@@ -8273,7 +8284,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.push(['Training', trainingView]);
     t.push(planOk() ? ['Team stats', teamView] : ['My stats', function () { statsView(S.me, chooseView); }]);
     if (planOk()) t.push(['Office dashboard', officeView]);
-    if (S.role === 'manager') t.push(['Team sign-ins', accountsView]);
+    if (mgrOn()) t.push(['Team sign-ins', accountsView]);
     if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
     if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample door', sampleView]);   /* not on Sixfold (2026-10-17) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
@@ -8663,7 +8674,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dnavItems() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]];   /* the office: no doors, no stats (2026-10-14) */
+      ['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]].concat(mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]];   /* the field crew (2026-10-19): no doors, no sales */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
@@ -9550,7 +9561,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var own = j.goal, G = own || j.company || {};
     var box = q('div', 'goalbox');
     var hd = q('div', 'gbh'); hd.appendChild(q('h3', null, 'Daily goal'));
-    var mayEdit = name === S.me || S.role === 'admin' || S.role === 'manager';
+    var mayEdit = name === S.me || S.role === 'admin' || mgrOn();
     if (mayEdit) { var ed = q('button', 'lnk', S.goalEdit ? 'Cancel' : (own ? 'Change' : 'Set a goal')); ed.type = 'button'; ed.addEventListener('click', function () { S.goalEdit = !S.goalEdit; statsView(name, back); }); hd.appendChild(ed); }
     box.appendChild(hd);
     var rows = [['doors', 'Doors', T.doors], ['talked', 'Talked to', talked], ['booked', 'Quotes booked', T.booked]];
@@ -10545,7 +10556,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; }   /* PINs hide whenever you leave the screen */
     hideToast(); S.signin = null; S.screen = 'accounts';
     foot.hidden = true; setDock(null);
-    var mgr = S.role === 'manager';
+    var mgr = mgrOn();
     setBar('back', { title: mgr ? 'Team sign-ins' : 'Accounts', sub: mgr ? 'Your crew: add, new codes, sign out, remove' : 'Who can sign in to the field tools', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
@@ -10562,7 +10573,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.newCode) holder.appendChild(codeCard(S.newCode));
     /* seats against the plan (2026-10-10): a warning only, adding people is never blocked */
     var sx = S.acctSeats; if (sx && (sx.status === 'active' || sx.status === 'trialing') && sx.used > sx.seats) holder.appendChild(q('div', 'msg bad', sx.used + ' people can sign in and the plan pays for ' + sx.seats + '. Add seats in Billing.'));
-    var mgr = S.role === 'manager';
+    var mgr = mgrOn();
     if (mgr) { var tmn = (S.acctTeams || [])[0]; holder.appendChild(q('div', 'sub2', 'Your team' + (tmn ? ': ' + tmn.name : '') + '. Admins change roles and teams.')); }
     else holder.appendChild(teamsBox(holder));
     var add = q('button', 'addlead', S.acctAdd ? 'Close the form' : mgr ? '+ Add someone to your team' : '+ Add a person'); add.type = 'button';
@@ -10678,7 +10689,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function accountForm(holder) {
     var fm = q('div', 'phf acf'), r = 'crew';
     var lb = q('label', null, 'Name'); var nm = q('input'); nm.maxLength = 40; nm.placeholder = 'First name and last initial'; nm.autocomplete = 'off'; lb.appendChild(nm); fm.appendChild(lb);
-    if (S.role === 'manager') fm.appendChild(q('div', 'lsub', 'They join your team as crew, with their own code.'));
+    if (mgrOn()) fm.appendChild(q('div', 'lsub', 'They join your team as crew, with their own code.'));
     else { fm.appendChild(q('div', 'lsub', 'Crew mark doors. ' + (feat('walkdesk') ? 'Office work the leads and book ' + vw() + 's. ' : '') + 'Admins also see the office tools, the export and these accounts.')); fm.appendChild(roleSeg('crew', function (v) { r = v; })); }
     var err = q('div', 'err'); fm.appendChild(err);
     var sv = q('button', 'save', 'Make the sign-in'); sv.type = 'button';
@@ -10721,6 +10732,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var meta = q('div', 'meta');
     meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'super' ? 'Traverse' : a.role === 'admin' ? 'Admin' : a.role === 'manager' ? 'Manager' : a.role === 'office' ? 'Office' : a.role === 'quote' ? 'Quote only' : 'Crew'));
     if (a.walker && feat('walkdesk') && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Does ' + vw() + 's'));
+    if (a.runsteam && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Runs a team'));
+    if (a.wonlost && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Marks won and lost'));
     var tm = (S.acctTeams || []).filter(function (t) { return t.id === a.team; })[0];
     if (tm && !a.off) meta.appendChild(q('span', 'tag teamtag', tm.name));
     meta.appendChild(q('span', null, a.off ? 'Turned off · cannot sign in' : a.source === 'app' ? 'Added' + (a.by ? ' by ' + a.by : '') + (a.at ? ' · ' + fmtDay(a.at) : '') : 'Set up on the server'));
@@ -10764,6 +10777,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (adm && feat('walkdesk') && a.role !== 'super' && a.role !== 'admin' && a.role !== 'office') btn(a.pays ? 'Stop payments' : 'Takes payments', null, function () {   /* 2026-10-19: a trusted feature, the admin decides */
         acctCall('paysset', { id: a.id, on: !a.pays }, function () { toast(a.pays ? a.name + ' no longer takes payments' : a.name + ' takes payments now', a.pays ? 'Charging a saved card and pay links are off for them. Cash they collect is still recorded.' : 'They can charge a saved card and make a Square pay link on their jobs.', null); });
       });
+      if (adm && feat('walkdesk') && a.role === 'office') {   /* an office account that runs a team, and marks won and lost (2026-10-20) */
+        btn(a.runsteam ? 'Stop running a team' : 'Runs a team', null, function () { acctCall('acctflag', { id: a.id, flag: 'runsteam', on: !a.runsteam }, function () { toast(a.runsteam ? a.name + ' no longer runs a team' : a.name + ' runs a team now', a.runsteam ? 'Their team stays as it is; an admin manages it.' : 'They add and manage the crew on their team, hand them leads, and see the team’s numbers.', null); }); });
+        btn(a.wonlost ? 'Stop won and lost' : 'Marks won and lost', null, function () { acctCall('acctflag', { id: a.id, flag: 'wonlost', on: !a.wonlost }, function () { toast(a.wonlost ? a.name + ' no longer marks won and lost' : a.name + ' marks won and lost now', a.wonlost ? 'Calls and the signed form still move their leads along.' : 'Won makes the customer.', null); }); });
+      }
       /* a new code: an admin may pick it, and change their own (2026-10-11, Matthew); a manager gives their crew a random one */
       if (adm || !a.you) btn(a.you ? 'Change my code' : 'New code', null, function () {
         if (adm) { S.acctCode = S.acctCode === a.id ? null : a.id; drawAccounts(holder); return; }
@@ -11534,7 +11551,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.qholder = holder;
     }
     S.leadRedraw = pipelineView;
-    if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { S.leadPeople = j.people.map(function (p) { return p.name; }); if (S.screen === 'pipeline') pipelineView(); } }).catch(function () {});
+    if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { var myT = (j.people.filter(function (x) { return x.me; })[0] || {}).team; S.leadPeople = j.people.filter(function (p) { return !(S.role === 'office' && S.runsTeam) || p.me || (myT && p.team === myT); }).map(function (p) { return p.name; }); if (S.screen === 'pipeline') pipelineView(); } }).catch(function () {});
     Promise.all([api('quotes'), api('leads'), deskLoad()]).then(function (rs) {
       if (rs[0]._status === 401 || rs[1]._status === 401) return signinView('Signed out. Enter your code again.');
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
@@ -15382,7 +15399,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      figure, score and filter is the card's own. A row opens its door in the neighbourhood, and Back comes here again. */
   var PLAN_CAP = 3000;
   var PLAN_NUM = { score: 1, hail: 1, roof: 1, built: 1, kwh: 1, panels: 1, acres: 1, value: 1 };   /* columns of figures, set to the right */
-  function planOk() { return (S.role === 'admin' && !S.viewAs) || S.role === 'manager'; }
+  function planOk() { return (S.role === 'admin' && !S.viewAs) || mgrOn(); }
   function planTown() { return S.regions.filter(function (x) { return x.key === (S.plan && S.plan.key); })[0] || null; }
   function planWho(d) { if (d.rep) return d.rep; var r = planTown(), a = r && r.areas.filter(function (x) { return x.name === d._area; })[0]; return a && a.who ? a.who : ''; }
   function planStatus(d) { return d.cust ? 'Customer' : !d.mark ? 'To knock' : backOn(d) ? (d.mark.outcome === 'later' ? 'Due back' : 'Try again') : markName(d.mark); }
@@ -15854,7 +15871,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       ['Training', trainingView, false, null, ['training']],
       S.role === 'admin' ? ['Results', resultsView, false, null, ['results']] : null,
       S.role === 'admin' ? ['Usage', usageView, false, null, ['usage']] : null,   /* the tap log (2026-10-12) */
-      S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : S.role === 'manager' ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
+      S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
     it.forEach(function (x) {
@@ -15892,7 +15909,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tc = q('div', 'card oteam'); tc.appendChild(q('h3', null, 'The team today')); right.appendChild(tc);
     var wk = q('div', 'card owalks'); wk.appendChild(q('h3', null, (feat('hail') ? 'Roof walks' : 'Walks') + ', next 7 days')); right.appendChild(wk);
     left.appendChild(officeMap());
-    var teamP = S.role === 'manager' ? api('calpeople').then(function (c) { return c && c.ok ? c.people.map(function (p) { return p.name; }) : null; }, function () { return null; }) : Promise.resolve(null);
+    var teamP = mgrOn() ? api('calpeople').then(function (c) { return c && c.ok ? c.people.map(function (p) { return p.name; }) : null; }, function () { return null; }) : Promise.resolve(null);
     var numbers = function () {
       api('stats', { params: { days: 7, team: 1 } }).then(function (j) {
         if (!j || !j.ok || S.screen !== 'office' || !document.body.contains(page)) return;
@@ -16117,7 +16134,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -16125,7 +16142,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

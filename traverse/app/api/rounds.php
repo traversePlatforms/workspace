@@ -1046,7 +1046,7 @@ const BOARD_OPEN = false;
    assigned, everyone still sees every neighbourhood as before. false hides the assignments from the crew again. */
 const TERRITORIES_OPEN = true;
 const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
-function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin' || $role === 'manager'; }
+function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin' || $role === 'manager' || mgr(); }
 function boardHidden(string $name): bool { return (bool) preg_match('/^(claude|fable)\b/i', $name); }
 function loadAssign(string $key): array {
     $out = [];
@@ -1810,7 +1810,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2654,7 +2654,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -2897,7 +2897,7 @@ if ($action === 'area') {
     $fchk = loadFireChecks($key);
     $walks = loadWalks($key);
     $custDoors = customerDoors();   /* the crew see the tag on the door (plan and start date only, no contact details) */
-    $repOf = (TERRITORIES_OPEN || $role === 'admin' || $role === 'manager') ? loadDoorAssign($key) : [];   /* doors assigned to one person (2026-10-08) */
+    $repOf = (TERRITORIES_OPEN || $role === 'admin' || mgr()) ? loadDoorAssign($key) : [];   /* doors assigned to one person (2026-10-08) */
     /* skip-trace results ride along for admins only (crew too if the config says crew_see); every number carries its DNC answer */
     $placeOf = skipMail($key);   /* id => {c: city, z: ZIP, m: mailing}; only c and z are sent */
     $traces = ($role === 'admin' || !empty(skipConfig(__DIR__)['crew_see'])) ? skipLoad($key) : [];
@@ -3233,9 +3233,9 @@ if ($action === 'stats') {
     $days = max(1, min(120, (int) ($_REQUEST['days'] ?? 30)));
     $who = whoFor((string) ($_REQUEST['who'] ?? ''));
     /* a manager's Team stats: their team, all at once (team=1) */
-    if ($role === 'manager' && !empty($_REQUEST['team']) && trim((string) ($_REQUEST['who'] ?? '')) === '') $who = '';
+    if (mgr() && !empty($_REQUEST['team']) && trim((string) ($_REQUEST['who'] ?? '')) === '') $who = '';
     $list = teamDays($days, $who);
-    if ($role === 'manager' && $who === '') $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || sameTeam($p['name'])));
+    if (($role === 'manager' || (mgr() && !empty($_REQUEST['team']))) && $who === '') $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || sameTeam($p['name'])));
     out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => loadGoals()]);
 }
 
@@ -3780,9 +3780,15 @@ function teamInfo(array $basePeople, array $acct, string $key): array {
     }
     return ['byName' => $byName, 'members' => $members];
 }
+/* an Office account that also runs a team (2026-10-20, Matthew: Nneka is a sales rep who also does calls, doors and quotes, "she will manage a
+   team for bria and christain"). Accounts ticks two options on an office account: "Runs a team" (runsteam) gives exactly a manager's powers
+   over their own team; "Marks won and lost" (wonlost) shows the Won and Lost buttons the office screen otherwise hides. Everything else stays
+   the office's: no pricing math, no Payments page, no other teams, no codes but their team's. */
+function acctFlag(string $k, string $id): bool { global $acct; return feature('walkdesk') && $id !== '' && !empty($acct[$k][$id]); }
+function mgr(): bool { global $role, $session; return $role === 'manager' || ($role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? ''))); }
 function sameTeam(string $who): bool { global $TEAM, $myTeam; return $myTeam !== '' && ($TEAM['byName'][$who]['team'] ?? '') === $myTeam; }
 /** may the signed-in person manage who's things (stats, calendar entries, goals, leads)? */
-function canManage(string $who): bool { global $role, $me; return $who === $me || $role === 'admin' || ($role === 'manager' && sameTeam($who)); }
+function canManage(string $who): bool { global $role, $me; return $who === $me || $role === 'admin' || (mgr() && sameTeam($who)); }
 /** may they look at who's calendar? */
 function canViewCal(string $who): bool { global $role; return canManage($who) || desk() || ($role === 'crew' && sameTeam($who)); }
 /** the walk desk (2026-10-14): admins, and the office role where the company turns it on */
@@ -3794,7 +3800,7 @@ function whoFor(string $req): string { global $role, $me; $req = trim($req); if 
 function mayAssign(string $cur, string $new): bool {
     global $role, $me;
     if ($role === 'admin') return true;
-    if ($role !== 'manager') return false;
+    if (!mgr()) return false;
     $ours = fn($n) => $n === '' || $n === $me || sameTeam($n);
     return $ours($cur) && $ours($new);
 }
@@ -7264,6 +7270,24 @@ if ($action === 'paysset') {
     out(['ok' => true]);
 }
 /* who does walks (2026-10-14, the walk desk): an admin ticks them in Accounts; the desk books walks only with them */
+if ($action === 'acctflag') {   /* "Runs a team" / "Marks won and lost" on an office account (2026-10-20) */
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost'], true)) fail('No such setting.');
+    $acctLock = @fopen(accountsFile() . '.lock', 'c');
+    if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
+    $id = (string) ($body['id'] ?? '');
+    if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if ($rows[$id]['role'] !== 'office') fail('Only an Office account takes this.');
+    if ($flag === 'runsteam' && !empty($body['on']) && (string) ($acct['member'][$id] ?? '') === '') fail('Put them on a team first.');
+    $acct[$flag] = (array) ($acct[$flag] ?? []);
+    if (!empty($body['on'])) $acct[$flag][$id] = 1; else unset($acct[$flag][$id]);
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => ($flag === 'runsteam' ? 'runs a team' : 'marks won and lost') . (!empty($body['on']) ? '' : ': off'), 'name' => $rows[$id]['name'], 'id' => $id]);
+    out(['ok' => true]);
+}
 if ($action === 'walkerset') {
     if (!feature('walkdesk')) fail('Not here.', 404);
     if ($role !== 'admin') fail('Not allowed.', 403);
@@ -7283,7 +7307,7 @@ if ($action === 'walkerset') {
 if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins'], true)) {
     /* managers (Matthew 2026-10-11: "they can remove people right? they should be able to"): the crew on their own team only.
        They add crew (who join their team), give a new code, sign out and remove; roles, teams, PINs and everyone else stay with admins. */
-    $isMgr = $role === 'manager';
+    $isMgr = mgr();   /* a manager, or an office account that runs a team (2026-10-20) */
     if ($role !== 'admin' && !($isMgr && in_array($action, ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], true))) fail('Not allowed.', 403);
     if ($isMgr && $myTeam === '') fail('You are not on a team yet. Ask an admin to put you on one.', 403);
     $rows = acctRows($basePeople, $acct, $sessionKey);
@@ -7299,7 +7323,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id'])];
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id'])];
         }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
@@ -7455,12 +7479,12 @@ if ($action === 'board') {
     $names = [];
     foreach ($people as $code => $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }   /* names only, never codes */
     ksort($names);
-    if ($role === 'manager' && !BOARD_OPEN) {   /* a manager's board is their team's (2026-10-05) */
+    if (mgr() && !BOARD_OPEN) {   /* a manager's board is their team's (2026-10-05) */
         $rows = array_filter($rows, fn($r) => $r['name'] === $me || sameTeam($r['name']));
         $terr = array_values(array_filter($terr, fn($t) => $t['who'] === $me || sameTeam($t['who'])));
     }
     out(['ok' => true, 'today' => $from['today'], 'open' => BOARD_OPEN, 'goals' => loadGoals(), 'pgoals' => loadPGoals(), 'people' => array_values($rows),
-         'territories' => $terr, 'names' => $role === 'admin' ? array_keys($names) : ($role === 'manager' ? array_values(array_filter(array_keys($names), fn($n) => $n === $me || sameTeam($n))) : [])]);
+         'territories' => $terr, 'names' => $role === 'admin' ? array_keys($names) : (mgr() ? array_values(array_filter(array_keys($names), fn($n) => $n === $me || sameTeam($n))) : [])]);
 }
 
 if ($action === 'goals') {
@@ -7482,7 +7506,7 @@ if ($action === 'goals') {
  * manager role will assign within their own team: the assignment rows already say who assigned
  * ('by'), so that role only needs a team list and a check here. */
 if ($action === 'territories') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $towns = [];
     foreach (($idx['regions'] ?? []) as $rg) {
@@ -7497,12 +7521,12 @@ if ($action === 'territories') {
     ksort($names);
     /* everyone who can sign in now, hidden ones included: an assignment to anyone else belongs to someone removed */
     $active = []; foreach ($people as $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '') $active[$n] = true; }
-    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names), 'active' => array_keys($active), 'manager' => $role === 'manager']);
+    out(['ok' => true, 'towns' => $towns, 'names' => array_keys($names), 'active' => array_keys($active), 'manager' => mgr()]);
 }
 /* every neighbourhood one person holds, in every town, back to unassigned in one go (2026-10-04): when someone leaves,
    or their area changes. Works for people already removed from Accounts too. */
 if ($action === 'unassignall') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $who = trim((string) ($body['who'] ?? ''));
     if ($who === '') fail('Whose neighbourhoods?');
@@ -7517,7 +7541,7 @@ if ($action === 'unassignall') {
     out(['ok' => true, 'n' => $n]);
 }
 if ($action === 'assignmany') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $areas = is_array($body['areas'] ?? null) ? array_values(array_unique(array_map('strval', $body['areas']))) : [];
@@ -7538,7 +7562,7 @@ if ($action === 'assignmany') {
 }
 
 if ($action === 'assign') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $area = (string) ($body['area'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $data = loadRegion($key);
@@ -7556,7 +7580,7 @@ if ($action === 'assign') {
 /* doors to one person, from the desktop planning table (2026-10-08): up to 1,000 at a time, all or none.
    A manager moves only doors that are unassigned or their team's, to someone on their team. */
 if ($action === 'doorassign') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $ids = is_array($body['ids'] ?? null) ? array_values(array_unique(array_map('strval', $body['ids']))) : [];
@@ -7606,7 +7630,7 @@ function appendTerr(string $key, array $row): bool {
     return (bool) @file_put_contents(DATA_DIR . '/territory-' . $key . '.log', json_encode(stamped($row), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
 }
 if ($action === 'terrlist') {
-    if (!TERRITORIES_OPEN && $role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if (!TERRITORIES_OPEN && $role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     $key = (string) ($_GET['region'] ?? '');
     if (!regionAvailable($key)) fail('No such region.', 404);
     /* 'del': may this person take the outline away (a manager only their team's) */
@@ -7614,7 +7638,7 @@ if ($action === 'terrlist') {
     out(['ok' => true, 'territories' => $list]);
 }
 if ($action === 'terrsave') {
-    if ($role !== 'admin' && $role !== 'manager') fail('Not allowed.', 403);
+    if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? '');
     if (!regionAvailable($key)) fail('No such region.', 404);
