@@ -5655,13 +5655,16 @@ if ($action === 'leadadd') {
  * a Meta app (Business type), grants it leads_retrieval and the page permissions, and drops the app id, app secret and a user
  * token in a file; tools/meta-leads.php --setup=<file> swaps them for page tokens that do not expire, and deletes the file. */
 function metaFile(): string { return dirname(__DIR__, 2) . '/sixfold-private/meta-leads.json'; }
-function metaFields(array $fd): array {
+function metaFields(array $fd, array $labels = []): array {
     $v = []; foreach ($fd as $x) { $k = strtolower(trim((string) ($x['name'] ?? ''))); if ($k !== '') $v[$k] = trim(implode(', ', array_map('strval', (array) ($x['values'] ?? [])))); }
+    /* a form's own questions (2026-10-19, the 365 ZIP form): a custom question arrives under its key ("0"), so its label says what it is.
+       A ZIP or postal question fills the zip; any other custom answer is labelled with its question, not the key */
+    foreach ($labels as $lk => $lab) if (isset($v[$lk]) && preg_match('/\b(zip|postal)\b/i', $lab) && ($v['zip_code'] ?? '') === '') { $v['zip_code'] = $v[$lk]; unset($v[$lk]); }
     $pick = function (array $keys) use (&$v) { foreach ($keys as $k) if (($v[$k] ?? '') !== '') { $x = $v[$k]; return $x; } return ''; };
     $name = $pick(['full_name', 'name']); if ($name === '') $name = trim($pick(['first_name']) . ' ' . $pick(['last_name']));
     $known = ['full_name', 'name', 'first_name', 'last_name', 'phone_number', 'phone', 'email', 'street_address', 'address', 'city', 'zip_code', 'zip', 'post_code', 'postal_code', 'state', 'province', 'country'];
     $street = $pick(['street_address', 'address']); $city = $pick(['city']); $zip = $pick(['zip_code', 'zip', 'post_code', 'postal_code']);
-    $extra = []; foreach ($v as $k => $x) if (!in_array($k, $known, true) && $x !== '') $extra[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . str_replace('_', ' ', $x);
+    $extra = []; foreach ($v as $k => $x) if (!in_array($k, $known, true) && $x !== '') $extra[] = (isset($labels[$k]) ? rtrim(trim($labels[$k]), ' ?:') : ucfirst(str_replace('_', ' ', $k))) . ': ' . str_replace('_', ' ', $x);
     return ['name' => $name, 'phone' => preg_replace('/^p:/i', '', $pick(['phone_number', 'phone'])), 'email' => $pick(['email']), 'street' => $street, 'city' => $city,
             'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : ''), ', '), 'extra' => $extra];
 }
@@ -5703,7 +5706,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     $added = []; $errors = [];
     foreach ($M['pages'] as $pi => $P) {
         $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since; $errBefore = count($errors);
-        $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status', 'limit' => 100, 'access_token' => $P['token']]));
+        $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status,questions{key,label}', 'limit' => 100, 'access_token' => $P['token']]));
         if (isset($forms['error'])) { $errors[] = $P['name'] . ': ' . (string) ($forms['error']['message'] ?? '?'); continue; }
         foreach ((array) ($forms['data'] ?? []) as $F) {
             $url = $g . '/' . rawurlencode((string) $F['id']) . '/leads?' . http_build_query(['fields' => 'id,created_time,field_data,ad_name', 'limit' => 100, 'access_token' => $P['token'],
@@ -5715,7 +5718,8 @@ if ($action === 'metasetup' || $action === 'metapoll') {
                     $ext = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', (string) ($L['id'] ?? '')), 0, 64); if ($ext === '') continue;
                     $at = strtotime((string) ($L['created_time'] ?? '')) ?: time(); $newest = max($newest, $at);
                     if (isset($seenExt[$ext])) continue;
-                    $fv = metaFields((array) ($L['field_data'] ?? []));
+                    $qLab = []; foreach ((array) ($F['questions'] ?? []) as $q) if (isset($q['key'])) $qLab[strtolower((string) $q['key'])] = (string) ($q['label'] ?? '');
+                    $fv = metaFields((array) ($L['field_data'] ?? []), $qLab);
                     $name = a365Clean($fv['name'], 120); $phone = a365Clean($fv['phone'], 40); $email = a365Clean($fv['email'], 160); if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $email = '';
                     if ($name === '' && $phone === '' && $email === '') continue;
                     $d = $digits($phone); $who = strlen($d) === 10 ? 'p' . $d : ($email !== '' ? 'e' . strtolower($email) : '');
