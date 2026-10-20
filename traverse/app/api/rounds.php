@@ -4681,11 +4681,54 @@ function squarePaymentsSince(int $from, int $pages = 4): ?array {   /* the payme
     }
     return $out;
 }
+/* ---- the name-and-amount match (2026-10-20, Matthew: "build out the system that can add the name and amount match so payments taken
+ * straight in Square still get picked up within 15 minutes"). Randy Cruickshank paid $468 through a payment link made by hand in Square;
+ * the app had never linked him to a Square customer, so the customer-id match above could not see it. A payment counts for a job only when
+ * ALL of these hold: completed; its amount less refunds equals what the job owes, to the cent; the full name (first and last) on its Square
+ * customer record or card matches the job's customer; it is not already counted anywhere in the app; and it is not older than the booking
+ * less three days. Two candidate payments for one job, or a one-word name, and it is left to a person. ---- */
+function nameKey(string $s): string { return trim((string) preg_replace('/\s+/', ' ', (string) preg_replace('/[^a-z ]/', '', strtolower(str_replace(['-', '.'], ' ', $s))))); }
+function squareCustName(string $cid): string {
+    static $c = [];
+    if ($cid === '') return '';
+    if (!array_key_exists($cid, $c)) { $r = squareApi('GET', '/v2/customers/' . rawurlencode($cid)); $cu = $r['customer'] ?? []; $c[$cid] = nameKey(trim((string) ($cu['given_name'] ?? '') . ' ' . (string) ($cu['family_name'] ?? ''))); }
+    return $c[$cid];
+}
+/* every Square payment and order the app already counts, anywhere, so one payment is never counted for two jobs */
+function squarePayUsed(): array {
+    static $u = null; if ($u !== null) return $u;
+    $ids = []; $orders = [];
+    foreach (leadsAll() as $l) { foreach (['sqpaid', 'sqafter'] as $k) if (!empty($l[$k]['payment'])) $ids[(string) $l[$k]['payment']] = 1; if (!empty($l['sign']['pay']['order'])) $orders[(string) $l['sign']['pay']['order']] = 1; }
+    foreach (jobsAll() as $j) { foreach (['sqcharge', 'sqpaid'] as $k) if (!empty($j[$k]['payment'])) $ids[(string) $j[$k]['payment']] = 1; if (!empty($j['sqlink']['order'])) $orders[(string) $j['sqlink']['order']] = 1; }
+    return $u = [$ids, $orders];
+}
+function squareNameMatch(array $j, array $l, array $pays): ?array {
+    static $claimed = [];
+    $owed = jobOwed($j) * 100; $key = nameKey((string) ($l['name'] ?? ''));
+    if ($owed < 100 || strpos($key, ' ') === false) return null;
+    $leads = leadsAll(); $twins = 0;   /* two jobs owing the same amount under the same name: no telling which one paid */
+    foreach (jobsAll() as $o) if (!$o['off'] && jobOwed($o) * 100 === $owed && nameKey((string) ($leads[$o['lead']]['name'] ?? '')) === $key) $twins++;
+    if ($twins > 1) return null;
+    [$used, $usedOrders] = squarePayUsed(); $from = (int) ($j['at'] ?? 0) - 3 * 86400; $hits = [];
+    foreach ($pays as $py) {
+        $id = (string) ($py['id'] ?? '');
+        if (($py['status'] ?? '') !== 'COMPLETED' || $id === '' || isset($used[$id]) || isset($claimed[$id]) || isset($usedOrders[(string) ($py['order_id'] ?? '')])) continue;
+        if ((int) strtotime((string) ($py['created_at'] ?? '')) < $from) continue;
+        if ((int) ($py['amount_money']['amount'] ?? 0) - (int) ($py['refunded_money']['amount'] ?? 0) !== $owed) continue;
+        $names = [nameKey((string) ($py['card_details']['card']['cardholder_name'] ?? ''))];
+        if (!empty($py['customer_id'])) $names[] = squareCustName((string) $py['customer_id']);
+        if (in_array($key, $names, true)) $hits[] = $py;
+    }
+    if (count($hits) !== 1) return null;
+    $hit = $hits[0]; $claimed[(string) $hit['id']] = 1;
+    return ['payment' => (string) $hit['id'], 'amt' => intdiv($owed, 100), 'last4' => (string) ($hit['card_details']['card']['last_4'] ?? ''), 'brand' => (string) ($hit['card_details']['card']['card_brand'] ?? ''), 'when' => (string) $hit['created_at'], 'match' => 'name'];
+}
 function squareBalancePaid(array $j, array $l, ?array $pays = null): ?array {
     $cust = (string) ($l['sqcust'] ?? ''); $owed = jobOwed($j); $cfg = squareCfg();
-    if ($cust === '' || $owed < 1 || !$cfg) return null;
-    [$ids, $orders] = jobKnownPays($j, $l);
+    if ($owed < 1 || !$cfg) return null;
     if ($pays === null) $pays = squarePaymentsSince(max(0, (int) ($j['at'] ?? time()) - 3 * 86400)) ?? [];
+    if ($cust === '') return squareNameMatch($j, $l, $pays);   /* no Square customer linked: the name-and-amount match only */
+    [$ids, $orders] = jobKnownPays($j, $l);
     $sum = 0; $hit = null;
     for ($pg = 0; $pg < 1; $pg++) {
         foreach ($pays as $py) {
@@ -4695,19 +4738,19 @@ function squareBalancePaid(array $j, array $l, ?array $pays = null): ?array {
             if (!$hit || strcmp((string) $py['created_at'], (string) $hit['created_at']) > 0) $hit = $py;
         }
     }
-    if (!$hit || $sum < $owed * 100) return null;
+    if (!$hit || $sum < $owed * 100) return squareNameMatch($j, $l, $pays);   /* nothing under their linked customer: try the name and amount */
     return ['payment' => (string) $hit['id'], 'amt' => intdiv($sum, 100), 'last4' => (string) ($hit['card_details']['card']['last_4'] ?? ''), 'brand' => (string) ($hit['card_details']['card']['card_brand'] ?? ''), 'when' => (string) $hit['created_at']];
 }
 /* the sweep: every job still owing from a customer in Square, against one fetch of Square's recent payments (2026-10-19) */
 function squareSweep(): array {
     if (!squareCfg()) return ['ok' => false, 'error' => 'Square is not connected.'];
     $leads = leadsAll(); $owing = []; $from = time();
-    foreach (jobsAll() as $j) { if ($j['off'] || jobOwed($j) < 1) continue; $l = $leads[$j['lead']] ?? null; if (!$l || empty($l['sqcust'])) continue; $owing[] = [$j, $l]; $from = min($from, (int) ($j['at'] ?? time())); }
+    foreach (jobsAll() as $j) { if ($j['off'] || jobOwed($j) < 1) continue; $l = $leads[$j['lead']] ?? null; if (!$l) continue; $owing[] = [$j, $l]; $from = min($from, (int) ($j['at'] ?? time())); }   /* every owing job now, not only Square-linked ones: the name-and-amount match covers the rest (2026-10-20) */
     if (!$owing) return ['ok' => true, 'owing' => 0, 'paid' => 0];
     $pays = squarePaymentsSince(max(time() - 45 * 86400, $from - 3 * 86400), 10);
     if ($pays === null) return ['ok' => false, 'error' => 'Square did not answer.'];
     $paid = 0;
-    foreach ($owing as [$j, $l]) { $f = squareBalancePaid($j, $l, $pays); if ($f) { jobSquareFound((string) $j['id'], $f, 'by the Square check'); $paid++; } }
+    foreach ($owing as [$j, $l]) { $f = squareBalancePaid($j, $l, $pays); if ($f) { jobSquareFound((string) $j['id'], $f, ($f['match'] ?? '') === 'name' ? 'by the Square check, matched by name and amount' : 'by the Square check'); $paid++; } }
     return ['ok' => true, 'owing' => count($owing), 'paid' => $paid];
 }
 /* record it: the job paid by Square, a note, the office told, the aftercare */
@@ -4792,9 +4835,9 @@ if ($action === 'squarelook') {
     if (jobOwed($j) < 1) out(['ok' => true, 'paid' => true, 'already' => true]);
     if (!squareCfg()) fail('Square is not connected yet.');
     $l = leadsAll()[$j['lead']] ?? [];
-    if (empty($l['sqcust'])) out(['ok' => true, 'paid' => false, 'why' => 'They are not in your Square customer list, so their payments cannot be matched. Mark it paid if they paid.']);
-    $f = squareBalancePaid($j, $l);
-    if ($f) jobSquareFound($jid, $f, 'by Check Square');
+    $f = squareBalancePaid($j, $l);   /* without a linked Square customer it matches on name and amount (2026-10-20) */
+    if (!$f && empty($l['sqcust'])) out(['ok' => true, 'paid' => false, 'why' => 'No Square payment of exactly $' . jobOwed($j) . ' under their full name. Mark it paid if they paid another way.']);
+    if ($f) jobSquareFound($jid, $f, ($f['match'] ?? '') === 'name' ? 'by Check Square, matched by name and amount' : 'by Check Square');
     out(['ok' => true, 'paid' => (bool) $f, 'amt' => $f['amt'] ?? 0, 'last4' => $f['last4'] ?? '']);
 }
 /* send (or send again) the aftercare email by hand */

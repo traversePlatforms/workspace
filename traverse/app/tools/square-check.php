@@ -21,7 +21,7 @@ if (!$now) {
     if ((int) date('G') < 2 || $nightDone) {
         /* not the nightly check: the balance sweep, every 15 minutes (2026-10-19, Matthew: "is there a way to automate it") */
         $sf = $scData . '/square-sweep.json'; $sl = json_decode((string) @file_get_contents($sf), true);
-        if (is_array($sl) && time() - (int) ($sl['at'] ?? 0) < 15 * 60) exit(0);
+        if (is_array($sl) && time() - (int) ($sl['at'] ?? 0) < 14 * 60) exit(0);   /* 14, not 15: started every 5 minutes, a 15-minute wait slipped to 20 (2026-10-20) */
         @file_put_contents($sf, json_encode(['at' => time()]), LOCK_EX);
         $scAction = 'squaresweep';
     }
