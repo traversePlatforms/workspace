@@ -5659,6 +5659,11 @@ if ($action === 'leads') {
     foreach ($leads as &$ql) if (isset($jobOf[$ql['id']])) { $jj = $jobOf[$ql['id']]; $ql['job'] = ['id' => $jj['id'], 'date' => $jj['date'], 'crew' => $jj['crew'], 'price' => (int) $jj['price'], 'owed' => jobOwed($jj), 'pay' => payLine($jj), 'card' => cardLine($jj, $ql), 'done' => $jj['done'] ? (string) $jj['done']['o'] : '']; } unset($ql);
     /* a manager sees the leads nobody owns yet and their own team's */
     if (!desk() && $role === 'manager') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
+    /* an office account that runs a team (Nneka) sees the whole Pipeline except the people nobody has contacted yet: those are Jen's first
+       call (2026-10-20, Matthew: "make sure that shes not seeing people (to call) that jen hasn't already contacted yet"). A lead shows once it
+       has a call try (hers in the app, or her ClickUp status), or when it is this person's or their team's (added by or handed to them). */
+    if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => ($l['status'] ?? 'new') !== 'new' || !empty($l['tries'])
+        || in_array((string) ($l['by'] ?? ''), [$me], true) || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
