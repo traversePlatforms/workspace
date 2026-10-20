@@ -2062,7 +2062,7 @@ function squareCustomer(array $l): string {
     $nm = preg_split('/\s+/', trim((string) ($l['name'] ?? ''))) ?: ['']; $given = (string) array_shift($nm);
     $req = ['idempotency_key' => 'cust-' . $l['id'], 'given_name' => mb_substr($given, 0, 100), 'family_name' => mb_substr(implode(' ', $nm), 0, 100), 'reference_id' => (string) $l['id'], 'note' => 'Added by the 365 app when the deposit was paid.'];
     if ($em) $req['email_address'] = $em; if ($e164) $req['phone_number'] = $e164;
-    $h = $l['house'] ?? null; if ($h && !empty($h['address'])) $req['address'] = ['address_line_1' => streetCaseServer((string) $h['address']), 'locality' => streetCaseServer((string) ($h['town'] ?? '')), 'administrative_district_level_1' => 'CO', 'country' => 'US'];
+    $h = $l['house'] ?? null; if ($h && !empty($h['address'])) $req['address'] = ['address_line_1' => streetCaseServer((string) $h['address']), 'locality' => streetCaseServer(houseTown($h)), 'administrative_district_level_1' => 'CO', 'country' => 'US'];
     $r = squareApi('POST', '/v2/customers', $req);
     if (empty($r['customer']['id']) && isset($req['email_address'])) { unset($req['email_address']); $req['idempotency_key'] = 'cust2-' . $l['id']; $r = squareApi('POST', '/v2/customers', $req); }   /* Square refuses some addresses */
     return (string) ($r['customer']['id'] ?? '');
@@ -2241,13 +2241,13 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     if (!preg_match('/^([wm]\d{14}[0-9a-f]{6})-([0-9a-f]{16})$/D', $q, $qm) || !hash_equals(a365QuoteKey($qm[1]), $qm[2])) fail('This link does not look right. Please call or text us and we will send it again.', 404);
     $all = leadsAll(); $l = $all[$qm[1]] ?? null; $Q = $l['quote'] ?? null;
     if (!$l || !$Q || $l['status'] === 'lost') fail('This quote is no longer open. Please call or text us for a fresh one.', 410);
-    $phone = (string) (company()['a365']['phone'] ?? '');
+    $phone = a365Phone($l);
     $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
     $job = jobForLead($l['id']); if ($job && ($job['done'] || $job['date'] < $today)) $job = null;
     $bookedOut = fn($j) => ['day' => a365Day($j['date']), 'arrive' => a365Arrive((string) $j['slot'])];
     if ($action === 'a365quote') {
         $h = $l['house'] ?? null;
-        $street = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : trim((string) ($l['town'] ?? ''));
+        $street = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
         $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
         $acc = $l['accept'] ?? null; if ($acc && (int) ($acc['price'] ?? 0) !== (int) $Q['price']) $acc = null;   /* a yes to an older price */
         $off = $job ? null : offerLive($l);
@@ -2268,7 +2268,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
     $acc = ['price' => (int) $Q['price'], 'note' => $note];
     if ($off) {   /* the day Jen offered: book it */
         $h = $l['house'] ?? null;
-        $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $jid = 'j' . bin2hex(random_bytes(6));
         $row = ['id' => $jid, 'lead' => $l['id'], 'title' => $name, 'crew' => (string) $off['crew'], 'date' => (string) $off['date'], 'slot' => (string) $off['slot'], 'price' => (int) $Q['price'],
                 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => $note, 'addr' => $addr ?: 'Ask the office',
@@ -2296,12 +2296,17 @@ if ($action === 'a365quote' || $action === 'a365accept') {
  * DRAFT wording until Brandon (or the attorney) approves it: facts from the call and the business only; no refund or cancellation
  * terms, because none are set. Never the lawn size, the seed or anything measured; never Sixfold. */
 const A365_SIGN_VERSION = 'v4-draft-2026-10-16';   /* v4: their phone and email on it (Matthew 2026-10-16); v3: "not confirmed until the deposit is paid" (Matthew 2026-10-15) */   /* Matthew's answers to the seven questions; Brandon still to review */
+/* the number a customer is told to call or text (2026-10-20, Matthew: "for josephs form in particular can u change the number to mine"):
+   the lead's own form phone (fphone) when one is set, else 365's. And a house's town without an internal label: a property pulled in by
+   itself carries one in brackets ("Brighton (Barnes)"), which reached Joseph's form. */
+function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? '')); return $f !== '' ? $f : (string) (company()['a365']['phone'] ?? ''); }
+function houseTown(array $h): string { return trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', (string) ($h['town'] ?? ''))); }
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
 function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
 function a365Agreement(array $l): array {
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
     $h = $l['house'] ?? null;
-    $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : trim((string) ($l['town'] ?? ''));
+    $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
     $inc = $Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer'];
     $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
@@ -2316,7 +2321,7 @@ function a365Agreement(array $l): array {
               ['Price', '$' . number_format((int) $Q['price'])], $due ? ['Deposit (non-refundable), to pay now', '$' . number_format((int) $S2['deposit'])] : ['Deposit paid (non-refundable)', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
               ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]]);
     if (($S2['how'] ?? '') === 'link' && !empty($l['savecard']['yes'])) $facts[] = ['Card on file', a365SaveText((int) $Q['price'] - (int) $S2['deposit'])];   /* their choice when they paid (2026-10-15) */
-    $ph = (string) (company()['a365']['phone'] ?? '');
+    $ph = a365Phone($l);
     $terms = ['We will do the work listed above at this address on the day shown, arriving in the time shown.',
               'Please let us know if there are sprinklers, shallow pipes or invisible dog fences, so they can be marked before we start.',
               'On the day, please leave gates unlocked and keep pets inside.',
@@ -2376,7 +2381,7 @@ function a365Mail(string $to, string $subject, string $text, string $html): arra
 function a365SendSigned(array $l, array $sg, string $by): array {
     $to = trim((string) ($l['email'] ?? ''));
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'stage' => 'noemail', 'error' => 'No email on the lead.'];
-    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = (string) ($co['phone'] ?? '');
+    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $when = (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a');
     $link = a365SignLink((string) $l['id'], (string) $l['sign']['key']);
@@ -2439,16 +2444,16 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     }
     $sv = !empty($l['signview']['facts']) && empty($l['signed']) ? $l['signview'] : null;   /* view only (2026-10-16): the agreement as the office wrote it, nothing to pay or sign */
     if ($sv && $action === 'a365sign') out(['ok' => true, 'view' => true, 'moved' => null, 'first' => $first, 'facts' => $sv['facts'], 'terms' => $sv['terms'], 'consent' => '', 'consents' => [], 'pay' => null, 'save' => null]);
-    if ($sv) fail('This agreement is for reading only. Please call or text us at ' . (string) (company()['a365']['phone'] ?? '') . '.', 409);
+    if ($sv) fail('This agreement is for reading only. Please call or text us at ' . a365Phone($l) . '.', 409);
     if (!empty($l['sign']['nosign']) && empty($l['signed'])) {   /* no signature needed (2026-10-17): the agreement, the deposit when by link, booked once it is in */
         if (empty($l['confirmed']) && (($l['sign']['how'] ?? '') !== 'link' || a365DepositPaid($l, false))) { a365BookNoSign((string) $l['id'], 'website'); $l = leadsAll()[$l['id']]; }   /* catch-up */
-        if ($action !== 'a365sign') fail('This form needs no signature. Questions? Call or text us at ' . (string) (company()['a365']['phone'] ?? '') . '.', 409);
+        if ($action !== 'a365sign') fail('This form needs no signature. Questions? Call or text us at ' . a365Phone($l) . '.', 409);
         $cf = $l['confirmed'] ?? null; $jb = $cf && !empty($cf['job']) ? (jobsAll()[(string) $cf['job']] ?? null) : null;
         out(['ok' => true, 'nosign' => true, 'moved' => $moved, 'first' => $first, 'facts' => $cf['facts'] ?? $A['facts'], 'terms' => $cf['terms'] ?? $A['terms'], 'consent' => '',   /* the copy kept at booking (2026-10-18) */ 'consents' => [], 'pay' => $payOut,
              'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null,
-             'confirmed' => (bool) $cf, 'booked' => $jb && !$jb['off'] ? ['day' => a365Day((string) $jb['date']), 'arrive' => a365Arrive((string) $jb['slot'])] : null, 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+             'confirmed' => (bool) $cf, 'booked' => $jb && !$jb['off'] ? ['day' => a365Day((string) $jb['date']), 'arrive' => a365Arrive((string) $jb['slot'])] : null, 'phone' => a365Phone($l)]);
     }
-    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => (string) (company()['a365']['phone'] ?? '')]);
+    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => a365Phone($l)]);
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
     $name = a365Clean($body['name'] ?? '', 120);
@@ -2470,7 +2475,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
         appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']], 'by' => 'website', 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= $today0) {
-        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
@@ -3864,7 +3869,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
@@ -4342,7 +4347,7 @@ if ($action === 'qwon') {
         $o = $l['quote']['offer'] ?? null; if (!is_array($o)) fail('No day is held for them: set one on the schedule, or untick Book their day.');
         if ((string) $o['date'] < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Their held day has passed: move it on the schedule first.');
         if (($why = slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], $id)) !== null) fail($why, 409);
-        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . (($h['town'] ?? '') !== '' ? ', ' . streetCaseServer((string) $h['town']) : '') : (string) ($l['town'] ?? '');
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . (($h['town'] ?? '') !== '' ? ', ' . streetCaseServer(houseTown($h)) : '') : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6)); $name = trim((string) ($l['name'] ?? '')) ?: 'Customer';
         if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $id, 'title' => $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => $price, 'pkg' => (string) ($l['quote']['pkg'] ?? 'full'), 'scope' => 'all', 'seedLb' => $l['quote']['seedLb'] ?? null, 'fertLb' => $l['quote']['fertLb'] ?? null,
@@ -4798,7 +4803,7 @@ function jobAftercare(string $jid, string $why, bool $again = false): array {
         return $r + ['to' => $to];
     };
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
-    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = (string) ($co['phone'] ?? '');
+    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $owed = jobOwed($j); $cg = $j['sqcharge'] ?? null; $link = (string) ($j['sqlink']['url'] ?? '');
     $tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
@@ -6196,7 +6201,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
         appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => $pay, 'by' => $by, 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], $lid) === null && (string) $o['date'] >= $today0) {
-        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $lid, 'title' => trim((string) ($l['name'] ?? '')) ?: 'Customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
@@ -6624,13 +6629,13 @@ function paymentsAll(): array {
     $jobLead = []; foreach ($st as $j) if (empty($j['off']) && $j['lead'] !== '') $jobLead[$j['lead']] = true;
     foreach ($leads as $l) {   /* money taken on "They said yes" with no day booked yet (2026-10-18, Fable review), until a job carries it */
         $w = $l['wpay'] ?? null; if (!is_array($w) || isset($jobLead[(string) $l['id']]) || (int) ($w['amt'] ?? 0) < 1) continue;
-        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $out[] = $row((int) ($w['at'] ?? 0), (int) $w['amt'], (string) ($w['how'] ?? ''), (($w['s'] ?? '') === 'paid' ? 'Paid in full' : 'Deposit') . ' (no job booked)', '', trim((string) ($l['name'] ?? '')) ?: 'Customer', $addr, '', '', false, (string) $l['id']);
     }
     foreach ($leads as $l) {   /* a deposit paid by link where no job was booked yet */
         $pid = (string) ($l['sqpaid']['payment'] ?? '');
         if ($pid === '' || !empty($used[$pid])) continue;
-        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer((string) $h['town']) : (string) ($l['town'] ?? '');
+        $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $out[] = $row((int) ($l['sqpaid']['at'] ?? 0), (int) ($l['sqpaid']['amt'] ?? 0), 'square', 'Deposit (no job booked)', $pid, trim((string) ($l['name'] ?? '')) ?: 'Customer', $addr, '', '', false, (string) $l['id']);
     }
     usort($out, fn($a, $b) => $a['at'] <=> $b['at']);

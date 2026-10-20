@@ -6069,7 +6069,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function leadBrand(l) {
     /* the quote-only account too (2026-10-16: Jen's Copy a text said Sixfold and Brandon's number) */
     var src = l && l.src, a = CO.a365 && (wdOn() || qView()) && (['a365web', 'meta', 'messenger'].indexOf(src) >= 0 || ((asOffice() || qView()) && ['website', 'linktree', 'nextdoor'].indexOf(src) < 0)) ? CO.a365 : null;   /* Fable review 2026-10-14: a Sixfold-site enquiry never gets 365's name */
-    return { name: a ? a.name : CO.short, phone: a ? a.phone : CO.phone, web: a ? (a.web || '') : '' };
+    return { name: a ? a.name : CO.short, phone: (l && l.fphone) || (a ? a.phone : CO.phone), web: a ? (a.web || '') : '' };   /* a lead's own number to call back (fphone, 2026-10-20) */
   }
   /* the name someone signs with (2026-10-16, Jen: "I usually go by Jenn"): company a365.signAs by account name, sent at sign-in as S.sign; first name unless full */
   function myName(full) { var n = String(S.sign || S.me || ''); return full ? n : n.split(' ')[0]; }
