@@ -1,0 +1,153 @@
+<title>Peak Meeting Game Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one letter-size sheet. A court-line frame (the kitchen line as the rule under the header), two columns below. */
+:root {
+  --paper: #F7F8F5; --ink: #18232B; --muted: #55616A; --line: #CBD3D6;
+  --court: #1F5E73; --court-soft: #E3EEF1; --ball: #C9D93A; --ball-ink: #4E5A00;
+  --display: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Public Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #12191E; --ink: #E7ECEE; --muted: #A2AEB5; --line: #33424A;
+  --court: #7FC0D4; --court-soft: #1B2A31; --ball: #C9D93A; --ball-ink: #DCE88A; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #12191E; --ink: #E7ECEE; --muted: #A2AEB5; --line: #33424A;
+  --court: #7FC0D4; --court-soft: #1B2A31; --ball: #C9D93A; --ball-ink: #DCE88A; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font: 13.5px/1.45 var(--body); }
+.sheet { max-width: 8.5in; margin: 0 auto; padding-block: 28px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 3px solid var(--court); position: relative; }
+header::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 3px; height: 14px; background: var(--court); transform: translateY(100%); }
+.eyebrow { font: 600 11px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--court); }
+h1 { font: 700 30px/1.05 var(--display); margin: 0; text-wrap: balance; letter-spacing: .005em; }
+.meta { color: var(--muted); font-size: 12px; }
+.goal { margin: 18px 0 14px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: start;
+  background: var(--court-soft); border-radius: 6px; padding: 12px 14px; }
+.goal b.k { font: 700 12px/1.6 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--court); }
+.goal ol { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.cols > * { min-width: 0; }
+section { display: grid; gap: 6px; align-content: start; }
+h2 { font: 700 15.5px/1.2 var(--display); margin: 0; display: flex; gap: 8px; align-items: baseline; text-wrap: balance; }
+h2 .n { font: 700 11px/1 var(--display); color: var(--paper); background: var(--court); border-radius: 50%;
+  width: 19px; height: 19px; display: inline-grid; place-items: center; flex: none; transform: translateY(-1px); }
+p { margin: 0; }
+ul { margin: 0; padding-left: 16px; display: grid; gap: 3px; }
+.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.wide { grid-column: 1 / -1; }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th, td { text-align: left; padding: 5px 8px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 10.5px/1.2 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td:first-child { font-weight: 600; white-space: nowrap; }
+.win { border-left: 4px solid var(--ball); padding: 8px 12px; background: color-mix(in srgb, var(--ball) 14%, var(--paper)); border-radius: 0 6px 6px 0; }
+.win h2 { color: var(--ball-ink); }
+.dont li::marker { content: "✕  "; color: var(--court); font-weight: 700; }
+.check li::marker { content: "☐  "; color: var(--court); }
+footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; }
+footer a { color: var(--court); }
+@media (max-width: 640px) { .cols { grid-template-columns: 1fr; } h1 { font-size: 26px; } td:first-child { white-space: normal; } }
+@media print {
+  @page { size: letter; margin: 0.45in; }
+  :root { --paper: #FFFFFF; --ink: #111A20; --muted: #4C5860; --line: #C9D0D3; --court: #1F5E73; --court-soft: #E8F1F3; --ball-ink: #4E5A00; color-scheme: light; }
+  body { font-size: 11.3px; line-height: 1.38; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet { max-width: none; padding: 0; }
+  h1 { font-size: 25px; } h2 { font-size: 13.5px; } table { font-size: 10.6px; }
+  .goal { margin: 12px 0 10px; padding: 9px 12px; } .cols { gap: 10px 20px; } footer { margin-top: 10px; }
+}
+</style>
+
+<div class="sheet">
+  <header>
+    <span class="eyebrow">Peak Pickleball · meeting one-sheet</span>
+    <h1>Game plan: sponsorships, memberships and the nonprofit</h1>
+    <span class="meta">For Brandon and Matthew · prepared 19 Oct 2026 · Peak Pickleball, 1730 Briargate Blvd, Colorado Springs (owners Scott and Tina Wilson)</span>
+  </header>
+
+  <div class="goal">
+    <b class="k">Leave with</b>
+    <ol>
+      <li>Access to Peak's member and visit numbers. Every sponsor pitch needs them.</li>
+      <li>A written 90-day trial on sponsorship commissions.</li>
+      <li>A defined Surge trial for memberships.</li>
+    </ol>
+  </div>
+
+  <div class="cols">
+    <section>
+      <h2><span class="n">1</span>Open with their track record</h2>
+      <p>It's Peak's strongest sponsor story, and their own site barely tells it.</p>
+      <ul>
+        <li>First USA Pickleball Wheelchair Nationals: <span class="num">94</span> players, 19–21 June 2026, Numotion as title partner.</li>
+        <li>Colorado Springs' first USA Pickleball Golden Ticket qualifier, 9–13 July 2025.</li>
+        <li>The Pickle Bowl, Feb 2025: <span class="num">156</span> players, sponsored by Selkirk.</li>
+        <li>Free weekly veterans class: about <span class="num">60</span> a session, <span class="num">400+</span> taught.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="n">3</span>Show what makes sponsors renew</h2>
+      <p>Their signs already carry QR codes, but nothing shows scans being reported back. Bring a mock monthly sponsor report (scans by week, event attendance, photos) and the pipeline. Reporting is the gap we fill, and it's why a <span class="num">$12,000</span> court sponsor pays again next year.</p>
+    </section>
+
+    <section class="wide">
+      <h2><span class="n">2</span>Four revenue lines, and who sells each</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Line</th><th>What gets sold</th><th>Who</th></tr></thead>
+        <tbody>
+          <tr><td>Sponsorships</td><td>Open courts (15 court sponsors listed for 24 courts), championship-court naming, "Peak Premier League presented by", event presenting spots, renewals. Today: <span class="num">$12,000</span>/yr court, <span class="num">$24,000</span>/yr title.</td><td>Brandon, on commission; Matthew's tools behind it</td></tr>
+          <tr><td>Cause sponsorships</td><td>Companies backing the veterans and adaptive programs, the way Numotion backed the Nationals.</td><td>Brandon</td></tr>
+          <tr><td>Corporate memberships</td><td>Direct employer plans and team outings. Employers reach Peak only through Wellhub today; group court rental is <span class="num">$40</span> a court.</td><td>Brandon and the Surge team</td></tr>
+          <tr><td>Memberships and donations</td><td>Free-class signups, booths and events; the Give'em Heaven campaign (Exchange Ministries).</td><td>Surge team, once registered as a paid solicitor</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section>
+      <h2><span class="n">4</span>Propose the deal</h2>
+      <ul>
+        <li>90-day trial.</li>
+        <li><span class="num">15–20%</span> on new sponsorships, about <span class="num">10%</span> on renewals.</li>
+        <li>A registered prospect list, so nobody argues over who found a sponsor.</li>
+        <li>Peak signs every sponsor contract; office space included.</li>
+        <li>Member and visit data shared from day one.</li>
+      </ul>
+    </section>
+
+    <section class="win">
+      <h2><span class="n">5</span>Name a quick win</h2>
+      <p>The 5th Annual Veterans Pickleball Tournament runs <b>6–8 November 2026</b> at Peak, with no presenting sponsor listed. Offer to find one within two weeks. It's the fastest proof.</p>
+    </section>
+
+    <section>
+      <h2>If they say yes: the first 30 days</h2>
+      <ul>
+        <li><b>Week 1:</b> member and visit numbers; every sold and open asset with its renewal date; sponsor QR codes switched to tracked links.</li>
+        <li><b>Week 2:</b> rate card with the new assets; a sponsor deck built on the audience and the national events; a prospect list by category.</li>
+        <li><b>Weeks 3–4:</b> first sponsor meetings, first corporate-membership pitches, first monthly reports to current sponsors.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Don't, in this meeting</h2>
+      <ul class="dont">
+        <li>Quote prices for new assets before seeing their numbers.</li>
+        <li>Promise donation canvassing before the paid-solicitor registration ($15,000 bond) is sorted.</li>
+        <li>Agree to commission terms without them in writing.</li>
+      </ul>
+      <h2 style="margin-top:6px">Check by hand before going</h2>
+      <ul class="check">
+        <li>Peak's Google and Yelp ratings.</li>
+        <li>Facebook and Instagram follower counts.</li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>
+    <span>Facts checked 19 Oct 2026 against Peak's site, the Gazette, Denver Gazette, KOAA, SFIA, ProPublica and the Colorado SOS.</span>
+    <span>Full research and sources: <a href="https://claude.ai/artifact/MSvAAG6Eay4uGbN84RtCaH">the deep-dive doc</a></span>
+  </footer>
+</div>
