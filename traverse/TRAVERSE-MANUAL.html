@@ -150,7 +150,7 @@ a { color: var(--flag); }
   <div class="eyebrow">Product reference · internal</div>
   <h1>The Traverse Manual</h1>
   <p class="lede">Everything the app does: what all six installs share, what each edition has that the others don't, what each role can do, how the phone and the computer differ, and where every piece of data comes from.</p>
-  <p class="stamp">Checked against the code (traverse/app, the edition build and the server API) on 13 October 2026. Home counts are from the current build files and can differ slightly from live.</p>
+  <p class="stamp">Checked against the code (traverse/app, the edition build and the server API) on 13 October 2026; Sixfold's jobs, quotes and payments, its extra roles and the super view added on 19 October 2026. Home counts are from the current build files and can differ slightly from live.</p>
 </header>
 
 <!-- ============================================================ 01 -->
@@ -270,8 +270,8 @@ a { color: var(--flag); }
   <div class="edhead"><h3>Sixfold (Routes)</h3><span class="ed six">Lawn, land and fire</span></div>
   <div class="facts">
     <div><small>Card</small><span>Lawn, trees, fire, funding, water</span></div>
-    <div><small>Towns</small><span>22 (mirrors Yards)</span></div>
-    <div><small>Office tools</small><span>Quote builder, skip trace</span></div>
+    <div><small>Towns</small><span>About 100 around Denver (19 Oct), more as the refine finishes</span></div>
+    <div><small>Office tools</small><span>Jobs board, Quick quote, Square payments, Quote builder, skip trace</span></div>
     <div><small>Data</small><span>Sixfold's real customers and jobs</span></div>
   </div>
   <div class="only"><h4>Only in Sixfold</h4><ul>
@@ -284,6 +284,32 @@ a { color: var(--flag); }
   </ul></div>
   <p><b>Shared with Yards:</b> everything on the Yards list below (lawn size, lawn plan, trees, wildfire, fire check, funding, water, Communities, frost and rain, soil, townhome lawns).</p>
   <p><b>Not in Sixfold:</b> the Company screen and billing (it isn't a paying client), Live radar as a tile, and anything for roofing, solar, pest or security.</p>
+
+  <h4>Sixfold's jobs, quotes and payments</h4>
+  <p>Built from 14 October for Sixfold's 365 aeration work. The code is in every install, but only Sixfold has it switched on (section 08).</p>
+  <div class="only"><h4>The quote desk (Quick quote)</h4><ul>
+    <li><b>Price a lawn by address:</b> the measured lawn size gives the price; a lawn we have no measurement for is priced by size. The quote goes out from the person's own email or as a text.</li>
+    <li><b>No-signature form by default,</b> with a signed form as the option for big jobs. "Won without the form" adds a customer who won't sign, with nothing sent to them.</li>
+    <li><b>Deposits:</b> a Square card link, or cash, Zelle, Venmo, check. A card saved with the deposit can be charged for the balance on the day, only after asking.</li>
+    <li><b>Leads to follow up:</b> new enquiries since 16 October in folding groups (Not reached yet, Talked to, No answer yet, Left a voicemail, Texted or messaged, Emailed, On hold), all closed at the start. The groups follow the taps in the app and the statuses in the office's ClickUp list.</li>
+    <li><b>Schedule:</b> the crew's days, held times and confirmed jobs. A job opens from the schedule or from the customer list, where it can be marked Done or Could not do it in one tap, marked paid, or charged.</li>
+    <li><b>Payment lines</b> on the schedule and customer list: "Deposit $X paid · $Y left", "Card on file (Visa 3312)", "Paid in full (paid in Square)".</li>
+    <li><b>Aftercare:</b> the care notes after a job (our sourced notes and the partner company's practice, which wins where they differ), sent by hand: Email it from my email, Text it, or Copy the email.</li>
+  </ul></div>
+  <div class="only"><h4>The job crew's app</h4><ul>
+    <li><b>Jobs only:</b> crew marked "Does walks" get a home screen without doors or sales, with search kept.</li>
+    <li><b>My schedule</b> (read-only), and each job card with the <b>aerial photo and property line</b>, directions, and <b>photos</b>.</li>
+    <li><b>Done</b> asks how long it took (hours and minutes); <b>Could not do it</b> asks what happened. A job the office marked done shows "Add how long it took", and the home screen counts jobs still missing a time.</li>
+    <li><b>Add a walk</b>, <b>My walks</b>, and <b>My stats</b> (jobs done, hours, square feet of lawn, past jobs). Taking payments is off until an admin turns on <b>Takes payments</b> for that person in Accounts.</li>
+  </ul></div>
+  <div class="only"><h4>Payments and the feeds in</h4><ul>
+    <li><b>Square:</b> deposits, saved cards, balance charges and pay links. A payment taken straight in Square is still found: a Check Square button, a check when a job opens and before any charge, the Square notice matched by customer, a sweep every 15 minutes and a nightly check.</li>
+    <li><b>Done with money owing</b> alerts whoever made the quote. Paid in full and done hides the job's "Open the job" link.</li>
+    <li><b>ClickUp:</b> the office's ClickUp list comes into the Pipeline every 5 minutes, one way only. Its statuses set the lead's stage and call tries; "completed" marks the job done once, on or after the job day.</li>
+    <li><b>Facebook lead forms</b> every 5 minutes, using each form's own questions (a ZIP question fills the zip). Anyone already in the Pipeline by phone or email is skipped.</li>
+    <li><b>Website forms:</b> the 365 site and Sixfold's site post enquiries straight into the Pipeline.</li>
+    <li><b>Customers:</b> "Overdue" means the next visit date has passed, and it clears once a job on or after that date is Done ("Could not do it" doesn't count).</li>
+  </ul></div>
 
   <!-- ROOFING -->
   <div class="edhead"><h3>Roofing</h3><span class="ed roof">Storm slate</span></div>
@@ -495,8 +521,10 @@ a { color: var(--flag); }
       <li>The only one who can see sign-in codes</li>
       <li>Switch between installs from Profile → Edition (a one-use pass that lasts 60 seconds)</li>
       <li>Client admins can't edit, re-code, sign out or remove you; they see your line tagged "Traverse"</li>
+      <li><b>See through their eyes</b> (Sixfold): tabs for Office, Quote only, Manager, Door reps and Job crew show the app exactly as that person sees it. Look-only by default; the <b>Make changes</b> switch lets saves through, recorded as you, while what you see stays theirs</li>
     </ul></div>
   </div>
+  <div class="note"><b>Sixfold's extra roles</b> (only where the jobs features are on): <b>Office</b> makes calls, sends emails and books walks, and nothing else of an admin's; <b>Quote only</b> is the quote desk (Quick quote, its schedule, its own customers and leads); <b>Job crew</b> is crew marked "Does walks", with the jobs-only app. Office and Quote only accounts are also checked for where they're used from.</div>
 
   <h3>Who can do what</h3>
   <div class="tw"><table class="matrix">
@@ -674,6 +702,7 @@ a { color: var(--flag); }
     <tbody>
       <tr><th>In-app texting</th><td>Code live on all six, switched off. Texts only numbers given at the door, quiet hours 8 am–9 pm, STOP and START handled.</td><td>A Twilio account and number, carrier registration for business texting (10DLC, days to weeks), keys, and the switch in that install's settings.</td></tr>
       <tr><th>Billing</th><td>Code live on all six, switched off. Nothing locks anyone out.</td><td>A Stripe account with prices and the founding coupon, keys, the switch.</td></tr>
+      <tr><th>Jobs, quotes and payments in the editions</th><td>Code in all six; switched on in Sixfold only (jobs board, Quick quote, job crew app, Square, ClickUp and Facebook feeds).</td><td>The jobs switch in that install's settings, plus that client's own Square account (and ClickUp or Facebook if they use them).</td></tr>
       <tr><th>Signing contracts at the door (#2)</th><td>Not built.</td><td>Your go. Needs each client's own contract wording.</td></tr>
       <tr><th>Missed-you door hanger with a QR code (#5)</th><td>Not built.</td><td>Your go.</td></tr>
       <tr><th>Review request after a won job (#6)</th><td>Not built.</td><td>Your go.</td></tr>
