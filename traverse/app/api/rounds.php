@@ -1158,6 +1158,18 @@ function loadVisits(): array {
     }
     return $v;
 }
+/* the customer's next visit already happened (2026-10-19, Matthew: Eric and Russ said Overdue though their jobs were done): a visit, or a
+   job for their lead, marked done on or after that date. A one-off customer's next date is the job day and nothing moves it on, so without
+   this they show Overdue forever. "Could not do it" does not count. */
+function custNextDone(array $c, array $visits = []): bool {
+    $n = (string) ($c['next'] ?? ''); if ($n === '') return false;
+    foreach ($visits as $v) if (($v['status'] ?? 'done') === 'done' && (string) ($v['date'] ?? '') >= $n) return true;
+    if (empty($c['lead'])) return false;
+    static $doneByLead = null;
+    if ($doneByLead === null) { $doneByLead = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead']) && (($j['done']['o'] ?? '') === 'done')) $doneByLead[(string) $j['lead']][] = (string) $j['date']; }
+    foreach ($doneByLead[(string) $c['lead']] ?? [] as $d) if ($d >= $n) return true;
+    return false;
+}
 /** door key => [plan, service, since] for active customers: the crew see "Customer" on that door */
 function customerDoors(): array {
     $out = [];
@@ -6653,7 +6665,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
             $c['visits'] = $mine;
             $c['spent'] = array_sum(array_map(fn($v) => (float) ($v['price'] ?? 0), $done));
             $c['last'] = $done[0]['date'] ?? null;
-            $c['due'] = ($c['status'] ?? 'active') === 'active' && !empty($c['next']) && $c['next'] <= $soon;
+            $c['due'] = ($c['status'] ?? 'active') === 'active' && !empty($c['next']) && $c['next'] <= $soon && !custNextDone($c, $mine);
             $c['overdue'] = $c['due'] && $c['next'] < $today;
             if (!empty($c['lead'])) {   /* their jobs and payments (2026-10-16, Matthew: no slot for deposits on the customer) */
                 static $jByLead = null; if ($jByLead === null) { $jByLead = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $jByLead[(string) $j['lead']][] = $j; }
@@ -7639,8 +7651,9 @@ if ($action === 'digest') {
     $walks = walksBetween($today, $tom);
     /* customers due within a week, overdue first */
     $due = [];
+    $visByC = []; foreach (loadVisits() as $v) $visByC[(string) ($v['cid'] ?? '')][] = $v;
     foreach (loadCustomers() as $c) {
-        if (($c['status'] ?? 'active') !== 'active' || empty($c['next']) || $c['next'] > $week) continue;
+        if (($c['status'] ?? 'active') !== 'active' || empty($c['next']) || $c['next'] > $week || custNextDone($c, $visByC[$c['id']] ?? [])) continue;
         $due[] = ['name' => (string) ($c['name'] ?? ''), 'next' => (string) $c['next'], 'overdue' => $c['next'] < $today, 'plan' => (string) ($c['plan'] ?? ''),
                   'service' => (string) ($c['service'] ?? ''), 'price' => $c['price'] ?? null, 'town' => (string) ($c['town'] ?? '')];
     }

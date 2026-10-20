@@ -1327,7 +1327,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .desk .dkc-why{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--ink) 5%,transparent);font-weight:700;font-size:14px}
   .desk .dkc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 4px}
   /* the lot in the door card (2026-10-19): a photo with the property line on a computer, a big button on a phone */
-  .dkc-lot{position:relative;height:210px;margin:12px 0 0;border-radius:14px;overflow:hidden;cursor:pointer;background:#2b3326;border:1px solid var(--line)}
+  .dkc-lot{position:relative;isolation:isolate;z-index:0;height:210px;margin:12px 0 0;border-radius:14px;overflow:hidden;cursor:pointer;background:#2b3326;border:1px solid var(--line)}   /* isolate: the map's own layers (z-index 400+) stay inside the box and scroll under the top bar (2026-10-19, Matthew) */
   .dkc-lot:focus-visible{outline:3px solid #d6400c;outline-offset:2px}
   .dkc-lotmap{position:absolute;inset:0;background:#2b3326}
   .dkc-lotmap.leaflet-container{background:#2b3326;cursor:pointer}
