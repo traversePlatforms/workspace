@@ -986,6 +986,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .sblk{margin:10px 0}.sblkhd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
   .sblkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.sblkrow small{display:block;color:var(--soft)}
   .sblkform{display:grid;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}.sblkdates{display:flex;gap:10px;flex-wrap:wrap}.sblkdates label,.sblknote{display:grid;gap:3px;font-size:13px;color:var(--soft)}
+  .sblktime{display:grid;gap:3px;font-size:13px;color:var(--soft);max-width:180px}.sblktime select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .sblkdates input,.sblknote input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .schedt tr.sblocked td{color:var(--soft);background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(127,127,127,.08) 6px 12px)}
   .pipeseg button{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);cursor:pointer;padding:6px 2px;font:700 12px var(--sans)}
@@ -6883,8 +6884,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* blocked-out time (2026-10-21, Matthew: "a way for jen to block out dates for brad and brandon"): part all, am (before noon) or pm */
   function slotHalf(k) { return slotStart(k) < 720 ? 'am' : 'pm'; }
-  function blockOn(list, iso, crew, slot) { return (list || []).filter(function (b) { return b.crew === crew && iso >= b.from && iso <= b.to && (b.part === 'all' || b.part === slotHalf(slot)); })[0] || null; }
-  function blockWhen(b) { return dayName(b.from) + (b.to !== b.from ? ' to ' + dayName(b.to) : '') + (b.part === 'am' ? ', morning' : b.part === 'pm' ? ', afternoon' : ''); }
+  function hhmmMin(t) { var m = /^(\d\d):(\d\d)$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : 720; }
+  function blockHits(b, slot) {   /* any of the window in the blocked time (2026-10-21: "include a time slot"); old am / pm = before / after 12 */
+    var p = b.part === 'am' ? 'before' : b.part === 'pm' ? 'after' : b.part, t = (b.part === 'am' || b.part === 'pm') ? 720 : hhmmMin(b.time);
+    if (p !== 'before' && p !== 'after') return true;
+    var a = slotStart(slot), e = { s1: 600, s2: 720, s3: 840, s4: 900 }[slot]; if (e == null) e = a;
+    return p === 'before' ? a < t : (e > t || a >= t);
+  }
+  function blockOn(list, iso, crew, slot) { return (list || []).filter(function (b) { return b.crew === crew && iso >= b.from && iso <= b.to && blockHits(b, slot); })[0] || null; }
+  function timeText(t) { var m = hhmmMin(t), h = Math.floor(m / 60), mm = m % 60; return (h % 12 || 12) + (mm ? ':' + (mm < 10 ? '0' : '') + mm : '') + (h < 12 ? ' am' : ' pm'); }
+  function blockWhen(b) { var p = b.part === 'am' ? 'before' : b.part === 'pm' ? 'after' : b.part, t = (b.part === 'am' || b.part === 'pm') ? '12:00' : b.time; return dayName(b.from) + (b.to !== b.from ? ' to ' + dayName(b.to) : '') + (p === 'before' || p === 'after' ? ', ' + p + ' ' + timeText(t) : ', all day'); }
   function schedBlocks(box, J, done) {
     box.textContent = '';
     var hd = q('div', 'sblkhd'); hd.appendChild(q('b', null, 'Days off'));
@@ -6912,21 +6921,24 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     fi.addEventListener('change', function () { if (!ti.value || ti.value < fi.value) ti.value = fi.value; });
     fl.appendChild(fi); tl.appendChild(ti); dr.appendChild(fl); dr.appendChild(tl); f.appendChild(dr);
     f.appendChild(q('div', 'dwsub', 'Which part of the day'));
-    var pr = q('div', 'dwlen'); [['all', 'All day'], ['am', 'Morning'], ['pm', 'Afternoon']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(part === o[0])); b.addEventListener('click', function () { part = o[0]; [].forEach.call(pr.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); pr.appendChild(b); }); f.appendChild(pr);
+    var tl0 = q('label', 'sblktime', 'Time'), tsel = q('select');
+    for (var mi = 6 * 60; mi <= 20 * 60; mi += 30) { var hh = Math.floor(mi / 60), v = (hh < 10 ? '0' : '') + hh + ':' + (mi % 60 ? '30' : '00'), op = q('option', null, timeText(v)); op.value = v; if (v === '12:00') op.selected = true; tsel.appendChild(op); }
+    tl0.appendChild(tsel); tl0.hidden = true;
+    var pr = q('div', 'dwlen sblkpart'); [['all', 'All day'], ['before', 'Before a time'], ['after', 'After a time']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(part === o[0])); b.addEventListener('click', function () { part = o[0]; tl0.hidden = part === 'all'; [].forEach.call(pr.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); pr.appendChild(b); }); f.appendChild(pr); f.appendChild(tl0);
     var nl = q('label', 'sblknote', 'Note (optional)'), ni = q('input'); ni.maxLength = 60; ni.placeholder = 'Vacation, appointment\u2026'; nl.appendChild(ni); f.appendChild(nl);
     var err = q('div', 'err'), sv = q('button', 'save', 'Block it out'); sv.type = 'button'; f.appendChild(sv); f.appendChild(err);
-    f.appendChild(q('div', 'ltrynote', 'Morning = arrivals before noon; afternoon = noon on. Jobs already booked then stay booked: you get the list, to move them. ' + (crews.length ? 'They get an alert.' : '')));
+    f.appendChild(q('div', 'ltrynote', 'A time window is blocked if any of it falls in the blocked time: after 11 am blocks 10\u201312; after 12 does not. Jobs already booked then stay booked: you get the list, to move them. ' + (crews.length ? 'They get an alert.' : '')));
     sv.addEventListener('click', function () {
       err.textContent = '';
       if (!who) { err.textContent = 'Pick who is off.'; return; }
       if (!fi.value) { err.textContent = 'Pick the first day.'; return; }
       var to = ti.value || fi.value; if (to < fi.value) { err.textContent = 'The last day is before the first.'; return; }
       sv.disabled = true;
-      api('jobblockadd', { body: { crew: who, from: fi.value, to: to, part: part, note: ni.value.trim() } }).then(function (r) {
+      api('jobblockadd', { body: { crew: who, from: fi.value, to: to, part: part, time: part === 'all' ? '' : tsel.value, note: ni.value.trim() } }).then(function (r) {
         sv.disabled = false;
         if (r._status === 401) return signinView('Signed out. Enter your code again.');
         if (!r.ok) { err.textContent = r.error || 'Not saved. Try again.'; return; }
-        var b0 = { from: fi.value, to: to, part: part }, nm = String(who).split(' ')[0];
+        var b0 = { from: fi.value, to: to, part: part, time: tsel.value }, nm = String(who).split(' ')[0];
         var more = (r.booked && r.booked.length ? ' Still booked then: ' + r.booked.map(function (x) { return x.name + ' (' + dayName(x.date) + ', ' + x.slot + ')'; }).join('; ') + '. Move them on the schedule.' : '') + (r.held ? ' ' + r.held + ' held quote time' + (r.held === 1 ? ' is' : 's are') + ' in that time.' : '');
         toast(nm + ' blocked off', blockWhen(b0) + '.' + more, null); done();
       }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was saved.'; });

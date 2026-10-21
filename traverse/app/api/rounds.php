@@ -2327,7 +2327,7 @@ function jobHolds(?array $leads = null): array {
 }
 /** is this crew / day / slot free for this lead: no job there, and no other lead's offer holding it */
 function slotFree(string $crew, string $date, string $slot, string $lead, string $exceptJob = ''): ?string {
-    if ($bk = blockAt($crew, $date, $slot)) return strtok($crew, ' ') . ' is blocked off ' . ($bk['part'] === 'am' ? 'that morning' : ($bk['part'] === 'pm' ? 'that afternoon' : 'that day')) . ($bk['note'] !== '' ? ' (' . $bk['note'] . ')' : '') . '.';   /* 2026-10-21 */
+    if ($bk = blockAt($crew, $date, $slot)) return strtok($crew, ' ') . ' is blocked off ' . blockPartText($bk) . ($bk['note'] !== '' ? ' (' . $bk['note'] . ')' : '') . '.';   /* 2026-10-21 */
     foreach (jobsAll() as $j) if (!$j['off'] && $j['id'] !== $exceptJob && $j['crew'] === $crew && $j['date'] === $date && $j['slot'] === $slot) return $crew . ' already has a job then: ' . $j['title'] . '.';
     foreach (jobHolds() as $h) if ($h['lead'] !== $lead && $h['crew'] === $crew && $h['date'] === $date && $h['slot'] === $slot) return 'That time is held for ' . $h['name'] . '\'s quote.';
     return null;
@@ -4581,14 +4581,19 @@ function jobSlot(string $k): ?array {
 }
 function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobdays.json'), true); return is_array($j) ? $j : []; }
 /* blocked-out time for a crew (2026-10-21, Matthew: "a way for jen to block out dates for brad and brandon"): from / to (a day or a run of
-   days), part = all | am (arrivals before noon) | pm (noon on), an optional note. jobblocks.json beside jobdays.json. */
+   days), part = all | before | after a time ('time', HH:MM; "include a time slot"), an optional note. jobblocks.json beside jobdays.json.
+   A window is blocked when any of it falls in the blocked time; an exact arrival time is a point. Old am / pm = before / after 12:00. */
 function jobBlocks(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobblocks.json'), true); return is_array($j) ? array_values(array_filter($j, 'is_array')) : []; }
 function slotHalf(string $slot): string { $s = jobSlot($slot); return $s && $s[2] < '12:00' ? 'am' : 'pm'; }
+function slotSpan(string $slot): array { $s = jobSlot($slot); $a = $s ? $s[2] : '00:00'; $e = ['s1' => '10:00', 's2' => '12:00', 's3' => '14:00', 's4' => '15:00'][$slot] ?? $a; return [$a, $e]; }
+function blockNorm(array $b): array { $p = (string) ($b['part'] ?? 'all'); if ($p === 'am') { $p = 'before'; $b['time'] = '12:00'; } elseif ($p === 'pm') { $p = 'after'; $b['time'] = '12:00'; } $b['part'] = in_array($p, ['before', 'after'], true) ? $p : 'all'; $b['time'] = (string) ($b['time'] ?? ''); return $b + ['note' => '']; }
+function blockHits(array $b, string $slot): bool { $b = blockNorm($b); if ($b['part'] === 'all') return true; [$a, $e] = slotSpan($slot); return $b['part'] === 'before' ? $a < $b['time'] : ($e > $b['time'] || $a >= $b['time']); }
+function blockPartText(array $b): string { $b = blockNorm($b); if ($b['part'] === 'all') return 'that day'; $h = (int) substr($b['time'], 0, 2); $m = substr($b['time'], 3, 2); return $b['part'] . ' ' . ($h % 12 ?: 12) . ($m !== '00' ? ':' . $m : '') . ($h < 12 ? ' am' : ' pm') . ' that day'; }
 function blockAt(string $crew, string $date, string $slot): ?array {
-    foreach (jobBlocks() as $b) if (($b['crew'] ?? '') === $crew && $date >= ($b['from'] ?? '') && $date <= ($b['to'] ?? '') && (($b['part'] ?? 'all') === 'all' || $b['part'] === slotHalf($slot))) return $b + ['note' => ''];
+    foreach (jobBlocks() as $b) if (($b['crew'] ?? '') === $crew && $date >= ($b['from'] ?? '') && $date <= ($b['to'] ?? '') && blockHits($b, $slot)) return blockNorm($b);
     return null;
 }
-function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t)); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
+function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_map('blockNorm', array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t))); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
 function jobShow(array $j, ?array $leads = null): array {
     $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
@@ -4692,9 +4697,10 @@ if ($action === 'jobblockadd' || $action === 'jobblockdel') {
         if ($to < $from) fail('The last day is before the first.');
         if ($to < $today) fail('Those days are already gone.');
         if (strtotime($to) - strtotime($from) > 120 * 86400) fail('Block four months at most at a time.');
-        $part = in_array($body['part'] ?? 'all', ['all', 'am', 'pm'], true) ? (string) $body['part'] : 'all';
-        $nb = ['id' => bin2hex(random_bytes(6)), 'crew' => $crew, 'from' => $from, 'to' => $to, 'part' => $part, 'note' => $clean($body['note'] ?? '', 60), 'by' => $me, 'at' => time()];
-        $in = fn($d, $s) => $d >= $from && $d <= $to && ($part === 'all' || slotHalf((string) $s) === $part);
+        $nb = blockNorm(['id' => bin2hex(random_bytes(6)), 'crew' => $crew, 'from' => $from, 'to' => $to, 'part' => (string) ($body['part'] ?? 'all'), 'time' => (string) ($body['time'] ?? ''), 'note' => $clean($body['note'] ?? '', 60), 'by' => $me, 'at' => time()]);
+        if ($nb['part'] !== 'all' && !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', $nb['time'])) fail('Pick the time.');
+        if ($nb['part'] === 'all') $nb['time'] = '';
+        $in = fn($d, $s) => $d >= $from && $d <= $to && blockHits($nb, (string) $s);
         $leads = leadsAll();
         foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $crew && $in($j['date'], $j['slot'])) $booked[] = ['date' => $j['date'], 'slot' => (string) (jobSlot((string) $j['slot'])[1] ?? $j['slot']), 'name' => ($role === 'quote' && !qMine($leads[$j['lead']] ?? [])) ? 'Booked' : (trim((string) ($leads[$j['lead']]['name'] ?? '')) ?: 'A customer')];
         foreach (jobHolds($leads) as $h) if ($h['crew'] === $crew && $in($h['date'], $h['slot'])) $held++;
@@ -4702,7 +4708,7 @@ if ($action === 'jobblockadd' || $action === 'jobblockdel') {
     }
     if (@file_put_contents(DATA_DIR . '/jobblocks.json', json_encode(array_values($all), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
     flock($lk, LOCK_UN);
-    $bb = $nb ?? $gone; $when = deskWhen($bb['from'], '') . ($bb['to'] !== $bb['from'] ? ' to ' . deskWhen($bb['to'], '') : '') . ($bb['part'] === 'am' ? ', morning' : ($bb['part'] === 'pm' ? ', afternoon' : ''));
+    $bb = blockNorm($nb ?? $gone); $when = deskWhen($bb['from'], '') . ($bb['to'] !== $bb['from'] ? ' to ' . deskWhen($bb['to'], '') : '') . ($bb['part'] !== 'all' ? ', ' . preg_replace('/ that day$/', '', blockPartText($bb)) : '');
     if ($bb['crew'] !== $me) pushName($bb['crew'], ($nb ? 'Blocked off: ' : 'Free again: ') . $when, ($bb['note'] !== '' ? $bb['note'] . ' · ' : '') . ($nb ? 'set' : 'taken off') . ' by ' . $me, './', 'block-' . $bb['id']);
     usort($booked, fn($a, $b) => strcmp($a['date'], $b['date']));
     out(['ok' => true, 'blocks' => blocksAhead(), 'booked' => $booked, 'held' => $held]);
