@@ -6556,7 +6556,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function handLine(m) { return fmtSq(m.sq) + ' \u00b7 measured ' + (HAND_SRC[m.src] || 'by hand') + (m.incl ? ', ' + HAND_INCL[m.incl] : '') + ' \u00b7 ' + String(m.by || '').split(' ')[0] + (m.at ? ', ' + new Date(m.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) : ''); }
   function lawnEstimate(h) {
     if (h.hand && h.hand.sq) { var hs = +h.hand.sq; return { sq: hs, a: hs, b: hs, mid: hs, band: bandOf(hs), span: '', conf: 'Good', why: ['measured ' + (HAND_SRC[h.hand.src] || 'by hand')], yr: (h.lawn && h.lawn.yr) || 2023, hand: true }; }   /* the size of record (2026-10-21) */
-    var L = h.lawn || {}, sq = +L.sq || 0, T = h.trees || {}, tc = Math.max(+T.z2 || 0, +T.z3 || 0);
+    var L = h.lawn || {}, sq = +L.sq || 0, T = h.trees || {}, tc = +T.z2 || 0;   /* the 5-30 ft ring only: 30-100 ft is mostly the neighbours' yards and street trees on a small lot (2026-10-21, Matthew: 9416 Desert Willow read 100% there) */
     var why = [], conf = 'Good', lo = 0.85, hi = 1.0;
     if (L.lv === 'T' || tc >= 0.35) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('lots of trees, and the photo misses lawn under them'); }
     else if (tc >= 0.2) { conf = 'Fair'; lo = 0.9; hi = 1.25; why.push('some trees over the lawn'); }
@@ -6610,7 +6610,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return n > E.b * 1.15 ? 'They say bigger than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : n < E.a * 0.85 ? 'They say smaller than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : 'Matches our estimate.';
   }
   /* a lot where the photo misses lawn: trees over it, no green read, or the estimate flagged (2026-10-21) */
-  function treeLot(h) { var T = h.trees || {}, L = h.lawn || {}; return Math.max(+T.z2 || 0, +T.z3 || 0) >= 0.2 || L.lv === 'N' || L.lv === 'T'; }
+  function treeLot(h) { var T = h.trees || {}, L = h.lawn || {}; return (+T.z2 || 0) >= 0.2 || L.lv === 'N' || L.lv === 'T'; }
   function setQuoteSize(from, v) { var p = from.closest && from.closest('.hpanel'); var i = p && p.querySelector('.qbasis input'); if (!i) return; i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); try { i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
   function handBox(h, redraw) {
     var w = q('div', 'handx'), m = h.hand;

@@ -1,0 +1,110 @@
+[
+ {
+  "addr": "2787 RUSSET SKY CT",
+  "town": "castle-rock",
+  "hand": 3898,
+  "upper": false,
+  "note": "Matthew, Google Maps, grass only",
+  "lot": 14780,
+  "greenTall": 0,
+  "grassLook": {
+   "brMin": 56,
+   "texMax": 17.1
+  },
+  "drcog": 4270,
+  "now": 4270,
+  "ignoreH": 4270,
+  "bright": 4270,
+  "both": 4270
+ },
+ {
+  "addr": "1648 MARSH HAWK CIR",
+  "town": "castle-rock",
+  "hand": 2344,
+  "upper": false,
+  "note": "Matthew, Google Maps; back yard under 3 trees",
+  "lot": 8900,
+  "greenTall": 1260,
+  "grassLook": {
+   "brMin": 35,
+   "texMax": 17
+  },
+  "drcog": 1170,
+  "now": 1880,
+  "ignoreH": 1180,
+  "bright": 1550,
+  "both": 1170
+ },
+ {
+  "addr": "7378 UPTON CT",
+  "town": "franktown",
+  "hand": 2595,
+  "upper": false,
+  "note": "Matthew, Google Maps, watered lawn only",
+  "lot": 52380,
+  "greenTall": 1080,
+  "grassLook": {
+   "brMin": 50,
+   "texMax": 22.9
+  },
+  "drcog": 2810,
+  "now": 2810,
+  "ignoreH": 2810,
+  "bright": 2810,
+  "both": 2810
+ },
+ {
+  "addr": "11663 SETTLERS DR",
+  "town": "parker",
+  "hand": 10473,
+  "upper": false,
+  "note": "Jen, Google Earth, grass under the trees too",
+  "lot": 16460,
+  "greenTall": 1600,
+  "grassLook": {
+   "brMin": 49,
+   "texMax": 19.6
+  },
+  "drcog": 440,
+  "now": 220,
+  "ignoreH": 230,
+  "bright": 850,
+  "both": 230
+ },
+ {
+  "addr": "9554 PENSTEMON CT",
+  "town": "black-forest",
+  "hand": 5746,
+  "upper": true,
+  "note": "upper bound only; El Paso, no DRCOG",
+  "lot": 14830,
+  "greenTall": 620,
+  "grassLook": {
+   "brMin": 52,
+   "texMax": 16
+  },
+  "drcog": null,
+  "now": 2370,
+  "ignoreH": 2140,
+  "bright": 2490,
+  "both": null
+ },
+ {
+  "addr": "9416 DESERT WILLOW TRL",
+  "town": "highlands-ranch",
+  "hand": null,
+  "upper": false,
+  "note": "quoted 2026-10-21; no hand measure yet",
+  "lot": 6580,
+  "greenTall": 1130,
+  "grassLook": {
+   "brMin": 60,
+   "texMax": 28.9
+  },
+  "drcog": 820,
+  "now": 430,
+  "ignoreH": 1740,
+  "bright": 430,
+  "both": 1060
+ }
+]
