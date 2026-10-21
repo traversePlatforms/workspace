@@ -1553,7 +1553,9 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .stp .stcard{padding:14px 16px;margin:0}
   .stp .stsq{display:block;width:100%;text-align:left;margin:0 0 12px;padding:12px 16px;border:1.5px solid var(--ember,#d6400c);cursor:pointer;font:inherit;color:inherit}
   .stp .stsq b{display:block;color:var(--ember-ink,#a0340a)} .stp .stsq span{font-size:13.5px;color:var(--soft)}
-  .sqp .stcard{padding:14px 16px;margin:0 0 14px} .sqp .okpis{margin:6px 0 14px}
+  .sqp .stcard{padding:14px 16px;margin:0 0 14px}
+  .sqp .sqfold{padding:4px 16px} .sqp .sqfh{margin:6px 0;font-size:13px} .sqp .sqfh small{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--soft);font-size:13px} .sqp .sqfb{padding:0 0 10px}
+  .sqp .sqday2{box-shadow:none;border:1px solid var(--line,#e3ddd2);margin:8px 0;padding:2px 12px} .sqp .sqfb .sqconf{margin:4px 0} .sqp .okpis{margin:6px 0 14px}
   .sqp .sqstat{font-size:13.5px;color:var(--soft);margin:4px 0 8px} .sqp .sqday{font:800 12px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--soft);margin:12px 0 4px}
   .sqp .sqrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-bottom:1px solid var(--line,#e3ddd2)} .sqp .sqrow > div{flex:1;min-width:200px} .sqp .sqrow small{display:block;color:var(--soft);font-size:12.5px} .sqp .sqrow.off{opacity:.6}
   .sqp .sqtag{padding:3px 9px;border-radius:999px;font-size:12.5px;background:var(--paper2,#f4efe6)} .sqp .sqtag.confirm{background:var(--ember,#d6400c);color:#fff} .sqp .sqtag.none{border:1px dashed var(--line,#d9d1c2)} .sqp .sqrec{font-size:12.5px}
@@ -16246,25 +16248,45 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       out.appendChild(q('div', 'sqstat', 'Square is connected' + (j.env === 'sandbox' ? ' (test mode)' : '') + ' \u00b7 checked ' + new Date().toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' })));
       var kp = q('div', 'okpis'); out.appendChild(kp);
       [['In today', j.totals.today], ['Last 7 days', j.totals.week], ['Last 14 days', j.totals.all]].forEach(function (x) { var c = kpiCard(x[0]); kp.appendChild(c); c.querySelector('b').textContent = cur(x[1]); c.querySelector('span').textContent = 'after refunds'; });
-      if (j.waiting && j.canConfirm) out.appendChild(squareConfirmCard(again));
+      /* folded sections (2026-10-21): a line each until opened */
+      S.sqOpen = S.sqOpen || {};
+      var fold = function (key, label, sub, openDefault, fill, holder) {
+        var wrap = q('section', 'card stcard sqfold'), open = key in S.sqOpen ? S.sqOpen[key] : openDefault;
+        var b = q('button', 'cfold sqfh'); b.type = 'button'; b.setAttribute('aria-expanded', String(open)); b.appendChild(ico('chev', 2.4));
+        b.appendChild(q('span', null, label)); if (sub) b.appendChild(q('small', null, sub)); wrap.appendChild(b);
+        var body = q('div', 'sqfb'); body.hidden = !open; wrap.appendChild(body); var filled = false;
+        var paint = function () { if (open && !filled) { filled = true; fill(body); } body.hidden = !open; b.setAttribute('aria-expanded', String(open)); };
+        b.addEventListener('click', function () { open = !open; S.sqOpen[key] = open; paint(); });
+        paint(); (holder || out).appendChild(wrap); return wrap;
+      };
+      if (j.waiting && j.canConfirm) fold('confirm', 'To confirm', j.waiting + (j.waiting === 1 ? ' payment' : ' payments'), false, function (b) { b.appendChild(squareConfirmCard(again)); });
       else if (j.waiting) out.appendChild(q('div', 'msg', j.waiting + (j.waiting === 1 ? ' payment is' : ' payments are') + ' waiting for the office to confirm which job they belong to.'));
-      var lc = q('section', 'card stcard'); lc.appendChild(q('h3', null, 'Payments')); out.appendChild(lc);
-      if (!j.payments.length) lc.appendChild(q('div', 'msg soft', 'No payments in the last 14 days.'));
-      var day = '';
-      j.payments.forEach(function (p) {
-        var d = isoOf(new Date(p.at * 1000)); if (d !== day) { day = d; lc.appendChild(q('div', 'sqday', dayName(d))); }
-        var r = q('div', 'sqrow' + (p.status !== 'COMPLETED' ? ' off' : ''));
-        var l = q('div'); l.appendChild(q('b', null, (p.who || 'No name') + ' \u00b7 ' + cur(p.amt - p.back)));
-        var t = p.tie, tt = t.kind === 'job' ? (t.part ? 'Part payment for ' : 'Paid for ') + (t.name || 'a job') + (t.date ? ' (' + dayName(t.date) + ')' : '') : t.kind === 'lead' ? (t.deposit ? 'Deposit from ' : 'From ') + (t.name || 'a lead') : t.kind === 'confirm' ? 'Waiting to be confirmed' + (t.name ? ': likely ' + t.name : '') : t.kind === 'aside' ? 'Set aside: not one of ours' : 'Not tied to anything in the app';
-        l.appendChild(q('small', null, [new Date(p.at * 1000).toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }), p.card, p.back ? cur(p.back) + ' refunded' : '', p.status !== 'COMPLETED' ? p.status.toLowerCase() : '', p.note].filter(Boolean).join(' \u00b7 ')));
-        r.appendChild(l);
-        var tag = q('span', 'sqtag ' + t.kind, tt); r.appendChild(tag);
-        if (p.receipt) { var a = q('a', 'sqrec', 'Receipt'); a.href = p.receipt; a.target = '_blank'; a.rel = 'noopener'; r.appendChild(a); }
-        lc.appendChild(r);
+      var tot14 = j.payments.reduce(function (n, p) { return n + (p.status === 'COMPLETED' ? p.amt - p.back : 0); }, 0);
+      fold('pays', 'Payments, last 14 days', j.payments.length + (j.payments.length === 1 ? ' payment' : ' payments') + ' \u00b7 ' + cur(tot14), false, function (lc) {
+        if (!j.payments.length) { lc.appendChild(q('div', 'msg soft', 'No payments in the last 14 days.')); return; }
+        var days = {}, order = [];
+        j.payments.forEach(function (p) { var d = isoOf(new Date(p.at * 1000)); if (!days[d]) { days[d] = []; order.push(d); } days[d].push(p); });
+        order.forEach(function (d, i) {
+          var list = days[d], sum = list.reduce(function (n, p) { return n + (p.status === 'COMPLETED' ? p.amt - p.back : 0); }, 0);
+          var dayBox = fold('day:' + d, dayName(d), list.length + (list.length === 1 ? ' payment' : ' payments') + ' \u00b7 ' + cur(sum), i === 0, function (db) {
+            list.forEach(function (p) {
+              var r = q('div', 'sqrow' + (p.status !== 'COMPLETED' ? ' off' : ''));
+              var l = q('div'); l.appendChild(q('b', null, (p.who || 'No name') + ' \u00b7 ' + cur(p.amt - p.back)));
+              var t = p.tie, tt = t.kind === 'job' ? (t.part ? 'Part payment for ' : 'Paid for ') + (t.name || 'a job') + (t.date ? ' (' + dayName(t.date) + ')' : '') : t.kind === 'lead' ? (t.deposit ? 'Deposit from ' : 'From ') + (t.name || 'a lead') : t.kind === 'confirm' ? 'Waiting to be confirmed' + (t.name ? ': likely ' + t.name : '') : t.kind === 'aside' ? 'Set aside: not one of ours' : 'Not tied to anything in the app';
+              l.appendChild(q('small', null, [new Date(p.at * 1000).toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }), p.card, p.back ? cur(p.back) + ' refunded' : '', p.status !== 'COMPLETED' ? p.status.toLowerCase() : '', p.note].filter(Boolean).join(' \u00b7 ')));
+              r.appendChild(l); r.appendChild(q('span', 'sqtag ' + t.kind, tt));
+              if (p.receipt) { var a = q('a', 'sqrec', 'Receipt'); a.href = p.receipt; a.target = '_blank'; a.rel = 'noopener'; r.appendChild(a); }
+              db.appendChild(r);
+            });
+          }, lc);
+          dayBox.classList.add('sqday2');
+        });
       });
-      var kc = q('section', 'card stcard'); kc.appendChild(q('h3', null, 'Pay links sent, not paid yet')); out.appendChild(kc);
-      if (!j.links.length) kc.appendChild(q('div', 'msg soft', 'None waiting.'));
-      j.links.forEach(function (x) { var r = q('div', 'sqrow'); var l = q('div'); l.appendChild(q('b', null, x.name + ' \u00b7 ' + cur(x.owed))); l.appendChild(q('small', null, (x.deposit ? 'Deposit link' : 'Balance link') + (x.at ? ' sent ' + ago(x.at) : '') + (x.date ? ' \u00b7 job ' + dayName(x.date) : ''))); r.appendChild(l); kc.appendChild(r); });
+      var owedLinks = j.links.reduce(function (n, x) { return n + (x.owed || 0); }, 0);
+      fold('links', 'Pay links sent, not paid yet', j.links.length + (j.links.length === 1 ? ' link' : ' links') + (j.links.length ? ' \u00b7 ' + cur(owedLinks) : ''), false, function (kc) {
+        if (!j.links.length) { kc.appendChild(q('div', 'msg soft', 'None waiting.')); return; }
+        j.links.forEach(function (x) { var r = q('div', 'sqrow'); var l = q('div'); l.appendChild(q('b', null, x.name + ' \u00b7 ' + cur(x.owed))); l.appendChild(q('small', null, (x.deposit ? 'Deposit link' : 'Balance link') + (x.at ? ' sent ' + ago(x.at) : '') + (x.date ? ' \u00b7 job ' + dayName(x.date) : ''))); r.appendChild(l); kc.appendChild(r); });
+      });
     }, function () { out.textContent = ''; out.appendChild(q('div', 'msg', 'Square needs signal.')); });
   }
   /* the ad report (2026-10-21, Matthew: the Instant Form vs Messenger sheet in the app, current every day): built from the app's records and the
