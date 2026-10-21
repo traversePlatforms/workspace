@@ -21,7 +21,7 @@ SSID=$(netsh wlan show interfaces 2>/dev/null | tr -d '' | awk -F': ' '/^ *SSID
 case "$SSID" in *iPhone*) say "  info  network: $SSID (phone hotspot: tree downloads stay paused)";; *) say "  info  network: ${SSID:-wired}";; esac
 if [ -f "$DT/logs-paused.flag" ]; then ok "tree work PAUSED since $(date -r "$DT/logs-paused.flag" "+%m-%d %H:%M") (hotspot); resume: bash traverse/data-pipeline/door-territory/resume-trees-2026-10-16.sh"; else
 NODES=$(tasklist //FI "IMAGENAME eq node.exe" 2>/dev/null | grep -c node.exe)
-for run in batch5:run-batch5-2026-10-15.sh batch5-fix:run-batch5-fix-2026-10-16.sh boulder-trees:boulder-trees-last-2026-10-16.sh; do
+for run in batch5:run-batch5-2026-10-15.sh batch5-fix:run-batch5-fix-2026-10-16.sh; do   # boulder-trees retired 2026-10-20: the Wi-Fi queue's refine does Boulder's trees
   name=${run%%:*}; L="$DT/logs-$name"
   [ -d "$L" ] || continue
   if [ -f "$L/done.flag" ]; then ok "build $name finished $(date -r "$L/done.flag" '+%m-%d %H:%M')"; continue; fi
@@ -54,7 +54,15 @@ up() { # label flag towns...
 }
 up towns-trees-2026-10-16 "$DT/logs-batch5/done.flag" $T40
 up towns-catchup-2026-10-16 "$DT/logs-batch5-fix/done.flag" $T40 $SIX
-up towns-final-2026-10-16 "$DT/logs-boulder-trees/done.flag" $T40 $SIX boulder
+# up towns-final-2026-10-16 ... retired 2026-10-20: the Wi-Fi queue uploads every town it rebuilds; an upload from here could land mid-rebuild
+
+# 2b. The Wi-Fi queue (2026-10-20): its status line, a parked job, or a runner that stopped updating
+QS="/c/Users/Surge Inc/Desktop/claude test 2/traverse/ops/wifi-queue/state/status.txt"
+if [ -f "$QS" ]; then
+  say "  info  Wi-Fi queue: $(sed -n 2p "$QS" | cut -c1-160)"
+  grep -q "PARKED" "$QS" && bad "Wi-Fi queue: a job is parked after 3 failures (traverse/ops/wifi-queue/state/status.txt)"
+  if ! grep -q "everything in the queue is done" "$QS"; then qm=$(age_min "$QS"); [ "$qm" -gt 60 ] && bad "Wi-Fi queue: status not updated for $qm min (runner stopped? the task restarts it every 30 min)"; fi
+fi
 
 # 3. The live server: app page, API answering, Sixfold town list readable, PHP fatal errors in the last hour
 SRV=$($SG "cd ~/www/traverseplatforms.com && \

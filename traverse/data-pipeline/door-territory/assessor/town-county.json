@@ -1,0 +1,297 @@
+{
+ "_note": "Each town's county, from five sample doors per town checked against the state parcel map (2026-10-20). Read by build-year.mjs.",
+ "acres-green": [
+  "Douglas"
+ ],
+ "arvada": [
+  "Jefferson"
+ ],
+ "aurora": [
+  "Arapahoe"
+ ],
+ "bennett": [
+  "Adams"
+ ],
+ "berkley": [
+  "Adams"
+ ],
+ "black-forest": [
+  "El Paso"
+ ],
+ "boulder": [
+  "Boulder"
+ ],
+ "bow-mar": [
+  "Jefferson",
+  "Arapahoe"
+ ],
+ "brighton": [
+  "Adams"
+ ],
+ "broomfield": [
+  "Broomfield"
+ ],
+ "byers": [
+  "Arapahoe"
+ ],
+ "castle-pines": [
+  "Douglas"
+ ],
+ "castle-rock": [
+  "Douglas"
+ ],
+ "centennial": [
+  "Arapahoe"
+ ],
+ "cherry-creek": [
+  "Arapahoe"
+ ],
+ "cherry-hills-village": [
+  "Arapahoe"
+ ],
+ "columbine": [
+  "Jefferson"
+ ],
+ "columbine-valley": [
+  "Arapahoe"
+ ],
+ "commerce-city": [
+  "Adams"
+ ],
+ "cripple-creek": [
+  "Teller"
+ ],
+ "cs-northeast": [
+  "El Paso"
+ ],
+ "cs-northwest": [
+  "El Paso"
+ ],
+ "cs-southeast": [
+  "El Paso"
+ ],
+ "cs-southwest": [
+  "El Paso"
+ ],
+ "dacono": [
+  "Weld"
+ ],
+ "dakota-ridge": [
+  "Jefferson"
+ ],
+ "denver": [
+  "Denver"
+ ],
+ "derby": [
+  "Adams"
+ ],
+ "divide": [
+  "Teller"
+ ],
+ "dove-valley": [
+  "Arapahoe"
+ ],
+ "edgewater": [
+  "Jefferson"
+ ],
+ "elizabeth": [
+  "Elbert"
+ ],
+ "englewood": [
+  "Arapahoe"
+ ],
+ "erie": [
+  "Weld",
+  "Boulder"
+ ],
+ "evergreen": [
+  "Jefferson"
+ ],
+ "federal-heights": [
+  "Adams"
+ ],
+ "firestone": [
+  "Weld"
+ ],
+ "florissant": [
+  "Teller"
+ ],
+ "fort-lupton": [
+  "Weld"
+ ],
+ "fountain": [
+  "El Paso"
+ ],
+ "four-square-mile": [
+  "Arapahoe"
+ ],
+ "foxfield": [
+  "Arapahoe"
+ ],
+ "franktown": [
+  "Douglas"
+ ],
+ "frederick": [
+  "Weld"
+ ],
+ "glendale": [
+  "Arapahoe"
+ ],
+ "golden": [
+  "Jefferson"
+ ],
+ "greenwood-village": [
+  "Arapahoe"
+ ],
+ "gunbarrel": [
+  "Boulder"
+ ],
+ "highlands-ranch": [
+  "Douglas"
+ ],
+ "holly-hills": [
+  "Arapahoe"
+ ],
+ "hudson": [
+  "Weld"
+ ],
+ "idaho-springs": [
+  "Clear Creek"
+ ],
+ "inverness": [
+  "Arapahoe"
+ ],
+ "keenesburg": [
+  "Weld"
+ ],
+ "ken-caryl": [
+  "Jefferson"
+ ],
+ "kiowa": [
+  "Elbert"
+ ],
+ "lafayette": [
+  "Boulder"
+ ],
+ "lakewood": [
+  "Jefferson"
+ ],
+ "larkspur": [
+  "Douglas"
+ ],
+ "littleton": [
+  "Arapahoe"
+ ],
+ "lochbuie": [
+  "Weld",
+  "Adams"
+ ],
+ "lone-tree": [
+  "Douglas"
+ ],
+ "longmont": [
+  "Boulder",
+  "Weld"
+ ],
+ "louisville": [
+  "Boulder"
+ ],
+ "lyons": [
+  "Boulder"
+ ],
+ "mead": [
+  "Weld"
+ ],
+ "meridian": [
+  "Douglas"
+ ],
+ "monument": [
+  "El Paso"
+ ],
+ "morrison": [
+  "Jefferson"
+ ],
+ "nederland": [
+  "Boulder"
+ ],
+ "niwot": [
+  "Boulder"
+ ],
+ "northglenn": [
+  "Adams"
+ ],
+ "palmer-lake": [
+  "El Paso"
+ ],
+ "parker": [
+  "Douglas"
+ ],
+ "perry-park": [
+  "Douglas"
+ ],
+ "platteville": [
+  "Weld"
+ ],
+ "roxborough-park": [
+  "Douglas"
+ ],
+ "security-widefield": [
+  "El Paso"
+ ],
+ "sedalia": [
+  "Douglas"
+ ],
+ "sheridan": [
+  "Arapahoe"
+ ],
+ "sherrelwood": [
+  "Adams"
+ ],
+ "south-denver": [
+  "Denver"
+ ],
+ "sterling-ranch": [
+  "Douglas"
+ ],
+ "stonegate": [
+  "Douglas"
+ ],
+ "strasburg": [
+  "Adams",
+  "Arapahoe"
+ ],
+ "superior": [
+  "Boulder"
+ ],
+ "the-pinery": [
+  "Douglas"
+ ],
+ "thornton": [
+  "Adams"
+ ],
+ "twin-lakes": [
+  "Adams"
+ ],
+ "walden": [
+  "El Paso"
+ ],
+ "watkins": [
+  "Arapahoe"
+ ],
+ "welby": [
+  "Adams"
+ ],
+ "westminster": [
+  "Adams",
+  "Jefferson"
+ ],
+ "wheat-ridge": [
+  "Jefferson"
+ ],
+ "windsor": [
+  "Weld"
+ ],
+ "woodland-park": [
+  "Teller"
+ ]
+}

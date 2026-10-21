@@ -27,6 +27,17 @@ const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'el
   /* 2026-10-10: the Front Range Roofing towns. Adams and Boulder record roof cover; Denver gives year built and remodel; Arapahoe
      (Centennial) publishes nothing in bulk. Thornton and Erie straddle Weld: both counties are read for them. */
   thornton: ['adams', 'weld'], 'commerce-city': 'adams', erie: ['boulder', 'weld'], denver: 'denver' };
+/* every other town in a county whose files we hold (2026-10-20, Matthew: year built for the metro towns, so the lot preview can say a house
+   was built after the aerial photo). town-county.json: each town's counties from sample doors; the towns listed above keep their entries. */
+const COUNTY_KEY = { 'El Paso': 'elpaso', Douglas: 'douglas', Adams: 'adams', Boulder: 'boulder', Denver: 'denver', Weld: 'weld' };
+const TC = existsSync(join(HERE, 'town-county.json')) ? JSON.parse(readFileSync(join(HERE, 'town-county.json'), 'utf8')) : {};
+for (const [town, cs] of Object.entries(TC)) {
+  if (town.startsWith('_') || TOWNS[town] || !Array.isArray(cs)) continue;
+  const ks = cs.map((c) => COUNTY_KEY[c]).filter(Boolean);
+  if (ks.length) TOWNS[town] = ks.length === 1 ? ks[0] : ks;
+}
+const ONLY = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
+if (ONLY.length) for (const t of Object.keys(TOWNS)) if (!ONLY.includes(t)) delete TOWNS[t];
 const q = (line) => line.replace(/^"|"\s*$/g, '').split('","');
 const lines = async (f, fn) => { const rl = createInterface({ input: createReadStream(f), crlfDelay: Infinity }); for await (const l of rl) if (l) fn(l); };
 
