@@ -14552,13 +14552,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      away for a newer picture, now aimed at the lot's real centre and zoom. */
   /* the lot's outline from the first of the market's parcel services that has one (Colorado's statewide service; a county's
      own elsewhere, one per county: 2026-10-11). Each is an ArcGIS feature layer, asked the same way. */
+  /* through our server first (2026-10-20): the state's parcel map refuses some networks (phone hotspots), so the server asks it and keeps the
+     answer; straight to the map only if our server cannot answer. "no parcel" from the server is final. */
   function parcelAt(lon, lat, urls) {
+    var viaUs = S.me && urls && urls[0] && urls[0].indexOf('gis.colorado.gov') >= 0
+      ? api('parcelat', { params: { lon: Number(lon).toFixed(6), lat: Number(lat).toFixed(6) } }).then(function (j) {
+          if (j && j.ok && j.rings && j.rings.length) return { rings: j.rings };
+          if (j && j.ok) throw new Error('no parcel');
+          throw new Error('server');
+        })
+      : Promise.reject(new Error('direct'));
+    return viaUs.catch(function (e) { if (e && e.message === 'no parcel') throw e; return parcelDirect(lon, lat, urls); });
+  }
+  function parcelDirect(lon, lat, urls) {
     if (!urls || !urls.length) return Promise.reject(new Error('no parcel service'));
     return fetch(urls[0] + '?' + new URLSearchParams({ f: 'json', geometry: lon + ',' + lat, geometryType: 'esriGeometryPoint', inSR: '4326', outSR: '4326',
       spatialRel: 'esriSpatialRelIntersects', returnGeometry: 'true', outFields: 'OBJECTID', geometryPrecision: '7' }).toString())
       .then(function (r) { return r.json(); })
       .then(function (j) { var geo = j.features && j.features[0] && j.features[0].geometry; if (!geo || !geo.rings) throw new Error('no parcel'); return geo; })
-      .catch(function (e) { return urls.length > 1 ? parcelAt(lon, lat, urls.slice(1)) : Promise.reject(e); });
+      .catch(function (e) { return urls.length > 1 ? parcelDirect(lon, lat, urls.slice(1)) : Promise.reject(e); });
   }
   var PC_API = 'https://planetarycomputer.microsoft.com/api';
   function zoomFor(acres) { return acres >= 3 ? 18 : acres >= 1 ? 19 : 20; }

@@ -7535,6 +7535,29 @@ if ($action === 'goals') {
  * Matthew: territories get their own screen; admins assign neighbourhoods to people. Later a team
  * manager role will assign within their own team: the assignment rows already say who assigned
  * ('by'), so that role only needs a team list and a check here. */
+/* a lot's property line through the server (2026-10-20): the door card, the aerial view and the house lookup ask here first. The state's
+   parcel map (gis.colorado.gov) refuses some networks, phone hotspots among them, and then the cards had no line and no framing. Signed-in
+   only, Colorado points only, one parcel per point, kept 90 days (a point with no parcel too). */
+const PARCEL_CO = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
+if ($action === 'parcelat') {
+    if (market()['key'] !== 'co') fail('Not here.', 404);
+    $lon = (float) ($_GET['lon'] ?? 0); $lat = (float) ($_GET['lat'] ?? 0); $bx = market()['box'];
+    if ($lat < $bx[0] || $lat > $bx[2] || $lon < $bx[1] || $lon > $bx[3]) fail('That point is outside the area.');
+    $pk = sprintf('%.6f,%.6f', $lon, $lat); $pdir = DATA_DIR . '/parcel-cache'; if (!is_dir($pdir)) @mkdir($pdir, 0700, true);
+    $pf = $pdir . '/' . md5($pk) . '.json';
+    if (is_file($pf) && time() - filemtime($pf) < 90 * 86400) { $c = json_decode((string) @file_get_contents($pf), true); if (is_array($c)) out(['ok' => true, 'rings' => $c['rings'] ?? null, 'kept' => true]); }
+    if (!throttleTake(rateFile('parcelat|' . $me), 900, 3600)) fail('Too many lookups for now. Try again in a few minutes.', 429);
+    $purl = PARCEL_CO; $pov = dirname(__DIR__, 2) . '/sixfold-private/parcel-api-test.txt';
+    if (PHP_SAPI === 'cli-server' && is_file($pov)) $purl = trim((string) file_get_contents($pov));   /* the test copy's stand-in map; never on the host */
+    $pcode = 0; $praw = httpGetRaw($purl . '?' . http_build_query(['f' => 'json', 'geometry' => $lon . ',' . $lat, 'geometryType' => 'esriGeometryPoint', 'inSR' => '4326', 'outSR' => '4326',
+        'spatialRel' => 'esriSpatialRelIntersects', 'returnGeometry' => 'true', 'outFields' => 'OBJECTID', 'geometryPrecision' => '7']), 15, $pcode);
+    $pj = $praw !== null ? json_decode($praw, true) : null;
+    if (!is_array($pj) || isset($pj['error'])) fail('The parcel map did not answer.', 502);
+    $pg = $pj['features'][0]['geometry'] ?? null;
+    $rings = is_array($pg) && !empty($pg['rings']) && is_array($pg['rings']) ? $pg['rings'] : null;
+    @file_put_contents($pf, json_encode(['rings' => $rings, 'at' => time()]), LOCK_EX);
+    out(['ok' => true, 'rings' => $rings]);
+}
 if ($action === 'territories') {
     if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
