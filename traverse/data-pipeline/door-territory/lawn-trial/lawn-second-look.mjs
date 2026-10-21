@@ -31,7 +31,10 @@ for (const f of [`${TOWN}.json`, `${TOWN}-lookup.json`]) {
 }
 const noGreen = (d) => { const c = cache[`${d.lat},${d.lon}`]; return c && !c.err && !(+c.s > 0) && !c.sl && !(out[`${d.lat},${d.lon}`] || {}).sl; };
 let todo = doors.filter(noGreen);
-if (IDS && existsSync(IDS)) { const first = new Set(JSON.parse(readFileSync(IDS, 'utf8'))); todo.sort((a, b) => (first.has(b.id) ? 1 : 0) - (first.has(a.id) ? 1 : 0)); }
+if (IDS) {   /* a list given: only those doors (the queue's "houses we are visiting"); a missing list is an error, never a silent "first N" */
+  if (!existsSync(IDS)) { console.log(`the door list ${IDS} is missing`); process.exit(1); }
+  const only = new Set(JSON.parse(readFileSync(IDS, 'utf8'))); todo = todo.filter((d) => only.has(d.id));
+}
 if (LIMIT > 0) todo = todo.slice(0, LIMIT);
 console.log(`${TOWN}: ${doors.length} doors, ${todo.length} to look at again in the ${YEAR} photo`);
 if (!todo.length) { console.log(`${TOWN}: nothing to look at`); process.exit(0); }
