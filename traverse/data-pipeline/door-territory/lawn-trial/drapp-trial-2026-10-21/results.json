@@ -1,0 +1,70 @@
+[
+ {
+  "address": "12405 W 19TH PL",
+  "acres": 0.3,
+  "trees30ft": "48%",
+  "appLawn": 700,
+  "naip": {
+   "lot": 13165,
+   "green": 4862,
+   "open": 8417
+  },
+  "drapp": {
+   "lot": 13172,
+   "green36": 1180,
+   "green20": 4446,
+   "open": 8311
+  }
+ },
+ {
+  "address": "155 EVERETT ST",
+  "acres": 0.28,
+  "trees30ft": "60%",
+  "appLawn": 0,
+  "naip": {
+   "lot": 12318,
+   "green": 5346,
+   "open": 8567
+  },
+  "drapp": {
+   "lot": 12316,
+   "green36": 217,
+   "green20": 1530,
+   "open": 8071
+  }
+ },
+ {
+  "address": "1539 HARLAN ST",
+  "acres": 0.13,
+  "trees30ft": "78%",
+  "appLawn": 500,
+  "naip": {
+   "lot": 5583,
+   "green": 1497,
+   "open": 3477
+  },
+  "drapp": {
+   "lot": 5656,
+   "green36": 0,
+   "green20": 24,
+   "open": 3001
+  }
+ },
+ {
+  "address": "2644 S HOYT ST",
+  "acres": 0.19,
+  "trees30ft": "66%",
+  "appLawn": 1100,
+  "naip": {
+   "lot": 8181,
+   "green": 4184,
+   "open": 5792
+  },
+  "drapp": {
+   "lot": 8167,
+   "green36": 197,
+   "green20": 2266,
+   "open": 5108
+  }
+ }
+]
