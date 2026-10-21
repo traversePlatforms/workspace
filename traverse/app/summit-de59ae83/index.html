@@ -3893,7 +3893,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       else if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
-      officeGroup(box, 'sales', 'Sales', [pt, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
+      officeGroup(box, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way Jen does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         qt,
         feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null]);
@@ -4738,7 +4738,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      lands on that person's calendar with an alert and everything they need for it. Admins and the office role book; the people
      ticked "Does walks" in Accounts go. They say how it went from the walk itself, which moves the lead along. */
   /* an Office account that also runs a team (2026-10-20, Nneka): a manager's powers over their own team, everything else the office's */
-  function qqName() { return S.role === 'office' && S.runsTeam ? 'Quote builder' : 'Quick quote'; }   /* Matthew 2026-10-20: "just call it quote builder on her page" */
+  function qqName() { return (S.role === 'office' && S.runsTeam) || (adminView() && !qView()) ? 'Quote builder' : 'Quick quote'; }   /* admins too (2026-10-21, Matthew: 'so i can make quotes like jen does') */   /* Matthew 2026-10-20: "just call it quote builder on her page" */
   function mgrOn() { return S.role === 'manager' || (S.role === 'office' && !!S.runsTeam); }
   function wdOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
   function walkerOn() { return feat('walkdesk') && !!S.walker; }
@@ -8587,7 +8587,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var t = [];
     if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
     if (adminView() && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
-    if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
+    if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); if (quickCanBook()) t.push([qqName(), function () { quickQuoteView(); }]); }
     if (wdOn()) t.push(['Stats', statsPageView]);   /* 2026-10-20 */
     if (squarePageOn()) t.push(['Square', squareView]);   /* 2026-10-21 */
     else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push([qqName(), function () { quickQuoteView(); }]); }
@@ -8994,7 +8994,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
     if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'results', 'skip', 'deskbook', 'walk']]);
     if (adminView() && wdOn()) it.push(['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']]);   /* the jobs board (2026-10-14) */
-    if (adminView()) it.push(['card', 'Customers', customersView, ['customers', 'customer']]);   /* in the top bar, not only under Office (Matthew 2026-10-15) */
+    if (adminView()) it.push(['card', 'Customers', customersView, ['customers', 'customer']]);
+    if (adminView() && quickCanBook()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);   /* Jen's quote builder in the admin's menu (2026-10-21) */   /* in the top bar, not only under Office (Matthew 2026-10-15) */
     if (asOffice()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
