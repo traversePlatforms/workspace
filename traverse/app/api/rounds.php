@@ -2162,7 +2162,10 @@ function a365Trk($t): array {
 function a365Came(array $t, string $qr): string {
     if ($qr !== '') return 'QR code on our ' . (['card' => 'business card', 'yard' => 'yard sign', 'truck' => 'truck', 'car' => 'car'][$qr] ?? $qr);
     $us = strtolower((string) ($t['us'] ?? '')); $host = (string) preg_replace('#/.*$#', '', (string) ($t['ref'] ?? ''));
-    if (!empty($t['fb']) || preg_match('/^(facebook|fb|instagram|ig|meta)/', $us)) return 'Facebook or Instagram ad link';
+    /* Facebook puts its click tag (fbclid) on EVERY link tapped in its apps, not only ads (2026-10-21: Alberto came from the Facebook app,
+       and the log cannot say ad, post or page button), so only a link we tagged as paid is called an ad */
+    if (preg_match('/^(facebook|fb|instagram|ig|meta)/', $us) && preg_match('/cpc|paid|ad/', strtolower((string) ($t['um'] ?? '')))) return 'Facebook or Instagram ad link';
+    if (!empty($t['fb']) || preg_match('/^(facebook|fb|instagram|ig|meta)/', $us)) return 'Facebook or Instagram link (an ad, a post or the page\'s button)';
     if (!empty($t['g']) || ($us === 'google' && preg_match('/cpc|paid|ad/', strtolower((string) ($t['um'] ?? ''))))) return 'Google ad';
     if ($host !== '' && !preg_match('/(^|\.)365aeration\.com$/', $host)) {
         if (preg_match('/(^|\.)(facebook|fb|messenger)\.com$/', $host)) return 'Facebook (a post, page or message link)';

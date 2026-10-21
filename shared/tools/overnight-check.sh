@@ -61,7 +61,15 @@ QS="/c/Users/Surge Inc/Desktop/claude test 2/traverse/ops/wifi-queue/state/statu
 if [ -f "$QS" ]; then
   say "  info  Wi-Fi queue: $(sed -n 2p "$QS" | cut -c1-160)"
   grep -q "PARKED" "$QS" && bad "Wi-Fi queue: a job is parked after 3 failures (traverse/ops/wifi-queue/state/status.txt)"
-  if ! grep -q "everything in the queue is done" "$QS"; then qm=$(age_min "$QS"); [ "$qm" -gt 60 ] && bad "Wi-Fi queue: status not updated for $qm min (runner stopped? the task restarts it every 30 min)"; fi
+  if ! grep -q "everything in the queue is done" "$QS"; then qm=$(age_min "$QS")
+    if [ "$qm" -gt 60 ]; then
+      # one town can take all night (Westminster's lawn fill: 9 h, 2026-10-21): the status only changes between units, so a
+      # runner still writing its step log is working, not stopped
+      QL="$(dirname "$(dirname "$QS")")/logs"; sl=$(ls -t "$QL"/step-*.log 2>/dev/null | head -1)
+      if [ -n "$sl" ] && [ "$(age_min "$sl")" -le 20 ]; then say "  ok    Wi-Fi queue: one long unit, still working ($(basename "$sl" .log) written $(age_min "$sl") min ago)"
+      else bad "Wi-Fi queue: status not updated for $qm min and no step log written in 20 min (runner stopped? the task restarts it every 30 min)"; fi
+    fi
+  fi
 fi
 
 # 3. The live server: app page, API answering, Sixfold town list readable, PHP fatal errors in the last hour
