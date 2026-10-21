@@ -4977,6 +4977,20 @@ function adSpend(): array {
         ['key' => 'msgr', 'label' => 'Messenger ad (since 15 Oct)', 'src' => 'messenger', 'spend' => 541.07, 'results' => 51, 'asof' => '2026-10-20', 'by' => 'Matthew\'s Meta screenshot'],
     ];
 }
+/** the printed QR codes' scan counts from the 365 site (2026-10-21), cached 10 minutes; null when the site does not answer */
+function qrScans(): ?array {
+    $cf = DATA_DIR . '/qr-scans-cache.json'; $c = json_decode((string) @file_get_contents($cf), true);
+    if (is_array($c) && (int) ($c['at'] ?? 0) > time() - 600) return $c['pieces'] ?? [];
+    $key = trim((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/a365-relay-key.txt')); if (strlen($key) < 32) return null;
+    $url = 'https://365aeration.com/api/scans.php';
+    if (PHP_SAPI === 'cli-server' && is_file(dirname(__DIR__, 2) . '/sixfold-private/a365-scans-url.txt')) $url = trim((string) file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/a365-scans-url.txt'));   /* the test server's stand-in */
+    $h = curl_init($url); curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => ['X-Site-Key: ' . $key], CURLOPT_USERAGENT => 'Sixfold app']);
+    $r = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); curl_close($h);
+    $j = is_string($r) ? json_decode($r, true) : null;
+    if ($code !== 200 || !is_array($j) || empty($j['ok'])) return is_array($c) ? ($c['pieces'] ?? []) : null;
+    @file_put_contents($cf, json_encode(['at' => time(), 'pieces' => $j['pieces'] ?? []]), LOCK_EX);
+    return $j['pieces'] ?? [];
+}
 function jobPaidSoFar(array $j): int { $p = $j['pay'] ?? []; $s0 = (string) ($p['s'] ?? 'unpaid'); return $s0 === 'paid' ? (int) $j['price'] : ($s0 === 'deposit' ? (int) ($p['amt'] ?? 0) : 0); }
 if ($action === 'statspage') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
@@ -5043,7 +5057,14 @@ if ($action === 'statspage') {
         if (empty($l['came'])) { $web['before']++; continue; } $web['came'][$l['came']] = ($web['came'][$l['came']] ?? 0) + 1;
         if (!empty($l['hear'])) { $hl = A365_HEAR[$l['hear']] ?? $l['hear']; $web['hear'][$hl] = ($web['hear'][$hl] ?? 0) + 1; } }
     arsort($web['came']); arsort($web['hear']);
-    out(['ok' => true, 'web' => $web, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
+    /* the printed QR codes (2026-10-21): scans from the 365 site, leads and jobs from the form's from=<piece> */
+    $qr = ['pieces' => [], 'answer' => true]; $sc = qrScans(); if ($sc === null) { $qr['answer'] = false; $sc = []; }
+    foreach (['yard' => 'Yard signs', 'card' => 'Business cards', 'truck' => 'Truck magnets', 'car' => 'Car magnet'] as $pk => $plabel) {
+        $ln = 0; $jn = 0; $bk = 0;
+        foreach ($leads as $l) { if (!$realLead($l) || (string) ($l['qr'] ?? '') !== $pk) continue; $ln++; if (isset($jobOfLead[$l['id']])) { $jn++; $bk += (int) $jobOfLead[$l['id']]['price']; } }
+        $s0 = $sc[$pk] ?? []; $qr['pieces'][] = ['key' => $pk, 'label' => $plabel, 'scans' => (int) ($s0['total'] ?? 0), 'week' => (int) ($s0['week'] ?? 0), 'last' => (int) ($s0['last'] ?? 0), 'leads' => $ln, 'jobs' => $jn, 'booked' => $bk];
+    }
+    out(['ok' => true, 'qr' => $qr, 'web' => $web, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
          'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN], 'doors' => $doors, 'canEdit' => $role === 'admin']);
 }
 /** the end-of-day reminder (2026-10-21): after 7 pm, once a day, a push to the admins when no one has typed the ad spend today */

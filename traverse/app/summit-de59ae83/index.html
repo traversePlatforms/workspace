@@ -16222,6 +16222,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tr(tb5, ['Six weeks', money0(P.weeks.reduce(function (a, w) { return a + w.booked; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.pipeline; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.plans; }, 0)), money0(gt)], 'sttot');
         c5.appendChild(q('p', 'stnote', 'Booked: jobs on the board that week. Quoted leads: ' + P.pipeN + (P.pipeN === 1 ? ' lead' : ' leads') + ' quoted in the app or in Jen\u2019s ClickUp, with no job yet (not lost), worth ' + money0(P.pipe) + ' together; times the close rate (' + (P.quoted ? pct(P.close) + ', ' + P.won + ' of the ' + P.quoted + ' leads of the last 60 days that were quoted booked' : 'nothing quoted in 60 days') + '), spread evenly over the six weeks. Plans: ' + money0(j.plans.mrr) + ' a month, as weeks.'));
         /* 6. doors, the whole company */
+        /* the printed QR codes (2026-10-21) */
+        if (j.qr) {
+          var cq = card('QR codes', 'yard signs, business cards and magnets', col);
+          var tbq = table(cq, ['', 'Scans', 'Last 7 days', 'Leads', 'Jobs']);
+          j.qr.pieces.forEach(function (x) { tr(tbq, [[x.label, x.last ? 'last scan ' + ago(x.last) : 'no scans yet'], x.scans, x.week, x.leads, x.jobs ? x.jobs + ' (' + money0(x.booked) + ')' : '0']); });
+          cq.appendChild(q('p', 'stnote', (j.qr.answer ? '' : 'The 365 site did not answer just now, so the scan counts may be behind. ') + 'A scan is counted each time the code is opened; link checkers and repeat opens can add a few. Leads and jobs come from the website form opened from that code.'));
+        }
         var c6 = card('Doors', 'the whole company', col);
         var tb6 = table(c6, ['', 'Doors knocked', 'Talked to', 'Quotes booked', 'People out']);
         [['Last week', j.doors.last], ['This week so far', j.doors.this]].forEach(function (x) { var d = x[1]; tr(tb6, [x[0], d.doors.toLocaleString(LOCALE), d.talked.toLocaleString(LOCALE), d.booked.toLocaleString(LOCALE), d.people]); });

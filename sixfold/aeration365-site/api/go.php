@@ -10,7 +10,9 @@ $ok = ['yard', 'truck', 'car', 'card'];
 if (!in_array($piece ?? '', $ok, true)) $piece = 'unknown';
 $dir = dirname(__DIR__, 2) . '/scan-log';
 if (!is_dir($dir)) @mkdir($dir, 0700, true);
-@file_put_contents("$dir/scans.csv", gmdate('c') . ",$piece\n", FILE_APPEND | LOCK_EX);
+/* ?preview=1 shows the page without counting it (2026-10-21: for opening it ourselves) */
+$preview = isset($_GET['preview']);
+if (!$preview) @file_put_contents("$dir/scans.csv", gmdate('c') . ",$piece\n", FILE_APPEND | LOCK_EX);
 
 /* ---- fill these in when they exist; an empty one hides its button ---- */
 $LINKS = [
@@ -62,7 +64,11 @@ header('X-Content-Type-Options: nosniff');
   <img class="badge" src="/assets/365-sixfold-badge.svg" alt="Sixfold 365: Land, Aeration &amp; Seeding">
   <h1>Aeration &amp; Overseeding</h1>
   <p class="tag">Core aeration · Overseeding · Fertilizer</p>
+<?php if ($piece === 'yard'): /* the yard signs stand on a customer's lawn, done or in progress (2026-10-21, Matthew) */ ?>
+  <p class="from">Your neighbour chose 365 for their lawn. Want yours done next?</p>
+<?php else: ?>
   <p class="from">Thanks for scanning our <?= $h($FROM[$piece]) ?>.</p>
+<?php endif; ?>
   <div class="links">
     <a class="btn main" href="/<?= $q ?>#quote">Get a quote</a>
     <a class="btn" href="tel:<?= $h($PHONE) ?>"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Call <?= $h($PHONE_SHOWN) ?></a>
