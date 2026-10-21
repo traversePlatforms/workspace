@@ -4573,7 +4573,7 @@ if ($action === 'leadquote') {
     } elseif (is_array($prevOffer)) $q['offer'] = $prevOffer;
     $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
     /* Jen quotes on the phone (2026-10-16, Matthew: the app's Quote sent should match what she did): her saved price is a quote given */
-    if (($q['sent'] || $role === 'quote' || $role === 'office') && in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
+    if (in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';   /* any saved quote, admins too (2026-10-21, Matthew: "quoted should automatically happen from the quote builder") */
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'status' => $row['status'] ?? $all[$id]['status'], 'link' => a365QuoteLink($id)]);
 }
@@ -5210,6 +5210,7 @@ if ($action === 'squarepage') {   /* the Square page (2026-10-21) */
     foreach ($pays as $p) {
         $id = (string) ($p['id'] ?? ''); $at = (int) strtotime((string) ($p['created_at'] ?? ''));
         $amt = (int) ($p['amount_money']['amount'] ?? 0); $back = (int) ($p['refunded_money']['amount'] ?? 0); $st = (string) ($p['status'] ?? '');
+        if ($amt === 0 && $back === 0) continue;   /* a $0 card check is not a payment (2026-10-21) */
         if ($st === 'COMPLETED') { $net = ($amt - $back) / 100; $tot['all'] += $net; if ($at >= $t7) $tot['week'] += $net; if ($at >= $t0) $tot['today'] += $net; }
         $cu = squareCustInfo((string) ($p['customer_id'] ?? ''));
         $who = $cu['name'] !== '' ? $cu['name'] : trim((string) ($p['card_details']['card']['cardholder_name'] ?? ''));
@@ -5222,7 +5223,9 @@ if ($action === 'squarepage') {   /* the Square page (2026-10-21) */
     usort($list, fn($a, $b) => $b['at'] <=> $a['at']);
     /* pay links sent and not paid */
     $links = []; foreach ($jobs as $j) if (!$j['off'] && !empty($j['sqlink']['url']) && jobOwed($j) > 0) $links[] = ['name' => $short($leads[$j['lead']]['name'] ?? ''), 'owed' => jobOwed($j), 'date' => (string) $j['date'], 'at' => (int) ($j['sqlink']['at'] ?? 0)];
-    foreach ($leads as $l) if (($l['sign']['how'] ?? '') === 'link' && !empty($l['sign']['pay']['url']) && !a365DepositPaid($l, false) && !in_array($l['status'] ?? '', ['lost'], true)) $links[] = ['name' => $short($l['name'] ?? ''), 'owed' => (int) ($l['sign']['deposit'] ?? 0), 'date' => '', 'at' => (int) ($l['sign']['at'] ?? 0), 'deposit' => true];
+    /* a deposit link stops counting once the job has money on it (2026-10-21, Matthew: Randy, Jeremy and Carlos paid, Jen took it another way): the job says what is owed */
+    $jobOf = []; foreach ($jobs as $j) if (!$j['off'] && !isset($jobOf[$j['lead']])) $jobOf[$j['lead']] = $j;
+    foreach ($leads as $l) if (($l['sign']['how'] ?? '') === 'link' && !empty($l['sign']['pay']['url']) && !a365DepositPaid($l, false) && !in_array($l['status'] ?? '', ['lost'], true) && ((($jobOf[$l['id']] ?? null)['pay']['s'] ?? 'unpaid') === 'unpaid')) $links[] = ['name' => $short($l['name'] ?? ''), 'owed' => (int) ($l['sign']['deposit'] ?? 0), 'date' => '', 'at' => (int) ($l['sign']['at'] ?? 0), 'deposit' => true];
     out(['ok' => true, 'connected' => true, 'env' => (string) $cfg['env'], 'answer' => true, 'totals' => array_map(fn($v) => round($v, 2), $tot), 'payments' => $list, 'waiting' => count($waiting), 'links' => $links, 'canConfirm' => desk()]);
 }
 if ($action === 'squareconfirmlist') {

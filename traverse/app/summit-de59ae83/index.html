@@ -2021,6 +2021,23 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   /* the house lookup (2026-10-14) */
   .handx,.rangex{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;display:grid;gap:4px}.handx b,.rangex b{font:800 14px var(--sans)}.handx > span{font-size:14px}.handx .lnk,.rangex .lnk{justify-self:start;background:none;border:0;padding:2px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
   .handx:has(.handop){border-style:dashed}.handf{display:grid;gap:6px}.handrow{display:flex;gap:8px;align-items:center}.handrow input{font:700 16px var(--sans);width:9em;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .acgrp,.cugrp{border:1px solid var(--line);border-radius:14px;margin:0 0 10px;background:var(--card);overflow:hidden}
+  .acgrp > summary,.cugrp > summary{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none;font-size:15px}
+  .acgrp > summary::-webkit-details-marker,.cugrp > summary::-webkit-details-marker{display:none}
+  .acgrp > summary::after,.cugrp > summary::after{content:"\203a";margin-left:auto;font-weight:800;transition:transform .15s}
+  .acgrp[open] > summary::after,.cugrp[open] > summary::after{transform:rotate(90deg)}
+  .acgn{min-width:24px;padding:1px 8px;border-radius:999px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;text-align:center}
+  .acgrp > summary small{color:var(--soft);font-size:12px}
+  .acgrp > :not(summary){margin:0 10px 10px}
+  .cugrp{margin:0;background:transparent}.cugrp > summary{padding:9px 2px;font-size:14px}
+  .cunote{color:var(--soft);font-size:13px;margin:0 2px 6px}
+  .cuchips{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 10px}
+  .cuchip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:13px;background:var(--card);max-width:100%}
+  .cuchip > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cuchip button{border:0;background:none;color:var(--soft);font:700 15px var(--sans);width:24px;height:24px;border-radius:50%;cursor:pointer;flex:none}
+  .cuchip button:hover{background:var(--line);color:var(--ink)}
+  .handx .handcx{color:var(--soft)}
+  .pipepick{margin-top:6px}
   .rangex .rgturf{font-size:14px}.rangex .rgturf small{color:var(--soft)}.rangex .rgcred{font-size:11.5px}
   .rangex{background:var(--sunk)}.rangex .rgn{font:800 18px var(--sans)}.rangex small{color:var(--soft)}.rga{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.rga button{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
   .hpanel .hlawn{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--sunk);display:grid;gap:3px}
@@ -3870,7 +3887,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var jbh = q('div'); box.appendChild(jbh); jobsHomeCard(jbh);   /* the jobs board (2026-10-14) */
     var th = q('div', 'terrhost'); box.appendChild(th); territoryList(th);
     if (asOffice()) {   /* first on the office home (2026-10-14): Jen works leads, not doors */   /* the office role (2026-10-14): leads, walks and everyone's calendar */
-      var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipelineView);
+      var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipeOpen);
       api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
       grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
     }
@@ -3889,7 +3906,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'users', 'Team sign-ins', 'Add your crew, give a new code, sign out or remove.', 'Manager', accountsView),
       tile('button', 'chart', 'Office', 'Your team today and this week, the map of best doors left, walks and live radar.', 'Manager', officeView)]);
     if (adminView()) {
-      var pt = tile('button', 'clip', 'Pipeline', 'Door bookings and enquiries, call to won.', 'Admin only', pipelineView);
+      var pt = tile('button', 'clip', 'Pipeline', 'Door bookings and enquiries, call to won.', 'Admin only', pipeOpen);
       api('leads', { params: { count: 1 } }).then(function (j) {
         var tg = pt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' · Admin only';
       }).catch(function () {});
@@ -4719,6 +4736,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var sb = q('div', 'lstat');
     var quotedNow = !!l.quote || ['quoted', 'won', 'lost'].indexOf(l.status) >= 0;   /* Won and Lost only once there is a quote (Matthew 2026-10-15) */
     LEAD_ST.forEach(function (x) {
+      if (wdOn() && x[0] !== 'won' && x[0] !== 'lost') return;   /* (the walk desk; editions without it have no Reached out? buttons and keep the row) New, Contacted, Walk booked, Quoted, On hold gone (2026-10-21, Matthew): Reached out? moves a lead, a saved quote makes it Quoted, ClickUp sets On hold */
       if ((x[0] === 'won' || x[0] === 'lost') && !quotedNow) return;
       var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === x[0]));
       b.addEventListener('click', function () {
@@ -4732,7 +4750,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       sb.appendChild(b);
     });
-    if (!asOffice() || (S.role === 'office' && S.wonlost)) c.appendChild(sb);   /* + an office account ticked Marks won and lost (2026-10-20) */   /* the office: no won/lost buttons; the calls and the form move the lead */
+    if (sb.children.length && (!asOffice() || (S.role === 'office' && S.wonlost))) c.appendChild(sb);   /* + an office account ticked Marks won and lost (2026-10-20) */   /* the office: no won/lost buttons; the calls and the form move the lead */
     if (l.status === 'won' && (adminView() || (S.role === 'office' && S.wonlost))) {
       var mcl = q('button', 'addlead mkcust', 'Make customer'); mcl.type = 'button';
       mcl.addEventListener('click', function () { makeCustomer({ lead: l.id }); });
@@ -6598,20 +6616,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var w = q('div', 'handx'), m = h.hand;
     if (m && m.sq) {
       w.appendChild(q('b', null, 'Measured by hand')); w.appendChild(q('span', null, handLine(m)));
-      var ch = q('button', 'lnk', 'Change'); ch.type = 'button'; ch.addEventListener('click', function () { h.hand = null; redrawHand(); }); w.appendChild(ch);
+      var ch = q('button', 'lnk', 'Change'); ch.type = 'button'; ch.addEventListener('click', function () { h.handWas = m; h.hand = null; redrawHand(); }); w.appendChild(ch);
       var redrawHand = function () { var nb = handBox(h, redraw); w.replaceWith(nb); };
       return w;
     }
-    var op = q('button', 'lnk handop', 'Measured it by hand? Add the size \u203a'); op.type = 'button'; w.appendChild(op);
-    var f = q('div', 'handf'); f.hidden = true; w.appendChild(f);
-    op.addEventListener('click', function () { f.hidden = !f.hidden; if (!f.hidden) try { si.focus(); } catch (e) {} });
+    /* opens and closes (2026-10-21, Matthew: "needs to be collapsable again just in case its clicked by mistake"); Change keeps the saved one to go back to */
+    var was = h.handWas || null, OPEN_T = 'Measured it by hand? Add the size \u203a', SHUT_T = was ? 'Keep ' + fmtSq(was.sq) + ', measured by hand' : 'Close \u00d7';
+    var op = q('button', 'lnk handop', was ? SHUT_T : OPEN_T); op.type = 'button'; w.appendChild(op);
+    var f = q('div', 'handf'); f.hidden = !was; w.appendChild(f);
+    var shut = function () { if (was) { h.hand = was; h.handWas = null; w.replaceWith(handBox(h, redraw)); return; } f.hidden = true; op.textContent = OPEN_T; op.setAttribute('aria-expanded', 'false'); };
+    op.setAttribute('aria-expanded', String(!f.hidden));
+    op.addEventListener('click', function () { if (!f.hidden) { shut(); return; } f.hidden = false; op.textContent = SHUT_T; op.setAttribute('aria-expanded', 'true'); try { si.focus(); } catch (e) {} });
     f.appendChild(q('div', 'dwsub', 'Lawn size you measured'));
     var r1 = q('div', 'handrow'), si = q('input'); si.inputMode = 'numeric'; si.maxLength = 7; si.placeholder = 'e.g. 10473'; si.setAttribute('aria-label', 'Square feet'); r1.appendChild(si); r1.appendChild(q('span', 'qunit', 'sq ft')); f.appendChild(r1);
     var src = 'ge', incl = '';
     var chips = function (title, opts, cur, set) { f.appendChild(q('div', 'dwsub', title)); var r = q('div', 'dwlen'); opts.forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0])); b.addEventListener('click', function () { set(o[0]); [].forEach.call(r.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); r.appendChild(b); }); f.appendChild(r); };
     chips('How', [['ge', 'Google Earth'], ['wheel', 'Measuring wheel'], ['other', 'Other']], src, function (v) { src = v; });
     chips('What it includes', [['grass', 'Grass only'], ['trees', 'Grass under the trees too'], ['beds', 'Grass and beds']], incl, function (v) { incl = v; });
-    var err = q('div', 'err'), sv = q('button', 'save', 'Save the measurement'); sv.type = 'button'; f.appendChild(sv); f.appendChild(err);
+    var err = q('div', 'err'), sv = q('button', 'save', 'Save the measurement'); sv.type = 'button'; f.appendChild(sv);
+    var cx = q('button', 'lnk handcx', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', shut); f.appendChild(cx); f.appendChild(err);
     f.appendChild(q('div', 'ltrynote', 'It becomes the size this house is quoted at, on every card, for everyone. It also teaches us how far off the photo is.'));
     sv.addEventListener('click', function () {
       err.textContent = ''; var n = parseInt(String(si.value).replace(/\D/g, ''), 10) || 0;
@@ -6622,7 +6645,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         sv.disabled = false;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; return; }
-        h.hand = j.hand; toast('Saved', fmtSq(n) + ' is now the size for ' + streetCase(h.address), null); if (redraw) redraw();
+        h.hand = j.hand; h.handWas = null; toast('Saved', fmtSq(n) + ' is now the size for ' + streetCase(h.address), null); if (redraw) redraw();
       }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was saved.'; });
     });
     return w;
@@ -8839,7 +8862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var add = function (l1, l2, fn) { var r = q(fn ? 'button' : 'div', 'dh-trow'); if (fn) { r.type = 'button'; r.addEventListener('click', fn); } r.appendChild(q('b', null, l1)); r.appendChild(q('span', null, l2)); tc.appendChild(r); };
       ws.slice(0, 5).forEach(function (w) { add(w.time || 'Today', (feat('hail') ? 'Roof walk' : 'Walk') + ' \u00b7 ' + w.address + (planOk() && w.by ? ' \u00b7 ' + w.by : ''), function () { S.region = w.region; S.area = null; S.flash = w.id; S.openDoor = w.id; S.allClosed = false; S.returnTo = chooseView; openArea(w.area); }); });
       withRegions(function () { var F = followups(); if (F.due) add('Due', F.due + (F.due === 1 ? ' door due back (asked us to come back by today)' : ' doors due back (asked us to come back by today)'), followupView); if (F.na) add('Again', F.na + (F.na === 1 ? ' no-answer back on the list' : ' no-answers back on the list'), followupView); if (!ws.length && !F.due && !F.na) tc.appendChild(q('span', 'dempty', 'Nothing booked for today. Walks, come-backs and new leads show here.')); });
-      if (S.role === 'admin') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) add('Leads', l.new + (l.new === 1 ? ' new lead in the Pipeline' : ' new leads in the Pipeline'), pipelineView); }).catch(function () {});
+      if (S.role === 'admin') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) add('Leads', l.new + (l.new === 1 ? ' new lead in the Pipeline' : ' new leads in the Pipeline'), pipeOpen); }).catch(function () {});
     }).catch(function () {});
     /* storms and warnings */
     var sc = q('div', 'dh-storm'); c2.appendChild(sc); sc.appendChild(alertStrip(null));
@@ -9096,13 +9119,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
-    if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
+    if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipeOpen, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]].concat(squarePageOn() ? [['card', 'Square', squareView, ['square']]] : []);   /* the field crew (2026-10-19): no doors, no sales; + Square for those who take payments (2026-10-21) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
     if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
-    if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipelineView, ['pipeline', 'results', 'skip', 'deskbook', 'walk']]);
+    if (adminView() || asOffice()) it.push(['pipe', 'Pipeline', pipeOpen, ['pipeline', 'results', 'skip', 'deskbook', 'walk']]);
     if (adminView() && wdOn()) it.push(['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']]);   /* the jobs board (2026-10-14) */
     if (adminView()) it.push(['card', 'Customers', customersView, ['customers', 'customer']]);
     if (adminView() && quickCanBook()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);   /* Jen's quote builder in the admin's menu (2026-10-21) */   /* in the top bar, not only under Office (Matthew 2026-10-15) */
@@ -11032,13 +11055,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     holder.appendChild(q('div', 'sub2', on.length + (on.length === 1 ? ' person signs in' : ' people sign in') + ' · ' + on.filter(function (a) { return a.role === 'admin'; }).length + ' admin · ' + nowIn + ' signed in now'));
     /* phones signed in before the list started show up the next time they are used (sessions last 45 days) */
     if (S.acctTracking && Date.now() / 1000 - S.acctTracking < 45 * 86400) holder.appendChild(q('div', 'anote', 'Anyone who signed in before ' + fmtDay(S.acctTracking) + ' shows as signed in the next time they open the app.'));
-    on.forEach(function (a) { holder.appendChild(accountRow(a, holder)); });
+    if (mgr) on.forEach(function (a) { holder.appendChild(accountRow(a, holder)); });
+    else {   /* in groups, each closed until opened (2026-10-21, Matthew: "so its not one big long list") */
+      var isAdm = function (a) { return a.role === 'admin' || a.role === 'super'; }, rest = on.slice();
+      (feat('walkdesk') ? [['admin', 'Admin', isAdm], ['office', 'Office', function (a) { return a.role === 'office' || a.role === 'quote'; }], ['crew', 'Crew', function (a) { return a.role === 'crew' && a.walker; }], ['reps', 'Reps', function () { return true; }]]
+        : [['admin', 'Admin', isAdm], ['crew', 'Crew', function () { return true; }]]).forEach(function (g) {
+        var its = rest.filter(g[2]); rest = rest.filter(function (a) { return its.indexOf(a) < 0; });
+        if (its.length) holder.appendChild(acctGroup(g[0], g[1], its, holder));
+      });
+    }
     if (!mgr) holder.appendChild(exportsBox());
     if (!mgr) holder.appendChild(flagsBox());
-    if (off.length) {
-      holder.appendChild(q('h2', null, 'Turned off · ' + off.length));
-      off.forEach(function (a) { holder.appendChild(accountRow(a, holder)); });
-    }
+    if (off.length) holder.appendChild(acctGroup('off', 'Turned off', off, holder));
+  }
+  function acctGroup(k, title, its, holder) {
+    S.acctOpen = S.acctOpen || {};
+    var d = q('details', 'acgrp'); if (S.acctOpen[k]) d.open = true; d.setAttribute('data-g', k);
+    var sm = q('summary'); sm.appendChild(q('b', null, title)); sm.appendChild(q('span', 'acgn', String(its.length)));
+    var live = its.filter(function (a) { return a.live && a.live.length; }).length; if (live) sm.appendChild(q('small', null, live + ' signed in now'));
+    d.appendChild(sm);
+    d.addEventListener('toggle', function () { S.acctOpen[k] = d.open; });   /* stays open through a change on someone in it */
+    its.forEach(function (a) { d.appendChild(accountRow(a, holder)); });
+    return d;
   }
   /* every download that left the app (2026-10-11, Matthew): who, what, how many, when; the newest 100 */
   var EXPORT_WHAT = { 'door list': 'Door list (Plan)', 'doors worked': 'Doors worked (CSV)', customers: 'Customers', 'full backup': 'Full backup', 'backup copy': 'Backup copy', 'skip trace numbers': 'Skip trace numbers', 'bookings for Jobber': 'Bookings for Jobber', 'bookings for JobNimbus': 'Bookings for JobNimbus', 'heavy viewing': 'Viewed a lot of doors today' };
@@ -11156,6 +11194,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var meta = q('div', 'meta');
     meta.appendChild(q('span', 'tag role-' + a.role, a.role === 'super' ? 'Traverse' : a.role === 'admin' ? 'Admin' : a.role === 'manager' ? 'Manager' : a.role === 'office' ? 'Office' : a.role === 'quote' ? 'Quote only' : 'Crew'));
     if (a.walker && feat('walkdesk') && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Does ' + vw() + 's'));
+    if (feat('walkdesk') && !a.off && (a.role === 'office' || (a.pays && a.role !== 'admin' && a.role !== 'super'))) meta.appendChild(q('span', 'tag teamtag', 'Takes payments'));   /* office accounts always can (2026-10-21, Matthew: "make sure jen can take payments") */
     if (a.runsteam && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Runs a team'));
     if (a.wonlost && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Marks won and lost'));
     if (a.role === 'office' && !a.off) [['doors', 'Knocks doors'], ['communities', 'Communities'], ['results', 'Results']].forEach(function (x) { if (a[x[0]]) meta.appendChild(q('span', 'tag teamtag', x[1])); });   /* 2026-10-21 */
@@ -11678,14 +11717,38 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var hd = q('div', 'sqch'); hd.appendChild(q('b', null, 'ClickUp and the app')); hd.appendChild(q('span', null, c.items.length + ' to look at \u00b7 checked ' + ago(c.at))); box.appendChild(hd);
     var open = !!S.cuCheckOpen, list = q('div'); list.hidden = !open;
     var tg = q('button', 'lnk', open ? 'Hide' : 'Show'); tg.type = 'button'; tg.addEventListener('click', function () { S.cuCheckOpen = !S.cuCheckOpen; list.hidden = !S.cuCheckOpen; tg.textContent = S.cuCheckOpen ? 'Hide' : 'Show'; }); hd.appendChild(tg);
-    c.items.forEach(function (it) {
-      var r = q('div', 'sqrow'); r.appendChild(q('span', null, it.text));
-      var lv = q('button', 'lnk', 'Leave it'); lv.type = 'button';
-      lv.addEventListener('click', function () { lv.disabled = true; api('cucheckok', { body: { key: it.key } }).then(function (k) { if (!k.ok) { lv.disabled = false; toast('Not saved', k.error || 'Try again.', null); return; } S.cucheck = k.cucheck; if (k.cucheck && k.cucheck.items.length) box.replaceWith(cuCheckBox(k.cucheck)); else box.remove(); }).catch(function () { lv.disabled = false; toast('No signal', 'Try again.', null); }); });
-      r.appendChild(lv); list.appendChild(r);
+    /* by kind, each closed, a name per chip (2026-10-21, Matthew: "way to long it needs to be condensed") */
+    list.appendChild(q('div', 'ltrynote', 'Tap \u00d7 to leave one as it is; it stops showing here.'));
+    S.cuOpenG = S.cuOpenG || {};
+    CU_KINDS.forEach(function (g) {
+      var its = c.items.filter(function (it) { var k = String(it.key).split(':')[0]; return g[0] === k || (g[0] === '' && !CU_KINDS.some(function (x) { return x[0] === k; })); });
+      if (!its.length) return;
+      var d = q('details', 'cugrp'); if (S.cuOpenG[g[0]]) d.open = true; d.addEventListener('toggle', function () { S.cuOpenG[g[0]] = d.open; });
+      var sm = q('summary'); sm.appendChild(q('b', null, g[1])); sm.appendChild(q('span', 'acgn', String(its.length))); d.appendChild(sm);
+      if (g[2]) d.appendChild(q('div', 'cunote', g[2]));
+      var chips = q('div', 'cuchips'); d.appendChild(chips);
+      its.forEach(function (it) { chips.appendChild(cuChip(it, g[3], box)); });
+      list.appendChild(d);
     });
     box.appendChild(list);
     return box;
+  }
+  var CU_KINDS = [
+    ['app', 'In the app, not in Jen\u2019s ClickUp', 'Leads here with no ClickUp task.', function (t) { return t.replace(/^In the app, not in Jen's ClickUp: /, '').replace(/\.$/, ''); }],
+    ['cu', 'In ClickUp, not in the app', 'No name, phone or email the app can use.', function (t) { return t.replace(/^In ClickUp, not in the app: /, '').replace(/\. It has no name.*$/, ''); }],
+    ['dup', 'A second ClickUp task', 'Only the first is followed. Jen can delete the extra one.', function (t) { return t.replace(/^A second ClickUp task for /, '').replace(/: only the first.*$/, ''); }],
+    ['nojob', 'Scheduled in ClickUp, no job yet', 'Won here; book the day on the Jobs board.', function (t) { return t.replace(/: scheduled in ClickUp.*$/, ''); }],
+    ['proof', 'ClickUp is behind the app', 'Booked or paid here, so they stay Won. Jen can move the ClickUp task on.', function (t) { return t.replace(/, but the app has them.*$/, ''); }],
+    ['', 'Other', '', function (t) { return t; }]
+  ];
+  function cuChip(it, short, box) {
+    var r = q('span', 'cuchip'); r.title = it.text; r.appendChild(q('span', null, short(it.text)));
+    var lv = q('button', null, '\u00d7'); lv.type = 'button'; lv.setAttribute('aria-label', 'Leave it: ' + it.text);
+    {
+      lv.addEventListener('click', function () { lv.disabled = true; api('cucheckok', { body: { key: it.key } }).then(function (k) { if (!k.ok) { lv.disabled = false; toast('Not saved', k.error || 'Try again.', null); return; } S.cucheck = k.cucheck; if (k.cucheck && k.cucheck.items.length) box.replaceWith(cuCheckBox(k.cucheck)); else box.remove(); }).catch(function () { lv.disabled = false; toast('No signal', 'Try again.', null); }); });
+      r.appendChild(lv);
+    }
+    return r;
   }
   function sqCheckBox(c) {
     var box = q('div', 'sqcheck' + (c && c.items && c.items.length ? ' warn' : ''));
@@ -11961,6 +12024,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale', hold: 'hold' };
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
+  /* the Pipeline from the menu, a tile or an alert opens with no stage picked (2026-10-21, Matthew: "we dont want to open into clutterness,
+     lets allow them to choose"); a link to one lead still opens its stage */
+  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; pipelineView(); }
   function pipelineView() {
     /* a save made on the pipeline refreshes it in place: the list stays up until the new one arrives,
        rather than blanking for the half-second the door bookings take to load */
@@ -12084,9 +12150,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .concat((S.pleads || []).map(function (l) { return { kind: 'lead', x: l, at: l.at }; }))
       .sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
     if (asOffice()) items = items.filter(function (it) { return it.kind === 'lead'; });   /* the office works the leads, not the crews' door bookings */
-    var stage = S.pipeStage || 'call', src = S.pipeSrc || 'all';
-    if (!asOffice() && !PIPE_ST.some(function (x) { return x[0] === stage; })) stage = 'call';
-    if (asOffice() && !OFFICE_ST.some(function (x) { return x[0] === stage; })) stage = OFFICE_MAP[stage] || ({ walk: 'call' })[stage] || 'call';
+    var stage = S.pipeStage || null, src = S.pipeSrc || 'all';   /* nothing open until a stage is picked (2026-10-21) */
+    if (stage && !asOffice() && !PIPE_ST.some(function (x) { return x[0] === stage; })) stage = 'call';
+    if (stage && asOffice() && !OFFICE_ST.some(function (x) { return x[0] === stage; })) stage = OFFICE_MAP[stage] || ({ walk: 'call' })[stage] || 'call';
     /* top: add a lead, the walks coming up, the Jobber export */
     var top = q('div', 'pipetop');
     var add = q('button', 'addlead', S.leadAdd ? 'Close the form' : '+ Add a lead'); add.type = 'button';
@@ -12110,12 +12176,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* the walks coming up list is gone from the Pipeline (2026-10-21, Matthew); booked walks show on the calendar and the office home */
     if (S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));
     /* stages */
-    var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + (asOffice() ? OFFICE_ST : PIPE_ST).length + ',1fr)';
-    (asOffice() ? OFFICE_ST : PIPE_ST).forEach(function (st) {
+    /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
+    var stList = (asOffice() ? OFFICE_ST : PIPE_ST).filter(function (st) { return st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; }); });
+    var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + stList.length + ',1fr)';
+    stList.forEach(function (st) {
       var n = items.filter(function (it) { return pipeStage(it) === st[0] && (src === 'all' || pipeSrc(it) === src); }).length;
       var b = q('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(stage === st[0])); b.setAttribute('data-st', st[0]);
       b.appendChild(q('b', null, String(n))); b.appendChild(q('span', null, st[1]));
-      b.addEventListener('click', function () { S.pipeStage = st[0]; drawPipe(); });
+      b.addEventListener('click', function () { S.pipeStage = stage === st[0] ? null : st[0]; drawPipe(); });   /* tap it again to close it */
       seg.appendChild(b);
     });
     holder.appendChild(seg);
@@ -12131,7 +12199,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(sc);
     }
     var shown = items.filter(function (it) { return pipeStage(it) === stage && (src === 'all' || pipeSrc(it) === src); });
-    if (!shown.length && !(wdOn() && deskWide())) {
+    if (!stage) holder.appendChild(q('div', 'msg soft pipepick', 'Pick a stage to see who is in it.'));
+    if (stage && !shown.length && !(wdOn() && deskWide())) {
       holder.appendChild(q('div', 'msg', items.length ? 'Nothing at this stage' + (src === 'all' ? '' : ' from ' + pipeSrcName(src)) + '.'
         : 'Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent; website enquiries arrive by themselves; add the rest with + Add a lead.'));
     }
@@ -12159,7 +12228,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var due = shown.filter(function (it) { return tryDue(it.x) <= Date.now(); }).sort(function (a, b) { return lt2(a) - lt2(b); }), later = shown.filter(function (it) { return tryDue(it.x) > Date.now(); }).sort(function (a, b) { return lt2(a) - lt2(b); });
       groups = []; if (due.length) groups.push(['Call back today', due]); if (later.length) groups.push(['Voicemail left today, call back next', later]);
     }
-    if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
+    if (!stage) { /* nothing picked */ } else if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
     else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
     /* won, not in Customers yet (2026-10-15: no Won tab any more; a won door from the crew, or a lead won before Won made the customer) */
     if (!asOffice() && S.custLinks) {
@@ -12171,12 +12240,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var pids = pend.map(function (it) { return it.kind === 'lead' ? 'l:' + it.x.id : 'd:' + it.x.region + '/' + it.x.id; }), seenW = [];
         try { seenW = JSON.parse(localStorage.getItem('wonPendSeen') || '[]'); } catch (e) {}
         var fresh = pids.filter(function (k) { return seenW.indexOf(k) < 0; }).length;
-        if (S.wonPendOpen == null && fresh > 0) S.wonPendOpen = true;   /* stays open this visit until closed */
+        /* no longer opens by itself (2026-10-21, Matthew: nothing open by default); the line says how many are new */
         fresh = S.wonPendNew = Math.max(fresh, S.wonPendNew || 0);   /* the count holds for the visit: the redraw a moment later has already marked them seen */
         var wp = q('section', 'wonpend'), wOpen = !!S.wonPendOpen;
         if (wOpen) { try { localStorage.setItem('wonPendSeen', JSON.stringify(seenW.concat(pids.filter(function (k) { return seenW.indexOf(k) < 0; })).slice(-300))); } catch (e) {} }
         var wh = q('button', 'cfold'); wh.type = 'button'; wh.setAttribute('aria-expanded', String(wOpen)); wh.appendChild(ico('chev', 2.4));
-        wh.appendChild(document.createTextNode('Won, not in Customers yet (' + pend.length + ')' + (fresh && wOpen ? ' · ' + fresh + ' new' : '')));
+        wh.appendChild(document.createTextNode('Won, not in Customers yet (' + pend.length + ')' + (fresh ? ' · ' + fresh + ' new' : '')));
         wh.addEventListener('click', function () { S.wonPendOpen = !wOpen; drawPipe(); });
         wp.appendChild(wh);
         if (wOpen) { wp.appendChild(q('div', 'ltrynote', 'Tap Make customer on each to put them in Customers.')); pend.forEach(function (it) { drawCard(it, wp); }); }
@@ -16314,7 +16383,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       ['Territories', territoriesView, false, null, ['territories']],
       commOk() && feat('communities') ? ['Communities', communitiesView, false, null, ['communities']] : null,   /* 2026-10-12: was on the phone's tools only */
       S.role === 'admin' && feat('hail') && cardOn('hail') ? ['Storm list', stormView, false, null, ['storm', 'stormday', 'hail']] : null,
-      S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipelineView, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
+      S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipeOpen, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
       S.role === 'admin' || S.role === 'office' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
       wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
       squarePageOn() ? ['Square', squareView, false, null, ['square']] : null,   /* 2026-10-21 */
@@ -16509,6 +16578,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var owedLinks = j.links.reduce(function (n, x) { return n + (x.owed || 0); }, 0);
       fold('links', 'Pay links sent, not paid yet', j.links.length + (j.links.length === 1 ? ' link' : ' links') + (j.links.length ? ' \u00b7 ' + cur(owedLinks) : ''), false, function (kc) {
         if (!j.links.length) { kc.appendChild(q('div', 'msg soft', 'None waiting.')); return; }
+        kc.appendChild(q('div', 'ltrynote', 'Paid another way (cash, check, or in Square itself)? Mark the job paid on the Jobs board and it leaves this list.'));   /* 2026-10-21 */
         j.links.forEach(function (x) { var r = q('div', 'sqrow'); var l = q('div'); l.appendChild(q('b', null, x.name + ' \u00b7 ' + cur(x.owed))); l.appendChild(q('small', null, (x.deposit ? 'Deposit link' : 'Balance link') + (x.at ? ' sent ' + ago(x.at) : '') + (x.date ? ' \u00b7 job ' + dayName(x.date) : ''))); r.appendChild(l); kc.appendChild(r); });
       });
     }, function () { out.textContent = ''; out.appendChild(q('div', 'msg', 'Square needs signal.')); });
