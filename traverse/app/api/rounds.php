@@ -2327,6 +2327,7 @@ function jobHolds(?array $leads = null): array {
 }
 /** is this crew / day / slot free for this lead: no job there, and no other lead's offer holding it */
 function slotFree(string $crew, string $date, string $slot, string $lead, string $exceptJob = ''): ?string {
+    if ($bk = blockAt($crew, $date, $slot)) return strtok($crew, ' ') . ' is blocked off ' . ($bk['part'] === 'am' ? 'that morning' : ($bk['part'] === 'pm' ? 'that afternoon' : 'that day')) . ($bk['note'] !== '' ? ' (' . $bk['note'] . ')' : '') . '.';   /* 2026-10-21 */
     foreach (jobsAll() as $j) if (!$j['off'] && $j['id'] !== $exceptJob && $j['crew'] === $crew && $j['date'] === $date && $j['slot'] === $slot) return $crew . ' already has a job then: ' . $j['title'] . '.';
     foreach (jobHolds() as $h) if ($h['lead'] !== $lead && $h['crew'] === $crew && $h['date'] === $date && $h['slot'] === $slot) return 'That time is held for ' . $h['name'] . '\'s quote.';
     return null;
@@ -2651,7 +2652,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4579,6 +4580,15 @@ function jobSlot(string $k): ?array {
     return null;
 }
 function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobdays.json'), true); return is_array($j) ? $j : []; }
+/* blocked-out time for a crew (2026-10-21, Matthew: "a way for jen to block out dates for brad and brandon"): from / to (a day or a run of
+   days), part = all | am (arrivals before noon) | pm (noon on), an optional note. jobblocks.json beside jobdays.json. */
+function jobBlocks(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobblocks.json'), true); return is_array($j) ? array_values(array_filter($j, 'is_array')) : []; }
+function slotHalf(string $slot): string { $s = jobSlot($slot); return $s && $s[2] < '12:00' ? 'am' : 'pm'; }
+function blockAt(string $crew, string $date, string $slot): ?array {
+    foreach (jobBlocks() as $b) if (($b['crew'] ?? '') === $crew && $date >= ($b['from'] ?? '') && $date <= ($b['to'] ?? '') && (($b['part'] ?? 'all') === 'all' || $b['part'] === slotHalf($slot))) return $b + ['note' => ''];
+    return null;
+}
+function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t)); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
 function jobShow(array $j, ?array $leads = null): array {
     $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
@@ -4591,7 +4601,7 @@ function jobShow(array $j, ?array $leads = null): array {
     }
     return $o;
 }
-if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'schedview'], true) && !feature('walkdesk')) fail('Not here.', 404);
+if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'schedview', 'jobblockadd', 'jobblockdel'], true) && !feature('walkdesk')) fail('Not here.', 404);
 /* paid, and what is left (2026-10-19): "Deposit $50 paid · $249 left", "Paid in full (card charged)" */
 function payLine(array $j): string {
     $p = $j['pay'] ?? ['s' => 'unpaid']; $s0 = (string) ($p['s'] ?? 'unpaid');
@@ -4631,7 +4641,7 @@ if ($action === 'schedview') {
     foreach ($rows as &$rw) { if (($rw['town'] ?? '') !== '') continue; $lid = ($rw['kind'] ?? '') === 'booked' ? (string) ($JA[$rw['id'] ?? '']['lead'] ?? '') : (string) ($rw['lead'] ?? ($rw['hold'] ?? '')); if ($lid !== '' && isset($leads[$lid]) && ($role !== 'quote' || qMine($leads[$lid]))) $rw['tl'] = $lid; } unset($rw);
     foreach ($rows as &$rw) { if (desk() && ($rw['kind'] ?? '') === 'held' && !empty($rw['lead'])) $rw['hold'] = $rw['lead']; unset($rw['lead']); } unset($rw);   /* held: 'hold' = the lead, for move or take off (2026-10-16) */
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
-    out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
+    out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead()]);
 }
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
 if ($action === 'jobs') {
@@ -4648,7 +4658,7 @@ if ($action === 'jobs') {
         $list = array_map(fn($j) => ['id' => $j['id'], 'date' => $j['date'], 'crew' => $j['crew'], 'slot' => $j['slot'], 'slotLabel' => $j['slotLabel'] ?? '', 'title' => 'Booked', 'who' => ['name' => 'Booked'], 'price' => 0, 'pkg' => 'full', 'scope' => 'all', 'pay' => ['s' => 'unpaid'], 'card' => false, 'done' => null, 'lead' => qMine($leads[$j['lead']] ?? []) ? $j['lead'] : ''], $list);
         $holds = array_map(fn($h) => qMine($leads[$h['lead']] ?? []) ? $h : ['lead' => '', 'name' => 'Held', 'crew' => $h['crew'], 'date' => $h['date'], 'slot' => $h['slot'], 'until' => $h['until'], 'paid' => $h['paid']], $holds);
     }
-    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed()]);
+    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead()]);
 }
 /* each crew's area for a day ("the town of the day" in Randy's sheet) */
 if ($action === 'jobday') {
@@ -4662,6 +4672,40 @@ if ($action === 'jobday') {
     if (isset($all[$date]) && !$all[$date]) unset($all[$date]);
     if (@file_put_contents(DATA_DIR . '/jobdays.json', json_encode($all, JSON_UNESCAPED_UNICODE), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+/* block out time for a crew, or take a block off (2026-10-21): Jen (quote or office) and admins. Jobs already booked in the time stay
+   booked and are counted back, so she can move them; the crew gets an alert. */
+if ($action === 'jobblockadd' || $action === 'jobblockdel') {
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $lk = @fopen(DATA_DIR . '/jobblocks.json.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = jobBlocks(); $booked = []; $held = 0; $nb = null;
+    if ($action === 'jobblockdel') {
+        $id = (string) ($body['id'] ?? ''); $gone = null; foreach ($all as $b) if (($b['id'] ?? '') === $id) $gone = $b;
+        if (!$gone) fail('That block is already gone.');
+        $all = array_values(array_filter($all, fn($b) => ($b['id'] ?? '') !== $id));
+    } else {
+        $crew = (string) ($body['crew'] ?? ''); if (!in_array($crew, jobCrewList(), true)) fail('Pick who is off.');
+        $from = (string) ($body['from'] ?? ''); $to = (string) ($body['to'] ?? '') ?: $from;
+        if (!dateOk($from) || !dateOk($to)) fail('Pick the days.');
+        if ($to < $from) fail('The last day is before the first.');
+        if ($to < $today) fail('Those days are already gone.');
+        if (strtotime($to) - strtotime($from) > 120 * 86400) fail('Block four months at most at a time.');
+        $part = in_array($body['part'] ?? 'all', ['all', 'am', 'pm'], true) ? (string) $body['part'] : 'all';
+        $nb = ['id' => bin2hex(random_bytes(6)), 'crew' => $crew, 'from' => $from, 'to' => $to, 'part' => $part, 'note' => $clean($body['note'] ?? '', 60), 'by' => $me, 'at' => time()];
+        $in = fn($d, $s) => $d >= $from && $d <= $to && ($part === 'all' || slotHalf((string) $s) === $part);
+        $leads = leadsAll();
+        foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $crew && $in($j['date'], $j['slot'])) $booked[] = ['date' => $j['date'], 'slot' => (string) (jobSlot((string) $j['slot'])[1] ?? $j['slot']), 'name' => ($role === 'quote' && !qMine($leads[$j['lead']] ?? [])) ? 'Booked' : (trim((string) ($leads[$j['lead']]['name'] ?? '')) ?: 'A customer')];
+        foreach (jobHolds($leads) as $h) if ($h['crew'] === $crew && $in($h['date'], $h['slot'])) $held++;
+        $all[] = $nb;
+    }
+    if (@file_put_contents(DATA_DIR . '/jobblocks.json', json_encode(array_values($all), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    flock($lk, LOCK_UN);
+    $bb = $nb ?? $gone; $when = deskWhen($bb['from'], '') . ($bb['to'] !== $bb['from'] ? ' to ' . deskWhen($bb['to'], '') : '') . ($bb['part'] === 'am' ? ', morning' : ($bb['part'] === 'pm' ? ', afternoon' : ''));
+    if ($bb['crew'] !== $me) pushName($bb['crew'], ($nb ? 'Blocked off: ' : 'Free again: ') . $when, ($bb['note'] !== '' ? $bb['note'] . ' · ' : '') . ($nb ? 'set' : 'taken off') . ' by ' . $me, './', 'block-' . $bb['id']);
+    usort($booked, fn($a, $b) => strcmp($a['date'], $b['date']));
+    out(['ok' => true, 'blocks' => blocksAhead(), 'booked' => $booked, 'held' => $held]);
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
 if ($action === 'jobsave') {

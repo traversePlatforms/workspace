@@ -983,6 +983,11 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .pipetop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
   .pipetop .addlead{margin:0}
   .pipeseg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0 8px}
+  .sblk{margin:10px 0}.sblkhd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+  .sblkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.sblkrow small{display:block;color:var(--soft)}
+  .sblkform{display:grid;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}.sblkdates{display:flex;gap:10px;flex-wrap:wrap}.sblkdates label,.sblknote{display:grid;gap:3px;font-size:13px;color:var(--soft)}
+  .sblkdates input,.sblknote input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .schedt tr.sblocked td{color:var(--soft);background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(127,127,127,.08) 6px 12px)}
   .pipeseg button{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);cursor:pointer;padding:6px 2px;font:700 12px var(--sans)}
   .pipeseg button b{font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}
   .pipeseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
@@ -5531,6 +5536,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var t = W.data.jobs.filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && !(job && x.id === job.id); })[0];
       if (t) return t;
       var h = (W.data.holds || []).filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && x.lead !== myLead; })[0];
+      if (!h) { var bk = blockOn(W.data.blocks, iso, crew, slot); if (bk) return { title: 'Off', who: { name: 'Off' + (bk.note ? ': ' + bk.note : '') } }; }   /* blocked off (2026-10-21) */
       return h ? { title: 'Held: ' + h.name, who: { name: 'Held: ' + h.name } } : null;
     }
     function drawStrip() {
@@ -6823,6 +6829,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (asJobs) { var ready = q('section', 'ocard jready'); box.appendChild(ready); jobsReady(ready); }   /* the office books from here */
     box.appendChild(nav);
     var only = q('label', 'schedonly'), oc = q('input'); oc.type = 'checkbox'; oc.checked = !!S.schedOpenOnly; only.appendChild(oc); only.appendChild(q('span', null, 'Open times only')); box.appendChild(only);
+    var blkBox = q('section', 'ocard sblk'); blkBox.hidden = true; box.appendChild(blkBox);   /* block out days (2026-10-21) */
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
     if (asJobs && !asOffice()) { var ob = q('button', 'lnk jboard', 'The old board: prices, addresses and the weather');   /* not for the office (2026-10-21, Matthew) */ ob.type = 'button'; ob.addEventListener('click', function () { jobsBoard(); }); box.appendChild(ob); }
     view.appendChild(box);
@@ -6848,7 +6855,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               var r = j.rows.filter(function (x) { return x.date === d && x.crew === crew && x.slot === s.k; })[0];
               var past = d < today;
               if (S.schedOpenOnly && (r || past)) return;
-              var tr = q('tr', (r ? r.kind : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
+              var bk = !r ? blockOn(j.blocks, d, crew, s.k) : null; if (bk && S.schedOpenOnly) return;   /* blocked off (2026-10-21) */
+              var tr = q('tr', (r ? r.kind : bk ? 'sblocked' : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
               if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { again(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
               tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
@@ -6856,6 +6864,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }
               if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { again(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
+              else if (bk) { tr.appendChild(q('td', null, 'Off')); [bk.note || 'Blocked off', '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               bd.appendChild(tr); n++;
             });
@@ -6867,9 +6876,61 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         else hold.appendChild(q('div', 'ltrynote', 'Booked = signed and on the crew\u2019s day. Held = offered or sent and waiting. Open = free to offer. Tap a booked job to move or cancel it; tap a date to set that crew\u2019s town for the day. The crew gets an alert when their job moves.'));
       };
       oc.addEventListener('change', function () { S.schedOpenOnly = oc.checked; draw(); });
+      blkBox.hidden = false; schedBlocks(blkBox, j, function () { again(wk); });
       draw();
     }).catch(function () { hold.textContent = ''; hold.appendChild(q('div', 'msg', 'The schedule needs signal.')); });
     window.scrollTo(0, 0);
+  }
+  /* blocked-out time (2026-10-21, Matthew: "a way for jen to block out dates for brad and brandon"): part all, am (before noon) or pm */
+  function slotHalf(k) { return slotStart(k) < 720 ? 'am' : 'pm'; }
+  function blockOn(list, iso, crew, slot) { return (list || []).filter(function (b) { return b.crew === crew && iso >= b.from && iso <= b.to && (b.part === 'all' || b.part === slotHalf(slot)); })[0] || null; }
+  function blockWhen(b) { return dayName(b.from) + (b.to !== b.from ? ' to ' + dayName(b.to) : '') + (b.part === 'am' ? ', morning' : b.part === 'pm' ? ', afternoon' : ''); }
+  function schedBlocks(box, J, done) {
+    box.textContent = '';
+    var hd = q('div', 'sblkhd'); hd.appendChild(q('b', null, 'Days off'));
+    var openB = q('button', 'lnk', 'Block out days'); openB.type = 'button'; hd.appendChild(openB); box.appendChild(hd);
+    var list = J.blocks || [];
+    if (!list.length) box.appendChild(q('div', 'ltrynote', 'Nobody is blocked off. Block out a day, a run of days or half a day, and nothing can be offered or booked for that person then.'));
+    list.forEach(function (b) {
+      var row = q('div', 'sblkrow'); var t = q('div'); t.appendChild(q('b', null, String(b.crew).split(' ')[0] + ' \u00b7 ' + blockWhen(b))); t.appendChild(q('small', null, (b.note ? b.note + ' \u00b7 ' : '') + 'set by ' + b.by)); row.appendChild(t);
+      var x = q('button', 'lnk danger', 'Take off'); x.type = 'button';
+      x.addEventListener('click', function () {
+        if (!window.confirm('Take this off? ' + String(b.crew).split(' ')[0] + ' is free again ' + blockWhen(b) + '.')) return;
+        x.disabled = true;
+        api('jobblockdel', { body: { id: b.id } }).then(function (r) { x.disabled = false; if (r._status === 401) return signinView('Signed out. Enter your code again.'); if (!r.ok) { toast('Not taken off', r.error || 'Try again.', null); return; } toast('Free again', String(b.crew).split(' ')[0] + ' \u00b7 ' + blockWhen(b), null); done(); }).catch(function () { x.disabled = false; toast('No signal', 'Nothing was changed.', null); });
+      });
+      row.appendChild(x); box.appendChild(row);
+    });
+    var f = q('div', 'sblkform'); f.hidden = true; box.appendChild(f);
+    openB.addEventListener('click', function () { f.hidden = !f.hidden; });
+    var who = '', part = 'all', crews = (J.pick && J.pick.length ? J.pick : J.crews) || [];
+    if (crews.length === 1) who = crews[0];
+    f.appendChild(q('div', 'dwsub', 'Who is off'));
+    var wr = q('div', 'dwlen sblkwho'); crews.forEach(function (n) { var b = q('button', null, String(n).split(' ')[0]); b.type = 'button'; b.setAttribute('aria-pressed', String(who === n)); b.addEventListener('click', function () { who = n; [].forEach.call(wr.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); wr.appendChild(b); }); f.appendChild(wr);
+    var dr = q('div', 'sblkdates'), fl = q('label', null, 'First day'), fi = q('input'), tl = q('label', null, 'Last day'), ti = q('input');
+    fi.type = ti.type = 'date'; fi.min = ti.min = todayISO(); fi.value = todayISO();
+    fi.addEventListener('change', function () { if (!ti.value || ti.value < fi.value) ti.value = fi.value; });
+    fl.appendChild(fi); tl.appendChild(ti); dr.appendChild(fl); dr.appendChild(tl); f.appendChild(dr);
+    f.appendChild(q('div', 'dwsub', 'Which part of the day'));
+    var pr = q('div', 'dwlen'); [['all', 'All day'], ['am', 'Morning'], ['pm', 'Afternoon']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(part === o[0])); b.addEventListener('click', function () { part = o[0]; [].forEach.call(pr.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); pr.appendChild(b); }); f.appendChild(pr);
+    var nl = q('label', 'sblknote', 'Note (optional)'), ni = q('input'); ni.maxLength = 60; ni.placeholder = 'Vacation, appointment\u2026'; nl.appendChild(ni); f.appendChild(nl);
+    var err = q('div', 'err'), sv = q('button', 'save', 'Block it out'); sv.type = 'button'; f.appendChild(sv); f.appendChild(err);
+    f.appendChild(q('div', 'ltrynote', 'Morning = arrivals before noon; afternoon = noon on. Jobs already booked then stay booked: you get the list, to move them. ' + (crews.length ? 'They get an alert.' : '')));
+    sv.addEventListener('click', function () {
+      err.textContent = '';
+      if (!who) { err.textContent = 'Pick who is off.'; return; }
+      if (!fi.value) { err.textContent = 'Pick the first day.'; return; }
+      var to = ti.value || fi.value; if (to < fi.value) { err.textContent = 'The last day is before the first.'; return; }
+      sv.disabled = true;
+      api('jobblockadd', { body: { crew: who, from: fi.value, to: to, part: part, note: ni.value.trim() } }).then(function (r) {
+        sv.disabled = false;
+        if (r._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!r.ok) { err.textContent = r.error || 'Not saved. Try again.'; return; }
+        var b0 = { from: fi.value, to: to, part: part }, nm = String(who).split(' ')[0];
+        var more = (r.booked && r.booked.length ? ' Still booked then: ' + r.booked.map(function (x) { return x.name + ' (' + dayName(x.date) + ', ' + x.slot + ')'; }).join('; ') + '. Move them on the schedule.' : '') + (r.held ? ' ' + r.held + ' held quote time' + (r.held === 1 ? ' is' : 's are') + ' in that time.' : '');
+        toast(nm + ' blocked off', blockWhen(b0) + '.' + more, null); done();
+      }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was saved.'; });
+    });
   }
   /* move or cancel one booked job from the schedule (2026-10-15) */
   /* the town cell (2026-10-16, Jen: "if there is no town listed can I add one? For Kirk"): Add town when the row has none */
