@@ -985,6 +985,21 @@ function loadLawnFix(string $key): array {
 function appendLawnFix(string $key, array $row): bool {
     return (bool) @file_put_contents(lawnfixFile($key), json_encode(stamped($row), JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
 }
+/* ---- the lawn measured by hand (2026-10-21, Matthew: Jen measured 11663 N Settlers at 10,473 sq ft in Google Earth; the photo said
+ * 226) ---- the size of record on that house: the quote starts from it and every card shows it. src: ge (Google Earth, traced by
+ * hand), wheel (measuring wheel), other. incl: grass (grass only), trees (grass under the trees too), beds (grass and beds). Last line
+ * per door wins; sq 0 clears it. Kept as the calibration data for the photo's estimate. */
+function loadLawnHand(string $key): array {
+    $out = [];
+    foreach (logRows('lawnhand', $key) as $r) {
+        if (!is_array($r) || !isset($r['id'])) continue;
+        if (empty($r['sq'])) unset($out[$r['id']]);
+        else $out[$r['id']] = ['sq' => (int) $r['sq'], 'src' => (string) ($r['src'] ?? ''), 'incl' => (string) ($r['incl'] ?? ''), 'by' => (string) ($r['by'] ?? ''), 'at' => (int) ($r['at'] ?? 0)];
+    }
+    return $out;
+}
+/** a lot under trees: its lawn range from the server's measure (lawn-range.mjs), cached for good (the photo does not change) */
+function lawnRangeCache(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/lawn-range.json'), true); return is_array($j) ? $j : []; }
 /* ---- roof material seen at the door (Matthew 2026-10-05) ----
  * Whoever is at the house can say what the roof is. It beats the county record and the photo (a person looking at it),
  * shows on the card under their name, and is the training data for teaching the photo model metal and shake. */
@@ -2652,7 +2667,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -3007,7 +3022,7 @@ if ($action === 'area') {
     $marks = loadMarks($key);
     $phones = loadPhones($key); $phoneX = loadPhoneExtras($key);
     $notes = loadNotes($key);
-    $lfix = loadLawnFix($key);
+    $lfix = loadLawnFix($key); $lhand = loadLawnHand($key);   /* 2026-10-21 */
     $emails = loadEmails($key);
     $photos = loadPhotos($key);
     $work = loadWork($key);
@@ -3101,7 +3116,7 @@ if ($action === 'area') {
                 'os' => $d['os'] ?? null,
                 'prevMark' => ($m0 && !$m) ? ['outcome' => $m0['outcome'], 'by' => $m0['by'], 'at' => $m0['at']] : null,
                 'lawn' => $d['lawn'] ?? null, 'cg' => !empty($d['cg']) ? 1 : null,   /* a townhome lot: the lawn around it is the HOA's (2026-10-13) */
-                'lawnfix' => $lfix[$d['id']] ?? null,
+                'lawnfix' => $lfix[$d['id']] ?? null, 'hand' => $lhand[$d['id']] ?? null,
                 'trees' => $d['trees'] ?? null,
                 'val' => $d['val'] ?? null,
                 'com' => $d['com'] ?? null,   /* commercial test buildings (admin-only towns): use, roof size, owner lead */
@@ -4192,6 +4207,7 @@ function houseFacts(string $key, string $id): ?array {
         return ['region' => $key, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($key), 'area' => (string) $a['name'], 'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'cen' => censusFor($key, $id),   /* 2026-10-21 */
+                'hand' => loadLawnHand($key)[$id] ?? null, 'range' => lawnRangeCache()[$key . '/' . $id] ?? null,   /* 2026-10-21 */
                 'yb' => is_array($y) ? ($y['yb'] ?? null) : null, 'bsf' => is_array($y) ? ($y['bsf'] ?? null) : null,
                 /* 2026-10-14 (Matthew: "is that all the information we have for the property?"): the rest the door lists carry */
                 'fire' => $d['fire'] ?? null, 'cg' => !empty($d['cg']), 'os' => $d['os'] ?? null, 'place' => $a['place'] ?? null,
@@ -4202,7 +4218,7 @@ function houseFacts(string $key, string $id): ?array {
         if ($d['id'] !== $id) continue;
         return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : 'Not on the door lists','owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
-                'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']),
+                'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']), 'hand' => loadLawnHand($k0)[$id] ?? null, 'range' => lawnRangeCache()[$k0 . '/' . $id] ?? null,
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
     }
     return null;
@@ -7583,6 +7599,51 @@ if ($action === 'matfix') {
     if ($m !== '' && !in_array($m, MAT_KEYS, true)) fail('Pick a roof material.');
     if (!appendMatFix($key, ['id' => $id, 'm' => $m === '' ? null : $m, 'by' => $me, 'at' => tapTime($body)])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+/* save a hand measurement, or clear it (2026-10-21) */
+if ($action === 'lawnhand') {
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? '');
+    if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('No such house.', 404);
+    $hf = houseFacts($key, $id); if (!$hf) fail('No such house.', 404); $key = (string) $hf['region'];
+    $sq = (int) round((float) ($body['sq'] ?? 0));
+    if ($sq !== 0 && ($sq < 100 || $sq > 400000)) fail('Type the lawn size in square feet, between 100 and 400,000.');
+    $src = in_array($body['src'] ?? '', ['ge', 'wheel', 'other'], true) ? (string) $body['src'] : 'other';
+    $incl = in_array($body['incl'] ?? '', ['grass', 'trees', 'beds'], true) ? (string) $body['incl'] : '';
+    $row = ['id' => $id, 'sq' => $sq, 'src' => $src, 'incl' => $incl, 'by' => $me, 'at' => time()];
+    if (!empty($hf['lawn']['sq'])) $row['photo'] = (int) $hf['lawn']['sq']; if (!empty($hf['range'])) $row['range'] = $hf['range']; if (!empty($hf['trees'])) $row['trees'] = $hf['trees']; if (isset($hf['acres'])) $row['acres'] = $hf['acres'];   /* the calibration row: what the photo said beside it */
+    if (!@file_put_contents(DATA_DIR . '/lawnhand-' . basename($key) . '.log', json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'hand' => $sq ? loadLawnHand($key)[$id] ?? null : null]);
+}
+/* a lot under trees: the range, measured on the server and cached (2026-10-21) */
+if ($action === 'lawnrange') {
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    $key = (string) ($_GET['region'] ?? ''); $id = (string) ($_GET['id'] ?? '');
+    if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('No such house.', 404);
+    $hf = houseFacts($key, $id); if (!$hf || !isset($hf['lat'], $hf['lon'])) fail('No such house.', 404);
+    $ck = $hf['region'] . '/' . $id; $have = lawnRangeCache()[$ck] ?? null; if ($have) out(['ok' => true, 'range' => $have]);
+    $script = dirname(__DIR__, 2) . '/sixfold-tools/prop-pull/lawn-range.mjs';
+    if (PHP_SAPI === 'cli-server' && is_file(dirname(__DIR__, 2) . '/sixfold-private/lawn-range-stub.json')) { $res = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/lawn-range-stub.json'), true); }   /* the test server */
+    else {
+        if (!is_file($script) || !function_exists('proc_open')) fail('The range is not set up on this server.', 503);
+        $node = is_file('/usr/local/bin/node') ? '/usr/local/bin/node' : 'node';
+        @set_time_limit(90);
+        $proc = @proc_open([$node, $script, '--lat', (string) $hf['lat'], '--lon', (string) $hf['lon']], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, dirname($script));
+        if (!is_resource($proc)) fail('The measure did not start. Try again.', 500);
+        stream_set_blocking($pipes[1], false); $outTxt = ''; $t0 = time();
+        while (time() - $t0 < 70) { $r = [$pipes[1]]; $w = null; $e = null; if (@stream_select($r, $w, $e, 1) > 0) { $chunk = fread($pipes[1], 65536); if ($chunk === '' || $chunk === false) { if (feof($pipes[1])) break; } else $outTxt .= $chunk; } if (!proc_get_status($proc)['running'] && feof($pipes[1])) break; }
+        if (proc_get_status($proc)['running']) proc_terminate($proc);
+        fclose($pipes[1]); fclose($pipes[2]); proc_close($proc);
+        $lines = array_values(array_filter(explode("\n", trim($outTxt)))); $res = $lines ? json_decode((string) end($lines), true) : null;
+    }
+    if (!is_array($res)) fail('The measure took too long. Try again in a minute.', 504);
+    if (empty($res['ok'])) fail((string) ($res['error'] ?? 'The measure did not work.'));
+    $rg = ['lo' => (int) $res['low'], 'hi' => (int) $res['high'], 'lot' => (int) ($res['lot'] ?? 0), 'd' => (string) ($res['d'] ?? ''), 'at' => time()];
+    $lk = @fopen(DATA_DIR . '/lawn-range.json.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+    $all = lawnRangeCache(); $all[$ck] = $rg; @file_put_contents(DATA_DIR . '/lawn-range.json', json_encode($all, JSON_UNESCAPED_SLASHES), LOCK_EX);
+    if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
+    out(['ok' => true, 'range' => $rg]);
 }
 if ($action === 'lawnfix') {
     if (!$isPost) fail('POST required', 405);

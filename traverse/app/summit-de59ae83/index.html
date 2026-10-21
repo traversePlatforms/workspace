@@ -2019,6 +2019,9 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .ltrynote{font-size:12px;color:var(--soft);margin-top:6px}
   .pipegrp{font:800 13px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:18px 2px 8px}
   /* the house lookup (2026-10-14) */
+  .handx,.rangex{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;display:grid;gap:4px}.handx b,.rangex b{font:800 14px var(--sans)}.handx > span{font-size:14px}.handx .lnk,.rangex .lnk{justify-self:start;background:none;border:0;padding:2px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
+  .handx:has(.handop){border-style:dashed}.handf{display:grid;gap:6px}.handrow{display:flex;gap:8px;align-items:center}.handrow input{font:700 16px var(--sans);width:9em;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .rangex{background:var(--sunk)}.rangex .rgn{font:800 18px var(--sans)}.rangex small{color:var(--soft)}.rga{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.rga button{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
   .hpanel .hlawn{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--sunk);display:grid;gap:3px}
   .hpanel .hlawn b{font:800 22px var(--sans)}.hpanel .hlawn > span{font-size:14px;color:var(--soft)}
   .hconf{display:grid;gap:4px;margin-top:6px}.hconf small{font-size:12.5px;color:var(--soft);line-height:1.4}
@@ -6530,7 +6533,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      it over time. The office only: customers never see the photo or our figures (Matthew). */
   var A365_BANDS = [[2500, 'Small'], [5000, 'Medium'], [8000, 'Large'], [1e9, 'Extra large']];   /* until the price sheet: the bands follow it */
   function bandOf(sq) { for (var i = 0; i < A365_BANDS.length; i++) if (sq < A365_BANDS[i][0]) return A365_BANDS[i][1]; return ''; }
+  var HAND_SRC = { ge: 'in Google Earth', wheel: 'with a measuring wheel', other: 'by hand' }, HAND_INCL = { grass: 'grass only', trees: 'grass under the trees too', beds: 'grass and beds' };
+  function handLine(m) { return fmtSq(m.sq) + ' \u00b7 measured ' + (HAND_SRC[m.src] || 'by hand') + (m.incl ? ', ' + HAND_INCL[m.incl] : '') + ' \u00b7 ' + String(m.by || '').split(' ')[0] + (m.at ? ', ' + new Date(m.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) : ''); }
   function lawnEstimate(h) {
+    if (h.hand && h.hand.sq) { var hs = +h.hand.sq; return { sq: hs, a: hs, b: hs, mid: hs, band: bandOf(hs), span: '', conf: 'Good', why: ['measured ' + (HAND_SRC[h.hand.src] || 'by hand')], yr: (h.lawn && h.lawn.yr) || 2023, hand: true }; }   /* the size of record (2026-10-21) */
     var L = h.lawn || {}, sq = +L.sq || 0, T = h.trees || {}, tc = Math.max(+T.z2 || 0, +T.z3 || 0);
     var why = [], conf = 'Good', lo = 0.85, hi = 1.0;
     if (L.lv === 'T' || tc >= 0.35) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('lots of trees, and the photo misses lawn under them'); }
@@ -6584,6 +6590,60 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!E || E.none) return '';
     return n > E.b * 1.15 ? 'They say bigger than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : n < E.a * 0.85 ? 'They say smaller than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : 'Matches our estimate.';
   }
+  /* a lot where the photo misses lawn: trees over it, no green read, or the estimate flagged (2026-10-21) */
+  function treeLot(h) { var T = h.trees || {}, L = h.lawn || {}; return Math.max(+T.z2 || 0, +T.z3 || 0) >= 0.2 || L.lv === 'N' || L.lv === 'T'; }
+  function setQuoteSize(from, v) { var p = from.closest && from.closest('.hpanel'); var i = p && p.querySelector('.qbasis input'); if (!i) return; i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); try { i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
+  function handBox(h, redraw) {
+    var w = q('div', 'handx'), m = h.hand;
+    if (m && m.sq) {
+      w.appendChild(q('b', null, 'Measured by hand')); w.appendChild(q('span', null, handLine(m)));
+      var ch = q('button', 'lnk', 'Change'); ch.type = 'button'; ch.addEventListener('click', function () { h.hand = null; redrawHand(); }); w.appendChild(ch);
+      var redrawHand = function () { var nb = handBox(h, redraw); w.replaceWith(nb); };
+      return w;
+    }
+    var op = q('button', 'lnk handop', 'Measured it by hand? Add the size \u203a'); op.type = 'button'; w.appendChild(op);
+    var f = q('div', 'handf'); f.hidden = true; w.appendChild(f);
+    op.addEventListener('click', function () { f.hidden = !f.hidden; if (!f.hidden) try { si.focus(); } catch (e) {} });
+    f.appendChild(q('div', 'dwsub', 'Lawn size you measured'));
+    var r1 = q('div', 'handrow'), si = q('input'); si.inputMode = 'numeric'; si.maxLength = 7; si.placeholder = 'e.g. 10473'; si.setAttribute('aria-label', 'Square feet'); r1.appendChild(si); r1.appendChild(q('span', 'qunit', 'sq ft')); f.appendChild(r1);
+    var src = 'ge', incl = '';
+    var chips = function (title, opts, cur, set) { f.appendChild(q('div', 'dwsub', title)); var r = q('div', 'dwlen'); opts.forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0])); b.addEventListener('click', function () { set(o[0]); [].forEach.call(r.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); r.appendChild(b); }); f.appendChild(r); };
+    chips('How', [['ge', 'Google Earth'], ['wheel', 'Measuring wheel'], ['other', 'Other']], src, function (v) { src = v; });
+    chips('What it includes', [['grass', 'Grass only'], ['trees', 'Grass under the trees too'], ['beds', 'Grass and beds']], incl, function (v) { incl = v; });
+    var err = q('div', 'err'), sv = q('button', 'save', 'Save the measurement'); sv.type = 'button'; f.appendChild(sv); f.appendChild(err);
+    f.appendChild(q('div', 'ltrynote', 'It becomes the size this house is quoted at, on every card, for everyone. It also teaches us how far off the photo is.'));
+    sv.addEventListener('click', function () {
+      err.textContent = ''; var n = parseInt(String(si.value).replace(/\D/g, ''), 10) || 0;
+      if (n < 100) { err.textContent = 'Type the size in square feet.'; return; }
+      if (!incl) { err.textContent = 'Say what it includes.'; return; }
+      sv.disabled = true;
+      api('lawnhand', { body: { region: h.region, id: h.id, sq: n, src: src, incl: incl } }).then(function (j) {
+        sv.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; return; }
+        h.hand = j.hand; toast('Saved', fmtSq(n) + ' is now the size for ' + streetCase(h.address), null); if (redraw) redraw();
+      }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was saved.'; });
+    });
+    return w;
+  }
+  function rangeBox(h) {
+    var w = q('div', 'rangex'); w.appendChild(q('b', null, 'Under trees: the photo misses lawn here'));
+    var body = q('div', 'rgb'); w.appendChild(body);
+    var draw = function (rg) {
+      body.textContent = '';
+      body.appendChild(q('span', 'rgn', 'Between ' + fmtSq(rg.lo) + ' and ' + fmtSq(rg.hi)));
+      body.appendChild(q('small', null, 'Low: the lawn the photo can see. High: the open ground (the lot without the house, drive and patio), which counts grass under the trees. Measure it to be sure.'));
+      var acts = q('div', 'rga');
+      [['Price at ' + fmtSq(rg.lo), rg.lo], ['Price at ' + fmtSq(rg.hi), rg.hi]].forEach(function (o) { var b = q('button', null, o[0]); b.type = 'button'; b.addEventListener('click', function () { setQuoteSize(w, o[1]); }); acts.appendChild(b); });
+      body.appendChild(acts);
+    };
+    if (h.range) { draw(h.range); return w; }
+    body.appendChild(q('span', 'rgwait', 'Working out the range from the photo\u2026 (about 15 seconds)'));
+    api('lawnrange', { params: { region: h.region, id: h.id } }).then(function (j) {
+      if (j && j.ok && j.range) { h.range = j.range; draw(j.range); } else { body.textContent = ''; body.appendChild(q('small', null, (j && j.error ? j.error + '. ' : '') + 'Measure it by hand to be sure.')); }
+    }).catch(function () { body.textContent = ''; body.appendChild(q('small', null, 'The range needs signal. Measure it by hand to be sure.')); });
+    return w;
+  }
   function housePanel(h, lead, redraw, quick) {
     var E = lawnEstimate(h), box = q('div', 'door hpanel');
     box.appendChild(q('div', 'addr', streetCase(h.address)));
@@ -6598,12 +6658,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var big = q('div', 'hlawn c-' + E.conf.toLowerCase());
     if (E.none) big.appendChild(q('b', null, 'No lawn measured yet'));
     else {
-      big.appendChild(q('b', null, 'Lawn about ' + fmtSq(E.mid)));
-      big.appendChild(q('span', null, 'likely ' + fmtSq(E.a) + '–' + fmtSq(E.b) + ' · ' + (E.span || E.band)));
+      big.appendChild(q('b', null, (E.hand ? 'Lawn ' : 'Lawn about ') + fmtSq(E.mid)));
+      big.appendChild(q('span', null, E.hand ? 'measured by hand · ' + E.band : 'likely ' + fmtSq(E.a) + '–' + fmtSq(E.b) + ' · ' + (E.span || E.band)));
     }
     var cf = q('div', 'hconf'); cf.appendChild(q('span', 'htag c-' + E.conf.toLowerCase(), E.conf === 'Good' ? 'Good to quote' : E.conf === 'Fair' ? 'Fair: ask them' : 'Check before quoting'));
     cf.appendChild(q('small', null, E.why.join('; ') + (E.none ? '' : ' (' + E.yr + ' photo)')));
     big.appendChild(cf); box.appendChild(big);
+    box.appendChild(handBox(h, redraw));   /* measured by hand (2026-10-21) */
+    if (!E.hand && treeLot(h)) box.appendChild(rangeBox(h));   /* a lot under trees: the range (2026-10-21) */
     var facts = q('div', 'dwfacts');
     var fact = function (k, v) { if (!v) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
     if (typeof h.acres === 'number') fact('Lot', lotLine(h.acres));
@@ -7298,8 +7360,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!j || !j.ok) { facts.appendChild(q('div', 'msg', 'Could not load the house.')); return; }
         var h = j.house, E = lawnEstimate(h);
         var big = q('div', 'lpbig c-' + E.conf.toLowerCase());
-        big.appendChild(q('b', null, E.none ? 'No lawn measured yet' : 'Lawn about ' + fmtSq(E.mid)));
-        if (!E.none) big.appendChild(q('span', null, 'likely ' + fmtSq(E.a) + '\u2013' + fmtSq(E.b)));
+        big.appendChild(q('b', null, E.none ? 'No lawn measured yet' : (E.hand ? 'Lawn ' : 'Lawn about ') + fmtSq(E.mid)));
+        if (!E.none) big.appendChild(q('span', null, E.hand ? 'measured by hand' : 'likely ' + fmtSq(E.a) + '\u2013' + fmtSq(E.b)));
         big.appendChild(q('span', 'htag c-' + E.conf.toLowerCase(), E.conf === 'Good' ? 'Good to quote' : E.conf === 'Fair' ? 'Fair: ask them' : 'Check before quoting'));
         facts.appendChild(big);
         var row = function (k, v) { if (!v) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
@@ -7535,7 +7597,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       basis.appendChild(sqIn); basis.appendChild(q('span', 'qunit', 'sq ft'));
       var chips = q('div', 'qchips');
       var chip = function (label, v) { if (!v) return; var b = q('button', null, label + ' ' + Number(v).toLocaleString(LOCALE)); b.type = 'button'; b.addEventListener('click', function () { st.sq = v; sqIn.value = v; st.price = null; paint(); }); chips.appendChild(b); };
-      if (!E.none) { chip('Low', E.a); chip('Our estimate', E.mid); chip('High', E.b); }
+      if (E.hand) chip('Measured', E.mid); else if (!E.none) { chip('Low', E.a); chip('Our estimate', E.mid); chip('High', E.b); }
       if (said) chip('They said', said);
       box.appendChild(basis); box.appendChild(chips);
       var pk = q('div', 'dwlen');
@@ -14814,7 +14876,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* a townhome lot (2026-10-13): the property line hugs the building and the HOA keeps the grass; the crew's answer still wins */
     if (d.cg && !d.lawnfix) { el.classList.add('lv-cg'); el.appendChild(document.createTextNode('Townhome: the HOA keeps the lawn')); if (tappable) el.setAttribute('aria-label', 'Townhome lot: the HOA keeps the lawn ' + DOT + ' tap to say what is really here'); return el; }
     el.appendChild(document.createTextNode(lv ? LAWN[lv] : 'Lawn?'));
-    if (lv && lv !== 'N' && !d.lawnfix && !(d.cg && !d.lawnfix) && d.lawn && d.lawn.sq) { var E0 = lawnEstimate(d); if (!E0.none) el.appendChild(document.createTextNode(' ' + DOT + ' about ' + fmtSq(E0.mid))); }   /* the size on the chip (2026-10-21) */
+    if (d.hand && d.hand.sq) el.appendChild(document.createTextNode(' ' + DOT + ' ' + fmtSq(d.hand.sq) + ', measured'));   /* a hand measurement (2026-10-21) */
+    else if (lv && lv !== 'N' && !d.lawnfix && !(d.cg && !d.lawnfix) && d.lawn && d.lawn.sq) { var E0 = lawnEstimate(d); if (!E0.none) el.appendChild(document.createTextNode(' ' + DOT + ' about ' + fmtSq(E0.mid))); }   /* the size on the chip (2026-10-21) */
     if (d.lawnfix) el.appendChild(q('em', null, ' ' + DOT + ' crew'));
     else if (d.lawn && lv) el.appendChild(q('em', null, ' ' + DOT + ' ' + d.lawn.yr + ' photo'));
     return el;
