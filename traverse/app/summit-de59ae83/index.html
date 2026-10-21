@@ -6381,7 +6381,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else why.push('open lot; the photo reads a little high on these');
     if (L.lv === 'N') { conf = 'Check'; why.push('no green lawn in the 2023 photo (brown then, rock, or new since)'); }
     if (h.yb && +h.yb >= 2023) { conf = 'Check'; why.push('house built ' + h.yb + ', after the photo'); }
-    if (!sq) return { none: true, conf: 'Check', why: ['no lawn measured for this house yet'] };
+    if (!sq) return { none: true, conf: 'Check', why: [L.lv === 'N' ? 'no green lawn in the ' + (L.yr || 2023) + ' photo (brown that September, rock, or landscaped since), so no size to give' : 'no lawn measured for this house yet'] };   /* measured with no green is not "not measured" (2026-10-20: 21,200 of Aurora's 21,442 "unmeasured" were this) */
     var r = function (x) { return Math.max(100, Math.round(x / 100) * 100); };
     var a = r(sq * lo), b = r(sq * hi), mid = r((a + b) / 2);
     return { sq: sq, a: a, b: b, mid: mid, band: bandOf(mid), span: bandOf(a) !== bandOf(b) ? bandOf(a) + ' or ' + bandOf(b) : '', conf: conf, why: why, yr: L.yr || 2023 };
