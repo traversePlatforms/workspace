@@ -6964,8 +6964,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     lines.push('Price: ' + money0(st.cur.price) + (sm.ladder && sm.ladder !== st.cur.price ? ' (list ' + money0(sm.ladder) + ')' : ''));
     var dep = Math.ceil(st.cur.price / 2); lines.push('Deposit (half): ' + money0(dep) + ' \u00b7 balance on the day: ' + money0(st.cur.price - dep));
     (sm.rows || []).forEach(function (r) { if (r[2] === '') lines.push(r[0] + ': ' + r[1]); else if (r[2] && r[2] !== '\u2014') lines.push(r[0] + ': ' + r[1] + ' = ' + r[2]); });
-    if (sm.known && sm.rows && sm.rows.length) lines.push('Left before labour: ' + money0(st.cur.price - sm.cost));
-    else if (sm.left != null) lines.push('Left after expenses (before paying the crew): ' + money0(sm.left));
+    if (sm.known && sm.rows && sm.rows.length) { if (sm.crew) lines.push('Crew: ' + money0(sm.crew)); lines.push('Left after the crew: ' + money0(st.cur.price - sm.cost - (sm.crew || 0))); }
+    else if (sm.left != null) lines.push('Left after expenses and the crew: ' + money0(sm.left));
     return lines.join('\n');
   }
   function quickCustomerText(h, st) {
@@ -7458,7 +7458,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             var rows = [];
             if (st.pkg === 'full' && st.sq) { rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', j.fertName + ' \u00b7 ' + j.fertLb + ' lb', '']); }
             if (rows.length || (price && j.left != null)) { var tb = q('div', 'qcost'); rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); tb.appendChild(d); });
-              if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer and the drive; before paying the crew')); lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
+              if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer, the drive and the crew (' + (j.crewPct != null ? j.crewPct : 20) + '% of the price)')); lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
               detail.appendChild(tb); }
             if (st.pkg === 'full' && !st.sq) detail.appendChild(q('div', null, 'Type the lawn size to work out the seed and fertilizer.'));
             st.cur = { price: price, seedLb: j.seedLb, fertLb: j.fertLb }; st.sum = { rows: rows, cost: 0, known: false, ladder: ladder, left: j.left };
@@ -7500,12 +7500,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); d.appendChild(q('span', null, r[2])); tb.appendChild(d); });
         if (price && rows.length) {
           var t1 = q('div', 'qcrow qctot'); t1.appendChild(q('b', null, st.pkg === 'full' ? 'Seed, fertilizer and drive' : 'Drive')); t1.appendChild(q('span', null, known ? money2(cost) : '\u2014')); tb.appendChild(t1);
-          var t2 = q('div', 'qcrow qcleft'); t2.appendChild(q('b', null, 'Left before labour')); t2.appendChild(q('span', null, known ? money0(price - cost) : '\u2014')); tb.appendChild(t2);
+          var cs = P.crewShare != null ? Number(P.crewShare) : 0.2, crew = price * cs;   /* the crew: a share of every job's price (2026-10-21) */
+          var tc = q('div', 'qcrow'); var tca = q('div'); tca.appendChild(q('b', null, 'Crew')); tca.appendChild(q('small', null, Math.round(cs * 100) + '% of the price')); tc.appendChild(tca); tc.appendChild(q('span', null, money2(crew))); tb.appendChild(tc);
+          var t2 = q('div', 'qcrow qcleft'); t2.appendChild(q('b', null, 'Left after the crew')); t2.appendChild(q('span', null, known ? money0(price - cost - crew) : '\u2014')); tb.appendChild(t2);
         }
         detail.appendChild(tb);
         lines.forEach(function (t) { detail.appendChild(q('div', null, t)); });
         noteBox.textContent = ''; notes.forEach(function (t) { noteBox.appendChild(q('div', null, t)); });
-        st.cur = { price: price, seedLb: seedLb, fertLb: fertLb }; st.sum = { rows: rows, cost: cost, known: known, ladder: ladder };
+        st.cur = { price: price, seedLb: seedLb, fertLb: fertLb }; st.sum = { rows: rows, cost: cost, known: known, ladder: ladder, crew: price && rows.length ? price * (P.crewShare != null ? Number(P.crewShare) : 0.2) : 0 };
         drawActs();
       }
       function drawActs() {

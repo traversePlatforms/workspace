@@ -4329,10 +4329,11 @@ const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 39
     /* 2026-10-15 (Matthew): fertilizer from the bag (price per lb x the lb its label says covers the lawn), Jen picks the brand of the day;
        Bryce gave no rate per sq ft, only "$25 in fertilizer" on a $399 job. Travel: the drive from the storage at 333 W Hampden Ave,
        there and back, at an 18 mpg truck and the week's Denver gas price (EIA). */
-    'fertDefault' => 'lesco', 'mpg' => 18, 'roadFactor' => 1.3];
+    'fertDefault' => 'lesco', 'mpg' => 18, 'roadFactor' => 1.3,
+    'crewShare' => 0.2];   /* the crew: 20% of every job's price (Matthew, 2026-10-21: "a 20% employee cost to every job") */
 const A365_FERTS = [
-    ['k' => 'lesco', 'name' => 'LESCO 24-0-11 (SiteOne)', 'bagLb' => 50, 'bagCost' => 58.99, 'coverSq' => 12000,
-     'src' => 'Label: a 50 lb bag covers about 12,000 sq ft. Price: True Value list price $58.99 (October 2026); ask the SiteOne rep for Sixfold’s price.'],
+    ['k' => 'lesco', 'name' => 'LESCO 24-0-11 (SiteOne)', 'bagLb' => 50, 'bagCost' => 40, 'coverSq' => 12000,
+     'src' => 'Label: a 50 lb bag covers about 12,000 sq ft. Price: $40 for a 50 lb bag (Matthew, 21 Oct 2026).'],
     ['k' => 'scotts', 'name' => 'Scotts Turf Builder Lawn Food 32-0-4', 'bagLb' => 12.5, 'bagCost' => 27.24, 'coverSq' => 5000,
      'src' => 'Home Depot $27.24 for 12.5 lb (October 2026); the bag covers 5,000 sq ft.'],
     ['k' => 'milorganite', 'name' => 'Milorganite 6-4-0', 'bagLb' => 32, 'bagCost' => 19.97, 'coverSq' => 2500,
@@ -4399,16 +4400,16 @@ if ($action === 'a365calc') {
         $fk = (string) ($_GET['fert'] ?? ''); $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $fk) $F = $f; if (!$F) foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null;
         if ($F && $F['coverSq'] > 0) { $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1); $fName = (string) $F['name']; }
     }
-    /* what is left after seed, fertilizer and the drive, before paying the crew: the total only, never the parts (Matthew 2026-10-15) */
-    $cost = $drive + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0);
+    /* what is left after seed, fertilizer, the drive and the crew's share (2026-10-21): the total only, never the parts (Matthew 2026-10-15) */
+    $cost = $drive + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0) + $price * (float) ($P['crewShare'] ?? 0);
     if ($fertLb > 0) foreach ($P['ferts'] as $f) if ($f['name'] === $fName && $f['bagLb'] > 0) $cost += $fertLb * $f['bagCost'] / $f['bagLb'];
-    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'left' => $price ? (int) round($price - $cost) : null]);
+    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'left' => $price ? (int) round($price - $cost) : null]);
 }
 if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
-            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3]];
+            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1]];
     $p = a365Pricing();
     foreach ($lim as $k => [$lo, $hi]) {
         if (!array_key_exists($k, $body)) continue;
