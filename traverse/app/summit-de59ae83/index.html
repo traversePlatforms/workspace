@@ -7289,7 +7289,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         wl.appendChild(b);
       });
       var vmDue = G.vm.filter(function (l) { return tryDue(l) <= Date.now(); });
-      var next = G.new.concat(G.today, vmDue).slice(0, 7);
+      var next = G.new.concat(G.today, vmDue).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }).slice(0, 7);   /* the longest waiting first (2026-10-21, Matthew: 'those who have been waiting for a day or so dont get further down the list') */
       if (!next.length) list.appendChild(q('div', 'msg soft', 'Nobody waiting. New Facebook and website requests show here as they come in.'));
       next.forEach(function (l) {
         var b = q('button', 'orow'); b.type = 'button';
@@ -11937,6 +11937,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var its = shown.filter(function (it) { return gOf(it) === g[0]; });
         if (!its.length) return;
         if (g[0] !== 'new') its.sort(function (a, b) { return lt(a) - lt(b); });
+        else its.sort(function (a, b) { return (a.at || 0) - (b.at || 0); });   /* not tried yet: the longest waiting first, as on the office home (2026-10-21) */
         groups.push([g[1], its]);
       });
     }
