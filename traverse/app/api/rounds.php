@@ -4872,6 +4872,91 @@ function jobAddPart(array $j, int $amt, string $how, string $by, ?array $sq = nu
     appendLine(DATA_DIR . '/jobs.log', $row);
     return ['tot' => $tot, 'left' => max(0, $price - $tot), 'paid' => $tot >= $price];
 }
+/* ---- the stats page (2026-10-20): admins and the office. Everything from the app's own records except ad spend, which Meta does not share
+ * with the app yet: an admin types each ad's lifetime spend (ad-spend.json; the first three entries are Matthew's Meta screenshots of 20 Oct). ---- */
+function adSpendFile(): string { return DATA_DIR . '/ad-spend.json'; }
+function adSpend(): array {
+    $j = json_decode((string) @file_get_contents(adSpendFile()), true);
+    if (is_array($j) && isset($j['ads'])) return $j['ads'];
+    return [   /* Matthew's Meta screenshots (19 and 20 Oct); replaced as soon as anyone saves new figures */
+        ['key' => 'form1', 'label' => 'Instant Form ad (13-14 Oct, paused)', 'src' => 'meta', 'spend' => 169.28, 'results' => 21, 'asof' => '2026-10-19', 'by' => 'Matthew\'s Meta screenshot'],
+        ['key' => 'form2', 'label' => 'Instant Form ad (since 19 Oct)', 'src' => 'meta', 'spend' => 134.84, 'results' => 9, 'asof' => '2026-10-20', 'by' => 'Matthew\'s Meta screenshot'],
+        ['key' => 'msgr', 'label' => 'Messenger ad (since 15 Oct)', 'src' => 'messenger', 'spend' => 541.07, 'results' => 51, 'asof' => '2026-10-20', 'by' => 'Matthew\'s Meta screenshot'],
+    ];
+}
+function jobPaidSoFar(array $j): int { $p = $j['pay'] ?? []; $s0 = (string) ($p['s'] ?? 'unpaid'); return $s0 === 'paid' ? (int) $j['price'] : ($s0 === 'deposit' ? (int) ($p['amt'] ?? 0) : 0); }
+if ($action === 'statspage') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz);
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days');   /* this week's Monday */
+    $d = fn(DateTime $x) => $x->format('Y-m-d');
+    $thisFrom = $d($mon); $thisTo = $d((clone $mon)->modify('+6 days'));
+    $lastFrom = $d((clone $mon)->modify('-7 days')); $lastTo = $d((clone $mon)->modify('-1 day'));
+    $ts = fn(string $ymd, bool $end = false) => (new DateTime($ymd . ($end ? ' 23:59:59' : ' 00:00:00'), $tz))->getTimestamp();
+    $leads = leadsAll(); $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && !preg_match('/\btest\b|claude/i', (string) ($leads[$j['lead']]['name'] ?? '')));
+    $realLead = fn($l) => !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''));
+    $jobOfLead = []; foreach ($jobs as $j) $jobOfLead[(string) $j['lead']] = $j;
+    $row = function (array $j) use ($leads) { $l = $leads[$j['lead']] ?? []; return ['id' => (string) $j['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'src' => (string) ($l['src'] ?? ''), 'date' => (string) $j['date'], 'slot' => (string) (jobSlot((string) $j['slot'])[1] ?? $j['slot']), 'crew' => (string) $j['crew'], 'price' => (int) $j['price'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => (string) ($j['done']['o'] ?? '')]; };
+    /* 1. last week */
+    $lw = ['from' => $lastFrom, 'to' => $lastTo, 'jobs' => [], 'leads' => [], 'quotes' => 0, 'booked' => 0];
+    foreach ($jobs as $j) if ($j['date'] >= $lastFrom && $j['date'] <= $lastTo) $lw['jobs'][] = $row($j);
+    foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $ts($lastFrom) && (int) ($j['at'] ?? 0) <= $ts($lastTo, true)) $lw['booked']++;
+    foreach ($leads as $l) { if (!$realLead($l)) continue; $at = (int) ($l['at'] ?? 0); if ($at >= $ts($lastFrom) && $at <= $ts($lastTo, true)) $lw['leads'][(string) ($l['src'] ?? 'other')] = ($lw['leads'][(string) ($l['src'] ?? 'other')] ?? 0) + 1;
+        $qa = (int) ($l['quote']['at'] ?? 0); if ($qa >= $ts($lastFrom) && $qa <= $ts($lastTo, true)) $lw['quotes']++; }
+    /* 2. this week */
+    $tw = ['from' => $thisFrom, 'to' => $thisTo, 'jobs' => [], 'holds' => []];
+    foreach ($jobs as $j) if ($j['date'] >= $thisFrom && $j['date'] <= $thisTo) $tw['jobs'][] = $row($j);
+    usort($tw['jobs'], fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
+    $holds = jobHolds($leads);
+    foreach ($holds as $h) if ($h['date'] >= $thisFrom && $h['date'] <= $thisTo) $tw['holds'][] = ['name' => $h['name'], 'date' => $h['date'], 'slot' => (string) (jobSlot((string) $h['slot'])[1] ?? $h['slot']), 'crew' => $h['crew'], 'price' => (int) ($leads[$h['lead']]['quote']['price'] ?? 0)];
+    /* 3. ads: spend as typed, leads and jobs by the lead's source */
+    $ads = adSpend(); $bySrc = [];
+    foreach ($leads as $l) { if (!$realLead($l)) continue; $src = (string) ($l['src'] ?? ''); if (!in_array($src, ['meta', 'messenger'], true)) continue; $bySrc[$src]['leads'] = ($bySrc[$src]['leads'] ?? 0) + 1;
+        if (isset($jobOfLead[$l['id']])) { $j = $jobOfLead[$l['id']]; $bySrc[$src]['jobs'] = ($bySrc[$src]['jobs'] ?? 0) + 1; $bySrc[$src]['booked'] = ($bySrc[$src]['booked'] ?? 0) + (int) $j['price']; $bySrc[$src]['paid'] = ($bySrc[$src]['paid'] ?? 0) + jobPaidSoFar($j); } }
+    $adOut = [];
+    foreach (['meta' => 'Instant Form', 'messenger' => 'Messenger'] as $src => $label) {
+        $sp = 0.0; $res = 0; $asof = ''; foreach ($ads as $a) if (($a['src'] ?? '') === $src) { $sp += (float) $a['spend']; $res += (int) ($a['results'] ?? 0); $asof = max($asof, (string) ($a['asof'] ?? '')); }
+        $b = $bySrc[$src] ?? []; $jn = (int) ($b['jobs'] ?? 0);
+        $adOut[] = ['src' => $src, 'label' => $label, 'spend' => round($sp, 2), 'results' => $res, 'asof' => $asof, 'leads' => (int) ($b['leads'] ?? 0), 'jobs' => $jn, 'booked' => (int) ($b['booked'] ?? 0), 'paid' => (int) ($b['paid'] ?? 0), 'perJob' => $jn ? round($sp / $jn, 2) : null, 'perLead' => $res ? round($sp / $res, 2) : null];
+    }
+    /* 4. monthly plans: active customers on a recurring plan, and what they bring in a month */
+    $plans = []; $mrr = 0.0; $per = ['monthly' => 1, 'quarterly' => 1 / 3, 'yearly' => 1 / 12];
+    foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); if (($c['status'] ?? 'active') !== 'active' || !isset($per[$pl])) continue;
+        $m = round((float) ($c['price'] ?? 0) * $per[$pl], 2); $mrr += $m; $plans[] = ['name' => (string) ($c['name'] ?? ''), 'plan' => $pl, 'monthly' => $m]; }
+    /* 5. six weeks: booked work + quoted leads x the close rate + plan income */
+    $cut = time() - 60 * 86400; $quoted = 0; $won = 0;
+    foreach ($leads as $l) { if (!$realLead($l)) continue; $qa = (int) ($l['quote']['at'] ?? 0); if (!$qa || $qa < $cut) continue; $quoted++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $won++; }
+    $close = $quoted ? $won / $quoted : 0.0;
+    $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (!$realLead($l) || isset($jobOfLead[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || empty($l['quote']['price'])) continue; $pipe += (int) $l['quote']['price']; $pipeN++; }
+    $weeks = [];
+    for ($w = 0; $w < 6; $w++) {
+        $f = $d((clone $mon)->modify('+' . (7 * $w) . ' days')); $t = $d((clone $mon)->modify('+' . (7 * $w + 6) . ' days'));
+        $bk = 0; $bn = 0; foreach ($jobs as $j) if ($j['date'] >= $f && $j['date'] <= $t) { $bk += (int) $j['price']; $bn++; }
+        $exp = round($pipe * $close / 6); $planW = round($mrr * 12 / 52);
+        $weeks[] = ['from' => $f, 'to' => $t, 'booked' => $bk, 'jobs' => $bn, 'pipeline' => (int) $exp, 'plans' => (int) $planW, 'total' => (int) ($bk + $exp + $planW)];
+    }
+    /* 6. doors, the whole company: last week and this week */
+    $doors = []; $td = array_filter(teamDays(15, ''), fn($p) => !boardHidden((string) $p['name']));   /* 15 days reach last Monday */
+    foreach (['last' => [$lastFrom, $lastTo], 'this' => [$thisFrom, $thisTo]] as $k => [$f, $t]) {
+        $sum = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'people' => 0];
+        foreach ($td as $p) { $any = false; foreach ($p['days'] as $r) if ($r['date'] >= $f && $r['date'] <= $t) { $sum['doors'] += (int) $r['doors']; $sum['talked'] += (int) $r['booked'] + (int) $r['later'];   /* as the Office dashboard counts it */ $sum['booked'] += (int) $r['booked']; if ((int) $r['doors'] > 0) $any = true; } if ($any) $sum['people']++; }
+        $doors[$k] = $sum;
+    }
+    out(['ok' => true, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
+         'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN], 'doors' => $doors, 'canEdit' => $role === 'admin']);
+}
+if ($action === 'adspendsave') {   /* an admin types each ad's lifetime spend from Meta (until Meta shares it with the app) */
+    if (!feature('walkdesk') || $role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $in = is_array($body['ads'] ?? null) ? $body['ads'] : []; $out = [];
+    foreach (array_slice($in, 0, 20) as $a) {
+        $label = mb_substr(trim((string) ($a['label'] ?? '')), 0, 80); $src = in_array($a['src'] ?? '', ['meta', 'messenger'], true) ? (string) $a['src'] : '';
+        if ($label === '' || $src === '') continue;
+        $out[] = ['key' => preg_replace('/[^a-z0-9]/', '', strtolower((string) ($a['key'] ?? '')) ) ?: 'ad' . count($out), 'label' => $label, 'src' => $src, 'spend' => max(0, round((float) ($a['spend'] ?? 0), 2)), 'results' => max(0, (int) ($a['results'] ?? 0)), 'asof' => date('Y-m-d'), 'by' => $me];
+    }
+    if (!$out) fail('Add at least one ad with a name and where its leads come from.');
+    if (!writeJsonAtomic(adSpendFile(), ['ads' => $out, 'at' => time(), 'by' => $me])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 if ($action === 'squareconfirmlist') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     if (!squareCfg()) out(['ok' => true, 'items' => [], 'note' => 'Square is not connected yet.']);

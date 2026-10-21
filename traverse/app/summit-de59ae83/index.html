@@ -1543,6 +1543,32 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .office .okpi b{font:800 32px/1.1 var(--sans);font-variant-numeric:tabular-nums}
   .office .okpi span{font-size:13px;color:var(--soft)}
   .office .okpi.tap{cursor:pointer}
+  .stp .stcard{padding:14px 16px;margin:0 0 14px}
+  .stp .stcard h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+  .stp .stcard h3 small{font:400 13px var(--sans);color:var(--soft)}
+  .stp table{width:100%;border-collapse:collapse;font-size:14px}
+  .stp th,.stp td{padding:7px 8px;border-bottom:1px solid var(--line,#e3ddd2);text-align:right;vertical-align:top}
+  .stp th:first-child,.stp td:first-child{text-align:left}
+  .stp th{font:800 12px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--soft)}
+  .stp td small{display:block;color:var(--soft);font-size:12.5px}
+  .stp tr.sttot td{font-weight:800;border-top:2px solid var(--ink,#1d2a1c)}
+  .stp .stdayh td{background:var(--paper2,#f4efe6);font-weight:800}
+  .stp .stnote{font-size:13px;color:var(--soft);margin:8px 0 0;line-height:1.45}
+  .stp .stwrap{overflow-x:auto}
+  .stp .stsrc{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+  .stp .stsrc span{padding:3px 9px;border-radius:999px;background:var(--paper2,#f4efe6);font-size:13px}
+  .stp .stedit{display:grid;gap:8px;margin:10px 0 0}
+  .stp .stedit .str{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center}
+  .stp .stedit input,.stp .stedit select{min-height:40px;padding:0 8px;border:1px solid var(--line,#d9d1c2);border-radius:8px;font:14px var(--sans);min-width:0}
+  .stp .stbtns{display:flex;flex-wrap:wrap;gap:8px}
+  .stp .stedit .str button{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--line,#d9d1c2);background:#fff;font:600 13px var(--sans);cursor:pointer}
+  .stp .stedit .sth{font:800 11.5px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--soft)}
+  @media (max-width:640px){ .stp .stedit .sth{display:none} }
+  .stp .stbtns button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line,#d9d1c2);background:#fff;font:700 14px var(--sans);cursor:pointer}
+  .stp .stbtns button.save{background:var(--ember,#d6400c);border-color:var(--ember,#d6400c);color:#fff}
+  @media (max-width:640px){ .stp .stedit .str{grid-template-columns:1fr 1fr} .stp .stedit .str input:first-child{grid-column:1/-1}
+    .stp .okpis{grid-template-columns:1fr 1fr;gap:8px;min-height:0} .stp .okpi{padding:10px 12px} .stp .okpi b{font-size:26px}
+    .stp .stcard{padding:12px 10px} .stp table{min-width:560px;font-size:13.5px} .stp .stwrap{margin:0 -10px;padding:0 10px} }   /* a phone: the tables scroll sideways inside their card */
   .office .ocols{display:grid;gap:14px}
   @media (min-width:1000px){ .office .ocols{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr);align-items:start} }
   .office .ocol{display:grid;gap:14px;min-width:0}
@@ -7170,7 +7196,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
     [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', qqName(), function () { quickQuoteView(); }],
-     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }]].concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }]].concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
     c2.appendChild(tc);
@@ -8395,6 +8421,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) t.push(['Plan the doors', function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); }]);
     if (adminView() && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
     if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
+    if (wdOn()) t.push(['Stats', statsPageView]);   /* 2026-10-20 */
     else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push([qqName(), function () { quickQuoteView(); }]); }
     else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
     if (walkerOn()) t.push(['My ' + vw() + 's', function () { myWalksView(); }]);
@@ -8792,7 +8819,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dnavItems() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]].concat(mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
+      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]];   /* the field crew (2026-10-19): no doors, no sales */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
@@ -16002,6 +16029,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && feat('hail') && cardOn('hail') ? ['Storm list', stormView, false, null, ['storm', 'stormday', 'hail']] : null,
       S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipelineView, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
       S.role === 'admin' || S.role === 'office' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
+      wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
       ['Team stats', teamView, false, null, ['team', 'stats']],
       ['Leaderboard', boardView, false, null, ['board']],
@@ -16019,6 +16047,130 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       m.appendChild(b);
     });
     return m;
+  }
+  /* ---- the stats page (2026-10-20, Matthew): last week, this week's jobs, the ads, monthly plans, six weeks ahead and the whole
+     company's doors. Admins and the office. Ad spend is typed in by an admin until Meta shares it with the app. ---- */
+  var ST_SRC = { meta: 'Instant Form', messenger: 'Messenger', a365web: '365 website', website: 'Website', phone: 'Phone call', referral: 'Referral', door: 'At the door', inperson: 'In person', nextdoor: 'Nextdoor', linktree: 'Linktree', other: 'Other', '': 'Not set' };
+  function statsPageView() {
+    if (!wdOn()) return chooseView();
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'statspage'; S.inOffice = planOk();
+    setDock(null); foot.hidden = true;
+    setBar('back', { title: 'Stats', sub: 'Last week, this week and six weeks ahead', back: chooseView, backLabel: asOffice() ? 'Home' : 'Field tools' });
+    document.body.classList.add('dk-top');
+    view.textContent = '';
+    var page = q('div', 'office stp'), body = q('div', 'obody');
+    if (planOk()) page.appendChild(officeMenu());
+    var hd = q('div', 'ohead'), ht = q('div'); ht.appendChild(q('h2', null, 'Stats')); var hs = q('small', null, 'Loading\u2026'); ht.appendChild(hs); hd.appendChild(ht); body.appendChild(hd);
+    var kp = q('div', 'okpis'); body.appendChild(kp);
+    var out = q('div'); out.appendChild(q('div', 'skel')); body.appendChild(out);
+    page.appendChild(body); view.appendChild(page);
+    var rng = function (f, t) { return dayName(f) + ' \u2013 ' + dayName(t); };
+    var pct = function (n) { return Math.round(n * 100) + '%'; };
+    var cur = function (n) { return n === null || n === undefined ? '\u2013' : '$' + Number(n).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var card = function (title, sub) { var c = q('section', 'card stcard'), h = q('h3', null, title); if (sub) h.appendChild(q('small', null, sub)); c.appendChild(h); out.appendChild(c); return c; };
+    var table = function (c, head) { var w = q('div', 'stwrap'), t = document.createElement('table'), tr = document.createElement('tr'); head.forEach(function (x) { tr.appendChild(q('th', null, x)); }); var th = document.createElement('thead'); th.appendChild(tr); t.appendChild(th); var tb = document.createElement('tbody'); t.appendChild(tb); w.appendChild(t); c.appendChild(w); return tb; };
+    var tr = function (tb, cells, cls) { var r = document.createElement('tr'); if (cls) r.className = cls; cells.forEach(function (x) { var td = document.createElement('td'); if (x && x.nodeType) td.appendChild(x); else if (Array.isArray(x)) { td.appendChild(document.createTextNode(x[0])); if (x[1]) td.appendChild(q('small', null, x[1])); } else td.textContent = x === null || x === undefined ? '' : String(x); r.appendChild(td); }); tb.appendChild(r); return r; };
+    var payTxt = function (j) { return j.owed > 0 ? (j.paid ? money0(j.paid) + ' in, ' + money0(j.owed) + ' owed' : money0(j.owed) + ' owed') : 'paid'; };
+    var load = function () {
+      api('statspage').then(function (j) {
+        if (S.screen !== 'statspage' || !document.body.contains(page)) return;
+        out.textContent = ''; kp.textContent = '';
+        if (!j || !j.ok) { out.appendChild(q('div', 'msg', (j && j.error) || 'The stats need signal.')); hs.textContent = ''; return; }
+        hs.textContent = 'From the app\u2019s own records, ' + new Date().toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' });
+        var L = j.last, T = j.this;
+        var done = L.jobs.filter(function (x) { return x.done === 'done'; });
+        var doneV = done.reduce(function (a, x) { return a + x.price; }, 0), coll = L.jobs.reduce(function (a, x) { return a + x.paid; }, 0);
+        var leadsIn = Object.keys(L.leads).reduce(function (a, k) { return a + L.leads[k]; }, 0);
+        var twV = T.jobs.reduce(function (a, x) { return a + x.price; }, 0);
+        [['Jobs done last week', done.length, [money0(doneV) + ' of work', L.jobs.length !== done.length ? (L.jobs.length - done.length) + ' on the board not marked done' : '']],
+         ['Leads in last week', leadsIn, [L.quotes + (L.quotes === 1 ? ' quote sent' : ' quotes sent'), L.booked + (L.booked === 1 ? ' job booked' : ' jobs booked')]],
+         ['Jobs this week', T.jobs.length, [money0(twV) + ' booked', T.holds.length ? T.holds.length + ' more held' : '']],
+         ['Close rate', null, [j.proj.won + ' of ' + j.proj.quoted + ' quoted in 60 days booked']]].forEach(function (x) {
+          var c = kpiCard(x[0]); kp.appendChild(c); kpiFill(c, x[1], x[2]);
+          if (x[1] === null) c.querySelector('b').textContent = j.proj.quoted ? pct(j.proj.close) : '\u2013';
+        });
+        /* 1. last week */
+        var c1 = card('Last week', rng(L.from, L.to));
+        if (!L.jobs.length) c1.appendChild(q('div', 'msg soft', 'No jobs on the board last week.'));
+        else {
+          var tb1 = table(c1, ['Job', 'Day', 'Crew', 'Price', 'Paid']);
+          L.jobs.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }).forEach(function (x) { tr(tb1, [[x.name, (ST_SRC[x.src] || x.src) + (x.done === 'done' ? ' \u00b7 done' : x.done ? ' \u00b7 ' + x.done : ' \u00b7 not marked done')], dayName(x.date), x.crew, money0(x.price), payTxt(x)]); });
+          tr(tb1, [L.jobs.length + (L.jobs.length === 1 ? ' job' : ' jobs'), '', '', money0(L.jobs.reduce(function (a, x) { return a + x.price; }, 0)), money0(coll) + ' in'], 'sttot');
+        }
+        var src = q('div', 'stsrc'); Object.keys(L.leads).sort(function (a, b) { return L.leads[b] - L.leads[a]; }).forEach(function (k) { src.appendChild(q('span', null, (ST_SRC[k] || k) + ' ' + L.leads[k])); });
+        if (leadsIn) { c1.appendChild(q('p', 'stnote', 'Leads in, by where they came from:')); c1.appendChild(src); }
+        /* 2. this week */
+        var c2 = card('This week\u2019s jobs', rng(T.from, T.to));
+        if (!T.jobs.length && !T.holds.length) c2.appendChild(q('div', 'msg soft', 'Nothing booked this week yet.'));
+        else {
+          var tb2 = table(c2, ['Job', 'Time', 'Crew', 'Price', 'Paid']), day = '';
+          T.jobs.concat(T.holds.map(function (h) { return { name: h.name, date: h.date, slot: h.slot, crew: h.crew, price: h.price, held: true }; }))
+            .sort(function (a, b) { return (a.date + a.slot) < (b.date + b.slot) ? -1 : 1; }).forEach(function (x) {
+              if (x.date !== day) { day = x.date; var r = tr(tb2, [dayName(x.date), '', '', '', ''], 'stdayh'); r.firstChild.colSpan = 5; while (r.children.length > 1) r.removeChild(r.lastChild); }
+              tr(tb2, [[x.name, x.held ? 'held for their quote, not booked yet' : (ST_SRC[x.src] || x.src) + (x.done === 'done' ? ' \u00b7 done' : '')], x.slot, x.crew, x.price ? money0(x.price) : '', x.held ? '' : payTxt(x)]);
+            });
+          tr(tb2, [T.jobs.length + (T.jobs.length === 1 ? ' job booked' : ' jobs booked') + (T.holds.length ? ', ' + T.holds.length + ' held' : ''), '', '', money0(twV), ''], 'sttot');
+        }
+        /* 3. ads */
+        var c3 = card('Ad performance', 'Facebook and Instagram, since the ads started');
+        var tb3 = table(c3, ['', 'Spent', 'Meta counts', 'Leads in the app', 'Jobs', 'Booked', 'Collected', 'Per lead', 'Per job']);
+        var tot = { sp: 0, res: 0, l: 0, jb: 0, bk: 0, pd: 0 };
+        j.ads.forEach(function (a) { tot.sp += a.spend; tot.res += a.results; tot.l += a.leads; tot.jb += a.jobs; tot.bk += a.booked; tot.pd += a.paid;
+          tr(tb3, [[a.label, a.asof ? 'spend as of ' + dayName(a.asof) : 'no spend typed in'], cur(a.spend), a.results + (a.src === 'messenger' ? ' chats' : ' leads'), a.leads, a.jobs, money0(a.booked), money0(a.paid), cur(a.perLead), cur(a.perJob)]); });
+        tr(tb3, ['Both', cur(tot.sp), tot.res, tot.l, tot.jb, money0(tot.bk), money0(tot.pd), tot.res ? cur(tot.sp / tot.res) : '\u2013', tot.jb ? cur(tot.sp / tot.jb) : '\u2013'], 'sttot');
+        c3.appendChild(q('p', 'stnote', 'Spend and Meta\u2019s counts are typed in from Meta (the app cannot read the ad account yet). Leads, jobs and money are counted by where each lead came from in the app, so a friend a customer sent is a referral, not an ad lead.'));
+        if (j.canEdit) c3.appendChild(adSpendEditor(j.adRows, load));
+        /* 4. plans */
+        var c4 = card('Monthly plans', j.plans.list.length ? money0(j.plans.mrr) + ' a month' : '');
+        if (!j.plans.list.length) c4.appendChild(q('div', 'msg soft', 'No customers on an active monthly, quarterly or yearly plan yet. A customer shows here when their plan is set and they are active.'));
+        else { var tb4 = table(c4, ['Customer', 'Plan', 'A month']); j.plans.list.forEach(function (p) { tr(tb4, [p.name, p.plan, cur(p.monthly)]); }); tr(tb4, [j.plans.list.length + ' on a plan', '', cur(j.plans.mrr)], 'sttot'); }
+        /* 5. six weeks */
+        var P = j.proj, c5 = card('Six weeks ahead', 'booked work + quoted leads \u00d7 the close rate + plan income');
+        var tb5 = table(c5, ['Week', 'Booked', 'From quoted leads', 'Plans', 'Total']), gt = 0;
+        P.weeks.forEach(function (w, i) { gt += w.total; tr(tb5, [[(i === 0 ? 'This week' : 'Week of ' + dayName(w.from)), w.jobs ? w.jobs + (w.jobs === 1 ? ' job' : ' jobs') : ''], money0(w.booked), money0(w.pipeline), money0(w.plans), money0(w.total)]); });
+        tr(tb5, ['Six weeks', money0(P.weeks.reduce(function (a, w) { return a + w.booked; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.pipeline; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.plans; }, 0)), money0(gt)], 'sttot');
+        c5.appendChild(q('p', 'stnote', 'Booked: jobs on the board that week. Quoted leads: ' + P.pipeN + (P.pipeN === 1 ? ' lead' : ' leads') + ' with a price and no job yet (not lost), worth ' + money0(P.pipe) + ' together; times the close rate (' + (P.quoted ? pct(P.close) + ', ' + P.won + ' of ' + P.quoted + ' quoted in the last 60 days booked' : 'nothing quoted in 60 days') + '), spread evenly over the six weeks. Plans: ' + money0(j.plans.mrr) + ' a month, as weeks.'));
+        /* 6. doors, the whole company */
+        var c6 = card('Doors', 'the whole company');
+        var tb6 = table(c6, ['', 'Doors knocked', 'Talked to', 'Quotes booked', 'People out']);
+        [['Last week', j.doors.last], ['This week so far', j.doors.this]].forEach(function (x) { var d = x[1]; tr(tb6, [x[0], d.doors.toLocaleString(LOCALE), d.talked.toLocaleString(LOCALE), d.booked.toLocaleString(LOCALE), d.people]); });
+        c6.appendChild(q('p', 'stnote', 'Talked to: doors marked booked or come back later, as on the Office dashboard.'));
+      }, function () { if (S.screen === 'statspage') { out.textContent = ''; out.appendChild(q('div', 'msg', 'The stats need signal.')); } });
+    };
+    load();
+  }
+  /* an admin types each ad's lifetime spend from Meta's Ads Manager (2026-10-20) */
+  function adSpendEditor(rows, done) {
+    var w = q('div'), bt = q('div', 'stbtns'), open = q('button', null, 'Update ad spend'); open.type = 'button'; bt.appendChild(open); w.appendChild(bt);
+    open.addEventListener('click', function () {
+      w.textContent = '';
+      var ed = q('div', 'stedit'); w.appendChild(ed);
+      ed.appendChild(q('p', 'stnote', 'One line per ad. Type the amount spent and the results from Meta (the whole run, not one day). Pick where its leads come from.'));
+      var hh = q('div', 'str sth'); ['Ad', 'Its leads come in as', 'Spent ($)', 'Meta’s results', ''].forEach(function (x) { hh.appendChild(q('span', null, x)); }); ed.appendChild(hh);
+      var lines = q('div', 'stedit'); ed.appendChild(lines);
+      var add = function (a) {
+        var r = q('div', 'str');
+        var nm = q('input'); nm.placeholder = 'Ad name'; nm.value = a.label || ''; nm.setAttribute('aria-label', 'Ad name'); nm.maxLength = 80;
+        var sr = q('select'); sr.setAttribute('aria-label', 'Where its leads come from'); [['meta', 'Instant Form'], ['messenger', 'Messenger']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sr.appendChild(op); }); sr.value = a.src || 'meta';
+        var sp = q('input'); sp.type = 'number'; sp.min = '0'; sp.step = '0.01'; sp.placeholder = 'Spent $'; sp.setAttribute('aria-label', 'Amount spent'); sp.value = a.spend !== undefined ? a.spend : '';
+        var rs = q('input'); rs.type = 'number'; rs.min = '0'; rs.step = '1'; rs.placeholder = 'Results'; rs.setAttribute('aria-label', 'Results Meta counts'); rs.value = a.results !== undefined ? a.results : '';
+        var rm = q('button', null, 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { r.remove(); });
+        [nm, sr, sp, rs, rm].forEach(function (x) { r.appendChild(x); }); r._get = function () { return { key: a.key || '', label: nm.value.trim(), src: sr.value, spend: sp.value, results: rs.value }; };
+        lines.appendChild(r);
+      };
+      rows.forEach(add);
+      var b2 = q('div', 'stbtns'), ad = q('button', null, 'Add an ad'), sv = q('button', 'save', 'Save'), cn = q('button', null, 'Cancel');
+      [ad, sv, cn].forEach(function (x) { x.type = 'button'; b2.appendChild(x); }); ed.appendChild(b2);
+      ad.addEventListener('click', function () { add({}); });
+      cn.addEventListener('click', done);
+      sv.addEventListener('click', function () {
+        var ads = Array.prototype.map.call(lines.children, function (r) { return r._get(); }).filter(function (a) { return a.label; });
+        sv.disabled = true;
+        api('adspendsave', { body: { ads: ads } }).then(function (r) { sv.disabled = false; if (r && r.ok) { toast('Saved', 'Ad spend updated.'); done(); } else toast('Not saved', (r && r.error) || 'Try again.'); }, function () { sv.disabled = false; toast('Not saved', 'Needs signal.'); });
+      });
+    });
+    return w;
   }
   function officeView() {
     if (!planOk()) return chooseView();
