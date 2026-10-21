@@ -7096,13 +7096,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     window.scrollTo(0, 0);
   }
   /* on a lead in the Pipeline: its house, or the button to find it */
+  /** where a lead lives: their house on our lists, or else the address as they typed it (2026-10-21) */
+  function leadAddr(l) { return l.house ? streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '') : String(l.town || '').trim(); }
   function leadHouseRow(l) {
-    var b = q('button', 'hrow' + (l.house ? ' on' : '')); b.type = 'button';
+    var typedOnly = !l.house && String(l.town || '').trim() !== '';   /* an address they gave that matches no house yet (Scott, 2026-10-21) */
+    var b = q('button', 'hrow' + (l.house || typedOnly ? ' on' : '')); b.type = 'button';
     b.appendChild(ico('door', 2.2));
-    b.appendChild(q('span', null, l.house ? streetCase(l.house.address) + ', ' + l.house.town : 'Find their house'));
+    b.appendChild(q('span', null, l.house ? streetCase(l.house.address) + ', ' + l.house.town : typedOnly ? streetCase(String(l.town).trim()) : 'Find their house'));
+    if (typedOnly) b.appendChild(q('small', null, 'As they gave it \u00b7 not matched to a house yet \u00b7 tap to look it up'));
     if (l.house && !l.house.region) b.appendChild(q('small', null, 'Not on our property lists yet \u00b7 quote by lawn size'));
     if (l.ask && l.ask.size) b.appendChild(q('small', null, 'They said: ' + l.ask.size));
-    b.addEventListener('click', function () { houseLookupView(l, l.house || null); });
+    b.addEventListener('click', function () { houseLookupView(l, l.house || null, typedOnly ? String(l.town).trim() : undefined); });
     return b;
   }
   /* a lead with its house (2026-10-14, Matthew: "For leads that come in with the address it should auto populate the image of the property
@@ -7263,7 +7267,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       next.forEach(function (l) {
         var b = q('button', 'orow'); b.type = 'button';
         var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
-        tx.appendChild(q('small', null, [l.need, LEAD_SRC[l.src] || l.src, ago(l.at)].filter(Boolean).join(' · '))); b.appendChild(tx);
+        tx.appendChild(q('small', null, [l.need, leadAddr(l), LEAD_SRC[l.src] || l.src, ago(l.at)].filter(Boolean).join(' · '))); b.appendChild(tx);   /* + the address (2026-10-21) */
         b.appendChild(q('span', 'otag' + (callGroup(l) !== 'new' ? ' again' : ''), callGroup(l) === 'vm' ? 'Voicemail' : callGroup(l) === 'today' ? 'Try again' : 'New'));
         b.addEventListener('click', function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
         list.appendChild(b);
@@ -7304,7 +7308,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var tx = q('span');
         tx.appendChild(q('b', null, it.kind === 'door' ? streetCase(x.address) : (x.name || x.phone || x.email || 'No name')));
         var w = it.kind === 'door' ? dwFor('door', x.region, x.id) : dwFor('lead', x.id), lt = it.kind === 'lead' ? lastTry(x) : null;
-        tx.appendChild(q('small', null, [it.kind === 'door' ? x.town : x.need, pipeSrcName(pipeSrc(it)), w ? VW() + ' ' + dwWhen(w) : lt ? TRY_N[lt.o] + ' ' + ago(lt.at) : ago(it.at)].filter(Boolean).join(' · ')));
+        tx.appendChild(q('small', null, [it.kind === 'door' ? x.town : x.need, it.kind === 'lead' ? leadAddr(x) : '', pipeSrcName(pipeSrc(it)), w ? VW() + ' ' + dwWhen(w) : lt ? TRY_N[lt.o] + ' ' + ago(lt.at) : ago(it.at)].filter(Boolean).join(' · ')));
         b.appendChild(tx);
         b.addEventListener('click', function () { S.pipeSel = k; [].forEach.call(left.querySelectorAll('.p2row.on'), function (r) { r.classList.remove('on'); }); b.classList.add('on'); showDet(); });
         left.appendChild(b);
